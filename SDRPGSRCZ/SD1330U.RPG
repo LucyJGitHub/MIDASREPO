@@ -1,0 +1,73 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Final check for loan number ranges')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD1330U - Final Check for Loan Number Ranges.                *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE004             Date 10FEB97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE004 - Lending Enhancements:                               *
+      *           New function.                                       *
+      *                                                               *
+      *****************************************************************
+     FSDLENOL2IF  E           K        DISK
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           RNGNO   2
+     C**********           PARM           SFSTN   60                                          CLE148
+     C**********           PARM           SLSTN   60                                          CLE148
+     C                     PARM           SFSTN   6                                           CLE148
+     C                     PARM           SLSTN   6                                           CLE148
+      *
+     C                     MOVE *BLANK    P0RTN
+      *
+      * Position file pointer at highest date on file greater than
+      * input date and read previous record
+      *
+     C           SLSTN     SETGT@LENOL2
+     C                     READP@LENOL2                  88
+      *
+      * If not EOF, then check that range retrieved is not the current
+      * one we are working with
+      *
+     C           *IN88     IFEQ '0'                        IF 1
+      *
+     C           RNGNO     IFNE F9RGNB                      IF 2
+      *
+      * If not current range, then range input must not span the one
+      * just found.
+      * NOTE: All other possible overlaps have already been checked in
+      * the SYNON program.
+      *
+     C********** SFSTN     IFLT F9FRAN                       IF 3                             CLE148
+     C********** SLSTN     ANDGTF9LRAN                        AND                             CLE148
+     C           SFSTN     IFLT F9FRAA                                                        CLE148
+     C           SLSTN     ANDGTF9LRAA                                                        CLE148
+     C                     MOVE 'OVERLAP' P0RTN
+     C                     END                               FI 3
+      *
+     C                     END                              FI 2
+      *
+     C                     END                             FI 1
+      *
+     C                     MOVE '1'       *INLR

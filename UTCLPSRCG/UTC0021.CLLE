@@ -1,0 +1,360 @@
+/*********************************************************************/
+/*XBI    CRTSRCPF FILE(QTEMP/STDWORK) RCDLEN(112)                    */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Process standard creation parameters')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC0021 - Process creation parameters for CRTOBJ            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR887384           Date 09Jan12              */
+/*                      CUT008             Date 15Nov10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BG18886            Date 22May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BG4923             Date 26Apr04              */
+/*                      CPK018  *MOVED     Date 26Apr04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*                      178905             Date 12May00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CPK009             Date 27Jul99              */
+/*                      CUT002             Date 06AUG98              */
+/*                      CAP002             Date 21MAY98              */
+/*                      CPK008             Date 12FEB97              */
+/*                      117186             Date 23APR97              */
+/*                      094890             Date 13FEB97              */
+/*                      CAA008             Date 19AUG96              */
+/*                      078080             DATE 28OCT94              */
+/*                      074291             DATE 08AUG94              */
+/*                      S01516             DATE 19JUL94              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR887384 - CRTSRCPF record length set to 112.               */
+/*       CUT008 - Rewrite of CRTOBJ.                                 */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       BG4923 - Externalise SQL creation parameters (reopen)       */
+/*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
+/*       178905 - New creation parameter types - XBS/XBI, XAS/XAI    */
+/*                to enable multiple line pre- & post-compilation    */
+/*                instructions.  Also allow regional creation        */
+/*                parameters.                                        */
+/*       CPK009 - DBA R3 packaging:                                  */
+/*                - Ensure that EXI lines only read once             */
+/*       CUT002 - Expansion of CRTOBJ Creation Paramter types        */
+/*       CAP002 - Ensure that only /*CRT lines are copied from       */
+/*                STDCRTPARM.                                        */
+/*       CPK008 - DBA R2 packaging:                                  */
+/*                - Changes for source being 112 long.               */
+/*       117186 - If the STDCRTPARM member referred to is not found  */
+/*                in the library list, send a message to that effect */
+/*                instead of the general purpose message.            */
+/*       094890 - Utility can not work when sources files are        */
+/*                with different CSSID                               */
+/*       CAA008 - Change processing so that standard creation        */
+/*                parameters can be use for panel groups             */
+/*       078080 - Allow for more than one STDCRTPARM source file     */
+/*       074291 - Further enhancements to CRTOBJ                     */
+/*       S01516 - Incorporation of enhanced CRTOBJ into core         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRCMBR &SRCFILE &SRCFLIB &SRCTYPE +
+                          &SQL &RTNCODE)
+ 
+             DCL        VAR(&SRCMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCTYPE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&STDPARM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CRTPRMSRC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&NBRCURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&STDPRMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STDTYPE) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ENDSTDEXS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NBRRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&EXTSRCTYP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STDCRTEXT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&INCCHAR) TYPE(*CHAR) LEN(5)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+             DCLF       FILE(QTEMP/STDWORK)
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+             RTVJOBA    NBR(&JOBNBR)
+             CHGVAR     VAR(&CRTPRMSRC) VALUE('W' *CAT &JOBNBR)
+ 
+/* Prepare work files. */
+             DLTF       FILE(QTEMP/STDWORK)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/STDWORK) RCDLEN(112) MBR(MEMBER)
+             CHKOBJ     OBJ(QTEMP/&CRTPRMSRC) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/**********     CRTSRCPF   FILE(QTEMP/&CRTPRMSRC) TEXT('Temporary file for +  */        /*AR887384*/
+/**********                  CRTOBJ Creation parameters')                     */        /*AR887384*/
+                CRTSRCPF   FILE(QTEMP/&CRTPRMSRC) RCDLEN(112) +
+                             TEXT('Temporary file for CRTOBJ Creation +
+                             parameters')                                               /*AR887384*/
+                GOTO       CMDLBL(CHKSQL)
+             ENDDO
+             CLRPFM     FILE(QTEMP/&CRTPRMSRC) MBR(&SRCMBR)
+             MONMSG     MSGID(CPF0000)
+ 
+CHKSQL:
+/* If source member is SQLBASE, we only need to find this STDCRTPARM member. */
+             IF         COND(&SQL = 'Y') THEN(DO)
+                CALLSUBR   SUBR(SRSQLBASE)
+                RETURN
+             ENDDO
+ 
+             DLTDTAARA  DTAARA(QTEMP/STDCRTEXT)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Check whether external replacement parameters exist. */
+EXTPRM:
+             RTVMBRD    FILE(STDCRTEXT1) MBR(&SRCMBR) +
+                          SRCTYPE(&EXTSRCTYP)
+             MONMSG     MSGID(CPF0000)
+             IF         COND(&SRCTYPE *EQ &EXTSRCTYP) THEN(DO)
+                CHGVAR     VAR(&STDCRTEXT) VALUE(STDCRTEXT1)
+                GOTO       CMDLBL(EXTOVR)
+             ENDDO
+             ELSE       CMD(DO)
+                RTVMBRD    FILE(STDCRTEXT2) MBR(&SRCMBR) +
+                             SRCTYPE(&EXTSRCTYP)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&SRCTYPE *EQ &EXTSRCTYP) THEN(DO)
+                CHGVAR     VAR(&STDCRTEXT) VALUE(STDCRTEXT2)
+                GOTO       CMDLBL(EXTOVR)
+             ENDDO
+             ELSE       CMD(DO)
+                RTVMBRD    FILE(STDCRTEXT3) MBR(&SRCMBR) +
+                             SRCTYPE(&EXTSRCTYP)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&SRCTYPE *EQ &EXTSRCTYP) THEN(DO)
+                CHGVAR     VAR(&STDCRTEXT) VALUE(STDCRTEXT3)
+                GOTO       CMDLBL(EXTOVR)
+             ENDDO
+             ELSE       CMD(DO)
+                RTVMBRD    FILE(STDCRTEXT4) MBR(&SRCMBR) +
+                             SRCTYPE(&EXTSRCTYP)
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&SRCTYPE *EQ &EXTSRCTYP) THEN(DO)
+                CHGVAR     VAR(&STDCRTEXT) VALUE(STDCRTEXT4)
+             ENDDO
+ 
+EXTOVR:
+             IF         COND(&STDCRTEXT *NE '          ') THEN(DO)
+                CRTDTAARA  DTAARA(QTEMP/STDCRTEXT) TYPE(*CHAR) LEN(10) +
+                             VALUE(&STDCRTEXT)
+                OVRDBF     FILE(&SRCFILE) TOFILE(&STDCRTEXT) MBR(&SRCMBR)
+             ENDDO
+ 
+/* There are 4 types of external standard creation parameters - *STD, *EXS, */
+/*  *XBS and *XAS.  For each type the actual standard creation parameter    */
+/*  must be identified and found and then the contents copied to a single   */
+/*  work file.                                                              */
+ 
+/* Copy standard creation parameters reference from source. */
+             CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                          TOFILE(QTEMP/STDWORK) FROMMBR(&SRCMBR) +
+                          MBROPT(*ADD) INCCHAR(*RCD 14 *EQ '*STD') +
+                          FMTOPT(*MAP)
+/* Check to see if there are any *STD references and, if not, then check for */
+/*  internal creation parameters.    */
+             RTVMBRD    FILE(QTEMP/STDWORK) NBRCURRCD(&NBRRCD)
+             IF         COND(&NBRRCD *EQ 0) THEN(DO)
+                GOTO       CMDLBL(INTPRM)
+             ENDDO
+/* Continue copying standard creation parameters. */
+             CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                          TOFILE(QTEMP/STDWORK) FROMMBR(&SRCMBR) +
+                          MBROPT(*ADD) INCCHAR(*RCD +
+                          14 *EQ '*EXS') FMTOPT(*MAP)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                          TOFILE(QTEMP/STDWORK) FROMMBR(&SRCMBR) +
+                          MBROPT(*ADD) INCCHAR(*RCD +
+                          14 *EQ '*XBS') FMTOPT(*MAP)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                          TOFILE(QTEMP/STDWORK) FROMMBR(&SRCMBR) +
+                          MBROPT(*ADD) INCCHAR(*RCD +
+                          14 *EQ '*XAS') FMTOPT(*MAP)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Read list of standard creation parameters and copy the actual parameters. */
+/*  First treat the *STD and *EXS records and then the source's individual   */
+/*  *EXI records (if any).  Then handle the *XBS and *XAS parameters.        */
+ READ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CPYEXI)
+             ENDDO
+             CHGVAR     VAR(&STDTYPE) VALUE(%SST(&SRCDTA 3 3))
+             IF         COND(&STDTYPE *EQ 'STD') THEN(DO)
+                CHGVAR     VAR(&INCCHAR) VALUE('/*CRT')
+             ENDDO
+             IF         COND(&STDTYPE *EQ 'EXS') THEN(DO)
+                CHGVAR     VAR(&INCCHAR) VALUE('/*CRT')
+             ENDDO
+             IF         COND(&STDTYPE *EQ 'XBS') THEN(DO)
+                CHGVAR     VAR(&INCCHAR) VALUE('/*XBI')
+             ENDDO
+             IF         COND(&STDTYPE *EQ 'XAS') THEN(DO)
+                CHGVAR     VAR(&INCCHAR) VALUE('/*XAI')
+             ENDDO
+/* If the standard creation parameter is no longer *STD or *EXS but there are */
+/*  more records to copy (*XBS or *XAS) then copy across any *EXI records     */
+/*  first but only do this once.                                              */
+             IF         COND(&STDTYPE *NE 'STD' *AND &STDTYPE *NE +
+                          'EXS') THEN(DO)
+                IF         COND(&ENDSTDEXS *NE 'Y') THEN(DO)
+                   CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                                TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(&SRCMBR) +
+                                TOMBR(&SRCMBR) MBROPT(*ADD) INCCHAR(*RCD +
+                                14 *EQ '*EXI') FMTOPT(*MAP)
+                   CHGVAR     VAR(&ENDSTDEXS) VALUE('Y')
+                ENDDO
+             ENDDO
+/* Check that the standard creation parameter exists in the library list. */
+             CHGVAR     VAR(&STDPARM) VALUE(%SST(&SRCDTA 10 10))
+             CHGVAR     VAR(&STDPRMLIB) VALUE(' ')
+             CALL       PGM(UT0063) PARM(&STDPARM 'STDCRTPARM' +
+                          &STDPRMLIB ' ')
+/* If it doesn't then set the return code and end the program ... */
+             IF         COND(&STDPRMLIB *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&RTNCODE) VALUE('*NOTFND')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+/* ... else copy across the appropriate creation parameters. */
+             ELSE       CMD(DO)
+                CPYF       FROMFILE(&STDPRMLIB/STDCRTPARM) +
+                             TOFILE(QTEMP/&CRTPRMSRC) +
+                             FROMMBR(&STDPARM) TOMBR(&SRCMBR) +
+                             MBROPT(*ADD) INCCHAR(*RCD 13 *EQ +
+                             &INCCHAR) FMTOPT(*MAP)
+                MONMSG     MSGID(CPF0000)
+                IF         COND(&STDTYPE *EQ 'XBS' *OR &STDTYPE *EQ +
+                             'XAS') THEN(DO)
+                   CPYF       FROMFILE(&STDPRMLIB/STDCRTPARM) +
+                                TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(XXEND) +
+                                TOMBR(&SRCMBR) MBROPT(*ADD) INCCHAR(*RCD +
+                                13 *EQ '/*END') FMTOPT(*MAP)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(READ)
+ 
+/* If the *EXI records were not already copied across then do it now. */
+CPYEXI:
+             IF         COND(&ENDSTDEXS *NE 'Y') THEN(DO)
+                CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                             TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(&SRCMBR) +
+                             TOMBR(*FROMMBR) MBROPT(*ADD) INCCHAR(*RCD +
+                             14 *EQ '*EXI') FMTOPT(*MAP)
+                CHGVAR     VAR(&ENDSTDEXS) VALUE('Y')
+             ENDDO
+ 
+/* Now copy across any individual *XBI or *XAI records. */
+                CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                             TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(&SRCMBR) +
+                             TOMBR(*FROMMBR) MBROPT(*ADD) INCCHAR(*RCD +
+                             14 *EQ '*XBI') FMTOPT(*MAP)
+                CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                             TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(&SRCMBR) +
+                             TOMBR(*FROMMBR) MBROPT(*ADD) INCCHAR(*RCD +
+                             14 *EQ '*XAI') FMTOPT(*MAP)
+ 
+             GOTO       CMDLBL(OVRADD)
+ 
+INTPRM:
+/* If there were no standard creation parameters then check if there are */
+/*  internal creation parameters.                                        */
+             CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                          TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(&SRCMBR) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          INCCHAR(*RCD 13 *EQ '/*CRT') FMTOPT(*MAP)
+ 
+/*  check if any creation parameter records copied. */
+             RTVMBRD    FILE(QTEMP/&CRTPRMSRC) MBR(&SRCMBR) +
+                          NBRCURRCD(&NBRCURRCD)
+             IF         COND(&NBRCURRCD *EQ 0) THEN(DO)
+                CHGVAR     VAR(&RTNCODE) VALUE('*NOCRTP')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Users may have used a combination of standard creation parameters and */
+/*  the older *OVR and *ADD type paramters.                              */
+OVRADD:
+             CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                          TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(&SRCMBR) +
+                          TOMBR(*FROMMBR) MBROPT(*ADD) +
+                          INCCHAR(*RCD 13 *EQ '/*OVR') FMTOPT(*MAP)
+             CPYF       FROMFILE(&SRCFLIB/&SRCFILE) +
+                          TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(&SRCMBR) +
+                          TOMBR(*FROMMBR) MBROPT(*ADD) +
+                          INCCHAR(*RCD 13 *EQ '/*ADD') FMTOPT(*MAP)
+ 
+/* Delete temporary work files                                             */
+             DLTF       FILE(QTEMP/STDWORK)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSGID(SYS0014) MSGF(UTMSGF) MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+ /* If the external override was in place then remove it. */
+             IF         COND(&STDCRTEXT *NE '          ') THEN(DO)
+                DLTOVR     FILE(&SRCFILE)
+                MONMSG      MSGID(CPF0000)
+             ENDDO
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to copy SQLBASE creation parameter from STDCRTPARM     */
+/* source file to &CRTPRMSRC.                                        */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRSQLBASE)
+ 
+             CHGVAR     VAR(&STDPRMLIB) VALUE(' ')
+             CALL       PGM(UT0063) PARM('SQLBASE   ' 'STDCRTPARM' +
+                          &STDPRMLIB ' ')
+/* If it doesn't then set the return code and end the program ... */
+             IF         COND(&STDPRMLIB *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&RTNCODE) VALUE('*NOTFND')
+             ENDDO
+/* ... else copy across the appropriate creation parameters. */
+             ELSE       CMD(DO)
+                CPYF       FROMFILE(&STDPRMLIB/STDCRTPARM) +
+                             TOFILE(QTEMP/&CRTPRMSRC) FROMMBR(SQLBASE) +
+                             TOMBR(&SRCMBR) MBROPT(*ADD) INCCHAR(*RCD +
+                             13 *EQ '/*CRT') FMTOPT(*MAP)
+             ENDDO
+ 
+             ENDSUBR
+/* End of subroutine SRSQLBASE. */
+ 
+             ENDPGM

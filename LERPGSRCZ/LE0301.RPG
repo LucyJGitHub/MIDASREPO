@@ -1,0 +1,614 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Internal fclty ref for synd agent fclties')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0301 - Midas LE Internal facility references for           *
+      *           syndicated agent facilities                         *
+      *                                                               *
+      *  Function:  This program will generate report of all          *
+      *  (I/C and   Syndicated agent facility together with its       *
+      *    COB)     internal facility reference.                      *
+      *                                                               *
+      *  Called By: LEC0301A - Midas LE Internal facility reference   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 161257  *CREATE    Date 21Jun99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  161257 - Profitability and facility averages not showing for *
+      *           syndicated loan fees.                               *
+      *                                                               *
+      *****************************************************************
+     FLEFCLTLAIF  E           K        DISK         KINFSR *PSSR
+     FLEFCLTL4IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTYL4F
+     FLE0301P1O   E             07     PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FLE0301AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   07  - Overflow indicator                                    *
+      *   37  - Multi-branching indicator                             *
+      *   89  - Record not Found / End of File                        *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPRNT - Subroutine to Print detail record                   *
+      *  SRTERM - Subroutine to Process audit report and terminate    *
+      *           program.                                            *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for LE0391P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     ISPOOLU      DS
+      ** File Information Data Structure for LE0301AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External data structures for Bank Details
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** External data structures for Branch Details
+     ISDFACT    E DSSDFACTL0
+      *
+      ** External data structures for Facility type Details
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      *
+      ** External data structures for Customer Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** External data structures for Currency Details
+     IDSFDY     E DSDSFDY
+      *
+      ** First data structure for Access Programs, short DS
+     IDSSDY     E DSDSSDY
+      *
+      ** Second data structure for Access Programs, long DS
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Check if only a single branch to be process
+      *
+     C           PENTY     IFNE 'ALL'
+     C           PENTY     ANDNE'   '
+     C           PENTY     SETLLLEFCLTLA
+     C                     ENDIF
+      *
+     C                     READ LEFCLTLA                 89
+     C           *IN89     DOWEQ*OFF
+     C           PENTY     ANDNE'ALL'
+     C           PENTY     ANDNE'   '
+     C           PENTY     ANDEQBRCA
+     C           *IN89     OREQ *OFF
+     C           PENTY     ANDEQ'ALL'
+     C           *IN89     OREQ *OFF
+     C           PENTY     ANDEQ'   '
+      *
+      ** Acess branch details if there is a change in branch
+      *
+     C           BRCA      IFNE WBRCA
+     C**********           CALL 'AOBRCHR0'PPAR1                                               CGL029
+     C                     CALL 'AOBRCHR1'PPAR1                                               CGL029
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELPBRCH     DBKEY            * DBERR 02 *
+     C                     Z-ADD02        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Print details if facility is a syndicated agent
+      *
+     C           A8SYCU    IFEQ ANUM
+     C                     EXSR SRPRNT
+     C                     ENDIF
+      *
+     C                     READ LEFCLTLA                 89
+     C                     ENDDO
+      *
+     C                     EXSR SRTERM
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PENTY   3
+      *
+      ** Initialise LDA field.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE0301'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Call Access Program for Bank Details
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN37
+     C                     ENDIF
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'*FIRST  'DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       WOPEN   1
+     C                     Z-ADD0         WIFNO   50
+     C                     Z-ADD0         WAFNO   50
+     C                     MOVE *BLANKS   WBRCA   3
+     C                     Z-ADD*ZEROS    WFCTP   30
+      *
+      ** Define parameter list for AOBRCHR0
+      *
+     C           PPAR1     PLIST
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BRCA      PBRCH   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ** Define parameter list for AOCURRR0
+      *
+     C           PPAR2     PLIST
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Define parameter list for AOFACTR0
+      *
+     C           PPAR3     PLIST
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PFACT   3
+     C           SDFACT    PARM SDFACT    DSFDY
+      *
+      ** Define parameter list for AOCUSTR0
+      *
+     C           PPAR4     PLIST
+     C                     PARM '*BLANKS' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PKEYC  10
+     C                     PARM           PKYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WPMKY     KLIST
+     C**********           KFLD           WPMFC   60                                          CSD027
+     C                     KFLD           WPMFC   6                                           CSD027
+     C                     KFLD           WPMFT   30
+     C                     KFLD           WPMFN   20
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRNT - Subroutine to write detail line on report.          *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPRNT    BEGSR
+      *
+      ** Initialise all report fields
+      *
+     C                     MOVE *BLANKS   RPMFC
+     C                     MOVE *BLANKS   RPCSN
+     C                     MOVE *BLANKS   RPCCY
+     C                     MOVE *BLANKS   RPAMT
+     C                     MOVE *BLANKS   RTRCA
+     C                     MOVE *BLANKS   RPSTD
+     C                     MOVE *BLANKS   RPEND
+     C                     MOVE *BLANKS   RINFC
+     C                     MOVE *BLANKS   RICCY
+     C                     MOVE *BLANKS   RIAMT
+     C                     MOVE *BLANKS   RISTD
+     C                     MOVE *BLANKS   RIEND
+      *
+      ** If spool file is already open and there is a change in branch,
+      ** print end of report for branch
+      *
+     C           WOPEN     IFEQ 'Y'
+     C           WBRCA     ANDNEBRCA
+     C                     MOVE WBRCA     RBRCA
+     C                     WRITETRAILP1
+     C                     CLOSELE0301P1
+     C                     MOVE BRCA      WBRCA
+     C                     MOVE 'N'       WOPEN
+     C                     ENDIF
+      *
+      ** If the record read is the first record to be printed for the
+      ** branch, open spool file and write report heading
+      *
+     C           WOPEN     IFEQ 'N'
+      *
+     C                     MOVE BRCA      WBRCA
+     C                     Z-ADDFACT      WFCTP
+     C                     MOVE 'Y'       WOPEN
+     C                     OPEN LE0301P1
+     C                     MOVE FACT      PFACT
+     C                     CALL 'AOFACTR0'PPAR3
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDFACTPD'DBFILE           ************
+     C                     MOVELPFACT     DBKEY            * DBERR 03 *
+     C                     Z-ADD03        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE FACT      RFTYP
+     C                     MOVELAMFCNM    RFCNM
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN07
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+      ** Enroll spool file LE0301P1 in RCF
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** If LE0301P1 is already open and there is a change in facility
+      ** type, write record to new page
+      *
+     C                     ELSE
+     C           WFCTP     IFNE FACT
+     C                     MOVE FACT      WFCTP
+     C                     MOVE FACT      PFACT
+     C                     CALL 'AOFACTR0'PPAR3
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDFACTPD'DBFILE           ************
+     C                     MOVELPFACT     DBKEY            * DBERR 04 *
+     C                     Z-ADD04        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE FACT      RFTYP
+     C                     MOVELAMFCNM    RFCNM
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN07
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Format Syndicated Agent facility details
+      *
+     C                     MOVELFACT      WFCTY   6
+     C                     MOVEL'/'       WFCNO   3
+     C                     MOVE FCNO      WFCNO
+     C                     MOVE WFCNO     WFCTY
+     C                     MOVELCNUM      RPMFC
+     C                     MOVE WFCTY     RPMFC
+      *
+     C                     MOVELCNUM      PKEYC
+     C                     CALL 'AOCUSTR0'PPAR4
+     C                     MOVE BBCRNM    RPCSN
+      *
+     C                     MOVE FCCY      RPCCY
+     C                     MOVE FCCY      PCURR
+     C                     CALL 'AOCURRR0'PPAR2
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELPCURR     DBKEY            * DBERR 05 *
+     C                     Z-ADD05        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDFAMT      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RPAMT
+      *
+     C                     MOVE TRCA      RTRCA
+      *
+     C                     Z-ADDDTAP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RPSTD
+      *
+     C                     Z-ADDDTEX      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RPEND
+      *
+      ** Access internal participant facility and format details
+      *
+     C                     MOVE CNUM      WPMFC
+     C                     MOVE FACT      WPMFT
+     C                     MOVE FCNO      WPMFN
+     C           WPMKY     SETLLFCLTYL4F
+     C           WPMKY     READEFCLTYL4F                 89
+      *
+     C           *IN89     DOWEQ'0'
+     C           PRTR      IFEQ 'I'
+     C                     MOVELFACT      WFCTY   6
+     C                     MOVEL'/'       WFCNO   3
+     C                     MOVE FCNO      WFCNO
+     C                     MOVE WFCNO     WFCTY
+     C                     MOVELCNUM      RINFC
+     C                     MOVE WFCTY     RINFC
+      *
+     C                     MOVE FCCY      RICCY
+     C                     MOVE FCCY      PCURR
+     C                     CALL 'AOCURRR0'PPAR2
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELPCURR     DBKEY            * DBERR 06 *
+     C                     Z-ADD06        DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDFAMT      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RIAMT
+      *
+     C                     Z-ADDDTAP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RISTD
+      *
+     C                     Z-ADDDTEX      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RIEND
+     C                     ADD  1         WIFNO
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           WPMKY     READEFCLTYL4F                 89
+     C                     ENDDO
+      *
+     C           *IN07     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     MOVE '0'       *IN07
+     C                     ENDIF
+     C                     WRITEDETAIL
+     C                     ADD  1         WAFNO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTERM - Subroutine to output Audit Report and terminate     *
+      *           program.                                            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls    : NONE                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR
+      *
+     C           WOPEN     IFEQ 'Y'
+     C                     MOVE WBRCA     RBRCA
+     C                     WRITETRAILP1
+     C                     CLOSELE0301P1
+     C                     ENDIF
+      *
+     C                     WRITEHEADAU
+      *
+      ** Print Audit File if database error.
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      *
+      ** Print Audit File if no details to report.
+      *
+     C           WOPEN     IFEQ 'N'
+     C           WIFNO     ANDEQ0
+     C           WAFNO     ANDEQ0
+     C                     WRITENODTLS
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDWAFNO     RSANO
+     C                     Z-ADDWIFNO     RIFNO
+     C                     WRITECONTROL
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR   -  Program exception error routine                   *
+      *             Called automatically if a program error occurs,   *
+      *             or directly by the program code using EXSR.       *
+      *             This subroutine DUMPs the program just once.      *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     EXSR SRTERM
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ31
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      ********************************************************************
+** ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+** ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+** ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

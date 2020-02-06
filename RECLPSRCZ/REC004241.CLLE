@@ -1,0 +1,121 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas RE Cheques Presented Today Report')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC004241 - Cheques Presented Today Control                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CRE019  *CREATE    Date 12Jan04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE019 - Cheque Processing and Maintenance                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2004')
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LID) TYPE(*CHAR) LEN(2)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             SNDPGMMSG  MSG('REC004241 - Cheques Presented Today +
+                          Control') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+/* Get system prefix from data area */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&LID)
+ 
+/* Setup 'To library' */
+ 
+             CHGVAR     VAR(&DPLIB) VALUE(&LID *CAT 'DPLIB')
+ 
+/* Copy records from all the members of TTRANPD to a temporary file */
+ 
+             CPYF       FROMFILE(TTRANPD) TOFILE(&DPLIB/XTTRANPD) +
+                          FROMMBR(*ALL) MBROPT(*REPLACE) CRTFILE(*YES) +
+                          INCREL((*IF MSG1 *NE ' ') (*AND CQNF *NE ' ') +
+                          (*AND CQNF *NE '0 ')) FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2689)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870)
+ 
+/* Override necessary files to be used in extract program. */
+ 
+             OVRDBF     FILE(XTTRANPD) TOFILE(TTRANPD)
+             OVRDBF     FILE(TTRANL4)  TOFILE(&DPLIB/XTTRANPD) SHARE(*NO)
+ 
+/* Clear cheque presented file */
+ 
+             CLRPFM     FILE(CHQPRPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Call extract program */
+ 
+             CALL       PGM(RE004241)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CALL       PGM(RE004242)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                           REC004241 ended abnormally - see job log') +
+                           TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             DLTF       FILE(&DPLIB/XTTRANPD)
+             MONMSG     MSGID(CPF0000)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

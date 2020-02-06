@@ -1,0 +1,121 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE Past Due Classification Update')             */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC000478  -  Midas LE Past Due Classification Update     */
+/*                                                                 */
+/*       (c) Finastra International Limited 2012                   */
+/*                                                                 */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467          Date 11Apr13              */
+/*                      CLE134 *C *CREATE  Date 01Aug12              */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1097467A - Expected 15% COB run optimization not met    */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+ 
+/**********  PGM        PARM(&CNAM &CSEQ)                          */                 /*AR1097467A*/
+             PGM        PARM(&CNAM &CSEQ &TYPE)                                       /*AR1097467A*/
+ 
+             DCL        VAR(&CNAM)   TYPE(*CHAR)  LEN(10)
+             DCL        VAR(&CSEQ)   TYPE(*DEC)   LEN(5 0)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(10)                                /*AR1097467A*/
+ 
+             DCL        VAR(&STAT)    TYPE(*CHAR) LEN(1) VALUE(' ')
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2012')
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+ 
+/** Main Processing Control */
+ 
+             SNDPGMMSG  MSG('PDCL Standing Data Validation') +
+                           TOMSGQ(MRUNQ)
+ 
+/** Check the current status of this component */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Update Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/***Clear*Work*Files**/                                                               /*AR1097467A*/
+/*******************************************************************/                 /*AR1097467A*/
+/**********  CLRPFM     FILE(LEPDLHPD)                             */                 /*AR1097467A*/
+/**********  CLRPFM     FILE(LEPDFHPD)                             */                 /*AR1097467A*/
+ 
+/** Execute Primary Function: */
+/** - Update Classification Details */
+ 
+/**********  CALL       PGM(LE000478)                              */                 /*AR1097467A*/
+             CALL       PGM(LE000478) PARM(&TYPE)                                     /*AR1097467A*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Reset Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('N')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Program Completed Successfully */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_OOB:
+             SNDPGMMSG  MSG('Job terminated, file out of balance.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_CDE:
+             SNDPGMMSG  MSG('Job terminated, component doesn''t +
+                           exist.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Termination Process */
+ 
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited')
+             ENDPGM
+ 

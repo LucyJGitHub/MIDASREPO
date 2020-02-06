@@ -1,0 +1,109 @@
+/*********************************************************************/
+/*STD****CLPBASE******************************************************/                   /*CSC056*/
+/********************************************************************/
+/*                                                                  */
+/*        Midas     - Standing Data Module                      */
+/*                                                                  */
+/*       SDC0603 -  DAILY MAINTENANCE RUNS                          */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*       Last Amend No. CSC056  *REDUNDANT Date 06Aug12              */
+/*       Prev Amend No. CCB020             Date 06Aug12             */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.04 ---------------------------------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                         S01333         DATE  04APR91             */
+/*                         S01179         DATE  12/09/88            */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1     */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure    */
+/*       S01333 - MIS GL REAL TIME POSTING                          */
+/*       S01179 - AS400 CONVERSION                                  */
+/*                                                                  */
+/********************************************************************/
+/*                                                                            */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRM01)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/*                                                                            */
+             DCL        &PRM01        TYPE(*CHAR)  LEN(8)
+             DCL        &RTNCD        TYPE(*CHAR)  LEN(1)
+             DCL        &SWS          TYPE(*CHAR)  LEN(8)
+             DCL        &JOB          TYPE(*CHAR)  LEN(10)
+             DCL        &USER         TYPE(*CHAR)  LEN(10)
+             DCL        &DATE         TYPE(*CHAR)  LEN(6)
+             DCL        &MSG          TYPE(*CHAR)  LEN(75)
+/**********  DCLDTAARA  MPHAS                                       *  *S01179*/
+/**********  DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                          */ /*S01179 CCB020*/
+/*/COPY WNCPYSRC,SDC0603001                                          */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNORMAL)
+/*                                                                  */
+/**********  RCVDTAARA  MPHAS                                       *  *S01179*/
+/**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                            */ /*S01179 CCB020*/
+             RTVJOBA    JOB(&JOB)  USER(&USER)  DATE(&DATE)
+             CHGVAR     &RTNCD VALUE('0')
+             CHGVAR     &MSG VALUE(' DAILY UPDATE RUNS')
+             SNDMSG     TOMSGQ(MRUNQ) MSG(&MSG)
+             CHGVAR     &MSG VALUE(' BASE RATES UPDATE EXECUTING')
+             SNDMSG     TOMSGQ(MRUNQ) MSG(&MSG)
+/*                                                                  */
+LOOP01:
+             ALCOBJ     OBJ((TABLE *FILE *EXCL TABLE)) WAIT(999)
+             MONMSG     CPF0000 EXEC(GOTO LOOP01)
+/*                                                                  */
+             OVRDBF     FILE(TABLE) TOFILE(TABSDU)
+             CALL       SD0600
+             DLTOVR     FILE(*ALL)
+             RTVJOBA    SWS(&SWS)
+/*                                                                            */
+             IF         (%SUBSTRING(&SWS 8 1) *EQ '1') THEN(GOTO DBETAG)
+/*                                                                            */
+             CHGVAR     &MSG VALUE(' CHECK/UPDATE ACCRUAL DATE EXECUTING')
+             SNDMSG     TOMSGQ(MRUNQ) MSG(&MSG)
+/*/COPY WNCPYSRC,SDC0603002                                          */
+             OVRDBF     FILE(TABLE) TOFILE(TABSDU)
+             CALL       SD0640
+             DLTOVR     FILE(*ALL)
+             RTVJOBA    SWS(&SWS)
+/**/                                                                  /*S01333*/
+             IF         (%SUBSTRING(&SWS 8 1) *NE '1') THEN(DO)
+             CPYF       FROMFILE(GLACBTPD) TOFILE(GLACBYPD) +
+                          MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)      +
+                        EXEC(CLRPFM GLACBYPD)
+             CPYF       FROMFILE(ACCNTAB) TOFILE(GLACBTPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)     +
+                        EXEC(CLRPFM GLACBTPD)
+             ENDDO
+/**/                                                                  /*S01333*/
+/*                                                                            */
+             IF         (%SUBSTRING(&SWS 8 1) *NE '1') THEN(GOTO ENDCLPGM)
+             ELSE
+DBETAG:
+             CHGVAR     &MSG VALUE(' JOB TERMINATED - DATABASE IN ERROR')
+             SNDMSG     TOMSGQ(&JOB) MSG(&MSG)
+/*                                                                            */
+ABNORMAL:
+             SNDPGMMSG  TOMSGQ(&JOB) MSG('PROGRAM SDC0603 ENDED +
+                                                    ABNORMALLY')
+             MONMSG     MSGID(CPF0000 MCH0000) /* Monitor at every +
+                          line for possible error and avoid going to +
+                          the tag - 'ABNORMAL' */
+ ENDCLPGM:
+             DLCOBJ     OBJ((TABLE *FILE *EXCL TABLE))
+             RETURN
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM     /* END CL PGM */

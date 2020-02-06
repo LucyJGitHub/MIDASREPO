@@ -1,0 +1,823 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU Map 'In' currency to Euro - batch update')
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Retail Utilities                                 *
+      *                                                               *
+      *  EU0110 - Maps 'In' currencies to Euro (Updates files)        *
+      *                                                               *
+      *  Function:  This program will create records in the EMU       *
+      *             Mapping Details Header file and the EMU Mapping   *
+      *             Details Account Mapping LIst.                     *
+      *                                                               *
+      *  Called By: EUC0100                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 217435             Date 13May03               *
+      *                 CRE008             Date 19Feb02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 191928             Date 28Dec01               *
+      *                 191826             Date 31Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158089             Date 08Apr99               *
+      *                 153298             Date 15Feb99               *
+      *                 150198             DATE 22DEC98               *
+      *                 146607             DATE 04NOV98               *
+      *                 139366             Date 27JUL98               *
+      *                 139062             Date 17JUL98               *
+      *                 133671             Date 17Apr98               *
+      *                 CEU022  *CREATE    Date 15Dec97               *
+      *                                                               *
+      *================================================================
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  217435 - Refine mapping to specify A/c Seq No                *
+      *  CRE008 - Cash Management                                     *
+      *  191928 - When Create one Euro account is 'N', assign account *
+      *           sequence sequentially.                              *
+      *  191826 - For mapping rule, Create one EURO account for each  *
+      *           customer, account code and account sequence ='Y',   *
+      *           whenever a EURO account is already existing for the *
+      *           'In' currency, a new EURO account is created by     *
+      *           incrementing the account sequence until a non-      *
+      *           existing EURO account is produced. Also, ensure     *
+      *           the retail account number of the 'In' currency will *
+      *           be preserved to the newly created EURO account if   *
+      *           retail account numbers preserved (EURNPR = 'Y').    *
+      *           If EURNPR = 'N', the user-defined retail account no.*
+      *           will be applied to the newly created EURO account.  *
+      *  158089 - EUMDHDL0 is made unique, so that no duplicate record*
+      *           is allowed . If trying to write a duplicate record  *
+      *           then send a message to the user . This situation    *
+      *           only occurs if more than one user is validating     *
+      *           input mapping details at exactly the same time .    *
+      *  153298 - If 'Create one Euro a/c for each cust., a/c code    *
+      *           & a/c seq.' flag is 'Y' (many-to-one map) 1 a/c for *
+      *           each 'in' ccy is created, and if flag is 'N' (one-  *
+      *           to-one map) only 1 a/c is created. It should be the *
+      *           other way round. Also if many-to-one and RE a/c no. *
+      *           not preserved, the new RE a/c no. should only be    *
+      *           checked for the 1st a/c, otherwise the map fails.   *
+      *           Also reinstate coding to check that the new RE a/c  *
+      *           no. doesn't already exist for another a/c and if RE *
+      *           a/c no. preserved check if Euro a/c already exists. *
+      *  150198 - NO MAPPING AND EXCEPTION REPORT PRODUCED LISTING    *
+      *           EURO RET ACC THAT ALREADY EXIST .                   *
+      *  146607 - Mapping number is overlapping.                      *
+      *  139366 - IF MAPPING WITH CREATION OF A NEW RETAIL ACCOUNT    *
+      *           CHECK IF RETAIL NUMBER NOT USED IN THE NEW FILE     *
+      *  139062 - IF MAPPING WITH CREATION OF A NEW RETAIL ACCOUNT    *
+      *           THERE IS NO CHECK IF THIS ACCOUNT IS 'UNIQUE'       *
+      *  133671 - Blanks out retail account no. of 'in' currency acc  *
+      *           when retail account nos have been preserved         *
+      *  CEU022 - EMU Retail Utilities                                *
+      *                                                               *
+      *================================================================
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    55  -   Overflow indicator                                 *   088224
+      *    80      Used for CHAIN and READ                            *
+      *    90-99   Used by standard subroutine                        *
+      *                                                               *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                   ~~~~~~~~~~~~~~~~~~~~                        *
+      *  INITPR  -  Initial processing                                *
+      *  MAINPR  -  Main Processing for program                       *
+      *  EXITPR  -  Exits program                                     *
+      *  WRTHD   -  Processes output to EUMDHDPD                      *
+      *  WRTCM   -  Processes output to EUACMLPD                      *
+      *  *PSSR   -  Exception error handling                          *
+      *                   ~~~~~~~~~~~~~~~~~~~~                        *
+      *****************************************************************
+      ** EMU Mapping List
+     FEUACMLL2IF  E           K        DISK         KINFSR *PSSR A
+     F            EUACMLPF                          KRENAMEACMLL2
+     F                                              KCOMIT
+      *
+      ** Account Master File
+     FACCNTAB IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Account Master File
+     F**ACNUM   IF  E           K        DISK       KINFSR *PSSR          150198
+     F************ACCNTABF                          KRENAMEACNUMF         150198
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR          153298
+     F            ACCNTABF                          KRENAMEACNUMF         153298
+      *                                                                   150198
+     FACCNTL0 IF  E           K        DISK         KINFSR *PSSR          150198
+     F            ACCNTABF                          KRENAMEACCNTF         150198
+      *
+      ** EMU Mapping Details Header
+     FEUMDHDL0O   E                    DISK         KINFSR *PSSR
+     F                                              KINFDS INFDS1         158089
+     F                                              KCOMIT
+      *
+      ** EMU Mapping Details Header
+     FEUMDHDL4IF  E                    DISK         KINFSR *PSSR
+      *
+      ** EMU Mapping RETAIL                                               139366
+     F/COPY WNCPYSRC,EU0110F001
+     FEUACMLL1IF  E           K        DISK         KINFSR *PSSR          139366
+     F            EUACMLPF                          KRENAMEACMLL1         139366
+     F                                              KCOMIT                139366
+      *                                                                   153298
+     FEUACMLL6IF  E           K        DISK         KINFSR *PSSR          153298
+     F            EUACMLPF                          KRENAMEACMLL6         153298
+      *-----------------------------------------------------------------
+      *E-Specifications
+      *-----------------------------------------------------------------
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    ACN        10  1
+      *
+      *-----------------------------------------------------------------
+      *I-Specifications
+      *-----------------------------------------------------------------
+      *
+      ** RENAME EUACMLL1 FIELDS                                           139366
+     IACMLL1                                                              139366
+     I              EUMAPN                          XXMAPM                139366
+     I              EUIBRC                          XXIBRC                139366
+     I              EUICNM                          XXICNM                139366
+     I              EUICCY                          XXICCY                139366
+     I              EUIACD                          XXIACD                139366
+     I              EUISQN                          XXISQN                139366
+     I              EUIACN                          XXIACN                139366
+     I              EUEBRC                          XXEBRC                139366
+     I              EUECNM                          XXECNM                139366
+     I              EUECCY                          XXECCY                139366
+     I              EUEACD                          XXEACD                139366
+     I              EUESQN                          XXESQN                139366
+     I              EUEACN                          XXEACN                139366
+     I              EUOPFA                          XXOPFA                139366
+     I              EUSWFA                          XXSWFA                139366
+     I              EUACLO                          XXACLO                139366
+      *                                                                   153298
+     IACMLL6                                                              153298
+     I              EUMAPN                          YYMAPM                153298
+     I              EUIBRC                          YYIBRC                153298
+     I              EUICNM                          YYICNM                153298
+     I              EUICCY                          YYICCY                153298
+     I              EUIACD                          YYIACD                153298
+     I              EUISQN                          YYISQN                153298
+     I              EUIACN                          YYIACN                153298
+     I              EUEBRC                          YYEBRC                153298
+     I              EUECNM                          YYECNM                153298
+     I              EUECCY                          YYECCY                153298
+     I              EUEACD                          YYEACD                153298
+     I              EUESQN                          YYESQN                153298
+     I              EUEACN                          YYEACN                153298
+     I              EUOPFA                          YYOPFA                153298
+     I              EUSWFA                          YYSWFA                153298
+     I              EUACLO                          YYACLO                153298
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+     **                                     134 141 DBFILE
+     **                                     142 170 DBKEY
+     **                                     171 180 DBPGM
+     **                                     181 1830DBASE
+      *
+      ** General Ledger Details
+     ISDGELR    E DSSDGELRPD
+      *
+      *  First DS for access program, short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access programs, long Data Structure
+     IDSSDY     E DSDSSDY
+      *
+     IP#PRM1    E DSEUMDHDPD
+     I/COPY WNCPYSRC,EU0110I001
+      *
+     I            DS
+     I                                        1   5 DIG
+     I                                        2   5 DIG4
+     I                                        3   5 DIG3
+     I                                        4   5 DIG2
+     I                                        5   5 DIG1
+      *                                                                   158089
+     IINFDS1      DS                                                      158089
+     I                                     *STATUS  STAT1                 158089
+     I/COPY WNCPYSRC,EU0110I002
+      *
+      *================================================================-
+      *                    C-Specifications
+      *================================================================-
+      *
+      * ===============================================================
+      **                  D E F I N I T I O N S
+      * ===============================================================
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *Define input
+     C           *ENTRY    PLIST
+     C                     PARM           P#EMUM  1        EMU MAPPING Y/NCRE008
+     C                     PARM           P#PRM1
+     C                     PARM           P#PRM2  1        RETURN CODE
+     C/COPY WNCPYSRC,EU0110C001
+      *
+      ** Define Key Lists
+      ** ~~~~~~~~~~~~~~~~
+     C           K#KY01    KLIST
+     C                     KFLD           EUIBRC
+     C                     KFLD           EUICNM
+     C                     KFLD           EUICCY
+     C                     KFLD           EUIACD
+     C                     KFLD           EUISQN
+      *                                                                   150198
+     C           K#KEY     KLIST                                          150198
+     C                     KFLD           CNUM                            150198
+     C                     KFLD           EUECCY                          150198
+     C                     KFLD           EUEACD                          150198
+     C                     KFLD           EUESQN                          150198
+     C                     KFLD           EUEBRC                          150198
+      *                                                                   153298
+     C           K#KEY2    KLIST                                          153298
+     C                     KFLD           EUEBRC                          153298
+     C                     KFLD           CNUM                            153298
+     C                     KFLD           EUECCY                          153298
+     C                     KFLD           EUEACD                          153298
+     C                     KFLD           EUESQN                          153298
+      *
+      ** Define Fields
+      ** ~~~~~~~~~~~~~
+     C           *LIKE     DEFN CNUM      W#CNUM
+     C           *LIKE     DEFN EUMAPN    W#MAPN
+     C           *LIKE     DEFN EUESQN    W#ESQN
+     C           *LIKE     DEFN EURNCD    W##RCD
+      *
+      *================================================================-
+      *                   P R O G R A M
+      *================================================================-
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C                     EXSR INITPR
+      *
+     C                     EXSR MAINPR
+      *
+     C                     EXSR EXITPR
+      *
+      *================================================================-
+      *SUBROUTINE-INITPR
+      *================================================================-
+     C           INITPR    BEGSR
+      *                                                                   153298
+     C                     MOVE *BLANKS   P#PRM2                          153298
+      *
+      ** Access General Ledger Details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD01        DBASE
+     C                     MOVEL'SDGELRPD'DBFILE
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     MOVEL'EU0120'  DBPGM
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   W#CNUM
+     C                     MOVE EURNCD    W##RCD
+      *
+     C                     MOVE 'Y'       W#FLAG  1
+      *
+     C                     Z-ADD0         COUNT
+     C/COPY WNCPYSRC,EU0110C006
+      *
+     C                     ENDSR
+      *
+      *================================================================-
+      *SUBROUTINE-MAINPR
+      *================================================================-
+     C           MAINPR    BEGSR
+      *Read open query file
+     C                     READ ACCNTAB                  80
+      *
+     C           *IN80     DOWEQ*OFF
+     C           P#PRM2    ANDNE'5'                                       153298
+     C/COPY WNCPYSRC,EU0110C007
+      *
+     C                     MOVE BRCA      EUIBRC
+     C                     MOVE CNUM      EUICNM
+     C                     MOVE CCY       EUICCY
+     C                     MOVE ACOD      EUIACD
+     C                     MOVE ACSQ      EUISQN
+      *
+     C           K#KY01    CHAINEUACMLL2             80
+     C           *IN80     IFEQ *ON
+      *
+     C           W#FLAG    IFEQ 'Y'
+     C                     EXSR WRTDH
+     C                     ENDIF
+      *
+     C                     EXSR WRTCM
+      *
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0110C008
+      *
+     C                     READ ACCNTAB                  80
+      *
+     C                     ENDDO
+      *
+      *Updates EU0100 with 'No reocrds updated' message
+     C           COUNT     IFEQ 0
+     C           P#PRM2    ANDNE'5'                                       153298
+     C                     MOVE '4'       P#PRM2
+     C                     ENDIF
+      *
+     C           P#PRM2    IFEQ '5'
+      *
+     C                     ROLBK
+      *
+     C                     ELSE
+      *
+      **  Commit data base changes
+     C                     Z-ADDW#MAPN    EUMAPN
+     C                     COMIT
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *================================================================-
+      *SUBROUTINE-WRTDH
+      *================================================================-
+     C           WRTDH     BEGSR
+      *
+     C                     MOVE 'N'       EUOPIN
+     C                     MOVE 'N'       EUSWPI
+     C                     MOVE 'N'       EUCLSE
+     C                     MOVE *ZERO     EUSWEP
+     C                     MOVE *ZERO     EUSTHR
+     C                     MOVE *ZERO     EUSLCD
+     C                     MOVE *ZERO     EUTNLU
+      *Select next Map No. for processing
+     C           *HIVAL    SETLLEUMDHDL4
+     C                     READPEUMDHDL4                 80
+      *
+     C           *IN80     IFEQ *ON
+     C                     Z-ADD1         EUMAPN
+      *
+     C                     ELSE
+      *
+     C           EUMAPN    ADD  1         EUMAPN
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDEUMAPN    W#MAPN
+      *                                                                   CRE008
+     C                     MOVE P#EMUM    EUEMUM                          CRE008
+      *
+     C                     WRITEEUMDHDPF
+      *
+     C                     MOVE 'N'       W#FLAG
+     C/COPY WNCPYSRC,EU0110C004
+      *
+     C                     ENDSR
+      *
+      *================================================================-
+      *SUBROUTINE-WRTCM
+      *================================================================-
+     C           WRTCM     BEGSR
+      *
+     C                     Z-ADDW#MAPN    EUMAPN                          146607
+      *
+      ** Do if customer number is different to last account
+     C           CNUM      IFNE W#CNUM
+      *
+     C                     MOVE CNUM      W#CNUM
+     C                     MOVELACNO      W#EACN
+     C                     MOVELW##RCD    EURNCD
+     C                     MOVELEURNCD    W#RNCD  50
+     C                     MOVE ACSQ      W#ACSQ
+      *                                                                   153298
+      **If*they*wish*to*create*multiple*accounts for each customer        153298
+      * If not a many-to-one map a/c seq. no is sequentially allocated    153298
+     C********** EUMULT    IFEQ 'Y'                                       153298
+     C           EUMULT    IFEQ 'N'                                       153298
+     C                     MOVEL0         W#ESQN    P
+      *
+     C                     ELSE
+      *
+     C                     MOVELACSQ      W#ESQN    P
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE BRCA      EUIBRC
+     C                     MOVE CNUM      EUICNM
+     C                     MOVE CCY       EUICCY
+     C                     MOVE ACOD      EUIACD
+     C                     MOVE ACSQ      EUISQN
+      *                                                                   133671
+      ** If retail account nos are preserved, blank out 'in' currency one 133671
+     C           EURNPR    IFEQ 'N'                                       133671
+     C                     MOVE ACNO      EUIACN
+     C                     ELSE                                           133671
+     C                     MOVE *ZEROS    EUIACN                          133671
+     C                     ENDIF                                          133671
+      *
+     C                     MOVE 'N'       EUOPFA
+     C                     MOVE 'N'       EUSWFA
+     C                     MOVE 'N'       EUACLO
+      *
+     C                     MOVE BRCA      EUEBRC
+     C                     MOVE ACOD      EUEACD
+     C           P#EMUM    IFEQ 'Y'                                       CRE008
+     C                     MOVE BKEURO    EUECCY
+     C                     ELSE                                           CRE008
+     C                     MOVE CCY       EUECCY                          CRE008
+     C                     ENDIF                                          CRE008
+      *
+      **If*they*wish*to*create*multiple*accounts for each customer        153298
+      * If not a many-to-one map a/c seq. no is sequentially allocated    153298
+     C********** EUMULT    IFEQ 'Y'                                       153298
+     C           EUMULT    IFEQ 'N'                                       153298
+     C                     ADD  1         W#ESQN
+     C                     MOVE W#ESQN    EUESQN
+      *
+     C                     ELSE
+      *
+     C                     MOVE ACSQ      EUESQN
+     C                     ENDIF
+      *
+     C           EURNPR    IFEQ 'Y'
+      *
+     C********** EUMULT    IFEQ 'Y'                                       153298
+     C           EUMULT    IFEQ 'N'                                       153298
+     C                     MOVELACNO      EUEACN
+      *
+     C                     ELSE
+      *
+     C           ACSQ      IFNE W#ACSQ
+     C           CNUM      ORNE EUECNM
+     C           ACNO      ORNE EUEACN                                    191826
+     C                     MOVELACNO      EUEACN
+     C                     MOVE ACSQ      W#ACSQ  20
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                   153298
+      * Check if Euro a/c already exists on ACCNT or other map            153298
+     C           K#KEY     CHAINACCNTF               80                   153298
+     C           *IN80     IFEQ *OFF                                      153298
+     C           EUMULT    IFEQ 'Y'                                       153298
+     C           ACNO      DOWNEEUEACN                                    191826
+     C           *IN80     ANDEQ*OFF                                      191826
+     C                     ADD  1         EUESQN                          191826
+     C           K#KEY     CHAINACCNTF               80                   191826
+     C                     ENDDO                                          191826
+     C           K#KEY2    CHAINEUACMLL6             80                   191826
+     C           YYEACN    DOWNEEUEACN                                    191826
+     C           *IN80     ANDEQ*OFF                                      191826
+     C                     ADD  1         EUESQN                          191826
+     C           K#KEY2    CHAINEUACMLL6             80                   191826
+     C                     ENDDO                                          191826
+     C**********           MOVE ACNO      EUEACN                   153298 191826
+     C                     MOVE *ON       *IN80                           153298
+      *                                                                                       191928
+      ** assign account sequence sequencially when create one euro = 'N'                      191928
+      *                                                                                       191928
+     C                     ELSE                                                               191928
+     C           *IN80     DOWEQ'0'                                                           191928
+     C           EUESQN    ANDLE99                                                            191928
+     C                     ADD  1         EUESQN                                              191928
+     C           K#KEY     CHAINACCNTF               80                                       191928
+     C                     ENDDO                                                              191928
+      *                                                                   217435
+     C***********K#KEY2    CHAINEUACMLL6             80                   217435
+     C           K#KEY2    CHAINEUACMLL6             81                   217435
+     C           K#KEY     CHAINACCNTL0              82                   217435
+     C           *IN81     IFEQ *ON                                       217435
+     C           *IN82     ANDEQ*ON                                       217435
+     C                     MOVE *ON       *IN80                           217435
+     C                     ELSE                                           217435
+     C                     MOVE *OFF      *IN80                           217435
+     C                     ENDIF                                          217435
+      *                                                                   217435
+     C           *IN80     DOWEQ'0'                                                           191928
+     C           YYEACN    ANDNEEUEACN                                                        191928
+     C           EUESQN    ANDLE99                                                            191928
+     C                     ADD  1         EUESQN                                              191928
+     C***********K#KEY2    CHAINEUACMLL6             80                   217435
+     C           K#KEY2    CHAINEUACMLL6             81                   217435
+     C           K#KEY     CHAINACCNTL0              82                   217435
+     C           *IN81     IFEQ *ON                                       217435
+     C           *IN82     ANDEQ*ON                                       217435
+     C                     MOVE *ON       *IN80                           217435
+     C                     ELSE                                           217435
+     C                     MOVE *OFF      *IN80                           217435
+     C                     ENDIF                                          217435
+     C                     ENDDO                                                              191928
+      *                                                                                       191928
+     C                     ENDIF                                          153298
+     C                     ELSE                                           153298
+     C           K#KEY2    CHAINEUACMLL6             80                   153298
+     C           *IN80     IFEQ *OFF                                      153298
+     C           EUMULT    IFEQ 'Y'                                       153298
+     C           YYEACN    DOWNEEUEACN                                    191826
+     C           *IN80     ANDEQ*OFF                                      191826
+     C                     ADD  1         EUESQN                          191826
+     C           K#KEY2    CHAINEUACMLL6             80                   191826
+     C                     ENDDO                                          191826
+     C**********           MOVE YYEACN    EUEACN                   153298 191826
+     C                     MOVE *ON       *IN80                           153298
+      *                                                                                       191928
+     C                     ELSE                                                               191928
+     C           *IN80     DOWEQ'0'                                                           191928
+     C           YYEACN    ANDNEEUEACN                                                        191928
+     C           EUESQN    ANDLE99                                                            191928
+     C                     ADD  1         EUESQN                                              191928
+     C***********K#KEY2    CHAINEUACMLL6             80                                       191928
+     C           K#KEY2    CHAINEUACMLL6             81                                       191928
+     C           K#KEY     CHAINACCNTL0              82                   217435
+     C           *IN81     IFEQ *ON                                       217435
+     C           *IN82     ANDEQ*ON                                       217435
+     C                     MOVE *ON       *IN80                           217435
+     C                     ELSE                                           217435
+     C                     MOVE *OFF      *IN80                           217435
+     C                     ENDIF                                          217435
+     C                     ENDDO                                                              191928
+      *                                                                                       191928
+     C                     ENDIF                                          153298
+     C                     ENDIF                                          153298
+     C                     ENDIF                                          153298
+      *                                                                   153298
+     C           *IN80     IFEQ *OFF                                      153298
+     C                     MOVE '5'       P#PRM2                          153298
+     C                     GOTO ENDSR                                     153298
+     C                     ENDIF                                          153298
+      *
+     C                     ELSE
+      *
+     C********** EUMULT    IFEQ 'Y'                                       153298
+     C           EUMULT    IFEQ 'N'                                       153298
+      *
+     C           CNUM      IFEQ EUECNM
+     C                     MOVELACNO      W#EACN
+     C                     ADD  1         W#RNCD
+     C                     MOVELW#RNCD    EURNCD
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           ACSQ      IFNE W#ACSQ
+     C                     MOVELEURNCD    W#RNCD  50
+     C                     ADD  1         W#RNCD
+     C                     MOVELW#RNCD    EURNCD
+     C                     MOVE ACSQ      W#ACSQ
+     C                     MOVELACNO      W#EACN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     SETOF                     80                   139062
+     C                     MOVELW##RCD    EURNCD                          139062
+      *                                                                   153298
+      * Only generate & check new RE a/c no. if one-to-one map or 1st     153298
+      * a/c for many-to-one map.                                          153298
+     C                     MOVE W#EACN    @WK10  100                      153298
+     C           EUMULT    IFEQ 'N'                                       153298
+     C           EUMULT    OREQ 'Y'                                       153298
+     C           ACNO      ANDEQ@WK10                                     153298
+      *                                                                   139062
+     C************IN80     DOWEQ*OFF                               139062*150198
+     C                     MOVEAW#EACN    ACN,1
+     C                     MOVE EURNCD    DIG
+     C                     MOVE EURNPO    X       20
+      *
+     C           EURNND    IFEQ 1
+     C                     MOVEADIG1      ACN,X
+     C                     ENDIF
+      *
+     C           EURNND    IFEQ 2
+     C                     MOVEADIG2      ACN,X
+     C                     ENDIF
+      *
+     C           EURNND    IFEQ 3
+     C                     MOVEADIG3      ACN,X
+     C                     ENDIF
+      *
+     C           EURNND    IFEQ 4
+     C                     MOVEADIG4      ACN,X
+     C                     ENDIF
+      *
+     C           EURNND    IFEQ 5
+     C                     MOVEADIG       ACN,X
+     C                     ENDIF
+      *
+     C                     MOVEAACN       W#EACN 10
+     C                     MOVE W#EACN    EUEACN
+      *
+      * Check if Euro a/c already exists; if it does and many-to-one      153298
+      * map, use existing RE a/c no. Otherwise, error.                    153298
+     C           K#KEY     CHAINACCNTF               80                   150198
+      *                                                                   150198
+     C           *IN80     IFEQ *OFF                                      150198
+     C           EUMULT    IFEQ 'Y'                                       153298
+     C           ACNO      DOWNEEUEACN                                    191826
+     C           *IN80     ANDEQ*OFF                                      191826
+     C                     ADD  1         EUESQN                          191826
+     C           K#KEY     CHAINACCNTF               80                   191826
+     C                     ENDDO                                          191826
+     C           K#KEY2    CHAINEUACMLL6             80                   191826
+     C           YYEACN    DOWNEEUEACN                                    191826
+     C           *IN80     ANDEQ*OFF                                      191826
+     C                     ADD  1         EUESQN                          191826
+     C           K#KEY2    CHAINEUACMLL6             80                   191826
+     C                     ENDDO                                          191826
+     C**********           MOVE ACNO      EUEACN                   150198 191826
+     C                     MOVE *ON       *IN80                           153298
+      *                                                                                       191928
+      ** assign account sequence sequentially when Create one account='N'                     191928
+      *                                                                                       191928
+     C                     ELSE                                                               191928
+     C           EUEACN    CHAINEUACMLL1             80                                       191928
+     C           *IN80     IFEQ '1'                                                           191928
+     C           K#KEY     CHAINACCNTF               80                                       191928
+     C           *IN80     DOWEQ'0'                                                           191928
+     C           EUESQN    ANDLE99                                                            191928
+     C                     ADD  1         EUESQN                                              191928
+     C           K#KEY     CHAINACCNTF               80                                       191928
+     C                     ENDDO                                                              191928
+     C           K#KEY2    CHAINEUACMLL6             80                                       191928
+     C           *IN80     DOWEQ'0'                                                           191928
+     C           YYEACN    ANDNEEUEACN                                                        191928
+     C           EUESQN    ANDLE99                                                            191928
+     C                     ADD  1         EUESQN                                              191928
+     C           K#KEY2    CHAINEUACMLL6             80                                       191928
+     C                     ENDDO                                                              191928
+     C                     ENDIF                                                              191928
+      *                                                                                       191928
+     C                     ENDIF                                          153298
+     C**********           END                                     150198 153298
+      *                                                                   153298
+     C                     ELSE                                           153298
+      *                                                                   153298
+      * Check if Euro a/c already exists on another map                   153298
+     C           K#KEY2    CHAINEUACMLL6             80                   153298
+     C           *IN80     IFEQ *OFF                                      153298
+     C           EUMULT    ANDEQ'Y'                                                           191928
+     C********** EUMULT    IFEQ 'Y'                                                    153298 191928
+     C           YYEACN    DOWNEEUEACN                                    191826
+     C           *IN80     ANDEQ*OFF                                      191826
+     C                     ADD  1         EUESQN                          191826
+     C           K#KEY2    CHAINEUACMLL6             80                   191826
+     C                     ENDDO                                          191826
+     C**********           MOVE YYEACN    EUEACN                   153298 191826
+     C                     MOVE *ON       *IN80                           153298
+     C**********           END                                                         153298 191928
+     C                     ELSE                                           153298
+     C           EUMULT    IFEQ 'N'                                                           191928
+     C           *IN80     ANDEQ'0'                                                           191928
+     C           *IN80     DOWEQ'0'                                                           191928
+     C           YYEACN    ANDNEEUEACN                                                        191928
+     C           EUESQN    ANDLE99                                                            191928
+     C                     ADD  1         EUESQN                                              191928
+     C           K#KEY2    CHAINEUACMLL6             80                                       191928
+     C                     ENDDO                                                              191928
+     C                     ENDIF                                                              191928
+      *                                                                   153298
+      * Check that RE a/c no. doesn't already exist for another a/c       153298
+     C           EUEACN    CHAINACNUMF               80                   153298
+      *                                                                   153298
+     C           *IN80     IFEQ *ON                                       153298
+      *                                                                   150198
+     C/COPY WNCPYSRC,EU0110C005
+     C           EUEACN    CHAINEUACMLL1             80                   150198
+      *                                                                   153298
+      * If RE a/c no. already exists for another map check that the       153298
+      * GL a/c key is the same.                                           153298
+     C           *IN80     IFEQ *OFF                                      153298
+     C           EUMULT    ANDEQ'Y'                                       153298
+     C           CNUM      ANDEQXXECNM                                    153298
+     C           EUECCY    ANDEQXXECCY                                    153298
+     C           EUEACD    ANDEQXXEACD                                    153298
+     C           EUESQN    ANDEQXXESQN                                    153298
+     C           EUEBRC    ANDEQXXEBRC                                    153298
+     C                     MOVE *ON       *IN80                           153298
+     C                     ENDIF                                          153298
+      *                                                                   153298
+     C                     ENDIF                                          153298
+     C                     ENDIF                                          153298
+     C                     ENDIF                                          153298
+      *                                                                   153298
+     C           *IN80     IFEQ *OFF                                      150198
+     C                     MOVE '5'       P#PRM2                          150198
+     C                     ADD  1         W#RNCD                          150198
+     C                     MOVELW#RNCD    EURNCD                          150198
+     C                     MOVE EUICNM    CNUM                            150198
+     C                     GOTO ENDSR                                     150198
+     C                     ELSE                                           150198
+     C                     MOVELW##RCD    W#RNCD                          150198
+     C                     END                                            150198
+      *                                                                   153298
+     C                     ENDIF                                          153298
+     C*                                                                   150198
+     C                     ENDIF                                          150198
+     C*                                                                   150198
+     C                     MOVE '2'       P#PRM2                          150198
+     C                     ADD  1         COUNT   30                      150198
+     C                     MOVE CNUM      EUECNM                          150198
+     C                     WRITEACMLL2                                    150198
+     C**                                                                  150198
+     C***********EUEACN    CHAINACNUMF               80                   150198
+      ***********                                                  139366*150198
+     C************IN80     IFEQ *ON                                139366*150198
+     C***********EUEACN    CHAINEUACMLL1             80            139366*150198
+     C***********          END                                     139366*150198
+     C************IN80     IFEQ *OFF                                      150198
+     C************         MOVE '5'       P#PRM2                          150198
+     C************         ADD  1         W#RNCD                   139062*150198
+     C************         MOVELW#RNCD    EURNCD                   139062*150198
+     C************         MOVE EUICNM    CNUM                     139062*150198
+     C************         ENDIF                                          150198
+      **                                                                  150198
+     C************         ENDDO                                   139062*150198
+     C************         MOVELW##RCD    W#RNCD                   139062*150198
+      **                                                           139062*150198
+     C************         ENDIF                                          150198
+      **                                                                  150198
+     C************         MOVE CNUM      EUECNM                          150198
+     C************         WRITEACMLL2                                    150198
+      **                                                                  150198
+     C***********          MOVE '2'       P#PRM2                          150198
+     C***********          ADD  1         COUNT   30                      150198
+      **                                                                  150198
+     C/COPY WNCPYSRC,EU0110C002
+     C***********          ENDSR                                          150198
+      *                                                                   150198
+     C           ENDSR     ENDSR                                          150198
+      *                                                                   150198
+      *================================================================-
+      *SUBROUTINE-EXITPR
+      *================================================================-
+     C           EXITPR    BEGSR
+     C/COPY WNCPYSRC,EU0110C003
+     C                     SETON                     LR
+     C                     ENDSR
+      *
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       @RUN    1
+      *                                                                   158089
+     C           STAT1     IFEQ 01021                                     158089
+     C                     MOVE '6'       P#PRM2                          158089
+     C                     ROLBK                                          158089
+     C                     MOVE *ON       *INLR                           158089
+     C                     RETRN                                          158089
+      *                                                                   158089
+     C                     ELSE                                           158089
+     C                     MOVE '3'       P#PRM2
+      *
+     C                     DUMP
+      *
+     C                     ROLBK
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDIF                                          158089
+      *                                                                   158089
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

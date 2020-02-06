@@ -1,0 +1,457 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Penalty Termination Report')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS¦DBA - Dealing Money Market Module                      *
+      *                                                               *
+      *  MM5291 - Penalty Termination Reporting                       *
+      *                                                               *
+      *  Function:  This program reports the Penalty Termination for  *
+      *             TD deals entered in the system.                   *
+      *                                                               *
+      *  Called By: MMC5291 - MM Penalty Termination Reports          *
+      *                                                               *
+      *  (C) Copyright Finastra International Limited 2008            *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG26488           Date 19Oct09               *
+      *                 258692             Date 02Feb09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256795   *Create   Date 25Sep08               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG26488 - MMPTRMPD compiled with error - attributes are     *
+      *             incompatible (Recompile)                          *
+      *  258692 - Incorrect type of PTCNUM field in MMPTRMPD          *
+      *           (Recompile).                                        *
+      *  256795 - Penalty Termination of Time Deposits (CDL052).      *
+      *                                                               *
+      *****************************************************************
+      *
+     FMMPTRMPDIF  E           K        DISK         KINFSR *PSSR
+     FMM5291P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      *
+      *-------------------------------------------------------------------
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   30 - Print ALL Records
+      *   31 - Print only records inserted today
+      *
+      *   40 - Multi-Branching
+      *
+      *   90 - General Purpose Indicator
+      *   98 - Date Format Indicator
+      *
+      *-------------------------------------------------------------------
+      *
+     E                    CPY@    1   1 80               MKI Copyright array
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZEDITZ1
+      *-------------------------------------------------------------------
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+      ** Data Structure to pass parameters to Access programs
+     IAOFMTS    E DSDSFDY
+      *
+      ** Data Structure to receive SDBANKPD details
+     IAOBANK    E DSSDBANKPD
+      *
+      ** Data Structure to receive SDBRCHPD details
+     IAOBRCH    E DSSDBRCHPD
+      *
+      ** Data Structure to receive SDCURRPD details
+     IAOCURR    E DSSDCURRPD
+      *
+     ILDA       EUDSLDA                         256
+      *
+      ** Data Structure for RUNDAT
+     IRUNDAT    E DSRUNDAT
+      *
+      *-------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@SEQ            Sequence number
+     C                     PARM           P@LVL            Level
+     C                     PARM           P@ENTY           Entity
+     C                     PARM           P@TYPE           Run Type
+      *
+     C                     EXSR SRINIT
+     C  N90                EXSR SRREPT
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRREPT - Report Processing Subroutine                           *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRREPT    BEGSR
+      *
+     C                     READ MMPTRMPD                 90
+      *
+     C           *IN90     DOWEQ'0'
+      *
+     C           *IN31     IFEQ '1'                        B1
+     C           PTMDAT    ANDEQW#RUND
+     C           *IN30     OREQ '1'
+      *
+     C           P@ENTY    IFEQ 'ALL'
+     C           P@ENTY    OREQ PTBRCA
+     C                     EXSR SRPROC
+     C                     END
+      *
+     C                     END                             E1
+      *
+     C                     READ MMPTRMPD                 90
+     C                     END
+      *
+     C           W#RCTR    IFNE 0
+     C                     EXSR SRTRLR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRPROC - Process Report Details                                 *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     MOVE '0'       *IN50
+      *
+      ** Output Trailer and Header on change of branch if branch level
+      ** report
+     C           PTBRCA    IFNE P1BRCA                     B1
+      *
+     C           W#RCTR    IFNE 0                          B2
+     C                     EXSR SRTRLR
+     C                     CLOSEMM5291P1
+     C                     END                             E2
+      *
+     C                     OPEN MM5291P1
+     C                     EXSR SRRCFP
+      *
+      ** If Multi-Branching, access SDBRCHPD to obtain branch details
+     C           AGMBIN    IFEQ 'Y'                        B2
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           PTBRCA
+     C           AOBRCH    PARM           AOFMTS
+      *
+     C           P@RTCD    IFNE *BLANKS                    B3
+     C                     MOVEL'AOBRCH'  @BFILE           ***************
+     C                     MOVEL'002'     @BASE            * DB ERROR 02 *
+     C                     MOVELPTBRCA    @BKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             E3
+     C                     END                             E2
+      *
+      ** Format File Details for Report
+     C                     MOVE PTBRCA    P1BRCA
+     C                     MOVE A8BRNM    P1BRNM
+      *
+     C                     EXSR SRHDR
+     C                     END
+      *
+      ** Deal Number
+     C                     MOVE PTDLNO    P1DLNO
+      *
+      ** Deal Type / Subtype
+     C                     MOVE 'TD'      P1DTYP
+     C                     MOVE PTSTYP    P1STYP
+      *
+      ** Book Code
+     C                     MOVE PTBOOK    P1BOOK
+      *
+      ** Value Date
+     C                     MOVE PTVDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     P1VDAT
+      *
+      ** Maturity Date
+     C                     MOVE PTMDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     P1MDAT
+      *
+      ** Currency
+     C                     MOVE PTCCY     P1CCY
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           PTCCY
+     C           AOCURR    PARM           AOFMTS
+      *
+     C           P@RTCD    IFNE *BLANKS                    B2
+     C                     MOVEL'AOCURR'  @BFILE           ***************
+     C                     MOVEL'003'     @BASE            * DB ERROR 03 *
+     C                     MOVELPTCCY     @BKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             E2
+      *
+      ** Principal Amount
+     C                     MOVE PTPCPL    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P1PCPL
+      *
+      ** Base Rate
+     C                     MOVE PTBRTT    P1BRTT
+      *
+      ** Spread / Rate
+     C                     MOVE PTDLRT    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P1DLRT
+      *
+      ** Interest
+     C                     MOVE PTPINT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P1PINT
+      *
+      ** Insert / Amend User
+     C                     MOVE PTUSRI    P1USRI
+      *
+      ** Previous Maturity Date
+     C                     MOVE PTPMDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     P1PMDT
+      *
+      ** Penalty Rate
+     C           PTPENR    IFNE PTDEFR
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+     C                     MOVE PTPENR    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P1PENR
+      *
+      ** Interest
+     C                     MOVE PTINTA    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P1INTA
+      *
+      ** Insert / Amend User
+     C                     MOVE PTUSRX    P1USRX
+      *
+      ** Adjustment
+     C                     MOVE PTADJA    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    P1ADJA
+      *
+      ** Output detail line
+     C                     ADD  1         W#RCTR
+     C                     EXSR SRDETL
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRDETL - Output P1 Details                                      *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      ** Check for line overflow
+     C           OFLLN1    SUB  PRTLN1    W#DIFF
+     C           W#DIFF    IFLE 4
+     C                     EXSR SRHDR
+     C                     END
+      *
+      ** Write detail line
+     C                     WRITEMM5291D1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRHDR - Output P1 Header details                                *
+      *                                                                 *
+      ******************************************************************
+      *
+     C           SRHDR     BEGSR
+      *
+     C                     WRITEMM5291H1
+     C                     WRITEMM5291S1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRTRLR - Output P1 Trailer Details                              *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRTRLR    BEGSR
+      *
+      ** Check for line overflow
+     C           OFLLN1    SUB  PRTLN1    W#DIFF
+     C           W#DIFF    IFLE 4
+     C**********           MOVE '1'       *IN05
+     C**********           WRITEMMM091T1
+     C**********           MOVE '0'       *IN05
+     C                     WRITEMM5291H1
+     C                     END
+      *
+      ** Output Trailer
+     C                     WRITEMM5291T1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRRCFP - P1 Report Control Facility processing                  *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRRCFP    BEGSR
+      *
+      ** Ensure P1 Spool File recorded by RCF.
+     C                     Z-ADDSFNUM1    ZSNUM
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM P@SEQ     SEQ
+     C                     PARM PTBRCA    SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVEL'ZSFILE'  @BFILE           ***************
+     C                     MOVEL'005'     @BASE            * DB ERROR 05 *
+     C                     EXSR *PSSR                      ***************
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRINIT - Initial Program Subroutine                             *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Define program work fields
+     C           *LIKE     DEFN DBFILE    @BFILE
+     C           *LIKE     DEFN DBASE     @BASE
+     C           *LIKE     DEFN DBKEY     @BKEY
+     C           *LIKE     DEFN BJRDNB    W#RUND
+      *
+     C                     MOVE *BLANKS   P@RTCD  7
+     C                     MOVE *BLANKS   P@OPTN  7
+     C                     MOVE *BLANKS   SEQ     5
+     C                     MOVE *BLANKS   SENTY   3
+     C                     MOVE *BLANKS   ZSERR   1
+      *
+     C                     Z-ADD0         ZSNUM   60
+     C                     Z-ADD0         W#RCTR  50
+     C                     Z-ADD0         W#DIFF  30
+      *
+     C                     MOVE P@SEQ     P@SEQ   5
+     C                     MOVE P@LVL     P@LVL   1
+     C                     MOVE P@ENTY    P@ENTY  3
+     C                     MOVE P@TYPE    P@TYPE  1
+      *
+      ** Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Get Rundat to obtain Multi-branching indicator
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Set indicator if Multi-branching
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN40
+     C                     END
+      *
+      ** Access SDBANKPD to obtain Report Title and Run Date
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C           AOBANK    PARM *BLANKS   AOFMTS
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'@BFILE           ***************
+     C                     Z-ADD001       @BASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     END
+      *
+     C                     MOVE BJURPT    H1URPT
+     C                     MOVE BJMRDT    H1MRDT
+     C                     Z-ADDBJRDNB    W#RUND
+     C                     MOVE 'AUDIT'   H1MODE
+      *
+      ** SET DATE INDICATOR
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ** SET TYPE OF REPORT
+     C           P@TYPE    COMP '1'                      30
+     C           P@TYPE    COMP '2'                      31
+      *
+      ** CHECK IF ANY RECORDS ON FILE
+     C           *LOVAL    SETLLMMPTRMPD             90
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - PROGRAM EXCEPTION ERROR ROUTINE                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MM5291'  DBPGM
+     C                     MOVEL@BFILE    DBFILE
+     C                     MOVEL@BASE     DBASE
+     C                     MOVEL@BKEY     DBKEY
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZEDITZ2
+      *********************************************************************
+** CPY@     : COPYRIGHT NOTICE FOR INCLUSION IN ALL FINASTRA PROGRAMS
+(C) COPYRIGHT Finastra International Limited 2008
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

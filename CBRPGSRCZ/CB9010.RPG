@@ -1,0 +1,485 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Loop checker')                                *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing
+     F*                                                               *
+     F*  CB9010 - CB LOOP CHECKER                                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01417             Date 07Jul93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *   CCB020 - COB Restructure - Secondary COB Infrastructure     *
+     F*   S01417 - New report for checking for loops                  *   S01417
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*
+     FCBDPNL0 UF  E           K        DISK
+     FCB9010P1O   E                    PRINTER
+     F                                              KINFDS PRINT
+     E***
+     E                    CHN       999 15
+     E                    CHU       999  3
+     I***
+     I*
+     I** Data structure to concatenate Depended On Component/Sequence.
+     I*
+     IDDONDS      DS
+     I                                        1  10 DIDDON
+     I                                       11  15 DIDDOS
+     I*
+     I** Data structure to concatenate Depends On Component/Sequence.
+     I*
+     IDSONDS      DS
+     I                                        1  10 DIDSON
+     I                                       11  15 DIDSOS
+     I*
+     I**     Local Data Area
+     I*
+     IPRINT       DS
+     I                                    B 367 3680LINE
+     C***
+     C/EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           LOOPER  1
+     C*
+     C** KEY Lists
+     C*
+     C           DEPKY1    KLIST
+     C                     KFLD           DIDDON
+     C                     KFLD           DIDDOS
+     C*
+     C           DEPKY2    KLIST
+     C                     KFLD           DIDDON
+     C                     KFLD           DIDDOS
+     C                     KFLD           DIDSON
+     C                     KFLD           DIDSOS
+     C                     KFLD           DIDRUN
+     C*
+     C** INITIAL processing
+     C*
+     C**         ... initialize variables and print headings...
+     C*
+     C                     EXSR INVAR
+     C*
+     C**         ... set up beginning of first chain.
+     C*
+     C                     EXSR INCHN
+     C*
+     C** MAIN processing. Perform loop until all dependency chains have
+     C**                  been processed.
+     C*
+     C                     MOVE 'N'       ENDMN   1
+     C           ENDMN     DOWEQ'N'
+     C*
+     C**         ... build dependency chain ...
+     C*
+     C                     EXSR MNBLD
+     C*
+     C**         ... check end of chain for redundant dependencies ...
+     C*
+     C                     EXSR MNECK
+     C*
+     C**         ... flag last component as processed.
+     C*
+     C                     EXSR MNBCK
+     C*
+     C                     ENDDO
+     C*
+     C** TERMINATION processing. Read all whole file to ensure that all
+     C**                         records have been processed. Report
+     C**                         exceptions.
+     C*
+     C                     EXSR TERM
+     C*
+     C*
+      /EJECT
+     C*---------------------------------------------------------------*
+     C*
+     C           MNBLD     BEGSR
+     C*
+     C** Build dependency chain. Before adding a component into the
+     C** chain, check that it does not already exist in the chain as
+     C** this is what causes a loop. Continue to build the chain until
+     C** component COBEND is reached OR a component is reached for
+     C** which all dependencies have already been processed (via
+     C** another dependency chain). If any component except COBEND has
+     C** no dependencies, then the dependency chain is broken.
+     C*
+     C                     MOVE 'N'       ENDSUB  1
+     C                     MOVEL'SCOBFINI'SCOBFI 10                                           CCB020
+     C                     MOVE 'SH'      SCOBFI                                              CCB020
+     C*
+     C           ENDSUB    DOWEQ'N'
+     C*
+     C                     MOVE CHN,A     DDONDS
+     C*
+     C** Read first dependency for last component in dependency chain.
+     C*
+     C           DEPKY1    SETLLCBDPNL0
+     C           DEPKY1    READECBDPNL0                  52
+     C*
+     C** Output 'broken chain' message to printer file if no record
+     C** read.
+     C*
+     C           *IN52     IFEQ '1'
+     C                     EXSR HEAD
+     C                     WRITEDETL02
+     C                     WRITERPTEND
+     C                     MOVE 'Y'       LOOPER
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     MOVE 'Y'       ENDSUB
+     C                     ENDIF
+     C*
+     C** Read dependency records for this component until record read
+     C** which has not been processed.
+     C*
+     C           PROCSD    DOWEQ'Y'
+     C           *IN52     ANDEQ'0'
+     C           DEPKY1    READECBDPNL0                  52
+     C                     ENDDO
+     C*
+     C** If non-processed record found, check that the depends-on
+     C** component is not already in the dependency chain. If it is,
+     C** execute subroutine LOOP to print the loop and then terminate
+     C** the program.
+     C*
+     C           *IN52     IFEQ '0'
+     C*
+     C           DSONDS    IFNE *BLANKS
+     C           DSONDS    LOKUPCHN                      53
+     C           *IN53     IFEQ '1'
+     C                     EXSR LOOP
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Add Depends-on component to the dependency chain.
+     C*
+     C                     ADD  1         A
+     C                     MOVE DSONDS    CHN,A
+     C                     MOVE DIDRUN    CHU,A
+     C*
+     C** If COBEND component has been reached, end the subroutine.
+     C*
+     C********** DIDSON    IFEQ 'COBEND'                                                      CCB020
+     C           DIDSON    IFEQ SCOBFI                                                        CCB020
+     C                     MOVE 'Y'       ENDSUB
+     C                     ENDIF
+     C*
+     C                     ELSE
+     C                     MOVE 'Y'       ENDSUB
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C*
+     C*---------------------------------------------------------------*
+      /EJECT
+     C*---------------------------------------------------------------*
+     C*
+     C           MNECK     BEGSR
+     C*
+     C** When a dependency chain ends with COBEND, check that the
+     C** previous component in the chain is not depended on by any
+     C** other component.
+     C*
+     C                     MOVE CHN,A     DDONDS
+     C*
+     C********** DIDDON    IFEQ 'COBEND'                                                      CCB020
+     C           DIDDON    IFEQ SCOBFI                                                        CCB020
+     C*
+     C           A         SUB  1         B       30
+     C                     MOVE CHN,B     DDONDS
+     C*
+     C           DEPKY1    SETLLCBDPNL0
+     C           DEPKY1    READECBDPNL0                  54
+     C*
+     C** If record not found, output 'database error' message to
+     C** printer file and terminate program.
+     C*
+     C           *IN54     IFEQ '1'
+     C                     EXSR HEAD
+     C                     WRITEDETL05
+     C                     EXSR HEAD
+     C                     WRITERPTEND
+     C                     MOVE 'Y'       LOOPER
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ELSE
+     C*
+     C** If record other than dependency to 'COBEND' found, output
+     C** 'redundant dependency' message to printer file and terminate
+     C** program.
+     C*
+     C********** DIDSON    IFEQ 'COBEND'                                                      CCB020
+     C           DIDSON    IFEQ SCOBFI                                                        CCB020
+     C           DEPKY1    READECBDPNL0                  54
+     C           *IN54     IFEQ '0'
+     C                     EXSR HEAD
+     C                     WRITEDETL06
+     C                     ENDIF
+     C                     ELSE
+     C                     EXSR HEAD
+     C                     WRITEDETL06
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*
+     C*---------------------------------------------------------------*
+      /EJECT
+     C*---------------------------------------------------------------*
+     C*
+     C           MNBCK     BEGSR
+     C*
+     C** Check whether the last component in the dependency chain is
+     C** COBBEGIN. If it is, set on the flag to end the main processing
+     C** loop. If not...
+     C**
+     C** Flag the last component in the dependency chain as having been
+     C** processed and remove it from the chain.
+     C*
+     C                     MOVE CHN,A     DDONDS
+     C*
+     C           DIDDON    IFEQ 'COBBEGIN'
+     C*
+     C                     MOVE 'Y'       ENDMN
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE CHN,A     DSONDS
+     C                     MOVE CHU,A     DIDRUN
+     C                     MOVE *BLANKS   CHN,A
+     C                     MOVE *BLANKS   CHU,A
+     C                     SUB  1         A
+     C                     MOVE CHN,A     DDONDS
+     C           DEPKY2    CHAINCBDPNL0              55
+     C*
+     C** If record not found, output 'database error' message to
+     C** printer file and terminate program.
+     C*
+     C           *IN55     IFEQ '1'
+     C                     EXSR HEAD
+     C                     WRITEDETL07
+     C                     EXSR HEAD
+     C                     WRITERPTEND
+     C                     MOVE 'Y'       LOOPER
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ELSE
+     C*
+     C** Set on processed flag and update record.
+     C*
+     C                     MOVE 'Y'       PROCSD
+     C                     UPDATCBDPRLD0
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*
+     C*---------------------------------------------------------------*
+      /EJECT
+     C*---------------------------------------------------------------*
+     C*
+     C           INVAR     BEGSR
+     C*
+     C                     Z-ADD1         A       30
+     C*
+     C                     WRITEHEADER
+     C*
+     C                     ENDSR
+     C*
+     C*---------------------------------------------------------------*
+     C*
+     C           INCHN     BEGSR
+     C*
+     C                     MOVE *BLANKS   DIDDON
+     C                     MOVEL'COBBEGIN'DIDDON
+     C*
+     C** Read the first dependency record for component COBBEGIN.
+     C*
+     C           DIDDON    SETLLCBDPNL0
+     C*
+     C           DIDDON    READECBDPNL0                  51
+     C*
+     C** If no record found, output message 'No components depend on
+     C** COBBEGIN' to printer file and terminate program.
+     C*
+     C           *IN51     IFEQ '1'
+     C                     EXSR HEAD
+     C                     WRITEDETL01
+     C                     EXSR HEAD
+     C                     WRITERPTEND
+     C                     MOVE 'Y'       LOOPER
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C** Set up the first two components in the dependency chain.
+     C*
+     C                     MOVE DDONDS    CHN,A
+     C                     ADD  1         A
+     C                     MOVE DSONDS    CHN,A
+     C                     MOVE DIDRUN    CHU,A
+     C*
+     C                     ENDSR
+      /EJECT
+     C*---------------------------------------------------------------*
+     C*
+     C           LOOP      BEGSR
+     C*
+     C** Ensure Report Line: 'NO DEPENDENCY LOOPS FOUND' is not printed
+     C*
+     C                     SETON                     06
+     C*
+     C** This subroutine adds onto the dependency chain the dependency
+     C** which causes the loop condition. It then prints the entire
+     C** chain and terminates the program.
+     C*
+     C                     ADD  1         A
+     C                     MOVE DSONDS    CHN,A
+     C                     MOVE DIDRUN    CHU,A
+     C*
+     C                     EXSR HEAD
+     C*
+     C                     WRITEDETL03
+     C*
+     C                     Z-ADD0         A
+     C                     MOVEA'00000'   *IN,01
+     C*
+     C           *IN07     DOWEQ'0'
+     C*
+     C                     ADD  1         A
+     C                     MOVE A         NUMA    30
+     C                     MOVE CHN,A     COMPA  15
+     C           DSONDS    IFEQ COMPA
+     C                     SETON                     01
+     C                     ENDIF
+     C*
+     C                     ADD  1         A
+     C                     MOVE A         NUMB    30
+     C                     MOVE CHN,A     COMPB  15
+     C           DSONDS    IFEQ COMPB
+     C                     SETON                     02
+     C                     ENDIF
+     C*
+     C                     ADD  1         A
+     C                     MOVE A         NUMC    30
+     C                     MOVE CHN,A     COMPC  15
+     C           DSONDS    IFEQ COMPC
+     C                     SETON                     03
+     C                     ENDIF
+     C*
+     C                     ADD  1         A
+     C                     MOVE A         NUMD    30
+     C                     MOVE CHN,A     COMPD  15
+     C           DSONDS    IFEQ COMPD
+     C                     SETON                     04
+     C                     ENDIF
+     C*
+     C                     ADD  1         A
+     C                     MOVE A         NUME    30
+     C                     MOVE CHN,A     COMPE  15
+     C           DSONDS    IFEQ COMPE
+     C                     SETON                     05
+     C                     ENDIF
+     C*
+     C           COMPA     IFEQ *BLANKS
+     C           COMPB     ANDEQ*BLANKS
+     C           COMPC     ANDEQ*BLANKS
+     C           COMPD     ANDEQ*BLANKS
+     C           COMPE     ANDEQ*BLANKS
+     C                     SETON                     07
+     C                     ENDIF
+     C*
+     C           *IN07     IFEQ '0'
+     C                     EXSR HEAD
+     C                     WRITEDETL04
+     C                     MOVEA'00000'   *IN,01
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C                     EXSR HEAD
+     C                     WRITERPTEND
+     C                     MOVE 'L'       LOOPER
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*---------------------------------------------------------------*
+      /EJECT
+     C*---------------------------------------------------------------*
+     C*
+     C           TERM      BEGSR
+     C*
+     C                     MOVE *BLANKS   DIDDON
+     C*
+     C** Read whole file and report records with PROCSD flag = 'N'.
+     C*
+     C           DIDDON    SETLLCBDPNL0
+     C*
+     C                     READ CBDPNL0                  56
+     C*
+     C           *IN56     DOWEQ'0'
+     C           PROCSD    IFEQ 'N'
+     C                     EXSR HEAD
+     C                     WRITEDETL08
+     C                     MOVE 'Y'       LOOPER
+     C                     ENDIF
+     C                     READ CBDPNL0                  56
+     C                     ENDDO
+     C*
+     C** Write Report Line 'NO DEPENDENCY LOOPS FOUND'
+     C*
+     C           *IN06     IFNE '1'
+     C                     EXSR HEAD
+     C                     WRITEDETL09
+     C                     ENDIF
+     C*
+     C                     EXSR HEAD
+     C                     WRITERPTEND
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*---------------------------------------------------------------*
+      /EJECT
+     C*---------------------------------------------------------------*
+     C*
+     C           HEAD      BEGSR
+     C*
+     C** Check to ensure that Printer file does not overflow.
+     C*
+     C           LINE      IFGE 56
+     C                     WRITEHEADER
+     C                     ENDIF
+     C*
+     C                     ENDSR

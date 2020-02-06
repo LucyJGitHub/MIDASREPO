@@ -1,0 +1,69 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas EM Update I/C Exposure for Nxt Days TF Trans')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Exposure Management Module                          */
+/*                                                                   */
+/*       EMC000001 - Midas EM Update Input Cycle Exposure Files for  */
+/*                   Next Day's Trade Finance Transactions           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CTI007  *CREATE    Date 31Mar14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CTI007 - Trade Finance BF Midas 2.2 Exposure Management     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('EMC000001 - Midas RE Update Input Cycle +
+                          Exposure Files for ext Days Trade Finance +
+                          Transactions') TOMSGQ(MRUNQ)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(QTEMP/LDA) VALUE(*BLANK)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             CALL       PGM(EM000001)
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             COMMIT
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             ROLLBACK
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSG('Program EMC000001 ended abnormally - see joblog') +
+                          TOMSGQ(MOPERQ)
+ 
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             ENDPGM

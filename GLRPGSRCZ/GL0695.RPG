@@ -1,0 +1,259 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Base Rate History File Purge')                *
+     F********************************************************************
+     F*  Midas - General Ledger Module
+     F*                                                                  *
+     F*    GL0695 - BASE RATE HISTORY FILE PURGE                         *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1066137          Date 10Dec12               *
+      *                 CGL127AE           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 185971             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01267             Date 18Sep90               *
+     F********************************************************************
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1066137 - GL0695 issued update or delete in SDBSHSL0 without  *
+      *              prior READ or CHAIN                                 *
+      *  CGL127AE - COB Restructure - GL COB Optimisation Phase 1     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*     185971 -  Rates purged too early - workfield is being        *
+     F*               truncated because it is too small.                 *
+     F*     S01267 -  CREATED FOR MIS RELEASE 2.2 CHANGES.               *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDBSHSPAUF  E                    DISK
+     F*SDBSHSL0UF  E                    DISK                                                CGL127AE
+     FSDBSHSL0UF  E           K        DISK                                                 CGL127AE
+     FGL0695AUO   E                    DISK
+     F/COPY WNCPYSRC,GL0695F001
+     F*****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*****************************************************************
+     F*       01      PF/SDBSHSPA NOT SET UP
+     F*       02      END OF FILE - LF/SDBSHSL0
+     F*       U7&U8   DATABASE IN ERROR
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,GLH00618
+     I**
+     ISDBANK    E DSSDBANKPD
+     I** BANK DETAILS
+     I*
+     ISDGELR    E DSSDGELRPD
+     I*
+     I** GENERAL LEDGER DETAILS
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I/COPY WNCPYSRC,GL0695I001
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I**
+     I**  LOCAL DATA AREA TO IDENTIFY DATABASE ERRORS
+     I*
+     C**   Define Local Data Area
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** ACCESS BANK DETAILS
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'GL0695'  DBPGM            ** DBERR 001 **
+     C                     Z-ADD001       DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C** ACCESS GENERAL LEDGER DETAILS
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBPGM
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL'GL0695'  DBPGM            ** DBERR 002 **
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR DBERR
+     C                     END
+     C/COPY WNCPYSRC,GL0695C001
+     C*
+     C** SET NUMBER OF RECORDS DELETED TO ZERO
+     C*
+     C                     Z-ADD0         NRDL   150
+     C*
+     C** MULTIPLY BASE RATE RETENTION MONTHS BY 31 (= RETENTION DAYS)
+     C*
+     C***********BKBRRP    MULT 31        RTDY    30                      185971
+     C           BKBRRP    MULT 31        RTDY    50                      185971
+     C*
+     C** SUBTRACT RETENTION DAYS FROM RUN DAY NUMBER (= TARGET DATE)
+     C*
+     C********** BJRDNB    SUB  RTDY      TGDT    60                                        CGL127AE
+     C           BJRDNB    SUB  RTDY      TGDT    50                                        CGL127AE
+     C/COPY WNCPYSRC,GLH00619
+     C**********                                                                            CGL127AE
+     C***LOOP*TO READ & PROCESS RECORDS ON LF/SDBSHSL0                                      CGL127AE
+     C**********                                                                            CGL127AE
+     C**********           SETOF                         02                                 CGL127AE
+     C**********           READ SDBSHSL0                 02                                 CGL127AE
+     C**********                                                                            CGL127AE
+     C***WHILE*NOT END OF FILE AND HISTORY DATE IS LESS THAN OR EQUAL                       CGL127AE
+     C***TO*TARGET DATE                                                                     CGL127AE
+     C**********                                                                            CGL127AE
+     C********** *IN02     DOWEQ'0'                                                         CGL127AE
+     C********** G0HIDT    IFLE TGDT                                                        CGL127AE
+     C**********                                                                            CGL127AE
+     C***DELETE*THE RECORD FROM SDBSHSPD                                                    CGL127AE
+     C**********                                                                            CGL127AE
+     C**********           DELETSDBSHSL0                                                    CGL127AE
+     C**********                                                                            CGL127AE
+     C***ADD*1*TO NUMBER OF RECORDS DELETED                                                 CGL127AE
+     C**********                                                                            CGL127AE
+     C**********           ADD  1         NRDL                                              CGL127AE
+     C/COPY WNCPYSRC,GL0695C002
+     C**********           END                                                              CGL127AE
+     C**********                                                                            CGL127AE
+     C***READ*NEXT RECORD FROM SDBSHSPD                                                     CGL127AE
+     C**********                                                                            CGL127AE
+     C**********           READ SDBSHSL0                 02                                 CGL127AE
+     C**********                                                                            CGL127AE
+     C**********           END                                                              CGL127AE
+     C*                                                                                     CGL127AE
+     C** LOOP TO READ & PROCESS RECORDS ON LF/SDBSHSL0                                      CGL127AE
+     C*                                                                                     CGL127AE
+     C                     SETOF                         02                                 CGL127AE
+     C           TGDT      SETGTSDBSHSL0                                                    CGL127AE
+     C                     READPSDBSHSL0                 02                                 CGL127AE
+     C*                                                                                     CGL127AE
+     C** WHILE NOT END OF FILE DELETE THE RECORD FROM SDBSHSPD                              CGL127AE
+     C*                                                                                     CGL127AE
+     C           *IN02     DOWEQ'0'                                                         CGL127AE
+     C*                                                                                     CGL127AE
+     C                     DELETSDBSHSL0                                                    CGL127AE
+     C*                                                                                     CGL127AE
+     C** ADD 1 TO THE NUMBER OF RECORDS DELETED                                             CGL127AE
+     C*                                                                                     CGL127AE
+     C                     ADD  1         NRDL                                              CGL127AE
+     C**********           END                                                    CGL127AE AR1066137
+     C*                                                                                     CGL127AE
+     C** READ PREVIOUS RECORD FROM SDBHSPD                                                  CGL127AE
+     C*                                                                                     CGL127AE
+     C                     READPSDBSHSL0                 02                                 CGL127AE
+      *                                                                                    AR1066137
+     C                     ENDDO                                                           AR1066137
+     C*                                                                                     CGL127AE
+     C/COPY WNCPYSRC,GLH00620
+     C*
+     C** AFTER END OF PROCESSING FOR SDBSHSPD,
+     C** IF NUMBER OF RECORDS DELETED IS GREATER THAN ZERO
+     C*
+     C           NRDL      IFNE *ZERO
+     C*
+     C** READ PF/SDBSHSPA (HISTORIC TRAILER FILE) - DBERR IF NO REC
+     C*
+     C                     READ SDBSHSPA                 01
+     C*
+     C           *IN01     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'SDBSHSPA'DBFILE           *************
+     C                     MOVEL'GL0695'  DBPGM            **DBERR OO3**
+     C                     Z-ADD003       DBASE            *************
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     SUB  NRDL      G1CORC
+     C*
+     C                     UPDATSDBSHSA0
+     C                     END
+     C*
+     C* WRITE REPORT HEADINGS, DETAILS AND END OF TEXT
+     C*
+     C                     WRITEGL0695AH
+     C                     WRITEGL0695AD
+     C                     WRITEGL0695AT
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *
+      * DBERR - DATABASE ERROR PROCESSING. PERFORMED WHEN SDBSHSPA,
+      *         SDBANKPD, OR SDGELRPD IN ERROR
+      *
+      * CALLED BY : MAIN PROCESSING
+      *
+      * CALLS     : NONE
+      *
+      * FIELDS IN : NONE
+      *
+      * FIELDS OUT: NONE
+      *
+      ********************************************************************
+      *
+     C           DBERR     BEGSR
+      *
+     C*
+     C* WRITE REPORT HEADINGS
+     C*
+     C                     WRITEGL0695AH
+     C*
+      ** WRITE OUT ERROR TEXT
+      *
+     C                     WRITEGL0695AE
+      *
+      ** SETON DATABASE ERROR INDS, DUMP PROGRAM AND RETURN CONTROL
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     OUT  LDA
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

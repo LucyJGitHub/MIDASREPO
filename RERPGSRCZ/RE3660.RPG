@@ -1,0 +1,550 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Charges calculation update')                  *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module
+     F*                                                               *
+     F*  RE3660  - RETAIL CHARGES CALCULATION UPDATE                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01413  *CREATE    Date 13Apr93               *
+      *                 XXXXXX             Date DDMmmYY               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER049 - Stamp Tax                                           *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F** Function of Indicators
+     F*
+     F*
+     F*       01         RECORD FORMAT REPOSTL
+     F*       20         ACCESS REIAC FILE
+     F/COPY WNCPYSRC,RE3660F001
+     F*       88         SHOW STATUS ON DB ERROR REPORT
+     F*       98         RECORD FOUND IN REPOSTL
+     F*       99         GENERAL ERROR AND CHAINING
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         DATABASE ERROR
+     F*       LR         END OF PROGRAM
+     F*
+     F*****************************************************************
+     F*
+     F** Subroutines
+     F*
+     F*   FIRST  - First cycle
+     F*   MAIN   - Main processing
+     F*   TOTAL  - End processing
+     F*   DETPR  - Detail processing
+     F*   DBSR   - Database error handling
+     F*   REPSR  - Repostl file exception/error handling
+     F*
+     F*****************************************************************
+     F*
+     FRETRG   IF  E           K        DISK
+     F            RETRGAF                           KIGNORE
+     F*           RETRGDF                           KIGNORE
+     F            RETRGZF                           KIGNORE
+     F***REIAC** IF  E           K        DISK                                                CER049
+     FREIAC   UF  E           K        DISK                                                   CER049
+     F            REIACAF                           KIGNORE
+     F*           REIACDF                           KIGNORE
+     F            REIACZF                           KIGNORE
+     FREPOSTL UF  E           K        DISK
+     F                                              KINFDS REPDS
+     F                                              KINFSR REPSR
+     FRE3660AUO   E                    PRINTER
+     F/COPY WNCPYSRC,RE3660F002
+     E/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E**  Copyright insertion
+     E*
+     I/EJECT
+     I********************************************************************
+     I*
+     I** Declaration of indicators to authorize
+     I** multiple format update in REPOSTL
+     I**
+     I*
+     IRETRGDF
+     I*
+     I** Rename RECI field in RETRGDF format  - RETRG file
+     I*
+     I*
+     I              RECI                            RECID
+     I              REBI                            REBID
+     IREEODPFF
+     I*
+     I** Rename RECI field in REEODPF format  - REPOSTL file
+     I*
+     I*
+     I              RECI                            RRECI
+     IREIACDF
+     I*
+     I** Rename fields in REIACDF format  - REIAC file
+     I*
+     I*
+     I              CNUM                            RCNUM
+     I              CCY                             RCCY
+     I              ACOD                            RACOD
+     I              ACSQ                            RACSQ
+     I              BRCA                            RBRCA
+     I              ZZ015                           RZZ015
+     I/COPY WNCPYSRC,RE3660I001
+     IREPDS       DS
+     I*
+     I** Data structure for RPG 01021 error handling
+     I*
+     I                                     *STATUS  STSREP
+     I**
+     I            DS
+     I*
+     I** Keys Data Structure : REPKEY to initialize fields
+     I*                        for TRG KLIST
+     I                                        1  12 KEY
+     I                                        4   80TRATB
+     I                                        9  11 CCYB
+     I            DS
+     I*
+     I** Keys Data Structure : HACKEY to initialize fields
+     I*
+     I**********                              1  18 HACKEY                                    CGL029
+     I                                        1  24 HACKEY                                    CGL029
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7   9 CCY
+     I**********                             10  130ACOD                                      CGL029
+     I**********                             14  150ACSQ                                      CGL029
+     I**********                             16  18 BRCA                                      CGL029
+     I                                       10  190ACOD                                      CGL029
+     I                                       20  210ACSQ                                      CGL029
+     I                                       22  24 BRCA                                      CGL029
+     I*
+     IRUNDT       DS
+     I*
+     I** System Rundate
+     I*
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     ILDA         DS                            256
+     I*
+     I** Local Data Area for Database Error details
+     I*
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     I              BJURPT                          TITL
+     IDSFDY     E DSDSFDY
+     I*
+     I** Short Data Structure for Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Long Data Structure for Access Programs
+     ISCSARD    E DSSCSARDPD                                                                  CER049
+     I/COPY WNCPYSRC,RE3660I002
+     I*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** Copyright Statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Key List to chain to REPOSTL file
+     C*
+     C*
+     C           TRGKEY    KLIST
+     C                     KFLD           TRATB
+     C                     KFLD           CCYB
+     C*
+     C** Key List to chain to REIAC file
+     C*
+     C*
+     C           IACKEY    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA
+     C/COPY WNCPYSRC,RE3660C001
+     C*
+     C** Work fields definition
+     C*
+     C           *LIKE     DEFN KEY       ZTABKY
+     C*
+     C*===============================================================
+     C** P R O G R A M    S T A R T
+     C*===============================================================
+     C*
+     C** First cycle processing
+     C*
+     C                     EXSR FIRST
+     C*
+     C** Main processing
+     C*
+     C                     READ RETRG                    LR
+     C*
+     C           *INLR     DOWEQ'0'                        - B1
+     C/COPY WNCPYSRC,RE3660C002
+     C                     EXSR PROC
+     C                     READ RETRG                    LR
+     C                     END                             - E1
+     C*
+     C** Total processing
+     C*
+     C                     EXSR TOTAL
+     C/COPY WNCPYSRC,RE3660C003
+     C*
+     C*==============================================================
+     C** P R O G R A M  E N D
+     C*==============================================================
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**
+     C** FIRST    - subroutine to execute first cycle
+     C**
+     C** CALLED BY- Main routine
+     C**
+     C** CALLS    - DBSR
+     C**
+     C*****************************************************************
+     C**
+     C           FIRST     BEGSR                           **FIRST BEGSR**
+     C*
+     C** Initialise LDA
+     C*
+     C                     MOVE *BLANKS   DBLOT
+     C*
+     C** Access LDA.
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Access Data Area RUNDAT.
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Get Bank Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE3660'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     MOVEL'FIRST'   DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     WRITEHEADAU
+     C                     EXSR DBSR
+     C                     END
+      *                                                                                       CER049
+      ** Check if CER049 is installed                                                         CER049
+      *                                                                                       CER049
+     C                     CALL 'AOSARDR0'                                                    CER049
+     C                     PARM '       ' @RTCD                                               CER049
+     C                     PARM '*VERIFY' @OPTN                                               CER049
+     C                     PARM 'CER049'  @SARD   6                                           CER049
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER049
+      *                                                                                       CER049
+     C           @RTCD     IFNE *BLANK                                                        CER049
+     C           @RTCD     ANDNE'*NRF   '                                                     CER049
+     C           *LOCK     IN   LDA                                                           CER049
+     C                     MOVEL'RE3660'  DBPGM                                               CER049
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER049
+     C                     Z-ADD2         DBASE                                               CER049
+     C                     MOVEL@SARD     DBKEY                                               CER049
+     C                     OUT  LDA                                                           CER049
+     C                     EXSR DBSR                                                          CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       CER049
+     C                     MOVE 'N'       CER049  1                                           CER049
+     C           @RTCD     IFEQ *BLANK                                                        CER049
+     C                     MOVE 'Y'       CER049                                              CER049
+     C                     ENDIF                                                              CER049
+     C/COPY WNCPYSRC,RE3660C004
+     C*
+     C** Output Audit header
+     C*
+     C                     WRITEHEADAU
+     C*
+     C** Initialize work fields to blank/zero
+     C*
+     C                     Z-ADD0         NORE
+     C                     Z-ADD0         WCHGP  257
+     C*
+     C                     ENDSR                           **FIRST ENDSR**
+     C*****************************************************************
+     C**                                                              *
+     C** PROC      - Subroutine to execute processing of records      *
+     C**             until end of file                                *
+     C**                                                              *
+     C** CALLED BY - Main routine                                     *
+     C**                                                              *
+     C** CALLS     - DETPR                                            *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           PROC      BEGSR                           **PROC BEGSR**
+     C*
+     C** Using same key set pointer on record in REPOSTL
+     C*
+     C           TRGKEY    SETLLREPOSTL                  98**Found**
+     C*
+     C           *IN98     IFEQ '1'                        - B1
+     C*
+     C** Read in REPOSTL
+     C*
+     C           TRGKEY    READEREPOSTL                  99
+     C                     MOVEL*BLANK    REBI
+     C                     Z-ADD0         CHGA
+     C*
+     C** Record found
+     C*
+     C           *IN99     DOWEQ'0'                        - B2
+     C                     EXSR DETPR
+     C           TRGKEY    READEREPOSTL                  99
+     C                     Z-ADD0         CHGA
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **PROC ENDSR**
+     C*******************************************************************
+     C**
+     C** TOTAL      - Subroutine to execute end processing
+     C**
+     C** CALLED BY -  Main routine
+     C**
+     C** CALLED BY -  None
+     C**
+     C*******************************************************************
+     C**
+     C           TOTAL     BEGSR                           **TOTAL BEGSR**
+     C*
+     C** Verify if NORE = zero
+     C*
+     C           NORE      IFEQ 0                          - B1
+     C*
+     C** Output AUDIT : no record updated
+     C*
+     C                     WRITENONE
+     C                     ELSE                            - X1
+     C*
+     C** Output AUDIT : record(s) updated
+     C*
+     C                     WRITETOTALS
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **TOTAL ENDSR**
+     C********************************************************************
+     C**
+     C** DETPR     - Subroutine to execute charges calculation
+     C**
+     C** CALLED BY - PROC
+     C**
+     C** CALLS     - DBSR
+     C**
+     C********************************************************************
+     C**
+     C           DETPR     BEGSR                           **DETPR BEGSR**
+     C*
+     C** Access REIACD to get transaction charge amount overide
+     C*
+     C                     MOVE 'N'       IACFLG  1                                           CER049
+     C           IACKEY    CHAINREIAC                20
+     C           *IN20     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE3660'  DBPGM            ************
+     C                     MOVEL'REIAC'   DBFILE           * DBERR 03 *
+     C                     MOVELHACKEY    DBKEY            ************
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     MOVEA'1'       *IN,88
+     C                     EXSR DBSR
+     C                     ELSE                                                               CER049
+     C                     MOVE 'Y'       IACFLG                                              CER049
+     C                     END                             - E1
+     C*
+     C** If transaction charge overide is non zero then use this field
+     C*
+     C           TCHO      IFNE *ZEROS                     - B1
+     C           DCAM      IFEQ 'C'                        - B2
+     C           DCPC      OREQ 'C'
+     C                     Z-SUBTCHO      CHGA
+     C                     ELSE                            - X2
+     C                     Z-ADDTCHO      CHGA
+     C                     END                             - E2
+     C*
+     C** Charges for multiple transaction
+     C*
+     C           NITMS     IFGT 1                          - B2
+     C           CHGA      MULT NITMS     CHGA
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C/COPY WNCPYSRC,RE3660C005
+     C*
+     C** Verify if Charge Amount > zero
+     C*
+     C           CHAM      IFGT 0                          - B2
+     C*
+     C** Test if Debit or Credit Amount
+     C*
+     C           DCAM      IFEQ 'C'                        - B3
+     C                     Z-SUBCHAM      CHGA
+     C                     ELSE                            - X3
+     C                     Z-ADDCHAM      CHGA
+     C                     END                             - E3
+     C*
+     C** Charges for multiple transaction
+     C*
+     C           NITMS     IFGT 1                          - B3
+     C           CHGA      MULT NITMS     CHGA
+     C                     END                             - E3
+     C*
+     C** Charge amount less or equal zero
+     C*
+     C                     ELSE                            - X2
+     C                     Z-ADD0         CHGA
+     C                     END                             - E2
+     C*
+     C** Test if Charge Percentage > 0
+     C*
+     C           CHPC      IFGT 0                          - B2
+     C           PSTA      MULT CHPC      WCHGP
+     C           WCHGP     DIV  100       WCHGP     H
+     C*
+     C** Test if Debit or credit Percentage
+     C*
+     C           DCPC      IFEQ 'C'                        - B3
+     C                     Z-SUBWCHGP     CHGA
+     C                     ELSE                            - X3
+     C                     Z-ADDWCHGP     CHGA
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** Update CHGA in REPOSTL
+     C*
+     C                     MOVELREBID     REBI
+     C                     UPDATREEODPFF
+     C*
+     C** Set record format indicators off
+     C*
+     C                     MOVEA'00000'   *IN,01
+     C                     MOVEA'00000'   *IN,06
+     C*
+     C** Add one to counter
+     C*
+     C                     ADD  1         NORE
+      *                                                                                       CER049
+      ** Update new fields of REIACD                                                          CER049
+      *                                                                                       CER049
+     C           CER049    IFEQ 'Y'                                                           CER049
+     C           IACFLG    IFEQ 'Y'                                                           CER049
+     C           CHGA      ANDNE0                                                             CER049
+     C                     MOVE 'Y'       STPF1                                               CER049
+     C                     ADD  CHGA      TRCH                                                CER049
+     C                     UPDATREIACDF                                                       CER049
+     C                     ENDIF                                                              CER049
+     C                     ENDIF                                                              CER049
+     C/COPY WNCPYSRC,RE3660C006
+     C*
+     C                     ENDSR                           **DTPR ENDSR**
+     C**
+     C*******************************************************************
+     C/EJECT
+     C*******************************************************************
+     C**
+     C** -REPSR- SUBROUTINE FOR REPOSTL FILE EXCEPTION/ERROR HANDLING
+     C**
+     C**         CALLED BY  INPUT SPECIFICATIONS
+     C**
+     C**         CALLS      DBSR
+     C**
+     C*******************************************************************
+     C**
+     C           REPSR     BEGSR
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE3660'  DBPGM            ************
+     C                     MOVEL'POSTL'   DBFILE           * DBERR 02 *
+     C                     MOVELKEY       DBKEY            ************
+     C                     MOVE STSREP    DBSTAT
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     MOVEA'1'       *IN,88
+     C                     EXSR DBSR
+     C*
+     C                     ENDSR                           **REPSR ENDSR**
+     C********************************************************************
+     C********************************************************************
+     C**
+     C** DBSR      - Subroutine for Database Error Handling
+     C**
+     C** CALLED BY - REPSR
+     C**
+     C** CALLS     - None
+     C**
+     C********************************************************************
+     C**
+     C           DBSR      BEGSR                           **DBSR BEGSR**
+     C*
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     WRITEERRAU
+     C                     RETRN
+     C*
+     C                     ENDSR                           **DBSR ENDSR**
+     C*
+     C********************************************************************
+** CPY@ OBJECT COPYRIGHT                                               ***
+(c) Finastra International Limited 2001

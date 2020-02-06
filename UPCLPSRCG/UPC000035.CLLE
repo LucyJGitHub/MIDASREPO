@@ -1,0 +1,104 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Upgrade data areas and data queues')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000035 - Upgrade data areas and data queues              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. CUP041   *CREATE   Date 11Sep13              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OBJTYPE &MEMBER &SRCF &BRGSRCLIB +
+                          &OBJLIB &LIBMOV &OWNER &AUTL &RTNFLAG)
+ 
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGSRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EXIST) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* If object is not found then just create. */
+             RTVOBJD    OBJ(&MEMBER) OBJTYPE(&OBJTYPE) RTNLIB(&RTNLIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(CRTOBJ)
+             ENDDO
+ 
+/* Otherwise move the file to the temporary hodling library. */
+             CHGVAR     VAR(&EXIST) VALUE('Y')
+ 
+             ENDJRNOBJ  OBJ(&RTNLIB/&MEMBER) OBJTYPE(&OBJTYPE)
+             MONMSG     MSGID(CPF7032)
+ 
+             MOVOBJ     OBJ(&RTNLIB/&MEMBER) OBJTYPE(&OBJTYPE) +
+                          TOLIB(&LIBMOV)
+/* If the object already exists then try to rename it and move again. */
+             MONMSG     MSGID(CPF2112) EXEC(DO)
+                CHGVAR     VAR(&NEWNAME) VALUE('#.' *TCAT &MEMBER)
+                RNMOBJ     OBJ(&LIBMOV/&MEMBER) OBJTYPE(&OBJTYPE) +
+                             NEWOBJ(&NEWNAME)
+/* If the renamed object already exists then flag as failure. */
+                MONMSG     MSGID(CPF2112) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+                MOVOBJ     OBJ(&RTNLIB/&MEMBER) OBJTYPE(&OBJTYPE) +
+                             TOLIB(&LIBMOV)
+             ENDDO
+ 
+CRTOBJ:
+             CRTOBJ     OBJ(&OBJLIB/&MEMBER) +
+                          SRCFILE(&BRGSRCLIB/&SRCF) SRCMBR(*OBJ) +
+                          OWNER(&OWNER) AUTL(&AUTL)
+             MONMSG     MSGID(SYS9898 SYS0011 SYS0017) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* If the object did not originally exist then there is no copy needed. */
+             IF         COND(&EXIST *EQ 'N') THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&OBJTYPE *EQ '*DTAQ') THEN(DO)
+                CPYDTAQ    FMDTAQ(&LIBMOV/&MEMBER) TODTAQ(&OBJLIB/&MEMBER)
+                MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&OBJTYPE *EQ '*DTAARA') THEN(DO)
+                CPYDTAARA  FMDTAARA(&LIBMOV/&MEMBER) +
+                             TODTAARA(&OBJLIB/&MEMBER)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGVAR     VAR(&RTNFLAG) VALUE('E')
+ 
+ENDPGM:
+             ENDPGM

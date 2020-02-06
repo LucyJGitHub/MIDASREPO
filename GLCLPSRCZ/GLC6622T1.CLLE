@@ -1,0 +1,147 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Balance Statements - Start Task Split')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC6622T1 - Midas GL Balance Statements - Start Task Split  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD040278 *CREATE   Date 18Aug16              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD040278 - Stamp Tax A/C Keys (GLC008131) is not task split.*/
+/*                  Complete rework of the component to allow task   */
+/*                  split.                                           */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLC6622')
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACDRPD')
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACIXPD')
+             DCL        VAR(&NAME1) TYPE(*CHAR) LEN(5) VALUE('GLAC')
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACSERVE')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
+             DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&WKCUR) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&WKDLT) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&WKTOT) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+ 
+             DCLF       FILE(CBCMPNLC)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2016')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ. */
+ 
+             SNDPGMMSG  MSG('GLC6622T1 - Stamp Tax GLACNTQD - Start +
+                          Task Split') TOMSGQ(MRUNQ)
+ 
+ 
+/* Determine full DTAQLIB library name. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Remove all members from driving file. */
+             CLRPFM     FILE(&INDEXFL)
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+ 
+/* Clear main data queue. */
+ 
+             CALL       PGM(QCLRDTAQ) PARM(&RCVDTAQ  '*LIBL')
+ 
+             RTVMBRD    FILE(GLACNTQD) NBRCURRCD(&WKCUR) +
+                             NBRDLTRCD(&WKDLT)
+ 
+             CHGVAR     VAR(&WKTOT) VALUE(&WKCUR + &WKDLT)
+ 
+/* Retrieve number of sub-tasks. */
+ 
+ CHAIN:
+             RCVF
+             CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
+             IF         COND((&DHCOTT *NE &CNAME) *OR (&NAME2_N *NE +
+                          &CSEQ)) THEN(DO)
+                GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+/* Start commitment control for feeder program */
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+/* Add all members and create data queues. */
+ 
+             CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
+ LOOP:
+             IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
+                GOTO       CMDLBL(START)
+             ENDDO
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *TCAT &NAME2_C)
+             ADDPFM     FILE(&DRIVER) MBR(&MEMBER)
+             ADDPFM     FILE(GLSTCYPD) MBR(&MEMBER)
+ 
+/* Override and populate member in driving file */
+ 
+             OVRDBF     FILE(&DRIVER) TOFILE(&DRIVER) MBR(&MEMBER) +
+                          OVRSCOPE(*JOB)
+             CALL       PGM(GL6622T2) PARM(&DHTSNO &WKTOT)
+             DLTOVR     FILE(&DRIVER) LVL(*JOB)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+ 
+             IF         COND(&LOOP *EQ 1) THEN(DO)
+                CHGVAR     VAR(&NAME2_N) VALUE(01000)
+                CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
+             ENDDO
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
+             CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
+             GOTO       CMDLBL(LOOP)
+ 
+ START:
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program GLC6622T1 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

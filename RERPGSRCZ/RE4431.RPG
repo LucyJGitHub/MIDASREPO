@@ -1,0 +1,743 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI Monitor (Screen 2)')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4431 - CI Monitor (Screen 2)                               *
+      *                                                               *
+      *  Function:  This program enables the user to amend the number *
+      *  (I/C)      of jobs running for each function.  It also       *
+      *             displays all active jobs for a particular task.   *
+      *                                                               *
+      *  Called By: RE4430 - CI Monitor (Screen 1)                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01 -------------------------------------------*
+      *  Prev Amend No. CRT005             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 122060             Date 21Aug97               *
+      *                 CRT003  *CREATE    Date 22Jul96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRT005 - Cashier Enhancement for Cash In/Cash Out            *
+      *  122060 - Drafts Issuance.                                    *
+      *  CRT003 - Cashier Interface.                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FREACJBL0IF  E           K        DISK
+      **  BAI Active Jobs
+      *
+     FRE4431DFCF  E                    WORKSTN
+     F                                        @RRN  KSFILE RE4431S0
+      **  Display file
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *  01 - Rollup.                                                 *
+      *  11 - EOF for REACJBL0.                                       *
+      *  12 - LOKUP.                                                  *
+      *  13 - Error on required value.                                *
+      *  15 - No active jobs for program.                             *
+      *  16 - Subfile Clear.                                          *
+      *  17 - LF/REACJBL0 not empty.                                  *
+      *  18 - Disable rollup.                                         *
+      *                                                               *
+      *  KC - Exit.                                                   *
+      *  KE - Refresh.                                                *
+      *  KL - Previous.                                               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR -  Initialisation.                                    *
+      *  *PSSR  -  Program Error.                                     *
+      *  CLRSF  -  Clear Subfile.                                     *
+      *  DBERR  -  Database Error Handling.                           *
+      *  LDSFL  -  Actual Subfile Load.                               *
+      *  LOAD   -  Load Subfile Details.                              *
+      *  RVJBST -  Retrieve Job Status.                               *
+      *  RVACJB -  Retrieve Active Jobs.                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E**********          PGM        25 10                                                    CRT005
+     E                    PGM        29 10                                                    CRT005
+      ** Array containing Program Names
+      *
+     E**********          RQD        25  2                                                    CRT005
+     E                    RQD        29  2                                                    CRT005
+      ** Array containing Required Number of Jobs
+      *
+      /EJECT
+     IPRCVV       DS                            111
+      **  Data Structure definition similar to WRKACTJOB
+      *
+     I                                        9  18 JJBNM
+     I                                       19  28 JUSER
+     I                                       29  34 JJBNO
+     I                                       35  50 JINJI
+     I                                       51  60 JJBST
+     I                                      108 111 JACJS
+      *
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+     I                                        1  10 @PGM
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+      *
+     ICIACTV    E DSCIACTV                      100
+      ** Data area for required number of jobs
+      *
+     I                                        1  58 CIAALL
+     I                                        1   2 RBALP
+     I                                        3   4 RTFRP
+     I                                        5   6 RCDAP
+     I                                        7   8 RCQDP1
+     I                                        9  10 RCQDP2
+     I                                       11  12 RCDNP
+     I                                       13  14 RCQNP1
+     I                                       15  16 RCQNP2
+     I                                       17  18 RCWAP
+     I                                       19  20 RCWNP
+     I                                       21  22 RCQWP
+     I                                       23  24 RCQWQ
+     I                                       25  26 RBDCP
+     I                                       27  28 RBTCP1
+     I                                       29  30 RBTCP2
+     I                                       31  32 RBTCP3
+     I                                       33  34 RBTCP4
+     I                                       35  36 RSTCP1
+     I                                       37  38 RSTCP2
+     I                                       39  40 RSTCP3
+     I                                       41  42 RSTCP4
+     I                                       43  44 RTXRP
+     I                                       45  46 RPUPP
+     I                                       47  48 RPNAP
+     I                                       49  50 RDISP
+     I                                       51  52 RCQDP3
+     I                                       53  54 RCQDP4
+     I                                       55  56 RCQNP3
+     I                                       57  58 RCQNP4
+      *
+     I            DS
+     I                                        1  15 WSTTS
+     I                                        1  10 WSTS1
+     I                                       11  11 WSPC
+     I                                       12  15 WSTS2
+      *
+     I            DS
+     I                                    B   1   40PLNRV
+      *
+     I            DS
+     I I            X'00000000'               1   4 PNULL
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** 2nd   DS for access programs, Long  data structure
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CRT005
+      ** External DS for Switchable Features                                                  CRT005
+      *                                                                                       CRT005
+      /COPY ZSRSRC,CIPGMNI1
+      **  CI Function Program Names
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Processing                        *
+      *                                                               *
+      * CALLS      LOAD   - Load Subfile Details                      *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WRTCD   2
+     C                     PARM           WFNCN  30
+     C                     PARM           WPGMN  10
+     C                     PARM           WCRNT   20
+     C                     PARM           WDFLT   20
+     C                     PARM           WMINM   20
+     C                     PARM           WMAXM   20
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      **  Load active job details for function.
+      *
+     C                     EXSR LOAD
+      *
+      **  Assign appropriate return code.
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVEL'F3'      WRTCD
+     C                     ELSE
+     C                     MOVEL*BLANKS   WRTCD
+     C                     ENDIF
+      *
+     C                     MOVEL'1'       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             CLRSF - Clear Subfile.                            *
+      *                                                               *
+      * CALLED BY  LOAD   - Load Subfile Details.                     *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           CLRSF     BEGSR                           ** CLRSF  **
+      *
+      **  Subfile clear.
+      *
+     C                     MOVEL'1'       *IN16
+     C                     WRITERE4431C0
+     C                     MOVEL'0'       *IN16
+      *
+     C                     Z-ADD0         @RRN    50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             LDSFL - Actual Subfile Control.                   *
+      *                                                               *
+      * CALLED BY  LOAD   - Load Subfile Details.                     *
+      *                                                               *
+      * CALLS      RVJBST - Retrieve Job Status.                      *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           LDSFL     BEGSR                           ** LDSFL  **
+      *
+     C                     MOVEL'0'       *IN15
+     C                     MOVEL'0'       *IN17
+     C                     MOVEL'0'       *IN18
+     C                     Z-ADD0         WWCRN   50
+     C                     Z-ADD1         WCTR    50
+     C                     Z-ADD1         SRRN
+      *
+     C           WJBNM     DOWEQRQJBNM
+     C           *IN11     ANDEQ'0'
+      *
+      **  Retrive job status of valid record found.
+      *
+     C                     EXSR RVJBST
+      *
+      **  If no errors and job status is not end, update counters.
+      *
+     C           PERCD     IFEQ PNULL
+     C           WSTS2     ANDNE'END'
+      *
+     C                     MOVELJJBNM     SJBNM
+     C                     MOVELJUSER     SUSER
+     C                     MOVELJJBNO     SNMBR
+     C                     MOVELWSTTS     SSTTS
+      *
+      **  Jobs with EOJ status is not counted under the current number of jobs.
+      *
+     C           WSTS2     IFNE 'EOJ'
+     C                     ADD  1         WWCRN
+     C                     ENDIF
+     C                     ADD  1         WCTR
+     C                     ADD  1         @RRN
+      *
+     C                     WRITERE4431S0
+     C                     ENDIF
+      *
+     C                     READ REACJBL0                 11
+      *
+     C                     ENDDO
+      *
+      **  No further records, disable rollup.
+      *
+     C           WJBNM     IFNE RQJBNM
+     C                     MOVEL'1'       *IN18
+     C                     ENDIF
+      *
+     C                     MOVE WWCRN     SCRNT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             LOAD  - Load Subfile Details.                     *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Processing.                          *
+      *                                                               *
+      * CALLS      CLRSF  - Clear Subfile.                            *
+      *            LDSFL  - Actual Subfile Load.                      *
+      *            RVACJB - Validation Routine.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           LOAD      BEGSR                           ** LOAD   **
+      *
+     C                     MOVELWPGMN     WJBNM  10
+     C           WJBNM     SETLLREACJBL0                 11
+     C           WJBNM     READEREACJBL0                 11
+      *
+      **  No active jobs running for this function.
+      *
+     C           *IN11     IFEQ '1'
+     C                     MOVEL'1'       *IN15
+     C                     MOVEL'1'       *IN17
+     C                     WRITERE4431F1
+      *
+      **  Active jobs are running, build subfile.
+      *
+     C                     ELSE
+      *
+     C                     EXSR CLRSF
+     C                     EXSR LDSFL
+     C                     ENDIF
+      *
+      **  Not F3 nor F12.
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  Assign screen values.
+      *
+     C                     MOVEL@USER     SUSER
+     C                     MOVEL@JOB      SWSID
+     C                     MOVELWFNCN     SFNCN
+     C                     MOVELWDFLT     SDFLT
+     C                     MOVELWMINM     SMINM
+     C                     MOVELWMAXM     SMAXM
+      *
+      **  Be ready for input for required number of active tasks.
+      *
+     C                     WRITERE4431C1
+     C           *IN17     IFEQ '0'
+     C                     WRITERE4431C0
+     C                     ENDIF
+     C                     WRITERE4431F2
+     C                     EXFMTRE4431F0
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  Active tasks are running.
+      *
+     C           *IN17     IFEQ '0'
+      *
+      **  Refresh.
+      *
+     C           *INKE     IFEQ '1'
+      *
+     C                     CALL 'SCC0250'
+      *
+     C                     MOVEL*BLANKS   SREQD
+     C                     MOVEL'0'       *IN13
+      *
+     C           WJBNM     SETLLREACJBL0                 11
+     C           WJBNM     READEREACJBL0                 11
+      *
+     C                     EXSR CLRSF
+     C                     EXSR LDSFL
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  No active tasks are running.  Refresh.
+      *
+     C           *INKE     IFEQ '1'
+     C                     CALL 'SCC0250'
+     C                     MOVEL*BLANKS   SREQD
+     C                     MOVEL'0'       *IN13
+     C                     WRITERE4431F1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Input made on required number of active tasks.
+      *
+     C           SREQD     IFNE *BLANKS
+     C                     EXSR RVACJB
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RVJBST - Retrieve Job Status                       *
+      *                                                               *
+      * CALLED BY  LDSFL  - Actual Subfile Load.                      *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           RVJBST    BEGSR                           ** RVJBST **
+      *
+      **  Assign values to parameters for QUSRJOBI.
+      *
+     C                     MOVEL*BLANKS   PRCVV 111
+     C                     MOVEL*BLANKS   PJBNM  26
+     C                     MOVELPNULL     PERCD   4
+     C                     MOVEL*BLANKS   PINJI  16
+      *
+     C                     MOVELRQJBNM    JJBNM
+     C                     MOVELRQJBUS    JUSER
+     C                     MOVELRQJBNO    JJBNO
+      *
+     C           RQJBNM    IFEQ 'CASH_REC'                                122060
+     C           RQJBNM    CAT  RQJBUS:2  WDS    20                       122060
+     C                     ELSE                                           122060
+     C           RQJBNM    CAT  RQJBUS:1  WDS    20
+     C                     ENDIF                                          122060
+     C                     MOVELWDS       WQJBN  26
+     C                     MOVELRQJBNO    W6      6
+     C                     MOVE W6        WQJBN
+      *
+     C                     CALL 'QUSRJOBI'
+     C                     PARM           PRCVV
+     C                     PARM           PLNRV
+     C                     PARM WFMTN     PFTNM  10
+     C                     PARM WQJBN     PJBNM
+     C                     PARM           PINJI
+     C                     PARM           PERCD
+      *
+      **  Assign to screen fields.
+      *
+     C                     MOVEL*BLANKS   WSTTS
+     C                     MOVELJJBST     WSTTS
+     C                     MOVELJJBST     WSTS1
+     C                     MOVE JACJS     WSTTS
+     C                     MOVE JACJS     WSTS2
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           SNDMSG  - Send Program Message Parameters.          *
+      *                                                               *
+      * CALLS     SCC0240 - Send Message to Program Queue.            *
+      *                                                               *
+      * CALLED BY RVACJB  - Validation Routine.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+      *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C           WUMSID    PARM WUMSID    WQ0001  7        Message Identif
+     C           WUMSGF    PARM WUMSGF    WQ0002 10        Message File Na
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RVACJB - Validation Routine.                       *
+      *                                                               *
+      * CALLED BY  LOAD   - Load Subfile Details.                     *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           RVACJB    BEGSR                           ** RVACJB **
+      *
+     C                     CALL 'SCC0250'
+      *
+     C                     MOVEL'0'       *IN13
+     C                     MOVELSREQD     NREQD   20
+     C                     MOVELNREQD     AREQD   2
+      *
+      **  Non-numeric input.
+      *
+     C           SREQD     IFNE AREQD
+     C                     MOVEL'1'       *IN13
+     C                     MOVEL'USR0023' WUMSID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      **  Input less than minimum.
+      *
+     C           NREQD     IFLT WMINM
+     C                     MOVEL'1'       *IN13
+     C                     MOVEL'USR0021' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+      **  Input greater than maximum.
+      *
+     C           NREQD     IFGT WMAXM
+     C                     MOVEL'1'       *IN13
+     C                     MOVEL'USR0022' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Valid numeric input.
+      *
+     C           *IN13     IFEQ '0'
+      *
+     C                     Z-ADD1         X       20
+     C           WPGMN     LOKUPPGM,X                    12
+      *
+      **  Update active jobs data area with the input.
+      *
+     C           *IN12     IFEQ '1'
+     C           *LOCK     IN   CIACTV
+     C                     MOVEL*BLANKS   RQD,X
+     C                     MOVELSREQD     RQD,X
+     C                     MOVEARQD,1     CIAALL
+     C                     OUT  CIACTV
+      *
+      **  Update successful.
+      *
+     C                     MOVEL'USR0024' WUMSID
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *             DBERR - Database Error Handling.                  *
+      *                                                               *
+      * CALLED BY  *INZSR - Initialisation.                           *
+      *            *PSSR  - Program Error.                            *
+      *                                                               *
+      * CALLS    DBERRCTL -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL'RE4431'  DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     CALL 'DBERRCTL'
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR             - Program error                             *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+      **  Check to see that *PSSR has not been called yet
+      *
+     C           WRUN      IFEQ *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'Y'       WRUN
+     C                     SETON                     U7U8LR
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *INZSR - Initialisation Subroutine                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR                           ** *INZSR **
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+      *
+     C           *NAMVAR   DEFN           CIACTV
+     C                     IN   CIACTV
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK'  @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *                                                                                       CRT005
+      ** Determine if CRT005 is installed                                                     CRT005
+      *                                                                                       CRT005
+     C                     CALL 'AOSARDR0'                                                    CRT005
+     C                     PARM *BLANKS   PRTCD   7                                           CRT005
+     C                     PARM '*VERIFY 'POPTN   7                                           CRT005
+     C                     PARM 'CRT005'  PSARD   6                                           CRT005
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRT005
+      *                                                                                       CRT005
+     C           PRTCD     IFNE *BLANKS                                                       CRT005
+     C           PRTCD     ANDNE'*NRF   '                                                     CRT005
+     C           *LOCK     IN   LDA                                                           CRT005
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRT005
+     C                     Z-ADD2         DBASE                                               CRT005
+     C                     MOVEL'CRT005'  DBKEY                                               CRT005
+     C                     EXSR DBERR                                                         CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C           PRTCD     IFEQ *BLANKS                                                       CRT005
+     C                     MOVE 'Y'       CRT005  1                                           CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVE 'N'       CRT005                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *
+      **  Initialise work fields.
+      *
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     Z-ADD0         DBASE
+      *
+      **  For QUSRJOBI.
+      *
+     C                     Z-ADD111       PLNRV
+     C                     MOVEL'JOBI0200'WFMTN   8
+     C                     MOVE ' '       WRUN    1
+      *
+      **  For error messages.
+      *
+     C                     MOVEL@PGM      SPGMQ
+     C                     MOVE *BLANKS   WUMSID  7
+     C                     MOVEL'CIMSGF'  WUMSGF 10
+      *
+      **  Initialise arrays.
+      *
+     C                     MOVELWBALP     PGM,1
+     C                     MOVELWTFRP     PGM,2
+     C                     MOVELWCDAP     PGM,3
+     C                     MOVELWCQDP1    PGM,4
+     C                     MOVELWCQDP2    PGM,5
+     C                     MOVELWCDNP     PGM,6
+     C                     MOVELWCQNP1    PGM,7
+     C                     MOVELWCQNP2    PGM,8
+     C                     MOVELWCWAP     PGM,9
+     C                     MOVELWCWNP     PGM,10
+     C                     MOVELWCQWP     PGM,11
+     C                     MOVELWCQWQ     PGM,12
+     C                     MOVELWBDCP     PGM,13
+     C                     MOVELWBTCP1    PGM,14
+     C                     MOVELWBTCP2    PGM,15
+     C                     MOVELWBTCP3    PGM,16
+     C                     MOVELWBTCP4    PGM,17
+     C                     MOVELWSTCP1    PGM,18
+     C                     MOVELWSTCP2    PGM,19
+     C                     MOVELWSTCP3    PGM,20
+     C                     MOVELWSTCP4    PGM,21
+     C                     MOVELWTXRP     PGM,22
+     C                     MOVELWPUPP     PGM,23
+     C                     MOVELWPNAP     PGM,24
+     C                     MOVELWDISP     PGM,25
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C                     MOVELWTCIP     PGM,26                                              CRT005
+     C                     MOVELWTCOP     PGM,27                                              CRT005
+     C                     MOVELWTTIP     PGM,28                                              CRT005
+     C                     MOVELWTTOP     PGM,29                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *
+     C                     MOVELRBALP     RQD,1
+     C                     MOVELRTFRP     RQD,2
+     C                     MOVELRCDAP     RQD,3
+     C                     MOVELRCQDP1    RQD,4
+     C                     MOVELRCQDP2    RQD,5
+     C                     MOVELRCDNP     RQD,6
+     C                     MOVELRCQNP1    RQD,7
+     C                     MOVELRCQNP2    RQD,8
+     C                     MOVELRCWAP     RQD,9
+     C                     MOVELRCWNP     RQD,10
+     C                     MOVELRCQWP     RQD,11
+     C                     MOVELRCQWQ     RQD,12
+     C                     MOVELRBDCP     RQD,13
+     C                     MOVELRBTCP1    RQD,14
+     C                     MOVELRBTCP2    RQD,15
+     C                     MOVELRBTCP3    RQD,16
+     C                     MOVELRBTCP4    RQD,17
+     C                     MOVELRSTCP1    RQD,18
+     C                     MOVELRSTCP2    RQD,19
+     C                     MOVELRSTCP3    RQD,20
+     C                     MOVELRSTCP4    RQD,21
+     C                     MOVELRTXRP     RQD,22
+     C                     MOVELRPUPP     RQD,23
+     C                     MOVELRPNAP     RQD,24
+     C                     MOVELRDISP     RQD,25
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C                     MOVELRCQDP3    RQD,26                                              CRT005
+     C                     MOVELRCQDP4    RQD,27                                              CRT005
+     C                     MOVELRCQNP3    RQD,28                                              CRT005
+     C                     MOVELRCQNP4    RQD,29                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

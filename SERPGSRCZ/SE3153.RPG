@@ -1,0 +1,1734 @@
+     H        1   D
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE AUTO Cust/Broker Default Maint.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3153 - Customer/Broker Default Charges Maintenance         *
+     F*                                                               *
+     F*  Function: To allow insertions, amendments, deletions and     *
+     F*   (I/C)    enquiries on the data held within the Customer/    *
+     F*            Broker default charges file.                       *
+     F*                                                               *
+     F*  Called by: SEC3153 - Customer/Broker Default Charges Maint   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CPK016             Date 04Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 126055             Date 23Feb98               *
+      *                 S01496             DATE 27OCT94               *
+     F*                 052254             DATE 11JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 S01117             DATE 16APR91               *
+     F*                 S01199             DATE 03AUG89               *
+     F*                 S01176             DATE 21JUL88               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+     F*  126055 - RECOMPILE AFTER CHANGE OF LF SECURBL0
+     F*  S01496 - Incorporation of Jyske Enhancements (S10984)        *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01117 - Multibranching.                                     *
+     F*  S01199 -  HELP SYSTEM.                                    *   S01199
+     F*  S01176 - SECURITIES TRADING 3.1 (AUSTRALIA)                  *   S01176
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FSE3153DFCF  E                    WORKSTN
+     F****CUBRD   UF  E           K        DISK         KCOMIT       A    S01496
+     FCUBRD   UF  E           K        DISK         KCOMIT       A    UC  S01496
+     FSECUBRL0UF  E           K        DISK         KCOMIT       A    UC  S01496
+     F            CUBRDDF                           KRENAMESCUBRDDF       S01496
+     F***********                                   KINFDS CBDDS          S01176
+     F***********                                   KINFSR CBDSR          S01176
+     F/COPY WNCPYSRC,SE3153F001
+     FCUBRDA  UF  E                    DISK         KCOMIT
+     F***********                                   KINFDS CBTDS          S01176
+     F***********                                   KINFSR CBTSR          S01176
+     FINVTO   IF  E           K        DISK
+     F*MARKT   IF  E           K        DISK
+     FSEMKC   IF  E           K        DISK
+     F*CLINT   IF  E           K        DISK                              S01117
+     F*SNAME   IF  E           K        DISK                              S01117
+     F**          CLINTCBF                          KRENAMERNM1           S01117
+     FSECGC   IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F************TABLETJF                          KIGNORE               S01117
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  01 - ERROR ON CHAIN TO TABLE FILE                            *
+     F*  06 - IF IN ENQUIRE MODE                                      *
+     F***07*-*HELP*FACILITY*REQUIRED********************              *   S01199
+     F*  08 - DISCRET INDICATOR = D OR M  PROTECT 3 FIELDS            *
+     F*       ALSO SET ON IN ENQUIRE OR DELETE MODE                   *
+     F*  09 - ANY ERROR ON DETAIL SCREEN                              *
+     F*  10 - SETON WHEN ENQUIRE OR DELETE ACTION CODE ENTERED -      *
+     F*       ALL FIELDS APART FROM INITIAL SCREEN PROTECED           *
+     F*  11 - ACTION CODE INVALID (NOT = 'I' 'A' 'E' OR 'D')          *
+     F***12*-*CLASSIFICATION*INVALID***********************************   S01496
+     F*  12 - CLASSIFICATION OR CUSTOMER CHARGE GROUP INVALID         *   S01496
+     F*  13 - CUSTOMER NUMBER INVALID                                 *
+     F*  14 - INVESTMENT TYPE INVALID                                 *
+     F*  15 - MARKET CENTRE INVALID                                   *
+     F*  16 - BROKERAGE COMMISSION CODE INVALID                       *
+     F*  17 - CUSTOMER COMMISSION CODE INVALID                        *
+     F*  18 - DEFAULT CHARGE CODE 1 INVALID                           *
+     F*  19 - DEFAULT CHARGE CODE 2 INVALID                           *
+     F*  20 - COMMISSION REBATE INVALID                               *
+     F*  41 - CUSTOMER NUMBER 1st DIGIT NUMERIC TEST RESULT           *
+     F*  42 - CUSTOMER NUMBER 1st DIGIT BIT TEST RESULT               *
+     F*  43 - CUSTOMER NUMBER 1st SIX DIGITS NUMERIC TEST RESULT      *
+     F*  44 - CUSTOMER NUMBER 6th DIGIT BIT TEST RESULT               *
+     F***50*-*VALID*CLNTSE*RECORD*FOUND********************************   S01117
+     F*  50 - VALID CUSTOMER RECORD FOUND ON SDSECSPD                 *   S01117
+     F*  55 - CHARGE BY CUSTOMER GROUP FEATURE IS ON                  *   S01496
+     F*  64 - SETON WHEN RECENT UPDATE TO RECORD - ERROR 229          *
+     F*  65 - SETON WHEN SCREEN INPUT ERROR                           *
+     F*  66 - SETON WHEN SELECTION MADE USING ACCESS OBJECT           *   S01117
+     F***70*-*CHAIN*TO*CLNTSE*FAILURE**********************************   S01117
+     F***71*-*CHAIN*TO*SNAME*FAILURE***********************************   S01117
+     F*  72 - NO RECORD FOR CHAIN TO CUBRD                            *
+     F*  73 - READE(READ EQUAL KEY) TO SECGC - NOT FOUND              *
+     F*  74 - SET LOWER LIMIT TO SECGC - SEARCH ARG >                 *
+     F*                                  THAN HIGHEST KEY             *
+     F*  76 - WRITE ERROR ON FILE CUBRD                               *
+     F*  77 - UPDATE ERROR ON TRAILER - ROLLBACK TO BE PERFORMED      *
+     F*  80 - IF IN ENQUIRE MODE & RECI =                             *
+     F*       'C' DISPLAY 'DELETED' ON DET.SC.                        *
+     F*  81 - IF IN DELETE MODE - TO ENABLE F10 &                     *
+     F*                           DISPLAY F10 MESSAGE                 *
+     F*  82 - CHAIN TO CUBRDA FAILURE                                 *
+     F*  98 - IF DATE FORMAT MMDDYY                                   *
+     F*                                                               *
+     F*  ERRORS                                                       *
+     F*                                                               *
+     F*  101   BLANK ACTION CODE                                      *
+     F*  102   ACTION CODE INVALID                                    *
+     F*  103   BLANK DISCRETIONARY INDICATOR & BLANK CUSTOMER FIELD   *
+     F*  104   CLASSIFICATION                                         *   S01176
+     F*  105   CLASSIFICATION                                         *   S01176
+     F*  106   INVESTMENT TYPE NOT ENTERED BUT MARKET CENTRE ENTERED  *
+     F*  107   INVESTMENT TYPE INVALID - NOT ON LF/INVTO              *
+     F*  108   MARKET CENTRE NOT ENTERED BUT CUSTOMER FIELD IS ENTRED *
+     F*  109   MARKET CENTRE DOESN'T EXIST ON LF/SEMKC                *
+     F*  110   CUSTOMER FIELD - IF FIRST CHARACTER IS NUMERIC IT MUST *
+     F*        BE OF THE FORMAT NNNNNNbbbb                            *
+     F*  111   IF VALID NUMERIC CUSTOMER IT MUST EXIST ON PF/CLINTSE  *
+     F*  112   IF CUSTOMER FIELD NOT NUMERIC & DOESN'T EXIST ON       *
+     F*        LF/SNAM OR HAS NO CORRESPONDING RECORD ON PF/CLINTSE   *
+     F*        - LATER ACCESS REQUIRED TO PICK UP C1DI -DISCRETIONARY *
+     F*        INDICATOR                                              *
+     F*  113   IF ACTION CODE = 'I' AND RECORD EXISTS ON PF/CUBRDD    *
+     F*  114   IF ACTION CODE = 'A' OR 'D' & RECORD DOESN'T EXIST ON  *
+     F*        PF/CUBRDD WITH A RECORD ID OF 'D'                      *
+     F*  115   IF ACTION CODE = 'E' & RECORD DOESN'T EXIST ON         *
+     F*        PF/CUBRDD WITH A RECORD ID OF 'D' OR 'C'               *
+     F*  116   CUSTOMER CHARGE GROUP CODE DOESN'T EXIST               *   S01496
+     F*  201   BROKERAGE COMMISSION CODE NOT ON LF/SECGC WITH RECI='D *
+     F*  202   CUSTOMER COMMISSION CODE   "         "         "     " *
+     F*  203   DEFAULT CHARGE CODE 1 NOT ON LF/SECGT WITH RECI = D    *   S01176
+     F*  204      "      "     "   2  "   "     "     "     "    "    *   S01176
+     F*  205   COMMISSION REBATE NOT A VALID PERCENTAGE               *
+     F*  229   RECORD UPDATED BY ANOTHER WORKSTATION OR IN CASE OF    *
+     F*        INSERT THE RECORD NOW EXISTS (INSERTED BY ANOTHER USER *
+     F*        IN THE INTERIM PERIOD)                                 *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   INIT   - RETRIEVE RUN CONTROL REC & SET DATE FORMAT         *
+     F*            INDICATOR                                          *
+     F*   P1     - DISPLAY & VALIDATE INITIAL SCREEN (SE3152D1)       *
+     F*   P2     - DISPLAY & VALIDATE DETAIL SCREEN (SE3152D2)        *
+     F*   VALCUS - VALIDATE CUSTOMER NUMBER                           *
+     F*   VALDET - VALIDATE DETAIL LINES                              *
+     F*   P3     - UPDATE FILES                                       *
+     F*   ERROR  - PERFORM STANDARD MIDAS D/B ERROR HANDLING          *
+     F*   CBDSR  - CUSTOMER/BROKER DETAILS FILE EXCEPTION ERRORS      *
+     F*   CBTSR  - CUSTOMER/BROKER TRAILER FILE EXCEPTION ERRORS      *
+     F*   *PSSR  - PROGRAM EXCEPTION ERROR HANDLING ROUTINE           *
+     F****HELP***-*CALL*EXTERNAL*SUBROUTINE*MHELP*******              *   S01199
+     F*   ZTNLU1 - RETRIEVE NEXT AVAILABLE TRANSACTION NUMBER         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E************        ARA        19  4                                S01117
+     E                    ARA        22  4                                S01117
+     E                    ARZ        10  1
+     E/COPY ZSRSRC,ZASIGNZ1                                               S01176
+     E/COPY ZSRSRC,ZEDITZ1                                                S01176
+     E                    CPY@    1   1 80
+      /EJECT
+     IINVTPDF                                                                                 CPK016
+     I              SFLG                            INSFLG                                    CPK016
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*FILE*INFORMATION*DATA*STRUCTURE*FOR*FILE*CUBRD******
+     I*
+     I*CBDDS***** DS                            366                       S01176
+     I*
+     I*FILE*INFORMATION*DATA*STRUCTURE*FOR*FILE*CUBRDA*****
+     I*
+     I*CBTDS***** DS                            366                       S01176
+     I*
+     I*FILE*INFORMATION*DATA*STRUCTURE*USED*BY*ERROR*PROCESSING***
+     I*
+     I*EPFDS***** DS                                                      S01176
+     I***********                             1 256 EPFDS1                S01176
+     I***********                           257 366 EPFDS2                S01176
+     I*
+     IEPDDS      SDS                                                      S01176
+     I*
+     I*PROGRAM STATUS DATA STRUCTURE USED BY ERROR PROCESSING
+     I*
+     I                                        1  10 EPPP                  S01176
+     I                                       81  90 EPPPL                 S01176
+     I                                        1 253 EPPDS1                S01176
+     I                                      254 429 EPPDS2                S01176
+     I                                      244 253 WID                   S01176
+     I                                      254 263 USRID                 S01176
+     I*
+     ILDA         DS                            256
+     I*
+     I*DATA STRUCTURE FOR LOCAL DATA AREA
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     IDSSDY     E DSDSSDY                                                 S01117
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE               S01117
+      **                                                                  S01117
+     IZMUSER      DS                             17                       S01117
+      ** DATA AREA OF MENU USER                                           S01117
+     I                                       11  13 USRBCH                S01117
+     I                                       17  17 BANKAU                S01117
+     I*                                                                   S01117
+     ISDCUST    E DSSDCUSTPD                                              S01117
+     I** CLIENT DETAILS                                                   S01117
+     I*                                                                   S01117
+     I*                                                                   S01117
+     ISDSECS    E DSSDSECSPD                                              S01117
+     I**SECURITY CLIENT DETAILS                                           S01117
+     I*                                                                   S01117
+     ISDSTRD    E DSSDSTRDPD                                              S01496
+     I**  Data structure for securities trading details                   S01496
+     I*                                                                   S01496
+     ISCSARD    E DSSCSARDPD                                              S01496
+     I**  Data structure for switchable features file                     S01496
+     I*                                                                   S01496
+     ISDCUGR    E DSSECUGRPD                                              S01496
+     I**  Data structure for customer group details                       S01496
+     I*                                                                   S01496
+     ICLR         DS
+     I*
+     I*DATA STRUCTURE TO CLEAR SCREEN FIELDS
+     I*ALSO USED FOR COMMITMENT TEXT
+     I*
+     I                                        1   1 ACODE
+     I                                        2   2 DISCD
+     I****************************************3  12 CUSTND                S01496
+     I***************************************13  15 INVTYP                S01496
+     I***************************************16  17 MARKC                 S01496
+     I***************************************18  19 BCCD                  S01496
+     I***************************************20  21 CCCD                  S01496
+     I***********                            22  23 LTDCD                 S01176
+     I***********                            24  25 PMTD                  S01176
+     I***********                            26  27 CDCCD                 S01176
+     I***********                            28  29 RBCCD                 S01176
+     I***********                            30  31 RDCCD                 S01176
+     I***************************************22  23 SDCC1          S01176 S01496
+     I***************************************24  25 SDCC2          S01176 S01496
+     I***************************************26  31 SCMRP          S01176 S01496
+     I                                        3   4 USGRP                 S01496
+     I                                        5  14 CUSTND                S01496
+     I                                       15  17 INVTYP                S01496
+     I                                       18  19 MARKC                 S01496
+     I                                       20  21 BCCD                  S01496
+     I                                       22  23 CCCD                  S01496
+     I                                       24  25 SDCC1                 S01496
+     I                                       26  27 SDCC2                 S01496
+     I                                       28  33 SCMRP                 S01496
+     I*
+     I@CMTXT      DS                            450
+     I*
+     I* Data structure for commitment text
+     I*
+     I                                        1   50@CMTRF
+     I                                        6   7 @CMMOD
+     I                                        8  15 @CMPGM
+     I                                       16  18 @CMWSI
+     I                                       19  240@CMTIM
+     I                                       25  25 @CMACT
+     I                                       26  35 @CMUSR
+     I                                       51 148 @FSREC
+     I*
+     I*  Data structure to update last transaction no.
+     I*
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I*
+     C/EJECT
+     C****************************************************************
+     C*   MAINLINE CONTROL                                           *
+     C****************************************************************
+     C*
+     C***KEY*LIST*FOR*PF/CLINTSE***************************************   S01117
+     C***********                                                         S01117
+     C***********CLNTSE    KLIST                                          S01117
+     C***********          KFLD           CNUMSE  60                      S01117
+     C***********          KFLD           RCDTSE  1                       S01117
+     C*
+     C*  KEY LIST FOR LF/SECGC
+     C*
+     C           SECKEY    KLIST
+     C                     KFLD           CCOM1   2
+     C                     KFLD           CCY1    3
+     C*
+     C*  PARTIAL KEY LIST FOR LF/SECGC
+     C*
+     C           SECK2     KLIST
+     C                     KFLD           CCOM1
+     C*
+     C*  KEY LIST FOR LF/CUBRD
+     C*
+     C           CUBKEY    KLIST
+     C                     KFLD           DISCD
+     C                     KFLD           INVTYP
+     C                     KFLD           MARKC
+     C                     KFLD           CNUM
+     C*                                                                   S01496
+     C** Key list for LF/SECUBRL0                                         S01496
+     C*                                                                   S01496
+     C           CGBKEY    KLIST                                          S01496
+     C                     KFLD           USGRP                           S01496
+     C                     KFLD           INVTYP                          S01496
+     C                     KFLD           MARKC                           S01496
+     C                     KFLD           CNUM                            S01496
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE WID       WIDDF
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE3153'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA ZMUSER                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   ZMUSER                                    S01117
+     C*  EXECUTE 'INITIALIZE SUBROUTINE'
+     C*
+     C                     EXSR INIT
+     C*
+     C*  F3 TO END &
+     C*  F10 IS ALLOWED IF IN DELETE MODE
+     C*  F12 FOR INITIAL SCREEN CAN BE SELECTED FROM EITHER SCREEN
+     C*
+     C           *INKC     DOUEQ'1'                        ---B1
+     C                     SETOF                     65
+     C                     SETOF                     66                   S01117
+     C*
+     C*  EXECUTE 'DISPLAY & VALIDATE INITIAL SCREEN'
+     C*
+     C                     EXSR P1
+     C*
+     C*  EXECUTE 'DISPLAY & VALIDATE DETAIL SCREEN'
+     C*
+     C  NKCNKL             EXSR P2
+     C*
+     C*
+     C*  IF ACTION CODE = 'I' 'A' OR 'D' UPDATE FILES
+     C*
+     C  NKCNKLN06          EXSR P3
+     C                     END                             ---E1
+     C*
+     C           *IN55     IFEQ '1'                                       S01496
+     C                     CLOSESECUBRL0                                  S01496
+     C                     ELSE                                           S01496
+     C                     CLOSECUBRD                                     S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PROCEDURE: INIT                                              *
+     C*  FUNCTION: RETRIEVE RUN CONTROL RECORD & SET DATE FORMAT IND. *
+     C*  CALLED FROM: MAINLINE CONTROL                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                           *BEGSR INIT *
+     C*
+     C                     MOVEL'01'      TABKEY 12
+     C                     MOVE '10'      TABKEY
+     C           TABKEY    CHAINTABSE                01
+     C*
+     C           *IN01     IFEQ '1'                        ---B1        *
+     C           RECI      ORNE 'D'
+     C                     Z-ADD1         EBASE   20       ************
+     C                     MOVELTABKEY    EKEY   29        *DB ERROR 01*
+     C                     MOVEL'TABLE'   EFILE   5        ************
+     C                     EXSR ERROR
+     C                     END                             ---E1
+     C*
+     C*  IF DATE FORMAT MMDDYY SETON INDICATOR 98
+     C*
+     C           DATF      IFEQ 'M'                        ---B1
+     C                     SETON                     98
+     C                     END                             ---E1
+     C*                                                                   S01496
+     C**  Get securities trading details using access object              S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSTRDR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*FIRST ' WLOPTN  7                       S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*                                                                   S01496
+     C**  Check if error occurred                                         S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     Z-ADD4         EBASE            ***************S01496
+     C                     MOVEL'*FIRST ' EKEY             * DB ERROR 04 *S01496
+     C                     MOVE 'SDSTRDPD'EFILE            ***************S01496
+     C                     EXSR ERROR                                     S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  Check if S01496 feature is installed using access object        S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSARDR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*VERIFY' WLOPTN                          S01496
+     C                     PARM 'S01496'  WLSARD  6                       S01496
+     C           SCSARD    PARM SCSARD    DSSDY                           S01496
+     C                     MOVE 'N'       S01496  1                       S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFEQ *BLANKS                                   S01496
+     C                     MOVE 'Y'       S01496                          S01496
+     C                     ELSE                                           S01496
+     C*                                                                   S01496
+     C**  Error if return code other than '*NRF'                          S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE '*NRF'                                    S01496
+     C                     Z-ADD5         EBASE            ***************S01496
+     C                     MOVEL'*VERIFY' EKEY             * DB ERROR 04 *S01496
+     C                     MOVE 'SCSARDPD'EFILE            ***************S01496
+     C                     EXSR ERROR                                     S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  If S01496 is on and autocharge option is 'Y', seton ind. 55     S01496
+     C*                                                                   S01496
+     C           S01496    IFEQ 'Y'                                       S01496
+     C           BVACOP    ANDEQ'Y'                                       S01496
+     C                     MOVE '1'       *IN55                           S01496
+     C                     END                                            S01496
+     C*
+     C           *IN55     IFEQ '1'                                       S01496
+     C                     OPEN SECUBRL0                                  S01496
+     C                     ELSE                                           S01496
+     C                     OPEN CUBRD                                     S01496
+     C                     END                                            S01496
+      *
+     C                     ENDSR                           *ENDSR INIT *
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PROCEDURE: P1                                                *
+     C*  FUNCTION: DISPLAY & VALIDATE INITIAL SCREEN                  *
+     C*  CALLED FROM: MAINLINE CONTROL                                *
+     C*  ARRAY: ARA 19/4                                              *
+     C*  CALLS: FHELP                                                 *   S01199
+     C*         VALCUS                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           P1        BEGSR                           *BEGSR P1   *
+     C*
+     C*  BLANK OUT INPUT FIELDS FROM INITIAL & DETAIL SCREENS
+     C*
+     C                     MOVE *BLANKS   CLR
+     C*
+     C           *IN64     IFEQ '1'                        ---B1
+     C                     SETON                     65
+     C                     SETOF                     64
+     C                     END                             ---E1
+     C*
+     C*  REPEAT THE FOLLOWING CODE UNTIL THE INIT. SCREEN IS ERROR FREE
+     C*
+     C           *IN65     DOUEQ'0'                        ---B1
+     C           *IN66     ANDEQ'0'                                       S01117
+     C                     Z-ADD0         Z       30
+     C                     EXFMTSE3153F1
+     C*
+     C********** *IN07     DOWEQ'1'                        ---B2          S01199
+     C**********           EXSR FHELP                                     S01199
+     C**********           READ SE3153F1                 06               S01199
+     C**********           END                             ---E2          S01199
+     C*
+     C                     MOVEA*BLANKS   ARA
+     C                     MOVE *BLANKS   ERCOD1
+     C                     SETOF                     111213
+     C                     SETOF                     141516
+     C                     SETOF                     171819
+     C                     SETOF                     202122
+     C                     SETOF                     506580
+     C                     SETOF                     0810
+     C                     SETOF                     66                   S01117
+     C*
+     C*  F3 OR F12 DON'T VALIDATE
+     C*
+     C           *INKC     IFNE '1'                        ---B2
+     C           *INKL     ANDNE'1'
+     C*                                                                   S01117
+     C                     MOVE 'N'       @SEL    1                       S01117
+      *                                                                   S01117
+     C                     MOVELCUSTND    @STP    1                       S01117
+     C           @STP      IFEQ '?'                                       S01117
+     C                     MOVE 'Y'       @SEL                            S01117
+     C                     SETON                     66                   S01117
+      *                                                                   S01117
+      ** Access customer details file SDSECSPD via access object prog.    S01117
+      *                                                                   S01117
+     C                     CALL 'AOSECSR0'                                S01117
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY    '@OPTN   7                       S01117
+     C                     PARM '? '      @AENB   6                       S01117
+     C           SDSECS    PARM SDSECS    DSSDY                           S01117
+     C           @RTCD     IFEQ *BLANKS                                   S01117
+     C                     MOVELBFCUST    CUSTND                          S01117
+     C                     ELSE                                           S01117
+     C                     MOVE *BLANK    CUSTND                          S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C*     IF SELECTION NOT MADE PROCEED TO VALIDATE                     S01117
+     C           @SEL      IFEQ 'N'                                       S01117
+     C*
+     C*  VALIDATE ACTION CODE - MANDATORY
+     C*
+     C           ACODE     IFEQ *BLANKS                    ---B3
+     C                     ADD  1         Z
+     C                     MOVE ' 101'    ARA,Z
+     C                     SETON                     6511
+     C                     END                             ---E3
+     C*
+     C*  VALIDATE ACTION CODE - 'I' 'A' 'E' OR 'D'
+     C*
+     C           ACODE     IFNE 'I'                        ---B3
+     C           ACODE     ANDNE'A'
+     C           ACODE     ANDNE'E'
+     C           ACODE     ANDNE'D'
+     C                     ADD  1         Z
+     C                     MOVE ' 102'    ARA,Z
+     C                     SETON                     6511
+     C                     END                             ---E3
+     C*
+     C*  IF IN ENQUIRE MODE SETON INDICATOR 06 i.e. NO UPDATE REQUIRED
+     C*
+     C           ACODE     IFEQ 'E'                        ---B3
+     C                     SETON                     06
+     C                     ELSE                            ---X3
+     C                     SETOF                     06
+     C                     END                             ---E3
+     C*                                                                   S01496
+     C**  If charges by customer group feature is on, validate            S01496
+     C**  customer group code else validate classification                S01496
+     C*                                                                   S01496
+     C           *IN55     IFEQ '1'                                       S01496
+     C*                                                                   S01496
+     C                     CALL 'AOCUGRR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY   ' WLOPTN                          S01496
+     C                     PARM USGRP     WLGRPC  2                       S01496
+     C           SDCUGR    PARM SDCUGR    DSSDY                           S01496
+     C*                                                                   S01496
+     C**  If record not found, display error message                      S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     ADD  1         Z                               S01496
+     C                     MOVE ' 116'    ARA,Z                           S01496
+     C                     SETON                     6512                 S01496
+     C                     ELSE                                           S01496
+     C                     MOVE USGRP     CLGR                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     ELSE                                           S01496
+     C/COPY WNCPYSRC,SE3153C001
+     C*
+     C*  CLASSIFICATION IS MANDATORY IF CUSTOMER NUMBER/
+     C*  SHORTNAME IS NOT ENTERED
+     C*
+     C           DISCD     IFEQ *BLANKS                    ---B3
+     C           CUSTND    ANDEQ*BLANKS
+     C                     ADD  1         Z
+     C                     MOVE ' 103'    ARA,Z
+     C                     SETON                     6512
+     C                     END                             ---E3
+     C*
+     C*  CLASSIFICATION IF ENTERED MUST BE = 'S','D' OR 'M'               S01176
+     C*
+     C           DISCD     IFNE *BLANKS                    ---B3
+     C           DISCD     ANDNE'S'
+     C           DISCD     ANDNE'D'
+     C           DISCD     ANDNE'M'
+     C                     ADD  1         Z
+     C                     MOVE ' 105'    ARA,Z
+     C                     SETON                     6512
+     C                     END                             ---E3
+     C*                                                                   S01496
+     C                     END                                            S01496
+     C*
+     C*  INVESTMENT TYPE MANDATORY IF MARKET CENTRE ENTERED
+     C*
+     C           MARKC     IFNE *BLANKS                    ---B3
+     C           INVTYP    ANDEQ*BLANKS
+     C                     ADD  1         Z
+     C                     MOVE ' 106'    ARA,Z
+     C                     SETON                     6514
+     C                     END                             ---E3
+     C*
+     C*
+     C*  INVESTMENT TYPE IF ENTERED MUST EXIST ON THE INVESTMENT TYPES
+     C*  TABLE (LF/INVTO)
+     C*
+     C           INVTYP    IFNE *BLANKS                    ---B3
+     C*
+     C           INVTYP    CHAININVTO                70
+     C*
+     C           *IN70     IFEQ '1'                        ---B4
+     C           RECI      ORNE 'D'
+     C                     ADD  1         Z
+     C                     MOVE ' 107'    ARA,Z
+     C                     SETON                     6514
+     C                     END                             ---E4
+     C*
+     C                     END                             ---E3
+     C*
+     C*  MARKET CENTRE MANDATORY IF CUSTOMER NUMBER/SHORTNAME ENTERED
+     C*
+     C           CUSTND    IFNE *BLANKS                    ---B3
+     C           MARKC     ANDEQ*BLANKS
+     C                     ADD  1         Z
+     C                     MOVE ' 108'    ARA,Z
+     C                     SETON                     6515
+     C                     END                             ---E3
+     C*
+     C*  MARKET CENTRE IF ENTERED DETAILS MUST EXIST ON THE MKT CENTRE
+     C*  TABLE (LF/SEMKC)
+     C*
+     C           MARKC     IFNE *BLANKS                    ---B3
+     C*
+     C           MARKC     CHAINSEMKC                70
+     C*
+     C           *IN70     IFEQ '1'                        ---B4
+     C           RECI      ORNE 'D'
+     C                     ADD  1         Z
+     C                     MOVE ' 109'    ARA,Z
+     C                     SETON                     6515
+     C                     END                             ---E4
+     C*
+     C                     END                             ---E3
+     C*
+     C*  CUSTOMER NUMBER/SHORTNAME VALIDATION
+     C*
+     C                     EXSR VALCUS
+     C*
+     C*  IF A VALID RECORD IS ENTERED INDICATOR 50 IS ON & IF THE
+     C*  CLASSIFICATION IT MUST BE CHECKED                                S01176
+     C*  AGAINST THE VALUE FOUND IN PF/CLINTSE
+     C*
+     C           *IN50     IFEQ '1'                        ---B3
+     C           DISCD     ANDNE*BLANKS
+     C***********DISCD     ANDNEC1DI                                      S01117
+     C           DISCD     ANDNEBFCLAS                                    S01117
+     C                     ADD  1         Z
+     C                     MOVE ' 104'    ARA,Z
+     C                     SETON                     6512
+     C                     END                             ---E3
+     C*
+     C*  SET UP KEY FOR CHAIN TO CUSTOMER/BROKER DEFAULT CHARGES FILE
+     C*
+     C           DISCD     IFNE *BLANKS                    ---B3
+     C                     MOVE DISCD     C1DI
+     C*
+     C*  ELSE IT WILL HAVE BEEN RETRIEVED FROM PF/CLINTSE
+     C*
+     C                     END                             ---E3
+     C*
+     C                     MOVE INVTYP    SITP
+     C                     MOVE MARKC     MRKT
+     C*
+     C           CUSTND    IFEQ *BLANKS                    ---B3
+     C*
+     C*  ELSE IT WILL HAVE BEEN RETRIEVED FROM PF/CLINTSE
+     C*
+     C**********           Z-ADD0         CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     END                             ---E3
+     C*
+     C           *IN55     IFEQ '1'                                       S01496
+     C           CGBKEY    CHAINSECUBRL0             72                   S01496
+     C                     ELSE                                           S01496
+     C           CUBKEY    CHAINCUBRD                72
+     C                     END                                            S01496
+     C*
+     C*  IF RECORD EXISTS RELEASE IT & STORE THE TRANSACTION NUMBER
+     C*  OF THE LAST UPDATE
+     C*
+     C           *IN72     IFEQ '0'                        ---B3
+     C*                                                                   S01496
+     C           *IN55     IFEQ '1'                                       S01496
+     C                     EXCPTREL1B                                     S01496
+     C                     ELSE                                           S01496
+     C                     EXCPTREL1
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     Z-ADDTNLU      WTNLU   50
+     C                     END                             ---E3
+     C*
+     C*  IF INSERT MODE CHECK THAT THE RECORD DOESN'T ALREADY EXIST
+     C*
+     C           ACODE     IFEQ 'I'                        ---B3
+     C           *IN72     ANDNE'1'
+     C           RECI      ANDNE'C'
+     C                     ADD  1         Z
+     C                     MOVE ' 113'    ARA,Z
+     C                     SETON                     121314
+     C                     SETON                     1565
+     C                     END                             ---E3
+     C*
+     C*  IF AMEND OR DELETE MODE CHECK THAT THE RECORD EXISTS
+     C*  WITH A RECORD ID OF 'D'
+     C*
+     C           ACODE     IFEQ 'A'                        ---B3
+     C           ACODE     OREQ 'D'
+     C*
+     C           *IN72     IFEQ '1'                        ---B4
+     C           *IN72     OREQ '0'
+     C           RECI      ANDNE'D'
+     C                     ADD  1         Z
+     C                     MOVE ' 114'    ARA,Z
+     C                     SETON                     121314
+     C                     SETON                     1565
+     C                     END                             ---E4
+     C*
+     C                     END                             ---E3
+     C*
+     C*  IF ENQUIRE MODE CHECK THAT THE RECORD EXISTS BUT RECI MUST
+     C*  BE = 'C' OR 'D'
+     C*
+     C           ACODE     IFEQ 'E'                        ---B3
+     C*
+     C           *IN72     IFEQ '0'                        ---B4
+     C           RECI      ANDEQ'D'
+     C           *IN72     OREQ '0'
+     C           RECI      ANDEQ'C'
+     C*
+     C*  IT IS VALID - DO NOTHING, ELSE ISSUE ERROR MESSAGE
+     C*
+     C                     ELSE                            ---X4
+     C*
+     C                     ADD  1         Z
+     C                     MOVE ' 115'    ARA,Z
+     C                     SETON                     121314
+     C                     SETON                     1565
+     C                     END                             ---E4
+     C*
+     C                     END                             ---E3
+     C*
+     C*  IF IN ENQUIRE OR DELETE MODE SETON PROTECT INDICATOR
+     C*
+     C           ACODE     IFEQ 'E'                        ---B3
+     C           ACODE     OREQ 'D'
+     C                     SETON                     0810
+     C                     END                             ---E3
+     C*
+     C*  IF IN DELETE MODE SETON 81 TO ENABLE F10 DISPLAY F10 MESSAGE
+     C*
+     C           ACODE     IFEQ 'D'                        ---B3
+     C                     SETON                     81
+     C*
+     C                     ELSE                            ---X3
+     C                     SETOF                     81
+     C                     END                             ---E3
+     C*
+     C*  IF IN ENQUIRE MODE & RECI = 'C' SETON 80 TO DISPLAY 'DELETED'
+     C*  ON DETAIL SCREEN
+     C*
+     C           ACODE     IFEQ 'E'                        ---B3
+     C           RECI      ANDEQ'C'
+     C                     SETON                     80
+     C                     END                             ---E3
+     C*
+     C*   SPF VALIDATION                                                  S01117
+     C*                                                                   S01117
+     C           ACODE     IFEQ 'I'                                       S01117
+     C           ACODE     OREQ 'A'                                       S01117
+     C           ACODE     OREQ 'E'                                       S01117
+     C           ACODE     OREQ 'D'                                       S01117
+     C*                                                                   S01117
+     C**   IF SINGLE BRANCH ENVIRONMENT                                   S01117
+     C*                                                                   S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM ACODE     @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         Z                               S01117
+     C                     MOVE ' 302'    ARA,Z                           S01117
+     C                     SETON                     6511                 S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C**   IF MULTIBRANCHING ENVIRONMENT                                  S01117
+     C*                                                                   S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM ACODE     @ZACTN  1                       S01117
+     C                     PARM USRBCH    @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFEQ 2                                         S01117
+     C                     ADD  1         Z                               S01117
+     C                     MOVE ' 304'    ARA,Z                           S01117
+     C                     SETON                     6511                 S01117
+     C                     END                                            S01117
+     C           @ERR      IFEQ 1                                         S01117
+     C                     ADD  1         Z                               S01117
+     C                     MOVE ' 303'    ARA,Z                           S01117
+     C                     SETON                     6511                 S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                             ---E SPF       S01117
+     C*                                                                   S01117
+     C                     END                             ---E2
+     C*
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           *IN65     IFEQ '1'                        ---B2
+     C                     MOVEAARA       ERCOD1
+     C                     END                             ---E2
+     C*
+     C                     END                             ---E1
+     C*
+     C                     ENDSR                           *ENDSR P1   *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PROCEDURE: P2                                                *
+     C*  FUNCTION: VALIDATE SCREEN SE3153D2                           *
+     C*  CALLED FROM: MAINLINE CONTROL                                *
+     C*  ARRAY: ARA 19/4                                              *
+     C*  CALLS: FHELP                                                 *   S01199
+     C*         VALDET                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           P2        BEGSR                           *BEGSR P2   *
+     C*
+     C*IFIFONOTNINNINSERTOMODEOLOADEDETAILCSCREENEDETAILS*************    S01496
+     C*                                                                   S01496
+     C**  If not in insert mode or if insert mode and record ID = 'C',    S01496
+     C**  load detail screen details                                      S01496
+     C*
+     C           ACODE     IFNE 'I'                        ---B1
+     C*                                                                   S01496
+     C           ACODE     OREQ 'I'                                       S01496
+     C           RECI      ANDEQ'C'                                       S01496
+     C                     MOVE TBCC      BCCD
+     C                     MOVE TCCC      CCCD
+     C***********          MOVE TTCC      LTDCD                           S01176
+     C***********          MOVE TPCC      PMTD                            S01176
+     C***********          MOVE TDCC      CDCCD                           S01176
+     C***********          MOVE TOCC      RBCCD                           S01176
+     C***********          MOVE TRCC      RDCCD                           S01176
+     C                     MOVE DCC1      SDCC1                           S01176
+     C                     MOVE DCC2      SDCC2                           S01176
+     C                     MOVE CMRP      ZFIELD                          S01176
+     C                     Z-ADD3         ZADEC                           S01176
+     C                     EXSR ZEDIT                                     S01176
+     C                     MOVE ZFIELD    SCMRP                           S01176
+     C                     END                             ---E1
+     C*
+     C*
+     C***********ACODE     IFEQ 'I'                        ---B1          S01176
+     C***********ACODE     OREQ 'A'                                       S01176
+     C***********                                                         S01176
+     C***********DISCD     IFEQ 'D'                        ---B2          S01176
+     C***********DISCD     OREQ 'M'                                       S01176
+     C***********          SETON                     08                   S01176
+     C*
+     C***********          ELSE                            ---X2          S01176
+     C***********          SETOF                     08                   S01176
+     C***********          END                             ---E2          S01176
+     C*
+     C***********          END                             ---E1          S01176
+     C*
+     C*  REPEAT THE FOLLOWING CODE UNTIL THE DET. SCREEN IS ERROR FREE
+     C*
+     C           *IN65     DOUEQ'0'                        ---B1
+     C                     Z-ADD0         Z       30
+     C                     EXFMTSE3153F2
+     C*
+     C           ACODE     IFEQ 'A'                        ---B2
+     C           ACODE     OREQ 'I'
+     C*
+     C********** *IN07     DOWEQ'1'                        ---B3          S01199
+     C**********           EXSR FHELP                                     S01199
+     C**********           READ SE3153F2                 06               S01199
+     C**********           END                             ---E3          S01199
+     C*
+     C                     MOVEA*BLANKS   ARA
+     C                     MOVE *BLANKS   ERCOD1
+     C                     SETOF                     111213
+     C                     SETOF                     141516
+     C                     SETOF                     171819
+     C                     SETOF                     202122
+     C                     SETOF                     506510
+     C*
+     C*  F3 OR F12 DON'T VALIDATE
+     C*
+     C           *INKC     IFNE '1'                        ---B3
+     C           *INKL     ANDNE'1'
+     C*
+     C*  VALIDATE BROKERAGE COMMISSION CODE
+     C*
+     C           BCCD      IFNE *BLANKS                    ---B4
+     C                     MOVE BCCD      CCOM1
+     C                     EXSR VALDET
+     C                     END                             ---E4
+     C*
+     C           *IN09     IFEQ '1'                        ---B4
+     C                     SETOF                     09
+     C                     MOVE ' 201'    ARA,Z
+     C                     SETON                     6516
+     C                     END                             ---E4
+     C*
+     C*  VALIDATE CUSTOMER COMMISSION CODE
+     C*
+     C           CCCD      IFNE *BLANKS                    ---B4
+     C                     MOVE CCCD      CCOM1
+     C                     EXSR VALDET
+     C                     END                             ---E4
+     C*
+     C           *IN09     IFEQ '1'                        ---B4
+     C                     SETOF                     09
+     C                     MOVE ' 202'    ARA,Z
+     C                     SETON                     6517
+     C                     END                             ---E4
+     C**********************************                                  S01176
+     C*VALIDATE*LOCAL*TRANSFER*DUTY*CODE******
+     C***********                                                         S01176
+     C***********LTDCD     IFNE *BLANKS                    ---B4          S01176
+     C***********          MOVE LTDCD     CCOM1                           S01176
+     C***********          EXSR VALDET                                    S01176
+     C***********          END                             ---E4          S01176
+     C***********                                                         S01176
+     C************IN09     IFEQ '1'                        ---B4          S01176
+     C***********          SETOF                     09                   S01176
+     C***********          MOVE ' 203'    ARA,Z                           S01176
+     C***********          SETON                     6518                 S01176
+     C***********          END                             ---E4          S01176
+     C***********                                                         S01176
+     C*VALIDATE*PMT*CHARGE*CODE******
+     C***********                                                         S01176
+     C***********PMTD      IFNE *BLANKS                    ---B4          S01176
+     C***********          MOVE PMTD      CCOM1                           S01176
+     C***********          EXSR VALDET                                    S01176
+     C***********          END                             ---E4          S01176
+     C***********                                                         S01176
+     C************IN09     IFEQ '1'                        ---B4          S01176
+     C***********          SETOF                     09                   S01176
+     C***********          MOVE ' 204'    ARA,Z                           S01176
+     C***********          SETON                     6519                 S01176
+     C***********          END                             ---E4          S01176
+     C*
+     C*************************************                               S01176
+     C*
+     C***********CDCCD     IFNE *BLANKS                    ---B4          S01176
+     C***********          MOVE CDCCD     CCOM1                           S01176
+     C***********          EXSR VALDET                                    S01176
+     C***********          END                             ---E4          S01176
+     C***********                                                         S01176
+     C************IN09     IFEQ '1'                        ---B4          S01176
+     C***********          SETOF                     09                   S01176
+     C***********          MOVE ' 206'    ARA,Z                           S01176
+     C***********          SETON                     6520                 S01176
+     C***********          END                             ---E4          S01176
+     C***********                                                         S01176
+     C*VALIDATE*RIGHTS/BONUS*CHARGE*CODE******************
+     C***********                                                         S01176
+     C***********RBCCD     IFNE *BLANKS                    ---B4          S01176
+     C***********          MOVE RBCCD     CCOM1                           S01176
+     C***********          EXSR VALDET                                    S01176
+     C***********          END                             ---E4          S01176
+     C***********                                                         S01176
+     C************IN09     IFEQ '1'                        ---B4          S01176
+     C***********          SETOF                     09                   S01176
+     C***********          MOVE ' 208'    ARA,Z                           S01176
+     C***********          SETON                     6521                 S01176
+     C***********          END                             ---E4          S01176
+     C***********                                                         S01176
+     C*VALIDATE*RECEIPTS/DELIVERIES*CHARGE*CODE******
+     C***********                                                         S01176
+     C***********RDCCD     IFNE *BLANKS                    ---B4          S01176
+     C***********          MOVE RDCCD     CCOM1                           S01176
+     C***********          EXSR VALDET                                    S01176
+     C***********          END                             ---E4          S01176
+     C***********                                                         S01176
+     C************IN09     IFEQ '1'                        ---B4          S01176
+     C***********          SETOF                     09                   S01176
+     C***********          MOVE ' 210'    ARA,Z                           S01176
+     C***********          SETON                     6522                 S01176
+     C***********          END                             ---E4          S01176
+     C*                                                                   S01176
+     C*  VALIDATE DEFAULT CHARGE CODE 1                                   S01176
+     C*                                                                   S01176
+     C           SDCC1     IFNE *BLANKS                    ---B4          S01176
+     C                     MOVE SDCC1     CCOM1                           S01176
+     C                     EXSR VALDET                                    S01176
+     C                     END                             ---E4          S01176
+     C*                                                                   S01176
+     C           *IN09     IFEQ '1'                        ---B4          S01176
+     C                     SETOF                     09                   S01176
+     C                     MOVE ' 203'    ARA,Z                           S01176
+     C                     SETON                     6518                 S01176
+     C                     END                             ---E4          S01176
+     C*                                                                   S01176
+     C*  VALIDATE DEFAULT CHARGE CODE 2                                   S01176
+     C*                                                                   S01176
+     C           SDCC2     IFNE *BLANKS                    ---B4          S01176
+     C                     MOVE SDCC2     CCOM1                           S01176
+     C                     EXSR VALDET                                    S01176
+     C                     END                             ---E4          S01176
+     C*                                                                   S01176
+     C           *IN09     IFEQ '1'                        ---B4          S01176
+     C                     SETOF                     09                   S01176
+     C                     MOVE ' 204'    ARA,Z                           S01176
+     C                     SETON                     6519                 S01176
+     C                     END                             ---E4          S01176
+     C*                                                                   S01176
+     C                     MOVE *BLANKS   ZFLD17                          S01176
+     C                     MOVELSCMRP     ZFLD17                          S01176
+     C                     Z-ADD5         ZSDIG                           S01176
+     C                     Z-ADD3         ZSDEC                           S01176
+     C                     EXSR ZASIGN                                    S01176
+     C           *IN99     IFEQ '1'                                       S01176
+     C                     ADD  1         Z                               S01176
+     C                     MOVE ' 205'    ARA,Z                           S01176
+     C                     SETON                     6520                 S01176
+     C                     END                             ---E4          S01176
+     C*                                                                   S01176
+     C                     END                             ---E3
+     C*
+     C                     END                             ---E2
+     C*
+     C           *IN65     IFEQ '1'                        ---B2
+     C                     MOVEAARA       ERCOD1
+     C                     END                             ---E2
+     C*
+     C                     END                             ---E1
+     C*
+     C                     ENDSR                           *ENDSR P2   *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PROCEDURE VALCUS                                             *
+     C*  SUBROUTINE TO VALIDATE CUSTOMER NUMBER FIELD                 *
+     C*  ARRAY: ARZ 10/1                                              *
+     C*  CALLED FROM: P1                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALCUS    BEGSR                           *BEGSR VALCUS*
+     C                     SETOF                     50
+     C*
+     C*  IF CUSTOMER FIELD IS BLANK DON'T CONTINUE WITH THIS VALIDATION
+     C*
+     C           CUSTND    IFNE *BLANKS                    ---B1
+     C                     MOVE *BLANKS   ARZ
+     C                     MOVEACUSTND    ARZ
+     C*
+     C*  CHECK IF THE FIRST CHARACTER IS NUMERIC
+     C*  THIS IS DONE IN TWO STAGES
+     C*  a).check if it passes testn
+     C*  b).check if the first half-byte of the last digit = hex 'F'
+     C*
+     C**********           TESTN          ARZ,1      41                                       CSD027
+     C**********           TESTB'0123'    ARZ,1          42                                   CSD027
+     C*
+     C********** *IN41     IFEQ '1'                        ---B2                              CSD027
+     C********** *IN42     ANDEQ'1'                                                           CSD027
+     C*
+     C***IF*IT*DOES PASS CUSTND MUST BE 6 NUMERIC FOLLOWED BY 4 BLANKS                        CSD027
+     C***IF*IT*DOESN'T PASS THIS TEST PERFORM SHORTNAME VALIDATION                            CSD027
+     C*  PERFORM SHORTNAME VALIDATION                                                         CSD027
+     C*
+     C                     MOVEAARZ,1     W6      6
+     C**********           TESTN          W6         43                                       CSD027
+     C**********           TESTB'0123'    ARZ,6          44                                   CSD027
+     C                     MOVEAARZ,7     W4      4
+     C*
+     C********** *IN44     IFNE '1'                        ---B3                              CSD027
+     C********** *IN43     ORNE '1'                                                           CSD027
+     C********** W4        ORNE *BLANKS                                                       CSD027
+     C           W4        IFNE *BLANKS                                                       CSD027
+     C                     ADD  1         Z
+     C                     MOVE ' 110'    ARA,Z
+     C                     SETON                     6513
+     C                     ELSE                            ---X3
+     C*
+     C***IT*IS*A*VALID*NUMERIC*ENTRY*NOW*CHECK*IT*EXISTS*ON*LF/CLINT***   S01117
+     C***FORMAT*CLINTSEF***********************************************   S01117
+     C***IT*IS*A*VALID NUMERIC ENTRY NOW CHECK IT EXISTS ON PF/SDSECSPD   S01117              CSD027
+     C*  IT IS A VALID ENTRY NOW CHECK IT EXISTS ON PF/SDSECSPD                        S01117 CSD027
+     C*
+     C***********          MOVE W6        CNUMSE                          S01117
+     C***********          MOVE '1'       RCDTSE                          S01117
+     C***********CLNTSE    CHAINCLINTSEF             70                   S01117
+     C*
+     C                     MOVELW6        @SKEY   6                       S01117
+     C                     CALL 'AOSECSR0'                                S01117
+     C                     PARM *BLANKS   @RTCD                           S01117
+     C                     PARM '*KEY   ' @OPTN                           S01117
+     C                     PARM           @SKEY                           S01117
+     C           SDSECS    PARM SDSECS    DSSDY                           S01117
+     C*                                                                   S01117
+     C************IN70     IFEQ '1'                        ---B4          S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     ADD  1         Z
+     C                     MOVE ' 111'    ARA,Z
+     C                     SETON                     6513
+     C*
+     C                     ELSE                            ---X4
+     C                     SETON                     50
+     C                     MOVELBFCUST    CNUM                            S01117
+     C                     END                             ---E4
+     C*
+     C                     END                             ---E3
+     C*
+     C**********           ELSE                            ---X2                              CSD027
+     C*
+     C*  1st CHARACTER WAS NOT NUMERIC
+     C***CHECK*SHORTNAME*EXISTS*ON*LF/SNAME*(BUILT*OVER*CLINTCB)*******   S01117
+     C*  CHECK SHORTNAME EXISTS ON PF/SDCUSTPD                            S01117
+     C*
+     C***********CUSTND    CHAINSNAME                71                   S01117
+     C*
+     C                     MOVELCUSTND    @CKEY  10                       S01117
+     C                     CALL 'AOCUSTR0'                                S01117
+     C                     PARM *BLANKS   @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM           @CKEY                           S01117
+     C                     PARM *BLANKS   @KYSTS  7                       S01117
+     C           SDCUST    PARM SDCUST    DSSDY                           S01117
+     C************IN71     IFEQ '1'                        ---B3          S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     ADD  1         Z
+     C                     MOVE ' 112'    ARA,Z
+     C                     SETON                     6513
+     C*
+     C                     ELSE                            ---X3
+     C*
+     C***&*IF*IT*DOES,*CHECK*THAT*A*RECORD*EXISTS*ON*LF/CLINT**********   S01117
+     C***FORMAT*CLINTSEF***********************************************   S01117
+     C*  & IF IT DOES, CHECK THAT A RECORD EXISTS ON PF/SDSECSPD          S01117
+     C*
+     C***********          Z-ADDCNUM      CNUMSE                          S01117
+     C***********          MOVE '1'       RCDTSE                          S01117
+     C***********CLNTSE    CHAINCLINTSEF             70                   S01117
+     C                     MOVELBBCUST    @SKEY                           S01117
+     C                     CALL 'AOSECSR0'                                S01117
+     C                     PARM *BLANKS   @RTCD                           S01117
+     C                     PARM '*KEY   ' @OPTN                           S01117
+     C                     PARM           @SKEY                           S01117
+     C           SDSECS    PARM SDSECS    DSSDY                           S01117
+     C*
+     C************IN70     IFEQ '1'                        ---B4          S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     ADD  1         Z
+     C                     MOVE ' 112'    ARA,Z
+     C                     SETON                     6513
+     C*
+     C                     ELSE                            ---X4
+     C                     SETON                     50
+     C                     MOVELBFCUST    CNUM                            S01117
+     C                     END                             ---E4
+     C*
+     C                     END                             ---E3
+     C*
+     C**********           END                             ---E2                              CSD027
+     C*
+     C                     END                             ---E1
+     C*
+     C                     ENDSR                           *ENDSR VALCUS*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PROCEDURE VALDET                                             *
+     C*  SUBROUTINE TO VALIDATE DETAIL LINES                          *
+     C*  CALLED FROM: P2                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALDET    BEGSR                           *BEGSR VALDET*
+     C*
+     C                     MOVE *BLANKS   CCY1
+     C                     SETOF                     09
+     C*
+     C**  SET LOWER LIMITS USING CHARGE CODE ONLY
+     C*
+     C           SECK2     SETLLSECGC                    74
+     C*
+     C*  IF 74 OFF NO MATCH FOUND SO AN ERROR WILL OCCUR
+     C*
+     C           *IN74     IFEQ '0'                        ---B1
+     C*
+     C*  *IN74 IS NOT ON - NO RECORDS DELETED OR OTHERWISE  = ERROR
+     C*
+     C                     SETON                     09
+     C                     ADD  1         Z
+     C                     GOTO ENDVAL
+     C                     END                             ---E1
+     C*
+     C           LOOPVL    TAG
+     C*
+     C*    Loop to read all potentially deleted rcds
+     C*
+     C           SECK2     READESECGC                    73
+     C*
+     C*  READ ALL RECORDS WITH THIS KEY
+     C*
+     C           *IN73     IFEQ '0'
+     C*
+     C*  IF NOT END OF FILE ...
+     C*
+     C           RECI      IFEQ 'C'
+     C           RECI      OREQ '*'
+     C*
+     C*  IF DELETED READ THE NEXT ONE WITH THIS KEY
+     C*
+     C                     GOTO LOOPVL
+     C                     END
+     C*
+     C*  RECORD WAS NOT DELETED SO IT WAS A VALID RECD WITH CORRECT KEY
+     C*
+     C                     GOTO ENDVAL
+     C                     ELSE
+     C*
+     C*  END OF FILE ON READ EQUAL - ALL RECDS WERE DELETED ONES = ERR
+     C*
+     C                     SETON                     09
+     C                     ADD  1         Z
+     C                     END
+     C*
+     C           ENDVAL    ENDSR                           *ENDSR VALDET*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PROCEDURE P3                                                 *
+     C*  SUBROUTINE TO UPDATE FILES ONCE ALL VALIDATION IS COMPLETE   *
+     C*  CALLED FROM: MAINLINE CONTROL                                *
+     C*  CALLS: ERROR                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           P3        BEGSR                           *BEGSR P3   *
+     C                     SETOF                     6576
+     C                     MOVEA*BLANKS   ARA
+     C                     MOVE *BLANKS   ERCOD1
+     C           1         CHAINCUBRDA               82
+     C*
+     C*  IF TRAILER RECORD DOESN'T EXIST ISSUE D/B ERROR 2
+     C*
+     C           *IN82     IFEQ '1'                        ---B1
+     C                     Z-ADD2         EBASE            ************
+     C                     MOVEL'TRAILER' EKEY             *DB ERROR 02*
+     C                     MOVEL'TRAIL'   EFILE            ************
+     C                     EXSR ERROR
+     C                     END                             ---E1
+     C*
+     C*
+     C           *IN55     IFEQ '1'                                       S01496
+     C           CGBKEY    CHAINSECUBRL0             72                   S01496
+     C                     ELSE                                           S01496
+     C           CUBKEY    CHAINCUBRD                72
+     C                     END                                            S01496
+     C*
+     C*  IF RECORD DOESN'T EXIST & ACODE NOT = 'I' OR
+     C*  IF RECORD EXISTS,ACTION CODE NOT = 'I' & RECD ID NOT = 'D' OR
+     C*  IF RECORD UPDATED SINCE LAST READ OR
+     C*  IF RECORD NOW EXISTS & ACODE = 'I' ISSUE ERROR MESSAGE 229
+     C*
+     C           *IN72     IFEQ '1'                        ---B1
+     C           ACODE     ANDNE'I'
+     C*
+     C           *IN72     OREQ '0'
+     C           ACODE     ANDNE'I'
+     C           RECI      ANDNE'D'
+     C*
+     C           *IN72     OREQ '0'
+     C           ACODE     ANDNE'I'
+     C           WTNLU     ANDNETNLU
+     C*
+     C           *IN72     OREQ '0'
+     C           ACODE     ANDEQ'I'
+     C*
+     C                     Z-ADD1         Z
+     C                     MOVE ' 229'    ARA,Z
+     C                     SETON                     64
+     C*
+     C                     ELSE                            ---X1
+     C*
+     C*  RETRIEVE THE NEXT AVAILABLE TRANSACTION NUMBER
+     C*
+     C                     EXSR ZTNLU1
+     C                     Z-ADDFNATN     TNLU
+     C                     MOVE RUND      LCD
+     C*
+     C           ACODE     IFEQ 'I'                        ---B2
+     C           ACODE     OREQ 'A'
+     C                     MOVE BCCD      TBCC
+     C                     MOVE CCCD      TCCC
+     C***********          MOVE LTDCD     TTCC                            S01176
+     C***********          MOVE PMTD      TPCC                            S01176
+     C***********          MOVE CDCCD     TDCC                            S01176
+     C***********          MOVE RBCCD     TOCC                            S01176
+     C***********          MOVE RDCCD     TRCC                            S01176
+     C                     MOVE SDCC1     DCC1                            S01176
+     C                     MOVE SDCC2     DCC2                            S01176
+     C                     MOVE ZOUT15    CMRP                            S01176
+     C                     END                             ---E2
+     C*
+     C*  INSERTION PROCESSING
+     C*
+     C           ACODE     IFEQ 'I'                        ---B2
+     C*
+     C** RETRIEVE INSERT RECORD AGAIN IN CASE IT IS :-
+     C*
+     C*               A) INSERTED SINCE BY ANOTHER USER
+     C*               B) INSERT OVER A DELETRE AND SHOULD BE UPDATED
+     C*
+     C           *IN55     IFEQ '1'                                       S01496
+     C           CGBKEY    CHAINSECUBRL0             72                   S01496
+     C                     ELSE                                           S01496
+     C           CUBKEY    CHAINCUBRD                72
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C           *IN72     IFEQ '0'
+     C*
+     C*  RECORD IS RETRIEVED
+     C*
+     C           TNLU      ANDNEWTNLU
+     C*
+     C*  ERROR - UPDATED BY ANOTHER WORKSTATION USER
+     C*
+     C                     Z-ADD1         Z
+     C                     MOVE ' 229'    ARA,Z
+     C                     SETON                     64
+     C                     GOTO SKIPI
+     C                     END
+     C*
+     C                     MOVE 'D'       RECI
+     C*
+     C           DISCD     IFNE *BLANKS                    ---B3
+     C                     MOVE DISCD     C1DI
+     C*
+     C*  ELSE IT WILL HAVE BEEN RETRIEVED FROM PF/CLINTSE
+     C*
+     C                     END                             ---E3
+     C*
+     C                     MOVE INVTYP    SITP
+     C                     MOVE MARKC     MRKT
+     C                     MOVE 'I'       CHTP
+     C*
+     C           CUSTND    IFEQ *BLANKS                    ---B3
+     C**********           Z-ADD0         CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C*
+     C*  ELSE IT WILL HAVE BEEN RETRIEVED FROM PF/CLINTSE
+     C*
+     C                     END                             ---E3
+     C*                                                                   S01496
+     C                     MOVE ZOUT15    CMRP                            S01496
+     C*
+     C*  INSERT RECORD ON FILE CUBRD IF WRITE ERROR ASSUME DUPLICATES
+     C*  IS THE CAUSE
+     C*
+     C           *IN55     IFEQ '1'                                       S01496
+     C   72                WRITESCUBRDDF               76                 S01496
+     C  N72                UPDATSCUBRDDF               76                 S01496
+     C                     ELSE                                           S01496
+     C   72                WRITECUBRDDF                76
+     C  N72                UPDATCUBRDDF                76
+     C                     END                                            S01496
+     C*
+     C           *IN76     IFEQ '1'                        ---B3
+     C                     Z-ADD1         Z
+     C                     MOVE ' 229'    ARA,Z
+     C                     SETON                     64
+     C*
+     C                     ELSE                            ---X3
+     C*
+     C*  SET UP FIELDS FOR TRAILER RECORD
+     C*
+     C                     ADD  1         NORE
+     C                     ADD  1         NINS
+     C                     END                             ---E3
+     C*
+     C                     END                             ---E2
+     C*
+     C           SKIPI     TAG                             ** SKIPI **
+     C*
+     C*  AMEND MODE PROCESSING
+     C*
+     C           ACODE     IFEQ 'A'                        ---B2
+     C                     MOVE 'A'       CHTP
+     C*
+     C*  INDICATOR IS LEFT OFF 'UPDATE' OP CODE - IF IT FAILS THE
+     C*  PROGRAM TERMINATES
+     C*
+     C           *IN55     IFEQ '1'                                       S01496
+     C                     UPDATSCUBRDDF                                  S01496
+     C                     ELSE                                           S01496
+     C                     UPDATCUBRDDF
+     C                     END                                            S01496
+     C*
+     C                     ADD  1         NAMD
+     C*
+     C                     END                             ---E2
+     C*
+     C*  DELETION MODE PROCESSING
+     C*
+     C           ACODE     IFEQ 'D'                        ---B2
+     C*
+     C           *INKJ     IFEQ '1'                        ---B3
+     C                     MOVE 'D'       CHTP
+     C                     MOVE 'C'       RECI
+     C*                                                                   S01496
+     C           *IN55     IFEQ '1'                                       S01496
+     C                     UPDATSCUBRDDF                                  S01496
+     C                     ELSE                                           S01496
+     C                     UPDATCUBRDDF
+     C                     END                                            S01496
+     C*
+     C                     SUB  1         NORE
+     C                     ADD  1         NDEL
+     C*
+     C                     ELSE                            ---X3
+     C*
+     C*  IF ACODE = 'D' & F10 NOT PRESSED RELEASE RECORDS & DON'T COMIT
+     C*
+     C                     SETON                     76
+     C*                                                                   S01496
+     C           *IN55     IFEQ '1'                                       S01496
+     C                     EXCPTREL1B                                     S01496
+     C                     ELSE                                           S01496
+     C                     EXCPTREL1
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     EXCPTREL2
+     C                     END                             ---E3
+     C*
+     C                     END                             ---E2
+     C*
+     C*  INDICATOR 76 WILL BE ON IF DUPLICATE KEYS WERE ENCOUNTERED
+     C*  ON THE ATTEMPTED WRITE OPERATION OR INSERT MODE & F10 NOT
+     C*  SELECTED
+     C*
+     C           *IN76     IFNE '1'                        ---B2
+     C*
+     C*  Set up commitment text and commit changes
+     C*
+     C                     MOVEL'SE'      @CMMOD
+     C                     MOVEL'SE3153'  @CMPGM
+     C                     MOVELWID       @CMWSI
+     C                     TIME           @CMTIM
+     C                     Z-ADD@CMTIM    @CMTRF
+     C                     MOVELACODE     @CMACT
+     C                     MOVELUSRID     @CMUSR
+     C                     MOVE CLR       @FSREC
+     C*
+     C                     UPDATCUBRDAF                77
+     C*
+     C*  IF TRAILER RECORD UPDATE FAILURE ROLLBACK & ISSUE D/B ERROR 3
+     C*
+     C           *IN77     IFEQ '1'                        ---B3
+     C                     ROLBK
+     C                     Z-ADD3         EBASE            ************
+     C                     MOVEL'TRAILER' EKEY             *DB ERROR 03*
+     C                     MOVEL'TRAIL'   EFILE            ************
+     C                     EXSR ERROR
+     C                     END                             ---E3
+     C*
+     C           @CMTXT    COMIT
+     C*
+     C                     END                             ---E2
+     C*
+     C                     END                             ---E1
+     C*
+     C           *IN64     IFEQ '1'                        ---B1
+     C*
+     C*  IF 64 ON MESSAGE 229 TO BE DISPLAYED & THE TRAILER IS TO BE
+     C*  RELEASED
+     C*
+     C                     MOVEAARA       ERCOD1
+     C                     EXCPTREL2
+     C*
+     C*  IF 72 IS ON THE CUBRDD RECORD IS ALSO TO BE RELEASED
+     C*
+     C           *IN72     IFEQ '0'                        ---B2
+     C*                                                                   S01496
+     C           *IN55     IFEQ '1'                                       S01496
+     C                     EXCPTREL1B                                     S01496
+     C                     ELSE                                           S01496
+     C                     EXCPTREL1
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     END                             ---E2
+     C*
+     C                     END                             ---E1
+     C                     ENDSR                           *ENDSR P3   *
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  PROCEDURE: ERROR                                             *
+     C*  FUNCTION: PERFORM STANDARD MIDAS DATABASE ERROR HANDLING     *
+     C*  CALLED FROM: INIT                                            *
+     C*               P3                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ERROR     BEGSR                           *BEGSR ERROR*
+     C           *LOCK     IN   LDA
+     C                     MOVE EBASE     DBASE
+     C                     MOVE EFILE     DBFILE
+     C                     MOVE EKEY      DBKEY
+     C***********          MOVE 'SE3153'  DBPGM                           S01117
+     C                     OUT  LDA
+     C***********          DUMP
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR                           *ENDSR ERROR*
+     C****************************************************************
+     C/SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*PROCEDURE:*CBDSR****                                           *
+     C*FUNCTION:*FILE CUSTOMER/BROKER EXCEPTION/ERROR SUBROUTINE***   *
+     C*CALLED*FROM:*AUTOMATICALLY WHEN A FILE ERROR ENCOUNTERED****   *
+     C**************EXCEPT WHEN A FILE ERROR INDICATOR IS USED*****   *
+     C*CALLS:**PSSR******                                             *
+     C*  S / R   N O   L O N G E R   U S E D                          *
+     C*****************************************************************
+     C*
+     C***********CBDSR     BEGSR                                          S01176
+     C***********                                                         S01176
+     C***********          MOVE CBDDS     EPFDS                           S01176
+     C***********          MOVE 'F'       EPFLAG  1                       S01176
+     C***********          EXSR *PSSR                                     S01176
+     C*
+     C***********          ENDSR                                          S01176
+     C/SPACE 3
+     C*****************************************************************
+     C*PROCEDURE:*CBDSR*****                                          *
+     C*FUNCTION:*FILE*C/B*DEFAULT*EXCEPTION/ERROR*SUBROUTINE*****     *
+     C*CALLED*FROM:*AUTOMATICALLY*WHEN*A*FILE*ERROR*ENCOUNTERED****   *
+     C**************EXCEPT*WHEN*A*FILE*ERROR*INDICATOR*IS*USED****    *
+     C*CALLS:**PSSR**********                                         *
+     C*  S / R   N O   L O N G E R   U S E D                          *
+     C*****************************************************************
+     C*
+     C***********CBTSR     BEGSR                                          S01176
+     C***********                                                         S01176
+     C***********          MOVE CBTDS     EPFDS                           S01176
+     C***********          MOVE 'F'       EPFLAG  1                       S01176
+     C***********          EXSR *PSSR                                     S01176
+     C*
+     C***********          ENDSR                                          S01176
+     C/SPACE 3
+     C*****************************************************************
+     C*PROCEDURE:**PSSR********                                       *
+     C*FUNCTION:*PROGRAM*EXCEPTION/ERROR*******                       *
+     C*CALLED*FROM:*CBDSR********                                     *
+     C**************CBTSR********                                     *
+     C*CALLS:*SDC2505************                                     *
+     C********SDC2500************                                     *
+     C*  S / R   N O   L O N G E R   U S E D                          *
+     C*****************************************************************
+     C*
+     C************PSSR     BEGSR                           *** *PSSR ***  S01176
+     C***********EPSW      IFNE '1'                        ---B1          S01176
+     C***********          MOVE '1'       EPSW    1                       S01176
+     C***********                                                         S01176
+     C***********EPFLAG    IFNE 'F'                        ---B2          S01176
+     C*
+     C***********          CALL 'SDC2505'                                 S01176
+     C***********          PARM           EPPDS1                          S01176
+     C***********          PARM           EPPDS2                          S01176
+     C*
+     C***********          ELSE                            ---X2          S01176
+     C*
+     C***********          CALL 'SDC2500'                                 S01176
+     C***********          PARM           EPFDS1                          S01176
+     C***********          PARM           EPFDS2                          S01176
+     C***********          PARM           EPPP                            S01176
+     C***********          PARM           EPPPL                           S01176
+     C*
+     C***********          END                             ---E2          S01176
+     C*
+     C***********          ROLBK                                          S01176
+     C***********          DUMP                                           S01176
+     C***********          END                             ---E1          S01176
+     C*
+     C***********          SETON                     LR                   S01176
+     C***********          RETRN                                          S01176
+     C*
+     C***********          ENDSR                                          S01176
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*PROCEDURE:*FHELP*********                                      *   S01199
+     C*FUNCTION:*CALLS*EXTERNAL*SUBROUTINE*MHELP******                *   S01199
+     C*CALLED FROM:*P1**********                                      *   S01199
+     C**************P2**********                                      *
+     C*  S / R   N O   L O N G E R   U S E D                          *
+     C*****************************************************************
+     C***********
+     C***********FHELP     BEGSR                           *BEGSR FHELP*  S01199
+     C***********                                                         S01199
+     C***********          MOVE 'SE3153  'HBPGM   8                       S01199
+     C***********          MOVEAARA       HERCD 160                       S01199
+     C***********          CALL 'MHELP'                                   S01199
+     C***********          PARM           HBPGM                           S01199
+     C***********          PARM           HERCD                           S01199
+     C***********          ENDSR                           *ENDSR FHELP*  S01199
+     C***********                                                         S01199
+     C*****************************************************************
+      /EJECT                                                              S01176
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C* *PSSR - SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS            S01117
+     C*                                                                   S01117
+     C* CALLED FROM : AFTER ABNORMAL OPERATION OCCURS                     S01117
+     C*                                                                   S01117
+     C* CALLS : NOTHING                                                   S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+      */EJECT******************                                           S01195
+     C/COPY ZSRSRC,ZASIGNZ2                                               S01176
+      /EJECT                                                              S01176
+     C/COPY ZSRSRC,ZEDITZ2                                                S01176
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+     O/EJECT
+     OCUBRDDF E                REL1
+     OSCUBRDDFE                REL1B                                      S01496
+     OCUBRDAF E                REL2
+      ***
+**  CPY@
+(c) Finastra International Limited 2001

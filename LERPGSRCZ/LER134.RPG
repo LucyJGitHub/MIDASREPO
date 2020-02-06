@@ -1,0 +1,1201 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                     MD031496
+/*STD *  RPGSQL                                                       *                     MD031496
+/*EXI *  TEXT('Midas Fee Payments Due A/c Key Gen')                   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module
+     F*                                                               *
+     F*  LER134 - Fee Payments Due A/C Key Generation                 *
+     F*                                                               *
+     F*  Function:  This program takes the account keys generated     *
+     F*             by LER135 in the previous COB (which were         *
+     F*             written to PF/PSTTOM) and writes them to LKEYFED  *
+     F*             today.                                            *
+     F*  (COB)                                                        *
+     F*                                                               *
+     F*  Called By: LERC135 - Fee Calculations & Accruals.            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031496           Date 06Jan15               *
+      *                 CLE164             Date 18Aug14               *
+      *                 AR317401           Date 19Aug14               *
+      *                 MD020563           Date 21May13               *
+      *                 AR1097176          Date 22Mar13               *
+      *                 AR1089839          Date 19Feb13               *
+      *                 CFC006             Date 06Aug12               *
+      *                 AR1056323          Date 14Nov12               *
+      *                 AR741212           Date 02Oct12               *
+      *                 AR997862           Date 01Oct12               *
+      *                 AR571427           Date 01Aug12               *
+      *                 AR567790           Date 01Aug12               *
+      *                 263074             Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR821740           Date 29Aug11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CPK027             Date 18Apr07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 243499             Date 08Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE034             Date 21May03               *
+      *                 CLE031             Date 19Feb03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 100374             DATE 22MAY96               *
+     F*                 E45504             DATE 25FEB93               *
+     F*                 E45726             DATE 21NOV92               *
+     F*                 BH3479             DATE 14AUG92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD031496 - Component LERC135 in MSGW                         *
+      *             Enhanced FIX AR317401. Use embedded SQL instead   *
+      *             of a new logical file.                            *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  AR317401 - Loan fee subtype change processing                *
+      *           - Applied for MD025682                              *
+      *  MD020563 - CFC006 issues                                     *
+      *  AR1097176 - Accessing AOCOMR0 multiple times slows down the  *
+      *              system                                           *
+      *  AR1089839 - COBOP and 2.1 source clashes                     *
+      *  CFC006 - COB Restructure - Remove reports from COB           *
+      *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
+      *              LKEYFED (Recompile)                              *
+      *  AR741212 - Manual Repayment settling against a nostro account*
+      *             created a PDCL. Only output records into LEPK2DP  *
+      *             if settlement account is Retail.                  *
+      *             Or if Settlement account is GL (this one is as    *
+      *             per banks's request) (Child: AR741213)            *
+      *  AR997862 - CLE148: KLNNO incorrectly defined as numeric      *
+      *             SFDC 00724180 (Child: AR997863)                   *
+      *  AR571427 - SEVDAT must contain Fee start date                *
+      *             (Child: AR571428)                                 *
+      *  AR567790 - When record is output to LEPK2DPD account fields  *
+      *             must be populated. (Child  AR567791)              *
+      *  263074 - Wrong Postings when interest and principal are paid *
+      *           on the same day. Initialize numeric fields          *
+      *           CLE134 / SWIFT                                      *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR821740 - COB - No stamp tax account keys generated         *
+      *             (Recompile)                                       *
+      *  CPK027 - Error in 243499 - LKOLNO should now be 6A (Recomp.) *
+      *  243499 - Recompile for change to file LKEYFED.               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE034 - Lending Enhancements Phase 1 Priority 1A            *
+      *           Recompile                                           *
+      *  CLE031 - Lending Enhancements.                               *
+      *           Recompile                                           *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Posting     *
+      *           Information (Recompile)                             *
+     F*  100374 - Recompiled due to changes in LER134P1.              *
+     F*           Fee sequence is added.                              *
+     F*  E45504  -  Fee seq added to PF/PSTTOM.                       *
+     F*  E45726  -  Fee sequence required on report.                  *
+     F*  BH3479  -  Account keys generated for Payments Due the night *
+     F*             before they should be. So LER135 writes them to   *
+     F*             PSTTOM instead of LKEYFED, and this program will  *
+     F*             write them to LKEYFED the following night.        *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     FPSTTOM  IF  E           K        DISK
+     F************LKEYFEDF                          KRENAMEPSTTOMF        E45504
+     FLKEYFEZ UF  E                    DISK         KINFSR *PSSR
+     F***LEFEED**IF**E***********K        DISK                     E45726 E45504
+     FLKEYFED O   E                    DISK         KINFSR *PSSR
+     F/COPY WNCPYSRC,LEH01201
+     FLEPKTDPDIF  E           K        DISK                                                   CLE134
+     F            LKEYFEDF                          KRENAMELKEYFTDF                           CLE134
+     FLEPK2DPDO   E                    DISK         KINFSR *PSSR                              CLE134
+     F            LKEYFEDF                          KRENAMELKEYF2DF                           CLE134
+     FLEPK2HH IF  E                    DISK         KINFSR *PSSR A                            CLE134
+     F            LKEYFEAF                          KRENAMELKEYF2AF                           CLE134
+     FLEPK2ZZ UF  E                    DISK         KINFSR *PSSR A                            CLE134
+     F            LKEYFEZF                          KRENAMELKEYF2ZF                           CLE134
+     FLEFEED  IF  E           K        DISK                                                 AR567790
+     F***LEHISTV3IF  E           K        DISK                                     AR317401 MD031496
+     FLER134P1O   E             80     PRINTER      KINFDS SPOOL1     UC
+     FLER134AUO   E                    PRINTER      KINFDS SPOOLU
+     F/EJECT
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  10    - First time through indicator                         *
+     F*  16    - Read of LKEYFEZ                                      *
+     F*  21    - Details on P1 report                                 *
+     F*  24    - Not Multi Branch                                     *
+     F*  30    - '0' Decimal Place                                    *
+     F*  31    - '1' Decimal Place                                    *
+     F*  32    - '2' Decimal Place                                    *
+     F*  33    - '3' Decimal Place                                    *
+     F*  50    - Read of 'Post Tomorrow' file PSTTOM                  *
+     F*  80    - Overflow indicator on P1 report                      *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  REPORT - Write to P1 report                                  *
+     F*  INIT   - Program Initialisation                              *
+     F*  AUDIT  - Audit report processed through RCF.                 *
+     F*  ZHASH  - Hash totalling standard subroutine                  *
+     F*  *PSSR  - Program exception error routine.                    *
+     F*                                                               *
+     F*****************************************************************
+      *
+     E                    CPY@    1   1 80
+     E                    INT         2 15 0             ZHASH INTEGERS
+     E                    DEC         2  3 0             ZHASH DECIMALS
+     E********************FSQ        99  2 0             FEE SEQUENE45726 E45504
+     E/EJECT
+      *
+     I**HISTSHPF                                                                   AR317401 MD031496
+      **********                                                                   AR317401 MD031496
+      ***Rename*fields.                                                            AR317401 MD031496
+      **********                                                                   AR317401 MD031496
+     I**********    RECI                            RECIHP                         AR317401 MD031496
+     I**********    RCDT                            RCDTHP                         AR317401 MD031496
+     I**********    BRCA                            BRCAHP                         AR317401 MD031496
+     I**********    CNUM                            CNUMHP                         AR317401 MD031496
+     I**********    LNRF                            LNRFHP                         AR317401 MD031496
+     I**********    VDAT                            VDATHP                         AR317401 MD031496
+     I**********    PRSQ                            PRSQHP                         AR317401 MD031496
+     I**********    LASN                            LASNHP                         AR317401 MD031496
+     I**********    CCY                             CCYHP                          AR317401 MD031496
+     I**********    AMTP                            AMTPHP                         AR317401 MD031496
+     I**********    LTYP                            LTYPHP                         AR317401 MD031496
+     I**********    SUTP                            SUTPHP                         AR317401 MD031496
+     I**********    LCD                             LCDHP                          AR317401 MD031496
+      *                                                                                     AR317401
+     I            DS                                                                        AR317401
+      *                                                                                     AR317401
+      ** Format fields from account key.                                                    AR317401
+      *                                                                                     AR317401
+     I                                        1  14 SAVKEY                                  AR317401
+     I                                        4   5 SUBTYP                                  AR317401
+      *                                                                                     AR317401
+     I            DS
+      ** Format fields from account key
+     I                                        1  130LKEAMT
+     I                                        1  130EAMT0
+     I                                        1  131EAMT1
+     I                                        1  132EAMT2
+     I                                        1  133EAMT3
+      *
+     I            DS
+      ** Format fields from account key
+     I**********                              1   60LKLNNO                                    CLE148
+     I                                        1   6 LKLNNO                                    CLE148
+     I                                        2   40FTYP
+     I                                        5   60FSEQ
+      *
+     ISPOOL1      DS
+      ** File information data structures
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I/COPY ZSRSRC,ZHASHZ2
+      *
+     ILDA       E DSLDA
+      ** Database error DS
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+     I              AGMBIN                          MBIN
+      *
+     I/COPY WNCPYSRC,LEH01202
+     ISCSARD    E DSSCSARDPD                                                                  CLE134
+     IDSACCT    E DSACCNTAB                                                                   CLE164
+     I              LCD                             QQLCD                                     CLE164
+     I              RECI                            QQRECI                                    CLE164
+     I              CNUM                            QQCNUM                                    CLE164
+     I              CCY                             QQCCY                                     CLE164
+     I              TMST                            QQTMST                                    CLE164
+     IWVCATC      DS                                                                          CLE164
+     I                                        1   50PFCLTY                                    CLE164
+     I                                        7   80PFESEQ                                    CLE164
+     I                                        9  160PREPR                                     CLE164
+     I                                       17  240PCAPR                                     CLE164
+      *                                                                                       CLE134
+     IHISTHP    E DSHISTSHP                                                                 MD031496
+      ** Rename fields.                                                                     MD031496
+      *                                                                                     MD031496
+     I              RECI                            RECIHP                                  MD031496
+     I              RCDT                            RCDTHP                                  MD031496
+     I              BRCA                            BRCAHP                                  MD031496
+     I              CNUM                            CNUMHP                                  MD031496
+     I              LNRF                            LNRFHP                                  MD031496
+     I              VDAT                            VDATHP                                  MD031496
+     I              PRSQ                            PRSQHP                                  MD031496
+     I              LASN                            LASNHP                                  MD031496
+     I              FCUS                            FCUSHP                                  MD031496
+     I              FTYP                            FTYPHP                                  MD031496
+     I              FSEQ                            FSEQHP                                  MD031496
+     I              PTYP                            PTYPHP                                  MD031496
+     I              CCY                             CCYHP                                   MD031496
+     I              AMTP                            AMTPHP                                  MD031496
+     I              PRAM                            PRAMHP                                  MD031496
+     I              INTA                            INTAHP                                  MD031496
+     I              WTXA                            WTXAHP                                  MD031496
+     I              FEAM                            FEAMHP                                  MD031496
+     I              FECD                            FECDHP                                  MD031496
+     I              WOIN                            WOINHP                                  MD031496
+     I              EXVD                            EXVDHP                                  MD031496
+     I              LTYP                            LTYPHP                                  MD031496
+     I              SUTP                            SUTPHP                                  MD031496
+     I              LCD                             LCDHP                                   MD031496
+     I              COFA                            COFAHP                                  MD031496
+     I              CPAM                            CPAMHP                                  MD031496
+     I              AITC                            AITCHP                                  MD031496
+     I              INTR                            INTRHP                                  MD031496
+     I              AIAP                            AIAPHP                                  MD031496
+     I              IPRD                            IPRDHP                                  MD031496
+     I              MNSG                            MNSGHP                                  MD031496
+     I              GASS                            GASSHP                                  MD031496
+     I              GPRT                            GPRTHP                                  MD031496
+     I              ROLN                            ROLNHP                                  MD031496
+     I              ACDA                            ACDAHP                                  MD031496
+     I              COFR                            COFRHP                                  MD031496
+     I              ACAP                            ACAPHP                                  MD031496
+     I              COFD                            COFDHP                                  MD031496
+     I              REPI                            REPIHP                                  MD031496
+     I              CHDU                            CHDUHP                                  MD031496
+     I              AITN                            AITNHP                                  MD031496
+     I              AIAN                            AIANHP                                  MD031496
+     I              IPRN                            IPRNHP                                  MD031496
+     I              INTN                            INTNHP                                  MD031496
+     I              FSPRAM                          FSPRHP                                  MD031496
+     I              FSCPAM                          FSCPHP                                  MD031496
+     I              CLAS                            CLASHP                                  MD031496
+      *                                                                                     MD031496
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Type
+     I              A6NBDP                          CDP
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch name details
+     I              A8BRNM                          BRNM
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Second DS for access programs, long data structure
+      *
+     I***/COPY*WNCPYSRC,LEH00978***                                                           CFC006
+     I/COPY WNCPYSRC,LEH00978                                                               MD020563
+     I              'LER134001'           C         SECTN                                     CFC006
+      *****************************************************************
+     C/TITLE MAIN PROCESSING
+      *****************************************************************
+      *
+      ** Perform initial processing.
+      *
+     C           *IN10     CASEQ'0'       INIT
+     C                     END
+      *
+      ** Read Post Tomorrow file
+     C           *IN50     DOWEQ'0'
+      *
+     C                     READ PSTTOM                   50
+      *
+     C           *IN50     IFEQ '0'
+      *
+      ** Get decimal places for key currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM LKECCY    WAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER134'  DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD001       DBASE            * DBERR 01 *
+     C                     MOVELLKECCY    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  For thickos: This bit sets on 30 if no dp's, 31 if 1 dp, etc
+      *
+     C                     Z-ADDCDP       DP
+     C                     MOVEA'0000'    *IN,30
+     C                     ADD  30        DP      20
+     C                     MOVE '1'       *IN,DP
+      *
+     C                     EXSR REPORT
+      *
+      ** Write to LKEYFED
+      *
+     C                     WRITELKEYFEDF
+     C/COPY WNCPYSRC,LER134C001
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** PROCESSING COMPLETE:
+      *
+      ** Update account keys trailer.
+      *
+     C                     READ LKEYFEZ                  16
+      *
+     C           *IN16     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER134'  DBPGM
+     C                     MOVEL'LKEYFEZ 'DBFILE           ************
+     C                     Z-ADD002       DBASE            * DBERR 02 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Obtain before value of file control fields for output to
+      ** report
+     C*
+     C                     Z-ADDLKNORE    NORE
+     C                     Z-ADDLKVLRF    VLRF
+     C                     Z-ADDLKVLRL    VLRL
+     C*
+     C** LKNTOT is total number of account keys generated field.
+     C*
+     C***  Add running total to what is on the trailer already
+     C***  (the last branch has not been added to the running total)
+     C*
+     C                     ADD  NKEY      LKNORE
+     C                     ADD  LKNTOT    LKNORE
+     C*
+     C                     Z-ADDTOTI      ZZAMT
+     C                     MOVE TOTD      ZZAMT
+     C                     Z-ADDLKVLRF    INT,2
+     C                     Z-ADDLKVLRL    DEC,2
+     C                     Z-ADD1         Z
+     C                     Z-ADD2         S
+     C                     EXSR ZHASH
+     C                     Z-ADDZZTOTI    LKVLRF
+     C                     Z-ADDZZTOTD    LKVLRL
+      *
+     C                     UPDATLKEYFEZF
+      *
+      **  If no details have been output to either detail report
+      **  out 'No Details' message on audit report
+      *
+     C           *IN21     IFEQ '0'
+     C           *IN22     ANDEQ'0'
+     C                     EXSR AUDIT
+     C                     WRITELER134C1
+     C                     WRITELER134C3
+      *
+     C                     ELSE
+      *
+      ** Write totals to account keys generated report (P1)
+      *
+     C***/COPY*WNCPYSRC,LEH01064***                                                        AR1089839
+     C/COPY WNCPYSRC,LEH01064                                                               MD020563
+     C           SUPFLG    IFNE 'Y'                                                        AR1089839
+     C                     WRITELER134A4
+     C***/COPY*WNCPYSRC,LEH01065***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01065                                                               MD020563
+     C                     ENDIF                                                              CFC006
+      *
+      ** Write header & hash totals to audit report
+      *
+     C                     EXSR AUDIT
+     C                     WRITELER134C1
+     C                     WRITELER134C2
+      *
+     C                     END
+      *
+      ** If CLE134 is on, then process LEPKTDPD                                               CLE134
+      ** Read Post Tomorrow file                                                              CLE134
+      *                                                                                       CLE134
+     C           CLE134    IFEQ 'Y'                                                           CLE134
+      *                                                                                     AR567790
+      ** LEFEED Key                                                                         AR567790
+      *                                                                                     AR567790
+     C           KFEE      KLIST                                                            AR567790
+     C                     KFLD           LKFBRC                                            AR567790
+     C                     KFLD           LKCNU2                                            AR567790
+     C                     KFLD           LKFACL                                            AR567790
+     C                     KFLD           LKLOAN                                            AR567790
+     C                     KFLD           LKFSEQ                                            AR567790
+      *                                                                                     AR567790
+     C                     MOVE *OFF      *IN50                                               CLE134
+     C                     Z-ADD0         LKNTOT                                              CLE134
+     C                     Z-ADD0         NKEY                                                CLE134
+     C                     Z-ADD0         TOTI                                                CLE134
+     C                     Z-ADD0         TOTD                                                CLE134
+      *                                                                                     AR741212
+      ** LKEYFED Hash Totals                                                                AR741212
+      *                                                                                     AR741212
+     C                     Z-ADD0         NLKFED  50                                        AR741212
+     C                     Z-ADD0         TOTIFD 150                                        AR741212
+     C                     Z-ADD0         TOTDFD  30                                        AR741212
+      *                                                                                     AR741212
+      ** LEPK2DP Hash Totals                                                                AR741212
+      *                                                                                     AR741212
+     C                     Z-ADD0         NLEPK2  50                                        AR741212
+     C                     Z-ADD0         TOTIK2 150                                        AR741212
+     C                     Z-ADD0         TOTDK2  30                                        AR741212
+      *                                                                                     AR741212
+     C           *IN50     DOWEQ'0'                                                           CLE134
+      *                                                                                     AR317401
+      ** Before any processing, check first if the loan has                                 AR317401
+      ** LS amendment actioned today.                                                       AR317401
+      *                                                                                     AR317401
+     C/EXEC SQL                                                                             MD031496
+     C+ declare ACursor insensitive scroll cursor for                                       MD031496
+     C+ SELECT * FROM HISTSHP                                                               MD031496
+     C+ where BRCA = :LKBRCD and CNUM = :LKCNUM and LNRF = :LKLNNO                          MD031496
+     C+  and LCD = :BJRDNB                                                                  MD031496
+     C+ order by BRCA, CNUM, LNRF, LCD                                                      MD031496
+     C/END-EXEC                                                                             MD031496
+      *                                                                                     MD031496
+     C/EXEC SQL                                                                             MD031496
+     C+ open ACursor                                                                        MD031496
+     C/END-EXEC                                                                             MD031496
+      *                                                                                     MD031496
+     C/EXEC SQL                                                                             MD031496
+     C+ fetch next from ACursor into :HISTHP                                                MD031496
+     C/END-EXEC                                                                             MD031496
+     C**********           MOVE '0'       *IN78                                    AR317401 MD031496
+     C********** KEYHP1    SETGTLEHISTV3                                           AR317401 MD031496
+     C********** KEYHP1    REDPELEHISTV3                 78                        AR317401 MD031496
+     C********** *IN78     IFEQ '0'                                                AR317401 MD031496
+     C********** VDATHP    ANDLELKEDAT                                             AR317401 MD031496
+     C           SQLCOD    DOWEQ0                                                           MD031496
+     C           VDATHP    IFLE LKEDAT                                                      MD031496
+      *                                                                                     AR317401
+     C                     MOVELLKAKEY    SAVKEY                                            AR317401
+     C                     MOVE SUTPHP    SUBTYP                                            AR317401
+      *                                                                                     AR317401
+     C                     MOVELSAVKEY    LKAKEY                                            AR317401
+     C                     ENDIF                                                            AR317401
+     C/EXEC SQL                                                                             MD031496
+     C+ FETCH NEXT FROM ACURSOR INTO :HISTHP                                                MD031496
+     C/END-EXEC                                                                             MD031496
+     C                     ENDDO                                                            MD031496
+      *                                                                                     MD031496
+     C/EXEC SQL                                                                             MD031496
+     C+ CLOSE ACURSOR                                                                       MD031496
+     C/END-EXEC                                                                             MD031496
+      *                                                                                       CLE134
+     C                     READ LEPKTDPD                 50                                   CLE134
+      *                                                                                       CLE134
+     C           *IN50     IFEQ '0'                                                           CLE134
+     C                     MOVE 'Y'       WLEPK2  1                                         AR741212
+      *                                                                                       CLE134
+      ** Get decimal places for key currency                                                  CLE134
+      *                                                                                       CLE134
+     C                     CALL 'AOCURRR0'                                                    CLE134
+     C                     PARM '*MSG   ' WRTCD   7                                           CLE134
+     C                     PARM '*KEY   ' WOPTN   7                                           CLE134
+     C                     PARM LKECCY    WAJCD   3                                           CLE134
+     C           SDCURR    PARM SDCURR    DSSDY                                               CLE134
+     C           WRTCD     IFNE *BLANKS                                                       CLE134
+     C           *LOCK     IN   LDA                                                           CLE134
+      *                                                                                       CLE134
+      ** ************                                                                         CLE134
+      ** * DBERR 01 *                                                                         CLE134
+      ** ************                                                                         CLE134
+      *                                                                                       CLE134
+     C                     MOVEL'LER134'  DBPGM                                               CLE134
+     C                     MOVEL'SDCURRPD'DBFILE                                              CLE134
+     C                     Z-ADD001       DBASE                                               CLE134
+     C                     MOVELLKECCY    DBKEY                                               CLE134
+     C                     OUT  LDA                                                           CLE134
+     C                     EXSR *PSSR                                                         CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ** For thickos: This bit sets on 30 if no dp's, 31 if 1 dp, etc                         CLE134
+      *                                                                                       CLE134
+     C                     Z-ADDCDP       DP                                                  CLE134
+     C                     MOVEA'0000'    *IN,30                                              CLE134
+     C                     ADD  30        DP      20                                          CLE134
+     C                     MOVE '1'       *IN,DP                                              CLE134
+      *                                                                                       CLE134
+     C                     EXSR REPORT                                                        CLE134
+      *                                                                                       CLE134
+      ** Write to LEPK2PD                                                                     CLE134
+      *                                                                                       CLE134
+     C                     Z-ADD0         SEACOD                                              263074
+     C                     Z-ADD0         SEACSQ                                              263074
+     C**********           Z-ADD0         SEPCKO                                       263074 CLE164
+     C                     Z-ADD0         SEVDAT                                              263074
+     C**********           Z-ADD0         SEPCKM                                       263074 CLE164
+     C**********           Z-ADD0         SEPCKT                                       263074 CLE164
+     C                     MOVE *BLANKS   SELNRF                                              263074
+     C           LKRECI    IFEQ 'L'                                                         AR567790
+     C**********           MOVE LKLNNO    KLNNO   60                               AR567790 AR997862
+     C                     MOVE LKLNNO    KLNNO   6                                         AR997862
+     C                     ELSE                                                             AR567790
+     C                     CLEARKLNNO                                                       AR567790
+     C                     ENDIF                                                            AR567790
+      *                                                                                     AR567790
+      ** Chain fee file                                                                     AR567790
+      *                                                                                     AR567790
+     C           KFEE      CHAINLEFEED               51                                     AR567790
+      *                                                                                     AR567790
+      ** Retrieve sett account and priority                                                 AR567790
+      *                                                                                     AR567790
+     C                     Z-ADDFEFACL    WFACL   50                                        AR567790
+     C                     Z-ADDFEFCOD    WFACOD  20                                        AR567790
+     C                     CALL 'LE000458'                                                  AR567790
+     C                     PARM           RETCOD  7                                         AR567790
+     C                     PARM           LKAKEY                                            AR567790
+     C                     PARM           LKECCY                                            AR567790
+     C                     PARM           KLNNO                                             AR567790
+     C                     PARM           FECNUM                                            AR567790
+     C                     PARM           FELOAN                                            AR567790
+     C                     PARM           WFACL                                             AR567790
+     C                     PARM           FEFSEQ                                            AR567790
+     C                     PARM           WFACOD                                            AR567790
+     C                     PARM           LKSCCY                                            AR567790
+     C                     PARM           LKOSAC                                            AR567790
+     C                     PARM           LKSETP                                            AR567790
+     C                     PARM           LKOLNO                                            AR567790
+     C                     PARM           LKOSBR                                            AR567790
+      *                                                                                     AR567790
+     C                     PARM *BLANKS   SEBRCA                                            AR567790
+     C                     PARM *BLANKS   SECNUM                                            AR567790
+     C                     PARM *BLANKS   SEACCY                                            AR567790
+     C                     PARM *ZEROS    SEACOD                                            AR567790
+     C                     PARM *ZEROS    SEACSQ                                            AR567790
+     C**********           PARM *ZEROS    SEPCKO                                     AR567790 CLE164
+     C                     PARM *BLANKS   OATYP   1                                         AR741212
+      *                                                                                     AR741212
+     C           RETCOD    IFEQ '*ERROR*'                                                   AR567790
+     C           *LOCK     IN   LDA                                                         AR567790
+     C                     MOVEL'LE000458'DBPGM                                             AR567790
+     C                     Z-ADD101       DBASE                                             AR567790
+     C                     OUT  LDA                                                         AR567790
+     C                     EXSR *PSSR                                                       AR567790
+     C                     ENDIF                                                            AR567790
+      *                                                                                     AR741212
+      ** Proceed in writing to LEPK2DP only if settlement account is                        AR741212
+      ** Retail. Or if Settlement account is GL (this one is as per                         AR741212
+      ** bank's request). Otherwise, write to LKEYFED.                                      AR741212
+      *                                                                                     AR741212
+     C           OATYP     IFNE 'N'                                                         AR741212
+      *                                                                                     AR567790
+      ** Set fields                                                                         AR567790
+      *                                                                                     AR567790
+     C           FECALT    IFNE '90'                                                        AR567790
+     C********** FELOAN    IFEQ *ZEROS                                             AR567790 AR997862
+     C           FELOAN    IFEQ *BLANKS                                                     AR997862
+     C**********           Z-ADD500       SEPCKM                                     AR567790 CLE164
+     C**********           Z-ADD500       SEPCKT                                     AR567790 CLE164
+     C                     MOVEL'FFEE'    SECATC                                              CLE164
+     C                     ELSE                                                             AR567790
+     C**********           Z-ADD600       SEPCKM                                     AR567790 CLE164
+     C**********           Z-ADD600       SEPCKT                                     AR567790 CLE164
+     C                     MOVEL'LFEE'    SECATC                                              CLE164
+     C                     ENDIF                                                            AR567790
+     C                     ELSE                                                             AR567790
+     C**********           Z-ADD100       SEPCKM                                     AR567790 CLE164
+     C**********           Z-ADD100       SEPCKT                                     AR567790 CLE164
+     C                     MOVEL'Fee90'   SECATC                                              CLE164
+     C                     ENDIF                                                            AR567790
+     C                     MOVELLKLNNO    SELNRF                                            AR567790
+     C                     Z-ADDLKEDAT    SEVDAT                                            AR567790
+     C**********           MOVE 'F2'      SEFILE                                     AR567790 CLE164
+     C                     Z-ADDFEPSTD    SEVDAT                                            AR571427
+     C                     MOVEL'LEPK2DPD'SEFILE                                              CLE164
+     C                     MOVEL*ZEROS    SEOVRD                                              CLE164
+     C                     MOVELFEPSTD    SESDAT                                              CLE164
+     C           FEPEND    IFEQ 0                                                             CLE164
+     C                     MOVELFEPSTD    SEMDAT                                              CLE164
+     C                     ELSE                                                               CLE164
+     C                     MOVELFEPEND    SEMDAT                                              CLE164
+     C                     ENDIF                                                              CLE164
+     C                     MOVEL*ZEROS    SEVDPD                                              CLE164
+     C                     MOVELLKEDAT    SEVDPY                                              CLE164
+     C                     Z-ADDLKEAMT    SEPAMT                                              CLE164
+     C                     MOVELSTMP      SETMST                                              CLE164
+     C           SETRID    ADD  1         SETRID                                              CLE164
+     C                     MOVEL*BLANKS   SETREF                                              CLE164
+     C           FELOAN    IFEQ *BLANKS                                                       CLE164
+     C                     MOVELFEFACL    WTREF   9                                           CLE164
+     C                     MOVELFEFCOD    WWTREF  4                                           CLE164
+     C                     MOVE FEFSEQ    WWTREF                                              CLE164
+     C                     MOVE WWTREF    WTREF                                               CLE164
+     C                     MOVELWTREF     SETREF                                              CLE164
+     C                     ELSE                                                               CLE164
+     C                     MOVELFELOAN    XTREF  10                                           CLE164
+     C                     MOVELFEFCOD    WWTREF                                              CLE164
+     C                     MOVE FEFSEQ    WWTREF                                              CLE164
+     C                     MOVE WWTREF    XTREF                                               CLE164
+     C                     MOVELXTREF     SETREF                                              CLE164
+     C                     ENDIF                                                              CLE164
+     C                     EXSR SRRPKY                                                        CLE164
+      *                                                                                     AR567790
+     C                     WRITELKEYF2DF                                                      CLE134
+      *                                                                                     AR741212
+     C                     ELSE                                                             AR741212
+     C                     MOVE 'N'       WLEPK2                                            AR741212
+     C                     WRITELKEYFEDF                                                    AR741212
+     C                     ENDIF                                                            AR741212
+      *                                                                                     AR741212
+      ** Add to LEPK2DP Hash Totals                                                         AR741212
+      *                                                                                     AR741212
+     C           WLEPK2    IFEQ 'Y'                                                         AR741212
+     C                     ADD  1         NLEPK2                                            AR741212
+     C           LKEAMT    DIV  1000      ZZAMT                                             AR741212
+     C                     Z-ADD1         Z                                                 AR741212
+     C                     Z-ADD1         S                                                 AR741212
+     C                     Z-ADDTOTIK2    ZZTOTI                                            AR741212
+     C                     Z-ADDTOTDK2    ZZTOTD                                            AR741212
+     C                     EXSR ZHASH                                                       AR741212
+     C                     Z-ADDZZTOTI    TOTIK2                                            AR741212
+     C                     Z-ADDZZTOTD    TOTDK2                                            AR741212
+     C                     ELSE                                                             AR741212
+      *                                                                                     AR741212
+      ** Add to LKEYFED Hash Totals                                                         AR741212
+      *                                                                                     AR741212
+     C                     ADD  1         NLKFED                                            AR741212
+     C           LKEAMT    DIV  1000      ZZAMT                                             AR741212
+     C                     Z-ADD1         Z                                                 AR741212
+     C                     Z-ADD1         S                                                 AR741212
+     C                     Z-ADDTOTIFD    ZZTOTI                                            AR741212
+     C                     Z-ADDTOTDFD    ZZTOTD                                            AR741212
+     C                     EXSR ZHASH                                                       AR741212
+     C                     Z-ADDZZTOTI    TOTIFD                                            AR741212
+     C                     Z-ADDZZTOTD    TOTDFD                                            AR741212
+     C                     ENDIF                                                            AR741212
+      *                                                                                     AR741212
+      *                                                                                     AR567790
+     C                     ENDIF                                                              CLE134
+     C                     ENDDO                                                              CLE134
+      *                                                                                       CLE134
+      ** Update Trailer                                                                       CLE134
+      *                                                                                       CLE134
+     C                     Z-ADD0         LKNORE                                              CLE134
+     C                     Z-ADD0         LKVLRF                                              CLE134
+     C                     Z-ADD0         LKVLRL                                              CLE134
+      *                                                                                       CLE134
+     C                     READ LKEYF2ZF                 16                                   CLE134
+      *                                                                                       CLE134
+      ** Obtain before value of file control fields for output to                             CLE134
+      ** report                                                                               CLE134
+      *                                                                                       CLE134
+     C                     Z-ADDLKNORE    NORE                                                CLE134
+     C                     Z-ADDLKVLRF    VLRF                                                CLE134
+     C                     Z-ADDLKVLRL    VLRL                                                CLE134
+      *                                                                                       CLE134
+      ** LKNTOT is total number of account keys generated field.                              CLE134
+      ** Add running total to what is on the trailer already                                  CLE134
+      ** (the last branch has not been added to the running total)                            CLE134
+      *                                                                                       CLE134
+     C**********           ADD  NKEY      LKNORE                                     CLE134 AR741212
+     C**********           ADD  LKNTOT    LKNORE                                     CLE134 AR741212
+     C                     Z-ADDTOTIK2    ZZAMT                                             AR741212
+     C                     MOVE TOTDK2    ZZAMT                                             AR741212
+      *                                                                                       CLE134
+     C                     Z-ADDTOTI      ZZAMT                                               CLE134
+     C                     MOVE TOTD      ZZAMT                                               CLE134
+     C                     Z-ADDLKVLRF    INT,2                                               CLE134
+     C                     Z-ADDLKVLRL    DEC,2                                               CLE134
+     C                     Z-ADD1         Z                                                   CLE134
+     C                     Z-ADD2         S                                                   CLE134
+     C                     EXSR ZHASH                                                         CLE134
+     C                     Z-ADDZZTOTI    LKVLRF                                              CLE134
+     C                     Z-ADDZZTOTD    LKVLRL                                              CLE134
+      *                                                                                       CLE134
+     C           *IN16     IFEQ *OFF                                                          CLE134
+     C                     UPDATLKEYF2ZF                                                      CLE134
+     C                     ELSE                                                               CLE134
+     C                     MOVE 'T'       LKRECI                                              CLE134
+     C                     ADD  2         LKNORE                                              CLE134
+     C                     WRITELKEYF2ZF                                                      CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     READ LEPK2HH                  16                                   CLE134
+     C           *IN16     IFEQ *ON                                                           CLE134
+     C                     MOVE 'H'       LKRECI                                              CLE134
+     C                     WRITELKEYF2AF                                                      CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                     AR741212
+      ** Update Trailer for LKEYFED                                                         AR741212
+      *                                                                                     AR741212
+     C           NLKFED    IFGT 0                                                           AR741212
+      *                                                                                     AR741212
+     C                     READ LKEYFEZ                  16                                 AR741212
+      *                                                                                     AR741212
+      ** Obtain before value of file control fields for output to                           AR741212
+      ** report                                                                             AR741212
+      *                                                                                     AR741212
+     C                     Z-ADDLKNORE    NORE                                              AR741212
+     C                     Z-ADDLKVLRF    VLRF                                              AR741212
+     C                     Z-ADDLKVLRL    VLRL                                              AR741212
+      *                                                                                     AR741212
+     C                     ADD  NLKFED    LKNORE                                            AR741212
+      *                                                                                     AR741212
+     C                     Z-ADDTOTIFD    ZZAMT                                             AR741212
+     C                     MOVE TOTDFD    ZZAMT                                             AR741212
+     C                     Z-ADDLKVLRF    INT,2                                             AR741212
+     C                     Z-ADDLKVLRL    DEC,2                                             AR741212
+     C                     Z-ADD1         Z                                                 AR741212
+     C                     Z-ADD2         S                                                 AR741212
+     C                     EXSR ZHASH                                                       AR741212
+     C                     Z-ADDZZTOTI    LKVLRF                                            AR741212
+     C                     Z-ADDZZTOTD    LKVLRL                                            AR741212
+      *                                                                                     AR741212
+     C                     UPDATLKEYFEZF                                                    AR741212
+      *                                                                                     AR741212
+     C                     ENDIF                                                            AR741212
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *
+      *  SR/REPORT - WRITE TO REPORT FILE
+      *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR
+     C*
+     C/COPY WNCPYSRC,LEH00979
+      ** If system is multibranching and branch code changes open
+      ** new spool file.
+      *
+     C           MBIN      IFEQ 'Y'
+     C           LKBRCD    ANDNESTRBRC
+      ** Write out total number of account keys generated for last
+      ** branch and end of report message before opening new spool file
+     C           *IN21     IFEQ '1'
+     C***/COPY*WNCPYSRC,LEH01066***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01066                                                               MD020563
+     C           SUPFLG    IFNE 'Y'                                                           CFC006
+     C                     WRITELER134A4
+     C***/COPY*WNCPYSRC,LEH01067***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01067                                                               MD020563
+     C                     ENDIF                                                              CFC006
+     C                     ADD  NKEY      LKNTOT
+     C                     Z-ADD0         NKEY
+     C                     END
+     C                     MOVE LKBRCD    STRBRC  3
+     C                     CLOSELER134P1
+     C                     OPEN LER134P1
+     C                     Z-ADD0         PAGE
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM1    ZSNUM1
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM LKBRCD    SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1  60
+     C                     PARM           ZSERR   1
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Obtain branch name for output
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM LKBRCD    WDSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER134'  DBPGM
+     C                     MOVELLKBRCD    DBKEY            ************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DBERR 03 *
+     C                     Z-ADD003       DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      ** Output headers
+     C***/COPY*WNCPYSRC,LEH01068***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01068                                                               MD020563
+     C           SUPFLG    IFNE 'Y'                                                           CFC006
+     C                     WRITELER134A1
+     C                     WRITELER134A2
+     C***/COPY*WNCPYSRC,LEH01069***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01069                                                               MD020563
+     C                     ENDIF                                                              CFC006
+      *
+      ** If system multibranching
+     C                     END
+      *
+      ** If system is not multibranching set up single spool file
+     C           MBIN      IFNE 'Y'
+     C           P1OP      ANDNE'Y'
+     C                     MOVE 'Y'       P1OP    1
+     C                     CLOSELER134P1
+     C                     OPEN LER134P1
+     C                     Z-ADD0         PAGE
+      ** Ensure report spool file recorded by RCF
+     C                     Z-ADDSFNUM1    ZSNUM1
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1
+     C                     PARM           ZSERR
+      *
+      ** If error during ZSFILE processing, return to calling program
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** Output header
+     C***/COPY*WNCPYSRC,LEH01070***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01070                                                               MD020563
+     C           SUPFLG    IFNE 'Y'                                                           CFC006
+     C                     WRITELER134A1
+     C                     WRITELER134A2
+     C***/COPY*WNCPYSRC,LEH01071***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01071                                                               MD020563
+     C                     ENDIF                                                              CFC006
+      *
+      ** MBIN IFNE 'Y' end
+     C                     END
+      *
+      ** If overflow indicator is on output headings on new page.
+     C           *IN80     IFEQ '1'
+     C***/COPY*WNCPYSRC,LEH01072***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01072                                                               MD020563
+     C           SUPFLG    ANDNE'Y'                                                           CFC006
+     C                     WRITELER134A1
+     C                     WRITELER134A2
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*                                                                   E45726
+     C***  Get fee sequence for report.                                   E45726
+     C*                                                                   E45726
+     C                     MOVE LKFSEQ    WOSEQ   2                       E45504
+     C***********          MOVE '  '      WOSEQ                    E45726 E45504
+     C***********          MOVELFTYP      FCAFCB  50               E45726 E45504
+     C***********          MOVE FSEQ      FCAFCB                   E45726 E45504
+     C***********          MOVE LKCNUM    CUNR60  60               E45726 E45504
+     C***********          MOVE '0'       *IN77                    E45726 E45504
+     C***********FEEKEY    SETLLLEFEED                             E45726 E45504
+     C***********FEEKEY    READELEFEED                   77        E45726 E45504
+     C************IN77     DOWEQ'0'                                E45726 E45504
+     C***********                                                  E45726 E45504
+     C*****If*customer*has*changed,*reset*store*of*sequence*numbersE45726 E45504
+     C*****Or*if*facility*changes.*********************************E45726 E45504
+     C***********                                                  E45726 E45504
+     C***********LKCNUM    IFNE SVCUNR                             E45726 E45504
+     C***********FTYP      ORNE SVFTYP                             E45726 E45504
+     C***********FSEQ      ORNE SVFSEQ                             E45726 E45504
+     C***********          Z-ADD0         FSQ                      E45726 E45504
+     C***********          END                                     E45726 E45504
+     C***********          Z-ADDLKCNUM    SVCUNR  60               E45726 E45504
+     C***********          Z-ADDFTYP      SVFTYP  30               E45726 E45504
+     C***********          Z-ADDFSEQ      SVFSEQ  20               E45726 E45504
+     C***********          Z-ADDFEFSEQ    BC      20               E45726 E45504
+     C***********                                                  E45726 E45504
+     C*****Either*End*Date*or*Next*Payment*Date*must*be*event*date.E45726 E45504
+     C*****Then*again,*it*could*be*last*payment*date*or*start*date.E45726 E45504
+     C***********                                                  E45726 E45504
+     C***********FENPYD    IFEQ LKEDAT                             E45726 E45504
+     C***********FELPDT    OREQ LKEDAT                             E45726 E45504
+     C***********FEPEND    OREQ LKEDAT                             E45726 E45504
+     C***********FEPSTD    OREQ LKEDAT                             E45726 E45504
+     C***********FSQ,BC    IFEQ 0                                  E45726 E45504
+     C***********          MOVE FEFSEQ    WOSEQ   2                E45726 E45504
+     C***********                                                  E45726 E45504
+     C*****Save*'used'*fee*seqs*so*as*not*to*use*them*again.*******E45726 E45504
+     C***********                                                  E45726 E45504
+     C***********          Z-ADDFEFSEQ    FSQ,BC  20               E45726 E45504
+     C***********          MOVE '1'       *IN77                    E45726 E45504
+     C***********          END                                     E45726 E45504
+     C***********          END                                     E45726 E45504
+     C************IN77     IFEQ '0'                                E45726 E45504
+     C***********FEEKEY    READELEFEED                   77        E45726 E45504
+     C***********          END                                     E45726 E45504
+     C***********          END                                     E45726 E45504
+     C***********                                                  E45726 E45504
+      *
+      ** Output account key generated details.
+     C***/COPY*WNCPYSRC,LEH01073***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01073                                                               MD020563
+     C           SUPFLG    IFNE 'Y'                                                           CFC006
+     C                     WRITELER134A3
+     C***/COPY*WNCPYSRC,LEH01074***                                                           CFC006
+     C/COPY WNCPYSRC,LEH01074                                                               MD020563
+     C                     ENDIF                                                              CFC006
+      *
+      ** Details on print file indicator
+     C                     MOVE '1'       *IN21
+      *
+      ** Add event amount to hash total for trailer
+      *
+     C           LKEAMT    DIV  1000      ZZAMT
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C                     Z-ADDTOTI      ZZTOTI
+     C                     Z-ADDTOTD      ZZTOTD
+     C                     EXSR ZHASH
+     C                     Z-ADDZZTOTI    TOTI   150
+     C                     Z-ADDZZTOTD    TOTD    30
+      *
+     C                     ADD  1         NKEY
+      *
+     C/COPY WNCPYSRC,LEH00980
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/INIT
+      *****************************************************************
+      *
+      ** INIT SUBROUTINE TO PERFORM FIRST CYCLE CALCS.
+      *
+      *  CALLED FROM:  MAIN PROCESSING
+      *
+      *  CALLS:  AOBANKR0
+      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C***********FEEKEY    KLIST                                   E45726 E45504
+     C***********          KFLD           LKBRCD                   E45726 E45504
+     C***********          KFLD           CUNR60                   E45726 E45504
+     C***********          KFLD           FCAFCB                   E45726 E45504
+     C***********          KFLD           WRK60                    E45726 E45504
+     C***********                                                  E45726 E45504
+     C***********          Z-ADD0         WRK60   60               E45726 E45504
+     C***********          Z-ADD0         FESEQ   20               E45726 E45504
+     C***********          Z-ADD0         FSQ                      E45726 E45504
+     C***********                                                  E45726 E45504
+      *                                                                                     AR317401
+      * Key to retrieve LS in HISTSHP.                                                      AR317401
+      *                                                                                     AR317401
+     C           KEYHP1    KLIST                                                            AR317401
+     C                     KFLD           LKBRCD                                            AR317401
+     C                     KFLD           LKCNUM                                            AR317401
+     C                     KFLD           LKLNNO                                            AR317401
+     C                     KFLD           BJRDNB                                            AR317401
+      *                                                                                     AR317401
+     C                     MOVE '1'       *IN10
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Lock in dataarea RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Set sequence to blanks
+      *
+     C                     MOVE *BLANKS   SEQ
+      *
+      ** If system is not multibranching do not output branch details
+      ** on print report
+      *
+     C           MBIN      IFNE 'Y'
+     C                     SETON                     24
+     C                     END
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LER134'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD004       DBASE            * DBERR 04 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADD0         LKNTOT  50
+     C                     Z-ADD0         NKEY    50
+      *
+     C***/COPY*WNCPYSRC,LEH00981***                                                           CFC006
+     C/COPY WNCPYSRC,LEH00981                                                               MD020563
+      *****************************************************************           AR1097176 MD020563
+      ***CFC006*-*COB*Restructure*-*Remove*reports*from*COB************           AR1097176 MD020563
+      *****************************************************************           AR1097176 MD020563
+     C**********           MOVE 'N'       CFC006                                  AR1097176 MD020563
+     C**********           CALL 'AOSARDR0'                                        AR1097176 MD020563
+     C**********           PARM *BLANKS   WRTCD   7                               AR1097176 MD020563
+     C**********           PARM '*KEY   ' WOPTN   7                               AR1097176 MD020563
+     C**********           PARM 'CFC006'  WSARD   6                               AR1097176 MD020563
+     C********** SCSARD    PARM SCSARD    DSFDY                                   AR1097176 MD020563
+      *****************************************************************           AR1097176 MD020563
+     C********** WRTCD     IFEQ *BLANKS                                           AR1097176 MD020563
+     C**********           MOVE 'Y'       CFC006  1                               AR1097176 MD020563
+     C**********           ENDIF                                                  AR1097176 MD020563
+      *                                                                                       CFC006
+      ** Enable output indicator for LER134P1                                                 CFC006
+      *                                                                                       CFC006
+     C                     MOVEL'N'       SUPFLG  1                                           CFC006
+     C********** CFC006    IFEQ 'Y'                                               AR1097176 MD020563
+     C                     CALL 'AOCOMR0'                                                     CFC006
+     C                     PARM 'LERC135' PNAME  10                                           CFC006
+     C                     PARM '*ALL '   PCSEQ   5                                           CFC006
+     C                     PARM SECTN     PSCTN  50                                           CFC006
+     C                     PARM *BLANKS   PRTCD   7                                           CFC006
+      *                                                                                       CFC006
+     C           PRTCD     IFEQ 'Y      '                                                     CFC006
+     C                     MOVEL'Y'       SUPFLG                                              CFC006
+     C                     ENDIF                                                              CFC006
+     C**********           ENDIF                                                  AR1097176 MD020563
+      *                                                                                       CFC006
+      *                                                                                       CLE134
+      ** CLE134 - Past Due Call Loans                                                         CLE134
+      *                                                                                       CLE134
+     C                     CALL 'AOSARDR0'                                                    CLE134
+     C                     PARM *BLANKS   WRTCD   7                                           CLE134
+     C                     PARM '*KEY   ' WOPTN   7                                           CLE134
+     C                     PARM 'CLE134'  WSARD   6                                           CLE134
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE134
+      *                                                                                       CLE134
+     C           WRTCD     IFEQ *BLANKS                                                       CLE134
+     C                     MOVE 'Y'       CLE134  1                                           CLE134
+     C                     ELSE                                                               CLE134
+     C                     MOVE 'N'       CLE134                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/AUDIT
+      *****************************************************************
+      *
+      *  AUDIT - Audit spool file processed through ZSFILE.
+      *
+      *  CALLED FROM:  Main Processing, *PSSR
+      *
+      *  CALLS:  ZSFILE
+      *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+     C                     Z-ADD0         PAGE
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU  60
+     C                     PARM           ZSERR
+      *
+      ** Error during ZSFILE processing, return to calling program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/TITLE STANDARD MIDAS SUBROUTINES USED IN PROGRAM
+      *****************************************************************
+      *
+      *  STANDARD MIDAS SUBROUTINES
+      *
+      *  CALLED FROM: Various
+      *
+      *  CALLS:       Various
+      *
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZHASHZ3
+      *
+      *****************************************************************
+     C/TITLE SR/*PSSR
+      *****************************************************************
+      *
+      *  *PSSR - subroutine to perform database error processing
+      *
+      *  CALLED FROM: Various
+      *
+      *  CALLS:  Audit
+      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8
+     C                     DUMP
+      *
+     C                     EXSR AUDIT
+     C                     WRITELER134C1
+     C                     WRITEERROR
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *    SRRETRPKY - Retrieve LEACCTPD Repayment Priorities         *                       CLE164
+      *****************************************************************                       CLE164
+     C           SRRPKY    BEGSR                                                              CLE164
+      *                                                                                       CLE164
+     C                     CALL 'LE000801'                                                    CLE164
+     C                     PARM *BLANKS   PRETC   7                                           CLE164
+     C                     PARM SECATC    PCATC   5                                           CLE164
+     C                     PARM 'LEFEEZTD'PFILE  10                                           CLE164
+     C                     PARM FELOAN    PLOAN   6                                           CLE164
+     C                     PARM FEBRCA    PBRCH   3                                           CLE164
+     C                     PARM FECNUM    PCUST   6                                           CLE164
+     C                     PARM FEFACL    PFCLTY                                              CLE164
+     C                     PARM FEFSEQ    PFESEQ                                              CLE164
+     C                     PARM *ZEROS    PREPR                                               CLE164
+     C                     PARM *ZEROS    PCAPR                                               CLE164
+     C                     PARM *BLANKS   SEOVFL                                              CLE164
+      *                                                                                       CLE164
+     C                     MOVELPREPR     SEREPR                                              CLE164
+     C                     MOVELPCAPR     SECAPR                                              CLE164
+      *                                                                                       CLE164
+     C                     ENDSR                                                              CLE164
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

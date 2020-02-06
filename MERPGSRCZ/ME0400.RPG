@@ -1,0 +1,128 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Check for o/g messages awaiting telex')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *    ME0400 - Check outgoing messages awaiting transmission     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 Patch D ---------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 166753             Date 24Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21SEP98               *
+      *                   113352            DATE 13FEB97              *
+      *                   097355            DATE 01MAR96              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  166753 - Add Century field to key list and use for           *
+      *           selection purposes.                                 *
+      *  141572 - Recompile over changes in MGOREFPD.                 *
+      *  113352 - Recompile over changes in MGOREFPD                  *
+      *  097355 - Only the status of single/first part messages       *
+      *           are needed to determine if there are still any      *
+      *           outstanding CRTD/AMND messages that needs to be     *
+      *           transmitted.  Applied fix 083007 from BLG-HKG.      *
+      *                                                               *
+      *****************************************************************
+     F***MGOREFLSIF  E           K        DISK                            097355
+     FMGOREFFSIF  E           K        DISK                               097355
+      *
+     E                    CPY@    1   1 80
+      *
+      * ID C  F  H  L Function of indicators
+      * 99            Read & Chain fail indicator
+      * 98            End of file indicator
+      * 01            Set lower limit indicator
+      * U6            Switch set on if Outgoing messages awaiting Tx
+      * U7U8LR        DB error
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+      *
+      **  Parameters passed from MEC0400
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RUNDAT  6
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Setup key for MGOREFFS                                           166753
+     C           MKEY      KLIST                                          166753
+     C                     KFLD           @RCEN                           166753
+     C                     KFLD           @RDAT                           166753
+      *                                                                   166753
+     C                     MOVE RUNDAT    @RDAT   60
+      *
+      ** Setup century field                                              166753
+     C                     MOVEL@RDAT     YY      20                      166753
+     C           YY        IFLT 72                                        166753
+     C                     MOVE '2'       @RCEN   1                       166753
+     C                     ELSE                                           166753
+     C                     MOVE '1'       @RCEN                           166753
+     C                     ENDIF                                          166753
+      *                                                                   166753
+     C***********@RDAT     SETLLMGOREFLS                 01RECORD PRESENT 097355
+     C***********          READ MGOREFLS               9998               097355
+     C***********@RDAT     SETLLMGOREFFS                 01RECORD P097355 166753
+     C           MKEY      SETLLMGOREFFS                 01RECORD PRESENT 166753
+     C                     READ MGOREFFS               9998               097355
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0400  'DBPGM
+     C                     MOVE '01'      DBASE            ***************
+     C***********          MOVE 'MGOREFLS'DBFILE           * DB ERROR 01 *097355
+     C                     MOVE 'MGOREFFS'DBFILE           * DB ERROR 01 *097355
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           *IN01     IFEQ '1'
+     C                     SETON                     U6
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+      **************************************************************************
+      *   *PSSR - error handling                                               *
+      *   Called by - INIT initial process                                     *
+      **************************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+** CPY@   **      Object copyright
+(c) Finastra International Limited 2001

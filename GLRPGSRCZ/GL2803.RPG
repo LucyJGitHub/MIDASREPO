@@ -1,0 +1,638 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Fontis Account Details Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Midas-Fontis Interface                               *
+      *                                                               *
+      *  GL2803 - Fontis Account Details Report                       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL004  *CREATE    Date 06Jan97               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL004 - Midas-Fontis Interface                              *
+      *                                                               *
+      *****************************************************************
+     FGLFONAL0IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     F*
+     FGL2803P1O   E                    PRINTER      KINFDS SPOOL      UC
+     FGL2803AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F*
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F* F U N C T I O N   O F   I N D I C A T O R S                   *
+     F*                                                               *
+     F*                                                               *
+     F* 88 - CHAIN OF ACCNT UNSUCCESSFUL                              *
+     F* 89 - END OF FILE GLFONAL0                                     *
+     F* U7 - DATABASE ERROR                                           *
+     F* U8 - DATABASE ERROR                                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F* S U B R O U T I N E     I N D E X                             *
+     F*                                                               *
+     F* INIT   - Initial Processing                                   *
+     F* PROCES - Main Processing                                      *
+     F* AUDIT  - Audit Report and End Program                         *
+     F* REPORT - Detail Processing                                    *
+     F* ZDATE2 - Convert Day Number to a Date                         *
+     F* ZFRPED - Edit Amount                                          *
+     F* BRCH   - Change of Branch Processing                          *
+     F* CUST   - Change of Customer Processing                        *
+     F* *PSSR  - Error Control                                        *
+     F*                                                               *
+     F*****************************************************************
+     E                    CPY@    1   1 80
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR. ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR. ARRAY
+     E                    ZMNM   12  12  3               ZDATE SR. ARRAY
+     E*
+     E/COPY ZSRSRC,ZFRPEDZ1
+     I*
+     I** Local Data Area for Data base errors
+     ILDA         DS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** Full Account Data Structure
+     I*
+     I            DS
+     I**********                              1  18 F1FULA                                    CGL029
+     I                                        1  24 F1FULA                                    CGL029
+     I                                        1   3 F1BRCD
+     I**********                              4   90F1CNUM                                    CSD027
+     I                                        4   9 F1CNUM                                    CSD027
+     I                                       10  12 F1CCY
+     I**********                             13  160F1ACOD                                    CGL029
+     I**********                             17  180F1ACSQ                                    CGL029
+     I                                       13  220F1ACOD                                    CGL029
+     I                                       23  240F1ACSQ                                    CGL029
+     I*
+     I** Data Structure for Chaining LF/ACCNT
+     I*
+     I            DS
+     I**********                              1  18 ACCNO                                     CGL029
+     I                                        1  24 ACCNO                                     CGL029
+     I                                        1   3 KBRCD
+     I**********                              4   90KCNUM                                     CSD027
+     I                                        4   9 KCNUM                                     CSD027
+     I                                       10  12 KCCY
+     I**********                             13  160KACOD                                     CGL029
+     I**********                             17  180KACSQ                                     CGL029
+     I                                       13  220KACOD                                     CGL029
+     I                                       23  240KACSQ                                     CGL029
+     I*
+     I** File Information Data Structure for GL2803AU
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I** File Information Data Structure for GL2803P1
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** External DS for Bank Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I** External DS for Branch Details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          DFACQQ                                    CGL029
+     I** External DS for Customer Details
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** External DS for Currency Details
+     I*
+     IDSMEMS    E DSMEMOS
+     I** External data structure for MEMOS Details
+     I** Renamed fields in PF/MEMOS
+     I              CNUM                            MECNUM
+     I              CCY                             MECCY
+     I              ACOD                            MEACOD
+     I              ACSQ                            MEACSQ
+     I              BRCA                            MEBRCA
+     IUMEMER      DS
+     I** Data structure for database error on call to AOMEMSR0.
+     I**********                              1   60U0CNUM                                    CSD027
+     I                                        1   6 U0CNUM                                    CSD027
+     I                                        7   9 U0CUCD
+     I**********                             10  130U0ACCD                                    CGL029
+     I**********                             14  150U0ACSQ                                    CGL029
+     I**********                             16  18 U0BRCA                                    CGL029
+     I                                       10  190U0ACCD                                    CGL029
+     I                                       20  210U0ACSQ                                    CGL029
+     I                                       22  24 U0BRCA                                    CGL029
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     IDSSDY     E DSDSSDY
+     I** Second DS for Access Programs, Long Data Structure
+     I*
+     IRUNDAT      DS
+     I                                       13  13 @MBIN
+     I/COPY ZSRSRC,ZFRPEDZ2
+     I*
+     I*
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M    S T A R T                                   *
+      *================================================================
+      *
+      ** Receive Parameter List
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           BRNCH   3
+      *
+      ** Perform Initialisation
+      *
+     C                     EXSR INIT
+      *
+      ** Perform Detail Processing
+      *
+     C                     EXSR PROCES
+      *
+      ** Output Audit Report and End Program
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Subroutine for Program Initialisation                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      * Calls:                                                        *
+      * AOBANKR0  Access Object                                       *
+      * ZDATE2                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field
+      *
+     C                     MOVEL'GL2803'  DBPGM  10
+      *
+      ** Call Access Program For Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database Error Processing
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY             ***********
+     C                     Z-ADD001       DBASE             * DBERR 01*
+     C                     EXSR *PSSR                       ***********
+     C                     ENDIF
+      *
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+      *
+      ** Report Work Fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         ACOUNT
+      *
+     C           *LIKE     DEFN F1BRCD    F1BROL
+     C           *LIKE     DEFN F1CNUM    F1CNOL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine for Main Processing                      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AUDIT - Produce Audit Report and End Program                 *
+      *  BRCH  - Change of Branch Processing                          *
+      *  CUST  - Change of Customer Processing                        *
+      *  REPORT- Detail Processing                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ** Read first record from file
+      *
+     C                     READ GLFONAL0                 89
+      *
+      ** Do While End of file is not detected
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C           BRNCH     IFEQ 'ALL'                       B001
+     C           BRNCH     OREQ F1BRCD
+     C           BRNCH     OREQ *BLANKS
+      *
+     C           F1FONA    IFEQ 'Y'                         B002
+      *
+     C           F1BRCD    IFNE F1BROL                      B003
+     C                     EXSR BRCH
+     C                     ENDIF                            E003
+      *
+     C           F1CNUM    IFNE F1CNOL                      B003
+     C                     EXSR CUST
+     C                     ENDIF                            E003
+      *
+     C                     EXSR REPORT
+      *
+     C                     MOVE F1BRCD    F1BROL
+     C                     MOVE F1CNUM    F1CNOL
+      *
+     C                     ENDIF                            E002
+     C                     ENDIF                            E001
+      *
+     C                     READ GLFONAL0                 89
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/BRCH
+      *****************************************************************
+      *                                                               *
+      * BRCH - Subroutine for Change of Branch processing             *
+      *                                                               *
+      * Called By: PROCES                                             *
+      * Calls:                                                        *
+      * ZSFILE                                                        *
+      * AOBRCHR0 Access Program                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           BRCH      BEGSR
+      *
+     C           F1BROL    IFNE *BLANK
+     C                     CLOSEGL2803P1
+     C                     ENDIF
+      *
+     C                     OPEN GL2803P1
+      *
+      ** Call Program ZSFILE to record the spool file within RCF
+      ** processing
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM RSEQ      SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, return to the
+      ** calling program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Call Access Program AOBRCHR0 to find Branch Name
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM F1BRCD    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVELF1BRCD    DBKEY            ************
+     C                     Z-ADD002       DBASE            * DBERR 02 *
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+      ** Write Header format, Branch Header
+      *
+     C                     WRITEW01P
+     C                     WRITEW04P
+     C                     WRITEW02P
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CUST
+      *****************************************************************
+      *                                                               *
+      *  CUST - Subroutine for Change of Customer Processing          *
+      *                                                               *
+      *  Called by: PROCES                                            *
+      *  Calls:                                                       *
+      *  AOCUSTR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CUST      BEGSR
+      *
+      ** Call Access Program AOCUSTR0 to obtain Customer Name
+      *
+     C                     MOVELF1CNUM    CKEY    7
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM CKEY      @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVEL@KEY1     DBKEY            ************
+     C                     Z-ADD003       DBASE            * DBERR 03 *
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+      ** Write Customer Header
+      *
+     C                     WRITEW05P
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Subrouitne for Detail Processing                    *
+      *                                                               *
+      *  Called by: PROCES                                            *
+      *  Calls:                                                       *
+      *  AOCURRR0 Access Program                                      *
+      *  ZFRPED                                                       *
+      *  ZDATE2                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR
+      *
+      ** Define key for chaining LF/ACCNT
+      *
+     C           KACCNT    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCD
+      *
+     C                     MOVE F1FULA    ACCNO
+      *
+      ** Read ACCNT to obtain Account Name and Address
+      *
+     C           KACCNT    CHAINACCNT                88
+      *
+     C           *IN88     IFEQ *ON
+     C                     MOVEL'ACCNT   'DBFILE
+     C                     MOVELACCNO     DBKEY            ************
+     C                     Z-ADD004       DBASE            * DBERR 04 *
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+      ** Call Access Object AOMEMSR0, to obtain the Real Time
+      *
+     C                     CALL 'AOMEMSR0'
+     C                     PARM *BLANKS   W0RTCD  7        I:Return code
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option
+     C                     PARM 0         W0RETL 100       O:Retail A/C No
+     C**********           PARM CNUM      W0CNUM  60       O:Customer No.                     CSD027
+     C                     PARM CNUM      W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM CCY       W0CUCD  3        O:Currency
+     C**********           PARM ACOD      W0ACCD  40       O:Account Code                     CGL029
+     C                     PARM ACOD      W0ACCD 100                                          CGL029
+     C                     PARM ACSQ      W0ACSQ  20       O:Account Seq.
+     C                     PARM BRCA      W0BRCA  3        O:Branch
+     C           DSMEMS    PARM DSMEMS    DSFDY
+      *
+     C           W0RTCD    IFNE *BLANK
+     C                     MOVE 'AOMEMSR0'DBFILE
+     C**********           Z-ADDW0CNUM    U0CNUM                                              CSD027
+     C                     MOVE W0CNUM    U0CNUM                                              CSD027
+     C                     MOVE W0CUCD    U0CUCD
+     C                     Z-ADDW0ACCD    U0ACCD
+     C                     Z-ADDW0ACSQ    U0ACSQ
+     C                     MOVE W0BRCA    U0BRCA
+     C                     MOVELUMEMER    DBKEY            ************
+     C                     Z-ADD005       DBASE            * DBERR 05 *
+     C                     EXSR *PSSR                      ************
+      *
+     C                     ENDIF
+      *
+      ** Edit Ledger Balance
+      *
+     C                     Z-ADDLDBLN     ZFLD15
+      *
+      ** Call Access Program AOCURRR0, to find no. of decimal
+      ** places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM CCY       @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELCCY       DBKEY            ************
+     C                     Z-ADD006       DBASE            * DBERR 06 *
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    LDBLO
+      *
+      ** Edit Cleared Balance
+      *
+     C                     Z-ADDCLBLN     ZFLD15
+      *
+      ** Call Access Program AOCURRR0, to find no. of decimal
+      ** places
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM CCY       @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELCCY       DBKEY            ************
+     C                     Z-ADD007       DBASE            * DBERR  07*
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    CLBLO
+      *
+      ** Call Subroutine ZDATE2 to edit dates
+      *
+     C                     Z-ADDF1ATVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ACTDO
+      *
+     C                     Z-ADDF1DATV    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DACDO
+      *
+     C                     Z-ADDF1WD42    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    WD42O
+      *
+      ** If Overflow caused by printing two lines of detail
+      ** print header
+      *
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEW01P
+     C                     WRITEW04P
+     C                     WRITEW02P
+     C                     WRITEW05P
+     C                     ENDIF
+      *
+      ** Print Detail, Add 1 to number of Accounts.
+      *
+     C                     WRITEW02PA
+     C                     ADD  1         ACOUNT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT - Subroutine to produce Audit Report and End Program   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+      ** If at least one record has been processed write end of report
+      *
+     C           ACOUNT    IFNE 0
+     C                     WRITEW03P
+     C                     CLOSEGL2803P1
+     C                     ENDIF
+      *
+     C                     OPEN GL2803AU
+     C                     WRITEW06A
+      *
+      ** If No details to report or Database Error exists, write
+      ** the relevant Audit report mesaage.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEW08A
+     C                     ENDIF
+      *
+     C           ACOUNT    IFEQ 0
+     C                     WRITEW07A
+     C                     ENDIF
+      *
+     C                     CLOSEGL2803AU
+      *
+      ** End Program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+      /TITLE SR/ZFRPED
+     C/COPY ZSRSRC,ZFRPEDZ3
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Error Control Subroutine                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check t see if *PSSR has been already called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, end program.
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+**  CPY@
+(c) Finastra International Limited 2001
+**  ZYDY - Years in Days Cumulative. Four Year Span
+0366073110961461
+**  ZMDY - Months in Days Cumulative through year
+000031059090120151181212243273304334365
+**  ZMNM - Months Short Names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

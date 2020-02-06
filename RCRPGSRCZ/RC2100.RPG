@@ -1,0 +1,560 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RC II - Account maintenance')
+/*OVRF*: OVRDBF (RCACMSLU) (RCACMSL0)                               : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Autorecs II Module                                   *
+      *                                                               *
+      *  RC2100 - Reconciliation account maintenance                  *
+      *                                                               *
+      *  Function:  Used to identify Midas accounts to the            *
+      *             Automatic Reconciliations II module.              *
+      *              o 'Insertion' of an RCII account implies setting *
+      *                the RCII a/c flag on ACCNTAB to 'Y'            *
+      *              o 'Deletion' of an RCII account implies setting  *
+      *                the RCII a/c flag on ACCNTAB to blank          *
+      *                                                               *
+      *  Input Cycle                                                  *
+      *                                                               *
+      *  Called By: RCC2100 - Reconciliation account maintenance      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01449             Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  176443 - Avoid MCH3601 to be sent.                           *
+      *           Pass correct parameter to AOCUSTR0.                 *
+      *  S01449 - Autorecs II module.                                 *
+      *                                                               *
+      *****************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FRC2100DFCF  E                    WORKSTN
+     FRCACMSL0IF  E           K        DISK
+     FRCACMSLUUF  E           K        DISK
+     F            ACCNTABF                          KRENAMERCACMSDU
+      *
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *   10        Multibranching Indicator                          *
+      *   30        General Screen Error                              *
+      *   31        action code not valid                             *
+      *   32        branch not valid                                  *
+      *   33        a/c not valid                                     *
+      *   40        non-display last statement sequence for I,D       *
+      *   70        work                                              *
+      *   71        a/c not found on master file                      *
+      *                                                               *
+      *   KC        F3 Enabled                                        *
+      *                                                               *
+      *   U7 & U8   Database error                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      ** Data Area giving Installation Control Details
+      *
+     IZMUSER    E DSZMUSER
+      **  User profile details
+      *
+     I            DS
+     I**********                              1  18 @ACID                                     CGL029
+     I                                        1  24 @ACID                                     CGL029
+     I**********                              1   60KCNUM                                     CSD027
+     I                                        1   6 KCNUM                                     CSD027
+     I                                        1   6 SCUS
+     I                                        7   9 KCCY
+     I                                        7   9 SCCY
+     I                                       10  190KACOD                                     CGL029
+     I                                       10  19 SCOD                                      CGL029
+     I                                       20  210KACSQ                                     CGL029
+     I                                       20  21 SSEQ                                      CGL029
+     I                                       22  24 KBRCA                                     CGL029
+     I                                       22  24 SBCH                                      CGL029
+     I**********                             10  130KACOD                                     CGL029
+     I**********                             10  13 SCOD                                      CGL029
+     I**********                             14  150KACSQ                                     CGL029
+     I**********                             14  15 SSEQ                                      CGL029
+     I**********                             16  18 KBRCA                                     CGL029
+     I**********                             16  18 SBCH                                      CGL029
+      **  Full account i/d
+      *
+     IINSMSG      DS
+     I                                        1  24 @INSAC                                    CGL029
+     I I            'defined as RCII a/c'    26  44 @INAR                                     CGL029
+     I**********                              1  18 @INSAC                                    CGL029
+     I*I********    'defined as RCII a/c'    20  38 @INAR                                     CGL029
+      **  Message issued on successful insert
+      *
+     IDELMSG      DS
+     I                                        1  24 @DELAC                                    CGL029
+     I I            'no longer RCII a/c'     26  43 @DNAR                                     CGL029
+     I**********                              1  18 @DELAC                                    CGL029
+     I*I********    'no longer RCII a/c'     20  37 @DNAR                                     CGL029
+      **  Message issued on successful deletion
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External Data structure for bank details.
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  External Data structure for branch details.
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      **  External Data structure for customer details
+      *
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access programs
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I                                      264 269 @NUM
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   INIT      Initial process                                   *
+      *   DETL      Detail process                                    *
+      *   VSEL      Validate selection                                *
+      *   INS       Insert                                            *
+      *   DEL       Delete                                            *
+      *   ENQ       Enquire                                           *
+      *   *PSSR     Process errors                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Initial process
+     C                     EXSR INIT
+      *
+      ** Detail process
+     C                     EXSR DETL
+      *
+      ** Terminate program
+     C                     SETON                     LR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  DETL                                           *
+      * Function    :  Detail processing                              *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  VSEL Validate selection                        *
+      *                INS  Insert processing                         *
+      *                DEL  Delete processing                         *
+      *                ENQ  Enquire processing                        *
+      *****************************************************************
+      *
+     C           DETL      BEGSR
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'
+      *
+      **  Display screen
+     C                     WRITERC2100F1
+     C                     WRITESFLMSGC
+     C                     EXFMTRC2100F2
+     C                     CALL 'ZM1002'
+     C                     SETON                     40
+      *
+      **  If F3 not pressed validate selection
+     C           *INKC     IFEQ '0'
+     C                     EXSR VSEL
+      *
+      **  If selection valid
+     C           *IN30     IFEQ '0'
+      *
+      **  Process action
+     C           SACT      CASEQ'I'       INS
+     C           SACT      CASEQ'D'       DEL
+     C           SACT      CASEQ'E'       ENQ
+     C                     END
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  VSEL                                           *
+      * Function    :  Validate selection                             *
+      *                                                               *
+      * Called by   :  DETL                                           *
+      * Calls       :  ZVACTU                                         *
+      *                ZVACTBU                                        *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+      **  Set off main error indicator
+     C                     SETOF                     303132
+     C                     SETOF                     33
+      *
+     C           SACT      SCAN 'IDE'                    70
+     C           *IN70     IFNE *ON                        1
+     C                     MOVEL'MEM2003' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     SETON                     3031
+     C                     END                             E1
+      *
+      **  If no error validate branch/authority
+     C           *IN30     IFEQ *OFF                       1
+      *
+      **  If multibranched, check branch code and authority
+     C           MBIN      IFEQ 'Y'                        2
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM SBCH      @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS                    3
+     C                     MOVEL'MEM1036' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     SETON                     3032
+     C                     ELSE                            X3
+      *
+      **  branch exists, so check authority
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM SACT      @ZACTN  1                       S01117
+     C                     PARM SBCH      @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+      *
+     C           @ERR      IFNE 0                          4
+     C           BANK      ANDNE'Y'
+     C                     MOVEL'MEM1077' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     SETON                     303132
+     C                     END                             E4
+     C                     END                             E3
+      *
+     C                     ELSE                            X2
+      *
+      **  single branch environment; check authority
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM SACT      @ZACTN  1                       S01117
+     C                     PARM           @ERR                            S01117
+      *                                                                   S01117
+     C           @ERR      IFNE *ZERO                      3              S01117
+     C           BANK      ANDNE'Y'
+     C                     MOVEL'MEM1077' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     SETON                     3031
+     C                     END                             E3
+      *
+     C                     END                             E2
+     C                     END                             E1
+      *
+      **  If still no error, validate according to action code
+     C           *IN30     IFEQ *OFF                       1
+      *
+      **  Access details on file
+     C           KEY1      CHAINRCACMSL0             71
+      *
+     C           *IN71     IFEQ *ON                        2
+     C                     MOVEL'MEM2000' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     SETON                     303233
+      *
+     C                     ELSE                            X2
+      *
+      **  Insert
+     C           SACT      IFEQ 'I'                        3
+      *
+     C           R4ACNT    IFEQ 'Y'                        4
+     C                     MOVEL'MEM2001' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     SETON                     303233
+     C                     END                             E4
+      *
+     C                     ELSE                            X3
+      *
+      **  Enquire/Delete
+     C           R4ACNT    IFNE 'Y'                        4
+     C                     MOVEL'MEM2002' @MSGID
+     C                     CALL 'ZM1001'  PLIST1
+     C                     SETON                     303233
+     C                     END                             E4
+      *
+     C                     END                             E3
+     C                     END                             E2
+      *
+     C                     END                             E1
+      *
+     C                     ENDSR                           VSEL
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  INS                                            *
+      * Function    :  Insert process; set RCII account flag to 'Y'   *
+      *                                                               *
+      * Called by   :  DETL                                           *
+      * Calls       :  *PSSR                                          *
+      *****************************************************************
+      *
+     C           INS       BEGSR
+      *
+      **  Access account details record for update
+     C           KEY1      CHAINRCACMSDU             70
+      *
+      **  Database error if record not found
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL@ACID     DBKEY            * DB ERROR 02 *
+     C                     MOVEL'RCACMSL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Set RCII account flag
+     C                     MOVEL'Y'       R4ACNT
+     C                     UPDATRCACMSDU
+      *
+      **  Send message to indicate succesful 'insertion'
+     C                     CLEAR@MSGID
+     C                     MOVEL@ACID     @INSAC
+     C                     MOVELINSMSG    @MSDTA
+     C                     CALL 'ZM1001'  PLIST1
+     C                     CLEAR@MSDTA
+      *
+      **  Clear screen fields
+     C                     MOVEL*BLANKS   @ACID
+     C                     MOVEL*BLANKS   SACT
+      *
+     C                     ENDSR                           INS
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  DEL                                            *
+      * Function    :  Insert process; set RCII account flag to ' '   *
+      *                                                               *
+      * Called by   :  DETL                                           *
+      * Calls       :  *PSSR                                          *
+      *****************************************************************
+      *
+     C           DEL       BEGSR
+      *
+      **  Access account details record for update
+     C           KEY1      CHAINRCACMSDU             70
+      *
+      **  Database error if record not found
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL@ACID     DBKEY            * DB ERROR 03 *
+     C                     MOVEL'RCACMSL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Reset RCII account flag
+     C                     MOVEL*BLANK    R4ACNT
+     C                     UPDATRCACMSDU
+      *
+      **  Send message to indicate succesful 'deletion'
+     C                     CLEAR@MSGID
+     C                     MOVEL@ACID     @DELAC
+     C                     MOVELDELMSG    @MSDTA
+     C                     CALL 'ZM1001'  PLIST1
+     C                     CLEAR@MSDTA
+      *
+      **  Clear screen fields
+     C                     MOVEL*BLANKS   @ACID
+     C                     MOVEL*BLANKS   SACT
+      *
+     C                     ENDSR                           DEL
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  ENQ                                            *
+      * Function    :  Enquiry process; display account details       *
+      *                                                               *
+      * Called by   :  DETL                                           *
+      * Calls       :  *PSSR                                          *
+      *****************************************************************
+      *
+     C           ENQ       BEGSR
+      *
+      **  Condition display of account details
+     C                     SETOF                     40
+      *
+      **  Access customer details for name (db err if not found)
+     C                     MOVE *BLANKS   @KEY1
+     C                     MOVELCNUM      @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C                     MOVELCNUM      DBKEY            * DB ERROR 04 *
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR                           ENQ
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Function    :  Initial process                                *
+      *                                                               *
+      * Called by   :  main process                                   *
+      * Calls       :  *PSSR                                          *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Read in user details
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Set up LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'RC2100'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Access SDBANKPD for date format
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** If the multibranching indicator is on, set on indicator 10
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN10
+     C                     ELSE
+     C                     MOVE BJSBRC    SBCH
+     C                     END
+      *
+      ** Key list for full account i/d
+     C           KEY1      KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+     C                     KFLD           KBRCA
+      *
+      **  ZM1001 parameter list
+     C           PLIST1    PLIST
+     C                     PARM           @MSGID 10
+     C                     PARM           @MSDTA 78
+      *
+      ** initialise variables
+     C                     MOVEL'RC2100'  PGMQ   10
+     C                     MOVEL*BLANKS   MSGKEY  4
+     C                     SETON                     40
+      *
+     C                     ENDSR                           INIT
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: INS  - Insert                                      *
+      *            DEL  - Delete                                      *
+      *            ENQ  - Enquire                                     *
+      *            INIT - Initial Process                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

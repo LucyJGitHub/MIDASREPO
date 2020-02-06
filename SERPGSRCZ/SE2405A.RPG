@@ -1,0 +1,1004 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Extract Todays Cust Fiscal Avg. Prices')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE2405A - SE Extract Today's Customer Fiscal Average Prices  *
+      *                                                               *
+      *  Function: This program will calculate the change to the      *
+      *   (COB)    average fical price numerator at trade date (CSTF) *
+      *            and at value date (CSVF).                          *
+      *                                                               *
+      *  Called by: SEC0606L - SE Update Customer Fiscal Average      *
+      *                        Prices                                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2004                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 233698             Date 25May05               *
+      *                 236696             Date 27Oct05               *
+      *                 236695             Date 27Oct05               *
+      *                 232543             Date 15Mar05               *
+      * Midas Release 4.04 -------------------------------------------*
+      *                 CGL031 *CREATE     Date 05Jul04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  233698 - Change Control for CGL031                           *
+      *  236696 - Interest over Transition Date wrong.                *
+      *  236695 - Use UPDATE instead of WRITE for SE Historic         *
+      *           Average Price-Acts.                                 *
+      *  232543 - Fix to CGL031                                       *
+      *  CGL031 - Taxation of Savings Income                          *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas SE Historic Cust Avg Price Acts-Aud
+     FCAPRHA  UF  E                    DISK         KINFDS CAPRDS
+     F                                              KINFSR CAPRSR
+      *
+      ** Midas SD Securities Trading Table File
+     FTABSE   IF  E           K        DISK
+     F            TABTB40F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+      *
+      ** Midas SE Securities
+     FSECTY   IF  E           K        DISK
+      *
+      ** Midas SE Customer Avg Price-Trade Acts
+     FTRDCP   IF  E           K        DISK
+      *
+      ** Midas SE Customer Avg Price-Depot Mvnts
+     FDPMCP   IF  E           K        DISK
+      *
+      ** Midas SE Historic Cust Average Price-Acts
+     F***CAPRH** UF  E           K        DISK         KINFDS CAPHDSA                         236695
+     FCAPRH   UF  E           K        DISK         KINFDS CAPHDS                             236695
+     F                                              KINFSR CAPHSR
+      *
+      ** Midas SE Extract Todays Cust Avg Prices
+     FSE2405AUO   E                    PRINTER
+     F/COPY WNCPYSRC,SE2405F001
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   21 - Nominal Currency Dec. Places 0                         *
+      *   22 - Nominal Currency Dec. Places 1                         *
+      *   23 - Nominal Currency Dec. Places 2                         *
+      *   24 - Nominal Currency Dec. Places 3                         *
+      *   77 - End of File on Reade or Record Exists on Setll         *
+      *   80 - End of Trade Actions - Customer Average Price          *
+      *   81 - End of Depot Movements - Customer Average Price        *
+      *   87 - Exception Error on Updated File - Prints Status/Audit  *
+      *   U7 - Database Error                                         *
+      *   U8 - Database Error                                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  I N D E X   T O   S U B R O U T I N E S                      *
+      *                                                               *
+      *   FIRST  - Accesses ICD Information                           *
+      *   W01    - Write Extracted Record                             *
+      *   APNUM  - Calculate Chagne To Average Price Numerator        *
+      *   ZSYSTM - Get TABTB10 ICD                                    *
+      *   ZICDSE - Get TABTB36 ICD                                    *
+      *   ZDATE1 - Validate dates submitted and convert to a number   *
+      *   ZDATE2 - Convert a day number to date format                *
+      *   ZEVCD  - Determine event control date                       *
+      *   ZDAYS  - Calculate no. of days between two dates for        *
+      *   ZDYYR  - Calculate no. of days in interest year             *
+      *   ZICD2  - Access ICD record 2 for securities trading         *
+      *   ZNCD   - Determine next coupon date                         *
+      *   AUDIT  - Outputs Audit Record CAPRHA and Control Report     *
+      *   CAPRSR - Error Handling for CAPRHA                          *
+      *   CAPHSR - Error Handling for CAPRH                           *
+      *   *PSSR  - Error handling                                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      **    Tables and Arrays    **
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+      ** Array Containig  Copyright Statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *
+     ITABLKY      DS
+      *
+      ** TABTB10 Table Key Field Data Structure for DB Error
+      *
+     I                                        1  12 TABKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+      *
+     ICAPHDS      DS                            366
+      *
+      ** Customer Average Price Actions Error Exception Data Struct.
+      *
+     I                                     *STATUS  STSCAP
+      *
+     ICAPRDS      DS                            366
+      *
+      ** Cust.Avg. Price Audit File Error Exception Data Struct.
+      *
+     I                                     *STATUS  STSCPR
+      *
+     ILDA         DS                            256
+      *
+      ** Previous Position Keys - Customer/Branch/Security
+      *
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+      ** Data Structure for Compilation  - Copyright Insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY WNCPYSRC,SE2405I001
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T
+      *================================================================
+      *
+      ** Keylists for chaining to files
+      *
+      ** Customer Average Price Actions LF/CAPRH
+      *
+     C           CPKEY     KLIST
+     C                     KFLD           WCSCN
+     C                     KFLD           WCSBA
+     C                     KFLD           WCSSC
+     C                     KFLD           WCSDA
+     C/COPY WNCPYSRC,SE2405C002
+      *
+      ** Customer Average Price Actions LF/CAPRH
+      *
+     C           CPKEY1    KLIST
+     C                     KFLD           WCSCN
+     C                     KFLD           WCSBA
+     C                     KFLD           WCSSC
+      *                                                                                       236696
+      ** Customer Average Price Actions LF/CAPRH                                              236696
+      *                                                                                       236696
+     C           CPKEY2    KLIST                                                              236696
+     C                     KFLD           WCSCN                                               236696
+     C                     KFLD           WCSBA                                               236696
+     C                     KFLD           WCSSC                                               236696
+     C                     KFLD           WCSDA                                               236696
+     C                     KFLD           WCSSE                                               236696
+     C                     KFLD           WCSRF                                               236696
+      *
+      ** Securities LF/SECTY
+      *
+     C           SECTKY    KLIST
+     C                     KFLD           CSSC
+      *
+      ** Access ICD Information in Subroutine First
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'SE2405A 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR FIRST
+      *
+      ** Check for Database Errors
+      *
+     C           *IN99     IFEQ *ON
+     C                     GOTO EAUDIT
+     C                     END
+      *
+      ** Define and Clear Work Fields
+      *
+     C           *LIKE     DEFN CSCN      WCSCN
+     C           *LIKE     DEFN CSBA      WCSBA
+     C           *LIKE     DEFN CSSC      WCSSC
+     C           *LIKE     DEFN CSDA      WCSDA
+     C           *LIKE     DEFN CSOA      WCSOA
+     C           *LIKE     DEFN CSSE      WCSSE                                               236696
+     C           *LIKE     DEFN CSRF      WCSRF                                               236696
+     C           *LIKE     DEFN CAPD      WCAPD                                               233698
+     C           *LIKE     DEFN CPUI      WCPUI                                               233698
+     C/COPY WNCPYSRC,SE2405C003
+      *
+      ** Loop round processing for each action record read LF/TRDCP
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Read action file of Customer Average Price Actions
+      *
+     C                     READ TRDCP                    80
+      *
+      ** If Trade Fiscal Price = 0, Goto End of Loop
+      *
+     C  N80      TFPR      CABEQ*ZERO     ENDLP1
+      *
+      ** If action record deleted Goto End of loop for next action
+      *
+     C  N80      RECI      CABEQ'*'       ENDLP1
+      *
+      ** At End of File
+      *
+     C           *IN80     CABEQ*ON       ENDLP1
+      *
+      ** Do not write record if Action Date is equal to Date of Next
+      ** Working Day
+      *
+     C           EVTD      CABEQDNWD      ENDLP1
+      *
+      ** Add to counter for each record read for Trade Action
+      *
+     C                     ADD  1         WTYPET  50
+      *
+      ** Determine source of action for Trade Action
+      *
+     C           PRSL      IFEQ 'P'
+     C                     MOVEL'TP'      SOATD   2
+     C                     ELSE
+     C                     MOVEL'TS'      SOATD
+     C                     ENDIF
+      *
+      ** Update actions greater than or equal to this Trade Action to
+      ** Record ID 'A' for subsequent action
+      *
+     C                     MOVE TRCP      WCSCN
+     C                     MOVE TDBA      WCSBA
+     C                     MOVE TDSS      WCSSC
+     C                     MOVE EVTD      WCSDA
+      *
+     C           CPKEY     SETLLCAPRH                    77
+     C                     MOVE *OFF      *IN77
+     C           *IN77     DOWEQ*OFF
+     C           CPKEY1    READECAPRH                    77
+      *
+     C           *IN77     IFNE *ON
+     C           RECI      IFNE 'D'
+     C           RECI      ANDNE'*'
+     C           RECI      ANDNE'C'
+      *
+      ** If Reversed Trade,then delete Original Action If/When Found
+      ** (Match on source of action and Trade ReF.) - flag RECI With 'C'
+      ** otherwise flag Price Action for Reworking with RECI of 'A'
+      *
+     C           RVLI      IFEQ 'Y'
+     C           SOATD     ANDEQCSOA
+     C           TDRF      ANDEQCSRF
+      *
+     C           RECI      IFEQ 'A'
+     C                     SUB  1         WUPDAT
+     C                     ENDIF
+      *
+     C                     MOVE 'C'       RECI
+     C                     ELSE
+      *
+     C           RECI      IFNE 'A'
+     C                     MOVE 'A'       RECI
+     C                     ADD  1         WUPDAT  50
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     EXCPTCAPRID
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Write extracted record
+      ** If not reversal
+      *
+     C           RVLI      IFNE 'Y'
+     C                     MOVE '1'       WTRADE  1
+     C                     EXSR W01
+     C                     MOVE '0'       WTRADE
+     C                     ENDIF
+      *
+     C           ENDLP1    TAG
+      *
+     C                     ENDDO
+      *
+      ** Loop round processing for each action record read LF/DPMCP
+      *
+      ** Read action file of Customer Average Price Acitons
+      *
+     C                     READ DPMCP                    81
+      *
+     C           *IN81     DOWEQ*OFF
+      *
+      ** If Trade Fiscal Price = 0, Goto End of Loop
+      *
+     C           CPFP      CABEQ*ZERO     ENDLP2
+      *
+      ** If action record deleted Goto End of Loop for next action
+      *
+     C           RECI      CABEQ'*'       ENDLP2
+      *
+      ** Add to counter for each record read for Type A and Type D
+      *
+     C                     ADD  1         WTYPED  50
+      *
+      ** Update actions greater than or equal to this Depot Movement
+      ** Record ID 'A' for subsequent action
+      *
+     C                     MOVE CCRT      WCSCN
+     C                     MOVE CPBA      WCSBA
+     C                     MOVE CPSS      WCSSC
+     C                     MOVE CADA      WCSDA
+      *
+     C           CPKEY     SETLLCAPRH                    77
+     C                     MOVE *OFF      *IN77
+     C           *IN77     DOWEQ*OFF
+     C           CPKEY1    READECAPRH                    77
+      *
+     C           *IN77     IFNE *ON
+     C           RECI      IFNE 'D'
+     C           RECI      ANDNE'A'
+     C           RECI      ANDNE'*'
+     C           RECI      ANDNE'C'
+     C           CDMR      OREQ CSRF
+     C           RECI      ANDNE'*'
+     C           RECI      ANDNE'C'
+     C           RECI      ANDNE'D'
+      *
+      ** If Reversal, update RECI as 'C'
+      ** only flag record to be deleted if the Depot Movement refer is
+      ** the same.
+      *
+     C           CRIN      IFEQ 'Y'
+     C           CDMR      ANDEQCSRF
+      *
+     C           RECI      IFEQ 'A'
+     C                     SUB  1         WUPDAT
+     C                     ENDIF
+      *
+     C                     MOVE 'C'       RECI
+      *
+      ** Else Re-Action record
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'A'       RECI
+     C                     ENDIF
+     C                     EXCPTCAPRID
+     C                     ADD  1         WUPDAT  50
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Write extracted record
+      ** If not reversal
+      *
+     C           CRIN      IFNE 'Y'
+     C                     MOVE '1'       WDEPOT  1
+     C                     EXSR W01
+     C                     MOVE '0'       WDEPOT
+     C                     ENDIF
+      *                                                                                       232543
+     C           ENDLP2    TAG                                                                232543
+      *
+      ** Read action file of Customer Average Price Actions
+      *
+     C                     READ DPMCP                    81
+      *
+     C********** ENDLP2    TAG                                                                232543
+      *
+     C                     ENDDO
+      *
+     C           EAUDIT    TAG
+      *
+      ** Output Run Control Report
+      *
+     C                     EXSR AUDIT
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * W01 - Write Extracted Record                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           W01       BEGSR
+      *
+      ** Records are written from Trade,Depot Events Files
+      ** flags WTRADE,WDEPOT are set to 1 of Trade,Depot
+      ** record respectively.
+      *
+     C***********          Z-ADD0         CSTF                                                236696
+     C***********          Z-ADD0         CSVF                                                236696
+     C                     Z-ADD0         WCSTF  150                                          236696
+     C                     Z-ADD0         WCSVF  150                                          236696
+     C                     Z-ADD0         CSTB
+     C                     Z-ADD0         CSVB
+     C                     Z-ADD0         CSAP
+     C                     Z-ADD0         CSCP
+     C                     Z-ADD0         CSNL
+      *
+      ** Trade Action
+      *
+     C           WTRADE    IFEQ '1'
+     C                     MOVE TRCP      CSCN
+     C                     MOVE TDBA      CSBA
+     C                     MOVE TDSS      CSSC
+     C                     MOVE '1'       CSSE
+     C                     MOVE '1'       WCSSE                                               236696
+      *
+     C           PRSL      IFEQ 'P'
+     C                     MOVE 'TP'      CSOA
+     C                     ENDIF
+      *
+     C           PRSL      IFEQ 'S'
+     C                     MOVE 'TS'      CSOA
+     C                     ENDIF
+      *
+     C                     Z-ADDNOML      CSNL
+     C                     Z-ADD0         CSAP
+     C                     MOVE TDRF      CSRF
+     C                     MOVE TDRF      WCSRF                                               236696
+      *
+      ** Calculate Average Price Numerator Change
+      *
+     C                     EXSR APNUM
+     C                     MOVE 'D'       RECI
+      *
+     C                     ENDIF
+      *
+      ** Depot Movement
+      *
+     C           WDEPOT    IFEQ '1'
+     C                     MOVE CCRT      CSCN
+     C                     MOVE CPBA      CSBA
+     C                     MOVE CPSS      CSSC
+     C                     MOVE '3'       CSSE
+     C                     MOVE '3'       WCSSE                                               236696
+     C                     MOVE CPMV      CSOA
+     C                     Z-ADDCMNA      CSNL
+     C                     Z-ADD0         CSAP
+     C                     Z-ADD0         CSCP
+     C                     MOVE CDMR      CSRF
+     C                     MOVE CDMR      WCSRF                                               236696
+     C/COPY WNCPYSRC,SE2405C004
+      *
+      ** Calculate Average Price Numerator Change
+      *
+     C                     EXSR APNUM
+     C                     MOVE 'D'       RECI
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDRUND      CSGD
+     C                     Z-ADDWCSDA     CSDA
+      *
+     C**********           WRITECAPRHDF                                                       236695
+      *                                                                                       236696
+     C                     MOVE TRCP      WCSCN                                               236696
+     C                     MOVE TDBA      WCSBA                                               236696
+     C                     MOVE TDSS      WCSSC                                               236696
+      *                                                                                       236696
+     C           CPKEY2    SETLLCAPRH                                                         236696
+     C                     MOVE *OFF      *IN77                                               236696
+      *                                                                                       236696
+     C           CPKEY2    READECAPRH                    77                                   236696
+     C           *IN77     IFEQ *OFF                                                          236696
+     C           CSTB      ANDNE*ZERO                                                         236696
+     C           WCSTF     ANDNE*ZERO                                                         236696
+     C                     Z-ADDWCSTF     CSTF                                                236696
+     C                     Z-ADDWCAPD     CAPD                                                233698
+     C                     Z-ADDWCPUI     CPUI                                                233698
+     C                     UPDATCAPRHDF                                                       236695
+     C                     ELSE                                                               236696
+      *                                                                                       236696
+     C           CPKEY2    READECAPRH                    77                                   236696
+     C           *IN77     IFEQ *OFF                                                          236696
+     C           CSVB      ANDNE*ZERO                                                         236696
+     C           WCSVF     ANDNE*ZERO                                                         236696
+     C                     Z-ADDWCSVF     CSVF                                                236696
+     C                     Z-ADDWCAPD     CAPD                                                233698
+     C                     Z-ADDWCPUI     CPUI                                                233698
+     C                     UPDATCAPRHDF                                                       236696
+     C                     ENDIF                                                              236696
+     C                     ENDIF                                                              236696
+      *
+     C           RECI      IFEQ 'D'
+     C**********           ADD  1         WRITEN  50                                   236695 236696
+     C                     ADD  1         WRITEN  50                                          236696
+     C**********           ADD  1         WUPDAT                                       236695 236696
+     C                     ENDIF
+      *
+     C           ENDW01    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * APNUM - Calculate Average Price Numerator                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           APNUM     BEGSR
+      *
+      ** Calculate Change to Average Price Numerator
+      *
+      ** Fetch nominal and nominal currency decimal places
+      *
+     C                     EXSR SECTIN
+      *
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELNMCY      ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             25
+     C  N25      RECI      COMP '*'                      25
+     C           *IN25     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELTKEY      DBKEY
+     C                     MOVE 'TABLE'   DBFILE
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+     C                     Z-ADD*ZEROS    WRK150 150
+     C                     Z-ADD*ZEROS    WRK151 151
+     C                     Z-ADD*ZEROS    WRK152 152
+     C                     Z-ADD*ZEROS    WRK153 153
+     C                     MOVEA'0000'    *IN,21
+     C           21        ADD  CDP       J       20
+     C                     MOVEA'1'       *IN,J
+      *
+      ** Trade Action Calculation
+      *
+     C           WTRADE    IFEQ '1'
+      *
+      ** Trade Action but not all TABTB36 flags set off
+      *
+     C   21      NOML      MULT TFPR      WRK150    H
+     C   22      NOML      MULT TFPR      WRK151    H
+     C   23      NOML      MULT TFPR      WRK152    H
+     C   24      NOML      MULT TFPR      WRK153    H
+      *
+     C   22                MOVE WRK151    WRK150
+     C   23                MOVE WRK152    WRK150
+     C   24                MOVE WRK153    WRK150
+      *
+     C           RCAP      IFEQ 'Y'
+     C                     Z-ADDRALL      WDRALL 158
+      *
+      **  If discount
+      *
+     C           STBS      IFEQ 'D'
+     C           RALL      ANDNE0
+     C                     Z-ADDDNWD      ZZDNWD
+     C                     Z-ADDAPDA      ZZAPDT
+     C                     EXSR ZEVCD
+     C                     EXSR ZNCD
+     C                     Z-ADDEVTD      ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     MOVE 'N'       DADJN
+     C                     EXSR ZDAYS
+     C                     MOVE ' '       DADJN
+     C                     Z-ADDZDDAYS    #DDAYS  50
+     C                     EXSR ZDYYR
+      *
+     C           ZINTDD    IFNE 0
+     C           RALL      MULT #DDAYS    WRKPRC 158
+     C           WRKPRC    DIV  ZINTDD    WCRALL    H
+      *
+     C           WCRALL    IFGE 0
+     C           1         SUB  WCRALL    WDRALL 158
+     C                     ELSE
+     C                     Z-SUBWCRALL    WCRALL 158
+     C           1         SUB  WCRALL    WDRALL
+     C                     Z-SUBWDRALL    WDRALL
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WDRALL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C   21      NOML      MULT WDRALL    WORK15 150H
+     C   22      NOML      MULT WDRALL    WRK151    H
+     C   23      NOML      MULT WDRALL    WRK152    H
+     C   24      NOML      MULT WDRALL    WRK153    H
+      *
+     C   22                MOVE WRK151    WORK15
+     C   23                MOVE WRK152    WORK15
+     C   24                MOVE WRK153    WORK15
+      *
+     C                     ADD  WORK15    WRK150
+      *
+     C                     ENDIF
+      *
+     C           SPBS      IFEQ 'P'
+     C                     DIV  100       WRK150    H
+     C                     ENDIF
+      *
+     C           5         SUB  NMDP      DC      10
+     C**************       MULT POWER8,DC WRK150    H                                         233698
+     C           WRK150    MULT POWER8,DC CSCP      H                                         233698
+      *
+     C***********SPBS      IFEQ 'P'                                                           236696
+     C***********          MULT 100       CSCP                                                236696
+     C***********          ENDIF                                                              236696
+      ***********                                                                             236696
+     C***********5         SUB  NMDP      DC      10                                          236696
+     C***********          ADD  CDP       DC      10                                          236696
+     C***********          DIV  POWER8,DC CSCP                                                236696
+      *
+     C           TVDA      IFEQ 'T'
+     C***********          Z-ADDWRK150    CSTF                                                236696
+     C                     Z-ADDWRK150    WCSTF                                               236696
+     C                     ENDIF
+      *
+     C           TVDA      IFEQ 'V'
+     C***********          Z-ADDWRK150    CSVF                                                236696
+     C                     Z-ADDWRK150    WCSVF                                               236696
+     C                     ENDIF
+     C                     MOVE EVTD      WCSDA                                               236696
+      *                                                                                       233698
+     C           NOML      MULT EVTD      WRK150    H                                         233698
+     C                     ADD  WRK150    WCAPD                                               233698
+      *                                                                                       233698
+     C           PRSL      IFEQ 'S'                                                           233698
+     C                     ADD  PCHI      WCPUI                                               233698
+     C                     ELSE                                                               233698
+     C                     SUB  PCHI      WCPUI                                               233698
+     C                     ENDIF                                                              233698
+      *                                                                                       233698
+     C                     ENDIF
+      *
+      ** Depot Movement Calculation
+      *
+     C           WDEPOT    IFEQ '1'
+     C***21******CMNA      MULT CPRC      WRK150    H                                         236696
+     C***22******CMNA      MULT CPRC      WRK151    H                                         236696
+     C***23******CMNA      MULT CPRC      WRK152    H                                         236696
+     C***24******CMNA      MULT CPRC      WRK153    H                                         236696
+     C   21      CMNA      MULT CPFP      WRK150    H                                         236696
+     C   22      CMNA      MULT CPFP      WRK151    H                                         236696
+     C   23      CMNA      MULT CPFP      WRK152    H                                         236696
+     C   24      CMNA      MULT CPFP      WRK153    H                                         236696
+      *
+     C   22                MOVE WRK151    WRK150
+     C   23                MOVE WRK152    WRK150
+     C   24                MOVE WRK153    WRK150
+      *
+     C           CDBA      IFEQ 'T'
+     C           CDBA      OREQ 'A'
+     C           5         SUB  NMDP      DC      10
+     C********** WRK150    MULT POWER8,DC CSTF      H                                         236696
+     C           WRK150    MULT POWER8,DC WCSTF     H                                         236696
+      *
+     C           SPBS      IFEQ 'P'
+     C***********          DIV  100       CSTF      H                                         236696
+     C                     DIV  100       WCSTF     H                                         236696
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           CDBA      IFEQ 'V'
+     C           CDBA      OREQ 'A'
+     C           CDBA      OREQ 'C'
+     C           5         SUB  NMDP      DC      10
+     C********** WRK150    MULT POWER8,DC CSVF      H                                         236696
+     C           WRK150    MULT POWER8,DC WCSVF     H                                         236696
+      *
+     C           SPBS      IFEQ 'P'
+     C**********           DIV  100       CSVF      H                                         236696
+     C                     DIV  100       WCSVF     H                                         236696
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     MOVE CADA      WCSDA                                               236696
+      *                                                                                       233698
+     C           CMNA      MULT CPDT      WRK150    H                                         233698
+     C           WRK150    ADD  WCAPD     WCAPD                                               233698
+      *                                                                                       233698
+     C           CPMV      IFEQ 'CI'                                                          233698
+     C                     ADD  CPPI      WCPUI                                               233698
+     C                     ELSE                                                               233698
+     C                     SUB  CPPI      WCPUI                                               233698
+     C                     ENDIF                                                              233698
+      *                                                                                       233698
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SECTIN  - Get Security Record                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SECTIN    BEGSR
+      *
+      ** Chain for Security Record and Database Error
+      *
+     C           SECTKY    CHAINSECTY                79
+     C           *IN79     IFNE *ON
+     C           RECI      COMP '*'                      79
+     C                     ENDIF
+      *
+     C           *IN79     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SECTY'   DBFILE
+     C                     MOVELCSSC      DBKEY
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     GOTO EAUDIT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * AUDIT - Outputs Audit Record CAPRHA and Control Report        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+     C           AUDIT     BEGSR
+      *
+      ** Compare count of actions to Audit File actions
+      *
+     C           *INU8     IFNE *ON
+     C                     READ CAPRHA                   79
+      *
+      ** Database Error
+      *
+     C           *IN79     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CAPRHA'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD4         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+     C                     ELSE
+     C                     Z-ADDNORE      WCNORE  50
+      *
+      ** Calculate no.of records on file now and update Audit File
+      *
+     C********** WCNORE    ADD  WRITEN    WNNORE  50                                          236695
+     C**********           Z-ADDWNNORE    NORE                                                236695
+     C                     Z-ADDWCNORE    NORE                                                236695
+     C                     Z-ADDWRITEN    SINS
+     C***********          Z-ADDWUPDAT    SAMD                                                236696
+     C                     UPDATCAPRHAF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Output Control Report
+      *
+     C                     WRITEHEADAU
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEERROR
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CAPHSR - Subroutine for Error Handling of LF/CAPRH            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CAPHSR    BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'CAPRH '  DBFILE
+     C                     MOVELWCSSC     DBKEY
+     C                     Z-ADD5         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE STSCAP    DBSTAT
+     C                     MOVE *ON       *IN87
+     C                     MOVE *ON       *IN99
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      * CAPRSR - Subroutine for Error Handling of PF/CAPRHA Audit     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CAPRSR    BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CAPRHA'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     Z-ADD6         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE STSCPR    DBSTAT
+     C                     MOVE *ON       *IN87
+     C                     MOVE *ON       *IN99
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     GOTO EAUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      * FIRST - Subroutine to Access ICD Information                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR
+      *
+     C/COPY WNCPYSRC,SE2405C001
+      *
+      ** Access ICD TABTB10
+      *
+     C                     EXSR ZSYSTM
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELZTABKY    DBKEY
+     C                     Z-ADD7         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** Access ICDSE TABTB36
+      *
+     C                     EXSR ZICDSE
+     C           *INU7     IFEQ *ON
+     C                     MOVE *ON       *IN99
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELZTABKY    DBKEY
+     C                     Z-ADD8         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** Access ICD TABTB10
+      *
+     C                     EXSR ZICD2
+      *
+     C           *INU7     IFEQ *ON
+     C                     MOVE *ON       *IN99
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELZTABKY    DBKEY
+     C                     Z-ADD9         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - Error control subroutine                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1
+     O/EJECT
+     OCAPRHDF E                CAPRID
+     O                         RECI
+      /EJECT
+      ***
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2004

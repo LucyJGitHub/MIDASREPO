@@ -1,0 +1,68 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Update Change User on GPCURRPD')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC000219 - Midas SM Update Change User on GPCURRPD        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CTP011  *CREATE    Date 10Jun10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CTP011 - Bank Fusion Midas Rebranding                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2010')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SMUC000219 -  Midas SM Update +
+                          Change User in GPCURRPD') TOMSGQ(MRUNQ)
+ 
+             CHGVAR     VAR(&MODE) VALUE('A')
+ 
+/** Call GPCURRPD Conversion Utility  */
+ 
+CALL:
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CALL       PGM(SMU00217) PARM(&MODE)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&MODE = 'A') THEN(DO)
+             CHGVAR     VAR(&MODE) VALUE('U')
+             GOTO       CMDLBL(CALL)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC000219 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

@@ -1,0 +1,266 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CB API Trailer Update')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       CBC000801 - Midas CB API Trailer Update                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD025467 *CREATE   Date 28Feb14              */
+/*                      MDNNNNNN           Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD025467 - API locking issue. Redesign approach.            */
+/*                - Rewrite CBC000800.                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ &MODE)
+ 
+/** Declaration of variables */
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+ 
+/* Journalling variables */
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNPF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)
+ 
+/* Other variables */
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&RECCONT) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                        Finastra International Limited 2014')
+ 
+             DCLF       FILE(SDTRDHL0) OPNID(TB1)
+             DCLF       FILE(SDTRDHL0) OPNID(TB2)
+             DCLF       FILE(SDTRDHL0) OPNID(TB3)
+ 
+/** Create data area LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(CALLSUBR +
+                        SUBR(SRABNOR))
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CALLSUBR   SUBR(SRBACKUP)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ENDCL)
+ 
+             CALLSUBR   SUBR(SREXECUT)
+ENDCL:
+             CALLSUBR   SUBR(SREND)
+ 
+/** CL program ends here */
+ 
+/** ---------------------------------------------------------------------- */
+/** SRBACKUP - Backup affected files for later retrieval in case of errors */
+/** ---------------------------------------------------------------------- */
+             SUBR       SUBR(SRBACKUP)
+ 
+                CLOF       OPNID(TB1)
+                MONMSG     MSGID(CPF4520)
+                OPNDBF     FILE(SDTRDHL0) OPTION(*INP) OPNID(TB1)
+                POSDBF     OPNID(TB1) POSITION(*START)
+AGAIN:
+                RCVF       OPNID(TB1)
+                MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDBACKUP))
+ 
+                IF      COND(&TB1_A8COBF *EQ 'Y') THEN(DO)
+ 
+/* Check if the object exist. */
+ 
+                   CHKOBJ     OBJ(&TB1_A8FILN) OBJTYPE(*FILE)
+                   MONMSG     MSGID(CPF9801) EXEC(CALLSUBR SUBR(SRABNOR))
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                              ENDBACKUP)
+ 
+                   IF         COND(&TB1_A8FILX *NE '          ') THEN(DO)
+                   CHKOBJ     OBJ(&TB1_A8FILX) OBJTYPE(*FILE)
+                   MONMSG     MSGID(CPF9801) EXEC(CALLSUBR SUBR(SRABNOR))
+                   IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                              ENDBACKUP)
+                   ENDDO
+ 
+/* Start Journalling */
+ 
+                   CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)
+                   CHGVAR     VAR(&JRNPF) VALUE(&TB1_A8FILN)
+                   CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                              *CAT &CSEQA)
+                   CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)
+                   SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                              FLAG('S') TEXT(&STEXT)
+ 
+                   IF         COND(&TB1_A8FILX *NE '          ') THEN(DO)
+                              CHGVAR     VAR(&JRNPF) VALUE(&TB1_A8FILX)
+                              SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                              FLAG('S') TEXT(&STEXT)
+                   ENDDO
+                ENDDO
+ 
+                GOTO       CMDLBL(AGAIN)
+ENDBACKUP:
+             ENDSUBR
+ 
+/** ---------------------------------------------------------------------- */
+/** SREXECUT - Execute Trailer Update Programs                             */
+/** ---------------------------------------------------------------------- */
+             SUBR       SUBR(SREXECUT)
+                CLOF       OPNID(TB2)
+                MONMSG     MSGID(CPF4520)
+                OPNDBF     FILE(SDTRDHL0) OPTION(*INP) OPNID(TB2)
+                POSDBF     OPNID(TB2) POSITION(*START)
+LOOP:
+                RCVF       OPNID(TB2)
+                MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDEXECUT))
+ 
+                IF         COND(&TB2_A8FILX *NE '          ') THEN(DO)
+                           RTVMBRD    FILE(&TB2_A8FILX) NBRCURRCD(&RECCONT)
+                           MONMSG     MSGID(CPF9812)
+                ENDDO
+                ELSE (DO)
+                           RTVMBRD    FILE(&TB2_A8FILN) NBRCURRCD(&RECCONT)
+                           MONMSG     MSGID(CPF9812)
+                ENDDO
+ 
+ 
+                IF         COND(&TB2_A8COBF *EQ 'Y' *AND &RECCONT *NE +
+                           0) THEN(DO)
+                           CHGJOB     SWS(XXXXXX00)
+                           CALL PGM(CB000801) PARM(&TB2_A8FILN &TB2_A8FILX +
+                           &TB2_A8FKEY)
+ 
+/** Execute rollback processing in case of errors                          */
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                           CALLSUBR SUBR(SRRESTORE)
+                           CALLSUBR SUBR(SRABNOR)
+                           GOTO CMDLBL(ENDEXECUT)
+                ENDDO
+ 
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                           CHGVAR VAR(&STAT) VALUE('N')
+                           CALL PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+                ENDDO
+ 
+                ENDDO
+                GOTO       CMDLBL(LOOP)
+/**/
+/* If the component has completed successfully reset the status field */
+/**/
+ENDEXECUT:
+             ENDSUBR
+ 
+/** ---------------------------------------------------------------------- */
+/** SRABNOR - Abnormal Program Processing                                  */
+/** ---------------------------------------------------------------------- */
+             SUBR       SUBR(SRABNOR)
+/**/
+/** Set the status to failed (&STAT = Y) in case the program fails */
+/**/
+                CHGVAR     VAR(&STAT) VALUE('Y')
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+                CHGJOB     SWS(XXXXXX11)
+                DMPCLPGM
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                             CBC000800 ended abnormally - see joblog +
+                             ') TOMSGQ(MOPERQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDSUBR
+ 
+/** ---------------------------------------------------------------------- */
+/** SREND - End of Program Processing                                      */
+/** ---------------------------------------------------------------------- */
+             SUBR       SUBR(SREND)
+                CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                             Finastra International Limited 2014')
+             ENDSUBR
+ 
+/** ---------------------------------------------------------------------- */
+/** SRRESTORE -Restore affected files                                      */
+/** ---------------------------------------------------------------------- */
+             SUBR       SUBR(SRRESTORE)
+                CHGJOB     SWS(XXXXXX00)
+                CLOF       OPNID(TB3)
+                MONMSG     MSGID(CPF4520)
+                OPNDBF     FILE(SDTRDHL0) OPTION(*INP) OPNID(TB3)
+                POSDBF     OPNID(TB3) POSITION(*START)
+REPEAT:
+                RCVF       OPNID(TB3)
+                MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDRESTORE))
+                IF         COND(&TB3_A8COBF *EQ 'Y') THEN(DO)
+ 
+/** Removes changes on main trailer files */
+                           CHGVAR    VAR(&JRNPF) VALUE(&TB3_A8FILN)
+                           CALLSUBR  SUBR(JRNRECOVR)
+ 
+/** Removes changes on extension files */
+                   IF      COND(&TB3_A8FILX *NE '          ') THEN(DO)
+                           CHGVAR    VAR(&JRNPF) VALUE(&TB3_A8FILX)
+                           CALLSUBR  SUBR(JRNRECOVR)
+                   ENDDO
+ 
+                ENDDO
+                GOTO       CMDLBL(REPEAT)
+ENDRESTORE:
+             ENDSUBR
+ 
+/*********************************************************************/
+/*                                                                   */
+/*       JRNRECOVR - Removes changes on trailer files using journal  */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(JRNRECOVR)
+ 
+/* Begin recovery from error */
+/* Retrieve attributes of current job */
+ 
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)
+ 
+/* Retrieve the most recent journal entry sequence number for the */
+/* specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) +
+                          SEARCH(*DESCEND) JOB(&NBR/&USR/&JOB) +
+                          FROMENT(*LAST) TOENT(*FIRST) +
+                          RTNRCV(&SJRNRCVR) RTNSEQNBR(&START)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+                CHGVAR     VAR(&START) VALUE(0)
+             ENDDO
+ 
+/* Determine starting journal sequence number of current job. */
+ 
+              SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                           SEQ(&FINISH)
+/* Remove journal changes. */
+ 
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)
+                RMVJRNCHG  JRN(ICJRN) FILE((&JRNPF)) RCVRNG(&SJRNRCVR +
+                          &FJRNRCVR) FROMENT(&START) TOENT(&FINISH)
+                MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)
+             ENDDO
+ 
+             ENDSUBR
+ 
+/* End JRNRECOVR subroutine. */
+             ENDPGM
+ 

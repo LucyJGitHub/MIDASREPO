@@ -1,0 +1,185 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Reset relative period nos online')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0119 - RESET RELATIVE PERIOD NUMBERS ONLINE                *
+     F*                                                               *
+     F*  Function: This program will find the current period within   *
+     F*  I/C Int   a period set and reset its relative period number  *
+     F*            to 0 and adjust the other periods' relative        *
+     F*            numbers accordingly.                               *
+     F*                                                               *
+     F*  Called By: MC0110                                            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CMC001             Date 18Mar96               *
+      *                 XXXXXX             Date 00Xxx00               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CMC001 - Management Accounts Enhancement for PCA:            *
+     F*           Recompile due to change of PF/GLPERDPD              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     FGLPERDL3UF  E           K        DISK         KCOMIT
+     F*****************************************************************
+     F* F U N C T I O N  O F  I N D I C A T O R S                     *
+     F*                                                               *
+     F*  11 - Beginning of GLPERDL3 reached.                          *
+     F*  12 - End of GLPERDL3 reached.                                *
+     F*                                                               *
+     F* U7-U8 - Database Error.                                       *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *  Copyright array
+      /SPACE 3
+     IRUNDAT    E DSRUNDAT
+      *  Data structure for run date using RUNDAT
+      *
+     ILDA       E DSLDA
+      *  Local Data Area
+      *
+     IPSDS       SDS
+      * Program Status Data Structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      ********************************************************************
+     C/EJECT
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Define work fields
+     C           *LIKE     DEFN AGRDNB    DAYNO
+     C           *LIKE     DEFN AGRDNB    TMRW
+     C                     MOVE 'Y'       RUN1    1
+      *
+      *  Parameter from MC0110 - Period Set Code
+     C           *ENTRY    PLIST
+     C                     PARM           STCODP  1
+      *
+      *  Key to read GLPERDL3 - Period Set Code + Tomorrow's Day No.
+     C           KEY       KLIST
+     C                     KFLD           STCODP
+     C                     KFLD           TMRW
+      *
+      * Get current day number from RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     Z-ADDAGRDNB    DAYNO            Day number
+      *
+      * Add 1 to get 'Tomorrows' day number
+     C           1         ADD  DAYNO     TMRW             Tomorrow
+      *
+      * Set lower limits on GLPERDL3 to find current period
+     C           KEY       SETLLGLPERDL3
+      *
+      * Read previous record.  This will be the start of period date
+      * for current period.  If no record found then perform error
+      * handling.
+     C                     READPGLPERDL3                 11
+     C           *IN11     IFEQ '1'
+     C           DTPSTC    ORNE STCODP
+      *
+      * Database error handling.
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0119'  DBPGM
+     C                     MOVE STCODP    DBKEY
+     C                     MOVEL'GLPERDPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DBERROR 001 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      * Set count to 0 for setting Relative Reriod Number. 0 = current
+      * period number.
+     C                     Z-ADD0         COUNT   30
+      *
+      * Continue reading previous until Period Set Code on record not
+      * equal to parameter passed or no more records found.
+     C           DTPSTC    DOWEQSTCODP
+     C           *IN11     ANDEQ'0'
+      *
+      * Update GLPERDPD with new Relative Period Number
+     C                     Z-ADDCOUNT     DTRPDN
+     C                     EXCPTUPDAT
+      *
+      * Subtract 1 from count for previous Relative Period Number
+     C                     SUB  1         COUNT
+      *
+      * Read previous record.
+     C                     READPGLPERDL3                 11
+     C                     END
+      *
+      * Set count to 1 for setting Relative Period Number. 1 = next
+      * period number after current.
+     C                     Z-ADD1         COUNT
+      *
+      * Reset lower limits on GLPERDL3 to find next period
+     C           KEY       SETLLGLPERDL3
+      *
+      * Read next record.  This will be the start of period date
+      * for the next period.
+     C                     READ GLPERDL3                 12
+      *
+      * Continue reading until Period Set Code on record not
+      * equal to parameter passed or no more records found.
+     C           DTPSTC    DOWEQSTCODP
+     C           *IN12     ANDEQ'0'
+      *
+      * Update GLPERDPD with new Relative Period Number
+     C                     Z-ADDCOUNT     DTRPDN
+     C                     EXCPTUPDAT
+      *
+      * Add 1 to count for next Relative Period Number
+     C                     ADD  1         COUNT
+      *
+      * Read next record.
+     C                     READ GLPERDL3                 12
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+      ********************************************************************
+      *
+      *  *PSSR Subroutine to handle program error
+      *
+      *    CALLED BY : Main Processing
+      *
+      *    CALLS     : PGM/DBERRCTL
+      *
+     C           *PSSR     BEGSR
+      *
+      * Check that this is the first time through the routine
+      * to prevent recursive calling which would loop the progam.
+     C           RUN1      IFEQ 'Y'
+     C                     MOVE 'N'       RUN1
+     C                     DUMP
+     C                     END
+      *
+      * Call DBERRCTL to control the program termination
+     C                     CALL 'DBERRCTL'
+     C                     ENDSR
+     O/EJECT
+      * Update Relative Period Number field on GLPERDL3.
+     O@PERDDX E                UPDAT
+     O                         DTRPDN
+      ********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

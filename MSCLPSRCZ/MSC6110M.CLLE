@@ -1,0 +1,284 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas MS Midas/SWIFT Meridian communication')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Midas SWIFT                                         */
+/*                                                                   */
+/*       MSC6110M - Midas/SWIFT Meridian communications              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. BUG24737           Date 31Jul09              */
+/*                      257554             Date 01Apr09              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      BUG11048           Date 29Mar06              */
+/*                      BUG10977           Date 21Mar06              */
+/*                      CSW038             Date 13Apr05              */
+/*                      BUG6466 (Reopen)   Date 25Apr05              */
+/*                      BUG6466            Date 12Apr05              */
+/*                      CSC023             Date 30Jan04              */
+/*                      CPK016             Date 04Jun03              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CSW025             Date 15Apr02              */
+/*                      CPK015             Date 06Jun02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                      CPK014             Date 14Nov01              */
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      CSW017 *CREATE     Date 11Feb99              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/* This module is a component of MS6110 (Midas/Swift Meridian        */
+/* Communications).                                                  */
+/*                                                                   */
+/* It should be called with the following parameters:                */
+/*    o  IO     : I => incoming ¦ O => Outgoing                      */
+/*    o  MCID   : Meridian Communications ID                         */
+/*    o  ACCP   : Alternative access path (if required)              */
+/*    o  EOD    : OPERATION from WRKMSMIF                            */                   /*CSW025*/
+/*                          - EOD is only meaningful value           */                   /*CSW025*/
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG24737-Recompiled as part of SC257554.                    */
+/*       257554 - Recompiled due to changes in module MS6110M.       */
+/*       BUG11048 - Run ME8200M for MMM, MS8200M for MINT            */
+/*       BUG10977 - CSW038 conditioning wrong                        */
+/*       CSW038 - Change to allow communication with MMM via         */
+/*                MQSeries queues, rather than data queues.  The     */
+/*                change here is to cause the compression server     */
+/*                job which is submitted to use MQSeries, but        */
+/*                also to do the kind of message compression that    */
+/*                MMM expects (by default it formats messages for    */
+/*                the MINT interface if MQSeries is used).           */
+/*       BUG6466 (Reopen) - MMM Data queues need to be journaled.    */
+/*       BUG6466 - MMM Data queues need to be journaled.             */
+/*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
+/*                OUTQ must always be *JOBD.                         */
+/*       CPK016 - Externalise STRCMTCTL code for ease of later       */
+/*                upgrade.                                           */
+/*       CSW025 - Midas Message Manager                              */                   /*CSW025*/
+/*       CPK015 - Release 4.01 Packaging:                            */
+/*                - MSQC dtaq now created in DPLIB.                  */
+/*                - MSQM dtaq now created in DPLIB.                  */
+/*       CPK014 - Submit jobs with user *JOBD                        */
+/*       CSW017 - Midas/SWIFT Meridian interface                     */
+/*                                                                   */
+/*********************************************************************/
+ 
+/************PGM********PARM(&MCID*&IO*&ACCP)**************/                              /*CSW025*/
+             PGM        PARM(&MCID &IO &ACCP &EOD)                                        /*CSW025*/
+ 
+             DCL        VAR(&IO)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MCID) TYPE(*CHAR) LEN(26)
+             DCL        VAR(&ACCP) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EOD)  TYPE(*CHAR) LEN(4)                                     /*CSW025*/
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&XLIB)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                   /*CPK015*/
+             DCL        VAR(&DTANAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTQC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7) VALUE('       ')                     /*CSW025*/
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                                      /*CSW025*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CSW025*/
+             DCL        VAR(&CSW025) TYPE(*CHAR) LEN(1)                                   /*CSW025*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CSW025*/
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)                                  /*CPK016*/
+             DCL        VAR(&CSW038) TYPE(*CHAR) LEN(1)                                   /*CSW038*/
+                                                                                          /*CSW025*/
+/* Declare variable CSC018 - flag for switchable feature */                              /*BUG6466*/
+/* Journaling Options for High Availability */                                           /*BUG6466*/
+                                                                                         /*BUG6466*/
+             DCL        VAR(&RSVALRTNC) TYPE(*CHAR) LEN(7)                               /*BUG6466*/
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)                                 /*BUG6466*/
+             DCL        VAR(&CSC018) TYPE(*CHAR) LEN(7)                                  /*BUG6466*/
+             DCL        VAR(&JRNDQ6) TYPE(*CHAR) LEN(1)                                  /*BUG6466*/
+                                                                                         /*BUG6466*/
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Initialisation */
+             RTVJOBA    TYPE(&JOBTYPE)
+             RTVJOBA    NBR(&CNUM) TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+ 
+/* Create and lock data area to prove we are active */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+             CHGVAR     VAR(&XLIB) VALUE(&PREFIX *CAT 'XLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PREFIX *CAT 'DPLIB')                           /*CPK015*/
+             CHGVAR     VAR(&DTANAM) VALUE('MSMR' *CAT &CNUM)
+             CRTDTAARA  DTAARA(&XLIB/&DTANAM) TYPE(*CHAR) LEN(1)
+             ALCOBJ     OBJ((&XLIB/&DTANAM *DTAARA *EXCL))
+ 
+/* Start commitment control (unless run interactively) */
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+/**********     STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) + */                        /*CPK016*/
+/**********                  CMTSCOPE(*JOB)                     */                        /*CPK016*/
+                CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)                                /*CPK016*/
+             ENDDO
+ 
+/* Determine if the Export via Data Queues feature (CSW025) is on   */                    /*CSW025*/
+             CHGVAR     VAR(&SARD) VALUE('CSW025')                                        /*CSW025*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                        /*CSW025*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                         /*CSW025*/
+             IF         COND(&RTN *EQ '       ') THEN(DO)                                 /*CSW025*/
+                  CHGVAR     VAR(&CSW025) VALUE('Y')                                      /*CSW025*/
+             ENDDO                                                                        /*CSW025*/
+ 
+/* If it is on, then check to see whether we are to send via */                           /*CSW038*/
+/* MQSeries.                                                 */                           /*CSW038*/
+             IF         COND(&CSW025 = 'Y') THEN(DO)                                      /*CSW038*/
+                CHGVAR     VAR(&SARD) VALUE('CSW038')                                     /*CSW038*/
+                CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                     /*CSW038*/
+                CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                      /*CSW038*/
+                IF         COND(&RTN *EQ '       ') THEN(DO)                              /*CSW038*/
+                     CHGVAR     VAR(&CSW038) VALUE('Y')                                   /*CSW038*/
+                ENDDO                                                                     /*CSW038*/
+             ENDDO                                                                        /*CSW038*/
+ 
+/* Check for Switchable feature CSC018. */                                               /*BUG6466*/
+                                                                                         /*BUG6466*/
+             CALL       PGM(AOSARDR0) PARM(&CSC018 '*VERIFY' +
+                          'CSC018' &SFMT)                                                /*BUG6466*/
+                                                                                         /*BUG6466*/
+/*  If feature CSC018 is present,                                                        /*BUG6466*/
+                                                                                         /*BUG6466*/
+             IF         COND(&CSC018 *EQ '       ') THEN(DO)                             /*BUG6466*/
+                                                                                         /*BUG6466*/
+/*  Get the high availability system values */                                           /*BUG6466*/
+                                                                                         /*BUG6466*/
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'HighAvlJrnDtaqueues' &SVAL1 '' '' '' '' +
+                          '' '' '' '' '' '' '' '' '' '' '' '' '' +
+                          '')                                                            /*BUG6466*/
+                                                                                         /*BUG6466*/
+/* If there is an error finding any system value then end abnormally */                  /*BUG6466*/
+                                                                                         /*BUG6466*/
+             IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO +
+                          CMDLBL(ABNOR))                                                 /*BUG6466*/
+                                                                                         /*BUG6466*/
+/* Check whether data queue journaling is required.                                      /*BUG6466*/
+                                                                                         /*BUG6466*/
+             CHGVAR     VAR(&JRNDQ6) VALUE(%SST(&SVAL1 1 1))                             /*BUG6466*/
+                                                                                         /*BUG6466*/
+             ENDDO                                                                       /*BUG6466*/
+ 
+/* Start compression server for outgoing (Tx) session */
+             IF         COND(&IO *EQ 'O') THEN(DO)
+             CHGVAR     VAR(&DTQM) VALUE('MSQM' *CAT &CNUM)
+             CHGVAR     VAR(&DTQC) VALUE('MSQC' *CAT &CNUM)
+/**********  CRTDTAQ    DTAQ(&XLIB/&DTQM) MAXLEN(12050) */                                /*CPK015*/
+/**********  CRTDTAQ    DTAQ(&XLIB/&DTQC) MAXLEN(50) */                                   /*CPK015*/
+             CRTDTAQ    DTAQ(&DPLIB/&DTQM) MAXLEN(12050)                                  /*CPK015*/
+             CRTDTAQ    DTAQ(&DPLIB/&DTQC) MAXLEN(50)                                     /*CPK015*/
+                                                                                         /*BUG6466*/
+/* If Feature CSC018 is 'on' (Journaling options for high availability)                  /*BUG6466*/
+             IF         COND(&CSC018 *EQ '       ') THEN(DO)                             /*BUG6466*/
+                                                                                         /*BUG6466*/
+/* If data queue journaling is required,                                                 /*BUG6466*/
+/* call program to journal data queues in xxDPLIB. */
+/**********  IF         COND(&JRNDQ6 *EQ 'Y') THEN(CALL PGM(SCC2469) + */    /*BUG6466*/ /*BUG6466*/
+/**********               PARM(&DPLIB))                                */    /*BUG6466*/ /*BUG6466*/
+             IF         COND(&JRNDQ6 *EQ 'Y') THEN(DO)                                   /*BUG6466*/
+             STRJRNOBJ  OBJ(&DPLIB/&DTQM &DPLIB/&DTQC) +
+                          OBJTYPE(*DTAQ) JRN(ICJRN)                                      /*BUG6466*/
+             ENDDO                                                                       /*BUG6466*/
+             ENDDO                                                                       /*BUG6466*/
+                                                                                         /*BUG6466*/
+/************SBMJOB     CMD(CALL PGM(MS8200P) PARM(&CNUM &ACCP)) +                        /*CPK014*/
+/************             JOB(MS_M2M_SRV) JOBD(MBATCH) JOBQ(MSJOBQ) +                     /*CPK014*/
+/************             RTGDTA(MULTILANGUAGE) MSGQ(MOPERQ)                              /*CPK014*/
+/*/COPY WNCPYSRC,MSC6110M01                                          */
+/************SBMJOB     CMD(CALL PGM(MS8200P) PARM(&CNUM &ACCP)) +                        /*CSW025*/
+/************             JOB(MS_M2M_SRV) JOBD(MBATCH) JOBQ(MSJOBQ) +                     /*CSW025*/
+/************             USER(*JOBD) RTGDTA(MULTILANGUAGE) +                             /*CSW025*/
+/************             MSGQ(MOPERQ)                                         /*CPK014*/ /*CSW025*/
+/*/COPY WNCPYSRC,MSC6110M02                                          */
+/************                                                                             /*CSW025*/
+/* Submit the correct job depending upon whether CSW025 is on or not                      /*CSW025*/
+/* Note that if it is on but MQSeries communication is also on, */                        /*CSW038*/
+/* we submit as if it were off.                                 */                        /*CSW038*/
+                                                                                          /*CSW025*/
+/**********  IF         COND(&CSW025 *EQ 'Y') THEN(DO)                      */ /*CSW025*/ /*CSW038*/
+/**********  IF         COND(&CSW025 *EQ 'Y' *OR &CSW038 *EQ 'Y') +                       BUG10977*/
+/**********               THEN(DO)                                               /*CSW038 BUG10977*/
+/**********  IF         COND(&CSW025 *EQ 'Y' *AND &CSW038 *NE 'Y') +                      BUG11048*/
+/**********               THEN(DO)                                             /*BUG10977 BUG11048*/
+/************   SBMJOB     CMD(CALL PGM(ME8200P) PARM(&CNUM &ACCP)) +                     /*CSC023*/
+/************                JOB(MS_M2M_SRV) JOBD(MBATCH) JOBQ(MSJOBQ) +                  /*CSC023*/
+/************                USER(*JOBD) RTGDTA(MULTILANGUAGE) +                          /*CSC023*/
+/************                MSGQ(MOPERQ)                                      /*CSW025*/ /*CSC023*/
+             IF COND(&CSW025 *EQ 'Y') THEN(DO)                                          /*BUG11048*/
+                SBMJOB     CMD(CALL PGM(ME8200P) PARM(&CNUM &ACCP)) +
+                             JOB(MS_M2M_SRV) JOBD(MBATCH) JOBQ(MSJOBQ) +
+                             USER(*JOBD) RTGDTA(MULTILANGUAGE) +
+                             MSGQ(MOPERQ) OUTQ(*JOBD)                                     /*CSC023*/
+             ENDDO                                                                        /*CSW025*/
+             ELSE       CMD(DO)                                                           /*CSW025*/
+/************   SBMJOB     CMD(CALL PGM(MS8200P) PARM(&CNUM &ACCP)) +                     /*CSC023*/
+/************                JOB(MS_M2M_SRV) JOBD(MBATCH) JOBQ(MSJOBQ) +                  /*CSC023*/
+/************                USER(*JOBD) RTGDTA(MULTILANGUAGE) +                          /*CSC023*/
+/************                MSGQ(MOPERQ)                                      /*CSW025*/ /*CSC023*/
+                SBMJOB     CMD(CALL PGM(MS8200P) PARM(&CNUM &ACCP)) +
+                             JOB(MS_M2M_SRV) JOBD(MBATCH) JOBQ(MSJOBQ) +
+                             USER(*JOBD) RTGDTA(MULTILANGUAGE) +
+                             MSGQ(MOPERQ) OUTQ(*JOBD)                                     /*CSC023*/
+                             ENDDO                                                        /*CSW025*/
+             ENDDO                                                                        /*CSW025*/
+ 
+             CHGJOB     LOGCLPGM(*NO)
+                                                                                          /*CSW025*/
+/* Call-bound MS6110M communications program */
+/************QSYS/CALLPRC*PRC(MS6110M)*PARM(&MCID*&DTQM*&DTQC*&IO)/                       /*CSW025*/
+             QSYS/CALLPRC PRC(MS6110M) PARM(&MCID &DTQM &DTQC &IO &EOD)                   /*CSW025*/
+ 
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Normal end */
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                            MSC6110 ended abnormally - see job log') +
+                            TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Delete 'active' data area here --- just in case called */
+/* interactively. */
+ END:        DLTDTAARA  DTAARA(&DTANAM)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

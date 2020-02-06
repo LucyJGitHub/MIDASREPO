@@ -1,0 +1,62 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_LEFEED1 - LE Fee Master file zonal                                  */
+/*                                                                             */
+/*       (c) Finastra International Limited 2013                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. AR787635 *CREATE   Date 10Jun13                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       AR787635 - Redelivery of AR214066. Also amended CGZONE where clause   */
+/*                  to prevent an SQL error when multiple records is           */
+/*                  retrieved. (Child: AR787636)                               */
+/*       AR214066 - UDF Files are not properly populated during migration.     */
+/*                  Created SQL for use in T_GZFEEMEX population.              */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  CGGLOB ,                                                                      :
+  DDFACT,                                                                       :
+  DDFCNO,                                                                       :
+  DDLNRF,                                                                       :
+  DDFSEQ )                                                                      :
+  AS                                                                            :
+  (SELECT                                                                       :
+  CGGLOB,                                                                       :
+  CASE WHEN FEFACL=0 THEN '   ' ELSE                                            :
+  SUBSTR(CONCAT(SUBSTR('00000',LENGTH(TRIM(FEFACL))+1),FEFACL),1,3)             :
+  END AS DDFACT,                                                                :
+  CASE WHEN FEFACL=0 THEN '  ' ELSE                                             :
+  SUBSTR(CONCAT(SUBSTR('00000',LENGTH(TRIM(FEFACL))+1),FEFACL),4,2)             :
+  END AS DDFCNO,                                                                :
+  FELOAN AS DDLNRF,                                                             :
+  CASE WHEN FEFSEQ=0 THEN '  ' ELSE                                             :
+  CONCAT(SUBSTRING('00',LENGTH(TRIM(FEFSEQ)) + 1), FEFSEQ)                      :
+  END AS DDFSEQ                                                                 :
+  FROM LEFEED                                                                   :
+  LEFT JOIN GPGLCUSL                                                            :
+  ON                                                                            :
+  FECNUM = CGCUST                                                               :
+  WHERE                                                                         :
+  CGZONE IN (SELECT DISTINCT A8ZONE FROM SDBRCHPD)                              :
+  ) ;                                                                           :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  CGGLOB  IS 'Global Customer ID'         ,                                     :
+  DDFACT  IS 'Fac. Type'                  ,                                     :
+  DDFCNO  IS 'Fac. No.'                   ,                                     :
+  DDLNRF  IS 'Loan Number'                ,                                     :
+  DDFSEQ  IS 'Facility Seq');                                                   :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE Fee Master File Zonal                    ';                     :
+                                                                                :

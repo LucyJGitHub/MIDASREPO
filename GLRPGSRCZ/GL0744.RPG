@@ -1,0 +1,149 @@
+     H
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Balances Sort 2')                             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0744 - GL Balances Sort for EMU - 1                        *
+      *                                                               *
+      *  Function - This program is used to sort records by its key   *
+      *             from LF/GLEXTRL4 to PF/GLX14.                     *
+      *                                                               *
+      *  Called by:  GLC75E - GL Balances in Cons. Euro CCy by Co-GL  *
+      *                       level.                                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 262907             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU011  *Create    Date 11Mar98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  262907 - FOOB GLC0730 and GLC0750 due to truncated balance   *
+      *         - Increase the length of the LDBL from 15,0 to 18,0 to*
+      *           make sure that balance will not be truncated.       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CEU011 - EMU Position/Risk Reporting                         *
+      *                                                               *
+      *****************************************************************
+     FGLEXTRL4IF  E           K        DISK
+      **  GL Balances Extract - 04
+      *
+     FGLX14   O   E                    DISK
+      **  GL Balances Extract - 14
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   OF   I N D I C A T O R S                   *
+      *                                                               *
+      *     24  -  End of file for GLEXTRL4                           *
+      *     25  -  Entered Branch not equal                           *
+      *     30  -  Indicator used in reading previous records         *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      **  Array for object Copyright Statement
+      *
+      /EJECT
+      *
+     C                     MOVEACPY@      MKI@   80
+      ** Set up copyright parameter
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRENT   3
+      *
+     C           WKEY1     KLIST
+     C                     KFLD           CMPYM
+     C                     KFLD           ASEC
+     C                     KFLD           TACD
+     C                     KFLD           ACOD
+     C                     KFLD           ECSS
+     C                     KFLD           CCY
+     C                     KFLD           DCIN
+      *
+     C           PRENT     IFEQ 'ALL'
+     C                     READ GLEXTRL4                 70
+     C                     ELSE
+      *
+     C                     MOVE PRENT     CMPYM
+     C                     MOVE *LOVAL    ASEC
+     C                     MOVE *LOVAL    TACD
+     C                     MOVE *LOVAL    ACOD
+     C                     MOVE *LOVAL    ECSS
+     C                     MOVE *LOVAL    CCY
+     C                     MOVE *LOVAL    DCIN
+      *
+     C           WKEY1     SETLLGLEXTRL4                 70
+     C           CMPYM     READEGLEXTRL4                 70
+     C                     ENDIF
+      *
+     C           *IN70     IFEQ '0'
+     C                     MOVELCMPYM     WCMPYM  3
+     C                     MOVELASEC      WASEC   10
+     C**********           MOVELTACD      WTACD   40                                          CGL029
+     C**********           MOVELACOD      WACOD   40                                          CGL029
+     C                     MOVELTACD      WTACD  100                                          CGL029
+     C                     MOVELACOD      WACOD  100                                          CGL029
+     C                     MOVELCCY       WCCY    3
+     C                     MOVELDCIN      WDCIN   1
+     C                     ENDIF
+      *
+     C           *IN70     DOWEQ'0'
+     C           PRENT     ANDEQ'ALL'
+     C           *IN70     OREQ '0'
+     C           PRENT     ANDEQCMPYM
+      *
+     C           CMPYM     IFEQ WCMPYM
+     C           ASEC      ANDEQWASEC
+     C           TACD      ANDEQWTACD
+     C           ACOD      ANDEQWACOD
+     C           CCY       ANDEQWCCY
+     C           DCIN      ANDEQWDCIN
+      *
+     C**********           ADD  LDBL      TLDBL  150                                          262907
+     C                     ADD  LDBL      TLDBL  180                                          262907
+      *
+     C                     ELSE
+     C                     MOVELCMPYM     WCMPYM
+     C                     MOVELASEC      WASEC
+     C                     MOVELTACD      WTACD
+     C                     MOVELACOD      WACOD
+     C                     MOVELCCY       WCCY
+     C                     MOVELDCIN      WDCIN
+      *
+     C                     READPGLEXTRL4                 70
+      *
+     C                     Z-ADDTLDBL     LDBL
+     C                     WRITEGLX14F
+     C**********           Z-ADD*ZEROS    TLDBL  150                                          262907
+     C                     Z-ADD*ZEROS    TLDBL  180                                          262907
+     C                     ENDIF
+      *
+     C                     READ GLEXTRL4                 70
+      *
+     C                     ENDDO
+      *
+     C           WCMPYM    IFNE *BLANKS
+     C                     READPGLEXTRL4                 70
+     C                     Z-ADDTLDBL     LDBL
+     C                     WRITEGLX14F
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+** CPY@   **      Object Copyright
+(c) Finastra International Limited 2001

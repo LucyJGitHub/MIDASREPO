@@ -1,0 +1,446 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD validation for settlement types')
+      *****************************************************************
+      *                                                               *
+      *  Midas  Standing Data                                         *
+      *                                                               *
+      *     VALIDATE SETTLEMENT TYPES - VALIDATE F + O CLIENTS        *
+      *                                 (SD0332U)                     *   S01251
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027B            Date 28Jun06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002 EM / TI Interface 23/09/98             *
+      *                 098560             Date 19Jan96               *
+      *                 056708             Date 03Nov93               *
+      *                 S01267             Date 18Sep90               *
+      *                 S01117             Date 21/2May90             *   S01117
+      *                 S01251             Date 23Feb90               *   S01251
+      *                                                               *   S01251
+      *****************************************************************
+      *                                                               *
+      * NOTE:- THIS PROGRAM SHOULD BE COMPILED WITH IGNDECERR(*YES)   *
+      *        OR IT WILL FALL OVER ON THE VALIDATION IF A NON-       *
+      *        NUMERIC FIELD IS PASSED IN TNUM6.                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027B- Further Customer Number changes.                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *     098560  - ALLOW SETTLEMENT METHOD TO BE '00'. IN THE F&O  *
+      *               TRADE INPUT SETTLEMENT DETAILS, '00' OR '  ' IS *
+      *               ALLOWED IN SETTLEMENT METHOD.                   *
+      *     056708  - IF NOSTRO DETAILS ARE BLANK AS THEY SHOULD BE   *
+      *               FOR SETTLEMENT METHOD 5, THE PROGRAM CHAINS TO  *
+      *               THE FIRST RECORD WITH A BLANK SHORTNAME         *
+      *     S01267  - RECOMPILED FOR MIS RELEASE 2.2 CHANGES.         *
+      *     S01117  - RELEASE 10 CHANGES                              *
+      *     S01251  - REVIEWED BY CPS FOR NAME CHANGES                *   S01251
+      *****************************************************************
+      *
+      * ID F  C  H  L     FUNCTION OF INDICATORS
+      *
+      *      50           WORK INDICATOR TO CONDITION RETURN CODE
+      *      51            "
+      *      53            "
+      *
+      *
+      ********************************************************************
+     FSDCUSTL2IF  E           K        DISK
+     FSDCUSTL1IF  E           K        DISK
+     FSDCNSTL1IF  E           K        DISK
+     FSDACODL1IF  E           K        DISK
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     I***OURS***     DS                             12                                        CGL029
+     IOURS        DS                             18                                           CGL029
+     I*
+     I* OURS FIELD SUBDIVISION DATA STRUCTURE
+     I*
+     I                                        1   2 NOST
+     I                                        3  12 ORST10
+     I                                        1   6 ONUM6
+     I                                        7  12 OREST6
+     I                                        1  10 ONUM10
+     I**********                              7  10 OACNO                                     CGL029
+     I**********                             11  12 OREST2                                    CGL029
+     I**********                             11  11 OPOS11                             S01117 CGL029
+     I**********                             12  12 OPOS12                             S01117 CGL029
+     I                                        7  16 OACNO                                     CGL029
+     I                                       17  18 OREST2                                    CGL029
+     I                                       17  17 OPOS11                                    CGL029
+     I                                       18  18 OPOS12                                    CGL029
+     ITHEIRS      DS                             10
+     I*
+     I* THEIRS FIELD SUBDIVISION DATA STRUCTURE
+     I*
+     I                                        1   6 TNUM6
+     I                                        7  10 TREST4
+     I                                        1   8 CNOST
+     I                                        9  10 TREST2
+     I                                        1   1 SEL1
+     I                                        2   2 SEL2
+     I                                        3   3 SEL3
+     I                                        4   4 SEL4
+     I                                        5   5 SEL5
+     I                                        6   6 SEL6
+     IFACOF       DS                             10
+     I*
+     I* FOR A/C OF FIELD SUBDIVISION DATA STRUCTURE
+     I*
+     I                                        1   6 FNUM6
+     I                                        7  10 FREST4
+     I                                        1   8 CNOSTF
+     I                                        9  10 FREST2
+     I                                        1   1 FSEL1                 S01117
+     ISPEC        DS                             35
+     I*
+     I* SPECIAL INSTR. FIELD SUBDIVISION DATA STRUCTURE
+     I*
+     I                                        1   5 BEN
+     I                                        6   8 CHFW
+     I                                        9  14 SNUM6
+     I                                        9  17 SNUM9
+     I                                       15  35 SRSTF6
+     I                                       18  35 SRSTF9
+     I*
+     I* EXTERNAL DATA AREA DATA STRUCTURE
+     I*
+     IRUNDAT      DS                             13
+     I                                       13  13 MBIND
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     C/EJECT
+     C********************************************************************
+     C*   PLACE DATA AREA INTO DATA STRUCTURE
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C*   VALIDATE SETTLEMENT INSTRUCTIONS
+     C*
+     C*
+     C* TABLE FILE, NOSTRO RECORD KEY
+     C           TABNSK    KLIST
+     C                     KFLD           CURN    3
+     C                     KFLD           NOSN    2
+     C* TABLE FILE, COUNTERPARTY NOSTRO RECORD KEY
+     C           TABCNK    KLIST
+     C                     KFLD           CNOS    8
+     C*
+     C* TABLE FILE, ACCOUNT CODES RECORD KEY
+     C           TABACD    KLIST
+     C                     KFLD           KACOD
+     C*
+     C* CLIENT FILE KEY
+     C*
+     C           CLINTK    KLIST
+     C                     KFLD           KCNUM
+     C*
+     C* ACCOUNT FILE KEY
+     C*
+     C*
+     C* SSI PARAMETER LIST
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7        RETURN CODE
+     C                     PARM           SCCY    3        CURRENCY CODE
+     C                     PARM           PCNUM   6        CUSTOMER NUMBER
+     C                     PARM           STTP    2        TRANS. TYPE
+     C                     PARM           SETTP   2        SELL CCY TYPE
+     C**********           PARM           SOSCA  12        OUR SELL CCY AC                    CGL029
+     C                     PARM           SOSCA  18                                           CGL029
+     C                     PARM           STSCN  10        THEIR SALE NOST
+     C                     PARM           SFACO  10        FOR ACCOUNT OF
+     C                     PARM           SSPI   35        SPECIAL INSTR.
+     C                     PARM           USCY    3        USD CCY CODE
+     C                     PARM           DSST    1        RETAIL 2 IND
+     C                     PARM           RACN    1        RET A/C NOS REQ
+     C**********           PARM           PCADC   4        CUR ACT DFT CDE                    CGL029
+     C                     PARM           PCADC  10                                           CGL029
+     C                     PARM           CUSTST  6        CUST NO STORE
+     C           *LIKE     DEFN BBCUST    KCNUM            KEY TO FILE    S01251
+     C           *LIKE     DEFN A5ACCD    KACOD            KEY TO FILE    S01251
+     C*
+     C                     MOVE *BLANK    W0RTN
+     C**********           MOVE PCNUM     SCNUM   60                                          CSD027
+     C                     MOVE PCNUM     SCNUM   6                                           CSD027
+     C**********           MOVE PCADC     CADC    40                                          CGL029
+     C                     MOVE PCADC     CADC   100                                          CGL029
+     C                     MOVE SOSCA     OURS
+     C                     MOVE STSCN     THEIRS
+     C                     MOVE SFACO     FACOF
+     C                     MOVE SSPI      SPEC
+     C*          ---------------
+     C* VALIDATE SETTLEMENT METHOD
+     C* IF THIS IS INVALID, NO FURTHER VALIDATION POSSIBLE
+     C*
+     C           SETTP     IFNE '01'                       SETTP INVALID?
+     C           SETTP     ANDNE'04'
+     C           SETTP     ANDNE'05'
+     C           SETTP     ANDNE'06'
+     C           SETTP     ANDNE'07'
+     C           SETTP     ANDNE'08'
+     C           SETTP     ANDNE'15'
+     C           SETTP     ANDNE'00'                                      098560
+     C                     MOVEL'TPINVAL' W0RTN
+     C                     GOTO SETEND
+     C                     END                             ENDIF SETTP INV
+     C*
+     C*          VALIDATE OURS FIELD
+     C*
+     C* FOR SETTLEMENT 01, 07, 08,  MUST BE A NOSTRO
+     C* MUST BE NUMERIC
+     C*
+     C           SETTP     IFEQ '01'                       OURS TO BE NOS?
+     C           SETTP     OREQ '07'
+     C           SETTP     OREQ '08'
+     C                     SETON                     50
+     C                     MOVELNOST      WK3     30
+     C                     MOVELWK3       ALP2    2
+     C           ORST10    IFNE *BLANK
+     C           NOST      ORNE ALP2
+     C                     MOVEL'NONOST'  W0RTN
+     C                     END
+     C*  NOSTRO MUST BE ENTERED
+     C           OURS      IFEQ *BLANK
+     C           WK3       OREQ 0
+     C                     MOVEL'NEEDNOS' W0RTN
+     C                     END
+     C                     END                                         C
+     C*
+     C*  SETTLEMENT TYPE 04,06 OR 15  BLANK
+     C*
+     C           SETTP     IFEQ '06'                       OURS TO BE BLK
+     C           SETTP     OREQ '04'
+     C           SETTP     OREQ '15'
+     C           OURS      IFNE *BLANK                     & IT ISN'T?
+     C                     MOVEL'ACNEBLK' W0RTN
+     C                     END                             ENDIF NON-BLK
+     C                     END                             ENDIF OURS BLK
+     C*
+     C* SETTLEMENT TYPE 05, OURS IS AN ACCOUNT NUMBER
+     C*
+     C           SETTP     IFEQ '05'                       OURS TO BE A/C
+     C                     SETON                     50
+     C*
+     C* SETTLEMENT ACCOUNT MUST BE ENTERED
+     C*
+     C           OURS      IFEQ *BLANKS
+     C                     MOVEL'NEEDSTA' W0RTN
+     C                     ELSE
+     C                     MOVELONUM10    WK11   110
+     C                     MOVELWK11      ALP10  10
+     C                     MOVELOREST2    WK3
+     C                     MOVELWK3       ALP2
+     C           ONUM10    IFNE ALP10                      OURS NO.?
+      *
+      *  With CSD027, field may contain alpha characters.                                    CSD027B
+     C**********           MOVEL'ALPADAT' W0RTN                                              CSD027B
+     C                     ELSE
+     C*
+     C*     CHECK FOR VALID ACCOUNT CODE
+     C*
+     C**********           MOVE OACNO     ACOD    4                                           CGL029
+     C                     MOVE OACNO     ACOD   10                                           CGL029
+     C                     MOVE ACOD      KACOD
+     C           TABACD    CHAINSDACODL1             50
+     C           *IN50     IFEQ '1'                        OURS INVALID?
+     C                     MOVEL'NOACMAS' W0RTN
+     C                     END                             ENDIF PAY/REC
+     C*
+     C*   CHECK FOR VALID CUSTOMER NUMBER
+     C*
+     C                     MOVE ONUM6     CNUM    6
+     C                     MOVE CNUM      KCNUM
+     C           CLINTK    CHAINSDCUSTL1             50
+     C           *IN50     IFEQ '1'
+     C                     MOVEL'NOACMAS' W0RTN
+     C                     END
+     C*
+     C*    CHECK FOR VALID ACCOUNT SEQUENCE WITH RELATION
+     C*    TO THE MULTIBRANCHING INDICATOR.
+     C*
+     C********** OREST2    IFEQ '  '                                      S01117
+     C           OPOS11    IFEQ ' '                                       S01117
+     C           OPOS12    OREQ ' '                                       S01117
+     C           WK3       OREQ 0
+     C           MBIND     IFEQ 'N'
+     C                     MOVEL'NOACMAS' W0RTN
+     C*********************END                                            S01117
+     C                     ELSE
+     C*
+     C           MBIND     IFEQ 'Y'
+     C                     MOVEL'NOACMAS' W0RTN
+     C                     END                                            S01117
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* VALIDATE THEIRS
+     C*
+     C* ONLY ALLOWED FOR SETTLEMENT TYPES 01,07,08
+     C*
+     C           SETTP     IFNE '01'                       THRS VALIDN?
+     C           SETTP     ANDNE'07'
+     C           SETTP     ANDNE'08'
+     C           THEIRS    ANDNE*BLANK
+     C                     MOVEL'NOSNEBL' W0RTN
+     C                     ELSE                            ELSE THRS OPT
+     C                     SETOF                     5051
+     C*
+     C* TEST FOR QUESTION MARK PROCESSING
+     C*
+     C           TREST4    IFEQ *BLANK                     THRS NO.?
+     C           SEL1      IFEQ '?'
+     C           SEL2      OREQ '?'
+     C           SEL3      OREQ '?'
+     C           SEL4      OREQ '?'
+     C           SEL5      OREQ '?'
+     C           SEL6      OREQ '?'
+     C                     CALL 'SD0010S'                                 S01251
+     C                     PARM           RTNCDE  7
+     C                     PARM           TNUM6
+     C           RTNCDE    IFNE *BLANK
+     C                     MOVEL'NOSEL  ' W0RTN
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVELTNUM6     WK7     70
+     C                     MOVELWK7       ALP6    6
+     C           TREST4    IFEQ *BLANK                     THRS NO.?
+     C           TNUM6     ANDEQALP6
+     C                     MOVE TNUM6     CNUM
+     C                     MOVE CNUM      KCNUM
+     C           CLINTK    CHAINSDCUSTL1             50
+     C  N50                SETON                     51
+     C  N50                MOVE BBCUST    CUSTST                          S01251
+     C                     END                             ENDIF THRS NO.
+     C           *IN51     IFEQ '0'                        THRS SNAME?
+     C           THEIRS    ANDNE*BLANKS                                   056708
+     C           THEIRS    CHAINSDCUSTL2             50
+     C  N50                SETON                     51
+     C  N50                MOVE BBCUST    CUSTST                          S01117
+     C                     END                             ENDIF THRS SNM
+     C           *IN51     IFEQ '0'                        THRS CP NOS?
+     C           TREST2    ANDEQ*BLANK
+     C                     MOVELCNOST     CNOS
+     C           TABCNK    CHAINSDCNSTL1             50
+     C  N50                SETON                     51
+     C           SETTP     IFEQ '07'
+     C           *IN51     ANDEQ'1'
+     C           SETTP     OREQ '08'
+     C           *IN51     ANDEQ'1'
+     C                     MOVEL'CPINVAL' W0RTN
+     C                     END                             ENDIF THRS CPN
+     C                     END
+     C           *IN51     IFEQ '0'
+     C           THEIRS    ANDNE*BLANK
+     C                     MOVEL'NOCUSCP' W0RTN
+     C                     END                             ENDIF THRS INV
+     C                     END                             ENDIF THRS VAL
+     C*
+     C* VALIDATE FOR A/C OF
+     C*
+     C*
+     C           FACOF     IFEQ *BLANK
+     C           SPEC      ANDEQ*BLANK
+     C                     GOTO SETEND
+     C                     END
+     C                     SETOF                     53
+     C           SETTP     IFNE '01'                       FACO VALIDN?
+     C           SETTP     ANDNE'07'
+     C           SETTP     ANDNE'08'
+     C           FACOF     ANDNE*BLANK
+     C                     MOVEL'FORNEBL' W0RTN
+     C                     ELSE                            ELSE FACO OPT
+     C                     SETOF                     5051
+     C*                                                                   S01117
+     C* TEST FOR QUESTION MARK PROCESSING                                 S01117
+     C*                                                                   S01117
+     C           FREST4    IFEQ *BLANK                     THRS NO.?      S01117
+     C           FSEL1     IFEQ '?'                                       S01117
+     C                     CALL 'SD0010S'                                 S01117
+     C                     PARM           RTNCDE  7                       S01117
+     C                     PARM           FNUM6                           S01117
+     C           RTNCDE    IFNE *BLANK                                    S01117
+     C                     MOVEL'NOSEL  ' W0RTN                           S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     MOVELFNUM6     WK7
+     C                     MOVELWK7       ALP6
+     C           FREST4    IFEQ *BLANK                     FACO NO.?
+     C           FNUM6     ANDEQALP6
+     C                     MOVE FNUM6     CNUM
+     C                     MOVE CNUM      KCNUM
+     C           CLINTK    CHAINSDCUSTL1             50
+     C  N50                MOVELBBCHID    BENCUS  6                       S01251
+     C  N50                MOVEL*BLANKS   SFACO                           S01117
+     C  N50                MOVELBBCUST    SFACO                           S01117
+     C  N50                SETON                     51
+     C                     END                             ENDIF FACO NO.
+     C           *IN51     IFEQ '0'                        FACO SNAME?
+     C           FACOF     CHAINSDCUSTL2             50
+     C  N50                MOVELBBCHID    BENCUS                          S01251
+     C  N50                MOVEL*BLANKS   SFACO                           S01117
+     C  N50                MOVELBBCUST    SFACO                           S01117
+     C  N50                SETON                     51
+     C                     END                             ENDIF FACO SNM
+     C           *IN51     IFEQ '0'                        FACO CP NOS?
+     C           FREST2    ANDEQ*BLANK
+     C                     MOVELCNOSTF    CNOS
+     C           TABCNK    CHAINSDCNSTL1             50
+     C  N50                SETON                     5153
+     C           SETTP     IFEQ '07'
+     C           *IN51     ANDEQ'1'
+     C           SETTP     OREQ '08'
+     C           *IN51     ANDEQ'1'
+     C                     MOVEL'INVALCP' W0RTN
+     C                     END                             ENDIF FACO CPN
+     C                     END
+     C           *IN51     IFEQ '0'
+     C           FACOF     ANDNE*BLANK
+     C                     MOVEL'CUSCPNO' W0RTN
+     C                     END                             ENDIF FACO INV
+     C                     END                             ENDIF FACO VAL
+     C           SETEND    TAG
+     C                     SETON                     LR
+     C                     RETRN
+     C********************************************************************
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Finastra International Limited 2001

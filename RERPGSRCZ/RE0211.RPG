@@ -1,0 +1,1633 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Interest Dets-Initial/Enquiry Scrn')             *
+0001 H***********                                                         S01117
+0002 F*****************************************************************
+0003 F*                                                               *
+     F*  Midas - Retail Module
+0005 F*                                                               *
+0006 F*  RE0211 - INTEREST INPUT - S/REINT                            *
+0007 F*           INITIAL/ENQUIRY SCREEN PROCESSING                   *
+0008 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*      1990, 1993                                               *
+0010 F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER055             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 12Sep96               *
+     F*                 S01413             Date 13APR93               *
+     F*                 LN0233                  22MAY90               *
+     F*                 S01194                  19FEB90               *
+     F*                 S01199                  15FEB90               *
+     F*                 S01117                  25JAN90               *
+     F*                 S01127                  15JUL87               *
+0012 F*                                                               *
+0011 F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01408  -  Addition of core hook RE0211IIP1                  *
+     F*          -  Addition of core hook RE0211CCP2                  *
+     F*          -  Addition of core hook RE0211CCP1                  *
+     F*  S01413  -  Retail 3 Incorporation                            *
+     F*  LN0233  -  ADD IN VALIDATION FOR AMEND,DELETE & ENQUIRE      *
+     F*             OPTIONS ALSO TO ALLOW ? IN N.S.D. FIELD(S)        *
+     F*  S01194  -  NEW STANDING DATA                                 *
+     F*  S01199  -  HELP CHANGES                                      *
+     F*  S01117  -  SPF VALIDATION                                    *
+     F*  S01127  -  FF MODULE ALLOWS 'MARGIN' IN FIRST BALANCE        *
+0012 F*                                                               *
+     F*****************************************************************
+     F*     CREATION REQUIREMENTS                                     *
+     F*                                                               *
+     F*     IGNDECERR(*YES)                                           *
+     F*                                                               *
+0013 F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+0013 F*****************************************************************
+     F/COPY WNCPYSRC,RE0211F001
+0016 FRE0210FMCF  F     623            WORKSTN
+     F/COPY WNCPYSRC,RE0211F002
+0017 F*
+0019 FREINT   IF  F     320 12AI     2 DISK
+0021 F*TABLE***IF*F      96 12AI     2 DISK                               S01194
+0022 F*
+0023 F*       FUNCTION OF INDICATORS
+0015 F*       04      SET ON IF ERROR DURING READ FROM THE WORK STATION *
+0062 F*       NON-STANDARD INPUT PROGRAM INDICATORS
+0063 F*       01      BLINK SUB - TYPE
+0064 F*       03      BLINK CURRENCY
+0065 F*       07      PROTECT BALANCE
+0066 F*       10      CURRENCY RECORD 1
+0067 F*       12      BLANK SUB - TYPE ENTERED
+0068 F*       13      BLANK CURRENCY ENTERED
+0068 F********15***   HELP                                                S01199
+0069 F*       30      BLANK ZERO BALANCE
+0070 F*       34      LOOP CONTROL
+0071 F*       36      LOOP CONTROL
+0072 F*       37      LOOP CONTROL
+0073 F*       38      COUNTER
+0074 F*       39      FIRST BALANCE OR RATE PROCESSING
+0062 F*       HELP TEXT INDICATORS                                        S01199
+0061 F*                                                                   S01199
+0061 F*               INTEREST TYPE                                       S01199
+0061 F*               ~~~~~~~~~~~~~                                       S01199
+0061 F*           | 01    02    03   04                                   S01199
+0061 F*       ----|---------------------                                  S01199
+0061 F*       18  |  0     0     1    1                                   S01199
+0061 F*       19  |  0     1     0    1                                   S01199
+0061 F*                                                                   S01199
+0053 F*       ALLOWED ACTION CODES
+0061 F*       58      USEFUL DATA TO BE DISPLAYED
+0060 F*       59      MANDATORY KEY FIELD NOT ENTERED
+0059 F*       60      ACTION CODE ENTERED NOT I/A/D/E OR BLANK
+0058 F*       61      INSERT - I ALLOWED
+0057 F*       62      AMEND - A ALLOWED
+0056 F*       63      DELETE - D ALLOWED
+0055 F*       64      ENQUIRE - E OR BLANK ALLOWED
+0054 F*       65      INSERT OVER DELETED RECORD ALLOWED
+0048 F*       ACTION CODES ENTERED
+0052 F*       66      I ENTERED
+0051 F*       67      A ENTERED
+0050 F*       68      D ENTERED
+0049 F*       69      E OR BLANK ENTERED
+0040 F*       POSSIBLE MASTER FILE SITUATIONS
+0046 F*       70      MASTER FILE - RECORD FOUND, BACKED OUT BY
+0045 F*       71      MASTER FILE - RECORD FOUND, LIVE - RFLV
+0044 F*       72      MASTER FILE - RECORD FOUND, DELETED PREVIOUSLY-RFDP
+0043 F*       73      MASTER FILE - RECORD FOUND, DELETED TODAY - RFDT
+0042 F*       74      MASTER FILE - RECORD FOUND, MATURED - RFMA
+0041 F*       75      MASTER FILE - NO RECORD FOUND - NORF
+0039 F*       76      FIRST CYCLE IND
+0024 F*       STANDARD INPUT PROGRAM INDICATORS
+0038 F*       77      SE SCREEN READ IN
+0037 F*       78      SF SCREEN READ IN
+0036 F*       79      SYSTEM SET-UP FLAG ON
+0035 F*       80      BLINK DELETE CHECK FIELD LABEL
+0034 F*       81      OUTPUT INITIAL - SF - SCREEN
+0033 F*       82      OUTPUT INSERT - SI - SCREEN
+0032 F*       83      OUTPUT AMEND - SA - SCREEN
+0031 F*       84      OUTPUT DELETE - SD - SCREEN
+0030 F*       85      OUTPUT ENQUIRE - SE - SCREEN
+0029 F*       86      NON-DISPLAY USEFUL DATA
+0028 F*       87      NON-DISPLAY CHANGE DETAILS
+0027 F*       88      NON-DISPLAY ERROR MESSAGE/CODES
+0026 F*       89      BLINK ACTION CODE LABEL
+     F*
+0028 F*       KC      TO END JOB
+0027 F*       KJ      TO DELETE A RECORD
+0026 F*       KL      RETURN TO PREVIOUS SCREEN
+0047 F*
+0025 F*       U7      DATABASE ERROR
+0075 E*    SUBROUTINE TABLES/ARRAYS
+0076 E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+0077 E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+0078 E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+0079 E                    ZA1        16  1               ZALIGN/ZEDIT
+0080 E                    ZA2        16  1               ZALIGN/ZEDIT
+0081 E*    STANDARD TABLES/ARRAYS
+0082 E                    ERCD       19  4               ERROR CODES
+0083 E***********         ERCM    1  19 79               ERROR MSGS.      S01117
+0083 E                    ERCM    1  22 79               ERROR MSGS.      S01117
+0084 E*    NON-STANDARD TABLES/ARRAYS
+0085 E                    BAL        11 15 0
+0086 E                    RAT        11 11 0
+     E/COPY WNCPYSRC,RE0211E001
+0087 E                    WBAR       10 29
+     E/COPY WNCPYSRC,RE0211E002
+0088 E                    SIG        10  1
+     E                    CPY@    1   1 80
+     E/EJECT
+0089 I*    STANDARD FILES
+0090 I*
+0091 I*    WORKSTATION FILE
+0092 I*
+0093 I*    FORMAT - INITIAL SCREEN
+0094 I*
+0095 IRE0210FMNS  78   8 CS   9 CF
+0096 I                                        1   7 SRUNA
+0097 I                                        8   9 SID
+0098 I                                       10  15 SPID
+0099 I                                       16  23 STIME
+0100 I                                       24  26 SWSID
+0101 I*                                NON-STANDARD KEY FIELDS
+0102 I                                       27  31 SISTP
+0103 I                                       32  34 SICCY
+0104 I*                                STANDARD ACTION CODE AND STRING
+0105 I                                       35  35 SACTN
+0106 I                                        1  35 SCNSF
+0107 I*
+0108 I*    FORMAT - ENQUIRY SCREEN
+0109 I*
+0110 I        NS  77   8 CS   9 CE
+0111 I                                        1   7 SRUNA
+0112 I                                        8   9 SID
+0113 I                                       10  15 SPID
+0114 I                                       16  23 STIME
+0115 I                                       24  26 SWSID
+0116 I*                                NON-STANDARD KEY FIELDS
+0117 I                                       27  31 SISTP
+0118 I                                       32  34 SICCY
+0119 I*                                STANDARD ACTION CODE
+0120 I                                       35  35 SACTN
+0121 I*                                NON-STANDARD DETAIL SCREEN FIELDS
+0122 I                                       36  65 STITLE
+0123 I                                       66  77 SRAT0
+0124 I                                       78  78 SIGN0
+0125 I                                       79  80 SBRT
+0126 I                                       81  96 SBAL1
+0127 I                                       97 108 SRAT1
+0128 I                                      109 109 SIGN1
+0129 I                                      110 125 SBAL2
+0130 I                                      126 137 SRAT2
+0131 I                                      138 138 SIGN2
+0132 I                                      139 154 SBAL3
+0133 I                                      155 166 SRAT3
+0134 I                                      167 167 SIGN3
+0135 I                                      168 183 SBAL4
+0136 I                                      184 195 SRAT4
+0137 I                                      196 196 SIGN4
+0138 I                                      197 212 SBAL5
+0139 I                                      213 224 SRAT5
+0140 I                                      225 225 SIGN5
+0141 I                                      226 241 SBAL6
+0142 I                                      242 253 SRAT6
+0143 I                                      254 254 SIGN6
+0144 I                                      255 270 SBAL7
+0145 I                                      271 282 SRAT7
+0146 I                                      283 283 SIGN7
+0147 I                                      284 299 SBAL8
+0148 I                                      300 311 SRAT8
+0149 I                                      312 312 SIGN8
+0150 I                                      313 328 SBAL9
+0151 I                                      329 340 SRAT9
+0152 I                                      341 341 SIGN9
+     I/COPY WNCPYSRC,RE0211I001
+0153 I                                      342 357 SBAL10
+0154 I                                      358 369 SRAT10
+0155 I                                      370 370 SIGN10
+0156 I                                      371 386 SINTH
+0157 I                                      387 392 STDAT
+     I/COPY WNCPYSRC,RE0211I002
+0158 I*                                STANDARD STRING FIELDS
+0159 I                                        1  35 SCNSF
+0160 I*
+0161 I*    CATCHALL
+0162 I        NS
+0163 I                                        8   9 SID
+0164 I*
+0165 I*    MASTER FILE - DETAIL RECORD
+0166 I*
+0167 IREINT   NS  74   1 CM
+0168 I       OR   73   1 C*
+0169 I       OR   71   1 CD
+0170 I                                        1   1 MRECI
+0171 I                                        3   40MITYP
+0172 I                                        5   90MISTP
+0173 I                                       10  12 MICCY
+0174 I                                       13  13 MRECT
+0175 I                                    P  31  330MTNLU
+0176 I                                    P  34  360MORED
+0177 I                                    P  37  390MLCD
+0178 I                                       40  40 MCHTP
+0179 I                                       48  77 MINNM
+0180 I                                    P  78 165 BAL
+0181 I                                    P 166 231 RAT
+0182 I                                      232 2330MBRT
+0183 I                                    P 254 2610MINTH
+0184 I                                    P 262 2640MVDTC
+0185 I                                    P 265 2670MVDPC
+0186 I                                        1 200 MOLD1
+0187 I                                      201 320 MOLD2
+0188 I*    CATCHALL
+0189 I        NS
+0190 I                                        1   1 MRECI
+0196 I*    NON-STANDARD FILES
+0197 I*
+0198 I*
+0199 I*****TABLE*FILE - CURRENCIES RECORD 1.                              S01194
+0200 I***********                                                         S01194
+0201 I*TABLE***NS  10   1 CD   2 C2   3 C0                                S01194
+0202 I*******AND*     13 C1                                               S01194
+0203 I***********                             1   1 RECI                  S01194
+0204 I***********                             2   30RECT                  S01194
+0205 I***********                            10  12 CCY                   S01194
+0206 I***********                            13  130SREC                  S01194
+0207 I***********                            14  27 CCNM                  S01194
+0208 I***********                         P  28  348SPOT                  S01194
+0209 I***********                            35  37 CCYS                  S01194
+0210 I***********                            38  380CDP                   S01194
+0211 I***********                            39  390TNOT                  S01194
+0212 I***********                            40  40 DCCY                  S01194
+0213 I***********                            41  44 SRC1                  S01194
+0214 I***********                            45  48 SRC2                  S01194
+0215 I***********                            49  520TACC                  S01194
+0216 I***********                            53  560TEQV                  S01194
+0217 I***********                            57  600SWQV                  S01194
+0218 I***********                            61  640TAC4                  S01194
+0219 I***********                            65  680TAC5                  S01194
+0220 I***********                            69  69 HIND                  S01194
+0221 I***********                         P  70  768PART                  S01194
+0222 I***********                            77  780SSNO                  S01194
+0223 I***********                         P  79  858ERLC                  S01194
+0224 I***********                            86  860MDIN                  S01194
+0225 I***********                            87  870MDIA                  S01194
+0226 I***********                            88  880MDIB                  S01194
+0227 I***********                         P  90  920LCD                   S01194
+0228 I***********                            93  93 CHTP                  S01194
+0229 I***********                         P  94  960TNLU                  S01194
+0230 I***********                                                         S01194
+0231 I*****CATCHALL                                                       S01194
+0232 I********NS*                                                         S01194
+0233 I*
+0234 I*    STANDARD DATA STRUCTURES
+0235 I*
+0236 I*    DATA STRUCTURE FOR MASTER FILE KEY
+0237 I*
+0238 I            DS
+0239 I                                        1  12 DSMKEY
+0240 I                                        2   3 SITYP
+0241 I                                        4   8 SISTP
+0242 I                                        9  11 SICCY
+0243 I                                       12  12 SRECT
+0244 I*
+0245 I*    DATA STRUCTURE FOR CHANGE DETAILS
+0246 I*
+0247 I            DS
+0248 I                                        1  17 DSCHDT
+0249 I                                        1   1 MRECI
+0250 I                                        2   60MTNLU
+0251 I                                        7  110MORED
+0252 I                                       12  160MLCD
+0253 I                                       17  17 MCHTP
+0254 I*
+0255 I*    NON-STANDARD DATA STRUCTURES
+0256 I*
+0257 I*****DATA*STRUCTURE FOR TABLE FILE KEY                              S01194
+0258 I***********                                                         S01194
+0259 I*********** DS                                                      S01194
+0260 I***********                             1  12 TABKEY                S01194
+0261 I***********                             1   2 TAB2                  S01194
+0262 I***********                             9  11 TAB3A                 S01194
+0263 I***********                            12  12 TAB1                  S01194
+0264 I*
+0265 I*    STANDARD LOCAL DATA AREA FIELDS
+0266 I*
+0267 ILDA        UDS                            256
+0268 I                                        1   8 LPROC
+0269 I***********                           134 138 LFILE                 S01117
+0270 I***********                           139 167 LKEY                  S01117
+0271 I***********                           168 175 LPROG                 S01117
+0272 I***********                           176 1770LDBNO                 S01117
+0183 I                                      134 141 LFILE                 S01117
+0183 I                                      142 170 LKEY                  S01117
+0183 I                                      171 180 LPROG                 S01117
+0183 I                                      181 1830LDBNO                 S01117
+0183 I                                      134 141 DBFILE                S01117
+0183 I                                      142 170 DBKEY                 S01117
+0183 I                                      171 180 DBPGM                 S01117
+0183 I                                      181 1830DBASE                 S01117
+0273 I***********                           181 1850LRUND                 S01117
+0274 I***********                           186 192 LRUNA                 S01117
+0275 I***********                           193 193 LDATF                 S01117
+0276 I***********                           194 1940LSFLG                 S01117
+0277 I***********                           195 1960LKEYL                 S01117
+0278 I***********                           197 202 LISP                  S01117
+0279 I***********                           203 203 LTWOL                 S01117
+0280 I***********                           204 2040LLDLP                 S01117
+0281 I***********                           205 2090LTNLU                 S01117
+0282 I***********                           210 210 LDELM                 S01117
+0283 I***********                           211 211 LDUD                  S01117
+0190 I                                      187 1910LRUND                 S01117
+0191 I                                      192 198 LRUNA                 S01117
+0192 I                                      199 199 LDATF                 S01117
+0193 I**********                            200 2000LSFLG           S01117S01194
+0193 I                                      200 200 LSFLG                 S01194
+0194 I                                      201 2020LKEYL                 S01117
+0195 I                                      203 208 LISP                  S01117
+0196 I                                      209 209 LTWOL                 S01117
+0197 I                                      210 2100LLDLP                 S01117
+0198 I                                      211 2150LTNLU                 S01117
+0199 I                                      216 216 LDELM                 S01117
+0200 I                                      217 217 LDUD                  S01117
+0284 I                                      132 133 LITYP
+0285 I                                      100 131 LTITL
+0191 I*
+0192 I*    WORKSTATION TRANSACTION FILE DATA STRUCTURE
+0193 I*
+     IWTRAN      UDS                            860
+     I                                        1 200 WTRAN1
+     I                                      201 400 WTRAN2
+     I                                      401 600 WTRAN3
+     I                                      601 800 WTRAN4
+     I                                      801 860 WTRAN5
+     I**                                                                  S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*  RETRIEVE WSID FROM PROGRAM STATUS DATA STRUCTURE
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I**                                                                  S01117
+     IZMUSER      DS                             17                       S01117
+     I** DATA AREA OF MENU USER                                           S01117
+     I                                       11  13 DFBM                  S01117
+     ISDCURR    E DSSDCURRPD                                              S01194
+      **   CURRENCY TYPE                                                  S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     ISCSARD    E DSSCSARDPD                                                                  CER055
+      ** Switchable features file                                                             CER055
+      *                                                                   S01408
+     I/COPY WNCPYSRC,RE0211IIP1                                           S01408
+      *                                                                   S01408
+     I*                                                                   S01194
+     I/EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*:  PARAMETER LIST FOR AOCURRR0                                     S01194
+     C           PLIST1    PLIST                                          S01194
+     C                     PARM '*BLANKS' RTCD    7                       S01194
+     C                     PARM '*KEY   ' OPTN    7                       S01194
+     C                     PARM           CKEY    3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+0286 C*  FIRST CYCLE PROCESSING
+0287 C*
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           WTRAN
+     C************LOCK     IN   *NAMVAR                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C           *LOCK     IN   WTRAN                                     S01117
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE0211CCP1                                           S01408
+      *                                                                   S01408
+     C**                                                                  S01117
+     C**    IN THE DATAAREA RUNDAT                                        S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C**                                                                  S01117
+     C**    IN THE DATAAREA ZMUSER                                        S01117
+     C**                                                                  S01117
+     C           *NAMVAR   DEFN           ZMUSER                          S01117
+     C                     IN   ZMUSER                                    S01117
+     C**
+     C*    READ WORKSTATION FILE /*HELP*FACILITY*                         S01199
+     C**
+     C**
+     C**   Set up indicators for help text.                               S01199
+     C           LITYP     IFEQ '01'                                      S01199
+     C**   Interest type 01 - Tiered.                                     S01199
+     C                     MOVE '0'       *IN18                           S01199
+     C                     MOVE '0'       *IN19                           S01199
+     C                     END                                            S01199
+     C**                                                                  S01199
+     C           LITYP     IFEQ '02'                                      S01199
+     C**   Interest type 02 - Threshold.                                  S01199
+     C                     MOVE '0'       *IN18                           S01199
+     C                     MOVE '1'       *IN19                           S01199
+     C                     END                                            S01199
+     C**                                                                  S01199
+     C           LITYP     IFEQ '03'                                      S01199
+     C**   Interest type 03 - Tiered, minimum monthly balance.            S01199
+     C                     MOVE '1'       *IN18                           S01199
+     C                     MOVE '0'       *IN19                           S01199
+     C                     END                                            S01199
+     C**                                                                  S01199
+     C           LITYP     IFEQ '04'                                      S01199
+     C**   Interest type 04 - Threshold, minimum monthly balance.         S01199
+     C                     MOVE '1'       *IN18                           S01199
+     C                     MOVE '1'       *IN19                           S01199
+     C                     END                                            S01199
+      *                                                                   S01408
+     C/COPY WNCPYSRC,RE0211CCP2                                           S01408
+      *                                                                   S01408
+     C**                                                                  S01199
+     C************IN15     DOUEQ'0'                                       S01199
+     C                     READ RE0210FM                 04
+     C************IN15     IFEQ '1'                                       S01199
+     C***********          MOVEAERCD      HERCD 160                       S01199
+     C***********          MOVEL'RE0210'  HBPGM   8                       S01199
+     C***********          CALL 'MHELP'                                   S01199
+     C***********          PARM           HBPGM                           S01199
+     C***********          PARM           HERCD                           S01199
+     C***********          END                                            S01199
+     C***********          END                                            S01199
+0293 C*
+0294 C*  SET-UP STANDARD INPUT PROGRAM FIELDS  -  WPROG IS THIS PROGRAM
+0295 C*
+0296 C                     MOVELLISP      WPROG   8
+0297 C                     MOVE '1  '     WPROG
+0298 C                     MOVELWPROG     SPID    6
+0299 C                     MOVE 'REINT'   LFILE
+0300 C*
+0301 C*  SET-UP NON STANDARD TITLE & KEY FIELDS
+0302 C*
+0303 C                     MOVE LTITL     STITL  32
+0304 C                     MOVE LITYP     SITYP
+0305 C*  SET-UP STANDARD LDA FIELDS
+0306 C                     MOVE WPROG     LPROG
+0307 C                     Z-ADD12        LKEYL
+0308 C                     Z-ADD1         LLDLP
+0309 C*  SET-UP STANDARD BLANK FIELDS
+0310 C                     MOVE ' '       BLK200200
+0311 C*
+0312 C           LDATF     COMP 'M'                      98* DATE FORMAT
+0313 C********** LSFLG     COMP 1                        79* SSF          S01194
+0313 C           LSFLG     COMP 'Y'                      79* SSF          S01194
+0314 C           LDUD      COMP 'U'                      58* USEFUL DATA
+0315 C*                                                    *    DISPLAYED
+0316 C*
+0317 C*  INITIALISE FIELD TO BLANK OUT KEY/ACTION CODE OR SCREEN FIELDS
+0318 C*
+0319 C                     MOVE ' '       BLK9    9
+0320 C                     MOVE ' '       BLK3    3
+0321 C                     MOVE ' '       BLK5    5
+0322 C                     MOVE ' '       BLK2    2
+0323 C                     MOVE ' '       BLK6    6
+0324 C                     MOVE ' '       BLK12  12
+0325 C                     MOVE ' '       BLK16  16
+     C/COPY WNCPYSRC,RE0211C001
+0326 C*
+0327 C*  SET ON/OFF INDICATORS FOR ALLOWED ACTION CODES
+0328 C*
+0329 C                     SETON                     61    I ALLOWED
+0330 C                     SETON                     62    A ALLOWED
+0331 C  N79                SETON                     63    D ALLOWED
+0332 C                     SETON                     64    E ALLOWED
+0333 C                     SETON                     65    I OVER D
+0334 C*                                                       ALLOWED
+0335 C                     MOVE '*'       LDELM            DELETE METHOD
+0336 C*
+0337 C*  I OVER D IS NOT ALLOWED WHEN DELETE METHOD INVOLVES LEAVING RECI
+0338 C*  AS D, BECAUSE OF FILE CONTROL PROBLEMS. THE FOLLOWING CODE CHECKS
+0339 C*  THAT THIS HAS NOT BEEN ATTEMPTED.
+0340 C*
+0341 C           LDELM     COMP ' '                      91
+      *                                                                                       CER055
+      ** Check if CER055 feature is installed                                                 CER055
+      *                                                                                       CER055
+     C                     CALL 'AOSARDR0'                                                    CER055
+     C                     PARM *BLANKS   RTCD                                                CER055
+     C                     PARM '*VERIFY' OPTN                                                CER055
+     C                     PARM 'CER055'  PSARD   6                                           CER055
+     C           SCSARD    PARM *BLANKS   DSFDY                                               CER055
+      *                                                                                       CER055
+     C           RTCD      IFEQ *BLANKS                                                       CER055
+     C                     MOVE 'Y'       CER055  1                                           CER055
+     C                     ELSE                                                               CER055
+     C                     MOVE 'N'       CER055                                              CER055
+     C                     ENDIF                                                              CER055
+      *                                                                                       CER055
+0342 C  N65
+0343 CORN91                GOTO ENDFC
+0344 C                     SETON                     U7LR
+0345 C                     MOVE '     '   LFILE
+0346 C                     MOVE BLK200    LKEY
+0347 C                     MOVE '93'      LDBNO            ** DB ERROR 93
+0348 C                     GOTO END
+0349 C*
+0350 C           ENDFC     TAG                             ** ENDFC TAG
+0351 C*
+0352 C*  INITIALISE STANDARD INDICATORS
+0353 C                     SETON                     888786* NON-DISPLAY
+0354 C                     SETOF                     8980  * BLINK LABELS
+0355 C                     SETOF                     858483* OUTPUT
+0356 C                     SETOF                     8281  * SCREENS
+0357 C                     SETOF                     696867* ACTION CODES
+0358 C                     SETOF                     66    * ENTERED
+0359 C                     SETOF                     59    * KEY FIELDS
+0359 C************         SETOF                     1504  * HELP         S01199
+0359 C                     SETOF                     04                   S01199
+0360 C*
+0361 C*  INITIALISE NON-STANDARD INDS
+0362 C*
+0363 C                     SETOF                     0103  * BLINK
+0364 C                     SETOF                     07    * PROTECT
+0365 C*
+0366 C*  BLANK OUT LAST CHANGE DETAILS
+0367 C*
+0368 C                     MOVE BLK200    DSCHDT
+0369 C*
+0370 C*  CHECK FOR CORRECT SCREEN READ IN
+0371 C*
+0372 C   77
+0373 COR 78                GOTO PROCES
+0374 C                     SETON                     U7LR
+0375 C                     MOVE 'SCREN'   LFILE
+0376 C                     MOVE BLK200    LKEY
+0377 C                     MOVEL'SF OR SE'LKEY
+0378 C                     MOVE 'FOUND   'LKEY
+0379 C                     MOVE SID       LKEY
+0380 C                     MOVE '92'      LDBNO            ** DB ERROR 92
+0381 C                     GOTO END
+0382 C*
+0383 C           PROCES    TAG                             ** PROCES TAG
+0384 C*
+0385 C*  CLEAR ERROR CODE ARRAY, RESET INDEX
+0386 C*
+0387 C                     MOVE BLK200    ERMSG  79
+0388 C                     MOVE '    '    ERCD
+0389 C                     Z-ADD0         S       20
+0390 C*
+0391 C*  IF F3, END THE PROGRAM
+0392 C*
+0393 C   KC                MOVE '**      'LPROC
+0394 C   KC                SETON                     LR
+0395 C   KC                GOTO END
+0396 C*
+0397 C*  IF F12, OUTPUT BLANK INITIAL SCREEN
+0398 C*
+0399 C   KL                EXSR SUBSF
+0400 C   KL                GOTO END
+0401 C*
+0402 C*  IF F10, OUTPUT ERROR MSG TO INITIAL SCREEN
+0403 C*
+0404 C   KJ                EXSR SUBSF
+0405 C   KJ                SETOF                     88
+0406 C   KJ      S         ADD  1         S
+0407 C   KJ                MOVE '915'     ERCD,S
+0408 C   KJ                MOVE ERCM,15   ERMSG
+0409 C   KJ                GOTO END
+0410 C*
+0411 C*  CMD KEYS HAVE BEEN PROCESSED. ONLY PROCESSING LEFT IS TO PROCESS
+0412 C*  NEW KEY FIELDS/ACTION. WHETHER FROM SF OR SE SCREEN, PROCESSING
+0413 C*  IS THE SAME.
+0414 C*
+0415 C*  VALIDATE ACTION CODE
+0416 C*
+0417 C           SACTN     COMP 'I'                  606066
+0418 C   60      SACTN     COMP 'A'                  606067
+0419 C   60      SACTN     COMP 'D'                  606068
+0420 C   60      SACTN     COMP 'E'                  606069
+0421 C   60      SACTN     COMP ' '                  606069
+0422 C*
+0423 C   69                MOVE 'E'       SACTN
+0424 C*
+0425 C  N60                GOTO ACTALL
+0426 C*
+0427 C*  ERROR IF ACTION CODE NOT I,A,D OR E - OUTPUT INITIAL SCREEN
+0428 C*
+0429 C                     EXSR SUBSF
+0430 C                     SETOF                     88
+0431 C                     SETON                     89
+0432 C           S         ADD  1         S
+0433 C                     MOVE '901'     ERCD,S
+0434 C                     MOVE ERCM,1    ERMSG
+0435 C                     GOTO END
+0436 C*
+0437 C           ACTALL    TAG                             ** ACTALL TAG
+0438 C*
+0439 C*  CHECK IF ACTION CODE IS ALLOWED
+0440 C*
+0441 C   66 61
+0442 COR 67 62
+0443 COR 68 63
+0444 COR 69 64             GOTO KEYVAL
+0445 C*
+0446 C                     EXSR SUBSF
+0447 C                     SETOF                     88
+0448 C                     SETON                     89
+0449 C           S         ADD  1         S
+0450 C                     MOVE '902'     ERCD,S
+0451 C                     MOVE ERCM,2    ERMSG
+0452 C                     GOTO END
+0453 C*
+0454 C           KEYVAL    TAG                             ** KEYVAL TAG
+     C**   VALIDATE ACTION CODE                                           S01117
+     C***  VALIDATE USERS AUTHORITY TO USE THIS ACTION                    S01117
+     C*                                                                   S01117
+     C                     Z-ADD*ZERO     @ERR                            S01117
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM SACTN     @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C**   IF MBIN = Y, VALIDATE ACTION & USER DEFAULT BRANCH TOGETHER    S01117
+     C**   CHECK IF THE USER IS AUTHORIZED TO USE ACTION                  S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM SACTN     @ZACTN  1                       S01117
+     C                     PARM DFBM      @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C**  IF NOT VALID FOR USER                                           S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+0449 C           S         ADD  1         S                               S01117
+0429 C                     EXSR SUBSF                                     S01117
+     C                     SETOF                     88                   S01117
+     C                     SETON                     89                   S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C                     MOVE '302'     ERCD,S                          S01117
+0451 C                     MOVE ERCM,20   ERMSG                           S01117
+     C                     ELSE                                           S01117
+     C           @ERR      IFEQ 1                                         S01117
+     C                     MOVE '303'     ERCD,S                          S01117
+     C                     MOVE ERCM,21   ERMSG                           S01117
+     C                     ELSE                                           S01117
+     C                     MOVE '304'     ERCD,S                          S01117
+     C                     MOVE ERCM,22   ERMSG                           S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+0455 C*
+0456 C*  TEST FOR ALL MANDATORY KEY FIELDS ENTERED
+0457 C*
+0458 C           SISTP     COMP BLK5                     01
+0459 C           SICCY     COMP BLK3                     03
+0460 C   01
+0461 COR 03                SETON                     59
+0462 C*
+0463 C   59      S         ADD  1         S
+0464 C   59                MOVE '920'     ERCD,S
+0465 C   59                MOVE ERCM,17   ERMSG
+0466 C*
+0467 C*  FOR INSERT VALIDATE KEY FIELDS INDIVIDUALLY, IF ALL ENTERED.
+0468 C*
+0469 C***66N59*****        EXSR VALKEY                                    LN0233
+0469 C     N59             EXSR VALKEY                                    LN0233
+0470 C*
+0471 C*  S IS NON-ZERO IF THERE ARE ANY ERRORS. IF SO, OUTPUT SF SCREEN
+0472 C*
+0473 C           S         COMP 0                    8181
+0474 C  N81                GOTO CHMAST
+0475 C*
+0476 C                     EXSR SUBSF
+0477 C                     SETOF                     88
+0478 C                     GOTO END
+0479 C*
+0480 C           CHMAST    TAG                             ** CHMAST TAG
+0481 C*
+0482 C*  CHAIN TO MASTER FILE FOR DETAIL RECORD
+0483 C*
+0484 C                     SETOF                     707172
+0485 C                     SETOF                     737475
+0486 C                     EXSR MASTCH
+0487 C*
+0488 C*  MOVE END OF MASTER RECORD INTO OLD200
+0489 C*  TO SIMPLIFY PROCESSING
+0490 C*
+0491 C  N75                MOVELMOLD2     OLD200200
+0492 C*
+0493 C*  UPDATE TNLU IN LDA
+0494 C*
+0495 C  N75                MOVE MTNLU     LTNLU
+0496 C   75                Z-ADD0         LTNLU
+0497 C*
+0498 C*  DETERMINE SITUATION FOUND ON MASTER
+0499 C*  FILE AND GOTO RELEVANT PROCESSING.
+0500 C*
+0501 C*  NO RECORD FOUND
+0502 C*
+0503 C   75                GOTO NORF
+0504 C*
+0505 C*  RECORD FOUND - MATURED
+0506 C*
+0507 C   74                GOTO RFMA
+0508 C*
+0509 C*  TEST RECORD FOUND WITH RECORD ID *
+0510 C*  FOR BACKED OUT BY RESTART/RECOVERY
+0511 C*
+0512 C   73      MLCD      COMP 0                    73  70
+0513 C*
+0514 C*  RECORD FOUND HAS BEEN BACKED OUT
+0515 C*
+0516 C   70                GOTO RFBO
+0517 C*
+0518 C*  TEST RECORD FOUND WITH RECORD ID *
+0519 C*  FOR DELETED TODAY OR PREVIOUSLY
+0520 C*
+0521 C   73      MLCD      COMP LRUND                  7273
+0522 C*
+0523 C*  RECORD WITH RECORD ID * HAS BEEN
+0524 C*  DELETED TODAY
+0525 C*
+0526 C   73                GOTO RFDT
+0527 C*
+0528 C*  RECORD FOUND WITH RECORD ID * WAS DELETED PREVIOUSLY
+0529 C*  - THAT IS, PRIOR TO TODAY
+0530 C*
+0531 C   72                GOTO RFDP
+0532 C*
+0533 C*  TEST RECORD FOUND WITH RECORD ID D
+0534 C*  FOR DELETED
+0535 C*
+0536 C   71      MCHTP     COMP 'D'                  717173
+0537 C*
+0538 C*  RECORD FOUND IS LIVE - MCHTP IS NOT D
+0539 C*
+0540 C   71                GOTO RFLV
+0541 C*
+0542 C*  RECORD FOUND WITH RECORD ID D
+0543 C*  AND MCHTP D - TEST FOR DELETED TODAY
+0544 C*
+0545 C   73      MLCD      COMP LRUND                    73
+0546 C*
+0547 C*  RECORD FOUND WITH RECORD ID D HAS
+0548 C*  BEEN DELETED TODAY
+0549 C*
+0550 C   73                GOTO RFDT
+0551 C*
+0552 C*  IF PROCESSING REACHES HERE THEN THE RECORD FOUND MAY
+0553 C*  BE IN ERROR, OR MAY BE THE HEADER OR TRAILER. IF IN ERROR,
+0554 C*  OUTPUT THE SE SCREEN WITH 'CHANGE DETAILS', OR SF SCREEN.
+0555 C*
+0556 C           S         ADD  1         S
+0557 C                     SETOF                     88
+0558 C           MRECI     COMP 'A'                      96
+0559 C  N96      MRECI     COMP 'Z'                      96
+0560 C*
+0561 C  N96                SETOF                     87    * CHNGE DETAILS
+0562 C  N96                EXSR SUBSE
+0563 C  N96                MOVE '903'     ERCD,S
+0564 C  N96                MOVE ERCM,3    ERMSG
+0565 C   96                EXSR SUBSF
+0566 C   96                MOVE '919'     ERCD,S
+0567 C   96                MOVE ERCM,16   ERMSG
+0568 C                     GOTO END
+0569 C*
+0570 C*  PROCESS SITUATIONS FOUND ON MASTER FILE
+0571 C*
+0572 C*  NO RECORD FOUND
+0573 C*
+0574 C           NORF      TAG                             ** NORF TAG
+0575 C*
+0576 C*  INSERT
+0577 C   66                EXSR SUBSI
+0578 C   66                GOTO END
+0579 C*
+0580 C*  AMEND
+0581 C*  DELETE
+0582 C*  ENQUIRE
+0583 C                     EXSR SUBSF
+0584 C                     SETOF                     88
+0585 C           S         ADD  1         S
+0461 C                     SETON                     0103
+0586 C                     MOVE '908'     ERCD,S
+0587 C                     MOVE ERCM,8    ERMSG
+0588 C                     GOTO END
+0589 C*
+0590 C*  RECORD FOUND - MATURED. ONLY ENQUIRE
+0591 C*  ALLOWED. OTHERWISE OUTPUT SE SCREEN
+0592 C*  WITH A MESSAGE.
+0593 C*
+0594 C           RFMA      TAG                             ** RFMA TAG
+0595 C*
+0596 C                     EXSR SUBSE
+0597 C                     SETOF                     88
+0598 C           S         ADD  1         S
+0599 C*  INSERT
+0600 C   66                MOVE '904'     ERCD,S
+0601 C   66                MOVE ERCM,4    ERMSG
+0602 C*
+0603 C*  AMEND
+0604 C   67                MOVE '909'     ERCD,S
+0605 C   67                MOVE ERCM,9    ERMSG
+0606 C*
+0607 C*  DELETE
+0608 C   68                MOVE '911'     ERCD,S
+0609 C   68                MOVE ERCM,11   ERMSG
+0610 C*
+0611 C*  ENQUIRE
+0612 C   69                MOVE '913'     ERCD,S
+0613 C   69                MOVE ERCM,13   ERMSG
+0614 C*
+0615 C                     GOTO END
+0616 C*
+0617 C*  RECORD FOUND - DELETED TODAY
+0618 C*
+0619 C           RFDT      TAG                             ** RFDT TAG
+0620 C*
+0621 C*
+0622 C*  FOR INSERT OVER DELETED RECORD ALLOWED,
+0623 C*  OUTPUT INSERT SCREEN
+0624 C*
+0625 C   66 65             EXSR SUBSI
+0626 C   66 65             SETOF                     88
+0627 C   66 65   S         ADD  1         S
+0628 C   66 65             MOVE '905'     ERCD,S
+0629 C   66 65             MOVE ERCM,5    ERMSG
+0630 C   66 65             GOTO END
+0631 C*
+0632 C*  FOR OTHER CONDITIONS, OUTPUT SE SCREEN WITH MESSAGE
+0633 C*
+0634 C                     EXSR SUBSE
+0635 C                     SETOF                     88
+0636 C           S         ADD  1         S
+0637 C*
+0638 C*  INSERT OVER DELETED RECORD NOT ALLOWED
+0639 C*
+0640 C   66N65             MOVE '906'     ERCD,S
+0641 C   66N65             MOVE ERCM,6    ERMSG
+0642 C*
+0643 C*  AMEND
+0644 C   67                MOVE '910'     ERCD,S
+0645 C   67                MOVE ERCM,10   ERMSG
+0646 C*
+0647 C*  DELETE
+0648 C   68                MOVE '912'     ERCD,S
+0649 C   68                MOVE ERCM,12   ERMSG
+0650 C*
+0651 C*  ENQUIRE
+0652 C   69                MOVE '914'     ERCD,S
+0653 C   69                MOVE ERCM,14   ERMSG
+0654 C*
+0655 C                     GOTO END
+0656 C*
+0657 C*  RECORD FOUND - DELETED PREVIOUSLY
+0658 C*
+0659 C           RFDP      TAG                             ** RFDP TAG
+0660 C*
+0661 C*  INSERT ALLOWED, OTHERWISE OUTPUT
+0662 C*  INITIAL SCREEN WITH MESSAGE - NOT ON FILE
+0663 C*
+0664 C*  INSERT
+0665 C   66                EXSR SUBSI
+0666 C   66                GOTO END
+0667 C*  AMEND
+0668 C*  DELETE
+0669 C*  ENQUIRE
+0670 C   69 58             EXSR SUBSE                      * USEFUL DATA
+0671 C  N69
+0672 CORN58                EXSR SUBSF
+0673 C                     SETOF                     88
+0674 C           S         ADD  1         S
+0675 C                     MOVE '908'     ERCD,S
+0676 C                     MOVE ERCM,8    ERMSG
+0677 C                     GOTO END
+0678 C*
+0679 C*  RECORD FOUND - LIVE
+0680 C*
+0681 C           RFLV      TAG                             ** RFLV TAG
+0682 C*
+0683 C*  INSERT
+0684 C   66                EXSR SUBSE
+0685 C   66                SETOF                     88
+0686 C   66      S         ADD  1         S
+0687 C   66                MOVE '907'     ERCD,S
+0688 C   66                MOVE ERCM,7    ERMSG
+0689 C   66                GOTO END
+0690 C*
+0691 C*  AMEND
+0692 C*  DELETE
+0693 C*  ENQUIRE
+0694 C   67                EXSR SUBSA
+0695 C   68                EXSR SUBSD
+0696 C   69                EXSR SUBSE
+0697 C                     GOTO END
+0698 C*
+0699 C*  RECORD FOUND - BACKED OUT
+0700 C*
+0701 C           RFBO      TAG                             ** RFBO TAG
+0702 C*
+0703 C*  INSERT IS ALLOWED
+0704 C   66                EXSR SUBSI
+0705 C   66                GOTO END
+0706 C*
+0707 C*  OTHER ACTION CODES ARE INVALID -
+0708 C*  OUTPUT MESSAGE - NOT ON FILE
+0709 C*  AMEND
+0710 C*  DELETE
+0711 C*  ENQUIRE
+0712 C   69 58             EXSR SUBSE                      * USEFUL DATA
+0713 C  N69
+0714 CORN58                EXSR SUBSF
+0715 C                     SETOF                     88
+0716 C           S         ADD  1         S
+0717 C                     MOVE '908'     ERCD,S
+0718 C                     MOVE ERCM,8    ERMSG
+0719 C*
+0720 C           END       TAG                             ** END TAG
+0727 C                     TIME           MTIME   60
+     C   LR U7             EXSR *PSSR                                     S01117
+     C***********          OUT  *NAMVAR                                   S01117
+     C                     OUT  LDA                                       S01117
+     C                     OUT  WTRAN                                     S01117
+0726 C* THESE INDICATORS ARE SETOF TO AVOID (RI) DURING 1ST CYCLE
+     C                     SETOF                     343637
+     C                     SETOF                     44
+     C                     SETOF                     35                   S01413
+     C  NLR                EXCPT
+     C                     RETRN
+0728 C*
+0729 C********************************************************************
+0730 C**
+0731 C**   SUBR. - TO SET UP INITIAL SCREEN OUTPUT
+0732 C**
+0733 C           SUBSF     BEGSR                           ***  SUBSF  ***
+0734 C                     SETON                     81
+0735 C                     MOVE '1  '     LPROC
+0736 C                     MOVE 'SF'      SID
+0737 C                     ENDSR
+0738 C********************************************************************
+0739 C**
+0740 C**   SUBR. - TO SET UP INSERT SCREEN OUTPUT
+0741 C**
+0742 C           SUBSI     BEGSR                           ***  SUBSI  ***
+0743 C                     SETON                     82
+0744 C                     MOVE '2  '     LPROC
+0745 C                     MOVE 'SI'      SID
+0746 C                     Z-ADD0         WBAL   150
+0747 C                     EXSR FORMT
+     C                     EXSR WTRUPD
+0748 C                     ENDSR
+0749 C********************************************************************
+0750 C**
+0751 C**   SUBR. - TO SET UP AMEND SCREEN OUTPUT
+0752 C**
+0753 C           SUBSA     BEGSR                           ***  SUBSA  ***
+0754 C                     SETON                     83
+0755 C                     MOVE '3  '     LPROC
+0756 C                     MOVE 'SA'      SID
+0757 C                     EXSR FORMT
+     C                     EXSR WTRUPD
+0762 C*
+0763 C                     ENDSR
+0764 C********************************************************************
+0765 C**
+0766 C**   SUBR. - TO SET UP DELETE SCREEN OUTPUT
+0767 C**
+0768 C           SUBSD     BEGSR                           ***  SUBSD  ***
+0769 C                     SETON                     84
+0770 C                     MOVE '4  '     LPROC
+0771 C                     MOVE 'SD'      SID
+0772 C                     EXSR FORMT
+     C                     EXSR WTRUPD
+0774 C                     ENDSR
+0775 C********************************************************************
+0776 C**
+0777 C**   SUBR. - TO SET UP ENQUIRY SCREEN OUTPUT
+0778 C**
+0779 C           SUBSE     BEGSR                           ***  SUBSE  ***
+0780 C                     SETON                     85
+0781 C                     MOVE '1  '     LPROC
+0782 C                     MOVE 'SE'      SID
+0783 C                     EXSR FORMT
+     C                     EXSR WTRUPD
+0784 C*
+0785 C*  CHECK FOR USEFUL DATA TO BE DISPLAYED.
+0786 C*
+0787 C*  IF SO, ALSO DISPLAY CHANGE DETAILS.
+0788 C   58                SETOF                     8687
+0789 C*
+0790 C                     ENDSR
+0791 C********************************************************************
+0792 C**
+0793 C**   SUBR. - TO CHAIN TO MASTER FILE
+0794 C**
+0795 C           MASTCH    BEGSR                           *** MASTCH  ***
+0796 C                     MOVE 'D'       SRECT
+0797 C                     SETOF                     717374
+0798 C                     SETOF                     75
+0799 C                     MOVELDSMKEY    LKEY
+0800 C           DSMKEY    CHAINREINT                75
+0801 C                     ENDSR
+0802 C********************************************************************
+0803 C**
+0804 C**   SUBR. - TO VALIDATE THE INITIAL SCREEN KEY FIELDS
+0805 C**
+0806 C           VALKEY    BEGSR                           *** VALKEY  ***
+0807 C*
+0808 C***CHECK*CURRENCY - MUST BE ON TABLE FILE                           S01194
+0809 C***********          MOVE BLK200    TABKEY                          S01194
+0810 C***********          MOVE '20'      TAB2                            S01194
+0811 C***********          MOVE '1'       TAB1                            S01194
+0812 C***********          MOVE SICCY     TAB3A                           S01194
+0813 C***********          EXSR TABCHN                                    S01194
+     C* CHECK CURRENCY - CALL ACCESS PROGRAM                              S01194
+     C                     MOVE SICCY     CKEY                            S01194
+     C                     CALL 'AOCURRR0'PLIST1                          S01194
+0814 C**N10******          SETON                     03                   S01194
+     C           RTCD      COMP *BLANKS              0303                 S01194
+     C  N03                MOVE A6CYCD    SICCY                           S01194
+0815 C   03      S         ADD  1         S
+0816 C   03                MOVE '002'     ERCD,S
+0817 C   03                MOVE ERCM,18   ERMSG
+0818 C*
+0819 C*  VALIDATE SUB - TYPE NO. - MUST BE 1 TO  99998
+0820 C                     MOVELSISTP     NFLD6   60
+0821 C                     MOVELNFLD6     AFLD5   5
+0822 C           SISTP     COMP AFLD5                0101
+0823 C  N01      SISTP     COMP '00000'                  01
+0824 C  N01      SISTP     COMP '99999'                  01
+0825 C*
+0826 C   01      S         ADD  1         S
+0827 C   01                MOVE '001'     ERCD,S
+0828 C   01                MOVE ERCM,19   ERMSG
+0829 C                     ENDSR
+0830 C********************************************************************
+0831 C**
+0832 C**   SUBR. - TO FORMAT MASTER FILE RECORD DATA FOR SCREEN OUTPUT
+0833 C**
+0834 C           FORMT     BEGSR                           ***  FORMT  ***
+0835 C*
+0836 C*  GET CURRENCY RECORD FOR DECIMAL PLACES
+0837 C*
+0838 C***********          MOVE BLK200    TABKEY                          S01194
+0839 C***********          MOVE '20'      TAB2                            S01194
+0840 C***********          MOVE '1'       TAB1                            S01194
+0841 C***********          MOVE MICCY     TAB3A                           S01194
+0842 C***82******          MOVE SICCY     TAB3A                           S01194
+0843 C***********          EXSR TABCHN                                    S01194
+0841 C                     MOVE MICCY     CKEY                            S01194
+0842 C   82                MOVE SICCY     CKEY                            S01194
+0841 C                     MOVE '*MSG   ' RTCD                            S01194
+     C                     CALL 'AOCURRR0'PLIST1                          S01194
+     C           RTCD      COMP *BLANKS                  10               S01194
+0844 C   10                GOTO FORMT1
+0845 C*
+0846 C*  DATABASE ERROR IF CURRENCY NOT FOUND
+0847 C*
+0848 C                     SETON                     U7LR
+0849 C***********          MOVE 'TABLE'   LFILE                           S01194
+0849 C                     MOVE 'SDCURRPD'LFILE                           S01194
+0850 C                     MOVE BLK200    LKEY
+0851 C***********          MOVELTABKEY    LKEY                            S01194
+0851 C                     MOVELMICCY     LKEY                            S01194
+0851 C   82                MOVELSICCY     LKEY                            S01194
+0852 C                     MOVE '01'      LDBNO            ** DB ERROR 01
+0853 C                     GOTO FORMTE
+0854 C*
+0855 C*  FORMAT 0 BAL OUTPUT FOR INSERT SCREEN
+0856 C*
+0857 C  N82                GOTO FORMT1
+0858 C                     MOVE WBAL      ZFIELD
+0859 C***********15        SUB  CDP       ZADIG                           S01194
+0859 C           15        SUB  A6NBDP    ZADIG                           S01194
+0860 C***********          Z-ADDCDP       ZADEC                           S01194
+0860 C                     Z-ADDA6NBDP    ZADEC                           S01194
+0861 C                     EXSR ZEDIT
+0862 C                     MOVE ZFIELD    WBAL1  16
+0863 C                     MOVE ' '       WSIG1   1
+0864 C   82                GOTO FORMTE
+0865 C           FORMT1    TAG                             ** FORMT1 TAG
+0866 C*
+0867 C*  FORMAT BALANCE AMOUNT
+0868 C*
+0869 C*  CHECK SIGN OF BALANCE AMOUNT
+0870 C*FORMAT BALANCE ARRAY FOR SCREEN FORMAT
+0871 C*  LOOP 11 TIMES
+0872 C*
+     C/COPY WNCPYSRC,RE0211C002
+0873 C                     Z-ADD0         CT      20
+0874 C                     SETON                     39    PROCESS 1ST BAL
+0875 C                     Z-ADD1         X       20
+0876 C           T1        TAG
+0877 C           X         COMP 1                    30
+     C/COPY WNCPYSRC,RE0211C003
+0878 C*  BLANK OUT ZERO BALS
+0879 C   30      BAL,X     COMP 0                      9530
+0880 C   30                MOVE BLK16     WTAMT
+0881 C   30      CT        ADD  1         CT
+0882 C   30                GOTO BLK16T
+0883 C*
+     C** FUTURES MODULE ALLOWS -1 AS BALANCE IF 'MARGIN'                  S01127
+     C** WAS INSERTED ORIGINALLY.                                         S01127
+     C*                                                                   S01127
+     C           X         IFEQ 2                                         S01127
+     C           BAL,2     ANDEQ-1                                        S01127
+     C                     MOVEL*BLANKS   WTAMT                           S01127
+     C                     MOVEL'MARGIN'  WTAMT                           S01127
+     C                     GOTO BLK16T                                    S01127
+     C                     END                                            S01127
+     C*                                                                   S01127
+      *                                                                                       CER055
+      ** FUTURES MODULE ALLOWS -2 AS BALANCE IF 'OVERDRAFT'                                   CER055
+      ** WAS INSERTED ORIGINALLY.                                                             CER055
+      *                                                                                       CER055
+     C           CER055    IFEQ 'Y'                                                           CER055
+     C           BAL,X     IFEQ -2                                                            CER055
+     C                     MOVEL*BLANKS   WTAMT                                               CER055
+     C                     MOVEL'OVERDRAF'WTAMT                                               CER055
+     C                     MOVE 'T       'WTAMT                                               CER055
+     C                     GOTO BLK16T                                                        CER055
+     C                     ENDIF                                                              CER055
+     C                     ENDIF                                                              CER055
+      *                                                                                       CER055
+0884 C* MAKE SURE 1ST BAL IS 0
+0885 C   95                Z-SUBBAL,X     BAL,X
+0886 C                     MOVE BAL,X     ZFIELD
+0887 C***********15        SUB  CDP       ZADIG                           S01194
+0887 C           15        SUB  A6NBDP    ZADIG                           S01194
+0888 C***********          Z-ADDCDP       ZADEC                           S01194
+0888 C                     Z-ADDA6NBDP    ZADEC                           S01194
+0889 C                     EXSR ZEDIT
+0890 C                     MOVE ZFIELD    WTAMT  16
+0891 C           BLK16T    TAG
+0892 C  N39                MOVELWTAMT     WBAR,Y
+0893 C   39                MOVELWTAMT     WBAL1  16
+0894 C   39                Z-ADD0         Y       20
+0895 C                     SETOF                     39    NO LONGER BAL 1
+0896 C           Y         ADD  1         Y
+0897 C           X         ADD  1         X
+     C/COPY WNCPYSRC,RE0211C004
+0898 C           X         COMP 12                       34
+     C/COPY WNCPYSRC,RE0211C005
+0899 C  N34                GOTO T1
+0900 C*
+     C/COPY WNCPYSRC,RE0211C006
+0901 C*
+0902 C*  NOW FORMAT THE  RATE
+0903 C                     SETON                     39
+0904 C                     Z-ADD0         X
+0905 C           11        SUB  CT        BLKOT   20
+0906 C*  LOOP 11 TIMES
+0907 C           T3        TAG
+0908 C           X         ADD  1         X
+0909 C           Y         ADD  1         Y
+     C/COPY WNCPYSRC,RE0211C007
+0910 C           X         COMP 12                       36
+     C/COPY WNCPYSRC,RE0211C008
+0911 C           BLKOT     COMP X                    38  38
+0912 C   36                GOTO T4
+0913 C* ONLY BLANK OUT INVALID ZERO RATES
+0914 C           RAT,X     COMP 0                      3537
+     C/COPY WNCPYSRC,RE0211C009
+0915 C   35                Z-SUBRAT,X     RAT,X
+0916 C   37N38             MOVE BLK12     WRAT   12
+0917 C   37N38             GOTO T9
+0918 C                     MOVE BLK16     ZFIELD
+0919 C                     MOVE RAT,X     ZFIELD
+0920 C           11        SUB  7         ZADIG
+0921 C                     Z-ADD7         ZADEC
+0922 C                     EXSR ZEDIT
+0923 C                     MOVE ZFIELD    WRAT   12
+0924 C           T9        TAG
+0925 C  N39                MOVELWRAT      WBBIT  13
+0926 C  N39N35N37          MOVE '+'       WBBIT
+0927 C  N39 35N37          MOVE '-'       WBBIT
+0928 C  N39 37             MOVE ' '       WBBIT
+0929 C  N39                MOVE WBBIT     WBAR,Y
+0930 C   39                MOVE WRAT      WRAT1  12
+0931 C   39N35N37          MOVE '+'       WSIG1
+0932 C   39 35N37          MOVE '-'       WSIG1
+0933 C   39 37             MOVE ' '       WSIG1
+0934 C   39                Z-ADD0         Y
+0935 C                     SETOF                     39
+0936 C                     GOTO T3
+0937 C           T4        TAG
+     C/COPY WNCPYSRC,RE0211C010
+0938 C* FORMAT INTIAL THRESHOLD BALANCE
+0939 C*
+0940 C           MINTH     COMP 0                        42
+0941 C   42                MOVE BLK16     WINTH
+0942 C   42                GOTO L3
+0943 C                     MOVE MINTH     ZFIELD
+0944 C***********15        SUB  CDP       ZADIG                           S01194
+0944 C           15        SUB  A6NBDP    ZADIG                           S01194
+0945 C***********          Z-ADDCDP       ZADEC                           S01194
+0945 C                     Z-ADDA6NBDP    ZADEC                           S01194
+0946 C                     EXSR ZEDIT
+0947 C                     MOVE ZFIELD    WINTH  16
+     C/COPY WNCPYSRC,RE0211C011
+0948 C           L3        TAG
+0949 C*  BLANK OUT ZERO BANK RATE
+0950 C*
+0951 C                     MOVE MBRT      WBRT    2
+0952 C           MBRT      COMP 0                        46
+0953 C   46                MOVE BLK2      WBRT
+0954 C*
+0955 C*  FORMAT CHANGE DATE
+0956 C*
+     C           MVDTC     COMP 0                        44
+0957 C  N44                Z-ADDMVDTC     ZDAYNO
+0958 C  N44                EXSR ZDATE2
+0959 C  N44                MOVE ZDATE     WVDTC   6
+0964 C   44                MOVE BLK6      WVDTC
+0960 C*
+0961 C*  FORMAT PREVIOUS DATE
+0962 C*
+0963 C           MVDPC     COMP 0                        44
+0964 C   44                MOVE BLK6      WVDPC
+0965 C   44                GOTO FORMTE
+0966 C                     Z-ADDMVDPC     ZDAYNO
+0967 C                     EXSR ZDATE2
+0968 C                     MOVE ZDATE     WVDPC   6
+0969 C           FORMTE    ENDSR                           ** FORMTE TAG
+0970 C********************************************************************
+0971 C**
+0972 C**   SUBR. - TO UPDATE CHAIN TO THE WORKSTATION TRANSACTION FILE
+0973 C**
+0974 C           WTRUPD    BEGSR                           ***  WTRUPD ***
+0910 C**
+0901 C                     MOVE BLK200    WTRAN1
+0902 C                     MOVE BLK200    WTRAN2
+0903 C                     MOVE BLK200    WTRAN3
+0904 C                     MOVE BLK200    WTRAN4
+0905 C                     MOVE BLK200    WTRAN5
+1283 C*  OUTPUT 'BEFORE STATUS' OF MASTER FILE RECORD IF AMEND OR
+1284 C*  DELETE FOR SA AND SD SCREEN VALIDATION PROGRAMS
+0906 C  N82                MOVE MOLD1     WTRAN1
+0906 C  N82                MOVELOLD200    WTRAN2
+0910 C**
+0982 C                     ENDSR
+0983 C********************************************************************
+0984 C***********                                                         S01194
+0985 C*****SUBR**- TO CHAIN TO TABLE FILE                                 S01194
+0986 C***********                                                         S01194
+0987 C***********TABCHN    BEGSR                           ***  TABCHN ***S01194
+0988 C***********                                                         S01194
+0989 C***********          SETOF                       1099               S01194
+0990 C***********                                                         S01194
+0991 C***********TABKEY    CHAINTABLE                99                   S01194
+0992 C***********                                                         S01194
+0993 C***********          ENDSR                                          S01194
+0994 C********************************************************************
+0995 C**                                                                 *
+0996 C**  ZEDIT SUBROUTINE TO INSERT A DECIMAL POINT INTO A NUMERIC FIELD*
+0997 C**  AND TO BLANK OUT LEADING ZEROES.                               *
+0998 C**      INPUT FIELDS:   ZFIELD 16/                                 *
+0999 C*                       ZADEC                                      *
+1000 C*                       ZADIG - NOT ACTUALLY USED                  *
+1001 C*                                                                  *
+1002 C*       ARRAYS    ZA1 ,ZA2   BOTH 16 ELEMENTS, EACH ONE BYTE LONG. *
+1003 C*                                                                  *
+1004 C*       OUTPUT FIELD   ZFIELD                                      *
+1005 C*                                                                  *
+1006 C           ZEDIT     BEGSR                           ***  ZEDIT  ***
+1007 C**                                                                 *
+1008 C*       SET UP WORK FIELDS                                         *
+1009 C**                                                                 *
+1010 C                     Z-ADDZADIG     ZADIG   20                     *
+1011 C                     Z-ADDZADEC     ZADEC   10                     *
+1012 C*                                                                  *
+1013 C                     MOVEA' '       ZA1                            *
+1014 C                     MOVEA' '       ZA2                            *
+1015 C*                                                                  *
+1016 C                     Z-ADD16        Z1      20                     *
+1017 C                     Z-ADD16        Z2      20                     *
+1018 C*                                                                  *
+1019 C           16        SUB  ZADEC     ZADEC2  20                     *
+1020 C*                                                                  *
+1021 C*                                                                  *
+1022 C                     MOVEAZFIELD    ZA1                            *
+1023 C*                                                                  *
+1024 C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES               *
+1025 C*                                                                  *
+1026 C           ZADEC     COMP 0                        91              *
+1027 C   91                GOTO ZT20                                     *
+1028 C**                                                                 *
+1029 C           ZT10      TAG                             ** ZT10 TAG ***
+1030 C**                                                                 *
+1031 C*                                                                  *
+1032 C*       SET UP DECIMALS                                            *
+1033 C*                                                                  *
+1034 C                     MOVE ZA1,Z1    ZA2,Z2                         *
+1035 C           Z1        SUB  1         Z1                             *
+1036 C           Z2        SUB  1         Z2                             *
+1037 C*                                                                  *
+1038 C           Z2        COMP 0                        90              *
+1039 C   90                GOTO ZT30                                     *
+1040 C*                                                                  *
+1041 C*       CHECK IF END OF DECIMALS                                   *
+1042 C**                                                                 *
+1043 C           Z2        COMP ZADEC2               90                  *
+1044 C   90                GOTO ZT10                                     *
+1045 C*                                                                  *
+1046 C**                                                                 *
+1047 C*       PUT IN DECIMAL PLACE                                       *
+1048 C*                                                                  *
+1049 C                     MOVE '.'       ZA2,Z2                         *
+1050 C           Z2        SUB  1         Z2                             *
+1051 C*                                                                  *
+1052 C           ZT20      TAG                             ** ZT20 TAG ***
+1053 C*                                                                  *
+1054 C*       SET UP INTEGERS                                            *
+1055 C*                                                                  *
+1056 C                     MOVE ZA1,Z1    ZA2,Z2                         *
+1057 C           Z1        SUB  1         Z1                             *
+1058 C           Z2        SUB  1         Z2                             *
+1059 C**                                                                 *
+1060 C           Z2        COMP 0                    90                  *
+1061 C   90                GOTO ZT20                                     *
+1062 C*                                                                  *
+1063 C*       PUT IN LEADING BLANKS                                      *
+1064 C*                                                                  *
+1065 C           ZT30      TAG                             ** ZT30 TAG ***
+1066 C**                                                                 *
+1067 C                     Z-ADD1         Z2                             *
+1068 C**                                                                 *
+1069 C           ZT40      TAG                             ** ZT40 TAG ***
+1070 C*                                                                  *
+1071 C           ZA2,Z2    COMP '0'                  9090                *
+1072 C   90      ZA2,Z2    COMP ' '                  9090                *
+1073 C*                                                                  *
+1074 C   90                GOTO ZT50                                     *
+1075 C*                                                                  *
+1076 C                     MOVE ' '       ZA2,Z2                         *
+1077 C           Z2        ADD  1         Z2                             *
+1078 C*                                                                  *
+1079 C           Z2        COMP 16                     90                *
+1080 C   90                GOTO ZT40                                     *
+1081 C*                                                                  *
+1082 C*       IF NO INTEGERS PUT IN LEADING ZERO                         *
+1083 C*                                                                  *
+1084 C           ZT50      TAG                             ** ZT50 TAG ***
+1085 C*                                                                  *
+1086 C                     Z-ADDZADEC2    Z2                             *
+1087 C  N91      Z2        SUB  1         Z2                             *
+1088 C           ZA2,Z2    COMP ' '                      90              *
+1089 C   90                MOVE '0'       ZA2,Z2                         *
+1090 C*                                                                  *
+1091 C*                                                                  *
+1092 C*       SET UP OUTPUT FIELD                                        *
+1093 C*                                                                  *
+1094 C           ZT60      TAG                             ** ZT60 TAG ***
+1095 C*                                                                  *
+1096 C                     MOVEAZA2       ZFIELD 16                      *
+1097 C**                                                                 *
+1098 C           ZEND      ENDSR                           ** ZEND **    *
+1099 C*                                                                  *
+1100 C********************************************************************
+1101 C**
+1102 C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+1103 C**
+1104 C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+1105 C**
+1106 C           ZDATE2    BEGSR                           *** ZDATE2 ***
+1107 C**
+1108 C**   CLEAR DATE FIELDS.
+1109 C                     Z-ADD0         ZDATE   60
+1110 C                     MOVEL'       ' ZADATE  7
+1111 C**
+1112 C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+1113 C                     Z-ADDZDAYNO    ZDAYNO  50
+1114 C**
+1115 C**   DETERMINE YEAR NUMBER.
+1116 C**
+1117 C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+1118 C           ZDAYNO    SUB  1         ZDAYN1  50   99
+1119 C   99                GOTO ZDEND2
+1120 C**
+1121 C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+1122 C           ZDAYN1    DIV  1461      ZLYR    20
+1123 C                     MVR            ZDAYN1           SAVE REMAINING
+1124 C**                                                   DAYS
+1125 C**   CALCULATE NUMBER OF REMAINING YEARS.
+1126 C                     Z-ADD1         ZWRK2   20
+1127 C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+1128 C           ZDAYN1    COMP ZYDY,ZWRK2             90
+1129 C  N90      ZWRK2     ADD  1         ZWRK2
+1130 C  N90                GOTO ZDTAG1
+1131 C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+1132 C**
+1133 C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+1134 C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+1135 C**
+1136 C**   CALCULATE ACTUAL YEAR NUMBER.
+1137 C           ZLYR      MULT 4         ZWRK3   30
+1138 C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+1139 C                     Z-ADDZWRK3     ZYEAR   20
+1140 C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+1141 C**
+1142 C**   DETERMINE MONTH NUMBER.
+1143 C**
+1144 C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+1145 C                     SETOF                     9293
+1146 C   91      ZDAYN1    COMP 59                     9293
+1147 C   91N92   ZDAYN1    SUB  1         ZDAYN1
+1148 C**
+1149 C**   CALCULATE MONTH NUMBER.
+1150 C                     Z-ADD2         ZWRK2
+1151 C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+1152 C           ZDAYN1    COMP ZMDY,ZWRK2             94
+1153 C  N94      ZWRK2     ADD  1         ZWRK2
+1154 C  N94                GOTO ZDTAG2
+1155 C           ZWRK2     SUB  1         ZWRK2
+1156 C**
+1157 C                     Z-ADDZWRK2     ZMTH    20       MONTH
+1158 C**
+1159 C**   DETERMINE DAY OF MONTH.
+1160 C**
+1161 C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+1162 C           ZDAYN1    ADD  1         ZDAYN1
+1163 C**
+1164 C**   CALCULATE DAY OF MONTH.
+1165 C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+1166 C**
+1167 C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+1168 C   93      ZDAY      ADD  1         ZDAY
+1169 C**
+1170 C**   FORMAT DATE, DDMMYY OR MMDDYY.
+1171 C  N98                MOVELZDAY      ZWRK4   40
+1172 C   98                MOVE ZDAY      ZWRK4
+1173 C  N98                MOVE ZMTH      ZWRK4
+1174 C   98                MOVELZMTH      ZWRK4
+1175 C                     MOVELZWRK4     ZDATE
+1176 C                     MOVE ZYEAR     ZDATE
+1177 C**
+1178 C**   FORMAT ALPHA DATE, DDMMMYY.
+1179 C           ZDAY      COMP 10                     95
+1180 C                     MOVELZDAY      ZWRK5   5
+1181 C   95                MOVEL' '       ZWRK5
+1182 C                     MOVE ZMNM,ZMTH ZWRK5
+1183 C                     MOVELZWRK5     ZADATE
+1184 C                     MOVE ZYEAR     ZADATE
+1185 C**
+1186 C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+1187 C**
+1188 C**
+1189 C********************************************************************
+     C*                                                                   S01117
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01117
+     C*                                                                   S01117
+     C* CALLS: NOTHING                                                    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C********************************************************************S01117
+     C/EJECT
+1190 O*  WORKSTATION - INITIAL SCREEN OUTPUT
+1191 O*
+1192 ORE0210FME        81
+1193 O                                   K8 'RE0210F1'
+1194 O                         SCNSF     35
+1195 O                         SID        9
+1196 O                         SPID      15
+1197 O                         LTITL     47
+1198 O                         MTIME     55 '  .  .  '
+1199 O                         SWSID     58
+1200 O                         LITYP     60
+1201 O                         SISTP     65
+1202 O                         SICCY     68
+1203 O                         SACTN     69
+1204 O*  BLANK OUT KEY/ACTION CODE FOR F12 - REMOVED IN STANDARD PROG
+1205 O                 KL      BLK9      69
+1206 O*  ERROR FIELDS
+1207 O                         ERMSG    148
+     O/COPY WNCPYSRC,RE0211O001
+1208 O                         ERCD     224
+     O/COPY WNCPYSRC,RE0211O002
+1213 O*
+1214 O*  WORKSTATION - INSERT(82)/AMEND(83) SCREEN OUTPUT
+1215 O*
+1216 O        E        82
+1217 O       OR        83
+1218 O                                   K8 'RE0210F2'
+1219 O                         SCNSF     35
+1220 O                         SID        9
+1221 O                         SPID      15
+1222 O                         STITL     47
+1223 O                         MTIME     55 '  .  .  '
+1224 O                         SWSID     58
+1225 O                         SITYP     60
+1226 O                         SISTP     65
+1227 O                         SICCY     68
+1228 O                         SACTN     69
+1229 O*  OUTPUT DETAIL FIELDS FOR AMEND SCREEN
+1230 O                 83      MINNM     99
+1231 O                         WBAL1    115
+1232 O                 83      WRAT1    127
+1233 O                 83      WSIG1    128
+1234 O                 83      WBRT     130
+     O/COPY WNCPYSRC,RE0211O003
+1235 O                 83      WBAR     420
+1236 O                 83      WINTH    436
+1237 O                 83      WVDTC    442
+1238 O                 83      WVDPC    448
+1239 O                         ERMSG    527
+1240 O                         ERCD     603
+1241 O                         DSCHDT   623
+     O/COPY WNCPYSRC,RE0211O004
+1242 O*  ERROR FIELDS AND CHANGE DETAILS
+1243 O*
+1244 O*  WORKSTATION - DELETE(84)/ENQUIRY(85) SCREEN OUTPUT
+1245 O*
+1246 O        E        84
+1247 O       OR        85
+1248 O                                   K8 'RE0210F3'
+1249 O                         SCNSF     35
+1250 O                         SID        9
+1251 O                         SPID      15
+1252 O                         STITL     47
+1253 O                         MTIME     55 '  .  .  '
+1254 O                         SWSID     58
+1255 O                         SITYP     60
+1256 O*  OUTPUT DETAIL FIELDS
+1257 O*  ERROR FIELDS AND CHANGE DETAILS
+1258 O                         MISTP     65
+1259 O                         MICCY     68
+1260 O                         SACTN     69
+1261 O                         MINNM     99
+1262 O                         WBAL1    115
+1263 O                         WRAT1    127
+1264 O                         WSIG1    128
+1265 O                         WBRT     130
+     O/COPY WNCPYSRC,RE0211O005
+1266 O                         WBAR     420
+1267 O                         WINTH    436
+1268 O                         WVDTC    442
+1269 O                         WVDPC    448
+1270 O                         ERMSG    527
+1271 O                         ERCD     603
+1272 O                         DSCHDT   623
+     O/COPY WNCPYSRC,RE0211O006
+     O*
+     O** ERROR MESSAGE 20 ADDED TO ERCM ARRAY                             S01117
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ERROR MESSAGES
+ACTION CODE INVALID
+ACTION CODE ENTERED IS NOT ALLOWED
+THIS RECORD IS POSSIBLY IN ERROR - PLEASE TAKE A SCREEN PRINT AND INFORM B
+THIS IS A MATURED RECORD - INSERTION NOT ALLOWED
+THIS IS A RECORD DELETED TODAY - INSERTION IS ALLOWED
+THIS IS A RECORD DELETED TODAY - INSERTION IS NOT ALLOWED
+THIS IS A LIVE RECORD ALREADY ON FILE - INSERTION NOT ALLOWED
+RECORD NOT ON FILE
+THIS IS A MATURED RECORD - AMENDMENT NOT ALLOWED
+THIS IS A RECORD DELETED TODAY - AMENDMENT NOT ALLOWED
+THIS IS A MATURED RECORD - DELETION NOT ALLOWED
+THIS RECORD HAS ALREADY BEEN DELETED TODAY
+THIS IS A MATURED RECORD
+THIS IS A RECORD DELETED TODAY
+F10 KEY NOT ALLOWED NOW
+INVALID KEY FIELDS ENTERED
+MANDATORY KEY FIELD/S NOT ENTERED
+CURRENCY DOES NOT EXIST
+SUB TYPE INVALID - MUST BE 1 - 99998
+USER IS NOT AUTHORISED TO THE ACTION CODE FOR THIS MENU ITEM
+USER IS NOT AUTHORISED TO ANY ACTION CODES FOR THIS MENU ITEM AND BRANCH
+USER IS NOT AUTHORISED TO THE ACTION CODE FOR THIS MENU ITEM AND BRANCH
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,261 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK SE A/C Key Gen. - Input Form Print')
+     H********1   DD
+      *****************************************************************
+      *                                                               *
+      *  Midas - Account Key Generator                                *
+      *                                                               *
+      *  AK0065 - SE A/c Key Generation - Input Form Report           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 098778             Date 31Jan96               *
+      *                 081884             Date 17Jan95               *
+      *                 080060                  Date 06DEC94          *
+      *                 S01315                  Date 12DEC90          *
+      *                 E22736                  Date 12JUL90          *
+      *                 AK0016                  Date 02/02/90         *
+      *                 AK0005                  Date 10/10/89         *
+      *                 AK0003                  Date 10/10/89         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  098778 - Check if element 1 of LIN is blank during LR        *
+      *           processing to print the final five of the account   *
+      *           keys.                                               *
+     F*  081884 - NARRATIVE CODE IS NOW ALPHA - RECOMPILE             *
+      *  080060 - Check for overflow before outputting details        *
+      *           (Amendment to E22736)                               *
+      *  S01315 - Change to follow SD Standards                       *
+      *           Program name changed from SE4050 to AK0065.         *
+      *  E22736 - On last record output remaining contents of LIN     *
+      *           array.(cf AK0003 which was unfixed by AK0005 & 16)  *
+      *  AK0016 - AK005 causes pgm to miss line when overflow occurs. *
+      *  AK0005 - From 2nd page, 6th key on every page is missing.    *
+      *  AK0003 - Write out remaining contents of LIN array during    *
+      *           final processing so that last few keys are reported *
+      *                                                               *
+     F*****************************************************************
+     F*SE4050P1O***E**                  PRINTER      KINFDS PRDS          S01315
+     FAK0065P1O   E                    PRINTER      KINFDS PRDS           S01315
+     FXSEACKD IF  E                    DISK
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   99      End-of-file
+      *
+      *   SUBROUTINE DEFINITIONS
+      *   ----------------------
+      *
+      *   MAIN    Main processing control
+      *   OUTPUT  Output to report
+      *
+      *   ARRAYS
+      *   ------
+     E                    LIN         5 20               Holds a line for report
+     E                    CPY@    1   1 80                                S01315
+     E** Copyright array                                                  S01315
+     E*                                                                   S01315
+      *
+      *   Overflow line number and current print line in file info d.s.
+      *
+     IPRDS        DS
+     I                                       83  90 SFILE                 S01315
+     I                                    B 123 1240SFNUM                 S01315
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     I*                                                                   S01315
+     ICPYR@#      DS                                                      S01315
+     I                                        1  80 CPY@                  S01315
+     I                                        1  20 CPY@##                S01315
+     I** Data Structure for Compilation  - Copyright Insertion            S01315
+      *                                                                   S01315
+     ISDBANK    E DSSDBANKPD                                              S01315
+     I** Bank Details                                                     S01315
+     I*                                                                   S01315
+     IDSFDY     E DSDSFDY                                                 S01315
+     I** First DS for Access Programs, Short Data Structure               S01315
+     I*                                                                   S01315
+     C*****************************************************************   S01315
+      *  Initial processing - write report header
+      *                     - initialise count fields
+      *                                                                   S01315
+     C** Use access program AOBANKR0 to retrieve header details           S01315
+     C*                                                                   S01315
+     C                     CALL 'AOBANKR0'                                S01315
+     C                     PARM '*DBERR ' @RTCD   7                       S01315
+     C                     PARM '*FIRST ' @OPTN   7                       S01315
+     C           SDBANK    PARM SDBANK    DSFDY                           S01315
+     C*                                                                   S01315
+     C**  Ensure report spool file recorded by RCF                        S01315
+     C*                                                                   S01315
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01315
+     C*                                                                   S01315
+     C                     CALL 'ZSFILE'                                  S01315
+     C                     PARM           SEQ     5                       S01315
+     C                     PARM *BLANKS   SENTY   3                       S01315
+     C                     PARM           SFILE                           S01315
+     C                     PARM           ZSNUM                           S01315
+     C                     PARM           ZSERR   1                       S01315
+     C*                                                                   S01315
+     C           ZSERR     IFEQ 'Y'                                       S01315
+     C*                                                                   S01315
+     C**  Error during ZSFILE processing, return to calling program       S01315
+     C*                                                                   S01315
+     C                     SETON                     U7U8LR               S01315
+     C                     RETRN                                          S01315
+     C                     END                                            S01315
+     C*                                                                   S01315
+     C** Write Header                                                     S01315
+     C*                                                                   S01315
+     C***********          WRITESE4050HF                                  S01315
+     C                     WRITEAK0065HF                                  S01315
+     C                     Z-ADD10        RQDLN1  20
+     C                     Z-ADD0         L       10
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         DCOUNT
+      *
+      ** Main processing
+      *
+     C                     EXSR MAIN
+      *
+      ** End - seton LR
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      *
+      ***MAIN*-*Reads*through*XSEACKD*and*writes*records*to*SE4050P1.**** S01315
+      *  MAIN - Reads through XSEACKD and writes records to AK0065P1.     S01315
+      *
+      * Calls : OUTPUT - Output records to report
+      *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C                     SETOF                     99
+      *
+     C***********1         SETLLXSEACKDF                                  081884
+     C           1         SETLLTSEACKDF                                  081884
+      *
+     C           *IN99     DOWEQ'0'
+     C***********          READ XSEACKDF                 99               081884
+     C                     READ TSEACKDF                 99               081884
+      *
+     C           *IN99     IFNE '1'
+     C                     EXSR OUTPUT
+     C                     ELSE
+     C           RCOUNT    DIV  5         @@@     60                      E22736
+     C                     MVR            @R      10                      E22736
+     C           @R        IFNE 0                                         E22736
+     C           LIN,1     ORNE *BLANKS                                   098778
+     C                     MOVE LIN,1     KEY1                            E22736
+     C                     MOVE LIN,2     KEY2                            E22736
+     C                     MOVE LIN,3     KEY3                            E22736
+     C                     MOVE LIN,4     KEY4                            E22736
+     C                     MOVE LIN,5     KEY5                            E22736
+      *                                                                   080060
+      * If overflow, write new page                                       080060
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  20                      080060
+     C           DIFLN1    IFLE RQDLN1                                    080060
+     C                     WRITEAK0065HF                                  080060
+     C                     END                                            080060
+     C***********          WRITESE4050DF                            E22736S01315
+      *                                                                   080060
+      * Write details                                                     080060
+     C                     WRITEAK0065DF                                  S01315
+     C                     END                                            E22736
+     C***********          WRITESE4050HF                                  S01315
+     C***********          WRITESE4050TF                                  S01315
+     C                     WRITEAK0065HF                                  S01315
+     C                     WRITEAK0065TF                                  S01315
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      *  OUTPUT - If key not flagged for deletion
+      *****************-*Output*record*to*SE4050P1.***                    S01315
+      *                - Output record to AK0065P1.                       S01315
+      *
+      * Called by : MAIN - Main Processing
+      *
+      *****************************************************************
+     C           OUTPUT    BEGSR
+      *
+     C           RECI      IFEQ 'D'
+     C                     ADD  1         RCOUNT  60
+      *
+      *   If LIN is not full, move a/c key to next element.
+      *
+     C           L         IFNE 5
+      *
+      *   Increment LIN index by 1.
+      *
+     C                     ADD  1         L
+     C                     MOVE ACKE      LIN,L
+      *
+      *   Otherwise do overflow check......
+      *
+     C                     ELSE
+     C           OFLLN1    SUB  PRTLN1    DIFLN1  20
+     C           DIFLN1    IFLE RQDLN1
+     C***********          WRITESE4050HF                                  S01315
+     C                     WRITEAK0065HF                                  S01315
+     C                     END                                            AK0016
+     ***                                                            AK0005AK0016
+     ***(Need to store 1st key of 2nd line at this point.)          AK0005AK0016
+     ***                                                            AK0005AK0016
+     **********************Z-ADD1         L                         AK0005AK0016
+     **********************MOVE ACKE      LIN,L                     AK0005AK0016
+      *
+      *   ......and if overflow not required, print a detail line and
+      *   set L to 1. Move next key to LIN,1.
+      *
+     C*********************ELSE                                           AK0016
+     C                     MOVE LIN,1     KEY1
+     C                     MOVE LIN,2     KEY2
+     C                     MOVE LIN,3     KEY3
+     C                     MOVE LIN,4     KEY4
+     C                     MOVE LIN,5     KEY5
+     C***********          WRITESE4050DF                                  S01315
+     C                     WRITEAK0065DF                                  S01315
+      *                                                                   AK0005
+      ****f 1st line of a page has been written, need to ensure he  AK0005AK0016
+      ***next key read does not overwrite the one read in while ine AK0005AK0016
+      ***was being written.                                         AK0005AK0016
+      *                                                                   AK0005
+     C                     MOVEA*BLANKS   LIN                             AK0003
+     C***********L         IFEQ 1                                   AK0005AK0016
+     C*********************ADD  1         L                         AK0005AK0016
+     C*********************ELSE                                     AK0005AK0016
+     C                     Z-ADD1         L                               AK0005
+     C*********************END                                      AK0005AK0016
+     C                     MOVE ACKE      LIN,L
+     C*********************END                                            AK0016
+     C                     END
+      *
+     C                     ELSE
+     C                     ADD  1         DCOUNT  60
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

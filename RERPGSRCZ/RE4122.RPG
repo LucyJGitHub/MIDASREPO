@@ -1,0 +1,2200 @@
+     H        1
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                        *
+     F*                                                               *
+     F*  RE4122  -  Teller Crosses/Treasury Transaction               *
+     F*                                                               *
+     F*  Function:  This program accepts and validates cross teller   *
+     F*    (I/C)    transactions. Teller to treasure functions will   *
+     F*             also be accepted and validated, then the teller   *
+     F*             system master files will be updated.              *
+     F*             A transaction confirmation slip is generated      *
+     F*             during this transaction.                          *
+     F*                                                               *
+     F*  Called By: Retail Teller System Menu                         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 253892 (B          Date 28Apr08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8067            Date 05Sep05               *
+      *                 BUG7369            Date 07Jun05               *
+      *                 BUG3916            Date 04Aug04               *
+      *                 Bug3855            Date 03Aug04               *
+      *                 BUG2849            Date 06Jun04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRT012             Date 26Nov02               *
+      * Midas Release 4.01 -------------------------------------------*
+     F*                 200412             Date 22Nov01               *
+      *                 CRT005             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 194978             Date 28Jun01               *
+      *                 CRT006             Date 17Apr01               *
+      *                 156866             DATE 18Apr01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 103131             DATE 19SEP97               *
+     F*                 CRT002             DATE 01DEC95               *
+     F*                 098166             Date 11JAN96               *
+     F*                 093545             Date  8SEP95               *
+     F*                 092429             DATE 24AUG95               *
+     F*                 091241             DATE 17JUL95               *
+     F*                 CRT001  *CREATE    DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
+      *  253892 - Recompiled due to changes in display file RE4112DF  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8067 - Add Transaction Time (Recompile)                   *
+      *  BUG7369 - DB Error when taking menu "Teller treasury in"     *
+      *  BUG3916 - Very large postings from Cash In/Out. Incorporate  *
+      *            SC202495.                                          *
+      *  Bug3855 - Incorrect field definitions by CRT002              *
+      *  BUG2849 - CRE019 amendments for Cashier Interface (Recompile)*
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CRT012 - Recompiled due to changes in RBOITMI1               *
+     F*  200412 - If the cashier does not have enough cash for a      *
+     F*           teller out then send an error message.              *
+      *  CRT005 - Cashier Enhancement for Cash In/Cash Out            *
+      *  194978 - Recompiled due to changes in RTTWIDC1.              *
+      *  CRT006 - Cashier Reserve Transactions.                       *
+     F*  156866 - Recompile due to changes in PRTF/RE4122P1 --        *
+     F*           Change signature line title.                        *
+     F*  103131 - Recompile due to changes in ZSRSRC/RTTOTSC1         *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*           Recompile due to change in PF/TTRANPD.              *
+     F*  098166 - Correct various errors in profit centre.            *
+     F*  093545 - Recompile due to changes in PRTF/RE4122P1 --        *
+     F*           standardize pagesize.                               *
+     F*  092429 - Include RTS transaction narrative.                  *
+     F*  091241 - ATM Interface.  Recompiled.                         *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*  C R E A T I O N   P A R A M E T E R S
+     F*                                                               *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Teller crosses/treasury transaction')         *
+     F*                                                               *
+     F*****************************************************************
+     FTTRNT   UF  E           K        DISK         KINFSR *PSSR
+      ** Teller Trans. Control file
+     F                                              KCOMIT
+      *
+     F***TTRANPD O   E                    DISK         KINFSR *PSSR                           CRT005
+     FTTRANPD O   E                    DISK         KINFSR *PSSR      UC                      CRT005
+      ** Teller Trans. Details file
+     F                                              KCOMIT
+      *
+     F***TTRANPT UF  E                    DISK         KINFSR *PSSR                           CRT005
+     FTTRANPT UF  E                    DISK         KINFSR *PSSR      UC                      CRT005
+      ** Teller Trans. Trailer file
+     F                                              KCOMIT
+      *
+     F***RE4122DFCF  E                    WORKSTN      KINFSR *PSSR                           CRT005
+     FRE4122DFCF  E                    WORKSTN      KINFSR *PSSR      UC                      CRT005
+      ** Display file - Teller crosses/treasury transaction
+      *
+     FTTNARPD O   E                    DISK         KINFSR *PSSR
+      ** Teller transfer/cross narratives file
+     F                                              KCOMIT
+      *
+     FRE4122P1O   E                    PRINTER                        UC
+      ** Spool file for teller cross advices
+     F/COPY WNCPYSRC,RE4122F001
+      *                                                                                       CRT005
+     F/COPY ZSRSRC,RBWLOGF1                                                                   CRT005
+      *                                                                                       CRT005
+     F/COPY ZSRSRC,RBLDTLF1                                                                   CRT005
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F* F U N C T I O N   O F   I N D I C A T O R S                   *
+     F*                                                               *
+     F*  KC  -  Exit Program                                          *
+     F*  KE  -  Refresh Screen                                        *
+     F*                                                               *
+     F*  01  -  Help                                                  *
+     F*                                                               *
+     F*  10  -  Message Subfile End Indicator (SFLEND)                *
+     F*                                                               *
+     F*  11  -  Error in field SCCY                                   *
+     F*  12  -  Error in field SAMT                                   *
+     F*  13  -  Error in field STLID                                  *
+     F*  14  -  Error in field SDEPC                                  *
+     F*  15  -  Error in field SPRFC                                  *
+     F*  16  -  Profit Centre used                                    *
+     F*                                                               *
+     F*  20  -  Terminal errors found                                 *
+     F*  21  -  Warning  errors found                                 *
+     F*                                                               *
+     F*  25  -  Teller cross - narrative field used                   *
+     F*  26  -  Error in SNARR - Narrative                            *
+     F*                                                               *
+     F*  30  -  Teller cross in                                       *
+     F*  31  -  Teller cross out                                      *
+     F*                                                               *
+     F*  50  -  Invalid input indicator                               *
+     F*  69  -  General error indicator                               *
+     F*                                                               *
+     F*  70  -  General Indicator Used For CHAIN                      *
+     F*                                                               *
+     F*  U7+U8  Set on if database error occurs                       *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ADVICE - Print teller cross advice                           *
+     F*  DBERR  - Database Error Handling                             *
+     F*  DSPFMT - Display screen formats                              *
+     F*  FIRST  - Initial Processing                                  *
+     F*  IFLDS  - Initialize screen/work fields                       *
+     F*  INT01  - Initialise error indicators                         *
+     F*  LAST   - Final processing - terminate pgm.                   *
+     F*  PCMTXT - Prepare comit text                                  *
+     F*  RFRESH - Refresh screen                                      *
+     F*  SCRINP - Detail screen input                                 *
+     F*  SNDMSG - Send program message parameters                     *
+     F*  UPDRTN - Control rtn. for updates                            *
+     F*  UPTRL  - Update Control Trailer Record                       *
+     F*  VALAMT - Validate amount                                     *
+     F*  VALDET - Validate Details                                    *
+     F*  VALFMT - Validate input formats                              *
+     F*  WRTLPD - Write TELIDPD Record                                *
+     F*  *PSSR  - Program error                                       *
+     F*                                                               *
+     F*  Standard RTS Subroutines                                     *
+     F*                                                               *
+     F*  RTCASH - Excess cash check                                   *
+     F*  RTTCCY - Teller currency conditions check                    *
+     F*  RTTOTS - Teller total updates                                *
+     F*  RTTWID - Teller workstation conditions check                 *
+     F*                                                               *
+     F*  Standard MIDAS Subroutines                                   *
+     F*                                                               *
+     F*  ZALIGN - Validate amount fields                              *
+     F*  ZFRPED - Format and edit amount field                        *
+     F*  ZTNLU1 - Access dataarea for next transaction no.            *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250- Clear Message Queue                                 *
+     F*  SCC0240- Send Message to program queue                       *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+     E                    @TXT    1   4 80                                                    CRT005
+      *                                                                                       CRT005
+     E/COPY ZSRSRC,RBMODTE1                                                                   CRT005
+      ** Array for SR.MOVDET                                                                  CRT005
+      *                                                                                       CRT005
+     E                    @T         18  8
+      ** Terminal message codes array
+      *
+     E                    @W         18  8
+      ** Warning message codes array
+      *
+      /COPY ZSRSRC,ZALIGNZ1
+      ** Array for both SR.ZALIGN AND SR.ZEDIT
+      *
+      /COPY ZSRSRC,ZFRPEDZ1
+      ** Array for SR.ZFRPED
+      *
+     E                    @CY        24  3
+      ** Teller currencies array
+      *
+     E/COPY ZSRSRC,RBLDTLE1                                                                   CRT005
+      ** Array for SR.LODTLR                                                                  CRT005
+      *                                                                                       CRT005
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     ITTRNTM2F
+      ** Renamed fields in PF/TTRNTM2
+     I              NATN                            TTNATN
+      *
+     ITTRANPTF
+      ** Renamed fields in PF/TTRANPT
+     I              TBTN                            TRTBTN
+      *
+      *
+      /COPY ZSRSRC,RTTOTSI1
+      ** Multiple occurrence data structures for SR.RTTOTS
+      *
+      /COPY ZSRSRC,ZTNLU1Z1
+      **  Data structure to update last transaction number
+      *
+      /COPY ZSRSRC,ZFRPEDZ2
+      ** Data structure for SR.ZFRPED
+      *                                                                                       CRT005
+     I/COPY WNCPYSRC,REH00350
+     I/COPY ZSRSRC,RBOITMI1                                                                   CRT005
+     I/COPY WNCPYSRC,REH00351
+      *                                                                                       CRT005
+     I/COPY ZSRSRC,RBWLOGI1                                                                   CRT005
+      *                                                                                       CRT005
+     I/COPY ZSRSRC,RBMODTI1                                                                   CRT005
+      *                                                                                       CRT005
+     I/COPY ZSRSRC,RBLDTLI1                                                                   CRT005
+      *                                                                                       CRT005
+     I            DS                              5
+      ** Data structure to hold key fields of LF/TTRNT
+      *
+     I                                        1   5 @TTRNT
+     I                                        1   1 KTBRI
+     I                                        2   4 KTBID
+     I                                        5   5 KRCTP
+      *
+      *
+      *
+     I@AMTDS      DS                             14
+      ** Data structure to hold amount(SAMT) returned by zalign
+     I                                        1  14 @SAMT
+      *
+     I@@NARR      DS                             30
+      ** Data structure to setup narrative for file
+     I                                        1   50@@TBTN
+     I                                        6   6 @@SLSH
+     I                                        7   9 @@TBID
+     I                                       10  10 @@UNDS
+     I                                       11  30 SNARR
+      *
+      *
+     I            DS                             15
+      ** Data structure to redefine amt.required for SR.rtcash
+     I                                        1  150@TAMT
+     I                                        1  150@TNAM
+      *                                                                                       CRT005
+     I            DS                                                                          CRT005
+      ** Data structure to hold string constants for QCMDEXC                                  CRT005
+      *                                                                                       CRT005
+     I                                        1  80 @CMD                                      CRT005
+     I                                       30  30 @BRI                                      CRT005
+     I                                       31  33 @BID                                      CRT005
+      *                                                                                       CRT005
+     I            DS                                                                          CRT005
+      ** Data structure to hold string constants for QCMDEXC                                  CRT005
+      *                                                                                       CRT005
+     I                                        1  80 @CMDT                                     CRT005
+     I                                       30  30 @BRIT                                     CRT005
+     I                                       31  33 @BIDT                                     CRT005
+      *
+     ICMTTXT      DS                             61
+      *
+      **  COMIT TEXT
+     I                                        1   50@NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  34 USRIDX
+     I                                       35  37 SCCY
+     I                                       35  37 @CCY
+     I                                       38  51 SAMT
+     I                                       52  54 SDEPC
+     I                                       55  57 STLID
+     I                                       58  61 SPRFC
+      *
+     I            DS                             72
+      ** Data structure to redefine currency array
+     I                                        1  72 CCYR1
+     I                                        1  72 @CY
+     I**
+     IZMUSER      DS                             17
+     I** Data area of menu user
+     I                                        1  10 USRPRF
+      *
+     IPSDS       SDS
+      **  Program Status Data Structure
+      *
+     I                                        1  10 @PGM
+      **  Field containing Program name
+     I                                      244 253 @JOB
+      **  Field containing Workstation ID
+     I                                      254 263 @USER
+      **  Field Containing User ID
+      *
+      *
+     ILDA         DS                            256
+      **  Local data area for data base errors.
+     I                                        1   3 ERTLID
+     I                                       11  20 ERTWID
+     I                                       21  30 ERWSID
+      *
+      **  Field combining the following fields
+     I                                      134 183 DBLOT
+      **  Name of database file in error
+     I                                      134 141 DBFILE
+      **  Key value causing database error
+     I                                      142 170 DBKEY
+      **  Name of program causing database error
+     I                                      171 180 DBPGM
+      **  Number of database error
+     I                                      181 1830DBASE
+      *
+     IRTSDTA     UDS                            256
+      **  Job dataarea data structure
+      *
+     I                                        1   3 PTLID
+     I                                        4   6 PTLBC
+     I                                        7   7 PSPVI
+     I                                        8  32 POVIN
+     I                                    P  33  390PCHTL
+     I                                    P  40  460PNCTL
+     I                                       47  76 PTLNM
+     I                                       77  800PTLMG
+     I                                       81  840PTLSL
+     I                                       85  890PTLTO
+     I                                       90  92 PDEPC
+      *                                                                                       CRT005
+     ITTIME       DS                             12                                           CRT005
+      ** Incoming transaction for Transfer Cash In/Cash Out                                   CRT005
+      *                                                                                       CRT005
+     I                                        1   2 WTHR                                      CRT005
+     I                                        3   4 WTMN                                      CRT005
+     I                                        5   6 WTSS                                      CRT005
+     I                                        1   60WTIME                                     CRT005
+      *                                                                                       CRT005
+     I                                        7   8 WDT1                                      CRT005
+     I                                        9  10 WDT2                                      CRT005
+     I                                       11  12 WDT3                                      CRT005
+     I                                        7  120WDATE                                     CRT005
+      *                                                                                       CRT005
+     I                                        1  120WTMDS                                     CRT005
+      *                                                                                       CRT005
+     IREINTR      DS                                                                          CRT005
+      ** Incoming transaction for Transfer Cash In/Cash Out                                   CRT005
+      *                                                                                       CRT005
+     I                                        1   4 RXMSTY                                    CRT005
+     I                                        5   8 RXBRNM                                    CRT005
+     I                                        9  24 RXUSID                                    CRT005
+     I                                       25  30 RXCMSQ                                    CRT005
+     I                                       31 112 RXFIL1                                    CRT005
+     I                                      113 113 RXFWST                                    CRT005
+     I                                      114 116 RXCCY1                                    CRT005
+     I                                      117 127 RXTRA1                                    CRT005
+     I                                      128 143 RXTOFR                                    CRT005
+     I                                      144 157 RXTRN1                                    CRT005
+     I/COPY WNCPYSRC,REH00298
+     I                                      317 319 RXSPCD                                    CRT005
+     I                                     10041004 RXACKF                                    CRT005
+      *                                                                                       CRT005
+     IREOUTR      DS                                                                          CRT005
+      ** Outgoing transaction for Transfer Cash In/Cash Out                                   CRT005
+      *                                                                                       CRT005
+     I                                        1   4 RYMSTY                                    CRT005
+     I                                        5  24 RYFIL1                                    CRT005
+     I                                       25  28 RYWKID                                    CRT005
+     I                                       29  29 RYHMSS                                    CRT005
+     I                                       30  33 RYHMSI                                    CRT005
+     I                                       34 111 RYHSMS                                    CRT005
+     I                                      112 112 RYSNOF                                    CRT005
+     I                                      113 113 RYFPER                                    CRT005
+     I                                      114 116 RYCCY1                                    CRT005
+     I                                      117 127 RYAMT1                                    CRT005
+     I                                      128 143 RYTOFR                                    CRT005
+     I                                      144 157 RYTRN1                                    CRT005
+     I/COPY WNCPYSRC,REH00299
+      *                                                                                       CRT005
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I              BJMRDT                          SRUNA
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** Currency file Details
+     I*
+     ISDDEPT    E DSSDDEPTPD
+     I** Department Codes Details
+     I*
+     ISDRETR    E DSSDRETRPD
+     I** Retail Transaction Types Details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I** General Ledger Details
+     I              BKPRCU                          PFCU
+     I              BKPCDU                          PFCD
+     I*
+     ISDPRFM    E DSSDPRFMPD
+     I** Profit Centre Default Matrix Retrieval Index
+     I*
+     ISDPRFC    E DSSDPRFCPD
+     I** Profit Centre Details
+     I*
+     ISDTELD    E DSSDTELDPD
+     I** Teller ID Details
+     I*
+     ISDFNCD    E DSSDFNCDPD
+     I** Function Code  Details
+     I*
+      *                                                                                       CRT005
+     ISCSARD    E DSSCSARDPD                                                                  CRT005
+      ** External DS for Switchable Features                                                  CRT005
+      *                                                                                       CRT005
+     ISDBAII    E DSSDBAIIPD                                                                  CRT005
+      ** External DS for Cashier Interface ICD                                                CRT005
+     I*                                                                                       200412
+     ISDBRCH    E DSSDBRCHPD                                                                  200412
+     I** Branch Code Details                                                                  200412
+     I*                                                                                       200412
+      *                                                                                       200412
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for access programs, Short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I** Second DS for access programs, Long data structure
+      *
+     I/COPY WNCPYSRC,REH00300
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Control Process                           *
+      *                                                               *
+      * CALLS      FIRST  - Initial Processing                        *
+      *            LAST   - Final Processing                          *
+      *            INT01  - Initialise error indicators               *
+      *            SCRINP - Detail screen input                       *
+      *                                                               *
+      * CALLED BY         -                                           *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      ** Initial processing
+     C                     EXSR FIRST
+      *
+      ** Do while cmd/3 is not pressed
+     C           *INKC     DOWEQ'0'
+      *
+      ** Perform detail screen input
+     C                     EXSR SCRINP
+      *
+     C                     END
+      *
+      **  Final Processing
+     C                     EXSR LAST
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SCRINP - Detail screen input                       *
+      *                                                               *
+      * CALLS      DSPFMT - Display screen formats                    *
+      *            RFRESH - Refresh screen                            *
+      *            VALFMT - Validate input formats                    *
+      *            LAST   - Final processing - terminate pgm.         *
+      *            UPDRTN - Update control routine                    *
+      *                                                               *
+      * CALLED BY  MAIN   - Control Process                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SCRINP    BEGSR                           ** SCRINP **
+      *
+      ** Do while input not valid
+     C           *IN50     DOWEQ'1'
+      *
+      ** Display appropriate screen format depending on function code
+     C                     EXSR DSPFMT
+      *
+      ** Process the input depending on the key pressed
+      *
+      ** If cmd/3 is pressed - terminate the program
+     C           *INKC     CASEQ'1'       LAST
+      *
+      ** If cmd/5 is pressed - refresh the screen & redisplay appr.scrn
+     C           *INKE     CASEQ'1'       RFRESH
+      *
+      ** If enter key is pressed - validate the screen input
+     C                     CAS            VALFMT
+      *
+     C                     END
+      *
+      ** Error on PC mode processing                                                          CRT005
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C           PMODE     ANDEQ'P'                                                           CRT005
+     C           *IN50     ANDEQ*ON                                                           CRT005
+     C                     MOVE *ON       *IN20                                               CRT005
+     C                     LEAVE                                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     END
+      *
+      ** If no terminal errors - perform transaction update
+     C           *IN20     IFEQ '0'
+     C                     EXSR UPDRTN
+     C                     END
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C           PMODE     ANDEQ'P'                                                           CRT005
+     C                     EXSR SRMOVD                                                        CRT005
+     C                     EXSR SRMVBY                                                        CRT005
+     C                     CLEARP@QDS                                                         CRT005
+     C           RXMSTY    IFEQ 'OITM'                                                        CRT005
+     C           RXSPCD    ANDEQ'251'                                                         CRT005
+     C/COPY WNCPYSRC,REH00301
+     C                     MOVELREPOIO    P@QDS                                               CRT005
+     C                     ELSE                                                               CRT005
+     C/COPY WNCPYSRC,REH00302
+     C                     MOVELREOUTR    P@QDS                                               CRT005
+     C                     ENDIF                                                              CRT005
+     C                     EXSR SDQMS                                                         CRT005
+     C                     EXSR DQERR                                                         CRT005
+     C                     MOVE RACMSQ    WCMSQ                                               CRT005
+     C                     MOVELRABRNM    WBRCA                                               CRT005
+     C                     MOVELRAUSID    WUSID                                               CRT005
+     C           RXMSTY    IFEQ 'OITM'                                                        CRT005
+     C           RXSPCD    ANDEQ'251'                                                         CRT005
+     C                     MOVELREPOIO    WCMSG                                               CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVELREOUTR    WCMSG                                               CRT005
+     C                     ENDIF                                                              CRT005
+     C                     EXSR WRLOG                                                         CRT005
+     C                     EXSR PCMTXT                                                        CRT005
+     C           CMTTXT    COMIT                                                              CRT005
+     C                     MOVEL*BLANKS   REPOIO                                              CRT005
+     C                     MOVEL*BLANKS   REOUTR                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *
+      ** Perform initialisation
+     C                     EXSR RFRESH
+      *
+     C                     ENDSR
+      *****************************************************************                       CRT005
+      /EJECT                                                                                  CRT005
+      *****************************************************************                       CRT005
+      *                                                               *                       CRT005
+      * SRMOVD  -  Move Details to Send to Outgoing DataQ             *                       CRT005
+      *                                                               *                       CRT005
+      * Called By: SCRINP subroutine                                  *                       CRT005
+      *                                                               *                       CRT005
+      * Calls: None                                                   *                       CRT005
+      *                                                               *                       CRT005
+      *****************************************************************                       CRT005
+     C           SRMOVD    BEGSR                                                              CRT005
+      *                                                                                       CRT005
+      ** Message Type and Host Message Id.                                                    CRT005
+      *                                                                                       CRT005
+     C                     MOVELRAMSTY    RBMSTY                                              CRT005
+     C                     MOVEL*BLANKS   RBHMSI                                              CRT005
+      *                                                                                       CRT005
+      ** Terminal or Warning Errors Exist.                                                    CRT005
+      *                                                                                       CRT005
+     C           @TI       IFGT 0                                                             CRT005
+     C           @WI       ORGT 0                                                             CRT005
+      *                                                                                       CRT005
+      ** Convert warning messages to Cashier Format                                           CRT005
+      *                                                                                       CRT005
+     C                     MOVEA*BLANKS   WMS1                                                CRT005
+     C                     MOVEA*BLANKS   WMS2                                                CRT005
+     C                     MOVEASMSG1     WMS1                                                CRT005
+     C                     Z-ADD1         X       10                                          CRT005
+      *                                                                                       CRT005
+     C           WMS1,X    DOWNE*BLANKS                                                       CRT005
+     C           X         ANDLE7                                                             CRT005
+      *                                                                                       CRT005
+     C           WMS1,X    LOKUPTABC1     TABC2          25                                   CRT005
+     C           *IN25     IFEQ '1'                                                           CRT005
+     C                     MOVELTABC2     WMS2,X                                              CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVEL'CDNF'    WMS2,X                                              CRT005
+     C                     ENDIF                                                              CRT005
+     C                     ADD  1         X                                                   CRT005
+      *                                                                                       CRT005
+     C                     ENDDO                                                              CRT005
+      *                                                                                       CRT005
+     C                     SUB  1         X                                                   CRT005
+     C                     MOVE X         WWNUM                                               CRT005
+     C                     MOVELWHSMS     RBHSMS                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVEL'W'       RBHMSS                                              CRT005
+     C                     MOVEL'N'       WSUCM                                               CRT005
+      *                                                                                       CRT005
+     C           WFWST     IFEQ 'Y'                                                           CRT005
+     C                     MOVEL'S'       RBFPER                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Errors exist before detail screen appears.                                           CRT005
+      *                                                                                       CRT005
+     C           *IN50     IFEQ '1'                                                           CRT005
+     C                     MOVEL'E'       RBHMSS                                              CRT005
+      *                                                                                       CRT005
+     C           WFWST     IFEQ 'Y'                                                           CRT005
+     C                     MOVEL'E'       RBFPER                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVE @MSGID    RBHMSI                                              CRT005
+     C                     MOVEL*BLANKS   @MSGDT                                              CRT005
+     C                     MOVEL'N'       WSUCM                                               CRT005
+      *                                                                                       CRT005
+     C                     EXSR RTVMSG                                                        CRT005
+     C                     MOVEL@MSGTX    RBHSMS                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Valid record received.                                                               CRT005
+      *                                                                                       CRT005
+     C           @TI       IFEQ 0                                                             CRT005
+     C           @WI       ANDEQ0                                                             CRT005
+     C           *IN50     ANDEQ'0'                                                           CRT005
+      *                                                                                       CRT005
+      ** Completed Severity.  Transaction Reference should be comprised                       CRT005
+      ** of the Teller Id and Transaction Number.                                             CRT005
+      *                                                                                       CRT005
+     C                     MOVEL'C'       RBHMSS                                              CRT005
+      *                                                                                       CRT005
+     C           WFWST     IFEQ 'Y'                                                           CRT005
+     C                     MOVEL'Y'       RBFPER                                              CRT005
+     C                     MOVEL*BLANK    RBHMSS                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVELPTLID     @WRK8   8                                           CRT005
+     C                     MOVE TBTN      @WRK8                                               CRT005
+     C                     MOVEL@WRK8     RBTRN1                                              CRT005
+     C                     MOVEL'Y'       WSUCM                                               CRT005
+     C                     TIME           WTMDS                                               CRT005
+     C           WTHR      CAT  ':'       WA                                                  CRT005
+     C           WTMN      CAT  ':'       WB                                                  CRT005
+     C           WA        CAT  WB        WC                                                  CRT005
+     C           WC        CAT  WTSS      WCMTM                                               CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVEL'DS'      WSTAT                                               CRT005
+     C                     TIME           WTMDS                                               CRT005
+     C           WTHR      CAT  ':'       WA                                                  CRT005
+     C           WTMN      CAT  ':'       WB                                                  CRT005
+     C           WA        CAT  WB        WC                                                  CRT005
+     C           WC        CAT  WTSS      WSTTM                                               CRT005
+     C                     MOVELRABRNM    WBRCA                                               CRT005
+      *                                                                                       CRT005
+     C                     MOVE RACCY1    RBCCY1                                              CRT005
+     C                     MOVE RATRA1    RBAMT1                                              CRT005
+     C                     MOVE RXTOFR    RYTOFR                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDSR                                                              CRT005
+      *                                                                                       CRT005
+      *****************************************************************                       CRT005
+      /EJECT                                                                                  CRT005
+      *****************************************************************                       CRT005
+      *                                                               *                       CRT005
+      * SRMVBY  -  Move Details from RB to RY fields                  *                       CRT005
+      *                                                               *                       CRT005
+      * Called By: SCRINP subroutine                                  *                       CRT005
+      *                                                               *                       CRT005
+      * Calls: None                                                   *                       CRT005
+      *                                                               *                       CRT005
+      *****************************************************************                       CRT005
+     C           SRMVBY    BEGSR                                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVELRBMSTY    RYMSTY                                              CRT005
+     C                     MOVELRBWKID    RYWKID                                              CRT005
+     C                     MOVELRBHMSS    RYHMSS                                              CRT005
+     C                     MOVELRBHMSI    RYHMSI                                              CRT005
+     C                     MOVELRBHSMS    RYHSMS                                              CRT005
+     C                     MOVELRBSNOF    RYSNOF                                              CRT005
+     C                     MOVELRBFPER    RYFPER                                              CRT005
+     C                     MOVELRBCCY1    RYCCY1                                              CRT005
+     C                     MOVE RBAMT1    RYAMT1                                              CRT005
+     C                     MOVELRBTRN1    RYTRN1                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDSR                                                              CRT005
+      *                                                                                       CRT005
+      *****************************************************************                       CRT005
+      /EJECT                                                                                  CRT005
+      *****************************************************************                       CRT005
+      *                                                               *                       CRT005
+      * SRMVXA  -  Move Details from RX to RA fields                  *                       CRT005
+      *                                                               *                       CRT005
+      * Called By: DSPFMT subroutine                                  *                       CRT005
+      *                                                               *                       CRT005
+      * Calls: None                                                   *                       CRT005
+      *                                                               *                       CRT005
+      *****************************************************************                       CRT005
+     C           SRMVXA    BEGSR                                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVELRXMSTY    RAMSTY                                              CRT005
+     C                     MOVELRXBRNM    RABRNM                                              CRT005
+     C                     MOVELRXUSID    RAUSID                                              CRT005
+     C                     MOVELRXCMSQ    RACMSQ                                              CRT005
+     C                     MOVELRXFWST    RAFWST                                              CRT005
+     C                     MOVELRXCCY1    RACCY1                                              CRT005
+     C                     Z-ADD0         RATRA1                                             BUG3916
+     C                     MOVE RXTRA1    RATRA1                                              CRT005
+     C                     MOVELRXTRN1    RATRN1                                              CRT005
+     C                     MOVELRXSPCD    RASPCD                                              CRT005
+     C                     MOVELRXACKF    RAACKF                                              CRT005
+     C/COPY WNCPYSRC,REH00303
+      *                                                                                       CRT005
+     C                     ENDSR                                                              CRT005
+      *                                                                                       CRT005
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DSPFMT - Display screen formats                    *
+      *                                                               *
+      * CALLS      SCC0250- Clear Message Queue                       *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DSPFMT    BEGSR                           ** DSPFMT **
+      *                                                                                       CRT005
+      ** Access display file when in interactive mode                                         CRT005
+      *                                                                                       CRT005
+     C                     SELEC                                                              CRT005
+     C           PMODE     WHEQ 'I'                                                           CRT005
+      *
+      ** Display message subfile control record
+     C                     WRITERE4122C0
+      *
+      ** Display appropriate screen format depending on function code
+      *
+      ** If function code is 00E - teller Xin
+     C           PFNCD     IFEQ '00E'
+     C                     EXFMTRE4122F1
+     C                     END
+      *
+      ** If function code is 00F - teller Xout
+     C           PFNCD     IFEQ '00F'
+     C                     EXFMTRE4122F2
+     C                     END
+      *
+      ** If function code is 0JE - teller treasury in
+     C           PFNCD     IFEQ '0JE'
+     C                     EXFMTRE4122F3
+     C                     END
+      *
+      ** If function code is 0JF - teller treasury out
+     C           PFNCD     IFEQ '0JF'
+     C                     EXFMTRE4122F4
+     C                     END
+      *                                                                                       CRT005
+      ** Use data queue when in PC mode                                                       CRT005
+      *                                                                                       CRT005
+     C           CRT005    WHEQ 'Y'                                                           CRT005
+     C           PMODE     ANDEQ'P'                                                           CRT005
+     C                     MOVEL*BLANKS   REINTR                                              CRT005
+     C                     EXSR RDQMS                                                         CRT005
+     C                     EXSR DQERR                                                         CRT005
+     C/COPY WNCPYSRC,REH00304
+      *                                                                                       CRT005
+     C                     MOVE P@QDR     REINTR                                              CRT005
+     C/COPY WNCPYSRC,REH00305
+      *                                                                                       CRT005
+     C           RXMSTY    IFEQ 'OITM'                                                        CRT005
+     C           RXSPCD    ANDEQ'251'                                                         CRT005
+     C                     MOVE P@QDR     REPOII                                              CRT005
+     C/COPY WNCPYSRC,REH00306
+     C                     ELSE                                                               CRT005
+     C                     EXSR SRMVXA                                                        CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C           RAMSTY    IFNE '*END'                                                        CRT005
+     C                     MOVELRAFWST    WFWST   1                                           CRT005
+     C                     MOVELRACCY1    SCCY                                                CRT005
+     C                     MOVE RATRA1    SAMT                                                CRT005
+     C                     MOVE *BLANK    STLID                                               CRT005
+     C/COPY WNCPYSRC,REH00307
+      *                                                                                       CRT005
+     C           PFNCD     IFEQ '00E'                                                         CRT005
+     C           PFNCD     OREQ '00F'                                                         CRT005
+     C                     MOVELRXTOFR    STLID                                               CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     CLEARLOGDS                                                         CRT005
+     C                     CLEARWCMSG                                                         CRT005
+      *                                                                                       CRT005
+     C                     MOVE RACMSQ    WCMSQ                                               CRT005
+     C                     MOVELRABRNM    WBRCA                                               CRT005
+     C                     MOVELRAUSID    WUSID                                               CRT005
+     C                     MOVE 'N'       WSUCM                                               CRT005
+     C                     MOVE 'DR'      WSTAT                                               CRT005
+     C                     TIME           WTMDS  120                                          CRT005
+      *                                                                                       CRT005
+     C           WTHR      CAT  ':'       WA      3                                           CRT005
+     C           WTMN      CAT  ':'       WB      3                                           CRT005
+     C           WA        CAT  WB        WC      6                                           CRT005
+     C           WC        CAT  WDT3      WSTTM   8                                           CRT005
+     C                     MOVE WSTTM     WRCTM   8                                           CRT005
+     C           WDT1      CAT  '/'       WA                                                  CRT005
+     C           WDT2      CAT  '/'       WB                                                  CRT005
+     C           WA        CAT  WB        WC                                                  CRT005
+     C           WC        CAT  WDT3      WRCDT   8                                           CRT005
+      *                                                                                       CRT005
+     C                     MOVELP@QDR     WCMSG                                               CRT005
+     C                     EXSR WRLOG                                                         CRT005
+     C                     EXSR PCMTXT                                                        CRT005
+      *                                                                                       CRT005
+     C           CMTTXT    COMIT                                                              CRT005
+     C                     MOVE *OFF      *INKC                                               CRT005
+     C                     MOVE *OFF      *INKE                                               CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVE *ON       *INKC                                               CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDSL                                                              CRT005
+      *
+      ** Clear program message queue and terminal & warning msg. lines
+     C                     CALL 'SCC0250'
+      *
+      ** Setof indicators conditioning display of warn. & term. errors
+     C                     SETOF                     2021
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RFRESH - Refresh screen                            *
+      *                                                               *
+      * CALLS      IFLDS  - Initialize screen/work fields             *
+      *            INT01  - Initialise error indicators               *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           RFRESH    BEGSR                           ** RFRESH **
+      *
+      ** Initialize all indicators
+     C                     EXSR INT01
+      *
+      ** Initialize screen/work fields
+     C                     EXSR IFLDS
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALFMT - Validate screen input                     *
+      *                                                               *
+      * CALLS      VALDET - Validate details                          *
+      *            RTTWID - Teller workstation conditions check       *
+      *            INT01  - Initialise error indicators               *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALFMT    BEGSR                           ** VALFMT **
+      *
+      ** Intialise error indicators
+     C                     EXSR INT01
+      *
+      ** Setof indicator for invalid input
+     C                     SETOF                     50
+      *
+     C                     Z-ADD0         @TI     20
+     C                     Z-ADD0         @WI     20
+     C                     MOVE *BLANKS   @W
+     C                     MOVE *BLANKS   @T
+      *
+      ** perform check for multiple sign on
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C           PMODE     IFEQ 'P'                                                           CRT005
+     C                     Z-ADD1         @J                                                  CRT005
+     C                     MOVEL@TLID     @@PTL                                               CRT005
+     C                     MOVELRAUSID    @TLID                                               CRT005
+     C                     MOVELPTLBC     @@TLB   3                                           CRT005
+     C           @TLID     IFNE @@PTL                                                         CRT005
+     C           @TLID     LOKUPWTL,@J                   60                                   CRT005
+     C           *IN60     IFEQ *ON                                                           CRT005
+     C           @J        OCUR TELDS                  60                                     CRT005
+     C           *IN60     IFEQ *OFF                                                          CRT005
+     C                     MOVELD@TLID    PTLID                                               CRT005
+     C                     MOVELD@TLBC    PTLBC                                               CRT005
+     C                     MOVELD@SPVI    PSPVI                                               CRT005
+     C                     MOVELD@OVRI    POVIN                                               CRT005
+     C**********           MOVELD@CHTL    PCHTL                                       CRT002 Bug3855
+     C**********           MOVELD@NCTL    PNCTL                                       CRT002 Bug3855
+     C                     Z-ADDD@CHTL    PCHTL                                              Bug3855
+     C                     Z-ADDD@NCTL    PNCTL                                              Bug3855
+     C                     MOVELD@DEPC    PDEPC                                               CRT005
+     C                     ENDIF                                                              CRT005
+     C                     ENDIF                                                              CRT005
+     C                     ENDIF                                                              CRT005
+     C                     MOVE PDEPC     SDEPC                                               CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVELPTLID     @TLID                                               CRT005
+      *                                                                                       CRT005
+      ** Default to account code defined in general ledger file SDGELRPD if teller            CRT005
+      ** over/under account code is blank. Do this only when the transaction                  CRT005
+      ** received has SPCode of '251' (Balance Cash).                                         CRT005
+      *                                                                                       CRT005
+     C**********           Z-ADD*ZERO     WACD1   40                                   CRT005 CGL029
+     C                     Z-ADD*ZERO     WACD1  100                                          CGL029
+      *                                                                                       CRT005
+     C           RXMSTY    IFEQ 'OITM'                                                        CRT005
+     C           RXSPCD    ANDEQ'251'                                                         CRT005
+     C           FUOUAC    IFEQ *ZERO                                                         CRT005
+     C                     MOVELBKACCD    WACD1                                               CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVELFUOUAC    WACD1                                               CRT005
+     C                     ENDIF                                                              CRT005
+     C                     ENDIF                                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     EXSR RTTWID
+      *
+      ** Perform validate details
+     C                     EXSR VALDET
+      *
+     C/COPY WNCPYSRC,RE4122C001
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            INT01  - Initialise error indicators               *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial Processing                        *
+      *            VALFMT - Validate screen input                     *
+      *            RFRESH - Refresh screen                            *
+      *                                                               *
+      *****************************************************************
+     C           INT01     BEGSR                           ** INT01  **
+      *
+      ** Setof screen conditioning & error indicators
+     C                     SETOF                     111213
+     C                     SETOF                     14
+     C                     SETOF                     26
+     C                     MOVE '0'       *IN15   1
+      *
+      ** Seton indicator for invalid input
+     C                     SETON                     50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALDET - Validate Details                          *
+      *                                                               *
+      * CALLS      SNDMSG - Send program message parameters           *
+      *            INT01  - Initialise error indicators               *
+      *            VALAMT - Validate amount                           *
+      *            RTCASH - Excess cash check                         *
+      *            RTTCCY - Teller currency conditions check          *
+      *                                                               *
+      * CALLED BY  VALFMT - Validate screen input                     *
+      *                                                               *
+      *****************************************************************
+     C           VALDET    BEGSR                           ** VALDET **
+      *
+      ** If currency code is blanks
+     C           SCCY      IFEQ *BLANKS
+     C                     SETON                     1150
+     C                     MOVEL'USR0076' @MSGID
+     C                     EXSR SNDMSG
+      *
+      ** otherwise Check whether currency is present in currency table
+     C                     ELSE
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           SCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** If record not found
+      ** Message - currency code not found
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     1150
+     C                     MOVEL'USR0049' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** Validate amount - only if currency code is valid
+     C           *IN11     IFEQ '0'
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C           PMODE     ANDEQ'P'                                                           CRT005
+     C                     MOVEL*BLANKS   ZFIELD                                              CRT005
+     C                     MOVE SAMT      ZFIELD                                              CRT005
+     C                     Z-ADDA6NBDP    ZADEC                                               CRT005
+     C                     EXSR ZEDIT                                                         CRT005
+     C                     MOVE ZFIELD    SAMT                                                CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     EXSR VALAMT
+     C                     END
+      *
+      ** If function code is 00E or 00F (teller crosses)- validate tell
+     C           PFNCD     IFEQ '00E'
+     C           PFNCD     OREQ '00F'
+      *
+      ** Check if teller id entered is blanks or zeros
+      ** message - Teller identifier must not be blanks or zeros
+     C           STLID     IFEQ *BLANKS
+     C           STLID     OREQ *ZEROS
+     C                     SETON                     1350
+     C                     MOVEL'USR0032' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      ** Check if record exists in teller id table - PF/SDTELDPD
+     C                     CALL 'AOTELDR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           STLID
+     C           SDTELD    PARM SDTELD    DSFDY
+      *
+      ** If record does not exist
+      ** message - teller identifier not found
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     1350
+     C                     MOVEL'USR0030' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** Check if teller id entered is same as teller signed on
+     C           STLID     IFNE *BLANKS
+     C           STLID     ANDNE*ZEROS
+     C           STLID     ANDEQPTLID
+     C                     SETON                     1350
+     C                     MOVEL'USR0077' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** Check if branch code is same as that of teller signed on
+     C           STLID     IFNE *BLANKS
+     C           STLID     ANDNE*ZEROS
+     C           FRTLBC    ANDNEPTLBC
+     C                     SETON                     1350
+     C                     MOVEL'USR0078' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** If department code is blanks
+      ** message - department code is required
+     C           SDEPC     IFEQ *BLANK
+     C                     SETON                     1450
+     C                     MOVEL'USR0055' @MSGID
+     C                     EXSR SNDMSG
+      *
+      ** Get department code details
+     C                     ELSE
+     C*
+     C                     CALL 'AODEPTR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           SDEPC
+     C           SDDEPT    PARM SDDEPT    DSFDY
+      *
+      ** If record not found
+      ** message - department code not found
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     1450
+     C                     MOVE 'USR0054' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+     C*
+     C*  Validate the input Profit Centre if entered
+     C*
+     C           PFCU      IFEQ 'Y'
+     C*
+     C           SPRFC     IFNE *BLANK
+     C                     MOVE *BLANKS   @KEY
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM SPRFC     @KEY    4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE 'USR1199' @MSGID
+     C                     MOVE '1'       *IN15
+     C                     MOVE '1'       *IN50
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C                     MOVE DSPCCD    SPRFC
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           PFCD      IFEQ 'Y'
+     C                     CALL 'AOPRFMR0'
+     C                     PARM *BLANKS   @RTC1   1
+     C                     PARM *BLANKS   @BOOK   2
+     C                     PARM A1RTTY    @TRPT   5
+     C                     PARM *BLANKS   @SUTP   2
+     C                     PARM PTLBC     @BRAN   3
+     C                     PARM SDEPC     @DEPT   3
+     C                     PARM USRPRF    @USRID 10
+     C                     PARM *BLANKS   @ACOF   2
+     C                     PARM *BLANKS   @CNUM   6
+     C                     PARM *BLANKS   @PRFC   4
+     C*
+     C                     SELEC
+     C           @RTC1     WHEQ '0'
+     C                     MOVE @PRFC     SPRFC
+     C                     MOVE '0'       *IN15                           098166
+     C           @RTC1     WHEQ '2'
+     C           @RTC1     OREQ '1'                                       098166
+     C                     MOVE @PRFC     SPRFC
+     C                     MOVE 'USR1199' @MSGID
+     C                     MOVE '1'       *IN15
+     C                     MOVE '1'       *IN50
+     C                     EXSR SNDMSG
+     C                     ENDSL
+      *                                                                   098166
+      **  Else, if default profit centre usage is off and profit centre   098166
+      **  is blank, then error.                                           098166
+      *                                                                   098166
+     C                     ELSE                                           098166
+     C                     MOVE 'USR1199' @MSGID                          098166
+     C                     MOVE '1'       *IN15                           098166
+     C                     MOVE '1'       *IN50                           098166
+     C                     EXSR SNDMSG                                    098166
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+      *
+      ** If there are no errors in validation
+     C           *IN50     IFEQ '0'
+      *
+      ** Check for any terminal condition
+     C                     EXSR RTTCCY
+      *
+      ** If an empty element is found? insert currency into array
+     C           *IN82     IFEQ '1'
+     C           @CY,@I    ANDEQ'   '
+     C                     MOVE SCCY      @CY,@I
+     C                     END
+      *
+      ** If it is an OUT transaction (func.code = 00F or 0JF)
+     C           PFNCD     IFEQ '00F'
+     C           PFNCD     OREQ '0JF'
+      *
+      ** Check for excess cash terminal conditions
+     C                     EXSR RTCASH
+      *
+     C           PMODE     IFEQ 'P'                                       200412
+     C           @TI       ANDNE0                                         200412
+     C           @T,@TI    ANDEQ'EXCESS'                                  200412
+     C                     SETON                     1250                 200412
+     C                     MOVEL'USR1198' @MSGID                          200412
+     C                     EXSR SNDMSG                                    200412
+     C                     ENDIF                                          200412
+      *
+     C                     END
+      *
+      ** If terminal error(s) exist
+     C           @TI       IFGT 0
+     C                     SETON                     2021
+     C                     MOVEA@T,1      SMSG1
+     C                     MOVEA@T,10     SMSG2
+      *
+     C                     ELSE
+      *
+      ** If warning error(s) exist and different from previous error(s)
+     C           @WI       IFGT 0
+     C                     MOVEA@W,1      SMSG1
+     C                     MOVEA@W,10     SMSG2
+     C                     SETON                     21
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            VALAMT - Validate amount                           *
+      *                                                               *
+      * CALLS      ZALIGN - Validate amount fields                    *
+      *            ZFRPED - Edit numeric field                        *
+      *            SNDMSG - Send program message parameters           *
+      *                                                               *
+      * CALLED BY  VALDET - Validate details                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALAMT    BEGSR                           ** VALAMT **
+      *
+      ** Check if amount field is blanks or zeros
+     C           SAMT      IFEQ *ZEROS
+     C           SAMT      OREQ *BLANKS
+     C                     SETON                     1250
+     C                     MOVE 'USR0008' @MSGID
+     C                     EXSR SNDMSG
+      *
+     C                     ELSE
+      *
+      ** Set up decimal values
+     C                     Z-ADDA6NBDP    ZADEC
+     C           13        SUB  A6NBDP    ZADIG
+      *
+      ** Align amount - and move it to numeric field
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE SAMT      ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    @TAMT  150
+      *
+      ** If error found?  Set up error message
+     C           *IN99     IFEQ '1'
+     C           ZFIELD    OREQ *ZERO
+     C                     SETON                     1250
+     C                     MOVE 'USR0008' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     END
+      *
+      ** If there are no errors - edit the amount field - insert dec.pt
+     C           *IN12     IFEQ '0'
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE @TAMT     ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE *BLANKS   @AMTDS
+     C                     MOVE *BLANKS   SAMT
+     C                     MOVE ZOUT22    @AMTDS
+     C                     MOVEL@SAMT     SAMT
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      * CALLS      WRTLPD - Write Teller transactions details         *
+      *            UPTRL  - Update Control Trailer Record             *
+      *            ZTNLU1 - Get Next Available Tran.Number            *
+      *            PCMTXT - Prepare comit text                        *
+      *            RTTOTS - Teller total updates                      *
+      *            SNDMSG - Send program message parameters           *
+      *            DBERR  - Database Error Handling                   *
+      *            ADVICE - Print teller cross advice                 *
+      *                                                               *
+      * CALLED BY  SCRINP - Detail screen input                       *
+      *                                                               *
+      *****************************************************************
+     C           UPDRTN    BEGSR                           ** UPDRTN **
+      *
+      ** Update next available transaction number
+     C                     EXSR ZTNLU1
+      *
+      ** Prepare commmitment control text
+     C                     EXSR PCMTXT
+      *
+      ** Move fields to key list.
+     C                     MOVEL'T'       KTBRI
+     C           PMODE     IFEQ 'I'                                                           CRT005
+     C                     MOVELPTLID     KTBID
+     C                     ELSE                                                               CRT005
+     C                     MOVEL@TLID     KTBID                                               CRT005
+     C                     ENDIF                                                              CRT005
+     C                     MOVEL'1'       KRCTP
+      *
+      ** Access teller controls - TTRNTM2 - to get transaction number
+     C           KLTRNT    CHAINTTRNTM2F             70
+      *
+     C/COPY WNCPYSRC,RE4122C006
+      ** Write Teller transaction details file
+     C                     EXSR WRTLPD
+      *
+     C/COPY WNCPYSRC,RE4122C002
+      ** Write Narrative file
+     C           *IN25     IFEQ '1'
+     C                     MOVEL'D'       RECI
+     C                     MOVEL'T'       TBRI
+     C                     MOVELPTLID     TBID
+     C                     MOVE TBTN      @@TBTN
+     C                     MOVE TBID      @@TBID
+     C           SNARR     IFNE *BLANKS
+     C                     MOVE @@NARR    TTNARR
+     C                     ELSE
+     C                     MOVE *BLANKS   TTNARR
+     C                     END
+     C                     WRITETTNARPDF
+     C                     END
+      ** Update trailer
+     C                     EXSR UPTRL
+      *
+      ** Access teller controls - TTRNTM2 -
+     C                     MOVEL'1'       KRCTP
+     C           KLTRNT    CHAINTTRNTM2F             70
+      *
+      ** If record not found - database error
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD1         DBASE            ** DB ERR 01 **
+     C                     MOVE 'TTRNTM2' DBFILE           ***************
+     C                     MOVEL@TTRNT    DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+      ** Increment next available transaction number
+     C                     ADD  1         TTNATN
+      *
+      ** Use transaction ccy to look up currencies array
+     C                     Z-ADD1         @I      20
+     C           @CCY      LOKUP@CY,@I                   82
+      *
+      ** If element not found
+     C           *IN82     IFEQ '0'
+      *
+      ** Check if an empty element is present in array
+     C           '   '     LOKUP@CY,@I                   82
+      *
+      ** If empty element is present
+     C           *IN82     IFEQ '1'
+     C                     MOVEA@CCY      @CY,@I
+     C                     END
+      *
+     C                     END
+      *
+      ** Update the record
+     C                     UPDATTTRNTM2F
+      *
+     C                     END
+      *
+      ** Access teller controls - TTRNTM3 -
+     C                     MOVEL'2'       KRCTP
+     C           KLTRNT    CHAINTTRNTM3F             70
+      *
+      ** If record not found - database error
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                        ***************
+     C                     Z-ADD2         DBASE            ** DB ERR 03 **
+     C                     MOVE 'TTRNTM3' DBFILE           ***************
+     C                     MOVEL@TTRNT    DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+      ** Obtain currency totals
+     C                     EXSR RTTOTS
+     C                     Z-ADDTBTN      TNLU
+     C                     Z-ADDTBTN      TTLU                                                CRT006
+      *
+      ** Update the record
+     C                     UPDATTTRNTM3F
+      *
+      ** Print the advice if teller cross
+     C           PFNCD     IFEQ '00E'
+     C           PFNCD     OREQ '00F'
+     C                     OPEN RE4122P1
+     C                     WRITEDETAIL
+     C                     CLOSERE4122P1
+     C                     END
+     C/COPY WNCPYSRC,RE4122C003
+      *
+     C                     END
+      *
+      ** End of commitment cycle
+     C           CMTTXT    COMIT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      ** SR.RTTOTS Subroutine
+      /COPY ZSRSRC,RTTOTSC1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRTLPD - Write Teller transactions details         *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      *****************************************************************
+     C           WRTLPD    BEGSR                           ** WRTLPD **
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+      *                                                                                       CRT005
+      ** If not the first time, delete previous overrides                                     CRT005
+      *                                                                                       CRT005
+     C           PMODE     IFEQ 'P'                                                           CRT005
+      *                                                                                       CRT005
+     C           @CMD      IFNE *BLANKS                                                       CRT005
+     C                     MOVEL*BLANKS   @CMD                                                CRT005
+     C                     MOVEL@TXT,3    @CMD                                                CRT005
+     C                     CALL 'QCMDEXC'              70                                     CRT005
+     C                     PARM           @CMD                                                CRT005
+     C                     PARM 80        @LEN   155                                          CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Perform override to PF/TTRANPD & open file                                           CRT005
+      *                                                                                       CRT005
+     C                     MOVEL*BLANKS   @CMD                                                CRT005
+     C                     MOVEL@TXT,1    @CMD                                                CRT005
+     C                     MOVEL'T'       @BRI                                                CRT005
+     C                     MOVEL@TLID     @BID                                                CRT005
+     C                     CALL 'QCMDEXC'              70                                     CRT005
+     C                     PARM           @CMD                                                CRT005
+     C                     PARM 80        @LEN   155                                          CRT005
+      *                                                                                       CRT005
+     C                     MOVEL'QCMDEXC' P@QRS                                               CRT005
+     C                     MOVEL@CMDT     P@QKY                                               CRT005
+     C                     EXSR DQERR                                                         CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     Z-ADDWACD1     ACD1                                                CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     OPEN TTRANPD                70                                     CRT005
+      *
+     C                     MOVEL'D'       RECI
+     C                     MOVEL'T'       TBRI
+     C                     MOVELPTLID     TBID
+     C                     Z-ADDTTNATN    TBTN
+     C                     MOVELPFNCD     FNCD
+     C                     MOVELSCCY      CCY1
+     C                     Z-ADD@TAMT     AMT1
+     C                     MOVELSTLID     RTLI
+     C                     MOVELSDEPC     DEPC
+     C                     MOVELSPRFC     PRFC
+     C                     MOVELPTLBC     ITLB
+     C                     MOVEL@JOB      TWID
+     C                     TIME           TIME
+     C                     Z-ADDBJRDNB    VLDT
+      *                                                                                       200412
+      ** Get TCP/IP details via access object AOBRCHR1                                        200412
+      *                                                                                       200412
+     C                     CALL 'AOBRCHR1'                                                    200412
+     C                     PARM *BLANKS   PRTCD                                               200412
+     C                     PARM '*KEY   ' POPTN                                               200412
+     C                     PARM ITLB      PBRCA   3                                           200412
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               200412
+      *                                                                                       200412
+     C           PRTCD     IFNE *BLANK                                                        200412
+     C           *LOCK     IN   LDA                                                           200412
+     C                     MOVEL'SDBRCHPD'DBFILE           ************                       200412
+     C                     Z-ADD47        DBASE            * DBERR 47 *                       200412
+     C                     MOVELITLB      DBKEY            ************                       200412
+     C                     EXSR DBERR                                                         200412
+     C                     ENDIF                                                              200412
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C           PMODE     ANDEQ'P'                                                           CRT005
+     C           A8TCPP    ANDNE*ZEROS                                                        200412
+     C                     MOVE RAACKF    ACKF                                                CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVE 'Y'       ACKF                                                CRT006
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     WRITETTRANPDF
+      *                                                                                       CRT005
+     C                     CLOSETTRANPD                70                                     CRT005
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPTRL  - Update Control Trailer Record             *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      *****************************************************************
+     C           UPTRL     BEGSR                           ** UPTRL  **
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+      *                                                                                       CRT005
+      ** If not the first time, delete previous overrides                                     CRT005
+      *                                                                                       CRT005
+     C           PMODE     IFEQ 'P'                                                           CRT005
+      *                                                                                       CRT005
+     C           @CMDT     IFNE *BLANKS                                                       CRT005
+     C                     MOVEL*BLANKS   @CMDT                                               CRT005
+     C                     MOVEL@TXT,4    @CMDT                                               CRT005
+     C                     CALL 'QCMDEXC'              70                                     CRT005
+     C                     PARM           @CMDT                                               CRT005
+     C                     PARM 80        @LEN   155                                          CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Perform override to PF/TTRANPD & open file                                           CRT005
+      *                                                                                       CRT005
+     C                     MOVEL*BLANKS   @CMDT                                               CRT005
+     C                     MOVEL@TXT,2    @CMDT                                               CRT005
+     C                     MOVEL'T'       @BRIT                                               CRT005
+     C                     MOVEL@TLID     @BIDT                                               CRT005
+     C                     CALL 'QCMDEXC'              70                                     CRT005
+     C                     PARM           @CMDT                                               CRT005
+     C                     PARM 80        @LEN   155                                          CRT005
+      *                                                                                       CRT005
+     C                     MOVEL'QCMDEXC' P@QRS                                               CRT005
+     C                     MOVEL@CMDT     P@QKY                                               CRT005
+     C                     EXSR DQERR                                                         CRT005
+     C                     ENDIF                                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     OPEN TTRANPT                70                                     CRT005
+      *
+     C           1         CHAINTTRANPTF             70
+      *
+      ** If no record is present -
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD3         DBASE            ** DB ERR 03*
+     C                     MOVEL'TTRANPT' DBFILE           *************
+     C                     MOVEL'1       'DBKEY
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C                     ADD  1         NORE
+     C                     UPDATTTRANPTF
+      *
+     C                     CLOSETTRANPT                70                                     CRT005
+      *                                                                                       CRT005
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            PCMTXT - Prepare comit text                        *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      *****************************************************************
+     C           PCMTXT    BEGSR                           ** PCMTXT **
+      *
+      ** Prepare the comit text CMTTXT
+     C                     MOVE 'RE'      MDID
+     C                     MOVEL@PGM      PGMN
+     C                     MOVE SWID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE @USER     USRIDX
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            LAST   - Final Processing                          *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  Main   - Control Process                           *
+      *                                                               *
+      *****************************************************************
+     C           LAST      BEGSR                           ** LAST   **
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program error                             *
+      *                                                               *
+      * CALLS      DBERRCTL                                           *
+      *                                                               *
+      * CALLED BY  DBERR  - Database Error Handling                   *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR  **
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C           PMODE     IFEQ 'I'                                                           CRT005
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C           PMODE     ANDEQ'P'                                                           CRT005
+      *                                                                                       CRT005
+     C                     ROLBK                                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVELRAMSTY    RBMSTY                                              CRT005
+     C                     MOVELDBLOT     RBHSMS                                              CRT005
+     C                     MOVEL'DBER'    RBHMSI                                              CRT005
+     C                     MOVEL'1'       RBAEFL                                              CRT005
+     C                     MOVEL'E'       RBHMSS                                              CRT005
+      *                                                                                       CRT005
+     C                     CLEARLOGDS                                                         CRT005
+      *                                                                                       CRT005
+     C                     MOVEL'USR0010' @MSGID                                              CRT005
+     C                     MOVELDBLOT     @MSGDT                                              CRT005
+     C                     EXSR RTVMSG                                                        CRT005
+     C                     MOVEL@MSGTX    RBHSMS                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVE RACMSQ    WCMSQ                                               CRT005
+     C                     MOVELRABRNM    WBRCA                                               CRT005
+     C                     MOVELRAUSID    WUSID                                               CRT005
+     C                     MOVE 'N'       WSUCM                                               CRT005
+     C                     MOVE 'DS'      WSTAT                                               CRT005
+     C                     TIME           WTMDS                                               CRT005
+     C           WTHR      CAT  ':'       WA                                                  CRT005
+     C           WTMN      CAT  ':'       WB                                                  CRT005
+     C           WA        CAT  WB        WC                                                  CRT005
+     C           WC        CAT  WTSS      WSTTM                                               CRT005
+      *                                                                                       CRT005
+     C                     CLEARP@QDS                                                         CRT005
+      *                                                                                       CRT005
+     C           RXMSTY    IFEQ 'OITM'                                                        CRT005
+     C           RXSPCD    ANDEQ'251'                                                         CRT005
+     C/COPY WNCPYSRC,REH00308
+     C                     MOVELREPOIO    P@QDS                                               CRT005
+     C                     ELSE                                                               CRT005
+     C/COPY WNCPYSRC,REH00309
+     C                     MOVELREOUTR    P@QDS                                               CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     CLEARWCMSG                                                         CRT005
+      *                                                                                       CRT005
+     C           RXMSTY    IFEQ 'OITM'                                                        CRT005
+     C           RXSPCD    ANDEQ'251'                                                         CRT005
+     C                     MOVELREPOIO    WCMSG                                               CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVELREOUTR    WCMSG                                               CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C                     EXSR SDQMS                                                         CRT005
+     C                     EXSR DQERR                                                         CRT005
+     C                     EXSR WRLOG                                                         CRT005
+     C                     EXSR PCMTXT                                                        CRT005
+     C           CMTTXT    COMIT                                                              CRT005
+     C                     MOVEL*BLANKS   REOUTR                                              CRT005
+     C                     MOVEL*BLANKS   REPOIO                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+     C*
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            FIRST  - Initial Processing                        *
+      *                                                               *
+      * CALLS      IFLDS  - Initialize screen/work fields             *
+      *            INT01  - Initialise error indicators               *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLED BY  Main   - Control Process                           *
+      *                                                               *
+      *****************************************************************
+     C           FIRST     BEGSR                           ** FIRST  **
+      *
+      ** Input parameter(s) :
+     C           *ENTRY    PLIST                           Entry parameter list
+     C                     PARM           PFNCD   3        Function code
+     C                     PARM           PMODE   1                                           CRT005
+      *
+      ** Define Keylist(s)
+      *
+      *
+      ** Retrieve RTS job dataarea
+     C           *NAMVAR   DEFN           RTSDTA
+     C                     IN   RTSDTA
+     C                     MOVELPTLID     @TLID
+     C                     MOVELPDEPC     SDEPC
+      *
+      * Prepare LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+     C*
+     C** IN the data are ZMUSER
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *                                                                                       CRT005
+      ** Check access mode to know when to open the display file                              CRT005
+      *                                                                                       CRT005
+     C           PMODE     IFEQ 'I'                                                           CRT005
+     C                     OPEN RE4122DF                                                      CRT005
+     C                     ENDIF                                                              CRT005
+      *
+      ** Access PF/SDGELRPD for profit centre details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C** Check if 'PROFIT CENTRE USED'
+     C           PFCU      IFEQ 'Y'
+     C                     SETON                     16
+     C                     END
+      *
+      ***initialize parameters for SCC0240 build program message queue
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF '@MSGF  10
+      *
+      ** Initialize screen message queue
+     C                     MOVEL'*'       SPGMQ
+      *
+      ** Seton  message subfile end indicator
+     C                     MOVE '1'       *IN10
+      *
+     C                     MOVEL@JOB      SWID   10
+     C                     MOVEL@PGM      SPGMN  10
+     C                     MOVE *BLANKS   SMRDT   7
+     C                     MOVEL@USER     SUSER  10
+      *
+      *
+      ** Access PF/SDBANKPD for Midas Run Date
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If record does not exist
+     C           @RTCD     IFNE *BLANK
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD7         DBASE            ** DB ERR 07 **
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     EXSR DBERR
+      *
+     C                     END
+      *                                                                                       CRT005
+      ** Determine if SAR CRT005 Cashier Cash In/Cash Out is ins -                            CRT005
+      ** talled.                                                                              CRT005
+      *                                                                                       CRT005
+     C                     CALL 'AOSARDR0'                                                    CRT005
+     C                     PARM *BLANKS   PRTCD   7                                           CRT005
+     C                     PARM '*VERIFY 'POPTN   7                                           CRT005
+     C                     PARM 'CRT005'  PSARD   6                                           CRT005
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRT005
+      *                                                                                       CRT005
+     C           PRTCD     IFNE *BLANKS                                                       CRT005
+     C           PRTCD     ANDNE'*NRF   '                                                     CRT005
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRT005
+     C                     Z-ADD8         DBASE                                               CRT005
+     C                     MOVEL'CRT005'  DBKEY                                               CRT005
+     C                     EXSR *PSSR                                                         CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C           PRTCD     IFEQ *BLANKS                                                       CRT005
+     C                     MOVE 'Y'       CRT005  1                                           CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVE 'N'       CRT005                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Determine if SAR CRT003 Cashier Interface is installed                              BUG7369
+      *                                                                                      BUG7369
+     C                     CALL 'AOSARDR0'                                                   BUG7369
+     C                     PARM *BLANKS   PRTCD                                              BUG7369
+     C                     PARM '*VERIFY 'POPTN                                              BUG7369
+     C                     PARM 'CRT003'  PSARD                                              BUG7369
+     C           SCSARD    PARM SCSARD    DSFDY                                              BUG7369
+      *                                                                                      BUG7369
+     C           PRTCD     IFNE *BLANKS                                                      BUG7369
+     C           PRTCD     ANDNE'*NRF   '                                                    BUG7369
+     C                     MOVEL'SCSARDPD'DBFILE                                             BUG7369
+     C                     Z-ADD10        DBASE                                              BUG7369
+     C                     MOVEL'CRT003'  DBKEY                                              BUG7369
+     C                     EXSR *PSSR                                                        BUG7369
+     C                     ENDIF                                                             BUG7369
+      *                                                                                      BUG7369
+     C           PRTCD     IFEQ *BLANKS                                                      BUG7369
+     C                     MOVE 'Y'       CRT003  1                                          BUG7369
+     C                     ELSE                                                              BUG7369
+     C                     MOVE 'N'       CRT003                                             BUG7369
+     C                     ENDIF                                                             BUG7369
+      *                                                                                      BUG7369
+     C           CRT003    IFEQ 'Y'                                                          BUG7369
+      *                                                                                      BUG7369
+      ** Get the Teller Over/Under account code                                               CRT005
+      *                                                                                       CRT005
+     C                     CALL 'AOBAIIR1'                                                    CRT005
+     C                     PARM *BLANKS   PRTCD                                               CRT005
+     C                     PARM '*FIRST  'POPTN                                               CRT005
+     C           SDBAII    PARM SDBAII    DSSDY                                               CRT005
+      *                                                                                       CRT005
+     C           PRTCD     IFNE *BLANKS                                                       CRT005
+     C                     MOVEL'SDBAIIPD'DBFILE                                              CRT005
+     C                     Z-ADD9         DBASE                                               CRT005
+     C                     MOVELPOPTN     DBKEY                                               CRT005
+     C                     EXSR *PSSR                                                         CRT005
+     C                     ENDIF                                                              CRT005
+     C                     ENDIF                                                             BUG7369
+      *
+     C/COPY WNCPYSRC,REH00176
+      ** Access PF/SDFNCDPD for function code record
+     C                     CALL 'AOFNCDR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM PFNCD     @FNCD   3
+     C           SDFNCD    PARM SDFNCD    DSFDY
+      *
+      ** If record does not exists - database errors
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDFNCDPD'DBFILE           ***************
+     C                     Z-ADD4         DBASE            ** DB ERR 04 **
+     C                     MOVELPFNCD     DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+      ** If teller/treasury IN (func.code = 00E or 0JE)
+     C           PFNCD     IFEQ '00E'
+     C           PFNCD     OREQ '0JE'
+      *
+      ** Access PF/SDRETRPD for credit tr.code 1
+     C*
+     C                     CALL 'AORETRR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FQCRC1    @RETR   5
+     C           SDRETR    PARM SDRETR    DSFDY
+      *
+      ** If record does not exists - database errors
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETRPD'DBFILE           ***************
+     C                     Z-ADD5         DBASE            ** DB ERR 05 **
+     C                     MOVELFQCRC1    DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     END
+      *
+      ** If teller/treasury OUT (func.code = 00F or 0JF)
+     C           PFNCD     IFEQ '00F'
+     C           PFNCD     OREQ '0JF'
+     C*
+     C                     CALL 'AORETRR0'
+     C                     PARM '*BLANKS' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM FQDRC1    @RETR   5
+     C           SDRETR    PARM SDRETR    DSFDY
+      *
+      ** If record does not exists - database errors
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDRETRPD'DBFILE           ***************
+     C                     Z-ADD6         DBASE            ** DB ER 06  **
+     C                     MOVELFQDRC1    DBKEY            ***************
+     C                     EXSR DBERR
+     C                     END
+      *
+     C                     END
+      *
+      ** Initialise parameters for SR.rttots
+     C                     MOVEL' '       @RVIN   1
+     C                     MOVELA1DCIN    @DCIN   1
+     C                     MOVELA1CIND    @CSIN   1
+     C                     MOVELA1CLIN    @CLIN   1
+      *
+      ** Initialise all screen/work fields and indicators
+     C                     EXSR INT01
+     C                     EXSR IFLDS
+      *
+      ** Setof indicators conditioning display of warn. & term. errors
+     C                     SETOF                     2021
+      *
+      ** If teller cross set narrative field used
+     C           PFNCD     IFEQ '00E'
+     C           PFNCD     OREQ '00F'
+     C                     SETON                     25
+     C                     MOVE '/'       @@SLSH
+     C                     MOVE '_'       @@UNDS
+      *
+      ** Set teller cross indicator
+     C           PFNCD     IFEQ '00E'
+     C                     SETON                     30
+     C                     ELSE
+     C                     SETON                     31
+     C                     END
+     C/COPY WNCPYSRC,RE4122C004
+      *
+     C                     END
+     C/COPY WNCPYSRC,RE4122C005
+      *
+      ** Clear program message queue and terminal & warning msg. lines
+     C                     CALL 'SCC0250'
+      *                                                                                       CRT005
+      ** Load teller id if CRT005 is on                                                       CRT005
+      *                                                                                       CRT005
+     C           CRT005    IFEQ 'Y'                                                           CRT005
+     C                     EXSR LODTLR                                                        CRT005
+     C/COPY WNCPYSRC,REH00310
+     C                     MOVEL'RE4122'  P@QRC                                               CRT005
+      *                                                                                       CRT005
+      ** Set up the name of the data queue  (program name + function code)                    CRT005
+      *                                                                                       CRT005
+     C                     SELEC                                                              CRT005
+     C           PFNCD     WHEQ '00E'                                                         CRT005
+     C                     MOVE '00E '    P@QRC                                               CRT005
+     C           PFNCD     WHEQ '00F'                                                         CRT005
+     C                     MOVE '00F '    P@QRC                                               CRT005
+     C           PFNCD     WHEQ '0JE'                                                         CRT005
+     C                     MOVE '0JE '    P@QRC                                               CRT005
+     C           PFNCD     WHEQ '0JF'                                                         CRT005
+     C                     MOVE '0JF '    P@QRC                                               CRT005
+     C                     ENDSL                                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C/COPY ZSRSRC,RBOITMC1                                                                   CRT005
+      *                                                                                       CRT005
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            IFLDS  - Initialize screen/work fields             *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  RFRESH - Refresh screen                            *
+      *            FIRST  - Initial Processing                        *
+      *****************************************************************
+     C           IFLDS     BEGSR                           ** IFLDS  **
+      *
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SAMT
+     C                     MOVE *BLANKS   STLID
+     C                     MOVE *BLANKS   @W
+     C                     MOVE *BLANKS   @T
+     C                     Z-ADD1         @COUNT  10
+     C                     MOVE *BLANKS   SNARR
+     C                     MOVE *BLANKS   SPRFC
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SNDMSG  - Sends parameters of SNDPGMMSG command to be executed*
+      *                                                               *
+      * CALLS      SCC0240 - Send Message to program queue            *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED  @MSGID - Message id                                *
+      *            @MSGF  - Message file                              *
+      *                                                               *
+      *****************************************************************
+     C           SNDMSG    BEGSR                           ** SNDMSG **
+      *
+     C                     SETON                     69
+      *
+     C                     CALL 'SCC0240'                  Retrieve MSGF m
+     C                     PARM           @MSGID           Message Identif
+     C                     PARM           @MSGF            Message File Na
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database Error Handling                   *
+      *                                                               *
+      * CALLS      *PSSR  - Program  error                            *
+      *                                                               *
+      * CALLED BY  FIRST  - Initial processing                        *
+      *            UPTRL  - Update Control Trailer Record             *
+      *            UPDRTN - Control rtn. for updates                  *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR                           ** DBERR  **
+      *
+     C                     MOVEL@PGM      DBPGM
+     C                     OUT  LDA
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT                                                                                  CRT005
+      ** SR.ZEDIT subroutine                                                                  CRT005
+      /COPY ZSRSRC,ZEDITZ2                                                                    CRT005
+      *                                                                                       CRT005
+      *****************************************************************                       CRT005
+      /EJECT
+      ** SR.ZALIGN subroutine
+      /COPY ZSRSRC,ZALIGNZ2
+      *
+      *****************************************************************
+      /EJECT
+      ** SR.ZTNLU1 subroutine
+      /COPY ZSRSRC,ZTNLU1Z2
+      *
+      *****************************************************************
+      /EJECT
+      ** SR.ZFRPED Subroutine
+      /COPY ZSRSRC,ZFRPEDZ3
+      *
+      *****************************************************************
+      /EJECT
+      ** SR.RTTCCY Subroutine
+      /COPY ZSRSRC,RTTCCYC1
+      *
+      *****************************************************************
+      /EJECT
+      ** SR.RTCASH Subroutine
+      /COPY ZSRSRC,RTCASHC1
+      *****************************************************************
+      /EJECT
+      /COPY ZSRSRC,RTTWIDC1
+      ** Array for SR.RTTWID
+      *****************************************************************
+      /EJECT                                                                                  CRT005
+      /COPY ZSRSRC,RBLDTLC1                                                                   CRT005
+      ** Array for SR.LODTLR                                                                  CRT005
+      *****************************************************************                       CRT005
+      /EJECT                                                                                  CRT005
+      /COPY ZSRSRC,RBSDQMS                                                                    CRT005
+      ** Array for SR.SDQMS                                                                   CRT005
+      *****************************************************************                       CRT005
+      /EJECT                                                                                  CRT005
+      /COPY ZSRSRC,RBRDQMS                                                                    CRT005
+      ** Array for SR.RDQMS                                                                   CRT005
+      *****************************************************************                       CRT005
+      /EJECT                                                                                  CRT005
+      /COPY ZSRSRC,RBDQERR                                                                    CRT005
+      ** Array for SR.DQERR                                                                   CRT005
+      *****************************************************************                       CRT005
+      /EJECT                                                                                  CRT005
+      /COPY ZSRSRC,RBWLOGC1                                                                   CRT005
+      ** Array for SR.WRLOG                                                                   CRT005
+      *****************************************************************                       CRT005
+      /EJECT                                                                                  CRT005
+      /COPY ZSRSRC,RBRMSGC1                                                                   CRT005
+      ** Array for SR.RTVMSG                                                                  CRT005
+      *****************************************************************                       CRT005
+      /EJECT
+      ** Teller controls
+     OTTRNTM2FE                @RELTT
+      *
+      ** Teller totals
+     OTTRNTM3FE                @RELT3
+      *
+      *****************************************************************
+**  CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** @TXT - Large text strings                                                                  CRT005
+OVRDBF     FILE(TTRANPD) MBR(XXXX) SECURE(*YES) SHARE(*YES) SEQONLY(*NO)                      CRT005
+OVRDBF     FILE(TTRANPT) MBR(XXXX) SECURE(*YES) SHARE(*YES) SEQONLY(*NO)                      CRT005
+DLTOVR     FILE(TTRANPD)                                                                      CRT005
+DLTOVR     FILE(TTRANPT)                                                                      CRT005
+**  WTEXT WARNING TEXT MESSAGE                                                                CRT005
+KSM2329  Multiple referrals exist ( ) -                                                       CRT005
+**  TABC1/TABC2 - WARNING MESSAGE CONVERTION TABLE                                            CRT005
+HOLDS   HLDS                                                                                  CRT005
+EXCESS  EXCS                                                                                  CRT005
+FLOAT   FLOT                                                                                  CRT005
+CLS.O/D CSOD                                                                                  CRT005
+SVG.O/D SVOD                                                                                  CRT005
+MAX.CCY MXCY                                                                                  CRT005
+CHQBKER CQBK                                                                                  CRT005
+N.S.F.  NSF                                                                                   CRT005
+EX.O/D  EXOD                                                                                  CRT005
+BLW.MIN BLMN                                                                                  CRT005
+AC.CLG  ACCL                                                                                  CRT005
+N.ASGL1 NAG1                                                                                  CRT005
+N.ASGL2 NAG2                                                                                  CRT005
+N.ASGL3 NAG3                                                                                  CRT005
+BADDPT  BDDT                                                                                  CRT005
+BLOCKCR BLCR                                                                                  CRT005
+BLOCKDR BLDR                                                                                  CRT005
+BNKRPT  BKRP                                                                                  CRT005
+BR.DIF  BRDF                                                                                  CRT005
+BFBVIC  BVCQ                                                                                  CRT005
+CHQPRES CQPR                                                                                  CRT005
+CHQRNG  CQRN                                                                                  CRT005
+INACTV  INAC                                                                                  CRT005
+INACTV1 INA1                                                                                  CRT005
+INACTV2 INA2                                                                                  CRT005
+REFERCR RFCR                                                                                  CRT005
+REFERDR RFDR                                                                                  CRT005
+STOPCHQ STCQ                                                                                  CRT005
+TLIMIT  TLLM                                                                                  CRT005
+N.WKDAY NWKD                                                                                  CRT005
+XRTWARN XRTW                                                                                  CRT005
+TLIMIT1 TLLM                                                                                  CRT005
+TLIMIT2 TLLM                                                                                  CRT005
+CLOSED  CLOS                                                                                  CRT005
+BLOCKED BLOK                                                                                  CRT005
+NOTZERO NZRO                                                                                  CRT005

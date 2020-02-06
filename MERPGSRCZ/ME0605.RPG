@@ -1,0 +1,428 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Outgoing Messages release by range')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *    ME0605 - Outgoing messages release by range report request *
+      *             selection                                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CGL013             Date 29Mar02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21Sep98               *
+      *                   113352            DATE 13FEB97              *
+      *                   E29588            DATE 24OCT91              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE026 - Consumer Banking                                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL013 - MT94x Messages Generation (Recompile over new layout*
+      *                                      of SDNWRKPD)             *
+      *    141572 - Recompile over changes in MGOREFPD                *
+      *    113352 - Recompile over changes in MGOREFPD                *
+      *    E29588 - Post-collection SWIFT rationalisation amendments  *
+      *              o Check messages exist in specified range        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FMUSER   IF  E           K        DISK
+     FMGOREFA3IF  E           K        DISK                               E29588
+     FME0605DFCF  E                    WORKSTN
+      *
+     E                    CPY@    1   1 80
+      *
+      * ID C  F  H  L Function of indicaators
+      * 01            DSRUN (DATA AREA) not found indicator
+      * 99            Read & Chain fail indicator
+      * 98            End of file indicator
+      * 91            Mandatory indicator for LOKUP operation(NOT USED)
+      * 30            Error indicator for display file
+      * 32            Error indicator for display file
+      * 33            Error indicator for display file
+      * 34            Error indicator for display file
+      * U7U8LR        DB error
+      *
+     E/COPY WNCPYSRC,ME0605E001
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Local data area data structure
+      *
+     I           SDS
+     I                                     *PARMS   PGMPRM
+     I                                      244 253 PGMDEV
+     I                                      254 263 PGMUSR
+     I/COPY WNCPYSRC,ME0605I003
+      *
+      **  Program status data structure
+      *
+     IDSRUN       DS
+     I                                        1   7 RDAT
+     I                                        1   2 @DD
+     I                                        3   5 @MMM
+     I                                        6   7 @YY
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      **  RUNDAT data area data structure (date format -ddmmmyy)
+      *
+     I@RPARM      DS
+     I                                        1 100 @@RPRM
+     I                                        1   6 @NWRK
+     I                                        7  22 @FTRNO
+     I                                       23  38 @TTRNO
+     I                                       39  48 @USRP
+     I                                       49  58 @PDEV
+     I                                       59  61 @DBRN
+     I/COPY WNCPYSRC,ME0605I001
+      *
+      **  Parameters for &RPARM - 100 long string passed to RCF
+      *
+      *
+     ISDNWRK    E DSSDNWRKPD
+      *
+      **  Nwrk details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      **  First data structure for access program, Short data structure
+      *
+     I/COPY WNCPYSRC,ME0605I002
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *
+      **  Parameters passed to AONWRKR0
+      *
+     C           PLIST2    PLIST
+     C                     PARM '*DBMSG  '@RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM SNWRK     @NWRK   6
+     C           SDNWRK    PARM SDNWRK    DSFDY
+      *
+      ** ZM1001 ERROR
+     C           PLIST3    PLIST
+     C                     PARM           @MSGID 10
+     C                     PARM           @MSDTA 78
+      *
+     C                     MOVEL'ME0605'  PGMQ   10
+     C                     MOVEL*BLANKS   MSGKEY  4
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  RCF Parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @SEQ    5
+     C                     PARM           @LVL    1
+     C                     PARM           @ENT    1
+     C                     PARM           @RPARM100
+     C                     PARM           RACT    1
+     C                     PARM           RCMD    1
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   DETL  - Detail processing                                   *
+      *   TERM  - Termination processing                              *
+      *   VSEL  - Validation processing                               *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN   - Main process                                       *
+      *   Calls  - INIT - Init process                                *
+      *            DETL - Detail processing                           *
+      *            TERM - Termination processing                      *
+      *****************************************************************
+      *
+      **  Perform initial process
+      *
+     C                     EXSR INIT
+      *
+      **  Perform detail process
+      *
+     C                     EXSR DETL
+      *
+      **  Perform termination process
+      *
+     C                     EXSR TERM
+     C/EJECT
+      *****************************************************************
+      *   INIT   - Initial process                                    *
+      *   Called by main process                                      *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      **  Access data area DSRUN to find date
+      *
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C           *LOCK     IN   DSRUN
+     C                     OUT  DSRUN
+      *
+      **  If data area not found then perform database error processing
+      *
+     C           RDAT      IFEQ *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0605  'DBPGM
+     C                     MOVE '01'      DBASE            ***************
+     C                     MOVE 'RUNDAT'  DBFILE           * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access MUSER for users profile
+      *
+     C           PGMUSR    CHAINMUSER                9899
+      *
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '02'      DBASE            ***************
+     C                     MOVE PGMUSR    DBKEY            * DB ERROR 02 *
+     C                     MOVE 'MUSER'   DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C/COPY WNCPYSRC,ME0605C001
+     C                     MOVE USRP      @USRP
+     C                     MOVE PGMDEV    @PDEV
+     C                     MOVE DBRN      @DBRN
+      *
+      **  Display initial screen
+      *
+     C                     EXFMTINITSCN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   DETL   - Detail processing                                  *
+      *   Called by main process                                      *
+      *****************************************************************
+     C           DETL      BEGSR
+      *
+     C                     SETON                     30
+      *
+      **  Do while not F3 / F12 or errors outstanding
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *IN30     ANDEQ'1'
+      *
+      **  Validate input - VSEL
+      *
+     C                     EXSR VSEL
+      *
+      **  If errors exist, display initial screen
+      *
+     C           *IN30     IFEQ '1'
+     C                     WRITESFLMSGC
+     C                     EXFMTINITSCN
+     C                     CALL 'ZM1002'
+     C                     END
+      *
+     C/COPY WNCPYSRC,ME0605C002
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL   - Validation processing                              *
+      *   Called by DETL process                                      *
+      *****************************************************************
+     C           VSEL      BEGSR
+      *
+     C                     SETOF                     30
+     C                     SETOF                     32
+     C                     SETOF                     33
+     C                     SETOF                     34
+      *
+      **  VAlidation of network id
+      *
+     C                     EXSR VMDSTS
+      *
+      **  Validation of FROM TRNO & TO TRNO
+      *
+     C                     EXSR VTRNSR
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   VMDSTS - Validation of network ID process                            *
+      *   Called by DETL process                                               *
+      **************************************************************************
+     C           VMDSTS    BEGSR
+      *
+      **  If network id is not blank, access the network table via
+      **  access object AONWRKR0
+      *
+      *
+     C           SNWRK     IFNE *BLANKS
+      *
+      **  Access sdnwrkpd (via aonwrkr0)
+      *
+     C                     CALL 'AONWRKR0'PLIST2
+      *
+      **  Error handling for access object
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'MEM1014' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3032
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   VTRNSR - Transaction reference number validation process             *
+      *   Called by VSEL process                                               *
+      *                                                                        *
+      **************************************************************************
+     C           VTRNSR    BEGSR
+      *
+     C           SFTRNO    IFNE *BLANKS
+     C           STTRNO    ANDEQ*BLANKS
+      *
+      **  If From TRNO specified but not To TRNO, display
+      **  'TRNO of Message Required'
+      *
+     C                     MOVEL'MEM1043' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3033
+     C                     SETOF                     98
+      *
+     C                     END
+      *
+      *
+     C           STTRNO    IFNE *BLANKS
+     C           SFTRNO    ANDEQ*BLANKS
+      *
+      **  If To TRNO specified but not From TRNO, display
+      **  'TRNO of Message Required'
+      *
+     C                     MOVEL'MEM1043' @MSGID
+     C                     CALL 'ZM1001'  PLIST3
+     C                     SETON                     3034
+     C                     SETOF                     98
+      *
+     C                     END
+      *
+     C***********SFTRNO    IFGT STTRNO                                    E29588
+      ***********                                                         E29588
+     C***********          MOVE SFTRNO    TTRNO                           E29588
+     C***********          MOVE STTRNO    FTRNO                           E29588
+      ***********                                                         E29588
+     C***********          ELSE                                           E29588
+      *                                                                   E29588
+     C                     MOVE SFTRNO    FTRNO  16                       E29588
+     C                     MOVE STTRNO    TTRNO  16                       E29588
+      *                                                                   E29588
+     C***********          END                                            E29588
+      *
+      ** If range entered, check eligible messages exist                  E29588
+     C           FTRNO     IFNE *BLANKS                                   E29588
+     C           TTRNO     ANDNE*BLANKS                                   E29588
+      *                                                                   E29588
+     C           FTRNO     SETLLMGOREFA3                                  E29588
+     C                     READ MGOREFA3                 60               E29588
+      *                                                                   E29588
+     C           *IN60     IFEQ '1'                                       E29588
+     C           TRNO      ORGT TTRNO                                     E29588
+     C                     MOVEL'MEM1087' @MSGID                          E29588
+     C                     CALL 'ZM1001'  PLIST3                          E29588
+     C                     SETON                     303334               E29588
+     C                     SETOF                     98                   E29588
+     C                     END                                            E29588
+      *                                                                   E29588
+     C                     END                                            E29588
+      *
+     C                     ENDSR
+     C/EJECT
+      **************************************************************************
+      *   TERM - Termination  Processing                                       *
+      *   Called by MAIN process                                               *
+      *                                                                        *
+      **************************************************************************
+     C           TERM      BEGSR
+      *
+      **  If F3 was pressed send termination code of 'E' back to RCF
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       RCMD
+     C                     END
+      *
+      **  If F12 was pressed send termination code of 'F' back to RCF
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'F'       RCMD
+     C                     END
+      *
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      **  Set up &RPARM with selection criteria parameters
+      *
+     C                     MOVE SNWRK     @NWRK
+     C                     MOVE FTRNO     @FTRNO
+     C                     MOVE TTRNO     @TTRNO
+     C/COPY WNCPYSRC,ME0605C003
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANKS   @RPARM
+     C                     END
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+     C/EJECT
+      **************************************************************************
+      *   *PSSR - error handling                                               *
+      *   Called by - INIT initial process                                     *
+      **************************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+** CPY@   **      Object copyright
+(c) Finastra International Limited 2001

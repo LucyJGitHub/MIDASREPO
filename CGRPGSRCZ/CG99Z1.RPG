@@ -1,0 +1,721 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG View utility 1 - display file')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG99Z1 - View Utility 1            Display File         )    *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 22Jun95               *
+      *                                    Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  S01552 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     FCG99Z1DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE #SFLRCD
+     F                                              KINFSR SRFILE
+      *
+      * Current Data Files
+      *
+     FCGUDCRL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGUDTAL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Archive Data Files
+      *
+     FCGXDCRL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGXDTAL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Extract Data File for Display
+      *
+     FCG99Z1F O   E                    DISK                           UC
+     F                                              KINFSR SRFILE
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     E                    ERR     1   3 76
+     E                    CMD@    1   4 80
+     E                    DEC       832  1
+     E                    NDC       832  1
+     E                    BLK       832  1
+     E                    DTA       256  1
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     I/EJECT
+     I/COPY CGCPYSRC,SRERRI
+     IDATAXX    E DSCGUDCRL1
+     I              DRITEM                          ##ITEM
+     I              DRDCOR                          ##DCOR
+     I            DS
+     I                                        1 256 DTA
+     I                                        1 256 DATA
+     I            DS
+     I                                        1 832 DEC
+     I                                        1  64 DECH01
+     I                                       65 320 DECH02
+     I                                      321 576 DECH03
+     I                                      577 832 DECH04
+     I            DS
+     I                                    P   1   50DRITEM
+     I                                        1   5 DRITMA
+     I            DS
+     I                                        1   90@@ITEM
+     I                                        1   9 SSITEM
+     I            DS
+     I                                        1   90F@ITEM
+     I                                        1   9 C@ITEM
+     I            DS
+     I                                        1  17 NUMA
+     I                                    P   1  159NUMB
+     I                                    P  16  160NODECS
+     I                                       17  17 FMT
+     I            DS
+     I                                    P   1  150NUM0
+     I                                    P   1  151NUM1
+     I                                    P   1  152NUM2
+     I                                    P   1  153NUM3
+     I                                    P   1  154NUM4
+     I                                    P   1  155NUM5
+     I                                    P   1  156NUM6
+     I                                    P   1  157NUM7
+     I                                    P   1  158NUM8
+     I                                    P   1  159NUM9
+     IDSCMD       DS                             80
+     I                                       19  19 D@ARCH
+     I                                       14  22 D@FKEY
+     I                                       39  47 D@TKEY
+      /EJECT
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0MODE  8
+     C*
+     C* Initial Processing
+     C*
+     C                     EXSR SRINIT
+     C*
+     C* Display Screen
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR SRDSPL
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+     C* DISPLAY SCREEN
+     C*****************************************************************
+     C           SRDSPL    BEGSR
+     C*
+     C* Fill Subfile
+     C*
+     C                     EXSR FILLSB
+      * Update job time and last item reference
+     C                     TIME           ##TME
+     C                     Z-ADDDRITEM    @@ITEM
+     C*
+     C* Display Subfile until all ok
+     C*
+     C                     MOVEL*BLANKS   ##ALOK  2
+     C           ##ALOK    DOUEQ'OK'
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#SFLCTL
+     C*
+     C* Reset variables
+     C*
+     C                     MOVEL*BLANK    DDERR  76
+     C                     Z-ADD@@ITEM    DRITEM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C*
+     C* Process Screen
+     C*
+     C                     SELEC
+     C*
+     C* F3 OR F12,  EXIT
+     C           *INKC     WHEQ '1'
+     C           *INKL     OREQ '1'
+     C                     MOVEL'OK'      ##ALOK
+     C*
+     C* Rolldown
+     C           *IN05     WHEQ '1'
+     C                     MOVEL'OK'      ##ALOK
+     C                     EXSR ROLDWN
+     C*
+     C* Select
+     C           *IN,04    WHEQ '0'
+     C*
+     C* Read all changed records
+     C*
+     C                     READC#SFLRCD                  99*RECORD CHANGED
+     C           *IN99     DOWEQ'0'
+      *
+      * Invalid Action
+      *
+     C           ACTN      IFNE 'E'
+     C           ACTN      ANDNE'P'
+     C           ACTN      ANDNE' '
+      * Send message 'Invalid Action'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELERR,3     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'1'       *IN84
+     C                     UPDAT#SFLRCD
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C                     SELEC
+     C** Print Data
+     C*
+     C           ACTN      WHEQ 'P'
+      *
+      * Set copy command
+      *
+     C                     Z-ADD160       QCELEN 155
+     C                     MOVEACMD@,3    DSCMD
+      *
+      * Set up type of file
+      *
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C                     MOVEL'X'       D@ARCH
+     C                     OTHER
+     C                     MOVEL'U'       D@ARCH
+     C                     ENDSL
+     C                     MOVELDSCMD     QCEL
+      *
+      * Set up key values
+      *
+     C                     MOVEACMD@,4    DSCMD
+     C                     Z-ADDDRITEM    F@ITEM
+     C                     MOVELC@ITEM    D@FKEY
+     C                     MOVELC@ITEM    D@TKEY
+     C                     MOVE DSCMD     QCEL
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QCEL  160
+     C                     PARM           QCELEN
+     C** Extract Data
+     C*
+     C           ACTN      WHEQ 'E'
+     C                     EXSR SREXTR
+     C*
+     C** Look at Data
+     C*
+     C                     CALL 'CG99Z2'
+     C                     PARM *BLANKS   W0RTN
+     C                     PARM           DRITMA
+     C*
+     C** End Requested
+     C*
+     C           W0RTN     IFEQ 'Y2U9999'
+     C                     MOVEL'1'       *INKC
+     C                     MOVEL'OK'      ##ALOK
+     C                     LEAVE
+     C                     ENDIF
+     C*
+     C                     ENDSL
+     C*
+     C                     MOVEL*BLANK    ACTN
+     C                     MOVEL'0'       *IN84
+     C                     UPDAT#SFLRCD
+     C*
+     C                     Z-ADD##ITEM    DRITEM
+     C                     MOVEL##DCOR    DRDCOR
+     C*
+     C                     READC#SFLRCD                  99*RECORD CHANGED
+     C*
+     C                     ENDDO
+      *
+      * No more actions therefore OK
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'OK'      ##ALOK
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C* EXTRACT DATA
+     C********************************************************************
+     C           SREXTR    BEGSR
+      *
+      * Clear file
+      *
+     C                     Z-ADD80        QCELEN 155
+     C                     MOVEACMD@,1    QCE
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QCE    80
+     C                     PARM           QCELEN
+      *
+      * Override File
+      *
+     C                     Z-ADD80        QCELEN 155
+     C                     MOVEACMD@,2    QCE
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           QCE    80
+     C                     PARM           QCELEN
+      *
+     C                     OPEN CG99Z1F
+      *
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     Z-ADD0         OSEQ
+      *
+      * Postion pointer for reads
+      *
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C           CGUDCP    SETLLCGXDTAL1
+     C                     OTHER
+     C           CGUDCP    SETLLCGUDTAL1
+     C                     ENDSL
+      *
+     C                     MOVEL*BLANK    DEC
+      *
+      * Read until end of group
+      *
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C           CGUDCP    READECGXDTAL1                 99*
+     C                     OTHER
+     C           CGUDCP    READECGUDTAL1                 99*
+     C                     ENDSL
+      *
+     C           *IN99     DOWEQ'0'
+      *
+      * Format data
+      *
+     C                     EXSR FORMAT
+      *
+     C                     MOVEL*BLANK    DEC
+      *
+      * Read Next Record
+      *
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C           CGUDCP    READECGXDTAL1                 99*
+     C                     OTHER
+     C           CGUDCP    READECGUDTAL1                 99*
+     C                     ENDSL
+     C                     ENDDO
+      *
+     C                     CLOSECG99Z1F                99
+      *
+     C                     ENDSR
+     C********************************************************************
+     C* FORMAT DATA
+     C********************************************************************
+     C           FORMAT    BEGSR
+      *
+     C                     BITOF'01234567'SCHAR   1
+     C                     BITON'01234567'ECHAR   1
+      *
+     C           *IN99     DOUEQ'0'
+      *
+     C                     Z-ADD1         X       30
+     C           ECHAR     LOKUPDEC,X                    99*
+     C           *IN99     IFEQ '1'
+     C           X         ADD  1         Y       30
+     C           Y         COMP 832                    99  *
+     C   99      ECHAR     LOKUPDEC,Y                    99*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    DTA
+     C                     MOVEADEC       DTA
+     C                     MOVEABLK       DTA,Y
+     C                     EXSR EDTDTA
+     C                     ADD  1         OSEQ
+     C                     WRITECG99Z1FF
+     C                     ADD  1         Y
+     C           Y         IFLE 832
+     C                     MOVEL*BLANK    NDC
+     C                     MOVEADEC,Y     NDC
+     C                     MOVEL*BLANK    DEC
+     C                     MOVEANDC       DEC
+     C                     ELSE
+     C                     MOVE '1'       *IN,99
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     ENDSR
+     C********************************************************************
+     C* EDIT DATA
+     C********************************************************************
+     C           EDTDTA    BEGSR
+      *
+      * FIRST REMOVE 2 CONTROL CHARS
+      *
+     C                     Z-ADD1         Z       40
+     C           SCHAR     LOKUPDTA,Z                    98*
+     C   98                MOVEL*BLANK    DTA,Z
+     C           SCHAR     LOKUPDTA,Z                    98*
+     C   98                MOVEL*BLANK    DTA,Z
+      *
+      * IF ANY CONTROL CHARS LEFT, FIELD MUST BE NUMERIC
+      *
+     C           SCHAR     LOKUPDTA,Z                    98*
+     C           *IN98     IFEQ '1'
+     C                     MOVEADTA,Z     NUMA
+      *
+     C           NODECS    IFEQ 9
+     C                     Z-ADDNUMB      NUM9
+     C                     ELSE
+     C           NODECS    IFEQ 8
+     C                     Z-ADDNUMB      NUM8
+     C                     ELSE
+     C           NODECS    IFEQ 7
+     C                     Z-ADDNUMB      NUM7
+     C                     ELSE
+     C           NODECS    IFEQ 6
+     C                     Z-ADDNUMB      NUM6
+     C                     ELSE
+     C           NODECS    IFEQ 5
+     C                     Z-ADDNUMB      NUM5
+     C                     ELSE
+     C           NODECS    IFEQ 4
+     C                     Z-ADDNUMB      NUM4
+     C                     ELSE
+     C           NODECS    IFEQ 3
+     C                     Z-ADDNUMB      NUM3
+     C                     ELSE
+     C           NODECS    IFEQ 2
+     C                     Z-ADDNUMB      NUM2
+     C                     ELSE
+     C           NODECS    IFEQ 1
+     C                     Z-ADDNUMB      NUM1
+     C                     ELSE
+     C                     Z-ADDNUMB      NUM0
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     Z-ADDNUM0      ZFLD15
+     C           FMT       IFEQ '@'
+     C                     MOVE 'L'       ZECODE
+     C                     ELSE
+     C                     MOVE 'J'       ZECODE
+     C                     END
+     C                     Z-ADDNODECS    ZDECS
+      *
+      * Format numeric data
+      *
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM *BLANKS   ZECODE  1
+     C                     PARM *BLANKS   ZOUT21 21
+     C                     MOVEAZOUT21    DTA,Z
+      *
+     C                     END
+     C                     ENDSR
+     C********************************************************************
+     C* FILL SUBFILE
+     C********************************************************************
+     C           FILLSB    BEGSR
+     C                     MOVEA'000'     *IN,1
+     C                     MOVEA'1'       *IN,4
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITE#SFLCTL
+      * Position
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C           CGUDCK    SETLL@XDCRL1
+     C                     OTHER
+     C           CGUDCK    SETLL@UDCRL1
+     C                     ENDSL
+      * Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '0'
+     C                     MOVELDRITEM    ##ITEM
+     C                     MOVELDRDCOR    ##DCOR
+     C                     ELSE
+     C                     Z-ADD*ZERO     ##ITEM
+     C                     MOVEL*BLANK    ##DCOR
+     C                     Z-ADD*ZERO     DRITEM
+     C                     MOVEL*BLANK    DRDCOR
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+      * Send message '*No data to display'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELDDERR     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C           *IN99     DOWEQ'0'
+     C                     ADD  1         RRN     40     04*
+     C                     WRITE#SFLRCD
+     C           RRN       IFEQ 16
+      * Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     DRITEM
+     C                     MOVEL*BLANK    DRDCOR
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+      * Send message '*No data to display'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELDDERR     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ELSE
+     C                     SETON                         99*
+     C                     END
+     C                     ELSE
+      * Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     DRITEM
+     C                     MOVEL*BLANK    DRDCOR
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+      * Send message '*No data to display'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELDDERR     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* SET SUBFILE CONTROL INDICATORS
+     C*
+     C                     SELEC
+     C           *IN,4     WHEQ '1'
+     C                     MOVEA'011'     *IN,1
+     C           *IN,4     WHEQ '0'
+     C           DDERR     ANDEQERR,1
+     C                     MOVEA'111'     *IN,1
+     C                     OTHER
+     C                     MOVEA'110'     *IN,1
+     C                     ENDSL
+     C                     ENDSR
+     C********************************************************************
+     C* ROLLDOWN REQUEST
+     C********************************************************************
+     C           ROLDWN    BEGSR
+     C                     Z-ADD*ZERO     RRN
+     C                     MOVEL##ITEM    DRITEM
+     C                     MOVEL##DCOR    DRDCOR
+      * Position
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C           CGUDCK    SETGT@XDCRL1
+     C                     OTHER
+     C           CGUDCK    SETGT@UDCRL1
+     C                     ENDSL
+      * Read (Previous)
+     C                     EXSR RDPFIL
+     C*
+     C           *IN99     DOWEQ'0'
+     C           RRN       ANDLT16
+      * Read (Previous)
+     C                     EXSR RDPFIL
+     C*
+     C                     ADD  1         RRN
+     C                     END
+     C*
+     C           *IN99     IFEQ '1'
+     C                     Z-ADD*ZERO     DRITEM
+     C                     MOVEL*BLANK    DRDCOR
+     C                     MOVELERR,2     DDERR            *START OF FILE
+      * Send message '*No data to display'
+     C                     MOVEL'CPF9898' ZAMSID
+     C                     MOVELDDERR     ZAMSDA
+     C                     MOVEL'QCPFMSG 'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C* READ (NEXT) FROM FILE
+     C********************************************************************
+     C           RDFFIL    BEGSR
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C                     READ @XDCRL1                  99*
+     C                     OTHER
+     C                     READ @UDCRL1                  99*
+     C                     ENDSL
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C                     READ @XDCRL1                  99*
+     C                     OTHER
+     C                     READ @UDCRL1                  99*
+     C                     ENDSL
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C* READ PREVIOUS FROM FILE
+     C********************************************************************
+     C           RDPFIL    BEGSR
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C                     READP@XDCRL1                  99*
+     C                     OTHER
+     C                     READP@UDCRL1                  99*
+     C                     ENDSL
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C                     SELEC
+     C           P0MODE    WHEQ 'ARCHIVE'
+     C                     READP@XDCRL1                  99*
+     C                     OTHER
+     C                     READP@UDCRL1                  99*
+     C                     ENDSL
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C* DETERMINE IF RECORD READ IS TO BE SELECTED FOR DISPLAY
+     C********************************************************************
+     C           SELCTN    BEGSR
+      *
+      ** END OF FILE
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'*'       SELT    1
+     C                     GOTO ESELCT
+     C                     END
+      *
+      ** RECORD TO BE SELECTED?
+      *
+     C                     MOVEL'Y'       SELT
+      *
+     C                     MOVELDRITEM    SITEM
+     C                     MOVEL*BLANK    STRAN
+     C           DRMTRN    IFNE *BLANK
+     C                     MOVELDRMTRN    STRAN
+     C                     ELSE
+     C                     MOVELDRMACT    STRAN
+     C                     END
+      *
+     C           ESELCT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     C*****************************************************************
+     C* INITIAL PROCESSING
+     C*****************************************************************
+     C           SRINIT    BEGSR
+     C*
+     C*  Set up copyright parameter
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C**  Key List
+     C*
+     C           CGUDCK    KLIST
+     C                     KFLD           DRITEM
+     C                     KFLD           DRDCOR
+     C           CGUDCP    KLIST
+     C                     KFLD           DRITEM
+     C                     Z-ADD0         DRITEM
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+**  CPY@
+(c) Finastra International Limited 2001
+** ERR
+End of File
+Start of File
+Invalid Action Code
+** CMD@
+CLRPFM FILE(QTEMP/CG99Z1F)
+OVRDBF FILE(CG99Z1F) TOFILE(QTEMP/CG99Z1F) SHARE(*NO) SECURE(*YES)
+CPYF   FROMFILE(CGUDTAL2) TOFILE(*PRINT) OUTFMT(*HEX) RCDFMT(*ALL)
+FROMKEY(1 (X'123456789F')) TOKEY(1 (X'123456789F'))

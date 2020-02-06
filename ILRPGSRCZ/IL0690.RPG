@@ -1,0 +1,916 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Format and download for FIRE')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  IL0690  - IBLC 2002 Format and download for FIRE             *
+      *                                                               *
+      *  Function:  This program will produce a items file, and will  *
+      *             download them in "FIRE" Specified Folder in a     *
+      *             PC Formatted document. Data are kept in a         *
+      *             multimember file (ILDATAPD) until next COB        *
+      *                                                               *
+      *  Called By: ILC0690 - IBLC 2002 - DOWNLOAD ITEMS TO FOLDER    *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 UPG402             Date 06Oct04               *
+      *                 IL0037             Date 10Jan02               *
+      *                 201342             Date 05Dec01               *
+      *                 200880             Date 05Dec01               *
+      *                 ULX043             Date 11Oct01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to change in ZALIGNZ2                 *
+      *  IL0037 - Date of generation from ILSTAT                      *
+      *  201342 - BAD LAYOUT FOR FIRE FILE                            *
+      *  200880 - Cannot create twice same Member in ildatapd         *
+      *           ILITEML1 must be read using key list, clean CMDxx   *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+     F****ILITEML1IF  E                    DISK         KINFSR *PSSR      200880
+     FILITEML1IF  E           K        DISK         KINFSR *PSSR          200880
+      ***  Extraction File for Daily IBLC
+      *
+     FILICDRPDIF  E                    DISK         KINFSR *PSSR
+      ***  IBLC 2002 ICD
+      *
+     F***SDBRCHYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDBRX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Branch code extended Details
+      *
+     FILDATAPDO   E                    DISK         KINFSR *PSSR      UC
+      ***  Output in FIRE FORMAT
+      *
+      /EJECT
+      *****************************************************************
+      ***  Compile Time Arrays
+      *****************************************************************
+      *
+      ***  Standard Subroutine Arrays
+      *
+      /COPY ZSRSRC,ZEDITZ1                               Std ZEDIT
+      /COPY ZSRSRC,ZDATE2Z1                              Std ZDATE1/2
+      /COPY ZSRSRC,ZDATE9Z1                              Std ZDATE9
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Define COMMAND using Constants
+      *
+     I              'ADDPFM FILE(*LIBL/IL-C         #1ADDP
+     I              'DATAPD) MBR(BCL'
+     I              ')'                   C         #2ADDP
+     I              'OVRDBF FILE(ILDATAPD-C         #1OVR
+     I              ') TOFILE(*LIBL/ILDAT-
+     I              'APD) MBR(BCL'
+     I              ') SHARE(*NO)'        C         #2OVR
+     I              'DLTOVR FILE(ILDATAPD'C         #1DLT
+      *
+      ***  Standard subroutine Data Structure
+      *
+      /COPY ZSRSRC,ZDATE9Z2                                Std ZDATE9
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ***  Data Area giving Installation Control Details
+      *                                                                   IL0037
+     IILSTAT    E DSILSTAT                                                IL0037
+      ***  IBLC 2002 data area                                            IL0037
+      *                                                                   IL0037
+      ***  Data Structure to received details through Access Object programs
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  Standing date - currency details
+     IDSSDY     E DSDSSDY
+      ***  Long data stucture for Access Object Programs
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C****       1         SETLLILITEML1                                  200880
+     C           *LOVAL    SETLLILITEML1                                  200880
+     C                     READ ILITEML1                 70
+      *
+     C           *IN70     IFEQ *OFF                       At least one found
+      *
+      ***  Read until EOF
+      *
+     C           *IN70     DOWEQ*OFF
+      *
+      ***  Perform Branch Break
+      *
+     C           ITBRCD    IFNE WKBRCD
+     C                     EXSR #BRCD
+     C                     ENDIF
+      *
+      ***  Permorm Item treatment
+      *
+     C                     EXSR #DETA
+      *
+      ***  Read next record
+      *
+     C                     READ ILITEML1                 70
+      *
+     C                     ENDDO
+      *
+      ***  Add Trailer in file
+      *
+     C                     EXSR #TRAIL
+      *
+      ***  Close and Create PC document in "FIRE" Folder
+      *
+     C                     EXSR #TRSMT
+      *
+     C                     ENDIF                           *IN70
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *              E N D     O F     M A I N L I N E S              *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #BRCD  - Handle Branch Break                                 *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     : QCMDEXC, #TRAIL , #TRSMT                         *
+      *****************************************************************
+      *
+     C           #BRCD     BEGSR
+      *
+      *
+     C           WKBRCD    IFNE *BLANKS                    Not for First Branch
+      *
+      ***  Create trailer in file
+      *
+     C                     EXSR #TRAIL
+      *
+      ***  Close file and transmit details
+      *
+     C                     EXSR #TRSMT
+      *
+     C                     ENDIF                           WKBRCD = *BLANKS
+      *
+      ***  Retrieve BCLN reference number and
+      ***  And Create new member to receive output
+      *
+     C                     MOVE ITBRCD    WKBRCD
+     C********** WKBRCD    CHAINSDBRCHYL             99                                       CER001
+     C           WKBRCD    CHAINSDBRX1L0             99                                       CER001
+      *
+      ***  Handle database Error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C                     MOVELPGM       DBPGM     P      * DB ERROR 001 *
+     C                     MOVEL'SDBRCHXL'DBFILE    P      ****************
+     C                     MOVELWKBRCD    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE BRBKNB    BCLN    3
+      *
+      ***  ADD new member for BCLN Report
+      ***  "ADDPFM FILE(*LIBL/ILDATAPD) MBR(BCLxxx)"
+      *
+     C                     MOVE *BLANKS   CMD40                           200880
+     C           #1ADDP    CAT  BCLN:0    CMD40  40
+     C           CMD40     CAT  #2ADDP:0  CMD40
+      *
+     C                     CALL 'QCMDEXC'              16
+     C                     PARM           CMD40
+     C                     PARM 40        WLEN   155
+      *
+      ***  Handle database error
+      *
+     C           *IN16     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 002 *
+     C                     MOVEL'QCMDEXC 'DBFILE           ****************
+     C                     MOVE CMD40     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  OVERRIDE I)DATAPD on member to work with.
+      ***  "OVRDBF FILE(ILDATAPD) TOFILE(*FILE/ILDATAPD) MBR(BCLxxx) SHARE(*NO)
+      *
+     C                     MOVE *BLANKS   CMD68                           200880
+     C           #1OVR     CAT  BCLN:0    CMD68  68
+     C           CMD68     CAT  #2OVR:0   CMD68
+      *
+     C                     CALL 'QCMDEXC'              16
+     C                     PARM           CMD68
+     C                     PARM 68        WLEN   155
+      *
+      ***  Handle database error
+      *
+     C           *IN16     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 003 *
+     C                     MOVEL'QCMDEXC 'DBFILE           ****************
+     C                     MOVE CMD68     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Open file ILDATAPD to use it
+      *
+     C                     OPEN ILDATAPD               82
+      *
+      ***  Handle database error
+      *
+     C           *IN82     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 004 *
+     C                     MOVEL'ILDATAPD'DBFILE           ****************
+     C           'OPENING' CAT  BCLN:1    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Create File header
+      *
+     C                     EXSR #HEAD
+      *
+     C                     Z-ADD0         CHKSUM 160       Amount of Registration
+     C                     Z-ADD0         TOTAL   60       Total of Record in batch
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #TRSMT - Close current Report, and Transmit in FIRE PC FOLDER*
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     : QCMDEXC, ILDWTOPC                                *
+      *****************************************************************
+      *
+     C           #TRSMT    BEGSR
+      *
+      ***  Close ILDATAPD, Current Member
+      *
+     C                     CLOSEILDATAPD               99
+      *
+      ***  Handle database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ****************
+     C                     MOVELPGM       DBPGM     P      * DB ERROR 005 *
+     C                     MOVEL'ILDATAPD'DBFILE    P      ****************
+     C           'CLOSING' CAT  BCLN:1    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Delete override "DLTVOR FILE(ILDATAPD)"
+      *
+     C                     MOVE *BLANKS   CMD21                           200880
+     C           #1DLT     CAT  #2ADDP:0  CMD21  21
+      *
+     C                     CALL 'QCMDEXC'              16
+     C                     PARM           CMD21
+     C                     PARM 21        WLEN   155
+      *
+      ***  Handle database error
+      *
+     C           *IN16     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 006 *
+     C                     MOVEL'QCMDEXC 'DBFILE           ****************
+     C                     MOVELCMD21     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Output PC formatted details in "Abclmmdd.TXT" file
+      *
+     C                     CALL 'ILDWTOPC'             99
+     C                     PARM *BLANK    PRETC   1
+     C                     PARM BCLN      PBCLN   3        Current BCL Ref
+     C                     PARM ICFLDP    PFLR   63        Folder
+      *
+      ***  Handle problem in Output
+      *
+     C           *IN99     IFEQ *ON
+     C           PRETC     ORNE ' '
+     C           *LOCK     IN   LDA                                       200880
+     C                     Z-ADD7         DBASE            ****************
+     C                     MOVELPGM       DBPGM     P      * DB ERROR 007 *
+     C                     MOVEL'ILDATAPD'DBFILE    P      ****************
+     C           'TRANSFER'CAT  BCLN:1    DBKEY     P
+     C                     OUT  LDA                                       200880
+     C                     EXSR *PSSR                                     200880
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #HEAD  - Produce Header Record of ILDATAPD According         *
+      *  ------     FIRE Daily IBLC Data dictionnary                  *
+      *  Called by :                                                  *
+      *  Calls     : #LEFT, #NUML                                     *
+      *****************************************************************
+      *
+     C           #HEAD     BEGSR
+      *
+      ***  output record to blanks
+      *
+     C                     MOVE *BLANKS   ILDTAR
+      *
+     C                     MOVEL'H['      ILDTAR    P      header record
+      *
+      ***  C001 : Supplier of physical batch
+      *
+     C                     MOVE BRBKNB    TEMP  256 P
+     C                     EXSR #LEFT                      Left align
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C002 : Physical Batch Name :  A+ BCL ref+ MMDD '.TXT'
+      *
+     C           ILDTAR    CAT  'A':0     ILDTAR
+     C           ILDTAR    CAT  BCLN:0    ILDTAR           'Abcl'
+      *
+      ***  take Reporting date from ILSTAT of RUNDAT if not found         IL0037
+      *                                                                   IL0037
+     C******               Z-ADDAGRDNB    @@DAYN  50                      IL0037
+     C                     Z-ADDREPDAT    @@DAYN  50                      IL0037
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WK08N0  80
+     C                     MOVE WK08N0    WK4ALP  4
+     C****                 MOVE WK4ALP    WK04N0  40
+     C****                 Z-ADD0         ZADEC            No Decimals
+     C****                 MOVE *BLANKS   ZFIELD
+     C****                 MOVE WK04N0    ZFIELD    P
+     C****                 EXSR #NUML                      Left Align numeric value
+     C                     MOVELWK4ALP    TEMP
+     C           ILDTAR    CAT  TEMP:0    ILDTAR           'AbclMMDD'
+     C           ILDTAR    CAT  '.TXT':0  ILDTAR           'AbclMMDD.TXT'
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C003 : Origin of The Physical Batch : DETR
+      *
+     C           ILDTAR    CAT  'DETR':0  ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C004 : Reporting Date : Midas rundate (YYYYMMDD)
+      *
+     C****                 Z-ADDAGRDNB    @@DAYN  50                      IL0037
+     C                     Z-ADDREPDAT    @@DAYN  50       Rep. Date      IL0037
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WK08N0  80
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WK08N0    ZFIELD    P
+     C                     EXSR #NUML
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C005 : Production Date : Midas Rundat
+      *
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+      *
+      ***  Save for Trailer
+      *
+     C                     MOVELILDTAR    SVDTAR100 P
+     C           ILDTAR    CAT  ']':0     ILDTAR           End of Record
+      *
+      ***  Write header
+      *
+     C                     WRITEILDATAD0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #DETA  - Produce Details Records of ILDTATPD                 *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     : #LEFT, #NUML                                     *
+      *****************************************************************
+      *
+     C           #DETA     BEGSR
+      *
+      ***  Read Extracted file
+      ***  Add in C071 Totla of record treated
+      *
+     C                     ADD  1         TOTAL
+      *
+      ***  In case of Currency break, Access SDCURRPD to retrieve Dec. Places
+      *
+     C           ITCURR    IFNE WKCURR
+      *
+     C                     MOVE ITCURR    WKCURR
+      *
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY    'POTPN   7
+     C                     PARM WKCURR    PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ****************
+     C                     MOVELPGM       DBPGM     P      * DB ERROR 008 *
+     C                     MOVEL'SDCURRPD'DBFILE    P      ****************
+     C                     MOVELWKCURR    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Keep for multple uses
+      *
+     C                     Z-ADDA6NBDP    WKDECP  10       Decimals places
+     C                     ENDIF
+      *
+      ***  Reset Format
+      *
+     C                     MOVE *BLANKS   ILDTAR
+      *
+     C                     MOVEL'D['      ILDTAR    P      Detail Record
+      *
+      ***  C006 : Record type
+      *
+     C           ILDTAR    CAT  '010':0   ILDTAR           Rec Type 10
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C072 : Original Transaction Reference
+      *
+     C                     MOVELITOPER    TEMP      P
+     C                     EXSR #LEFT
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C073 : Sequential counter
+      *
+     C                     MOVELITITSQ    TEMP      P
+     C                     EXSR #LEFT
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C007 : ISO currency code
+      *
+     C                     MOVE ITCURR    TEMP      P
+     C                     EXSR #LEFT
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      ****
+      **** C807 : Original transaction currency
+      ****
+     C****                 MOVE ITOCUR    TEMP      P
+     C****                 EXSR #LEFT
+     C****       ILDTAR    CAT  TEMP:0    ILDTAR
+     C****       ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C008 : Code origin of the information  ('2'for luxembourg)
+      *
+     C           ILDTAR    CAT  '2':0     ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C010 : ISO - country of residence code
+      *
+     C                     MOVE ITCOCO    TEMP      P
+     C                     EXSR #LEFT
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C014 : INTERNAL NUMBER                                         201342
+      *                                                                   201342
+     C                     MOVE *BLANKS   ZFIELD                          201342
+     C                     MOVE ITITSQ    ZFIELD                          201342
+     C                     EXSR #NUML                                     201342
+     C           ILDTAR    CAT  TEMP:0    ILDTAR                          201342
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separato201342
+      *                                                                   201342
+      ***  C040 : Amount in ISO currency code without decimal part
+      *
+     C                     Z-ADD0         ZADEC            0 Decimal
+     C                     MOVE *BLANKS   ZFIELD
+      *
+      ***  Round Amount
+      *
+     C                     SELEC
+     C           WKDECP    WHEQ 0
+     C                     Z-ADDITAMNT    WKAMNT 150
+     C           WKDECP    WHEQ 1
+     C           ITAMNT    DIV  10        WKAMNT    H
+     C           WKDECP    WHEQ 2
+     C           ITAMNT    DIV  100       WKAMNT    H
+     C           WKDECP    WHEQ 3
+     C           ITAMNT    DIV  1000      WKAMNT    H
+     C                     ENDSL
+      *
+      ***  Add in C070 with Amount registered
+      *
+     C                     ADD  WKAMNT    CHKSUM
+     C                     MOVE WKAMNT    ZFIELD    P
+     C                     EXSR #NUML
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *****                                                               201342
+      *****C840 : Amount in Original Currency code without decimal part   201342
+      *****       Will be recalculated by FIRE (!)                        201342
+      *****                                                               201342
+     C*****      ITOCUR    IFNE WKOCUR                                    201342
+      *****                                                               201342
+      *****Retrieve Original currency Decimal places to remove            201342
+      *****                                                               201342
+     C*****                MOVE ITOCUR    WKOCUR  3                       201342
+      *****                                                               201342
+     C*****      ITOCUR    IFEQ *BLANKS                                   201342
+      *****                                                               201342
+      *****Rest to 0                                                      201342
+      *****                                                               201342
+     C*****                Z-ADD0         WODECP  10                      201342
+     C*****                ELSE                                           201342
+      *****                                                               201342
+     C*****                CALL 'AOCURRR0'             99                 201342
+     C*****                PARM *BLANKS   PRTCD                           201342
+     C*****                PARM '*KEY    'POTPN                           201342
+     C*****                PARM ITOCUR    PCCY                            201342
+     C*****      SDCURR    PARM SDCURR    DSSDY                           201342
+      *****                                                               201342
+     C*****      PRTCD     IFNE *BLANKS                                   201342
+     C*****      *IN99     OREQ *ON                                       201342
+     C*****      *LOCK     IN   LDA                                       201342
+     C*****                Z-ADD9         DBASE            ***************201342
+     C*****                MOVELPGM       DBPGM     P      * DB ERROR 009 201342
+     C*****                MOVEL'SDCURRPD'DBFILE    P      ***************201342
+     C*****                MOVELITOCUR    DBKEY     P                     201342
+     C*****                OUT  LDA                                       201342
+     C*****                EXSR *PSSR                                     201342
+     C*****                ENDIF                                          201342
+      *****                                                               201342
+      *****Keep for multiple uses                                         201342
+      *****                                                               201342
+     C*****                Z-ADDA6NBDP    WODECP  10                      201342
+     C*****                ENDIF                                          201342
+      *****                                                               201342
+     C*****                ENDIF                                          201342
+      *****                                                               201342
+     C*****                Z-ADD0         ZADEC            0 Decimal      201342
+     C*****                MOVE *BLANKS   ZFIELD                          201342
+      *****                                                               201342
+      *****Round Amount                                                   201342
+      *****                                                               201342
+     C*****                SELEC                                          201342
+     C*****      WODECP    WHEQ 0                                         201342
+     C*****                Z-ADDITOAMN    WKAMNT 150                      201342
+     C*****      WODECP    WHEQ 1                                         201342
+     C*****      ITOAMN    DIV  10        WKAMNT    H                     201342
+     C*****      WODECP    WHEQ 2                                         201342
+     C*****      ITOAMN    DIV  100       WKAMNT    H                     201342
+     C*****      WODECP    WHEQ 3                                         201342
+     C*****      ITOAMN    DIV  1000      WKAMNT    H                     201342
+     C*****                ENDSL                                          201342
+     C*****                MOVE WKAMNT    ZFIELD    P                     201342
+     C*****                EXSR #NUML                                     201342
+     C*****      ILDTAR    CAT  TEMP:0    ILDTAR                          201342
+     C*****      ILDTAR    CAT  ',':0     ILDTAR           Fields Separato201342
+      *
+      ***  C099 : Debit - Credit indicator
+      *
+     C                     MOVELITDRCR    TEMP      P
+     C                     EXSR #LEFT
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C281: Reference number of the transaction
+      *
+     C           ILDTAR    CAT  ITOPER:0  ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C282 : Id number of the counterparty
+      *
+     C           ILDTAR    CAT  ITIDNB:0  ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C283 : Identification code
+      *
+     C           ILDTAR    CAT  ITIDCO:0  ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C284 : IBLC code
+      *
+     C           ILDTAR    CAT  ITOPCO:0  ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C286 : Accounting date
+      *
+     C                     MOVELITACTD    TEMP      P
+     C*                    EXSR #LEFT
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C291 : Amount in Euros
+      *
+     C                     Z-ADD0         ZADEC            0 Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C           ITAMNB    DIV  100       WKAMNT 150H      Half adjust
+     C                     MOVE WKAMNT    ZFIELD    P
+     C                     EXSR #NUML
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C307 : Globalisaton ID
+      *
+     C                     MOVE ITGLOB    TEMP      P
+     C                     EXSR #LEFT
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Fields Separator
+      *
+      ***  C338 : Correction code
+      *
+     C                     MOVE ITCORR    TEMP      P
+     C                     EXSR #LEFT
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+      *
+     C           ILDTAR    CAT  ']':0     ILDTAR           End of Record
+      *
+      ***  Write detail
+      *
+     C                     WRITEILDATAD0                   Write Out
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #TRAIL - Produce Trailer Record of ILDATAPD                  *
+      *  ------                                                       *
+      *  Called by : Mainlines                                        *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #TRAIL    BEGSR
+      *
+      ***  Reset Format
+      *
+     C                     MOVELSVDTAR    ILDTAR    P
+      *
+     C                     MOVEL'T'       ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           Field separator
+      *
+      ***  C070 : Check Sum
+      *
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE CHKSUM    ZFIELD    P
+     C                     EXSR #NUML
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+     C           ILDTAR    CAT  ',':0     ILDTAR           field separator
+      *
+      ***  C071 : Amount of Record
+      *
+     C                     Z-ADD0         ZADEC            No Decimals
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE TOTAL     ZFIELD    P
+     C                     EXSR #NUML
+     C           ILDTAR    CAT  TEMP:0    ILDTAR
+      *
+     C           ILDTAR    CAT  ']':0     ILDTAR           End of Record
+      *
+      ***  Write trailer
+      *
+     C                     WRITEILDATAD0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #NUML  - Remove Trailing Zero of Numeric value and left      *
+      *  -----    in TEMP field                                       *
+      *  input : ZFIELD (16A)                                         *
+      *          ZADEC  (1N0)                                         *
+      *  Output : TEMP  (100A)                                        *
+      *  Called by : #HEAD, #DETA, #TRAIL                             *
+      *  Calls     : ZEDIT, #LEFT                                     *
+      *****************************************************************
+      *
+     C           #NUML     BEGSR
+      *
+     C                     EXSR ZEDIT
+      *
+      ***  ZADEC is used to detect number of Maximum trailing 0
+      *
+     C           ZADEC     IFGT 1                          Keep 1
+     C           ZADEC     SUB  1         #L      20       Mas of Loops
+     C                     Z-ADD16        #J      20       Right scanning
+     C           #L        DOWGT0
+      *
+      ***  Remove trailing Zero if found, if different then stop
+      *
+     C           ZA2,#J    IFEQ '0'                        use ZEDIT array
+     C                     MOVEA' '       ZA2,#J
+     C                     SUB  1         #J
+     C                     ELSE
+     C                     Z-ADD0         #L               Stop when 0
+     C                     ENDIF
+      *
+      ***  Discrease loop
+      *
+     C                     SUB  1         #L               stop when 0
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ***  PUT and left ALign
+      *
+     C                     MOVE *BLANKS   TEMP  256        Reset
+     C                     MOVEAZA2       TEMP              put new value
+     C                     EXSR #LEFT                       Left align
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #LEFT  - This routine will align string TEMP of 256 Char     *
+      *  -----                                                        *
+      *  Called by : #HEAD, #DETA, #TRAIL, #NUML                      *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #LEFT     BEGSR
+      *
+      ***  Declare temp size
+      *
+     C                     MOVELTEMP      TEMP  256
+      *
+      ***  Search first non blanks
+      *
+     C           ' '       CHECKTEMP      #I      30
+     C           #I        IFNE 0
+      *
+      ***  When found, left align by substring and Blanks padding
+      *
+     C                     SUBSTTEMP:#I   TEMP      P
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial subroutine called automatically             *
+      *  ------                                                       *
+      *  Called by : At Pgm start                                     *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ***  Reset all indicators
+      *
+     C                     MOVEL*OFF      *IN
+      *
+      ***  Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ***  Validate date as correct using ZDATE2
+      *
+     C                     Z-ADDAGRDNB    ZDAYNO  50       Midas Run date
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD10        DBASE            * DBERROR 010 *
+     C                     MOVEL'*NONE'   DBFILE           ***************
+     C           'WRONG '  CAT  'DATE'    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   IL0037
+      ***  Retrieve date of BCL run for Header and trailer                IL0037
+      *                                                                   IL0037
+     C           *NAMVAR   DEFN           ILSTAT                          IL0037
+     C                     IN   ILSTAT                                    IL0037
+      *                                                                   IL0037
+      ***  Validate by ZDATE1 Subroutine                                  IL0037
+      ***  SETUP ZDATE DDMMYY or MMDDYY depending on *IN98                IL0037
+      *                                                                   IL0037
+     C  N98                MOVELILDADD    WKDAT4  4                       IL0037
+     C   98                MOVELILDAMM    WKDAT4                          IL0037
+     C  N98                MOVE ILDAMM    WKDAT4  4                       IL0037
+     C   98                MOVE ILDADD    WKDAT4                          IL0037
+     C                     MOVELWKDAT4    WKDAT6  6                       IL0037
+     C                     MOVE ILDAYY    WKDAT6                          IL0037
+     C                     MOVE WKDAT6    ZDATE                           IL0037
+     C                     EXSR ZDATE1                                    IL0037
+     C           *IN99     IFEQ *OFF                                      IL0037
+     C                     Z-ADDZDAYNO    REPDAT  50       Rep. date      IL0037
+     C                     ELSE                                           IL0037
+     C                     Z-ADDAGRDNB    REPDAT                          IL0037
+     C                     ENDIF                                          IL0037
+      *
+      ***  Read IBLC I.C.D.
+      *
+     C           1         SETLLILICDRPD
+     C                     READ ILICDRPD                 99
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD11        DBASE            * DBERROR 011 *
+     C                     MOVEL'ILICDRPD'DBFILE           ***************
+     C                     MOVEL'*FIRST ' DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Working fields
+      *
+     C                     MOVE *BLANKS   WKBRCD  3
+     C                     MOVE *BLANKS   WKCURR  3
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *  ------   Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      * Called by : database error                                    *
+      * Calls     : *none                                             *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      /TITLE Copy Standard Subroutines
+      /COPY ZSRSRC,ZDATE1Z2                                Std ZDATE1     IL0037
+      /COPY ZSRSRC,ZDATE2Z2                                Std ZDATE2
+      /COPY ZSRSRC,ZDATE9Z3                                Std ZDATE9
+      /COPY ZSRSRC,ZEDITZ2                                 Std ZEDIT
+      /COPY ZSRSRC,ZALIGNZ2                                Std ZALIGN
+      /EJECT
+      ********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  CPY@
+(c) Finastra International Limited 2005

@@ -1,0 +1,55 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE Reset Past Due Customer Flag')               */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC004781 - Midas LE Reset Past Due Customer Flag         */
+/*                                                                 */
+/*       (c) Finastra International Limited 2013                   */
+/*                                                                 */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467 *CREATE  Date 11Apr13              */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1097467A - Expected 15% COB run optimization not met    */
+/*                                                                 */
+/*******************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERR_PGM))
+ 
+             SNDPGMMSG  MSG('LEC004781 - Reset Past Due Customer +
+                          Flag') TOMSGQ(MRUNQ)
+ 
+/* Call program to reset Past Due Customer Flag */
+ 
+             CALL       PGM(LE004781)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_PGM)
+ 
+/* Program Completed Successfully */
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Process Errors */
+ 
+ERR_PGM:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

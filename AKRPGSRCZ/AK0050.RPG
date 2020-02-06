@@ -1,0 +1,1855 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK Internal Contract A/c Key Generation')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Account Key Generator                                *
+     F*                                                               *
+     F*  AK0050  - Internal Contracts Account Keys Generation         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1071025          Date 16Jan13               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL038             Date 10May05               *
+      *                 CAS007             Date 26Apr04               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 208016             Date 01Aug02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01MAR99               *
+      *                 CTI002 Exposure Management / TI Interface     *
+     F*                 085263             DATE 18APR95               *
+     F*                 063694             DATE 23MAR94               *
+     F*                 047369             DATE 10JAN94               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1071025 - Erroneous field will only highlight after the    *
+      *              second enter (Recompile)                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CAS007 - Hedge Accounting Control                            *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  208016 - Errors in screen validation in Account Keys         *
+      *           Maintenance                                         *
+      *  CAS004 - Hedge Accounting Phase A                            *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  085263 - Narrative code 28 redundant - remove from array.    *
+     F*  063694 - Program should not produce A/C code for account key *
+     F*           if the spot trade equivalent A/C of the base        *
+     F*           currency is blank.                                  *
+     F*  047369 - Narrative codes should be ALPHA and not NUMERIC.    *
+     F*           Recompile over amended file ZACKEYAL.               *
+     F*                                                               *
+     F*****************************************************************
+     FAK0050DFCF  E                    WORKSTN
+     FSDCURRL0IF  E           K        DISK
+     FZACKEYALO   E                    DISK                      A
+     FSDNARRL1IF  E           K        DISK
+     FSDDLSTL1IF  E           K        DISK
+     FSDACODL0IF  E           K        DISK
+     FSDBOOKL1IF  E           K        DISK                                                   CAS004
+     F********************************************************************
+     F* ID F  C  H  L   FUNCTION OF INDICATORS
+     F*
+     F* 03 Exit requested (F3 pressed)
+     F* 04 End of file (SDCURRPD)
+     F* 07 Keys generated successfully
+     F* 10 Chain to SDACODL0 for A6SPAE failed
+     F* 11 Chain to SDNARRL1 for Required Narrative failed
+     F* 12 Initial screen requested (F12 pressed from second screen)
+     F* 25 Spot Trade Equiv A/c required as DR account
+     F* 26 Spot Trade Equiv A/c required as CR account
+      * 30 Effective Fair Value Hedge Profit Contra Account          *                        CAS004
+      * 31 Posting Reference 1 or 3                                  *                        CAS004
+      * 32 Other Income Account                                      *                        CAS004
+      * 33 Effective Fair Value Hedge Loss Contra Account            *                        CAS004
+      * 34 Posting Reference 1 or 3                                  *                        CAS004
+      * 35 Other Expense Account                                     *                        CAS004
+      * 36 Effective Cash Flow Hedge Profit Contra Account           *                        CAS004
+      * 37 Posting Reference 1 or 3                                  *                        CAS004
+      * 38 Other Comprehensive Income Account                        *                        CAS004
+      * 39 Effective Cash Flow Hedge Loss Contra Account             *                        CAS004
+      * 40 Posting Reference 1 or 3                                  *                        CAS004
+     F* 41 Error occurred in initial screen
+      * 42 Other Comprehensive Income Account                        *                        CAS004
+     F* 50 Invalid Deal Type
+     F* 51 Invalid Sub Type
+     F* 52 Internal Forward Purchases (F1) invalid
+     F* 53 Internal Forward Sales (F2) invalid
+     F* 54 Internal Forward Position (F3) invalid
+     F* 55 Internal Nostro (F4) invalid
+     F* 55 Internal Loan (F5) invalid
+     F* 57 Internal Deposit (F6) invalid
+     F* 58 Interest Received Accrual (F7) invalid
+     F* 59 Interest Received Income (F8) invalid
+     F* 60 Interest Paid Accrual (F9) invalid
+     F* 61 Interest Paid Expense (F10) invalid
+     F* 62 Internal Contracts screen in error
+     F* 78 Spot Trade Account Code on SDTRADPD invalid
+     F* U4 Not all Narrative Codes set up - terminate program
+     F* U8 Database error - terminate program
+     F********************************************************************
+     E                    CCYA      200  3               Dealing Currencies
+     E**********          TAC       200  4 0             Spot Trade A/c Equiv                 CGL029
+     E                    TAC       200 10 0                                                  CGL029
+     E************        PN          8  2               Missing Narrative085263
+     E                    PN          7  2               Narrative codes  085263
+     E                    NR      8   8  2               Reqd. Narratives
+     E                    CPY@    1   1 80               Copyright Array
+     E********************************************************************
+     I**   Data Structures
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I** Data Structure to retrieve User and Workstation ID.
+     I*
+     IRUNDAT      DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 @MBIN
+     I** Rundate Data Area
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** Local Data Area
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     IDSSDY     E DSDSSDY                                                                     CAS004
+      ** Second DS for access programs, Long Date Structure                                   CAS004
+      *                                                                                       CAS004
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     ISDTRAD    E DSSDTRADPD
+     I** Trading Data Details
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CAS004
+      ** Data Structure for Switcheable Features File                                         CAS004
+      *                                                                                       CAS004
+     ISDACOD    E DSSDACODPD                                                                  CAS004
+     I              QQACCD                          QQACC1                                    CGL029
+      ** Trading Details                                                                      CAS004
+      *                                                                                       CAS004
+     ISDDEAL    E DSSDDEALPD                                                                  CAS004
+     I              QQACCD                          QQACC2                                    CGL029
+      ** Dealing Data Details                                                                 CAS004
+      *                                                                                       CAS004
+     ISDTCLS    E DSSDTCLSPD                                                                  CDL038
+     I** Transaction Classes                                                                  CDL038
+     IDLAKEY      DS
+     I                                        1  10 DLKEY
+     I                                        1   2 DTYPD
+     I                                        3   3 EVENTD
+     I                                        4   5 STYPD
+     I                                        6   8 CYD
+     I                                        9   9 FBD
+     I                                       10  10 AMTD
+     I                                       11  14 CLASD                                     CDL038
+     I**********                             11  52 FMKEYS                                    CGL029
+     I**********                             11  22 FIRSTA                                    CGL029
+     I**********                             11  14 AC1                                       CGL029
+     I**********                             15  18 AC2                                       CGL029
+     I**********                             19  22 AC3                                       CGL029
+     I**********                             23  34 SECA                                      CGL029
+     I**********                             23  26 AC4                                       CGL029
+     I**********                             27  30 AC5                                       CGL029
+     I**********                             31  34 AC6                                       CGL029
+     I**********                             35  40 FIRSTN                                    CGL029
+     I**********                             35  36 PN1                                       CGL029
+     I**********                             37  38 PN2                                       CGL029
+     I**********                             39  40 PN3                                       CGL029
+     I**********                             41  46 SECN                                      CGL029
+     I**********                             41  42 PN4                                       CGL029
+     I**********                             43  44 PN5                                       CGL029
+     I**********                             45  46 PN6                                       CGL029
+     I**********                             47  49 FIRSTP                                    CGL029
+     I**********                             47  47 PR1                                       CGL029
+     I**********                             48  48 PR2                                       CGL029
+     I**********                             49  49 PR3                                       CGL029
+     I**********                             50  52 SECP                                      CGL029
+     I**********                             50  50 PR4                                       CGL029
+     I**********                             51  51 PR5                                       CGL029
+     I**********                             52  52 PR6                                       CGL029
+     I                                       11  88 FMKEYS                                    CGL029
+     I                                       11  40 FIRSTA                                    CGL029
+     I                                       11  20 AC1                                       CGL029
+     I                                       21  30 AC2                                       CGL029
+     I                                       31  40 AC3                                       CGL029
+     I                                       41  70 SECA                                      CGL029
+     I                                       41  50 AC4                                       CGL029
+     I                                       51  60 AC5                                       CGL029
+     I                                       61  70 AC6                                       CGL029
+     I                                       71  76 FIRSTN                                    CGL029
+     I                                       71  72 PN1                                       CGL029
+     I                                       73  74 PN2                                       CGL029
+     I                                       75  76 PN3                                       CGL029
+     I                                       77  82 SECN                                      CGL029
+     I                                       77  78 PN4                                       CGL029
+     I                                       79  80 PN5                                       CGL029
+     I                                       81  82 PN6                                       CGL029
+     I                                       83  85 FIRSTP                                    CGL029
+     I                                       83  83 PR1                                       CGL029
+     I                                       84  84 PR2                                       CGL029
+     I                                       85  85 PR3                                       CGL029
+     I                                       86  88 SECP                                      CGL029
+     I                                       86  86 PR4                                       CGL029
+     I                                       87  87 PR5                                       CGL029
+     I                                       88  88 PR6                                       CGL029
+      *                                                                                       CGL029
+      ** Contant containing 10 zeros                                                          CGL029
+      *                                                                                       CGL029
+     I              '0000000000'          C         WTEN0                                     CGL029
+     C********************************************************************
+     C                     EXSR INIT
+     C                     EXSR MAIN
+     C                     SETON                     LR
+     C                     RETRN
+     C********************************************************************
+     C*
+     C*  MAIN - Main processing
+     C*
+     C*  Calls - Y2CLMSC - Clear program message queue (external)
+     C*        - ICP     - Validate Internal Contracts screen/Generate
+     C*
+     C********************************************************************
+     C           MAIN      BEGSR
+     C*
+     C           *IN03     DOWEQ'0'
+     C           *IN07     ANDEQ'0'
+     C**
+     C** Initialise counts of No. Inserts & Amends
+     C**
+     C                     Z-ADD0         INS     40
+     C                     Z-ADD0         AMS     40
+     C*
+     C                     WRITE#MSGCTL
+     C                     EXFMTACKEYSF
+     C**
+     C** Clear messages from program message queue.
+     C**
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C**
+     C** If F3 not pressed, validate initial screen
+     C**
+     C           *IN03     IFEQ '0'
+     C*
+     C** Set off screen selection indicators
+     C*
+     C                     SETOF                     415051
+     C                     SETOF                     98                                       CDL038
+     C**
+     C** Send message if required narratives not all found on SDNARRL1
+     C**
+     C           *IN11     IFEQ '1'
+     C                     MOVEL'USR1776' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     SETON                     41    Initial scr error
+     C                     ELSE
+     C**
+     C**   Send message if Deal Type is blank
+     C**
+     C           TYPE      IFNE 'PS'
+     C                     SETON                     50    Deal Type invalid
+     C                     MOVEL'USR4251' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END                                         ype
+     C**
+     C**   Send message if Deal Sub Type is blank or invalid
+     C**
+     C           STYP      IFEQ *BLANKS
+     C                     SETON                     51    Deal SubType invalid
+     C                     ELSE
+     C           STYP      CHAINSDDLSTL1             51
+     C                     END
+     C*
+     C           *IN51     IFEQ '1'
+     C                     SETON                     41
+     C                     MOVEL'USR4218' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**                                                                                      CDL038
+     C**   Send message if Class is invalid                                                   CDL038
+     C**                                                                                      CDL038
+     C           CDL038    IFEQ 'Y'                                                           CDL038
+     C                     CALL 'AOTCLSR0'                                                    CDL038
+     C                     PARM *BLANK    P@RTCD  7                                           CDL038
+     C                     PARM '*KEY   ' P@OPTN  7                                           CDL038
+     C                     PARM CLAS      P@CLAS  4                                           CDL038
+     C                     PARM           SDTCLS                                              CDL038
+     C           P@RTCD    IFEQ '*NRF   '                                                     CDL038
+     C                     SETON                     4198                                     CDL038
+     C                     MOVEL'USR5010' ZAMSID           Message id.                        CDL038
+     C                     EXSR ZASNMS                     Send message                       CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVELTCCLAS    CLAS                                                CDL038
+     C                     END                                                                CDL038
+     C                     END                                                                CDL038
+     C                     END
+     C**
+     C** If no errors, output and process second screen
+     C**
+     C           *IN50     IFEQ '0'                        Deal Type valid
+     C           *IN51     ANDEQ'0'                        Deal Subtype valid
+     C           *IN41     ANDEQ'0'                                         d
+     C           *IN03     ANDEQ'0'                        F3 not pressed
+     C**
+     C** Blank out previous values entered on screen
+     C**
+     C                     MOVE *BLANKS   F1
+     C                     MOVE *BLANKS   F2
+     C                     MOVE *BLANKS   F3
+     C                     MOVE *BLANKS   F4
+     C                     MOVE *BLANKS   F5
+     C                     MOVE *BLANKS   F6
+     C                     MOVE *BLANKS   F7
+     C                     MOVE *BLANKS   F8
+     C                     MOVE *BLANKS   F9
+     C                     MOVE *BLANKS   F10
+     C*
+     C                     SETOF                     525354
+     C                     SETOF                     555657
+     C                     SETOF                     585960
+     C                     SETOF                     6162
+      *                                                                                       CAS004
+      ** If CAS004 is installed, initialise screen fields and                                 CAS004
+      ** indicators                                                                           CAS004
+      *                                                                                       CAS004
+     C           CAS004    IFEQ 'Y'                                                           CAS004
+     C           CAS007    ANDEQ'Y'                                                           CAS007
+     C                     MOVE *BLANKS   SEFVHP                                              CAS004
+     C                     MOVE *BLANKS   SFVPPR                                              CAS004
+     C                     MOVE *BLANKS   SOTINC                                              CAS004
+     C                     MOVE *BLANKS   SEFVHL                                              CAS004
+     C                     MOVE *BLANKS   SFVLPR                                              CAS004
+     C                     MOVE *BLANKS   SOTEXP                                              CAS004
+     C                     MOVE *BLANKS   SECFHP                                              CAS004
+     C                     MOVE *BLANKS   SCFPPR                                              CAS004
+     C                     MOVE *BLANKS   SOCOMP                                              CAS004
+     C                     MOVE *BLANKS   SECFHL                                              CAS004
+     C                     MOVE *BLANKS   SCFLPR                                              CAS004
+     C                     MOVE *BLANKS   SOCOML                                              CAS004
+     C                     MOVEA'000000'  *IN,30                                              CAS004
+     C                     MOVEA'00000'   *IN,36                                              CAS004
+     C                     MOVE *OFF      *IN42                                               CAS004
+     C                     ENDIF                                                              CAS004
+     C*
+     C                     EXSR ICP
+     C*
+     C                     END                             2nd screen reqd
+     C*
+     C                     END                             F3 pressed
+     C*
+     C                     END                             F3 pressed
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C** ICP - Validate Internal Contracts screen & structure output/
+     C**       update to ZACKEYAL
+     C**
+     C** Called By - MAIN - Main processing
+     C**
+     C** Calls - ZASNMS - Send message to program message queue
+     C**       - CCYUP  - Update ZACKEYAL with keys requiring
+     C**                  currencies
+     C**
+     C********************************************************************
+     C           ICP       BEGSR
+     C*
+     C           *IN03     DOUEQ'1'                        F3 pressed
+     C           *IN12     OREQ '1'                        F12 pressed
+     C           *IN62     OREQ '0'                        No errs in IC scrn
+     C*
+     C                     WRITE#MSGCTL
+     C                     EXFMTACKEYIC
+     C**
+     C** Clear messages from program message queue.
+     C**
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C**
+     C** If F3 and F12 not pressed, validate screen
+     C**
+     C           *IN03     IFEQ '0'                        F3 pressed  X scrn
+     C           *IN12     ANDEQ'0'                        F12 pressed X scrn
+     C**
+     C** Initialise indicators before validation
+     C**
+     C                     SETOF                     525354
+     C                     SETOF                     555657
+     C                     SETOF                     585960
+     C                     SETOF                     6162
+     C**
+     C** Load arrays with valid Dealing Currencies and corresponding
+     C** Base Equivalent Accounts. Initialise SDCURRPD & count No. of
+     C** currencies in array. Process all records from SDCURRPD
+     C**
+     C           *LOVAL    SETLL@A6REA4
+     C                     Z-ADD0         C       30
+     C*
+     C           *IN04     DOUEQ'1'                        Not eof(SDCURRPD)
+     C           C         ORGT 200
+     C*
+     C                     READ @A6REA4                  04
+     C**
+     C** If not end of file, process Dealing Currencies
+     C**
+     C           *IN04     IFEQ '0'                        Not eof(SDCURRPD)
+     C*
+     C           A6DLCI    IFEQ 'Y'
+     C**
+     C** Fill Currency array
+     C**
+     C           C         ADD  1         C
+     C                     MOVE A6CYCD    CCYA,C
+     C**
+     C** Validate Spot Trade A/c Equivalents & move to array
+     C**
+     C           A6SPAE    CHAINSDACODL0             10
+     C*
+     C           *IN10     IFEQ '1'                        A/c code invalid
+     C           A5TOIN    OREQ 'Y'
+     C                     SETON                     62    Error
+     C                     MOVELA6CYCD    ZAMSDA           Message parameters
+     C                     MOVEL'USR4226' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE                            A/c code valid
+     C                     MOVE A6SPAE    TAC,C
+     C*                                                                   063694
+     C** Save the Base Currency Spot Trade Equivalent A/C                 063694
+     C*                                                                   063694
+     C           CCYA,C    IFEQ BJCYCD                                    063694
+     C**********           MOVE A6SPAE    BSPAE   4                                    063694 CGL029
+     C                     MOVE A6SPAE    BSPAE  10                                           CGL029
+     C                     END                                            063694
+     C                     END                             A/c validation
+     C*
+     C                     END                             Not Dealing Ccy
+     C*
+     C                     END                             Eof
+     C*
+     C                     END                             Eof or C GT 200
+     C**
+     C** If more than 200 Dealing Currencies send error message
+     C**
+     C           C         IFGT 200
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4220' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Store number of currencies loaded into array
+     C**
+     C                     Z-ADDC         MAXCCY  30
+     C                     SETOF                     62    Errors on screen
+     C*
+     C**
+     C** Check F1 (Internal Forward Purchases) is entered and is valid
+     C** non-title Account code
+     C**
+     C           F1        IFEQ *BLANKS
+     C                     SETON                     52
+     C                     ELSE
+     C           F1        CHAINSDACODL0             52
+     C                     END
+     C*
+     C           *IN52     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN52                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F2 (Internal Forward Sales) is entered and is valid
+     C** non-title Account code
+     C**
+     C           F2        IFEQ *BLANKS
+     C                     SETON                     53
+     C                     ELSE
+     C           F2        CHAINSDACODL0             53
+     C                     END
+     C*
+     C           *IN53     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN53                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F3 (Internal Forward Position) is entered and is valid
+     C** non-title Account code
+     C**
+     C           F3        IFEQ *BLANKS
+     C                     SETON                     54
+     C                     ELSE
+     C           F3        CHAINSDACODL0             54
+     C                     END
+     C*
+     C           *IN54     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN54                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F4 (Internal Nostro) is entered and is valid, non-title
+     C** Account code
+     C**
+     C           F4        IFEQ *BLANKS
+     C                     SETON                     55
+     C                     ELSE
+     C           F4        CHAINSDACODL0             55
+     C                     END
+     C*
+     C           *IN55     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN55                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F5 (Internal Loan) is entered and is valid, non-title
+     C** Account code
+     C**
+     C           F5        IFEQ *BLANKS
+     C                     SETON                     56
+     C                     ELSE
+     C           F5        CHAINSDACODL0             56
+     C                     END
+     C*
+     C           *IN56     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN56                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F6 (Internal Deposit) is entered and is valid, non-title
+     C** Account code
+     C**
+     C           F6        IFEQ *BLANKS
+     C                     SETON                     57
+     C                     ELSE
+     C           F6        CHAINSDACODL0             57
+     C                     END
+     C*
+     C           *IN57     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN57                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F7 (Interest Received Accrual) is entered and is
+     C** valid, non-title Account code
+     C**
+     C           F7        IFEQ *BLANKS
+     C                     SETON                     58
+     C                     ELSE
+     C           F7        CHAINSDACODL0             58
+     C                     END
+     C*
+     C           *IN58     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN58                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F8 (Interest Received Income) is entered and is
+     C** valid, non-title Account code
+     C**
+     C           F8        IFEQ *BLANKS
+     C                     SETON                     59
+     C                     ELSE
+     C           F8        CHAINSDACODL0             59
+     C                     END
+     C*
+     C           *IN59     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN59                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F9 (Interest Paid Accrual) is entered and is
+     C** valid, non-title Account code
+     C**
+     C           F9        IFEQ *BLANKS
+     C                     SETON                     60
+     C                     ELSE
+     C           F9        CHAINSDACODL0             60
+     C                     END
+     C*
+     C           *IN60     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN60                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check F10 (Interest Paid Expense) is entered and is
+     C** valid, non-title Account code
+     C**
+     C           F10       IFEQ *BLANKS
+     C                     SETON                     61
+     C                     ELSE
+     C           F10       CHAINSDACODL0             61
+     C                     END
+     C*
+     C           *IN61     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     MOVE *ON       *IN61                                               208016
+     C                     SETON                     62    Errors in IC screen
+     C                     MOVEL'USR4230' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     END
+     C**
+     C** Check Spot Trade Account Code from SDTRADPD ICD is valid
+     C** (stored as F11)
+     C**
+     C           BLSPTA    CHAINSDACODL0             78
+     C           *IN78     IFEQ '1'
+     C           A5TOIN    OREQ 'Y'
+     C                     SETON                     6278  Errors in IC screen
+     C                     MOVEL'USR4224' ZAMSID           Message id.
+     C                     EXSR ZASNMS                     Send message
+     C                     ELSE
+     C**********           MOVE BLSPTA    F11     4                                           CGL029
+     C                     MOVE BLSPTA    F11    10                                           CL0029
+     C                     END
+      *                                                                                       CAS004
+      ** If Hedge Accounting (CAS004) is installed, generate Hedge                            CAS004
+      ** Accounting account keys.                                                             CAS004
+      *                                                                                       CAS004
+     C           CAS004    IFEQ 'Y'                                                           CAS004
+     C           CAS007    ANDEQ'Y'                                                           CAS007
+     C           *IN62     ANDEQ*OFF                                                          CAS004
+     C                     EXSR SRDHAC                                                        CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C**
+     C** If errors exist on screen, exit subroutine
+     C**
+     C           *IN62     IFEQ '0'                        No errs in IC scrn
+     C**
+     C** Set up all fields for ZACKEYAL output/update
+     C**
+     C                     MOVE *BLANK    DLKEY
+     C                     MOVE TYPE      DTYPD
+     C                     MOVE STYP      STYPD
+     C                     MOVE CLAS      CLASD                                               CDL038
+     C                     MOVE *BLANK    FMKEYS
+     C**
+     C** Deal Date Keys
+     C**
+     C** Format Key PSDYY...FB      (YY=Sub Type,.=blank)
+     C**
+     C                     MOVE 'FB'      DLKEY
+     C                     MOVE 'D'       EVENTD
+     C** DR fields
+     C                     MOVE F1        AC1
+     C                     MOVE '01'      PN1
+     C                     MOVE '1'       PR1
+     C** CR fields
+     C                     MOVE F3        AC4
+     C                     MOVE '01'      PN4
+     C                     MOVE '1'       PR4
+     C** Update file
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSDYY...BB & update file
+     C**
+     C                     MOVE 'B'       FBD
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSDYY...BC
+     C**
+     C                     MOVE 'C'       AMTD
+     C** DR & CR fields
+     C                     MOVE F3        AC1
+     C                     MOVE F2        AC4
+     C** Update file
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSDYY...FC & update file
+     C**
+     C                     MOVE 'F'       FBD
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSDYYCCY.P (CCY=Currency code)
+     C**
+     C                     MOVE ' '       FBD
+     C                     MOVE 'P'       AMTD
+     C**
+     C** DR & CR fields & update file
+     C**
+     C                     MOVE *BLANK    FMKEYS
+     C                     EXSR CCYUP
+     C**
+     C** Format Key PSDYYCCY.S & update file
+     C**
+     C                     MOVE 'S'       AMTD
+     C                     EXSR CCYUP
+     C**
+     C** Start Date Keys
+     C**
+     C** Format Key PSSYY...FB
+     C**
+     C                     MOVE 'FB'      DLKEY
+     C                     MOVE 'S'       EVENTD
+     C                     MOVE *BLANKS   CYD
+     C** DR fields
+     C                     MOVE F3        AC1
+     C                     MOVE '01'      PN1
+     C                     MOVE '1'       PR1
+     C                     MOVE F4        AC2
+     C                     MOVE '01'      PN2
+     C                     MOVE '1'       PR2
+     C** CR fields
+     C                     MOVE F1        AC4
+     C                     MOVE '01'      PN4
+     C                     MOVE '1'       PR4
+     C                     MOVE F11       AC5
+     C                     MOVE '01'      PN5
+     C                     MOVE '1'       PR5
+     C** Update file
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSSYY...BB & update file
+     C**
+     C           *LIKE     DEFN AC5       ACTMP                           063694
+     C           *LIKE     DEFN PN5       PNTMP                           063694
+     C           *LIKE     DEFN PR5       PRTMP                           063694
+     C                     MOVE 'B'       FBD
+     C           BSPAE     IFEQ *BLANKS                                   063694
+     C********** BSPAE     OREQ '0000'                                                 063694 CGL029
+     C           BSPAE     OREQ WTEN0                                                         CGL029
+     C                     MOVE AC5       ACTMP                           063694
+     C                     MOVE PN5       PNTMP                           063694
+     C                     MOVE PR5       PRTMP                           063694
+     C                     MOVE *BLANKS   AC5                             063694
+     C                     MOVE *BLANKS   PN5                             063694
+     C                     MOVE *BLANKS   PR5                             063694
+     C                     EXSR ACUP                                      063694
+     C                     MOVE ACTMP     AC5                             063694
+     C                     MOVE PNTMP     PN5                             063694
+     C                     MOVE PRTMP     PR5                             063694
+     C                     ELSE                                           063694
+     C                     EXSR ACUP
+     C                     END                                            063694
+     C**
+     C** Format Key PSSYY...BC
+     C**
+     C                     MOVE 'C'       AMTD
+     C** DR fields
+     C                     MOVE F2        AC1
+     C                     MOVE F11       AC2
+     C** CR fields
+     C                     MOVE F3        AC4
+     C                     MOVE F4        AC5
+     C           BSPAE     IFEQ *BLANKS                                   063694
+     C********** BSPAE     OREQ '0000'                                                 063694 CGL029
+     C           BSPAE     OREQ WTEN0                                                         CGL029
+     C                     MOVE AC2       ACTMP                           063694
+     C                     MOVE PN2       PNTMP                           063694
+     C                     MOVE PR2       PRTMP                           063694
+     C                     MOVE *BLANKS   AC2                             063694
+     C                     MOVE *BLANKS   PN2                             063694
+     C                     MOVE *BLANKS   PR2                             063694
+     C                     EXSR ACUP                                      063694
+     C                     MOVE ACTMP     AC2                             063694
+     C                     MOVE PNTMP     PN2                             063694
+     C                     MOVE PRTMP     PR2                             063694
+     C                     ELSE                                           063694
+     C                     EXSR ACUP
+     C                     END                                            063694
+     C**
+     C** Format Key PSSYY...FC & update file
+     C**
+     C                     MOVE 'F'       FBD
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSSYYCCY.P
+     C**
+     C                     MOVE ' P'      DLKEY
+     C**
+     C** DR & CR Fields & update file
+     C**
+     C                     MOVE *BLANK    FMKEYS
+     C                     MOVE ' '       AC1
+     C***********          MOVE '01'      PN1                             063694
+     C***********          MOVE '1'       PR1                             063694
+     C                     SETON                     25
+     C                     EXSR CCYUP
+     C                     SETOF                     25
+     C**
+     C** Format Key PSSYYCCY.S & update file
+     C**
+     C                     MOVE 'S'       AMTD
+     C                     MOVE *BLANK    FMKEYS
+     C                     MOVE ' '       AC4
+     C***********          MOVE '01'      PN4                             063694
+     C***********          MOVE '1'       PR4                             063694
+     C                     SETON                     26
+     C                     EXSR CCYUP
+     C                     SETOF                     26
+     C**
+     C** Format Key PSSYY...DF & update file
+     C**
+     C                     MOVE *BLANKS   CYD
+     C                     MOVE 'DF'      DLKEY
+     C                     MOVE F4        AC1
+     C                     MOVE '01'      PN1
+     C                     MOVE '1'       PR1
+     C                     MOVE F6        AC4
+     C                     MOVE '01'      PN4                             063694
+     C                     MOVE '1'       PR4                             063694
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSSYY...LG & update file
+     C**
+     C                     MOVE 'LG'      DLKEY
+     C                     MOVE F5        AC1
+     C                     MOVE F4        AC4
+     C                     EXSR ACUP
+     C**
+     C** Accrual Date Keys
+     C**
+     C** Format Key PSAYY...DA & update file
+     C**
+     C                     MOVE 'DA'      DLKEY
+     C                     MOVE 'A'       EVENTD
+     C                     MOVE F10       AC1
+     C                     MOVE F9        AC4
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSAYY...LA & update file
+     C**
+     C                     MOVE 'L'       FBD
+     C                     MOVE F7        AC1
+     C                     MOVE F8        AC4
+     C                     EXSR ACUP
+     C**
+     C** Maturity Date Keys
+     C**
+     C** Format Key PSMYY...BB & update file
+     C**
+     C                     MOVE 'BB'      DLKEY
+     C                     MOVE 'M'       EVENTD
+     C** DR fields
+     C                     MOVE F3        AC1
+     C                     MOVE F4        AC2
+     C                     MOVE '01'      PN2
+     C                     MOVE '1'       PR2
+     C** CR fields
+     C                     MOVE F1        AC4
+     C                     MOVE F11       AC5
+     C                     MOVE '01'      PN5
+     C                     MOVE '1'       PR5
+     C           BSPAE     IFEQ *BLANKS                                   063694
+     C********** BSPAE     OREQ '0000'                                                 063694 CGL029
+     C           BSPAE     OREQ WTEN0                                                         CGL029
+     C                     MOVE AC5       ACTMP                           063694
+     C                     MOVE PN5       PNTMP                           063694
+     C                     MOVE PR5       PRTMP                           063694
+     C                     MOVE *BLANKS   AC5                             063694
+     C                     MOVE *BLANKS   PN5                             063694
+     C                     MOVE *BLANKS   PR5                             063694
+     C                     EXSR ACUP                                      063694
+     C                     MOVE ACTMP     AC5                             063694
+     C                     MOVE PNTMP     PN5                             063694
+     C                     MOVE PRTMP     PR5                             063694
+     C                     ELSE                                           063694
+     C                     EXSR ACUP
+     C                     END                                            063694
+     C**
+     C** Format Key PSMYY...FB & update file
+     C**
+     C                     MOVE 'F'       FBD
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSMYY...FC & update file
+     C**
+     C                     MOVE 'C'       AMTD
+     C                     MOVE F2        AC1
+     C                     MOVE F11       AC2
+     C                     MOVE F3        AC4
+     C                     MOVE F4        AC5
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSMYY...BC & update file
+     C**
+     C                     MOVE 'B'       FBD
+     C           BSPAE     IFEQ *BLANKS                                   063694
+     C********** BSPAE     OREQ '0000'                                                 063694 CGL029
+     C           BSPAE     OREQ WTEN0                                                         CGL029
+     C                     MOVE AC2       ACTMP                           063694
+     C                     MOVE PN2       PNTMP                           063694
+     C                     MOVE PR2       PRTMP                           063694
+     C                     MOVE *BLANKS   AC2                             063694
+     C                     MOVE *BLANKS   PN2                             063694
+     C                     MOVE *BLANKS   PR2                             063694
+     C                     EXSR ACUP                                      063694
+     C                     MOVE ACTMP     AC2                             063694
+     C                     MOVE PNTMP     PN2                             063694
+     C                     MOVE PRTMP     PR2                             063694
+     C                     ELSE                                           063694
+     C                     EXSR ACUP
+     C                     END                                            063694
+     C**
+     C** Format Key PSMYYCCY.P & update file
+     C**
+     C                     MOVE *BLANKS   FMKEYS
+     C                     MOVE ' P'      DLKEY
+     C                     MOVE 'M'       EVENTD
+     C                     MOVE ' '       AC1
+     C***********          MOVE '01'      PN1                             063694
+     C***********          MOVE '1'       PR1                             063694
+     C                     SETON                     25
+     C                     EXSR CCYUP
+     C                     SETOF                     25
+     C**
+     C** Format Key PSMYYCCY.S & update file
+     C**
+     C                     MOVE *BLANKS   FMKEYS
+     C                     MOVE ' S'      DLKEY
+     C                     MOVE ' '       AC4
+     C***********          MOVE '01'      PN4                             063694
+     C***********          MOVE '1'       PR4                             063694
+     C                     SETON                     26
+     C                     EXSR CCYUP
+     C                     SETOF                     26
+     C**
+     C** Format Key PSMYY...DF & update file
+     C**
+     C                     MOVE *BLANKS   FMKEYS
+     C                     MOVE *BLANKS   CYD
+     C                     MOVE 'DF'      DLKEY
+     C                     MOVE F6        AC1
+     C                     MOVE '01'      PN1
+     C                     MOVE '1'       PR1
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSMYY...DI & update file
+     C**
+     C                     MOVE 'I'       AMTD
+     C                     MOVE F9        AC1
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSMYY...LB & update file
+     C**
+     C                     MOVE 'LB'      DLKEY
+     C                     MOVE F4        AC1
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSMYY...LG & update file
+     C**
+     C                     MOVE *BLANKS   FMKEYS
+     C                     MOVE 'LG'      DLKEY
+     C                     MOVE F5        AC4
+     C                     MOVE '01'      PN4
+     C                     MOVE '1'       PR4
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSMYY...LI & update file
+     C**
+     C                     MOVE 'I'       AMTD
+     C                     MOVE F7        AC4
+     C                     EXSR ACUP
+     C**
+     C** Format Key PSMYY...DB & update file
+     C**
+     C                     MOVE 'DB'      DLKEY
+     C                     MOVE F4        AC4
+     C                     EXSR ACUP
+      *                                                                                       CAS004
+      ** If Hedge Accounting (CAS004) is installed                                            CAS004
+      *                                                                                       CAS004
+     C           CAS004    IFEQ 'Y'                                                           CAS004
+     C           CAS007    ANDEQ'Y'                                                           CAS007
+     C                     EXSR SRGHAC                                                        CAS004
+     C                     ENDIF                                                              CAS004
+     C**
+     C** Deal Type/SubType reset to blanks before redisplaying initial
+     C** screen.
+     C**
+     C                     MOVE *BLANKS   TYPE
+     C                     MOVE *BLANKS   STYP
+     C                     MOVE *BLANKS   CLAS                                                CDL038
+     C                     MOVE '1'       *IN07
+     C*
+     C                     END                             Errs in IC screen
+     C*
+     C                     END                             F3/F12 not pressed
+     C*
+     C                     END                             F3/F12/Errs in scrn
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C** CCYUP - Setup keys to ZACKEYAL which involve a currency code
+     C**         Move Spot Trade Equivalents to DR or CR accounts
+     C**         as required
+     C**
+     C** Called By - ICP - IC screen validation/ key generation
+     C**
+     C********************************************************************
+     C           CCYUP     BEGSR                                       *
+     C*
+     C                     Z-ADD0         C
+     C*
+     C           C         DOWLTMAXCCY
+     C*
+     C           C         ADD  1         C
+     C                     MOVE CCYA,C    CYD
+     C*
+     C           *IN25     IFEQ '1'
+     C                     MOVE TAC,C     AC1
+     C                     END
+     C*
+     C           *IN26     IFEQ '1'
+     C                     MOVE TAC,C     AC4
+     C                     END
+     C*                                                                   063694
+     C** Move narrative and reference codes only if spot trade account    063694
+     C** exists for the currency                                          063694
+     C*                                                                   063694
+     C           *IN25     IFEQ '1'                                       063694
+     C           AC1       ANDNE*BLANKS                                   063694
+     C********** AC1       ANDNE'0000'                                                 063694 CGL029
+     C           AC1       ANDNEWTEN0                                                         CGL029
+     C                     MOVE '01'      PN1                             063694
+     C                     MOVE '1'       PR1                             063694
+     C                     ELSE                                           063694
+     C                     CLEARPN1                                       063694
+     C                     CLEARPR1                                       063694
+     C                     END                                            063694
+     C*                                                                   063694
+     C           *IN26     IFEQ '1'                                       063694
+     C           AC4       ANDNE*BLANKS                                   063694
+     C********** AC4       ANDNE'0000'                                                 063694 CGL029
+     C           AC4       ANDNEWTEN0                                                         CGL029
+     C                     MOVE '01'      PN4                             063694
+     C                     MOVE '1'       PR4                             063694
+     C                     ELSE                                           063694
+     C                     CLEARPN4                                       063694
+     C                     CLEARPR4                                       063694
+     C                     END                                            063694
+     C*
+     C** Update file
+     C                     EXSR ACUP
+     C                     END
+     C**
+     C                     ENDSR                                       G *
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C** ACUP - Update ZACKEYAL
+     C**
+     C** Called By - ICP - Validate IC screen/ Generate IC keys
+     C**
+     C** Calls - None
+     C**
+     C********************************************************************
+     C           ACUP      BEGSR
+     C**
+     C** Move values to file fields
+     C**
+     C                     MOVE 'D'       RECI
+     C*********************MOVE DLKEY     AKEY             Move to file fld                   CDL038
+     C                     MOVELDLKEY     AKEY             Move to file fld                   CDL038
+     C                     MOVE CLAS      AKEY             Move to file fld                   CDL038
+     C                     MOVE AC1       ACD1             Move to file fld
+     C                     MOVE AC2       ACD2             Move to file fld
+     C                     MOVE AC3       ACD3             Move to file fld
+     C                     MOVE AC4       ACD4             Move to file fld
+     C                     MOVE AC5       ACD5             Move to file fld
+     C                     MOVE AC6       ACD6             Move to file fld
+     C                     MOVE PN1       NCD1             Move to file fld
+     C                     MOVE PN2       NCD2             Move to file fld
+     C                     MOVE PN3       NCD3             Move to file fld
+     C                     MOVE PN4       NCD4             Move to file fld
+     C                     MOVE PN5       NCD5             Move to file fld
+     C                     MOVE PN6       NCD6             Move to file fld
+     C                     MOVE PR1       PRF1             Move to file fld
+     C                     MOVE PR2       PRF2             Move to file fld
+     C                     MOVE PR3       PRF3             Move to file fld
+     C                     MOVE PR4       PRF4             Move to file fld
+     C                     MOVE PR5       PRF5             Move to file fld
+     C                     MOVE PR6       PRF6             Move to file fld
+     C**
+     C** Write new Account Key and accounting entries to work file
+     C**
+     C                     WRITEZACKEYAF
+     C*
+     C                     ENDSR
+      *                                                                                       CAS004
+      *****************************************************************                       CAS004
+      /EJECT                                                                                  CAS004
+      *****************************************************************                       CAS004
+      *                                                               *                       CAS004
+      * SRDHAC - Subroutine to display Hedge Accounting screen fields *                       CAS004
+      *                                                               *                       CAS004
+      * Called by: ICP                                                *                       CAS004
+      *                                                               *                       CAS004
+      * Calls: SRVHAC                                                 *                       CAS004
+      *                                                               *                       CAS004
+      *****************************************************************                       CAS004
+      *                                                                                       CAS004
+     C           SRDHAC    BEGSR                                                              CAS004
+      *                                                                                       CAS004
+      ** Clear messages from program message queue                                            CAS004
+      *                                                                                       CAS004
+     C                     CALL 'Y2CLMSC'                                                     CAS004
+     C                     PARM SPGMQ     ZAPGM                                               CAS004
+     C                     PARM '*SAME'   ZAPGRL                                              CAS004
+      *                                                                                       CAS004
+      ** Validate until F3 or F12 or error is encountered                                     CAS004
+      *                                                                                       CAS004
+     C           *IN03     DOUEQ*ON                                                           CAS004
+     C           *IN12     OREQ *ON                                                           CAS004
+     C           *IN62     OREQ *OFF                                                          CAS004
+      *                                                                                       CAS004
+      ** Reset Error Indicator                                                                CAS004
+      *                                                                                       CAS004
+     C                     MOVE *OFF      *IN62                                               CAS004
+      *                                                                                       CAS004
+     C                     WRITE#MSGCTL                                                       CAS004
+     C                     EXFMTAKEYHAC                                                       CAS004
+     C                     MOVEA'000000'  *IN,30                                              CAS004
+     C                     MOVEA'00000'   *IN,36                                              CAS004
+     C                     MOVE *OFF      *IN42                                               CAS004
+      *                                                                                       CAS004
+      ** Clear messages from program message queue                                            CAS004
+      *                                                                                       CAS004
+     C                     CALL 'Y2CLMSC'                                                     CAS004
+     C                     PARM SPGMQ     ZAPGM                                               CAS004
+     C                     PARM '*SAME'   ZAPGRL                                              CAS004
+      *                                                                                       CAS004
+      ** Validate fields                                                                      CAS004
+      *                                                                                       CAS004
+     C           *IN03     IFEQ *OFF                                                          CAS004
+     C           *IN12     ANDEQ*OFF                                                          CAS004
+      *                                                                                       CAS004
+      ** Call subroutine that validates Hedge Accounting screen fields                        CAS004
+      *                                                                                       CAS004
+     C                     EXSR SRVHAC                                                        CAS004
+      *                                                                                       CAS004
+     C                     ENDIF                                                              CAS004
+     C                     ENDDO                                                              CAS004
+      *                                                                                       CAS004
+      ** If F12 pressed, redisplay Internal Contracts Screen                                  CAS004
+      *                                                                                       CAS004
+     C           *IN12     IFEQ *ON                                                           CAS004
+     C                     MOVE *OFF      *IN12                                               CAS004
+     C                     MOVE *ON       *IN62                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** If F3 is pressed, exit                                                               CAS004
+      *                                                                                       CAS004
+     C           *IN03     IFEQ *ON                                                           CAS004
+     C                     MOVE *ON       *IN62                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     ENDSR                                                              CAS004
+      *                                                                                       CAS004
+      *****************************************************************                       CAS004
+      /EJECT                                                                                  CAS004
+      *****************************************************************                       CAS004
+      *                                                               *                       CAS004
+      * SRVHAC - Subroutine to validate Hedge Accounting screen       *                       CAS004
+      *                                                               *                       CAS004
+      * Called by: SRDHAC                                             *                       CAS004
+      *                                                               *                       CAS004
+      * Calls: SRACOD                                                 *                       CAS004
+      *                                                               *                       CAS004
+      *****************************************************************                       CAS004
+      *                                                                                       CAS004
+     C           SRVHAC    BEGSR                                                              CAS004
+      *                                                                                       CAS004
+     C                     MOVE ' '       WKEREN  1                                           CAS004
+      *                                                                                       CAS004
+      ** Enter ALL or NONE of: Effective Fair Value Hedge Profit Contra                       CAS004
+      ** Account; Profit Posting Reference; Hedge Profit Account;                             CAS004
+      ** Effective Fair Value Hedge Loss Contra Account; Loss Posting                         CAS004
+      ** Reference; Hedge Loss Account                                                        CAS004
+      *                                                                                       CAS004
+     C                     SELEC                                                              CAS004
+      *                                                                                       CAS004
+     C           SEFVHP    WHNE *BLANKS                                                       CAS004
+     C           SFVPPR    ANDNE*BLANKS                                                       CAS004
+     C           SOTINC    ANDNE*BLANKS                                                       CAS004
+     C           SEFVHL    ANDNE*BLANKS                                                       CAS004
+     C           SFVLPR    ANDNE*BLANKS                                                       CAS004
+     C           SOTEXP    ANDNE*BLANKS                                                       CAS004
+      *                                                                                       CAS004
+      ** Account code must be a valid non-title account code                                  CAS004
+      *                                                                                       CAS004
+     C                     MOVE SEFVHP    PIACOD                                              CAS004
+     C                     EXSR SRACOD                                                        CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE A5ACCD    SEFVHP                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           WERRCD    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN30                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Posting reference must be 1 or 3                                                     CAS004
+      *                                                                                       CAS004
+     C           SFVPPR    IFNE '1'                                                           CAS004
+     C           SFVPPR    ANDNE'3'                                                           CAS004
+     C                     MOVE 'Y'       WKEREN                                              CAS004
+     C                     MOVEL'USR4259' ZAMSID                                              CAS004
+     C                     EXSR ZASNMS                                                        CAS004
+     C                     MOVE *ON       *IN31                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Other Income Account must be a valid, non-titled account code                        CAS004
+      *                                                                                       CAS004
+     C                     MOVE SOTINC    PIACOD                                              CAS004
+     C                     EXSR SRACOD                                                        CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE A5ACCD    SOTINC                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           WERRCD    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN32                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Effective Fair Value Hedge Loss Contra account                                       CAS004
+      ** must be a valid non-titled account code                                              CAS004
+      *                                                                                       CAS004
+     C                     MOVE SEFVHL    PIACOD                                              CAS004
+     C                     EXSR SRACOD                                                        CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE A5ACCD    SEFVHL                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           WERRCD    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN33                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Posting reference must be 1 or 3                                                     CAS004
+      *                                                                                       CAS004
+     C           SFVLPR    IFNE '1'                                                           CAS004
+     C           SFVLPR    ANDNE'3'                                                           CAS004
+     C                     MOVE 'Y'       WKEREN                                              CAS004
+     C                     MOVEL'USR4259' ZAMSID                                              CAS004
+     C                     EXSR ZASNMS                                                        CAS004
+     C                     MOVE *ON       *IN34                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Other Expense Account must be a valid non-titled account code                        CAS004
+      *                                                                                       CAS004
+     C                     MOVE SOTEXP    PIACOD                                              CAS004
+     C                     EXSR SRACOD                                                        CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE A5ACCD    SOTEXP                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           WERRCD    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN35                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           SEFVHP    WHEQ *BLANKS                                                       CAS004
+     C           SFVPPR    ANDEQ*BLANKS                                                       CAS004
+     C           SOTINC    ANDEQ*BLANKS                                                       CAS004
+     C           SEFVHL    ANDEQ*BLANKS                                                       CAS004
+     C           SFVLPR    ANDEQ*BLANKS                                                       CAS004
+     C           SOTEXP    ANDEQ*BLANKS                                                       CAS004
+      *                                                                                       CAS004
+     C                     OTHER                                                              CAS004
+      *                                                                                       CAS004
+     C                     MOVE 'Y'       WKEREN                                              CAS004
+     C                     MOVEL'USR9388' ZAMSID                                              CAS004
+     C                     EXSR ZASNMS                                                        CAS004
+     C                     MOVEA'111111'  *IN,30                                              CAS004
+      *                                                                                       CAS004
+     C                     ENDSL                                                              CAS004
+      *                                                                                       CAS004
+      ** Enter ALL or NONE of: Effective Cash Flow Hedge Profit Contra                        CAS004
+      ** Account; Profit Posting Reference; Other Comprehensive Income                        CAS004
+      ** Account; Effective Cash Flow Hedge Loss Contra Account; Loss                         CAS004
+      ** Posting Reference; Other Comprehensive Income Account(Loss)                          CAS004
+      *                                                                                       CAS004
+     C                     SELEC                                                              CAS004
+      *                                                                                       CAS004
+     C           SECFHP    WHNE *BLANKS                                                       CAS004
+     C           SCFPPR    ANDNE*BLANKS                                                       CAS004
+     C           SOCOMP    ANDNE*BLANKS                                                       CAS004
+     C           SECFHL    ANDNE*BLANKS                                                       CAS004
+     C           SCFLPR    ANDNE*BLANKS                                                       CAS004
+     C           SOCOML    ANDNE*BLANKS                                                       CAS004
+      *                                                                                       CAS004
+      ** Account code must be a valid non-title account code                                  CAS004
+      *                                                                                       CAS004
+     C                     MOVE SECFHP    PIACOD                                              CAS004
+     C                     EXSR SRACOD                                                        CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE A5ACCD    SECFHP                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           WERRCD    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN36                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Posting reference must be 1 or 3                                                     CAS004
+      *                                                                                       CAS004
+     C           SCFPPR    IFNE '1'                                                           CAS004
+     C           SCFPPR    ANDNE'3'                                                           CAS004
+     C                     MOVE 'Y'       WKEREN                                              CAS004
+     C                     MOVEL'USR4259' ZAMSID                                              CAS004
+     C                     EXSR ZASNMS                                                        CAS004
+     C                     MOVE *ON       *IN37                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Other Income Account must be a valid non-titled account code                         CAS004
+      *                                                                                       CAS004
+     C                     MOVE SOCOMP    PIACOD                                              CAS004
+     C                     EXSR SRACOD                                                        CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE A5ACCD    SOCOMP                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           WERRCD    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN38                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Effective Fair Value Hedge Loss Contra account                                       CAS004
+      ** must be a valid non-titled account code                                              CAS004
+      *                                                                                       CAS004
+     C                     MOVE SECFHL    PIACOD                                              CAS004
+     C                     EXSR SRACOD                                                        CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE A5ACCD    SECFHL                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           WERRCD    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN39                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Posting reference must be 1 or 3                                                     CAS004
+      *                                                                                       CAS004
+     C           SCFLPR    IFNE '1'                                                           CAS004
+     C           SCFLPR    ANDNE'3'                                                           CAS004
+     C                     MOVE 'Y'       WKEREN                                              CAS004
+     C                     MOVEL'USR4259' ZAMSID                                              CAS004
+     C                     EXSR ZASNMS                                                        CAS004
+     C                     MOVE *ON       *IN40                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Other Expense Account must be a valid non-titled account code                        CAS004
+      *                                                                                       CAS004
+     C                     MOVE SOCOML    PIACOD                                              CAS004
+     C                     EXSR SRACOD                                                        CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE A5ACCD    SOCOML                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           WERRCD    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN42                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           SECFHP    WHEQ *BLANKS                                                       CAS004
+     C           SCFPPR    ANDEQ*BLANKS                                                       CAS004
+     C           SOCOMP    ANDEQ*BLANKS                                                       CAS004
+     C           SECFHL    ANDEQ*BLANKS                                                       CAS004
+     C           SCFLPR    ANDEQ*BLANKS                                                       CAS004
+     C           SOCOML    ANDEQ*BLANKS                                                       CAS004
+      *                                                                                       CAS004
+     C                     OTHER                                                              CAS004
+      *                                                                                       CAS004
+     C                     MOVE 'Y'       WKEREN                                              CAS004
+     C                     MOVEL'USR9389' ZAMSID                                              CAS004
+     C                     EXSR ZASNMS                                                        CAS004
+     C                     MOVEA'11111'   *IN,36                                              CAS004
+     C                     MOVE *ON       *IN42                                               CAS004
+      *                                                                                       CAS004
+     C                     ENDSL                                                              CAS004
+      *                                                                                       CAS004
+     C           WKEREN    IFEQ 'Y'                                                           CAS004
+     C                     MOVE *ON       *IN62                                               CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     ENDSR                                                              CAS004
+      *                                                                                       CAS004
+      *****************************************************************                       CAS004
+      /EJECT                                                                                  CAS004
+      *****************************************************************                       CAS004
+      *                                                               *                       CAS004
+      * SRGHAC - Subroutine to generate account keys for Hedge        *                       CAS004
+      *          Accounting                                           *                       CAS004
+      *                                                               *                       CAS004
+      * Called by: ICP                                                *                       CAS004
+      *                                                               *                       CAS004
+      * Calls: ACUP                                                   *                       CAS004
+      *                                                               *                       CAS004
+      *****************************************************************                       CAS004
+      *                                                                                       CAS004
+     C           SRGHAC    BEGSR                                                              CAS004
+      *                                                                                       CAS004
+      ** xxAyybbFIP - Debit                                                                   CAS004
+      *                                                                                       CAS004
+     C                     MOVE *BLANKS   DLKEY                                               CAS004
+     C                     MOVE TYPE      DTYPD                                               CAS004
+     C                     MOVE STYP      STYPD                                               CAS004
+     C                     MOVE CLAS      CLASD                                               CDL038
+     C                     MOVE 'A'       EVENTD                                              CAS004
+     C                     MOVEL'  '      CYD                                                 CAS004
+     C                     MOVE 'FIP'     DLKEY                                               CAS004
+     C                     MOVE *BLANKS   FMKEYS                                              CAS004
+     C                     MOVE SEFVHP    AC1                                                 CAS004
+     C                     MOVE SFVPPR    PR1                                                 CAS004
+     C           SEFVHP    IFNE *BLANKS                                                       CAS004
+     C                     MOVE '01'      PN1                                                 CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** xxAyybbFIP - Credit                                                                  CAS004
+      *                                                                                       CAS004
+     C                     MOVE SOTINC    AC4                                                 CAS004
+     C                     MOVE SFVPPR    PR4                                                 CAS004
+     C           SEFVHP    IFNE *BLANKS                                                       CAS004
+     C                     MOVE '01'      PN4                                                 CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           BNBCPL    IFEQ 'Y'                                                           CAS004
+     C           *LOVAL    SETLLSDBOOKL1                                                      CAS004
+     C                     READ SDBOOKL1                 99                                   CAS004
+     C           *IN99     DOWNE*ON                                                           CAS004
+     C                     MOVELBDBKCD    CYD                                                 CAS004
+     C                     EXSR ACUP                                                          CAS004
+     C                     READ SDBOOKL1                 99                                   CAS004
+     C                     ENDDO                                                              CAS004
+     C                     ELSE                                                               CAS004
+     C                     EXSR ACUP                                                          CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** xxAyybbFIL - Debit                                                                   CAS004
+      *                                                                                       CAS004
+     C                     MOVE 'FIL'     DLKEY                                               CAS004
+     C                     MOVE *BLANKS   FMKEYS                                              CAS004
+     C                     MOVE SOTEXP    AC1                                                 CAS004
+     C                     MOVE SFVLPR    PR1                                                 CAS004
+     C           SEFVHP    IFNE *BLANKS                                                       CAS004
+     C                     MOVE '01'      PN1                                                 CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** xxAyybbFIL - Credit                                                                  CAS004
+      *                                                                                       CAS004
+     C                     MOVE SEFVHL    AC4                                                 CAS004
+     C                     MOVE SFVLPR    PR4                                                 CAS004
+     C           SEFVHP    IFNE *BLANKS                                                       CAS004
+     C                     MOVE '01'      PN4                                                 CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           BNBCPL    IFEQ 'Y'                                                           CAS004
+     C           *LOVAL    SETLLSDBOOKL1                                                      CAS004
+     C                     READ SDBOOKL1                 99                                   CAS004
+     C           *IN99     DOWNE*ON                                                           CAS004
+     C                     MOVELBDBKCD    CYD                                                 CAS004
+     C                     EXSR ACUP                                                          CAS004
+     C                     READ SDBOOKL1                 99                                   CAS004
+     C                     ENDDO                                                              CAS004
+     C                     ELSE                                                               CAS004
+     C                     EXSR ACUP                                                          CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** xxAyybbCIP - Debit                                                                   CAS004
+      *                                                                                       CAS004
+     C                     MOVE 'CIP'     DLKEY                                               CAS004
+     C                     MOVE *BLANKS   FMKEYS                                              CAS004
+     C                     MOVE SECFHP    AC1                                                 CAS004
+     C                     MOVE SCFPPR    PR1                                                 CAS004
+     C           SECFHP    IFNE *BLANKS                                                       CAS004
+     C                     MOVE '01'      PN1                                                 CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** xxAyybbCIP - Credit                                                                  CAS004
+      *                                                                                       CAS004
+     C                     MOVE SOCOMP    AC4                                                 CAS004
+     C                     MOVE SCFPPR    PR4                                                 CAS004
+     C           SECFHP    IFNE *BLANKS                                                       CAS004
+     C                     MOVE '01'      PN4                                                 CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           BNBCPL    IFEQ 'Y'                                                           CAS004
+     C           *LOVAL    SETLLSDBOOKL1                                                      CAS004
+     C                     READ SDBOOKL1                 99                                   CAS004
+     C           *IN99     DOWNE*ON                                                           CAS004
+     C                     MOVELBDBKCD    CYD                                                 CAS004
+     C                     EXSR ACUP                                                          CAS004
+     C                     READ SDBOOKL1                 99                                   CAS004
+     C                     ENDDO                                                              CAS004
+     C                     ELSE                                                               CAS004
+     C                     EXSR ACUP                                                          CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** xxAyybbCIL - Debit                                                                   CAS004
+      *                                                                                       CAS004
+     C                     MOVE 'CIL'     DLKEY                                               CAS004
+     C                     MOVE *BLANKS   FMKEYS                                              CAS004
+     C                     MOVE SOCOML    AC1                                                 CAS004
+     C                     MOVE SCFLPR    PR1                                                 CAS004
+     C           SECFHP    IFNE *BLANKS                                                       CAS004
+     C                     MOVE '01'      PN1                                                 CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** xxAyybbCIP - Credit                                                                  CAS004
+      *                                                                                       CAS004
+     C                     MOVE SECFHL    AC4                                                 CAS004
+     C                     MOVE SCFLPR    PR4                                                 CAS004
+     C           SECFHP    IFNE *BLANKS                                                       CAS004
+     C                     MOVE '01'      PN4                                                 CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           BNBCPL    IFEQ 'Y'                                                           CAS004
+     C           *LOVAL    SETLLSDBOOKL1                                                      CAS004
+     C                     READ SDBOOKL1                 99                                   CAS004
+     C           *IN99     DOWNE*ON                                                           CAS004
+     C                     MOVELBDBKCD    CYD                                                 CAS004
+     C                     EXSR ACUP                                                          CAS004
+     C                     READ SDBOOKL1                 99                                   CAS004
+     C                     ENDDO                                                              CAS004
+     C                     ELSE                                                               CAS004
+     C                     EXSR ACUP                                                          CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     ENDSR                                                              CAS004
+      *                                                                                       CAS004
+      *****************************************************************                       CAS004
+      /EJECT                                                                                  CAS004
+      *****************************************************************                       CAS004
+      *                                                               *                       CAS004
+      * SRACOD - Subroutine to access SDACODPD via access object      *                       CAS004
+      *                                                               *                       CAS004
+      * Called by: SRVHAC                                             *                       CAS004
+      *                                                               *                       CAS004
+      * Calls: AOACODR0                                               *                       CAS004
+      *                                                               *                       CAS004
+      *****************************************************************                       CAS004
+      *                                                                                       CAS004
+     C           SRACOD    BEGSR                                                              CAS004
+      *                                                                                       CAS004
+      ** Get Account codes details via access object                                          CAS004
+      *                                                                                       CAS004
+     C                     MOVE *BLANKS   WERRCD  1                                           CAS004
+      *                                                                                       CAS004
+     C                     CALL 'AOACODR0'                                                    CAS004
+     C                     PARM *BLANKS   PRTCD                                               CAS004
+     C                     PARM '*KEY  '  POPTN                                               CAS004
+     C**********           PARM           PIACOD  4                                    CAS004 CGL029
+     C                     PARM           PIACOD 10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFNE *BLANKS                                                       CAS004
+     C           PRTCD     OREQ *BLANKS                                                       CAS004
+     C           A5TOIN    ANDEQ'Y'                                                           CAS004
+     C                     MOVE 'Y'       WERRCD                                              CAS004
+     C                     MOVE 'Y'       WKEREN                                              CAS004
+     C                     MOVEL'USR4239' ZAMSID                                              CAS004
+     C                     EXSR ZASNMS                                                        CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C                     ENDSR                                                              CAS004
+      *                                                                                       CAS004
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C* INIT - Initialise program
+     C*
+     C* Calls - DBERR - Database error processing
+     C*       - AOBANKR0 - SDBANKPD Access Program (external)
+     C*       - AOTRADR0 - SDTRADPD Access Program (external)
+     C*
+     C********************************************************************
+     C           INIT      BEGSR
+     C*
+     C** Define Local Data Area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Define Rundat Data Area
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C** Clear all fields to send messages to message queue.
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C                     MOVE *BLANKS   SPGMQ            Program queue
+     C                     MOVEL'AK0050  'SPGMQ            Program queue
+     C**
+     C** Setup LDA field DBPGM
+     C**
+     C           *LOCK     IN   LDA                                       S01315
+     C                     MOVEL'AK0050'  DBPGM
+     C                     OUT  LDA                                       S01315
+     C*
+     C** Use access program AOBANKR0 to retrieve SDBANKPD Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            **DBERROR 001 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C**
+     C** Use access program AOTRADR0 to retrieve SDTRADPD Details
+     C**
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+     C**
+     C** If error in access program, exit via DBERR subroutine
+     C**
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDTRADPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            **DBERROR002 **
+     C                     EXSR DBERR                      ***************
+     C                     END
+      *                                                                                       CAS004
+      ** Use access program AODEALR0 to retrieve SDDEALPD Details                             CAS004
+      *                                                                                       CAS004
+     C**********           CALL 'AODEALR0'                                             CAS004 CGL029
+     C                     CALL 'AODEALR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD                                               CAS004
+     C                     PARM '*FIRST ' POPTN                                               CAS004
+     C********** SDDEAL    PARM SDDEAL    DSFDY                                        CAS004 CGL029
+     C           SDDEAL    PARM SDDEAL    DSSDY                                               CGL029
+      *                                                                                       CAS004
+      ** If error in access program, exit via DBERR subroutine                                CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFNE *BLANKS                                                       CAS004
+     C           *LOCK     IN   LDA                                                           CAS004
+     C                     MOVEL'SDDEALPD'DBFILE                                              CAS004
+     C                     Z-ADD003       DBASE                                               CAS004
+     C                     MOVELPOPTN     DBKEY                                               CAS004
+     C                     EXSR DBERR                                                         CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Access Switchable Feature Details, Check if CAS004 is installed                      CAS004
+      *                                                                                       CAS004
+     C                     CALL 'AOSARDR0'                                                    CAS004
+     C                     PARM *BLANKS   PRTCD   7                                           CAS004
+     C                     PARM '*VERIFY 'POPTN   7                                           CAS004
+     C                     PARM 'CAS004'  PSARD   6                                           CAS004
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFNE *BLANK                                                        CAS004
+     C           PRTCD     ANDNE'*NRF '                                                       CAS004
+     C           *LOCK     IN   LDA                                                           CAS004
+     C                     Z-ADD004       DBASE                                               CAS004
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS004
+     C                     MOVELPSARD     DBKEY                                               CAS004
+     C                     EXSR DBERR                                                         CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+     C           PRTCD     IFEQ *BLANKS                                                       CAS004
+     C                     MOVE 'Y'       CAS004  1                                           CAS004
+     C                     ELSE                                                               CAS004
+     C                     MOVE 'N'       CAS004                                              CAS004
+     C                     ENDIF                                                              CAS004
+      *                                                                                       CAS004
+      ** Access Switchable Feature Details, Check if CAS007 is installed                      CAS007
+      *                                                                                       CAS007
+     C                     CALL 'AOSARDR0'                                                    CAS007
+     C                     PARM *BLANKS   PRTCD                                               CAS007
+     C                     PARM '*VERIFY 'POPTN                                               CAS007
+     C                     PARM 'CAS007'  PSARD                                               CAS007
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAS007
+      *                                                                                       CAS007
+     C           PRTCD     IFNE *BLANK                                                        CAS007
+     C           PRTCD     ANDNE'*NRF '                                                       CAS007
+     C           *LOCK     IN   LDA                                                           CAS007
+     C                     Z-ADD005       DBASE                                               CAS007
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS007
+     C                     MOVELPSARD     DBKEY                                               CAS007
+     C                     EXSR DBERR                                                         CAS007
+     C                     ENDIF                                                              CAS007
+      *                                                                                       CAS007
+     C           PRTCD     IFEQ *BLANKS                                                       CAS007
+     C                     MOVE 'Y'       CAS007  1                                           CAS007
+     C                     ELSE                                                               CAS007
+     C                     MOVE 'N'       CAS007                                              CAS007
+     C                     ENDIF                                                              CAS007
+      *                                                                                       CAS007
+      *                                                                                       CDL038
+      ** Access Switchable Feature Details, check if CDL038 is installed                      CDL038
+      ** (Extended Deal Sub Types)                                                            CDL038
+      *                                                                                       CDL038
+     C                     CALL 'AOSARDR0'                                                    CDL038
+     C                     PARM *BLANKS   PRTCD                                               CDL038
+     C                     PARM '*VERIFY 'POPTN                                               CDL038
+     C                     PARM 'CDL038'  PSARD                                               CDL038
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL038
+      *                                                                                       CDL038
+     C           PRTCD     IFEQ *BLANKS                                                       CDL038
+     C                     MOVE 'Y'       CDL038  1                                           CDL038
+     C                     MOVE *ON       *IN27                                               CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVE 'N'       CDL038                                              CDL038
+     C                     MOVE *OFF      *IN27                                               CDL038
+     C                     ENDIF                                                              CDL038
+     C**
+     C** Check that all required Narrative Codes are present
+     C** on SDNARRPD
+     C**
+     C                     Z-ADD0         N       10
+     C*
+     C***********N         DOWLT8                                         085263
+     C           N         DOWLT7                                         085263
+     C           N         ADD  1         N
+     C           NR,N      CHAINSDNARRL1             11
+     C           *IN11     IFEQ '1'
+     C                     MOVE NR,N      PN,N
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     MOVEAPN        PNTEST 16
+     C*
+     C           PNTEST    IFNE *BLANKS
+     C                     SETON                       11
+     C                     END
+     C*
+     C                     SETOF                     030710
+     C                     SETOF                     1225
+     C                     SETOF                     2650
+     C                     SETOF                     515254
+     C                     SETOF                     555657
+     C                     SETOF                     585960
+     C                     SETOF                     616263
+     C                     SETOF                     6478
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  ZASNMS - Send message to program message queue
+     C*
+     C*  Calls - Y2SNMGC - Send message to queue (external)
+     C*
+     C********************************************************************
+     C           ZASNMS    BEGSR
+     C**
+     C** Declare message file name
+     C**
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C* DBERR - Database error processing
+     C*
+     C* Called by - INIT - Initialise program
+     C*
+     C* Calls     : None
+     C*
+     C********************************************************************
+     C           DBERR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C**
+     C** If file control error, set off switch U7
+     C**
+     C           *IN07     IFEQ '1'
+     C                     SETOF                     U7
+     C                     END
+     C*
+     C                     DUMP
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+** NR - Required Narrative Codes
+01022324252627
+**  CPY@
+(c) Finastra International Limited 2001

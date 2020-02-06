@@ -1,0 +1,1821 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Extended settlements FRA/IRS enquiry')        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      ***SD0402E*-*Extended*Settlements*Enquiry*-*FRA/IRS**************                       CSW212
+      *  SD0402E - Extended Settlements Additional Details            *                       CSW212
+      *            Enquiry                                            *                       CSW212
+      *                                                               *
+      ***Function:**This*program*displays*FRA/IRS*fields*on*the********                       CSW212
+      **************Extended*Settlements*file.*************************                       CSW212
+      *  Function:  This program displays additional details fields   *                       CSW212
+      *             on the Extended Settlements file                  *                       CSW212
+      *                                                               *
+      *  Called By: SD0401E - Extended Settlements Enquiry.           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *                 AR993497           Date 21Jun12               *
+      *                 AR992080           Date 19Jun12               *
+      *                 CSW212             Date 03May12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 BUG6329            Date 25Mar05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CDL031             Date 05dec04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CSW200             Date 21Aug00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 173052             Date 06DEC99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW097             Date 26Feb99               *
+      *                 CSD003             Date 02JAN98               *
+      *                 CSW005             Date 12NOV96               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+      *  AR993497 - Missing 'Information' in Sender to Receiver field *
+      *             description (Recompile)                           *
+      *  AR992080 - Remove FX from the descriptions of Sender to      *
+      *             Receiver cover and confirmation fields            *
+      *  CSW212 - SWIFT 2012 Changes                                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  BUG6329 - 'DV' Trans Types should call SD0402                *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CDL031 - Effective Date on Extended SSI (Recompile)          *
+      *  CSW200 - SWIFT 2000 Changes                                  *
+      *  173052 - CSW005 FIX...disable ISDA fields if CSW005 is off   *
+      *  CSW097 - SWIFT97 Changes for MT34* and MT36*                 *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CSW005 - FRA/IRS MT34*, MT36* Message Generation.            *
+      *           New function.                                       *
+      *                                                               *
+      *****************************************************************
+     F*Ext Stlmnts Enq(FRA/IRS) Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD0402EFPG
+     FSD0402E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Extended settlements (FRA/IRS) enquiry
+      *
+     FSDEXSTL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Extended settlements retrieval
+      *
+     FSDEXSTLAIF  E           K        DISK                                                  BUG6329
+     F                                              KINFSR *PSSR                             BUG6329
+      * RTV : Midas SD Extended settlements retrieval (Eff Date)                             BUG6329
+      *
+     FSDCURRL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Currency codes retrieval
+      *
+     F/COPY WNCPYSRC,SDH00226
+     FSDCUSTL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Customer details retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*Ext Stlmnts Enq(FRA/IRS) Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD0402EEPG
+      *                                                                                       CSW212
+      ** Array for Header labels on Extended Settlements Enquiry                              CSW212
+      *                                                                                       CSW212
+     E                    HDTG    1   3 10                                                    CSW212
+     E                    CONF    1   3 42                                                    CSW212
+     E                    SETN    1   3 42                                                    CSW212
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I*
+     I/COPY QWINDSRC,SD0400GDTA                                           S01229
+     I*
+     I*Ext Stlmnts Enq(FRA/IRS) Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD0402EIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     I***P1PARM******DS***                          11                                       BUG6329
+     I***P1PARM******DS***                          14                                BUG6329 CSD095
+     IP1PARM      DS                             19                                           CSD095
+      * KEY: Midas SD Extended settlements retrieval
+      * I : MAP Currency Code
+     I                                        1   3 P1CYCD
+      * I : MAP Customer Number
+     I                                        4   9 P1CUST
+      * I : MAP Transaction Type
+     I                                       10  11 P1TRTY
+      * I : MAP Effective Date                                                               BUG6329
+     I                                    P  12  140P1EFFD                                   BUG6329
+      * I : MAP Sub-Type                                                                      CSD095
+     I                                       15  16 P1STYP                                    CSD095
+      * I : MAP Branch                                                                        CSD095
+     I                                       17  19 P1BRCA                                    CSD095
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0001
+     I/COPY WNCPYSRC,SDH00227
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Extended S
+     C/COPY WNCPYSRC,SDH00228
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1CYCD    IFEQ *BLANK                     Currency Code
+     C           #1CUST    OREQ *BLANK                     Customer Number
+     C           #1TRTY    OREQ *BLANK                     Transaction Typ
+     C/COPY WNCPYSRC,SDH00229
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           BYCYCD           Currency Code
+     C                     KFLD           BYCUST           Customer Number
+     C                     KFLD           BYTRTY           Transaction Typ
+     C                     KFLD           BYBRCA           Branch                             CSD095
+     C                     KFLD           BYSTYP           Sub-Type                           CSD095
+     C/COPY WNCPYSRC,SDH00230
+      * Define keylist for SDEXSTLA                                                          BUG6329
+     C           KEXTLA    KLIST                                                             BUG6329
+     C                     KFLD           BYCUST           Customer Number                   BUG6329
+     C                     KFLD           BYCYCD           Currency Code                     BUG6329
+     C                     KFLD           BYTRTY           Transaction Typ                   BUG6329
+     C                     KFLD           BYEFFD           Effective Date                    BUG6329
+     C                     KFLD           BYBRCA           Branch                             CSD095
+     C                     KFLD           BYSTYP           Deal Sub-Type                      CSD095
+     C/COPY WNCPYSRC,SDH00231
+      * Setup key
+     C                     MOVEL#1CYCD    BYCYCD           Currency Code
+     C                     MOVEL#1CUST    BYCUST           Customer Number
+     C                     MOVEL#1TRTY    BYTRTY           Transaction Typ
+     C                     MOVEL#1BRCA    BYBRCA           Branch                             CSD095
+     C                     MOVEL#1STYP    BYSTYP           Sub-Type                           CSD095
+     C           CDL031    IFEQ 'Y'                                                          BUG6329
+     C                     Z-ADDP1EFFD    BYEFFD                                             BUG6329
+     C           KEXTLA    CHAINSDEXSTLA             9091                                    BUG6329
+     C                     ELSE                                                              BUG6329
+     C/COPY WNCPYSRC,SDH00232
+     C           KRTV      CHAIN@BYREFY              9091  *
+     C/COPY WNCPYSRC,SDH00233
+     C                     ENDIF                                                             BUG6329
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     993132*
+     C                     SETON                     33    *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     993132*
+     C                     SETON                     33    *
+      * Send message 'Extended Settlements   NF'
+     C                     MOVEL'USR0361' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * 00/Copy Member SD0402ESFF - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD0402ESFF
+      * USER: Load detail screen from DBF record
+      * 00/Copy Member SD0402ELDS - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Load Detail Screen
+     C/COPY WNCPYSRC,SD0402ELDS
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * Validate Transaction Type
+     C                     MOVEL*BLANK    W0RTN
+     C                     MOVEL#1TRTY    W0NSRQ  1        Transaction Typ
+      * Name search required?
+     C           W0NSRQ    IFEQ '?'
+     C                     CALL 'Y2VLLSR'              90  *
+     C                     PARM           W0RTN   7
+     C                     PARM 1110281   Y2LSNO  70
+     C           #1TRTY    PARM #1TRTY    W0EXVL 20        Transaction Typ
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *
+     C           W0RTN     IFNE *BLANK
+     C                     MOVEL*BLANK    W0RTN
+     C                     SETON                     9933  *
+     C                     END
+      * Select existing record
+     C                     EXSR VACKRL
+      * Check relations
+      * Check reference to Currency Codes
+     C                     EXSR VBCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C           W0RTN     IFNE *BLANK
+     C                     MOVEL*BLANK    W0RTN
+     C                     SETON                     9931  *
+     C                     END
+      * Check reference to Client Details
+     C                     EXSR VCCKRL
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C           W0RTN     IFNE *BLANK
+     C                     MOVEL*BLANK    W0RTN
+     C                     SETON                     9932  *
+     C                     END
+      * USER: Validate key screen
+      * 00/Copy Member SD0402EVKS - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Validate Key Screen
+     C/COPY WNCPYSRC,SD0402EVKS
+      * Currency Code required
+     C           #1CYCD    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      * Customer Number required
+     C           #1CUST    IFEQ *BLANK                     IF
+     C                     SETON                     9932  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      * Transaction Type required
+     C           #1TRTY    IFEQ *BLANK                     IF
+     C                     SETON                     9933  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+     C/COPY WNCPYSRC,SDH00234
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * 00/Copy Member SD0402EPKR - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD0402EPKR
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * 00/Copy Member SD0402ESFF - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD0402ESFF
+      * USER: Validate detail screen
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD0402EVSW - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Validate Detail Scrn Wdw
+     C/COPY WNCPYSRC,SD0402EVSW
+     C                     END                             *FI
+      * 00/Copy Member SD0402EVDS - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Validate Detail Screen
+     C/COPY WNCPYSRC,SD0402EVDS
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * 00/Copy Member SD0402EPCA - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Perform Confrimed Action
+     C/COPY WNCPYSRC,SD0402EPCA
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * 00/Copy Member SD0402EPCK - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Process Command Keys
+     C/COPY WNCPYSRC,SD0402EPCK
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P1CYCD    IFEQ *BLANK                     Currency Code
+     C           P1CUST    OREQ *BLANK                     Customer Number
+     C           P1TRTY    OREQ *BLANK                     Transaction Typ
+     C/COPY WNCPYSRC,SDH00235
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+     C**********           MOVEL'0'       *IN79                                               CSW212
+     C********** CSW005    IFNE 'Y'                        *IF                         173052 CSW212
+     C********** CSW011    ANDNE'Y'                                                    CSW200 CSW212
+     C********** CSW005    ORNE 'Y'                                                    CSW200 CSW212
+     C********** CSW200    ANDNE'Y'                                                    CSW200 CSW212
+     C                     MOVE *ON       *IN79                           173052
+     C           CSW005    IFEQ 'Y'                                                           CSW212
+     C           CSW011    OREQ 'Y'                                                           CSW212
+     C           CSW212    OREQ 'Y'                                                           CSW212
+     C                     MOVE *OFF      *IN79                                               CSW212
+     C                     ENDIF                            FI            173052
+     C***********#1TRTY    IFEQ 'FR'                       *IF            CSW097
+     C***********          MOVEL'1'       *IN79                           CSW097
+     C***********          END                             *FI            CSW097
+      *                                                                                       CSW212
+      ** Activate the header labels according to the CSW212's status                          CSW212
+      *                                                                                       CSW212
+     C                     MOVE *BLANKS   #WNARR                                              CSW212
+     C                     MOVE *BLANKS   #WNCON                                              CSW212
+     C                     MOVE *BLANKS   #WNSET                                              CSW212
+     C                     MOVE *BLANKS   #WFIND  1                                           CSW212
+     C                     SELEC                                                              CSW212
+     C           #1TRTY    WHEQ 'AT'                                                          CSW212
+     C           CSW005    IFEQ 'Y'                                                           CSW212
+     C           CSW011    OREQ 'Y'                                                           CSW212
+     C                     Z-ADD1         #WX     20                                          CSW212
+     C                     MOVEL'Y'       #WFIND                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C           CSW212    IFEQ 'Y'                                                           CSW212
+     C           #WFIND    IFEQ 'Y'                                                           CSW212
+     C                     Z-ADD2         #WX                                                 CSW212
+     C                     ELSE                                                               CSW212
+     C                     Z-ADD3         #WX                                                 CSW212
+     C                     ENDIF                                                              CSW212
+     C                     ENDIF                                                              CSW212
+     C           #1TRTY    WHEQ 'FX'                                                          CSW212
+     C           #1TRTY    OREQ 'FF'                                                          CSW212
+     C           #1TRTY    OREQ 'OP'                                                          CSW212
+     C           #1TRTY    OREQ 'CL'                                                          CSW212
+     C           CDL008    ANDEQ'Y'                                                           CSW212
+     C                     Z-ADD3         #WX                                                 CSW212
+     C                     OTHER                                                              CSW212
+     C                     Z-ADD1         #WX                                                 CSW212
+     C                     ENDSL                                                              CSW212
+      *                                                                                       CSW212
+     C                     MOVELHDTG,#WX  #WNARR                                              CSW212
+     C                     MOVELCONF,#WX  #WNCON                                              CSW212
+     C                     MOVELSETN,#WX  #WNSET                                              CSW212
+      *                                                                                       CSW212
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     MOVEL*BLANK    #1CSSN           Customer Shortn
+     C                     MOVEL*BLANK    #1CRTN           Customer Report
+     C                     MOVEL*BLANK    #1CRNM           Customer Report
+     C                     MOVEL*BLANK    #1RSTY           Receipt - Settl
+     C                     MOVEL*BLANK    #1RONO           Receipt - Our N
+     C                     MOVEL*BLANK    #1ROBN           Rcpt - Ordering
+     C                     MOVEL*BLANK    #1ROCS           Rcpt - Ordering
+     C                     MOVEL*BLANK    #1RIBN           Rcpt - Intermed
+     C                     MOVEL*BLANK    #1RIBL           Rcpt - I/m Bank
+     C                     MOVEL*BLANK    #1PSTY           Pay - Settlemen
+     C                     MOVEL*BLANK    #1PONO           Pay - Our Nostr
+     C                     MOVEL*BLANK    #1POBN           Pay - Ordering
+     C                     MOVEL*BLANK    #1POCS           Pay - Ordering
+     C                     MOVEL*BLANK    #1PIBN           Pay - Intermed
+     C                     MOVEL*BLANK    #1PIBA           Pay - I/m Bank
+     C                     MOVEL*BLANK    #1RCNO           Receiver Corres
+     C                     MOVEL*BLANK    #1RCAL           Receiver Corr.
+     C                     MOVEL*BLANK    #1RCNB           Receiver Number
+     C                     MOVEL*BLANK    #1ACBN           A/c With Bank N
+     C                     MOVEL*BLANK    #1ACBL           A/c With Bank L
+     C                     MOVEL*BLANK    #1BYNB           Beneficiary Num
+     C                     MOVEL*BLANK    #1BACL           Beneficiary A/c
+     C                     MOVEL*BLANK    #1DPY1           Details of Paym
+     C                     MOVEL*BLANK    #1DPY2           Details of Paym
+     C                     MOVEL*BLANK    #1DPY3           Details of Paym
+     C                     MOVEL*BLANK    #1DPY4           Details of Paym
+     C                     MOVEL*BLANK    #1DECG           Details of char
+     C                     MOVEL*BLANK    #1BBI1           Bank to Bank In
+     C                     MOVEL*BLANK    #1BBI2           Bank to Bank In
+     C                     MOVEL*BLANK    #1BBI3           Bank to Bank In
+     C                     MOVEL*BLANK    #1BBI4           Bank to Bank In
+     C                     MOVEL*BLANK    #1BBI5           Bank to Bank In
+     C                     MOVEL*BLANK    #1BBI6           Bank to Bank In
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1CVMR           Cover Message R
+     C                     MOVEL*BLANK    #1ORBR           Our Receive Bra
+     C                     MOVEL*BLANK    #1OPBR           Our Payment Bra
+     C                     MOVEL*BLANK    #1DSR1           Def Conf Snd to
+     C                     MOVEL*BLANK    #1DSR2           Def Conf Snd to
+     C                     MOVEL*BLANK    #1DSR3           Def Conf Snd to
+     C                     MOVEL*BLANK    #1DSR4           Def Conf Snd to
+     C                     MOVEL*BLANK    #1DSR5           Def Conf Snd to
+     C                     MOVEL*BLANK    #1DSR6           Def Conf Snd to
+     C                     MOVEL*BLANK    #1SSR1           Sett Conf Sndr-
+     C                     MOVEL*BLANK    #1SSR2           Sett Conf Sndr-
+     C                     MOVEL*BLANK    #1SSR3           Sett Conf Sndr-
+     C                     MOVEL*BLANK    #1SSR4           Sett Conf Sndr-
+     C                     MOVEL*BLANK    #1SSR5           Sett Conf Sndr-
+     C                     MOVEL*BLANK    #1SSR6           Sett Conf Sndr-
+     C                     MOVEL*BLANK    #1CND1           FRA/IRS Conf Co
+     C                     MOVEL*BLANK    #1CND2           FRA/IRS Conf Co
+     C                     MOVEL*BLANK    #1CND3           FRA/IRS Conf Co
+     C                     MOVEL*BLANK    #1CND4           FRA/IRS Conf Co
+     C                     MOVEL*BLANK    #1CND5           FRA/IRS Conf Co
+     C                     MOVEL*BLANK    #1CND6           FRA/IRS Conf Co
+     C                     MOVEL*BLANK    #1ISDA           Version of ISDA
+     C                     MOVEL*BLANK    #1AGTY           Type of ISDA ag
+     C                     MOVEL*BLANK    #1AGDT           Date of ISDA Ag
+     C                     MOVEL*BLANK    #1AGVV           Version of ISDA
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @BYREFY fields to screen
+      *================================================================
+     C                     MOVELBYCSSN    #1CSSN           Customer Shortn
+     C                     MOVELBYCRTN    #1CRTN           Customer Report
+     C                     MOVELBYCRNM    #1CRNM           Customer Report
+     C                     MOVELBYRSTY    #1RSTY           Receipt - Settl
+     C                     MOVELBYRONO    #1RONO           Receipt - Our N
+     C                     MOVELBYROBN    #1ROBN           Rcpt - Ordering
+     C                     MOVELBYROCS    #1ROCS           Rcpt - Ordering
+     C                     MOVELBYRIBN    #1RIBN           Rcpt - Intermed
+     C                     MOVELBYRIBL    #1RIBL           Rcpt - I/m Bank
+     C                     MOVELBYPSTY    #1PSTY           Pay - Settlemen
+     C                     MOVELBYPONO    #1PONO           Pay - Our Nostr
+     C                     MOVELBYPOBN    #1POBN           Pay - Ordering
+     C                     MOVELBYPOCS    #1POCS           Pay - Ordering
+     C                     MOVELBYPIBN    #1PIBN           Pay - Intermed
+     C                     MOVELBYPIBA    #1PIBA           Pay - I/m Bank
+     C                     MOVELBYRCNO    #1RCNO           Receiver Corres
+     C                     MOVELBYRCAL    #1RCAL           Receiver Corr.
+     C                     MOVELBYRCNB    #1RCNB           Receiver Number
+     C                     MOVELBYACBN    #1ACBN           A/c With Bank N
+     C                     MOVELBYACBL    #1ACBL           A/c With Bank L
+     C                     MOVELBYBYNB    #1BYNB           Beneficiary Num
+     C                     MOVELBYBACL    #1BACL           Beneficiary A/c
+     C                     MOVELBYDPY1    #1DPY1           Details of Paym
+     C                     MOVELBYDPY2    #1DPY2           Details of Paym
+     C                     MOVELBYDPY3    #1DPY3           Details of Paym
+     C                     MOVELBYDPY4    #1DPY4           Details of Paym
+     C                     MOVELBYDECG    #1DECG           Details of char
+     C                     MOVELBYBBI1    #1BBI1           Bank to Bank In
+     C                     MOVELBYBBI2    #1BBI2           Bank to Bank In
+     C                     MOVELBYBBI3    #1BBI3           Bank to Bank In
+     C                     MOVELBYBBI4    #1BBI4           Bank to Bank In
+     C                     MOVELBYBBI5    #1BBI5           Bank to Bank In
+     C                     MOVELBYBBI6    #1BBI6           Bank to Bank In
+     C                     Z-ADDBYLCD     #1LCD            Last Change Dat
+     C                     MOVELBYTYLC    #1TYLC           Type of Last Ch
+     C                     MOVELBYCVMR    #1CVMR           Cover Message R
+     C                     MOVELBYORBR    #1ORBR           Our Receive Bra
+     C                     MOVELBYOPBR    #1OPBR           Our Payment Bra
+     C                     MOVELBYCYCD    #1CYCD           Currency Code
+     C                     MOVELBYCUST    #1CUST           Customer Number
+     C                     MOVELBYTRTY    #1TRTY           Transaction Typ
+     C                     MOVELBYDSR1    #1DSR1           Def Conf Snd to
+     C                     MOVELBYDSR2    #1DSR2           Def Conf Snd to
+     C                     MOVELBYDSR3    #1DSR3           Def Conf Snd to
+     C                     MOVELBYDSR4    #1DSR4           Def Conf Snd to
+     C                     MOVELBYDSR5    #1DSR5           Def Conf Snd to
+     C                     MOVELBYDSR6    #1DSR6           Def Conf Snd to
+     C                     MOVELBYSSR1    #1SSR1           Sett Conf Sndr-
+     C                     MOVELBYSSR2    #1SSR2           Sett Conf Sndr-
+     C                     MOVELBYSSR3    #1SSR3           Sett Conf Sndr-
+     C                     MOVELBYSSR4    #1SSR4           Sett Conf Sndr-
+     C                     MOVELBYSSR5    #1SSR5           Sett Conf Sndr-
+     C                     MOVELBYSSR6    #1SSR6           Sett Conf Sndr-
+     C                     MOVELBYCND1    #1CND1           FRA/IRS Conf Co
+     C                     MOVELBYCND2    #1CND2           FRA/IRS Conf Co
+     C                     MOVELBYCND3    #1CND3           FRA/IRS Conf Co
+     C                     MOVELBYCND4    #1CND4           FRA/IRS Conf Co
+     C                     MOVELBYCND5    #1CND5           FRA/IRS Conf Co
+     C                     MOVELBYCND6    #1CND6           FRA/IRS Conf Co
+     C                     MOVELBYISDA    #1ISDA           Version of ISDA
+     C                     MOVELBYAGTY    #1AGTY           Type of ISDA ag
+     C                     MOVELBYAGDT    #1AGDT           Date of ISDA Ag
+     C***********          MOVELBYAGVV    #1AGVV           Version of ISDACSW097
+     C                     MOVE BYAGVV    #1AGVV           Version of ISDACSW097
+     C                     MOVELBYAGVC    #1AGVV           Version of ISDACSW097
+     C/COPY WNCPYSRC,SDH00236
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVEL*BLANK    #1CSSN           Customer Shortn
+     C                     MOVEL*BLANK    #1CRTN           Customer Report
+     C                     MOVEL*BLANK    #1CRNM           Customer Report
+     C/COPY WNCPYSRC,SDH00237
+     C                     MOVELP1CYCD    #1CYCD           Currency Code
+     C                     MOVELP1CUST    #1CUST           Customer Number
+     C                     MOVELP1TRTY    #1TRTY           Transaction Typ
+     C                     MOVELP1BRCA    #1BRCA  3        Branch                             CSD095
+     C                     MOVELP1STYP    #1STYP  2        Sub-Type                           CSD095
+      * USER: Load key screen
+      * 00/Copy Member SD0402ELKS - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Load Key Screen
+     C/COPY WNCPYSRC,SD0402ELKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get all Midas Modules - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDMMODPD'ZA0001           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SAEXIT                     *QUIT
+     C                     GOTO SAEXIT
+     C                     END
+      *
+      * USER: Exit processing
+      * PAR = DB1 By name
+     C                     MOVELBGMTMI    WUMTMI           Midas/Telex Mod
+     C                     MOVELBGSWFT    WUSWFT           SWIFT Funds Tra
+     C                     MOVELBGSWST    WUSWST           SWIFT Securitie
+     C                     MOVELBGSWCL    WUSWCL           SWIFT Customer
+     C                     MOVELBGSWSL    WUSWSL           SWIFT Synd Loan
+     C                     MOVELBGSWSM    WUSWSM           SWIFT Statement
+     C                     MOVELBGSWDL    WUSWDL           SWIFT Dealing
+     C                     MOVELBGSDGL    WUSDGL           Standing data/G
+     C                     MOVELBGDLFX    WUDLFX           Dealing: FX
+     C                     MOVELBGSYLN    WUSYLN           Syndicated Loan
+     C                     MOVELBGEXMG    WUEXMG           Exposure Manage
+     C                     MOVELBGFNMO    WUFNMO           Financial Model
+     C                     MOVELBGSTRT    WUSTRT           Statutory Retur
+     C                     MOVELBGCSLN    WUCSLN           Customer Lendin
+     C                     MOVELBGRTBN    WURTBN           Retail Banking
+     C                     MOVELBGMSDL    WUMSDL           Midas/Swift dir
+     C                     MOVELBGSECS    WUSECS           Securities
+     C                     MOVELBGAURC    WUAURC           Auto-reconcilia
+     C                     MOVELBGBDLI    WUBDLI           Bond Dealers In
+     C                     MOVELBGDRSD    WUDRSD           DRS Standing Da
+     C                     MOVELBGDRCM    WUDRCM           DRS Control mod
+     C                     MOVELBGDRFE    WUDRFE           DRS Foreign Exc
+     C                     MOVELBGDRMM    WUDRMM           DRS Money Marke
+     C                     MOVELBGDRAR    WUDRAR           DRS Arbitrage
+     C                     MOVELBGFDTR    WUFDTR           Funds Transfer
+     C                     MOVELBGDRCA    WUDRCA           DRS Common Appl
+     C                     MOVELBGFUOP    WUFUOP           Futures & Optio
+     C                     MOVELBGMTSL    WUMTSL           Midas/Telex Syn
+     C                     MOVELBGMTDL    WUMTDL           Midas/Telex Dea
+     C                     MOVELBGMTGL    WUMTGL           Midas/Telex Gen
+     C                     MOVELBGMTCL    WUMTCL           Midas/Telex Cus
+     C                     MOVELBGNWMI    WUNWMI           Message Managem
+     C                     MOVELBGFIIN    WUFIIN           FRA/IRS Indicat
+     C                     MOVELBGDLMM    WUDLMM           Dealing: MM
+     C                     MOVELBGINCN    WUINCN           Internal Contra
+     C                     MOVELBGTRMG    WUTRMG           Treasury Manage
+     C                     MOVELBGRKMG    WURKMG           Interest Risk M
+     C                     MOVELBGTSKY    WUTSKY           Testkey
+     C                     MOVELBGMIDQ    WUMIDQ           Midas/Q
+     C                     MOVELBGMFIC    WUMFIC           Microfiche
+     C                     MOVELBGIOAC    WUIOAC           Interest on acc
+     C                     MOVELBGWDPR    WUWDPR           Window processi
+     C                     MOVELBGSARP    WUSARP           SAR's processin
+     C                     MOVELBGFRIN    WUFRIN           French return i
+     C                     MOVELBGLRIN    WULRIN           Lux return indi
+     C                     MOVELBGDRIN    WUDRIN           Dutch return in
+     C                     MOVELBGGRIN    WUGRIN           German return i
+     C                     MOVELBGBRIN    WUBRIN           Belgian return
+     C                     MOVELBGIRIN    WUIRIN           Italian return
+     C                     MOVELBGSWEI    WUSWEI           Swift External
+     C                     MOVELBGPFMG    WUPFMG           Portfolio Manag
+     C                     MOVELBGCRMG    WUCRMG           Credit Manageme
+     C                     MOVELBGHORP    WUHORP           Head Office Rep
+     C                     MOVELBGAVBL    WUAVBL           Average Balance
+     C                     MOVELBGMARG    WUMARG           Margins
+     C                     MOVELBGCFMT    WUCFMT           Confirmation Ma
+     C                     MOVELBGMIMX    WUMIMX           Mimix
+     C                     MOVELBGRCFI    WURCFI           Report Control
+     C                     MOVELBGAMIN    WUAMIN           Amps Int
+     C                     MOVELBGSWRT    WUSWRT           Swiss Returns
+     C                     MOVELBGFLND    WUFLND           Fiduciary Loans
+     C                     MOVELBGLMCR    WULMCR           Portfolio Lendi
+     C                     MOVELBGCNTX    WUCNTX           Cantonal Tax
+     C                     MOVELBGSTDU    WUSTDU           Stamp Duty
+     C                     MOVELBGUDRS    WUUDRS           Use DRS Shortna
+     C                     MOVELBGCHDL    WUCHDL           Chips Dealing
+     C                     MOVELBGCHLN    WUCHLN           Chips Lending
+     C                     MOVELBGCHOB    WUCHOB           Chips Opening B
+     C                     MOVELBGCHIP    WUCHIP           CHIPS
+     C                     MOVELBGCHDI    WUCHDI           Chips Direct Li
+     C                     MOVELBGOPDK    WUOPDK           Optical Disk
+     C                     MOVELBGMBIN    WUMBIN           Multi-branching
+     C                     MOVELBGNNST    WUNNST           Leo Data Nucleu
+     C                     MOVELBGNOST    WUNOST           Leo Letters of
+     C                     MOVELBGNPST    WUNPST           Leo Collections
+     C                     MOVELBGNQST    WUNQST           Leo Bills/Finan
+     C                     MOVELBGNRST    WUNRST           Leo Bankers Acc
+     C                     MOVELBGNSST    WUNSST           Leo Reimburseme
+     C                     MOVELBGNTST    WUNTST           Taxes
+     C                     MOVELBGNUST    WUNUST           History & Audit
+     C                     MOVELBGNVST    WUNVST           Management Acco
+     C                     MOVELBGNWST    WUNWST           IBLC Returns
+     C                     MOVELBGNXST    WUNXST           Retail 3
+     C                     MOVELBGNYST    WUNYST           Interest on Acc
+     C                     MOVELBGNZST    WUNZST           Midas Export Da
+     C                     MOVELBGN0ST    WUN0ST           Analytical Acco
+     C                     MOVELBGN1ST    WUN1ST           User Defined Co
+     C                     MOVELBGN2ST    WUN2ST           Midas-Plato Int
+     C                     MOVELBGN3ST    WUN3ST           Midas-Trade Inn
+     C                     MOVELBGN4ST    WUN4ST           Reserved for La
+     C                     MOVELBGN5ST    WUN5ST           Reserved for La
+     C                     MOVELBGN6ST    WUN6ST           Reserved for La
+     C                     MOVELBGN7ST    WUN7ST           Reserved for La
+     C                     MOVELBGN8ST    WUN8ST           Reserved for La
+     C                     MOVELBGN9ST    WUN9ST           Reserved for La
+     C                     MOVELBGOAST    WUOAST           Reserved for La
+     C                     MOVELBGOBST    WUOBST           Reserved for La
+     C                     MOVELBGOCST    WUOCST           Reserved for La
+     C                     MOVELBGODST    WUODST           Reserved for La
+     C                     MOVELBGOEST    WUOEST           Reserved for La
+     C                     MOVELBGOFST    WUOFST           Reserved for La
+     C                     MOVELBGOGST    WUOGST           Reserved for La
+     C                     MOVELBGOHST    WUOHST           Reserved for La
+     C                     MOVELBGOIST    WUOIST           Reserved for La
+     C                     MOVELBGOJST    WUOJST           Reserved for La
+     C                     MOVELBGOKST    WUOKST           Reserved for La
+     C                     MOVELBGOLST    WUOLST           Reserved for La
+     C                     MOVELBGOMST    WUOMST           Reserved for La
+     C                     MOVELBGONST    WUONST           Reserved for La
+     C                     MOVELBGOOST    WUOOST           Reserved for La
+     C                     MOVELBGOPST    WUOPST           Reserved for La
+     C                     MOVELBGOQST    WUOQST           Reserved for La
+     C                     MOVELBGORST    WUORST           Reserved for La
+     C                     MOVELBGOSST    WUOSST           Reserved for La
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSB     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1CYCD    WK1X01  1
+     C                     MOVEL#1CUST    WK1X02  1
+     C                     MOVEL#1TRTY    WK1X03  1
+     C/COPY WNCPYSRC,SDH00238
+     C           WK1X01    IFEQ '?'                        Currency Code
+     C           WK1X02    OREQ '?'                        Customer Number
+     C           WK1X03    OREQ '?'                        Transaction Typ
+     C/COPY WNCPYSRC,SDH00239
+     C                     CALL 'SD0400S'              90  Select Extended
+     C                     PARM *BLANK    W0RTN   7
+     C/COPY WNCPYSRC,SDH00240
+     C           #1CYCD    PARM #1CYCD    WQ0001  3        Currency Code
+     C           #1CUST    PARM #1CUST    WQ0002  6        Customer Number
+     C           #1TRTY    PARM #1TRTY    WQ0003  2        Transaction Typ
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0400S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         VBCKRL    BEGSR
+      *================================================================
+      * Check reference to Currency Codes
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Name search required?
+     C                     MOVEL#1CYCD    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Currency Code
+     C                     CALL 'SD0020S'              90  Select Currency
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CYCD    PARM #1CYCD    WQ0004  3        Currency Code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0020S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     9931  *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     IFNE *BLANK
+     C                     GOTO VBEXIT
+     C                     END
+     C                     END
+      *................................................................
+      * If all low order keys not entered, exit
+     C           #1CYCD    IFEQ *BLANK                     Currency Code
+     C                     GOTO VBEXIT
+     C                     END
+      *
+     C           KLVBA6    KLIST
+     C                     KFLD           A6CYCD           Currency Code
+      * Setup key
+     C                     MOVEL#1CYCD    A6CYCD           Currency Code
+     C           KLVBA6    CHAIN@A6REA3              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     GOTO VBEXIT
+     C                     END
+      * Send message 'Currency Codes         NF'
+     C                     MOVEL'USR0071' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'USR0071' W0RTN
+      *================================================================
+     CSR         VBEXIT    ENDSR
+      /EJECT
+     CSR         VCCKRL    BEGSR
+      *================================================================
+      * Check reference to Client Details
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Name search required?
+     C                     MOVEL#1CUST    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Customer Number
+     C                     CALL 'SD0010S'              90  Select Client D
+     C                     PARM *BLANK    W0RTN   7
+     C           #1CUST    PARM #1CUST    WQ0005  6        Customer Number
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0010S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     9932  *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+      * No value selected, exit
+     C           W0RTN     IFNE *BLANK
+     C                     GOTO VCEXIT
+     C                     END
+     C                     END
+      *................................................................
+      * If all low order keys not entered, exit
+     C           #1CUST    IFEQ *BLANK                     Customer Number
+     C                     GOTO VCEXIT
+     C                     END
+      *
+     C           KLVCBB    KLIST
+     C                     KFLD           BBCUST           Customer Number
+      * Setup key
+     C                     MOVEL#1CUST    BBCUST           Customer Number
+     C           KLVCBB    CHAIN@BBREBF              9091  *
+     C           *IN90     IFEQ '0'
+      * Record found - move back any virtuals
+     C                     MOVELBBCSSN    #1CSSN           Customer Shortn
+     C                     MOVELBBCRTN    #1CRTN           Customer Report
+     C                     MOVELBBCRNM    #1CRNM           Customer Report
+     C                     GOTO VCEXIT
+     C                     END
+      * Send message 'Client Details         NF'
+     C                     MOVEL'USR0081' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'USR0081' W0RTN
+      *================================================================
+     CSR         VCEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM 'SDBSD1R' W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * 00/Copy Member SD0402EEPP - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Exit Program Processing
+     C/COPY WNCPYSRC,SD0402EEPP
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Midas/Telex Module Ind.
+     C                     MOVEL*BLANK    WUMTMI  1
+      * Define work field SWIFT Funds Transfer
+     C                     MOVEL*BLANK    WUSWFT  1
+      * Define work field SWIFT Securities Trading
+     C                     MOVEL*BLANK    WUSWST  1
+      * Define work field SWIFT Customer Lending
+     C                     MOVEL*BLANK    WUSWCL  1
+      * Define work field SWIFT Synd Loans (REDUN)
+     C                     MOVEL*BLANK    WUSWSL  1
+      * Define work field SWIFT Statements
+     C                     MOVEL*BLANK    WUSWSM  1
+      * Define work field SWIFT Dealing
+     C                     MOVEL*BLANK    WUSWDL  1
+      * Define work field Standing data/Gen.Ledger
+     C                     MOVEL*BLANK    WUSDGL  1
+      * Define work field Dealing: FX
+     C                     MOVEL*BLANK    WUDLFX  1
+      * Define work field Syndicated Loans (REDUN)
+     C                     MOVEL*BLANK    WUSYLN  1
+      * Define work field Exposure Management
+     C                     MOVEL*BLANK    WUEXMG  1
+      * Define work field Financial Modeller
+     C                     MOVEL*BLANK    WUFNMO  1
+      * Define work field Statutory Returns
+     C                     MOVEL*BLANK    WUSTRT  1
+      * Define work field Customer Lending
+     C                     MOVEL*BLANK    WUCSLN  1
+      * Define work field Retail Banking
+     C                     MOVEL*BLANK    WURTBN  1
+      * Define work field Midas/Swift direct link
+     C                     MOVEL*BLANK    WUMSDL  1
+      * Define work field Securities
+     C                     MOVEL*BLANK    WUSECS  1
+      * Define work field Auto-reconciliations
+     C                     MOVEL*BLANK    WUAURC  1
+      * Define work field Bond Dealers Interface
+     C                     MOVEL*BLANK    WUBDLI  1
+      * Define work field DRS Standing Data
+     C                     MOVEL*BLANK    WUDRSD  1
+      * Define work field DRS Control module
+     C                     MOVEL*BLANK    WUDRCM  1
+      * Define work field DRS Foreign Exchange
+     C                     MOVEL*BLANK    WUDRFE  1
+      * Define work field DRS Money Market
+     C                     MOVEL*BLANK    WUDRMM  1
+      * Define work field DRS Arbitrage
+     C                     MOVEL*BLANK    WUDRAR  1
+      * Define work field Funds Transfer
+     C                     MOVEL*BLANK    WUFDTR  1
+      * Define work field DRS Common Applications
+     C                     MOVEL*BLANK    WUDRCA  1
+      * Define work field Futures & Options
+     C                     MOVEL*BLANK    WUFUOP  1
+      * Define work field Midas/Telex Synd. Loans
+     C                     MOVEL*BLANK    WUMTSL  1
+      * Define work field Midas/Telex Dealing
+     C                     MOVEL*BLANK    WUMTDL  1
+      * Define work field Midas/Telex Gen. Ledger
+     C                     MOVEL*BLANK    WUMTGL  1
+      * Define work field Midas/Telex Cust. Lending
+     C                     MOVEL*BLANK    WUMTCL  1
+      * Define work field Message Management
+     C                     MOVEL*BLANK    WUNWMI  1
+      * Define work field FRA/IRS Indicator
+     C                     MOVEL*BLANK    WUFIIN  1
+      * Define work field Dealing: MM
+     C                     MOVEL*BLANK    WUDLMM  1
+      * Define work field Internal Contracts
+     C                     MOVEL*BLANK    WUINCN  1
+      * Define work field Treasury Management
+     C                     MOVEL*BLANK    WUTRMG  1
+      * Define work field Interest Risk Management
+     C                     MOVEL*BLANK    WURKMG  1
+      * Define work field Testkey
+     C                     MOVEL*BLANK    WUTSKY  1
+      * Define work field Midas/Q
+     C                     MOVEL*BLANK    WUMIDQ  1
+      * Define work field Microfiche
+     C                     MOVEL*BLANK    WUMFIC  1
+      * Define work field Interest on accounts
+     C                     MOVEL*BLANK    WUIOAC  1
+      * Define work field SAR's processing required
+     C                     MOVEL*BLANK    WUSARP  1
+      * Define work field French return indicator
+     C                     MOVEL*BLANK    WUFRIN  1
+      * Define work field Lux return indicator
+     C                     MOVEL*BLANK    WULRIN  1
+      * Define work field Dutch return indicator
+     C                     MOVEL*BLANK    WUDRIN  1
+      * Define work field German return indicator
+     C                     MOVEL*BLANK    WUGRIN  1
+      * Define work field Belgian return indicator
+     C                     MOVEL*BLANK    WUBRIN  1
+      * Define work field Italian return indicator
+     C                     MOVEL*BLANK    WUIRIN  1
+      * Define work field Swift External Interface
+     C                     MOVEL*BLANK    WUSWEI  1
+      * Define work field Portfolio Management
+     C                     MOVEL*BLANK    WUPFMG  1
+      * Define work field Credit Management.
+     C                     MOVEL*BLANK    WUCRMG  1
+      * Define work field Head Office Reporting
+     C                     MOVEL*BLANK    WUHORP  1
+      * Define work field Average Balances
+     C                     MOVEL*BLANK    WUAVBL  1
+      * Define work field Margins
+     C                     MOVEL*BLANK    WUMARG  1
+      * Define work field Confirmation Matching
+     C                     MOVEL*BLANK    WUCFMT  1
+      * Define work field Mimix
+     C                     MOVEL*BLANK    WUMIMX  1
+      * Define work field Report Control Facility
+     C                     MOVEL*BLANK    WURCFI  1
+      * Define work field Amps Int
+     C                     MOVEL*BLANK    WUAMIN  1
+      * Define work field Swiss Returns
+     C                     MOVEL*BLANK    WUSWRT  1
+      * Define work field Fiduciary Loans & Deposit
+     C                     MOVEL*BLANK    WUFLND  1
+      * Define work field Portfolio Lending
+     C                     MOVEL*BLANK    WULMCR  1
+      * Define work field Cantonal Tax
+     C                     MOVEL*BLANK    WUCNTX  1
+      * Define work field Stamp Duty
+     C                     MOVEL*BLANK    WUSTDU  1
+      * Define work field Use DRS Shortnames
+     C                     MOVEL*BLANK    WUUDRS  1
+      * Define work field Chips Dealing
+     C                     MOVEL*BLANK    WUCHDL  1
+      * Define work field Chips Lending
+     C                     MOVEL*BLANK    WUCHLN  1
+      * Define work field Chips Opening Balance
+     C                     MOVEL*BLANK    WUCHOB  1
+      * Define work field CHIPS
+     C                     MOVEL*BLANK    WUCHIP  1
+      * Define work field Chips Direct Link
+     C                     MOVEL*BLANK    WUCHDI  1
+      * Define work field Optical Disk
+     C                     MOVEL*BLANK    WUOPDK  1
+      * Define work field Leo Data Nucleus
+     C                     MOVEL*BLANK    WUNNST  1
+      * Define work field Leo Letters of Credit
+     C                     MOVEL*BLANK    WUNOST  1
+      * Define work field Leo Collections
+     C                     MOVEL*BLANK    WUNPST  1
+      * Define work field Leo Bills/Financing
+     C                     MOVEL*BLANK    WUNQST  1
+      * Define work field Leo Bankers Acceptances
+     C                     MOVEL*BLANK    WUNRST  1
+      * Define work field Leo Reimbursements
+     C                     MOVEL*BLANK    WUNSST  1
+      * Define work field Taxes
+     C                     MOVEL*BLANK    WUNTST  1
+      * Define work field History & Audit Facility
+     C                     MOVEL*BLANK    WUNUST  1
+      * Define work field Management Accounts
+     C                     MOVEL*BLANK    WUNVST  1
+      * Define work field IBLC Returns
+     C                     MOVEL*BLANK    WUNWST  1
+      * Define work field Retail 3
+     C                     MOVEL*BLANK    WUNXST  1
+      * Define work field Interest on Accounts 3
+     C                     MOVEL*BLANK    WUNYST  1
+      * Define work field Midas Export Data Module
+     C                     MOVEL*BLANK    WUNZST  1
+      * Define work field Analytical Accounting
+     C                     MOVEL*BLANK    WUN0ST  1
+      * Define work field User Defined Correspondnc
+     C                     MOVEL*BLANK    WUN1ST  1
+      * Define work field Midas-Plato Interface
+     C                     MOVEL*BLANK    WUN2ST  1
+      * Define work field Midas-Trade Innovation If
+     C                     MOVEL*BLANK    WUN3ST  1
+      * Define work field Reserved for Later Use 41
+     C                     MOVEL*BLANK    WUN4ST  1
+      * Define work field Reserved for Later Use 42
+     C                     MOVEL*BLANK    WUN5ST  1
+      * Define work field Reserved for Later Use 43
+     C                     MOVEL*BLANK    WUN6ST  1
+      * Define work field Reserved for Later Use 44
+     C                     MOVEL*BLANK    WUN7ST  1
+      * Define work field Reserved for Later Use 45
+     C                     MOVEL*BLANK    WUN8ST  1
+      * Define work field Reserved for Later Use 46
+     C                     MOVEL*BLANK    WUN9ST  1
+      * Define work field Reserved for Later Use 47
+     C                     MOVEL*BLANK    WUOAST  1
+      * Define work field Reserved for Later Use 48
+     C                     MOVEL*BLANK    WUOBST  1
+      * Define work field Reserved for Later Use 49
+     C                     MOVEL*BLANK    WUOCST  1
+      * Define work field Reserved for Later Use 50
+     C                     MOVEL*BLANK    WUODST  1
+      * Define work field Reserved for Later Use 51
+     C                     MOVEL*BLANK    WUOEST  1
+      * Define work field Reserved for Later Use 52
+     C                     MOVEL*BLANK    WUOFST  1
+      * Define work field Reserved for Later Use 53
+     C                     MOVEL*BLANK    WUOGST  1
+      * Define work field Reserved for Later Use 54
+     C                     MOVEL*BLANK    WUOHST  1
+      * Define work field Reserved for Later Use 55
+     C                     MOVEL*BLANK    WUOIST  1
+      * Define work field Reserved for Later Use 56
+     C                     MOVEL*BLANK    WUOJST  1
+      * Define work field Reserved for Later Use 57
+     C                     MOVEL*BLANK    WUOKST  1
+      * Define work field Reserved for Later Use 58
+     C                     MOVEL*BLANK    WUOLST  1
+      * Define work field Reserved for Later Use 59
+     C                     MOVEL*BLANK    WUOMST  1
+      * Define work field Reserved for Later Use 60
+     C                     MOVEL*BLANK    WUONST  1
+      * Define work field Reserved for Later Use 61
+     C                     MOVEL*BLANK    WUOOST  1
+      * Define work field Reserved for Later Use 62
+     C                     MOVEL*BLANK    WUOPST  1
+      * Define work field Reserved for Later Use 63
+     C                     MOVEL*BLANK    WUOQST  1
+      * Define work field Reserved for Later Use 64
+     C                     MOVEL*BLANK    WUORST  1
+      * Define work field Reserved for Later Use 65
+     C                     MOVEL*BLANK    WUOSST  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C/COPY WNCPYSRC,SDH00241
+      * Open files
+     C                     OPEN SD0402E#
+     C/COPY WNCPYSRC,SDH00242
+     C                     OPEN SDEXSTL1
+     C/COPY WNCPYSRC,SDH00243
+     C                     OPEN SDCURRL1
+     C                     OPEN SDCUSTL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0402E Precompiler - Extended Settlements  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+     C*                                                                   173052
+     C                     MOVEL*BLANKS   CSW005  1                       173052
+     C*                                                                   173052
+     C** Check if switchable feature CSW005 is switched on.               173052
+     C*                                                                   173052
+     C                     CALL 'AOSARDR0'                                173052
+     C                     PARM *BLANKS   P@RTCD  7                       173052
+     C                     PARM '*VERIFY' P@OPTN  7                       173052
+     C                     PARM 'CSW005'  P@SARD  6                       173052
+     C           P@RTCD    IFEQ *BLANKS                                   173052
+     C                     MOVEL'Y'       CSW005                          173052
+     C                     ENDIF                                          173052
+      *                                                                   CSW200
+     C** Check if SWIFT 2000 Changes is on.                               CSW200
+      *                                                                   CSW200
+     C                     CALL 'SWIF2000'                                CSW200
+     C                     PARM *BLANKS   P@RTCD                          CSW200
+      *                                                                   CSW200
+     C           P@RTCD    IFEQ 'CSW200'                                  CSW200
+     C                     MOVEL'Y'       CSW200  1                       CSW200
+     C                     ENDIF                                          CSW200
+      *                                                                   CSW200
+     C** Check if switchable feature CSW011 is on.                        CSW200
+      *                                                                   CSW200
+     C                     CALL 'AOSARDR0'                                CSW200
+     C                     PARM *BLANKS   P@RTCD                          CSW200
+     C                     PARM '*VERIFY' P@OPTN                          CSW200
+     C                     PARM 'CSW011'  P@SARD                          CSW200
+      *                                                                   CSW200
+     C           P@RTCD    IFEQ *BLANKS                                   CSW200
+     C                     MOVEL'Y'       CSW011  1                       CSW200
+     C                     ENDIF                                          CSW200
+      *                                                                   CSW200
+      ** Check if switchable feature CDL031 is switched on                                   BUG6329
+     C                     CALL 'AOSARDR0'                                                   BUG6329
+     C                     PARM *BLANKS   P@RTCD                                             BUG6329
+     C                     PARM '*VERIFY' P@OPTN                                             BUG6329
+     C                     PARM 'CDL031'  P@SARD                                             BUG6329
+     C********   SCSARD    PARM SCSARD    DSSDY                                              BUG6329
+      *                                                                                      BUG6329
+     C           P@RTCD    IFEQ *BLANKS                                                      BUG6329
+     C                     MOVE 'Y'       CDL031  1                                          BUG6329
+     C                     ELSE                                                              BUG6329
+     C                     MOVE 'N'       CDL031                                             BUG6329
+     C                     ENDIF                                                             BUG6329
+      *                                                                                      BUG6329
+      ** Check if feature CSW212 is on                                                        CSW212
+      *                                                                                       CSW212
+     C                     CALL 'SWIF2012'                                                    CSW212
+     C                     PARM *BLANKS   P@RTCD                                              CSW212
+      *                                                                                       CSW212
+     C           P@RTCD    IFEQ 'CSW2012'                                                     CSW212
+     C                     MOVE 'Y'       CSW212  1                                           CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVE 'N'       CSW212                                              CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+      ** Check if feature CDL008 is on                                                        CSW212
+      *                                                                                       CSW212
+     C                     CALL 'AOSARDR0'                                                    CSW212
+     C                     PARM *BLANKS   P@RTCD                                              CSW212
+     C                     PARM '*VERIFY' P@OPTN                                              CSW212
+     C                     PARM 'CDL008'  P@SARD                                              CSW212
+      *                                                                                       CSW212
+     C           P@RTCD    IFEQ *BLANKS                                                       CSW212
+     C                     MOVE 'Y'       CDL008  1                                           CSW212
+     C                     ELSE                                                               CSW212
+     C                     MOVE 'N'       CDL008                                              CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+      * Copyright Statement 1996 - Standard Functions  * copyright
+      * Get all Midas Modules - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SBRVGN
+      * Data Struct. for Ext Sett - Extended Settlements  *
+      * 00/Copy Member SD0402EFPG - Extended Settlements  *
+      * 00/Copy Member SD0402EEPG - Extended Settlements  *
+      * 00/Copy Member SD0402EIPG - Extended Settlements  *
+      * 00/Copy Member SD0402ECPG - Extended Settlements  *
+     C*Ext Stlmnts Enq(FRA/IRS) Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD0402ECPG
+      * 00/Copy Member SD0402EOPG - Extended Settlements  *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0402EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0402EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0402EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*Ext Stlmnts Enq(FRA/IRS) Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD0402EOPG
+      *                                                                                     AR992080
+      ** Remove 'FX' in CONF and SETN elements 2-3                                          AR992080
+      *                                                                                     AR992080
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001
+** HDTG                                                                                       CSW212
+FRA/IRS                                                                                       CSW212
+FRAIRS/FX                                                                                     CSW212
+FX                                                                                            CSW212
+** CONF                                                                                       CSW212
+(Definition Confirmation)                                                                     CSW212
+(Definition Confirmation/Cover Message)                                              CSW212 AR992080
+(Cover Message)                                                                      CSW212 AR992080
+** SETN                                                                                       CSW212
+(Settlement/reset Confirmation)                                                               CSW212
+(Settlement/reset Confirmation/Conf.)                                                CSW212 AR992080
+(Confirmation)                                                                       CSW212 AR992080

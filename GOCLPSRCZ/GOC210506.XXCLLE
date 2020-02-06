@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC210506 - Midas GO Check for Unauthorised Customer        */
+/*                   Segmentation Records (COB)                      */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*                                                                   */
+/*       Last Amend No. CCB023 *REDUNDANT  Date 06Aug12              */
+/*       Prev Amend No. CSD090  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       CSD090 - Customer Segmentation                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTNCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2010')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Check for unauthorised Customer Segmentation records */
+ 
+             CALL       PGM(GPC210506) PARM(&PRTNCD)
+ 
+             IF         COND(&PRTNCD = '       ') THEN(GOTO CMDLBL(END))
+ 
+             SNDMSG     MSG('Unauthorised Customer Segmentation +
+                          exists. Please reopen the input cycle.') +
+                          TOMSGQ(MOPERQ)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDMSG     MSG('Program GOC210506 ended abnormally - job +
+                          cancelled') TOMSGQ(MOPERQ)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

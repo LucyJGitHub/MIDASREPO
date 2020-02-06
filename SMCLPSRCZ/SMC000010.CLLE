@@ -1,0 +1,218 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM 10-digit account BRIDGE program')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000010 - 10 digit account code Bridge program.           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP003             Date 15Sep10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP038             Date 11Jul07              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM008  *REWRITE   Date 22Feb06              */
+/*                      CSM007             Date 27Oct05              */
+/*                      CSM005             Date 21Sep05              */
+/*                      CSM003             Date 30May05              */
+/*                      BUG5222            Date 14Dec04              */
+/*                      CGL034             Date 15Sep04              */
+/*                      CGL029 *CREATE     Date 13Feb04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP003 - Keep copies in QTEMP to improve re-runnability.    */
+/*       CUP038 - Remove calls to update reporting codes.            */
+/*       CSM008 - Rewritten to improve error handling.               */
+/*       CSM007 - Add error reporting to Conversion Process          */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CSM003 - Use system value rather than UPSTAT.               */
+/*       BUG5222 - Extend Account Length in External Account Id      */
+/*       CGL034 - Migrate reporting codes separately                 */
+/*       CGL029 - 10 digit account code                              */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&PFX &BRGLIB)                                             */ /*CUP003*/
+             PGM        PARM(&PFX)                                                        /*CUP003*/
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+/**********  DCL        VAR(&BRGLIB) TYPE(*CHAR) LEN(10)                               */ /*CUP003*/
+ 
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BATCH) TYPE(*CHAR) LEN(4) VALUE('*NO ')
+             DCL        VAR(&ERRPROGRAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GENPGM) TYPE(*CHAR) LEN(10) +
+                          VALUE('SMC000010')
+             DCL        VAR(&REPORTMSG) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Retrieve job attributes to determine whether job is batch or not. */
+             RTVJOBA    TYPE(&TYPE)
+             IF         COND(&TYPE *EQ '0') THEN(DO)
+                CHGVAR     VAR(&BATCH) VALUE('*YES')
+             ENDDO
+ 
+/* If running interactively then create MIDASMSG data area for on screen */
+/*  error handling.                                                      */
+             IF         COND(&BATCH *EQ '*NO') THEN(DO)
+                DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+                MONMSG     MSGID(CPF0000)
+                CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                             VALUE(' ')
+             ENDDO
+ 
+/* Create temporary file to hold messages for UP008010. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+ 
+/* Set up zone library list to be converted. */
+             CALL       PGM(UPC0014) PARM(&PFX)
+ 
+/* Check status of conversion as this may be a re-run. */
+             RTVDTAARA  DTAARA(UPSTAT (169 1)) RTNVAR(&STAT)
+             IF         COND(&STAT *EQ '2') THEN(DO)
+                GOTO       CMDLBL(STAGE2)
+             ENDDO
+             IF         COND(&STAT *EQ '3') THEN(DO)
+                GOTO       CMDLBL(STAGE3)
+             ENDDO
+             IF         COND(&STAT *EQ '4') THEN(DO)
+                GOTO       CMDLBL(STAGE4)
+             ENDDO
+             IF         COND(&STAT *EQ 'C') THEN(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+STAGE1:
+/* Call program to create version of SMACFFPD but with only one record per file. */
+             CLRPFM     FILE(SMACFNPD)
+             CALL       PGM(SM000010)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPROGRAM) VALUE('SM000010')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+STAGE2:
+/* Ascertain positions of fields to be changed. */
+             CHGDTAARA  DTAARA(UPSTAT (169 1)) VALUE('2')
+             CLRPFM     FILE(SMACFXPD)
+/**********  CALL       PGM(SMC000012) PARM(&BRGLIB)                                   */ /*CUP003*/
+             CALL       PGM(SMC000012)                                                    /*CUP003*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPROGRAM) VALUE('SMC000012')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+STAGE3:
+/* Perform account code conversion. */
+             CHGDTAARA  DTAARA(UPSTAT (169 1)) VALUE('3')
+/**********  CALL       PGM(SMC000013) PARM(&BRGLIB)                                   */ /*CUP003*/
+             CALL       PGM(SMC000013)                                                    /*CUP003*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPROGRAM) VALUE('SMC000013')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+STAGE4:
+/* Perform exception processing. */
+             CHGDTAARA  DTAARA(UPSTAT (169 1)) VALUE('4')
+/* Change narratives for Funds Transfer. */
+/**********  CALL       PGM(SMC000016) PARM(&BRGLIB)                                   */ /*CUP003*/
+             CALL       PGM(SMC000016)                                                    /*CUP003*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPROGRAM) VALUE('SMC000016')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Initialise trailer files. */
+/**********  CALL       PGM(SMC000017) PARM(&BRGLIB)                                   */ /*CUP003*/
+             CALL       PGM(SMC000017)                                                    /*CUP003*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPROGRAM) VALUE('SMC000017')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/**Update*reporting*codes*-*also*increased*from*4*digits*to*10*digits.**/ /*           */ /*CUP038*/
+/**********  CALL       PGM(SMC000018) PARM(&BRGLIB)                                   */ /*CUP038*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                               */ /*CUP038*/
+/**********     CHGVAR     VAR(&ERRPROGRAM) VALUE('SMC000018')                         */ /*CUP038*/
+/**********     GOTO       CMDLBL(ERROR)                                               */ /*CUP038*/
+/**********  ENDDO                                                                     */ /*CUP038*/
+ 
+/* Update TIPOSTPD. */
+/**********  CALL       PGM(SMC000019) PARM(&BRGLIB)                                   */ /*CUP003*/
+             CALL       PGM(SMC000019)                                                    /*CUP003*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPROGRAM) VALUE('SMC000019')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Update STRAN; take security copy first. */
+/**********  CPYF       FROMFILE(STRAN) TOFILE(&BRGLIB/@STRAN) +                       */ /*CUP003*/
+/**********               MBROPT(*REPLACE) CRTFILE(*YES)                               */ /*CUP003*/
+             CPYF       FROMFILE(STRAN) TOFILE(QTEMP/@STRAN) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CUP003*/
+             CALL       PGM(SM001704)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CPYF       FROMFILE(@STRAN) TOFILE(STRAN) MBROPT(*REPLACE)
+                CHGVAR     VAR(&ERRPROGRAM) VALUE('SM001704')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             DLTF       FILE(@STRAN)
+             MONMSG     MSGID(CPF2105)
+ 
+/* If processing has completed normally then send message and set status on UPSTAT. */
+             CHGDTAARA  DTAARA(UPSTAT (169 1)) VALUE('C')
+             CHGVAR     VAR(&REPORTMSG) VALUE('The Account Code +
+                          conversion has ended normally.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &REPORTMSG)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&REPORTMSG) VALUE(&ERRPROGRAM *BCAT +
+                          'ended abnormally.  Check previous +
+                          messages and/or job log.')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &REPORTMSG)
+ 
+ABNOR:
+             IF         COND(&BATCH *EQ '*NO') THEN(DO)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE('The +
+                             Account Code conversion has ended +
+                             abnormally.')
+                MONMSG     MSGID(CPF0000)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE('Check +
+                             report UP008010P1 for details.')
+                MONMSG     MSGID(CPF0000)
+                CALL       PGM(SCC0010) PARM('SMC000010' 'ENTER' ' ')
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+             CHGVAR     VAR(&REPORTMSG) VALUE('The Account Code +
+                          conversion has ended abnormally. ')
+             CALL       PGM(UP008010) PARM(*WRITE &GENPGM &REPORTMSG)
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             CALL       PGM(UP008010) PARM(*REPORT &GENPGM ' ')
+             MONMSG     MSGID(CPF0000)
+             CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) +
+                          USRDTA(&GENPGM)
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

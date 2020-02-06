@@ -1,0 +1,190 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SM Check for CBDPRLPD duplicate records')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Implementation module                                *
+      *                                                               *
+      *  SM8020 - Check for duplicate records in CBDPRLPD             *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK015  *CREATE    Date 03Jan03               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CPK015 - Check for duplicate records in CBDPRLL5.            *
+      *                                                               *
+      *****************************************************************
+     FCBDPRLPDIF  E                    DISK
+     FSM8020P1O   E             37     PRINTER                        UC
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRMAIN
+      *
+     C           RECS      IFNE 'Y'
+     C                     WRITENORECS
+     C                     ENDIF
+      *
+     C                     CLOSESM8020P1
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialisation routine.                             *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     MOVEL'CBDPRLPD'#FILE
+      *
+      ** Initialise main DBerror fields
+      *
+     C                     Z-ADD0         DBASE
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+      *
+     C                     MOVEL*BLANKS   #DSON  10
+     C                     MOVEL*BLANKS   #DSOS   5
+     C                     MOVEL*BLANKS   #DDON  10
+     C                     MOVEL*BLANKS   #DDOS   5
+      *
+     C                     MOVEL'Dpds'    #HDR1
+     C                     MOVEL'Seq'     #HDR2
+     C                     MOVEL'Dpdd'    #HDR3
+     C                     MOVEL'Seq'     #HDR4
+     C                     MOVEL*BLANKS   #HDR5
+      *
+     C                     OPEN SM8020P1
+     C                     WRITEHEADH                  69
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Main processing                                     *
+      *                                                               *
+      *  Called by: Main routine                                      *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+     C                     READ CBDPRLPD                 01
+      *
+     C           *IN01     DOWEQ*OFF
+      *
+      * If the read record has the same key as the last record, then
+      *  delete the recently read record. Otherwise, save the current
+      *  value of keys.
+     C           DIDSON    IFEQ #DSON
+     C           DIDSOS    ANDEQ#DSOS
+     C           DIDDON    ANDEQ#DDON
+     C           DIDDOS    ANDEQ#DDOS
+      *
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH
+     C                     SETOF                     37
+     C                     ENDIF
+      *
+     C                     MOVEL#DSON     #FLD1
+     C                     MOVEL#DSOS     #FLD2
+     C                     MOVEL#DDON     #FLD3
+     C                     MOVEL#DDOS     #FLD4
+     C                     MOVEL*BLANKS   #FLD5
+     C                     WRITEDTL1
+     C                     MOVEL'Y'       RECS    1
+      *
+     C                     ELSE
+      *
+      * Save the value of the current record's keys
+     C                     MOVELDIDSON    #DSON
+     C                     MOVELDIDSOS    #DSOS
+     C                     MOVELDIDDON    #DDON
+     C                     MOVELDIDDOS    #DDOS
+      *
+     C                     ENDIF
+      *
+      * Read the next record
+     C                     READ CBDPRLPD                 01
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *  Called by: (**calling routines**)                            *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2003

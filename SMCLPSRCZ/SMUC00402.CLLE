@@ -1,0 +1,155 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Utility for MD-24222')                                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMUC00402 - Utility for MD-24222                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027435 *CREATE   Date 09Jun14              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD027435 - Conversion of utilities to upgrade program       */
+/*                  standards related to MD027279.                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SQL) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message.  */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for SKXBRIDGE')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* The actual program function would appear here.  If additional */
+/*  programs need to be called then use switches (U7 and U8) to  */
+/*  denote error.  The shell program which controls the call of  */
+/*  Bridge Upgrade Programs (UPC9900) will check the switches.   */
+ 
+/** Create a file from merged records of CLOANCL & MCLONCL    */
+/* CREATE TABLE QTEMP/LOANSPF AS                                        */
+/* (SELECT RECI, BRCA, CNUM, LNRF, FCUS, FTYP, FSEQ, CCY FROM CLOANCL   */
+/*  UNION ALL SELECT RECI, BRCA, CNUM, LNRF, FCUS, FTYP, FSEQ, CCY      */
+/*  FROM MCLONCL) WITH DATA                                             */
+ 
+/* Set up the statement line-by-line....                 */
+             CHGVAR     VAR(&SQL) VALUE('CREATE TABLE QTEMP/LOANSPF +
+                          AS')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
+             CHGVAR     VAR(&SQL) VALUE('(SELECT RECI, BRCA, CNUM, +
+                          LNRF, FCUS, FTYP, FSEQ, CCY FROM CLOANCL')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('UNION ALL SELECT RECI, +
+                          BRCA, CNUM, LNRF, FCUS, FTYP, FSEQ, CCY')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('FROM MCLONCL) WITH DATA')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE) NAMING(*SYS)
+             MONMSG     MSGID(SQL9010)
+ 
+/** Delete record  in LEPELND if it is not present in the     */
+/** merged file LOANSPF (records of CLOANCL & MCLONCL)        */
+/* DELETE FROM LEPELND                                                  */
+/* WHERE NOT EXISTS                                                     */
+/* (SELECT * FROM QTEMP/LOANSPF WHERE LEPELND.BRCA=LOANSPF.BRCA         */
+/*             AND LEPELND.LDLNRF=LOANSPF.LNRF                          */
+/*             AND LEPELND.LDCNUM=LOANSPF.CNUM                          */
+/*             AND LEPELND.LDFCUS=LOANSPF.FCUS                          */
+/*             AND LEPELND.LDFTYP=LOANSPF.FTYP                          */
+/*             AND LEPELND.LDFSEQ=LOANSPF.FSEQ)                         */
+ 
+/* Set up the statement line-by-line....                 */
+             CHGVAR     VAR(&SQL) VALUE('DELETE FROM LEPELND')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
+             CHGVAR     VAR(&SQL) VALUE('WHERE NOT EXISTS')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('(SELECT * FROM +
+                          QTEMP/LOANSPF WHERE +
+                          LEPELND.BRCA=LOANSPF.BRCA')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND +
+                          LEPELND.LDLNRF=LOANSPF.LNRF')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND +
+                          LEPELND.LDCNUM=LOANSPF.CNUM')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND +
+                          LEPELND.LDFCUS=LOANSPF.FCUS')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND +
+                          LEPELND.LDFTYP=LOANSPF.FTYP')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND +
+                          LEPELND.LDFSEQ=LOANSPF.FSEQ)')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE) NAMING(*SYS)
+             MONMSG     MSGID(SQL9010)
+ 
+/** Delete records on LEPEMGD if it is not present in LEPELND */
+/* DELETE FROM LEPEMGD                                                  */
+/* WHERE NOT EXISTS                                                     */
+/* (SELECT * FROM LEPELND WHERE LEPEMGD.MDLNRF=LEPELND.LDLNRF           */
+/*           AND LEPEMGD.BRCA=LEPELND.BRCA                              */
+/*           AND LEPEMGD.MDCNUM=LEPELND.LDCNUM)                         */
+ 
+/* Set up the statement line-by-line....                 */
+             CHGVAR     VAR(&SQL) VALUE('DELETE FROM LEPEMGD')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*CLEAR')
+             CHGVAR     VAR(&SQL) VALUE('WHERE NOT EXISTS')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('(SELECT * FROM LEPELND +
+                          WHERE LEPEMGD.MDLNRF=LEPELND.LDLNRF')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND +
+                          LEPEMGD.BRCA=LEPELND.BRCA')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+             CHGVAR     VAR(&SQL) VALUE('AND +
+                          LEPEMGD.MDCNUM=LEPELND.LDCNUM)')
+             CALL       PGM(UTWRTSQL) PARM(&SQL '*WRITE')
+ 
+/* ... and run the SQL. */
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE) NAMING(*SYS)
+             MONMSG     MSGID(SQL9010)
+ 
+/* Reorganize the files */
+             CALL       PGM(SCC000060) PARM('LEPELND' '*FIRST')
+             CALL       PGM(SCC000060) PARM('LEPEMGD' '*FIRST')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,688 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FC Calculate next report date')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Report Control Facility Module
+     F*                                                               *
+     F*  FC0015 - DAY NUMBER ENQUIRY                                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 173405             Date 13Feb01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 076355             Date 18Sep96               *
+      *                 067780             Date 23Jan96               *
+     F*                 069182             DATE 12APR94               *
+     F*                 066539             DATE 07FEB94               *
+     F*                 046303             DATE 13JAN94               *
+     F*                 E38323             DATE 30JUL92               *
+     F*                 LN1277             DATE 22MAY91               *
+     F*                 LN1205             DATE 30APR91               *
+     F*                 LN1083             DATE 14DEC90               *
+     F*                 LN0719             DATE 11SEP90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  173405 - Next reporting date for the current period missed   *
+      *           when computing for the next active date.            *
+     F*  076355 - For day-of-week frequency, if next active date is      *
+     F*           calculated as less or equal the rundate, add 7 days    *
+     F*           to target date and check back (for holidays).          *
+     F*  067780 - Initialise AFLAG to 'N', so that 'Y' value is not   *
+     F*           retained on subsequent calls to this program.       *
+     F*  069182 - Additional processing required for fix 066539.       d *
+     F*  066539 - Processing for frequencies B, M, Q and Y corrected and *
+     F*           rewritten for clarity                                  *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  E38323 - Recompiled due to a change in copy source ZFWDT srtn*
+     F*  LN1277 - CHAIN TO SDBANKL1 FOR VALUE OF DAY OF NEXT          *
+     F*           WORKING DAY AS THE ACCESS PROGRAM WILL STILL        *
+     F*           HOLD YESTERDAYS VALUES WHEN RUN AT I/C INITIATION   *
+     F*  LN1205 - FOR Y FREQUENCY, WHEN NEXT YEAR IS A LEAP YEAR,     *
+     F*           PREVENT INCREMENT OF ZDAYNO BY '1' IF NEXT DAY      *
+     F*           NUMBER IS CALCULATED AS A DATE IN THE CURRENT       *
+     F*           YEAR                                                *
+     F*  LN1083 - FOR M, Q OR Y ALLOW NEXT DATE TO BE IN CURRENT      *
+     F*           TIME PERIOD                                         *
+     F*           IF 'A', RETURN 'A' TO CALLING PROGRAM, NOT VALUE    *
+     F*           FROM GELR.                                          *
+     F*  LN0719 - SET UP FREQ DAY CORRECTLY                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      ********************************************************************
+      * OPERATION
+      * ~~~~~~~~~
+      * This program returns the date on which a report must next be
+      * produced by the Report Control Facility. The date is expressed
+      * in MIDAS Day Number form.
+      *
+      * Example parameter list :
+      *
+      ************         CALL 'SDRNXDT'              90  <NEXT DATE>    LN1083
+      *                    CALL 'FC0015'               90  <NEXT DATE>    LN1083
+      *                    PARM *BLANK    P@RTCD  7        B:Return code
+      *                    PARM 'M'       P@FREQ  1        I:Frequency
+      *                    PARM DAYFRQ    P@FRQD  20       I:Freq. Day No.
+      *          NXDAYN    PARM           P@NDNO  50       O:Next  Day No.
+      *
+      * Notes on the parameters:
+      *
+      *    1. P@RTCD will return the values:
+      *
+      *              1. '*FREQ  ' - Invalid Frequency code
+      *
+      *              2. '*FRQDAY' - Invalid Freqency Day No.
+      *
+      *              3. '*ERROR ' - Error in this or subsidiary program
+      *
+      *    2. P@NDNO will return the next Day Number.
+      *
+      ********************************************************************
+      /EJECT
+     FSDBANKL1IF  E           K        DISK                               LN1277
+     E*ESTART
+      ***************************************************
+     E                    @FC     1  13  1               Frequency codes
+     E                    @DR     1   7  1 0             Day remainders
+     E                    @DD    13  13  3 0             Days in months
+     E                    @DN        12  3 0             Days in next mth.
+     E                    @MN    12  12  3               Month names
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZHOLE
+      ***************************************************
+      /SPACE 3
+     I*ISTART
+      *****************************************************
+      /COPY ZSRSRC,ZHOLI
+      *
+      /COPY ZSRSRC,ZHOLDS
+     IDSFDY     E DSDSFDY
+      * 200 BYTE DATASTRUCTURE FOR ACCESS PROGRAMS
+      *
+     I*P@BANK****E*DSSDBANKPD                                             LN1277
+      **Bank*ICD*Access*Program*record*format*data*structure              LN1277
+      *
+     IP@GELR    E DSSDGELRPD
+      * General Ledger Details Access Program record format data structure
+      *
+     IA@DD        DS
+      * Days in month/next month array/field data structure
+     I                                        1  39 @DD
+     I                                        4  39 @DN
+     I            DS
+      * Today's date variables :
+     I                                        1   7 R@DATE
+     I                                        1   20R@DD
+     I                                        3   5 R@MNTH
+     I                                        6   70R@YY
+     I                                       11  120R@MM
+      *
+     I            DS                                                      066539
+      * Next working day's variables :                                    066539
+     I                                        1   60NWDATD                066539
+     I                                        1   20NWD                   066539
+     I                                        3   40NWM                   066539
+     I                                        5   60NWY                   066539
+      *                                                                   066539
+      *****************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************
+     C                     MOVEACPY@      BIS@   80
+      **
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7        B:Return code
+     C                     PARM           P@FREQ  1        I:Frequency
+     C*********************PARM           P@FRQD  20       I:Freq. Day No.
+     C                     PARM           P@FRDA  2        B:FDay No AlphaLN0719
+     C                     PARM           P@NDNO  50       O:Next  Day No.
+      *****************************************************
+      *MAIN
+     C                     SETOF                     919293 Reset inds.
+     C                     Z-ADD0         ZDYNBR
+     C                     MOVE P@FRDA    P@FRQD                          LN0719
+     C                     MOVE 'N'       AFLAG                           067780
+      *
+     C           *IN01     IFEQ '0'                        IF FIRST TIME
+      *                    ¦
+     C**********           CALL 'AOGELRR0'                   <G/LDG.ICD>                      CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANK    P@APRC  7          B:Return code
+     C                     PARM '*FIRST'  P@APOP  7          I:Option
+     C********** P@GELR    PARM P@GELR    DSFDY              O:Rec.format                     CGL029
+     C           P@GELR    PARM P@GELR    DSSDY                                               CGL029
+     C           P@APRC    IFNE *BLANK
+     C                     SETON                     94
+     C                     GOTO T@SKIP
+     C                     END
+     C           *IN93     CABEQ'1'       T@SKIP             Error------->
+      *                    ¦
+     C***********          CALL 'AOBANKR0'                   <BANK ICD>   LN1277
+     C***********          PARM *BLANK    P@APRC  7          B:Return codeLN1277
+     C***********          PARM '*FIRST'  P@APOP  7          I:Option     LN1277
+     C***********P@BANK    PARM P@BANK    DSFDY              O:Rec.format LN1277
+     C*                                                                   LN1277
+     C* CHAIN TO SDBANKL1 TO GET NEXT WORKING DAY                         LN1277
+     C*                                                                   LN1277
+     C                     MOVEL'BANK'    KEY    10                       LN1277
+     C           KEY       CHAINSDBANKL1             95                   LN1277
+     C*                                                                   LN1277
+     C           *IN95     IFEQ '1'                                       LN1277
+     C***********P@APRC    IFNE *BLANK                                    LN1277
+     C***********          SETON                     95                   LN1277
+     C                     GOTO T@SKIP
+     C                     END
+     C           *IN93     CABEQ'1'       T@SKIP             Error------->
+     C                     MOVE BJMRDT    R@DATE             Today's date
+     C                     MOVE BJLCCY    ZCCY               Local Ccy.cd.
+     C                     MOVE *BLANK    ZLOC               Location code
+      *                    ¦
+     C                     Z-ADD1         R@MM               Set month ptr
+     C           R@MNTH    LOKUP@MN,R@MM                 90  Month No.
+     C                     SETON                     01      End init.
+      *                    ¦
+     C           R@YY      DIV  4         P2      30         ¦ Check for
+     C                     MVR            P2             02  ¦ Leap year
+      *                    ¦
+     C           R@YY      ADD  1         P2                 Next year
+     C                     DIV  4         P2                 ¦ Check for
+     C                     MVR            P2             03  ¦ Leap year
+      *                    ¦
+     C                     END                             FI
+      *
+      * Check Frequency code for Accrual/Profit day :
+      *
+     C           P@FREQ    IFEQ 'A'                        IF ACCRUAL FREQ
+     C                     MOVE 'Y'       AFLAG   1                       LN1083
+     C                     MOVE BKAPFQ    P@FREQ             Frequency
+     C*********************Z-ADDBKAPFD    P@FRQD             Frequency dayLN0719
+     C                     Z-ADDBKAPFD    P@FRQD  20         Frequency dayLN0719
+     C                     END                             FI
+      *
+      * Check Frequency code :
+      *
+     C           P@FREQ    LOKUP@FC                      90=Code found
+      *
+     C           *IN90     IFEQ '0'                        IF NOT FOUND
+     C                     SETON                     91      Code error
+     C                     GOTO T@SKIP                       Error------->
+     C                     END                             FI
+      *
+      * Check Frequency Day number, if required :
+      *
+     C           P@FREQ    IFEQ 'M'                        IF  MONTHLY
+     C           P@FREQ    OREQ 'Q'                         OR QUARTERLY
+     C           P@FREQ    OREQ 'Y'                         OR YEARLY
+     C           P@FRQD    IFLT 1                          IF  ¦ FREQ.DAY
+     C           P@FRQD    ORGT 31                          OR ¦ INVALID
+     C                     SETON                     92      Freq.error
+     C                     GOTO T@SKIP                       Error------->
+     C                     END                             FI
+     C                     END                             FI
+      *
+      * Reset "No.of Working Days Fwd/Back" parameter :
+      *
+     C                     Z-ADD*ZERO     ZNRDYS           Nearest w/day
+      *
+      * 1. Frequency 'D' - Daily :
+      *
+     C           P@FREQ    IFEQ 'D'                        IF DAILY
+     C/COPY WNCPYSRC,FC0015C001
+     C           BJRDNB    ADD  1         ZDAYNO             Tomorrow
+     C                     EXSR ZFWDT                        Check forward
+     C                     END                             FI
+     C/COPY WNCPYSRC,FC0015C002
+      *
+      * 2. Frequency '1' to '7' - Day of week :
+      *
+     C           P@FREQ    IFGE '1'                        IF   ¦ DAY OF
+     C           P@FREQ    ANDLE'7'                         AND ¦ WEEK
+     C           BJRDNB    DIV  7         W@FREQ             ¦ Today
+     C                     MVR            W@FREQ             ¦ MOD 7
+     C                     Z-ADD1         P1      30         Set ptr.1
+     C           W@FREQ    LOKUP@DR,P1                   90  Day of week
+     C                     MOVE P@FREQ    W@FREQ  10         Make numeric
+     C           W@FREQ    SUB  P1        ZDAYNO             Offset
+     C           W@FREQ    IFLE P1                         IF TARG.<=TODAY
+     C                     ADD  7         ZDAYNO             Adjust Offset
+     C                     END                             FI
+     C                     ADD  BJRDNB    ZDAYNO             Today's Dayno
+     C                     EXSR ZBKDT                        Check back
+     C*                                                                   076355
+     C           ZDYNBR    IFLE BJRDNB                     IF TARG.<=TODAY076355
+     C                     ADD  7         ZDAYNO             Adjust Offset076355
+     C                     EXSR ZBKDT                        Check back   076355
+     C                     END                             FI             076355
+     C*                                                                   076355
+     C           ZDYNBR    IFLE BJRDNB                     IF TARG.<=TODAY
+     C                     EXSR ZFWDT                        Check forward
+     C                     END                             FI
+     C                     END                             FI
+      *                                                                   066539
+      *    Convert next working day from day number to DDMMYY format      066539
+      *                                                                   066539
+     C                     MOVE 'D'       PFMT    1                       066539
+     C                     CALL 'ZDATE2'                                  066539
+     C                     PARM           BJDNWD                          066539
+     C                     PARM           PFMT                            066539
+     C                     PARM           NWDATE  60                      066539
+     C                     PARM           PADATE  7                       066539
+     C                     MOVE NWDATE    NWDATD                          066539
+      *
+      * 3. Frequency 'B' - Last Working day of month :
+      *
+     C           P@FREQ    CASEQ'B'       FREQB                           066539
+      *                                                                y :066539
+      * 4. Frequency 'M', 'Q', 'Y' - Month/Quarter/Year on specified day :066539
+     C           P@FREQ    CASEQ'M'       FREQM                           066539
+     C           P@FREQ    CASEQ'Q'       FREQQ                           066539
+     C           P@FREQ    CASEQ'Y'       FREQY                           066539
+     C                     ENDCS                                          066539
+      *                                                                   066539
+      *    Convert date to day number and adjust for any holidays         066539
+      *                                                                   066539
+     C           P@FREQ    IFEQ 'B'                                       069182
+     C           P@FREQ    OREQ 'M'                                       069182
+     C           P@FREQ    OREQ 'Q'                                       069182
+     C           P@FREQ    OREQ 'Y'                                       069182
+     C                     MOVE NDD       NWD                             066539
+     C                     MOVE NWDATD    PDATE                           066539
+     C                     EXSR ZDATE1                                    066539
+     C/COPY WNCPYSRC,FC0015C003
+     C                     EXSR ZBKDT                                     066539
+     C/COPY WNCPYSRC,FC0015C004
+     C                     ENDIF                                          069182
+      *                                                                   066539
+      *    The following coding has been replaced by the above and the    066539
+      *    new subroutines.                                               066539
+      *-------------------------------------------------------------------066539
+      *****Today*- End day of this month + Last day of next month +       066539
+      *****Leap*year adjustment + Today's day no. = Target Day Number     066539
+      ***********                                                         066539
+     C***********P@FREQ    IFEQ 'B'                        IF  LAST DAY   066539
+     C***********@DD,R@MM  SUB  R@DD      ZDAYNO             To end month 066539
+     C***********ZDAYNO    IFEQ 0                          IF TODAY LN1083066539
+     C***********R@MM      ADD  1         P1                 Next month   066539
+     C***********P1        IFGT 12                         IF NEXT YEAR   066539
+     C***********          Z-ADD1         P1                 First month  066539
+     C***********          END                             FI             066539
+     C***********          ADD  @DD,P1    ZDAYNO             To next mth. 066539
+     C***********          END                             FI       LN1083066539
+     C************IN02     IFEQ '1'                        IF LEAP YEAR   066539
+     C***********R@MM      IFEQ 2                          IF  ¦ EITHER IS066539
+     C***********P1        OREQ 2                           OR ¦ FEBRUARY 066539
+     C***********          ADD  1         ZDAYNO             Extra day    066539
+     C***********          END                             FI             066539
+     C***********          END                             FI             066539
+     C***********          ADD  BJRDNB    ZDAYNO             Today's Dayno066539
+     C***********          EXSR ZBKDT                        Check back   066539
+     C***********          END                             FI             066539
+      ***********                                                         066539
+      **4.*Frequency 'M', 'Q', 'Y' - Month/Quarter/Year on specified day :066539
+      ***********                                                         066539
+     C***********P@FREQ    IFEQ 'M'                        IF  MONTHLY    066539
+     C***********P@FREQ    OREQ 'Q'                         OR QUARTERLY  066539
+     C***********P@FREQ    OREQ 'Y'                         OR YEARLY     066539
+      ***********          ¦                                              066539
+      **Obtain*an adjustment from today to the actual day on which the    066539
+      **report*should have been produced :                                066539
+      ***********          ¦                                              066539
+     C***********R@DD      IFGT P@FRQD                     IF PREV.MONTH  066539
+     C***********@DD,R@MM  SUB  R@DD      ZDAYNO             To end month 066539
+     C***********          ADD  P@FRQD    ZDAYNO             To Freq.day  066539
+     C************IN02     IFEQ '1'                        IF LEAP YEAR   066539
+     C***********R@MM      ANDEQ2                           AND FEBRUARY  066539
+     C***********          ADD  1         ZDAYNO             Adjustment   066539
+     C***********          END                             FI             066539
+     C***********R@MM      ADD  1         P1                 Next month   066539
+     C***********P1        IFGT 12                         IF NEXT YEAR   066539
+     C***********          Z-ADD1         P1                 First month  066539
+     C***********          END                             FI             066539
+     C***********          ELSE                            EL SAME MONTH  066539
+     C***********P@FRQD    SUB  R@DD      ZDAYNO             Adjustment   066539
+     C***********          Z-ADDR@MM      P1                 This month   066539
+     C***********          END                             FI             066539
+      ***********          ¦                                              066539
+      **Quarterly/Monthly frequency - add days in month :                 066539
+      ***********          ¦                                              066539
+     C***********P@FREQ    IFEQ 'M'                        IF  MONTHLY    066539
+     C***********P@FREQ    OREQ 'Q'                         OR QUARTERLY  066539
+      ***********          ¦¦                                             066539
+      ***********                                                   LN1083066539
+      **If*report is to be printed today, add number of days in thisLN1083066539
+      **month****                                                   LN1083066539
+      ***********                                                   LN1083066539
+     C***********ZDAYNO    IFEQ 0                          IF TODAY LN1083066539
+     C***********          ADD  @DD,P1    ZDAYNO             Days inLN1083066539
+     C***********          END                             FI       LN1083066539
+      ***********          ¦¦                                             066539
+      **Adjust*if P@FRQD exceeds actual days in this month :              066539
+      ***********          ¦¦                                             066539
+     C***********P@FRQD    IFGT @DD,R@MM                   IF EXCESS      066539
+     C***********@DD,R@MM  SUB  P@FRQD    P2                 ¦ Snip off   066539
+     C***********          ADD  P2        ZDAYNO             ¦ excess     066539
+     C************IN02     IFEQ '1'                        IF   LEAP YEAR 066539
+     C***********R@MM      ANDEQ2                           AND FEBRUARY  066539
+     C***********          ADD  1         ZDAYNO             Add day      066539
+     C***********          END                             FI             066539
+     C***********          END                             FI             066539
+      ***********          ¦¦                                             066539
+     C***********          ADD  @DD,P1    ZDAYNO             Days inLN1083066539
+      ***********          ¦¦                                             066539
+      **Adjust*if February, and Leap year :                               066539
+      ***********          ¦¦                                             066539
+     C************IN02     IFEQ '1'                        IF   LEAP YEAR 066539
+     C***********P1        ANDEQ2                           AND FEBRUARY  066539
+     C***********          ADD  1         ZDAYNO             Add day      066539
+     C***********          END                             FI             066539
+      ***********          ¦¦                                             066539
+      **If*today*is a valid quarter day,                            LN1083066539
+      **Adjust*Quarterly frequency for extra two months :                 066539
+      **else*do*not adjust to enable printing this month            LN1083066539
+      ***********          ¦¦                                             066539
+     C***********P@FREQ    IFEQ 'Q'                        IF QUARTERLY   066539
+     C***********R@DD      ANDEQP@FRQD                      AND Q DALN1083066539
+     C***********1         DO   2         P2               DO TWICE       066539
+     C***********          ADD  1         P1                 Next month   066539
+     C***********P1        IFGT 12                         IF NEXT YEAR   066539
+     C***********          Z-ADD1         P1                 First month  066539
+     C***********          END                             FI             066539
+     C***********          ADD  @DD,P1    ZDAYNO             Days in month066539
+     C************IN02     IFEQ '1'                        IF   LEAP YEAR 066539
+     C***********P2        ANDEQ1                           AND THIS YEAR 066539
+     C***********P1        ANDEQ2                           AND FEBRUARY  066539
+     C************IN03     OREQ '1'                        OR   LEAP YEAR 066539
+     C***********P2        ANDEQ2                           AND NEXT YEAR 066539
+     C***********P1        ANDEQ2                           AND FEBRUARY  066539
+     C***********          ADD  1         ZDAYNO             Add day      066539
+     C***********          END                             FI             066539
+     C***********          END                             OD             066539
+     C***********          END                             FI             066539
+      ***********          ¦¦                                             066539
+      **Adjust*target if P@FRQD exceeds actual days in target month :     066539
+      ***********          ¦¦                                             066539
+     C***********P@FRQD    IFGT @DN,P1                     IF EXCESS      066539
+     C***********@DN,P1    SUB  P@FRQD    P2                 ¦ Snip off   066539
+     C***********          ADD  P2        ZDAYNO             ¦ excess     066539
+     C************IN03     IFEQ '1'                        IF   LEAP YEAR 066539
+     C***********P1        ANDEQ1                           AND NEXT=FEB  066539
+     C***********P@FREQ    ANDEQ'Y'                         AND YEARLY    066539
+     C************IN02     OREQ '1'                        OR   LEAP YEAR 066539
+     C***********P1        ANDEQ1                           AND NEXT=FEB  066539
+     C***********P@FREQ    ANDNE'Y'                         AND NOT YEARLY066539
+     C***********          ADD  1         ZDAYNO             Add day      066539
+     C***********          END                             FI             066539
+     C***********          END                             FI             066539
+      ***********          ¦¦                                             066539
+      **If*today*is the annual frequency day,                             066539
+      **Yearly*frequency - add days in year and adjust :                  066539
+      **else,*do*not adjust to enable printing this year.                 066539
+      ***********          ¦¦                                             066539
+     C***********          ELSE                            EL YEARLY      066539
+      ***********          ¦¦                                             066539
+     C***********R@DD      IFEQ P@FRQD                     IF TODAY = Y   066539
+     C***********          ADD  365       ZDAYNO             Days in year 066539
+     C***********          END                             FI             066539
+      **This*year :        ¦¦                                             066539
+     C************IN02     IFEQ '1'                        IF   LEAP YEAR 066539
+     C***********R@MM      ANDLT3                           AND JAN/FEB   066539
+      **Next*year :        ¦¦¦                                            066539
+     C************IN03     OREQ '1'                        OR   LEAP YEAR 066539
+     C***********P1        ANDGT2                           AND ¬JAN/FEB  066539
+     C***********R@DD      ANDEQP@FRQD                      AND TODALN1205066539
+      **Next*year, February, target after 28th.:                          066539
+     C************IN03     OREQ '1'                        OR   LEAP YEAR 066539
+     C***********P1        ANDEQ2                           AND FEBRUARY  066539
+     C***********P@FRQD    ANDGT28                          AND AFTER 28TH066539
+     C***********R@DD      ANDEQP@FRQD                      AND TODALN1205066539
+      ***********          ¦¦¦                                            066539
+     C***********          ADD  1         ZDAYNO             Add day      066539
+      ***********          ¦¦¦                                            066539
+     C***********          END                             FI             066539
+      ***********          ¦¦                                             066539
+     C***********          END                             FI             066539
+      ***********          ¦                                              066539
+      **Adjust*target to nearest Working day :                            066539
+      ***********          ¦                                              066539
+     C***********          ADD  BJRDNB    ZDAYNO             Today's Dayno066539
+     C***********          EXSR ZBKDT                        Check back   066539
+      ***********          ¦                                              066539
+     C***********          END                             FI             066539
+      *
+      * Set return code if errors occurred :
+      *          _____________
+     C           T@SKIP    TAG
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD           No errors
+     C   91                MOVE '*FREQ  ' P@RTCD           Freq.error
+     C   92                MOVE '*FRQDAY' P@RTCD           Day No.error
+     C   94                MOVE '*AOGEL ' P@RTCD           Program error
+     C***95******          MOVE '*AOBANK' P@RTCD           Program error  LN1277
+     C   95                MOVE 'BANK   ' P@RTCD           Program error  LN1277
+      *
+     C                     Z-ADDZDYNBR    P@NDNO
+     C                     MOVE P@FRQD    P@FRDA                          LN0719
+      *                                                                   LN1083
+      * If frequency is 'A', it has been overwritten by the accrual       LN1083
+      * day from GELR. Re-set to 'A' for passing back to the calling      LN1083
+      * program.                                                          LN1083
+      *                                                                   LN1083
+     C           AFLAG     IFEQ 'Y'                                       LN1083
+     C                     MOVE 'A'       P@FREQ                          LN1083
+     C                     MOVE '00'      P@FRDA                          LN1083
+     C                     END                                            LN1083
+      *
+     C                     RETRN
+      *
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     LR
+     C                     END
+     C                     ENDSR'*CANCL'
+      *****************************************************
+      * NOTE: *LR is NOT set on. Use FREE or RCLRSC to end.
+      *****************************************************
+      *ENDMAIN
+      ********************************************************************066539
+      *                                                                   066539
+      *    FREQB SR - TO PERFORM FREQUENCY B PROCESSING                   066539
+      *                                                                   066539
+     C           FREQB     BEGSR                                          066539
+      *                                                                   066539
+      *    Assume last day of month to be last working day                066539
+      *                                                                   066539
+     C                     Z-ADD@DD,NWM   NDD     20                      066539
+      *                                                                   066539
+      *    Adjust for leap year if necessary                              066539
+      *                                                                   066539
+     C           NWM       IFEQ 2                                         066539
+     C           *IN02     ANDEQ'1'                                       066539
+     C                     ADD  1         NDD                             066539
+     C                     ENDIF                                          066539
+      *                                                                   066539
+     C                     ENDSR                                          066539
+      *                                                                   066539
+      ********************************************************************066539
+      *                                                                   066539
+      *    FREQM SR - TO PERFORM FREQUENCY M PROCESSING                   066539
+      *                                                                   066539
+     C           FREQM     BEGSR                                          066539
+      *                                                                   066539
+      *    Set day as frequency day unless greater than number of days    066539
+      *    in month                                                       066539
+      *                                                                   066539
+     C                     Z-ADDP@FRQD    NDD     20                      066539
+     C           R@DD      IFGE NDD                                       173405
+     C           R@MM      IFEQ NWM                                       066539
+     C                     ADD  1         NWM                             066539
+     C                     ENDIF                                          066539
+     C                     END                                            173405
+     C                     EXSR YRADJ                                     066539
+     C           NDD       IFGT @DD,NWM                                   066539
+     C                     Z-ADD@DD,NWM   NDD                             066539
+     C                     ENDIF                                          066539
+      *                                                                   066539
+      *    Adjust for leap year if necessary                              066539
+      *                                                                   066539
+     C           NWM       IFEQ 2                                         066539
+     C           *IN02     ANDEQ'1'                                       066539
+     C           P@FRQD    ANDGT28                                        066539
+     C                     Z-ADD29        NDD                             066539
+     C                     ENDIF                                          066539
+      *                                                                   066539
+     C                     ENDSR                                          066539
+      *                                                                   066539
+      ********************************************************************066539
+      *                                                                   066539
+      *    FREQQ SR - TO PERFORM FREQUENCY Q PROCESSING                   066539
+      *                                                                   066539
+     C           FREQQ     BEGSR                                          066539
+      *                                                                   066539
+      *    Set day as frequency day unless greater than number of days    066539
+      *    in month                                                       066539
+      *                                                                   066539
+     C                     Z-ADDP@FRQD    NDD     20                      066539
+     C           R@DD      IFGE NDD                                       173405
+     C           R@MM      IFEQ NWM                                       066539
+     C                     ADD  3         NWM                             066539
+     C                     ELSE                                           066539
+     C                     ADD  2         NWM                             066539
+     C                     ENDIF                                          066539
+     C                     END                                            173405
+     C                     EXSR YRADJ                                     066539
+     C           NDD       IFGT @DD,NWM                                   066539
+     C                     Z-ADD@DD,NWM   NDD                             066539
+     C                     ENDIF                                          066539
+      *                                                                   066539
+      *    Adjust for leap year if necessary                              066539
+      *                                                                   066539
+     C                     EXSR LPYRCH                                    066539
+      *                                                                   066539
+     C                     ENDSR                                          066539
+      *                                                                   066539
+      ********************************************************************066539
+      *                                                                   066539
+      *    FREQY SR - TO PERFORM FREQUENCY Y PROCESSING                   066539
+      *                                                                   066539
+     C           FREQY     BEGSR                                          066539
+      *                                                                   066539
+      *    Set day as frequency day unless greater than number of days    066539
+      *    in month                                                       066539
+      *                                                                   066539
+     C                     Z-ADDP@FRQD    NDD     20                      066539
+     C           R@DD      IFGE NDD                                       173405
+     C           R@MM      IFEQ NWM                                       066539
+     C                     ADD  12        NWM                             066539
+     C                     ELSE                                           066539
+     C                     ADD  11        NWM                             066539
+     C                     ENDIF                                          066539
+     C                     END                                            173405
+     C                     EXSR YRADJ                                     066539
+     C           NDD       IFGT @DD,NWM                                   066539
+     C                     Z-ADD@DD,NWM   NDD                             066539
+     C                     ENDIF                                          066539
+      *                                                                   066539
+      *    Adjust for leap year if necessary                              066539
+      *                                                                   066539
+     C                     EXSR LPYRCH                                    066539
+      *                                                                   066539
+     C                     ENDSR                                          066539
+      *                                                                   066539
+      ********************************************************************066539
+      *                                                                   066539
+      *    LPYRCH - TO ADJUST NUMBER OF DAYS IN FEBRUARY IF LEAP YEAR     066539
+      *                                                                   066539
+     C           LPYRCH    BEGSR                                          066539
+      *                                                                   066539
+      *    This applies to frequencies Q and Y where the frequency day    066539
+      *    is greater than 28.                                            066539
+      *                                                                   066539
+     C           NWM       IFEQ 2                                         066539
+     C           *IN03     ANDEQ'1'                                       066539
+     C           P@FRQD    ANDGT28                                        066539
+     C                     Z-ADD29        NDD                             066539
+     C                     ENDIF                                          066539
+      *                                                                   066539
+     C                     ENDSR                                          066539
+      *                                                                   066539
+      ********************************************************************066539
+      *                                                                   066539
+      *    YRADJ SR - TO ADJUST MONTH AND YEAR IF NEXT MONTH IN NEXT YEAR 066539
+      *                                                                   066539
+     C           YRADJ     BEGSR                                          066539
+      *                                                                   066539
+     C           NWM       IFGT 12                                        066539
+     C                     SUB  12        NWM                             066539
+     C                     ADD  1         NWY                             066539
+     C                     ENDIF                                          066539
+      *                                                                   066539
+     C                     ENDSR                                          066539
+      *                                                                   066539
+      ********************************************************************066539
+      *                                                                   066539
+      *    ZDATE1 SR - TO CONVERT DATE TO MIDAS DAY NUMBER                066539
+      *                                                                   066539
+     C           ZDATE1    BEGSR                                          066539
+      *                                                                   066539
+     C                     CALL 'ZDATE1'                                  066539
+     C                     PARM           PERROR  7                       066539
+     C                     PARM           PDATE   60                      066539
+     C                     PARM           PFMT    1                       066539
+     C                     PARM           ZDAYNO                          066539
+     C                     ENDSR                                          066539
+      *                                                                   066539
+      ********************************************************************066539
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZBKDT
+      /COPY ZSRSRC,ZFWDT
+** @FC - Frequency codes
+D  - Daily
+1  - Weekly on Monday     ¦ Mapping value = 3  ¦
+2  -   "       Tuesday    ¦ (see table @DR  4  ¦
+3  -   "       Wednesday  ¦  below. Values  5  ¦
+4  -   "       Thursday   ¦  based on the   6  ¦
+5  -   "       Friday     ¦  day of week of 0  ¦
+6  -   "       Saturday   ¦  MIDAS D/No.1,  1  ¦
+7  -   "       Sunday     ¦  Sat.1/1/72)    2  ¦
+A  - Accruals/Profit day (if not daily)
+B  - Last Working Day of Month
+M  - Monthly on specific date        (Frequency Day Number required)
+Q  - Quarterly on specific date      (    "      "    "       "    )
+Y  - Yearly on specific date         (    "      "    "       "    )
+** @DR - Day remainder values (map to day of week Frequency codes)
+3 - Monday
+4 - Tuesday
+5 - Wednesday
+6 - Thursday
+0 - Friday
+1 - Saturday
+2 - Sunday
+** @DD - Days in this month (Jan-Dec)
+031028031030031030031031030031030031031
+** @MN - Month names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@
+(c) Finastra International Limited 2001

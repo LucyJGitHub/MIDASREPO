@@ -1,0 +1,680 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2013')
+      *****************************************************************
+/*STD *  RPGSQLBND                                                    *
+/*EXI *  TEXT('Midas OF Accounting Rules MT940')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger module                                *
+      *                                                               *
+      ***GL000589*-*Midas*OF*Accounting*Rules*MT940********************                     MD029739
+      *  DI000589 - Midas OF Accounting Rules MT940                   *                     MD029739
+      *                                                               *
+      *  (c) Finastra International Limited 2013                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *                 MD029683           Date 19Aug14               *
+      *                 MD027367           Date 04Jun14               *
+      *                 MD025966           Date 02Apr14               *
+      *                 MD025973           Date 25Mar14               *
+      *                 MD024772           Date 03Feb14               *
+      *                 MD024513           Date 23Jan14               *
+      *                 MD023629           Date 08Jan14               *
+      *                 MD023837           Date 27Nov13               *
+      *                 MD023628           Date 09Nov13               *
+      *                 CGL135B  *Create   Date 10Jul13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD029739 - File renaming for integration layer.              *
+      *  MD029683 - Nostro Accounts Reconciliation Monitor            *
+      *             Enhancement.                                      *
+      *  MD027367 - Generate MT940 on Transit Accounts.               *
+      *             Ensure Nostro Number set correctly.               *
+      *  MD025966 - Produce MT940 on the IMATCH Network for the       *
+      *             Unreconciled Account of the Nostro.               *
+      *  MD025973 - Intermitent Generation of Movement in MT940       *
+      *  MD024772 - Problems with Accounting Interface postings and   *
+      *             enquiries. (Recompile)                            *
+      *  MD024513 - Add Description field (30A) to the Accounting     *
+      *             Rules. (Recompile)                                *
+      *  MD023629 - Accounting Rules Processing - Restart             *
+      *  MD023837 - Triggers on tables GLACMNTD, GLACBHTD, GLACBDTD   *
+      *             failed (Recompile)                                *
+      *  MD023628 - Accounting Rules Process - restart processing     *
+      *  CGL135B - Accounting Rules Process                           *
+      *                                                               *
+      *****************************************************************
+      *
+      ** File DS
+      *
+      **   Midas OF Accounting Rules Batch Details
+     D*DsACBDTD*     E DS                  EXTNAME(GLACBDTD)                                MD029739
+     D DsACBDTD      E DS                  EXTNAME(DIACBDTD)                                MD029739
+      *
+      **   Midas SD Nostro details
+     D DsNOSTPD      E DS                  EXTNAME(SDNOSTPD)
+      *
+      **   Midas OF Message network details extension table
+     D DsNWRK1D      E DS                  EXTNAME(SDNWRK1D)
+      *
+      **   Midas GL MT940/941/942/950 Messages Requests
+     D DsMR94PD      E DS                  EXTNAME(GLMR94PD)
+     D   QQACCD1     E                     EXTFLD(QQACCD)
+      *
+      *****Midas*OF Accounting Rules Batch Details File                                    MD023628
+      **   Midas OF MT940/941/942/950 Messages Requests - Extented detail                  MD023628
+     D DsMR941D      E DS                  EXTNAME(GLMR941D)
+      *
+      * Bank Details
+     D DsBANK        E DS                  EXTNAME(SDBANKPD)
+      *
+      * Short DS for access programs
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      *
+      * Long DS for access programs
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      *
+      ** Local data Area
+     D LDA           E DS                  EXTNAME(LDA) DTAARA
+      *                                                                                     MD025966
+      ** Midas GL Nostro Extension File                                                     MD025966
+     D NOST2D        E DS                  EXTNAME(SDNOST2D)                                MD025966
+      *
+      ** Network account
+     D DsNwAc          DS
+     D  WkNWRK                             LIKE(MRNWRK)                         Network
+     D  WkBRCA                             LIKE(MRBRCA)                         Branch
+     D  WkCNUM                             LIKE(MRCNUM)                         Customer
+     D  WkCCY                              LIKE(MRCCY )                         Currency
+     D  WkACOD                             LIKE(MRACCD)                         Account Code
+     D  WkACSQ                             LIKE(MRACSQ)                         Account Seq
+     D  WkNATY                             LIKE(MRNATY)                         Account Type
+     D  WkDSTN                             LIKE(MRDSTN)                         Destination
+     D  WkLSTD                        5  0                                      Last Stmt Date
+      *
+      * Entry's parameters
+      *
+     D P_BatchId       S             60                                         Batch Id
+     D S_BatchId       S             60                                         Batch Id
+     D P_ARStatus      S             30                                         AR Status
+     D S_ARStatus      S             30                                         AR Status
+     D P_ARErrCod      S             10                                         AR Err CodeMD023628
+     D P_MsgReq        S                   LIKE(DsMR941D)                       Msg keys   MD023628
+      *
+      * Access objects parameters
+     D P@RTCD          S              7A                                        Return Code
+     D P@OPTN          S              7A                                        Option
+     D P@OP01          S             20A
+     D P@VL01          S            200A
+     D P@OP02          S             20A
+     D P@VL02          S            200A
+     D P@OP03          S             20A
+     D P@VL03          S            200A
+     D P@OP04          S             20A
+     D P@VL04          S            200A
+     D P@OP05          S             20A
+     D P@VL05          S            200A
+     D P@OP06          S             20A
+     D P@VL06          S            200A
+     D P@OP07          S             20A
+     D P@VL07          S            200A
+     D P@OP08          S             20A
+     D P@VL08          S            200A
+     D P@OP09          S             20A
+     D P@VL09          S            200A
+     D P@OP10          S             20A
+     D P@VL10          S            200A
+      *
+     D P@DataQueue     S             10                                         DataQueue
+     D P@Library       S             10                                         Library
+     D P@DataLength    S              5  0                                      DataLength
+     D P@Data          S              1                                         Data
+      *
+     D WKNetwork       S                   LIKE(MRNWRK)                         Network
+     D WkProdMT9xx     S              1A                                        Produce MT9xx
+     D WkOurAccNost    S             35A                                        Our Account at Nostr
+     D WkMsgtype       S              3A                                        Message Type
+     D WkStatTime      S              6S 0                                      Start Time
+     D WkMT9xxReq      S              1                                         MT9xx Requested
+      *
+     D Recursive       S              1
+      *
+      /EJECT
+      *
+      *****************************************************************
+      * Main routine                                                  *
+      *****************************************************************
+      *
+      ** Set working fields
+      *
+     C******             EVAL      P_ARStatus = 'ERROR in MT940/MT950 request'             MD023628
+     C                   EVAL      P_ARErrCod = *Blanks                         AR Err CodeMD023628
+     C                   EVAL      P_MsgReq   = *Blanks                         Msg req.   MD023628
+     C                   EVAL      WkMT9xxReq = 'N'                             MT9xx Requested
+      *
+      ** Start commitment control
+      *
+     C/EXEC SQL
+     C+ SET OPTION COMMIT = *CHG
+     C/END-EXEC
+      *
+      ** If MT940/MT950 required.
+      *
+     C                   IF        WkProdMT9xx <> 'Y'
+     C                   GOTO      EndPgm
+     C                   ENDIF
+      *
+      ** Retrieve Account.
+      *
+     C                   EVAL      WkOurAccNost = %SUBST(S_BatchId:16:35)
+      *
+     C/EXEC SQL
+     C+    SELECT *
+     C+    INTO :DsNOSTPD
+     C+    FROM SDNOSTPD
+     C*****WHERE A7OACN LIKE :WkOurAccNost                                                 MD023628
+     C+    WHERE A7OACN =    :WkOurAccNost                                                 MD023628
+     C/END-EXEC
+      *
+     C                   IF        SQLCODE <> 0
+     C                   GOTO      EndPgm
+     C                   ENDIF
+      *
+      ** Retrieve network details extension table
+      *
+     C/EXEC SQL
+     C+    SELECT *
+     C+    INTO :DsNWRK1D
+     C+    FROM SDNWRK1D
+     C**** WHERE EDNWR1 LIKE :WkNetwork                                                    MD023628
+     C+    WHERE EDNWR1 =    :WkNetwork                                                    MD023628
+     C/END-EXEC
+      *
+     C                   IF        SQLCODE <> 0
+     C*******            GOTO      EndPgm                                                  MD023628
+     C                   EVAL      EDP950 = 'N'                                            MD023628
+     C                   EVAL      EDA950 = 'N'                                            MD023628
+     C                   EVAL      EDP940 = 'N'                                            MD023628
+     C                   EVAL      EDA940 = 'N'                                            MD023628
+     C                   ENDIF
+      *
+      ** If Input Cycle Generation of MT950
+      ** and allow few generations for the same date
+      *
+     C                   IF        EDP950 = 'Y' AND
+     C                             EDA950 = 'Y'
+      *
+     C                   EVAL      WkMsgtype   = '950'                          Message Type
+      *
+      ** Retrieve the MT950 Network Accounts.
+      *
+     C/EXEC SQL DECLARE C1 CURSOR FOR
+     C+ SELECT NANWRK AS NWRK,
+     C+        NABRCH AS BRCA,
+     C+        NACNUM AS CNUM,
+     C+        NACCY  AS CCY,
+     C+        NAACOD AS ACOD,
+     C+        NAACSQ AS ACSQ,
+     C+        NANATY AS NATY,
+     C+        CAST('          ' AS CHAR (10)) AS DSTN,
+     C+        NA5LSD AS LSTD
+     C+ FROM GLNWACPD
+     C+ WHERE  NARECI = 'D'        AND
+     C+        NAG950 = 'Y'        AND
+     C+        NANWRK = :WkNetwork AND
+     C+        NABRCH = :A7BRCD    AND
+     C+        NACNUM = :A7CUST    AND
+     C+        NACCY  = :A7CYCD    AND
+     C+        NAACOD = :A7ACCD    AND
+     C+        NAACSQ = :A7ACSN
+     C/END-EXEC
+      *
+     C/EXEC SQL
+     C+  OPEN C1
+     C/END-EXEC
+      *
+     C/EXEC SQL
+     C+    FETCH NEXT FROM C1 INTO :DSNwAc
+     C/END-EXEC
+      *
+     C                   DOW       SQLCODE <> 100
+      *
+      ** Insert MT950 request
+      *
+     C                   EXSR      SRRequest
+      *
+     C/EXEC SQL
+     C+    FETCH NEXT FROM C1 INTO :DSNwAc
+     C/END-EXEC
+      *
+     C                   ENDDO
+      *
+     C/EXEC SQL
+     C+  CLOSE C1
+     C/END-EXEC
+      *
+     C                   ENDIF
+      *
+      ** If Input Cycle Generation of MT940
+      ** and allow few generations for the same date
+      *
+     C                   IF        EDP940 = 'Y' AND
+     C                             EDA940 = 'Y'
+      *
+     C                   EVAL      WkMsgtype   = '940'                          Message Type
+      *
+      ** Retrieve the MT940 Network Accounts.
+      *
+     C/EXEC SQL DECLARE C2 CURSOR FOR
+     C+ SELECT N4NWRK AS NWRK,
+     C+        N4BRCA AS BRCA,
+     C+        N4CNUM AS CNUM,
+     C+        N4CCY  AS CCY,
+     C+        N4ACCD AS ACOD,
+     C+        N4ACSQ AS ACSQ,
+     C+        N4NATY AS NATY,
+     C+        N4DSTN AS DSTN,
+     C+        N40LSD AS LSTD
+     C+ FROM GLNW94PD
+     C+ WHERE  N4RECI = 'D'        AND
+     C+        N4G940 = 'Y'        AND
+     C+        N4NWRK = :WkNetwork AND
+     C+        N4BRCA = :A7BRCD    AND
+     C+        N4CNUM = :A7CUST    AND
+     C+        N4CCY  = :A7CYCD    AND
+     C+        N4ACCD = :A7ACCD    AND
+     C+        N4ACSQ = :A7ACSN
+     C/END-EXEC
+      *
+     C/EXEC SQL
+     C+  OPEN C2
+     C/END-EXEC
+      *
+     C/EXEC SQL
+     C+    FETCH NEXT FROM C2 INTO :DSNwAc
+     C/END-EXEC
+      *
+     C                   DOW       SQLCODE <> 100
+      *
+      ** Insert MT940 request
+      *
+     C                   EXSR      SRRequest
+      *
+     C/EXEC SQL
+     C+    FETCH NEXT FROM C2 INTO :DSNwAc
+     C/END-EXEC
+      *
+     C                   ENDDO
+      *
+     C/EXEC SQL
+     C+  CLOSE C2
+     C/END-EXEC
+      *
+     C                   ENDIF
+      *
+     C     EndPgm        TAG
+      *
+     C                   IF        WkMT9xxReq = 'Y'                             MT9xx Requested
+      *
+      ** Restart message generation,
+      **   Send a 'C' to data queue GLM94XDQ
+      *
+     C                   CALL      'QSNDDTAQ'
+     C                   PARM      'GLM94XDQ'    P@DataQueue
+     C                   PARM      '*LIBL'       P@Library
+     C                   PARM      1             P@DataLength
+     C                   PARM      'C'           P@Data
+      *
+     C                   ENDIF
+      *                                                                                     MD025966
+     C                   EXSR      SRUnrecAC                                                MD025966
+      *
+      ** Update Batch Id Status Parameter
+      *
+     C                   IF        WkMT9xxReq = 'Y'                             MT9xx Requested
+     C**********         EVAL      P_ARStatus = 'MT940/MT950 requested'                    MD023629
+     C                   EVAL      P_ARStatus = 'Update MT940'                             MD023629
+     C                   EVAL      P_ARStatus = 'MT940 Production'                 MD023629 MD029683
+     C******             ELSE                                                              MD023628
+     C******             EVAL      P_ARStatus = S_ARStatus                                 MD023628
+     C                   ENDIF
+      *
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *                                                                                     MD025966
+      *****************************************************************                     MD025966
+      /EJECT                                                                                MD025966
+      *****************************************************************                     MD025966
+      * SRUnrecAC   - Request MT940/MT950 for Unreconciled Account    *                     MD025966
+      *****************************************************************                     MD025966
+      *                                                                                     MD025966
+     C     SRUnrecAC     BEGSR                                                              MD025966
+      *                                                                                     MD025966
+      ** Retrieve Unreconciled Account                                                      MD025966
+      *                                                                                     MD025966
+     C/Exec SQL                                                                             MD025966
+     C+                  Select * into :NOST2D                                              MD025966
+     C+                           from SDNOST2D                                             MD025966
+     C+                          where ERCYCD = :A7CYCD                                     MD025966
+     C**********                 and   ERNONB = :A7ACSN                            MD025966 MD027367
+     C+                          and   ERNONB = :A7NONB                                     MD027367
+     C/End-Exec                                                                             MD025966
+      *                                                                                     MD025966
+     C                   IF        SQLCODE <> 0                                             MD025966
+     C                   GOTO      EndPgm2                                                  MD025966
+     C                   ENDIF                                                              MD025966
+      *                                                                                     MD025966
+      ** Check that Batch Items with missing Accounting Rule                                MD025966
+      *                                                                                     MD025966
+     C/Exec SQL                                                                             MD025966
+     C+                  Select * into :DsACBDTD                                            MD025966
+     C*+********                  from GLACBDTD                                    MD025966 MD029739
+     C+                           from DIACBDTD                                             MD029739
+     C+                          where BDBTID = :S_BatchId                                  MD025966
+     C+                          and   BDCRST = 'U'                                         MD025966
+     C+                          fetch first 1 row only                                     MD025966
+     C/End-Exec                                                                             MD025966
+      *                                                                                     MD025966
+     C                   IF        SQLCODE <> 0                                             MD025966
+     C                   GOTO      EndPgm2                                                  MD025966
+     C                   ENDIF                                                              MD025966
+      *                                                                                     MD025966
+      ** If Input Cycle Generation of MT950                                                 MD025966
+      ** and allow few generations for the same date                                        MD025966
+      *                                                                                     MD025966
+     C                   IF        EDP950 = 'Y' AND                                         MD025966
+     C                             EDA950 = 'Y'                                             MD025966
+      *                                                                                     MD025966
+     C                   EVAL      WkMsgtype   = '950'                                      MD025966
+      *                                                                                     MD025966
+      ** Retrieve the MT950 Network Accounts.                                               MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL DECLARE C3 CURSOR FOR                                                       MD025966
+     C+ SELECT NANWRK AS NWRK,                                                              MD025966
+     C+        NABRCH AS BRCA,                                                              MD025966
+     C+        NACNUM AS CNUM,                                                              MD025966
+     C+        NACCY  AS CCY,                                                               MD025966
+     C+        NAACOD AS ACOD,                                                              MD025966
+     C+        NAACSQ AS ACSQ,                                                              MD025966
+     C+        NANATY AS NATY,                                                              MD025966
+     C+        CAST('          ' AS CHAR (10)) AS DSTN,                                     MD025966
+     C+        NA5LSD AS LSTD                                                               MD025966
+     C+ FROM GLNWACPD                                                                       MD025966
+     C+ WHERE  NARECI = 'D'        AND                                                      MD025966
+     C+        NAG950 = 'Y'        AND                                                      MD025966
+     C+        NANWRK = :WkNetwork AND                                                      MD025966
+     C+        NABRCH = :A7BRCD    AND                                                      MD025966
+     C+        NACNUM = :A7CUST    AND                                                      MD025966
+     C+        NACCY  = :ERCYCD    AND                                                      MD025966
+     C+        NAACOD = :ERACCD    AND                                                      MD025966
+     C+        NAACSQ = :ERACSN                                                             MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL                                                                             MD025966
+     C+  OPEN C3                                                                            MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL                                                                             MD025966
+     C+    FETCH NEXT FROM C3 INTO :DSNwAc                                                  MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C                   DOW       SQLCODE <> 100                                           MD025966
+      *                                                                                     MD025966
+      ** Insert MT950 request                                                               MD025966
+      *                                                                                     MD025966
+     C                   EXSR      SRRequest                                                MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL                                                                             MD025966
+     C+    FETCH NEXT FROM C3 INTO :DSNwAc                                                  MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C                   ENDDO                                                              MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL                                                                             MD025966
+     C+  CLOSE C3                                                                           MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C                   ENDIF                                                              MD025966
+      *                                                                                     MD025966
+      ** If Input Cycle Generation of MT940                                                 MD025966
+      ** and allow few generations for the same date                                        MD025966
+      *                                                                                     MD025966
+     C                   IF        EDP940 = 'Y' AND                                         MD025966
+     C                             EDA940 = 'Y'                                             MD025966
+      *                                                                                     MD025966
+     C                   EVAL      WkMsgtype   = '940'                                      MD025966
+      *                                                                                     MD025966
+      ** Retrieve the MT940 Network Accounts.                                               MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL DECLARE C4 CURSOR FOR                                                       MD025966
+     C+ SELECT N4NWRK AS NWRK,                                                              MD025966
+     C+        N4BRCA AS BRCA,                                                              MD025966
+     C+        N4CNUM AS CNUM,                                                              MD025966
+     C+        N4CCY  AS CCY,                                                               MD025966
+     C+        N4ACCD AS ACOD,                                                              MD025966
+     C+        N4ACSQ AS ACSQ,                                                              MD025966
+     C+        N4NATY AS NATY,                                                              MD025966
+     C+        N4DSTN AS DSTN,                                                              MD025966
+     C+        N40LSD AS LSTD                                                               MD025966
+     C+ FROM GLNW94PD                                                                       MD025966
+     C+ WHERE  N4RECI = 'D'        AND                                                      MD025966
+     C+        N4G940 = 'Y'        AND                                                      MD025966
+     C+        N4NWRK = :WkNetwork AND                                                      MD025966
+     C+        N4BRCA = :A7BRCD    AND                                                      MD025966
+     C+        N4CNUM = :A7CUST    AND                                                      MD025966
+     C+        N4CCY  = :ERCYCD    AND                                                      MD025966
+     C+        N4ACCD = :ERACCD    AND                                                      MD025966
+     C+        N4ACSQ = :ERACSN                                                             MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL                                                                             MD025966
+     C+  OPEN C4                                                                            MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL                                                                             MD025966
+     C+    FETCH NEXT FROM C4 INTO :DSNwAc                                                  MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C                   DOW       SQLCODE <> 100                                           MD025966
+      *                                                                                     MD025966
+      ** Insert MT940 request                                                               MD025966
+      *                                                                                     MD025966
+     C                   EXSR      SRRequest                                                MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL                                                                             MD025966
+     C+    FETCH NEXT FROM C4 INTO :DSNwAc                                                  MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C                   ENDDO                                                              MD025966
+      *                                                                                     MD025966
+     C/EXEC SQL                                                                             MD025966
+     C+  CLOSE C4                                                                           MD025966
+     C/END-EXEC                                                                             MD025966
+      *                                                                                     MD025966
+     C                   ENDIF                                                              MD025966
+      *                                                                                     MD025966
+     C     EndPgm2       TAG                                                                MD025966
+      *                                                                                     MD025966
+     C                   IF        WkMT9xxReq = 'Y'                                         MD025966
+      *                                                                                     MD025966
+      ** Restart message generation,                                                        MD025966
+      **   Send a 'C' to data queue GLM94XDQ                                                MD025966
+      *                                                                                     MD025966
+     C                   CALL      'QSNDDTAQ'                                               MD025966
+     C                   PARM      'GLM94XDQ'    P@DataQueue                                MD025966
+     C                   PARM      '*LIBL'       P@Library                                  MD025966
+     C                   PARM      1             P@DataLength                               MD025966
+     C                   PARM      'C'           P@Data                                     MD025966
+      *                                                                                     MD025966
+     C                   ENDIF                                                              MD025966
+      *                                                                                     MD025966
+     C                   ENDSR                                                              MD025966
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRRequest   - Request MT940/MT950                             *
+      *****************************************************************
+      *
+     C     SRRequest     BEGSR
+      *
+     C                   CLEAR                   DsMR94PD
+     C                   EVAL      MRNWRK = WkNWRK                              Network
+     C                   EVAL      MRBRCA = WkBRCA                              Branch
+     C                   EVAL      MRCNUM = WkCNUM                              Customer
+     C                   EVAL      MRCCY  = WkCCY                               Currency
+     C                   EVAL      MRACCD = WkACOD                              Account Code
+     C                   EVAL      MRACSQ = WkACSQ                              Account Seq
+     C                   EVAL      MRNATY = WkNATY                              Account Type
+     C                   EVAL      MRDSTN = WkDSTN                              Destination
+     C                   EVAL      MRMTPY = WkMsgtype                           Message Type
+     C                   EVAL      MRSORQ = 'ACCRULE'                           Source of Request
+     C                   EVAL      MRSDTE = BJRDNB                              Schedule Start Date
+     C                   TIME                    WkStatTime                     Schedule Start Time
+     C                   MOVEL     WkStatTime    MRSTIM                         Schedule Start Time
+     C                   EVAL      MRRDTE = BJRDNB                              Request Date
+     C                   EVAL      MRSRTIM= 'IMED'                              Request Time
+     C                   EVAL      MRRNWK = WkNWRK                              Network
+     C                   EVAL      MRSTAT = 'WAITING'                           Request Status
+      *
+     C/exec SQL
+     C+ insert into GLMR94PD
+     C+ values(:DsMR94PD)
+     C/end-exec
+      *
+     C                   IF        SQLCODE <> 0
+     C******             LEAVESR                                                           MD023628
+     C                   EXSR      *PSSR                                                   MD023628
+     C                   ENDIF
+      *
+     C                   CLEAR                   DsMR941D
+     C                   EVAL      M1NWRK = MRNWRK                              Network
+     C                   EVAL      M1BRCA = MRBRCA                              Branch
+     C                   EVAL      M1CNUM = MRCNUM                              Customer
+     C                   EVAL      M1CCY  = MRCCY                               Currency
+     C                   EVAL      M1ACCD = MRACCD                              Account Code
+     C                   EVAL      M1ACSQ = MRACSQ                              Account Seq
+     C                   EVAL      M1NATY = MRNATY                              Account Type
+     C                   EVAL      M1DSTN = MRDSTN                              Destination
+     C                   EVAL      M1MTPY = MRMTPY                              Message Type
+     C                   EVAL      M1SORQ = MRSORQ                              Source of Request
+     C                   EVAL      M1SDTE = MRSDTE                              Schedule Start Date
+     C                   EVAL      M1STIM = MRSTIM                              Schedule Start Time
+     C                   EVAL      M1RDTE = MRRDTE                              Request Date
+     C                   EVAL      M1SRTIM = MRSRTIM                            Request Time
+     C**********         EVAL      M1STMDT = WkLSTD                          Statement Date MD025973
+     C                   EVAL      M1STMDT = BJRDNB                                         MD025973
+      *
+     C/exec SQL
+     C+ insert into GLMR941D
+     C+ values(:DsMR941D)
+     C/end-exec
+      *
+     C                   IF        SQLCODE <> 0
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   COMMIT
+      *
+     C                   EVAL      WkMT9xxReq = 'Y'                             MT9xx Requested
+     C                   EVAL      P_MsgReq   = DsMR941D                        Msg req.   MD023628
+      *
+     C     SRRequestE    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *INZSR        BEGSR
+      *
+     C     *ENTRY        PLIST
+     C     S_BatchId     PARM                    P_BatchId
+     C     S_ARStatus    PARM                    P_ARStatus
+     C                   PARM                    P_ARErrCod                                MD023628
+     C                   PARM                    P_MsgReq                                  MD023628
+      *
+      ** Retrieve Bank ICD details.
+      *
+     C                   CALL      'AOBANKR0'
+     C                   PARM      '*DBERR '     P@RTCD
+     C                   PARM      '*KEY'        P@OPTN
+     C     DsBANK        PARM      *Blanks       DSFDY
+      *
+      ** Retrieve system values: Produce MT940/MT950 and IntelliMatch Network
+      *
+     C                   EVAL      P@OP01 = 'ProduceMT940'
+     C                   EVAL      P@OP02 = 'IntelliMatchNetwork'
+      *
+     C                   CALL      'AOSVALR0'
+     C                   PARM      *Blanks       P@RTCD
+     C                   PARM                    P@OP01
+     C                   PARM      *Blanks       P@VL01
+     C                   PARM                    P@OP02
+     C                   PARM      *Blanks       P@VL02
+     C                   PARM                    P@OP03
+     C                   PARM                    P@VL03
+     C                   PARM                    P@OP04
+     C                   PARM                    P@VL04
+     C                   PARM                    P@OP05
+     C                   PARM                    P@VL05
+     C                   PARM                    P@OP06
+     C                   PARM                    P@VL06
+     C                   PARM                    P@OP07
+     C                   PARM                    P@VL07
+     C                   PARM                    P@OP08
+     C                   PARM                    P@VL08
+     C                   PARM                    P@OP09
+     C                   PARM                    P@VL09
+     C                   PARM                    P@OP10
+     C                   PARM                    P@VL10
+      *
+     C     P@RTCD        IFEQ      *Blanks
+     C                   EVAL      WkProdMT9xx = P@VL01
+     C                   EVAL      WkNetwork   = P@VL02
+     C                   ENDIF
+      *
+     C     EINZSR        ENDSR
+      *
+      /EJECT
+      *********************************************************************
+      *                                                                   *
+      * *PSSR  - Program exception error routine                          *
+      *                                                                   *
+      * Called by:                                                        *
+      *                                                                   *
+      * Calls: None                                                       *
+      *                                                                   *
+      *********************************************************************
+     C     *PSSR         BEGSR
+      *
+     C                   IF        Recursive = *blank
+     C                   EVAL      Recursive = 'Y'
+     C                   DUMP
+     C                   ROLBK
+     C                   ENDIF
+      *
+     C                   IF        P_ARErrCod = *Blanks                                    MD023628
+     C                   EVAL      P_ARErrCod = 'CGL0218'                                  MD023628
+      *** Error Code: CGL0218 - MT940/MT940 Request failed.                                MD023628
+     C                   ENDIF                                                             MD023628
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *
+     C     PSSRE         ENDSR
+      *
+      ********************************************************************
+      *

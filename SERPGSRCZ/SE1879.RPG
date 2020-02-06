@@ -1,0 +1,440 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Update SWIFT Generation Status')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE1879 - UPDATE SWIFT GENERATION STATUS                      *
+      *                                                               *
+      *  Function: Update SWIFT Generation Status from ISO15022 driver*
+      *            files.                                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CSW208             Date 15Apr08               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW025             Date 10Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE029 *CREATE     Date 24Jul01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CSW208 - SWIFT 2008 Changes (Recompile)                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW025 - Midas Message Manager                               *
+      *           - MT566 new ISO15022 message                        *
+      *  CSE029 - ISO15022 message generation                         *
+      *                                                               *
+      *****************************************************************
+      *
+     FMGISOTPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FMGISODPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FMGISOPPDUF  E                    DISK         KINFSR *PSSR                              CSW025
+     F                                              KCOMIT                                    CSW025
+      *
+     F/COPY WNCPYSRC,SE1879F001
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *     20 - Program MG5900 not found                             *
+      *     21 - Program MG5910 not found                             *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  ISOT   - Read MGISOTPD (ISO15022 generation file - trades)   *
+      *  ISOD   - Read MGISODPD (ISO15022 generation file - depos)    *
+      *  ISOP   - Read MGISOPPD (ISO15022 generation file - position  *                       CSW025
+      *                          settlement)                          *                       CSW025
+      *  UPSQ   - Update SWIFT Sequence Number                        *
+      *                                                               *
+      *  *PSSR  - Program error handling routine                      *
+      *  AUDIT  - Run Control Process                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     IMGISODD0
+     I              MGTYPE                          MDTYPE
+     I              MGDEST                          MDDEST
+     I              MGTTYP                          MDTTYP
+     I              MGTSTP                          MDTSTP
+     I              MGINST                          MDINST
+     I              MGINSS                          MDINSS
+     I              MGPFIX                          MDPFIX
+     I              MGTREF                          MDTREF
+     I              MGTSEQ                          MDTSEQ
+     I              MGSETP                          MDSETP
+     I              MGSDAT                          MDSDAT
+     I              MGTDAT                          MDTDAT
+     I              MGSTCY                          MDSTCY
+     I              MGPRIC                          MDPRIC
+     I              MGSTAM                          MDSTAM
+     I              MGOTRA                          MDOTRA
+     I              MGOTRC                          MDOTRC
+     I              MGITRA                          MDITRA
+     I              MGITCY                          MDITCY
+     I              MGACND                          MDACND
+     I              MGNCDT                          MDNCDT
+     I              MGSWTP                          MDSWTP
+     I              MGIMD1                          MDIMD1
+     I              MGIMD2                          MDIMD2
+     I              MGIMD3                          MDIMD3
+     I              MGIMD4                          MDIMD4
+     I              MGIMD5                          MDIMD5
+     I              MGIMD6                          MDIMD6
+     I              MGIMD7                          MDIMD7
+     I              MGIMD8                          MDIMD8
+     I              MGIMD9                          MDIMD9
+     I              MGPSET                          MDPSET
+     I              MGTSTS                          MDTSTS
+     IMGISOPD0
+     I              MGPFIX                          MPPFIX
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ISCSARD    E DSSCSARDPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I** DATA STRUCTURE FOR DBERROR
+     IDBERR       DS                             20
+     I                                        1   2 WWMODE
+     I                                        3  17 @TREF
+     I** DATA STRUCTURE FOR DBERROR2
+     IDBERR2      DS                             20
+     I                                        1   2 @MODI
+     I                                        3  17 @TRAN
+      *
+      /TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ***  Read MGISOTPD
+     C                     EXSR ISOT
+      *
+      ***  Read MGISODPD
+     C                     EXSR ISOD
+      *
+      **   Process MGISOPPD                                                                   CSW025
+      *                                                                                       CSW025
+     C                     EXSR ISOP                                                          CSW025
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C** SET UP LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Check if CSW003 is on
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'CSW003'  @SARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C                     SELEC
+     C           @RTCD     WHEQ *BLANK
+     C                     MOVE 'Y'       CSW003  1
+     C           @RTCD     WHEQ '*NRF'
+     C                     MOVE 'N'       CSW003
+     C                     OTHER
+     C           *LOCK     IN   LDA
+     C                     MOVEL'01'      DBASE            ***************
+     C                     Z-ADD001       DBASE            *  DBERR 001  *
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSL
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ISOT
+      *****************************************************************
+      *                                                               *
+      *  ISOT   - Subroutine to read MGISOTPD                         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ISOT      BEGSR
+      *
+     C                     MOVE *OFF      *IN90
+     C                     READ MGISOTPD                 90
+      *
+     C           *IN90     DOWEQ*OFF
+     C*
+     C                     MOVE *BLANKS   WWTRAN 15
+     C                     MOVELMGTREF    WWFL06  6
+     C                     MOVELWWFL06    WWTRAN
+     C                     MOVE MGTTYP    WWTRAN
+     C*
+     C                     CALL 'MG5910'               21
+     C                     PARM 'SE'      @MODI   2
+     C                     PARM WWTRAN    @TREF  15
+     C                     PARM 'PR'      @PROG   2
+     C                     PARM 'U'       @MODE   1
+     C                     PARM *BLANKS   @CONG   1
+     C                     PARM *BLANKS   @RCDG   1
+     C                     PARM *BLANKS   @ERCD   1
+     C                     PARM CSW003    @MT5XX  1
+     C*
+     C                     MOVEL@MODI     WWMODE
+     C*
+     C** IF PROGRAM NOT FOUND
+     C           *IN21     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '002'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 002  *
+     C                     MOVEL'MG5910'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*Update SWIFT Sequence Number
+     C                     EXSR UPSQ
+     C*
+     C*Update SWIFT Sequence Number again if it is greater than 1
+     C           @LSWS     IFGE 1
+     C                     EXSR UPSQ
+     C                     ENDIF
+     C*
+     C                     DELETMGISOTD0
+     C*
+     C** COMIT All changes to files
+     C                     COMIT
+     C*
+     C                     READ MGISOTPD                 90
+     C                     ENDDO
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ISOD
+      *****************************************************************
+      *                                                               *
+      *  ISOD   - Subroutine to read MGISODPD                         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ISOD      BEGSR
+      *
+     C                     MOVE *OFF      *IN90
+     C                     READ MGISODPD                 90
+      *
+     C           *IN90     DOWEQ*OFF
+     C*
+     C                     MOVE *BLANKS   WWTRAN 15
+     C                     MOVELMDTREF    WWFL06  6
+     C                     MOVELWWFL06    WWTRAN
+     C                     MOVE MDTTYP    WWTRAN
+     C*
+     C                     CALL 'MG5910'               26
+     C                     PARM 'SE'      @MODI
+     C                     PARM WWTRAN    @TREF
+     C                     PARM 'PR'      @PROG
+     C                     PARM 'U'       @MODE
+     C                     PARM *BLANKS   @CONG
+     C                     PARM *BLANKS   @RCDG
+     C                     PARM *BLANKS   @ERCD
+     C                     PARM CSW003    @MT5XX
+     C*
+     C                     MOVEL@MODI     WWMODE
+     C*
+     C** IF PROGRAM NOT FOUND
+     C           *IN26     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 007  *
+     C                     MOVEL'MG5910'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*Update SWIFT Sequence Number
+     C                     EXSR UPSQ
+     C*
+     C*Update SWIFT Sequence Number again if it is greater than 1
+     C           @LSWS     IFGE 1
+     C                     EXSR UPSQ
+     C                     ENDIF
+     C*
+     C                     DELETMGISODD0
+     C*
+     C** COMIT All changes to files
+     C                     COMIT
+     C*
+     C                     READ MGISODPD                 90
+     C                     ENDDO
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ISOP                                                                          CSW025
+      *****************************************************************                       CSW025
+      *                                                               *                       CSW025
+      *  ISOP   - Subroutine to read MGISOPPD                         *                       CSW025
+      *                                                               *                       CSW025
+      *  Called By: Main Processing                                   *                       CSW025
+      *                                                               *                       CSW025
+      *  Calls    : None                                              *                       CSW025
+      *                                                               *                       CSW025
+      *****************************************************************                       CSW025
+      *                                                                                       CSW025
+     C           ISOP      BEGSR                                                              CSW025
+      *                                                                                       CSW025
+     C                     MOVE *OFF      *IN90                                               CSW025
+      *                                                                                       CSW025
+     C           *IN90     DOWEQ*OFF                                                          CSW025
+      *                                                                                       CSW025
+     C                     READ MGISOPPD                 90                                   CSW025
+     C           *IN90     IFEQ *OFF                                                          CSW025
+     C                     DELETMGISOPD0                                                      CSW025
+      *                                                                                       CSW025
+      ** COMIT All changes to files                                                           CSW025
+      *                                                                                       CSW025
+     C                     COMIT                                                              CSW025
+      *                                                                                       CSW025
+     C                     ENDIF                                                              CSW025
+     C                     ENDDO                                                              CSW025
+      *                                                                                       CSW025
+     C                     ENDSR                                                              CSW025
+      *                                                                                       CSW025
+      *****************************************************************                       CSW025
+      /TITLE SR/UPSQ
+      *****************************************************************
+      *                                                               *
+      *  UPSQ   - Update SWIFT Sequence Number                        *
+      *                                                               *
+      *  Called By: ISOT, ISOD                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPSQ      BEGSR                           ***  UPSQ  ***
+      *
+     C                     CALL 'MG5900'               20
+     C                     PARM 'SE'      @MODI
+     C                     PARM WWTRAN    @TRAN  15
+     C                     PARM 'PR'      @PROG
+     C                     PARM 'U'       @MODE
+     C                     PARM           @LSWS   70
+     C                     PARM *BLANKS   @ERCD
+     C                     PARM CSW003    @MT5XX
+     C*
+     C** IF PROGRAM NOT FOUND
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '004'     DBASE            * * * * * * * *
+     C                     MOVE *BLANKS   DBKEY            *  DBERR 005  *
+     C                     MOVEL'MG5900'  DBPGM            * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE1879'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELLDA       WLDA
+     C                     OUT  WLDA
+     C                     SETON                     U7U8LR
+      *
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

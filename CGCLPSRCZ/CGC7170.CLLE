@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Retail Interest Scale Qualifying Acod Maint')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       CGC7170 - Retail Interest Scale Qualifying Acct Codes Maint */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2011')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA if it does not exist */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD AS400 Local +
+                          Date Area'))
+ 
+/* Set-off Database Error Switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+/* Retail Interest Scale Qualifying Account Codes Maintenance */
+ 
+             CALL       PGM(CG7170)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             MONMSG (CPF0000 MCH0000 RPG0000)
+             SNDPGMMSG  MSG('Program CGC7170 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/* Normal termination */
+ 
+ END:        ENDPGM

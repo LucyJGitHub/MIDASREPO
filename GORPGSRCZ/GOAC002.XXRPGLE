@@ -1,0 +1,178 @@
+     h debug
+     h copyright('(c) Misys International Banking Systems Ltd. 2009')
+      *****************************************************************
+/*S*D ***RPGBASEBNC****************************************************
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GOAC002    - Bulk Update of Global File GZACCNTAB            *
+      *               Task Split write records to driver.             *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. AR1097467B *REDUNDANT Date 17Apr13            *
+      *  Prev Amend No. CGO001AA           Date 06Aug12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGP013  *CREATE    Date 20Feb09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR1097467B - Expected 15% COB run optimization not met       *
+      *  CGO001AA - COB Restructure - GO COB Optimisation Phase 1     *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CGP013 - Task Split for Accounts Global Update               *
+      *                                                               *
+      *****************************************************************
+ 
+     faccnt     if   e           k disk    include(accntabf)
+     f                                     infsr(*pssr)
+ 
+     factsixpd  uf a e           k disk    commit
+     f                                     infsr(*pssr)
+     f                                     prefix(i_)
+     f                                     rename(actsdvpdf : indexf)                       CGO001AA
+ 
+     f***actsdvpd  o    e           k disk    rename(accntabf: driverf)                     CGO001AA
+     factsdvpd  o    e           k disk    rename(actsdvpdf : driverf)                      CGO001AA
+     f                                     commit
+     f                                     infsr(*pssr)
+     f                                     usropn                                           CGO001AA
+      *====================================================================
+ 
+      * Program Status Data Structure
+     d/copy zacpysrc,psds
+ 
+     d inPssr                          n
+ 
+      *====================================================================
+ 
+     C     *entry        plist
+     C                   parm                    rectot            7 0
+     C                   parm                    rtcode            3
+ 
+     c                   open      actsdvpd                                                 CGO001AA
+                                                                                            CGO001AA
+     c     accntK        klist
+     c                   kfld                    i_cnum
+     c                   kfld                    i_ccy
+     c                   kfld                    i_acod
+     c                   kfld                    i_acsq
+     c                   kfld                    i_brca
+      *====================================================================
+ 
+     c                   exsr      init
+ 
+     c                   exsr      tsplit
+ 
+     c                   exsr      closedown
+      *********************************************************************
+ 
+     c     tsplit        begsr
+ 
+      * Load records from accounts master to driver.
+ 
+     c                   eval      *in81 = *off                                             CGO001AA
+                                                                                            CGO001AA
+     c                   do        rectot
+     c                   read      accnt
+     c                   if        %eof
+                                                                                            CGO001AA
+     C                   if        *in81 = *ON                                              CGO001AA
+     c                   eval      rtcode      = 'EOF'
+     c                   else                                                               CGO001AA
+     c                   eval      rtcode      = 'NRF'                                      CGO001AA
+     c                   leave
+     c                   endif                                                              CGO001AA
+                                                                                            CGO001AA
+     c                   endif
+ 
+     c                   if        *in81 = *OFF                                             CGO001AA
+     c                   eval      recid = 'A'                                              CGO001AA
+     c                   eval      prot = *blank                                            CGO001AA
+     c                   call      'ZAGENTS'                                                CGO001AA
+     c                   parm                    tmst                                       CGO001AA
+                                                                                            CGO001AA
+     c                   write     driverf
+                                                                                            CGO001AA
+     c                   eval      *in81 = *on                                              CGO001AA
+     c                   endif                                                              CGO001AA
+                                                                                            CGO001AA
+     c                   enddo
+                                                                                            CGO001AA
+     c                   if        *in81 = *on                                              CGO001AA
+     c                   eval      recid = 'Z'                                              CGO001AA
+     c                   eval      prot = *blank                                            CGO001AA
+     c                   call      'ZAGENTS'                                                CGO001AA
+     c                   parm                    tmst                                       CGO001AA
+     c                   write     driverf                                                  CGO001AA
+ 
+      * Update (or write to) index file to reflect last account processed.
+ 
+     c     *start        setll     actsixpd
+     c                   read      actsixpd
+     c                   eval      i_cnum      = cnum
+     c                   eval      i_ccy       = ccy
+     c                   eval      i_acod      = acod
+     c                   eval      i_acsq      = acsq
+     c                   eval      i_brca      = brca
+ 
+     c                   eval      i_recid = recid                                          CGO001AA
+     c                   eval      i_prot = prot                                            CGO001AA
+     c                   eval      i_tmst = tmst                                            CGO001AA
+                                                                                            CGO001AA
+     c                   if        %eof
+     c**********         write     actsixpdf                                                CGO001AA
+     c                   write     indexf                                                   CGO001AA
+     c                   else
+     c**********         update    actsixpdf                                                CGO001AA
+     c                   update    indexf                                                   CGO001AA
+     c                   endif
+ 
+     c                   endif                                                              CGO001AA
+                                                                                            CGO001AA
+     c                   commit
+ 
+     c                   endsr
+      *********************************************************************
+ 
+     c     init          begsr
+ 
+      * Read the index record to determine start position on accounts master.
+ 
+     c     *start        setll     actsixpd                                                 CGO001AA
+     c                   read      actsixpd
+     c                   if        %eof
+     c     *start        setll     accnt
+     c                   else
+     c     accntK        setgt     accnt
+     c                   endif
+ 
+     c                   endsr
+      *********************************************************************
+ 
+     c     closedown     begsr
+ 
+     c**********         eval      *inlr       = *on                                        CGO001AA
+     c                   close     actsdvpd                                                 CGO001AA
+     c                   return
+ 
+     c                   endsr
+      *********************************************************************
+ 
+     C     *pssr         begsr
+ 
+     C                   if        not inPssr
+     C                   eval      inPssr      = *on
+     C                   dump
+     C                   endif
+ 
+     c                   eval      *inlr       = *on
+     c                   eval      *inu7       = *on
+     C                   eval      *inu8       = *on
+     C                   return
+ 
+     C                   endsr

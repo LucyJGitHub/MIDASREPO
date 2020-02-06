@@ -1,0 +1,543 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Request Performance Dataset Refresh')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PM6000 - PM Request Performance Dataset Refresh              *
+      *                                                               *
+      *  Function:  This program allows the user to request that the  *
+      *  (I/C,COB)  performance dataset be refreshed.                 *
+      *                                                               *
+      *  Called By: RCF - Report Control Facility                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 10Jul96               *
+      *                 S01124             Date 15Jun94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CPM005 - Private Banking Phase II                            *
+      *           Focus Group Changes Upgraded to DBA                 *
+      *  S01124 - PBFG/4 - Simple Performance Dataset Save & Query    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F***PM6000DDCF**E                    WORKSTN      KINFSR *PSSR       CPM005
+     FPM6000DFCF  E                    WORKSTN      KINFSR *PSSR          CPM005
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       03         EXIT                    (PF3)                 N
+     F*       22         EXTRA VALUATION STAT.  (PF22)                 N
+     F*
+     F*       11         WORKING INDICATOR FOR MESSAGE BLINKING
+     F*       12         WORKING INDICATOR FOR F22
+     F*       13         WORKING INDICATOR FOR CONFIRMATION OF BATCH SUBMITED
+     F*
+     F*       40         SFLEND
+     F*       49         VLDCMDKY
+     F*
+     F*       80         FILE OPERATIONS INDICATOR - SDBANKL1
+     F*       81         FILE OPERATIONS INDICATOR - SDPLCSL1
+     F*       82         FILE OPERATIONS INDICATOR - SDCUSTL1
+     F*       83         FILE OPERATIONS INDICATOR - PMCSNPPP
+     F*       84         FILE OPERATIONS INDICATOR - SDCUSTY0
+     F*       85         FILE OPERATIONS INDICATOR - SDALTNL2
+     F*       86         FILE OPERATIONS INDICATOR - PMPTNPXX
+     F*       87         FILE OPERATIONS INDICATOR - PM6000DD
+     F*
+     F*       98         DATE FORMAT = MMDDYY
+     F*       99         WORK
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       ..  ..  ..  04  ..  06  07  08  09  10
+     F*       11  ..  13  14  15  16  17  18  19  20
+     F*       21  ..  23  24  ..  26  27  28  29  30
+     F*       31  32  33  34  35  36  37  38  39  40
+     F*       ..  ..  43  ..  ..  ..  ..  48  ..  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  70
+     F*       71  72  73  74  75  76  77  78  79  ..
+     F*       81  82  ..  ..  ..  ..  ..  88  89  90
+     F*       91  92  93  94  95  96  97  ..  ..
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       'WWAID' VALUES USED
+     F*
+     F*       03         F3
+     F*       12         F12
+     F*       RA         ENTER PRESSED
+     F*       UP         ROLLUP
+     F*       DN         ROLLDOWN
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E***********         ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAYCPM005
+     E***********         ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAYCPM005
+     E***********         ZMNM   12  12  3               ZDATE2 SR. ARRAY CPM005
+     E***********                                                         CPM005
+     E***********         CMD     1   1 54               CMD OVRMSGF      CPM005
+      *                                                                   CPM005
+     E/COPY ZSRSRC,ZDATE2Z1                                               CPM005
+      *                                                                   CPM005
+     E                    CPY@    1   1 80
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***LDA*****    DS                            256                    CPM005
+     I***********                           132 141 WWFILE                CPM005
+     I***********                           142 170 WWKEY                 CPM005
+     I***********                           171 180 WWPGM                 CPM005
+     I***********                           181 1830WWASE                 CPM005
+     ILDA       E DSLDA                         256                       CPM005
+      *                                                                   CPM005
+      ** Local data area for database error details                       CPM005
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          CPM005
+      ** after each database error handling.                              CPM005
+      **                                                                  CPM005
+      **                                    134 141 DBFILE                CPM005
+      **       Defines:                     142 170 DBKEY                 CPM005
+      **                                    171 180 DBPGM                 CPM005
+      **                                    181 1830DBASE                 CPM005
+     IRPARM       DS                            100                       CPM005
+     I                                        1   1 RFILL                 CPM005
+     I*
+     IPMSTAT      DS                            256
+     I                                       54  58 DLRD
+     I                                       59  68 DLRU
+     I*
+     I***PGMDS**   ESDSY2PGDSP                                            CPM005
+     I**Program*data*structure.****************************************   CPM005
+     IPSDS       SDS                                                      CPM005
+      *                                                                   CPM005
+      ** Program Status Data Structure                                    CPM005
+      *                                                                   CPM005
+     I                                     *PROGRAM PGM                   CPM005
+     I                                      244 253 WSID                  CPM005
+     I                                      254 263 USER                  CPM005
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ISDBANK    E DSSDBANKPD                                              CPM005
+      *                                                                   CPM005
+      **  SD Bank Details                                                 CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+      *                                                                   CPM005
+      ** Short Data Structure                                             CPM005
+      *                                                                   CPM005
+     I**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *  P R O G R A M     S T A R T
+      ********************************************************************
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR #INIT
+     C*
+     C** DISPLAY SCREEN DETAILS
+     C*
+     C                     EXSR #P01
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C*
+      ********************************************************************
+      *  P R O G R A M     E N D
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - FILE ERROR HANDLING                                   *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR                           ** #INIT BSR **
+     C*
+      ** Define Input Parameters                                          CPM005
+      *                                                                   CPM005
+     C           *ENTRY    PLIST                                          CPM005
+     C                     PARM           RSEQ    5                       CPM005
+     C                     PARM           RLEV    1                       CPM005
+     C                     PARM           RENT    3                       CPM005
+     C                     PARM           RPARM 100                       CPM005
+     C                     PARM           RACT    1                       CPM005
+     C                     PARM           RCMD    1                       CPM005
+      *                                                                   CPM005
+     C           *NAMVAR   DEFN           LDA                             CPM005
+     C                     MOVE '0'       *IN
+     C***********          MOVEL##JOB     WSID                            CPM005
+     C                     MOVEL'PM6000'  DBPGM  10
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C************LOVAL    SETLLSDBANKL1                                  CPM005
+     C***********          READ SDBANKL1                 80               CPM005
+     C***********                                                         CPM005
+     C************IN80     IFEQ '1'                        ***************CPM005
+     C***********          Z-ADD1         DBASE   30       **DB ERROR 01**CPM005
+     C***********          MOVEL'SDBANKL1'DBFILE 10        ***************CPM005
+     C***********          MOVE *BLANKS   DBKEY  29                       CPM005
+     C***********          EXSR *PSSR                                     CPM005
+     C***********          END                                            CPM005
+      *                                                                   CPM005
+      ** Access the Bank Details                                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST ' WOPTN   7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD001       DBASE            ***************CPM005
+     C                     MOVE 'SDBANKPD'DBFILE           * DB ERROR 01 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+     C*
+     C** IF FOUND CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           BJDFIN    IFEQ 'M'                        MMDDYY, 98 ON
+     C                     MOVE '1'       *IN98
+     C                     END
+     C**
+     C** GET DATA FROM DATA AREA
+     C*
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C                     MOVE DLRD      ZDAYNO
+     C                     MOVE DLRU      DDDLRU
+     C*
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    DDDLRD
+     C*
+     C                     MOVE 'RA'      WWAID
+     C                     MOVE '*'       RFILL                           CPM005
+     C*
+     C           E#INIT    ENDSR                           ** #INIT ESR **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - DISPLAY SCREEN DETAILS                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR                           ** #P01  BSR **
+     C*
+     C** DO UNTIL F3 TAKEN
+     C*
+     C           WWAID     DOUEQ'03'                       B1
+     C           WWAID     OREQ '12'                                      CPM005
+     C           *IN13     OREQ *ON                                       CPM005
+     C*
+     C                     EXFMTPM6000F1
+     C*
+     C** COMMAND KEYS
+     C*
+     C                     EXSR #VCMD
+     C*
+     C** 'ENTER'
+     C*
+     C           WWAID     IFEQ 'RA'                       B2
+     C*
+     C** FIRST TIME THE SCREEN IS DISPLAYED -> SETON THE INDICATOR TO HAVE A
+     C*             BLINKING MESSAGE + F22 (CONFIRMATION) TO BE DISPLAYED
+     C*
+     C           *IN11     IFEQ *OFF                       B3
+     C           *IN12     ANDEQ*OFF
+     C           *IN13     ANDEQ*OFF
+     C                     MOVE *ON       *IN11
+     C                     MOVE *ON       *IN12
+     C                     END                             E3
+     C*
+     C                     END                             E2
+     C*
+     C** SECOND TIME THE SCREEN IS DISPLAYED
+     C*
+     C           WWAID     IFEQ '22'                       B2
+     C           *IN11     ANDEQ*ON
+     C           *IN12     ANDEQ*ON
+     C           *IN13     ANDEQ*OFF
+     C***********          MOVE CMD,1     CMD1   54                       CPM005
+     C***********          Z-ADD54        CMDLEN 155                      CPM005
+     C***********          CALL 'QCMDEXC'                                 CPM005
+     C***********          PARM           CMD1                            CPM005
+     C***********          PARM           CMDLEN                          CPM005
+     C                     MOVE *OFF      *IN11
+     C                     MOVE *OFF      *IN12
+     C                     MOVE *ON       *IN13
+      *                                                                   CPM005
+      ** Update PMSTAT if action code is Enquiry                          CPM005
+      *                                                                   CPM005
+     C           RACT      IFNE 'E'                                       CPM005
+     C           *LOCK     IN   PMSTAT
+     C***********          MOVE ##USR     DLRU                            CPM005
+     C                     MOVE USER      DLRU                            CPM005
+     C                     MOVE BJRDNB    DLRD
+     C                     OUT  PMSTAT
+     C                     ENDIF                                          CPM005
+      *                                                                   CPM005
+     C                     END                             E2
+     C*
+     C                     END                             E1
+     C*
+     C           E#P01     ENDSR                           ** #P01  ESR **
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #VCMD    - VALIDATE COMMAND KEYS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - PROCESS PM NOTEPAD SCREEN                             *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           #VCMD     BEGSR                           ** #VCMD  BSR **
+     C*
+     C** If ENTER pressed, the VLDCMDKEY indicator will be off
+     C*
+     C           *IN49     IFEQ '0'
+     C                     MOVE 'RA'      WWAID   2
+     C                     END
+     C*
+     C** If F3
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE '03'      WWAID
+     C                     MOVE '0'       *INKC
+     C                     MOVE 'E'       RCMD                            CPM005
+     C                     END
+      *                                                                   CPM005
+      ** If F12                                                           CPM005
+      *                                                                   CPM005
+     C           *INKL     IFEQ *ON                                       CPM005
+     C                     MOVE '12'      WWAID                           CPM005
+     C                     MOVE *OFF      *INKL                           CPM005
+     C                     MOVE 'F'       RCMD                            CPM005
+     C                     ENDIF                                          CPM005
+     C*
+     C** If F22 pressed
+     C*
+     C           *INKW     IFEQ '1'
+     C                     MOVE '22'      WWAID
+     C                     MOVE '0'       *INKW
+     C                     END
+     C*
+     C                     ENDSR                           ** #VCMD  ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - FILE ERROR HANDLING                                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PMC1000  - WRITE DETAILS TO *GDA                                 *
+      * PMC1020  - END GROUP JOBS                                        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #P01     - DISPLAY SCREEN                                        *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR                            ** *PSSR BSR**
+     C*
+      ***UPDATE*LDA*WITH*ERROR*INFORMATION*****************************   CPM005
+     C************NAMVAR   DEFN           LDA                             CPM005
+     C************LOCK     IN   LDA                                       CPM005
+     C***********          MOVELDBFILE    WWFILE                          CPM005
+     C***********          MOVELDBKEY     WWKEY                           CPM005
+     C***********          MOVELDBPGM     WWPGM                           CPM005
+     C***********          MOVELDBASE     WWASE                           CPM005
+     C***********          OUT  LDA                                       CPM005
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+      *
+      ** ROLL BACK CHANGES, PRINT DUMP AND CANCEL PROGRAM
+     C                     ROLBK
+     C                     DUMP
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                            ** *PSSR ESR**
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C***********                                                         CPM005
+     C*****ZDATE2*SR.*TO*CONVERT*A*DAY*NUMBER*TO*DATE*FORMATS.*********   CPM005
+     C***********                                                         CPM005
+     C*****THE*YEAR*2000,*BEING*DIVISIBLE*BY*400,*IS*A*LEAP*YEAR.******   CPM005
+     C***********                                                         CPM005
+     C***********ZDATE2    BEGSR                           *** ZDATE2 *** CPM005
+     C***********                                                         CPM005
+     C*****CLEAR*LEAP*YEAR*WORK*FIELD.*********************************   CPM005
+     C***********          MOVE 'N'       ZLEAP   1                       CPM005
+     C***********                                                         CPM005
+     C*****CLEAR*DATE*FIELDS.******************************************   CPM005
+     C***********          Z-ADD0         ZDATE   60                      CPM005
+     C***********          MOVEL'       ' ZADATE  7                       CPM005
+     C***********                                                         CPM005
+     C*****CALCULATION*TO*DEFINE*INPUT*DAY*NUMBER.*********************   CPM005
+     C***********          Z-ADDZDAYNO    ZDAYNO  50                      CPM005
+     C***********                                                         CPM005
+     C*****DETERMINE*YEAR*NUMBER.**************************************   CPM005
+     C***********                                                         CPM005
+     C*****ADJUST*DAY*NUMBER*IN*CASE*LAST*DAY*OF*YEAR.*****************   CPM005
+     C***********ZDAYNO    SUB  1         ZDAYN1  50                      CPM005
+     C***********ZDAYN1    IFLT 0                                         CPM005
+     C***********          GOTO ZDEND2                                    CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C*****CALCULATE*NUMBER*OF*4*YEAR*SPANS*SINCE*31/12/1971.**********   CPM005
+     C***********ZDAYN1    DIV  1461      ZLYR    20                      CPM005
+     C***********          MVR            ZDAYN1           SAVE REMAINING CPM005
+     C***********                                          DAYS           CPM005
+     C*****CALCULATE*NUMBER*OF*REMAINING*YEARS.************************   CPM005
+     C***********          Z-ADD1         ZWRK2   20                      CPM005
+     C***********ZDTAG1    TAG                             ** ZDTAG1 TAG *CPM005
+     C***********ZDAYN1    IFGE ZYDY,ZWRK2                                CPM005
+     C***********ZWRK2     ADD  1         ZWRK2                           CPM005
+     C***********          GOTO ZDTAG1                                    CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C***********ZWRK2     SUB  1         ZWRK2                           CPM005
+     C***********                                                         CPM005
+     C*****DECREMENT*DAY*NO.*BY*DAYS*IN*REMAINING*YEARS.***************   CPM005
+     C***********ZWRK2     IFNE 0                                         CPM005
+     C***********ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1                          CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C*****CALCULATE*ACTUAL*YEAR*NUMBER.*******************************   CPM005
+     C***********ZLYR      MULT 4         ZWRK3   30                      CPM005
+     C***********ZWRK3     ADD  72        ZWRK3            BASE IS 1972   CPM005
+     C***********          Z-ADDZWRK3     ZYEAR   20                      CPM005
+     C***********ZYEAR     ADD  ZWRK2     ZYEAR            YEAR           CPM005
+     C***********                                                         CPM005
+     C*****DETERMINE*MONTH*NUMBER.*************************************   CPM005
+     C***********                                                         CPM005
+     C*****ADJUST*DAY*NO.*IN*CASE*LAST*DAY*OF*LEAP*YEAR*FEBRUARY.******   CPM005
+     C***********ZWRK2     IFEQ 0                                         CPM005
+     C***********ZDAYN1    IFEQ 59                                        CPM005
+     C***********          MOVE 'Y'       ZLEAP                           CPM005
+     C***********          END                                            CPM005
+     C***********ZDAYN1    IFGE 59                                        CPM005
+     C***********ZDAYN1    SUB  1         ZDAYN1                          CPM005
+     C***********          END                                            CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C*****CALCULATE*MONTH*NUMBER.*************************************   CPM005
+     C***********          Z-ADD2         ZWRK2                           CPM005
+     C***********ZDTAG2    TAG                             ** ZDTAG2 TAG *CPM005
+     C***********ZDAYN1    IFGE ZMDY,ZWRK2                                CPM005
+     C***********ZWRK2     ADD  1         ZWRK2                           CPM005
+     C***********          GOTO ZDTAG2                                    CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C***********ZWRK2     SUB  1         ZWRK2                           CPM005
+     C***********                                                         CPM005
+     C***********          Z-ADDZWRK2     ZMTH    20       MONTH          CPM005
+     C***********                                                         CPM005
+     C*****DETERMINE*DAY*OF*MONTH.*************************************   CPM005
+     C***********                                                         CPM005
+     C*****ADD*BACK*LAST*DAY*OF*YEAR*ADJUSTMENT.***********************   CPM005
+     C***********ZDAYN1    ADD  1         ZDAYN1                          CPM005
+     C***********                                                         CPM005
+     C*****CALCULATE*DAY*OF*MONTH.*************************************   CPM005
+     C***********ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY            CPM005
+     C***********                                                         CPM005
+     C*****ADD*BACK*LEAP*YEAR*29TH*FEBUARY*ADJUSTMENT,*IF*REQUIRED.****   CPM005
+     C***********ZLEAP     IFEQ 'Y'                                       CPM005
+     C***********ZDAY      ADD  1         ZDAY                            CPM005
+     C***********          END                                            CPM005
+     C***********                                                         CPM005
+     C*****FORMAT*DATE,*DDMMYY*OR*MMDDYY.******************************   CPM005
+     C**N98******          MOVELZDAY      ZWRK4   40                      CPM005
+     C***98******          MOVE ZDAY      ZWRK4                           CPM005
+     C**N98******          MOVE ZMTH      ZWRK4                           CPM005
+     C***98******          MOVELZMTH      ZWRK4                           CPM005
+     C***********          MOVELZWRK4     ZDATE                           CPM005
+     C***********          MOVE ZYEAR     ZDATE                           CPM005
+     C***********                                                         CPM005
+     C*****FORMAT*ALPHA*DATE,*DDMMMYY.*********************************   CPM005
+     C***********          MOVELZDAY      ZWRK5   5                       CPM005
+     C***********ZDAY      IFLT 10                                        CPM005
+     C***********          MOVEL' '       ZWRK5                           CPM005
+     C***********          END                                            CPM005
+     C***********          MOVE ZMNM,ZMTH ZWRK5                           CPM005
+     C***********          MOVELZWRK5     ZADATE                          CPM005
+     C***********          MOVE ZYEAR     ZADATE                          CPM005
+     C***********                                                         CPM005
+     C***********ZDEND2    ENDSR                           * ZDEND2 ENDSR*CPM005
+     C***********                                                         CPM005
+     C***********                                                         CPM005
+      *                                                                   CPM005
+     C/COPY ZSRSRC,ZDATE2Z2                                               CPM005
+      *                                                                   CPM005
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*************   CMD - COMMAND TO SUBMIT JOB                         CPM005
+     C***********SBMJOB CMD(CALL PGM(PMC6010)) JOB(PMC6010) JOBQ(MJOBQ)   CPM005
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

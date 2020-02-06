@@ -1,0 +1,497 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust serv fees - process FP type = PP')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1933 - Customer Service Fees - Process Fees with fee       *
+      *           Processing Type equal to 'PP'.                      *
+      *                                                               *
+      *  Function:  This COB program selects records that requires    *
+      *             Fees calculation from the Customer Fees Charge    *
+      *             file, GLCHRGPD, and writes an entry for that      *
+      *             record in the Performance Incentive Fees to be    *
+      *             Calculated file, GLIFTCPD.                        *
+      *             If at least one record have been written to the   *
+      *             GLIFTCPD file then this program will send a       *
+      *             a message to Meridian to signal to TOF that fees  *
+      *             are ready to receive information.                 *
+      *                                                               *
+      *  Called By: GLC1992 - Retrieve Customer/Portfolio             *
+      *                       for Fee processing                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 207288             Date 11Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 202538             Date 07Mar02               *
+      *                 CSD011  *CREATE    Date 04Mar02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  207288 - Recompile over changes in SDTOFPD.                  *
+      *           Applied for AR999664 (Child: AR999668)              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  202538 - Performance Incentive Fees not being processed due  *
+      *           to file changes at Release 3.3.                     *
+      *  CSD011 - Performance Incentive Fees                          *
+      *                                                               *
+      *****************************************************************
+     FSDCFTPL0IF  E           K        DISK         KINFSR *PSSR
+      ** Fee type details
+      *
+     FGLCHRGL2UF  E           K        DISK         KINFSR *PSSR
+      ** Customer Fees Charges (Only Authorised, Generated or Overdue)
+      *
+     FGLIFTCL2UF  E           K        DISK         KINFSR *PSSR A
+      ** Fees to to be Calculated file.
+      *
+     FSDTOFPD IF  E           K        DISK         KINFSR *PSSR
+      ** TOF ICD physical file.
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   80  - End of File GLCHRGPD                                  *
+      *   81  - Chain on file SDCFTPL0 failed.                        *
+      *   82  - Chain on file SDCFTPL0 failed.                        *
+      *   83  - Chain on file GLIFTCL2 failed.                        *
+      *   84  - Read on file SDTOFPD failed.                          *
+      *   85  - Error on WRITE/UPDATE to file GLIFTCPD                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRMAIN - Main Processing                                     *
+      *  SRIFTC - Write record to Fees to be Calculated File.         *
+      *  SRIPOP - Initialise and Populate the fields on file GLIFTCPD *
+      *  SRMERD - Sends a message to Meridian                         *
+      *                                                               *
+      *  *INSZR - Initialisation routine                              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SREXIT - Terminate Program                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS For Access Programs, Short Data Structure
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ****************************************************************
+      *                M A I N   P R O C E S S I N G                 *
+      ****************************************************************
+      *
+      ** Initial Subroutine
+      *                    EXSR *INZSR
+      *
+      ** Main Processing
+     C                     EXSR SRMAIN
+      *
+      ** Termination
+     C                     EXSR SREXIT
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN - Main Processing                                     *
+      *                                                               *
+      *  Called By : None                                             *
+      *                                                               *
+      *  Calls     : SRIFTC - Write record to GLIFTCPD.               *
+      *            : SRMERD - Send message to Meridian.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR
+      *
+      ** Read all records on the Customer Fees Charge File and select
+      *  record with status equal to authorized 'A'.
+      *
+     C                     READ GLCHRGL2                 80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+     C           CHSTAT    IFEQ 'A'                        Status=Authoris
+      *
+      ** Only process records which has it Action date greater than
+      *  the next working Days.
+      *
+      ** Action Date is equal to the 'Next Calculation Date' plus
+      *  the 'Number of Working Days' defined on the TOF ICD file.
+      *
+     C           TQIFNB    ADD  CHNCDA    WWACTD  50
+      *
+     C           WWACTD    IFLT BJDNWD
+      *
+      ** Access Fee Type file to determine if this record has a
+      *  Fee Processing Type equal to 'PP'.  Only process records
+      *  with Fee Processing Type equal to 'PP'
+      *
+     C                     MOVE *BLANKS   WWPRTP  2
+      *
+     C                     MOVE CHFTYP    KWFETP
+     C                     MOVE CHGROU    KWCHGR
+      *
+     C           KWFEE     CHAINSDCFTPL0             81
+      *
+     C           *IN81     IFEQ *OFF
+     C           F1RECI    ANDNE'*'
+      *
+     C           F1PRTP    IFNE '  '                                                          202538
+     C                     MOVELF1PRTP    WWPRTP
+      *
+     C                     ELSE
+      *
+     C                     MOVE CHFTYP    KWFETP
+     C                     MOVE *BLANKS   KWCHGR
+      *
+     C           KWFEE     CHAINSDCFTPL0             82
+      *
+     C           *IN82     IFEQ *OFF
+     C           F1RECI    ANDNE'*'
+      *
+     C                     MOVELF1PRTP    WWPRTP
+      *
+     C                     ELSE
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'SDCFTPPD'DBFILE    P
+     C                     MOVE CHFTYP    DBKEY     P
+     C                     MOVEL'GL1933'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF                           F1PRTP<>'  '                       202538
+      *                                                                                       202538
+     C                     ENDIF
+      *
+     C           WWPRTP    IFEQ 'PP'
+      *
+      ** Write a record in the Fees to be Calculated file.
+      *
+     C                     EXSR SRIFTC
+      *
+      ** If No error on adding a record to GLIFTCPD file then
+      ** amend the status to 'C' to indicate that calculation have
+      *  been requested.
+      *
+     C           *IN85     IFEQ *OFF
+     C                     MOVE 'Y'       WWFUPD           Rec written
+     C                     MOVEL'C'       CHSTAT           Calc Requested
+      *
+     C                     UPDATGLCHRGD0                   Update Status
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ GLCHRGL2                 80
+      *
+     C                     ENDDO
+      *
+      ** Check if any records have been written to file GLIFTCPD.
+      *  If at least one record have been written then call program
+      *  GL1933B to format and send a header message with
+      *  BENCHFEESRQS to Meridian to signal to TOF that fees are ready
+      *  ready to recieve information.
+      *
+     C           WWFUPD    IFEQ 'Y'                        Rec written
+     C                     EXSR SRMERD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIFTC - Write record to Fees to be Calculated File.         *
+      *                                                               *
+      *  Called By : SRMAIN Main Processing                           *
+      *                                                               *
+      *  Calls     : SRIPOP Initialise and Populate fields            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRIFTC    BEGSR
+      *
+      ** Check if a record already exist for this Charge Reference
+      *  on the Fees to be calculated file.  If a record exist then
+      *  replace it by this new one.
+      *
+     C                     Z-ADDCHREFE    KWCHRE
+      *
+     C           KWIFTC    CHAINGLIFTCL2             83
+      *
+     C           *IN83     IFEQ *OFF
+     C                     EXSR SRIPOP
+     C                     UPDATGLIFTCD0               85
+     C                     ELSE
+     C                     EXSR SRIPOP
+     C                     WRITEGLIFTCD0               85
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRIPOP - Initialise and Populate the fields in the Fees      *
+      *           to be Calculated File.                              *
+      *                                                               *
+      *  Called By : SRIFTC                                           *
+      *                                                               *
+      *  Calls     : None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRIPOP    BEGSR
+      *
+      ** Initialise all the fields in file GLIFTCPD.
+      *
+     C                     Z-ADD0         IFCHRE           Charge Referene
+     C                     MOVE *BLANKS   IFCNUM           Customer No
+     C                     MOVE *BLANKS   IFPTFR           Portolio Ref
+     C                     Z-ADD0         IFPCDA           Prev Calc Date
+     C                     Z-ADD0         IFTCDA           This Calc Date
+     C                     MOVE *BLANKS   IFCCCY           Charging Ccy
+     C                     MOVE *BLANKS   IFBASP           Basis 4 Port Vl
+     C                     Z-ADD0         IFDAYM           Days in Month
+     C                     Z-ADD0         IFMONQ           Month in Quarte
+     C                     Z-ADD0         IFPERF           Perf During Prd
+     C                     Z-ADD0         IFBENC           Benchmark 4 Prd
+     C                     MOVE *BLANKS   IFPCCY           Portfolio Ccy
+     C                     Z-ADD0         IFPVAL           Portfolio Value
+     C                     MOVE *BLANKS   IFRCVT           Infor Recvd TOF
+     C                     MOVE *BLANKS   IFCALC           Fees Calculated
+     C                     MOVE *BLANKS   IFSETT           Fees Settled
+      *
+      ** Populate all the fields in file GLIFTCPD.
+      *
+      ** Data from GLCHRGPD
+     C                     Z-ADDCHREFE    IFCHRE
+     C                     MOVELCHCNUM    IFCNUM
+     C                     MOVELCHPORT    IFPTFR
+     C                     Z-ADDCHSLSD    IFPCDA
+     C                     Z-ADDCHNCDA    IFTCDA
+     C                     MOVELCHCCY     IFCCCY
+      *
+      ** Data from SDCFTPPD
+     C                     MOVELF1BASP    IFBASP
+     C                     Z-ADDF1DAYM    IFDAYM
+     C                     Z-ADDF1MONQ    IFMONQ
+      *
+      ** Data from TOF
+     C                     Z-ADD*ZEROS    IFPERF
+     C                     Z-ADD*ZEROS    IFBENC
+     C                     MOVE *BLANKS   IFPCCY
+     C                     Z-ADD*ZEROS    IFPVAL
+      ** Default values.
+     C                     MOVE 'N'       IFRCVT
+     C                     MOVE 'N'       IFCALC
+     C                     MOVE 'N'       IFSETT
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMERD - Call program GL1933B to Send a message header to    *
+      *           Meridian to signal to TOF that fees are ready to    *
+      *           receive information.                                *
+      *                                                               *
+      *  Called By : SRMAIN Main Processing                           *
+      *                                                               *
+      *  Calls     : GL1933B                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMERD    BEGSR
+      *
+     C                     CALL 'GL1933B'
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *                                                               *
+      *   Called by : Main processing                                 *
+      *                                                               *
+      *   Calls     : None.                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE    P
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     MOVEL'GL1933'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set *IN98 according to date format
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+     C           KWFEE     KLIST
+     C                     KFLD           KWFETP  2        Fee Type
+     C                     KFLD           KWCHGR  2        Charge Group
+      *
+     C           KWIFTC    KLIST
+     C                     KFLD           KWCHRE  80       Charge Ref No
+      *
+      *
+      ** Access the TOF ICD physical file to retrieve the data for
+      *  Number of Processing days for Incentive Fees.
+      *
+     C                     READ SDTOFPD                  84
+      *
+     C           *IN84     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE
+     C                     MOVEL'SDTOFPD' DBFILE    P
+     C                     MOVE *BLANKS   DBKEY     P
+     C                     MOVEL'GL1933'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *
+      ** Initialise work fields.
+      *
+      ** Field used to determine if at least one record has been
+      *  written to GLIFTCPD.
+     C                     MOVE *BLANKS   WWFUPD  1
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREXIT - Exit program and return control to calling program  *
+      *                                                               *
+      * Calls     - None                                              *
+      * Called by - Main processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREXIT    BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2002

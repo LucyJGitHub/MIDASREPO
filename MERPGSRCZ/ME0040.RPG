@@ -1,0 +1,389 @@
+0001 H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME SWIFT Accounts Reorganisation')
+0002 F********************************************************************
+0003 F*                                                                  *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+0005 F*                                                                  *
+0006 F*     ME0040 -  S.W.I.F.T ACCOUNTS REORGANISATION                  *
+0007 F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG7351            Date 05Jun05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 065362             Date 23Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 101867             Date 10Mar97               *
+     F*                   CSW004            DATE 13NOV95              *
+0011 F*                                                                  *
+0012 F********************************************************************
+0012 F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG7351- Process closed records to prevent FOOB. Apply 194641*
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  065362 -  Reset SWIFT statement numbers at calendar year     *
+     F*            end rather than MIDAS year end.                    *
+     F*  101867 - If deleted record, do not add to trailer control.   *
+     F*           Applied 068212.                                     *
+     F*  CSW004 - 'MT940 Destination' field added to PF/SWACSSB       *
+     F*                                                               *
+0012 F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0029 F*WACS***IP  F      64 15AI     2 DISK                               CSW004
+     F***SWACS** IP  F      75 15AI     2 DISK                                         CSW004 CGL029
+     FSWACS   IP  F      85 15AI     2 DISK                                                   CGL029
+0030 FTABMS   IF  F      96 12AI     2 DISK
+     F/COPY WNCPYSRC,ME0040F001
+0031 FSWACNSA O   F      64            DISK                      A
+     F*WACNSB*O   F      64            DISK                      A        CSW004
+     F***SWACNSB O   F      75            DISK                      A                  CSW004 CGL029
+     FSWACNSB O   F      85            DISK                      A                            CGL029
+     FSWACNSC O   F      64            DISK                      A
+     F/COPY WNCPYSRC,ME0040F002
+0032 FME0040AUO   F     132            PRINTER
+0012 F**                                                                **
+0013 F**ID F  C  H  L    FUNCTION OF INDICATORS                         **
+0014 F**                                                                **
+0015 F**01            SWIFT ACCOUNTS FILE - HEADER RECORD               **
+0016 F**02                                - DETAIL RECORD               **
+0017 F**03                                - TRAILER RECORD              **
+0018 F**04                                - CATCH-ALL                   **
+0019 F**      20      FIRST CYCLE CONDITIONING INDICATOR                **
+0020 F**      30      RECORD TO BE DELETED                              **
+0021 F**      31      RECORDS DELETED TOTALS DO NOT AGREE               **
+0022 F**      32      INPUT TOTALS DO NOT AGREE                         **
+0023 F**      99      USED INSTANDARD SUBROUTINE ZSYSTEM                **
+0024 F**         U7   FILE CONTROLS OUT OF BALANCE                      **
+0025 F**         U7,U8DATABASE IN ERROR                                 **
+0026 F**           LR LAST RECORD INDICATOR                             **
+0027 F**                                                                **
+0028 F********************************************************************
+     E**  Copyright array
+     E                    CPY@    1   1 80
+     E********************************************************************
+0033 I**
+0034 I**   SWIFT ACCOUNTS FILE - HEADER RECORD
+0035 I**
+0036 ISWACS   NS  01   1 CH   2 CH
+0037 I                                        1   1 RECID
+0038 I                                        2   2 KEYID
+0039 I                                    P  17  190SIZE
+0040 I                                        1  64 SWACSH
+0041 I**
+0042 I**   SWIFT ACCOUNTS FILE - DETAIL RECORD
+0043 I**
+0044 ISWACS   NS  02   1 CD
+0045 I       OR        1 C*
+     I       OR        1 CC                                                                  BUG7351
+0046 I                                        1   1 RECID
+0047 I                                        2   70CNUM
+0048 I                                        8  10 CCY
+0049 I**********                             11  140ACODE                                     CGL029
+     I                                       11  140ACODQQ                                    CGL029
+0050 I                                       15  16 ACSEQ
+     I/COPY WNCPYSRC,ME0040I003
+0051 I                                    P  17  230CFBAL
+0052 I                                    P  24  260LSDAT
+0053 I                                    P  27  290NSDAT
+0054 I                                       30  390RACNO
+0055 I                                       40  40 SFREQ
+0056 I                                       41  420SDAY
+0057 I                                    P  43  450LSNO
+0058 I                                       46  460UPREP
+0059 I                                       47  47 DEMST
+     I/COPY WNCPYSRC,ME0040I004
+0060 I                                    P  58  600DTLC
+0061 I                                       61  61 CHTP
+0062 I                                    P  62  640TNLC
+0061 I                                       65  75 MT94                  CSW004
+0063 I*****                                   1  64 SWACSD                CSW004
+0063 I**********                              1  75 SWACSD                             CSW004 CGL029
+     I                                       76  850ACODE                                     CGL029
+     I                                        1  85 SWACSD                                    CGL029
+     I/COPY WNCPYSRC,ME0040I002
+0064 I**
+0065 I**   SWIFT ACCOUNTS FILE - TRAILER RECORD
+0066 I**
+0067 ISWACS   NS  03   1 CT
+0068 I                                        1   1 RECID
+0069 I                                        2   8 KYID
+0070 I                                    P  17  190NORE
+0071 I                                    P  20  220NORD
+0072 I                                    P  59  610DTLC
+0073 I                                    P  62  640TNLC
+0074 I**
+0075 I**   SWIFT ACCOUNTS FILE - CATCH-ALL
+0076 I**
+0077 ISWACS   NS  04
+0078 I*
+0079 I*
+0080 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+0081 I*
+0082 ITABMS   NS  05   2 C0   3 C1  12 C1
+0083 I       AND      13 C0
+0084 I                                        1   1 RECI
+0085 I                                        2   30RECT
+0086 I                                       12  130RCDE
+0087 I                                       14  66 TITL
+0088 I                                       67  67 DATF
+0089 I                                       68  700DFBR
+0090 I                                       74  74 MODI1
+0091 I                                       75  75 MODI2
+0092 I                                       76  76 MODI3
+0093 I                                    P  77  790RUND
+0094 I                                       80  86 RUNA
+     I                                       85  860@CURYR                065362
+0095 I                                       87  870SFLG
+0096 I                                    P  90  920LCD
+0097 I                                       93  93 CHTP
+0098 I                                    P  94  960TNLU
+0099 I**
+0100 I*    TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.
+0101 I*
+0102 ITABMS   NS  07   1 CD   2 C0   3 C1
+0103 I       AND      12 C1  13 C1
+0104 I                                        1   1 RECI
+0105 I                                        2   30RECT
+0106 I                                       12  130RCDE
+0107 I                                       14  16 BCCY
+0108 I                                       17  19 BCYL
+0109 I                                       20  22 HOCY
+0110 I**********                             23  280HEAD                                      CSD027
+0110 I                                       23  28 HEAD                                      CSD027
+0111 I                                    P  29  310APDA
+0112 I                                       35  35 APFQ
+0113 I                                    P  36  380LOGS
+0114 I                                       39  40 CUZR
+0115 I                                    P  41  430DNWD
+0116 I                                       44  460BVLP
+0117 I                                       47  49 LOCY
+0118 I                                       50  510FDAY
+0119 I                                       52  52 ACLD
+0120 I                                       53  53 MBIN
+0121 I                                    P  54  560EOYD
+0122 I                                       86  86 ISAV
+0123 I                                    P  87  890LLOG
+0124 I                                    P  90  920LCD
+0125 I                                       93  93 CHTP
+0126 I                                    P  94  960TNLU
+0127 I**
+0128 I**   TABLE FILE - CATCH-ALL
+0129 I**
+0130 ITABMS   NS  06
+0131 I**   LOCAL DATA AREA
+0132 ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *                                                                   065362
+      * next working day ddmmmyy                                          065362
+     I@NWDAT      DS                                                      065362
+     I                                        6   70@NWDYR                065362
+     I/COPY WNCPYSRC,ME0040I001
+     C**
+     C** Reference Copyright Array
+     C**
+     C                     MOVEACPY@      CPY@@   1
+0137 C**
+0138 C**   FIRST CYCLE PROCESSING
+0139 C   20                GOTO ENDFC
+0140 C                     SETON                     20
+0141 C**
+0142 C**   INITIALISE FIELDS USED TO COUNT RECORD TOTALS
+0143 C                     Z-ADD0         ITOT    50
+0144 C                     Z-ADD0         DELTOT  50
+0145 C                     Z-ADD0         OTOT    50
+0146 C**
+0147 C**   SET UP FIELDS FOR OUTPUT
+0148 C                     Z-ADD0         ZERO5   50
+0149 C                     Z-ADD1         ONE     50
+0150 C**   SET UP FIELDS TO HANDLE DATABASE ERRORS
+0151 C                     MOVE '        'BLAN16 16
+0152 C                     MOVEL'        'BLAN16
+0153 C                     MOVE BLAN16    DBKEY
+0154 C                     MOVELBLAN16    DBKEY
+0155 C                     MOVE '     '   DBFILE
+0156 C                     MOVE 'ME0040  'DBPGM
+0157 C                     Z-ADD0         DBASE
+0158 C**
+0159 C**   ACCESS INSTALLATION CONTROL DATA RECORD 1 FOR TITLE
+0160 C**   AND DATE FORMAT
+0161 C                     EXSR ZSYSTM
+0162 C   99                SETON                     U7U8LR
+0163 C   99                Z-ADD1         DBASE
+0164 C                     MOVEL'TABMS'   DBFILE
+0165 C   99                MOVELZTABKY    DBKEY
+0166 C   99                GOTO END
+0167 C*
+0168 C*    ACCESS ICD2 FOR DATE OF NEXT WORKING
+0169 C*    AND END-OF-YEAR DATE
+0170 C*
+0171 C                     MOVE '11'      ZTABKY
+0172 C           ZTABKY    CHAINTABMS                99
+0173 C   99
+0174 CORN07                SETON                     U7U8LR
+0175 C   U8                Z-ADD02        DBASE            * DB ERROR 02 *
+0176 C   U8                MOVELZTABKY    DBKEY
+0177 C   U8                GOTO END
+0178 C*
+     C                     CALL 'ZDATE2'                                  065362
+     C                     PARM DNWD      ZDAYNO  50                      065362
+     C                     PARM           ZDATFM  1                       065362
+     C                     PARM           ZDATE   60                      065362
+     C           @NWDAT    PARM           ZADATE  7                       065362
+     C           @NWDYR    COMP @CURYR               4040                 065362
+0179 C***********DNWD      COMP EOYD                 40                   065362
+0180 C**
+0181 C**   INCREMENT COUNT OF RECORDS ON S/SWACS AND RECORD OUTPUT
+0182 C           ITOT      ADD  1         ITOT
+0183 C           OTOT      ADD  1         OTOT
+0184 C**
+     C/COPY WNCPYSRC,ME0040C001
+0185 C           ENDFC     TAG                             ** ENDFC TAG **
+0186 C**
+0187 C**   PROCESSING FOR SWACS DETAIL RECORD
+0188 C  N02                GOTO END
+0189 C**
+0190 C**   INCREMENT COUNT OF RECORDS ON S/SWACS
+     C**   BUT IGNORE DELETED RECORD.                                     101867
+     C           RECID     IFNE '*'                                       101867
+0191 C           ITOT      ADD  1         ITOT
+     C                     ENDIF                                          101867
+0192 C**
+0193 C**   INCREMENT APPROPRIATE COUNT AND OUTPUT RECORDS NOT TO
+0194 C**   BE DELETED
+0195 C           RECID     COMP '*'                      30
+     C/COPY WNCPYSRC,ME0040C002
+0196 C   30      DELTOT    ADD  1         DELTOT
+0197 C   30                GOTO END
+0198 C**
+0199 C           OTOT      ADD  1         OTOT
+     C/COPY WNCPYSRC,ME0040C003
+0200 C**
+0201 C           END       TAG                             *** END TAG ***
+0202 C**
+0203 C**   LAST RECORD PROCESSING
+0204 CLR U7 U8             GOTO ENDLR
+0205 C**
+0206 C**   INCREMENT COUNT OF RECORDS ON S/SWACS
+0207 CLR         ITOT      ADD  1         ITOT
+0208 C**
+0209 C**   COMPARE RECORD COUNTS
+0210 CLR         NORD      COMP DELTOT               3131
+0211 CLR         NORE      COMP ITOT                 3232
+0212 CLR 31
+0213 COR 32                SETON                     U7
+0214 C**
+0215 C**   INCREMENT COUNT OF RECORDS OUTPUT
+0216 CLR         OTOT      ADD  1         OTOT
+0217 C**
+0218 CLR         ENDLR     TAG                             ** ENDLR TAG **
+0219 C********************************************************************
+0220 C**
+0221 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0222 C**
+0223 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0224 C**
+0225 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0226 C                     MOVEL'01      'ZTABKY 12
+0227 C                     MOVE '  10'    ZTABKY
+0228 C**
+0229 C           ZTABKY    CHAINTABMS                99    ON NOT THERE
+0230 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0231 C**
+0232 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0233 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0234 C**
+0235 C                     ENDSR
+0236 C**
+0237 C**
+0238 C********************************************************************
+0239 OSWACNSA DADD     01
+0240 O                         SWACSH    64
+0241 OSWACNSB DADD     02N30
+0242 O********                 SWACSD    64                               CSW004
+0242 O**********               SWACSD    75                                            CSW004 CGL029
+     O                         SWACSD    85                                                   CGL029
+0243 O                 40      ZERO5     45P
+     O/COPY WNCPYSRC,ME0040O001
+0244 OSWACNSC TADD     LRNU8
+0245 O                                    1 'T'
+0246 O                                    8 '9999999'
+0247 O                         OTOT      19P
+0248 O                         ZERO5     22P
+0249 OME0040AUT   0305 LR
+0250 O                                   16 'REFERENCE ME0040'
+0251 O                         TITL      89
+0252 O                                  111 'DATE'
+0253 O                         RUNA     119
+0254 O                                  125 'PAGE'
+0255 O                         PAGE     130
+0256 O        T     06 LR
+0257 O                                   67 'SWIFT ACCOUNTS REORGANIS'
+0258 O                                   86 'ATION FILE CONTROLS'
+0259 O        T  1     LR
+0260 O                                   67 '------------------------'
+0261 O                                   86 '-------------------'
+0262 O        T   1617 LR
+0263 O                                   35 'BEFORE UPDATE S/SWACS'
+0264 O                                   57 'CALCULATED'
+0265 O                                   79 'INPUT'
+0266 O        T     21 LR
+0267 O                                   35 '---------------------'
+0268 O        T     23 LR
+0269 O                                   38 'NUMBER OF DELETED RECORD'
+0270 O                                   51 'S ON FILE   -'
+0271 O                         DELTOT3   57
+0272 O                         NORD  3   79
+0273 O                       31         104 '*** DIFFERENCE ***'
+0274 O        T     27 LR
+0275 O                                   37 'TOTAL NUMBER OF RECORDS'
+0276 O                                   51 'ON FILE     -'
+0277 O                         ITOT  3   57
+0278 O                         NORE  3   79
+0279 O                       32         104 '*** DIFFERENCE ***'
+0280 O        T     28 LR
+0281 O                                   34 'AFTER UPDATE S/SWACN'
+0282 O        T     32 LR
+0283 O                                   34 '--------------------'
+0284 O        T     34 LR
+0285 O                                   38 'NUMBER OF RECORDS REMOVE'
+0286 O                                   51 'D FROM FILE -'
+0287 O                         DELTOT3   57
+0288 O        T  1     LR
+0289 O                                   37 'TOTAL NUMBER OF RECORDS'
+0290 O                                   51 'ON FILE     -'
+0291 O                         OTOT  3   57
+0292 O        T   40   LRNU8NU7
+0293 O                                   75 '*** END OF REPORT ***'
+0294 O        T   40   LR U7 U8
+0295 O                                   42 '*** REFERENCE'
+0296 O                         DBPGM     51
+0297 O                                   71 '-DATABASE ERROR AT'
+0298 O                         DBASE     74
+0299 O        T   41   LR U7 U8
+0300 O                                   37 'FILE NAME'
+0301 O                         DBFILE    43
+0302 O                                   48 'KEY'
+0303 O                         DBKEY     78
+0304 O        T   40   LR U7NU8
+0305 O                                   69 '*** FILE CONTROLS OUT OF'
+0306 O                                   81 ' BALANCE ***'
+**  CPY@
+(c) Finastra International Limited 2001

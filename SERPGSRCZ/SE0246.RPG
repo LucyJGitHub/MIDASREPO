@@ -1,0 +1,956 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE LUX Security Details 1')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS/ABS  EUROPEAN REPORTING                                *
+      *                                                               *
+      *  SE0246 - LUX Security Details 1                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG11848           Date 06Aug05               *
+      *                 CER001  *CREATE    Date 25Apr05               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG11848 - DB Error when enquiring a record                  *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *                                                               *
+      *****************************************************************
+      *  F U N C T I O N    O F    I N D I C A T O R S
+      *
+      *  (Screen field error indicators should start with 20 in
+      *   ascending order)
+      *
+      *  *IN15  -  On=Delete/Enquiry, Protect field.
+      *            Off=Insert/Amend, Underline field.
+      *  *IN25  -  Error on field #0PORE
+      *  *IN60  -  Extension record not found via update index
+      *  *IN61  -  Unable to allocate record via update index
+      *  *IN68  -  Error occured during DBF update
+      *  *IN69  -  SFLEND control
+      *  *IN75  -  General error indicator. Used to condition output
+      *            of error messages and redisplay screen.
+      *  *IN81  -  Call to DBERRCTL ended in error
+      *  *IN82  -  Plexus capital currency in error
+      *  *IN89  -  Extension record not found via retrieval index
+      *
+      *  *INKJ  -  F10 pressed, enable delete
+      *  *INKL  -  F12 pressed, exit
+      *  *INLR  -  End processing
+      *
+      *  *INU7  -  :    Data-base
+      *  *INU8  -  :  error control
+      *
+      *****************************************************************
+      *
+      *  S U B R O U T I N E     I N D E X
+      *
+      *   SRALOC- Routine to access record via update index
+      *   SRAMD - Routine to handle 'AMEND' action
+      *   SRBTOF - Routine to move blanks to file fields
+      *   SRCMSG- Routine to clear program's message queue
+      *   SRCOMP- Routine to compare before/after image of records
+      *   SRDBER- Routine to handle database errors
+      *   SRDEL - Routine to handle 'DELETE' action
+      *   SRDELR- Routine to delete a record
+      *   SRENQ - Routine to handle 'ENQUIRY' action
+      *   SRINIT- Routine to handle initial processing
+      *   SRINS - Routine to handle 'INSERT' action
+      *   SRINZ - Routine to initialize screen fields with defaults
+      *   SRFTOS- Routine to move file fields to screen fields
+      *   SRREC - Routine to access file via retrieve index
+      *   SRRTRN- Routine to set up return code for calling program
+      *   SRPORE- Routine to validate VXPORE
+      *   SRSAVE- Routine to save before image of record via DS
+      *   SRSCRN- Routine to handle screen and validation
+      *   SRSMSG- Routine to send messages to message subfile
+      *   SRSTOF- Routine to move screen fields to file fields
+      *   SRUPD - Routine to update file
+      *   SRWRT - Routine to write a new record to the file
+      *   SRVAL - Routine to control validation of each field
+      *
+      *****************************************************************
+      *
+      * - Changes to the existing code should be reduced to a minimum,
+      *   using separate subroutines in order to preserve the program
+      *   structure as defined in the skeleton, thus reducing
+      *   maintenance efforts.
+      *
+      * - Moreover, no functionality should be added unless specifically
+      *   required. In this case, it should be very well documented
+      *   in the header box.
+      *
+      * - The data structure used to save the before image of the
+      *   record is called SVRCD.
+      *   Only the length should be changed.
+      *
+      * - The data structure used to access the current record
+      *   via the DS name is called NWRCD.
+      *   Only the file name should be changed.
+      *
+      * - The files must have their record formats renamed to:
+      *      RTVIDX for the retrieve index
+      *      UPDIDX for the update index
+      *      SCREEN for the screen format
+      *   Any file/screen access will be done through the renamed format
+      *   so that these routines remain unchanged.
+      *
+      *----------------------------------------------------------------
+      *
+     FSESDX2L0IF  E           K        DISK
+     F            SECTYDF4                          KRENAMERTVIDX
+      ** Securities details              Retrieval index            Prefix VE.
+     FSESDX2PDUF  E           K        DISK         KCOMIT       A    UC
+     F            SECTYDF4                          KRENAMEUPDIDX
+      ** Securities details              Update index               Prefix VE.
+     FSE0246DFCF  E                    WORKSTN
+     F            SE0246F                           KRENAMESCREEN
+      *                                Display file               Prefix #0.
+      /EJECT
+      *----------------------------------------------------------------
+     E                    CPY@    1   1 80
+      /EJECT
+      *----------------------------------------------------------------
+     I           SDS
+      ** Get program name from PSDS
+     I                                     *PROGRAM WWPGM
+     I                                      244 253 WSID
+     I                                      254 263 WUSER
+      /EJECT
+      *----------------------------------------------------------------
+     IDLDA        DS                            256
+      ** Data structure for data-base processing
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      /EJECT
+      *----------------------------------------------------------------
+     IDSFDY     E DSDSFDY
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I@MMOD     E DSSDMMODPD
+      ** DUMMY RECORD FORMATS FOR ACCESS TO MIDAS MODULES DETAILS
+     INWRCD     E DSSESDX2PD
+      ** Current/previous master file fields
+      /EJECT
+      *----------------------------------------------------------------
+     ISVRCD       DS                             11
+      ** Stored master file fields
+      /EJECT
+      *----------------------------------------------------------------
+      ** Get the data structure passed from calling program
+      /COPY QWINDSRC,SE0040GDTA
+      /EJECT
+      *----------------------------------------------------------------
+      ** Get the data structure passed from calling program
+     IDATALX      DS                           1024
+     I                                        1  10 #1SESN
+     I                                       11  13 #1CCYI
+     I                                       14  16 #1INVT
+     I                                       17  26 #1ISSR
+     I                                       27  29 #1LICD
+     I                                      117 117 #1SCVI
+     I                                      124 129 #1ITDT
+     I                                      130 135 #1MATY
+     I                                      136 147 #1ISNO
+     I                                      201 202 #LCRTT
+     I                                      203 204 #LINCT
+     I                                      205 206 #LEXCD
+     I                                      207 207 #LOIDI
+     I                                      208 208 #LAPIE
+     I                                      209 209 #LPROT
+      *
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *****************************************************************
+      *
+      * Main processing
+      *
+      *****************************************************************
+      *
+      ** Execute initial routine
+      *
+     C                     EXSR SRINIT
+      *
+      ** Execute specific routine depending on action
+      *
+     C           ACTCDE    CASEQ'I'       SRINS
+     C           ACTCDE    CASEQ'D'       SRDEL
+     C                     ENDCS
+      *
+     C           ACTCDE    CASEQ'A'       SRAMD
+     C           ACTCDE    CASEQ'E'       SRENQ
+     C                     ENDCS
+      *
+      ** Execute routine to setup return code and exit program
+      *
+     C                     EXSR SRRTRN
+      *
+      /EJECT
+      *****************************************************************
+      *
+      * SRINS - Routine to handle 'INSERT' action
+      *
+      *****************************************************************
+      *
+     C           SRINS     BEGSR
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record found,
+      *
+     C           *IN89     IFEQ '0'
+      *
+      ** In case of 'Insert over Deleted Record'
+      ** Save before image
+      *
+     C                     EXSR SRSAVE
+      *
+     C                     ENDIF
+      *
+      ** Initialize fields
+      *
+     C                     EXSR SRINZ
+      *
+      ** Display and handle screen until no more errors or F12
+      *
+     C           *IN75     DOUEQ'0'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Bypass any further validation if previous DB error or F12
+      *
+     C           *IN69     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      ** Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      *
+      ** Validate input
+      *
+     C                     EXSR SRVAL
+      *
+      ** No errors
+      *
+     C           *IN75     IFEQ '0'
+      *
+      ** In case of 'Insert over Deleted Record'
+      *
+     C           *IN89     IFEQ '0'
+      *
+      ** Allocate record via update index
+      *
+     C                     EXSR SRALOC
+      *
+      ** If record on file and allocated, compare record images,
+      * else, screen will be redisplayed
+      *
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+      *
+     C                     EXSR SRCOMP
+      *
+      ** If images do not match, screen will be redisplayed with
+      ** relevant message
+      *
+     C           WWMTCH    IFEQ 'Y'
+      *
+      ** Move blanks to all file fields
+      *
+     C                     EXSR SRBTOF
+      *
+      ** Images match, move screen values to file fields
+      *
+     C                     EXSR SRSTOF
+      *
+      ** Update record
+      *
+     C                     EXSR SRUPD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Move screen fields to file fields
+      *
+     C                     EXSR SRSTOF
+      *
+      ** Write new record
+      *
+     C                     EXSR SRWRT
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRAMD - Routine to handle 'AMEND' action
+      *
+      *****************************************************************
+      *
+     C           SRAMD     BEGSR
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record not found,
+      ** set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'ER99920' ZAMSID
+     C                     EXSR SRSMSG
+      *
+      ** Protect fields for display
+      *
+     C                     MOVE '1'       *IN15
+      *
+      ** Display screen
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Execute DB error routine
+      *
+     C                     MOVELWWEXTF    WWBFIL
+     C                     Z-ADD2         WWBASE
+     C                     MOVELKSESN     WWBKEY
+     C                     EXSR SRDBER
+      *
+     C                     ELSE
+      *
+      ** Record found,
+      ** set file fields to screen fields and save before image
+      *
+     C                     EXSR SRFTOS
+     C                     EXSR SRSAVE
+      *
+      ** Display and handle screen until record can be allocated and
+      ** record on file and no errors left or F12 pressed
+      *
+     C           *IN61     DOUEQ'0'
+     C           *IN60     ANDEQ'0'
+     C           *IN75     ANDEQ'0'
+     C           *INKL     OREQ '1'
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Bypass any further validation if previous DB error or F12
+      *
+     C           *IN69     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+      *
+      ** Clear messages for redisplay
+      *
+     C                     EXSR SRCMSG
+      *
+      ** Validate input
+      *
+     C                     EXSR SRVAL
+      *
+      ** No errors
+      *
+     C           *IN75     IFEQ '0'
+      *
+      ** Allocate record via update index
+      *
+     C                     EXSR SRALOC
+      *
+      ** If record on file and allocated, compare record images,
+      ** else, screen will be redisplayed
+      *
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+      *
+     C                     EXSR SRCOMP
+      *
+      ** If images do not match, screen will be redisplayed with
+      ** relevant message
+      *
+     C           WWMTCH    IFEQ 'Y'
+      *
+      ** Images match, move screen values to file fields
+      *
+     C                     EXSR SRSTOF
+      *
+      ** Update record
+      *
+     C                     EXSR SRUPD
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRDEL - Routine to handle 'DELETE' action
+      *
+      *****************************************************************
+      *
+     C           SRDEL     BEGSR
+      *
+      ** Set indicators on for 'DELETE' mode to protect fields
+      *
+     C                     MOVE '1'       *IN15
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record not found,
+      ** set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'ER99916' ZAMSID
+     C                     EXSR SRSMSG
+      *
+      ** Execute DB error routine
+      *
+     C                     MOVELWWEXTF    WWBFIL
+     C                     Z-ADD3         WWBASE
+     C                     MOVELKSESN     WWBKEY
+     C                     EXSR SRDBER
+      *
+     C                     ELSE
+      *
+      ** Record found,
+      ** save before image
+      *
+     C                     EXSR SRSAVE
+      *
+      ** Allocate record via update index
+      *
+     C                     EXSR SRALOC
+      *
+      ** Disable F10 key
+      *
+     C                     MOVE '0'       *IN11
+      *
+      ** Record found, set file fields to screen fields
+      *
+     C                     EXSR SRFTOS
+      ** Display screen
+     C                     EXSR SRSCRN
+      *
+      ** If record on file and allocated, compare record images,
+      ** else, screen will be redisplayed
+      *
+     C           *IN60     IFEQ '0'
+     C           *IN61     ANDEQ'0'
+      *
+     C                     EXSR SRCOMP
+      *
+      ** If images do not match, screen will be redisplayed with
+      ** relevant message
+      *
+     C           WWMTCH    IFEQ 'Y'
+      *
+      ** Images match, delete record
+      *
+     C                     EXSR SRDELR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRENQ - Routine to handle 'ENQUIRY' action
+      *
+      *****************************************************************
+      *
+     C           SRENQ     BEGSR
+      *
+      ** Set indicators on for 'ENQUIRY' mode to protect fields
+      *
+     C                     MOVE '1'       *IN15
+      *
+      ** Check whether record exists
+      *
+     C                     EXSR SRREC
+      *
+      ** If record not found,
+      ** set DB error indicator, setup message, display screen, exit
+      *
+     C           *IN89     IFEQ '1'
+      *
+     C                     MOVE '1'       *IN69
+     C                     MOVEL'ER99917' ZAMSID
+     C                     EXSR SRSMSG
+      *
+      ** Display screen
+      *
+     C                     EXSR SRSCRN
+      *
+      ** Execute DB error routine
+      *
+     C**********           MOVELWWEXTF    WWBFIL                                            BUG11848
+     C**********           Z-ADD4         WWBASE                                            BUG11848
+     C**********           MOVELKSESN     WWBKEY                                            BUG11848
+     C**********           EXSR SRDBER                                                      BUG11848
+      *
+     C                     ELSE
+      *
+      ** Record found, set file fields to screen fields
+      *
+     C                     EXSR SRFTOS
+      *
+      ** Display and handle screen
+      *
+     C                     EXSR SRSCRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRSMSG - Routine to send messages to message subfile.
+      *
+      *****************************************************************
+      *
+     C           SRSMSG    BEGSR
+      *
+     C           ZAMSGF    IFEQ *BLANKS
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     ENDIF
+     C                     CALL 'SNDERMSG'
+     C                     PARM WWPGM     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+      ** Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRCMSG - Routine to clear program's message queue.
+      *
+      *****************************************************************
+      *
+     C           SRCMSG    BEGSR
+      *
+     C                     CALL 'CLRERMSG'
+     C                     PARM WWPGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRREC - Routine to access file via retrieve index
+      *
+      *****************************************************************
+      *
+     C           SRREC     BEGSR
+      *
+     C           KSESN     CHAINRTVIDX               89
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRALOC - Routine to access record via update index
+      *
+      *****************************************************************
+      *
+     C           SRALOC    BEGSR
+      *
+     C           KSESN     CHAINUPDIDX               6061
+      *
+      ** If record not on file, setup message 'Record deleted'
+      *
+     C           *IN60     IFEQ '1'
+     C                     MOVEL'ER99918' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRUPD - Routine to update file.
+      *
+      *****************************************************************
+      *
+     C           SRUPD     BEGSR
+      *
+     C                     UPDATUPDIDX                 68
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRWRT - Routine to write a new record to the file.
+      *
+      *****************************************************************
+      *
+     C           SRWRT     BEGSR
+      *
+     C                     WRITEUPDIDX                 68
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRDELR - Routine to delete a record
+      *
+      *****************************************************************
+      *
+     C           SRDELR    BEGSR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRCOMP - Routine to compare before/after image of records
+      *
+      *****************************************************************
+      *
+     C           SRCOMP    BEGSR
+      *
+     C           SVRCD     IFEQ NWRCD
+     C                     MOVE 'Y'       WWMTCH  1
+     C                     ELSE
+     C                     MOVE 'N'       WWMTCH
+     C                     MOVEL'ER99919' ZAMSID
+     C                     EXSR SRSMSG
+      *
+      ** Use SETLL to release record lock
+      *
+     C           KSESN     SETLLUPDIDX
+      *
+      ** Set condition to redisplay screen
+      *
+     C                     MOVE '1'       *IN60
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRSAVE - Routine to save before image of record via DS
+      *
+      *****************************************************************
+      *
+     C           SRSAVE    BEGSR
+      *
+     C                     MOVELNWRCD     SVRCD
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRRTRN - Routine to set up return code for calling program
+      *
+      *****************************************************************
+      *
+     C           SRRTRN    BEGSR
+      *
+      ** DBF update error
+      *
+     C           *IN69     IFEQ '1'
+     C                     MOVE 'Y2U0004' W0RTN
+     C                     ELSE
+      *
+      ** Database / Window error
+      *
+     C           *IN68     IFEQ '1'
+     C                     MOVE 'USR0563' W0RTN
+     C                     ELSE
+      *
+      ** F12 pressed
+      *
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'USR0790' W0RTN
+     C                     ELSE
+      *
+      ** No errors
+      *
+     C                     MOVE *BLANKS   W0RTN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     CLOSESESDX2PD               99
+      *
+      ** Exit program
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRDBER - Routine to handle database errors
+      *
+      *****************************************************************
+      *
+     C           SRDBER    BEGSR
+      *
+      ** Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       DLDA
+     C           *LOCK     IN   DLDA
+     C                     MOVEL'SE0246'  DBPGM
+     C                     MOVE WWBFIL    DBFILE
+     C                     MOVE WWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  DLDA
+      *
+      ** Set on data-base error indicators
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *IN69
+      *
+      ** Dump program
+      *
+     C                     DUMP
+      *
+      ** Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'             81
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRSCRN - Routine to handle screen and validation
+      *
+      *****************************************************************
+      *
+     C           SRSCRN    BEGSR
+      *
+      ** Display messages
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Display main screen
+      *
+     C                     EXFMTSCREEN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * The routines that can be changed start here...
+      *
+      * SRVAL - Routine to control validation of each field.
+      *
+      *****************************************************************
+      *
+     C           SRVAL     BEGSR
+      *
+      ** Initialize error condition indicators
+      *
+     C                     MOVE '0'       *IN75
+     C                     MOVEA'0000000' *IN,23
+     C                     MOVEA'00'      *IN,30
+      *
+     C                     EXSR SRPORE
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRPORE - Routine to validate VXPORE
+      *
+      *****************************************************************
+      *
+     C           SRPORE    BEGSR
+      *
+      ** Validate field
+      *
+     C           #0PORE    IFEQ *BLANKS
+     C                     MOVE 'N'       #0PORE
+     C                     ELSE
+      *
+     C           #0PORE    IFNE 'Y'
+     C           #0PORE    ANDNE'N'
+     C                     MOVE '1'       *IN75
+     C                     MOVE '1'       *IN25
+     C                     MOVE 'ERM4003' ZAMSID
+     C                     EXSR SRSMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRINZ - Routine to initialize screen fields with defaults
+      *
+      *****************************************************************
+      *
+     C           SRINZ     BEGSR
+      *
+     C                     MOVE *BLANKS   #0PORE
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRFTOS - Routine to move file fields to screen fields
+      *
+      *****************************************************************
+      *
+     C           SRFTOS    BEGSR
+      *
+     C                     MOVE VXPORE    #0PORE
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRSTOF - Routine to move screen fields to file fields
+      *
+      *****************************************************************
+      *
+     C           SRSTOF    BEGSR
+      *
+      ** Move key field to file field
+      *
+     C                     MOVE KSESN     VXSESN
+      *
+      ** Move data fields to file fields
+      *
+     C                     MOVE #0PORE    VXPORE
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRINIT - Routine to handle initial processing
+      *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Get parameters from calling program
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RTNCDE 10
+     C                     PARM           ACTCDE  1
+     C                     PARM           DATALX
+     C                     PARM           W0RTN   7
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+      ** Setup key values using transaction data passed from caller
+      *
+     C           *LIKE     DEFN VXSESN    KSESN
+     C                     MOVE #1SESN    KSESN
+      *
+      ** Redefine data-base error fields for program
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBKEY     WWBKEY
+     C           *LIKE     DEFN DBASE     WWBASE
+      *
+      ** Setup file value used in database error during access to
+      ** retrieval index
+      *
+     C           *LIKE     DEFN DBFILE    WWEXTF
+     C                     MOVEL'TRADSDX4'WWEXTF
+      *
+      ** Initialise error indicators
+      *
+     C                     MOVEA'0000000' *IN,23
+     C                     MOVE '0'       *IN75
+      *
+      ** CALL ACCESS PROGRAM FOR MIDAS MODULES DETAILS
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           @MMOD     PARM @MMOD     DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDMMODPD'WWBFIL
+     C                     MOVEL'99'      WWBASE
+     C                     MOVEL@OPTN     WWBKEY
+     C                     EXSR SRDBER
+     C                     ENDIF
+      *
+     C           BGLRIN    IFNE 'Y'
+     C                     MOVE *BLANKS   W0RTN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ELSE
+     C                     OPEN SESDX2PD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *
+      * SRBTOF - Routine to move blanks to file fields
+      *
+      *****************************************************************
+      *
+     C           SRBTOF    BEGSR
+      *
+      ** Move blanks to file fields
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2005

@@ -1,0 +1,96 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SD FATCA Indicia Search Tool Enq and Rept')     */
+/*********************************************************************/
+/*       Includes MD025277                                           */
+/*                                                                   */
+/*       Midas - Standing Data                                       */
+/*                                                                   */
+/*       SDC000733 - Midas SD FATCA Indicia Search Tool Enq and Rept */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027682           Date 28Aug14              */
+/*                      MD026703           Date 12May14              */
+/*                      CGL132  *CREATE    Date 01May13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD027682 - Reporting Type is not Reflected During           */
+/*                  Information and Update Mode in USIT.             */
+/*                  Apply Fix MD028682                               */
+/*       MD026703 - Trigger issues with SDFTCSPD                     */
+/*       CGL132 - FATCA Phase 1 - Customers' Identification and      */
+/*                Classification - Master                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Determine full DPLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CLRPFM     (SDFCLDPD)                                                    /* MD028682 */
+             MONMSG     MSGID(CPF2105)                                                /* MD028682 */
+/* Call Report Program */
+             CALL       PGM(SD000733) PARM(&MODE)
+ 
+             IF         COND(&MODE *NE 'I') THEN(DO)
+                DLTOVR     FILE(SDFTCSPD) LVL(*JOB)
+                DLTOVR     FILE(SDFTNHPD) LVL(*JOB)
+                TRIGZONE   FILE(SDFTCSPD) ACTION(*RMVTRIG)                            /* MD026703 */
+                CPYF       FROMFILE(SDFCB2PD) TOFILE(SDFTCSPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+                CPYF       FROMFILE(SDFNB2PD) TOFILE(SDFTNHPD) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ /* Refresh Backup */                                                                 /* MD028682 */
+                CPYF       FROMFILE(SDFTCSPD) TOFILE(&DPLIB/SDFCBKPD) +
+                           MBROPT(*REPLACE)                                           /* MD028682 */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                             /* MD028682 */
+                CPYF       FROMFILE(SDFTNHPD) TOFILE(&DPLIB/SDFNBKPD) +
+                           MBROPT(*REPLACE)                                           /* MD028682 */
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                             /* MD028682 */
+ /**********    CALL       PGM(GOC0100) PARM('GZSDFTCSPD')              */   /* MD026703 MD028682 */
+ /**********    TRIGZONE   FILE(SDFTCSPD) ACTION(*ADDTRIG)              */   /* MD026703 MD028682 */
+                OVRDBF     FILE(SDFTCSPD) TOFILE(SDFCB2PD) +
+                             OVRSCOPE(*JOB) SHARE(*YES)
+                OVRDBF     FILE(SDFTNHPD) TOFILE(SDFNB2PD) +
+                             OVRSCOPE(*JOB) SHARE(*YES)
+                CALL       PGM(GOC0100) PARM('GZSDFTCSPD')                            /* MD028682 */
+                TRIGZONE   FILE(SDFTCSPD) ACTION(*ADDTRIG)                            /* MD028682 */
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000733 Midas SD FATCA Indicia +
+                          Search Tool +
+                          ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+END:
+             ENDPGM

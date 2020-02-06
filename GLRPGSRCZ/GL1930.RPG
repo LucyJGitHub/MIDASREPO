@@ -1,0 +1,1195 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Reconciliation Customer Fees Files')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1930 - Reconciliation of Customer Fees Files               *
+      *                                                               *
+      *  Function:  This program checks whether any record deleted    *
+      *  (COB)      on all files and can if necessary reactivate this *
+      *             one.                                              *
+      *                                                               *
+      *  Called By: GLC1930 - Reconciliation of Customer Fees Files   *
+      *                       Control                                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Prev Amend No. CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+     FSDCFTPL2UF  E           K        DISK         KINFSR *PSSR
+      ** Customer Service Fee Types file
+      *
+     FSDCFTPL1IF  E           K        DISK         KINFSR *PSSR
+      **  Customer Service Fee Types file
+      *
+     F            SDCFTPD0                          KRENAMESDCFTPXX
+      *
+     FSDVATCL0UF  E           K        DISK         KINFSR *PSSR
+      ** Customer Service VAT Code file
+      *
+     FSDCGFRL0IF  E           K        DISK         KINFSR *PSSR
+      ** Customer Service Charge Group/fee Rate file
+      *
+     FSDRTCDL0UF  E           K        DISK         KINFSR *PSSR
+      ** Customer Service Rate Code file
+      *
+     FGLCHRGL4IF  E           K        DISK         KINFSR *PSSR
+      ** Customer Fees Charges
+      *
+     FGLFEACL2IF  E           K        DISK         KINFSR *PSSR
+      ** Fees Accrued file
+      *
+     FGLOTSTL4IF  E           K        DISK         KINFSR *PSSR
+      ** Fees Outstanding Settlements files
+      *
+     FSDFCTLL0UF  E           K        DISK         KINFSR *PSSR
+      ** Standing data controls by filename - update
+      *
+     FGL1930P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL1
+      **  Customer Service Fees control - Report
+      *
+     FGL1930AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+      ** Customer Service Fees control - Audit
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   50  - READE indicator                                       *
+      *   59  - Problem during deletion of Spec. Fee Defin.           *
+      *   60  - Print Fee Type/Charge Group, New Reason Descr.        *
+      *   61  - Error in Definition File                              *
+      *   62  - Error in Extention Details                            *
+      *   63  - Error in Fee Charge Group /Fee Rate Table             *
+      *   64  - Error due to Accruals not yet settled                 *
+      *   65  - Error due to Settlements not yet posted               *
+      *   66  - Print Fee Type/Charge Group , New reason descr.       *
+      *   67  - Error in Fee Type Definition File                     *
+      *   68  - Print Rate Code, reason of reactivation               *
+      *   69  - Error in Fee Charge Group/Fee Rate                    *
+      *   87  - CHAIN indicator                                       *
+      *   88  - READE indicator                                       *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Terminate Program                                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRCFTP - Check Fees Definition File                          *
+      *  SRFEER - Reactivate Fee Definition                           *
+      *  SRVATC - Check VAT Code Table                                *
+      *  SRVATR - Reactivate VAT code due to exist in Fee definition  *
+      *  SRRATC - Check Rate Codes                                    *
+      *  SRRATR - Reactivate the rate code                            *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  ZTNLU1 - Retrieve/Update Transaction Number of last update   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+     ISDCFTPXX
+      ** Rename fields of renamed format to avoid bad update.
+      *
+     I              F1RECI                          XXRECI
+     I              F1LCD                           XXLCD
+     I              F1LCTM                          XXLCTM
+     I              F1CHTP                          XXCHTP
+     I              F1TNLU                          XXTNLU
+     I              F1FETP                          XXFETP
+     I              F1CHGR                          XXCHGR
+     I              F1PRTP                          XXPRTP
+     I              F1NARR                          XXNARR
+     I              F1FECP                          XXFECP
+     I              F1RETR                          XXRETR
+     I              F1TAXE                          XXTAXE
+     I              F1IRAC                          XXIRAC
+     I              F1VATC                          XXVATC
+     I              F1VATA                          XXVATA
+     I              F1VATS                          XXVATS
+     I              F1AUTO                          XXAUTO
+     I              F1CCCY                          XXCCCY
+     I              F1MINA                          XXMINA
+     I              F1MAXA                          XXMAXA
+     I              F1INAC                          XXINAC
+     I              F1ACAC                          XXACAC
+     I              F1ACFR                          XXACFR
+     I              F1ACDM                          XXACDM
+     I              F1ACDT                          XXACDT
+     I              F1LADT                          XXLADT
+     I              F1CADT                          XXCADT
+     I              F1STGE                          XXSTGE
+     I              F1STFR                          XXSTFR
+     I              F1STDM                          XXSTDM
+     I              F1STDT                          XXSTST
+     I              F1LSTD                          XXLSTD
+     I              F1CSTD                          XXCSTD
+     I              F1ALNB                          XXALNB
+     I              F1IACC                          XXIACC
+     I              F1INFF                          XXINFF
+     I              F1CFAC                          XXCFAC
+     I              F1CFFG                          XXCFFG
+     I              F1VAIA                          XXVAIA
+     I              F1RETP                          XXRETP
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for GL1930P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for GL1930AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     IDSSDY     E DSDSSDY
+      ** Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     IDNATN       DS                              5
+      ** Data Area for Update Processing
+      *
+     I                                        1   50FNATN
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      ** Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0  - Access Program for Bank Details                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PDELT   1
+      *
+      ** Setup LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVE 'N'       WWOPEN  1
+      *
+      ** RCF processing for Audit file.
+      *
+     C                     EXSR RCFAU
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'GL1930'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Setup Key lists
+      *
+     C           KWFEE     KLIST
+     C                     KFLD           WKFETP
+      *
+     C           KWFECH    KLIST
+     C                     KFLD           WKFETP  2
+     C                     KFLD           WKCHGR  2
+      *
+      ** Report Work fields.
+      *
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     Z-ADD*ZERO     RCOFE   50
+     C                     Z-ADD*ZERO     RCOVA   50
+     C                     Z-ADD*ZERO     RCORC   50
+     C                     Z-ADD*ZERO     RQDLN1  30
+     C                     Z-ADD*ZERO     DIFLN1  30
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRCFTP - Check Fees Definition File                          *
+      *  SRVATC - Check VAT Code Table                                *
+      *  SRRATC - Check Rate Code Table                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                           *** SRPROC ***
+      *
+      ** Reset Counter of Reactivated Records (Counter Fee, Counter
+      ** VAT, Counter Rate)
+      *
+     C                     Z-ADD0         RCOFE
+     C                     Z-ADD0         RCOVA
+     C                     Z-ADD0         RCORC
+      *
+      ** 1) Check Fees definition File
+      *
+     C                     EXSR SRCFTP
+      *
+      ** Force Heading
+      *
+     C                     MOVE WWOPEN    WWFORC
+      *
+      ** 2) Check VAT code Table
+      *
+     C                     EXSR SRVATC
+      *
+      ** Force Heading
+      *
+     C                     MOVE WWOPEN    WWFORC
+      *
+      ** 3) Check Rate Code table
+      *
+     C                     EXSR SRRATC
+      *
+      ** If RCOFE, RCOVA or RCORC >< 0 then print trailer
+      *
+     C           RCOFE     IFNE 0
+     C           RCOVA     ORNE 0
+     C           RCORC     ORNE 0
+      *
+      ** Find Last sub header to print
+      *
+     C           RCOFE     IFNE 0
+     C                     MOVE *ON       *IN60
+     C                     ENDIF
+      *
+     C           RCOVA     IFNE 0
+     C                     MOVE *OFF      *IN60
+     C                     MOVE *ON       *IN66
+     C                     ENDIF
+      *
+     C           RCORC     IFNE 0
+     C                     MOVE *OFF      *IN60
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *ON       *IN68
+     C                     ENDIF
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+      *
+      ** Fee definition
+      *
+     C           *IN60     IFEQ *ON
+     C                     WRITESUBHFD
+     C                     ENDIF
+      *
+      ** VAT Code
+      *
+     C           *IN66     IFEQ *ON
+     C                     WRITESUBHVA
+     C                     ENDIF
+      *
+      ** Rate Code
+      *
+     C           *IN68     IFEQ *ON
+     C                     WRITESUBHRT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+     C                     CLOSEGL1930P1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCFTP
+      *****************************************************************
+      *                                                               *
+      *  SRCFTP - Check Fees Definition File                          *
+      *                                                               *
+      *  1) When main fee definition (charge Group is blank)          *
+      *     check whether other charge group is live                  *
+      *  2) check that fee type not used in extension files           *
+      *  3) check that fee type not used by the Fee Charge            *
+      *     Group/Fee Rate Table                                      *
+      *  4) check that fee type not used in Accruals files            *
+      *  5) check that fee type not used in Settlem. files            *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRFEER  - Reactivate Fee Definition                          *
+      *  ZTNLU1  - Retrieve/Update Transaction Number of last update  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFTP    BEGSR                           *** SRCFTP ***
+      *
+      ** Reset Printer file indicators : SUBHFD format
+      ** *IN60 : Print Fee type to reactivate and Cause Description
+      ** *IN61 :       Applicable for fee definition
+      ** *IN62 :       Applicable for Extension Cust/Port
+      ** *IN63 :       Applicable for Fee charge group/fee Rate tabl   e
+      ** *IN64 :       Accruals not settled
+      ** *IN65 :       Settlements not posted
+      ** Position in the beginning of Fee definition file
+      *
+     C                     MOVEA'0110000' *IN,59
+      *
+     C           *LOVAL    SETLLSDCFTPL2
+     C                     READ SDCFTPL2                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C           F1RECI    IFNE 'D'
+      *
+      ** Keep Flag to say to Previous Specific has been also checked
+      *
+     C           F1FETP    IFNE WWWFEE
+     C                     MOVE 'N'       WWPRBL  1
+     C                     MOVE F1FETP    WWWFEE  2
+     C                     ENDIF
+      *
+      ** If WWIND indicator is 'Y', then you can delete the record
+      *
+     C                     MOVE 'Y'       WWIND   1
+     C                     MOVE F1FETP    WKFETP
+     C                     MOVE F1CHGR    WKCHGR
+      *
+      ** 1) Read SDCFTPXX file to check if no other charges group is live
+      *
+     C           F1CHGR    IFEQ *BLANKS
+     C           WKFETP    SETLLSDCFTPXX
+     C           WKFETP    READESDCFTPXX                 50
+     C           *IN50     DOWEQ*OFF
+     C           XXRECI    IFEQ 'D'
+     C                     EXSR SRFEER
+     C                     ENDIF
+     C           WKFETP    READESDCFTPXX                 50
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** 2) Access extension file depending of FETP and CHGR
+      *
+     C                     MOVEA'101000'  *IN,60
+      *
+     C           WKCHGR    IFEQ *BLANKS
+     C           KWFEE     SETLLGLCHRGL4
+     C           KWFEE     READEGLCHRGL4                 88
+     C                     ELSE
+     C           KWFECH    SETLLGLCHRGL4
+     C           KWFECH    READEGLCHRGL4                 88
+     C                     ENDIF
+      *
+     C           *IN88     DOWEQ*OFF
+     C                     EXSR SRFEER
+     C           WKCHGR    IFEQ *BLANKS
+     C           KWFEE     READEGLCHRGL4                 88
+     C                     ELSE
+     C           KWFECH    READEGLCHRGL4                 88
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** 3) Access Fee Charge group/Rate Table using FETP and CHGR
+      *
+     C                     MOVEA'100100'  *IN,60
+      *
+     C           WKCHGR    IFEQ *BLANKS
+     C           KWFEE     SETLLSDCGFRL0
+     C           KWFEE     READESDCGFRL0                 88
+     C                     ELSE
+     C           KWFECH    SETLLSDCGFRL0
+     C           KWFECH    READESDCGFRL0                 88
+     C                     ENDIF
+      *
+     C           *IN88     DOWEQ*OFF
+     C           F4RECI    IFEQ 'D'
+     C                     EXSR SRFEER
+     C                     ENDIF
+      *
+     C           WKCHGR    IFEQ *BLANKS
+     C           KWFEE     READESDCGFRL0                 88
+     C                     ELSE
+     C           KWFECH    READESDCGFRL0                 88
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** 4) Access Fee Accrued file depending of FETP and CHGR
+      *
+     C                     MOVEA'100010'  *IN,60
+      *
+     C           WKCHGR    IFEQ *BLANKS
+     C           KWFEE     SETLLGLFEACL2
+     C           KWFEE     READEGLFEACL2                 88
+     C                     ELSE
+     C           KWFECH    SETLLGLFEACL2
+     C           KWFECH    READEGLFEACL2                 88
+     C                     ENDIF
+      *
+     C           *IN88     DOWEQ*OFF
+     C                     EXSR SRFEER
+      *
+     C           WKCHGR    IFEQ *BLANKS
+     C           KWFEE     READEGLFEACL2                 88
+     C                     ELSE
+     C           KWFECH    READEGLFEACL2                 88
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** 5) Access Fees Oustanding settlements file depending
+      **    FETP and CHGR.
+      *
+     C                     MOVEA'100001'  *IN,60
+      *
+     C           WKCHGR    IFEQ *BLANKS
+     C           KWFEE     SETLLGLOTSTL4
+     C           KWFEE     READEGLOTSTL4                 88
+     C                     ELSE
+     C           KWFECH    SETLLGLOTSTL4
+     C           KWFECH    READEGLOTSTL4                 88
+     C                     ENDIF
+      *
+     C           *IN88     DOWEQ*OFF
+     C           F7RECI    IFEQ 'D'
+     C                     EXSR SRFEER
+     C                     ENDIF
+     C           WKCHGR    IFEQ *BLANKS
+     C           KWFEE     READEGLOTSTL4                 88
+     C                     ELSE
+     C           KWFECH    READEGLOTSTL4                 88
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** In the Case of Default fee definition, Check if Deletion of
+      ** charge group fees has no problem
+      *
+     C           WWIND     IFEQ 'Y'
+     C           WKCHGR    ANDEQ*BLANKS
+     C           WWPRBL    ANDEQ'Y'
+     C                     MOVEA'1100000' *IN,59
+     C                     EXSR SRFEER
+     C                     ENDIF
+      *
+      ** Reactive the Fee type when authorised
+      *
+     C           PDELT     IFEQ 'Y'
+      *
+     C                     MOVEL'SDCFTPPD'KFLNM  10
+     C           KFLNM     CHAIN@AHREAU              17
+      *
+     C           WWIND     IFEQ 'Y'
+     C                     DELETSDCFTPL2
+     C                     SUB  1         AHNORC
+     C                     ELSE
+     C                     MOVE 'D'       F1RECI
+     C                     Z-ADDBJRDNB    F1LCD
+     C                     TIME           F1LCTM
+     C                     MOVE 'A'       F1CHTP
+     C                     EXSR ZTNLU1
+     C                     Z-ADDWWDSTN    F1TNLU
+     C                     UPDATSDCFTPD0
+     C                     SUB  1         AHNODL
+     C                     ADD  1         AHNOAM
+     C                     ENDIF
+      *
+     C                     UPDAT@AHREAU
+     C                     ENDIF
+      *
+     C                     ENDIF                                        ?
+      *
+      ** Read Next Record.
+      *
+     C                     READ SDCFTPL2                 89
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCFTP
+      *****************************************************************
+      *                                                               *
+      *  SRFEER - Reactivate Fee Definition due to ... Print Reason   *
+      *                                                               *
+      *  Called By: SRCFTP Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  RCFP1    - Subroutine to register P1 printer file via RCF    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFEER    BEGSR                           *** SRFEER ***
+      *
+     C                     MOVE 'N'       WWIND
+     C           F1CHGR    IFNE *BLANKS
+     C                     MOVE 'Y'       WWPRBL
+     C                     ENDIF
+      *
+      ** Open Printer file for RCF if it is'nt done before
+      *
+     C                     EXSR RCFP1
+      *
+      ** Fill Report field depending on Printer indicators
+      *
+     C           *IN61     IFEQ *ON
+     C                     MOVE XXFETP    RFETP1
+     C                     MOVE XXCHGR    RCHGR1
+     C                     ENDIF
+      *
+     C           *IN62     IFEQ *ON
+     C                     MOVELCHCNUM    RCNUM2    P
+     C                     MOVELCHPORT    RPTFR2    P
+     C                     ENDIF
+      *
+     C           *IN63     IFEQ *ON
+     C                     MOVELF4FETP    RFETP3    P
+     C                     MOVELF4CHGR    RCHGR3    P
+     C                     MOVELF4RTCD    RRTCD3    P
+     C                     MOVELF4DDPT    RDDPT3    P
+     C                     MOVELF4SESN    RSESN3    P
+     C                     MOVELF4INVT    RINVT3    P
+     C                     MOVELF4CCY     RCCCY3    P
+     C                     MOVELF4NOMA    RNOMA3    P
+     C                     MOVELF4INST    RINST3    P
+     C                     MOVELF4PCHO    RPCHO3    P
+     C                     MOVELF4RTCD    RRTCD3    P
+     C                     ENDIF
+      *
+     C           *IN64     IFEQ *ON
+     C                     MOVE F6BRCA    RBRCH4
+     C                     MOVE F6CNUM    RCNUM4
+     C                     MOVE F6PTFR    RPTFR4
+     C                     ENDIF
+      *
+     C           *IN65     IFEQ *ON
+     C                     MOVE F7BRCA    RBRCH5
+     C                     MOVE F7CNUM    RCNUM5
+     C                     MOVE F7PTFR    RPTFR5
+     C                     ENDIF
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     MOVE *ON       *IN60
+     C                     WRITEHEADP1
+     C                     WRITESUBHFD
+     C                     ENDIF
+      *
+     C           *IN60     IFEQ *ON
+     C                     MOVE F1FETP    RFETP
+     C                     MOVE F1CHGR    RCHGR
+     C                     ENDIF
+      *
+      ** Report Details
+      *
+     C                     WRITEDETLFD
+     C                     ADD  1         RCOFE
+     C                     MOVE *OFF      *IN60
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRVATC
+      *****************************************************************
+      *                                                               *
+      *  SRVATC - Check VAT Code Table                                *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRVATR   - Reactivate VAT Code                               *
+      *  ZTNLU1   - Retrieve/Update Transaction Number of last update *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVATC    BEGSR                           *** SRVATC ***
+      *
+      ** Change Sub Header and Error found in fee definition
+      *
+     C                     MOVEA'0000000' *IN,59
+     C                     MOVEA'11'      *IN,66
+      *
+     C           *LOVAL    SETLLSDVATCL0
+     C                     READ SDVATCL0                 89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C           F9RECI    IFNE 'D'
+      *
+      ** If WWIND indicator is 'Y', than you can delete the record
+      *
+     C                     MOVE 'Y'       WWIND   1
+     C                     MOVE F9VATC    WKVATC  2
+      *
+      ** Access to the Fee type file and check all fees with same VAT Code
+      *
+     C           *LOVAL    SETLLSDCFTPL2
+     C                     READ SDCFTPL2                 88
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+      ** If Fee type record exist or not deleted and same VAT Code
+      ** than reactivate VAT Code and execute audit
+      *
+     C           F1RECI    IFNE '*'
+     C           F1VATC    ANDEQWKVATC
+     C                     EXSR SRVATR
+     C                     ENDIF
+      *
+      ** Read next record
+      *
+     C                     READ SDCFTPL2                 88
+     C                     ENDDO
+      *
+      ** Reactive the Fee type is necessary
+      *
+     C           PDELT     IFEQ 'Y'
+      *
+     C                     MOVEL'SDVATCPD'KFLNM
+     C           KFLNM     CHAIN@AHREAU              17
+      *
+     C           WWIND     IFEQ 'Y'
+     C                     DELETSDVATCD0
+     C                     SUB  1         AHNORC
+     C                     ELSE
+     C                     MOVE 'D'       F9RECI
+     C                     Z-ADDBJRDNB    F9LCD
+     C                     TIME           F9LCTM
+     C                     MOVE 'A'       F9CHTP
+     C                     EXSR ZTNLU1
+     C                     Z-ADDWWDSTN    F9TNLU
+     C                     UPDATSDVATCD0
+     C                     SUB  1         AHNODL
+     C                     ADD  1         AHNOAM
+     C                     ENDIF
+      *
+     C                     UPDAT@AHREAU
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read Next Record.
+      *
+     C                     READ SDVATCL0                 89
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRVATR
+      *****************************************************************
+      *                                                               *
+      *  SRVATR - Reactivate VAT code due to exist in Fee definition  *
+      *                                                               *
+      *  Called By: SRVATC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  RCFP1    - Retrieve/Update Transaction Number of last update *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVATR    BEGSR                           *** SRVATR ***
+      *
+     C                     MOVE 'N'       WWIND
+      *
+      ** Open Printer file if required
+      *
+     C                     EXSR RCFP1
+      *
+      ** Write depends on Indicator   *IN66 / *IN67
+      *
+     C           *IN67     IFEQ *ON
+     C                     MOVE F1FETP    RFETP7
+     C                     MOVE F1CHGR    RCHGR7
+     C                     MOVELF1NARR    RNARR7    P
+     C                     ENDIF
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     MOVE *ON       *IN66
+     C                     WRITEHEADP1
+     C                     WRITESUBHVA
+     C                     ENDIF
+      *
+     C           *IN66     IFEQ *ON
+     C                     MOVE F9VATC    RVATC
+     C                     MOVELF9NARR    RNARR6
+     C                     ENDIF
+      *
+      ** Report Details
+      *
+     C                     WRITEDETLVA
+      *
+     C                     ADD  1         RCOVA
+     C                     MOVE *OFF      *IN66
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRATC
+      *****************************************************************
+      *                                                               *
+      *  SRRATC - Check Rate Codes                                    *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRRATR   - Reactivate Rate Codes                             *
+      *  ZTNLU1   - Retrieve/Update Transaction Number of last update *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRATC    BEGSR                           *** SRRATC ***
+      *
+      ** Reset sub-header indicator
+      *
+     C                     MOVEA'00'      *IN,66
+      *
+      ** Rate table
+      *
+     C                     MOVEA'11'      *IN,68
+      *
+      ** Read Rate Table
+      *
+     C           *LOVAL    SETLLSDRTCDL0                 89
+     C                     READ SDRTCDL0                 89
+     C           *IN89     DOWEQ*OFF
+      *
+     C           F3RECI    IFNE 'D'
+      *
+     C                     MOVE 'Y'       WWIND   1
+     C                     MOVE F3RTCD    WKRTCD  2
+     C                     MOVE F3CCY     WKCCY   3
+      *
+      ** Read All Record of the Charge group/Fee Rate file
+      *
+     C           *LOVAL    SETLLSDCGFRL0
+     C                     READ SDCGFRL0                 88
+     C           *IN88     DOWEQ*OFF
+      *
+     C           F4RECI    IFEQ 'D'
+     C           F4RTCD    ANDEQF3RTCD
+      *
+      ** Access Fee Default, to retrieve Currency
+      *
+     C                     MOVE F4FETP    WKFETP
+     C           WKFETP    CHAINSDCFTPL2             87
+     C           *IN87     IFEQ *OFF
+     C           F1RECI    ANDEQ'D'
+      *
+      ** If Fee definition is Live, Retrieve Charging Currency
+      *
+     C           F1CCCY    IFEQ WKCCY
+     C                     EXSR SRRATR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ SDCGFRL0                 88
+     C                     ENDDO
+      *
+      ** Reactive the fee type is necessary
+      *
+     C           PDELT     IFEQ 'Y'
+      *
+     C                     MOVEL'SDRTCDPD'KFLNM
+     C           KFLNM     CHAIN@AHREAU              17
+      *
+     C           WWIND     IFEQ 'Y'
+     C                     DELETSDRTCDL0
+     C                     SUB  1         AHNORC
+     C                     ELSE
+     C                     MOVE 'D'       F3RECI
+     C                     Z-ADDBJRDNB    F3LCD
+     C                     TIME           F3LCTM
+     C                     MOVE 'A'       F3CHTP
+     C                     EXSR ZTNLU1
+     C                     Z-ADDWWDSTN    F3TNLU
+     C                     UPDATSDRTCDD0
+     C                     SUB  1         AHNODL
+     C                     ADD  1         AHNOAM
+     C                     ENDIF
+      *
+     C                     UPDAT@AHREAU
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read Next Record.
+      *
+     C                     READ SDRTCDL0                 89
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRATR
+      *****************************************************************
+      *                                                               *
+      *  SRRATR - Reactivate the rate code                            *
+      *                                                               *
+      *  Called By: SRRATC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  RCFP1   - Subroutine to register P1 printer file via RCF     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRATR    BEGSR                           *** SRRATR ***
+      *
+     C                     MOVE 'N'       WWIND
+      *
+      ** Open Printer file if required
+      *
+     C                     EXSR RCFP1
+      *
+      ** Write depends on Indicator   *IN68 / *IN69
+      *
+     C           *IN69     IFEQ *ON
+     C                     MOVELF4FETP    RFETP9    P
+     C                     MOVELF4CHGR    RCHGR9    P
+     C                     MOVELF4RTCD    RRTCD9    P
+     C                     MOVELF4DDPT    RDDPT9    P
+     C                     MOVELF4SESN    RSESN9    P
+     C                     MOVELF4INVT    RINVT9    P
+     C                     MOVELF4CCY     RCCCY9    P
+     C                     MOVELF4NOMA    RNOMA9    P
+     C                     MOVELF4INST    RINST9    P
+     C                     MOVELF4PCHO    RPCHO9    P
+     C                     ENDIF
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     MOVE *ON       *IN68
+     C                     WRITEHEADP1
+     C                     WRITESUBHRT
+     C                     ENDIF
+      *
+     C           *IN68     IFEQ *ON
+     C                     MOVE F3RTCD    RRTCD8
+     C                     MOVE F3CCY     RCCY8
+     C                     MOVELF3NARR    RNARR8
+     C                     ENDIF
+      *
+      ** Report Details
+      *
+     C                     WRITEDETLRC
+      *
+     C                     MOVE *OFF      *IN68
+     C                     ADD  1         RCORC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing and *PSSR                         *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           *** SRAUDT ***
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C           RCOFE     IFEQ 0
+     C           RCOVA     ANDEQ0
+     C           RCORC     ANDEQ0
+     C                     WRITENODTLS
+      *
+      ** Normal audit exit
+      *
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** End Program and Return.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZTNLU1
+      *****************************************************************
+      *                                                               *
+      *  ZTNLU1 - Retrieve/Update Transaction Number of last update   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZTNLU1    BEGSR                           *** ZTNLU1 ***
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   PSEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+     C           WWOPEN    IFEQ 'N'
+     C                     OPEN GL1930P1
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   PSEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWOPEN
+     C                     WRITEHEADP1
+     C           *IN60     IFEQ *ON
+     C                     WRITESUBHFD                                 on
+     C                     ENDIF
+     C           *IN66     IFEQ *ON
+     C                     WRITESUBHVA
+     C                     ENDIF
+     C           *IN68     IFEQ *ON
+     C                     WRITESUBHRT
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** If New File to Reconcile, Force Header
+      *
+     C           WWFORC    IFEQ 'Y'
+     C                     WRITEHEADP1
+     C           *IN60     IFEQ *ON
+     C                     WRITESUBHFD
+     C                     ENDIF
+     C           *IN66     IFEQ *ON
+     C                     WRITESUBHVA
+     C                     ENDIF
+     C           *IN68     IFEQ *ON
+     C                     WRITESUBHRT
+     C                     ENDIF
+     C                     MOVE 'N'       WWFORC  1
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

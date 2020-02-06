@@ -1,0 +1,144 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC Clear PEA system files')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000123 - Clear PEA system files                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1015594          Date 20Nov12              */
+/*                      AR998122           Date 02Jul12              */
+/*                      CSC054   *CREATE   Date 23Feb12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1015594 - Files that needed to be copied from live system */
+/*                   should be cleared                               */
+/*       AR998122 - PEA clearing option clears both zones            */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PEAIND) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&PSYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)                               /*AR998122*/
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')                      /*AR998122*/
+             DCL        VAR(&PRTCD)    TYPE(*CHAR) LEN(7)   VALUE(' ')                  /*AR998122*/
+             DCL        VAR(&PERMS)    TYPE(*CHAR) LEN(50)  VALUE(' ')                  /*AR998122*/
+             DCL        VAR(&PFULLCK)  TYPE(*CHAR) LEN(7)   VALUE('Y')                  /*AR998122*/
+             DCL        VAR(&PZONE)    TYPE(*CHAR) LEN(10)  VALUE(' ')                  /*AR998122*/
+             DCL        VAR(&PSHTC)    TYPE(*CHAR) LEN(4)   VALUE(' ')                  /*AR998122*/
+             DCL        VAR(&PRDNB)    TYPE(*DEC)  LEN(5 0) VALUE(0)                    /*AR998122*/
+             DCL        VAR(&PDNWD)    TYPE(*DEC)  LEN(5 0) VALUE(0)                    /*AR998122*/
+             DCL        VAR(&PBCCY)    TYPE(*CHAR) LEN(3)   VALUE(' ')                  /*AR998122*/
+             DCL        VAR(&PNJOB)    TYPE(*DEC)  LEN(1 0) VALUE(0)                    /*AR998122*/
+             DCL        VAR(&DMLIBP) TYPE(*CHAR) LEN(10)                               /*AR1015594*/
+             DCLF       FILE(SCPEADPD)                                                 /*AR1015594*/
+ 
+/*/COPY SDCPYSRC,SDSVALDCL  */
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('SCC000123 - SC Clear PEA system files') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Get zone and create temporary sourcefile for UTWRTSQL program */                    /*AR998122*/
+                                                                                        /*AR998122*/
+             CALL       PGM(GOGETZONE) PARM(&PRTCD &PERMS &PFULLCK +
+                          &PZONE &PSHTC &PRDNB &PDNWD &PBCCY &PNJOB)                    /*AR998122*/
+                                                                                        /*AR998122*/
+             DLTF       FILE(QTEMP/RUNSQLSTM)                                           /*AR998122*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR998122*/
+             DLTF       FILE(QTEMP/RUNSQL)                                              /*AR998122*/
+             MONMSG     MSGID(CPF0000)                                                  /*AR998122*/
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UTWRTSQL')                                           /*AR998122*/
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)                                                /*AR998122*/
+                                                                                        /*AR998122*/
+/** Clear Period End Log File */
+ 
+/**********  CLRPFM     FILE(T_PEATRANS)                                             */ /*AR998122*/
+/**********  MONMSG     MSGID(CPF0000)                                               */ /*AR998122*/
+             CHGVAR     VAR(&STM_STR) VALUE('DELETE FROM T_PEATRANS +
+                          WHERE TRZONE =' *BCAT &QUOTE *TCAT &PZONE +
+                          *TCAT &QUOTE)                                                 /*AR998122*/
+                                                                                        /*AR998122*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')                           /*AR998122*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*AR998122*/
+             MONMSG     MSGID(CPD32CC)                                                  /*AR998122*/
+             MONMSG     MSGID(SQL0952) CMPDTA(CPA32B2)                                  /*AR998122*/
+ 
+/** Get PEA Indicator */
+/** also get MQ Queue Manager and Incoming Queue Name */
+ 
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'PEAIndicator' &SVAL1 +
+                          'PEAHandShakingQM' &SVAL2 +
+                          'PEAHandShakingIQ' &SVAL3 +
+                          'BrgMidasSystemPrefix' &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 +
+                          &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+ 
+             CHGVAR     VAR(&PEAIND) VALUE(%SST(&SVAL1 1 1))
+ 
+/** Send 'PEA Cleared' message */
+ 
+             IF         COND(&PEAIND *EQ 'Y') THEN(DO)
+ 
+             CHGVAR     VAR(&PSYS) VALUE(%SST(&SVAL4 1 2))
+             CHGVAR     VAR(&MQMGR) VALUE(%SST(&SVAL2 1 48))
+             CHGVAR     VAR(&MQUEUE) VALUE(%SST(&SVAL3 1 48))
+             CHGVAR     VAR(&DMLIBP) VALUE(&PSYS *CAT 'DMLIB')                         /*AR1015594*/
+                                                                                       /*AR1015594*/
+/** Kill Object Locks and triggers before clearing database */                         /*AR1015594*/
+                                                                                       /*AR1015594*/
+             SCKOBJLCK  LIB(&DMLIBP) JNAM(*ALL) JUSR(*ALL) LOCKST(*ALL)                /*AR1015594*/
+             RMVALLTRG  LIBRARY(&DMLIBP)                                               /*AR1015594*/
+                                                                                       /*AR1015594*/
+CLRDB:       RCVF    RCDFMT(QLIDOBJD)                                                  /*AR1015594*/
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(CLREND))                       /*AR1015594*/
+             IF         COND(&ODOBTP *EQ '*FILE' *AND &ODOBNM *NE +
+                          'SDBANKPD') THEN(DO)                                         /*AR1015594*/
+             CLRPFM     FILE(&ODOBNM)                                                  /*AR1015594*/
+             MONMSG     MSGID(CPF0000)                                                 /*AR1015594*/
+             ENDDO                                                                     /*AR1015594*/
+             GOTO       CMDLBL(CLRDB)                                                  /*AR1015594*/
+CLREND:                                                                                /*AR1015594*/
+             CHGVAR     VAR(&MSG) VALUE('PEA Cleared')
+ 
+             CALL       PGM(ZAMSGTOMQ) PARM(&RSVALRTNC &PSYS +
+                          &MQMGR &MQUEUE &MSG)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000123 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

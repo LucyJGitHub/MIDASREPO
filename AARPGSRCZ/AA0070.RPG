@@ -1,0 +1,1424 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Funds Transfer Transaction Audit list')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  AA0070 - Funds Transfer Transaction Audit List               *
+      *                                                               *
+      *  Function:  This program will list by branch and currency     *
+      *  (COB)      all payments itemising the customer, payment date,*
+      *             amount, charges, FX margin applied, and profit    *
+      *             centre code.                                      *
+      *                                                               *
+      *  Called By: AAC0070 - Funds Transfer Transction Audit List    *
+      *                       Control Program                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CFT032             Date 11Sep06               *
+      *                 CDL049             Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CGL029             Date 03Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             DATE 08FEB00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC001 *CREATE     Date 01FEB96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed PF/INPAYDD.                 *
+      *  175479 - Recompiled over changes in INPAYDD & OTPAYDD        *
+      *  CAC001 - Profit Centre Accounting Development:               *
+      *           New report program.                                 *
+      *                                                               *
+      *****************************************************************
+     FOTPAYL1 IF  E           K        DISK         KINFSR *PSSR
+      **  Outgoing Payments by branch and currency
+      *
+     FINPAYL1 IF  E           K        DISK         KINFSR *PSSR
+      **  Incoming Payments by branch and currency
+      *
+     FCQCOCL1 IF  E           K        DISK         KINFSR *PSSR
+      **  Cheques to be Collected by branch and currency
+      *
+     FCQPADL1 IF  E           K        DISK         KINFSR *PSSR
+      **  Cheques to be Paid by branch and currency
+      *
+     FCQPAC   IF  E           K        DISK         KINFSR *PSSR
+      **  Cheques to be Paid - Credit details only
+     F            CQPADDDF                          KIGNORE
+      *
+     FAA0070AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      **  Funds Transfer Transaction Audit Report
+      *
+     FAA0070P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      **  Funds Transfer Transaction Audit List
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   31  - No outgoing payments to report                        *
+      *   32  - No incoming payments to report                        *
+      *   33  - No cheques to be collected to report                  *
+      *   34  - No cheques to be paid to report                       *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *   38  - System level requested                                *
+      *                                                               *
+      *   41  - Outgoing payments records                             *
+      *   42  - Incoming payments records                             *
+      *   43  - Cheques to be collected records                       *
+      *   44  - Cheques to be paid records                            *
+      *                                                               *
+      *   50  - FX/Change Commission (S01494) feature is installed    *
+      *   51  - Vat Processing (S01499) feature is installed          *
+      *                                                               *
+      *   88  - Chain fail on LF/CQPAC                                *
+      *   89  - End of File                                           *
+      *                                                               *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SROTPY - Process Outgoing Payments                           *
+      *  SRINPY - Process Incoming Payments                           *
+      *  SRCQCO - Process Cheques to be Collected                     *
+      *  SRCQPD - Process Cheques to be Paid                          *
+      *                                                               *
+      *  SRREPT - Process Report Lines                                *
+      *  SRCHBR - Process a Change in Branch                          *
+      *  SRCHCY - Process a Change in Currency                        *
+      *  SRDREQ - Compute for Debit Currency Equivalent               *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SRRCFP - RCF Processing for P1 Report                        *
+      *  SRRCFA - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZDATE2 - Format a Day Number to Date Format                  *
+      *  ZEDIT  - Edit an Amount                                      *
+      *  ZSEDIT - Edit an Amount with Sign and Optional Commas        *
+      *  ZXRATE - Compute Cross Currency Exchange Rate and Multiply   *
+      *           Divide Indicator betweeen Two Currencies            *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      **  Array containing Copyright statement
+      *
+     E                    HTX     1   4 25
+      *
+      **  Array containing header text
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      /SPACE 3
+      *
+     ICQPACDDF
+      **  Rename fields similar to CQPADDD
+     I              BRCA                            BRCAPC
+     I              PRFC                            PRFCPC
+      *
+     I**********  DS                             24                                           CGL029
+     I            DS                             36                                           CGL029
+      **  Data structure for credit/debit party - may be a
+      **  2-digit nostro number or 10-digit retail a/c no.
+      *
+     I**********                              1  120CRPY                                      CGL029
+     I**********                              1  180CRPY                               CGL029 CSD027
+     I                                        1  18 CRPY                                      CSD027
+     I                                        1   20WCRNO
+     I                                        1  100WCRRE
+     I**********                             13  240DRPY                                      CGL029
+     I**********                             13  140WDRNO                                     CGL029
+     I**********                             13  220WDRRE                                     CGL029
+     I**********                             19  360DRPY                               CGL029 CSD027
+     I                                       19  36 DRPY                                      CSD027
+     I                                       19  200WDRNO                                     CGL029
+     I                                       19  280WDRRE                                     CGL029
+      *
+     ID#DTA       DS                            256
+      *  Calling parameter data structure for AOCCYCV0
+      *
+      *                                       From Currency & amount
+     I                                        1   3 D#FCCY
+     I                                    P   4  110D#FAMT
+      *                                       To Currency & amount
+     I                                       12  14 D#TCCY
+     I                                    P  15  220D#TAMT
+      *                                       Rate and multi/div ind.
+     I                                       23  23 I#MDIN
+     I                                    P  24  368I#RATE
+      *                                Output Rate and multi/div ind.
+      *                                       If no in rate
+     I                                       37  37 O#MDIN
+     I                                    P  38  508O#RATE
+      *
+     ILDA       E DSLDA                         256
+      *
+      **  Local data area for database error details
+      **  *LOCK IN LDA immediately before and OUT LDA immediately
+      **  after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      **  Data Area giving Installation Control Details
+      *
+     ISPOOL1      DS
+      **  File Information Data Structure for AA0070P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for AA0070AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISDBANK    E DSSDBANKPD
+      **  External data structure for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  External data structure for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  External data structure for Currency Details
+      *
+     ISCSARD    E DSSCSARDPD
+      **  External data structure for Switchable features details
+      *
+     IDSFDY     E DSDSFDY
+      **  First data structure for Access Programs, short DS
+      *
+     IDSSDY     E DSDSSDY
+      **  Second data structure for Access Programs, long DS
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      **  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      **  Process Outgoing Payments.
+      *
+     C                     EXSR SROTPY
+      *
+      **  Process Incoming Payments.
+      *
+     C                     EXSR SRINPY
+      *
+      **  Process Cheques to be Collected.
+      *
+     C                     EXSR SRCQCO
+      *
+      **  Process Cheques to be Paid.
+      *
+     C                     EXSR SRCQPD
+      *
+      **  Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  *PSSR  - Error control subroutine                *
+      *              AOBANKR0 - Bank details access object            *
+      *              AOSARDR0 - Switchable features access object     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR                           *** SRINIT ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQN   5
+     C                     PARM           PLEVL   1
+     C                     PARM           PENTY   3
+      *
+      **  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AA0070'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      **  Call Access Program for Bank Details - Title, Run Date and
+      **  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVEL'*FIRST'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Check System Date Format, DDMMYY (*IN98 off)
+      **                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN37
+     C                     ENDIF
+      *
+      **  System level requested.
+      *
+     C           PLEVL     IFEQ 'S'
+     C                     MOVE *ON       *IN38
+     C                     ENDIF
+      *
+      **  Define key list for LF/CQPAC
+      *
+     C           WKYPC     KLIST
+     C                     KFLD           PREF
+     C                     KFLD           WCQSQ
+      *
+      **  Initialise Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE 'N'       WOPEN   1
+     C                     MOVE *BLANKS   WCURF   2
+     C                     MOVE *BLANKS   WPRVF   2
+     C                     Z-ADD0         WCQSQ   20
+      *
+      **  Determine if FX/Change Commission feature is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*VERIFY' WOPTN
+     C                     PARM 'S01494'  WSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+     C                     MOVE '0'       *IN50
+      *
+      **  Return code other than '*NRF'
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           WRTCD     IFNE '*NRF'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SCSARDPD'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVELWSARD     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *ON       *IN50
+     C                     ENDIF
+      *
+      **  Determine if VAT Processing feature is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*VERIFY' WOPTN
+     C                     PARM 'S01499'  WSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+     C                     MOVE '0'       *IN51
+      *
+      **  Return code other than '*NRF'
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           WRTCD     IFNE '*NRF'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SCSARDPD'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELWSARD     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *ON       *IN51
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SROTPY
+      *****************************************************************
+      *                                                               *
+      *  SROTPY - Subroutine to process Outgoing Payments.            *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  SRREPT - Process Report Lines                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SROTPY    BEGSR                           *** SROTPY ***
+      *
+      **  Set current file to 'OP' for outgoing payments
+      *
+     C                     MOVE 'OP'      WCURF
+     C                     MOVE *ON       *IN41
+     C                     MOVE HTX,1     RHDTX
+     C                     SETOF                     424344
+      *
+      **  Read first record
+      *
+     C                     READ OTPAYL1                  89
+      *
+      **  If End of Records, seton no outgoing payments indicator
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *ON       *IN31
+     C                     ENDIF
+      *
+      **  Do While Not End of File.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      **  Process Report Lines
+      *
+     C                     EXSR SRREPT
+      *
+      **  Read next record.
+      *
+     C                     READ OTPAYL1                  89
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRINPY
+      *****************************************************************
+      *                                                               *
+      *  SRINPY - Subroutine to process Incoming Payments.            *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  SRREPT - Process Report Lines                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINPY    BEGSR                           *** SRINPY ***
+      *
+      **  Set current file to 'IP' for incoming payments
+      *
+     C                     MOVE 'IP'      WCURF
+     C                     MOVE *ON       *IN42
+     C                     MOVE HTX,2     RHDTX
+     C                     SETOF                     414344
+      *
+      **  Read first record
+      *
+     C                     READ INPAYL1                  89
+      *
+      **  If End of Records, seton no incoming payments indicator
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *ON       *IN32
+     C                     ENDIF
+      *
+      **  Do While Not End of File.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      **  Process Report Lines
+      *
+     C                     EXSR SRREPT
+      *
+      **  Read next record.
+      *
+     C                     READ INPAYL1                  89
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCQCO
+      *****************************************************************
+      *                                                               *
+      *  SRCQCO - Subroutine to process Cheques to be Collected.      *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  SRREPT - Process Report Lines                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCQCO    BEGSR                           *** SRCQCO ***
+      *
+      **  Set current file to 'CC' for cheques to be collected
+      *
+     C                     MOVE 'CC'      WCURF
+     C                     MOVE *ON       *IN43
+     C                     MOVE HTX,3     RHDTX
+     C                     SETOF                     414244
+      *
+      **  Read first record
+      *
+     C                     READ CQCOCL1                  89
+      *
+      **  If End of Records, seton no cheques to be collected indicator
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *ON       *IN33
+     C                     ENDIF
+      *
+      **  Do While Not End of File.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      **  Process Report Lines
+      *
+     C                     EXSR SRREPT
+      *
+      **  Read next record.
+      *
+     C                     READ CQCOCL1                  89
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCQPD
+      *****************************************************************
+      *                                                               *
+      *  SRCQPD - Subroutine to process Cheques to be Paid.           *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *  Calls    :  SRREPT - Process Report Lines                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCQPD    BEGSR                           *** SRCQPD ***
+      *
+      **  Set current file to 'CP' for cheques to be paid
+      *
+     C                     MOVE 'CP'      WCURF
+     C                     MOVE *ON       *IN44
+     C                     MOVE HTX,4     RHDTX
+     C                     SETOF                     414243
+      *
+      **  Read first record
+      *
+     C                     READ CQPADL1                  89
+      *
+      **  If End of Records, seton no cheques to be paid indicator
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE *ON       *IN34
+     C                     ENDIF
+      *
+      **  Do While NoOt End of File.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      **  Process Report Lines
+      *
+     C                     EXSR SRREPT
+      *
+      **  Read next record.
+      *
+     C                     READ CQPADL1                  89
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRREPT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By:  SROTPY - Process Outgoing Payments               *
+      *              SRINPY - Process Incoming Payments               *
+      *              SRCQCO - Process Cheques to be Collected         *
+      *              SRCQPD - Process Cheques to be Paid              *
+      *  Calls    :  SRCHBR - Process a Change in Branch              *
+      *              SRCHCY - Process a Change in Currency            *
+      *              SRDREQ - Compute for Debit Currency Equivalent   *
+      *              ZDATE2 - Format a Date                           *
+      *              ZEDIT  - Format an Amount                        *
+      *              ZSEDIT - Format an Amount with sign and commas   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR                           *** SRREPT ***
+      *
+      **  Set up corresponding curency, payment date, payment amount,
+      **  customer, and entry charges 1 to 8
+      *
+     C                     SELEC
+      *
+      **  Outgoing payments...
+      *
+     C           WCURF     WHEQ 'OP'
+     C                     MOVE PCCY      WCCY    3
+     C                     Z-ADDPVDT      WPDAT   50
+     C                     Z-ADDPYAM      WPAMT  130
+      *
+     C                     MOVE ORC1      RCNM1
+     C                     MOVE ORC2      RCNM2
+     C                     MOVE ORC3      RCNM3
+     C                     MOVE ORC4      RCNM4
+     C**********           MOVE *BLANKS   RCNM5                                               CFT032
+     C                     MOVE ORC5      RCNM5                                               CFT032
+      *
+      **  If pay currency is different from settle currency, convert
+      **  entry charges (which are in settle ccy) to pay currency
+      **  equivalent amounts
+      *
+     C           PCCY      IFNE SMCY
+     C                     MOVE SMCY      WFCCY
+     C                     MOVE PCCY      WTCCY
+      *
+     C                     Z-ADDTRCM      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM1
+      *
+     C                     Z-ADDCSTA      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM2
+      *
+     C                     Z-ADDSPCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM3
+      *
+     C                     Z-ADDCQCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM4
+      *
+     C                     Z-ADDMSCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM5
+      *
+     C                     Z-ADDTXCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM6
+      *
+     C                     Z-ADDOPCHCM    WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM7
+      *
+     C                     Z-ADDOPVATT    WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM8
+      *
+     C                     ELSE
+     C                     Z-ADDTRCM      WDUM1  110
+     C                     Z-ADDCSTA      WDUM2  110
+     C                     Z-ADDSPCH      WDUM3  110
+     C                     Z-ADDCQCH      WDUM4  110
+     C                     Z-ADDMSCH      WDUM5  110
+     C                     Z-ADDTXCH      WDUM6  110
+     C                     Z-ADDOPCHCM    WDUM7  110
+     C                     Z-ADDOPVATT    WDUM8  110
+     C                     ENDIF
+      *
+      **  Incoming payments...
+      *
+     C           WCURF     WHEQ 'IP'
+     C                     MOVE SMCY      WCCY
+     C                     Z-ADDSLDT      WPDAT
+     C                     Z-ADDSMAM      WPAMT
+      *
+     C                     MOVE BNC1      RCNM1
+     C                     MOVE BNC2      RCNM2
+     C                     MOVE BNC3      RCNM3
+     C                     MOVE BNC4      RCNM4
+     C                     MOVE BNC5      RCNM5
+      *
+      **  If settle currency is different from pay currency, convert
+      **  entry charges (which are in pay ccy) to settle currency
+      **  equivalent amounts
+      *
+     C           SMCY      IFNE PCCY
+     C                     MOVE PCCY      WFCCY
+     C                     MOVE SMCY      WTCCY
+      *
+     C                     Z-ADDTRCM      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM1
+      *
+     C                     Z-ADDADCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM2
+      *
+     C                     Z-ADDTLCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM3
+      *
+     C                     Z-ADDCQCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM4
+      *
+     C                     Z-ADDMSCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM5
+      *
+     C                     Z-ADDTXCH      WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM6
+      *
+     C                     Z-ADDINCHCM    WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM7
+      *
+     C                     Z-ADDINVATT    WFAMT
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WDUM8
+      *
+     C                     ELSE
+     C                     Z-ADDTRCM      WDUM1
+     C                     Z-ADDADCH      WDUM2
+     C                     Z-ADDTLCH      WDUM3
+     C                     Z-ADDCQCH      WDUM4
+     C                     Z-ADDMSCH      WDUM5
+     C                     Z-ADDTXCH      WDUM6
+     C                     Z-ADDINCHCM    WDUM7
+     C                     Z-ADDINVATT    WDUM8
+     C                     ENDIF
+      *
+      **  Cheques to be Collected...
+      *
+     C           WCURF     WHEQ 'CC'
+     C                     MOVE CRCY      WCCY
+     C                     Z-ADDCRVD      WPDAT
+     C                     Z-ADDCCYAM     WPAMT
+      *
+      **  Check if credit party type is 'N' (nostro), 'R' (retail), or
+      **  'P' (partial account)
+      *
+     C                     MOVE *BLANKS   RCNM1
+     C                     SELEC
+     C           CRPT      WHEQ 'N'
+     C                     MOVELWCRNO     RCNM1
+     C           CRPT      WHEQ 'R'
+     C                     MOVELWCRRE     RCNM1
+     C           CRPT      WHEQ 'P'
+     C                     MOVELCRPY      RCNM1
+     C                     ENDSL
+      *
+      **  Entry charges are in credit currency
+      *
+     C                     Z-ADDTRCM      WDUM1
+     C                     Z-ADDCSTA      WDUM2
+     C                     Z-ADDCOLL      WDUM3
+     C                     Z-ADDCCCHCM    WDUM4
+     C                     Z-ADDCCVATT    WDUM5
+     C                     Z-ADDTXCH      WDUM6
+      *
+      **  Cheques to be Paid...
+      *
+     C           WCURF     WHEQ 'CP'
+     C                     MOVE DRCY      WCCY
+     C                     Z-ADDDRVD      WPDAT
+      *
+      **  Get pay currency from LF/CQPAC
+      *
+     C           WKYPC     CHAINCQPAC                88
+      *
+      **  Compute for the debit currency equivalent amount if debit
+      **  currency is not equal to pay currency
+      *
+     C           PCCY      IFNE DRCY
+     C                     MOVE PCCY      WFCCY
+     C                     MOVE DRCY      WTCCY
+     C                     Z-ADDCQAM      WFAMT  130
+     C                     EXSR SRDREQ
+     C                     Z-ADDD#TAMT    WPAMT
+     C                     ELSE
+     C                     Z-ADDCQAM      WPAMT
+     C                     ENDIF
+      *
+      **  Check if debit party type is 'N' (nostro), 'R' (retail), or
+      **  'P' (partial account)
+      *
+     C                     MOVE *BLANKS   RCNM1
+     C                     SELEC
+     C           DRPT      WHEQ 'N'
+     C                     MOVELWDRNO     RCNM1
+     C           DRPT      WHEQ 'R'
+     C                     MOVELWDRRE     RCNM1
+     C           DRPT      WHEQ 'P'
+     C                     MOVELDRPY      RCNM1
+     C                     ENDSL
+      *
+      **  Entry charges are in debit currency
+      *
+     C                     Z-ADDTRCM      WDUM1
+     C                     Z-ADDCSTA      WDUM2
+     C                     Z-ADDCOLL      WDUM3
+     C                     Z-ADDPDCHCM    WDUM4
+     C                     Z-ADDPDVATT    WDUM5
+      *
+     C                     ENDSL
+      *
+      **  Setup common report details
+      *
+     C                     MOVE WCCY      RCCY
+     C                     MOVE PRFC      RPRFC
+      *
+      **  Check if file, branch or currency has changed
+      *
+     C                     SELEC
+     C           WCURF     WHNE WPRVF
+     C           BRCA      ORNE WSVBR
+     C                     EXSR SRCHBR
+     C                     EXSR SRCHCY
+     C                     WRITEHEADP1
+      *
+     C           WCCY      WHNE WSVCY
+     C                     EXSR SRCHCY
+     C                     WRITEHEADP1
+     C                     ENDSL
+      *
+      **  Format payment date
+      *
+     C                     Z-ADDWPDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RPDAT
+      *
+      **  Format payment amount
+      *
+     C                     Z-ADDWPAMT     ZFLD15
+     C                     Z-ADDWDECP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RAMNT
+      *
+      **  Format Entry Charge 1 (Transfer Commission)
+      *
+     C                     Z-ADDWDUM1     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDUM1
+      *
+      **  Format Entry Charge 2 (Costs Abroad/Advice Charge)
+      *
+     C                     Z-ADDWDUM2     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDUM2
+      *
+      **  Format Entry Charge 3 (Swift Priority/Telephone/Collection)
+      *
+     C                     Z-ADDWDUM3     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDUM3
+      *
+      **  Format Entry Charge 4 (Cheque/FX/Change Commission)
+      *
+     C                     Z-ADDWDUM4     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDUM4
+      *
+      **  If Cheques and FX/Change commission feature is not installed,
+      **  blank out Entry Charge 4
+      *
+     C           *IN43     IFEQ *ON
+     C           *IN44     OREQ *ON
+     C           *IN50     IFEQ *OFF
+     C                     MOVE *BLANKS   RDUM4
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Format Entry Charge 5 (Miscellaneous/Total VAT Charge)
+      *
+     C                     Z-ADDWDUM5     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDUM5
+      *
+      **  If Cheques and VAT Processing feature is not installed,
+      **  blank out Entry Charge 5
+      *
+     C           *IN43     IFEQ *ON
+     C           *IN44     OREQ *ON
+     C           *IN51     IFEQ *OFF
+     C                     MOVE *BLANKS   RDUM5
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Format Entry Charge 6 (Telex Charge)
+      *
+     C                     Z-ADDWDUM6     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDUM6
+      *
+      **  Format Entry Charge 7 (FX/Change Commission for Outgoing and
+      **  and Incoming Payments only)
+      *
+     C           *IN50     IFEQ *ON
+     C                     Z-ADDWDUM7     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDUM7
+     C                     ENDIF
+      *
+      **  Format Entry Charge 8 (Total VAT Charge for Outgoing and
+      **  and Incoming Payments only)
+      *
+     C           *IN51     IFEQ *ON
+     C                     Z-ADDWDUM8     ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDUM8
+     C                     ENDIF
+      *
+      **  Format FX Margin Points
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE FXMP      ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RFXMP
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     SELEC
+     C           WCURF     WHEQ 'OP'
+     C           WCURF     OREQ 'IP'
+     C                     Z-ADD6         RQDLN1
+     C           WCURF     WHEQ 'CC'
+     C                     Z-ADD4         RQDLN1
+     C           WCURF     WHEQ 'CP'
+     C                     Z-ADD3         RQDLN1
+     C                     ENDSL
+      *
+      **  If FX/Change Commission is switched on, add 1 to RQDLN1
+      *
+     C           *IN50     IFEQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+      *
+      **  If VAT Processing is switched on, add 1 to RQDLN1
+      *
+     C           *IN51     IFEQ *ON
+     C                     ADD  1         RQDLN1
+     C                     ENDIF
+      *
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHBR
+      *****************************************************************
+      *                                                               *
+      *  SRCHBR - Subroutine to Process a Change in Branch.           *
+      *                                                               *
+      *  Called By:  SRREPT - Process Report Lines                    *
+      *  Calls    :  SRRCFP - RCF Processing for Audit Report         *
+      *              *PSSR  - Error control subroutine                *
+      *              AOBRCHR0 - Branch details access object          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHBR    BEGSR                           *** SRCHBR ***
+      *
+      **  If printer file is open, print report footer
+      *
+     C                     MOVE BRCA      WSVBR   3
+     C                     MOVE WCURF     WPRVF
+      *
+     C           WOPEN     IFEQ 'Y'
+     C           PENTY     ANDNE*BLANK
+      *
+      **  Check that sufficient lines remain for the Format.  If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Write out Total Format.
+      *
+     C                     WRITETRAILP1
+     C                     CLOSEAA0070P1
+     C                     MOVE 'N'       WOPEN
+     C                     ENDIF
+      *
+      **  Get branch details using access object
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM BRCA      WBRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      **  Handle database error
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELBRCA      DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA8BRCD    RBRCA
+     C                     MOVELA8BRNM    RBRNM
+      *
+      **  Open printer file AA0070P1 if entity not blank
+      **  or the printer file is not yet open
+      *
+     C           PENTY     IFNE *BLANK
+     C           WOPEN     ORNE 'Y'
+     C                     OPEN AA0070P1
+     C                     MOVE 'Y'       WOPEN
+      *
+      **  Ensure Report Spool File recorded by RCF
+      *
+     C           PENTY     IFNE *BLANK
+     C                     MOVE BRCA      SENTY
+     C                     ELSE
+     C                     MOVE *BLANKS   SENTY
+     C                     ENDIF
+      *
+     C                     EXSR SRRCFP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCHCY
+      *****************************************************************
+      *                                                               *
+      *  SRCHCY - Subroutine to Process a Change in Currency.         *
+      *                                                               *
+      *  Called By:  SRREPT - Process Report Lines                    *
+      *  Calls    :  *PSSR  - Error control subroutine                *
+      *              AOCURRR0 - Currency Details Access Program       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCHCY    BEGSR                           *** SRCHCY ***
+      *
+      **  Get currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WCCY      WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  Handle database error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD5         DBASE            * DBERR 05 *
+     C                     MOVELWCCY      DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Save currency decimal place, mult/divide indicator, and
+      **  spot rate
+      *
+     C                     MOVE WCCY      WSVCY   3
+     C                     Z-ADDA6NBDP    WDECP   10
+     C                     Z-ADDA6SPRT    WRATE  138
+     C                     MOVE A6MDIN    WMDIN   1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRDREQ
+      *****************************************************************
+      *                                                               *
+      *  SRDREQ - Subroutine to Calculate Debit Currency Equivalent   *
+      *                                                               *
+      *  Called By: SRREPT - Process Report Lines                     *
+      *  Calls    : *PSSR  - Error control subroutine                 *
+      *             ZXRATE - Obtain Cross-Exchange Rate between 2 CCys*
+      *             AOCURRR0 - Currency Details Access Program        *
+      *             AOCCYCV0 - Convert Currency                       *
+      *                                                               *
+      *****************************************************************
+     C           SRDREQ    BEGSR                           *** SRDREQ ***
+      *
+      **  Get From currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WFCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  Handle database error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD6         DBASE            * DBERR 06 *
+     C                     MOVELWFCCY     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6SPRT    ZRATE1 138
+     C                     MOVE A6MDIN    ZMDI1   1
+      *
+      **  Get To currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM           WTCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  Handle database error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     Z-ADD7         DBASE            * DBERR 07 *
+     C                     MOVELWTCCY     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Compute for the cross currency exchange rate and cross
+      **  multiply/divide indicator between From and To currencies
+      *
+     C                     Z-ADDA6SPRT    ZRATE2 138
+     C                     MOVE A6MDIN    ZMDI2   1
+     C                     EXSR ZXRATE
+      *
+      **  Get the numeric equivalent of cross multiply/divide indicator
+      *
+     C           ZMDIX     IFEQ 'M'
+     C                     Z-ADD1         WMDIX   10
+     C                     ELSE
+     C                     Z-ADD0         WMDIX
+     C                     ENDIF
+      *
+      **  Determine multiply/divide indicator for entered rate
+      *
+     C           ZRATEX    IFGT 1
+     C           RATE      ANDGT1
+     C           ZRATEX    ORLE 1
+     C           RATE      ANDLE1
+     C                     Z-ADDWMDIX     WEMDIN  10
+     C                     ELSE
+     C           1         SUB  WMDIX     WEMDIN
+     C                     END
+      *
+      **  Set up input fields for AOCCYCV0
+      *
+     C                     Z-ADDWFAMT     D#FAMT
+     C                     MOVELWFCCY     D#FCCY
+     C                     MOVELWTCCY     D#TCCY
+     C                     Z-ADDRATE      I#RATE
+      *
+      **  Set multiply/divide indicator field
+      *
+     C           WEMDIN    IFEQ 0
+     C                     MOVEL'D'       I#MDIN
+     C                     ELSE
+     C                     MOVEL'M'       I#MDIN
+     C                     ENDIF
+      *
+     C                     CALL 'AOCCYCV0'             9090
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*F*T*RAT'W0ACT   8
+     C           D#DTA     PARM D#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           WRTCD     ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*CALL   'DBFILE           ************
+     C                     MOVEL'AOCCYCV0'DBKEY            * DBERR 08 *
+     C                     Z-ADD8         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *              *PSSR  - Error control subroutine                *
+      *  Calls    :  SRRCFA - RCF Processing for Audit Report         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                           *** SRAUDT ***
+      *
+      **  If P1 report is open and no database error occurred, print
+      **  report footer
+      *
+     C           WOPEN     IFEQ 'Y'
+     C           *INU7     ANDEQ*OFF
+      *
+      **  Check that sufficient lines remain for the Format.  If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     WRITETRAILP1
+      *
+     C                     ENDIF
+      *
+      **  Output Report Header if any of the files has no details
+      **  to report or if a database error occurs
+      *
+     C           *IN31     IFEQ *ON
+     C           *IN32     OREQ *ON
+     C           *IN33     OREQ *ON
+     C           *IN34     OREQ *ON
+     C           *INU7     OREQ *ON
+      *
+      **  RCF Processing for Audit File.
+      *
+     C                     OPEN AA0070AU
+     C                     EXSR SRRCFA
+     C                     WRITEHEADAU
+      *
+      **  If there is a DB Error, output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+      *
+      **  If P1 report is open, output the DB Error reference.
+     C           WOPEN     IFEQ 'Y'
+      *
+      **  Check that sufficient lines remain for the Format.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     WRITEDBERRF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      **  Or, if no records read in all files,  Output "No Details" message.
+      *
+     C           *IN31     IFEQ *ON
+     C           *IN32     ANDEQ*ON
+     C           *IN33     ANDEQ*ON
+     C           *IN34     ANDEQ*ON
+     C                     SETOF                     313233
+     C                     SETOF                     34
+     C                     ENDIF
+     C                     WRITENODTLS
+      *
+     C                     ENDIF
+      *
+     C                     CLOSEAA0070AU
+     C                     ENDIF
+      *
+      **  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *  Called By:  SRINIT - Perform Initialisation Processing       *
+      *              SRDREQ - Compute for Debit Currency Equivalent   *
+      *              SRCHCY - Perform Detail Processing               *
+      *              SRCHBR - Error control subroutine                *
+      *  Calls    :  SRAUDT - Produce Audit Report and End Program    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRCFP
+      *****************************************************************
+      *                                                               *
+      *  SRRCFP - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *  Called By:  SRCHBR - Process a Change in Branch              *
+      *  Calls    :  ZSFILE - Setup Spool File                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR                            *** SRRCFP ***
+      *
+      **  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRRCFA
+      *****************************************************************
+      *                                                               *
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *  Called By:  SRAUDT - Produce Audit Report and End Program    *
+      *  Calls    :  ZSFILE - Setup Spool File                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR                            *** SRRCFA ***
+      *
+      **  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQN     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2
+      /TITLE SR/ZSEDIT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /TITLE SR/ZXRATE
+     C/COPY ZSRSRC,ZXRATEZ1
+**  CPY@
+(c) Finastra International Limited 2001
+**  HTX - Header Text Array
+- OUTGOING PAYMENTS
+- INCOMING PAYMENTS
+- CHEQUES TO BE COLLECTED
+- CHEQUES TO BE PAID
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

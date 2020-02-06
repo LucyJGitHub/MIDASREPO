@@ -1,0 +1,114 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       P_PERMSYNC - Midas HI Permissions Synchronisation                     */
+/*                                                                             */
+/*         (c) Finastra International Limited 2013                             */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. MD023079           Date 29Oct13                        */
+/*                      MD023307           Date 20Nov13                        */
+/*                      MD022433           Date 17Sep13                        */
+/*                      AR1087622 *CREATE  Date 18Apr13                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       MD023079 - Database error encountered on menus with more than 6       */
+/*                  T_PERMM records for a specific user profile, branch,       */
+/*                  and zone.                                                  */
+/*       MD023307 - User amendments are not automatically updated              */
+/*       MD022433 - P_PERMSYNC doesn't condition USRP = USERPRF on DELETE      */
+/*                  statement when USERPRF is not blank                        */
+/*       AR1087622 - Takes a long time to populate WIP list view for CLIP      */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  ( IN USERPRF CHAR (32),                                                       :
+    OUT RETCODE CHAR (1))                                                       :
+                                                                                :
+   LANGUAGE SQL                                                                 :
+                                                                                :
+   BEGIN                                                                        :
+                                                                                :
+   declare SQLCODE int default 0;                                               :
+                                                                                :
+   CASE                                                                         :
+   WHEN USERPRF = '' THEN                                                       :
+   --INSERT:                                                                    :
+   insert into T_PERMM(select g.* from MIVW_NPERM g                             :
+   left exception join T_PERMM  h on                                            :
+    h.TPUSRP = g.USRP and                                                       :
+    h.TPMGRP = g.MGRP and                                                       :
+    h.TPBRCB = g.BRCB and                                                       :
+    h.TPACTC = g.ACA  and                                                       :
+    h.TPINDX = g.INDX and                                                       :
+    h.TPZONE = g.ZONE);                                                         :
+                                                                                :
+   --DELETE                                                                     :
+   delete from T_PERMM c where                                                  :
+   (c.TPUSRP, c.TPMGRP, c.TPBRCB,c.TPACTC, c.TPINDX, c.TPZONE) in               :
+   (select a.TPUSRP,a.TPMGRP, a.TPBRCB,a.TPACTC, a.TPINDX, a.TPZONE             :
+   from T_PERMM a                                                               :
+    left exception join MIVW_NPERM b                                            :
+      on a.TPUSRP = b.USRP                                                      :
+     and a.TPMGRP = b.MGRP                                                      :
+     and a.TPBRCB = b.BRCB                                                      :
+     and a.TPACTC = b.ACA                                                       :
+     and a.TPINDX = b.INDX                                                      :
+     and a.TPZONE = b.ZONE);                                                    :
+                                                                                :
+   WHEN USERPRF <> '' THEN                                                      :
+   --INSERT                                                                     :
+   insert into T_PERMM(select g.* from MIVW_NPERM g                             :
+   left exception join T_PERMM  h on                                            :
+    h.TPUSRP = g.USRP and                                                       :
+    h.TPMGRP = g.MGRP and                                                       :
+    h.TPBRCB = g.BRCB and                                                       :
+    h.TPACTC = g.ACA  and                                                       :
+    h.TPINDX = g.INDX and                                                       :
+    h.TPZONE = g.ZONE                                                           :
+   where g.USRP = USERPRF);                                                     :
+                                                                                :
+   --DELETE                                                                     :
+   delete from T_PERMM c where                                                  :
+   (c.TPUSRP, c.TPMGRP, c.TPBRCB,c.TPACTC, c.TPINDX, c.TPZONE) in               :
+   (select a.TPUSRP,a.TPMGRP, a.TPBRCB,a.TPACTC, a.TPINDX, a.TPZONE             :
+   from T_PERMM a                                                               :
+    left exception join MIVW_NPERM b                                            :
+      on a.TPUSRP = b.USRP                                                      :
+     and a.TPMGRP = b.MGRP                                                      :
+     and a.TPBRCB = b.BRCB                                                      :
+     and a.TPACTC = b.ACA                                                       :
+     and a.TPINDX = b.INDX                                                      :
+*****and*a.TPZONE*=*b.ZONE);****************************************************:           MD022433
+     and a.TPZONE = b.ZONE                                                      :           MD022433
+****where*b.USRP*=*USERPRF);****************************************************:  MD022433 MD023307
+    where a.TPUSRP = USERPRF);                                                  :           MD023307
+                                                                                :
+   END CASE;                                                                    :
+                                                                                :
+   --DELETE DUPLICATE RECORDS                                                   :           MD023079
+   delete from T_PERMM a where rrn(a) > (                                       :           MD023079
+   select min(rrn(b)) from T_PERMM b where                                      :           MD023079
+   a.TPUSRP = b.TPUSRP and                                                      :           MD023079
+   a.TPMGRP = b.TPMGRP and                                                      :           MD023079
+   a.TPBRCB = b.TPBRCB and                                                      :           MD023079
+   a.TPACTC = b.TPACTC and                                                      :           MD023079
+   a.TPINDX = b.TPINDX and                                                      :           MD023079
+   a.TPZONE = b.TPZONE );                                                       :           MD023079
+                                                                                :           MD023079
+   if (SQLCODE = 0) or (SQLCODE = 100) then                                     :
+       set RETCODE = '0';                                                       :
+   else                                                                         :
+     set RETCODE = '1';                                                         :
+   end if;                                                                      :
+                                                                                :
+   END;                                                                         :
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas HI Permissions Synchronisation              ';                     :
+                                                                                :

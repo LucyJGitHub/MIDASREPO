@@ -1,0 +1,995 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Bulk Transaction Confirmations')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3005 - BULK TRANSACTION CONFIRMATIONS                      *
+     F*                                                               *
+     F*  Function: When a bulk transaction has been entered or        *
+     F*   (I/C)    deleted, an internal confirmation is produced,     *
+     F*  (I/C TRM) as well as the standard confirmations, which will  *
+     F*            be produced for the individual deals.  The         *
+     F*            internal confirmation shows details of the type    *
+     F*            of bulk transaction and the individual trades      *
+     F*            which make up the transaction.                     *
+     F*                                                               *
+     F*  Called by: SEC0304 - I/C Confirmation Print                  *
+     F*            Frequency:                                         *
+     F*            - On request during input cycle                    *
+     F*            - As part of input cycle termination produced for  *
+     F*              unrequested items                                *
+     F*                                                               *
+     F*  Called by: SEC0304 - I/C Confirmation Print                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 208241             Date 21Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 052254             DATE 06JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E37493             DATE 02APR92               *
+     F*                 E37680             DATE 26MAR92               *
+     F*                 E36979             DATE 12MAR92               *
+     F*                 E32580             DATE 12DEC91               *
+     F*                 E29170             DATE 17OCT91               *
+     F*                 E28923             DATE 27SEP91               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                 S01269             DATE 31JUL90               *
+     F*                 S01271             DATE 19JUN90               *
+     F*                 E21312             DATE 06MAR90               *
+     F*                 E18626             DATE 10AUG89               *
+     F*                 E17800             DATE 19JUL89               *
+     F*                 E16826             DATE 21/02/89              *
+     F*                 E16795             DATE 21/02/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E37493 - Recompiled over changed printer file                *
+     F*  E37680 - In single branch mode no details are reported as    *
+     F*           branch is blank                                     *
+     F*  E36979 - No Bulk Confirmations were being produced           *
+     F*  E32580 - Should not print 'END OF REPORT'                    *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E28923 - Parameter list missing for R.10 RCF                 *
+     F*  S01117 - Multi-branching                                     *
+     F*  S01269 - TRADE AUTHORISATION: RECOMPILED FOR CHANGE TO FILE  *
+     F*           TABSE                                               *
+     F*  S01271 - Recompiled for Pay/Receive in Input Cycle changes   *
+     F*           to TRADSD and/or DPTMVD                             *
+     F*  E21312 - UPDATE TO FILE "TRADSD" IS WRONG BECAUSE IT TAKE    *   E21312
+     F*           SOME FIELD FROM FILE "TABTG10".                     *   E21312
+     F*  E18626 - ACTION TODAY FIELD MISSING FROM REPORT              *   E18626
+     F*  E17800 - NO DECIMAL POINT IN SETTLEMENT AMOUNT               *   E17800
+     F*  E16826 - PRINT CORRECT REPORT NAME                           *   E16826
+     F*  E16795 - ADD SETTLEMENT CURRENCY AND VALUE, TRADE DATE AND   *   E16795
+     F*           VALUE DATE TO THE REPORT, SE3005P1.                 *   E16795
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FSECTY   IF  E           K        DISK
+     FTRADF   IF  E           K        DISK
+     FTRADBK  UF  E           K        DISK
+     F            TRADSDF                           KRENAMETRADSDX
+     F*TABTB10 IF  E                    DISK                              E16795
+     FTABSE   IF  E           K        DISK                               E16795
+     F            TABLETAF                          KIGNORE               E16795
+     F            TABTB11F                          KIGNORE               E16795
+     F            TABTB40F                          KIGNORE               E16795
+     F            TABTE10F                          KIGNORE               E16795
+     F            TABTE20F                          KIGNORE               E16795
+     F            TABTG20F                          KIGNORE               E16795
+     F            TABLETHF                          KIGNORE               E16795
+     F*********** TABLETJF                          KIGNORE        E16795 S01117
+     F            TABLETKF                          KIGNORE               E16795
+     F            TABLETLF                          KIGNORE               E16795
+     F            TABLETNF                          KIGNORE               E16795
+     F            TABLETPF                          KIGNORE               E16795
+     F            TABLETRF                          KIGNORE               E16795
+     F            TABLETXF                          KIGNORE               E16795
+     F            TABLET2F                          KIGNORE               E16795
+     F            TABLET3F                          KIGNORE               E16795
+     F            TABLET5F                          KIGNORE               E16795
+     F***SE3005P1O***E             60     PRINTER                         E29170
+     FSE3005AUO   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOLU         E29170
+     FSE3005P1O   E             60     PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   29 - To allow for change from MARKET Trade to CLIENT Trade  *
+     F*   30 - Transaction performed on AGENCY Basis                  *
+     F*   31 - Transaction performed on TRADE Basis                   *
+     F*   32 - Unrelated Trade                                        *
+     F*   36 - DETAIL PRINTER FILE P1 OPEN                            *   E29170
+     F*   37 - MULTIBRANCHING ON                                      *   E29170
+     F*   55 - ERROR - No live Record on PF/TABTB10                   *
+     F*   56 - No Confirmations Outstanding                           *
+     F*   57 - ERROR - Securities Full Name not found on LF/SECTY     *
+     F*   58 - Find starting point of Records with given Bulk Ref.    *
+     F*   59 - Read next Record with given Bulk Ref.                  *
+     F*   60 - Overflow Indicator                                     *
+     F*   61 - Customer Short Name not found on LF/CLINT              *
+     F*U7-U8 - Database Error Switches                                *
+     F*   LR - Program Termination                                    *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   MAIN   -  Main Processing                                   *
+     F*   INIT   -  Initial Processing                                *
+     F*   SUBHD  -  Page Sub-Headings                                 *
+     F*   DET    -  Detail Processing                                 *
+     F*   ZDATE2 -  Date Reformat                                     *
+     F*   DBERR  -  To Display ERROR Messages                         *
+     F*   *PSSR  -  Error handling                                    *   S01117
+     F*   RCFP1  -  SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF    *   E29170
+     F*   RCFAU  -  SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF    *   E29170
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZSDESCZ1                                               E16826
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZPOWERZ1                                               E16795
+      *
+     I/EJECT
+     I*
+     ITRADSDX
+     I*
+     I*  Renaming Fields on LF/TRADBK
+     I*
+     I              RECI                            RECIX
+     I*
+     ITABTB10F
+     I*
+     I*  Renaming Fields on PF/TABTB10
+     I*
+     I              LCD                             LCDA
+     I              CHTP                            CHTPA
+     I*
+     ISECTYDF
+     I*
+     I*  Renaming Fields on PF/SECTYD
+     I*
+     I              LCD                             LCDB
+     I              CHTP                            CHTPB
+     I*
+     ICLINTCBF
+     I*
+     I*  Renaming Fields on PF/CLINTCB
+     I*
+     I              LCD                             LCDC
+     I              CHTP                            CHTPC
+     I*
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I*  Defining Local Data Area to display Error Messages
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     IRUNDT       DS                                                      E29170
+     I                                        1   7 RUNA                  E29170
+     I                                    P   8  100RUND                  E29170
+     I                                       11  11 SSF                   E29170
+     I                                       12  12 DATF                  E29170
+     I                                       13  13 MBIN                  E29170
+     I*                                                                   E29170
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+     I*                                                                   E29170
+     ISDBRCH    E DSSDBRCHPD                                              E29170
+     I*                                                                   E29170
+     I**  DATA STRUCTURE FOR BRANCH DETAILS                               E29170
+     I*                                                                   E29170
+     IDSFDY     E DSDSFDY                                                 E29170
+     I*                                                                   E29170
+     I**  FIRST DATA STRUCTURE FOR ACCESS PROGRAMS - SHORT FORMAT         E29170
+     I*                                                                   E29170
+     I*
+     I*COPY ZSRSRC,ZEDITZ2   **** COPY DOES NOT WORK
+     I*
+     I*  Data structure used in ZSEDIT routine
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*                                                                   E16826
+     I*COPY*ZSRSRC*ZSDESC2*******************                             E16826
+     I*                                                                   E16826
+     IAONDS       DS                                                      E16826
+     I                                        1  50 AON                   E16826
+     I                                        1  50 AONM                  E16826
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I*
+     C/EJECT
+     C*******************************************************************
+     C*                                                                 *
+     C*   MAIN       :  Main Processing                                 *
+     C*                                                                 *
+     C*   Functions  :  To Determine and carry out any necessary        *
+     C*                 changes to be made to any Bulk Transactions     *
+     C*                 for the day                                     *
+     C*                                                                 *
+     C*   Calls      :  INIT                                            *
+     C*                 DET                                             *
+     C*                                                                 *
+     C*******************************************************************
+      *                                                                   E28923
+      ** Input parameters :                                               E28923
+      *                                                                   E28923
+     C           *ENTRY    PLIST                                          E28923
+     C                     PARM           SEQ     5                       E28923
+     C                     PARM           ENT     3                       E28923
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C*
+     C                     EXSR INIT
+     C*
+     C** DETERMINE ANY OUTSTANDING CONFIRMATIONS
+     C*
+     C                     READ TRADF                    56
+     C*                                                                   E29170
+     C** ONLY PROCESS IF BRANCH IS REQUESTED                              E29170
+     C*                                                                   E29170
+     C           *IN56     IFEQ '0'                                       E29170
+     C           ENT       IFNE 'ALL'                                     E29170
+     C***********ENT       ORNE TDBA                                E29170E36979
+     C           ENT       ANDNETDBA                                      E36979
+     C           MBIN      ANDEQ'Y'                                       E37680
+     C                     SETON                     56                   E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C*
+     C           *IN56     DOWEQ'0'                        **** B001
+     C           LCD       ANDEQRUND
+     C*
+     C** PERFORM DETAIL SUBROUTINE FOR OUTPUT
+     C*
+     C                     EXSR DET
+     C*
+     C                     READ TRADF                    56
+     C*                                                                   E29170
+     C** ONLY PROCESS IF BRANCH IS REQUESTED                              E29170
+     C*                                                                   E29170
+     C           *IN56     IFEQ '0'                                       E29170
+     C           ENT       IFNE 'ALL'                                     E29170
+     C***********ENT       ORNE TDBA                                E29170E36979
+     C           ENT       ANDNETDBA                                      E36979
+     C           MBIN      ANDEQ'Y'                                       E37680
+     C                     SETON                     56                   E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C*
+     C                     END                             **** E001
+     C*
+     C** TERMINATION PROCESSING
+     C*
+     C*  Produce 'No Details' Report
+     C*
+     C***********PAGCNT    IFEQ 0                          **** B001      E29170
+     C***********          WRITEHEAD                                      E29170
+     C           COUNT     IFEQ 0                          **** B001      E29170
+     C*                                                                   E29170
+     C** OPEN AUDIT PRINTER FILE                                          E29170
+     C*                                                                   E29170
+     C                     OPEN SE3005AU                                  E29170
+     C                     WRITEHEADAU                                    E29170
+     C                     WRITENODET
+     C*                                                                   E29170
+     C** RCF PROCESSING FOR AUDIT PRINTER FILE                            E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C***********          END                             **** E001      E29170
+     C                     ELSE                                           E29170
+     C*
+     C           *IN60     IFEQ '1'                        **** B002
+     C                     ADD  1         PAGCNT
+     C                     WRITEHEAD
+     C                     END                             **** E002
+     C***********          WRITEREPORT                                    E32580
+     C                     END                                            E29170
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*******************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INIT       :  Initial Processing                             *
+     C*                                                               *
+     C*  Functions  :  To Access PF/TABTB10 for Run Date & Date Format*
+     C*                To set up common field for Database Errors     *
+     C*                                                               *
+     C*  Fields IN  :  None                                           *
+     C*                                                               *
+     C*  Fields OUT :  RUND - Run Date                                *
+     C*                DATF - Date Format                             *
+     C*                MTIME - Machine Time                           *
+     C*                                                               *
+     C*  Called by  :  MAIN                                           *
+     C*                                                               *
+     C*  Calls      :  None                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C*  Retrieve Machine Time
+     C*
+     C                     TIME           MTIME   60
+     C*
+     C*  To set up common field for Database Errors
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT                           S01117
+     C                     MOVEL'SE3005'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C*  To Access PF/TABTB10 for Run Date and Date Format
+     C*
+     C********** 1         CHAINTABTB10              55                   E16795
+     C                     READ TABTB10F                 55               E16795
+     C*
+     C*  ERROR - No Live Records on PF/TABTB10
+     C*
+     C           *IN55     IFEQ '1'                        **** B001
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'10'      TABKEY 12
+     C                     MOVE '01'      TABKEY           ***************
+     C                     Z-ADD01        DBASE            * DB ERROR 01 *
+     C                     MOVE 'TABTB'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                             **** E001
+     C*
+     C*  To Determine Date Format on PF/TABTB10
+     C*
+     C           DATF      IFEQ 'M'                        **** B001
+     C                     SETON                     98
+     C                     END                             **** E001
+     C*                                                                   E29170
+     C** IN THE DATAAREA RUNDAT                                           E29170
+     C*                                                                   E29170
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+     C                     IN   RUNDT                                     E29170
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     37                   E29170
+     C                     END                                            E29170
+     C                     Z-ADD0         COUNT   50                      E29170
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBHD      :  Page Sub-Headings                              *
+     C*                                                               *
+     C*  Functions  :  To Produce Headings at the top of each Page    *
+     C*                                                               *
+     C*  Fields IN  :  BCON - Bulk Confirmation Required              *
+     C*                SESN - Securities Short Name                   *
+     C*                                                               *
+     C*  Fields OUT :  SRPN - Securities Full Name                    *
+     C*                MATY - Security Maturity Date                  *
+     C*                TDRF - Trade Reference                         *
+     C*                                                               *
+     C*  Called by  :  MAIN                                           *
+     C*                DET                                            *
+     C*                                                               *
+     C*  Calls      :  DBERR                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SUBHD     BEGSR
+     C*
+     C*  Check Basis of Transaction for Output
+     C*
+     C           ATRD      IFNE *BLANKS                    **** B001
+     C                     SETON                     30
+     C                     ELSE                            **** X001
+     C*
+     C           RTRF      IFNE *BLANKS                    **** B002
+     C                     SETON                     31
+     C                     ELSE                            **** X002
+     C                     MOVE BLKR      UNTD
+     C                     SETON                     32
+     C                     END                             **** E002
+     C                     END                             **** E001
+     C*
+     C*  Retrieve Securities Full Name from Securities file
+     C*
+     C           TDSS      CHAINSECTY                57
+     C*
+     C*  ERROR - Securities Full Name not found
+     C*
+     C           *IN57     IFEQ '1'                        **** B001
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVELTDSS      TABKEY 12        ***************
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *
+     C                     MOVE 'SECTY'   DBFILE           ***************
+     C                     MOVELTABKEY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR DBERR
+     C                     END                             **** E001
+     C*                                                                   E16826
+     C* FORMAT SECURITIES REPORT NAME                                     E16826
+     C*                                                                   E16826
+     C                     MOVE SRPN      ZSRPN                           E16826
+     C                     MOVE *BLANKS   ZSFN1                           E16826
+     C                     MOVE *BLANKS   ZSFN2                           E16826
+     C                     MOVE RSFD      ZRSFD                           S01117
+     C                     EXSR ZSDESC                                    E16826
+     C*
+     C*  Reformat MIDAS Day No. into DDMMMYY
+     C*
+     C                     Z-ADDMATY      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    MDATE   7
+     C*                                                                   E29170
+     C** CLOSE AND OPEN DETAIL PRINTER FILE P1                            E29170
+     C*                                                                   E29170
+     C           TDBA      IFNE TDBASV                                    E29170
+     C           *IN36     IFEQ '1'                                       E29170
+     C***********          WRITEREPORT                              E29170E32580
+     C                     CLOSESE3005P1                                  E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     OPEN SE3005P1                                  E29170
+     C                     SETON                     36                   E29170
+     C                     Z-ADD0         PAGCNT                          E29170
+     C                     MOVELTDBA      TDBASV  3                       E29170
+     C*                                                                   E29170
+     C** RCF PROCESSING FOR DETAIL PRINTER FILE                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C*                                                                   E29170
+     C** ACCESS BRANCH NAME IF MULTIBRANCHING IS ON                       E29170
+     C*                                                                   E29170
+     C           *IN37     IFEQ '1'                                       E29170
+     C**********           CALL 'AOBRCHR0'                                             E29170 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       E29170
+     C                     PARM '*KEY   ' @OPTN   7                       E29170
+     C                     PARM TDBA      @BRKEY  3                       E29170
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        E29170 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   E29170
+     C           @RTCD     IFNE *BLANKS                                   E29170
+     C           *LOCK     IN   LDA                                       E29170
+     C                     Z-ADD3         DBASE            ***************E29170
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 03 *E29170
+     C                     MOVELTDBA      DBKEY            ***************E29170
+     C                     OUT  LDA                                       E29170
+     C                     EXSR DBERR                                     E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C*
+     C*  Output Report Headings
+     C*
+     C                     Z-ADD1         PAGCNT
+     C                     ADD  1         COUNT                           E29170
+     C*
+     C                     WRITEHEAD
+     C                     WRITEHEAD2
+     C*                                                                   S01117
+     C* Get Nominal currency decimal places                               S01117
+     C*                                                                   S01117
+     C                     MOVEL'20      'TKEYD1 12                       S01117
+     C                     MOVELNMCY      TKEYD2  4                       S01117
+     C                     MOVE 1         TKEYD2                          S01117
+     C                     MOVE TKEYD2    TKEYD1                          S01117
+     C           TKEYD1    CHAINTABTG10F             90                   S01117
+     C           *IN90     IFEQ '1'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABTG'   DBFILE                          S01117
+     C                     MOVELTKEYD1    DBKEY            ***************S01117
+     C                     Z-ADD5         DBASE            **DB ERROR 05**S01117
+     C                     OUT  LDA                                       E29170
+     C                     EXSR DBERR                      ***************S01117
+     C                     END                                            S01117
+     C                     Z-ADDCDP       NMCDP   10                      S01117
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  DET        :  Detail Processing                              *
+     C*                                                               *
+     C*  Functions  :  To Produce Report with any Outstanding         *
+     C*                Confirmations                                  *
+     C*                                                               *
+     C*  Fields IN  :  BCON - Bulk Confirmation Required              *
+     C*                                                               *
+     C*  Fields OUT :  TCNR - Customer Number                         *
+     C*             or CSNM - Customer Short Name                     *
+     C*                NOML - Nominal                                 *
+     C*                TPDY - Price/Discount/Yield                    *
+     C*                TDTP - Trade Type                              *
+     C*                ACTD - Action Today                            *
+     C*                                                               *
+     C*  Called by  :  MAIN                                           *
+     C*                                                               *
+     C*  Calls      :  SUBHD                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DET       BEGSR
+     C*
+     C** To Determine Sub-Headings
+     C*
+     C           *IN58     IFEQ '0'                        **** B002
+     C           *IN59     OREQ '1'
+     C                     EXSR SUBHD
+     C                     END                             **** E002
+     C*
+     C** Select the first Record on LF/TRADBK with the same Bulk Reference
+     C*
+     C           BLKR      SETLLTRADBK                   58
+     C*
+     C           BLKR      READETRADBK                   59
+     C*                                                                  *E18626
+     C** Determine the Action performed on the Record for Today          *E18626
+     C*                                                                  *E18626
+     C           LCD       IFEQ RUND                       **** B002     *E18626
+     C*                                                                  *E18626
+     C           CHTP      IFEQ 'I'                        **** B003     *E18626
+     C                     MOVE 'INS'     ACTD                           *E18626
+     C                     ELSE                            **** X003     *E18626
+     C           CHTP      IFEQ 'A'                        **** B004     *E18626
+     C                     MOVE 'AMD'     ACTD                           *E18626
+     C                     ELSE                            **** X004     *E18626
+     C           CHTP      IFEQ 'D'                        **** B005     *E18626
+     C                     MOVE 'DEL'     ACTD                           *E18626
+     C                     ELSE                            **** X005     *E18626
+     C                     MOVE 'CHG'     ACTD                           *E18626
+     C                     END                             **** E005     *E18626
+     C                     END                             **** E004     *E18626
+     C                     END                             **** E003     *E18626
+     C                     END                             **** E002     *E18626
+     C*
+     C** Determine the relevant Trade Heading
+     C*
+     C           ATRD      IFEQ 'M'                        **** B001
+     C                     WRITEMARKET
+     C                     ELSE                            **** X001
+     C*
+     C           ATRD      IFEQ 'C'                        **** B002
+     C                     WRITECLIENT
+     C                     SETON                     29
+     C                     ELSE                            **** X002
+     C                     WRITETRADE
+     C                     END                             **** E002
+     C                     END                             **** E001
+     C*
+     C*  Process each Record with the same Bulk Reference
+     C*
+     C           *IN59     DOWEQ'0'                        **** B001
+     C*
+     C*  Allow for change from MARKET Trade to CLIENT Trade
+     C*
+     C           ATRD      IFEQ 'C'                        **** B002
+     C           *IN29     ANDNE'1'
+     C                     WRITECLIENT
+     C                     SETON                     29
+     C                     END                             **** E002
+     C*
+     C*  Access Client file - LF/CLINT - for Customer Short Name
+     C*
+     C           TCNR      CHAINCLINT                61
+     C*
+     C           *IN61     IFEQ '0'                        **** B002
+     C           CSNM      ANDNE*BLANKS
+     C                     MOVELCSNM      CUST
+     C                     ELSE                            **** X002
+     C                     MOVELTCNR      CUST
+     C                     END                             **** E002
+     C*
+     C*  Determine Trade Type as 'PURCHASE' or 'SALE'
+     C*
+     C           TDTP      IFEQ 'TP'                       **** B002
+     C                     MOVE 'PURCHASE'TRTP
+     C                     ELSE                            **** X002
+     C                     MOVEL'SALE'    TRTP
+     C                     END                             **** E002
+      *
+      * FORMAT NOMINAL
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADDTNMD      ZDECS
+     C                     MOVE NOML      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ENOML  16
+      *
+      * FORMAT PRICE/DISCOUNT/YIELD
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE TPDY      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ETPDY  17
+     C*                                                                   E16795
+     C* IF NOM CCY IS NOT EQUAL TO SETTLEMENT CCY CONVERT NOM TO SETTLE   E16795
+     C*                                                                   E16795
+     C           NMCY      IFNE SETC                                      E16795
+     C*                                                                   E16795
+     C                     MOVE TCTR      ZAMTCI                          E16795
+     C*                                                                   E16795
+     C* CONV. NOM TO SETT CCY USING EX.RATE AND M/D IND FROM TRADES FILE  E16795
+     C*                                                                   E16795
+     C                     MOVE TDER      ZEXCH                           E16795
+     C                     MOVE TMDI      ZMD                             E16795
+     C*                                                                   E16795
+     C                     MOVE NMCY      ZCCYI                           E16795
+     C                     Z-ADDNMCDP     ZCDPI                           S01117
+     C                     MOVE SETC      ZCCYO                           E16795
+     C                     MOVEL'20      'TKEYD1 12                       S01117
+     C                     MOVELSETC      TKEYD2  4                       S01117
+     C                     MOVE 1         TKEYD2                          S01117
+     C                     MOVE TKEYD2    TKEYD1                          S01117
+     C           TKEYD1    CHAINTABTG10F             90                   S01117
+     C           *IN90     IFEQ '1'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABTG'   DBFILE                          S01117
+     C                     MOVELTKEYD1    DBKEY            ***************S01117
+     C                     Z-ADD4         DBASE            **DB ERROR 04**S01117
+     C                     OUT  LDA                                       E29170
+     C                     EXSR DBERR                      ***************S01117
+     C                     END                                            S01117
+     C                     Z-ADDCDP       ZCDPO                           S01117
+     C*                                                                   E16795
+     C* CONVERT FROM ONE CURRENCY TO ANOTHER USING ZCONV                  E16795
+     C*                                                                   E16795
+     C                     EXSR ZCONV                                     E16795
+     C************IN90     IFEQ '1'                                E16795 S01117
+     C***********          SETON                     U7U8LR        E16795 S01117
+     C***********          MOVE 'TABTG'   DBFILE                   E16795 S01117
+     C***********          MOVELTKEY      DBKEY            ********E16795 S01117
+     C***********          MOVE '03'      DBASE            **DB 3**E16795 S01117
+     C***********          EXSR DBERR                      ********E16795 S01117
+     C***********          END                                     E16795 S01117
+     C*                                                                   E16795
+     C                     Z-ADDZAMTCO    P1AMT  150                      E16795
+     C                     ELSE                                           E16795
+     C                     Z-ADDTCTR      P1AMT                           E16795
+     C***********          MOVEL'20      'TKEYD1 12                E17800 S01117
+     C***********          MOVELSETC      TKEYD2  4                E17800 S01117
+     C***********          MOVE 1         TKEYD2                   E17800 S01117
+     C***********          MOVE TKEYD2    TKEYD1                   E17800 S01117
+     C***********TKEYD1    CHAINTABTG10F             90            E17800 S01117
+     C************IN90     IFEQ '1'                                E17800 S01117
+     C***********          SETON                     U7U8LR        E17800 S01117
+     C***********          MOVE 'TABTG'   DBFILE                   E17800 S01117
+     C***********          MOVELTKEY      DBKEY            ********E17800 S01117
+     C***********          MOVE '04'      DBASE            **DB 4**E17800 S01117
+     C***********          EXSR DBERR                      ********E17800 S01117
+     C***********          END                                     E17800 S01117
+     C***********          Z-ADDTNMD      CDP                             E16795
+     C                     END                                            E16795
+     C*                                                                   E16795
+     C* FORMAT SETTLEMENT                                                 E16795
+     C*                                                                   E16795
+     C                     MOVE *BLANKS   ZFLD15                          E16795
+     C                     Z-ADDCDP       ZDECS                           E16795
+     C                     MOVE P1AMT     ZFLD15                          E16795
+     C***********          MOVE 'J'       ZECODE                          E16795
+     C                     MOVE 'L'       ZECODE                          E17800
+     C                     EXSR ZSEDIT                                    E16795
+     C                     MOVE ZOUT21    SETAMT                          E16795
+     C*                                                                   E16826
+     C* REFORMAT MIDAS DAY NO. INTO DDMMMYY                               E16826
+     C*                                                                   E16826
+     C                     Z-ADDTDDT      ZDAYNO                          E16826
+     C                     EXSR ZDATE2                                    E16826
+     C                     MOVE ZADATE    STDDT                           E16826
+     C*                                                                   E16826
+     C* REFORMAT MIDAS DAY NO. INTO DDMMMYY                               E16826
+     C*                                                                   E16826
+     C                     Z-ADDTDVD      ZDAYNO                          E16826
+     C                     EXSR ZDATE2                                    E16826
+     C                     MOVE ZADATE    STDVD                           E16826
+     C*
+     C***Determine*the*Action*performed*on*the*Record*for*Today*****
+     C*
+     C***********LCD       IFEQ RUND                       **** B002     *E18626
+     C***********                                                        *E18626
+     C***********CHTP      IFEQ 'I'                        **** B003     *E18626
+     C***********          MOVE 'INS'     ACTD                           *E18626
+     C***********          ELSE                            **** X003     *E18626
+     C***********CHTP      IFEQ 'A'                        **** B004     *E18626
+     C***********          MOVE 'AMD'     ACTD                           *E18626
+     C***********          ELSE                            **** X004     *E18626
+     C***********CHTP      IFEQ 'D'                        **** B005     *E18626
+     C***********          MOVE 'DEL'     ACTD                           *E18626
+     C***********          ELSE                            **** X005     *E18626
+     C***********          MOVE 'CHG'     ACTD                           *E18626
+     C***********          END                             **** E005     *E18626
+     C***********          END                             **** E004     *E18626
+     C***********          END                             **** E003     *E18626
+     C***********          END                             **** E002     *E18626
+     C*
+     C*  Check to see if New Page is required
+     C*
+     C           *IN60     IFEQ '1'                        **** B002
+     C                     WRITEOVFLOW
+     C                     ADD  1         PAGCNT
+     C                     WRITEHEAD
+     C                     WRITEHEAD2
+     C                     SETOF                     60
+     C                     END                             **** E002
+     C*
+     C*  Produce Detail line on Report
+     C*
+     C                     WRITEDETAIL
+     C*
+     C*  Update Bulk Confirmation with value of 'N'
+     C*
+     C           BCON      IFEQ 'Y'                        **** B002
+     C                     MOVE 'N'       BCON
+     C***********          UPDATTRADSDX                                   E21312
+     C                     EXCPTTRAD                                      E21312
+     C                     END                             **** E002
+     C*
+     C*  Initialise Detail fields for next Record
+     C*
+     C                     MOVE *BLANKS   TDRF
+     C                     MOVE *BLANKS   CUST
+     C                     Z-ADD0         NOML
+     C                     Z-ADD0         TPDY
+     C                     MOVE *BLANKS   TRTP
+     C                     MOVE *BLANKS   ACTD
+     C*
+     C           BLKR      READETRADBK                   59
+     C*
+     C                     END                             **** E001
+     C*
+     C                     SETOF                     293031
+     C                     SETOF                     32
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Subroutine DBERR - To Display ERROR Messages                 *
+     C*                                                               *
+     C*  Functions  :  To Produce Report with DB Error Messages       *
+     C*             :  To Produce Dump                                *
+     C*             :  To check F4 Headers out of Balance             *
+     C*             :  To Terminate Program                           *
+     C*                                                               *
+     C*  Fields IN  :  DBFILE - File in Error                         *
+     C*             :  DBKEY  - Database File Key                     *
+     C*             :  DBASE  - Database Error Number                 *
+     C*                                                               *
+     C*  Fields OUT :  DBFILE - File in Error                         *
+     C*             :  DBKEY  - Database File Key                     *
+     C*             :  DBASE  - Database Error Number                 *
+     C*             :  DBPGM  - Program Name                          *
+     C*                                                               *
+     C*  Called by  :  MAIN                                           *
+     C*             :  DET                                            *
+     C*                                                               *
+     C*  Calls      :  None                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DBERR     BEGSR                           **** B001
+     C*
+     C                     SETON                     U7U8LR
+     C*                                                                   E29170
+     C** OPEN AUDIT PRINTER FILE                                          E29170
+     C*                                                                   E29170
+     C                     OPEN SE3005AU                                  E29170
+     C*
+     C***********          WRITEHEAD                                      E29170
+     C                     WRITEHEADAU                                    E29170
+     C                     WRITEERROR
+     C***********          WRITEREPORT                                    E29170
+     C*                                                                   E29170
+     C** RCF PROCESSING FOR AUDIT PRINTER FILE                            E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C***********          DUMP                                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           **** E001
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*******************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM TDBA      SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT                                                              E16826
+     C/COPY ZSRSRC,ZSDESCZ3                                               E16826
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1                                                E16795
+     O/EJECT
+     OTRADSDX E                TRAD                                       E21312
+     O                         BCON                                       E21312
+      /EJECT
+      ***
+      /COPY ZSRSRC,ZDATE2Z3
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION                       E16795
+0000001                                                                   E16795
+0000010                                                                   E16795
+0000100                                                                   E16795
+0001000                                                                   E16795
+0010000                                                                   E16795
+0100000                                                                   E16795
+1000000                                                                   E16795

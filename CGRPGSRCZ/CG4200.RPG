@@ -1,0 +1,560 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Securities trade confirmations - driver')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG4200 - Securities Trade Confirmations - Driver             *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE006             Date  7SEP99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 088442             DATE 28MAY95               *
+     F*                 088441             DATE 26MAY95               *
+     F*                 082060             DATE 24JAN95               *
+     F*                 S01522             DATE 22NOV94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+     F*  CSE006 - Repurchase Agreement Enhancements                   *
+     F*  088442 - Standard format confirmations produced for items    *
+     F*           which should be UDC.                                *
+     F*             o standard program runs after this one, but, if   *
+     F*               authorisations are going on at the time, it may *
+     F*               pick up trades which this program has never     *
+     F*               read. Specify trades rejected by UDC explicitly *
+     F*               in this pgm, and only process these in SE0550.  *
+     F*  088441 - Ensure confirmation message indicator (TMSI bit 0)  *
+     F*           is set when UDC confirmation produced; it is        *
+     F*           used in SE0050 to determine whether a cancel        *
+     F*           confirmation is required and in CG4210 in the       *
+     F*           set up of the Cancel/Amend indicator.               *
+     F*  082060 - Redefine Binary fields as Decimal (9,0 Packed)      *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*****************************************************************
+     F*TRDCONF*UF*E********** K        DISK                               CSE006
+     FTRDCONF IF  E           K        DISK                               CSE006
+     F                                              KINFSR SRFILE
+     F                                              KCOMIT
+     FTRADS   UF  E           K        DISK                           UC  CSE006
+     F                                              KINFSR SRFILE         CSE006
+     F            TRADSDF                           KRENAMETRADSDFY       CSE006
+     F                                              KCOMIT                CSE006
+     F/COPY WNCPYSRC,CG4200F001
+     E/SPACE 5
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     I/SPACE 5
+     I/COPY WNCPYSRC,CG4200I001
+     IDSPARM    E DSTRADSD
+     I**  External DS for parameter passed to CG4210
+     I*                                                                   CSE006
+     ISDBOOK    E DSSDBOOKPD                                              CSE006
+     I**  EXTERNAL DS FOR BOOK DETAILS                                    CSE006
+     I*                                                                   CSE006
+     IDSFDY     E DSDSFDY                                                 CSE006
+     I**  First DS for access programs, short data structure              CSE006
+     I*
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     I/COPY WNCPYSRC,CG4200I002
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      ** Initialisation processing
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+     C                     EXSR SRMAIN
+      *
+      ** Audit processing
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C***********          SETON                     LR                   082060
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CG4210 - Securities Trade Confirmations        *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Read from the Trades for Confirmations file
+      ** (This logical selects TRADSD records with TCFR = 'Y')
+      *
+     C           *LOVAL    SETLLTRDCONF
+      *                                                                   CSE006
+      ** Change Read to NO LOCK so that record can be reaccessed later    CSE006
+      *                                                                   CSE006
+     C***********          READ TRDCONF                  99*              CSE006
+     C                     READ TRDCONF             N    99*              CSE006
+      *
+      ** Read until End of File
+      *
+     C           *IN99     DOWEQ'0'
+     C/COPY WNCPYSRC,CG4200C001
+      *
+      **  Increment the count of TRADSD records read.
+     C                     ADD  1         ##TREC  50
+      *                                                                   CSE006
+      ** Check Whether Buy/Sell Back Trade with Linked Reference          CSE006
+      *                                                                   CSE006
+     C           CSE006    IFEQ 'Y'                                       CSE006
+     C           LKRF      IFNE *BLANKS                                   CSE006
+      *                                                                   CSE006
+     C                     CALL 'AOBOOKR0'                                CSE006
+     C                     PARM *BLANKS   @RTCD   7                       CSE006
+     C                     PARM '*KEY   ' @OPTN   7                       CSE006
+     C                     PARM TDBK      @BKEY   2                       CSE006
+     C           SDBOOK    PARM SDBOOK    DSFDY                           CSE006
+      *                                                                   CSE006
+      ** Check if Buy/Sell Book indicator is 'Y'                          CSE006
+      *                                                                   CSE006
+     C           BDBYSL    IFEQ 'Y'                                       CSE006
+     C                     MOVE 'Y'       W#BYSL  1                       CSE006
+     C                     MOVE TDVD      W#TDVD  50                      CSE006
+      *                                                                   CSE006
+      ** Access Linked Reference to see which trade is performed first    CSE006
+      *                                                                   CSE006
+     C                     OPEN TRADS                                     CSE006
+     C           LKRF      CHAINTRADS               N89                   CSE006
+      *                                                                   CSE006
+      ** If second trade is later trade reaccess first trade              CSE006
+      *                                                                   CSE006
+     C           TDVD      IFGT W#TDVD                                    CSE006
+     C           LKRF      CHAINTRADS               N89                   CSE006
+     C                     ENDIF                                          CSE006
+     C                     Z-ADD0         W#TDVD                          CSE006
+     C                     CLOSETRADS                                     CSE006
+      *                                                                   CSE006
+     C                     CALL 'CG4220'                                  CSE006
+     C                     PARM *BLANKS   ##RTCD  7                       CSE006
+     C                     PARM W0CMT     ##CMT   3                       CSE006
+     C                     PARM *BLANK    ##COPD  1                       CSE006
+     C                     PARM *BLANK    ##AUTO  1                       CSE006
+     C                     PARM           DSPARM                          CSE006
+     C                     ENDIF                                          CSE006
+     C                     ENDIF                                          CSE006
+     C                     ENDIF                                          CSE006
+      *
+      ** Produce Confirmation
+      *
+      ** Call CG4210 if CG4220 has not been called                        CSE006
+      *                                                                   CSE006
+     C           W#BYSL    IFNE 'Y'                                       CSE006
+     C                     CALL 'CG4210'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM *BLANK    ##COPD  1
+     C                     PARM *BLANK    ##AUTO  1
+     C                     PARM           DSPARM
+     C                     ENDIF                                          CSE006
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+      ** Error issued should depend on program called                     CSE006
+     C           W#BYSL    IFNE 'Y'                                       CSE006
+     C                     MOVEL'CG4210  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *                                                                   CSE006
+     C                     ELSE                                           CSE006
+      *                                                                   CSE006
+     C                     MOVEL'CG4220  'W0FILE           ***************CSE006
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 03 *CSE006
+     C                     Z-ADD3         W0ERNB           ***************CSE006
+     C                     MOVEL'MEM5003' W0MSGD                          CSE006
+     C                     MOVEL'MIDAS  ' W0MSGF                          CSE006
+     C                     EXSR SRERR                                     CSE006
+     C                     ENDIF                                          CSE006
+     C                     END
+      *
+     C                     OPEN TRADS                                     CSE006
+      *
+      ** Confirmation Produced?
+      *
+     C           W#BYSL    IFNE 'Y'                                       CSE006
+     C           TDRF      CHAINTRADS                89                   CSE006
+     C           ##COPD    IFEQ 'Y'
+      *
+      ** Update Confirmation Required Indicator on TRADSD
+      *
+     C                     BITON'0'       TMSI                            088441
+     C                     MOVEL'N'       TCFR
+     C***********          EXCPTUTRADS                                    CSE006
+     C                     EXCPTUTRADY                                    CSE006
+      *                                                                   088442
+      ** Else, if item suppresed in UDC, set confirmation_required flag   088442
+      ** to 'S'. SE0550 (standard process) changed to recognise only      088442
+      ** these.                                                           088442
+     C                     ELSE                                           088442
+     C                     MOVEL'S'       TCFR                            088442
+     C************         EXCPTUTRADS                              088442CSE006
+     C                     EXCPTUTRADY                                    CSE006
+      *
+     C                     END                             * ##COPD IFEQ 'Y'
+     C                     END                             * ##COPD IFEQ 'CSE006
+      *
+      ** Update File as above if this ia a buy/sell back                  CSE006
+      *                                                                   CSE006
+     C           W#BYSL    IFEQ 'Y'                                       CSE006
+     C           TDRF      CHAINTRADS                89                   CSE006
+     C           *IN89     IFEQ *OFF                                      CSE006
+     C                     MOVE *BLANKS   W#BYSL                          CSE006
+     C           ##COPD    IFEQ 'Y'                                       CSE006
+      *                                                                   CSE006
+      ** Update Confirmation Required Indicator on TRADSD                 CSE006
+      *                                                                   CSE006
+     C                     BITON'0'       TMSI                            CSE006
+     C                     MOVEL'N'       TCFR                            CSE006
+     C                     EXCPTUTRADY                                    CSE006
+      *                                                                   CSE006
+      ** Else, if item suppresed in UDC, set confirmation_required flag   CSE006
+      ** to 'S'. SE0550 (standard process) changed to recognise only      CSE006
+      ** these.                                                           CSE006
+     C                     ELSE                                           CSE006
+     C                     MOVEL'S'       TCFR                            CSE006
+     C                     EXCPTUTRADY                                    CSE006
+      *                                                                   CSE006
+     C                     END                             * ##COPD IFEQ 'CSE006
+     C                     ELSE                                           CSE006
+     C                     MOVEL'TRADS   'W0FILE                          CSE006
+     C                     MOVELLKRF      W0KEY            ************   CSE006
+     C                     Z-ADD4         W0ERNB           * DBERR 4  *   CSE006
+     C                     MOVEL'MEM5004' W0MSGD           ************   CSE006
+     C                     MOVEL'MIDAS  ' W0MSGF                          CSE006
+     C                     EXSR SRERR                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+      ** Access Linked Reference                                          CSE006
+      *                                                                   CSE006
+     C           LKRF      CHAINTRADS                89                   CSE006
+     C           *IN89     IFEQ *OFF                                      CSE006
+     C           ##COPD    IFEQ 'Y'                                       CSE006
+      *                                                                   CSE006
+      ** Update Confirmation Required Indicator on TRADSD                 CSE006
+      *                                                                   CSE006
+     C                     BITON'0'       TMSI                            CSE006
+     C                     MOVEL'N'       TCFR                            CSE006
+     C                     EXCPTUTRADY                                    CSE006
+      *                                                                   CSE006
+      ** Else, if item suppresed in UDC, set confirmation_required flag   CSE006
+      ** to 'S'. SE0550 (standard process) changed to recognise only      CSE006
+      ** these.                                                           CSE006
+     C                     ELSE                                           CSE006
+     C                     MOVEL'S'       TCFR                            CSE006
+     C                     EXCPTUTRADY                                    CSE006
+      *                                                                   CSE006
+     C                     END                             * ##COPD IFEQ 'CSE006
+     C                     ELSE                                           CSE006
+     C                     MOVEL'TRADS   'W0FILE                          CSE006
+     C                     MOVELLKRF      W0KEY            ************   CSE006
+     C                     Z-ADD4         W0ERNB           * DBERR 4  *   CSE006
+     C                     MOVEL'MEM5004' W0MSGD           ************   CSE006
+     C                     MOVEL'MIDAS  ' W0MSGF                          CSE006
+     C                     EXSR SRERR                                     CSE006
+     C                     ENDIF                                          CSE006
+      *                                                                   CSE006
+     C                     ENDIF                                          CSE006
+     C                     CLOSETRADS                                     CSE006
+      *                                                                   CSE006
+      ** Commit
+     C                     COMIT
+     C/COPY WNCPYSRC,CG4200C002
+      *
+      ** Read next record from TRDCONF
+      *
+     C                     READ TRDCONF                  99*
+     C                     END                             * *IN99 DOWEQ '0'
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4200AU'I#SPLN
+     C                     MOVEL'CG4200  'I#REF
+     C                     MOVE 'CGD1417' I#TITL
+     C                     MOVE 'CGD1418' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##TREC
+     C*                                                                  CSE006
+     C** Access SAR details file to determine if CSE006 Feature is       CSE006
+     C** installed                                                       CSE006
+     C*                                                                  CSE006
+     C                     CALL 'AOSARDR0'                               CSE006
+     C                     PARM '       ' ##RTCD  7                      CSE006
+     C                     PARM '*VERIFY' ##OPTN  7                      CSE006
+     C                     PARM 'CSE006'  ##SARD  6                      CSE006
+      *                                                                  CSE006
+      ** DATABASE ERROR                                                  CSE006
+      *                                                                  CSE006
+     C           ##RTCD    IFNE *BLANK                                   CSE006
+     C           ##RTCD    ANDNE'*NRF   '                                CSE006
+     C                     MOVEL'SCSARDPD'W0FILE           **************CSE006
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 2  CSE006
+     C                     Z-ADD2         W0ERNB           **************CSE006
+     C                     MOVEL'MEM5003' W0MSGD                         CSE006
+     C                     MOVEL'MIDAS  ' W0MSGF                         CSE006
+     C                     EXSR SRERR                                    CSE006
+     C                     ELSE                                          CSE006
+     C           ##RTCD    IFNE '*NRF   '                                CSE006
+     C                     MOVE 'Y'       CSE006  1                      CSE006
+     C                     ENDIF                                         CSE006
+     C                     ENDIF                                         CSE006
+     C*                                                                  CSE006
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+     C/COPY WNCPYSRC,CG4200C003
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *                CG9020   - Write Data to UDC Data Files - Audit*
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4200  'I#REF
+     C                     MOVE 'CGD1417' I#TITL
+     C                     MOVE 'CGD1418' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'TRADSD  'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##TREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD1417' W0TITL  7
+     C                     PARM 'CGD1418' W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4200  'I#REF
+     C                     MOVE 'CGD1417' I#TITL
+     C                     MOVE 'CGD1418' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+     O*TRADSDF*E************** UTRADS                                     CSE006
+     O*                        TCFR                                       CSE006
+     O*                        TMSI                                 088441CSE006
+     OTRADSDFYE                UTRADY                                     CSE006
+     O                         TCFR                                       CSE006
+     O                         TMSI                                       CSE006
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

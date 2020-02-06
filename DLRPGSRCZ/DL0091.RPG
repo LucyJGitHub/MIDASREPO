@@ -1,0 +1,1127 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Validate/update forward rates')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  -  Dealing Module                                     *
+     F*                                                               *
+     F*  DL0091 - Validate and update forward rates from Citydealer   *
+     F*                                                               *
+     F*  Function:  This program validates the forward rates          *
+     F*              downloaded from Citydealer and updates the       *
+     F*   (I/C)      forward rates file in Midas.                     *
+     F*                                                               *
+     F*  Called By: DL0001                                            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 152522             Date 18Jan99               *
+      *                 152073             Date 03Jan99               *
+     F*                 CEU026             DATE 15JUL98               *
+     F*                 E85931             DATE 11APR95               *
+     F*                 CCM001             DATE 28FEB95               *
+     F*                 XXXXXX             DATE DDMMMYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for EXCPT. *
+     F*  CSD006 - Market Data Feeds.                                  *
+     F*  152522 - Reverse reciprocal rates for OUT currency if base   *
+     F*           currency is IN.  Use multiply/divide indicator of   *
+     F*           OUT currency/EUR rate for rate conversion in ZXRATE.*
+     F*           Update Spot Rate for OUT currency/EUR on SDCURRPD.  *
+     F*           Update M/D Ind.  for OUT currency/EUR on SDCURRPD.  *
+      *  152073 - Correct calculation of base rate for OUT currency   *
+      *           if base currency is IN.                             *
+     F*  CEU026 - EMU Forward rate changes                            *
+     F*  E85931 - Update of Spot Rate on Currencies Files.            *
+     F*  CCM001 - New Program. Citydealer/ Midas Revaluation Rates    *
+     F*            Link.                                              *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*****FWDRT   UF  F     436  3AI     2 DISK                                 CSD006
+     FFWDRT   UF  F     719  3AI     2 DISK                                      CSD006
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F*****FWDRTFE O   F     436            DISK                      A          CSD006
+     FFWDRTFE O   F     719            DISK                      A               CSD006
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F*
+      /EJECT
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*                                                               *
+     F*   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F*   U8  - File Controls Out of Balance                          *
+     F* U7+U8 - Database Error                                        *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*                                                               *
+     F*  INIT   - Program Initialisation                              *
+     F*  MAIN   - Main Processing Loop                                *
+     F*  FINAL  - Final Processing                                    *
+     F*                                                               *
+     F*  VALIDA - Validate Currency, Days and Rates                   *
+     F*  UPDFWR - Update the Forward Rates File                       *
+     F*  FRTCHN - Chain to Forward Rates File                         *
+     F*  RECALC - Recalculate forward rate for 'out' ccy against      *   CEU026
+     F*           'in' base currency.                                 *   CEU026
+     F*                                                               *
+     F*  ZTNLU1 - Next Transaction Number                             *
+     F*                                                               *
+     F*  *PSSR  - Error Processing Subroutine - DUMPs and ends Program*
+     F*           (This is called automatically if an unexpected      *
+     F*            Error occurs, or specifically for DB Error.)       *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE ARRAY SPECIFICATIONS
+     E*
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+     E*** Array containing Copyright statement
+     E*
+     E                    @STK      100 10
+     E*** Subroutine Stack
+     E*
+     E                    ERCD       19  4               ERROR CODES
+     E                    DAY        25  5 0             NO. DAYS
+     E                    DYS        25  5 0             NO. DAYS - FWDRT
+     E                    WAT        25 11 7             RATES - CITYDEALER
+     E                    RAT        25 12 8             RATES
+     E                    RTN        25 12 8             RATES - FWDRT
+     E*** Start 152522
+     E                    RTS        25 12 8             SAVED RATES - CITYDEALER
+     E*** End 152522
+     E*
+     E*****************************************************************
+     I*
+     I*
+     I*    FORWARD RATES FILE - HEADER RECORD.
+     I*
+     IFWDRT   NS  08   1 CH
+     I                                        1   1 RECI
+     I                                        2   4 CCY
+     I                                    P   5   70NORE
+     I                                    P   8  100FLSZ
+     I                                    P  11  130NLRB
+     I                                    P  14  160NINS
+     I                                    P  17  190NAMD
+     I                                    P  20  220NDEL
+     I                                    P  23  250NLRA
+     I                                    P 250 2520LCD
+     I                                      253 253 CHTP
+     I                                    P 254 2560TNLU
+     I                                        1 150 FWR1
+     I                                      151 256 FWR2
+     I*
+     I*    FORWARD RATES FILE - DETAIL RECORD.
+     I*
+     IFWDRT   NS  06   1 CD
+     I       OR   07   1 C*
+     I                                        1   1 RECI
+     I                                        2   4 CCY
+     I                                    P   5  79 DYS
+     I                                    P  80 254 RTN
+     I                                    P 255 2570LCDF
+     I                                      258 258 CHTPF
+     I                                    P 259 2610TNLUF
+     I                                      613 638 FRTMST                                    CPK015
+     I                                        1 150 FWR1
+     I                                      151 256 FWR2
+     I                                      255 261 FWR3
+     I*
+     I            DS
+     I                                        1  11 LUD
+     I                                        1   50LCDF
+     I                                        6   6 CHTPF
+     I                                        7  110TNLUF
+     I*
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     IWDSDAY      DS
+     I                                        1 1250DAY
+     I*
+     IWDSRTE      DS
+     I                                        1 2757WAT
+     I**
+     I**  DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USRIDX
+     I                                       51  52 SCRN
+     I                                       53  53 ACTNY
+     I                                       54  56 CCYS
+     I                                       57 206 FWR1
+     I                                      207 312 FWR2
+     I                                      313 319 FWR3
+     I*
+     ILDA       E DSLDA
+     I*** Local data area for database error details
+     I*
+     IPSDS       SDS
+     I*** Program Status Data Structure - gives Job and
+     I*** User ID
+     I*
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I                                     *PROGRAM ##PGM
+     I*
+     IRUNDAT    E DS
+     I*** Data Structure for system flags and run date
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details Data Structure.
+     I*
+     ISDCURR    E DSSDCURRPD
+     I** Currency Details Data Structure.
+     I*
+     ISDGELR    E DSSDGELRPD                                              CEU026
+     I** General Ledger Details Data Structure.                           CEU026
+     I*                                                                   CEU026
+     IDSFDY     E DSDSFDY
+     I*** Short Data Structure for access programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*** Long Data Structure for access programs
+     I*
+     I*
+      /TITLE   CALCULATION SPECIFICATIONS
+     C*****************************************************************
+     C*
+     C           P@CCY     IFNE 'END'
+     C*
+     C*
+     C                     EXSR INIT
+     C*** Main processing
+     C                     EXSR MAIN
+     C*
+     C                     EXSR FINAL
+     C*
+     C*
+     C                     ELSE
+     C*** If the currency is 'END' then we terminate completely
+     C                     SETON                         LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* INIT   -  Initial processing                                  *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: AOBANKR0(pgm)                                          *
+     C*        AOSARDR0                                               *
+     C*        AOCURRR0                                               *
+     C*        AOGELRR0                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                           ** INIT SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q       30
+     C                     MOVEL'INIT'    @STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P@CCY   3
+     C                     PARM           P@DYA 125
+     C                     PARM           P@RAT1220
+     C                     PARM           P@RAT2 55
+     C                     PARM           P@RTCD 76
+     C*
+     C*** Set up copyright parameter
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C*** Setup LDA
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C*** Read in Installation Data
+     C                     CALL 'AOBANKR0'
+     C                     PARM           WRTCD   7
+     C                     PARM '*FIRST'  WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     SETON                     U7U8
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERR. 001  *
+     C                     MOVEL*BLANK    DBKEY            ***************
+     C                     MOVE ##PGM     DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CEU026
+      ** Check for EMU Currency Details CEU026                            CEU026
+      *                                                                   CEU026
+     C                     CALL 'AOSARDR0'                                CEU026
+     C                     PARM *BLANKS   @RTCD                           CEU026
+     C                     PARM '*VERIFY' @OPTN                           CEU026
+     C                     PARM 'CEU026'  @SARD   6                       CEU026
+     C                     PARM           DSFDY                           CEU026
+     C                     SELEC                                          CEU026
+     C           @RTCD     WHEQ *BLANK                                    CEU026
+     C                     MOVE 'Y'       CEU026  1                       CEU026
+     C           @RTCD     WHEQ '*NRF'                                    CEU026
+     C                     MOVE 'N'       CEU026                          CEU026
+     C                     OTHER                                          CEU026
+     C           *LOCK     IN   LDA                                       CEU026
+     C                     MOVEL'SCSARDPD'DBFILE            ************* CEU026
+     C                     MOVEL'002'     DBASE             *DBERROR 002* CEU026
+     C                     MOVEL@OPTN     DBKEY             ************* CEU026
+     C                     SETON                     U7U8LR               CEU026
+     C                     OUT  LDA                                       CEU026
+     C                     EXSR *PSSR                                     CEU026
+     C                     ENDSL                                          CEU026
+      *                                                                   CEU026
+      ** Access Currency Data For The Base CCY if CEU026 on.              CEU026
+      *                                                                   CEU026
+     C           CEU026    IFEQ 'Y'                                       CEU026
+     C                     CALL 'AOCURRR0'                                CEU026
+     C                     PARM *BLANKS   @RTCD   7                       CEU026
+     C                     PARM '*KEY   ' @OPTN   7                       CEU026
+     C                     PARM BJCYCD    @KEYCY  3                       CEU026
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU026
+     C           @RTCD     IFNE *BLANKS                                   CEU026
+     C           *LOCK     IN   LDA                                       CEU026
+     C                     MOVEL'SDCURRPD'DBFILE           ***************CEU026
+     C                     MOVEL'003'     DBASE            * DBERROR 003 *CEU026
+     C                     MOVELBJCYCD    DBKEY            ***************CEU026
+     C                     SETON                     U7U8LR               CEU026
+     C                     OUT  LDA                                       CEU026
+     C                     EXSR *PSSR                                     CEU026
+     C                     END                                            CEU026
+     C                     MOVELA6EUER    SPOTRA 138                      CEU026
+     C******************** MOVELA6MDIN    MULDIV  1                 CEU002152073
+     C                     MOVELA6EUMD    MULDIV  1                       152073
+      *                                                                   CEU026
+      ** Check for Whether the Base Rate is an 'IN' Currency              CEU026
+      ** and past its Transition Start Date.                              CEU026
+      *                                                                   CEU026
+     C           A6INCY    IFEQ 'Y'                                       CEU026
+     C           A6TPSD    ANDLEBJRDNB                                    CEU026
+     C                     MOVE 'Y'       INCCY   1                       CEU026
+     C                     ELSE                                           CEU026
+     C                     MOVE 'N'       INCCY                           CEU026
+     C                     ENDIF                                          CEU026
+     C                     ENDIF                                          CEU026
+      *                                                                   CEU026
+      ** Check for EURO Currency Name                                     CEU026
+      *                                                                   CEU026
+     C           CEU026    IFEQ 'Y'                                       CEU026
+     C**********           CALL 'AOGELRR0'                                CEU026              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR'  @RTCD                           CEU026
+     C                     PARM '*FIRST ' @OPTN                           CEU026
+     C********** SDGELR    PARM SDGELR    DSFDY                           CEU026              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   CEU026
+     C           *LOCK     IN   LDA                                       CEU026
+     C                     MOVEL'SDGELRPD'DBFILE            ************* CEU026
+     C                     MOVEL'004'     DBASE             *DBERROR 004* CEU026
+     C                     MOVEL@OPTN     DBKEY             ************* CEU026
+     C                     SETON                     U7U8LR               CEU026
+     C                     OUT  LDA                                       CEU026
+     C                     EXSR *PSSR                                     CEU026
+     C                     ENDIF                                          CEU026
+     C                     ENDIF                                          CEU026
+     C*
+     C*** Clear return code
+     C                     MOVE *BLANKS   P@RTCD
+     C*                                                                   152522
+     C*** Clear saved downloaded rates and OUT/EURO M/D indicator         152522
+     C                     MOVE *BLANKS   RTS                             152522
+     C                     MOVE *BLANKS   #MDI1                           152522
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* FINAL  -  Final processing                                    *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FINAL     BEGSR                           ** FINAL SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q
+     C                     MOVEL'FINAL'   @STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C*** Error Codes into Return Code
+     C                     MOVEAERCD      P@RTCD
+     C*
+     C*
+     C                     RETRN
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN   -  Main processing loop                                *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: VALIDA, UPDFWR                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           MAIN      BEGSR                           ** MAIN SR **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN    '@STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C*** Set up days and rates
+     C                     MOVE P@CCY     WCCY
+     C                     MOVE P@DYA     WDSDAY
+     C           ' ':'0'   XLATEWDSDAY    WDSDAY
+     C                     MOVELP@RAT1    WDSRTE
+     C                     MOVE P@RAT2    WDSRTE
+     C           ' ':'0'   XLATEWDSRTE    WDSRTE
+     C                     Z-ADDWAT       RAT
+     C*
+     C           *LIKE     DEFN P@CCY     WCCY
+     C*
+     C*
+     C*** Validate currency, days and rates
+     C                     MOVE 'Y'       WVALID  1
+     C                     EXSR VALIDA
+     C*
+     C*** If OK, update Forward Rates file
+     C           WVALID    IFEQ 'Y'
+     C                     EXSR UPDFWR
+     C*
+     C*** Send OK status
+     C                     MOVE *BLANKS   P@CCY
+     C                     MOVE *BLANKS   P@DYA
+     C                     MOVE *BLANKS   P@RAT1
+     C                     MOVE *BLANKS   P@RAT2
+     C                     ENDIF
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* VALIDA -  Validate Currency, Days and Rates                   *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: AOCURRR0(pgm)                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALIDA    BEGSR                           ** VALIDA   **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q
+     C                     MOVEL'VALIDA  '@STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C                     Z-ADD2         N       20
+     C                     Z-ADD0         S       20
+     C                     MOVE *BLANKS   ERCD
+     C*
+     C*
+     C*** ERROR IF NO CURRENCY CODE ENTERED
+     C           WCCY      IFEQ *BLANKS
+     C           S         ADD  1         S       20
+     C                     MOVE '229'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+     C*
+     C           WVALID    IFEQ 'Y'
+     C*** Error if not a dealing currency
+     C                     CALL 'AOCURRR0'
+     C                     PARM           WRTCD   7
+     C                     PARM '*KEY    'WOPTN   7
+     C                     PARM WCCY      WKEY   10
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C           WRTCD     OREQ *BLANKS
+     C           A6DLCI    ANDEQ'N'
+     C           S         ADD  1         S
+     C                     MOVE '230'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C*** Validate Days
+     C           WVALID    IFEQ 'Y'
+     C*
+     C*** First entry should not be 0,
+     C           DAY,1     IFLE 0
+     C           S         ADD  1         S
+     C                     MOVE '232'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ELSE
+     C***  or period date too far in future
+     C           BJRDNB    ADD  DAY,1     WLIMIT  60
+     C           WLIMIT    IFGT 99998
+     C                     ADD  1         S
+     C                     MOVE '232'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C*** First forward rate entry should not be 0,
+     C           RAT,1     IFLE 0
+     C           S         ADD  1         S
+     C                     MOVE '233'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ELSE
+     C***  Check rate is within 10% of spot rate
+     C***  If CEU026 is on, base currency 'in' and currency is 'out'      CEU026
+     C***  then rates are against Euro, re-calculate rates first          CEU026
+     C***  then check rate is within 10% of spot rate.                    CEU026
+     C**                                                                  CEU026
+     C           CEU026    IFEQ 'Y'                                       CEU026
+     C           A6INCY    ANDNE'Y'                                       CEU026
+     C           INCCY     ANDEQ'Y'                                       CEU026
+     C           WCCY      ANDNEBKEURO
+     C*                                                                   CEU026
+     C           CEU026    OREQ 'Y'                                       CEU026
+     C           INCCY     ANDEQ'Y'                                       CEU026
+     C           A6INCY    ANDEQ'Y'                                       CEU026
+     C           A6TPSD    ANDGTBJRDNB                                    CEU026
+     C                     EXSR RECALC                                    CEU026
+     C                     ENDIF                                          CEU026
+     C**                                                                  CEU026
+     C           RAT,1     SUB  A6SPRT    WK12   128   23
+     C           *IN23     IFEQ *ON
+     C                     Z-SUBWK12      WK12
+     C                     ENDIF
+     C           WK12      DIV  A6SPRT    DIFF   158
+     C           DIFF      IFGT .1
+     C           S         ADD  1         S
+     C                     MOVE 'W10'     ERCD,S
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C*** Validate Rest of Data
+     C           N         DOWLE25
+     C           S         ANDLT19
+     C*
+     C****  Test for zero
+     C           DAY,N     IFEQ 0
+     C                     MOVE *ON       WDYERR  1
+     C                     ELSE
+     C                     MOVE *OFF      WDYERR
+     C                     ENDIF
+     C           RAT,N     IFEQ 0
+     C                     MOVE *ON       WRTERR  1
+     C                     ELSE
+     C                     MOVE *OFF      WRTERR
+     C                     ENDIF
+     C*
+     C****  Either both or neither field must be zero
+     C           WDYERR    IFNE WRTERR
+     C           S         ADD  1         S
+     C*
+     C           WDYERR    IFEQ *OFF
+     C                     MOVE '239'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ELSE
+     C*
+     C                     MOVE '240'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C*** Embedded blanks not allowed
+     C           S         IFLT 19
+     C           N         ANDLT25
+     C*
+     C           N         ADD  1         O       20
+     C           DAY,N     IFEQ 0
+     C           DAY,O     ANDNE0
+     C           RAT,N     OREQ 0
+     C           RAT,O     ANDNE0
+     C           S         ADD  1         S
+     C                     MOVE '237'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C*** Days entry should be greater than previuos entry
+     C           S         IFLT 19
+     C           N         SUB  1         M       20
+     C           DAY,N     IFLE DAY,M
+     C           DAY,N     ANDNE0
+     C*                                                                   E85931
+     C                     SELEC                                          E85931
+     C           DAY,M     WHNE 999                                       E85931
+     C           DAY,N     ANDNE999                                       E85931
+     C           S         ADD  1         S
+     C                     MOVE '238'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ENDSL                                          E85931
+     C*                                                                   E85931
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           S         IFLT 19
+     C           BJRDNB    ADD  DAY,N     WLIMIT  60
+     C           WLIMIT    IFGT 99998
+     C           S         ADD  1         S
+     C                     MOVE '238'     ERCD,S
+     C                     MOVE 'N'       WVALID
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C***  Check Nth rate is within 10% of N-1th rate
+     C           S         IFLT 19
+     C           RAT,M     ANDNE0
+     C           RAT,N     ANDNE0
+     C           RAT,N     SUB  RAT,M     WK12   128   23
+     C           *IN23     IFEQ *ON
+     C                     Z-SUBWK12      WK12
+     C                     ENDIF
+     C           WK12      DIV  RAT,M     DIFF   158
+     C           DIFF      IFGT .1
+     C           S         ADD  1         S
+     C                     MOVE 'W11'     ERCD,S
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C*
+     C                     ADD  1         N
+     C                     ENDDO
+     C*
+     C                     ENDIF
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* UPDFWR -  Update the Forward Rates File                       *
+     C*                                                               *
+     C* Called by: MAIN                                               *
+     C*                                                               *
+     C* Calls: FRTCHN, ZTNLU1, EXCEPT                                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UPDFWR    BEGSR                           ** UPDFWR   **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q
+     C                     MOVEL'UPDFWR  '@STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C***  CHECK WHETHER CURRENCY IS ON FORWARD RATE FILE
+     C                     MOVE WCCY      FRTKEY  3
+     C                     EXSR FRTCHN
+     C                     MOVE LUD       LUDSV  11
+     C           *IN26     IFEQ *ON
+     C                     MOVE *BLANKS   LUDSV
+     C                     ENDIF
+     C*
+     C*** OBTAIN LAST TRANSACTION NUMBER  AND SET UP STANDARD OUTPUT
+     C***  INFORMATION
+     C                     EXSR ZTNLU1
+     C                     MOVE 'DL'      MDID    2
+     C                     MOVEL##PGM     PGMN    8
+     C                     MOVE 'XXX'     WSIDX   3
+     C                     TIME           MTIME
+     C                     MOVE USER      USRIDX 10
+     C                     MOVE 'X'       ACTNY   1
+     C*
+     C*    UPDATE FORWARD RATES FILE
+     C                     MOVE WCCY      CCYS
+     C                     Z-ADDDAY       DYS
+     C                     Z-ADDRAT       RTN
+     C           *IN26     IFEQ *ON
+     C***  Add record
+     C                     MOVE *ON       *IN46
+     C                     MOVE *OFF      WUPD    1
+     C                     ELSE
+     C***  Update record
+     C                     MOVE *ON       *IN47
+     C                     MOVE *ON       WUPD    1
+     C                     ENDIF
+     C                     EXSR EXCEPT
+     C*
+     C*    READ FORWARD RATES HEADER
+     C                     MOVE *BLANKS   FRTKEY
+     C                     EXSR FRTCHN
+     C           *IN08     IFEQ *OFF
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C*** Header fields
+     C           WUPD      IFEQ *ON
+     C*** Record amended
+     C           NAMD      ADD  1         NAMD
+     C                     ELSE
+     C*** Record added
+     C           NINS      ADD  1         NINS
+     C           NORE      ADD  1         NORE
+     C           NLRA      ADD  1         NLRA
+     C                     ENDIF
+     C*
+     C**   UPDATE FORWARD RATES HEADER
+     C                     SETON                     44
+     C                     EXSR EXCEPT
+      *                                                                   CEU026
+      * If any changes have been made to Euro forward rates then          CEU026
+      * re-calculate forward rates for 'in' ccy, if CEU026 is on.         CEU026
+     C           CEU026    IFEQ 'Y'                                       CEU026
+      *                                                                   CEU026
+     C           WCCY      IFEQ BKEURO                                    CEU026
+     C                     CALL 'DL4130'                                  CEU026
+     C                     PARM BJCYCD    WUBCCY  3                       CEU026
+     C                     PARM           BKEURO                          CEU026
+     C                     PARM           INCCY                           CEU026
+     C                     PARM 'N'       INITN   1                       CEU026
+     C                     PARM *BLANKS   RCODE   7                       CEU026
+     C                     ENDIF                                          CEU026
+     C                     ENDIF                                          CEU026
+     C*                                                                   E85931
+     C*                                                                   E85931
+     C*** Update spot rate on currencies files                            E85931
+     C                     EXSR UPSPOT                                    E85931
+     C*                                                                   E85931
+     C*
+     C**   END COMMITMENT CONTROL
+     C           CMTTXT    COMIT
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* FRTCHN -  Chain to Forward Rates File                         *
+     C*                                                               *
+     C* Called by:                                                    *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FRTCHN    BEGSR                           ** FRTCHN   **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q
+     C                     MOVEL'FRTCHN  '@STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C           FRTKEY    CHAINFWDRT                26
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*
+     C*****************************************************************   E85931
+     C*                                                               *   E85931
+     C* UPSPOT -  Update the Spot Rate on the Currencies Files        *   E85931
+     C*                                                               *   E85931
+     C* Called by: UPDFWR                                             *   E85931
+     C*                                                               *   E85931
+     C* Calls: TABTG                                                  *   E85931
+     C*                                                               *   E85931
+     C*****************************************************************   E85931
+     C*                                                                   E85931
+     C           UPSPOT    BEGSR                           ** UPSPOT   ** E85931
+     C*                                                                   E85931
+     C*** Setup subroutine name in stack                                  E85931
+     C                     ADD  1         Q                               E85931
+     C                     MOVEL'UPSPOT  '@STK,Q                          E85931
+     C*                                                                   E85931
+     C*----------------------------------------------------------------   E85931
+     C*                                                                   E85931
+     C*                                                                   E85931
+     C*** Update the Standing Data Files                                  E85931
+     C*                                                                   E85931
+     C*** Use the Spot Days to Locate Citydealer Spot Rate                E85931
+     C                     Z-ADDA6SPDY    WSPDY   50                      E85931
+     C                     Z-ADD1         N                               E85931
+     C           WSPDY     LOKUPDAY,N                    40               E85931
+     C*                                                                   E85931
+     C*** Get the currency record                                         E85931
+     C                     CALL 'AOCURRC0'             89                 E85931
+     C                     PARM *BLANKS   WRTCD   7                       E85931
+     C                     PARM '*KEY   ' WOPTN   7                       E85931
+     C                     PARM WCCY      WKEY   10                       E85931
+     C           SDCURR    PARM SDCURR    DSSDY                           E85931
+     C***   Program error                                                 E85931
+     C           *IN89     IFEQ *ON                                       E85931
+     C***   File error                                                    E85931
+     C           WRTCD     ORNE *BLANKS                                   E85931
+     C           *LOCK     IN   LDA                                       E85931
+     C                     SETON                     U7U8                 E85931
+     C                     Z-ADD2         DBASE            ***************E85931
+     C                     MOVEL'AOCURRC0'DBFILE           *DB ERR. 002  *E85931
+     C                     MOVELWCCY      DBKEY            ***************E85931
+     C                     MOVE ##PGM     DBPGM                           E85931
+     C                     OUT  LDA                                       E85931
+     C                     EXSR *PSSR                                     E85931
+     C                     ENDIF                                          E85931
+     C*                                                                   E85931
+     C*** Update with Citydealer Spot Rates                               E85931
+     C                     Z-ADDRAT,N     A6SPRT                          E85931
+     C                     Z-ADDRAT,N     A6ERLC                          E85931
+     C                     MOVE 'A'       A6TYLC                          E85931
+     C                     Z-ADDBJRDNB    A6LCD                           E85931
+     C*                                                                   152522
+     C** Update OUT currency/EUR Spot Rate with downloaded                152522
+     C** Citydealer Rates (i.e. if Base ccy 'IN')                         152522
+     C*                                                                   152522
+     C           CEU026    IFEQ 'Y'                                       152522
+     C           RTS,N     IFNE 0                                         152522
+     C                     Z-ADDRTS,N     A6INER                          152522
+     C                     ENDIF                                          152522
+     C           #MDI1     IFNE ' '                                       152522
+     C                     MOVE #MDI1     A6INMD                          152522
+     C                     ENDIF                                          152522
+     C                     ENDIF                                          152522
+     C*                                                                   152522
+     C*** Update the Currency Record                                      E85931
+     C                     CALL 'AOCURRC0'             8988               E85931
+     C                     PARM *BLANKS   WRTCD   7                       E85931
+     C                     PARM '*UPDATE' WOPTN   7                       E85931
+     C                     PARM *BLANKS   WKEY   10                       E85931
+     C           SDCURR    PARM SDCURR    DSSDY                           E85931
+     C           *IN89     IFEQ *ON                                       E85931
+     C           *IN88     OREQ *ON                                       E85931
+     C           WRTCD     ORNE *BLANKS                                   E85931
+     C           *LOCK     IN   LDA                                       E85931
+     C                     SETON                     U7U8                 E85931
+     C                     Z-ADD3         DBASE            ***************E85931
+     C                     MOVEL'AOCURRC0'DBFILE           *DB ERR. 003  *E85931
+     C                     MOVELWCCY      DBKEY            ***************E85931
+     C                     MOVE ##PGM     DBPGM                           E85931
+     C                     OUT  LDA                                       E85931
+     C                     EXSR *PSSR                                     E85931
+     C                     ENDIF                                          E85931
+     C*                                                                   E85931
+     C*                                                                   E85931
+     C*----------------------------------------------------------------   E85931
+     C*                                                                   E85931
+     C*** Remove subroutine name in stack                                 E85931
+     C                     MOVEA*BLANKS   @STK,Q                          E85931
+     C                     SUB  1         Q                               E85931
+     C*                                                                   E85931
+     C                     ENDSR                                          E85931
+     C*                                                                   E85931
+     C*****************************************************************
+     C*                                                               *
+     C* ZTNLU1 -  Next Transaction Number                             *
+     C*                                                               *
+     C* Called by: UPDFWR                                             *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR                           ** ZTNLU1   **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q
+     C                     MOVEL'ZTNLU1  '@STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*                                                               *
+     C* EXCEPT -  Exception Output to Forward Rates File              *
+     C*                                                               *
+     C* Called by: UPDFWR                                             *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           EXCEPT    BEGSR                           ** EXCEPT   **
+     C*
+     C*** Setup subroutine name in stack
+     C                     ADD  1         Q
+     C                     MOVEL'EXCEPT  '@STK,Q
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*
+     C                     MOVEASTAMP,1   FRTMST           Default Timestamp                  CPK015
+     C                     EXCPT
+     C                     SETOF                     444647
+     C*
+     C*
+     C*----------------------------------------------------------------
+     C*
+     C*** Remove subroutine name in stack
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C/EJECT
+      *****************************************************************   CEU026
+      *                                                               *   CEU026
+      *  RECALC - Subroutine to do Recalculation for Exchange         *   CEU026
+      *           Rate of 'OUT' Currency Against 'IN' Base            *   CEU026
+      *                                                               *   CEU026
+      *  Called By: VALIDA                                            *   CEU026
+      *  Calls:                                                       *   CEU026
+      *                                                               *   CEU026
+      *****************************************************************   CEU026
+      *                                                                   CEU026
+     C           RECALC    BEGSR                           *** RECALC *** CEU026
+      *                                                                   CEU026
+     C*                                                                   CEU026
+     C*** Setup subroutine name in stack                                  CEU026
+     C                     ADD  1         Q                               CEU026
+     C                     MOVEL'RECALC  '@STK,Q                          CEU026
+     C*                                                                   CEU026
+     C*----------------------------------------------------------------   CEU026
+      *                                                                   CEU026
+     C*** Save rates downloaded from Citydealer for OUT/EURO Spot rate    152522
+     C*** update                                                          152522
+     C                     Z-ADDWAT       RTS                             152522
+     C*                                                                   152522
+     C                     Z-ADD1         X       20                      CEU026
+     C           X         DOWLE25                                        CEU026
+      *                                                                   CEU026
+      ** Setup Details To Calculate Exchange Rate.                        CEU026
+      *                                                                   CEU026
+     C           RAT,X     IFNE 0                                         CEU026
+     C******************** Z-ADDSPOTRA    ZRATE1 138                CEU026152073
+     C******************** MOVE MULDIV    ZMDI1   1                 CEU026152073
+     C******************** Z-ADDRAT,X     ZRATE2 138                CEU026152073
+     C******************** MOVE A6MDIN    ZMDI2   1                 CEU026152073
+     C                     Z-ADDSPOTRA    ZRATE2 138                      152073
+     C                     MOVE MULDIV    ZMDI2   1                       152073
+     C                     Z-ADDRAT,X     ZRATE1 138                      152073
+     C***  As rate received = the OUT/EUR rate, use the OUT/EUR           152522
+     C***  multiply/divide indicator (A6INMD) for ZMDI1.                  152522
+     C***  If first time, M/D indicator may be blank and must be          152522
+     C***  defaulted.                                                     152522
+     C******************** MOVE A6MDIN    ZMDI1   1                 152073152522
+     C           A6INMD    IFEQ ' '                                       152522
+     C           A6MDIN    IFEQ 'D'                                       152522
+     C                     MOVE 'M'       A6INMD                          152522
+     C                     ELSE                                           152522
+     C                     MOVE 'D'       A6INMD                          152522
+     C                     ENDIF                                          152522
+     C***  Save default for SDCURRPD update                               152522
+     C                     MOVE A6INMD    #MDI1   1                       152522
+     C                     ENDIF                                          152522
+     C                     MOVE A6INMD    ZMDI1   1                       152522
+     C                     EXSR ZXRATE                                    CEU026
+      *                                                                   152522
+     C***  If rate is recripocal, call subroutine again with rates        152522
+     C***  reversed (input rate = ZRATE2; fixed IN/EUR rate = ZRATE1)     152522
+     C*                                                                   152522
+     C           ZRATEX    IFLT 1                                         152522
+     C                     Z-ADDSPOTRA    ZRATE1 138                      152522
+     C                     Z-ADDRAT,X     ZRATE2 138                      152522
+     C                     EXSR ZXRATE                                    152522
+     C                     ENDIF                                          152522
+      *                                                                   CEU026
+      ** Move new Forward rate into Rates array for Validation.           CEU026
+      *                                                                   CEU026
+     C                     Z-ADDZRATEX    RAT,X                           CEU026
+     C                     ADD  1         X                               CEU026
+     C                     ELSE                                           CEU026
+     C                     LEAVE                                          CEU026
+     C                     ENDIF                                          CEU026
+     C                     ENDDO                                          CEU026
+     C*----------------------------------------------------------------   CEU026
+     C*                                                                   CEU026
+     C*** Remove subroutine name in stack                                 CEU026
+     C                     MOVEA*BLANKS   @STK,Q                          CEU026
+     C                     SUB  1         Q                               CEU026
+     C*                                                                   CEU026
+     C                     ENDSR                                          CEU026
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR  - Program exception error routine                      *
+     C*          Called automatically if a program error occurs,      *
+     C*          or directly by the program code using EXSR.          *
+     C*          This subroutine DUMPs the program just once.         *
+     C*                                                               *
+     C* Called by: INIT                                               *
+     C*                                                               *
+     C* Calls: None                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C*
+     C***  Check if *PSSR has already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C*
+     C                     MOVEL'DBERR'   P@RTCD
+     C*                                                                   E85931
+     C                     ROLBK                                          E85931
+     C*
+     C                     DUMP
+     C*
+     C*
+     C                     ENDIF
+     C*
+     C***  If *PSSR already run, just end the program here.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      **  Subroutine to Calculate Exchange Rates                          CEU026
+      /COPY ZSRSRC,ZXRATEZ1                                               CEU026
+     O*
+     O*** UPDATE FWDRT HEADER
+     OFWDRT   E        44
+     O                         NORE       7P
+     O                         NINS      16P
+     O                         NAMD      19P
+     O                         NDEL      22P
+     O                         NLRA      25P
+     O                         BJRDNB   252P
+     O                         ACTNX    253
+     O                         NATN     256P
+     O*
+     O*** ADD FWDRT DETAIL
+     OFWDRTFE EADD     46
+     O                                    1 'D'
+     O                         CCYS       4
+     O                         DYS       79P
+     O                         RTN      254P
+     O                         BJRDNB   257P
+     O                         ACTNX    258
+     O                         NATN     261P
+     O                         FRTMST   638
+     O*
+     O*** UPDATE FWDRT DETAIL
+     OFWDRT   E        47
+     O                                    1 'D'
+     O                         DYS       79P
+     O                         RTN      254P
+     O                         BJRDNB   257P
+     O                         ACTNX    258
+     O                         NATN     261P
+     O*
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Finastra International Limited 2001

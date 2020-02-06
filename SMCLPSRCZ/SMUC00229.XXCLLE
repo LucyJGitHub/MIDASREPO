@@ -1,0 +1,53 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       SMUC00229 - Create Backup of TABLETN for upgrade            */
+/*                                                                   */
+/*       (C) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. CUP023  *REDUNDANT Date 27Apr11              */
+/*       Prev Amend No. AR690511*CREATE    Date 02Feb11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP023 - Program is unnecessary.                            */
+/*       AR690511 - Rename from SMC000090 to SMUC00229               */
+/*                  (Child: AR690512)                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&LIB1) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PFX)
+             CHGVAR     VAR(&LIB1) VALUE(&PFX *TCAT 'DMLIB')
+             CHGVAR     VAR(&LIB2) VALUE(&PFX *TCAT 'DPLIB')
+ 
+             CHKOBJ     OBJ(&LIB2/XTABLETN) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CPYF       FROMFILE(&LIB1/TABLETN) +
+                          TOFILE(&LIB2/XTABLETN) CRTFILE(*YES)
+             CLRPFM     FILE(&LIB1/TABLETN)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+             ENDPGM

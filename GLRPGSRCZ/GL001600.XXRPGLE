@@ -1,0 +1,1497 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+      *****************************************************************
+/*S*D****RPGBASEMOD****************************************************                       CCB023
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL001600 - Transfer Equation Accounting Information          *
+      *                                                               *
+      *  Function:  This program Transfers Equation Accounting        *
+      *             Information                                       *
+      *                                                               *
+      *  Called By: GLC001600 - Transfer Equation Accounting Info.    *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *                                                               *
+      *  Last Amend No. CCB023 *REDUNDANT Date 06Aug12                *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG14211C          Date 08Aug07               *
+      *                 BUG13011           Date 15Jan07               *
+      *                 BUG12870           Date 10Dec06               *
+      *                 BUG12366           Date 27Oct06               *
+      *                 BUG12218           Date 18Oct06               *
+      *                 BG12134            Date 30Sep06               *
+      *                 CRE026  *CREATE    Date 24May06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *           Restructuring                                       *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  BUG14211C - GLC30 Failed due to wrong trailer                *
+      *  BUG13011- GLC001600 00002 ended abnormally due to undefined  *
+      *            record type in AF4PF1                              *
+      *  BUG12870- GLC001600 crashes in COB when ZZTOTD is initialized*
+      *            with more than 999                                 *
+      *  BUG12366- FOOB in GLC30 due to wrong trailer value (decimal  *
+      *            part)                                              *
+      *  BUG12218- DBERR encountered for blank value date.  This      *
+      *            should be initialized with rundate. Program also   *
+      *            caused FOOB in GLC30 due to wrong trailer value    *
+      *  BG12134 - Remove RCF processing for audit file               *
+      *  CRE026 - Consumer Banking                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  I N D I C A T O R - U S A G E                                *
+      *                                                               *
+      *    91 - Total Amount is Negative                              *
+      *    92 - Amount is Negative                                    *
+      *    93 - Amount is Zero                                        *
+      *    94 - Amount is Greater than Total Amount                   *
+      *    95 - Amount and Total Amount is Positive                   *
+      *    96 - If ZZTOTD is Zero and ZZTOTI is -ve                   *
+      *    99 - Field ZZWK3 is less than ZZTOTI                       *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      *  SRAUDIT - Subroutine to Print Audit Report                   *
+      *  VALMAP  - Subroutine to Validate and Map Input Details       *
+      *            to Output File                                     *
+      *  GLZADD  - Subroutine to add Posting Amount to Integer        *
+      *            Total and Decimal Total                            *
+      *  VALCCY  - Subroutine to Validate Currency                    *
+      *  CVTDATE - Subroutine to Validate and Convert Date into       *
+      *            Day Number                                         *
+      *  VALBRCH - Subroutine to Validate the input Branch and find   *
+      *            Valid Output Branch                                *
+      *  SRNOST  - Subroutine to Retrieve Nostro Account Details      *
+      *  VALACOD - Subroutine to Validate Account Code                *
+      *  SRGELR  - Subroutine to Retrieve Computer Suspense Account   *
+      *  GLZSUM  - Subroutine to carry out  addition for subroutine   *
+      *            GLZADD                                             *
+      ***SRRCFAU*-*Subroutine*to*Audit*Spool*File*Recorded*by*Report***                      BG12134
+      *************Control*Facility************************************                      BG12134
+      *  *PSSR   - Error processing                                   *
+      *  *INZSR  - Initialise                                         *
+      *  ZALIGN  - Subroutine to Validate Numeric Fields.             *
+      *                                                               *
+      *  The *INZSR subroutine will only get called automatically     *
+      *  on entry to the module the first time it is run              *
+      *  (unless you end the program with LR on).  Similarly          *
+      *  D-spec initialisation only happens the first time.  Use      *
+      *  RESET for subsequent passes.                                 *
+      *                                                              *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+      **Equation Accounting Information Interface Header File
+      *
+     F***AF4PF1*  IF   E             DISK    INFSR(*PSSR)                                   BUG13011
+     FAF4PF1    IF   F  133        DISK    INFSR(*PSSR)                                     BUG13011
+      *
+      **Equation Accounting Information Interface Posting File
+      *
+     F***AF3PF1*   IF   E             DISK    INFSR(*PSSR)                                  BUG13011
+     FAF3PF1    IF   F  222        DISK    INFSR(*PSSR)                                     BUG13011
+      *
+      **Branch Extension for Sub-Branches Logical based on PF SDBRCHXA
+      *
+     FSDBRCXL1  IF   E           K DISK    INFSR(*PSSR)
+      *
+      **Consumer Banking Posting Detail File
+      *
+     FGECBPD    O    E             DISK    INFSR(*PSSR)
+      *
+      **Consumer Banking Posting Trailer File
+      *
+     FGECBZZ    O    E             DISK    INFSR(*PSSR)
+     F                                     PREFIX(T_)
+      *
+      **Transfer Equation Accounting Information Exception Audit Report File
+      *
+     FGL001600AUO    E             PRINTER INFSR(*PSSR)
+     F                                     OFLIND(OF)
+     F**********                           INFDS(SPOOLU)                                     BG12134
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ D-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+     D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
+      *
+     D LDA           E DS                  EXTNAME(LDA)
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+     D/COPY ZACPYSRC,PSDS
+      *
+      ** Program Status Data Structure
+      *
+      *
+      ** +--------------------------------------+
+      ** ¦ Named constants                      ¦
+      ** ¦ ===============                      ¦
+      ** +--------------------------------------+
+ 
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+ 
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      ** Second DS for access programs, long data structure
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      ** First DS for access programs, short data structure
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      ** External DS for bank details ICD retrieval
+     D SDNARR        E DS                  EXTNAME(SDNARRPD)
+      *
+     D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
+      *
+     D SDACOD        E DS                  EXTNAME(SDACODPD)
+     D                                     PREFIX(A_)
+      *
+     D SDACNT        E DS                  EXTNAME(ACCNTAB)
+     D                                     PREFIX(AC)
+      *
+     D SDGELR        E DS                  EXTNAME(SDGELRPD)
+      *
+     D SDNOST        E DS                  EXTNAME(SDNOSTPD)
+     D   XXACCD      E                     EXTFLD(QQACCD)
+      *
+     D*SPOOLU***       DS                                                                    BG12134
+     D**PSFILEU*              83     92                                                      BG12134
+     D**PSFNUMU*             123    124B 0                                                   BG12134
+      *
+      ** +--------------------------------------+
+      ** ¦ Declared variables                   ¦
+      ** ¦ ==================                   ¦
+      ** +--------------------------------------+
+      *
+     D @RTCD           S              7A
+     D @OPTN           S              7A
+      **
+     D @ERRFLAG        S              1A
+      **
+     D W#BTOTAL        S             23P 0
+      **
+     D W#BCOUNT        S              5P 0
+      **
+     D W#PTOTAL        S             15P 0
+      **
+     D W#CHKAMT        S             14A
+      **
+     D W#AMOUNT        S             14A
+      **
+     D W#FMAM          S             23A   VARYING
+     D                                     INZ('                       ')
+      **
+     D W#NOIS          S             10A   VARYING
+     D                                     INZ('         ')
+      **
+     D PZDATEA         S              6A
+      **
+     D PZDAYNO         S              5P 0
+      **
+     D PZDFIN          S              1A
+      **
+     D PBRCX           S              3A
+      **
+     D PNARRCODE       S              2A
+      **
+     D PBRCH           S              3A
+      **
+     D PACCD           S             10A
+      **
+     D PCNUM           S              6A
+      **
+     D PCCY            S              3A
+      **
+     D PACOD           S             10A
+      **
+     D PRETL           S             10A
+      **
+     D PASEQ           S              2A
+      **
+     D PBRCD           S              3A
+      **
+     D PCUST           S              6A
+      **
+     D PCCYD           S              3A
+      **
+     D PACSN           S              2A
+      **
+     D PNONB           S              2A
+      **
+     D PCSSN           S             10A
+      **
+     D PPNOI           S              1A
+      **
+     D W#DCOUNT        S              5P 0
+      **
+     D W#DTOTAL        S             23P 0
+      **
+     D W#PRINT         S              1A
+      **
+     D ZZAMT           S             15P 3
+      **
+     D ZZAMTI          S             15P 0
+      **
+     D ZZAMTD          S              3P 0
+      **
+     D ZZTOTI          S             15P 0
+      **
+     D ZZTOTD          S              3P 0
+      **
+     D ZZWK1           S              3P 3
+      **
+     D ZZWK2           S              4P 0
+      **
+     D ZZWK3           S             15P 0
+      **
+     D ZZSIGN          S              1A
+      **
+     D TOTD            S              4P 0
+      **
+     D PSEQ            S              5A
+      **
+     D PENTY           S              3A
+      **
+     D ZSNUMU          S              6P 0
+      **
+     D ZSERR           S              1A
+      **
+     D @RUN            S              1
+      **
+     D W#Len1          S             23P 0
+      **
+     D W#Len2          S             23P 0
+      **
+     D W#Amt23N        S             23P 0
+      **
+     D W#ItemN         S             10P 0
+      **
+     D W#Pos           S              1P 0 Inz(0)
+      **
+     D W#PAD           S             30A
+      **                                                                                    BUG12218
+     D RUNDATE         S              5P 0                                                  BUG12218
+      ** Variables for calling ZALIGN
+     D PZALIGN         S              1
+     D PZFIELD         S             16
+     D PZADEC          S              1  0
+     D PZADIG          S              2  0
+      **
+     IAF4PF1    AA  26                                                                      BUG13011
+     I                                  1   20  AF4FOID                                     BUG13011
+     I                                 21   40  AF4AOID                                     BUG13011
+     I                                 41   41  AF4CTFO                                     BUG13011
+     I                                 42   42  AF4RLOC                                     BUG13011
+     I                                 43   52  AF4RTRN                                     BUG13011
+     I                                 53   62  AF4MUSR                                     BUG13011
+     I                                 63   65  AF4BRCH                                     BUG13011
+     I                                 66   68  AF4DEPT                                     BUG13011
+     I                                 69   69  AF4MBB                                      BUG13011
+     I                                 70   99  AF4BDES                                     BUG13011
+     I                                100  122  AF4BTOT                                     BUG13011
+     I                                123  132  AF4NOIT                                     BUG13011
+     I                                133  133  AF4BHAI                                     BUG13011
+     IAF3PF1    BB  27                                                                      BUG13011
+     I                                  1   20  AF3FOID                                     BUG13011
+     I                                 21   40  AF3AOID                                     BUG13011
+     I                                 41   41  AF3CTFO                                     BUG13011
+     I                                 42   42  AF3RLOC                                     BUG13011
+     I                                 43   52  AF3RTRN                                     BUG13011
+     I                                 53   62  AF3MUSR                                     BUG13011
+     I                                 63   72  AF3ACCI                                     BUG13011
+     I                                 73   75  AF3CCY                                      BUG13011
+     I                                 76   85  AF3ACCD                                     BUG13011
+     I                                 86   87  AF3ACSQ                                     BUG13011
+     I                                 88   90  AF3IBRN                                     BUG13011
+     I                                 91  104  AF3PAMT                                     BUG13011
+     I                                105  105  AF3DRCR                                     BUG13011
+     I                                106  135  AF3NARR                                     BUG13011
+     I                                136  140  AF3TRTP                                     BUG13011
+     I                                141  150  AF3TRST                                     BUG13011
+     I                                151  156  AF3VDTE                                     BUG13011
+     I                                157  164  AF3CHQN                                     BUG13011
+     I                                165  180  AF3SWCR                                     BUG13011
+     I                                181  184  AF3PRCT                                     BUG13011
+     I                                185  194  AF3ACST                                     BUG13011
+     I                                195  196  AF3BKCD                                     BUG13011
+     I                                197  197  AF3RVSF                                     BUG13011
+     I                                198  202  AF3NOIT                                     BUG13011
+     I                                203  203  AF3RINO                                     BUG13011
+     I                                204  206  AF3OCCY                                     BUG13011
+     I                                207  222  AF3OAMT                                     BUG13011
+      *****************************************************************
+      /EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      **Initialise Variables
+      *
+     C                   EVAL      W#BTOTAL = 0
+     C                   EVAL      W#BCOUNT = 0
+     C                   EVAL      W#DTOTAL = 0
+     C                   EVAL      W#DCOUNT = 0
+     C                   EVAL      ZZAMT    = 0
+     C                   EVAL      ZZAMTI   = 0
+     C                   EVAL      ZZAMTD   = 0
+     C                   EVAL      ZZTOTI   = 0
+     C                   EVAL      ZZTOTD   = 0
+     C                   EVAL      ZZSIGN   = *Blanks
+     C                   EVAL      W#PRINT  = *Blanks
+     C                   EVAL      W#PAD    = *Zeros
+      *
+      ** Read Input Posting Header File
+      *
+     C                   Read      AF4PF1
+      *
+      ** Store Batch Amount and No. of Items
+      *
+     C                   EVAL      W#FMAM = %TRIM(AF4BTOT)
+     C                   EVAL      W#Len1 = %len(%Trim(W#FMAM))
+     C                   EVAl      %len(W#FMAM) = W#Len1
+      *
+     C     '-'           SCAN      W#FMAM        W#Pos
+      *
+     C                   IF        W#Pos > 0
+     C                   MOVE      W#FMAM        W#Amt23N
+     C                   Z-SUB     W#Amt23N      W#Amt23N
+     C                   ELSE
+     C                   MOVE      W#FMAM        W#Amt23N
+     C                   ENDIF
+      *
+     C                   EVAL      W#NOIS = %TRIM(AF4NOIT)
+     C                   EVAl      W#Len1 = %len(%Trim(W#NOIS))
+     C                   EVAl      %len(W#NOIS) = W#Len1
+     C                   MOVE      W#NOIS        W#ItemN
+      *
+     C                   EVAL      W#BTOTAL = W#Amt23N
+     C                   EVAL      W#BCOUNT = W#ItemN
+      *
+      ** Check if no record exists in Input Posting Header File,
+      ** print Audit Report and END the program
+      *
+     C                   IF        %EOF(AF4PF1)
+     C                   EVAL      W#PRINT = 'E'
+     C                   EXSR      SRAUDIT
+     C                   GOTO      END
+     C                   ENDIF
+      *
+      ** Read Input Posting Detail File from First Record
+      *
+     C     1             SETLL     AF3PF1
+     C                   READ      AF3PF1
+     C                   DOW       NOT%EOF(AF3PF1)
+      ** Clear Detail File
+     C                   CLEAR                   APOSTPDF
+      ** Validate and Map Input Details to Output
+     C                   EXSR      VALMAP
+      *
+      ** Check if Account(Customer + Currency + A/c Code + A/c Seq. + Branch)
+      ** exists in Midas Plus.
+      *
+     C                   EVAL      PCNUM = CNUM
+     C                   EVAL      PCCY = CCY
+     C                   MOVE      ACOD          PACCD
+     C                   MOVE      ACSQ          PASEQ
+     C                   EVAL      PBRCH = BRCA
+      *
+     C                   CALL      'AOACCTR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*VERIFY'     @OPTN
+     C                   PARM      *BLANKS       PRETL
+     C                   PARM                    PCNUM
+     C                   PARM                    PCCY
+     C                   PARM                    PACCD
+     C                   PARM                    PASEQ
+     C                   PARM                    PBRCH
+     C     SDACNT        PARM                    DSSDY
+      *
+     C                   IF        @RTCD <> *Blanks AND ATYP = 'R'
+      *
+     C                   EVAL      W#PRINT = 'R'
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE =  'ACCNTAB'
+     C                   EVAL      DBKEY  =  PCNUM + PCCY + PACCD
+     C                                        +PASEQ + PBRCH
+     C                   EVAL      DBPGM  =  PSProcPgm
+     C                   EVAL      DBASE  =  008
+     C                   EVAL      DBMOD  =  PSProcMod
+     C                   EVAL      DBPROC =  'SR/MAIN'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+      *
+     C                   ELSE
+      *
+     C                   IF        ATYP = 'R'
+     C                   EVAL      ACNO  =  ACACNO
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      ** Write Record in Consumer Banking Posting Details output file
+      *
+     C                   WRITE     APOSTPDF
+      *
+      ** Calculate Hash Totals
+      *
+     C**********         EVAL      ZZAMT = PSTA                                             BUG12218
+     C                   EVAL      ZZAMT = PSTA/1000                                        BUG12218
+     C                   EXSR      GLZADD
+      *
+      ** Accumulate processed Record Count and Total
+      *
+     C                   EVAL      W#DCOUNT = W#DCOUNT + 1
+     C                   EVAL      W#DTOTAL = W#DTOTAL + PSTA
+      *
+      ** Read Next Record from Input Posting Detail File
+      *
+     C                   READ      AF3PF1
+      *
+      ** End Of Do While Loop
+      *
+     C                   ENDDO
+      *
+      ** If Batch No. of Items and Batch Total Amount on Posting Header file
+      ** does not match with total  no. of records and Total Posting Amount
+      ** in Detail Posting File, then it is an Error
+      *
+     C                   IF        (W#BCOUNT <> W#DCOUNT) OR
+     C                             (W#BTOTAL <> W#DTOTAL)
+     C                   EVAL       W#PRINT = 'R'
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'AF3PF1'
+     C                   EVAL      DBKEY  = 'POSTING HDR <> POSTING DTL'
+     C                   EVAL      DBPGM  = PSProcPgm
+     C                   EVAL      DBASE  = 009
+     C                   EVAL      DBMOD  = PSProcMod
+     C                   EVAL      DBPROC = 'SR/MAIN'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** Prepare Hash Totals for audit report with -ve sign  indicator
+      *
+     C                   EVAL      TOTD = ZZTOTD * 10
+     C                   IF        TOTD < 0
+     C                   EVAL      *IN47 = *ON
+     C                   ELSE
+     C                   IF        ZZTOTI < 0
+     C                   EVAL      *IN47 = *ON
+     C                   ENDIF
+     C                   ENDIF
+      *
+      ** Write Consumer Banking Posting Trailer Record with
+      ** Total Records Count and Hash Totals
+      *
+     C                   EVAL      T_RECI = 'T'
+     C**********         EVAL      T_NORE1 = W#BCOUNT                                      BUG14211C
+     C                   EVAL      T_NORE1 = W#BCOUNT + 2                                  BUG14211C
+     C                   EVAL      T_HRWN = ZZTOTI
+     C                   EVAL      T_HRDC = ZZTOTD
+     C                   EVAL      T_ZZ144 = *Blanks
+     C                   WRITE     APOSTZZF
+      *
+      ** Print Posting Summary in Audit Report
+      *
+     C**********         EVAL      PRCOUNT = W#BCOUNT                                      BUG14211C
+     C                   EVAL      PRCOUNT = W#BCOUNT + 2                                  BUG14211C
+     C                   EVAL      PRHRWN = ZZTOTI
+     C                   EVAL      PRHRDC = TOTD
+     C                   EVAL      PRSIGN = ZZSIGN
+     C                   EVAL      W#PRINT = 'T'
+     C                   EXSR      SRAUDIT
+      *
+      ** Program Ends with LR seton and Returns to the caller
+      *
+     C     END           TAG
+     C                   EVAL      *INLR = *ON
+      *
+     C                   RETURN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALMAP  - Subroutine to Validate and Map Input Details to     *
+      *           Output File                                         *
+      *                                                               *
+      * Called By: Main processing                                    *
+      *                                                               *
+      * Calls:VALBRCH,CVTDATE,VALCCY,*PSSR,SRNOST,VALACOD,SRGELR      *
+      *****************************************************************
+     C     VALMAP        BEGSR
+      *
+     C                   EVAL      RECI = 'P'
+      *
+      ** Validate Currency
+     C                   EXSR      VALCCY
+      *
+     C                   EVAL      CCY = AF3CCY
+     C                   EVAL      ACODQQ = 0
+      *
+     C                   IF        AF3ACSQ = *Blanks
+     C                   MOVE      '01'          ACSQ
+     C                   ELSE
+     C                   EVAL      PZADEC = 0
+     C                   EVAL      PZADIG = 2
+     C                   EVAL      PZFIELD = AF3ACSQ
+     C                   EXSR      ZALIGN
+     C                   IF        PZALIGN = 'Y'
+     C                   MOVE      PZFIELD       ACSQ
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      IPDN = *Blanks
+     C                   EVAL      ACNO = 0
+     C                   EVAL      PSTD = BJRDNB
+     C                   IF        AF3VDTE <>*BLANKS                                        BUG12218
+      *
+      ** Convert Value Date from YYMMDD to DDMMYY
+      ** and then convert to Midas Runday Number
+      *
+     C                   EVAL      PZDATEA = %SUBST(AF3VDTE: 5:2) +
+     C                                       %SUBST(AF3VDTE:3: 2) +
+     C                                       %SUBST(AF3VDTE:1:2)
+     C                   EXSR      CVTDATE
+      *
+     C                   IF        @ERRFLAG = 'N'
+     C                   EVAL      VALD = PZDAYNO
+     C                   ENDIF
+     C*                                                                                     BUG12218
+     C                   ELSE                                                               BUG12218
+     C                   EVAL      VALD = RUNDATE                                           BUG12218
+     C                   ENDIF                                                              BUG12218
+      *
+     C                   EVAL      PNAR = ALDON
+      *
+      ** Check If Posting Amount is numeric or not
+      *
+     C                   EVAL      W#AMOUNT = AF3PAMT
+     C                   EVAL      W#Len1 = %Len(W#AMOUNT)
+     C                   EVAL      W#Len2 = %Len(%Trim(W#AMOUNT))
+     C                   EVAL      W#AMOUNT = %SUBST(W#PAD:1:W#Len1-W#Len2)
+     C                                        + %Trim(W#AMOUNT)
+      *
+     C                   MOVE      W#AMOUNT      W#PTOTAL
+     C                   MOVE      W#PTOTAL      W#CHKAMT
+      *
+      ** If Posting Amount is not Numeric  produce Database Error
+      ** and Print Record in Audit Report
+      *
+     C                   IF        W#AMOUNT <> W#CHKAMT
+      *
+     C                   EVAL      W#PRINT = 'R'
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'AF3PF1'
+     C                   EVAL      DBKEY  = AF3PAMT
+     C                   EVAL      DBPGM  = PSProcPgm
+     C                   EVAL      DBASE  = 006
+     C                   EVAL      DBMOD  = PSProcMod
+     C                   EVAL      DBPROC = 'SR/VALMAP'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+      *
+     C                   ELSE
+      *
+     C                   EVAL      PSTA = W#PTOTAL
+     C                   ENDIF
+      *
+     C                   MOVE      AF3DRCR       DRCR
+     C                   EVAL      ASOC = *Blanks
+      *
+     C                   EVAL      PZADEC = 0
+     C                   EVAL      PZADIG = 8
+     C                   EVAL      PZFIELD = AF3CHQN
+     C                   EXSR      ZALIGN
+     C                   IF        PZALIGN = 'Y'
+     C                   MOVE      PZFIELD       CHQN
+     C                   ENDIF
+      *
+     C                   EVAL      SPOS = '  GE-CB'
+      *
+      ** Validate Branch Code
+      *
+     C                   EVAL      PBRCH = AF3IBRN
+     C                   EXSR      VALBRCH
+      *
+      ** If Branch code does not exists in SDBRCHPD, check it should be a valid
+      ** branch on SDBRCHXA, in this case populate Main Branch
+      *
+     C                   IF        @RTCD <> *Blanks
+      *
+     C                   EVAL      PBRCX = AF3IBRN
+     C     PBRCX         CHAIN     SDBRCXL1
+      *
+     C                   IF        %FOUND(SDBRCXL1)
+     C                   EVAL      BRCA  = BXBRCD
+     C                   EVAL      PBRCH = BRCA
+     C                   EXSR      VALBRCH
+     C                   ELSE
+      *
+      ** If Input Branch code does not exists in SDBRCHPD and SDBRCHXA,
+      ** generate Database Error and Output record details on Audit Report
+      *
+     C                   EVAL      W#PRINT = 'R'
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'SDBRCHXA'
+     C                   EVAL      DBKEY  = AF3IBRN
+     C                   EVAL      DBPGM  = PSProcPgm
+     C                   EVAL      DBASE  = 007
+     C                   EVAL      DBMOD  = PSProcMod
+     C                   EVAL      DBPROC = 'SR/VALMAP'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ELSE
+     C                   EVAL      BRCA = AF3IBRN
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      CNUM   = A8BICN
+     C                   EVAL      REJC   = *Zeros
+     C                   EVAL      DPMT   = *Blanks
+     C                   EVAL      RRNM   = 0
+     C                   EVAL      ZZ009  = *Blanks
+     C                   EVAL      ZZ002  = *Blanks
+     C                   EVAL      EXIN   = *Blanks
+     C                   BITOFF    '01234567'    PRIN
+     C                   EVAL      GETP   = *Blanks
+     C                   EVAL      ACUM   = 0
+     C                   EVAL      PRFC   = AF3PRCT
+     C                   EVAL      PTIM   = 235959
+     C                   EVAL      VOIN   = 0
+     C                   EVAL      MGTT   = *Blanks
+     C                   EVAL      LTAI   = 0
+     C                   EVAL      ZZ007  = *Blanks
+     C                   EVAL      RINO   = *Blanks
+     C                   EVAL      SWCR   = *Blanks
+     C                   EVAL      DLREF  = *Blanks
+     C                   EVAL      FACO   = *Blanks
+     C                   EVAL      DBCNUM = *Zeros
+     C                   EVAL      PREF   = *Blanks
+     C                   EVAL      OTRFQQ = *Blanks
+     C                   EVAL      OTTP   = AF3TRTP
+     C                   EVAL      OTST   = AF3TRST
+     C                   EVAL      SDCB   = 0
+     C                   EVAL      SDLB   = 0
+     C                   EVAL      BOKC   = AF3BKCD
+      *
+     C                   EVAL      PZADEC  = 0
+     C                   EVAL      PZADIG  = 5
+     C                   EVAL      PZFIELD = AF3NOIT
+     C                   EXSR      ZALIGN
+     C                   IF        PZALIGN = 'Y'
+     C                   MOVE      PZFIELD       NITMS
+     C                   ENDIF
+      *
+     C                   EVAL      REBI   = *Blanks
+     C                   EVAL      CHGA   = 0
+     C                   EVAL      ZZ019  = *Blanks
+     C                   EVAL      TLIN   = *Blanks
+     C                   EVAL      TRCCY  = *Blanks
+     C                   EVAL      STYP   = *Blanks
+     C                   EVAL      CQRI   = *Blanks
+     C                   EVAL      PBTT   = *Blanks
+     C                   EVAL      ORBR   = *Blanks
+     C                   EVAL      ORAMT  = 0
+     C                   EVAL      XRFI   = *Blanks
+     C                   EVAL      XRFN   = 0
+     C                   EVAL      TRST   = *Blanks
+     C                   EVAL      ACKEY  = *Blanks
+     C                   EVAL      FEEFLG = *Blanks
+     C                   EVAL      FEEVAL = 0
+     C                   EVAL      FEEPCT = 0
+     C                   EVAL      RORACT = *Blanks
+     C                   EVAL      RORCTY = *Blanks
+     C                   EVAL      RORBNK = *Blanks
+     C                   EVAL      RORCDE = *Blanks
+     C                   EVAL      PORACT = *Blanks
+     C                   EVAL      PORCTY = *Blanks
+     C                   EVAL      PORBNK = *Blanks
+     C                   EVAL      PORCDE = *Blanks
+     C                   EVAL      DSTACT = *Blanks
+     C                   EVAL      DSTCTY = *Blanks
+     C                   EVAL      DSTBNK = *Blanks
+     C                   EVAL      SETDAT = 0
+     C                   EVAL      TICKER = *Blanks
+     C                   EVAL      EXCHNG = *Blanks
+     C                   EVAL      NOMINL = 0
+     C                   EVAL      FDTRID = *Blanks
+     C                   EVAL      OTRF   = *Blanks
+      *
+      ** If Input Account Code is Non-Blank, Check if it is
+      ** a Nostro Account and extract the Nostro Details
+      *
+     C                   IF        AF3ACCD <> *BLANKS
+      *
+     C                   EVAL      PCCYD = %SUBST(AF3ACCD:1:3)
+     C                   EVAL      PNONB = %SUBST(AF3ACCD:4:2)
+      *
+     C                   EXSR      SRNOST
+      *
+     C                   IF        @RTCD = *Blanks
+     C                   MOVE      A7ACCD        ACOD
+     C                   EVAL      CNUM = A7CUST
+     C                   EVAL      ACSQ = A7ACSN
+     C                   EVAL      CCY  = A7CYCD
+     C                   EVAL      BRCA = A7BRCD
+      *
+      ** Check  If the account type field A5ACTY on SDACODPD is 'R'
+      ** (accessed via A7ACCD field)
+      *
+     C                   EVAL      PACCD = A7ACCD
+     C                   EXSR      VALACOD
+     C                   IF        @RTCD = *Blanks
+      *
+     C                   IF        (A_A5ACTY = 'R')
+      *
+      ** If A5ACTY is 'R', Access the account file PF/ACCNTAB using the fields
+      ** above and output the Retail Number  ACNO into the field ACNO.
+      *
+     C                   EVAL      PCNUM = CNUM
+     C                   EVAL      PCCY  = CCY
+     C                   MOVE      ACOD          PACCD
+     C                   MOVE      ACSQ          PASEQ
+     C                   EVAL      PBRCH = BRCA
+      *
+     C                   CALL      'AOACCTR0'
+      *
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM      *BLANKS       PRETL
+     C                   PARM                    PCNUM
+     C                   PARM                    PCCY
+     C                   PARM                    PACCD
+     C                   PARM                    PASEQ
+     C                   PARM                    PBRCH
+     C     SDACNT        PARM                    DSSDY
+      *
+     C                   IF        @RTCD = *Blanks
+     C                   EVAL      ACNO = ACACNO
+     C                   ENDIF
+     C
+     C                   EVAL      RIND = 1
+     C                   EVAL      TRAT = 91090
+      *
+     C                   ELSE
+      *
+     C                   EVAL      RIND = 0
+     C                   EVAL      TRAT = 0
+     C                   ENDIF
+     C                   EVAL      ATYP = A_A5ACTY
+     C                   EVAL      ACSC = A_A5ACSC
+      *
+     C                   ENDIF
+     C                   ELSE
+      *
+      ** If Non-Blank and Non-Nostro, Check if it ia valid A/c Code on SDACODPD
+      *
+     C                   EVAL      PACCD = AF3ACCD
+     C                   EXSR      VALACOD
+     C                   IF        @RTCD = *Blanks
+      *
+SKB01C                   EVAL      PZADEC = 0
+SKB01C                   EVAL      PZADIG = 10
+SKB01C                   EVAL      PZFIELD = AF3ACCD
+SKB01C                   EXSR      ZALIGN
+SKB01C                   IF        PZALIGN = 'Y'
+SKB01C                   MOVE      PZFIELD       ACOD
+SKB01C                   ENDIF
+      *
+     C                   IF        A_A5ACTY = 'R'
+     C                   EVAL      RIND = 1
+     C                   EVAL      TRAT = 91090
+      *
+     C                   ELSE
+      *
+     C                   EVAL      RIND = 0
+     C                   EVAL      TRAT = 0
+      *
+     C                   ENDIF
+     C                   EVAL      ATYP =A_A5ACTY
+     C                   EVAL      ACSC = A_A5ACSC
+      *
+     C                   ELSE
+      *
+      ** If Non Blank, Non-Nostro and not found on Account file,
+      ** then defaults to Suspense Account
+      *
+     C                   EXSR      SRGELR
+      *
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   ELSE
+      *
+      ** If Blanks, defaults to Suspense Account
+      *
+     C                   EXSR      SRGELR
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALCCY  - Subroutine to Validate Currency                     *
+      *                                                               *
+      * Called By:VALMAP                                              *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *****************************************************************
+     C     VALCCY        BEGSR
+      *
+     C                   CALL      'AOCURRR0'
+      *
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*VERIFY'     @OPTN
+     C                   PARM                    AF3CCY
+     C                   PARM                    DSSDY
+      *
+     C                   IF        @RTCD <> *Blanks
+      *
+     C                   EVAL      W#PRINT = 'D'
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'SDCURRPD'
+     C                   EVAL      DBKEY  = AF3CCY
+     C                   EVAL      DBPGM  = PSProcPgm
+     C                   EVAL      DBASE  = 003
+     C                   EVAL      DBMOD  = PSProcMod
+     C                   EVAL      DBPROC = 'SR/VALCCY'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+      *
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CVTDATE - Subroutine to Validate and Convert Date into Day    *
+      *           Number                                              *
+      *                                                               *
+      * Called By: VALMAP                                             *
+      *                                                               *
+      * Calls: *PSSR                                                  *
+      *****************************************************************
+     C     CVTDATE       BEGSR
+      *
+     C                   CALLB     'ZDATE1'
+      *
+     C                   PARM                    PZDATEA
+     C                   PARM                    PZDAYNO
+     C                   PARM      'D'           PZDFIN
+     C                   PARM      *BLANKS       @ERRFLAG
+      *
+     C                   IF        @ERRFLAG = 'Y'
+      *
+     C                   EVAL      W#PRINT = 'R'
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'AF3PF1'
+     C                   EVAL      DBKEY  = AF3VDTE
+     C                   EVAL      DBPGM  = PSProcPgm
+     C                   EVAL      DBASE  = 004
+     C                   EVAL      DBMOD  = PSProcMod
+     C                   EVAL      DBPROC = 'SR/CVTDATE'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+      *
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALBRCH - Subroutine to Validate the input Branch and find    *
+      *           Valid Output Branch                                 *
+      *                                                               *
+      * Called By: VALMAP                                             *
+      *                                                               *
+      * Calls: None.                                                  *
+      *****************************************************************
+     C     VALBRCH       BEGSR
+      *
+     C                   CALL      'AOBRCHR1'
+      *
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY'        @OPTN
+     C                   PARM                    PBRCH
+     C     SDBRCH        PARM                    DSSDY
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALACOD - Subroutine to Validate Account Code                 *
+      *                                                               *
+      * Called By:VALMAP                                              *
+      *                                                               *
+      * Calls: None.                                                  *
+      *                                                               *
+      *****************************************************************
+     C     VALACOD       BEGSR
+      *
+     C                   CALL      'AOACODR0'
+      *
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY'        @OPTN
+     C                   PARM                    PACCD
+     C     SDACOD        PARM                    DSFDY
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRGELR - Subroutine to Retrieve Computer Suspense Account     *
+      *                                                               *
+      * Called By:VALMAP                                              *
+      *                                                               *
+      * Calls: *PSSR,VALACOD                                          *
+      *****************************************************************
+     C     SRGELR        BEGSR
+      *
+      ** Access General Ledger ICD File
+      *
+     C                   CALL      'AOGELRR1'
+      *
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*FIRST'      @OPTN
+     C     SDGELR        PARM                    DSSDY
+      *
+     C                   IF        @RTCD <> *Blanks
+     C                   EVAL      W#PRINT = 'D'
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'SDGELRPD'
+     C                   EVAL      DBKEY  = @OPTN
+     C                   EVAL      DBPGM  = PSProcPgm
+     C                   EVAL      DBASE  =  005
+     C                   EVAL      DBMOD  = PSProcMod
+     C                   EVAL      DBPROC = 'SR/SRGELR'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      **
+     C                   IF        @RTCD = *Blanks
+     C                   EVAL      PACCD = BKACCD
+     C                   EXSR      VALACOD
+      *
+     C                   IF        @RTCD = *Blanks
+      *
+     C                   IF        A_A5ACTY = 'R'
+     C                   EVAL      RIND = 1
+     C                   EVAL      TRAT = 91090
+     C                   ELSE
+     C                   EVAL      RIND = 0
+     C                   EVAL      TRAT = 0
+     C                   ENDIF
+      *
+     C                   EVAL      ATYP = A_A5ACTY
+     C                   EVAL      ACSC = A_A5ACSC
+      *
+     C                   ELSE
+      *
+     C                   EVAL      RIND = 0
+     C                   EVAL      TRAT = 0
+     C                   EVAL      ATYP = *Blanks
+     C                   EVAL      ACSC = *Blanks
+      *
+     C                   ENDIF
+      *
+SKB01C                   EVAL      PZADEC = 0
+SKB01C                   EVAL      PZADIG = 10
+SKB01C                   EVAL      PZFIELD = BKACCD
+SKB01C                   EXSR      ZALIGN
+SKB01C                   IF        PZALIGN = 'Y'
+SKB01C                   MOVE      PZFIELD       ACOD
+SKB01C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRNOST - Subroutine to  Retrieve Nostro Account Details       *
+      *                                                               *
+      * Called By: VALMAP                                             *
+      *                                                               *
+      * Calls: None.                                                  *
+      *****************************************************************
+     C     SRNOST        BEGSR
+      *
+     C                   CALL      'AONOSTR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY'        @OPTN
+     C                   PARM      *BLANKS       PCUST
+     C                   PARM                    PCCYD
+     C                   PARM      *BLANKS       PACCD
+     C                   PARM      *BLANKS       PACSN
+     C                   PARM                    PNONB
+     C                   PARM      *BLANKS       PBRCD
+     C                   PARM      *BLANKS       PCSSN
+     C                   PARM      *BLANKS       PPNOI
+     C     SDNOST        PARM                    DSFDY
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * GLZADD  - Subroutine to add Posting Amount to Integer Total   *
+      *           and Decimal Total                                   *
+      *                                                               *
+      * Called By:VALMAP                                              *
+      *                                                               *
+      * Calls: GLZSUM                                                 *
+      *****************************************************************
+     C     GLZADD        BEGSR
+      *
+      ** Split ZZAMT into Integer and Decimal fields
+      *
+     C                   IF        ZZAMT <> 0
+     C                   Z-ADD     ZZAMT         ZZAMTI
+     C                   Z-ADD     ZZAMT         ZZWK1
+     C**********         Z-ADD     ZZWK1         ZZAMTD                                     BUG12366
+     C                   MOVE      ZZWK1         ZZAMTD                                     BUG12366
+      *
+      ** Both ZZAMTI and ZZAMTD contain a 'SIGN' zone now
+      *
+     C                   EXSR      GLZSUM
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * GLZSUM  - Subroutine to carry out  addition for subroutine    *
+      *           GLZADD                                              *
+      *                                                               *
+      * Subroutine Input - ZZAMTI and ZZAMTD                          *
+      * Subroutine Output - ZZTOTI , ZZTOTD and ZZSIGN                *
+      *                                                               *
+      *  Called By:VALMAP                                             *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *****************************************************************
+     C     GLZSUM        BEGSR
+      *
+      ** Initialise Indicators
+      *
+     C                   SETOFF                                       919293
+     C                   SETOFF                                       949596
+     C                   SETOFF                                       99
+      *
+      ** Determine Sign of ZZAMTI and ZZAMTD (92 is ON if -ve) Bypass if ZERO
+      *
+     C     ZZAMTI        COMP      0                                    9293
+     C   93ZZAMTD        COMP      0                                    9293
+     C   93              GOTO      ZZSEND
+      *
+      ** Determine Sign of ZZTOTI and ZZTOTD (91 is ON if -ve),
+      ** if ZERO return ZZAMOUNTand Bypass
+      *
+     C     ZZTOTI        COMP      0                                    9193
+     C   93ZZTOTD        COMP      0                                    9193
+     C                   IF        *IN93 = *ON
+      *
+     C                   Z-ADD     ZZAMTI        ZZTOTI
+     C                   Z-ADD     ZZAMTD        ZZTOTD
+     C                   GOTO      ZZSEND
+      *
+     C                   ENDIF
+      *
+      ** If Signs Differ Bypass Overflow Checks
+      *
+     C                   IF        (*IN91 = *ON  AND *IN92 = *OFF) OR
+     C                             (*IN91 = *OFF  AND *IN92 = *ON)
+      *
+     C                   GOTO      ZZOFPS
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      ZZWK2 = ZZAMTD + ZZTOTD
+     C     ZZWK2         COMP      999                                93
+     C  N93ZZTOTD        COMP      -999                                 93
+      *
+     C                   IF        (*IN93 = *ON) AND (*IN92 = *OFF)
+     C                   EVAL      ZZWK3 = ZZAMTI + 1
+     C                   EVAL      ZZWK2 = ZZWK2 - 1000                                     BUG12870
+     C                   ENDIF
+      *
+     C                   IF        (*IN93 = *ON) AND (*IN92 = *ON)
+     C                   EVAL      ZZWK3 = ZZAMTI - 1
+     C                   EVAL      ZZWK2 = ZZWK2 + 1000                                     BUG12870
+     C                   ENDIF
+      *
+     C                   IF        (*IN93 = *ON)
+     C                   EVAL      ZZWK3 = ZZWK3 + ZZTOTI
+     C                   ELSE
+     C                   EVAL      ZZWK3 = ZZAMTI + ZZTOTI
+     C                   ENDIF
+      *
+      ** If the Modulus of ZZWK3 is LT Modulus of ZZTOTI
+      ** then Overflow has occurred
+      *
+     C                   IF        (*IN92 = *OFF)
+     C     ZZWK3         COMP      ZZTOTI                               99
+     C                   ELSE
+     C     ZZWK3         COMP      ZZTOTI                             99
+     C                   ENDIF
+      *
+      ** If Overflow Occurred Initialize ZZAMT to Zero,
+      ** 99 SETON and ZZTOT fields left intact
+      *
+     C                   IF        (*IN99 = *OFF)
+     C                   EVAL      ZZTOTD = ZZWK2
+     C                   EVAL      ZZTOTI = ZZWK3
+     C                   ELSE
+     C                   EVAL      ZZAMT = 0
+     C                   ENDIF
+      *
+     C                   GOTO      ZZSEND
+      *
+      ** The Signs are Different
+      *
+     C     ZZOFPS        TAG
+      *
+      ** The ZZAMT was -ve, make it +ve to compare with ZZTOT fields
+      *
+     C                   IF        (*IN92 = *ON)
+     C                   Z-SUB     ZZAMTI        ZZAMTI
+     C                   Z-SUB     ZZAMTD        ZZAMTD
+     C                   ENDIF
+      *
+      ** The ZZTOT was -ve, make it +ve to compare with ZZAMT fields
+      *
+     C                   IF        (*IN91 = *ON)
+     C                   Z-SUB     ZZTOTI        ZZTOTI
+     C                   Z-SUB     ZZTOTD        ZZTOTD
+     C                   ENDIF
+      *
+      ** Both ZZAMT and ZZTOT are now +ve
+      *
+     C     ZZTOTI        COMP      ZZAMTI                             93  95
+     C   95ZZTOTD        COMP      ZZAMTD                             93  95
+      *
+      ** If ZZTOT = ZZAMT, return Zero
+      *
+     C                   IF        (*IN95 = *ON)
+     C                   EVAL      ZZTOTI  = 0
+     C                   EVAL      ZZTOTD = 0
+     C                   GOTO      ZZSEND
+     C                   ENDIF
+      *
+      ** If ZZTOT GT ZZAMT
+      *
+     C                   IF        (*IN93 = *ON)
+     C     ZZAMTD        COMP      ZZTOTD                             94
+      *
+     C                   IF        (*IN94 = *ON)
+     C                   EVAL      ZZTOTI = ZZTOTI - 1
+     C                   EVAL      ZZWK2 = ZZTOTD + 1000
+     C                   EVAL      ZZTOTD = ZZWK2 - ZZAMTD
+     C                   ELSE
+     C                   EVAL      ZZTOTD = ZZTOTD - ZZAMTD
+     C                   ENDIF
+      *
+     C                   EVAL      ZZTOTI = ZZTOTI - ZZAMTI
+     C                   ELSE
+      *
+      ** If ZZAMT GT ZZTOT
+      *
+     C     ZZTOTD        COMP      ZZAMTD                             94
+     C                   IF        (*IN94 = *ON)
+     C                   EVAL      ZZWK3 = ZZAMTI - 1
+     C                   EVAL      ZZWK2 = ZZAMTD + 1000
+     C                   EVAL      ZZTOTI = ZZWK3 - ZZTOTI
+     C                   EVAL      ZZTOTD = ZZWK2 - ZZTOTD
+     C                   ELSE
+     C                   EVAL      ZZTOTI = ZZAMTI - ZZTOTI
+     C                   EVAL      ZZTOTD = ZZAMTD - ZZTOTD
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      ** Reverse Sign Of ZZTOT if Larger Input Fields were -ve
+      *
+     C                   EVAL      *IN94 = *OFF
+     C                   IF        (*IN91 = *ON   AND   *IN93 = *ON)  OR
+     C                             (*IN93 = *OFF   AND  *IN92 = *ON)
+     C                   Z-SUB     ZZTOTI        ZZTOTI
+     C                   Z-SUB     ZZTOTD        ZZTOTD
+     C                   ENDIF
+      *
+      ** Restore Sign of ZZAMTI and ZZAMTD if it was reversed
+      *
+     C                   IF        (*IN92 = *ON)
+     C                   Z-SUB     ZZAMTI        ZZAMTI
+     C                   Z-SUB     ZZAMTD        ZZAMTD
+     C                   ENDIF
+     C
+     C     ZZSEND        TAG
+      *
+      ** If ZZTOTD is Zero and ZZTOTI is -ve, setup ZZSIGN
+      *
+     C     ZZTOTD        COMP      0                                      91
+     C   91ZZTOTI        COMP      0                                    96
+     C                   IF        *IN96 = *ON
+     C                   EVAL      ZZSIGN = '- '
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SRAUDIT - Subroutine to Print Audit Report                    *
+      *                                                               *
+      *  Called By:VALMAP                                             *
+      *                                                               *
+      *  Calls: None.                                                 *
+      *****************************************************************
+     C     SRAUDIT       BEGSR
+      *
+      ** Print Audit Report Header
+      *
+     C                   WRITE     HEADAU
+      *
+      ** If Print Flag is T, print trailer/control summary
+      *
+     C                   IF        W#PRINT = 'T'
+     C                   WRITE     CONTROL
+     C                   ENDIF
+      *
+      ** If Print Flag is D, Print Database Error record without record details
+      *
+     C                   IF        W#PRINT = 'D'
+     C                   WRITE     DBERROR
+     C                   ENDIF
+      *
+      ** If Print Flag is R, Print Database Error record with record details
+      *
+     C                   IF        W#PRINT = 'R'
+      *
+      ** Populate Record Details to Print
+      *
+     C                   EVAL      PRFOTRANID = AF3FOID
+     C                   EVAL      PRFOASOCID = AF3AOID
+     C                   EVAL      PRCNFVALFO = AF3CTFO
+     C                   EVAL      PRRPRLOCN  = AF3RLOC
+     C                   EVAL      PRRETCODE  = AF3RTRN
+     C                   EVAL      PRMIDUSR   =  AF3MUSR
+     C                   EVAL      PRACID = AF3ACCI
+     C                   EVAL      PRCYCD = AF3CCY
+     C                   EVAL      PRACSN = AF3ACSQ
+     C                   EVAL      PRIBCA = AF3IBRN
+     C                   EVAL      PRPTAM = AF3PAMT
+     C                   EVAL      PRDCIN = AF3DRCR
+     C                   EVAL      PRNARR = AF3NARR
+     C                   EVAL      PRTRTY = AF3TRTP
+     C                   EVAL      PRTSTY = AF3TRST
+     C                   EVAL      PRVLDT = AF3VDTE
+     C                   EVAL      PRCQNB = AF3CHQN
+     C                   EVAL      PRSWCR = AF3SWCR
+     C                   EVAL      PRPRCN = AF3PRCT
+     C                   EVAL      PRACNB = AF3ACST
+     C                   EVAL      PRBKCD = AF3BKCD
+     C                   EVAL      PRRVDI = AF3RVSF
+     C                   EVAL      PRNITM = AF3NOIT
+     C                   EVAL      PRRINO = AF3RINO
+     C                   EVAL      PROCCY = AF3OCCY
+     C                   EVAL      PROAMT = AF3OAMT
+     C                   EVAL      PRACCD = AF3ACCD
+      *
+      ** Write Database Error with Record Details
+      *
+     C                   WRITE     DBERROR
+      *
+     C                   ENDIF
+      *
+      ** If Print Flag is E, Print No Record Found
+      *
+     C                   IF        W#PRINT = 'E'
+     C                   WRITE     NODTLS
+     C                   ENDIF
+      *
+      ** Print Audit Report Footer
+      *
+     C                   WRITE     FOOTAU
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      **SRRCFAU*-*Subroutine*To*Audit*Spool*File*Recorded*by*Report****                      BG12134
+      ************Control*Facility*************************************                      BG12134
+      *****************************************************************                      BG12134
+      ***Called*By:VALMAP**********************************************                      BG12134
+      *****************************************************************                      BG12134
+      ***Calls:*None***************************************************                      BG12134
+      *****************************************************************
+     C*****SRRCFAU       BEGSR                                                               BG12134
+      **********                                                                             BG12134
+     C**********         EVAL      ZSNUMU = PSFNUMU                                          BG12134
+      **********                                                                             BG12134
+     C**********         CALL      'ZSFILE'                                                  BG12134
+     C**********         PARM      *BLANKS       PSEQ                                        BG12134
+     C**********         PARM      *BLANKS       PENTY                                       BG12134
+     C**********         PARM                    PSFILEU                                     BG12134
+     C**********         PARM                    ZSNUMU                                      BG12134
+     C**********         PARM      *BLANKS       ZSERR                                       BG12134
+      **********                                                                             BG12134
+      **If*Error*occurs*during*processing,*then*return*to*the*calling*program                BG12134
+      **********                                                                             BG12134
+     C**********         IF        ZSERR = 'Y'                                               BG12134
+     C**********         EVAL      *INU7 = *ON                                               BG12134
+     C**********         EVAL      *INU8 = *ON                                               BG12134
+     C**********         EVAL      *INLR = *ON                                               BG12134
+     C**********         RETURN                                                              BG12134
+      **********                                                                             BG12134
+     C**********         ENDIF                                                               BG12134
+      **********                                                                             BG12134
+     C**********         ENDSR                                                               BG12134
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *****************************************************************
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANK
+     C                   EVAL      @RUN = 'Y'
+     C                   DUMP
+     C                   EXSR      SRAUDIT
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+      *
+     C                   RETURN
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      **Calls:**PSSR,SRRCFAU*******************************************                      BG12134
+      * Calls: *PSSR                                                  *                      BG12134
+      *****************************************************************
+     C     *INZSR        BEGSR
+      *
+      ** Define LDA Data Area
+      *
+     C     *DTAARA       DEFINE                  LDA
+      *
+      ** Access Bank details
+      *
+     C                   CALL      'AOBANKR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*FIRST'      @OPTN
+     C     SDBANK        PARM                    DSFDY
+      *
+      ** If ReturnCode is Non-Blank, generate Database Error.
+      *
+     C                   IF        @RTCD <> *Blanks
+     C                   EVAL      W#PRINT = 'D'
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'SDBANKPD'
+     C                   EVAL      DBKEY  = @OPTN
+     C                   EVAL      DBPGM  = PSProcPgm
+     C                   EVAL      DBASE  = 001
+     C                   EVAL      DBMOD  = PSProcMod
+     C                   EVAL      DBPROC = 'SR/*INZSR'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ELSE                                                               BUG12218
+     C                   EVAL      RUNDATE= BJRDNB                                          BUG12218
+     C                   ENDIF
+      *
+     C                   CALL      'AONARRR0'
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY'        @OPTN
+     C                   PARM      'CB'          PNARRCODE
+     C     SDNARR        PARM                    DSFDY
+      *
+     C                   IF        @RTCD <> *Blanks
+     C                   EVAL      W#PRINT = 'D'
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBFILE = 'SDNARRPD'
+     C                   EVAL      DBKEY  = PNARRCODE
+     C                   EVAL      DBPGM  = PSProcPgm
+     C                   EVAL      DBASE  = 002
+     C                   EVAL      DBMOD  = PSProcMod
+     C                   EVAL      DBPROC = 'SR/*INZSR'
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C*RCF*Processing*for*Audit*Printer*File***************************                      BG12134
+     C**********         EXSR      SRRCFAU                                                   BG12134
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * ZALIGN - Validate Numeric Fields                              *
+      *                                                               *
+      * Called by: VALMAP                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+     C     ZALIGN        BEGSR
+     C                   CALLB     'ZALIGN'
+     C                   PARM      *BLANKS       PZALIGN
+     C                   PARM                    PZFIELD
+     C                   PARM                    PZADEC
+     C                   PARM                    PZADIG
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2006

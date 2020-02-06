@@ -1,0 +1,370 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SC SAR maintenance password entry window')
+      *****************************************************************
+      *                                                               *
+      *  Midas - System Control                                       *
+      *                                                               *
+      *  SC0430W0 - Switchable feature password entry window.         *
+      *                                                               *
+      *  Function:  This program generates a window to allow the      *
+      *             user to switch on switchable features by entering *
+      *             a password.                                       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *  Prev Amend No. 171530             Date 30Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSC010             Date 14May99               *
+      *                 CSC007             Date 18Nov98               *
+      *                         *CREATE    Date 08May98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  171530 - Fix 'refresh' which didn't work - recompile.        *
+      *  CSC010 - Add substitution variables to message IDs           *
+      *  CSC005 - New suite of programs and files to permit           *
+      *           insertion of switchable features via passwords.     *
+      *                                                               *
+      *****************************************************************
+      *                                                                  *
+      *       FUNCTION OF INDICATORS                                     *
+      *                                                                  *
+      *       03      F3 PRESSED EXIT PROGRAM
+      *       05      F5 PRESSED REDISPLAY THE SCREEN
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *       30      REDISPLAY THE SCREEN
+      *       50      AT LEAST ONE FIELD IN ERROR
+      *
+     FSC0430#0CF  E                    WORKSTN
+      * DISPLAY FILE FOR WINDOW
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      * DATA MEMBER FOR MAIN PROGRAM
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      **   Standard parameter list for window manager
+      *
+     C           *ENTRY    PLIST
+      * Return code
+     C                     PARM           W0RTN   7
+      * Key pressed (F3, F12)
+     C                     PARM           KEYP    6
+      * Switchable Feature ID
+     C                     PARM           P@SARN  6
+      *
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR INIT
+      *
+      ** if the client is running the update program show the SF ID
+      ** which the password is required for.
+      *
+     C           W0RTN     IFEQ '*UPD'
+     C                     MOVE *ON       *IN69
+     C                     MOVE P@SARN    SFNUM   6
+     C                     ENDIF
+     C                     SETOF                     50
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C           *IN30     DOUEQ'1'
+      *
+      **   If error write messages
+      *
+     C           *IN50     IFEQ '1'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+      *
+      **  Main format of the display file
+      *
+     C                     EXFMTWINDOWF
+     C                     EXSR CLEAR
+      *
+     C******     *IN03     CASEQ'1'       EXIT                  CSC007
+     C           *IN03     IFEQ '1'                             CSC007
+     C           *IN69     ANDEQ'0'                             CSC007
+     C                     EXSR EXIT                            CSC007
+     C                     ENDIF                                CSC007
+     C           *IN05     CASEQ'1'       RESET
+     C           *IN12     CASEQ'1'       PREV
+     C                     CAS            VALID
+     C                     ENDCS
+     C                     ENDDO
+      *
+      **   Exit from program
+      *
+     C                     EXSR END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM 'SC0430W0'ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /EJECT
+      *****************************************************************
+      * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
+      *****************************************************************
+     C           RESET     BEGSR
+      *
+      **   Clear the program message queue and call SR/INIT to retrieve
+      **   the last committed data from the extension file.
+      *
+     C                     MOVE *BLANKS   PASS             CSC007
+     C                     EXSR CLEAR
+     C                     WRITE#MSGCTL
+     C                     EXSR INIT
+      *
+      **   Reset all error indicators
+      *
+     C                     SETOF                     50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVEL'*F3'     KEYP
+     C                     MOVEL'*F3'     W0RTN
+     C                     EXSR END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+     C******               MOVE 45        WLEN    30                      CSC010
+     C******               MOVE 11        WWID    30                      CSC010
+     C                     MOVE 'INSERT'  TITLE   7
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+     C******               MOVE 10        SWROW                           CSC010
+     C******               MOVE 25        SWCOL                           CSC010
+      *
+      **   Retrieve title for window
+      *
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+      *
+     C                     SETON                         01
+     C*                    WRITE#MSGCTL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+      **   Set F12 return code and end program
+      *
+     C                     MOVEL'*F12'    KEYP
+     C                     MOVEL'*F12'    W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALIDATE THE SCREEN
+      *****************************************************************
+     C           VALID     BEGSR
+     C                     MOVE 'I'       MODE
+     C                     MOVE *BLANKS   W0RTN
+     C                     CALL 'SC3100'
+      *  Unencrypted password
+     C                     PARM           PASS   16
+      *  Passed as blank, returns error message
+      *  or blanks if no error found.
+     C                     PARM           W0RTN   7
+      *  Switchable feature ID
+     C                     PARM           P@SARN
+      *  MODE: 'I'  Insert
+     C                     PARM           MODE    1
+      *  Passed as blank
+     C                     PARM           CORE    2
+      *
+      ** If the password facility for non-core is being initiated,
+      ** call SC1200.
+      *
+     C           W0RTN     IFEQ *BLANKS
+     C           P@SARN    ANDEQ'PASSWD'
+     C**********           CALL 'UP1200'                                  CSC007
+     C                     CALL 'SC1200'                                  CSC007
+     C                     ENDIF
+     C           W0RTN     IFNE *BLANKS
+     C                     SELEC
+      *
+      ** Move error messages to zamsid and execute error-handling
+      ** subroutine.
+      *
+     C           W0RTN     WHEQ '*NRF'
+      *
+      ** Switchable feature not defined on files
+      *
+     C                     MOVE 'CBM0231' ZAMSID
+     C                     MOVELP@SARN    ZAMSDA                          CSC010
+     C           W0RTN     WHEQ '*IN77 '                                  CSC010
+      *                                                                   CSC010
+      ** Switchable feature not defined on files
+      *                                                                   CSC010
+     C                     MOVE 'CBM0249' ZAMSID                          CSC010
+     C                     MOVELP@SARN    ZAMSDA                          CSC010
+     C           W0RTN     WHEQ '*PASS'
+      *
+      ** Password incorrect
+      *
+     C                     MOVE 'CBM0232' ZAMSID
+     C           W0RTN     WHEQ '*ENCR'
+      *
+      ** Invalid characters used on encryption
+      *
+     C                     MOVE 'CBM0228' ZAMSID
+     C           W0RTN     WHEQ '*ENCR'
+      *
+      ** Switchable feature inserted successfully
+      *
+     C                     MOVE 'CBM0230' ZAMSID
+     C                     MOVELP@SARN    ZAMSDA                          CSC010
+     C                     ENDSL
+     C                     EXSR ZASNMS
+      *
+      ** Set up indicators for displaying window
+      *
+     C                     MOVE *OFF      *IN30
+     C                     MOVE *ON       *IN50
+     C                     ELSE
+      *
+      ** Pass blanks to W0RTN to signify success
+      *
+     C                     MOVEL*BLANKS   W0RTN
+     C                     EXSR END
+     C                     ENDIF
+     C           VAEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Send message to program's message queue.
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL'SC0430W0'ZAPGMQ
+     C                     END
+      *
+     C                     MOVEL'CBUSRMSG'ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001

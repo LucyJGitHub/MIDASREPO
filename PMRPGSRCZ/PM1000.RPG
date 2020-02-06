@@ -1,0 +1,969 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Save customer details to backup files')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                             *
+     F*                                                               *
+     F*  PM1000 - SAVE CUSTOMERS DETAILS TO BACKUP FILES              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 01Jul02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC003             Date 25Feb97               *
+     F*                 CPM005             Date 06AUG96               *
+     F*                 CFF004             DATE 02OCT96               *
+     F*                 S71062             DATE 27FEB96               *
+     F*                 CPM004             DATE 08FEB96               *
+     F*                 095249             DATE 06NOV95               *
+     F*                 S01486             DATE 05JUL94               *
+     F*                 063450             DATE 17NOV93               *
+     F*                 038430             DATE 03AUG93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  Last Amend No. CSD007             Date 28Aug00               *
+     F*  176443 - Avoid MCH3601 to be sent.                           *
+     F*           Pass correct parameter to AOCUSTR0.                 *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     F*         - Recompiled due to changes in PF/PMPORTPD.           *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET / LIABILITY SPLIT         *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  S71062 - FF/PM Interface - PM Changes                        *
+     F*           Recompile due to changes in PMHOLDPD, PMCLOCPD ...  *
+     F*  CPM004 - Bank Portfolios (Recompiled due to change           *
+     F*           in PF/PMTRSFPD)                                     *
+     F*  095249 - Add branch for accounts - RECOMPILE ONLY            *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  063450 - FOR DELETED PORTFOLIO SETUPM RECI TO "*"            *
+     F*           FOR PORTFOLIO REFERENCE EQUAL TP "9997"             *
+     F*    Created for 038430  enhancements to customer insertion /   *
+     F*    deletion processing                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***SDPLCSPDUF**E           K        DISK                            S01486
+     FSDPLCSPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***SDPCSDPDUF**E           K        DISK                      A     S01486
+     FPMPCSDPDUF  E           K        DISK                      A        S01486
+     F                                              KINFSR *PSSR
+     F**PMPORDPPUF**E           K        DISK                      A      S01486
+     FPMPORDPDUF  E           K        DISK                      A        S01486
+     F            PMPORTP0                          KRENAMEPMPORTP1
+     F                                              KINFSR *PSSR
+     F**PMPORTPPUF**E           K        DISK                             S01486
+     FPMPORTPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**PMPORTZZUF**E           K        DISK                             S01486
+     FPMPORTPAUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**PMCIIPPPUF**E           K        DISK                             S01486
+     FPMCIIPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**PMCCIPPPUF**E           K        DISK                             S01486
+     FPMCCIPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**PMCDIPPPUF**E           K        DISK                             S01486
+     FPMCDIPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**PMCRIPPPUF**E           K        DISK                             S01486
+     FPMCRIPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**PMPTNPPPUF**E           K        DISK                             S01486
+     FPMPTNPPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**PMCHRGPPUF**E           K        DISK                             S01486
+     FPMCHRGPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***SCSCFAPDUF**E           K        DISK                      B8275 S01486
+     FSESCFAPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR          B8275
+     F***SCOCFSPDUF**E           K        DISK                      B8275 S01486
+     FSEOCFSPDUF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR          B8275
+     FPMTPTFLLUF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F**PMCLOCPPUF**E           K        DISK                      A      S01486
+     FPMCLOCPDUF  E           K        DISK                      A        S01486
+     F            PMHOLDP0                          KRENAMEPMHOLDP2
+     F                                              KINFSR *PSSR
+     FPMHDVNLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F**PMMFHLPPUF**E           K        DISK                             S01486
+     FPMMFHLPDUF  E           K        DISK                               S01486
+     F            PMHOLDP0                          KRENAMEPMHOLHP1
+     F                                              KINFSR *PSSR
+     F**SDCUSTL0IF**E           K        DISK                             S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***Bank*Details*****************************************************S01486
+     F**SDBANKL0IF**E           K        DISK         KINFSR *PSSR        S01486
+     F*                                                                   S01486
+     F**   Audit Control
+     FPM1000AUO   E                    PRINTER      KINFSR *PSSR
+     F*************************************************************
+     E** TABLES AND ARRAYS
+     E*********************************************************************
+      ** ARRAY FOR COPYRIGHT
+      *
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+     E**
+     ICPYR@#      DS
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ISCSARD    E DSSCSARDPD                                              S01486
+     I** EXTERNAL DS FOR SAR DETAILS                                      S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I* Customer Details Accessed Via Access Program                      S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* First DS For Access Programs, Short Data Structure                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* Second DS For Access Programs, Long Data Structure                S01486
+      *                                                                   CSD007
+     IDSLDY     E DSDSLDY                                                 CSD007
+      ** Third DS for access programs, very long data structure           CSD007
+      *                                                                   CSD007
+     I**   Local data area for database error details
+     I****LDA********UDS****************************256                   S01486
+     I***************************************32 183 DBLOT                 S01486
+     I**************************************132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     IRUNDAT      DS
+     I***********                             1   7 BJMRDT                S01486
+     I                                        1   7 RUNA                  S01486
+     I                                        1   2 XDAY
+     I                                        3   5 XMONTH
+     I                                        6   70XYEAR
+     C*************************************************************
+     C** P R O G R A M    S T A R T
+     C*************************************************************
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C**   Initialize database error fields
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'PM1000'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C** Read bank details
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01486
+     C                     Z-ADD1         DBASE            * DBERROR  01 *S01486
+     C                     MOVEL@OPTN     DBKEY            ***************S01486
+     C                     MOVEL@OPTN     DBOPTN  7                       S01486
+     C                     OUT  LDA                                       S01486
+     C***********          READ SDBANKL0                 70               S01486
+     C*
+     C************IN70     IFEQ '1'                                       S01486
+     C***********          Z-ADD01        DBASE            ***************S01486
+     C***********          MOVEL'SDBANKL0'DBFILE           * DB ERROR 01 *S01486
+     C                     EXSR *PSSR                      ***************
+     C                     END
+     C                     MOVELBJMRDT    RUNA                            S01486
+     C*
+     C** CHECK FOR SAFE CUSTODY FEES                                      S01486
+     C*                                                                   S01486
+     C                     CALL 'AOSARDR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM 'S01464'  SCFKY   6                       S01486
+     C           SCSARD    PARM SCSARD    DSFDY                           S01486
+     C           @RTCD     IFEQ *BLANKS                                   S01486
+     C                     MOVEL'Y'       SCF     1                       S01486
+     C                     END                                            S01486
+      *                                                                   CGL011
+      ** Access Switchable Features file and check if CSD007              CSD007
+      ** is switched on or not.                                           CSD007
+      *                                                                   CSD007
+     C                     CALL 'AOSARDR0'                                CSD007
+     C                     PARM *BLANKS   @RTCD   7                       CSD007
+     C                     PARM '*VERIFY' @OPTN   7                       CSD007
+     C                     PARM 'CSD007'  @SARD   6                       CSD007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD007
+      *                                                                   CSD007
+     C           @RTCD     IFEQ *BLANKS                                   CSD007
+     C                     MOVE 'Y'       CSD007  1                       CSD007
+     C                     ELSE                                           CSD007
+     C                     MOVE 'N'       CSD007                          CSD007
+      *                                                                   CSD007
+      ** Database Error, if Return Code is not blanks or *NRF             CSD007
+      *                                                                   CSD007
+     C           @RTCD     IFNE '*NRF   '                                 CSD007
+     C           *LOCK     IN   LDA                                       CSD007
+     C                     MOVEL'SCSARDPD'DBFILE                          CSD007
+     C                     MOVEL'007'     DBASE                           CSD007
+     C                     MOVEL'CSD007  'DBKEY                           CSD007
+     C                     OUT  LDA                                       CSD007
+     C                     EXSR *PSSR                                     CSD007
+     C                     ENDIF                                          CSD007
+     C                     ENDIF                                          CSD007
+     C*
+     C*
+     C** First read SDPLCSPD
+     C                     READ SDPLCSPD                 70
+     C*
+     C** Processing in loop
+     C           *IN70     DOWEQ'0'                        B1
+     C** Number of portfolio customers deleted
+     C                     ADD  1         RRTOTV
+     C**********           MOVE QBCUST    WWCUST  60                                          CSD027
+     C                     MOVE QBCUST    WWCUST  6                                           CSD027
+      *
+      ***Perform*processing*to*copy*customer*details*to*backup*files*if***S01486
+      ***not*already*performed********************************************S01486
+      ** Perform processing to copy customer details to backup files      S01486
+     C***********QBPCUS    IFNE 'D'                        B2             S01486
+      *
+     C***Delete*record*from*SDPCSDPD*if*exsists***************************S01486
+     C***********QBCUST    SETLLSDPCSDPD                                  S01486
+     C***********QBCUST    READESDPCSDPD                 71               S01486
+     C** Delete record from PMPCSDPD if exists                            S01486
+     C           QBCUST    SETLLPMPCSDPD                                  S01486
+     C           QBCUST    READEPMPCSDPD                 71               S01486
+     C           *IN71     IFEQ '0'                        B3
+     C***********          DELETSDPCSDPD                                  S01486
+     C                     DELETPMPCSDPD                                  S01486
+     C                     ENDIF                           E3
+      *
+     C***Delete*all*records*for*this*customer*from*PMPORDPP***************S01486
+     C***********WWCUST    SETLLPMPORDPP                                  S01486
+     C***********WWCUST    READEPMPORDPP                 71               S01486
+     C** Delete all records for this customer from PMPORDPD               S01486
+     C           WWCUST    SETLLPMPORDPD                                  S01486
+     C           WWCUST    READEPMPORDPD                 71               S01486
+      *
+     C***Delete*from*PMPORDPP*in*loop*************************************S01486
+     C** Delete from PMPORDPD in loop                                     S01486
+     C           *IN71     DOWEQ'0'                        B3
+      *
+     C***Delete*record*from*PMPORDPP**************************************S01486
+     C***********          DELETPMPORDPP                                  S01486
+     C** Delete record from PMPORDPD                                      S01486
+     C                     DELETPMPORDPD                                  S01486
+      *
+      ** Read next record
+     C***********WWCUST    READEPMPORDPP                 71               S01486
+     C           WWCUST    READEPMPORDPD                 71               S01486
+     C                     ENDDO                           E3
+      *
+     C***Delete*all*records*for*this*customer*from*PMCLOCPP***************S01486
+     C*  Delete all records for this customer from PMCLOCPD               S01486
+     C***********WWCUST    SETLLPMCLOCPP                                  S01486
+     C***********WWCUST    READEPMCLOCPP                 71               S01486
+     C           WWCUST    SETLLPMCLOCPD                                  S01486
+     C           WWCUST    READEPMCLOCPD                 71               S01486
+      *
+     C***Delete*from*PMCLOCPP*in*loop*************************************S01486
+     C** Delete from PMCLOCPD in loop                                     S01486
+     C           *IN71     DOWEQ'0'                        B3
+      *
+     C***Delete*record*from*PMCLOCPP**************************************S01486
+     C***********          DELETPMCLOCPP                                  S01486
+     C** Delete record from PMCLOCPD                                      S01486
+     C                     DELETPMCLOCPD                                  S01486
+      *
+      ** Read next record
+     C***********WWCUST    READEPMCLOCPP                 71               S01486
+     C           WWCUST    READEPMCLOCPD                 71               S01486
+     C                     ENDDO                           E3
+      *
+     C** Access Customer Details.                                         S01486
+     C*                                                                   S01486
+     C***********          CALL 'AOCUSTR0'                         S01486 CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM *BLANKS   PRTCD   7                       S01486
+     C                     PARM '*KEY'    POPTN   7                       S01486
+     C                     PARM QBCUST    PCUST  10                       S01486
+     C                     PARM           PKYST   7                       S01486
+     C***********SDCUST    PARM SDCUST    DSFDY                     S01486176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      ***Read*SDCUSTL0*for QBCSSN                                         S01486
+     C***********QBCUST    CHAIN@BBREBG              72                   S01486
+     C************IN72     IFEQ '1'                                       S01486
+      *
+      ** If CSD007 is on, allow processing of a closed record (return     CSD007
+      ** code '*NRF' and date deleted equal to zero).                     CSD007
+      *                                                                   CSD007
+     C           CSD007    IFEQ 'Y'                                       CSD007
+     C           PRTCD     ANDEQ'*NRF'                                    CSD007
+     C           BBDTDL    ANDEQ*ZERO                                     CSD007
+      *                                                                   CSD007
+     C                     ELSE                                           CSD007
+      *                                                                   CSD007
+     C           PRTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD02        DBASE            ***************
+     C                     MOVEL'SDCUSTL0'DBFILE           * DB ERROR 02 *
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                      ***************
+     C                     END
+      *                                                                   CSD007
+     C                     ENDIF                                          CSD007
+      *                                                                   CSD007
+     C                     MOVE BBCSSN    QBCSSN
+      *
+      ***Copy*from*SDPLCSPD*to*SDPCSDPD***********************************S01486
+     C***********          WRITESDPCSDP0                                  S01486
+      ** Copy from SDPLCSPD to PMPCSDPD                                   S01486
+     C                     WRITEPMPCSDP0                                  S01486
+      *
+     C***Copy*all*records*for*this*customer*from*PMPORTPP*to*PMPORDPP*****S01486
+     C** Copy all records for this customer from PMPORTPD to PMPORDPD     S01486
+     C*
+     C***First*read*PMPORTPP**********************************************S01486
+     C***********WWCUST    SETLLPMPORTPP                                  S01486
+     C***********WWCUST    READEPMPORTPP                 71               S01486
+     C** First read PMPORTPD                                              S01486
+     C           WWCUST    SETLLPMPORTPD                                  S01486
+     C           WWCUST    READEPMPORTPD                 71               S01486
+     C*
+     C** Processing in loop
+     C           *IN71     DOWEQ'0'                        B3
+     C                     MOVEASTAMP,1   PNTMST           Default Timestamp                  CPK015
+     C                     WRITEPMPORTP1
+      *
+      ** Read next record
+     C***********WWCUST    READEPMPORTPP                 71               S01486
+     C           WWCUST    READEPMPORTPD                 71               S01486
+     C                     ENDDO                           E3
+      *
+     C***Copy*all*records*for*this*customer*from*PMHDVNLL*to*PMCLOCPP*****S01486
+     C** Copy all records for this customer from PMHDVNLL to PMCLOCPD     S01486
+     C*
+     C** First read PMHDVNLL
+     C           WWCUST    SETLLPMHDVNLL
+     C           WWCUST    READEPMHDVNLL                 71
+      *                                                                   CPM005
+      **  Read records until next non-notional position found             CPM005
+      *                                                                   CPM005
+     C           *IN71     DOWEQ'0'                                       CPM005
+     C           QFNOPO    ANDEQ'Y'                                       CPM005
+     C           WWCUST    READEPMHDVNLL                 71               CPM005
+     C                     END                                            CPM005
+     C*
+     C** Processing in loop
+     C           *IN71     DOWEQ'0'                        B3
+     C                     WRITEPMHOLDP2
+      *
+      ** Read next record
+     C           WWCUST    READEPMHDVNLL                 71
+      *                                                                   CPM005
+      **  Read records until next non-notional position found             CPM005
+      *                                                                   CPM005
+     C           *IN71     DOWEQ'0'                                       CPM005
+     C           QFNOPO    ANDEQ'Y'                                       CPM005
+     C           WWCUST    READEPMHDVNLL                 71               CPM005
+     C                     END                                            CPM005
+     C                     ENDDO                           E3
+      *
+     C***Copy*all*records*for*this*customer*from*PMMFHLPP*to*PMCLOCPP*****S01486
+     C** Copy all records for this customer from PMMFHLPD to PMCLOCPD     S01486
+     C*
+     C***First*read*PMMFHLPP**********************************************S01486
+     C***********WWCUST    SETLLPMMFHLPP                                  S01486
+     C***********WWCUST    READEPMMFHLPP                 71               S01486
+     C** First read PMMFHLPD                                              S01486
+     C           WWCUST    SETLLPMMFHLPD                                  S01486
+     C           WWCUST    READEPMMFHLPD                 71               S01486
+     C*
+     C** Processing in loop
+     C           *IN71     DOWEQ'0'                        B3
+     C                     WRITEPMHOLDP2
+      *
+      ** Read next record
+     C***********WWCUST    READEPMMFHLPP                 71               S01486
+     C           WWCUST    READEPMMFHLPD                 71               S01486
+     C                     ENDDO                           E3
+     C***********                                                         S01486
+     C***Update*indicator*QBPCUS*to*'D';*thereby*indicating*that**********S01486
+     C***details*have*been*copied*correctly*******************************S01486
+     C***********          MOVE 'D'       QBPCUS                          S01486
+     C***********          UPDATSDPLCSP0                                  S01486
+     C***********          END                             E2             S01486
+      *
+     C***Delete*all*records*for*this*customer*from*PMPORTPP***************S01486
+     C** Delete all records for this customer from PMPORTPD               S01486
+     C*
+     C***First*read*PMPORTPP**********************************************S01486
+     C***********WWCUST    SETLLPMPORTPP                                  S01486
+     C***********WWCUST    READEPMPORTPP                 71               S01486
+     C** First read PMPORTPD                                              S01486
+     C           WWCUST    SETLLPMPORTPD                                  S01486
+     C           WWCUST    READEPMPORTPD                 71               S01486
+     C*
+     C** Processing in loop
+     C           *IN71     DOWEQ'0'                        B2
+      *
+      ** If Portfolio Definition is still live delete investment
+      ** policies, notepads and management and charge details
+     C           PNRECI    IFEQ 'D'                        B3
+     C                     EXSR #P01
+      *
+      ** Block transfers to closing portfolios
+     C                     EXSR #P02
+     C                     END                             E3
+      *
+     C                     ADD  1         WWRCDL  50
+     C***********          DELETPMPORTPP                                  S01486
+     C                     DELETPMPORTPD                                  S01486
+      *
+      ** Read next record
+     C***********WWCUST    READEPMPORTPP                 71               S01486
+     C           WWCUST    READEPMPORTPD                 71               S01486
+     C                     ENDDO                           E2
+      *
+     C***Delete*all*records*for*this*customer*from*PMMFHLPP***************S01486
+     C** Delete all records for this customer from PMMFHLPD               S01486
+     C*
+     C***First*read*PMMFHLPP**********************************************S01486
+     C***********WWCUST    SETLLPMMFHLPP                                  S01486
+     C***********WWCUST    READEPMMFHLPP                 71               S01486
+     C** First read PMMFHLPD                                              S01486
+     C           WWCUST    SETLLPMMFHLPD                                  S01486
+     C           WWCUST    READEPMMFHLPD                 71               S01486
+     C*
+     C** Processing in loop
+     C           *IN71     DOWEQ'0'                        B2
+     C***********          DELETPMMFHLPP                                  S01486
+     C                     DELETPMMFHLPD                                  S01486
+      *
+      ** Read next record
+     C***********WWCUST    READEPMMFHLPP                 71               S01486
+     C           WWCUST    READEPMMFHLPD                 71               S01486
+     C                     ENDDO                           E2
+      *
+     C** Next record
+     C                     READ SDPLCSPD                 70
+     C                     ENDDO                           E1
+     C*
+     C** Read and update Portfolio Definition file trailer
+     C                     READ PMPORTZ0                 70
+     C*
+     C           *IN70     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD02        DBASE            ***************
+     C***********          MOVEL'PMPORTZZ'DBFILE           * DB ERROR 02 *S01486
+     C                     MOVEL'PMPORTPA'DBFILE           * DB ERROR 02 *S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                      ***************
+     C                     END
+     C*
+     C           PNNORE    SUB  WWRCDL    PNNORE
+     C                     UPDATPMPORTZ0
+     C*
+     C** Audit output
+     C                     WRITEHEADER
+     C                     WRITEDETAILS
+     C*
+     C                     MOVE '1'       *INLR
+     C********************************************************************R10029
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #P0101   - TO DELETE CUSTOMER INVESTMENT POLICIES                      *
+      * #P0102   - TO DELETE PORTFOLIO NOTEPADS DETAILS                        *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PBB     - TO PROCESS ALL TRANSFERS AND DELETIONS                      *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P01      BEGSR
+     C**
+     C** LOGICALLY DELETE CUSTOMER INVESTMENT POLICIES
+     C**
+     C                     EXSR #P0101
+     C**
+     C** LOGICALLY DELETE PORTFOLIO NOTEPAD DETAILS
+     C**
+     C                     EXSR #P0102
+     C**
+     C**
+     C** FLAG PORTFOLIO CHARGE DETAILS FOR CHARGE PROCESSING
+     C**
+     C                     EXSR #P0103
+     C*                                                                   S01486
+     C** Only do if Safe Custody Fees is switched on                      S01486
+     C*                                                                   S01486
+     C           SCF       IFEQ 'Y'                                       S01486
+     C*
+     C** DELETE ALL SAFE CUSTODY ACCRUALS FOR THIS PORTFOLIO
+     C                     EXSR #P0105
+     C*
+     C** DELETE ALL OUTSTANDING SC FEE SETTLEMENTS FOR THIS PORTFOLIO
+     C                     EXSR #P0106
+     C                     END                                            S01486
+     C**
+     C                     ENDSR
+     C****************************************************************
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P0101   - TO DELETE CUSTOMER INVESTMENT POLICIES                      *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P0101    BEGSR
+     C*
+     C           PMCUPR    KLIST
+     C                     KFLD           PNCNUM
+     C                     KFLD           PNPTFR
+     C           PM9997    KLIST                                          063450
+     C                     KFLD           PNCUSB                          S01486
+     C                     KFLD           PNCNUM                          063450
+     C                     KFLD           WPTFR   4                       063450
+     C           PMPKEY    KLIST                                          S01486
+     C                     KFLD           PNCUSB                          S01486
+     C                     KFLD           PNCNUM                          S01486
+     C                     KFLD           PNPTFR                          S01486
+     C*
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMCIIPPP*-*CUSTOMER*INSTRUMENT*INVESTMENT*POLICY*******S01486
+     C** ACCESS PF/PMCIIPPD - CUSTOMER INSTRUMENT INVESTMENT POLICY       S01486
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IF FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCIIPPP                                  S01486
+     C***********PMCUPR    READEPMCIIPPP                 73               S01486
+     C           PMCUPR    SETLLPMCIIPPD                                  S01486
+     C           PMCUPR    READEPMCIIPPD                 73               S01486
+     C**
+     C           *IN73     DOWEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C                     MOVEL'*'       PYRECI
+     C**
+     C                     EXCPTPMCIIU
+     C**
+     C***********PMCUPR    READEPMCIIPPP                 73               S01486
+     C           PMCUPR    READEPMCIIPPD                 73               S01486
+     C**
+     C                     END
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMCCIPPD*-*CUSTOMER*CURRENCY***INVESTMENT*POLICY*******S01486
+     C** ACCESS PF/PMCCIPPP - CUSTOMER CURRENCY   INVESTMENT POLICY       S01486
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IN FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCCIPPP                                  S01486
+     C***********PMCUPR    READEPMCCIPPP                 73               S01486
+     C           PMCUPR    SETLLPMCCIPPD                                  S01486
+     C           PMCUPR    READEPMCCIPPD                 73               S01486
+     C**
+     C           *IN73     DOWEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C                     MOVEL'*'       PZRECI
+     C**
+     C                     EXCPTPMCCIU
+     C**
+     C***********PMCUPR    READEPMCCIPPP                 73               S01486
+     C           PMCUPR    READEPMCCIPPD                 73               S01486
+     C**
+     C                     END
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMCRIPPP*-*CUSTOMER*COUNTRY****INVESTMENT*POLICY*******S01486
+     C** ACCESS PF/PMCRIPPD - CUSTOMER COUNTRY    INVESTMENT POLICY       S01486
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IN FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCRIPPP                                  S01486
+     C***********PMCUPR    READEPMCRIPPP                 73               S01486
+     C           PMCUPR    SETLLPMCRIPPD                                  S01486
+     C           PMCUPR    READEPMCRIPPD                 73               S01486
+     C**
+     C           *IN73     DOWEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C                     MOVEL'*'       P2RECI
+     C**
+     C                     EXCPTPMCRIU
+     C**
+     C***********PMCUPR    READEPMCRIPPP                 73               S01486
+     C           PMCUPR    READEPMCRIPPD                 73               S01486
+     C**
+     C                     END
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMCDIPPP*-*CUSTOMER*INDUSTRY***INVESTMENT*POLICY*******S01486
+     C** ACCESS PF/PMCDIPPD - CUSTOMER INDUSTRY   INVESTMENT POLICY       S01486
+     C** ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IN FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCDIPPP                                  S01486
+     C***********PMCUPR    READEPMCDIPPP                 73               S01486
+     C           PMCUPR    SETLLPMCDIPPD                                  S01486
+     C           PMCUPR    READEPMCDIPPD                 73               S01486
+     C**
+     C           *IN73     DOWEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C                     MOVEL'*'       P1RECI
+     C**
+     C                     EXCPTPMCDIU
+     C**
+     C***********PMCUPR    READEPMCDIPPP                 73               S01486
+     C           PMCUPR    READEPMCDIPPD                 73               S01486
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C****************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P0102   - TO DELETE PORTFOLIO NOTEPADS DETAILS                        *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P0102    BEGSR
+     C**
+     C** +++++++++++++++++++++++++++++++++++++
+     C***ACCESS*PF/PMPTNPPP*-*CUSTOMER*NOTEPAD****************************S01486
+     C** ACCESS PF/PMPTNPPD - CUSTOMER NOTEPAD                            S01486
+     C** +++++++++++++++++++++++++++++++++++++
+     C**
+     C** POSITION IN FILE
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMPTNPPP                                  S01486
+     C***********PMCUPR    READEPMPTNPPP                 73               S01486
+     C           PMCUPR    SETLLPMPTNPPD                                  S01486
+     C           PMCUPR    READEPMPTNPPD                 73               S01486
+     C**
+     C           *IN73     DOWEQ'0'
+     C**
+     C** LOGICALLY DELETE RECORD
+     C**
+     C***********          MOVEL'*'       PRRECI                          S01486
+     C                     MOVEL'*'       GARECI                          S01486
+     C**
+     C                     EXCPTPMPTNU
+     C**
+     C***********PMCUPR    READEPMPTNPPP                 73               S01486
+     C           PMCUPR    READEPMPTNPPD                 73               S01486
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P0103   - TO FLAG PORTFOLIO CHARGES                                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #P01     - TO DELETE INVESTMENT POLICIES AND NOTEPADS                  *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P0103    BEGSR
+     C**
+     C                     MOVE '0'       *IN73
+     C**
+     C***********PMCUPR    SETLLPMCHRGPP                                  S01486
+     C***********PMCUPR    READEPMCHRGPP                 73               S01486
+     C           PMCUPR    SETLLPMCHRGPD                                  S01486
+     C           PMCUPR    READEPMCHRGPD                 73               S01486
+     C**
+     C           *IN73     DOWEQ'0'
+     C**
+     C*                    MOVEL'C'       PORECI
+     C                     MOVEL'*'       PORECI
+     C**
+     C                     EXCPTPMCHRU
+     C**
+     C***********PMCUPR    READEPMCHRGPP                 73               S01486
+     C           PMCUPR    READEPMCHRGPD                 73               S01486
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      * #P0105   - DELETE SAFE CUSTODY FEE ACCRUALS FOR THIS PORFOLIO
+      *
+      * SUBROUTINE CALLS:
+      *
+      * SUBROUTINE CALLED FROM:
+      * #P01
+      *
+      * ROUTINE USES VARIABLES:
+      *
+      ********************************************************************
+     C           #P0105    BEGSR
+     C**
+     C***********PMCUPR    SETLLSCSCFAP0                                  S01486
+     C           PMPKEY    SETLLSESCFAP0                                  S01486
+     C**
+     C***********PMCUPR    READESCSCFAP0                 73               S01486
+     C           PMPKEY    READESESCFAP0                 73               S01486
+     C**
+     C           *IN73     DOWEQ'0'
+     C**
+     C                     MOVE '*'       SDRECI
+     C                     MOVE XDAY      SDDLUP
+     C                     MOVE XMONTH    SDMLUP
+     C                     Z-ADDXYEAR     SDYLUP
+     C                     TIME           SDTLUP
+     C                     MOVE 'D'       SDCHTP
+     C                     Z-ADDBJRDNB    SDLCD
+     C                     Z-ADD0         SDTNLU
+     C**
+     C***********          UPDATSCSCFAP0                                  S01486
+     C                     UPDATSESCFAP0                                  S01486
+     C**
+     C***********PMCUPR    READESCSCFAP0                 73               S01486
+     C           PMPKEY    READESESCFAP0                 73               S01486
+     C**
+     C                     END
+     C**
+     C                     MOVEL'0'       *IN73                           063450
+     C                     MOVEL'9997'    WPTFR                           063450
+     C***********PM9997    SETLLSCSCFAP0                           063450 S01486
+     C           PM9997    SETLLSESCFAP0                                  S01486
+     C**                                                                  063450
+     C***********PM9997    READESCSCFAP0                 73        063450 S01486
+     C           PM9997    READESESCFAP0                 73               S01486
+     C**                                                                  063450
+     C           *IN73     DOWEQ'0'                                       063450
+     C**                                                                  063450
+     C                     MOVE '*'       SDRECI                          063450
+     C                     MOVE XDAY      SDDLUP                          063450
+     C                     MOVE XMONTH    SDMLUP                          063450
+     C                     Z-ADDXYEAR     SDYLUP                          063450
+     C                     TIME           SDTLUP                          063450
+     C                     MOVE 'D'       SDCHTP                          063450
+     C                     Z-ADDBJRDNB    SDLCD                           063450
+     C                     Z-ADD0         SDTNLU                          063450
+     C**                                                                  063450
+     C***********          UPDATSCSCFAP0                          063450  S01486
+     C                     UPDATSESCFAP0                                  S01486
+     C**                                                                  063450
+     C***********PM9997    READESCSCFAP0                 73        063450 S01486
+     C           PM9997    READESESCFAP0                 73               S01486
+     C**                                                                  063450
+     C                     END                                            063450
+     C**                                                                  063450
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *
+      * #P0106   - DELETE OUTSTANDINDG SC FEE SETTLEMENTS FOR THIS
+      *            PORTFOLIO.
+      *
+      * SUBROUTINE CALLS:
+      *
+      * SUBROUTINE CALLED FROM:
+      * #P01
+      *
+      * ROUTINE USES VARIABLES:
+      *
+      ********************************************************************
+     C           #P0106    BEGSR
+     C**
+     C***********PMCUPR    SETLLSCOCFSP0                                  S01486
+     C           PMPKEY    SETLLSEOCFSP0                                  S01486
+     C**
+     C***********PMCUPR    READESCOCFSP0                 73               S01486
+     C           PMPKEY    READESEOCFSP0                 73               S01486
+     C**
+     C           *IN73     DOWEQ'0'
+     C**
+     C                     MOVE '*'       SERECI
+     C                     MOVE XDAY      SEDLUP
+     C                     MOVE XMONTH    SEMLUP
+     C                     Z-ADDXYEAR     SEYLUP
+     C                     TIME           SETLUP
+     C                     MOVE 'D'       SECHTP
+     C                     Z-ADDBJRDNB    SELCD
+     C                     Z-ADD0         SETNLU
+     C**
+     C***********          UPDATSCOCFSP0                                  S01486
+     C                     UPDATSEOCFSP0                                  S01486
+     C**
+     C***********PMCUPR    READESCOCFSP0                 73               S01486
+     C           PMPKEY    READESEOCFSP0                 73               S01486
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #P02     - BLOCK TRANSFERS TO CLOSING PORTFOLIOS                       *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - main processing routine                                     *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #P02      BEGSR
+     C**
+     C** ACCESS LF/PMTPTFLL - PORTFOLIO TRANSFER DETAILS BY 'TO'
+     C** PORTFOLIO
+     C                     MOVE *LOVAL    PNPTFR
+     C           PMCUPR    SETLLPMTPTFLL
+     C           PNCNUM    READEPMTPTFLL                 74
+     C*
+     C           *IN74     DOWEQ'0'
+     C**
+     C** IF RECORD FOUND UPDATE IT
+     C**
+     C                     MOVEL'N'       P8TBPR
+     C**
+     C                     EXCPTPMTRSU
+     C*
+     C           PNCNUM    READEPMTPTFLL                 74
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+     C*************************************************************
+     C** P R O G R A M    E N D
+     C*************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK                                    S01486
+     C                     MOVE 'Y'       @RUN    1                       S01486
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     WRITEHEADER                                    S01486
+     C                     WRITEERRORAU                                   S01486
+     C                     END                                            S01486
+     C                     DUMP
+     C                     SETON                         LR               S01486
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+     C                     RETRN
+     C**
+     C                     ENDSR
+     OPMCIIPP0E                PMCIIU
+     O                         PYRECI
+     OPMCCIPP0E                PMCCIU
+     O                         PZRECI
+     OPMCRIPP0E                PMCRIU
+     O                         P2RECI
+     OPMCDIPP0E                PMCDIU
+     O                         P1RECI
+     OPMPTNPP0E                PMPTNU
+     O*********                PRRECI                                     S01486
+     O                         GARECI                                     S01486
+     OPMCHRGP0E                PMCHRU
+     O                         PORECI
+     OPMTRSFP0E                PMTRSU
+     O                         P8TBPR
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Finastra International Limited 2001

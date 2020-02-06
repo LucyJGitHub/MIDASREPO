@@ -1,0 +1,135 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Obtain Menu Details')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  SECURITY PROFILE FACILITY
+     F*                                                                  *
+     F*    SF0410 - OBTAIN MENU DETAILS                                  *
+     F*                                                                  *
+     F*  Function: This program checks that the User signed on at a      *
+     F*            workstation is a valid Midas User. If so, user        *
+     F*            details are returned to calling program from MUSER:-  *
+     F*            GRPP  - initial menu group options                    *
+     F*            USER1 - user profile name                             *
+     F*            SECL  - security level                                *
+     F*            TIMO  - elapse time before time-out                   *
+     F*            WXERR - error code = 1 if record deleted or not       *
+     F*                       found                                      *
+     F*            MULT  - user's preferred language code                *
+     F*                                                                  *
+     F*  Where Used: Input Cycle                                         *
+     F*              Close of Business                                   *
+     F*                                                                  *
+     F*  Called By: MIPGM                                                *
+     F*             SCBEGIN                                              *
+     F*             SFC0300                                              *
+     F*             FCC0200                                              *
+     F*             GLC441                                               *
+     F*             GLC442                                               *
+     F*             GLC443                                               *
+     F*             GLC444                                               *
+     F*             CBC0010                                              *
+     F*             EODRST                                               *
+     F*             SCRRTTERM                                            *
+     F*                                                                  *
+     F*  Calls: None                                                     *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAAA01             Date 08Mar95               *
+      *                 S01117             Date 25Mar92               *
+     F*                  S01269                   DATE 19JUN91           *
+     F*                  S01253                   DATE 14FEB90           *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE026 - Consumer Banking (Recompile)                           *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+     F*    CAAA01 - GUI/400 development
+     F*           - recompiled over changed MUSERDD
+     F*    S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD                   *
+     F*    S01269 - TRADE AUTHORISATION: RECOMPILED FOR CHANGE TO FILE   *
+     F*             MUSER.                                               *
+     F*    S01253  -  CHANGES FOR MULTIPLE LANGUAGE SUPPORT              *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FMUSER   IF  E           K        DISK
+     F* MIDAS users file
+     F*
+     F*                 ************************
+     F*                  FUNCTION OF INDICATORS
+     F*                 ************************
+     F*
+     F* ID F  C  H  L
+     F*
+     F*      10         User record not found or deleted
+     F*
+     F********************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     I********************************************************************
+     I**
+     I**     Program status data structure
+     I**
+     IPSDS       SDS
+     I                                      254 263 WSUSER
+     I*
+     I********************************************************************
+     I/EJECT
+     C********************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C*  CALCULATIONS
+     C*  ============
+     C*
+     C*  Attempt to get user details
+     C           WSUSER    CHAINMUSER                10
+     C*
+     C*  Check for deleted record
+     C*
+     C           *IN10     IFEQ '0'
+     C           RECI      ANDNE'D'
+     C                     SETON                     10
+     C                     END
+     C*
+     C*  Set error flag if deleted or error
+     C*
+     C           *IN10     IFEQ '1'
+     C                     Z-ADD1         WXERR
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  PLIST's
+     C*  =======
+     C*
+     C*  *ENTRY PLIST
+     C           *ENTRY    PLIST
+     C                     PARM           GRPP
+     C                     PARM           USER1
+     C                     PARM           SECL
+     C                     PARM           TIMO
+     C                     PARM           WXERR   10
+     C                     PARM           MULT                            S01253
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

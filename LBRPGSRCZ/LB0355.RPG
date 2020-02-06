@@ -1,0 +1,1360 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Borrowing Power Weighting report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0355 - Borrowing Power Weighting Report                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3644            Date 12Jul04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01498             Date 11Aug94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3644 - Serious Error in Collateralised Lending (Recompile)*
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*           (Removed execution of subroutine #C in subroutine   *
+     F*            #B and moved it in the mainline section)           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*   C R E A T I O N     P A R A M E T E R S                     *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F********************************************************************
+     F*
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****Bank*Details*File.*Prefix*-*BJ******************************   S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F**   Portfolio Lending Trailer. Prefix - TR
+     FLBTRAIPDIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**   File controls printer file
+     F***LB0355AUO***E             26     PRINTER      KINFDS ERF2DS      S01498
+     FLB0355AUO   E             26     PRINTER      KINFDS SPOOLU         S01498
+     F                                              KINFSR *PSSR
+     F*
+     F*****Report*Selection*File.*No*Prefix.***************************   S01498
+     F***QINLINE IF**F      96            DISK         KINFSR *PSSR     UCS01498
+     F*
+     F**   Borrowing Power Weighting File. Prefix - BP
+     FLBBPWRL1IF  E           K        DISK
+     F            LBBPWRD0                          KRENAMELBBPWRD1
+     F                                              KINFSR *PSSR
+     FLBBPWRL2IF  E           K        DISK
+     F            LBBPWRD0                          KRENAMELBBPWRD2
+     F                                              KINFSR *PSSR
+     FLBBPWRL3IF  E           K        DISK
+     F            LBBPWRD0                          KRENAMELBBPWRD3
+     F                                              KINFSR *PSSR
+     FLBBPWRL4IF  E           K        DISK
+     F            LBBPWRD0                          KRENAMELBBPWRD4
+     F                                              KINFSR *PSSR
+     FLBBPWRL5IF  E           K        DISK
+     F            LBBPWRD0                          KRENAMELBBPWRD5
+     F                                              KINFSR *PSSR
+     F*
+     F*****Client*Master*File.*Prefix*-*BB*&*CU************************   S01498
+     F***SDLBCSL0IF**E           K        DISK         KINFSR *PSSR       S01498
+     FLBLBCSJ0IF  E           K        DISK         KINFSR *PSSR          S01498
+     F*
+     F*****Instrument*Types*File.*Prefix*-*PD**************************   S01498
+     F***SDPLINL4IF**E           K        DISK         KINFSR *PSSR       S01498
+     F*
+     F**   Security Types File. No Prefix.
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F*****Country*Codes*File.*Prefix*-*A4*****************************   S01498
+     F***SDCTRYL0IF**E           K        DISK         KINFSR *PSSR       S01498
+     F*
+     F**   Detail Output printer file
+     F***LB0355P1O***E             25     PRINTER      KINFDS ERF1DS      S01498
+     FLB0355P1O   E             25     PRINTER      KINFDS SPOOL      UC  S01498
+     F                                              KINFSR *PSSR
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                 ------------------------                        *
+     F** 21 - COUNTRY CODES INDICATOR                                    *
+     F** 22 - INSTRUMENT CODES INDICATOR                                 *
+     F** 23 - SECURITY CODES INDICATOR                                   *
+     F** 24 - CLIENT DETAILS INDICATOR                                   *
+     F** 25 - OVERFLOW INDICATOR ON PRINTER FILE                         *
+     F** 26 - OVERFLOW INDICATOR ON FILE CONTROLS                        *
+     F***71*-*READ*FAILS*ON*'SDBANKPD'************************************S01498
+     F***72*-*END*OF*'QINLINE'*FILE***************************************S01498
+     F** 72 - 'NO DETAILS TO REPORT' INDICATOR FOR LB0355AU              *S01498
+     F** 73 - NO DETAILS TO REPORT                                       *
+     F** 74 - END OF 'LBBPWRL5' FILE                                     *
+     F***75*-*CHAIN*FAIL*ON*'SDCTRYL0'*********************************  *S01498
+     F** 76 - END OF 'LBBPWRL1' FILE                                     *
+     F***77*-*CHAIN*FAIL*ON*'SDPLINL4'*FILE****************************  *S01498
+     F** 78 - END OF 'LBBPWRL2' FILE                                     *
+     F** 79 - CHAIN FAIL ON 'SECTY' FILE                                 *
+     F***80*-*READ/CHAIN*FAIL*ON*'SDLBCSL0'*******************************S01498
+     F** 80 - READ/CHAIN FAIL ON 'LBLBCSJ0'                              *S01498
+     F** 82 - SELECTED CUSTOMER PROCESSING                               *
+     F** 83 - END OF 'LBBPWRL3' FILE                                     *
+     F** 84 - END OF 'LBBPWRL4' FILE                                     *
+     F** 85 - DATABASE ERROR                                             *
+     F** 86 - CHAIN FAIL ON PORTFOLIO LENDING TRAILER FILE               *
+     F** 98 - USED BY ZDATE2                                             *
+     F********************************************************************
+     E/EJECT
+     E********************************************************************
+     E*
+     E**   Array for COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E**   Array for date conversion
+     E/COPY ZSRSRC,ZDATE2Z1
+     E********************************************************************
+     I/EJECT
+     I********************************************************************
+     I*
+     I**   RENAME FIELDS ON LBBPWRL2
+     ILBBPWRD2
+     I              BPRECI                          BPREC2
+     I              BPCNUM                          BPCNU2
+     I              BPINST                          BPINS2
+     I              BPINPC                          BPINP2
+     I              BPSESN                          BPSES2
+     I              BPSEPC                          BPSEP2
+     I              BPCTYI                          BPCTY2
+     I              BPCTPC                          BPCTP2
+     I              BPREVD                          BPRED2
+     I              BPREVF                          BPREF2
+     I              BPREVN                          BPREN2
+     I              BPORED                          BPORE2
+     I              BPLCD                           BPLCD2
+     I              BPTLUP                          BPLCT2
+     I              BPCHTP                          BPCHT2
+     I*
+     I*****INTERNALLY*DEFINE*QINLINE***********************************   S01498
+     I***QINLINE*NS***************************                            S01498
+     I*                                                                   S01498
+     I**  Report parameters.                                              S01498
+     I*                                                                   S01498
+     I@RPARM      DS                            100                       S01498
+     I                                        1   6 WWPARM
+     I**********                              1   60WWPAR1                                    CSD027
+     I                                        1   6 WWPAR1                                    CSD027
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - Copyright Insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   REDEFINE WORK CUSTOMER NUMBER
+     IWWCUST      DS
+     I                                        1   6 WWCNU1
+     I**********                              1   60WWCNUM                                    CSD027
+     I                                        1   6 WWCNUM                                    CSD027
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     I***ERF1DS******DS                                                   S01498
+     ISPOOL       DS                                                      S01498
+     I                                       83  92 SFILE                 S01498
+     I                                    B 123 1240SFNUM                 S01498
+     I*
+     I**   FOR OVERFLOW
+     I                                    B 367 3680LINE
+     I*
+     I***ERF2DS******DS                                                   S01498
+     ISPOOLU      DS                                                      S01498
+     I                                       83  92 SFILEU                S01498
+     I                                    B 123 1240SFNUMU                S01498
+     I*
+     I**   FOR OVERFLOW
+     I                                    B 367 3680LINE1
+     I*
+     I**   LOCAL DATA AREA
+     I***LDA********UDS                            256                    S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Data structure for bank details                                 S01498
+     I*                                                                   S01498
+     ISDPLIN    E DSSDPLINPD                                              S01498
+     I**  Data structure for instrument type details                      S01498
+     I*                                                                   S01498
+     ISDCTRY    E DSSDCTRYPD                                              S01498
+     I**  Data structure for country code details                         S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure for access objects                         S01498
+     I********************************************************************
+     C/EJECT
+     C*                                                                   S01498
+     C**  Parameters input to program                                     S01498
+     C*                                                                   S01498
+     C           *ENTRY    PLIST                                          S01498
+     C                     PARM           @SEQ    5                       S01498
+     C                     PARM           @RPARM100                       S01498
+     C*                                                                   S01498
+     C********************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIALISATION
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C                     EXSR #B
+     C*                                                                   S01498
+     C**   Termination Processing                                         S01498
+     C                     EXSR #C                                        S01498
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**       INDEX TO SUBROUTINES                                      *
+     C**      ----------------------                                     *
+     C**                                                                 *
+     C**  1.  ZDATE2 - Convert a 5-figure day number into date format.   *
+     C**  2.  #ZA    - Sets up output fields for report                  *
+     C**  3.  #ZBA   - Sets up output fields for report using LBBPWRL2   *
+     C**  4.  #ZB    - Processes instrument and security details for     *
+     C**               clients                                           *
+     C**  5.  #ZC    - Accesses instrument file and outputs details      *
+     C**  6.  #ZD    - Accesses security file and outputs details        *
+     C**  7.  #BA    - Processes country codes                           *
+     C**  8.  #BB    - Processes instrument codes                        *
+     C**  9.  #BC    - Processes security codes                          *
+     C** 10.  #BD    - Processes all client codes                        *
+     C** 11.  #BE    - Process selected client code                      *
+     C** 12.  #A     - Accesses SDBANKPD and initialises work fields     *
+     C** 13.  #B     - Main processing                                   *
+     C** 14.  #C     - Termination processing                            *
+     C** 14.  #PSSR  - Program error handling routine                    *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A 5-FIGURE DAY NUMBER INTO DATE FORMAT
+     C**
+     C**   CALLED BY   - #ZA,#ZBA                                        *
+     C**   CALLS       - NONE                                            *
+     C**                                                                 *
+     C/COPY ZSRSRC,ZDATE2Z2
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   #ZA - THIS SUBROUTINE SETS UP OUTPUT FIELDS FOR REPORT        *
+     C**          USING 'LBBPWRL1' DETAILS                               *
+     C**                                                                 *
+     C**   CALLED BY - #BA,#BC,#ZB,#ZC                                   *
+     C**   CALLS     - ZDATE2                                            *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C**   SET UP OUTPUT FIELDS FOR COUNTRIES
+     C           *IN21     IFEQ '1'
+     C                     MOVE BPCTYI    RRCTYI
+     C                     MOVE A4CNNM    RRCNAM
+     C                     Z-ADDBPCTPC    RRWGHT
+     C                     END
+     C*
+     C**   SET UP OUTPUT FIELDS FOR INSTRUMENTS
+     C           *IN22     IFEQ '1'
+     C                     MOVE BPINST    RRINST
+     C                     MOVE PDISTN    RRISTN
+     C                     Z-ADDBPINPC    RRWGHT
+     C                     END
+     C*
+     C**   SET UP OUTPUT FIELDS FOR SECURITIES
+     C           *IN23     IFEQ '1'
+     C                     MOVE BPSESN    RRSESN
+     C                     Z-ADDBPSEPC    RRWGHT
+     C                     END
+     C*
+     C**   SET UP OUTPUT FIELDS FOR CUSTOMERS
+     C           *IN24     IFEQ '1'
+     C                     MOVE WWCNUM    RRCNUM
+     C                     MOVE BBCRNM    RRCRNM
+     C                     END
+     C*
+     C**   CONVERT THE REVIEW DATE TO DDMMMYY FORMAT
+     C                     Z-ADDBPREVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRREVD
+     C*
+     C                     MOVE BPREVF    RRREVF
+     C                     Z-ADDBPREVN    RRREVN
+     C*
+     C**   SET UP ACTION CODE
+     C           BPCHTP    IFEQ 'I'
+     C                     MOVE 'INSERT'  RRACTN
+     C                     ELSE
+     C           BPCHTP    IFEQ 'A'
+     C                     MOVE 'AMEND '  RRACTN
+     C                     ELSE
+     C           BPCHTP    IFEQ 'D'
+     C                     MOVE 'DELETE'  RRACTN
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**   SET UP TIME
+     C                     MOVE BPTLUP    RRTME
+     C*
+     C**   CONVERT THE LAST CHANGE DATE TO DDMMMYY FORMAT
+     C                     Z-ADDBPLCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRLCD
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   #ZBA- THIS SUBROUTINE SETS UP OUTPUT FIELDS FOR REPORT        *
+     C**          USING 'LBBPWRL2' DETAILS                               *
+     C**                                                                 *
+     C**   CALLED BY - #ZB                                               *
+     C**   CALLS     - ZDATE2                                            *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #ZBA      BEGSR
+     C*
+     C**   SET UP OUTPUT FIELDS FOR COUNTRIES
+     C           *IN21     IFEQ '1'
+     C                     MOVE BPCTY2    RRCTYI
+     C                     MOVE A4CNNM    RRCNAM
+     C                     Z-ADDBPCTP2    RRWGHT
+     C                     END
+     C*
+     C**   SET UP OUTPUT FIELDS FOR INSTRUMENTS
+     C           *IN22     IFEQ '1'
+     C                     MOVE BPINS2    RRINST
+     C                     MOVE PDISTN    RRISTN
+     C                     Z-ADDBPINP2    RRWGHT
+     C                     END
+     C*
+     C**   SET UP OUTPUT FIELDS FOR SECURITIES
+     C           *IN23     IFEQ '1'
+     C                     MOVE BPSES2    RRSESN
+     C                     Z-ADDBPSEP2    RRWGHT
+     C                     END
+     C*
+     C**   SET UP OUTPUT FIELDS FOR CUSTOMERS
+     C           *IN24     IFEQ '1'
+     C                     MOVE WWCNUM    RRCNUM
+     C                     MOVE BBCRNM    RRCRNM
+     C                     END
+     C*
+     C**   CONVERT THE REVIEW DATE TO DDMMMYY FORMAT
+     C                     Z-ADDBPRED2    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRREVD
+     C*
+     C                     MOVE BPREF2    RRREVF
+     C                     Z-ADDBPREN2    RRREVN
+     C*
+     C**   SET UP ACTION CODE
+     C           BPCHT2    IFEQ 'I'
+     C                     MOVE 'INSERT'  RRACTN
+     C                     ELSE
+     C           BPCHT2    IFEQ 'A'
+     C                     MOVE 'AMEND '  RRACTN
+     C                     ELSE
+     C           BPCHT2    IFEQ 'D'
+     C                     MOVE 'DELETE'  RRACTN
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**   SET UP TIME
+     C                     MOVE BPLCT2    RRTME
+     C*
+     C**   CONVERT THE LAST CHANGE DATE TO DDMMMYY FORMAT
+     C                     Z-ADDBPLCD2    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRLCD
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**  #ZB - THIS SUBROUTINE PROCESSES INSTRUMENT AND SECURITY        *
+     C**        DETAILS FOR CLIENTS                                      *
+     C**                                                                 *
+     C**  CALLED BY - #BD,#BE                                            *
+     C**  CALLS     - #ZBA,#ZC,#ZD                                       *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #ZB0
+     C*
+     C**   SET UP OUTPUT FIELDS
+     C                     EXSR #ZA
+     C*
+     C**   SET ON INSTRUMENT CODE INDICATOR
+     C                     MOVE '1'       *IN22
+     C*
+     C**   SET OFF 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '0'       *IN73
+     C*
+     C**   OUTPUT HEADINGS FOR CLIENT DETAILS
+     C                     WRITEHEADER3
+     C                     WRITEHEADER2
+     C*
+     C**   SET OFF CLIENT INDICATOR
+     C                     MOVE '0'       *IN24
+     C*
+     C**   POSITION TO THE START OF CUSTOMER
+     C           *IN82     IFEQ '1'
+     C           WWCNUM    SETLLLBBPWRL1
+     C           WWCNUM    READELBBPWRL1                 76
+     C                     END
+     C           *IN76     DOWEQ'0'
+     C           BPCNUM    ANDEQWWCNUM
+     C                     ADD  1         RRNORE
+     C                     EXSR #ZC
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #ZB0
+     C                     READ LBBPWRL1                 76
+     C                     END
+     C*
+     C**   PRINT 'NO DETAILS TO REPORT'
+     C           *IN73     IFEQ '0'
+     C                     WRITENODETLS
+     C                     END
+     C*
+     C**   SET OFF INSTRUMENT CODE INDICATOR
+     C                     MOVE '0'       *IN22
+     C*
+     C**   SET ON SECURITY CODE INDICATOR
+     C                     MOVE '1'       *IN23
+     C*
+     C**   SET OFF 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '0'       *IN73
+     C*
+     C**   PRINT HEADINGS ON OVERFLOW
+     C           LINE      IFGT 48
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C                     ELSE
+     C*
+     C**   OUTPUT HEADINGS FOR SECURITY DETAILS
+     C                     WRITEHEADER2
+     C                     END
+     C*
+     C**   POSITION TO THE START OF CUSTOMER
+     C           *IN82     IFEQ '1'
+     C           WWCNUM    SETLLLBBPWRL2
+     C           WWCNUM    READELBBPWRL2                 78
+     C                     END
+     C           *IN78     DOWEQ'0'
+     C           BPCNU2    ANDEQWWCNUM
+     C                     ADD  1         RRNORE
+     C                     MOVE BPSES2    WWSESN
+     C*
+     C**   SET UP OUTPUT FIELDS
+     C                     EXSR #ZBA
+     C*
+     C                     EXSR #ZD
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #ZB0
+     C                     READ LBBPWRL2                 78
+     C                     END
+     C*
+     C**   PRINT 'NO DETAILS TO REPORT'
+     C           *IN73     IFEQ '0'
+     C                     WRITENODETLS
+     C                     END
+     C*
+     C**   SET OFF SECURITY CODE INDICATOR
+     C                     MOVE '0'       *IN23
+     C*
+     C           #ZB0      ENDSR                            ** TAG #ZB0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**  #ZC - THIS SUBROUTINE PROCESSES INSTRUMENT DETAILS             *
+     C**                                                                 *
+     C**  CALLED BY - #BB,#ZB                                            *
+     C**  CALLS     - #ZA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #ZC       BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #ZC0
+     C*
+     C***********BPINST    CHAINSDPLINL4             77                   S01498
+     C************IN77     IFEQ '1'                                       S01498
+     C*                                                                   S01498
+     C                     CALL 'AOPLINR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM BPINST    P@INST  3                       S01498
+     C           SDPLIN    PARM SDPLIN    DSFDY                           S01498
+     C*                                                                   S01498
+     C**  Check if error occurred                                         S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD2         DBASE            ****************
+     C                     MOVE *BLANKS   DBFILE           *              *
+     C***********          MOVEL'SDPLINL4'DBFILE           * DBERROR  002 S01498
+     C                     MOVE 'SDPLINPD'DBFILE           * DBERROR 002 *S01498
+     C                     MOVE *BLANKS   DBKEY            *              *
+     C                     MOVELBPINST    DBKEY            ****************
+     C                     OUT  LDA                                       S01498
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     GOTO #ZC0
+     C                     END
+     C*
+     C**   SET ON 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '1'       *IN73
+     C*
+     C**   SET UP OUTPUT FIELDS
+     C                     EXSR #ZA
+     C*
+     C**   PRINT HEADINGS ON OVERFLOW
+     C           LINE      IFGT 56
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C                     END
+     C*
+     C**   PRINT DETAIL LINE
+     C                     WRITEDETAIL
+     C*
+     C           #ZC0      ENDSR                            ** TAG #ZC0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  #ZD - THIS SUBROUTINE PROCESSES SECURITY DETAILS               *
+     C**                                                                 *
+     C**  CALLED BY - #BC,#ZB                                            *
+     C**  CALLS     - NONE                                               *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #ZD       BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #ZD0
+     C*
+     C           WWSESN    CHAINSECTY                79
+     C           *IN79     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD3         DBASE            ****************
+     C                     MOVE *BLANKS   DBFILE           *              *
+     C***********          MOVEL'SECTY'   DBFILE           * DBERROR  003 S01498
+     C                     MOVE 'SECTY'   DBFILE           * DBERROR 003 *S01498
+     C                     MOVE *BLANKS   DBKEY            *              *
+     C                     MOVELWWSESN    DBKEY            ****************
+     C                     OUT  LDA                                       S01498
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     GOTO #ZD0
+     C                     END
+     C*
+     C**   SET ON 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '1'       *IN73
+     C*
+     C**   SET UP OUTPUT FIELD FOR SECURITY NAME
+     C                     MOVE SRPN      RRSRPN
+     C*
+     C**   PRINT HEADINGS ON OVERFLOW
+     C           LINE      IFGT 56
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C                     END
+     C*
+     C**   PRINT DETAIL LINE
+     C                     WRITEDETAIL
+     C           #ZD0      ENDSR                            ** TAG #ZD0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   #BA - THIS SUBROUTINE PROCESSES COUNTRY CODES                 *
+     C**                                                                 *
+     C**   CALLED BY - #B                                                *
+     C**   CALLS     - #ZA                                               *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #BA0
+     C*
+     C**   SET OFF 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '0'       *IN73
+     C*
+     C**   SET ON COUNTRY CODES INDICATOR
+     C                     MOVE '1'       *IN21
+     C*
+     C**   OUTPUT HEADINGS
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C*
+     C**   ACCESS 'LBBPWRL5' TO OBTAIN COUNTRY CODES
+     C           *LOVAL    SETLLLBBPWRL5
+     C                     READ LBBPWRL5                 74
+     C           *IN74     DOWEQ'0'
+     C                     ADD  1         RRNORE
+     C***********BPCTYI    CHAINSDCTRYL0             75                   S01498
+     C************IN75     IFEQ '1'                                       S01498
+     C***********A4TYLC    OREQ 'D'                                       S01498
+     C                     CALL 'AOCTRYR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM BPCTYI    P@CYTI  2                       S01498
+     C           SDCTRY    PARM SDCTRY    DSFDY                           S01498
+     C*                                                                   S01498
+     C**  Check if error occurred                                         S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD4         DBASE            ****************
+     C                     MOVE *BLANKS   DBFILE           *              *
+     C***********          MOVEL'SDCTRYL0'DBFILE           * DBERROR  004 S01498
+     C                     MOVE 'SDCTRYPD'DBFILE           * DBERROR 004 *S01498
+     C                     MOVE *BLANKS   DBKEY            *              *
+     C                     MOVELBPCTYI    DBKEY            ****************
+     C                     OUT  LDA                                       S01498
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     GOTO #BA0
+     C                     END
+     C*
+     C**   SET ON 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '1'       *IN73
+     C*
+     C**   SET UP OUTPUT FIELDS
+     C                     EXSR #ZA
+     C*
+     C**   PRINT HEADINGS ON OVERFLOW
+     C           LINE      IFGT 56
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C                     END
+     C*
+     C**   PRINT DETAIL LINE
+     C                     WRITEDETAIL
+     C                     READ LBBPWRL5                 74
+     C                     END
+     C*
+     C**   PRINT 'NO DETAILS TO REPORT'
+     C           *IN73     IFEQ '0'
+     C                     WRITENODETLS
+     C                     END
+     C*
+     C**   SET OFF COUNTRY CODES INDICATOR
+     C                     MOVE '0'       *IN21
+     C*
+     C           #BA0      ENDSR                            ** TAG #BA0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   #BB - THIS SUBROUTINE PROCESSES INSTRUMENT CODES              *
+     C**                                                                 *
+     C**   CALLED BY - #B                                                *
+     C**   CALLS     - #ZC                                               *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #BB0
+     C*
+     C**   SET OFF 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '0'       *IN73
+     C*
+     C**   SET ON INSTRUMENT CODES INDICATOR
+     C                     MOVE '1'       *IN22
+     C*
+     C**   OUTPUT HEADINGS
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C*
+     C**   ACCESS 'LBBPWRL3' TO OBTAIN INSTRUMENT CODES
+     C           *LOVAL    SETLLLBBPWRL3
+     C                     READ LBBPWRL3                 83
+     C           *IN83     DOWEQ'0'
+     C                     ADD  1         RRNORE
+     C                     EXSR #ZC
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #BB0
+     C                     READ LBBPWRL3                 83
+     C                     END
+     C*
+     C**   PRINT 'NO DETAILS TO REPORT'
+     C           *IN73     IFEQ '0'
+     C                     WRITENODETLS
+     C                     END
+     C*
+     C**   SET OFF INSTRUMENT CODES INDICATOR
+     C                     MOVE '0'       *IN22
+     C*
+     C           #BB0      ENDSR                            ** TAG #BB0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   #BC - THIS SUBROUTINE PROCESSES SECURITY CODES                *
+     C**                                                                 *
+     C**   CALLED BY - #B                                                *
+     C**   CALLS     - #ZA,#ZD                                           *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #BC0
+     C*
+     C**   SET OFF 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '0'       *IN73
+     C*
+     C**   SET ON SECURITY CODES INDICATOR
+     C                     MOVE '1'       *IN23
+     C*
+     C**   OUTPUT HEADINGS
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C*
+     C**   ACCESS 'LBBPWRL4' TO OBTAIN SECURITY CODES
+     C           *LOVAL    SETLLLBBPWRL4
+     C                     READ LBBPWRL4                 84
+     C           *IN84     DOWEQ'0'
+     C                     ADD  1         RRNORE
+     C                     MOVE BPSESN    WWSESN
+     C*
+     C**   SET UP OUTPUT FIELDS
+     C                     EXSR #ZA
+     C*
+     C                     EXSR #ZD
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #BC0
+     C                     READ LBBPWRL4                 84
+     C                     END
+     C*
+     C**   PRINT 'NO DETAILS TO REPORT'
+     C           *IN73     IFEQ '0'
+     C                     WRITENODETLS
+     C                     END
+     C*
+     C**   SET OFF SECURITY CODES INDICATOR
+     C                     MOVE '0'       *IN23
+     C*
+     C           #BC0      ENDSR                            ** TAG #BC0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**  #BD - THIS SUBROUTINE PROCESSES ALL CLIENT DETAILS             *
+     C**                                                                 *
+     C**  CALLED BY - #B                                                 *
+     C**  CALLS     - #ZB                                                *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #BD       BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #BD0
+     C*
+     C**   SET OFF 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '0'       *IN73
+     C*
+     C**   SET ON CLIENT DETAILS INDICATOR
+     C                     MOVE '1'       *IN24
+     C*
+     C**   OUTPUT HEADINGS
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C*
+     C**   ACCESS*'LBBPWRL1' AND 'LBBPWRL2'
+     C           *LOVAL    SETLLLBBPWRL1
+     C                     READ LBBPWRL1                 76
+     C*
+     C           *LOVAL    SETLLLBBPWRL2
+     C                     READ LBBPWRL2                 78
+     C*
+     C**   PRINT 'NO DETAILS TO REPORT'
+     C           *IN76     IFEQ '1'
+     C           *IN78     ANDEQ'1'
+     C                     WRITENODETLS
+     C                     END
+     C*
+     C           *IN76     DOWEQ'0'
+     C           *IN78     OREQ '0'
+     C*
+     C**   SET UP REPORT CUSTOMER NUMBER
+     C           *IN76     IFEQ '1'
+     C           *IN78     ANDEQ'0'
+     C                     MOVE BPCNU2    WWCNUM
+     C                     END
+     C*
+     C           *IN76     IFEQ '0'
+     C           *IN78     ANDEQ'1'
+     C                     MOVE BPCNUM    WWCNUM
+     C                     END
+     C*
+     C           *IN76     IFEQ '0'
+     C           *IN78     ANDEQ'0'
+     C           BPCNUM    IFLE BPCNU2
+     C                     MOVE BPCNUM    WWCNUM
+     C                     ELSE
+     C                     MOVE BPCNU2    WWCNUM
+     C                     END
+     C                     END
+     C*
+     C*****ACCESS*'SDLBCSL0'*TO*OBTAIN*CLIENT*DETAILS******************   S01498
+     C***********WWCNU1    CHAINSDLBCSL0             80                   S01498
+     C*                                                                   S01498
+     C**  Access 'LBLBCSJ0' to obtain client details                      S01498
+     C           WWCNU1    CHAINLBLBCSJ0             80                   S01498
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD5         DBASE            ****************
+     C                     MOVE *BLANKS   DBFILE           *              *
+     C***********          MOVEL'SDLBCSL0'DBFILE           * DBERROR  005 S01498
+     C                     MOVE 'LBLBCSJ0'DBFILE           * DBERROR 005 *S01498
+     C                     MOVE *BLANKS   DBKEY            *              *
+     C                     MOVELWWCNUM    DBKEY            ****************
+     C                     OUT  LDA                                       S01498
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     GOTO #BD0
+     C                     END
+     C                     EXSR #ZB
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #BD0
+     C*
+     C           *IN76     IFEQ '0'
+     C           *IN78     OREQ '0'
+     C                     MOVE '1'       *IN24
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #BD0      ENDSR                            ** TAG #BD0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**  #BE - THIS SUBROUTINE PROCESSES SELECTED CLIENT DETAILS        *
+     C**                                                                 *
+     C**  CALLED BY - #B                                                 *
+     C**  CALLS     - #ZB                                                *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #BE       BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #BE0
+     C*
+     C**   SET OFF 'NO DETAILS TO REPORT' INDICATOR
+     C                     MOVE '0'       *IN73
+     C*
+     C**   SET ON CLIENT DETAILS INDICATOR
+     C                     MOVE '1'       *IN24
+     C*
+     C**   SET ON SELECTED CUSTOMER PROCESSING INDICATOR
+     C                     MOVE '1'       *IN82
+     C*
+     C*****OUTPUT*HEADINGS*********************************************   S01498
+     C***********          WRITEHEADER1                                   S01498
+     C***********          WRITEHEADER2                                   S01498
+     C*
+     C*****ACCESS*'SDLBCSL0'*TO*OBTAIN*CLIENT*DETAILS******************   S01498
+     C***********WWPARM    CHAINSDLBCSL0             80                   S01498
+     C*                                                                   S01498
+     C**  Access 'LBLBCSJ0' to obtain client details                      S01498
+     C           WWPARM    CHAINLBLBCSJ0             80                   S01498
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD5         DBASE            ****************
+     C                     MOVE *BLANKS   DBFILE           *              *
+     C***********          MOVEL'SDLBCSL0'DBFILE           * DBERROR  005 S01498
+     C                     MOVE 'LBLBCSJ0'DBFILE           * DBERROR 005 *S01498
+     C                     MOVE *BLANKS   DBKEY            *              *
+     C                     MOVELWWPARM    DBKEY            ****************
+     C                     OUT  LDA                                       S01498
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     GOTO #BE0
+     C                     END
+     C*
+     C**   STORE CUSTOMER NUMBER
+     C                     MOVE WWPAR1    WWCNUM
+     C*                                                                   S01498
+     C**  Check if input files have details to report                     S01498
+     C*                                                                   S01498
+     C           WWCNUM    SETLLLBBPWRL1                 76               S01498
+     C           WWCNUM    SETLLLBBPWRL2                 78               S01498
+     C*                                                                   S01498
+     C           *IN76     IFEQ '1'                                       S01498
+     C           *IN78     OREQ '1'                                       S01498
+     C*                                                                   S01498
+     C**  Open printer file LB0355P1.                                     S01498
+     C*                                                                   S01498
+     C           WLOPN     IFNE 'Y'                                       S01498
+     C                     OPEN LB0355P1                                  S01498
+     C                     MOVE 'Y'       WLOPN   1                       S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C**  Output heading                                                  S01498
+     C                     WRITEHEADER1                                   S01498
+     C                     WRITEHEADER2                                   S01498
+     C                     EXSR #ZB
+     C                     ELSE                                           S01498
+     C                     MOVE '1'       *IN72                           S01498
+     C                     END                                            S01498
+     C*
+     C*
+     C**   SET OFF SELECTED CUSTOMER PROCESSING INDICATOR
+     C                     MOVE '0'       *IN82
+     C*
+     C           #BE0      ENDSR                            ** TAG #BE0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   #A - THIS SUBROUTINE ACCESSES SDBANKPD AND INITIALISES        *
+     C**        WORK FIELDS.                                             *
+     C**                                                                 *
+     C**   CALLED BY - MAINLINE                                          *
+     C**   CALLS     - NONE                                              *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #A        BEGSR
+     C*                                                                   S01498
+     C**  Copyright statement                                             S01498
+     C*                                                                   S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*
+     C*****OPEN*INPUT*FILE*********************************************   S01498
+     C***********          OPEN QINLINE                                   S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C*
+     C**   INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR
+     C**   DB ERROR FIELD.
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'LB0355'  DBPGM
+     C                     MOVEL'LBBPWRPD'WWFILE  8
+     C                     OUT  LDA                                       S01498
+     C*
+     C**   INITIALIZE WORK FIELDS
+     C                     Z-ADD*ZEROS    RRNORE
+     C*
+     C**   DEFINE WORK FIELDS
+     C           *LIKE     DEFN BPSESN    WWSESN
+     C*
+     C**   SET OFF ALL INDICATORS
+     C                     MOVEA'000000'  *IN,21
+     C                     MOVEA'00000000'*IN,71
+     C                     MOVEA'00000000'*IN,79
+     C                     MOVE '0'       *IN72                           S01498
+     C*
+     C*****ACCESS*BANK*DETAILS*FILE************************************   S01498
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 71               S01498
+     C************IN71     IFEQ '0'                                       S01498
+     C***********          MOVE '0'       *IN85                           S01498
+     C***********          END                                            S01498
+     C***********                                                         S01498
+     C*****IF*BANK*DETAILS*NOT*FOUND*THEN*DB*ERROR*********************   S01498
+     C************IN71     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+     C***********          MOVE '1'       *IN85                           S01498
+     C***********          END                                            S01498
+     C***********                                                         S01498
+     C************IN85     IFEQ '1'                                       S01498
+     C*                                                                   S01498
+     C**  Get bank details using access object                            S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM '*DBERR'  P@RTCD  7                       S01498
+     C                     PARM '*FIRST'  P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C*                                                                   S01498
+     C**  Check if error occurred                                         S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANK                                    S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD1         DBASE            ****************
+     C                     MOVE *BLANKS   DBFILE           *              *
+     C***********          MOVEL'SDBANKPD'DBFILE           * DBERROR  001 S01498
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR 001 *S01498
+     C                     MOVE *BLANKS   DBKEY            *              *
+     C                     OUT  LDA                        ***************S01498
+     C                     MOVE '1'       *INU7            ****************
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *IN85                           S01498
+     C                     GOTO #A0
+     C                     END
+     C*
+     C** Check system date format DDMMYY or MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C                     MOVE '0'       *IN98
+     C                     END
+     C*
+     C**   INITIALISE LINE COUNTER
+     C                     Z-ADD*ZEROS    LINE
+     C*
+     C           #A0       ENDSR                             ** TAG #A0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   #B - MAIN PROCESSING                                          *
+     C**                                                                 *
+     C**   CALLED BY - MAINLINE                                          *
+     C**   CALLS     - #BA,#BB,#BC,#BD,#BE                               *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #B0
+     C*
+     C*****READ*INPUT*FROM*'QINLINE'***********************************   S01498
+     C***********          READ QINLINE                  72               S01498
+     C*
+     C*****NO*DETAILS*TO*REPORT****************************************   S01498
+     C************IN72     IFEQ '1'                                       S01498
+     C***********          WRITEHEADER1                                   S01498
+     C***********          WRITENODETLS                                   S01498
+     C***********          END                                            S01498
+     C*
+     C*****DO*WHILE*NOT*EOF********************************************   S01498
+     C************IN72     DOWEQ'0'                                       S01498
+     C*
+     C**   PRODUCE REPORT FOR ALL BORROWING POWER WEIGHTINGS
+     C           WWPARM    IFEQ '*ALL'
+     C*                                                                   S01498
+     C**  Check if input files have details to report                     S01498
+     C*                                                                   S01498
+     C           *LOVAL    SETLLLBBPWRL5                                  S01498
+     C                     READ LBBPWRL5                 74               S01498
+     C*                                                                   S01498
+     C           *LOVAL    SETLLLBBPWRL3                                  S01498
+     C                     READ LBBPWRL3                 83               S01498
+     C*                                                                   S01498
+     C           *LOVAL    SETLLLBBPWRL4                                  S01498
+     C                     READ LBBPWRL4                 84               S01498
+     C*                                                                   S01498
+     C           *LOVAL    SETLLLBBPWRL1                                  S01498
+     C                     READ LBBPWRL1                 76               S01498
+     C*                                                                   S01498
+     C           *LOVAL    SETLLLBBPWRL2                                  S01498
+     C                     READ LBBPWRL2                 78               S01498
+     C*                                                                   S01498
+     C           *IN74     IFEQ '0'                                       S01498
+     C           *IN83     OREQ '0'                                       S01498
+     C           *IN84     OREQ '0'                                       S01498
+     C           *IN76     OREQ '0'                                       S01498
+     C           *IN78     OREQ '0'                                       S01498
+     C*                                                                   S01498
+     C**  Open printer file LB0355P1.                                     S01498
+     C*                                                                   S01498
+     C           WLOPN     IFNE 'Y'                                       S01498
+     C                     OPEN LB0355P1                                  S01498
+     C                     MOVE 'Y'       WLOPN   1                       S01498
+     C                     END                                            S01498
+     C*
+     C**   PROCESS COUNTRY CODES
+     C                     EXSR #BA
+     C*
+     C**   PROCESS INSTRUMENT CODES
+     C                     EXSR #BB
+     C*
+     C**   PROCESS SECURITY CODES
+     C                     EXSR #BC
+     C*
+     C**   PROCESS CLIENT CODES
+     C                     EXSR #BD
+     C*
+     C                     ELSE                                           S01498
+     C*                                                                   S01498
+     C**   Set ON indicator for 'NO DETAILS TO REPORT'                    S01498
+     C                     MOVE '1'       *IN72                           S01498
+     C                     END                                            S01498
+     C*
+     C**   Set up run control field
+     C                     MOVE '0'       *IN46
+     C                     MOVE '*ALL  '  RRPNP8
+     C*
+     C                     ELSE
+     C*
+     C**   PRODUCE REPORT FOR SELECTED CUSTOMERS
+     C           WWPARM    IFNE *BLANKS
+     C*
+     C**   PROCESS CUSTOMER
+     C                     EXSR #BE
+     C*
+     C**   Set up run control field
+     C                     MOVE '1'       *IN46
+     C                     MOVE BBCUST    RRPNP8
+     C                     MOVE BBCSSN    RRNAME
+     C*
+     C                     END
+     C                     END
+     C*
+     C**   EXIT IF DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #B0
+     C*
+     C*****Produce*a*run*controls*report*******************************   S01498
+     C***********          EXSR #C                                        S01498
+     C*
+     C*****READ*NEXT*ENTRY*ON*'QINLINE'********************************   S01498
+     C***********          READ QINLINE                  72               S01498
+     C***********          END                                            S01498
+     C*
+     C           #B0       ENDSR                             ** TAG #B0 **
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   #C - TERMINATION PROCESSING                                   *
+     C**                                                                 *
+     C**   CALLED BY - MAINLINE                                          *
+     C**   CALLS     - NONE                                              *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**   PROCESS DATA BASE ERROR
+     C           *INU7     CABEQ'1'       #C0
+     C*
+     C**   PRINT HEADINGS ON OVERFLOW
+     C           LINE      IFGT 56
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     WRITEHEADER3
+     C                     END
+     C*                                                                   S01498
+     C**  Write to LB0355P1 only if it is open and report details         S01498
+     C**  have been written                                               S01498
+     C*                                                                   S01498
+     C           WLOPN     IFEQ 'Y'                                       S01498
+     C           *IN72     ANDEQ'0'                                       S01498
+     C*
+     C**   'END OF REPORT' OUTPUT
+     C                     WRITEENDRPT
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     Z-ADD*ZEROS    LINE
+     C                     Z-ADD*ZEROS    PAGE
+     C*
+     C**   OUTPUT RUN CONTROLS AS NECESSARY
+     C           WWFILE    CHAINLBTRAIPD             86
+     C*
+     C           *IN86     IFEQ '1'
+     C           TRRECI    OREQ '*'
+     C           TRCHTP    OREQ 'D'
+     C*
+     C                     MOVE '1'       *IN85
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVE *BLANKS   DBFILE           *             *
+     C***********          MOVEL'LBTRAIPD'DBFILE           * DBERROR 006 *S01498
+     C                     MOVE 'LBTRAIPD'DBFILE           * DBERROR 006 *S01498
+     C                     MOVEL*BLANKS   DBKEY            *             *
+     C                     MOVELWWFILE    DBKEY            ***************
+     C                     OUT  LDA                                       S01498
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     ELSE
+     C                     MOVE '0'       *IN85
+     C                     END
+     C*
+     C**   INITIALIZE LINE COUNT AND PRODUCE A RUN CONTROL
+     C**   REPORT
+     C           #C0       TAG                               ** TAG #C0 **
+     C                     Z-ADD*ZEROS    LINE1
+     C                     Z-ADD*ZEROS    PAGE1
+     C*                                                                   S01498
+     C**  Close printer file LB0355P1 if it is currently open             S01498
+     C*                                                                   S01498
+     C           WLOPN     IFEQ 'Y'                                       S01498
+     C*                                                                   S01498
+     C**  Report if a database error has occurred                         S01498
+     C           *INU7     IFEQ '1'                                       S01498
+     C                     WRITEDBERROR                                   S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C** Ensure Report Spool File recorded by RCF                         S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUM     ZSNUM1  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @SEQ                            S01498
+     C                     PARM *BLANK    SENTY   3                       S01498
+     C                     PARM           SFILE                           S01498
+     C                     PARM           ZSNUM1                          S01498
+     C                     PARM           ZSERR   1                       S01498
+     C*                                                                   S01498
+     C** If an error occurred during ZSFILE processing,                   S01498
+     C** return to the calling program.                                   S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     CLOSELB0355P1                                  S01498
+     C                     MOVE *BLANK    WLOPN                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     WRITEFCNTLS1
+     C           *INU7     IFEQ '1'
+     C                     WRITEFCNTLS2
+     C                     EXSR *PSSR                                     S01498
+     C                     ELSE
+     C           *IN85     IFEQ '0'
+     C                     WRITEFCNTLS3
+     C                     END
+     C           *IN72     IFEQ '1'                                       S01498
+     C                     WRITENODTLS                                    S01498
+     C                     END                                            S01498
+     C                     END
+     C                     Z-ADD*ZEROS    RRNORE
+     C*                                                                   S01498
+     C** Ensure Audit Spool File recorded by RCF                          S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUMU    ZSNUM2  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @SEQ                            S01498
+     C                     PARM *BLANK    SENTY                           S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUM2                          S01498
+     C                     PARM           ZSERR                           S01498
+     C*                                                                   S01498
+     C** If an error occurred during ZSFILE processing,                   S01498
+     C** return to the calling program.                                   S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR   - Program error handling routine.                       *
+     C**                                                                 *
+     C** CALLED BY  -  NONE                                              *
+     C** CALLS      -  NONE                                              *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+**   CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

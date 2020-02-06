@@ -1,0 +1,963 @@
+     H        1
+     F****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FRA/IRS Rates Audit Report')
+/*OVRF*: OVRDBF FILE(FDAUFILL) TOFILE(FDAUDNLL)                     : *
+/*OVRF*: OVRDBF FILE(DLFIRSLL) TOFILE(DLFRARL3)                     : *
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - FRA/IRS Module
+     F*                                                              *
+     F*   DL1933 - FRA/IRS Rates Audit Report                        *
+     F*                                                              *
+     F*  Function: To list all changes made to the FRA or the IRS    *
+     F*   (COB)    Rates.                                            *
+     F*            The program is called in one of two modes         *
+     F*            determined by the input parameter, FI :           *
+     F*            FI = F runs in FRA mode :                         *
+     F*               FDAUFILL is overriden to FDAUDNLL;             *
+     F*               the field prefix is AM;                        *
+     F*               DLFIRSLL is overriden to DLFRARL3;             *
+     F*               the field prefix is FR;                        *
+     F*               the Date referred to is Value Date;            *
+     F*               the Title will mention 'FRA'.                  *
+     F*            FI = I runs in IRS mode :                         *
+     F*               FDAUFILL is overriden to FDAUDOLL;             *
+     F*               the field prefix is AO;                        *
+     F*               DLFIRSLL is overriden to DLIRSRL3;             *
+     F*               the field prefix is IR;                        *
+     F*               the Date referred to is Maturity Date;         *
+     F*               the Title will mention 'IRS'.                  *
+     F*                                                              *
+     F*  The creation parameters override file FDAUFILL to FDAUDNLL, *
+     F*  so the file field names referred to in the program are the  *
+     F*  ones in FDAUDNLL, prefix AM; and overrides DLFIRSLL to      *
+     F*  DLFRARL3 (no fields are used from this file only DSAUD).    *
+     F*                                                              *
+     F*  Called By: FDC0050 - DRS Audit Reports Control.             *
+     F*                       (Twice - once in each mode)            *
+     F*                                                              *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E36623             Date 02Apr92               *
+     F*                 S01328             Date 08MAR91               *
+     F*                                                              *
+     F*--------------------------------------------------------------*
+     F*                                                              *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  E36623 - FDINSTLL was made redundant by S01319.  Remove.    *
+     F*  S01328 - FRA/IRS Revaluations - New Program                 *
+     F*                                                              *
+     F****************************************************************
+     F/EJECT
+     F*FDINSTLLIF**E*****      K        DISK         KINFSR *PSSR      UC E36623
+     FDLFIRSLLIF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS DSAUD
+     F/COPY WNCPYSRC,DL1933F001
+     FFDTTOTLLUF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FFDRCVRLLIF  E           K        DISK         KINFSR *PSSR
+     FFDAUFILLIP  E           K        DISK         KINFSR *PSSR
+     FDL1933AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+     FDL1933P1O   E             61     PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  10   IND. ON FOR IRS MODE/ OFF FOR FRA MODE                  *
+     F*  61   DL1933P1 OVERFLOW INDICATOR                             *
+     F*  62   AT LEAST ONE RECORD ON FDAUFILL                         *
+     F*  63   PROGRAM WHICH UPDATED THIS RECORD WAS NOT THE USUAL ONE *
+     F*  64   FDAUFILL RECORD HAS BEEN RECOVERED                      *
+     F*  65   FILE CONTROL TOTALS OUT OF BALANCE                      *
+     F*  66   EXCEPTION ITEM ON DL1933P1                              *
+     F*                                                               *
+     F*  74   RECORD ON FILE FDTTOTLL LOCKED                          *
+     F*  75   FAIL ON CHAIN TO FDTTOTLL                               *
+     F*  76   READ OF DLFIRSLL                                        *
+     F*  77   READ OF FDRCVRLL                                        *
+     F***78***READ*OF*FDINSTLL                                        *   E36623
+     F*  80   CHAIN/READ FAIL INDICATOR                               *
+     F*                                                               *
+     F*  U7   SET ON WITH U8 IF A DATABASE ERROR OCCURS.              *
+     F*  U8   FILE OUT OF BALANCE IF SET ON ITS OWN.                  *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*   #B     - MAIN PROCESSING                                    *
+     F*   #BA    - PROCESSING FOR ENTRY TYPES 'UB', 'BR'              *
+     F*   #BB    - PROCESSING FOR ENTRY TYPES 'UP', 'UR'              *
+     F*   #BC    - PROCESSING FOR ENTRY TYPE  'PT'                    *
+     F*   #BD    - PROCESSING FOR ENTRY TYPES 'DR', 'DL'              *
+     F*   #ZA    - I.C.D. AND REPORT HEADER PROCESSING                *
+     F*   ZA0150 - STANDARD SUBROUTINE TO ACCESS I.C.D.               *
+     F*   #A     - INITIAL PROCESSING                                 *
+     F*   #C     - TERMINATION PROCESSING                             *
+     F*   #CA    - FILE CONTROL PROCESSING                            *
+     F/COPY WNCPYSRC,DL1933F002
+     F*   ZRATE1 - CONVERTS A RATE TO DISPLAY FORMAT                  *
+     F*   *PSSR  - ERROR HANDLING SUBROUTINE                          *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E/COPY ZSRSRC,ZRATE1Z1
+     E*
+     E/EJECT
+     E/COPY WNCPYSRC,DL1933E001
+     IDNATN       DS                              5
+     I** DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER
+     I                                        1   50FNATN
+     ICMTTXT      DS                             79
+     I**  COMIT TEXT
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     IDSAUD       DS
+     I**  FILE DATA STRUCTURE FOR DLFIRSLL
+     I                                    B 156 1590RRNORE
+     I*
+     I/COPY WNCPYSRC,DL1933I001
+     IPSDS       SDS
+     I*
+     I**  PROGRAM STATUS DATA STRUCTURE
+     I**  FIELD CONTAINING WORKSTATION ID
+     I                                      244 253 @JOB
+     I**  FIELD CONTAINING USER ID
+     I                                      254 263 @USER
+     I*
+     IDBERR       DS                            256
+     I**  DATA STRUCTURE FOR DATA-BASE ERRORS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I*
+      *
+     IDSFDY     E DSDSFDY
+      * 200 BYTE DATASTRUCTURE FOR ACCESS PROGRAMS
+      *
+     IP@BANK    E DSSDBANKPD
+      * Bank ICD Access Program record format data structure
+      *
+     ISPOOL       DS
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE - P1 REPORT
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I*
+     ISPOOLU      DS
+     I** SPOOL INFORMATION DATA STRUCTURE FOR ZSFILE - AU REPORT
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     I/EJECT
+     C*
+     C**  INITIAL PROCESSING - ONLY PERFORM ON FIRST CYCLE
+     C           @FCYC     IFNE 'Y'
+     C                     EXSR #A
+     C                     END
+     C*
+     C**  MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**  TERMINATION PROCESSING
+     CLR                   EXSR #C
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B - MAIN PROCESSING.                                        *
+     C*       CONTROLS SET UP OF DL1933P1 DETAILS.                    *
+     C*       OUTPUTS DL1933P1 DETAILS.                               *
+     C*                                                               *
+     C*  CALLED BY:  CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS:      #BA                                              *
+     C*              #BB                                              *
+     C*              #BC                                              *
+     C*              #BD                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  IF DATA BASE ERROR HAS OCCURRED, NO FURTHER
+     C**  PROCESSING IN THIS ROUTINE.
+     C           *INU7     CABEQ'1'       #B9
+     C*
+     C**  SET UP DL1933P1 FIELDS WHICH ARE NOT
+     C**  'BEFORE STATUS' OR 'AFTER STATUS'
+     C                     MOVE AMUSER    RRUSER
+     C                     MOVE AMPGM     RRPGM
+     C                     MOVE AMTIME    RRTIME
+     C                     MOVE AMJOB     RRJOB
+     C*
+     C** EXECUTE APPROPRIATE SUBROUTINE DEPENDING ON JOURNAL ENTRY TYPE
+     C** UB=UPDATE BEFORE;     BR=UPDATE BEFORE ROLLBACK;    PT=INSERT;
+     C** UP=UPDATE AFTER;      UR=UPDATE AFTER ROLLBACK;     DL=DELETE;
+     C** DR=DELETE AFTER ROLLBACK.
+     C           AMENTT    CASEQ'UB'      #BA
+     C           AMENTT    CASEQ'BR'      #BA
+     C           AMENTT    CASEQ'UR'      #BB
+     C           AMENTT    CASEQ'UP'      #BB
+     C           AMENTT    CASEQ'PT'      #BC
+     C           AMENTT    CASEQ'DR'      #BD
+     C           AMENTT    CASEQ'DL'      #BD
+     C                     END
+     C*
+     C** CHAIN TO THE RECOVERY SEQUENCE FILE TO SEE IF ENTRY HAS
+     C** NOT BEEN RECOVERED
+     C           AMSEQN    SETGTFDRCVRLL
+     C                     READPFDRCVRLL                 77
+     C           *IN77     IFEQ '0'
+     C           FRPNT     ANDLEAMSEQN
+     C           TOPNT     ANDGEAMSEQN
+     C                     MOVE '1'       *IN64
+     C                     END
+     C*
+     C**   CHECK IF PROGRAM PERFORMING UPDATE IS NOT THE NORMAL ONE
+     C           AMPGM     IFNE 'DL1930'
+     C                     MOVE '1'       *IN63
+     C                     MOVE '1'       *IN66
+     C                     ELSE
+     C                     MOVE '0'       *IN63
+     C                     END
+     C*
+     C**  OUTPUT DL1933P1 DETAIL LINE IF ENTRY TYPE IS UP, UR, PT, DR
+     C**  OR DL.
+     C           AMENTT    IFEQ 'UP'
+     C           AMENTT    OREQ 'UR'
+     C           AMENTT    OREQ 'PT'
+     C           AMENTT    OREQ 'DR'
+     C           AMENTT    OREQ 'DL'
+     C*
+     C**  IF THE DL1933P1 OVERFLOW LINE HAS BEEN REACHED
+     C**  OUTPUT DL1933P1 HEADING AND DL1933P1 DETAIL
+     C**  HEADING
+     C           *IN61     IFEQ '1'
+     C                     WRITEDL1933R0
+     C                     WRITEDL1933R1
+     C                     MOVE '0'       *IN61
+     C                     END
+     C*
+     C*   OUTPUT DL1933P1 DETAIL FORMAT
+     C*
+     C                     WRITEDL1933R2
+     C*
+     C*   CLEAR DL1933P1 DETAIL FORMAT FIELDS
+     C                     MOVE *BLANKS   RRCCYA
+     C                     MOVE *BLANKS   RRCCYB
+     C                     MOVE *BLANKS   RRBRTA
+     C                     MOVE *BLANKS   RRBRTB
+     C                     MOVE *BLANKS   RRPDYA
+     C                     MOVE *BLANKS   RRPDMA
+     C                     MOVE *BLANKS   RRPDDA
+     C                     MOVE *BLANKS   RRPDYB
+     C                     MOVE *BLANKS   RRPDMB
+     C                     MOVE *BLANKS   RRPDDB
+     C                     MOVE *BLANKS   RRVDMA
+     C                     MOVE *BLANKS   RRVDMB
+     C                     MOVE *BLANKS   RRRATA
+     C                     MOVE *BLANKS   RRRATB
+     C*
+     C**  RESET RECOVERY INDICATOR
+     C                     MOVE '0'       *IN64
+     C*
+     C**  SET INDICATOR THAT AT LEAST ONE SET OF DETAILS BEEN OUTPUT
+     C                     MOVE '1'       *IN62
+     C                     END
+     C*
+     C           #B9       ENDSR                           **#B9**
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BA - SETS UP DL1933P1 'BEFORE STATUS' FIELDS FOR            *
+     C*        JOURNAL ENTRY TYPE 'UB' OR 'BR'.                       *
+     C*                                                               *
+     C*  CALLED BY:  #B                                               *
+     C*                                                               *
+     C*  CALLS:      ZRATE1 - CONVERTS RATE TO DISPLAY                *
+     C*                                                               *
+     C*  USES:       @ENTTP - PREVIOUS ENTRY TYPE                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C**  IF LOGICALLY DELETED RECORD, SET UP 'BEFORE STATUS' FIELDS
+     C**  AS BLANKS AND SET DL1933P1 CHANGE TYPE FIELD TO 'INS'
+     C           AMCHTP    IFEQ 'D'
+     C                     MOVE *BLANKS   RRCCYB
+     C                     MOVE *BLANKS   RRBRTB
+     C                     MOVE *BLANKS   RRPDYB
+     C                     MOVE *BLANKS   RRPDMB
+     C                     MOVE *BLANKS   RRPDDB
+     C                     MOVE *BLANKS   RRVDMB
+     C                     MOVE *BLANKS   RRRATB
+     C                     MOVE 'INS'     RRTYPE
+     C                     ELSE
+     C*
+     C** IF NOT LOGICALLY DELETED, SET UP 'BEFORE STATUS' FIELDS WITH
+     C** DETAILS FROM FDAUFILL, SET DL1933P1 CHANGE TYPE FIELD TO 'AMD'
+     C                     MOVE AMCCY     RRCCYB
+     C*
+     C                     MOVE AMBRTT    RRBRTB
+     C*
+     C                     MOVE AMPDYR    RRPDYB
+     C                     MOVE AMPDMN    RRPDMB
+     C                     MOVE AMPDDY    RRPDDB
+     C*
+     C**  CONVERT RATE TO DISPLAY FORMAT
+     C*
+     C                     MOVE AMRATE    @@INPR
+     C                     EXSR ZRATE1
+     C                     MOVEL@@OUTR    RRRATB
+     C*
+     C* VALUE DATE 'AMVDMY', IN IRS MODE MATURITY DATE 'AOMDMY'
+     C*  IS OUTPUT TO DL1933P1 VIA RRVDMB
+     C*
+     C                     MOVE AMVDMY    RRVDMB
+     C                     MOVE 'AMD'     RRTYPE
+     C                     END
+     C*
+     C**  IF JOURNAL ENTRY TYPE IS 'UB', STORE ENTRY TYPE
+     C           AMENTT    IFEQ 'UB'
+     C                     MOVE AMENTT    @ENTTP
+     C                     ELSE
+     C                     MOVE '  '      @ENTTP
+     C                     END
+     C*
+     C           #BA9      ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BB - SETS UP DL1933P1 'AFTER STATUS' FIELDS FOR             *
+     C*        JOURNAL ENTRY TYPE 'UP' OR 'UR'.                       *
+     C*                                                               *
+     C*  CALLED BY:  #B                                               *
+     C*                                                               *
+     C*  CALLS:      ZRATE1 - CONVERTS RATE TO DISPLAY                *
+     C*                                                               *
+     C*  USES:       @ENTTP - PREVIOUS ENTRY TYPE                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C**  IF JOURNAL ENTRY TYPE IS 'UP' AND PREVIOUS ENTRY TYPE
+     C**  IS NOT 'UB', SKIP THE FOLLOWING PROCESSING
+     C           AMENTT    IFEQ 'UP'
+     C           @ENTTP    ANDNE'UB'
+     C                     GOTO #BB8
+     C                     END
+     C*
+     C**  PROCESSING IF JOURNAL ENTRY TYPE IS 'UR' OR IF JOURNAL
+     C**  ENTRY TYPE IS 'UP' AND PREVIOUS ENTRY TYPE IS 'UB'
+     C*
+     C**  IF LOGICALLY DELETED RECORD, SET UP 'AFTER STATUS'
+     C**  FIELDS AS BLANKS AND SET DL1933P1 CHANGE TYPE FIELD
+     C**  TO 'DEL'.
+     C           AMCHTP    IFEQ 'D'
+     C                     MOVE *BLANKS   RRCCYA
+     C                     MOVE *BLANKS   RRBRTA
+     C                     MOVE *BLANKS   RRPDYA
+     C                     MOVE *BLANKS   RRPDMA
+     C                     MOVE *BLANKS   RRPDDA
+     C                     MOVE *BLANKS   RRVDMA
+     C                     MOVE *BLANKS   RRRATA
+     C                     MOVE 'DEL'     RRTYPE
+     C                     ELSE
+     C*
+     C** IF NOT LOGICALLY DELETED, SET UP 'AFTER STATUS'
+     C** FIELDS WITH DETAILS FROM FDAUFILL.
+     C                     MOVE AMCCY     RRCCYA
+     C*
+     C                     MOVE AMBRTT    RRBRTA
+     C*
+     C                     MOVE AMPDYR    RRPDYA
+     C                     MOVE AMPDMN    RRPDMA
+     C                     MOVE AMPDDY    RRPDDA
+     C*
+     C**  CONVERT RATE TO DISPLAY FORMAT
+     C                     MOVE AMRATE    @@INPR
+     C                     EXSR ZRATE1
+     C                     MOVEL@@OUTR    RRRATA
+     C*
+     C* VALUE DATE 'AMVDMY', IN IRS MODE MATURITY DATE 'AOMDMY'
+     C*  IS OUTPUT TO DL1933P1 VIA RRVDMA.
+     C*
+     C                     MOVE AMVDMY    RRVDMA
+     C*
+     C**  ONLY OUTPUT THE 'AFTER STATUS' OF THOSE FIELDS
+     C**  WHICH HAVE CHANGED.
+     C*
+     C           RRCCYA    IFEQ RRCCYB
+     C                     MOVE *BLANKS   RRCCYA
+     C                     END
+     C           RRBRTA    IFEQ RRBRTB
+     C                     MOVE *BLANKS   RRBRTA
+     C                     END
+     C           RRPDYA    IFEQ RRPDYB
+     C           RRPDMA    ANDEQRRPDMB
+     C           RRPDDA    ANDEQRRPDDB
+     C                     MOVE *BLANKS   RRPDYA
+     C                     MOVE *BLANKS   RRPDMA
+     C                     MOVE *BLANKS   RRPDDA
+     C                     END
+     C           RRVDMA    IFEQ RRVDMB
+     C                     MOVE *BLANKS   RRVDMA
+     C                     END
+     C           RRRATA    IFEQ RRRATB
+     C                     MOVE *BLANKS   RRRATA
+     C                     END
+     C                     END
+     C*
+     C**  CHECK IF THIS IS A ROLLBACK AFTER PHYSICAL DELETE
+     C           @ENTTP    IFEQ 'DL'
+     C                     MOVE 'INS'     RRTYPE
+     C                     END
+     C*
+     C**  RESET PREVIOUS ENTRY TYPE
+     C                     MOVE '  '      @ENTTP
+     C*
+     C                     GOTO #BB9
+     C*
+     C**  PROCESSING IF JOURNAL ENTRY TYPE IS 'UP' AND PREVIOUS
+     C**  ENTRY TYPE IS NOT 'UB'
+     C*
+     C**  SET UP 'BEFORE STATUS' FIELDS AS BLANKS.
+     C           #BB8      TAG
+     C                     MOVE *BLANKS   RRCCYB
+     C                     MOVE *BLANKS   RRBRTB
+     C                     MOVE *BLANKS   RRPDYB
+     C                     MOVE *BLANKS   RRPDMB
+     C                     MOVE *BLANKS   RRPDDB
+     C                     MOVE *BLANKS   RRVDMB
+     C                     MOVE *BLANKS   RRRATB
+     C*
+     C**  SET UP 'AFTER STATUS' FIELDS WITH DETAILS FROM
+     C**  FDAUFILL AND SET DL1933P1 CHANGE TYPE FIELD TO
+     C**  'INS'.
+     C                     MOVE AMCCY     RRCCYA
+     C*
+     C                     MOVE AMBRTT    RRBRTA
+     C*
+     C                     MOVE AMPDYR    RRPDYA
+     C                     MOVE AMPDMN    RRPDMA
+     C                     MOVE AMPDDY    RRPDDA
+     C*
+     C**  CONVERT RATE TO DISPLAY FORMAT
+     C                     MOVE AMRATE    @@INPR
+     C                     EXSR ZRATE1
+     C                     MOVEL@@OUTR    RRRATA
+     C*
+     C* VALUE DATE 'AMVDMY', IN IRS MODE MATURITY DATE 'AOMDMY'
+     C*  IS OUTPUT TO DL1933P1 VIA RRVDMA.
+     C*
+     C                     MOVE AMVDMY    RRVDMA
+     C                     MOVE 'INS'     RRTYPE
+     C*
+     C**  RESET PREVIOUS ENTRY TYPE
+     C                     MOVE '  '      @ENTTP
+     C*
+     C           #BB9      ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BC - SETS UP DL1933P1 'BEFORE STATUS' AND 'AFTER STATUS'    *
+     C*        FIELDS FOR JOURNAL ENTRY TYPE 'PT'.                    *
+     C*                                                               *
+     C*  CALLED BY:  #B                                               *
+     C*                                                               *
+     C*  CALLS:      ZRATE1 - CONVERTS RATE TO DISPLAY                *
+     C*                                                               *
+     C*  USES:       @ENTTP - PREVIOUS ENTRY TYPE                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+     C**  SET UP 'BEFORE STATUS' FIELDS AS BLANKS.
+     C*
+     C                     MOVE *BLANKS   RRCCYB
+     C                     MOVE *BLANKS   RRBRTB
+     C                     MOVE *BLANKS   RRPDYB
+     C                     MOVE *BLANKS   RRPDMB
+     C                     MOVE *BLANKS   RRPDDB
+     C                     MOVE *BLANKS   RRVDMB
+     C                     MOVE *BLANKS   RRRATB
+     C*
+     C**  SET UP 'AFTER STATUS' FIELDS WITH DETAILS FROM
+     C**  DL1933AU AND SET DL1933P1 CHANGE TYPE FIELD TO
+     C**  'INS'.
+     C*
+     C                     MOVE AMCCY     RRCCYA
+     C*
+     C                     MOVE AMBRTT    RRBRTA
+     C*
+     C                     MOVE AMPDYR    RRPDYA
+     C                     MOVE AMPDMN    RRPDMA
+     C                     MOVE AMPDDY    RRPDDA
+     C*
+     C**  CONVERT RATE TO DISPLAY FORMAT
+     C                     MOVE AMRATE    @@INPR
+     C                     EXSR ZRATE1
+     C                     MOVEL@@OUTR    RRRATA
+     C*
+     C* VALUE DATE 'AMVDMY', IN IRS MODE MATURITY DATE 'AOMDMY'
+     C*  IS OUTPUT TO DL1933P1 VIA RRVDMA.
+     C*
+     C                     MOVE AMVDMY    RRVDMA
+     C                     MOVE 'INS'     RRTYPE
+     C*
+     C**  RESET PREVIOUS ENTRY TYPE
+     C                     MOVE '  '      @ENTTP
+     C*
+     C           #BC9      ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BD - SETS UP DL1933P1 'BEFORE STATUS' AND 'AFTER STATUS'    *
+     C*        FIELDS FOR JOURNAL ENTRY TYPE 'DL' OR 'DR'.            *
+     C*                                                               *
+     C*  CALLED BY:  #B                                               *
+     C*                                                               *
+     C*  CALLS:      ZRATE1 - CONVERTS RATE TO DISPLAY                *
+     C*                                                               *
+     C*  USES:       @ENTTP - PREVIOUS ENTRY TYPE                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BD       BEGSR
+     C*
+     C**  SET UP 'BEFORE STATUS' FIELDS WITH DETAILS FROM
+     C**  FDAUFILL.
+     C                     MOVE AMCCY     RRCCYB
+     C*
+     C                     MOVE AMBRTT    RRBRTB
+     C*
+     C                     MOVE AMPDYR    RRPDYB
+     C                     MOVE AMPDMN    RRPDMB
+     C                     MOVE AMPDDY    RRPDDB
+     C*
+     C**  CONVERT RATE TO DISPLAY FORMAT
+     C                     MOVE AMRATE    @@INPR
+     C                     EXSR ZRATE1
+     C                     MOVEL@@OUTR    RRRATB
+     C*
+     C* VALUE DATE 'AMVDMY', IN IRS MODE MATURITY DATE 'AOMDMY'
+     C*  IS OUTPUT TO DL1933P1 VIA RRVDMB.
+     C*
+     C                     MOVE AMVDMY    RRVDMB
+     C*
+     C*   SET UP 'AFTER STATUS' FIELDS AS BLANKS AND SET DL1933P1
+     C**  CHANGE TYPE FIELD TO 'DEL'
+     C                     MOVE *BLANKS   RRCCYA
+     C                     MOVE *BLANKS   RRBRTA
+     C                     MOVE *BLANKS   RRPDYA
+     C                     MOVE *BLANKS   RRPDMA
+     C                     MOVE *BLANKS   RRPDDA
+     C                     MOVE *BLANKS   RRVDMA
+     C                     MOVE *BLANKS   RRRATA
+     C                     MOVE 'DEL'     RRTYPE
+     C*
+     C**  IF THIS IS A PHYSICAL DELETE, SET PREVIOUS ENTRY TYPE
+     C**  FIELD IN CASE OF ROLLBACK
+     C           AMENTT    IFEQ 'DL'
+     C                     MOVE 'DL'      @ENTTP
+     C                     END
+     C*
+     C           #BD9      ENDSR
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #ZA       - READS FDICDRLL AND OUTPUTS REPORT HEADINGS       *
+     C*                                                               *
+     C*  CALLED BY : #A                                               *
+     C*              #C                                               *
+     C*                                                               *
+     C*  CALLS     : ZA0150                                           *
+     C*                                                               *
+     C*  USES:       @FCYC  - FIRST CYCLE PROCESSING FLAG             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C**  CALL STANDARD SUBROUTINE ZA0150 TO READ SDBANKPD
+     C                     EXSR ZA0150
+     C*
+     C*
+     C**  SET UP FIELDS FOR DL1933P1 AND DL1933AU REPORT HEADING
+     C                     MOVE BJURPT    RRTITL
+     C                     MOVE BJMRDT    RRRUNA
+     C*
+     C*   IF SR.#ZA CALLED FROM #A THEN THERE ARE DETAILS TO REPORT
+     C*   OPEN DL1933P1, OUTPUT HEADERS AND CALL ZSFILE
+     C           @FCYC     IFEQ 'Y'
+     C                     OPEN DL1933P1
+     C                     Z-ADDSFNUM     ZSFNO   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSSEQ   5
+     C                     PARM *BLANKS   PETTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSFNO
+     C                     PARM           PERR    1
+     C*
+     C** IF ERROR CODE = 'Y' THEN TERMINATE THE PROGRAM
+     C*
+     C           PERR      IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     WRITEDL1933R0
+     C                     WRITEDL1933R1
+     C                     END
+     C*
+     C* CALL ZSFILE FOR DL1933AU, THEN OUTPUT HEADERS
+     C*
+     C                     Z-ADDSFNUMU    ZSFNO   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSSEQ
+     C                     PARM *BLANK    ETTY    3
+     C                     PARM           SFILEU
+     C                     PARM           ZSFNO
+     C                     PARM           PERR    1
+     C*
+     C** IF ERROR CODE = 'Y' THEN TERMINATE THE PROGRAM
+     C*
+     C           PERR      IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     WRITEDL1933A0
+     C*
+     C* IF DB ERROR IN ZA0150, CATCH HERE AFTER OUTPUT OF TITLES
+     C*
+     C           *IN80     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           #ZA9      ENDSR                           **#ZA9**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  ZA0150 - THIS SUBROUTINE CALLS ACCESS OBJECT AOBANKR0 TO GET *
+     C*           BANK DETAILS.  IF THERE IS AN ERROR ON THE CALL     *
+     C*           IND.80 IS SET ON, AND *PSSR IS HANDLED IN CALLING SR*
+     C*                                                               *
+     C*  CALLED BY : #ZA                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZA0150    BEGSR
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG'    P@RTC2  7
+     C                     PARM '*FIRST'  P@OPTN  7
+     C           P@BANK    PARM P@BANK    DSFDY
+     C*
+     C** IF NO RECORD FOUND THEN PERORM DATABASE ERROR PROCESSING
+     C*
+     C           P@RTC2    IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY            *************
+     C                     MOVEL'900'     DBASE            * DBERR 900 *
+     C                     SETON                     80    *************
+     C                     END
+     C*
+     C           ZA0159    ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - INITIAL PROCESSING                        *
+     C*                                                               *
+     C*  CALLED BY :  CONTROL PROCESSING                              *
+     C*                                                               *
+     C*  CALLS     :  #ZA                                             *
+     C*                                                               *
+     C*  USES:        @FCYC  - FIRST CYCLE PROCESSING FLAG.           *
+     C*               @ENTTP - PREVIOUS ENTRY TYPE                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C**  SET FIRST CYCLE PROCESSING FLAG.
+     C                     MOVE 'Y'       @FCYC   1
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* RECIEVE PARAMETER FROM CALLING PGM,TO SET UP IRS OR FRA MODE
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           FI      1
+     C*
+     C           FI        IFEQ 'I'
+     C                     MOVE '1'       *IN10
+     C                     END
+     C*
+     C**  DEFINE PREVIOUS ENTRY TYPE
+     C                     MOVE *BLANKS   @ENTTP  2
+     C*
+     C**  READ INSTALLATION CONTROL DATA RECORD AND OUTPUT
+     C**  PRINT FILE HEADINGS.
+     C                     EXSR #ZA
+     C******************                                                  E36623
+     C****OPEN*FILE*FDINSTLL.                                             E36623
+     C******************   OPEN FDINSTLL                                  E36623
+     C******************   READ FDINSTLL                 78               E36623
+     C*
+     C/COPY WNCPYSRC,DL1933C001
+     C           #A9       ENDSR                           **#A9**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #C - TERMINATION PROCESSING                                  *
+     C*       READS I.C.D. RECORD IF NO RECORDS ON FDAUFILL.          *
+     C*       IF DATABASE ERROR HAS OCCURRED, OUTPUTS FD0570R4.       *
+     C*       INVOKES FILE CONTROL PROCESSING.                        *
+     C*       IF FILE CONTROLS OUT OF BALANCE, OUTPUTS FD0570R5.      *
+     C*                                                               *
+     C*  CALLED BY : CONTROL PROCESSING                               *
+     C*                                                               *
+     C*  CALLS     : #ZA                                              *
+     C*            : #CA                                              *
+     C*                                                               *
+     C*  USES:       @FCYC  - FIRST CYCLE PROCESSING FLAG             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**  IF THERE ARE NO RECORDS ON FDAUFILL THIS WILL BE THE FIRST
+     C**  ROUTINE TO BE PROCESSED; ACCESS THE I.C.D AND OUTPUT
+     C**  REPORT HEADINGS.
+     C           @FCYC     IFNE 'Y'
+     C*
+     C* SET UP *IN10 IF PGM IS RUNNING IN IRS MODE.
+     C           FI        IFEQ 'I'
+     C                     MOVE '1'       *IN10
+     C                     END
+     C*
+     C**  READ ICD RECORD AND OUTPUT PRINT FILE HEADINGS
+     C                     EXSR #ZA
+     C/COPY WNCPYSRC,DL1933C002
+     C                     END
+     C*
+     C**  OUTPUT FD0570P1 'END OF REPORT' FORMAT IF RECORDS HAVE BEEN
+     C**  READ FROM FDAUFIPP AND NO DATABASE ERROR
+     C           @FCYC     IFEQ 'Y'
+     C           *INU7     ANDEQ'0'
+     C                     WRITEDL1933R3
+     C                     END
+     C*
+     C**  IF NO DATA BASE ERROR HAS ALREADY OCCURRED,
+     C**  PERFORM FILE CONTROL PROCESSING.
+     C           *INU7     IFEQ '0'
+     C                     EXSR #CA
+     C                     END
+     C******************                                                  E36623
+     C****CLOSE*FILE*FDINSTLL                                             E36623
+     C******************   CLOSEFDINSTLL                                  E36623
+     C*
+     C           #C9       ENDSR                           **#C9**
+     C*
+     C*****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*   #CA - FILE CONTROL PROCESSING                              *
+     C*                                                              *
+     C*   CALLED BY:   #C                                            *
+     C*                                                              *
+     C*   CALLS:   ZTNLU1                                            *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #CA       BEGSR
+     C*
+     C/COPY WNCPYSRC,DL1933C003
+     C* READ DLFIRSLL FOR UPDATE OF FILE DATA STRUCTURE, DSAUD.
+     C* (PROGRAM FAILS TO COMPILE IF THIS IS NOT DONE.)
+     C                     READ DLFIRSLL                 76
+     C/COPY WNCPYSRC,DL1933C004
+     C*
+     C**  GET HEADER RECORD FOR UPDATE
+     C*
+     C                     MOVE *BLANKS   @XKEY  12
+     C           *IN10     IFEQ '0'
+     C                     MOVEL'FR'      @XKEY
+     C                     ELSE
+     C                     MOVEL'IR'      @XKEY
+     C                     END
+     C*
+     C           @XKEY     CHAINFDTTOTLL             7574
+     C*
+     C**  DATA BASE ERROR
+     C           *IN75     IFEQ '1'
+     C           RECI      ORNE 'H'
+     C                     MOVEL@XKEY     DBKEY            ************
+     C                     MOVEL'FDTTOTLL'DBFILE           * DBERR 001*
+     C                     MOVEL'001'     DBASE            ************
+     C                     EXSR *PSSR
+     C                     GOTO #CA9
+     C                     END
+     C*
+     C**  IF RECORD LOCKED SEND MESSAGE AND RELEASE MAIN UPDATE RECORD
+     C           *IN74     IFEQ '1'
+     C                     CALL 'ZA0250'
+     C                     MOVEL'FDM0120' @MSGID 10
+     C                     CALL 'ZA0240'
+     C                     PARM           @MSGID
+     C                     EXCPT@RLSFL
+     C                     GOTO #CA9
+     C                     END
+     C*
+     C**  SET UP CONTROL FIELDS FROM FDTTOTLL
+     C*
+     C                     Z-ADDNREC      RRNREC
+     C                     Z-ADDNINS      RRNINS
+     C                     Z-ADDNAMD      RRNAMD
+     C                     Z-ADDNDEL      RRNDEL
+     C*
+     C**  CALCULATE NUMBER OF LIVE RECORDS ON DLFIRSLL FROM FDTTOTLL
+     C**  DATA AND CHECK FOR 'FILE OUT OF BALANCE' CONDITION
+     C           NREC      ADD  NINS      RRNCAL
+     C                     SUB  NDEL      RRNCAL
+     C/COPY WNCPYSRC,DL1933C005
+     C           RRNORE    IFNE RRNCAL
+     C/COPY WNCPYSRC,DL1933C006
+     C                     MOVE '1'       *IN65
+     C                     MOVE '1'       *INU8
+     C                     ELSE
+     C*
+     C**  IF 'FILE IN BALANCE', UPDATE FDTTOTLL RECORD
+     C                     Z-ADD*ZERO     NAMD
+     C                     Z-ADD*ZERO     NINS
+     C                     Z-ADD*ZERO     NDEL
+     C                     Z-ADDRRNCAL    NREC
+     C                     EXSR ZTNLU1
+     C                     UPDATTABLETXF
+     C                     END
+     C*
+     C**  OUTPUT DL1933AU DETAILS FORMAT
+     C                     WRITEDL1933A1
+     C*
+     C           #CA9      ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C/COPY ZSRSRC,ZRATE1Z2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C/COPY WNCPYSRC,DL1933C007
+     C*  ZTNLU - TO LOCK AND UPDATE THE TRANSACTION NUMBER DATA AREA  *
+     C*                                                               *
+     C*  CALLED BY:  #CA                                              *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*  USES:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     MOVE 'DL'      MDID
+     C                     MOVEL'DL1933'  PGMN
+     C                     MOVEL@JOB      WSIDX
+     C                     TIME           MTIME
+     C                     MOVE 'A'       ACTCDX
+     C                     MOVE @USER     USRIDX
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR - ERROR HANDLING SUBROUTINE.                           *
+     C*                                                               *
+     C*  CALLED BY:  EXECUTES WHENEVER FILE OR PROGRAM EXCEPTION      *
+     C*              ERROR OCCURS.                                    *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*  USES:                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'DL1933'  DBPGM
+     C           *NAMVAR   DEFN LDA       @LDA  256
+     C           *LOCK     IN   @LDA
+     C                     MOVE DBERR     @LDA
+     C                     OUT  @LDA
+     C*
+     C* WRITE DATA-BASE ERROR FORMAT TO DL1933AU.
+     C                     WRITEDL1933A2
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     END
+     C                     RETRN
+     C*
+     C                     ENDSR                            ***PSSR9**
+     C*
+     C*****************************************************************
+     C*
+     OTABLETXFE                @RLSFL
+     O*
+** CPY@
+(c) Finastra International Limited 2001

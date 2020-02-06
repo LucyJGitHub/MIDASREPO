@@ -1,0 +1,101 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Update Midas Events with Equation Events')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       CLLE/GLC000539 - Transfer Events                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG13986           Date 21May07              */
+/*                      CRE026  *CREATE    Date 24May06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG13986 - Error in COB. Added SAR validation               */
+/*       CRE026 - Consumer Banking                                   */
+/*                                                                   */
+/*********************************************************************/
+     PGM
+ 
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2006')
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)                                    /*BUG13986*/
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                                    /*BUG13986*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                   /*BUG13986*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                 /*BUG13986*/
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+                                                                                        /*BUG13986*/
+/* Check if CRE026 feature */                                                           /*BUG13986*/
+                                                                                        /*BUG13986*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                      /*BUG13986*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                      /*BUG13986*/
+             CHGVAR     VAR(&SARD) VALUE('CRE026')                                      /*BUG13986*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                       /*BUG13986*/
+             IF         COND(&RTN *NE '       ') THEN(DO)                               /*BUG13986*/
+             GOTO       CMDLBL(END)                                                     /*BUG13986*/
+             ENDDO                                                                      /*BUG13986*/
+ 
+/* Create LDA for job in QTEMP if it does not already exist */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                        CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+                        ENDDO
+ 
+             SNDPGMMSG  MSG('GLC000539 - Transfer Events Program') +
+                             TOMSGQ(MRUNQ)
+ 
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+/* Clear Temporary Extract File */
+             CLRPFM     FILE(GLEQEXT)
+ 
+/* Call PGM to extract the Equation Movements to the temporary file */
+             CALL       PGM(GL000538)
+ 
+ 
+             CALL       PGM(GL000539)
+ 
+/* Database error processing */
+ 
+                         IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                            RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                            SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                                         TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                            GOTO       CMDLBL(ABNOR)
+                         ENDDO
+ 
+                         GOTO       CMDLBL(END)
+ 
+     ABNOR:
+ 
+/* Abnormal termination - batch job */
+ 
+                             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                                        GLC000539 ended abnormally - see job log') +
+                                        TOMSGQ(MOPERQ MRUNQ)
+                             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ 
+     END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2006')
+ 
+ 
+     ENDPGM

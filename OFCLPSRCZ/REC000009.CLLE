@@ -1,0 +1,160 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Generation of Modelo 193')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       REC000009 - Midas OF Generation of Modelo 193               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD034330           Date 07May15              */
+/*                      CRE104  *CREATE    Date 26Mar15              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*     MD034330 - Cancelled 193 request on the Modelo 193 screen is  */
+/*                saved on the audit file. Issue COMMIT command.     */
+/*       CRE104 - Modelo 123 and 193 Reports                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARMX)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2015')
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RPARMX) TYPE(*CHAR) LEN(100)
+ 
+             DCL        VAR(&BRCA) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&YEAR) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&FLAG) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&FOLD) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&DOCF) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JNBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PDFD) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&SPLFLR) TYPE(*CHAR) LEN(22)
+ 
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SUBSTRING(&SDSTAT 6 2))
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     PRTTXT(*BLANK) SWS(XXXXXX00)
+ 
+             CHGVAR     VAR(&BRCA) VALUE(%SUBSTRING(&RPARMX 1 3))
+             CHGVAR     VAR(&YEAR) VALUE(%SUBSTRING(&RPARMX 4 7))
+             CHGVAR     VAR(&FLAG) VALUE(%SUBSTRING(&RPARMX 8 8))
+ 
+/* Allocate file to ensure no one is using it */
+ 
+             ALCOBJ     OBJ((RE1931TD *FILE *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF1085 CPF1002) EXEC(DO)
+ 
+             SNDPGMMSG  MSG('Another user is generating the extract +
+                          list. Please try later.') TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+             ALCOBJ     OBJ((RE1932TD *FILE *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF1085 CPF1002) EXEC(DO)
+ 
+             SNDPGMMSG  MSG('Another user is generating the extract +
+                          list. Please try later.') TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CLRPFM     FILE(RE193ITD)
+             CLRPFM     FILE(RE1931TD)
+             CLRPFM     FILE(RE1932TD)
+             CLRPFM     FILE(RE193FTD)
+ 
+             CHGVAR     VAR(&FOLD) VALUE('AEAT/' *CAT &PRE *CAT '/M193/' *CAT +
+                          &BRCA)
+ 
+             CHGVAR     VAR(&DOCF) VALUE(&YEAR *CAT '.TXT')
+             IF         COND(&FLAG *EQ 'Y') THEN(DO)
+             CHGVAR     VAR(&DOCF) VALUE(&YEAR *CAT 'S.TXT')
+             ENDDO
+ 
+/* Call program to populate RE193ITD, RE1931TD, RE1932TD and RE193FTD */
+ 
+ PROC:       CALL       PGM(RE000009) PARM(&RSEQ &RLEV &RENT &RPARMX)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+ 
+/* Copy to Flat File */
+             CPYF       FROMFILE(RE1931TD) TOFILE(RE193FTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+ 
+             CPYF       FROMFILE(RE1932I0) TOFILE(RE193FTD) +
+                          MBROPT(*ADD) FMTOPT(*NOCHK)
+ 
+ 
+/* Create document in folder */
+ 
+             CPYTOPCD   FROMFILE(RE193FTD) TOFLR(&FOLD) +
+                          TODOC(&DOCF) REPLACE(*YES)
+ 
+             SNDPGMMSG  MSG('Generation of of Modelo 193 completed. +
+                          Check Flate File ' *CAT &DOCF *CAT ' in +
+                          folder ' *CAT &FOLD *CAT '.') TOMSGQ(MOPERQ MRUNQ)
+ 
+ 
+             RTVJOBA    JOB(&JOB) USER(&USER) NBR(&JNBR)
+ 
+             CHGVAR     VAR(&SPLFLR) VALUE('/QDLS/AEAT/' *CAT &PRE +
+                          *CAT '/M193/' *CAT &BRCA)
+ 
+             CHGVAR     VAR(&PDFD) VALUE('M' *CAT &YEAR *CAT '.PDF')
+             IF         COND(&FLAG *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&PDFD) VALUE('M' *CAT &YEAR *CAT 'S.PDF')
+             ENDDO
+ 
+             UTCVTSPOOL FROMFILE(RE000009P1) TOSTMF(&PDFD) +
+                          TODIR(&SPLFLR) JOB(&JNBR/&USER/&JOB) +
+                          SPLNBR(*ONLY) TOFMT(*PDF) STMFOPT(*REPLACE)
+ 
+             COMMIT                                                                     /*MD034330*/
+             GOTO       CMDLBL(END)
+ 
+ 
+ABNOR:      SNDPGMMSG  MSG('REC000009 - Ended Abnormally') +
+                         TOMSGQ(MOPERQ MRUNQ)
+            MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+            DMPCLPGM
+            MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+END:
+ 
+             DLCOBJ     OBJ((RE1931TD *FILE *EXCLRD))
+             DLCOBJ     OBJ((RE1932TD *FILE *EXCLRD))
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

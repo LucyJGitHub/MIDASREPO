@@ -1,0 +1,118 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas TI Initialise SDBSRTPF and ACCNTAB(ALL)')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Trade Innovation Module                             */
+/*                                                                   */
+/*       TIC002002 - Initialise SDBSRTPF and ACCNTAB (all records)   */
+/*                                                                   */
+/*       Function: This program will update and replace all details  */
+/*                 in ACCNTAB.  Use TIC002000 for live system.       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. 245028  *CREATE    Date 02Mar07              */
+/*                      XNNNNN             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       245028 - Add 3rd parameter to control initialisation of     */
+/*                ACCNTAB.  Update all records in ACCNTAB even if    */
+/*                field A5ACKY contains a value.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Mode 1 - First call */
+ 
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+ 
+/* Start commitment control with file updates */
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+             MONMSG     MSGID(CPF0000)
+ 
+/* Call the initialisation program */
+ 
+             CALL       PGM(TI002000) PARM(&PMODE)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDDO
+ 
+/* Mode 2 - Second call */
+ 
+             IF         COND((&PMODE *EQ '2') *OR +
+                             (&PMODE *EQ 'B')) THEN(DO)
+ 
+/* Start commitment control with file updates */
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+             MONMSG     MSGID(CPF0000)
+ 
+/* Call the initialisation program */
+ 
+             CALL       PGM(TI002000) PARM(&PMODE)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDDO
+ 
+/* Mode 3 - Deletion */
+ 
+             IF         COND(&PMODE *EQ '3') THEN(DO)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+             DMPCLPGM
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000)
+ 
+ /* Send the error message */
+ 
+             SNDPGMMSG  MSG('Program TIC002002 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000)
+ 
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000)
+ 
+             ENDPGM

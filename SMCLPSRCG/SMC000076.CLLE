@@ -1,0 +1,101 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update global System Values')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000076 - Update global System Values                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG28074           Date 26Aug10              */
+/*                      BUG28037           Date 17Aug10              */
+/*                      BUG27957  *CREATE  Date 30Jul10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG28074 - Correct placement of override.                   */
+/*       BUG28037 - Handle IASP.                                     */
+/*       B27957 - Standardise update of System Values.               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&GPSBSID)
+ 
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SYSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&GVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSVALVAL) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SYSVALVAL1) TYPE(*CHAR) LEN(200)                           /*BUG28037*/
+             DCL        VAR(&SYSVALVAL2) TYPE(*CHAR) LEN(200)                           /*BUG28037*/
+             DCL        VAR(&SYSVALVAL3) TYPE(*CHAR) LEN(200)                           /*BUG28037*/
+             DCL        VAR(&SYSVAL1) TYPE(*CHAR) LEN(20)                               /*BUG28037*/
+             DCL        VAR(&SYSVAL2) TYPE(*CHAR) LEN(20)                               /*BUG28037*/
+             DCL        VAR(&SYSVAL3) TYPE(*CHAR) LEN(20)                               /*BUG28037*/
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)                                /*BUG28037*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGVAR     VAR(&GVLIB) VALUE(&GPSBSID *TCAT 'GVLIB')
+ 
+/* Retrieve IASP System Values. */                                                      /*BUG28074*/
+             CHGVAR     VAR(&SYSVAL1) VALUE('IASPinstallation')                         /*BUG28074*/
+             CHGVAR     VAR(&SYSVAL2) VALUE('IASPdatabase')                             /*BUG28074*/
+             CHGVAR     VAR(&SYSVAL3) VALUE('IASPgroup')                                /*BUG28074*/
+             CALL       PGM(GPAOSVALR0) PARM(&RTNCODE &SYSVAL1 +
+                          &SYSVALVAL1 &SYSVAL2 &SYSVALVAL2 &SYSVAL3 +
+                          &SYSVALVAL3 ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ')                                    /*BUG28074*/
+             IF         COND(&RTNCODE *NE '       ') THEN(DO)                           /*BUG28074*/
+                GOTO       CMDLBL(ERROR)                                                /*BUG28074*/
+             ENDDO                                                                      /*BUG28074*/
+ 
+             OVRDBF     FILE(GPSVALL0) TOFILE(&GVLIB/GPSVALL0)
+ 
+/* Set up System Value GlobalJavaPathStem. */
+             CHGVAR     VAR(&SYSVAL) VALUE('GlobalJavaPathStem')
+             CHGVAR     VAR(&SYSVALVAL) +
+                          VALUE('/QOpenSys/Misys/MidasPlus/' *TCAT +
+                          &GPSBSID)
+             CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+/* Update global layer prefix. */
+             CHGVAR     VAR(&SYSVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVALVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVAL) VALUE('BrgMidasGlobalPrefix')
+             CHGVAR     VAR(&SYSVALVAL) VALUE(&GPSBSID)
+             CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+             CHGVAR     VAR(&SYSVAL) VALUE(' ')
+             CHGVAR     VAR(&SYSVAL) VALUE('GlobalSystemPrefix')
+             CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
+ 
+/* Update IASP values. */                                                               /*BUG28037*/
+/**********  CHGVAR     VAR(&SYSVAL1) VALUE('IASPinstallation')         */ /*BUG28037*/ /*BUG28074*/
+/**********  CHGVAR     VAR(&SYSVAL2) VALUE('IASPdatabase')             */ /*BUG28037*/ /*BUG28074*/
+/**********  CHGVAR     VAR(&SYSVAL3) VALUE('IASPgroup')                */ /*BUG28037*/ /*BUG28074*/
+/**********  CALL       PGM(GPAOSVALR0) PARM(&RTNCODE &SYSVAL1 +                     */ /*BUG28074*/
+/**********               &SYSVALVAL1 &SYSVAL2 &SYSVALVAL2 &SYSVAL3 +                */ /*BUG28074*/
+/**********               &SYSVALVAL3 ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +                */ /*BUG28074*/
+/**********               ' ' ' ' ' ' ' ' ' ' ' ' ')                    */ /*BUG28037*/ /*BUG28074*/
+/**********  IF         COND(&RTNCODE *NE '       ') THEN(DO)           */ /*BUG28037*/ /*BUG28074*/
+/**********     GOTO       CMDLBL(ERROR)                                */ /*BUG28037*/ /*BUG28074*/
+/**********  ENDDO                                                      */ /*BUG28037*/ /*BUG28074*/
+             CALL       PGM(GP009510) PARM(&SYSVAL1 &SYSVALVAL1 ' ')                    /*BUG28037*/
+             CALL       PGM(GP009510) PARM(&SYSVAL2 &SYSVALVAL2 ' ')                    /*BUG28037*/
+             CALL       PGM(GP009510) PARM(&SYSVAL3 &SYSVALVAL3 ' ')                    /*BUG28037*/
+ 
+             DLTOVR     FILE(GPSVALL0)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,444 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Incoming Messages Report Request')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT Direct Link Module                             *
+      *                                                               *
+      *   MS5055 - INCOMING MESSAGES REPORT REQUEST                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 146072             Date 28Oct98               *
+      *                 S01310             Date 06DEC90               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  146072 - Allow year 2000 to be used in the start and end     *
+      *           dates.                                              *
+      *   S01310 - SWIFT RATIONALISATION                              *
+      *                                                               *
+      *****************************************************************
+      *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     F*ABTB10*IF**E********   K        DISK                               S01310
+     FSDBRCHL0IF  E           K        DISK                               S01310
+     FMS5055DFCF  E                    WORKSTN
+      *
+      * ID C  F  H  L    Function of indicators
+      * 30               Error
+      * 31               Message type error
+      * 32               Message priority error
+      * 33               Start message ouput date error
+      * 34               Start message output time error
+      * 35               End message output date error
+      * 36               End message output time error
+      * 40               HELP
+      * 41               Multibranching on                                S01310
+      * 60               Message type not numeric
+      * 88               EOF SDBRCHL0                                     S01310
+      **89***************EOF TABTB10                                      S01310
+      * KC               F3
+      * KL               F12 pressed                                      S01310
+      * U7U8LR           DB error
+      *
+     E                    ERCD       19  4               ERROR CODE OUTPUT
+     E                    CPY@    1   1 80                                S01310
+     E********************CMD     1   5 80               QCMDEXC CMD      S01310
+      *
+      *
+     IPARAM       DS
+     I                                        1   3 STYP
+     I                                        4   4 SPTY
+     I                                        5  10 SOSD
+     I                                       11  14 SOST
+     I                                       15  20 SOED
+     I                                       21  24 SOET
+      *
+     I                                        5   6 SDYY
+     I                                        7   8 SDMM
+     I                                        9  10 SDDD
+      *
+     I                                       11  12 STHH
+     I                                       13  14 STMM
+      *
+     I                                       15  16 EDYY
+     I                                       17  18 EDMM
+     I                                       19  20 EDDD
+      *
+     I                                       21  22 ETHH
+     I                                       23  24 ETMM
+      *
+      **  Parameters data structure
+      *
+     I*OMM********DS*******                                               S01310
+     I*********************                   1 160 WCMD                  S01310
+     I*********************                   1  80 WCMD1                 S01310
+     I*********************                  81 160 WCMD2                 S01310
+     I*********************                 116 139 EXECPM                S01310
+      ****QCMDEXC*command data structure                                  S01310
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID                 S01310
+     I**  Workstation ID
+      *
+     IDSRUN       DS                             13                       S01310
+     I                                        1   7 RUNA                  S01310
+     I                                       13  13 MBIN                  S01310
+      **  RUNDAT data area                                                S01310
+      *                                                                   S01310
+     C           *ENTRY    PLIST                                          S01310
+     C                     PARM           RSEQ    5                       S01310
+     C                     PARM           RLEV    1                       S01310
+     C                     PARM           RENT    3                       S01310
+     C                     PARM           PARAM                           S01310
+     C                     PARM           RACT    1                       S01310
+     C                     PARM           RCMD    1                       S01310
+     C/EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   VSEL  - Validate selection                                  *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT Initial process                               *
+      *            VSEL Validate selection                            *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      ****Display*selection screen until F3 pressed                       S01310
+     C************INKC*****DOWEQ'0'                                       S01310
+      *********************                                               S01310
+      ****If*no*errors*clear input fields                                 S01310
+     C************IN30*****IFEQ '0'                                       S01310
+     C*********************MOVE *BLANKS   STYP                            S01310
+     C*********************MOVE *BLANKS   SPTY                            S01310
+     C*********************MOVE *BLANKS   SOSD                            S01310
+     C*********************MOVE *BLANKS   SOST                            S01310
+     C*********************MOVE *BLANKS   SOED                            S01310
+     C*********************MOVE *BLANKS   SOET                            S01310
+     C*********************END                                            S01310
+      *
+      **  Display selection screen until no errors                        S01310
+     C           *IN30     DOUEQ'0'                                       S01310
+     C                     WRITEMS5055F1
+      *
+      ****Do*while*HELP*pressed                                           S01310
+     C************IN40*****DOUEQ'0'                                       S01310
+     C                     READ MS5055F1                 40
+      *
+     C************IN40*****IFEQ '1'                                       S01310
+     C*********************MOVEAERCD      HERCD 160                       S01310
+     C*********************MOVEL'MSSWII'  HBPGM   8                       S01310
+     C*********************CALL 'MHELP'                                   S01310
+     C*********************PARM           HBPGM                           S01310
+     C*********************PARM           HERCD                           S01310
+     C*********************END                                            S01310
+     C*********************END                                            S01310
+      *
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     36
+      *
+      ****If*F3*not*pressed validate selection                            S01310
+     C************INKC*****IFEQ '0'                                       S01310
+      *                                                                   S01310
+      **  If F3 pressed terminate program                                 S01310
+     C           *INKC     IFEQ '1'                                       S01310
+     C                     MOVE 'E'       RCMD                            S01310
+     C                     SETON                     LR                   S01310
+     C                     RETRN                                          S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If F12 pressed terminate program                                S01310
+     C           *INKL     IFEQ '1'                                       S01310
+     C                     MOVE 'F'       RCMD                            S01310
+     C                     SETON                     LR                   S01310
+     C                     RETRN                                          S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Validate selection                                              S01310
+     C                     EXSR VSEL
+      *
+      ****IF*selection*valid submit report                                S01310
+     C************IN30*****IFEQ '0'                                       S01310
+      *********************                                               S01310
+     C*********************MOVELCMD,1     WCMD1                           S01310
+     C*********************CALL 'QCMDEXC'                                 S01310
+     C*********************PARM           WCMD  160                       S01310
+     C*********************PARM 160       WLEN   155                      S01310
+     C*********************MOVE *BLANKS   WCMD                            S01310
+      *********************                                               S01310
+     C*********************MOVELCMD,2     WCMD1                           S01310
+     C*********************MOVELCMD,3     WCMD2                           S01310
+     C*********************MOVE PARAM     EXECPM                          S01310
+     C*********************CALL 'QCMDEXC'                                 S01310
+     C*********************PARM           WCMD  160                       S01310
+     C*********************PARM 160       WLEN   155                      S01310
+     C*********************MOVE *BLANKS   WCMD                            S01310
+      *********************                                               S01310
+     C*********************MOVELCMD,4     WCMD1                           S01310
+     C*********************MOVELCMD,5     WCMD2                           S01310
+     C*********************CALL 'QCMDEXC'                                 S01310
+     C*********************PARM           WCMD  160                       S01310
+     C*********************PARM 160       WLEN   155                      S01310
+     C*********************MOVE *BLANKS   WCMD                            S01310
+      *********************                                               S01310
+     C*********************END                                            S01310
+     C*********************END                                            S01310
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01310
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MS5055  'DBPGM
+     C                     OUT  LDA
+      *
+      ****Access*TABTB10*to find run date                                 S01310
+     C*********************READ TABTB10                  89               S01310
+      *********************                                               S01310
+     C************IN89*****IFEQ '1'                                       S01310
+     C***********RECI******ORNE 'D'                                       S01310
+     C************LOCK*****IN   LDA                                       S01310
+     C*********************MOVE '01'      DBASE                           S01310
+     C*********************MOVE 'FIRST'   DBKEY            * DB ERROR 01 *S01310
+     C*********************MOVE 'TABTB10' DBFILE                          S01310
+     C*********************OUT  LDA                                       S01310
+     C*********************EXSR *PSSR                                     S01310
+     C*********************END                                            S01310
+      *                                                                   S01310
+      **  Access RUNDAT to find run date & multibranching indicator       S01310
+     C           *NAMVAR   DEFN RUNDAT    DSRUN                           S01310
+     C                     IN   DSRUN                                     S01310
+      *                                                                   S01310
+      **  If multibranching on                                            S01310
+     C           MBIN      IFEQ 'Y'                                       S01310
+      *                                                                   S01310
+      **  If not system level                                             S01310
+     C           RLEV      IFNE 'S'                                       S01310
+      *                                                                   S01310
+      **  Access SDBRCHL0 for branch name                                 S01310
+     C           RENT      IFNE 'ALL'                                     S01310
+     C           RENT      CHAINSDBRCHL0             88                   S01310
+      *                                                                   S01310
+     C           *IN88     IFEQ '1'                                       S01310
+     C           *LOCK     IN   LDA                                       S01310
+     C                     MOVE '01'      DBASE                           S01310
+     C                     MOVE RENT      DBKEY            * DB ERROR 01 *S01310
+     C                     MOVE 'SDBRCHL0'DBFILE                          S01310
+     C                     OUT  LDA                                       S01310
+     C                     EXSR *PSSR                                     S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Display branch code                                             S01310
+     C                     MOVE '1'       *IN41                           S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VSEL  - Validate selection                                  *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+      **  Blank out error codes array
+     C                     MOVE *BLANKS   ERCD
+     C                     Z-ADD0         W       20
+      *
+      **  Message type must be blank or numeric
+     C           STYP      IFNE *BLANK
+     C                     TESTN          STYP       60
+     C           *IN60     IFNE '1'
+     C                     SETON                     3031
+     C                     ADD  1         W
+     C                     MOVE '001'     ERCD,W
+     C                     END
+     C                     END
+      *
+      **  Message priority must be blank,'N' or 'U'.
+     C           SPTY      IFNE *BLANK
+     C           SPTY      ANDNE'N'
+     C           SPTY      ANDNE'U'
+     C                     SETON                     3032
+     C                     ADD  1         W
+     C                     MOVE '009'     ERCD,W
+     C                     END
+      *
+      **  Start year must be blank or 01-99
+     C           SOSD      IFNE *BLANK
+      *
+     C***********SDYY      IFLT '01'                                      146072
+     C           SDYY      IFLT '00'                                      146072
+     C           SDYY      ORGT '99'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '003'     ERCD,W
+     C                     END
+      *
+      **  Start month must be blank or 01-12
+     C           SDMM      IFLT '01'
+     C           SDMM      ORGT '12'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '004'     ERCD,W
+     C                     END
+      *
+      **  Start day must be blank or 01-31
+     C           SDDD      IFLT '01'
+     C           SDDD      ORGT '31'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '005'     ERCD,W
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **  Start time must not be entered if day is not entered
+     C           SOSD      IFEQ *BLANKS
+     C           SOST      ANDNE*BLANKS
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '006'     ERCD,W
+     C                     END
+      *
+      **  Start hours must be blank or 00-23
+     C           SOST      IFNE *BLANK
+      *
+     C           STHH      IFLT '00'
+     C           STHH      ORGT '23'
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '007'     ERCD,W
+     C                     END
+      *
+      **  Start minutes must be blank or 00-59
+     C           STMM      IFLT '00'
+     C           STMM      ORGT '59'
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '008'     ERCD,W
+      *
+     C                     END
+     C*
+     C                     END
+      *
+      **  End year must be blank or 01-99
+     C           SOED      IFNE *BLANK
+      *
+     C***********EDYY      IFLT '01'                                      146072
+     C           EDYY      IFLT '00'                                      146072
+     C           EDYY      ORGT '99'
+     C                     SETON                     3035
+     C                     ADD  1         W
+     C                     MOVE '003'     ERCD,W
+     C                     END
+      *
+      **  End month must be blank or 01-12
+     C           EDMM      IFLT '01'
+     C           EDMM      ORGT '12'
+     C                     SETON                     3035
+     C                     ADD  1         W
+     C                     MOVE '004'     ERCD,W
+     C                     END
+      *
+      **  End day must be blank or 01-31
+     C           EDDD      IFLT '01'
+     C           EDDD      ORGT '31'
+     C                     SETON                     3035
+     C                     ADD  1         W
+     C                     MOVE '005'     ERCD,W
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **  Time must not be entered if day is not entered
+     C           SOED      IFEQ *BLANKS
+     C           SOET      ANDNE*BLANKS
+     C                     SETON                     3036
+     C                     ADD  1         W
+     C                     MOVE '006'     ERCD,W
+     C                     END
+      *
+      **  End hours must be blank or 00-23
+     C           SOET      IFNE *BLANK
+      *
+     C           ETHH      IFLT '00'
+     C           ETHH      ORGT '23'
+     C                     SETON                     3036
+     C                     ADD  1         W
+     C                     MOVE '007'     ERCD,W
+     C                     END
+      *
+      **  End minutes must be blank or 00-59
+     C           ETMM      IFLT '00'
+     C           ETMM      ORGT '59'
+     C                     SETON                     3036
+     C                     ADD  1         W
+     C                     MOVE '008'     ERCD,W
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     MOVEAERCD      SFMG
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - INIT initial process                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

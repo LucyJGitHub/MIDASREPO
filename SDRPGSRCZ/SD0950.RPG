@@ -1,0 +1,237 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Update SECGT, SDSTRDPD, TABTB36')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - (Standing Data)
+     F*                                                               *
+     F*  Program name: SD0950                                         *
+     F*                                                               *
+     F*  Function:  This program initialises:                         *
+     F*                                                               *
+     F*             Group Charge Code (GCCO) and Group Charge Code    *
+     F*             Indicator (GCCI) on SE Charge types Details       *
+     F*             File PF/SECGTD                                    *
+     F*                                                               *
+     F*             Adjust commission same day trades (BVACSD) and    *
+     F*             Charges currency (BVCHRC) on Securities Trading   *
+     F*             I.C.D. file PF/SDSTRDPD                           *
+     F*                                                               *
+     F*             Adjust commission same day trades (ACSD) and      *
+     F*             Charges currency (CHRC) on Securities Trading     *
+     F*             I.C.D. file PF/TABTB36                            *
+     F*                                                               *
+     F*  Called by: SDC0950 - Default Field values for SE charge      *
+     F*                       types and SE I.C.D.                     *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 069250             Date 11Apr94               *
+      *                 S01446             Date 18Nov93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+     F*  069250 - Remove OVRDBF from creation parameters              *
+     F*  S01446 - BLI DEVELOPMENT STEP 2.                             *
+     F*           Created for switchable feature S01446 - Customer    *
+     F*           Commissions (Courtage)                              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F***OVRDBF (File in program) (file on system)                  : *   069250
+     F*****************************************************************
+     F*
+     FSECGTD  UF  E           K        DISK
+     FSDSTRDPDUF  E           K        DISK
+     FTABTB36 UF  E           K        DISK
+      /EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+      ***************** FIRST COMPILE TIME ARRAY *********************
+      /SPACE 3
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+      *****************************************************************
+      *
+      *** MAIN
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RETCDE  7
+     C                     PARM           PMODE   1
+      *
+      *** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR PROC1
+     C                     EXSR PROC2
+     C                     EXSR PROC3
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *
+      *** This program can be called with a parameter of '2' when the
+      *** switchable feature is being reset on or '3' if being set off
+      *** OR '1' when the feature is switched on for the first time.
+      *
+      *****************************************************************
+      *
+     C           PROC1     BEGSR
+     C                     READ SECGTD                   04
+     C           *IN04     DOWEQ'0'
+      *
+      *** If the Processing Mode is '1' for feature being set on
+      *** If the Processing Mode is '2' for feature being reinitialised
+      *
+     C           PMODE     IFEQ '1'
+     C           PMODE     OREQ '2'
+      *
+      *** Set field 'group charge code' (GCCO) to the charge
+      *** code already on the record, (CCOM).
+      *
+     C                     MOVELCCOM      GCCO
+      *
+      *** Set field 'group charge code indicator' (GCCI) to 'Y'
+      *
+     C                     MOVE 'Y'       GCCI
+      *
+     C                     ELSE
+      *
+      *** If the Processing Mode is '3' for feature being set off
+      *** Set fields to blanks
+      *
+     C                     MOVE *BLANKS   GCCO
+     C                     MOVE *BLANK    GCCI
+     C                     ENDIF
+      *
+     C                     UPDATSECGTDF
+     C                     READ SECGTD                   04
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *****************************************************************
+      *
+     C           PROC2     BEGSR
+     C                     READ SDSTRDPD                 05
+     C           *IN05     IFEQ '0'
+      *
+      *** If the Autocharges indicator (BVACOP) is 'Y', then
+      *** set 'Adjust Commission same day trades' (BVACSD) to
+      *** 'N'
+      *
+     C           PMODE     IFEQ '1'
+     C           PMODE     OREQ '2'
+     C           BVACOP    IFEQ 'Y'
+     C                     MOVE 'N'       BVACSD
+     C                     ELSE
+     C                     MOVE *BLANK    BVACSD
+     C                     END
+     C                     ELSE
+     C                     MOVE *BLANK    BVACSD
+     C                     END
+      *
+      *** Always set Charges Currency back to blanks
+      *
+     C                     MOVE *BLANKS   BVCHRC
+     C*
+     C                     UPDATSDSTRDD0
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *****************************************************************
+      *
+     C           PROC3     BEGSR
+     C                     READ TABTB36                  06
+     C           *IN06     IFEQ '0'
+      *
+      *** If the Autocharges indicator (AUMO) is 'Y', then
+      *** set 'Adjust Commission same day trades' (ACSD) to
+      *** 'N', otherwise leave it blank
+      *
+     C           PMODE     IFEQ '1'
+     C           PMODE     OREQ '2'
+     C           AUMO      IFEQ 'Y'
+     C                     MOVE 'N'       ACSD
+     C                     ELSE
+     C                     MOVE *BLANK    ACSD
+     C                     END
+     C                     ELSE
+     C                     MOVE *BLANK    ACSD
+     C                     END
+      *
+      *** Always set Charges Currency back to blanks
+      *
+     C                     MOVE *BLANKS   CHRC
+      *
+     C                     UPDATTABTB36F
+     C                     ELSE
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+     C*
+      *****************************************************************
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVEL'FAILURE' RETCDE
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

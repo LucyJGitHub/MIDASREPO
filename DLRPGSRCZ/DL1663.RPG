@@ -1,0 +1,278 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Create OIS settlement control file')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL1663 - Create OIS Settlement Control FIle.                 *
+      *                                                               *
+      *  Function:  This program selects OIS records and builds       *
+      *             extract file PF/DLOISSPD - The OIS Settlement     *
+      *             Control File, which contains details of all       *
+      *             OIS Deals due to settle on the next working day.  *
+      *                                                               *
+      *  Called By: DLC1663 - COB Maintain OIS Settlement Control     *
+      *                       File.                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 204923             Date 29Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007  *CREATE    Date 11May01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  204923 - Rate Fix Days Adjustment (OIS)                      *
+      *  CIR007 - Overnight Index Swaps                               *
+      *                                                               *
+      *****************************************************************
+      *
+     FDEALSDG IF  E           K        DISK
+      ** Interest rate agreements/Interest rate swaps file
+      *
+     FDLOISSPDO   E                    DISK
+      ** OIS Settlement Control File.
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  70 - EoF on DEALSDG                                          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    @CPY    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Dummy record format for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD                                                                  204923
+      ** Data Structure for Currency details                                                  204923
+      *                                                                                       204923
+     IDSSDY     E DSDSSDY                                                                     204923
+      ** Second DS for access programs, long data structure                                   204923
+      *                                                                                       204923
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** M A I N  P R O C E S S I N G
+      *
+     C                     EXSR SRINIT
+      *
+      ** Read file to find OIS Deals
+      *
+     C                     READ DEALSDG                  70
+      *
+     C           *IN70     DOWEQ'0'
+      *
+      ** Check Rate Fix Day Adjustment                                                        204923
+      *                                                                                       204923
+     C                     CALL 'AOCURRR0'                                                    204923
+     C                     PARM *BLANKS   PRTCD                                               204923
+     C                     PARM '*KEY    'POPTN                                               204923
+     C                     PARM UCUCY     PCURR   3                                           204923
+     C           SDCURR    PARM SDCURR    DSSDY                                               204923
+      *                                                                                       204923
+     C           PRTCD     IFNE *BLANK                                                        204923
+     C           *LOCK     IN   LDA                                                           204923
+     C                     MOVEL'SDCURRPD'DBFILE                                              204923
+     C                     Z-ADD2         DBASE                                               204923
+     C                     MOVELPCURR     DBKEY                                               204923
+     C                     OUT  LDA                                                           204923
+     C                     EXSR *PSSR                                                         204923
+     C                     ENDIF                                                              204923
+      *                                                                                       204923
+      ** If rate fix days adjustment is not 0, get the previous working day.                  204923
+      *                                                                                       204923
+     C           A6FXDY    IFNE 0                                                             204923
+     C                     Z-ADDBJRDNB    SELDT                                               204923
+     C                     ELSE                                                               204923
+     C                     Z-ADDBJDNWD    SELDT                                               204923
+     C                     ENDIF                                                              204923
+      *
+     C                     MOVEL'N'       LSEL    1
+      *
+      ** If our side of the deal is an OIS, and our side, or both sides
+      ** are settling tomorrow, then select for processing.
+      *
+     C           UICFR     IFEQ 'O'
+     C           UNIPD     IFEQ SELDT
+     C           MDAT      OREQ SELDT
+     C                     MOVEL'Y'       LSEL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If their side of the deal is an OIS, and their side, or both
+      ** sides are settling tomorrow, then select for processing.
+      *
+     C           TICFR     IFEQ 'O'
+     C           TNIPD     IFEQ SELDT
+     C           MDAT      OREQ SELDT
+     C                     MOVEL'Y'       LSEL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If the record is selected for processing, then build and write
+      ** a record to PF/DLOISSPD, the OIS Settlement Control File.
+      *
+     C           LSEL      IFEQ 'Y'
+     C                     EXSR SREXTR
+     C                     ENDIF
+      *
+      ** Read next record from PF/DEALSDG.
+      *
+     C                     READ DEALSDG                  70
+      *
+     C                     ENDDO
+      *
+      ** Termination Processing.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *  Subroutine : SRINIT                                          *
+      *  Called By  : Main Processing.                                *
+      *  Calls      : None.                                           *
+      *  Purpose    : Program Initialisation.                         *
+      *               Setup Selection Date field, SELDT.              *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter and LDA
+      *
+     C                     MOVEA@CPY      CPY2@  80
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Initialise LDA field fields
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL1663'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     OUT  LDA
+      *
+      ** Find date of next working day. Note that this program runs in
+      ** Input Cycle Initiation, before SCC0411. (SCC0411 advances the
+      ** dates). SELDT is to be set to the date of the next working day,
+      ** so we can extract details of deals about to settle.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '        'PRTCD   7
+     C                     PARM '*FIRST  'POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     MOVELPOPTN     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDBJDNWD    SELDT   50
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine : SREXTR                                          *
+      *  Called By  : Main Processing.                                *
+      *  Calls      : None.                                           *
+      *  Purpose    : Create and Write record to PF/DLOISSPD          *
+      *               (OIS Settlement Control File).                  *
+      *****************************************************************
+      *
+     C           SREXTR    BEGSR
+      *
+      ** Build record for PF/DLOISSPD.
+      *
+     C                     MOVELBRCA      L5BRCA
+     C                     MOVELUCUCY     L5CURR
+     C                     Z-ADDDLNO      L5DLNO
+     C                     MOVEL'N'       L5RFIN
+     C                     Z-ADD*ZERO     L5SRUN
+     C                     MOVEL'N'       L5SFST
+      *
+      ** Write record to PF/DLOISSPD.
+      *
+     C                     WRITEDLOISSD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WERR      IFEQ *BLANK
+     C                     MOVE 'Y'       WERR    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  @CPY
+(c) Finastra International Limited 2001

@@ -1,0 +1,987 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Request for trans/cust CR tran check auth')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Funds Transfer Module                                *
+      *                                                               *
+      *  FT0231 - Request for Transfer/Customer Credit Transfer Check *
+      *           Authorisation                                       *
+      *                                                               *
+      *  Function:  This program will check if there are unauthorised *
+      *  (COB)      request for transfer/customer credit transfer     *
+      *             transactions.                                     *
+      *                                                               *
+      *  Called By: FTC0230 - Non-Authorised Payments                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. BUG25160A          Date 18Aug09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 221761             Date 01Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185107             Date 17Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 177984             Date 17APR00               *
+      *                 CFT008             Date 05Jan00               *
+      *                 CFT006  *CREATE    Date 10Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG25160A - Apply fix 229655                                 *
+      *  229655 - This program has been overhauled by this fix        *
+      *           to produce a report of all RFT and CCT transactions *
+      *           that have not been authorised.                      *
+      *           (code patterned from original FT0571)               *
+      *  221761 - Recompiled due to change made in PF/FT101HPD.       *
+      *  185107 - Mapping of details from swift message - Recompile   *
+      *  177984 - GEMS ERROR NUMBER - MONITOR FOR UNAUTHORISED 101/   *
+      *           102 MESSAGES                                        *
+      *  CFT008 - Funds Transfer/Swift Messages MT102                 *
+      *  CFT006 - Funds Transfer/Swift Messages MT101                 *
+      *                                                               *
+      *****************************************************************
+     F******FT101HLAIF  E                    DISK                                             229655
+     F******FT102HL9IF  E                    DISK                                      CFT008 229655
+     FFT101HLFIF  E           K        DISK                                                   229655
+     FFT102HLFIF  E           K        DISK                                                   229655
+     FFT101DL0IF  E           K        DISK                                                   229655
+     FFT102DL0IF  E           K        DISK                                                   229655
+     FFT0231AUO   E                    PRINTER                                                229655
+     F                                              KINFDS SPOOLU                             229655
+     FFT0231P1O   E                    PRINTER                        UC                      229655
+     F                                              KINFDS SPOOL1                             229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *                       229655
+      *                                                               *                       229655
+      *   01  - End of file for FT101HLA                              *                       229655
+      *   02  - No record found equal for FT101DL0                    *                       229655
+      *   03  - End of file for FT102HL9                              *                       229655
+      *   04  - No record found equal for FT102DL0                    *                       229655
+      *   10  - FT102HL9 record read                                  *                       229655
+      *                                                               *                       229655
+      * 90-99 - Used by Standard Subroutines                          *                       229655
+      *                                                               *                       229655
+      * U7+U8 - Database Error                                        *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      /SPACE 3                                                                                229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  S U B R O U T I N E   I N D E X                              *                       229655
+      *                                                               *                       229655
+      *  SRINIT - Program Initialisation                              *                       229655
+      *  SRPROC - Detail Processing                                   *                       229655
+      *  SRRPRT - Process Report Lines                                *                       229655
+      *                                                               *                       229655
+      *  SRWRIT - Format and Write a Detail Record to the Report      *                       229655
+      *  SRPEND - Write End of Report                                 *                       229655
+      *                                                               *                       229655
+      *  SRAUDT - Produce Audit Report and End Program                *                       229655
+      *  *PSSR  - Program Error Processing Subroutine                 *                       229655
+      *  SRRP1  - RCF Processing for P1 Report                        *                       229655
+      *  SRRAU  - RCF Processing for Audit Report                     *                       229655
+      *                                                               *                       229655
+      *  ZEDIT  - Edit an Amount                                      *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZEDITZ1                                                                    229655
+     IFT102HD0                                                            CFT008
+     I              SINST                           SINSTX                CFT008
+      *                                                                                       229655
+     ILDA       E DSLDA                         256                                           229655
+      *                                                                                       229655
+      ** Local data area for database error details                                           229655
+      ** *LOCK IN LDA immediately before and OUT LDA immediately                              229655
+      ** after each database error handling.                                                  229655
+      **                                                                                      229655
+      **                                    134 141 DBFILE                                    229655
+      **       Defines:                     142 170 DBKEY                                     229655
+      **                                    171 180 DBPGM                                     229655
+      **                                    181 1830DBASE                                     229655
+      *                                                                                       229655
+     IPSDS       SDS                                                                          229655
+      *                                                                                       229655
+      ** Program Status Data Structure                                                        229655
+      *                                                                                       229655
+     I                                     *PROGRAM PGM                                       229655
+     I                                      244 253 WSID                                      229655
+     I                                      254 263 USER                                      229655
+     ISPOOL1      DS                                                                          229655
+      ***  File Information Data Structure for FT0231P1.                                      229655
+     I                                       83  92 SFILE1                                    229655
+     I                                    B 123 1240SFNUM1                                    229655
+     I                                    B 188 1890OFLLN1                                    229655
+     I                                    B 367 3680PRTLN1                                    229655
+      *                                                                                       229655
+     ISPOOLU      DS                                                                          229655
+      ***  File Information Data Structure for FT0231AU.                                      229655
+     I                                       83  92 SFILEU                                    229655
+     I                                    B 123 1240SFNUMU                                    229655
+      *                                                                                       229655
+      ***  Dummy Data Structures used by Access Programs.                                     229655
+      *                                                                                       229655
+     ISCSARD    E DSSCSARDPD                                                                  229655
+      * Sar Text details *                                                                    229655
+     ISDBANK    E DSSDBANKPD                                                                  229655
+      ***  External data structures for Bank Details                                          229655
+      *                                                                                       229655
+     ISDBRCH    E DSSDBRCHPD                                                                  229655
+      ***  External data structures for Bank Details                                          229655
+      *                                                                                       229655
+     ISDCURR    E DSSDCURRPD                                                                  229655
+      ***  External data structures for Currency Details                                      229655
+      *                                                                                       229655
+     IDSFDY     E DSDSFDY                                                                     229655
+      **  First data structure for Access Programs, short DS                                  229655
+      *                                                                                       229655
+     IDSSDY     E DSDSSDY                                                                     229655
+      **  Second data structure for Access Programs, long DS                                  229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      *****************************************************************                       229655
+      ***Initialisation*subroutine*************************************                177984 229655
+      *****************************************************************                177984 229655
+      *****************************************************************                177984 229655
+      ***Plist*********************************************************                177984 229655
+      *****************************************************************                177984 229655
+     C********** *ENTRY    PLIST                                                       177984 229655
+     C**********           PARM           PARM1   1                                    177984 229655
+      *****************************************************************                177984 229655
+      *****************************************************************                177984 229655
+      ***Main*Processing***********************************************                       229655
+      *****************************************************************                       229655
+      *****************************************************************                       229655
+      ***Set*up*copyright*parameter************************************                       229655
+      *****************************************************************                       229655
+     C***********          MOVEACPY@      CPY2@  80                                           229655
+      *****************************************************************                177984 229655
+      ***Initialise*variable*******************************************                177984 229655
+      *****************************************************************                177984 229655
+     C***********          MOVE ' '       PARM1                                        177984 229655
+      *****************************************************************                       229655
+     C***********          READ FT101HLA                 01                                   229655
+      *****************************************************************                       229655
+     C************IN01     IFEQ '1'                                                    CFT008 229655
+     C***********          READ FT102HL9                 01                            CFT008 229655
+     C***********          ENDIF                                                       CFT008 229655
+      *****************************************************************                       229655
+      ***Unauthorised*transaction*exists*******************************                       229655
+      *****************************************************************                       229655
+     C************IN01     IFEQ '0'                                                           229655
+     C**********           SETON                     U7U8                 177984
+     C***********          MOVE 'Y'       PARM1                                        177984 229655
+     C***********          ENDIF                                                              229655
+      ***********                                                                             229655
+     C***********          SETON                     LR                                       229655
+      *****************************************************************                       229655
+      *================================================================                       229655
+      *  P R O G R A M   S T A R T                                    *                       229655
+      *================================================================                       229655
+      *                                                                                       229655
+      **   Perform Initialisation.                                                            229655
+      *                                                                                       229655
+     C                     EXSR SRINIT                                                        229655
+      *                                                                                       229655
+      **   Perform Detail Processing.                                                         229655
+      *                                                                                       229655
+     C                     EXSR SRPROC                                                        229655
+      *                                                                                       229655
+     C                     EXSR SRRP1                                                         229655
+      *                                                                                       229655
+      **   Output Audit Report and End Program.                                               229655
+      *                                                                                       229655
+     C                     EXSR SRAUDT                                                        229655
+      *                                                                                       229655
+      *================================================================                       229655
+      *  P R O G R A M   E N D                                        *                       229655
+      *================================================================                       229655
+      /EJECT                                                                                  229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRINIT - Subroutine to do Program Initialisation.            *                       229655
+      *                                                               *                       229655
+      *  Called By: Main Processing                                   *                       229655
+      *  Calls    : SRRAU  - RCF Processing for Audit Report          *                       229655
+      *             AOBANKR0 Access Program                           *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRINIT    BEGSR                                                              229655
+      *                                                                                       229655
+      ** Set up copyright parameter                                                           229655
+      *                                                                                       229655
+     C                     MOVEACPY@      CPY2@  80                                           229655
+     C                     Z-ADD0         DBASE                                               229655
+      *                                                                                       229655
+      **   Receive Parameter List                                                             229655
+      *                                                                                       229655
+     C           *ENTRY    PLIST                                                              229655
+     C                     PARM           PARM1   1                                           229655
+     C                     PARM           @RSEQ   5                                           229655
+     C                     PARM           @RLEV   1                                           229655
+     C                     PARM           @RENT   3                                           229655
+     C                     PARM           @BORO   1                                           229655
+      *                                                                                       229655
+     C                     CALL 'AOSARDR0'                                                    229655
+     C                     PARM *BLANKS   @RTCD   7                                           229655
+     C                     PARM '*VERIFY' @OPTN   7                                           229655
+     C                     PARM 'CFT006'  @SARD   6                                           229655
+     C           SCSARD    PARM *BLANKS   DSFDY                                               229655
+      *                                                                                       229655
+     C           @RTCD     IFEQ *BLANKS                                                       229655
+     C                     MOVEL'Y'       CFT006  1                                           229655
+     C                     MOVEL'1'       *IN51                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      ** Access SAR details file to see if CFT008 is installed                                229655
+      *                                                                                       229655
+     C                     CALL 'AOSARDR0'                                                    229655
+     C                     PARM *BLANKS   @RTCD                                               229655
+     C                     PARM '*VERIFY' @OPTN                                               229655
+     C                     PARM 'CFT008'  @SARD   6                                           229655
+     C           SCSARD    PARM *BLANKS   DSFDY                                               229655
+      *                                                                                       229655
+     C           @RTCD     IFEQ *BLANKS                                                       229655
+     C                     MOVEL'Y'       CFT008  1                                           229655
+     C                     MOVEL'1'       *IN52                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      ** Exit immediately if features not installed                                           229655
+      *                                                                                       229655
+     C           CFT006    IFNE 'Y'                                                           229655
+     C           CFT008    ANDNE'Y'                                                           229655
+     C                     SETON                     LR                                       229655
+     C                     RETRN                                                              229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C           @RLEV     IFEQ 'B'                                                           229655
+     C                     MOVE *ON       *IN20                                               229655
+     C                     ELSE                                                               229655
+     C                     MOVE *OFF      *IN20                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C           @BORO     IFEQ 'B'                                                           229655
+     C                     MOVE *ON       *IN21                                               229655
+     C                     ELSE                                                               229655
+     C                     MOVE *OFF      *IN21                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Initialise LDA field                                                               229655
+      *                                                                                       229655
+     C                     MOVELUSER      RUSER                                               229655
+      *                                                                                       229655
+     C           *NAMVAR   DEFN           LDA                                                 229655
+      *                                                                                       229655
+      **   Call Access Program for Bank Details - Title, Run Date and                         229655
+      **   Run Day Number.                                                                    229655
+      *                                                                                       229655
+     C                     CALL 'AOBANKR0'                                                    229655
+     C                     PARM *BLANKS   PRTCD   7                                           229655
+     C                     PARM '*FIRST ' POPTN   7                                           229655
+     C           SDBANK    PARM SDBANK    DSFDY                                               229655
+      *                                                                                       229655
+      **   Handle Database Error                                                              229655
+      *                                                                                       229655
+     C           PRTCD     IFNE *BLANKS                                                       229655
+     C           *LOCK     IN   LDA                                                           229655
+     C                     MOVE 'SDBANKPD'DBFILE           ***************                    229655
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *                    229655
+     C                     MOVEL'*FIRST ' DBKEY            ***************                    229655
+     C                     MOVEL'FT0231'  DBPGM                                               229655
+     C                     OUT  LDA                                                           229655
+     C                     EXSR *PSSR                                                         229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C           BJDNWD    SUB  1         ##CDTE  50                                          229655
+      *                                                                                       229655
+     C                     CALL 'AOSARDR0'                                                    229655
+     C                     PARM *BLANKS   @RTCD   7                                           229655
+     C                     PARM '*VERIFY' @OPTN   7                                           229655
+     C                     PARM 'S01479'  @SARD   6                                           229655
+     C           SCSARD    PARM *BLANKS   DSFDY                                               229655
+     C           @RTCD     IFEQ *BLANKS                                                       229655
+     C                     MOVEL'Y'       S01479  1                                           229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   RCF Processing for Audit File                                                      229655
+      *                                                                                       229655
+     C                     EXSR SRRAU                                                         229655
+     C                     MOVEL'Y'       WFRST   1                                           229655
+      *                                                                                       229655
+      **   Report Work fields                                                                 229655
+      *                                                                                       229655
+     C                     Z-ADD0         RQDLN1  30                                          229655
+     C                     Z-ADD0         DIFLN1  30                                          229655
+     C                     MOVEL*BLANKS   WREF                                                229655
+     C                     MOVEL*BLANKS   PARM1                                               229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRPROC                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRPROC - Subroutine to do the Detail Processing.             *                       229655
+      *                                                               *                       229655
+      *  Called By: Main Processing                                   *                       229655
+      *  Calls    : SRAUDT - Produce Audit Report and End Program     *                       229655
+      *             SRRPRT - Process Report Lines                     *                       229655
+      *             SRPEND - Write End of Report                      *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRPROC    BEGSR                                                              229655
+      *                                                                                       229655
+      ***  Read first record from File.                                                       229655
+      *                                                                                       229655
+     C                     Z-ADD0         RCNT1                                               229655
+     C                     Z-ADD0         RCNT2                                               229655
+     C                     MOVEL'N'       WRFT    1                                           229655
+     C                     MOVEL'N'       WCCT    1                                           229655
+     C                     MOVEL*BLANKS   PBRCA   3                                           229655
+      *                                                                                       229655
+     C           @RLEV     IFNE 'S'                                                           229655
+     C           @RENT     ANDNE*BLANKS                                                       229655
+     C                     MOVE @RENT     PBRCA                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      ** PROCESS RFTS                                                                         229655
+      *                                                                                       229655
+     C           CFT006    IFEQ 'Y'                                                           229655
+      *                                                                                       229655
+     C                     READ FT101HLF                 01                                   229655
+      *                                                                                       229655
+     C           *IN01     IFEQ '0'                                                           229655
+     C                     EXSR SRBRCA                                                        229655
+     C                     MOVELSBRCA     WBRCA                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Do While End of File                                                               229655
+      *                                                                                       229655
+     C           *IN01     DOWEQ'0'                                                           229655
+      *                                                                                       229655
+     C           PBRCA     IFEQ *BLANKS                                                       229655
+     C           PBRCA     OREQ SBRCA                                                         229655
+     C           PBRCA     OREQ 'ALL'                                                         229655
+      *                                                                                       229655
+     C           RFTID     CHAINFT101DL0             02                                       229655
+     C                     MOVE 'Y'       WHDR    1                                           229655
+      *                                                                                       229655
+     C           *IN02     DOWEQ'0'                                                           229655
+      *                                                                                       229655
+      **   Count records read                                                                 229655
+      *                                                                                       229655
+     C                     ADD  1         RCNT1                                               229655
+     C                     MOVEL'Y'       WRFT                                                229655
+      *                                                                                       229655
+      **   Process Report Lines                                                               229655
+      *                                                                                       229655
+     C                     EXSR SRRPRT                                                        229655
+      *                                                                                       229655
+     C           RFTID     READEFT101DL0                 02                                   229655
+      *                                                                                       229655
+     C                     ENDDO                                                              229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Read next record                                                                   229655
+      *                                                                                       229655
+     C                     READ FT101HLF                 01                                   229655
+      *                                                                                       229655
+      **   Check change of branch                                                             229655
+      *                                                                                       229655
+     C           *IN01     IFEQ '0'                                                           229655
+     C                     EXSR CHGBRC                                                        229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C           *IN01     IFEQ '1'                                                           229655
+     C           WFRST     ANDEQ'N'                                                           229655
+     C           RCNT1     ANDNE0                                                             229655
+     C                     EXSR SRPEND                                                        229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     ENDDO                                                              229655
+      *                                                                                       229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **  PROCESS CCTs                                                                        229655
+      *                                                                                       229655
+     C           CFT008    IFEQ 'Y'                                                           229655
+      *                                                                                       229655
+     C                     READ FT102HLF                 03                                   229655
+      *                                                                                       229655
+     C           *IN03     IFEQ '0'                                                           229655
+     C                     EXSR SRBRCA                                                        229655
+     C                     MOVELSBRCA     WBRCA                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Do While End of File                                                               229655
+      *                                                                                       229655
+     C           *IN03     DOWEQ'0'                                                           229655
+      *                                                                                       229655
+     C           PBRCA     IFEQ *BLANKS                                                       229655
+     C           PBRCA     OREQ SBRCA                                                         229655
+     C           PBRCA     OREQ 'ALL'                                                         229655
+      *                                                                                       229655
+     C           CCTID     CHAINFT102DL0             04                                       229655
+      *                                                                                       229655
+     C                     MOVE 'Y'       WHDR                                                229655
+      *                                                                                       229655
+     C           *IN04     DOWEQ'0'                                                           229655
+      *                                                                                       229655
+     C           RCNT2     IFEQ 0                                                             229655
+     C           RCNT1     ANDNE0                                                             229655
+     C                     CLOSEFT0231P1                                                      229655
+     C                     OPEN FT0231P1                                                      229655
+     C                     EXSR SRRP1                                                         229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Count records read                                                                 229655
+      *                                                                                       229655
+     C                     ADD  1         RCNT2                                               229655
+     C                     MOVEL'Y'       WCCT                                                229655
+     C                     MOVE '1'       *IN10                                               229655
+      *                                                                                       229655
+      **   Process Report Lines                                                               229655
+      *                                                                                       229655
+     C                     EXSR SRRPRT                                                        229655
+      *                                                                                       229655
+     C           CCTID     READEFT102DL0                 04                                   229655
+      *                                                                                       229655
+     C                     ENDDO                                                              229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Read next record                                                                   229655
+      *                                                                                       229655
+     C                     READ FT102HLF                 03                                   229655
+      *                                                                                       229655
+     C           *IN03     IFEQ '0'                                                           229655
+     C                     EXSR CHGBRC                                                        229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C           *IN03     IFEQ '1'                                                           229655
+     C           WFRST     ANDEQ'N'                                                           229655
+     C           RCNT2     ANDNE0                                                             229655
+     C                     EXSR SRPEND                                                        229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     ENDDO                                                              229655
+      *                                                                                       229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C           WRFT      IFEQ 'N'                                                           229655
+     C           WCCT      ANDEQ'N'                                                           229655
+     C                     EXSR SRAUDT                                                        229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRRPRT                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRRPRT - Process Report Lines.                               *                       229655
+      *                                                               *                       229655
+      *  Called By: SRPROC - Detail Processing                        *                       229655
+      *  Calls:     SRWRIT - Write Deatil Record                      *                       229655
+      *             SRCURR - Calls AOCURRR0 Access Program            *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRRPRT    BEGSR                                                              229655
+      *                                                                                       229655
+     C                     MOVEL*BLANKS   RSNDRF                                              229655
+     C                     MOVEL*BLANKS   RTYPE                                               229655
+     C                     MOVEL*BLANKS   RTREF                                               229655
+     C                     MOVEL*BLANKS   RTAMT                                               229655
+     C                     MOVEL*BLANKS   RTCCY                                               229655
+     C                     MOVEL*BLANKS   RPAMT                                               229655
+     C                     MOVEL*BLANKS   RPCCY                                               229655
+     C                     MOVEL*BLANKS   RASTK                                               229655
+      *                                                                                       229655
+      **  Must it be authorised today?                                                        229655
+      *                                                                                       229655
+     C                     EXSR CHKAUT                                                        229655
+      *                                                                                       229655
+     C           *IN10     IFEQ '0'                                                           229655
+     C                     MOVELSNDREF    RSNDRF                                              229655
+     C                     MOVELPYTP      RTYPE                                               229655
+      *                                                                                       229655
+     C                     MOVELTRNCCY    WCCY    3                                           229655
+     C           WCCY      IFNE *BLANKS                                                       229655
+      *                                                                                       229655
+     C                     EXSR SRCURR                                                        229655
+     C                     EXSR SRCURR                                                        229655
+      *                                                                                       229655
+     C                     EXSR SRCURR                                                        229655
+     C                     MOVEL*BLANKS   ZFIELD                                              229655
+     C                     MOVE TRNAMT    ZFIELD                                              229655
+     C                     Z-ADDA6NBDP    ZADEC                                               229655
+     C                     EXSR ZEDIT                                                         229655
+     C                     MOVELZFIELD    RTAMT                                               229655
+      *                                                                                       229655
+     C                     MOVELTRNCCY    RTCCY                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     ELSE                                                               229655
+      *                                                                                       229655
+     C                     MOVELFILREF    RSNDRF                                              229655
+     C                     MOVELCCTTYP    RTYPE                                               229655
+      *                                                                                       229655
+     C                     MOVELCCTCCY    WCCY                                                229655
+     C           WCCY      IFNE *BLANKS                                                       229655
+     C                     EXSR SRCURR                                                        229655
+     C                     MOVEL*BLANKS   ZFIELD                                              229655
+     C                     MOVE CCTAMT    ZFIELD                                              229655
+     C                     Z-ADDA6NBDP    ZADEC                                               229655
+     C                     EXSR ZEDIT                                                         229655
+     C                     MOVELZFIELD    RTAMT                                               229655
+      *                                                                                       229655
+     C                     MOVELCCTCCY    RTCCY                                               229655
+     C                     ENDIF                                                              229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     MOVELTRNSID    RTREF                                               229655
+     C                     MOVELPAYCCY    WCCY                                                229655
+     C           WCCY      IFNE *BLANKS                                                       229655
+     C                     EXSR SRCURR                                                        229655
+     C                     MOVEL*BLANKS   ZFIELD                                              229655
+     C                     MOVE PAYAMT    ZFIELD                                              229655
+     C                     Z-ADDA6NBDP    ZADEC                                               229655
+     C                     EXSR ZEDIT                                                         229655
+     C                     MOVELZFIELD    RPAMT                                               229655
+     C                     MOVELPAYCCY    RPCCY                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Write out the record                                                               229655
+      *                                                                                       229655
+     C                     EXSR SRWRIT                                                        229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRCURR                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRCURR - Calls AOCURRR0 Access Program                       *                       229655
+      *                                                               *                       229655
+      *  Called By: SRRPRT - Process Detail Lines                     *                       229655
+      *  Calls:     AOCURRR0 - Currency Access Program                *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRCURR    BEGSR                                                              229655
+      *                                                                                       229655
+     C                     CALL 'AOCURRR0'                                                    229655
+     C                     PARM *BLANKS   PRTCD   7                                           229655
+     C                     PARM '*KEY   ' POPTN   7                                           229655
+     C                     PARM WCCY      PCURR   3                                           229655
+     C           SDCURR    PARM SDCURR    DSSDY                                               229655
+      *                                                                                       229655
+      **   Handle Database Error.                                                             229655
+      *                                                                                       229655
+     C           PRTCD     IFNE *BLANKS                                                       229655
+     C           *LOCK     IN   LDA                                                           229655
+     C                     MOVEL'SDCURRPD'DBFILE           ***************                    229655
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *                    229655
+     C                     MOVELWCCY      DBKEY            ***************                    229655
+     C                     MOVEL'FT0231'  DBPGM                                               229655
+     C                     OUT  LDA                                                           229655
+     C                     EXSR *PSSR                                                         229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRWRIT                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRWRIT - Subroutine to Write a Detail record to the Report.  *                       229655
+      *                                                               *                       229655
+      *  Called By: SRRPRT - Process Detail Lines                     *                       229655
+      *  Calls:     None                                              *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRWRIT    BEGSR                                                              229655
+      *                                                                                       229655
+     C           WFRST     IFEQ 'Y'                                                           229655
+     C                     OPEN FT0231P1                                                      229655
+     C                     MOVEL'N'       WFRST                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Check that sufficient lines remain for the Format. If not,                         229655
+      **   write out the Main Headings on a new page.                                         229655
+      *                                                                                       229655
+     C                     Z-ADD4         RQDLN1                                              229655
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              229655
+     C           DIFLN1    IFLE RQDLN1                                                        229655
+     C           *IN10     OREQ *ON                                                           229655
+     C           RCNT2     ANDEQ1                                                             229655
+     C           WCHGBR    OREQ 'Y'                                                           229655
+      *                                                                                       229655
+      **   Write out Header Record                                                            229655
+      *                                                                                       229655
+     C                     WRITEHEADP1                                                        229655
+     C                     WRITEHEADP1A                                                       229655
+     C                     WRITEHEADP2                                                        229655
+      *                                                                                       229655
+     C                     MOVE *BLANKS   WCHGBR                                              229655
+      *                                                                                       229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Write out Detail Record                                                            229655
+      *                                                                                       229655
+     C           RSNDRF    IFNE WREF                                                          229655
+     C           DIFLN1    ORLE RQDLN1                                                        229655
+     C           *IN10     OREQ *ON                                                           229655
+     C           RCNT2     ANDEQ1                                                             229655
+     C                     WRITEDETAIL1                                                       229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     WRITEDETAIL2                                                       229655
+     C                     MOVELRSNDRF    WREF   16                                           229655
+      *                                                                                       229655
+     C                     MOVE 'N'       WHDR                                                229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRPEND                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRPEND - Subroutine to Write End of Report.                  *                       229655
+      *                                                               *                       229655
+      *  Called By: SRPROC                                            *                       229655
+      *  Calls    : None                                              *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRPEND    BEGSR                                                              229655
+      *                                                                                       229655
+      **   Check that sufficient lines remain for the Format. If not,                         229655
+      **   write out the Main Headings on a new page.                                         229655
+      *                                                                                       229655
+     C                     Z-ADD4         RQDLN1                                              229655
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              229655
+     C           DIFLN1    IFLE RQDLN1                                                        229655
+     C                     WRITEHEADP1                                                        229655
+     C                     WRITEHEADP1A                                                       229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   Write out Trailer                                                                  229655
+      *                                                                                       229655
+     C                     WRITETRAILP1                                                       229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRAUDT                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *                       229655
+      *                                                               *                       229655
+      *  Called By: Main Processing                                   *                       229655
+      *             SRPROC - Detail Processing                        *                       229655
+      *             *PSSR  - Error Control                            *                       229655
+      *  Calls:     None                                              *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRAUDT    BEGSR                                                              229655
+      *                                                                                       229655
+      **   Output Report Header and File Controls                                             229655
+      *                                                                                       229655
+     C                     WRITEHEADAU                                                        229655
+     C           RCNT1     IFNE 0                                                             229655
+     C           RCNT2     ORNE 0                                                             229655
+     C                     WRITECONTROL                                                       229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   If there is a DB Error, Output the DB Error Information.                           229655
+      *                                                                                       229655
+     C           DBASE     IFNE 0                                                             229655
+     C                     WRITEDBERROR                                                       229655
+     C                     ELSE                                                               229655
+      *                                                                                       229655
+      **   Or, if no records read, Output "No Details" message.                               229655
+      *                                                                                       229655
+     C           RCNT1     IFEQ 0                                                             229655
+     C           RCNT2     ANDEQ0                                                             229655
+     C                     WRITENODTLS                                                        229655
+     C                     ENDIF                                                              229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **   End Program and Return                                                             229655
+      *                                                                                       229655
+     C                     SETON                     LR                                       229655
+     C                     RETRN                                                              229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/*PSSR                                                                         229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  *PSSR  - Error control subroutine                            *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           *PSSR     BEGSR                                                              229655
+      *                                                                                       229655
+      **   Check to see that *PSSR has not already been called                                229655
+      *                                                                                       229655
+     C           WRUN      IFEQ *BLANK                                                        229655
+     C                     MOVE 'Y'       WRUN    1                                           229655
+      *                                                                                       229655
+     C                     SETON                     U7U8LR                                   229655
+     C                     DUMP                                                               229655
+     C                     EXSR SRAUDT                                                        229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      **  If *PSSR already run, then just end the program here                                229655
+      *                                                                                       229655
+     C                     SETON                     U7U8LR                                   229655
+     C                     RETRN                                                              229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRRP1                                                                         229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRRP1  - Subroutine to register the P1 Printer File via RCF. *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRRP1     BEGSR                                                              229655
+      *                                                                                       229655
+      **  Ensure Report Spool File recorded by RCF                                            229655
+      *                                                                                       229655
+     C                     Z-ADDSFNUM1    ZSNUM   60                                          229655
+     C                     MOVEL'00001'   PSEQ    5                                           229655
+      *                                                                                       229655
+     C                     CALL 'ZSFILE'                                                      229655
+     C                     PARM @RSEQ     SEQ     5                                           229655
+     C                     PARM @RENT     SENTY   3                                           229655
+     C                     PARM           SFILE1                                              229655
+     C                     PARM           ZSNUM                                               229655
+     C                     PARM           ZSERR   1                                           229655
+      *                                                                                       229655
+      **  If Error occurs during ZSFILE processing, then return to the                        229655
+      **  Calling Program.                                                                    229655
+      *                                                                                       229655
+     C           ZSERR     IFEQ 'Y'                                                           229655
+     C                     SETON                     U7U8LR                                   229655
+     C                     RETRN                                                              229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRRAU                                                                         229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRRAU  - Subroutine to register the AU Printer File via RCF. *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRRAU     BEGSR                                                              229655
+      *                                                                                       229655
+      **   Ensure Audit Spool File recorded by RCF.                                           229655
+      *                                                                                       229655
+     C                     Z-ADDSFNUMU    ZSNUMU  60                                          229655
+      *                                                                                       229655
+     C                     CALL 'ZSFILE'                                                      229655
+     C                     PARM @RSEQ     SEQ                                                 229655
+     C                     PARM *BLANKS   SENTY                                               229655
+     C                     PARM           SFILEU                                              229655
+     C                     PARM           ZSNUMU                                              229655
+     C                     PARM *BLANK    ZSERR                                               229655
+      *                                                                                       229655
+      **  If Error occurs during ZSFILE processing, then return to the                        229655
+      **  Calling Program.                                                                    229655
+      *                                                                                       229655
+     C           ZSERR     IFEQ 'Y'                                                           229655
+     C                     SETON                     U7U8LR                                   229655
+     C                     RETRN                                                              229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *                                                                                       229655
+      *****************************************************************                       229655
+      /TITLE SR/SRBRCA                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  CHGBRC - Ccreate a new spoolfile if branch = 'ALL'           *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           CHGBRC    BEGSR                                                              229655
+      *                                                                                       229655
+     C                     EXSR SRBRCA                                                        229655
+      *                                                                                       229655
+     C           SBRCA     IFNE WBRCA                                                         229655
+      *                                                                                       229655
+      ** If level 'B' and branch 'ALL'                                                        229655
+      *                                                                                       229655
+     C           PBRCA     IFEQ 'ALL'                                                         229655
+      *                                                                                       229655
+     C           WFRST     IFEQ 'N'                                                           229655
+      *                                                                                       229655
+      ** Write end of report for this branch                                                  229655
+      *                                                                                       229655
+     C                     Z-ADD4         RQDLN1                                              229655
+     C           OFLLN1    SUB  PRTLN1    DIFLN1                                              229655
+     C           DIFLN1    IFLE RQDLN1                                                        229655
+     C                     WRITEHEADP1                                                        229655
+     C                     WRITEHEADP1A                                                       229655
+     C                     ENDIF                                                              229655
+     C                     WRITETRAILP1                                                       229655
+      *                                                                                       229655
+      ** Close spool file, open a new one and call ZSFILE                                     229655
+      *                                                                                       229655
+     C                     MOVE SBRCA     @RENT                                               229655
+     C                     CLOSEFT0231P1                                                      229655
+     C                     OPEN FT0231P1                                                      229655
+     C                     EXSR SRRP1                                                         229655
+     C                     MOVEL'Y'       WCHGBR  1                                           229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     MOVE SBRCA     WBRCA   3                                           229655
+      *                                                                                       229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+      ** If level 'B' and branch is specific                                                  229655
+      *                                                                                       229655
+     C           @RLEV     IFEQ 'B'                                                           229655
+     C           PBRCA     ANDNE'ALL'                                                         229655
+     C           *IN10     IFEQ '0'                                                           229655
+     C                     MOVE '1'       *IN01                                               229655
+     C                     ELSE                                                               229655
+     C                     MOVE '1'       *IN03                                               229655
+     C                     END                                                                229655
+     C                     END                                                                229655
+      *                                                                                       229655
+      ** If level 'S'                                                                         229655
+      *                                                                                       229655
+     C           @RLEV     IFEQ 'S'                                                           229655
+     C                     WRITEHEADP1                                                        229655
+     C                     WRITEHEADP1A                                                       229655
+     C                     WRITEHEADP2                                                        229655
+     C                     MOVE SBRCA     WBRCA                                               229655
+     C                     END                                                                229655
+      *                                                                                       229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *****************************************************************                       229655
+      /TITLE SR/SRBRCA                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  SRBRCA - Access Branch record                                *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           SRBRCA    BEGSR                                                              229655
+      *                                                                                       229655
+     C           @BORO     IFEQ 'B'                                                           229655
+     C                     MOVELBRCA      SBRCA   3                                           229655
+     C                     ELSE                                                               229655
+     C                     MOVELORBR      SBRCA                                               229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C           SBRCA     IFNE WBRCA                                                         229655
+      *                                                                                       229655
+     C                     CALL 'AOBRCHR0'                                                    229655
+     C                     PARM *BLANKS   RTCD    7                                           229655
+     C                     PARM '*KEY   ' @OPTN   7                                           229655
+     C                     PARM           SBRCA                                               229655
+     C           SDBRCH    PARM SDBRCH    DSFDY                                               229655
+      *                                                                                       229655
+     C           RTCD      IFNE *BLANKS                                                       229655
+     C           *LOCK     IN   LDA                                                           229655
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************                    229655
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *                    229655
+     C                     MOVELSBRCA     DBKEY            ***************                    229655
+     C                     MOVEL'FT0231'  DBPGM                                               229655
+     C                     OUT  LDA                                                           229655
+     C                     EXSR *PSSR                                                         229655
+     C                     ENDIF                                                              229655
+      *                                                                                       229655
+     C                     MOVE SBRCA     RBRCA                                               229655
+     C                     MOVE A8BRNM    RBDESC                                              229655
+     C                     END                                                                229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *****************************************************************                       229655
+      /TITLE SR/CHKAUT                                                                        229655
+      *****************************************************************                       229655
+      *                                                               *                       229655
+      *  CHKAUT - Determine if it must be authorised today.           *                       229655
+      *         - check is based on FT0210                            *                       229655
+      *                                                               *                       229655
+      *****************************************************************                       229655
+      *                                                                                       229655
+     C           CHKAUT    BEGSR                                                              229655
+      *                                                                                       229655
+     C           *IN10     IFEQ '0'                                                           229655
+     C           PYTP      ANDEQ'RI'                                                          229655
+     C           DBTVDT    IFLE ##CDTE                                                        229655
+     C           CRDVDT    ORLE ##CDTE                                                        229655
+     C           S01479    OREQ 'Y'                                                           229655
+     C                     MOVE 'Y'       PARM1                                               229655
+     C                     MOVEL'**'      RASTK                                               229655
+     C                     END                                                                229655
+     C                     END                                                                229655
+      *                                                                                       229655
+     C           *IN10     IFEQ '0'                                                           229655
+     C           PYTP      ANDEQ'RO'                                                          229655
+     C           DBTVDT    IFLE ##CDTE                                                        229655
+     C           S01479    OREQ 'Y'                                                           229655
+     C                     MOVE 'Y'       PARM1                                               229655
+     C                     MOVEL'**'      RASTK                                               229655
+     C                     END                                                                229655
+     C                     END                                                                229655
+      *                                                                                       229655
+     C           *IN10     IFEQ '1'                                                           229655
+     C           CCTTYP    ANDEQ'BI'                                                          229655
+     C           TTVDTE    IFLE BJRDNB                                                        229655
+     C           CRDVDT    ORLE BJRDNB                                                        229655
+     C           S01479    OREQ 'Y'                                                           229655
+     C                     MOVE 'Y'       PARM1                                               229655
+     C                     MOVEL'**'      RASTK                                               229655
+     C                     END                                                                229655
+     C                     END                                                                229655
+      *                                                                                       229655
+     C           *IN10     IFEQ '1'                                                           229655
+     C           CCTTYP    ANDEQ'BO'                                                          229655
+     C           DBTVDT    IFLE ##CDTE                                                        229655
+     C           TTVDTE    ANDNE##CDTE                                                        229655
+     C           S01479    OREQ 'Y'                                                           229655
+     C                     MOVE 'Y'       PARM1                                               229655
+     C                     MOVEL'**'      RASTK                                               229655
+     C                     END                                                                229655
+     C                     END                                                                229655
+      *                                                                                       229655
+     C                     ENDSR                                                              229655
+      *****************************************************************                       229655
+      /TITLE SR/ZEDIT                                                                         229655
+     C/COPY ZSRSRC,ZEDITZ2                                                                    229655
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

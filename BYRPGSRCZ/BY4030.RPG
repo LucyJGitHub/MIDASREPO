@@ -1,0 +1,438 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Update Deals Maximum DR/CR Positions')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY4030 - Update Deals Maximum DR/CR Positions                *
+      *                                                               *
+      *  Function:  This program will output new and updated Debit    *
+      *             and Credit positions for live deals.              *
+      *                                                               *
+      *  Called By: BYC4030 - Update Deals Maximum DR/CR Positions.   *
+      *                                                               *
+      *  (c) Finastra International Limited 1997                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 XNNNNN             Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN022 - BOE Upgrade to MidasPlus.                           *
+      *  nnnnnn - (fix details)                                       *
+      *                                                               *
+      *****************************************************************
+      *
+      * File description for files defined
+     FDEALSDC IF  E                    DISK         KINFSR *PSSR
+     FBYDLDCPPUF  E           K        DISK         KINFSR *PSSR A
+     FBYRPDTPPIF  E                    DISK         KINFSR *PSSR
+      /EJECT
+      *
+      *  Array containing Copyright statement
+     E                    @CPY    1   1 80
+      *
+      /SPACE 3
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+     ISDCURR    E DSSDCURRPD                199
+      *
+      ** Trading Data ICD
+     ISDTRAD    E DSSDTRADPD
+      *
+      *
+     ISDDEAL    E DSSDDEALPD
+     I              QQACCD                          QQACC1                                   LLN022
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM DSPGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LDETL - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      *  Detail Processing
+     C                     EXSR #LDETL
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDETL    BEGSR                                       **
+      *
+     C                     READ DEALSDC                  90
+      *
+     C           *IN90     DOWEQ*OFF
+      *
+      ** Initialise output fields
+     C                     Z-ADD0         LDLNO
+     C                     Z-ADD0         LMKDC
+     C                     Z-ADD0         LSMXD
+     C                     Z-ADD0         LMXDD
+     C                     Z-ADD0         LMKCC
+     C                     Z-ADD0         LSMXC
+     C                     Z-ADD0         LMXCD
+      *
+      ** Valid live deal
+     C           RECI      IFEQ 'D'
+      *
+      ** If record with corresponding deal exists
+     C                     MOVE DLNO      LDLNO
+     C           LDLNO     CHAINBYDLDCPP             89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ** If deal type equal to the following then treat amt as a CREDIT
+     C           DTYP      IFEQ 'IT'
+     C           DTYP      OREQ 'TD'
+     C           DTYP      OREQ 'CD'
+     C           DTYP      OREQ 'CI'
+      *
+      ** Make value positive before compare
+     C                     Z-SUBLMKCC     LMKCC
+      *
+      ** If current principal greater than max CR position in period
+     C           PCPL      IFGT LMKCC
+      *
+      ** Set maximum credit position in period equal to the current
+      ** principal of the deal
+     C                     Z-SUBPCPL      LMKCC
+      *
+      ** Convert current principal to sterling
+     C                     MOVE PCPL      ULIAMT
+     C                     MOVE CCY       ULICCY
+     C                     MOVE 0         ULOAMT
+      *
+     C                     CALL 'BY9070'  P1LIST
+      *
+      ** Terminate program if BY9070 ends abnormally
+     C           ULRC1     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update the maximum credit position(sterling) with the current
+      ** principal amount(sterling)
+     C                     Z-SUBULOAMT    LSMXC
+      *
+      ** Set Last Date of Max. CR position to Midas rundate
+     C                     Z-ADDBJRDNB    LMXCD
+     C                     MOVE RECI      LRECI
+      *
+     C                     UPDATBYDLDCD0
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If deal type equal to the following then treat amt as a DEBIT
+     C           DTYP      IFEQ 'LN'
+     C           DTYP      OREQ 'DL'
+     C           DTYP      OREQ 'IP'
+     C           DTYP      OREQ 'TI'
+     C           DTYP      OREQ 'CL'
+      *
+      ** If current principal greater than max debit position in period
+     C           PCPL      IFGT LMKDC
+      *
+      ** Set maximum debit positions in period equal to the current
+      ** principal of the deal
+     C                     Z-ADDPCPL      LMKDC
+      *
+      ** Convert current principal to sterling
+     C                     MOVE PCPL      ULIAMT
+     C                     MOVE CCY       ULICCY
+     C                     MOVE 0         ULOAMT
+      *
+     C                     CALL 'BY9070'  P1LIST
+      *
+      ** Terminate program if BY9070 ends abnormally
+     C           ULRC1     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update the maximum debit position(sterling) with the current
+      ** principal amount(sterling)
+     C                     Z-ADDULOAMT    LSMXD
+      *
+      ** Set Last Date of Max. DR position to Midas rundate
+     C                     Z-ADDBJRDNB    LMXDD
+     C                     MOVE RECI      LRECI
+      *
+     C                     UPDATBYDLDCD0
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If record does not exist in BYDLDCPP
+     C           *IN89     IFEQ *ON
+      *
+      ** If deal type equal to the following then treat amt as a CREDIT
+     C           DTYP      IFEQ 'IT'
+     C           DTYP      OREQ 'TD'
+     C           DTYP      OREQ 'CD'
+     C           DTYP      OREQ 'CI'
+      *
+      ** Set maximum Credit position in period equal to the current
+      ** principal of the deal
+     C                     Z-SUBPCPL      LMKCC
+      *
+      ** Convert current principal to sterling
+     C                     MOVE PCPL      ULIAMT
+     C                     MOVE CCY       ULICCY
+     C                     MOVE 0         ULOAMT
+      *
+     C                     CALL 'BY9070'  P1LIST
+      *
+      ** Terminate program if BY9070 ends abnormally
+     C           ULRC1     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update the maximum credit position(sterling) with the current
+      ** principal amount(sterling)
+     C                     Z-SUBULOAMT    LSMXC
+      *
+      ** Set Last Date of Max. CR position to Midas rundate
+     C           PCPL      IFEQ 0
+     C                     Z-ADD0         LMXCD
+     C                     ELSE
+     C                     Z-ADDBJRDNB    LMXCD
+     C                     ENDIF
+     C                     MOVE RECI      LRECI
+      *
+     C                     WRITEBYDLDCD0
+      *
+     C                     ENDIF
+      *
+      ** If deal type equal to the following then treat amt as a DEBIT
+     C           DTYP      IFEQ 'LN'
+     C           DTYP      OREQ 'DL'
+     C           DTYP      OREQ 'IP'
+     C           DTYP      OREQ 'TI'
+     C           DTYP      OREQ 'CL'
+      *
+      ** Set maximum debit position in period equal to the current
+      ** principal amount(sterling)
+     C                     Z-ADDULOAMT    LSMXD
+      *
+      ** Set Last Date of Max. DR position to Midas rundate
+     C           PCPL      IFEQ 0
+     C                     Z-ADD0         LMXDD
+     C                     ELSE
+     C                     Z-ADDBJRDNB    LMXDD
+     C                     ENDIF
+     C                     MOVE RECI      LRECI
+      *
+     C                     WRITEBYDLDCD0
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ DEALSDC                  90
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                                       **
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                                       **
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANK    ULRTCD  1
+     C                     MOVE *BLANK    ULERRI  1                    dicator
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+      *
+      ** Parameter List Definitions
+      *
+      *    P1LIST - Parameter list for calling 'program name'
+     C           P1LIST    PLIST
+     C                     PARM           ULIAMT 150
+     C                     PARM           ULICCY  3
+     C                     PARM           ULOAMT 150
+     C                     PARM           ULOCCY  3
+     C                     PARM *BLANKS   ULRC1   1
+      *
+      ** Field Defintions for key lists fields
+     C           *LIKE     DEFN BJCUST    P1BCUS
+     C           *LIKE     DEFN BJRDNB    PERSEQ
+     C           *LIKE     DEFN BJRDNB    Z1RSEQ
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                                       **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                                       **
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULRTCD
+      *
+      ** Copyright Statement
+     C                     MOVEA@CPY      ULCPY   8
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C                     PARM           SDBANK
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *  Get Trading Data ICD Record For GBP Currency Code (BLCYCD)
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C                     PARM           SDTRAD
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELDSPGM     DBPGM            ************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 02 *
+     C                     MOVEL'SDTRADPD'DBFILE           ************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+      ** Set up Sterling currency code
+     C                     MOVE BLCYCD    ULOCCY  3
+      *
+      ** Initial value for RCF Report Sequence from input parameter
+     C                     MOVE PERSEQ    Z1RSEQ
+      *
+      ** Move Head Office Customer No. to input parameter for BECUST
+     C                     MOVE BJCUST    P1BCUS
+      *
+      ** Obtain Reporting Date from PF/BYRPDTPP
+     C           1         CHAINBYRPDTPP             90
+      *
+      ** If chain failed or no active record, database error
+     C           *IN90     IFEQ '1'
+     C           L0RECI    ORNE 'D'
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'1'       DBKEY
+     C                     MOVEL'BYRPDTPP'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 003*
+     C                     EXSR *PSSR                      ************
+     C                     ENDIF
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+**  @CPY
+(c) Finastra International Limited 1997

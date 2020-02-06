@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Exemption Certificate Types Report')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000790 - Midas SD Exemption Certificate List             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2008                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+ 
+/** Start Program */
+ 
+             PGM        PARM(&PPARM &PRSEQ &PRLEV &PRENT)
+ 
+/** Declare variable. */
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2008')
+             DCL        VAR(&PPARM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PRLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+ 
+/** Monitor for Error Messages from System. */
+ 
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 +
+                          RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** Reset Error values - switches and LDA. */
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Call program. */
+ 
+             CALL       PGM(SD000790P) PARM(&PPARM &PRSEQ)
+ 
+/** Monitor for Database Errors (U7 and U8 on). */
+ 
+             IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(DBE0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Send Message to User alerting failure. */
+ 
+ ABNOR:      CHGVAR     VAR(&MSG) VALUE('Exemption Certificate Type +
+                          List endded abnormally')
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             DMPCLPGM
+ 
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

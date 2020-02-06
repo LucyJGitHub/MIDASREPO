@@ -1,0 +1,436 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('SMI Yearly Profitability Enquiry By Book')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE8407 - SMI Yearly Profitability Enquiry by Book            *
+      *                                                               *
+      *  Called by: *NONE                                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSE108 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSE108 - Yearly Profitability Report and Enquiry             *
+      *                                                               *
+      *****************************************************************
+     FSE8407DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SUBFLREC
+     FSEYPDBPDIF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     E/COPY ZSRSRC,ZSEDITZ1
+     I/COPY ZSRSRC,ZSEDITZ2
+     IDATA      E DSSEYPDBPD
+     I              YPBK                            ##YPBK
+     I              YPBA                            ##YPBA
+     ISEYPDA      DS                             15
+     I                                        1   50CECD
+      *
+      ** DATA AREA FOR CURRENT EVENT CONTROL DATE
+      *
+     ILDA         DS                            256
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     IPSDS       SDS
+     I                                     *STATUS  ERROR
+     I                                      244 253 WKSID
+     I                                      254 263 USRID
+      ** EXTERNAL DS FOR BANK DETAILS
+     ISDBANK    E DSSDBANKPD
+      *
+      ** EXTERNAL DS FOR CURRENCY DETAIL
+     ISDCURR    E DSSDCURRPD
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+      ** External data structures for GL Details
+     IDSFDY     E DSDSFDY
+      *
+      ** FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+      *
+      ** INITIAL PROCESSING
+      *
+     C                     EXSR INIT
+      *
+      ** DISPLAY SCREEN
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C                     EXSR DSPLAY
+     C                     END
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      * DSPLAY - DISPLAY SCREEN                                       *
+      *                                                               *
+      *****************************************************************
+     C           DSPLAY    BEGSR
+      *
+      ** FILL SUBFILE
+      *
+     C                     EXSR FILLSB
+      *
+      ** SECURITY DISPLAY SEQUENCE
+      *
+     C           SSEQ      IFNE 'I'
+     C                     MOVEL'S'       SSEQ
+     C                     END
+      *
+     C                     WRITESUBFLCTL
+     C                     WRITESUBMESS
+     C                     READ SUBFLCTL                 99*
+     C                     MOVEL*BLANK    DDERR
+      ** CK3 OR CK12,  END
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'
+     C                     ELSE
+      ** ROLLDOWN
+     C           *IN05     IFEQ '1'
+     C                     EXSR ROLDWN
+     C                     ELSE
+      ** SELECT
+     C           *IN,04    IFEQ '0'
+     C                     READCSUBFLREC                 99*RECORD CHANGED
+     C           *IN99     IFEQ '0'
+      *
+      ** YEARLY PROFITABILITY BY SECURITY  (FOR BRANCH/BOOK SELECTED)
+      *
+     C                     CALL 'SE8408'
+     C                     PARM           YECD
+     C                     PARM           YPBK
+     C                     PARM           YPBA
+     C                     PARM           ACTN
+     C                     PARM           SSEQ
+     C                     PARM           BOKD
+     C                     PARM *BLANK    RETC    4
+      *
+      ** END REQUESTED
+      *
+     C           RETC      IFEQ 'EXIT'
+     C                     MOVEL'1'       *INKC
+     C                     ELSE
+     C                     MOVEL*BLANK    YPBK
+     C                     MOVEL*BLANK    YPBA
+     C                     END
+      *
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * FILLSB - FILL SUBFILE                                         *
+      *                                                               *
+      *****************************************************************
+     C           FILLSB    BEGSR
+     C                     MOVEA'000'     *IN,1
+     C                     MOVEA'1'       *IN,4
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITESUBFLCTL                   *
+      ** Position
+     C           YPDTBK    SETLLSEYPDBD0
+      ** Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '0'
+     C                     MOVELYPBK      ##YPBK
+     C                     MOVELYPBA      ##YPBA
+     C                     ELSE
+     C                     MOVEL*BLANK    ##YPBK
+     C                     MOVEL*BLANK    ##YPBA
+     C                     MOVEL*BLANK    YPBK
+     C                     MOVEL*BLANK    YPBA
+     C           DDERR     IFEQ *BLANK
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT 80
+     C                     MOVEL'SSE8100' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03 80        Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN99     DOWEQ'0'
+     C                     ADD  1         RRN     40     04*
+     C                     WRITESUBFLREC
+     C           RRN       IFEQ 18
+      ** Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    YPBK
+     C                     MOVEL*BLANK    YPBA
+     C           DDERR     IFEQ *BLANK
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8100' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ELSE
+     C                     SETON                         99*
+     C                     ENDIF
+     C                     ELSE
+      ** Read
+     C                     EXSR RDFFIL
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    YPBK
+     C                     MOVEL*BLANK    YPBA
+     C           DDERR     IFEQ *BLANK
+      ** Send error message 'End of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8100' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     END
+      *
+      ** SET SUBFILE CONTROL INDICATORS
+      *
+     C           *IN,4     IFEQ '1'
+     C                     MOVEA'010'     *IN,1
+     C                     ELSE
+     C                     MOVEA'111'     *IN,1
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * ROLDWN - ROLLDOWN REQUEST                                     *
+      *                                                               *
+      *****************************************************************
+     C           ROLDWN    BEGSR
+     C                     Z-ADD*ZERO     RRN
+     C                     MOVEL##YPBK    YPBK
+     C                     MOVEL##YPBA    YPBA
+      ** Position
+     C           YPDTBK    SETGTSEYPDBD0
+      ** Read (Previous)
+     C                     EXSR RDPFIL
+      *
+     C           *IN99     DOWEQ'0'
+     C           RRN       ANDLT18
+      ** Read (Previous)
+     C                     EXSR RDPFIL
+      *
+     C                     ADD  1         RRN
+     C                     END
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    YPBK
+     C                     MOVEL*BLANK    YPBA
+      ** Send error message 'Start of file'
+     C                     MOVE *BLANKS   WUMTXT
+     C                     MOVEL'SSE8101' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    PARM01           Message Identifier
+     C           WUMSGF    PARM WUMSGF    PARM02           Message File Name
+     C           WUMTXT    PARM WUMTXT    PARM03           Message Text
+     C                     MOVELWUMTXT    DDERR
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * RDFFIL - READ (NEXT) FROM FILE                                *
+      *                                                               *
+      *****************************************************************
+     C           RDFFIL    BEGSR
+     C           YPDTBP    READESEYPDBD0                 99*
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C           YPDTBP    READESEYPDBD0                 99*
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * RPFILE - READ PREVIOUS FROM FILE                              *
+      *                                                               *
+      *****************************************************************
+     C           RDPFIL    BEGSR
+     C           YPDTBP    REDPESEYPDBD0                 99*
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C           YPDTBP    REDPESEYPDBD0                 99*
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+      * SELCTN - DETERMINE IF RECORD READ IS TO BE SELECTED FOR DISPLAY
+      *
+      ********************************************************************
+     C           SELCTN    BEGSR
+      *
+      ** END OF FILE
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'*'       SELT    1
+     C                     GOTO ESELCT
+     C                     END
+      *
+      ** RECORD TO BE SELECTED?
+      *
+     C           CBYTD     IFNE *ZERO
+     C           TBYTD     ORNE *ZERO
+     C                     MOVEL'Y'       SELT
+     C                     ELSE
+     C                     MOVEL'N'       SELT
+     C                     GOTO ESELCT
+     C                     END
+      *
+      ** GET BOOK DESCRIPTION
+      *
+     C           YPBK      CHAINBOOKDDF              99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'BOOKD'   DBFILE
+     C                     MOVELYPBK      DBKEY
+     C                     Z-ADD04        DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVELYPBK      SYPBK   2        (NOT USED)
+     C                     MOVELBOKD      SBOKD
+     C                     MOVELYPBA      SYPBA            DUG401
+      *
+      ** EDIT DAY CHANGE TO, AND TOTAL OF, YEAR TO DATE P/L FOR OUTPUT
+      *
+     C                     Z-ADDCBYTD     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SCBYTD
+      *
+     C                     Z-ADDTBYTD     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDBCDP      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    STBYTD
+      *
+     C           ESELCT    ENDSR
+      *****************************************************************
+      *
+      * INITIAL PROCESSING
+      *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE8407'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access LF/SDBANKL1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 01 *
+     C                     MOVEL'SDBANKL1'DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Access Currency file for Base Currency Decimal Places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM BJCYCD    WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database Error if not found.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELBJCYCD    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    BCDP    10
+      *
+      ** Call Access Program for GL Details
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*MSG   ' P@RTCD
+     C                     PARM '*FIRST ' P@RTCD  7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** READ IN CURRENT EVENT CONTROL DATE
+      *
+     C           *NAMVAR   DEFN           SEYPDA
+     C           *LOCK     IN   SEYPDA
+     C                     OUT  SEYPDA
+     C                     Z-ADDCECD      YECD
+      *
+      ** KEY LIST
+      *
+     C           YPDTBK    KLIST
+     C                     KFLD           YECD
+     C                     KFLD           YPBK
+     C                     KFLD           YPBA
+     C           YPDTBP    KLIST
+     C                     KFLD           YECD
+      *
+     C                     MOVEL'SEUSRMSG'WUMSGF 10
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      * *PSSR - ERROR PROCESSING SUBROUTINE
+      *
+      *****************************************************************
+     C           *PSSR     BEGSR
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     MOVEL'*CANCL'  RETURN  6
+     C                     ENDSRRETURN
+     C*****************************************************************
+     C/COPY ZSRSRC,ZSEDITZ3

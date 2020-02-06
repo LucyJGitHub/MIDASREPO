@@ -1,0 +1,194 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF Validate booking branch/user')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  SECURITY PROFILE FACILITY
+     F*                                                               *
+     F*   ZVBBU  - TO VALIDATE THAT THE USER IS AUTHORISED TO A       *
+     F*            BOOKING BRANCH                                     *
+     F*                                                               *
+     F*  Function: This program checks that the user is authorised    *
+     F*            to a Booking Branch.                               *
+     F*            A parameter is passed back to the calling program  *
+     F*            to indicate validity :                             *
+     F*            0 - all valid                                      *
+     F*            1 - no authorised branches found for user          *
+     F*            2 - user is not authorised to this branch          *
+     F*                                                               *
+     F*  Where Used: Input Cycle, multibranch environment             *
+     F*                                                               *
+     F*  Called By: Any program requiring this validation             *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  Any changes made to this program may also need to be         *
+     F*  incorporated in ZBBBU.                                       *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Prev Amend No. 197434             Date 09Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E26748             Date 01Aug91               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  197434 - Array index error on SF0021. Increase maximum       *
+      *           number of branches from 100 to 900.                 *
+     F*    E26748 - SOURCE MEMBER INCORRECTLY PLACED IN ZARPGSRC      *
+     F*             SO MOVE TO SFRPGSRC.                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F* ID F  C  H  L     FUNCTION OF INDICATORS
+     F*
+     F*       01       OPEN FILE
+     F*       99       NO VALID BRANCHES FOUND
+     F*
+     F*****************************************************************
+     F*       INPUTS TO THIS PROGRAMME
+     F*
+     F*       BRANCH CODE 3A  (FROM THE CALLING PROGRAMME)
+     F*       DTAARA/ZBRU     VALID BOOKING BRANCHES FOR THIS USER
+     F*
+     F*****************************************************************
+     F*       OUTPUT FROM THIS PROGRAMME
+     F*
+     F*       ERROR CODE  : 0 = NO ERROR
+     F*                     1 = NO VALID BRANCHES FOUND FOR USER
+     F*                     2 = THIS BRANCH CODE NOT VALID FOR USER
+     F*
+     F*****************************************************************
+     E**********          ZBR       100  3               STORAGE ARRAY                        197434
+     E                    ZBR       900  3               STORAGE ARRAY                        197434
+     I*
+     I* DATA STRUCTURE TO SET UP VALID BOOKING BRANCHES
+     I*
+     IZBRU        DS
+     I                                        1   1 ZCHO
+     I                                        2   4 ZINO
+     I                                        5 154 ZBR1
+     I                                      155 304 ZBR2
+      *                                                                                       197434
+     IZBRU1       DS                                                                          197434
+      *                                                                                       197434
+      ** Bank Level Functions / Booking Branches 1                                            197434
+      *                                                                                       197434
+     I                                        1 255 ZBR11                                     197434
+     I                                      256 510 ZBR12                                     197434
+     I                                      511 765 ZBR13                                     197434
+     I                                      7661020 ZBR14                                     197434
+     I                                     10211275 ZBR15                                     197434
+     I                                     12761530 ZBR16                                     197434
+     I                                     15311785 ZBR17                                     197434
+     I                                     17861998 ZBR18                                     197434
+     IZBRU2       DS                                                                          197434
+      *                                                                                       197434
+      ** Bank Level Functions / Booking Branches 2                                            197434
+      *                                                                                       197434
+     I                                        1 255 ZBR21                                     197434
+     I                                      256 402 ZBR22                                     197434
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           ZBRCDX  3        BRANCH CODE 3A
+     C                     PARM           ERR     10       ERROR CODE 1S
+     C*
+     C                     SETOF                       99
+     C                     Z-ADD0         ERR
+     C*
+     C*****************************************************************
+     C**  IF FIRST ROUND MOVE ZBRU DETAILS INTO ARRAY
+     C*
+     C           *IN01     IFEQ '0'                        B01
+     C**
+     C                     SETON                     01    SET 1ST RND IND
+     C*
+     C                     EXSR ZSPFB
+     C*
+     C                     END
+     C*
+     C*****************************************************************
+     C* IF NO RECORDS ARE ON ZBRU SET ERROR CONDITION TO 1
+     C*
+     C           U         IFEQ 0
+     C                     Z-ADD1         ERR
+     C*
+     C* IF AT LEAST ONE RECORD ON ZBRU
+     C*
+     C                     ELSE
+     C*
+     C* SAVE 'U' SO THAT SEARCHING ALWAYS STARTS AT LOWEST ENTRY
+     C*
+     C                     Z-ADDU         V       30
+     C*
+     C           ZBRCDX    LOKUPZBR,V                    99
+     C*
+     C* IF INPUTED BRANCH NOT ON ZBRU SET ERROR CONDITION TO 2
+     C*
+     C           *IN99     IFEQ '0'
+     C                     Z-ADD2         ERR
+     C                     END
+     C*
+     C                     END
+     C*C
+     C                     RETRN
+     C*****************************************************************
+     C**  P/ZSPFB STD SR TO MAKE SPF USER/BRANCHES AVAILABLE TO PGM
+     C**    INPUT FROM EXT.DTAARA- ZBR1 & 2,UP TO 100 BRANCHES,TOP DOWN
+     C**                           ZIN,INDEX OF LOWEST ENTRY FOR ARRAY
+     C**    OUTPUT - ZBR  ARRAY, TOP DOWN
+     C**             U, EQ ZINO
+     C**
+     C           ZSPFB     BEGSR                           **  ZSPFB **
+     C           *NAMVAR   DEFN           ZBRU
+     C                     IN   ZBRU
+     C                     MOVEAZBR1      ZBR,1
+     C                     MOVEAZBR2      ZBR,51
+     C                     MOVE ZINO      U       30
+     C                     UNLCKZBRU
+      *                                                                                       197434
+      ** Set up the array ZBR by branches in data areas ZBRU1 and ZBRU2                       197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZBRU1                                               197434
+     C                     IN   ZBRU1                                                         197434
+     C                     Z-ADD101       W       30                                          197434
+     C                     MOVEAZBR11     ZBR,W                                               197434
+     C                     Z-ADD186       W                                                   197434
+     C                     MOVEAZBR12     ZBR,W                                               197434
+     C                     Z-ADD271       W                                                   197434
+     C                     MOVEAZBR13     ZBR,W                                               197434
+     C                     Z-ADD356       W                                                   197434
+     C                     MOVEAZBR14     ZBR,W                                               197434
+     C                     Z-ADD441       W                                                   197434
+     C                     MOVEAZBR15     ZBR,W                                               197434
+     C                     Z-ADD526       W                                                   197434
+     C                     MOVEAZBR16     ZBR,W                                               197434
+     C                     Z-ADD611       W                                                   197434
+     C                     MOVEAZBR17     ZBR,W                                               197434
+     C                     Z-ADD696       W                                                   197434
+     C                     MOVEAZBR18     ZBR,W                                               197434
+     C                     UNLCKZBRU1                                                         197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZBRU2                                               197434
+     C                     IN   ZBRU2                                                         197434
+     C                     Z-ADD767       W                                                   197434
+     C                     MOVEAZBR21     ZBR,W                                               197434
+     C                     Z-ADD852       W                                                   197434
+     C                     MOVEAZBR22     ZBR,W                                               197434
+     C                     UNLCKZBRU2                                                         197434
+      *                                                                                       197434
+     C                     ENDSR
+     C**
+     C*****************************************************************

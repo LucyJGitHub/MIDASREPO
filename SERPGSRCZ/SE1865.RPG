@@ -1,0 +1,1146 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trades extended settlements audit')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module
+      *                                                               *
+      *  SE1865 - TRADES EXTENDED SETTLEMENT AUDIT LIST               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR580900           Date 20Jul10               *
+      *                 CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSW206E            Date 24Aug06               *
+      *                 CSW206D            Date 24Aug06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 208241             Date 17Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE028             Date 06Jun01               *
+      *                 127566             Date 09May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 21Dec98               *
+      *                 CSW098             Date 07May98               *
+      *                 066915             Date 14Feb94               *
+      *                 S01401             DATE 16JUN93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR580900 - Report SE1865P1687327 - Intermediary line should  *
+      *             be 2 lines and field tag 77 should not be written *
+      *             beside registration details (Recompile)           *
+      *  CSW210 - SWIFT 2010 Changes                                  *
+      *  CSW206E - Change Control for SWIFT 2006 Standard Changes     *
+      *  CSW206D - Change Control for SWIFT 2006 Standard Changes     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+      *  CSE028 - Standing Settlement Instructions Enhancement.       *
+      *  127566 - Recompiled over changed ZSDESCZ3                    *
+      *  CAC005 - PCA-SE Enhancement.                                 *
+      *  CSW098 - SWIFT 98 changes. New fields added.                 *
+      *  066915 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+      *           to 10,9 by GEMS 052254.                             *
+      *  S01401 - MT5xx SWIFT Messages Feature: New program           *
+      *                                                               *
+      *****************************************************************
+      *
+     FTRADSDJ3IF  E           K        DISK         KINFSR *PSSR
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     FSE1865P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FSE1865AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+     F/COPY WNCPYSRC,SE1865F001
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    11  - MULTIBRANCHING INDICATOR                             *
+      *    15  - Print file, SE1865P1, has been opened at least once  *
+      *    20  - Switchable feature CSW098 is on or date is greater   *   CSW098
+      *          than 16 October 1998. Can also be error on call to   *   CSW098
+      *          SWIFT98.                                             *   CSW098
+      *    30  - Switchable feature CSW210 is ON or run date is       *                       CSW210
+      *          equal or greater than 20 November 2010. If on it will*                       CSW210
+      *          display the DEBTOR's information.                    *                       CSW210
+      *    31  - Switchable feature CSW210 is ON or run date is       *                       CSW210
+      *          equal or greater than 20 November 2010. If on it will*                       CSW210
+      *          display the Place of Clearing and QFIN.              *                       CSW210
+      *    40  - MODE I          : AUDIT EXCEPTION                    *
+      *    41  - MODE A          : AUDIT                              *
+      *    42  - ALL OTHER MODES : FULL LIST                          *
+      *    51  - CHANGE TYPE     : A - AMEND                          *
+      *    52  - CHANGE TYPE     : I - INSERT                         *
+      *    53  - CHANGE TYPE     : D - DELETE                         *
+      *    54  - CHANGE TYPE     : C - CHANGE                         *
+      *    55  - CHANGE TYPE     : P - APPROVE                        *
+      *    56  - CHANGE TYPE     : Y - AUTHORISE                      *
+      *    74  - READ OF TRADSDJ3                                     *
+      *    79  - READ OF SECTY                                        *
+      *                                                               *
+      *    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  PROCES - Perform Detail Processing                           *
+      *  FORMAT - Format Output fields                                *
+      *  AUDIT  - Run Control Process                                 *
+      *                                                               *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *  ZDATE2 - Dayno to date conversion                            *
+      *  ZSEDIT - Edit numeric fields                                 *
+      *  ZSDESC - Format security descriptions                        *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+     E/COPY ZSRSRC,ZSDESCZ1
+      /TITLE I-SPECIFICATIONS
+     IRUNDAT      DS
+      ***  Data Structure to obtain Multibranching Indicator.
+     I                                       13  13 WMBIN
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE1865P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE1865AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      ** Customer Details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ** Securities Trading Details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      ** Book Details
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** PROGRAM STATUS DATA STRUCTURE
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I/COPY ZSRSRC,ZSDESCZ2
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Accept Parameters.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   1
+     C                     PARM           PSEQ    5
+     C                     PARM           PBRCA   3
+      *
+      ** SET INDICATORS FOR REPORT HEADING AND OPEN INPUT FILE
+      **          MODE I          : AUDIT EXCEPTION
+      **          MODE A          : AUDIT
+      **          ALL OTHER MODES : FULL LIST
+      *
+     C           PMODE     IFEQ 'I'
+     C                     SETON                     40
+     C                     ELSE
+     C           PMODE     IFEQ 'A'
+     C                     SETON                     41
+     C                     ELSE
+     C                     SETON                     42
+     C                     END
+     C                     END
+      *
+      ***  Access Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     MOVE BJMRDT    RRDATE
+     C                     MOVE BJURPT    RRTITL
+      *
+      ***  Access RUNDAT Data Area for Multi-Branching Indicator.
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           WMBIN     IFEQ 'Y'
+     C                     SETON                     11
+     C                     END
+      *
+      *** Access Securities Trading ICD details
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDSTRD    PARM SDSTRD    DSSDY
+     C*
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDSTRDPD'DBFILE           * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CSW098
+      ** Check to see if switchable feature CSW098 is on or if date is    CSW098
+      ** greater than 16 October 1998.                                    CSW098
+     C                     CALL 'SWIFT98'              20                 CSW098
+     C                     PARM           SWRTN   7                       CSW098
+      *                                                                   CSW098
+     C           *IN20     IFEQ *ON                        ***************CSW098
+     C                     MOVEL'05'      DBASE            * DB ERROR 05 *CSW098
+     C                     MOVEL'SE1865'  DBPGM            ***************CSW098
+     C                     MOVEL'ERR CALL'DBFILE                          CSW098
+     C                     MOVEL'SWIFT98' DBKEY                           CSW098
+     C                     EXSR *PSSR                                     CSW098
+     C                     ENDIF                                          CSW098
+      *
+      ** Check if CAC005 - PCA-SE Enhancement is on.                      CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   @RTCD   7                       CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                                       CSE028
+      ** Check if CSE028 feature is installed                                                 CSE028
+      *                                                                                       CSE028
+     C                     MOVE 'N'       CSE028  1                                           CSE028
+     C                     CALL 'AOSARDR0'                                                    CSE028
+     C                     PARM '       ' @RTCD                                               CSE028
+     C                     PARM '*VERIFY' @OPTN                                               CSE028
+     C                     PARM 'CSE028'  @SARD                                               CSE028
+      *                                                                                       CSE028
+     C           @RTCD     IFNE *BLANKS                                                       CSE028
+     C           @RTCD     ANDNE'*NRF   '                                                     CSE028
+     C                     Z-ADD06        DBASE                                               CSE028
+     C                     MOVEL'SE1865'  DBPGM                                               CSE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSE028
+     C                     MOVEL@SARD     DBKEY                                               CSE028
+     C                     EXSR *PSSR                                                         CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C           @RTCD     IFEQ *BLANK                                                        CSE028
+     C                     MOVE 'Y'       CSE028                                              CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+      ** Check if SWIFT Changes 2006 (CSW206) is installed                                   CSW206E
+      *                                                                                      CSW206E
+     C                     CALL 'SWIF2006'                                                   CSW206E
+     C                     PARM *BLANKS   RTNCD   7                                          CSW206E
+      *                                                                                      CSW206E
+     C           RTNCD     IFEQ 'CSW2006'                                                    CSW206E
+     C                     MOVE 'Y'       CSW206  1                                          CSW206E
+     C                     ELSE                                                              CSW206E
+     C                     MOVE 'N'       CSW206                                             CSW206E
+     C                     ENDIF                                                             CSW206E
+      *                                                                                      CSW206E
+     C/COPY WNCPYSRC,SE1865C001
+      *                                                                                       CSW210
+      ** Check to see if switchable feature CSW210 is on or if date is                        CSW210
+      ** equal or greater than 20 November 2010.                                              CSW210
+      *                                                                                       CSW210
+     C                     MOVEL*BLANKS   SRTNCD  7                                           CSW210
+     C                     CALL 'SWIF2010'             30                                     CSW210
+     C                     PARM           SRTNCD  7                                           CSW210
+      *                                                                                       CSW210
+     C           *IN30     IFEQ *ON                        ***************                    CSW210
+     C                     MOVEL'07'      DBASE            * DB ERROR 07 *                    CSW210
+     C                     MOVEL'SE1865'  DBPGM            ***************                    CSW210
+     C                     MOVEL'ERR CALL'DBFILE                                              CSW210
+     C                     MOVEL'SWIF2010'DBKEY                                               CSW210
+     C                     EXSR *PSSR                                                         CSW210
+      *                                                                                       CSW210
+     C                     ELSE                                                               CSW210
+     C           SRTNCD    IFEQ 'CSW2010'                                                     CSW210
+     C                     MOVE 'Y'       CSW210  1                                           CSW210
+     C                     ELSE                                                               CSW210
+     C                     MOVE 'N'       CSW210                                              CSW210
+     C                     ENDIF                                                              CSW210
+     C                     ENDIF                                                              CSW210
+      *
+      ***  DEFINE WORK FIELDS
+      *
+     C           *LIKE     DEFN BBCUST    WWTCNR
+     C           *LIKE     DEFN A8BRCD    WWLAST
+     C           *LIKE     DEFN A8BRCD    WWTDBA
+      *
+     C                     MOVE *BLANKS   WWLAST
+      *
+      ** INITIALISE 'NO. OF LIVE RECORDS' COUNTER
+     C                     Z-ADD0         WWLIVE 150
+      *
+      ** INITIALISE 'TOTAL NO. OF TRADE TRANSACTIONS' COUNTER
+     C                     Z-ADD0         WWTRAD 150
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: FORMAT, AUDIT                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ***  If Multibranching and Branch selected, Set Start Position.
+      *
+     C           WMBIN     IFEQ 'Y'
+     C           PBRCA     ANDNE'ALL'
+     C                     MOVE PBRCA     TDBA
+     C           TDBA      SETLLTRADSDJ3
+     C                     ENDIF
+      *
+     C                     READ TRADSDJ3                 74
+     C                     MOVE TDBA      WWTDBA
+      *
+      ***  If Multibranching and Branch selected, check same Branch.
+      *
+     C           *IN74     IFEQ '0'
+     C           WMBIN     ANDEQ'Y'
+     C           PBRCA     ANDNE'ALL'
+     C           TDBA      ANDNEPBRCA
+     C                     SETON                     74
+     C                     ENDIF
+      *
+      ***  Process until End of valid records.
+      *
+     C           *IN74     DOWEQ'0'
+      *
+      ** FORMAT DETAIL LINE AND OUTPUT
+     C                     EXSR FORMAT
+      *
+      ** READ NEXT RECORD
+     C                     READ TRADSDJ3                 74
+     C                     MOVE TDBA      WWTDBA
+      *
+      ***  If Multibranching and Branch selected, check same Branch.
+      *
+     C           *IN74     IFEQ '0'
+     C           WMBIN     ANDEQ'Y'
+     C           PBRCA     ANDNE'ALL'
+     C           TDBA      ANDNEPBRCA
+     C                     SETON                     74
+     C                     ENDIF
+      *
+     C                     END
+      *
+      ** If print file open then right 'End of Report' and close file
+     C           *IN15     IFEQ '1'
+     C                     WRITETRAILP1
+     C                     CLOSESE1865P1
+     C                     END
+      *
+      ** OUTPUT RUN CONTROL REPORT
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FORMAT
+      *****************************************************************
+      *                                                               *
+      *  FORMAT - Subroutine to Set Up and Write fields to Report.    *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: ZSEDIT, ZDATE2, ZSDESC                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FORMAT    BEGSR
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' POPTN   7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM TDBK      PMPSBK  2                       CAC005
+      *                                                                   CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPMBKCD    TDBK                            CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *
+      *                                                                   CSW098
+     C           SWRTN     IFEQ 'CSW098 '                                 CSW098
+     C                     MOVE *ON       *IN20                           CSW098
+     C                     ELSE                                           CSW098
+     C                     MOVE *OFF      *IN20                           CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C           CSW206    IFEQ 'Y'                                                          CSW206E
+     C                     MOVE *ON       *IN88                                              CSW206E
+     C                     ELSE                                                              CSW206E
+     C                     MOVE *OFF      *IN88                                              CSW206E
+     C                     ENDIF                                                             CSW206E
+      *                                                                                      CSW206E
+      ** MAINTAIN 'LIVE' COUNT ONLY IF RECORD NOT DELETED
+     C           RECI      IFNE '*'
+     C                     ADD  1         WWLIVE
+     C                     END
+      *
+      ** 'A' MODE - ** AUDIT ** OR 'I' MODE - ** AUDIT EXCEPTION **
+     C           PMODE     IFEQ 'A'
+     C           PMODE     OREQ 'I'
+      *
+     C           LCD       IFNE BJRDNB
+     C                     GOTO FOREND
+     C                     END
+      *
+      ** 'L' MODE - ** FULL LIST **
+     C                     ELSE
+     C           RECI      IFEQ '*'
+     C                     GOTO FOREND
+     C                     END
+     C                     END
+      *
+      ** MAINTAIN 'TOTAL NO. OF TRADE TRANSACTIONS' COUNTER
+     C                     ADD  1         WWTRAD
+      *
+      ** LAST ACTIVITY - DATE, ACTION & TRADER
+     C                     Z-ADDLCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRZLCD
+      *
+      ***  Set appropriate Indicator for Last Change Action.
+      *
+     C                     SETOF                     515253
+     C                     SETOF                     545556
+      *
+     C                     SELEC
+     C           CHTP      WHEQ 'A'
+     C                     SETON                     51
+     C           CHTP      WHEQ 'I'
+     C                     SETON                     52
+     C           CHTP      WHEQ 'D'
+     C                     SETON                     53
+     C           CHTP      WHEQ 'C'
+     C                     SETON                     54
+     C           CHTP      WHEQ 'P'
+     C                     SETON                     55
+     C           CHTP      WHEQ 'Y'
+     C                     SETON                     56
+     C                     ENDSL
+      *
+     C                     MOVE TDID      RRTDID
+      *
+      ** TRADE DETAILS FIELDS
+      *
+     C                     MOVE T2TDRF    RRTDRF
+      *
+     C                     MOVE *BLANKS   RRTINC
+     C           TINC      IFEQ 'I'
+     C                     MOVEL'IN'      RRTINC
+     C                     MOVE 'COMPLETE'RRTINC
+     C                     ELSE
+     C           TINC      IFEQ 'C'
+     C                     MOVEL'COMPLETE'RRTINC
+     C                     END
+     C                     END
+      *
+     C                     MOVE TCNR      RRTCNR
+     C                     MOVE TCNR      WWTCNR
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WWTCNR    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   RRCRNM
+     C                     MOVE *BLANKS   RRCTWN
+     C                     ELSE
+     C                     MOVE BBCRNM    RRCRNM
+     C                     MOVE BBCRTN    RRCTWN
+     C                     END
+      *
+     C                     MOVE TDSS      RRTDSS
+     C           TDSS      CHAINSECTYDF              79
+     C           *IN79     IFEQ '0'
+     C           RECI      IFEQ '*'
+     C                     SETON                     79
+     C                     END
+     C                     END
+     C           *IN79     IFEQ '1'
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SECTY'   DBFILE           * DB ERROR 03 *
+     C                     MOVELTDSS      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **   PREPARE FIELDS FOR REPORT NAME
+     C                     MOVE SRPN      ZSRPN
+     C                     MOVE *BLANKS   ZSFN1
+     C                     MOVE *BLANKS   ZSFN2
+      **   ZSDESC REPORT NAME
+     C                     MOVE BVROSD    RSFD    1
+     C                     EXSR ZSDESC
+     C                     MOVE ZRNME     RRRNME
+      *
+      ** FORMAT TYPE
+     C                     MOVE *BLANKS   RRTDTP
+     C           TDTP      IFEQ 'TP'
+     C                     MOVEL'PURCHASE'RRTDTP
+     C                     ELSE
+     C           TDTP      IFEQ 'TS'
+     C                     MOVEL'SALE'    RRTDTP
+     C                     END
+     C                     END
+      *
+     C                     MOVE TDBK      RRTDBK
+      *
+      ** Access Book Details
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM TDBK      WBOOK   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   RRBOKD
+     C                     ELSE
+     C                     MOVE BDBKD     RRBOKD
+     C                     END
+      *
+      ** FORMAT NOMINAL
+     C                     MOVE TNMC      RRTNMC
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADDTNMD      ZDECS
+     C                     MOVE NOML      ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRNOML
+     C                     MOVEAZS2,Z2    RRNOML
+      *
+      ** FORMAT VALUE DATE
+     C                     Z-ADDTDVD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRTDVD
+      *
+      ** FORMAT PRICE
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE PRIC      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE *BLANKS   RRPRIC
+     C                     MOVEAZS2,Z2    RRPRIC
+      *
+      ** EXTENDED SETTLEMENT DETAILS
+     C           T2AP1N    IFNE *BLANKS
+     C           SWRTN     ANDNE'CSW098 '                                 CSW098
+     C                     MOVELT2AP1N    WKAP1N  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKAP1N    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRAP1N
+     C                     ELSE
+     C                     MOVE T2AP1N    RRAP1N
+     C                     END
+     C                     END
+      *
+     C           SWRTN     IFEQ 'CSW098 '                                 CSW098
+     C                     MOVE *BLANKS   RRAP1N                          CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C           T2AFPN    IFNE *BLANKS
+     C                     MOVELT2AFPN    WKAFPN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKAFPN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRAFPN
+     C                     ELSE
+     C                     MOVE T2AFPN    RRAFPN
+     C                     END
+     C                     END
+      *
+     C           T2AWIN    IFNE *BLANKS
+     C                     MOVELT2AWIN    WKAWIN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKAWIN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRAWIN
+     C                     ELSE
+     C                     MOVE T2AWIN    RRAWIN
+     C                     END
+     C                     END
+      *
+     C           T2BOFN    IFNE *BLANKS
+     C                     MOVELT2BOFN    WKBOFN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKBOFN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRBOFN
+     C                     ELSE
+     C                     MOVE T2BOFN    RRBOFN
+     C                     END
+     C                     END
+      *
+     C           T2IPYN    IFNE *BLANKS
+     C                     MOVELT2IPYN    WKIPYN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKIPYN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRIPYN
+     C                     ELSE
+     C                     MOVE T2IPYN    RRIPYN
+     C                     END
+     C                     END
+      *
+     C           SWRTN     IFNE 'CSW098 '                                 CSW098
+     C                     MOVE *BLANKS   RRINVE                          CSW098
+      *                                                                   CSW098
+     C           T2CTYN    IFNE *BLANKS
+     C                     MOVELT2CTYN    WKCTYN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKCTYN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRCTYN
+     C                     ELSE
+     C                     MOVE T2CTYN    RRCTYN
+     C                     END
+     C                     END
+     C*
+     C                     ELSE                                           CSW098
+     C                     MOVE *BLANKS   RRCTYN                          CSW098
+     C*                                                                   CSW098
+     C           T2INVE    IFNE *BLANKS                                   CSW098
+     C                     CALL 'AOCUSTR0'                                CSW098
+     C                     PARM '*DBERR ' WRTCD                           CSW098
+     C                     PARM '*KEY   ' WOPTN                           CSW098
+     C                     PARM T2INVE    WCUST  10                       CSW098
+     C                     PARM *BLANKS   WKYST   7                       CSW098
+     C           SDCUST    PARM SDCUST    DSSDY                           CSW098
+     C           WRTCD     IFEQ *BLANK                                    CSW098
+     C                     MOVE BBCSSN    RRINVE                          CSW098
+     C                     ELSE                                           CSW098
+     C                     MOVE T2INVE    RRINVE                          CSW098
+     C                     ENDIF                                          CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C           T2SA1N    IFNE *BLANKS
+     C           SWRTN     ANDNE'CSW098 '                                 CSW098
+     C                     MOVELT2SA1N    WKSA1N  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKSA1N    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRSA1N
+     C                     ELSE
+     C                     MOVE T2SA1N    RRSA1N
+     C                     END
+     C                     END
+      *
+     C           SWRTN     IFEQ 'CSW098'                                  CSW098
+     C                     MOVE *BLANKS   RRSA1N                          CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C           T2SKAN    IFNE *BLANKS
+     C                     MOVELT2SKAN    WKSKAN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKSKAN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRSKAN
+     C                     ELSE
+     C                     MOVE T2SKAN    RRSKAN
+     C                     END
+     C                     END
+      *
+     C           T2RSSN    IFNE *BLANKS
+     C                     MOVELT2RSSN    WKRSSN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKRSSN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRRSSN
+     C                     ELSE
+     C                     MOVE T2RSSN    RRRSSN
+     C                     END
+     C                     END
+      *
+     C           T2DSSN    IFNE *BLANKS
+     C                     MOVELT2DSSN    WKDSSN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKDSSN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRDSSN
+     C                     ELSE
+     C                     MOVE T2DSSN    RRDSSN
+     C                     END
+     C                     END
+      *
+     C           T2BSSN    IFNE *BLANKS
+     C                     MOVELT2BSSN    WKBSSN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKBSSN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRBSSN
+     C                     ELSE
+     C                     MOVE T2BSSN    RRBSSN
+     C                     END
+     C                     END
+      *
+     C                     MOVE T2AP1L    RRAP1L
+     C                     MOVE T2AFPL    RRAFPL
+     C                     MOVE T2AWIA    RRAWIA
+     C                     MOVE T2AWIL    RRAWIL
+     C                     MOVE T2BOFA    RRBOFA
+     C                     MOVE T2BOF1    RRBOF1
+     C**********           MOVE T2BOF2    RRBOF2                                              CSW210
+     C                     MOVE T2ACL1    RRACL1
+     C                     MOVE T2ACL2    RRACL2
+     C                     MOVE T2SRL1    RRSRL1
+     C                     MOVE T2SRL2    RRSRL2
+     C                     MOVE T2SRL3    RRSRL3
+     C                     MOVE T2FIN1    RRFIN1
+     C                     MOVE T2FIN2    RRFIN2
+     C                     MOVE T2RED1    RRRED1
+     C                     MOVE T2RED2    RRRED2
+     C                     MOVE T2NAL1    RRNAL1
+     C                     MOVE T2NAL2    RRNAL2
+     C                     MOVE T2IPYL    RRIPYL
+      *                                                                   CSW098
+     C           SWRTN     IFNE 'CSW098 '                                 CSW098
+     C                     MOVE T2CTYL    RRCTYL
+     C                     ELSE                                           CSW098
+     C                     MOVE *BLANKS   RRCTYL                          CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C           CSW210    IFEQ 'Y'                                                           CSW210
+     C                     MOVE *ON       *IN30                                               CSW210
+     C                     MOVE *ON       *IN31                                               CSW210
+     C                     MOVE T2DIDN    RRDIDN                                              CSW210
+     C                     MOVE T2DLIN    RRDLIN                                              CSW210
+     C                     MOVE T2DAD1    RRDAD1                                              CSW210
+     C                     MOVE T2DAD2    RRDAD2                                              CSW210
+     C                     MOVE T2DAD3    RRDAD3                                              CSW210
+     C                     MOVE T2DAD4    RRDAD4                                              CSW210
+     C                     MOVE T2QFIN    RRQFIN                                              CSW210
+     C                     MOVE T2PCLR    RRPCLR                                              CSW210
+     C                     ENDIF                                                              CSW210
+     C*                                                                                       CSW210
+     C                     MOVE T2SA1L    RRSA1L
+     C                     MOVE T2SKAL    RRSKAL
+     C                     MOVE T2CCTN    RRCCTN
+     C/COPY WNCPYSRC,SE1865C002
+     C                     MOVE T2DCTL    RRDCTL
+     C/COPY WNCPYSRC,SE1865C003
+     C                     MOVE T2RSSA    RRRSSA
+     C                     MOVE T2RSS1    RRRSS1
+     C                     MOVE T2RSS2    RRRSS2
+     C                     MOVE T2RSS3    RRRSS3
+     C                     MOVE T2RSS4    RRRSS4
+     C                     MOVE T2DSSA    RRDSSA
+     C                     MOVE T2DSS1    RRDSS1
+     C                     MOVE T2DSS2    RRDSS2
+     C                     MOVE T2DSS3    RRDSS3
+     C                     MOVE T2DSS4    RRDSS4
+     C                     MOVE T2BSSA    RRBSSA
+     C                     MOVE T2BSS1    RRBSS1
+     C                     MOVE T2BSS2    RRBSS2
+      *                                                                                       CSE028
+      ** Move file fields introduced by CSE028 to report fields                               CSE028
+      *                                                                                       CSE028
+     C           CSE028    IFEQ 'Y'                                                           CSE028
+     C                     MOVE T2IMD1    RRIMD1                                              CSE028
+     C                     MOVE T2IMD2    RRIMD2                                              CSE028
+     C**********           MOVE T2IMD3    RRIMD3                                      CSE028 CSW206D
+     C**********           MOVE T2IMD4    RRIMD4                                      CSE028 CSW206D
+     C**********           MOVE T2IMD5    RRIMD5                                      CSE028 CSW206D
+     C**********           MOVE T2IMD6    RRIMD6                                      CSE028 CSW206D
+     C**********           MOVE T2IMD7    RRIMD7                                      CSE028 CSW206D
+     C**********           MOVE T2IMD8    RRIMD8                                      CSE028 CSW206D
+     C**********           MOVE T2IMD9    RRIMD9                                      CSE028 CSW206D
+     C           CSW206    IFEQ 'N'                                                          CSW206E
+     C                     MOVE T2IMD3    RRIMD3                                             CSW206E
+     C                     MOVE T2IMD4    RRIMD4                                             CSW206E
+     C                     MOVE T2IMD5    RRIMD5                                             CSW206E
+     C                     MOVE T2IMD6    RRIMD6                                             CSW206E
+     C                     MOVE T2IMD7    RRIMD7                                             CSW206E
+     C                     MOVE T2IMD8    RRIMD8                                             CSW206E
+     C                     MOVE T2IMD9    RRIMD9                                             CSW206E
+     C                     ENDIF                                                             CSW206E
+     C                     MOVE T2IMS1    RRIMS1                                              CSE028
+     C                     MOVE T2IMS2    RRIMS2                                              CSE028
+     C**********           MOVE T2IMS3    RRIMS3                                      CSE028 CSW206D
+     C**********           MOVE T2IMS4    RRIMS4                                      CSE028 CSW206D
+     C**********           MOVE T2IMS5    RRIMS5                                      CSE028 CSW206D
+     C**********           MOVE T2IMS6    RRIMS6                                      CSE028 CSW206D
+     C**********           MOVE T2IMS7    RRIMS7                                      CSE028 CSW206D
+     C**********           MOVE T2IMS8    RRIMS8                                      CSE028 CSW206D
+     C**********           MOVE T2IMS9    RRIMS9                                      CSE028 CSW206D
+     C           CSW206    IFEQ 'N'                                                          CSW206E
+     C                     MOVE T2IMS3    RRIMS3                                             CSW206E
+     C                     MOVE T2IMS4    RRIMS4                                             CSW206E
+     C                     MOVE T2IMS5    RRIMS5                                             CSW206E
+     C                     MOVE T2IMS6    RRIMS6                                             CSW206E
+     C                     MOVE T2IMS7    RRIMS7                                             CSW206E
+     C                     MOVE T2IMS8    RRIMS8                                             CSW206E
+     C                     MOVE T2IMS9    RRIMS9                                             CSW206E
+     C                     ENDIF                                                             CSW206E
+     C                     MOVE T2PSET    RRPSET                                              CSE028
+     C                     MOVE T2NAC1    RRNAC1                                              CSE028
+     C                     MOVE T2NAC2    RRNAC2                                              CSE028
+     C                     ENDIF                                                              CSE028
+      *
+      ***  If change of Branch open new print file;
+      ***  (if previous print file opened write 'End of Report' and
+      ***  close print file before opening new one).
+      *
+     C           WWTDBA    IFNE WWLAST
+      *
+     C           *IN15     IFEQ '1'
+     C                     WRITETRAILP1
+     C                     CLOSESE1865P1
+     C                     END
+      *
+     C                     OPEN SE1865P1
+     C                     MOVE '1'       *IN15
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM WWTDBA    WPARM   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      **  Store old Branch and access new Branch Details.
+     C                     MOVE WWTDBA    WWLAST
+     C                     MOVE WWTDBA    RRTDBA
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WWTDBA    WBRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 04 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE A8BRNM    RRBRNM
+      *
+      ***  save current branch and name to restore next time if needed
+     C                     MOVE RRTDBA    WRTDBA  3
+     C                     MOVE RRBRNM    WRBRNM 30
+      *
+      ***  else not a different branch so restore previous branch/name
+     C                     ELSE
+     C                     MOVE WRTDBA    RRTDBA  3
+     C                     MOVE WRBRNM    RRBRNM 30
+     C                     END
+      *
+      ** PRINT PAGE HEADINGS
+     C                     WRITEHEADP1
+      *
+      ** OUPUT DETAIL LINE
+     C                     WRITEDETAIL
+     C                     CLEARDETAIL
+      *
+     C           CSE028    IFEQ 'Y'                                                           CSE028
+     C           SWRTN     IFEQ 'CSW098 '                                                     CSW210
+     C                     MOVE *ON       *IN20                                               CSW210
+     C                     ENDIF                                                              CSW210
+     C                     WRITEHEADP1                                                        CSE028
+     C                     WRITEDETAIL2                                                       CSE028
+     C                     CLEARDETAIL2                                                       CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C           FOREND    TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Ouput Run Control Report.             *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   WPARM
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** WRITE HEADINGS
+     C                     WRITEHEADAU
+      *
+      ** OUTPUT NO. OF LIVE RECORDS
+     C                     Z-ADDWWLIVE    RRLIVE
+     C                     WRITECONTROLR
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no valid records read, Output "No Details" message.
+     C           WWLAST    IFEQ *BLANKS
+     C                     WRITENONE
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  Calls: AUDIT                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE1865'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     SETON                     U7U8LR
+      *
+     C                     EXSR AUDIT
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z4
+      /TITLE SR/ZSDESC
+     C/COPY ZSRSRC,ZSDESCZ3
+      /TITLE SR/ZSEDIT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

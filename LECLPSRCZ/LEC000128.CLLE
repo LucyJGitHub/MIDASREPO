@@ -1,0 +1,136 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Remove triggers for PDCL transactions')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000128 - Remove triggers for PDCL transactions           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021423E          Date 12Sep13              */
+/*                      MD020748           Date 20Jun13              */
+/*                      AR1081531 *CREATE  Date 24Jan13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD021423E - Not all JDBC jobs ended by LEC000460            */
+/*       MD020748 - Component LEC00610 failed due to active triggers */
+/*       AR1081531 - Change in components file needed for LEC000460  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* Declaration of variables */
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EXIT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TRIES) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&RETRYLIM) TYPE(*DEC) LEN(1 0)
+             DCL        VAR(&DLY) TYPE(*DEC) LEN(2 0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Create data area LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Setup number of retries and job delay in case of trigger failure */
+ 
+             CHGVAR     VAR(&RETRYLIM) VALUE(3)
+             CHGVAR     VAR(&DLY) VALUE(5)
+ 
+             CHGVAR     VAR(&FILE) VALUE('CLOANCL')
+             CALLSUBR   SUBR(RMVTRIG)
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHGVAR     VAR(&FILE) VALUE('CLOANCK')
+             CALLSUBR   SUBR(RMVTRIG)
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHGVAR     VAR(&FILE) VALUE('FCLTYFM')
+             CALLSUBR   SUBR(RMVTRIG)
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHGVAR     VAR(&FILE) VALUE('SDBRCHPD')
+             CALLSUBR   SUBR(RMVTRIG)
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHGVAR     VAR(&FILE) VALUE('CLONCLQD')
+             CALLSUBR   SUBR(RMVTRIG)
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LEC000128 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*********************************************************************/
+/*                                                                   */
+/*       RMVTRIG - Remove physical file triggers with n retries      */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(RMVTRIG)
+ 
+RETRY:
+             ALCOBJ     OBJ((&FILE *FILE *EXCL))
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+                CALL       PGM(LEC000460) PARM('LEC000460' X'00001F')
+                GOTO  RETRY
+             ENDDO
+             DLCOBJ     OBJ((&FILE *FILE *EXCL))
+ 
+             CHGVAR     VAR(&EXIT) VALUE('N')
+             CHGVAR     VAR(&TRIES) VALUE(0)
+ 
+             DOWHILE    COND(&EXIT = 'N')
+                CHGJOB     SWS(XXXXXX00)
+                CHGVAR     VAR(&EXIT) VALUE('Y')
+                CHGVAR     VAR(&ERROR) VALUE('N')
+ 
+                TRIGZONE   FILE(&FILE) ACTION(*RMVTRIG)
+ 
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   CHGVAR     VAR(&TRIES) VALUE(&TRIES + 1)
+                   CHGVAR     VAR(&EXIT) VALUE('N')
+                   IF         COND(&TRIES *GT &RETRYLIM) THEN(DO)
+                      CHGVAR     VAR(&EXIT) VALUE('Y')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                   ENDDO
+                   DLYJOB     DLY(&DLY)
+                ENDDO
+             ENDDO
+ 
+             ENDSUBR
+/* End RMVTRIG subroutine. */
+ 
+/** End program */
+ 
+END:
+             ENDPGM

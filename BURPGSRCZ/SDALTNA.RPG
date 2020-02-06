@@ -1,0 +1,280 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU BackGnd Upd of CLINTCC')                      *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     SDALTNA - BACKGROUND UPDATE OF CLINTCC FILE                  *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23967           Date 13May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01230             Date 07/11/89              *S01230
+     F*                                                                  *
+     F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *     BUG23967 - Add Local Industry Code Field. (Recompile)        *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     S01230 - STANDARDISE PROGRAMS                                *S01230
+     F********************************************************************S01230
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30         CHAIN to client file detail fails.              *
+     F*       31         WRITE to client file detail fails.              *
+     F*       32         UPDATE of client detail fails.                  *
+     F*       33         READE of client file detail fails.              *
+     F*                                                                  *
+     F********************************************************************
+     FCLINT   UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCBF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT                                                              S01230
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT                                                              S01230
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  Initial process - defines entry parameter list, key for client  *
+      *                    file and reads client detail record.          *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *
+      ** Define entry parameter list.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        RETURN CODE
+     C                     PARM           WCNUM   6        CUSTOMER NO.
+     C                     PARM           WCNA1  35        ADDRESS 1
+     C                     PARM           WCNA2  35        ADDRESS 2
+     C                     PARM           WCNA3  35        ADDRESS 3
+     C                     PARM           WCNA4  35        ADDRESS 4
+     C                     PARM           WCTWN  10        REPORT TOWN
+     C                     PARM           WCHTP   1        TYPE OF LST CHG
+     C                     PARM           WLCD    50       LAST CHG DATE
+      *
+      ** Define client file key.
+      *
+     C           CLKEY     KLIST
+     C**********           KFLD           KCNUM   60                                          CSD027
+     C                     KFLD           KCNUM   6                                           CSD027
+     C                     KFLD           KRCDT   1
+      *
+      ** Read client file detail record.
+      *
+     C                     MOVE WCNUM     KCNUM
+     C                     MOVE 'B'       KRCDT
+     C           CLKEY     CHAINCLINTCCF             30
+      *
+      /EJECT
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  Main process.                                                   *
+      *                                                                  *
+      *  Calls subroutines:   MAPDTA                                     *
+      *                       UPDATE                                     *
+      *                       ERROR                                      *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *
+      ** Code for last change type - insert.
+      *
+     C           WCHTP     IFEQ 'I'
+      *
+      ** If client detail record not found, map data and write new record.
+      *
+     C           *IN30     IFEQ '1'
+     C                     EXSR MAPDTA
+     C                     WRITECLINTCCF               31
+      ** Error on write.
+     C           *IN31     IFEQ '1'
+     C                     EXSR ERROR
+     C                     END
+      ** End of record not found code.
+     C                     END
+      *
+      ** Client record found. If it is a previous deletion update, else
+      ** error.
+      *
+     C           *IN30     IFEQ '0'
+      *
+     C           RECI      IFEQ '*'
+     C                     EXSR MAPDTA
+     C                     EXSR UPDATE
+     C                     END
+      *
+     C           RECI      IFNE '*'
+     C                     EXSR ERROR
+     C                     END
+      ** End of record found code.
+     C                     END
+      ** End of change type - insert code.
+     C                     END
+      *
+      ** Code for last change type - amend or delete.
+      *
+     C           WCHTP     IFEQ 'A'
+     C           WCHTP     OREQ 'D'
+      *
+      ** If a client record is not found then it is an error.
+      *
+     C           *IN30     IFEQ '1'
+     C                     EXSR ERROR
+     C                     END
+      *
+      ** If a client record is found but has previously been deleted, it
+      ** is an error.
+      *
+     C           *IN30     IFEQ '0'
+      *
+     C********** RECI      IFNE 'D'                                                           CSD031
+     C           RECI      IFEQ '*'                                                           CSD031
+     C                     EXSR ERROR
+     C                     END
+      *
+      ** If a client record is found and last change type is amend, then
+      ** update.
+      *
+     C           RECI      IFEQ 'D'
+      *
+     C           WCHTP     IFEQ 'A'
+     C                     EXSR MAPDTA
+     C                     EXSR UPDATE
+     C/COPY WNCPYSRC,SDALTNAC01
+     C                     END
+      *
+      ** If a client record is found and last change type is delete, then
+      ** update all alternative address records for the client.
+      *
+     C           WCHTP     IFEQ 'D'
+      *
+     C           *IN33     DOWEQ'0'
+     C                     MOVE 'C'       RECI
+     C                     Z-ADDWLCD      LCD
+     C                     MOVE WCHTP     CHTP
+     C                     EXSR UPDATE
+     C           KCNUM     READECLINTCCF                 33
+     C                     END
+      *
+     C                     END
+      ** End of record valid code.
+     C                     END
+      ** End of record found code.
+     C                     END
+      *
+      ** End of change type amend/delete code.
+     C                     END
+      *
+      /EJECT
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  Final process - sets on last record indicator and returns to    *
+      *                  calling programme.                              *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *------------------------------------------------------------------*
+      *  Index to subroutines.                                           *
+      *                                                                  *
+      *  MAPDTA - maps data from entry parameter list to CLINTCC fields. *
+      *  UPDATE - updates CLINTCC file.                                  *
+      *  ERROR  - sends error return message to calling programme.       *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      /EJECT
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  MAPDTA subroutine - maps data from entry parameter list to      *
+      *                      CLINTCC fields.                             *
+      *  Called by main process.                                         *
+      *                                                                  *
+      *  Input  - *ENTRY PLIST.                                          *
+      *  Output - CLINTCC fields.                                        *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *
+     C           MAPDTA    BEGSR
+      *
+     C                     MOVE 'D'       RECI
+     C                     MOVE WCNUM     CNUM
+     C                     MOVE 'B'       RCDT
+     C                     MOVE WCNA1     CNA1
+     C                     MOVE WCNA2     CNA2
+     C                     MOVE WCNA3     CNA3
+     C                     MOVE WCNA4     CNA4
+     C                     MOVE WCTWN     CTWN
+     C                     MOVE WLCD      LCD
+     C                     MOVE WCHTP     CHTP
+      *
+     C                     ENDSR
+      /EJECT
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  UPDATE subroutine - updates the client file.                    *
+      *                                                                  *
+      *  Called by main process.                                         *
+      *  Calls subroutine - ERROR                                        *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *
+     C           UPDATE    BEGSR
+      *
+     C                     UPDATCLINTCCF               32
+     C*
+     C           *IN32     IFEQ '1'
+     C                     EXSR ERROR
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  ERROR subroutine - deals with CHAIN, WRITE and UPDATE errors.   *
+      *                                                                  *
+      *  Called by main process.                                         *
+      *                                                                  *
+      *  Output  - error flag to calling programme.                      *
+      *------------------------------------------------------------------*
+      *
+     C           ERROR     BEGSR
+      *
+     C                     MOVE '*ERROR*' P0RTN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Finastra International Limited 2001

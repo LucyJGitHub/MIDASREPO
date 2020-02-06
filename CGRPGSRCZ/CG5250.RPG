@@ -1,0 +1,326 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG UDC Daily Periodic Request Processing')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                  *
+     F*                                                               *
+     F*  CG5250 - Daily Periodic Request Processing                   *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 245055             Date 15Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 241824             Date 06Oct06               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01522             Date 18Jan95               *
+      *                                    Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  245055 - Reverse 241824.                                     *
+      *  241824 - Allow print process request by Extract Date.        *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General work indicator                                 *
+     F*  91    General work indicator                                 *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     F*Cpysrc Templates Initialise Program F-spec
+     F/COPY WNCPYSRC,CG1070DFPG
+     FFCRREQL4IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F            @RREQAG                           KRENAME@RREQL4
+      *
+      * RTV : RCF Daily Requests - Periodics only
+      *
+     FFCPARDL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F            @D7REJF                           KRENAME@PARDL1
+      *
+      * RTV : RCF Daily Parameters      Retrieval index
+      *
+     F/COPY WNCPYSRC,CG5250F001
+     E/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E*  Array containing Copyright statement
+     E***************** FIRST COMPILE TIME ARRAY *********************
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E*  Copysource for error processing
+     E*
+     E*EDTRCD: Cpysrc Templates Initialise Program E-spec
+     E/COPY WNCPYSRC,CG1070DEPG
+      /EJECT
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I*  End of Program Error Processing copysource
+     I*
+     I*
+     I*EDTRCD: Cpysrc Templates Initialise Program I-spec
+     I/COPY WNCPYSRC,CG1070DIPG
+      /EJECT
+     IRUNDTA    E DSRUNDAT
+     I*
+     I* Get Rundate - Rundate  *
+     I*
+     IMMODDS    E DSSDMMODPD
+     I*
+     I* Modules Data Structure *
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I* Data Structures used by Access Programs
+     I*
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      *
+     I            DS
+     I                                        1   3 L@SEQA
+     I                                        1   30#SEQAN
+      *
+      /EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Reset return code
+      *
+     C                     MOVEL*BLANKS   P0RTN
+      *
+     C                     EXSR SRREPT
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT   : Read RCF Periodic Requests                        *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRREPT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRREPT'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG1070REPT
+      *
+      *  Set pointer to CG3000, CGC5240, 10001
+      *
+     C           KPOS      KLIST
+     C                     KFLD           D5RNAM           Report Name
+     C                     KFLD           D5COTT           Component Name
+     C                     KFLD           D5CSEQ           Component Sequence
+      *  Set up key
+     C                     MOVEL'CG3000'  D5RNAM           Report Name
+     C                     MOVEL'CGC5240' D5COTT           Component Name
+     C                     MOVEL'10001'   D5CSEQ           Component Sequence
+      *
+     C           KPOS      SETLL@RREQL4
+     C           KPOS      READE@RREQL4                  90
+      *
+      *  Read all occurrances
+      *
+     C           *IN90     DOWEQ'0'
+      *
+      *  Get Parameter Details
+      *
+     C           KPARL1    KLIST
+     C                     KFLD           D5RNAM           Report Name
+     C                     KFLD           D5RQSQ           Sequence Number
+      *
+     C           KPARL1    CHAIN@PARDL1              91
+      *
+      *  If return with an error if not found
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'FCPARDL1'W0FILE
+     C           D5RNAM    CAT  D5RQSQ    W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,CG5250C001
+      *
+      *  Call CGC5260 to process request
+      *
+     C                     CALL 'CGC5260'              91
+     C                     PARM D5RQSQ    P@RSEQ  5        Sequence
+     C                     PARM D5LVL     P@RLVL  1        Level
+     C                     PARM D5ETTY    P@RBCH  3        Entity
+     C/COPY WNCPYSRC,CG5250C002
+     C**********           PARM D7PARM    P@PARM100        Parameters                         241824
+     C**********           PARM D7PARM    P@PARM115        Parameters                   241824245055
+     C                     PARM D7PARM    P@PARM100        Parameters                         245055
+     C/COPY WNCPYSRC,CG5250C003
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'CGC5260' W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           * DB ERROR 02 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           KPOS      READE@RREQL4                  90
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXREPT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  /COPY for subroutine
+      *
+     C/COPY WNCPYSRC,CG5250INIT
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Get modules information
+     C*
+     C                     CALL 'AOMMODR0'             9090
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code
+     C                     PARM '*FIRST ' P@OPTN  7        I:Option
+     C           MMODDS    PARM *BLANKS   DSFDY            O:Module Flg
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           P@RTCD    OREQ '*ERROR*'
+     C                     MOVEL'AOMMODR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD5         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *
+      * Cpysrc Templates Initialise Program C-spec
+      *
+     C/COPY WNCPYSRC,CG5250DCPG
+     C/EJECT
+      *
+      * File and Program Error Processing
+      *
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+      *
+      * Cpysrc Templates Initialise Program O-spec
+      *
+     O/COPY WNCPYSRC,CG5250DOPG
+**  CPY@
+(c) Finastra International Limited 2001

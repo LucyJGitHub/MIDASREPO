@@ -1,0 +1,2747 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Securities redenomination selected secs')
+/*OVRF*: OVRDBF FILE(SECTYX) TOFILE(SECTY) SHARE(*NO)               : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7522 - SE Securities Redenomination Selected Securities    *
+      *                                                               *
+      *  Function:  Used to set selection criteria for the Selected   *
+      *  (I/C)      Securities screen and amend the said selected     *
+      *             securities.                                       *
+      *                                                               *
+      *  Called by: SE7521  -  Securities Redenomination Bulk Maint.  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP137             Date 07Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 138957             Date 16Jul98               *
+      *                 150478             Date 14Dec98               *
+      *                 149150             Date 21Nov98               *
+      *                 147477             Date 12Dec98               *
+      *                 138962             Date 28Aug98               *
+      *                 137879             Date 01Jul98               *
+      *                 136932             Date 24Jun98               *
+      *                 136428             Date 15Jun98               *
+      *                 136427             Date 11Jun98               *
+      *                 136420             Date 11Jun98               *
+      *                 136426             Date 11Jun98               *
+      *                 136424             Date 10Jun98               *
+      *                 136423             Date 10Jun98               *
+      *                 136422             Date 08Jun98               *
+      *                 136419             Date 05Jun98               *
+      *                 135688             Date 29May98               *
+      *                 135687             Date 28May98               *
+      *                 CEU017  *CREATE    Date 26FEB98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL014 - Collaterals Processing                              *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD006 - Use DSSDY to call AOBSRTR0.                         *
+      *  CAP137 - Conversion of SE Security inputs into modular       *
+      *           structure to use as APIs.                           *
+      *  138957 - Corporate Actions: Review information passed to     *
+      *           RPG/SE0040 (Security Details Maintenance) for a     *
+      *           Name Change event where the Security Shortname is   *
+      *           being changed (when F15 is pressed).                *
+      *  150478 - The possibility to select multiple old securities   *
+      *           to one new security in redenomination should only   *
+      *           be for interest bearing. Avoid securities with      *
+      *           processing types 2, 4 or 7                          *
+      *  149150 - 147477 selects also cancelled securities            *
+      *  147477 - EMU: Some matured securities selected for redenom.  *
+      *  138962 - EMU: Avoid locking problems with PF/SECORSPD        *
+      *  137879 - Add the ability to change (with a function key)     *
+      *           the order of selection in the bulk input screen     *
+      *           from security shortname to report name.             *
+      *         - When enquiry on New or Old Security and Related     *
+      *           Corporate Action Reference exists for the Bulk      *
+      *           Reference, subfile was amended with the last        *
+      *           Related Corporate Action Reference read.            *
+      *         - When confirmation is not 'Y' or 'N' on delete mode  *
+      *           subfile must be in high intensity.                  *
+      *  136932 - Add the field 'After Maturity Date' in the Bulk     *
+      *           Selection Screen.                                   *
+      *  136428 - Add Days Basis and Div. Basis in the Bulk Input     *
+      *           Screen to be used for the generation of new         *
+      *           Securities.                                         *
+      *  136427 - Program should not re-select any securities which   *
+      *           are already selected by other Bulk Input or Newly   *
+      *           created by redenomination.                          *
+      *           It Should not select any Matured Securities.        *
+      *  136420 - Add the link between the Bulk Reference and the     *
+      *           Corporate Action Reference (s) linked to the Bulk   *
+      *  136426 - Subfile should be builded with all the records in   *
+      *           SECORSPD for the same Bulk Ref. else it is possible *
+      *           to have record which in file but user donot know/see*
+      *           and also not possible to delete.                    *
+      *  136424 - After deletion, the screen should remain on the     *
+      *           same page and add confirm before delete.            *
+      *  136423 - Remove the use of array TSTS to avoid index array   *
+      *           error.                                              *
+      *  136422 - User should be allow to add securities which donot  *
+      *           match any selection parameters.                     *
+      *  136419 - Multiple securities can be redenominated in one     *
+      *           New Security. Input of Currency Events (CC) now     *
+      *           not allowed in 'Corporate Action Events Maintenance'*
+      *           program. Provided the Issuer, Maturity date and     *
+      *           Interest Rate are the same for all the old          *
+      *           Securities.                                         *
+      *           Should also allow the use of existing securites to  *
+      *           be use as new security if Issuer, Maturity Date and *
+      *           coupon rate are the same.                           *
+      *  135688 - Add the Industry Code in the Bulk Input Screen.     *
+      *  135687 - Due to array index not valid, increase number of    *
+      *           array entries on TSTS.                              *
+      *  CEU017 - Securities Redenomination Euro Changes              *
+      *                                                               *
+      *****************************************************************
+     F*****SECORSL0UF  E           K        DISK         KINFSR *PSSR A
+     F*****                                              KCOMIT
+      ******* NC - Securities Redenomination Bulk Securities - Updt
+      *
+     FSECORSL1IF  E           K        DISK         KINFSR *PSSR
+     F            SECORSD0                          KRENAMESECORSD1
+      ** NC - Securities Redenomination Bulk Securities - Rtvl
+      *
+     FSECORSL2UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      ** NC - Securities Redenomination Bulk Securities
+     FSECORSL3IF  E           K        DISK         KINFSR *PSSR          136419
+     F            SECORSD0                          KRENAMESECORSD3       136419
+      ** NC - Securities Redenomination Keyed By New Securities           136427
+     FSECORSL4IF  E           K        DISK         KINFSR *PSSR          136427
+     F            SECORSD0                          KRENAMESECORSD4       136427
+      ** NC - Securities Redenomination Keyed By New Securities           136427
+      *
+     FSECORBL0UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+      ** NB - Securities Redenomination Bulk Details
+      *
+     FSECTYX  IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Securities
+     FSECTYRN IF  E           K        DISK         KINFSR *PSSR          136427
+      ** Midas SE Securities Keyed by Replaced Securities                 136427
+      *
+     FSEMKC   IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Market Centres
+      *
+     FINVTO   IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Investment Types by Type only
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+     F            INVTPDF                           KRENAMEINVTPDF1
+      ** Midas SE Investment Types
+      *
+     FSECORSL5IF  E           K        DISK         KINFSR *PSSR          137879
+     F            SECORSD0                          KRENAMESECORSD5       137879
+      ** NC - Securities Redenomination Bulk Securities - Rtvl            137879
+      *                                                                   137879
+     FSE7522DFCF  E                    WORKSTN      KINFDS SCRDS
+     F                                              KINFSR *PSSR
+     F                                        SRRN  KSFILE SE7522S1
+      **   Display file
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      * ------------------------                                      *
+      *                                                               *
+      *  19    Add Mode.                                              *
+      *  20    Exit witout saving.                                    *
+      *  25    Any valid key.                                         *
+      *  27    Rollup key.                                            *
+      *  30    Subfile End Indicator (SFLEND) in SE7522C1.            *
+      *  40    Field ACTN in error in SE7522S1.                       *
+      *  41    Field SOSEC in error in SE7522S1.                      *
+      *  42    Field SNSEC in error in SE7522S1.                      *
+      *  43    Field SNMCY in error in SE7522F1.                      *
+      *  44    Field SVCCY in error in SE7522F1.                      *
+      *  45    Field SMKTC in error in SE7522F1.                      *
+      *  46    Field SPTYP in error in SE7522F1.                      *
+      *  47    Field SINVT in error in SE7522F1.                      *
+      *  48    Field SSESN in error in SE7522F1.                      *
+      *  49    Field SISSU in error in SE7522F1.                      *
+      *  50    Field SNWNCY in error in SE7522F1.                     *
+      *  51    Field SDECP in error in SE7522F1.                      *
+      *  52    Field SNWVCY in error in SE7522F1.                     *
+      *  55    CEU018 is not active.                                  *
+      *  56    Status of the Securities Redenomination Bulk is not    *
+      *        G, L, X or C.  Amendment is possible.                  *
+      *  57    Field SSIDY in error in SE7522F1.                      *   135688
+      *  58    Field SMATY in error in SE7522F1.                      *   136932
+      *  60    Delete process was done.                               *
+      *  61    Indicator used in SRUSED                               *   136427
+      *  64    Field SDAYS in error in SE7522F1                       *   136428
+      *  65    Field SDIV  in error in SE7522F1                       *   136428
+      *  70    0 - Amend mode.                                        *
+      *        1 - Enquiry mode.                                      *
+      *  71    Record not found in SECORSL1.                          *
+      *  72    Record not found in SECORSL1.                          *
+      *  73    Record not found in SECORSL2.                          *
+      *  76-78 General purpose indicators.                            *
+      *  80-89 Standard RTS subroutines                               *
+      *  90-99 Standard MIDAS subroutines                             *
+      *  KC    Exit program                                           *
+      *  KI    Add/Change Mode.                                       *
+      *  KL    Previous screen                                        *
+      *  LR    End program.                                           *
+      *  U7+U8 Database error occurs                                  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine Index                                             *
+      * ------------------                                            *
+      *                                                               *
+      *  SRBBLK - Build Blank Subfile Page.                           *
+      *  SRBLDS - Build Subfile Page.                                 *
+      *  SRCLSF - Clear Subfile.                                      *
+      *  SRENDP - End Processing.                                     *
+      *  SRINIT - Initial Processing.                                 *
+      *  SRINT1 - Initialise Selection Screen fields                  *
+      *  SRMAIN - Main Processing.                                    *
+      *  SRNSEC - Validate New Security                               *
+      *  SRSAV1 - Save Selection Screen fields                        *
+      *  SRSAV2 - Save Selected Securities fields                     *
+      ******  SRSPTR - Set pointer before the update is done.              *
+      *  SRSUBP - Subfile Processing.                                 *
+      *  SRTEST - Test if the Security is Unique.                     *
+      *  SRVLD1 - Validate Securities Selection Screen.               *
+      *  SRVLD2 - Validate Selected Securities Screen.                *
+      *  ZASNMS - Send message tp program's message queue             *
+      *  *PSSR  - DB Error Routine.                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      **  Copyright Array
+      *
+     E************        CTXT    1   3 75                                137879
+     E                    CTXT    1   7 75                                137879
+      **  Command Keys
+      *
+     E************        ADDIN   1   6 27                                136420
+     E************        ADDIN   1   7 27                         136420 137879
+     E                    ADDIN   1   8 27                                137879
+      **  Additional Information
+      *
+     E                    SECU       10  1               Security Shortname
+      *
+     E******              TSTS      250 10               Security Shortnam135687
+     E**************      TSTS     1000 10         Sec. Shortname  135687 136423
+      *                                                                   136932
+     E/COPY ZSRSRC,ZDATE2Z1                                               136932
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IINVTPDF
+     I              RECI                            XRECI
+     IINVTPDF1                                                            147477
+     I              RECI                            YRECI                 147477
+     I*                                                                   136419
+     ISECORSD3                                                            136419
+     I              NCRECI                          N3RECI                136419
+     I              NCOSEC                          N3OSEC                136419
+     I              NCNSEC                          N3NSEC                136419
+     I*                                                                   136427
+     ISECORSD4                                                            136427
+     I              NCRECI                          N4RECI                136427
+     I              NCOSEC                          N4OSEC                136427
+     I              NCNSEC                          N4NSEC                136427
+     I*                                                                   136427
+     ISECTRNF                                                             136427
+     I              RECI                            RNRECI                136427
+     I              SESN                            RNSESN                136427
+     I              SRRB                            RNSRRB                136427
+      *
+     ILDA       E DSLDA                         256
+      **   LOCAL DATA AREA
+      *
+     ISCRDS       DS
+      *
+     I                                      197 205 DSPNUM
+     I                                    B 378 3790CPFPOS
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     I                                      282 2870STIME
+      *
+     IZMUSER      DS                             17
+      ** Data area ZMUSER
+     I                                       11  13 BVBRCD
+      *
+     IRUNDAT    E DS
+      **  Standard Data Area Layout for System flags and Run Date
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Data structure for bank details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Data structure for branch details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Data structure for currency codes
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      **  Data structure for customer details
+      *
+     ISDINDS    E DSSDINDSPD                                              135688
+      **  Industry Details                                                135688
+      *                                                                   135688
+     ISDSTRD    E DSSDSTRDPD
+      **  Data structure for securities trading details
+      *
+     ISDBSRT    E DSSDBSRTPD
+      **  Data structure for base rate codes
+      *
+     ISCSARD    E DSSCSARDPD                                              CAP137
+      ** Externally described DS for SAR details                          CAP137
+      *                                                                   CAP137
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      **  Long data structure for access objects
+      *
+     I              'SESECSENQ'           C         WSEENQ                                    CGL014
+      ** Work constant used for calling pgm/'SESECSENQ'.                                      CGL014
+      *                                                                                       CGL014
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      SRENDP - End Processing.                           *
+      *            SRINIT - Initial Processing.                       *
+      *            SRMAIN - Main Processing.                          *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+      **  Initial Processing.
+     C                     EXSR SRINIT
+      *
+      **  Main Processing.
+     C                     EXSR SRMAIN
+      *
+      ** End Processing.
+     C                     EXSR SRENDP
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - Initial Processing.                       *
+      *                                                               *
+      * CALLS      *PSSR  - DB Error Routine.                         *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Copyright statement
+     C                     MOVEACPY@      MKI@   80
+      *
+      **  Read in DTAARA/RUNDAT
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      **  Read in DTAARA/ZMUSER
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      **  Read in DTAARA/LDA
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PBLKR   60       Bulk Reference
+     C                     PARM           PMODE   1        Mode
+     C                     PARM           PSELEC  1        Selection Screen ?
+     C                     PARM           PRTCD   1        Return code
+      *
+     C                     Z-ADDPBLKR     WBLKR   60
+      *
+      **  Initialise key and working fields.
+     C           KINVT1    KLIST
+     C                     KFLD           SNMCY
+     C                     KFLD           SINVT
+      *
+     C           KINVT3    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*                                                                   136419
+     C           *LIKE     DEFN ISSR      OISSR                           136419
+     C           *LIKE     DEFN MATY      OMATY                           136419
+     C           *LIKE     DEFN CPNR      OCPNR                           136419
+     C           *LIKE     DEFN SESN      WOLDS                           136419
+     C           *LIKE     DEFN SESN      WNEWS                           136419
+     C           *LIKE     DEFN SRRN      WSFLED                          136424
+     C           *LIKE     DEFN SRRN      WEND                            136424
+      *
+     C                     MOVEL'SE7522'  DBPGM
+      *
+     C                     Z-ADD0         WWRRN   40
+      *
+      **  Access to Bank Details to retrieve Midas Run Date
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WLRTCD  7
+     C                     PARM '*FIRST'  WLOPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE BJMRDT    SMRDT
+      *
+      **  Determine Date Format
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      **  Access to Securities Trading ICD
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*FIRST'  WLOPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVE 'SDSTRDPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Access SDBRCHPD using the default user branch
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C                     PARM BVBRCD    WLBRCH  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      **  Check if error occurred
+     C           WLRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVELBVBRCD    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVEL'SEUSRMSG'PMSGF  10
+      *
+      **  Fill in fields for SR/ZASNMS
+     C                     MOVEL'SE7522'  ZAPGM  10        Message queue
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      **  Clear messages from program message queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      **  Check if CEU018 (SE Decimal on Nominal Amount) is active
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' WLRTCD
+     C                     PARM '*VERIFY' WLOPTN
+     C                     PARM 'CEU018'  WLSARD  6
+      *
+      **  If record not found
+     C           WLRTCD    IFEQ *BLANKS                    B*1
+     C                     MOVE '0'       *IN55
+     C                     ELSE                            X*1
+     C                     MOVE '1'       *IN55
+     C                     ENDIF                           E*1
+      *                                                                   CAP137
+      ** Check if API Securities New Screen Input is installed.           CAP137
+      *                                                                   CAP137
+     C                     CALL 'AOSARDR0'                                CAP137
+     C                     PARM *BLANKS   WLRTCD                          CAP137
+     C                     PARM '*VERIFY' WLOPTN                          CAP137
+     C                     PARM 'CAP137'  WLSARD                          CAP137
+     C           SCSARD    PARM SCSARD    DSFDY                           CAP137
+      *                                                                   CAP137
+      ** An NRF (No Record Found) return code is valid.                   CAP137
+      ** Issue database error only for error return codes.                CAP137
+      *                                                                   CAP137
+     C           WLRTCD    IFNE *BLANKS                                   CAP137
+     C           WLRTCD    ANDNE'*NRF   '                                 CAP137
+     C           *LOCK     IN   LDA                                       CAP137
+     C                     Z-ADD7         DBASE                           CAP137
+     C                     MOVEL'SCSARDPD'DBFILE                          CAP137
+     C                     MOVEL'CAP137'  DBKEY                           CAP137
+     C                     OUT  LDA                                       CAP137
+     C                     EXSR *PSSR                                     CAP137
+     C                     ENDIF                                          CAP137
+      *                                                                   CAP137
+     C           WLRTCD    IFEQ *BLANK                                    CAP137
+     C                     MOVEL'Y'       CAP137  1                       CAP137
+     C                     MOVEL'SESECS'  PPGM    9                       CAP137
+     C                     MOVE 'SIN'     PPGM                            CAP137
+     C                     ELSE                                           CAP137
+     C                     MOVEL'N'       CAP137                          CAP137
+     C                     MOVE *BLANKS   PPGM                            CAP137
+     C                     ENDIF                                          CAP137
+      *                                                                                       CGL014
+      ** Check if CGL014 is installed.                                                        CGL014
+      *                                                                                       CGL014
+     C                     CALL 'AOSARDR0'                                                    CGL014
+     C                     PARM *BLANKS   WLRTCD                                              CGL014
+     C                     PARM '*VERIFY' WLOPTN                                              CGL014
+     C                     PARM 'CGL014'  WLSARD                                              CGL014
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL014
+      *                                                                                       CGL014
+      ** An NRF (No Record Found) return code is valid.                                       CGL014
+      ** Issue database error only for error return codes.                                    CGL014
+      *                                                                                       CGL014
+     C           WLRTCD    IFNE *BLANKS                                                       CGL014
+     C           WLRTCD    ANDNE'*NRF   '                                                     CGL014
+     C           *LOCK     IN   LDA                                                           CGL014
+     C                     Z-ADD8         DBASE                                               CGL014
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL014
+     C                     MOVEL'CGL014'  DBKEY                                               CGL014
+     C                     OUT  LDA                                                           CGL014
+     C                     EXSR *PSSR                                                         CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C                     MOVEL'N'       CGL014  1                                           CGL014
+     C           WLRTCD    IFEQ *BLANK                                                        CGL014
+     C                     MOVEL'Y'       CGL014                                              CGL014
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C/COPY WNCPYSRC,SE7522C001
+      *
+      ** For compilation sake.  The definition of a file should
+      ** be the same from calling and called program.
+     C           *IN98     IFEQ '0'
+     C           *IN98     ANDEQ'1'
+     C                     WRITESECORBD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRMAIN - Main Processing.                          *
+      *                                                               *
+      * CALLS      SRINT1 - Initialise Selection Screen fields        *
+      *            SRSAV1 - Save Selection Screen fields              *
+      *            SRSUBP - Subfile Processing.                       *
+      *            SRVLD1 - Validate Securities Selection Screen.     *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+     C                     MOVE 'N'       ERROR   1
+      *
+     C           PMODE     IFEQ 'A'                        B*1
+     C                     MOVE '0'       *IN70
+     C                     ELSE                            X*1
+     C                     MOVE '1'       *IN70
+     C                     MOVE '0'       *IN19
+     C                     MOVEACTXT,1    SCTXT
+     C                     MOVEACTXT,7    SCTXT2                          137879
+     C                     ENDIF                           E*1
+      *
+     C                     EXSR SRINT1
+      *
+     C                     MOVE '0'       *IN56
+      *
+     C           NBSTAT    IFNE 'G'                        B*1
+     C           NBSTAT    ANDNE'L'
+     C           NBSTAT    ANDNE'X'
+     C           NBSTAT    ANDNE'C'
+     C                     MOVE '1'       *IN56
+     C                     ENDIF                           E*1
+      *
+     C           PSELEC    IFEQ 'Y'                        B*1
+      *
+     C           *INKC     DOWEQ'0'                        B*1
+     C           *INKL     ANDEQ'0'
+     C           *IN20     ANDEQ'0'
+      *
+      ** Setup screen time
+     C                     TIME           STIME            Screen time.
+      *
+     C                     WRITESE7522C2
+     C                     EXFMTSE7522F1
+      *
+      ****Setof*error*indicator**IN43*to**IN52*************************
+      ****Setof*error*indicator *IN43 to *IN52 and *IN57           135688 136932
+      **  Setof error indicator *IN43 to *IN52 and *IN57, *IN58           136932
+     C                     MOVEA'00000'   *IN,43
+     C                     MOVEA'00000'   *IN,48
+     C                     MOVEA'0'       *IN,57                          135688
+     C                     MOVEA'0'       *IN,58                          136932
+     C                     MOVEA'00'      *IN,64                          136428
+      *
+      **  Clear Messages from Program Message Queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** If enter was pressed...
+     C           *IN25     IFEQ '0'                        B*2
+      *
+     C           *IN70     IFEQ '0'                        B*3
+     C                     EXSR SRVLD1
+     C                     ENDIF                           E*3
+      *
+     C           ERROR     IFEQ 'N'                        B*3
+      *
+     C           *IN70     IFEQ '0'                        B*4
+     C           *IN56     ANDEQ'1'
+     C                     EXSR SRSAV1
+     C                     ENDIF                           E*4
+      *
+      **  Access the Securities Redenomination Bulk Securities
+     C           WBLKR     SETLLSECORSL1
+     C           WBLKR     READESECORSL1                 89
+      *
+     C           *IN89     IFEQ '1'                        B*4
+      *
+     C***********          Z-ADD1         Y       30                      136423
+     C***********          RESETTSTS                                      136423
+      *
+     C           *LOVAL    SETLLSECTYX
+     C                     READ SECTYX                   71
+      *
+     C                     Z-ADD0         WWCPT
+     C           *IN71     DOWEQ'0'                        B*5
+      *
+     C           KINVT3    CHAININVTP                77
+      *
+     C                     EXSR SRUSED                                    136427
+     C*                                                                   136427
+     C           NMCY      IFNE SNMCY                      B*6
+     C           SNMCY     ANDNE*BLANKS
+     C           VLCY      ORNE SVCCY
+     C           SVCCY     ANDNE*BLANKS
+     C           SMCC      ORNE SMKTC
+     C           SMKTC     ANDNE*BLANKS
+     C           PROT      ORNE SPTYP
+     C           SPTYP     ANDNE*BLANKS
+     C********   SPTYP     ANDEQ'0'
+     C           SITP      ORNE SINVT
+     C           SINVT     ANDNE*BLANKS
+     C           SESN      ORNE SSESN
+     C           SSESN     ANDNE*BLANKS
+     C           SESN      ORNE SSESN
+     C           SSESN     ANDNE*BLANKS
+     C           ISSR      ORNE NBSEIS
+     C           SISSU     ANDNE*BLANKS
+     C********   RECI      ORNE 'D'                                       147477
+     C           RECI      ORNE 'D'                                       149150
+     C           YRECI     ORNE 'D'                                       147477
+     C           SIDY      ORNE NBSIDY                                    135688
+     C           SSIDY     ANDNE*BLANKS                                   135688
+     C           MATY      ORLT NBMATY                                    136932
+     C           SMATY     ANDNE*BLANKS                                   136932
+     C*                                                                   136427
+     C           WUSED     OREQ 'Y'                                       136427
+     C                     ELSE                            X*6
+      *
+      ** If the nominal ccy or the value ccy is blank, exclude the
+      ** securities with a nominal ccy equal to the new nominal ccy
+      ** or with a value ccy equal to the new value ccy.
+     C           SNMCY     IFEQ *BLANKS                    B*7
+     C           NMCY      ANDEQNBNCCY
+     C/COPY WNCPYSRC,SE7522C002
+     C           SVCCY     OREQ *BLANKS
+     C           VLCY      ANDEQNBVCCY
+     C/COPY WNCPYSRC,SE7522C003
+     C                     ELSE                            X*7
+      *
+     C                     ADD  1         WWCPT
+      *
+     C                     MOVE 'D'       NCRECI
+     C                     Z-ADDBJRDNB    NCLCD
+     C                     MOVE 'I'       NCCHTP
+     C                     MOVE SUSER     NCLUID
+     C                     MOVE SBLKR     NCBLKR
+     C                     MOVE SESN      NCOSEC
+     C                     MOVE SRRB      NCNSEC
+     C                     MOVE 'N'       NAMEG   1
+      *
+     C           NCNSEC    IFEQ *BLANKS
+     C           NCOSEC    ANDNE*BLANKS
+     C/COPY WNCPYSRC,SE7522C004
+      *
+     C                     MOVE 'Y'       NAMEG
+      *
+     C           ' '       CHEKRNCOSEC    X       20
+     C                     MOVEANCOSEC    SECU
+      *
+     C           X         IFNE 10
+     C                     ADD  1         X
+     C                     ENDIF
+      *
+     C                     MOVE 'E'       SECU,X
+     C                     MOVEASECU      WWNSEC 10
+      *
+     C***********WWNSEC    LOKUPTSTS                     89               136423
+     C                     MOVE '0'       *IN89                           136423
+      *
+     C************IN89     DOWEQ'1'                                       136423
+     C           *IN89     DOWEQ'0'                                       136423
+     C           X         ANDGT1
+     C           WWNSEC    CHAINSECORSL3             89                   136423
+     C*                                                                   136423
+     C*** If new security already being used then need to check if        136423
+     C*** it is with the same Issuer, Maturity Date and interest rate     136423
+     C*                                                                   136423
+     C           *IN89     IFEQ '0'                                       136423
+     C*                                                                   136423
+     C                     MOVE NCOSEC    WOLDS                           136423
+     C                     MOVE WWNSEC    WNEWS                           136423
+     C                     EXSR SRCHK                                     136423
+     C*                                                                   136423
+     C           ALLEQ     IFEQ 'Y'                                       136423
+     C                     MOVE '1'       *IN89                           136423
+     C                     ELSE                                           136423
+     C                     SUB  1         X
+     C                     MOVE 'E'       SECU,X
+     C                     MOVEASECU      WWNSEC
+     C***********WWNSEC    LOKUPTSTS                     89               136423
+     C                     END                                            136423
+     C*                                                                   136423
+     C                     END                                            136423
+     C                     ENDDO
+     C/COPY WNCPYSRC,SE7522C005
+      *
+     C                     MOVE WWNSEC    NCNSEC
+     C                     ENDIF
+      *
+     C***********          MOVE NCNSEC    TSTS,Y                          136423
+     C***********          ADD  1         Y                               136423
+      *
+     C*** Need to re-position file pointer after using subroutine SRCHK   136423
+     C*                                                                   136423
+     C           NCOSEC    CHAINSECTYX               75                   136423
+     C*                                                                   136423
+     C                     MOVE *BLANKS   NCMANU
+     C                     Z-ADD*ZEROS    NCCORF
+     C                     WRITESECORSD0
+     C                     ENDIF                           E*7
+     C                     ENDIF                           E*6
+      *
+     C                     READ SECTYX                   71
+      *
+     C                     ENDDO                           E*5
+      *
+     C           WWCPT     IFNE *ZEROS                     B*5
+     C                     MOVE '0'       *IN89
+     C                     ENDIF                           E*5
+      *
+     C                     ENDIF                           E*4
+      *
+      **  If no records found, then proceed with 'Add Mode'
+     C           PMODE     IFEQ 'A'                        B*4
+     C           *IN89     IFEQ '1'                        B*5
+     C                     MOVE '1'       *IN19
+     C                     MOVEACTXT,3    SCTXT
+     C                     MOVEACTXT,7    SCTXT2                          137879
+     C                     ELSE                            X*5
+     C                     MOVE '0'       *IN19
+     C                     MOVEACTXT,2    SCTXT
+     C                     MOVEACTXT,6    SCTXT2                          137879
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+      *
+      ** Display Selected Securities screen.
+     C                     EXSR SRSUBP
+      *
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDDO                           E*1
+      *
+     C                     ELSE                            X*1
+      *
+     C                     MOVE '0'       *IN19
+     C                     MOVEACTXT,2    SCTXT
+     C                     MOVEACTXT,6    SCTXT2                          137879
+      *
+      ** Display Selected Securities screen.
+     C                     EXSR SRSUBP
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRENDP - End Processing.                           *
+      *                                                               *
+      * CALLS      ZASNMS - Send message tp program's message queue   *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRENDP    BEGSR
+      *
+     C           *INKC     IFEQ '1'                        B*1
+     C                     MOVE '3'       PRTCD
+     C                     COMIT
+     C                     ENDIF                           E*1
+      *
+     C           *INKL     IFEQ '1'                        B*1
+     C           NOTF12    IFEQ 'Y'                        B*2
+     C                     MOVE ' '       PRTCD
+     C                     ELSE                            X*2
+     C                     MOVE '2'       PRTCD
+     C                     ENDIF                           E*2
+     C                     COMIT
+     C                     ENDIF                           E*1
+      *
+     C           *IN20     IFEQ '1'                        B*1
+      *
+     C                     MOVE ' '       SCONF
+     C                     MOVE '0'       *IN53
+      *
+     C           SCONF     DOWNE'Y'                        B*2
+     C           SCONF     ANDNE'N'
+      *
+     C                     WRITESE7522C2
+     C                     EXFMTSE7522F3
+      *
+      **  Clear Messages from Program Message Queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     SELEC                           B*3
+      *
+      **  Rollback uncommited changes, print dump and cancel program
+     C           SCONF     WHEQ 'Y'
+     C                     ROLBK
+      *
+     C           SCONF     WHEQ 'N'
+     C                     COMIT
+      *
+     C                     OTHER
+     C                     MOVEL'CO00520' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN53
+      *
+     C                     ENDSL                           E*3
+      *
+     C                     ENDDO                           E*2
+      *
+     C                     MOVE '3'       PRTCD
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSUBP - Subfile Processing.                       *
+      *                                                               *
+      * CALLS      SRCLSF - Clear Subfile.                            *
+      *            SRBLDS - Build Subfile Page.                       *
+      *            SRBBLK - Build Blank Subfile Page.                 *
+      *            SRVLD2 - Validate Selected Securities Screen.      *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSUBP    BEGSR
+      *
+     C                     MOVE SBLKR     SBLKH
+     C                     MOVE SNMCY     SNCYH
+     C                     MOVE SVCCY     SVCYH
+     C                     MOVE SMKTC     SMKTH
+     C                     MOVE SPTYP     SPTYH
+     C                     MOVE SINVT     SINVH
+     C                     MOVE SSESN     SSSNH
+     C                     MOVE SISSU     SISUH
+     C                     MOVE SSIDY     SSIDH                           135688
+     C                     MOVE SMATY     SMATH                           136932
+      *
+      **  "First" Time Processing
+     C                     MOVE '1'       *IN45
+     C                     MOVE 'Y'       WSORTS  1                       137879
+      *
+     C           *INKC     DOWEQ'0'                        B*1
+     C           *INKL     ANDEQ'0'
+     C           *IN20     ANDEQ'0'
+      *
+      **  If it is "First" Time Processing
+     C           *IN45     IFEQ '1'                        B*2
+      *
+      **  Clear Subfile.
+     C                     EXSR SRCLSF
+      *
+      **  Build Subfile page.
+     C           *IN19     IFEQ '0'
+      *                                                                   137879
+     C           WSORTS    IFEQ 'Y'                                       137879
+     C           WBLKR     SETLLSECORSL1
+     C           WBLKR     READESECORSL1                 71
+     C                     ELSE                                           137879
+     C           *LOVAL    SETLLSECORSL5                                  137879
+     C                     READ SECORSL5                 71               137879
+      *                                                                   137879
+     C           WBLKR     DOWNENCBLKR                                    137879
+     C           *IN71     ANDEQ'0'                                       137879
+     C                     READ SECORSL5                 71               137879
+     C                     ENDDO                                          137879
+     C                     ENDIF                                          137879
+      *
+     C                     MOVE *IN71     *IN72
+     C                     EXSR SRBLDS
+      *
+     C                     ELSE
+     C                     EXSR SRBBLK
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN45
+     C                     ENDIF                           E*2
+      *
+      ** Setup screen time
+     C                     TIME           STIME            Screen time.
+      *
+      **  Execute the subfile control record.
+     C                     WRITESE7522C2
+     C                     WRITESE7522F2
+     C                     EXFMTSE7522C1
+      *
+      **  Clear Messages from Program Message Queue.
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** If enter was pressed...
+     C           *IN25     IFEQ '0'                        B*2
+     C           *IN72     ANDEQ'0'
+     C           *IN25     OREQ '0'
+     C           *IN19     ANDEQ'1'
+     C                     EXSR SRVLD2
+      *
+     C           *IN19     IFEQ '1'                        B*3
+     C           ERROR     ANDEQ'Y'
+     C                     MOVE '0'       *INKI
+     C                     ENDIF                           E*3
+      *
+      ** If a delete was done, rebuild the subfile
+     C                     Z-ADD0         WSFLED                          136424
+     C           *IN60     IFEQ '1'                        B*3
+     C           ERROR     ANDEQ'N'
+     C                     MOVE '1'       *IN45
+     C                     MOVE '0'       *IN60
+     C*                                                                   136424
+     C*** Work out the subfile page the current deleted record is in      136424
+     C*                                                                   136424
+     C           SRRN      DIV  9         WRESUT  61                      136424
+     C           WRESUT    ADD  0.5       WSFLED    H                     136424
+     C           WSFLED    MULT 9         WSFLED                          136424
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  If F9 was pressed
+     C           *INKI     IFEQ '1'                        B*2
+     C                     MOVE '1'       *IN45
+      *
+      ** If F9 was pressed from 'Change' mode
+     C           *IN19     IFEQ '0'                        B*3
+     C                     MOVE '1'       *IN19
+     C                     MOVEACTXT,3    SCTXT
+     C                     MOVEACTXT,7    SCTXT2                          137879
+      *
+      ** If F9 was pressed from 'Add' mode
+     C                     ELSE                            X*3
+     C                     MOVE '0'       *IN19
+     C                     MOVEACTXT,2    SCTXT
+     C                     MOVEACTXT,6    SCTXT2                          137879
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+      *                                                                   137879
+      **  If F11 was pressed                                              137879
+     C           *INKK     IFEQ '1'                        B*2            137879
+      *                                                                   137879
+      **  Clear Subfile.                                                  137879
+     C                     EXSR SRCLSF                                    137879
+      *                                                                   137879
+     C           WSORTS    IFEQ 'Y'                        B*3            137879
+      *                                                                   137879
+     C           *IN70     IFEQ '0'                        B*4            137879
+     C                     MOVEACTXT,5    SCTXT                           137879
+     C                     MOVEACTXT,6    SCTXT2                          137879
+     C                     ELSE                            X*4            137879
+     C                     MOVEACTXT,4    SCTXT                           137879
+     C                     MOVEACTXT,7    SCTXT2                          137879
+     C                     ENDIF                           E*4            137879
+      *                                                                   137879
+      **  Build Subfile page.                                             137879
+     C           *LOVAL    SETLLSECORSL5                                  137879
+     C                     READ SECORSL5                 71               137879
+      *                                                                   137879
+     C           WBLKR     DOWNENCBLKR                                    137879
+     C           *IN71     ANDEQ'0'                                       137879
+     C                     READ SECORSL5                 71               137879
+     C                     ENDDO                                          137879
+      *                                                                   137879
+     C                     MOVE 'N'       WSORTS                          137879
+     C                     MOVE *IN71     *IN72                           137879
+     C                     EXSR SRBLDS                                    137879
+     C                     ELSE                            X*3            137879
+      *                                                                   137879
+     C           *IN70     IFEQ '0'                        B*4            137879
+     C                     MOVEACTXT,2    SCTXT                           137879
+     C                     MOVEACTXT,6    SCTXT2                          137879
+     C                     ELSE                            X*4            137879
+     C                     MOVEACTXT,1    SCTXT                           137879
+     C                     MOVEACTXT,7    SCTXT2                          137879
+     C                     ENDIF                           E*4            137879
+      *                                                                   137879
+      **  Build Subfile page.                                             137879
+     C           WBLKR     SETLLSECORSL1                                  137879
+     C           WBLKR     READESECORSL1                 71               137879
+      *                                                                   137879
+     C                     MOVE 'Y'       WSORTS                          137879
+     C                     MOVE *IN71     *IN72                           137879
+     C                     EXSR SRBLDS                                    137879
+     C                     ENDIF                           E*3            137879
+      *                                                                   137879
+     C                     ENDIF                           E*2            137879
+      *
+      * If rollup was pressed
+     C           *IN27     IFEQ '1'                        B*2
+     C                     Z-ADD0         WWCPT
+     C                     Z-ADDWWRRN     SRRN
+      *
+      ** If rollup was pressed from 'Change' mode
+     C           *IN19     IFEQ '0'                        B*3
+     C                     EXSR SRBLDS
+      *
+      ** If rollup was pressed from 'Add' mode
+     C                     ELSE                            X*3
+     C                     EXSR SRBBLK
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDDO                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRCLSF - Clear Subfile.                            *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRSUBP - Subfile Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRCLSF    BEGSR
+      *
+     C                     MOVE '1'       *IN80
+     C                     WRITESE7522C1
+     C                     MOVE '0'       *IN80
+      *
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN30
+     C                     Z-ADD0         SRRN
+     C                     Z-ADD0         WWCPT   40
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRINT1 - Initialise Selection Screen fields        *
+      *                                                               *
+      * CALLS      *PSSR  - DB Error Routine.                         *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINT1    BEGSR
+      *
+      **  Access the Securities Redenomination Bulk Details
+     C           WBLKR     CHAINSECORBL0            N89
+      *
+      **  If record not found
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C                     MOVE 'SECORBPD'DBFILE
+     C                     MOVELWBLKR     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Initialise screen fields
+     C                     MOVE *BLANKS   SBLKR
+     C                     MOVE *BLANKS   SNMCY
+     C                     MOVE *BLANKS   SVCCY
+     C                     MOVE *BLANKS   SMKTC
+     C                     MOVE *BLANKS   SPTYP
+     C                     MOVE *BLANKS   SINVT
+     C                     MOVE *BLANKS   SSESN
+     C                     MOVE *BLANKS   SISSU
+     C                     MOVE *BLANKS   SSIDY                           135688
+     C                     MOVE *BLANKS   SMATY                           136932
+     C                     MOVE *BLANKS   SDECP
+     C                     MOVE *BLANKS   SNWNCY
+     C                     MOVE *BLANKS   SNWVCY
+     C                     MOVE *BLANK    SDAYS                           136428
+     C                     MOVE *BLANK    SDIV                            136428
+      *
+     C                     MOVE PBLKR     SBLKR
+     C                     MOVE NBSENC    SNMCY
+     C                     MOVE NBSEVC    SVCCY
+     C                     MOVE NBSEMC    SMKTC
+     C                     MOVE NBSEPT    SPTYP
+     C                     MOVE NBSEIT    SINVT
+     C                     MOVE NBSESS    SSESN
+     C                     MOVE NBDYBS    SDAYS                           136428
+     C                     MOVE NBDVBS    SDIV                            136428
+      *
+     C********** NBSEIS    IFEQ 0                          B*1                                CSD027
+     C           NBSEIS    IFEQ *BLANKS                    B*1                                CSD027
+     C                     MOVE *BLANKS   SISSU
+     C                     MOVE *BLANKS   WLCUST
+     C                     ELSE                            X*1
+     C                     MOVEL*BLANKS   WLCUST
+     C                     MOVELNBSEIS    WLCUST
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY  '  WLOPTN
+     C                     PARM           WLCUST 10
+     C                     PARM *BLANK    WLKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS                    B*2
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE
+     C                     MOVE 'SDCUSTPD'DBFILE
+     C                     MOVELNBSEIS    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E*2
+     C                     MOVE BBCSSN    SISSU
+     C                     ENDIF                           E*1
+      *                                                                   135688
+     C           NBSIDY    IFNE *ZEROS                     B*1            135688
+     C                     MOVE NBSIDY    SSIDY                           135688
+     C                     ELSE                            X*1            135688
+     C                     MOVE *BLANKS   SSIDY                           135688
+     C                     ENDIF                           E*1            135688
+      *                                                                   136932
+     C           NBMATY    IFNE *ZEROS                     B*1            136932
+     C                     Z-ADDNBMATY    ZDAYNO                          136932
+     C                     EXSR ZDATE2                                    136932
+     C                     MOVE ZDATE     SMATY                           136932
+     C                     ELSE                            X*1            136932
+     C                     MOVE *BLANKS   SMATY                           136932
+     C                     ENDIF                           E*1            136932
+      *
+     C                     MOVE NBNCCY    SNWNCY
+      *
+     C           *IN55     IFEQ '0'
+     C                     MOVE NBNDCP    SDECP
+     C                     ENDIF
+      *
+     C                     MOVE NBVCCY    SNWVCY
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRBLDS - Build Subfile Page.                       *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRSUBP - Subfile Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRBLDS    BEGSR
+      *
+     C                     MOVEA'000'     *IN,40
+     C*                                                                   136424
+     C                     Z-ADD9         WEND                            136424
+     C*                                                                   136424
+     C** If it is from delete then reposition subfile.                    136424
+     C*                                                                   136424
+     C           WSFLED    IFNE 0                                         136424
+     C                     Z-ADDWSFLED    WEND                            136424
+     C                     END                                            136424
+      *
+     C           *IN71     DOWEQ'0'                        B*1
+     C***********WWCPT     ANDLT9                                         136424
+     C           WWCPT     ANDLTWEND                                      136424
+      *
+     C                     MOVE '0'       *IN76
+     C                     MOVE '0'       *IN77
+     C                     MOVE '0'       *IN78
+      *
+     C***********          MOVE '0'       EXCLU   1                       136426
+      *
+     C                     MOVEL*BLANK    SACTN
+     C                     MOVELNCOSEC    SOSEC
+     C                     MOVELSOSEC     SHOSEC
+     C                     MOVELNCNSEC    SNSEC
+     C                     MOVELSNSEC     SHNSEC
+      *
+     C                     EXSR SRADIN
+     C*                                                                   136426
+     C*** Remove condition to display record in subfile                   136426
+     C**************************************************************      136426
+     C***If*the*nominal*ccy*or*the*value*ccy*is*blank,*exclude*the**      136426
+     C***securities*with*a*nominal*ccy*equal*to*the*new*nominal*ccy*      136426
+     C***or*with*a*value*ccy*equal*to*the*new*value*ccy.************      136426
+     C***********SNMCY     IFEQ *BLANKS                                   136426
+     C***********WNMCY1    ANDEQSNWNCY                                    136426
+     C************IN75     ANDEQ'0'                                       136426
+     C***********SVCCY     OREQ *BLANKS                                   136426
+     C***********WNMCY2    ANDEQSNWVCY                                    136426
+     C************IN76     ANDEQ'0'                                       136426
+     C************         MOVE '1'       EXCLU                           136426
+     C************         ENDIF                                          136426
+      *
+     C***********EXCLU     IFEQ '0'                                       136426
+     C                     ADD  1         SRRN       81
+     C                     ADD  1         WWCPT
+     C                     WRITESE7522S1
+     C***********          ENDIF                                          136426
+      *
+     C           WSORTS    IFEQ 'Y'                                       137879
+     C           WBLKR     READESECORSL1                 71
+     C                     ELSE                                           137879
+     C                     READ SECORSL5                 71               137879
+      *                                                                   137879
+     C           WBLKR     DOWNENCBLKR                                    137879
+     C           *IN71     ANDEQ'0'                                       137879
+     C                     READ SECORSL5                 71               137879
+     C                     ENDDO                                          137879
+      *                                                                   137879
+     C                     ENDIF                                          137879
+      *
+     C                     ENDDO
+      *
+     C           *IN71     IFEQ '1'
+     C                     MOVE '1'       *IN30
+     C                     ENDIF
+      *
+     C                     MOVE SRRN      WWRRN
+      *
+     C           WWCPT     IFEQ 0
+     C                     Z-ADD1         SRRN
+     C                     MOVEL'CO00001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN72
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRBBLK - Build Blank Subfile Page.                 *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRSUBP - Subfile Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRBBLK    BEGSR
+      *
+     C                     MOVEA'000'     *IN,40
+      *
+     C           WWCPT     DOWLT9
+     C                     ADD  1         SRRN       81
+     C                     ADD  1         WWCPT
+     C                     MOVEL*BLANK    SACTN
+     C                     MOVEL*BLANK    SOSEC
+     C                     MOVEL*BLANK    SHOSEC
+     C                     MOVEL*BLANK    SREPN
+     C                     MOVEL*BLANK    SNSEC
+     C                     MOVEL*BLANK    SHNSEC
+     C                     MOVEL*BLANK    SADDIN
+     C                     WRITESE7522S1
+     C                     ENDDO
+      *
+     C                     MOVE SRRN      WWRRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRADIN - Setup Additionnal information field       *
+      *                                                               *
+      * CALLS      ZASNMS - Send message tp program's message queue   *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRADIN    BEGSR
+      *
+     C           SOSEC     CHAINSECTYX               75
+     C           *IN75     IFEQ '0'
+     C                     MOVE SRPN      SREPN
+      *
+     C           BASC      IFNE *ZEROS
+     C                     MOVE BASC      WBASC   2
+     C                     ELSE
+     C                     MOVE *BLANKS   WBASC
+     C                     ENDIF
+      *
+     C                     MOVE NMCY      WNMCY1  3
+     C                     MOVE VLCY      WNMCY2  3
+     C                     MOVE SITP      WSITP   3
+     C                     MOVE SRRB      WSRRB  10
+     C                     Z-ADDSRBK      WSRBK   60
+     C                     ELSE
+     C                     MOVEL*BLANK    SREPN
+     C                     MOVE *BLANKS   WBASC
+     C                     MOVE *BLANKS   WNMCY1
+     C                     MOVE *BLANKS   WSITP
+     C                     MOVE *BLANKS   WSRRB  10
+     C                     Z-ADD0         WSRBK
+     C                     ENDIF
+      *
+      ** New Security will be defaulted to 'Security Redenomination
+      ** Replaced by Shortname
+     C           SNSEC     IFEQ *BLANKS
+     C           *IN75     ANDEQ'0'
+     C           SRRB      ANDNE*BLANKS
+     C                     MOVE SRRB      SNSEC
+      *
+     C                     ELSE
+      *
+     C           SNSEC     IFEQ *BLANKS
+     C           SOSEC     ANDNE*BLANKS
+     C/COPY WNCPYSRC,SE7522C006
+     C           ' '       CHEKRSOSEC     X       20
+     C                     MOVEASOSEC     SECU
+      *
+     C           X         IFNE 10
+     C                     ADD  1         X
+     C                     ENDIF
+      *
+     C                     MOVE 'E'       SECU,X
+     C                     MOVEASECU      SNSEC
+     C/COPY WNCPYSRC,SE7522C007
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SNSEC     CHAINSECTYX               76
+      *
+     C           KINVT2    KLIST
+     C                     KFLD           SNWNCY
+     C                     KFLD           WSITP
+      *
+     C           KINVT2    CHAININVTP                77
+      *
+     C           WBASC     IFNE *BLANKS
+     C                     MOVE WBASC     WLBSRC  2
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C                     PARM SNWVCY    WLCCY
+     C                     PARM           WLBSRC
+     C***********SDBSRT    PARM SDBSRT    DSFDY                           CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                           CSD006
+      *
+     C           WLRTCD    IFNE *BLANKS                    B*2
+     C                     MOVE '1'       *IN78
+     C                     ENDIF                           E*2
+     C                     ENDIF                           E*2
+      *
+     C                     MOVE *BLANKS   SADDIN
+      *
+     C           PMODE     IFEQ 'E'                                       136420
+     C           NCCORF    ANDNE*ZEROS                                    136420
+     C                     MOVELADDIN,7   SADDIN                          136420
+     C                     MOVE NCCORF    SADDIN                          136420
+     C                     ENDIF                                          136420
+      *                                                                   136420
+     C           PMODE     IFNE 'E'
+     C           PMODE     OREQ 'E'
+     C           NBSTAT    ANDEQ'I'
+      *
+     C           KSECOR    KLIST
+     C                     KFLD           WBLKR
+     C                     KFLD           SOSEC
+      *
+     C********   KSECOR    CHAINSECORSL2             89                   138962
+     C           KSECOR    CHAINSECORSL2            N89                   138962
+      *
+     C                     SELEC
+      *
+      **  Field 'Security Redenomination Bulk Reference' is not blanks on LF/SEC
+      **  accessed with the OLD Security
+      **  OLD SECURITY IN BULK xxxxxx
+     C           *IN75     WHEQ '0'
+     C           WSRBK     ANDNE0
+     C                     MOVEAADDIN,1   SADDIN
+      *
+      **  New Security already exists on LF/SECTY accessed with the NEW Security
+      **  accessed with the OLD Security
+      **  NEW SECURITY EXISTS
+     C           *IN75     WHEQ '0'
+     C           WSRRB     ANDEQ*BLANKS
+     C           *IN76     ANDEQ'0'
+     C                     MOVEAADDIN,2   SADDIN
+      *
+      **  Field 'Security Redenomination Replaced by Shortname' is not blanks on
+      **  accessed with the OLD Security
+      **  REPLACEMENT EXISTS
+     C           WSRRB     WHNE *BLANKS
+     C                     MOVEAADDIN,5   SADDIN
+      *
+      **  Combination of the Investment Type of the OLD Security and the NEW Nom
+      **  does not exist on PF/INVTP
+      **  INVESTMENT TYPE ERROR
+     C           *IN77     WHEQ '1'
+     C                     MOVEAADDIN,3   SADDIN
+      *
+      **  Combination of the Base Rate Code of the OLD Security and the NEW Valu
+      **  does not exist on PF/SDBSRTPD
+      **  BASE RATE CODE ERROR
+     C           *IN78     WHEQ '1'
+     C                     MOVEAADDIN,4   SADDIN
+      *
+      **  MANUALLY ADDED
+     C           NCMANU    WHEQ 'Y'
+     C                     MOVEAADDIN,6   SADDIN
+      *
+     C                     ENDSL
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVLD1 - Validate Securities Selection Screen.     *
+      *                                                               *
+      * CALLS      ZASNMS - Send message tp program's message queue   *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVLD1    BEGSR
+      *
+     C                     MOVE 'N'       ERROR   1
+      *
+      ** Validate Nominal CCY
+     C                     Z-ADD0         N       10
+     C           '?'       SCAN SNMCY:1   N              89
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+     C           SNMCY     IFNE *BLANKS                    B*1
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C           SNMCY     PARM SNMCY     WLCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS                    B*2
+     C                     MOVEL'CO00521' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN43
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Value CCY
+     C           '?'       SCAN SVCCY:1   N              89
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+     C           SVCCY     IFNE *BLANKS                    B*1
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C           SVCCY     PARM SVCCY     WLCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS                    B*2
+     C                     MOVEL'CO00521' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *                                                                   136932
+      ** Validate After Maturity Date                                     136932
+     C           SMATY     IFNE *BLANKS                    B*1            136932
+     C                     MOVE SMATY     ZDATE                           136932
+     C                     EXSR ZDATE1                                    136932
+      *                                                                   136932
+     C           *IN99     IFEQ '1'                        B*2            136932
+     C                     MOVEL'CO00566' ZAMSID                          136932
+     C                     EXSR ZASNMS                                    136932
+     C                     MOVE '1'       *IN58                           136932
+     C                     MOVE 'Y'       ERROR                           136932
+     C                     ENDIF                           E*2            136932
+      *                                                                   136932
+     C                     ENDIF                           E*1            136932
+      *
+      ** Validate Market Centre
+     C           SMKTC     IFNE *BLANKS                    B*1
+      *
+     C           SMKTC     CHAINSEMKC                89
+      *
+     C           *IN89     IFEQ '1'                        B*2
+     C                     MOVEL'CO00522' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN45
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Processing Type
+     C           SPTYP     IFNE *BLANKS                    B*1
+     C                     MOVE SPTYP     WNUMB   10
+      *
+     C           WNUMB     IFLT 0
+     C                     Z-SUBWNUMB     WNUMB
+     C                     ENDIF
+      *
+     C                     MOVE WNUMB     WCHAR   1
+      *
+     C           SPTYP     IFNE WCHAR                      B*2
+     C           WNUMB     ORLT 1
+     C           WNUMB     ORGT 9
+     C                     MOVEL'CO00523' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN46
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Investment Type
+     C           SINVT     IFNE *BLANKS                    B*1
+      *
+     C           SNMCY     IFEQ *BLANKS                    B*2
+     C           SINVT     CHAININVTO                89
+      *
+     C           *IN89     IFEQ '1'                        B*3
+     C                     MOVEL'CO00524' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN47
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ELSE                            X*2
+      *
+     C           KINVT1    CHAININVTP                89
+      *
+     C           *IN89     IFEQ '1'                        B*3
+     C                     MOVEL'CO00537' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN47
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Security Shortname
+     C           SSESN     IFNE *BLANKS                    B*1
+      *
+     C           SSESN     CHAINSECTYX               89
+      *
+     C           *IN89     IFEQ '1'                        B*2
+     C                     MOVEL'CO00525' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN48
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Issuer
+     C           SISSU     IFNE *BLANKS                    B*1
+     C           '?'       SCAN SISSU:1   N              89
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY  '  WLOPTN
+     C           SISSU     PARM SISSU     WLCUST 10
+     C                     PARM *BLANK    WLKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS                    B*2
+     C                     MOVEL'CO00526' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN49
+     C                     MOVE 'Y'       ERROR
+     C                     ELSE                            X*2
+     C                     MOVE BBCUST    SHISSU  6
+     C                     MOVE BBCSSN    SISSU
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *                                                                   135688
+      ** Validate Industry Code                                           135688
+     C           SSIDY     IFNE *BLANKS                    B*1            135688
+      *                                                                   135688
+     C                     MOVELSSIDY     @STP    1                       135688
+     C           @STP      IFEQ '?'                        B*2            135688
+     C                     MOVELSSIDY     WLKEYI                          135688
+     C                     CALL 'AOINDSR0'                                135688
+     C                     PARM *BLANKS   WLRTCD                          135688
+     C                     PARM '*KEY   ' WLOPTN                          135688
+     C                     PARM           WLKEYI                          135688
+     C           SDINDS    PARM SDINDS    DSSDY                           135688
+      *                                                                   135688
+     C                     MOVE *BLANKS   SSIDY                           135688
+     C                     MOVE '0'       *IN57                           135688
+     C           WLRTCD    IFEQ *BLANKS                    B*3            135688
+     C                     MOVELAOLICD    SSIDY                           135688
+     C                     ENDIF                           E*3            135688
+      *                                                                   135688
+     C                     ELSE                            X*2            135688
+      *                                                                   135688
+     C                     CALL 'AOINDSR0'                                135688
+     C                     PARM *BLANKS   WLRTCD                          135688
+     C                     PARM '*KEY   ' WLOPTN                          135688
+     C                     PARM SSIDY     WLKEYI  3                       135688
+     C           SDINDS    PARM SDINDS    DSSDY                           135688
+      *                                                                   135688
+     C           WLRTCD    IFNE *BLANKS                    B*3            135688
+     C                     MOVEL'CO00576' ZAMSID                          135688
+     C                     EXSR ZASNMS                                    135688
+     C                     MOVE '1'       *IN57                           135688
+     C                     MOVE 'Y'       ERROR                           135688
+     C                     ENDIF                           E*3            135688
+     C                     ENDIF                           E*2            135688
+     C                     ENDIF                           E*1            135688
+      *
+      ** Validate New Nominal CCy only if fields are amendable
+     C           SNWNCY    IFEQ *BLANKS                    B*1
+     C           *IN56     ANDEQ'1'
+     C                     MOVEL'CO00527' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'Y'       ERROR
+      *
+     C                     ELSE                            X*1
+      *
+     C           '?'       SCAN SNWNCY:1  N              89
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C           SNWNCY    PARM SNWNCY    WLCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS                    B*2
+     C                     MOVEL'CO00521' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'Y'       ERROR
+      *
+     C                     ELSE                            X*2
+      *
+     C/COPY WNCPYSRC,SE7522C008
+     C           SNWNCY    IFEQ SNMCY                      B*3
+     C                     MOVEL'CO00528' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+     C/COPY WNCPYSRC,SE7522C009
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+      ** Validate Decimal places
+     C           *IN55     IFEQ '0'                        B*1
+     C                     MOVE SDECP     WNUMB
+      *
+     C           WNUMB     IFLT 0
+     C                     Z-SUBWNUMB     WNUMB
+     C                     ENDIF
+      *
+     C                     MOVE WNUMB     WCHAR
+      *
+     C           SDECP     IFNE WCHAR                      B*2
+     C           WNUMB     ORGT 4
+     C                     MOVEL'CO00538' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN51
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+     C*                                                                   136428
+     C** Validate Days Basis                                              136428
+     C*                                                                   136428
+     C           SDAYS     IFNE *BLANK                     B*1            136428
+     C           SDAYS     ANDNE'1'                                       136428
+     C           SDAYS     ANDNE'2'                                       136428
+     C           SDAYS     ANDNE'3'                                       136428
+     C           SDAYS     ANDNE'4'                                       136428
+     C           SDAYS     ANDNE'5'                                       136428
+     C           SDAYS     ANDNE'6'                                       136428
+     C                     MOVEL'CO00586' ZAMSID                          136428
+     C                     EXSR ZASNMS                                    136428
+     C                     MOVE '1'       *IN64                           136428
+     C                     MOVE 'Y'       ERROR                           136428
+     C                     ENDIF                           E*1            136428
+     C*                                                                   136428
+     C** Validate Days Basis                                              136428
+     C*                                                                   136428
+     C           SDIV      IFNE *BLANK                     B*1            136428
+     C           SDIV      ANDNE'1'                                       136428
+     C           SDIV      ANDNE'2'                                       136428
+     C           SDIV      ANDNE'3'                                       136428
+     C           SDIV      ANDNE'4'                                       136428
+     C           SDIV      ANDNE'5'                                       136428
+     C           SDIV      ANDNE'6'                                       136428
+     C                     MOVEL'CO00587' ZAMSID                          136428
+     C                     EXSR ZASNMS                                    136428
+     C                     MOVE '1'       *IN65                           136428
+     C                     MOVE 'Y'       ERROR                           136428
+     C                     ENDIF                           E*1            136428
+     C*                                                                   136428
+      *
+      ** Validate New Value CCy only if fields are amendable
+     C           SNWVCY    IFEQ *BLANKS                    B*1
+     C           *IN56     ANDEQ'1'
+     C                     MOVEL'CO00527' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN52
+     C                     MOVE 'Y'       ERROR
+      *
+     C                     ELSE                            X*1
+      *
+     C           '?'       SCAN SNWVCY:1  N              89
+      *
+     C           *IN89     IFEQ '1'
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM '*KEY   ' WLOPTN
+     C           SNWVCY    PARM SNWVCY    WLCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  If record not found
+     C           WLRTCD    IFNE *BLANKS                    B*2
+     C                     MOVEL'CO00521' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN52
+     C                     MOVE 'Y'       ERROR
+      *
+     C                     ELSE                            X*2
+      *
+     C/COPY WNCPYSRC,SE7522C010
+     C           SNWVCY    IFEQ SVCCY                      B*3
+     C                     MOVEL'CO00528' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN52
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+     C/COPY WNCPYSRC,SE7522C011
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE SDECP     WNUMB
+     C**********           MOVE SHISSU    WNUM6   60                                          CSD027
+     C                     MOVE SHISSU    WNUM6   6                                           CSD027
+      *
+     C           SNMCY     IFNE NBSENC                     B*1
+     C           SVCCY     ORNE NBSEVC
+     C           SMKTC     ORNE NBSEMC
+     C           SPTYP     ORNE NBSEPT
+     C           SINVT     ORNE NBSEIT
+     C           SSESN     ORNE NBSESS
+     C           WNUM6     ORNE NBSEIS
+     C           SNWNCY    ORNE NBNCCY
+     C           SNWVCY    ORNE NBVCCY
+     C           WNUMB     ORNE NBNDCP
+     C           SDAYS     ORNE NBDYBS                                    136428
+     C           SDIV      ORNE NBDVBS                                    136428
+      *
+      ** If a field was change and the status of bulk is G, L, X
+      ** or C then amendment is not possible.
+     C           *IN56     IFEQ '0'
+     C                     MOVEL'CO00529' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVLD2 - Validate Selected Securities Screen.      *
+      *                                                               *
+      * CALLS      SE0040 - Security Detail Maintenance               *
+      *            SRSAV2 - Save Selected Securities fields           *
+      ***********  SRSPTR - Set pointer before the update is done.    *
+      *            SRTEST - Test if the Security is Unique.           *
+      *            ZASNMS - Send message tp program's message queue   *
+      *                                                               *
+      * CALLED BY  SRSUBP - Subfile Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVLD2    BEGSR
+      *
+     C                     MOVE ' '       WACTN   1                       137879
+     C                     MOVE 'N'       ERROR   1
+     C                     Z-ADD0         SVRRN   40
+      *
+     C                     READCSE7522S1                 33
+      *
+     C           PMODE     IFEQ 'E'                        B*1
+     C           *IN33     ANDEQ'1'
+     C                     MOVE '1'       *INKL
+     C                     MOVE 'Y'       NOTF12  1
+     C                     ENDIF                           E*1
+      *
+     C           *IN33     DOWEQ'0'                        B*1
+      *
+     C                     Z-ADDSRRN      SVRRN
+     C                     MOVEA'000'     *IN,40
+      *
+      ** Enter was pressed in 'Change' Mode
+     C           *IN19     IFEQ '0'                        B*2
+      *
+      ** Validate New Security
+     C           SACTN     IFNE 'D'                        B*3
+     C                     EXSR SRNSEC
+      *
+     C           ERROR     IFEQ 'N'
+     C           SNSEC     ANDNESHNSEC
+     C                     EXSR SRSAV2
+     C                     ENDIF
+     C                     ENDIF                           E*3
+      *
+      ** Validate Action code
+     C           SACTN     IFNE *BLANKS                    B*3
+     C           ERROR     ANDEQ'N'
+      *
+     C           SACTN     IFNE 'D'                        B*4
+     C           SACTN     ANDNE'E'
+     C           SACTN     ANDNE'F'
+     C                     MOVEL'CO00532' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE 'Y'       ERROR
+      *
+     C                     ELSE                            X*4
+      *
+     C                     SELEC                           B*5
+      *
+     C           SACTN     WHEQ 'E'
+     C                     MOVE ' '       SACTN
+     C                     MOVE 'E'       WACTN                           137879
+      *
+     C           CAP137    IFNE 'Y'                                       CAP137
+     C                     CALL 'SE0040'               99
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM 'E'       WLACTN  1
+     C                     PARM SOSEC     WLSEC1 10
+     C                     PARM *BLANKS   WLSEC2 10
+     C                     PARM *BLANKS   #OTHER156                       138957
+     C                     ELSE                                           CAP137
+     C                     CALL 'SEC023'               99                 CAP137
+     C                     PARM           PPGM                            CAP137
+     C                     PARM *BLANKS   WLRTCD                          CAP137
+     C                     PARM 'E'       WLACTN                          CAP137
+     C                     PARM SOSEC     WLSEC1                          CAP137
+     C                     PARM *BLANKS   WLSEC2                          CAP137
+     C                     PARM *BLANKS   #OTHER                          CAP137
+     C                     PARM 'Y'       PLINK   1                       CAP137
+     C                     ENDIF                                          CAP137
+      *
+     C           SACTN     WHEQ 'F'                        B*6
+     C                     MOVE ' '       SACTN
+     C                     MOVE 'F'       WACTN                           137879
+      *
+     C           SNSEC     CHAINSECTYX               89
+     C           *IN89     IFEQ '0'                        B*2
+      *                                                                   CAP137
+     C           CAP137    IFNE 'Y'                                       CAP137
+     C                     CALL 'SE0040'               99
+     C                     PARM *BLANKS   WLRTCD
+     C                     PARM 'E'       WLACTN
+     C                     PARM SNSEC     WLSEC1
+     C                     PARM *BLANKS   WLSEC2
+     C                     PARM *BLANKS   #OTHER156                       138957
+     C                     ELSE                                           CAP137
+     C                     CALL 'SEC023'               99                 CAP137
+     C                     PARM           PPGM                            CAP137
+     C                     PARM *BLANKS   WLRTCD                          CAP137
+     C                     PARM 'E'       WLACTN                          CAP137
+     C                     PARM SNSEC     WLSEC1                          CAP137
+     C                     PARM *BLANKS   WLSEC2                          CAP137
+     C                     PARM *BLANKS   #OTHER                          CAP137
+     C                     PARM 'Y'       PLINK                           CAP137
+     C                     ENDIF                                          CAP137
+      *                                                                   CAP137
+     C                     ELSE
+      *                                                                                       CGL014
+      ** Call SESECSENQ, new API Security Transaction Details Enquiry.                        CGL014
+      *                                                                                       CGL014
+     C           CGL014    IFEQ 'Y'                                                           CGL014
+     C                     CALL WSEENQ                 99                                     CGL014
+     C                     PARM           PRCOD   7                                           CGL014
+     C                     PARM 'Y'       PLINK                                               CGL014
+     C                     ELSE                                                               CGL014
+      *
+      ** Call SE0245, Security Details Enquiry.
+     C                     CALL 'SE0245'               99
+     C                     ENDIF                                                              CGL014
+      *                                                                                       CGL014
+     C                     ENDIF
+      *
+     C           SACTN     WHEQ 'D'
+      *
+     C           *IN70     IFEQ '1'                        B*6
+     C                     MOVEL'CO00533' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN40
+     C                     MOVE 'Y'       ERROR
+      *
+      ** Remove a security from the selection
+     C                     ELSE                            X*6
+     C*************        EXSR SRSPTR
+     C*                                                                   136424
+     C** Get delete confirmation                                          136424
+     C*                                                                   136424
+     C                     MOVE ' '       SCOND                           136424
+     C                     MOVE '0'       *IN53                           136424
+     C           SCOND     DOUEQ'Y'                                       136424
+     C           SCOND     OREQ 'N'                                       136424
+      *                                                                   137879
+     C                     MOVE *BLANKS   SERR                            137879
+     C           SCOND     IFNE 'Y'                                       137879
+     C           SCOND     ANDNE'N'                                       137879
+     C           SCOND     ANDNE' '                                       137879
+     C                     MOVELADDIN,8   SERR                            137879
+     C                     ENDIF                                          137879
+      *                                                                   137879
+      **  Clear Messages from Program Message Queue.                      137879
+     C                     CALL 'Y2CLMSC'                                 137879
+     C                     PARM SPGM      ZAPGM  10                       137879
+     C                     PARM '*SAME'   ZAPGRL  5                       137879
+      *                                                                   137879
+     C                     WRITESE7522C2                                  137879
+     C                     EXFMTSE7522F4                                  136424
+     C                     MOVE '0'       *IN53                           136424
+     C           SCOND     IFNE 'Y'                                       136424
+     C           SCOND     OREQ 'N'                                       136424
+     C                     MOVE '1'       *IN53                           136424
+     C                     END                                            136424
+     C                     END                                            136424
+     C*                                                                   136424
+     C           SCOND     IFEQ 'Y'                                       136424
+     C*                                                                   136424
+     C           KSECOR    CHAINSECORSL2             89
+     C                     DELETSECORSD0
+      *
+     C                     END                                            136424
+     C*                                                                   136424
+     C                     MOVE ' '       SACTN
+     C                     MOVE '1'       *IN60
+     C                     ENDIF                           E*6
+      *
+     C                     ENDSL                           E*5
+      *
+     C                     ENDIF                           E*4
+      *
+     C                     ENDIF                           E*3
+      *
+      ** Enter was pressed in 'Add' Mode
+     C                     ELSE                            X*2
+      *
+      ** Validate Old Security
+     C           SOSEC     IFNE SHOSEC                     B*3
+     C           SOSEC     ANDNE*BLANKS
+      *
+     C           SOSEC     CHAINSECTYX               89
+      *
+     C           *IN89     IFEQ '1'                        B*4
+     C           *IN89     OREQ '0'
+     C           RECI      ANDNE'D'
+     C                     MOVEL'CO00534' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'Y'       ERROR
+      *
+     C                     ELSE                            X*4
+      *
+      **  If old security is present
+      **  and 'Security Redenomination replaced by Shortname is not blank.
+     C           SRRB      IFNE *BLANKS                    B*5
+     C                     MOVEL'CO00553' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'Y'       ERROR
+     C                     ELSE                            X*5
+      *
+     C           KINVT3    CHAININVTP                77
+      *
+     C*** Test condition taken out as not needed.                         136422
+     C***********NMCY      IFNE SNMCY                      B*6            136422
+     C***********SNMCY     ANDNE*BLANKS                                   136422
+     C***********VLCY      ORNE SVCCY                                     136422
+     C***********SVCCY     ANDNE*BLANKS                                   136422
+     C***********SMCC      ORNE SMKTC                                     136422
+     C***********SMKTC     ANDNE*BLANKS                                   136422
+     C***********PROT      ORNE SPTYP                                     136422
+     C***********SPTYP     ANDNE*BLANKS                                   136422
+     C********   SPTYP     ANDEQ'0'
+     C***********SITP      ORNE SINVT                                     136422
+     C***********SINVT     ANDNE*BLANKS                                   136422
+     C***********SESN      ORNE SSESN                                     136422
+     C***********SSESN     ANDNE*BLANKS                                   136422
+     C***********SESN      ORNE SSESN                                     136422
+     C***********SSESN     ANDNE*BLANKS                                   136422
+     C***********ISSR      ORNE NBSEIS                                    136422
+     C***********SISSU     ANDNE*BLANKS                                   136422
+     C***********SIDY      ORNE NBSIDY                             135688 136422
+     C***********SSIDY     ANDNE*BLANKS                            135688 136422
+      *
+     C***********SNMCY     OREQ *BLANKS                                   136422
+     C***********NMCY      ANDEQNBNCCY                                    136422
+     C***********SVCCY     OREQ *BLANKS                                   136422
+     C***********VLCY      ANDEQNBVCCY                                    136422
+     C***********          MOVEL'CO00568' ZAMSID                          136422
+     C***********          EXSR ZASNMS                                    136422
+     C***********          MOVE '1'       *IN41                           136422
+     C***********          MOVE 'Y'       ERROR                           136422
+      *
+     C***********          ELSE                            X*6            136422
+      *
+     C                     MOVE 'Y'       OLDSEC  1
+     C                     MOVE SOSEC     WWSEC  10
+     C                     EXSR SRTEST
+      *
+     C           UNIQUE    IFEQ 'N'                        B*7
+     C                     MOVEL'CO00535' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*7
+     C***********          ENDIF                           E*6            136422
+     C                     ENDIF                           E*5
+     C                     ENDIF                           E*4
+     C                     ENDIF                           E*3
+      *
+     C           SOSEC     IFEQ *BLANKS
+     C           SNSEC     ANDNE*BLANKS
+     C                     MOVEL'CO00536' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN41
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF
+      *
+     C           SOSEC     IFNE *BLANKS
+     C           *IN41     ANDEQ'0'
+     C                     MOVE SRRB      WSRRB
+     C                     ENDIF
+      *
+      ** Validate New Security
+     C                     EXSR SRNSEC
+      *
+     C           SNSEC     IFEQ *BLANKS
+     C           SOSEC     ANDNE*BLANKS
+     C           *IN41     ANDEQ'0'
+     C                     MOVE WSRRB     SNSEC
+     C                     ENDIF
+      *
+     C           ERROR     IFEQ 'N'
+     C           SOSEC     ANDNE*BLANKS
+     C                     EXSR SRSAV2
+     C                     MOVE '1'       *INKI
+     C                     ENDIF
+      *
+     C                     ENDIF                           E*2
+      *
+     C           ERROR     IFEQ 'N'                        B*2
+     C                     MOVE '0'       *IN84
+     C                     ELSE                            X*2
+     C                     MOVE '1'       *IN84
+     C                     ENDIF                           E*2
+      *
+     C           WACTN     IFEQ 'E'                                       137879
+     C           WACTN     OREQ 'F'                                       137879
+     C                     MOVE SBLKH     SBLKN                           137879
+     C           KBUOS     KLIST                                          137879
+     C                     KFLD           SBLKN   60                      137879
+     C                     KFLD           SOSEC                           137879
+     C*********  KBUOS     CHAINSECORSL2             89            137879 138962
+     C           KBUOS     CHAINSECORSL2            N89                   138962
+     C           NCCORF    IFNE *ZEROS                                    137879
+     C                     MOVELADDIN,7   SADDIN                          137879
+     C                     MOVE NCCORF    SADDIN                          137879
+     C                     ENDIF                                          137879
+     C                     ENDIF                                          137879
+      *                                                                   137879
+     C                     UPDATSE7522S1
+     C                     Z-ADDWWRRN     SRRN
+      *
+      ** Read next change of subfile record.
+     C                     READCSE7522S1                 33
+      *
+     C                     ENDDO                           E*1
+      *
+     C           SVRRN     IFEQ 0
+     C                     Z-ADDCPFPOS    SRRN
+     C                     ELSE
+     C                     Z-ADDSVRRN     SRRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSAV1 - Save Selection Screen fields              *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRMAIN - Main Processing.                          *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSAV1    BEGSR
+      *
+     C           WBLKR     CHAINSECORBL0             89
+      *
+      **  If record not found
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE
+     C                     MOVE 'SECORBPD'DBFILE
+     C                     MOVELWBLKR     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       NBRECI
+     C                     Z-ADDBJRDNB    NBLCD
+     C                     MOVE 'A'       NBCHTP
+     C                     MOVE SUSER     NBLUID
+      *
+     C                     MOVE SNMCY     NBSENC
+     C                     MOVE SVCCY     NBSEVC
+     C                     MOVE SMKTC     NBSEMC
+     C                     MOVE SPTYP     NBSEPT
+     C                     MOVE SINVT     NBSEIT
+     C                     MOVE SSESN     NBSESS
+     C                     MOVE SDAYS     NBDYBS                          136428
+     C                     MOVE SDIV      NBDVBS                          136428
+      *
+     C           SISSU     IFEQ *BLANKS
+     C**********           Z-ADD*ZEROS    NBSEIS                                              CSD027
+     C                     MOVE *BLANKS   NBSEIS                                              CSD027
+     C                     ELSE
+     C                     MOVE SHISSU    NBSEIS
+     C                     ENDIF
+      *                                                                   135688
+     C           SSIDY     IFEQ *BLANKS                                   135688
+     C                     Z-ADD*ZEROS    NBSIDY                          135688
+     C                     ELSE                                           135688
+     C                     MOVE SSIDY     NBSIDY                          135688
+     C                     ENDIF                                          135688
+      *                                                                   136932
+     C           SMATY     IFEQ *BLANKS                                   136932
+     C                     Z-ADD*ZEROS    NBMATY                          136932
+     C                     ELSE                                           136932
+     C                     MOVE SMATY     ZDATE                           136932
+     C                     EXSR ZDATE1                                    136932
+     C                     Z-ADDZDAYNO    NBMATY                          136932
+     C                     ENDIF                                          136932
+      *
+     C                     MOVE SNWNCY    NBNCCY
+      *
+     C           SDECP     IFEQ ' '
+     C                     MOVE 0         NBNDCP
+     C                     ELSE
+     C                     MOVE SDECP     NBNDCP
+     C                     ENDIF
+      *
+     C                     MOVE SNWVCY    NBVCCY
+     C                     UPDATSECORBD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSAV2 - Save Selected Securities fields           *
+      *                                                               *
+      * CALLS      SRSPTR - Set pointer before the update is done.    *
+      *                                                               *
+      * CALLED BY  SRSUBP - Subfile Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRSAV2    BEGSR
+      *
+     C           *IN19     IFEQ '0'
+     C*************        EXSR SRSPTR
+     C           KSECOR    CHAINSECORSL2             89
+     C                     MOVE 'A'       NCCHTP
+     C                     ELSE                            X*1
+     C                     MOVE 'I'       NCCHTP
+     C                     Z-ADD0         NCCORF
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE 'D'       NCRECI
+     C                     Z-ADDBJRDNB    NCLCD
+     C                     MOVE SUSER     NCLUID
+     C                     MOVE SBLKR     NCBLKR
+     C                     MOVE SOSEC     NCOSEC
+     C                     MOVE SOSEC     SHOSEC
+     C                     MOVE SNSEC     NCNSEC
+     C                     MOVE SNSEC     SHNSEC
+      *
+     C           *IN19     IFEQ '0'                        B*1
+     C                     UPDATSECORSD0
+     C                     ELSE                            X*1
+     C                     MOVE 'Y'       NCMANU
+     C                     WRITESECORSD0
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRTEST - Test if the Security is Unique.           *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRVLD2 - Validate Selected Securities Screen.      *
+      *                                                               *
+      * FLDS USED  UNIQUE - output                                    *
+      *            OLDSEC - input                                     *
+      *            WWSEC  - input                                     *
+      *                                                               *
+      *****************************************************************
+     C           SRTEST    BEGSR
+      *
+     C                     MOVE 'Y'       UNIQUE  1
+     C                     MOVE 'N'       WWEND   1
+      *
+     C           WBLKR     SETLLSECORSL1
+     C           WBLKR     READESECORSL1            N    73
+      *
+     C           *IN73     DOWEQ'0'
+     C           WWEND     ANDEQ'N'
+      *
+     C                     SELEC
+      *
+     C           OLDSEC    WHEQ 'Y'
+      *
+     C           NCOSEC    IFEQ WWSEC
+     C                     MOVE 'N'       UNIQUE
+     C                     MOVE 'Y'       WWEND
+     C                     ENDIF
+      *
+     C           OLDSEC    WHEQ 'N'
+      *
+     C           NCNSEC    IFEQ WWSEC
+     C           NCOSEC    ANDNESOSEC
+     C                     MOVE 'N'       UNIQUE
+     C                     MOVE 'Y'       WWEND
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C           WBLKR     READESECORSL1            N    73
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************   136419
+      *                                                               *   136419
+      *            SRCHK  - Check if the Old Securities have the      *   136419
+      *                     Same Issuer,Maturity and Interest rate.   *   136419
+      *                                                               *   136419
+      * CALLS             -                                           *   136419
+      *                                                               *   136419
+      * CALLED BY  SRNSEC - Validate Selected Securities Screen.      *   136419
+      *                                                               *   136419
+      * FLDS USED  ALLEQ  - output                                    *   136419
+      *            WOLDS  - input                                     *   136419
+      *            WNEWS  - input                                     *   136419
+      *                                                               *   136419
+      *****************************************************************   136419
+     C           SRCHK     BEGSR                                          136419
+      *                                                                   136419
+     C                     MOVE 'N'       ALLEQ   1                       136419
+      *                                                                   136419
+     C           WOLDS     CHAINSECTYX               73                   136419
+     C*                                                                   136419
+     C**********           Z-ADDISSR      OISSR                                        136419 CSD027
+     C                     MOVE ISSR      OISSR                                               CSD027
+     C                     Z-ADDMATY      OMATY                           136419
+     C                     Z-ADDCPNR      OCPNR                           136419
+     C*                                                                   150478
+     C           KINVT3    CHAININVTP                74                   150478
+     C*                                                                   136419
+     C           WNEWS     CHAINSECORSL3             73                   136419
+      *                                                                   136419
+     C           N3OSEC    DOWEQWOLDS                                     136419
+     C           *IN73     ANDEQ'0'                                       136419
+      *                                                                   136419
+     C           WNEWS     READESECORSL3                 73               136419
+      *                                                                   136419
+     C                     END                                            136419
+      *                                                                   136419
+     C           *IN73     IFEQ '0'                                       136419
+     C*                                                                   136419
+     C           N3OSEC    CHAINSECTYX               73                   136419
+     C*                                                                   136419
+     C           ISSR      IFEQ OISSR                                     136419
+     C           MATY      ANDEQOMATY                                     136419
+     C           CPNR      ANDEQOCPNR                                     136419
+     C           PROT      ANDNE'2'                                       150478
+     C           PROT      ANDNE'4'                                       150478
+     C           PROT      ANDNE'7'                                       150478
+     C                     MOVE 'Y'       ALLEQ                           136419
+     C                     END                                            136419
+     C*                                                                   136419
+     C                     ELSE                                           136419
+     C                     MOVE 'Y'       ALLEQ                           136419
+     C*                                                                   136419
+     C                     END                                            136419
+      *                                                                   136419
+     C                     ENDSR                                          136419
+      *****************************************************************   136419
+      /EJECT
+      *****************************************************************   136427
+      *                                                               *   136427
+      *            SRUSED - Check if the Securities have been used    *   136427
+      *                     by other bulk or newly created.           *   136427
+      *                                                               *   136427
+      * CALLS             -                                           *   136427
+      *                                                               *   136427
+      * CALLED BY  SRMAIN - Main Processing                           *   136427
+      *                                                               *   136427
+      * FLDS USED  WUSED  - output                                    *   136427
+      *                                                               *   136427
+      *****************************************************************   136427
+     C*                                                                   136427
+     C           SRUSED    BEGSR                                          136427
+     C*                                                                   136427
+     C                     MOVE 'N'       WUSED   1                       136427
+     C*                                                                   136427
+     C           SRRB      IFNE *BLANKS                                   136427
+     C                     MOVE 'Y'       WUSED                           136427
+     C                     END                                            136427
+     C*                                                                   136427
+     C           WUSED     IFEQ 'N'                                       136427
+     C           RECI      IFEQ 'M'                                       136427
+     C           RECI      OREQ '*'                                       136427
+     C                     MOVE 'Y'       WUSED                           136427
+     C                     END                                            136427
+     C                     END                                            136427
+     C*                                                                   136427
+     C           WUSED     IFEQ 'N'                                       136427
+     C           SESN      CHAINSECORSL3             61                   136427
+     C           *IN61     IFEQ '0'                                       136427
+     C                     MOVE 'Y'       WUSED                           136427
+     C                     END                                            136427
+     C                     END                                            136427
+     C*                                                                   136427
+     C           WUSED     IFEQ 'N'                                       136427
+     C           SESN      CHAINSECORSL4             61                   136427
+     C           *IN61     IFEQ '0'                                       136427
+     C                     MOVE 'Y'       WUSED                           136427
+     C                     END                                            136427
+     C                     END                                            136427
+     C*                                                                   136427
+     C           WUSED     IFEQ 'N'                                       136427
+     C           SSESN     ANDEQ*BLANKS                                   136427
+     C           SESN      CHAINSECTYRN              61                   136427
+     C           *IN61     IFEQ '0'                                       136427
+     C                     MOVE 'Y'       WUSED                           136427
+     C                     END                                            136427
+     C                     END                                            136427
+     C*                                                                   136427
+     C                     ENDSR                                          136427
+      *****************************************************************   136427
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRSPTR - Set pointer before the update is done.    *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRVLD2 - Validate Selected Securities Screen.      *
+      *                                                               *
+      * FLDS USED  SOSEC  - input                                     *
+      *                                                               *
+      *****************************************************************
+     C****       SRSPTR    BEGSR
+      *
+     C****       WBLKR     SETLLSECORSL0
+     C****       WBLKR     READESECORSL0                 73
+      *
+     C****       *IN73     DOWEQ'0'
+     C****       SOSEC     ANDNENCOSEC
+     C****       WBLKR     READESECORSL0                 73
+     C****                 ENDDO
+      *
+     C****                 ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRNSEC - Validate New Security                     *
+      *                                                               *
+      * CALLS      ZASNMS - Send message tp program's message queue   *
+      *                                                               *
+      * CALLED BY  SRVLD2 - Validate Selected Securities Screen.      *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRNSEC    BEGSR
+      *
+     C           SNSEC     IFNE SHNSEC                     B*1
+     C           SNSEC     ANDNE*BLANKS
+     C           SNSEC     CHAINSECTYX               89
+      *
+     C*** It should be possible to re-use a existing security already     136419
+     C*** on file provided the issuer, the maturity date and interest     136419
+     C*** rate is the same.                                               136419
+     C*** NEED TO MAKE SURE THE NOMINAL CCY AND VALUE CCY IS CORRECT      136419
+     C*                                                                   136419
+     C                     MOVE 'Y'       ALLEQ                           136419
+     C           *IN89     IFEQ '0'                        B*2
+     C*                                                                   136419
+     C           NMCY      IFNE NBNCCY                                    136419
+     C           VLCY      ORNE NBVCCY                                    136419
+     C                     MOVE 'N'       ALLEQ                           136419
+     C                     ELSE                                           136419
+     C**********           Z-ADDISSR      OISSR                                        136419 CSD027
+     C                     MOVE ISSR      OISSR                                               CSD027
+     C                     Z-ADDMATY      OMATY                           136419
+     C                     Z-ADDCPNR      OCPNR                           136419
+     C           SOSEC     CHAINSECTYX               89                   136419
+     C           KINVT3    CHAININVTP                74                   150478
+     C           ISSR      IFNE OISSR                                     136419
+     C           MATY      ORNE OMATY                                     136419
+     C           CPNR      ORNE OCPNR                                     136419
+     C           PROT      OREQ '2'                                       150478
+     C           PROT      OREQ '4'                                       150478
+     C           PROT      OREQ '7'                                       150478
+     C                     MOVE 'N'       ALLEQ                           136419
+     C                     END                                            136419
+     C                     END                                            136419
+     C*                                                                   136419
+     C                     END                                            136419
+     C*                                                                   136419
+     C           ALLEQ     IFEQ 'N'                                       136419
+     C                     MOVEL'CO00530' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE 'Y'       ERROR
+      *
+     C                     ELSE                            X*2
+      ********                                                            136419
+     C********             MOVE 'N'       OLDSEC  1                       136419
+     C********             MOVE SNSEC     WWSEC  10                       136419
+     C********             EXSR SRTEST                                    136419
+     C*                                                                   136419
+     C                     MOVE SOSEC     WOLDS                           136419
+     C                     MOVE SNSEC     WNEWS                           136419
+     C                     EXSR SRCHK                                     136419
+     C*                                                                   136419
+     C********   UNIQUE    IFEQ 'N'                        B*3            136419
+     C           ALLEQ     IFEQ 'N'                        B*3            136419
+     C                     MOVEL'CO00531' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*3
+      *
+     C                     ENDIF                           E*2
+      *
+     C                     ELSE                            X*1
+      *
+     C           SNSEC     IFEQ *BLANKS                    B*2
+     C           SOSEC     ANDNE*BLANKS
+     C           ERROR     ANDEQ'N'
+     C/COPY WNCPYSRC,SE7522C012
+     C           ' '       CHEKRSOSEC     X       20
+     C                     MOVEASOSEC     SECU
+      *
+     C           X         IFNE 10                         B*3
+     C                     ADD  1         X
+     C                     ENDIF                           E*3
+      *
+     C                     MOVE 'E'       SECU,X
+     C                     MOVEASECU      SNSEC
+      *
+     C/COPY WNCPYSRC,SE7522C013
+     C                     MOVE 'N'       OLDSEC  1
+     C                     MOVE SNSEC     WWSEC  10
+     C                     EXSR SRTEST
+     C           UNIQUE    IFEQ 'N'                        B*3
+     C*                                                                   136419
+     C                     MOVE SOSEC     WOLDS                           136419
+     C                     MOVE SNSEC     WNEWS                           136419
+     C                     EXSR SRCHK                                     136419
+     C*                                                                   136419
+     C           ALLEQ     IFEQ 'N'                        B*4            136419
+     C                     MOVEL'CO00531' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     MOVE 'Y'       ERROR
+     C                     ENDIF                           E*4            136419
+     C                     ENDIF                           E*3
+     C                     ENDIF                           E*2
+     C                     ENDIF                           E*1
+      *
+     C                     MOVE *BLANKS   SADDIN
+     C           ERROR     IFEQ 'N'                        B*1
+     C           SNSEC     ANDNE*BLANKS
+     C           SOSEC     ANDNE*BLANKS
+     C                     EXSR SRADIN
+     C                     ENDIF                           E*1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - DB Error Routine.                         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRINIT - Initial Processing.                       *
+      *            SRINT1 - Initialise Selection Screen fields        *
+      *            SRSAV1 - Save Selection Screen fields              *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE 'E'       PRTCD
+      *
+      **  Rollback uncommited changes, print dump and cancel program
+     C                     ROLBK
+     C                     DUMP
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     CALL 'DBERRCTL'
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ZASNMS - Send message tp program's message queue   *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRVLD1 - Validate Securities Selection Screen.     *
+      *            SRVLD2 - Validate Selected Securities Screen.      *
+      *            SRENDP - End Processing.                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+      **   message file specified use PMSGF
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      **   Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2                                               136932
+      /EJECT                                                              136932
+     C/COPY ZSRSRC,ZDATE2Z2                                               136932
+      /EJECT                                                              136932
+     C**  CTXT Change first element of array CTXT                         137879
+     C**       Add 4 new elements                                         137879
+     C*F3=Exit**F12=Previous                                              137879
+     C*F3=Exit**F9=Go to 'Add' mode  F12=Previous  F20=Exit Without Saving137879
+**  CPY@
+(c) Finastra International Limited 2001
+**  CTXT
+F3=Exit  F11=Sort by Report Name  F12=Previous
+F3=Exit  F9=Go to 'Add' mode  F11=Sort by Report Name  F12=Previous
+F3=Exit  F9=Go to 'Change' mode  F12=Previous  F20=Exit Without Saving
+F3=Exit  F11=Sort by Shortname  F12=Previous
+F3=Exit  F9=Go to 'Add' mode  F11=Sort by Shortname  F12=Previous
+F20=Exit Without Saving  Rollup/Rolldown
+Rollup/Rolldown
+**  ADDIN
+OLD SECURITY EXISTS IN BULK
+NEW SECURITY EXISTS
+INVESTMENT TYPE ERROR
+BASE RATE CODE ERROR
+REPLACEMENT EXISTS
+MANUALLY ADDED
+ CORPORATE REFERENCE                                                      136420
+ERROR - ENTER Y OR N                                                      137879
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                      136932
+0366073110961461                                                          136932
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                        136932
+000031059090120151181212243273304334365                                   136932
+**   ZMNM - MONTHS SHORT NAMES                                            136932
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                      136932

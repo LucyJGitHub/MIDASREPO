@@ -1,0 +1,505 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG Fee Messages Deletion/Cancellation Cont.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Management                                   *
+      *                                                               *
+      *  MG9300 - Contingent Facility A/c Keys Generation             *
+      *                                                               *
+      *  Function:  This program controls the deletion and/or         *
+      *  (COB)      cancellation of the fee messages that are         *
+      *             generated for a live fee and are subsequently     *
+      *             reversed.                                         *
+      *                                                               *
+      *  Called By: LE4510  - Pay/Receive Message Generation          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAS009             Date 04May04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 186066             Date 27Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CLE009             Date 23Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE007 *CREATE     Date 22May97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *           Called by DL6315.                                   *
+      *  186066 - Allow cancellation or deletion processing for fees  *
+      *           which have been reversed or whose settlement method *
+      *           has been amended from 08 to 01. Amend program to    *
+      *           be able to handle fees based on loans.              *
+      *  CLE009 - LE I/C Swift Message Generation for Fees            *
+      *
+      *  CLE007 - Customer Lending Enhancements - Others (T3)         *
+      *                                                               *
+      *****************************************************************
+      *
+     FMGOREFL0IF  E           K        DISK
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   21  - READP to MGOREFL0                                     *
+      *   22  - CHAIN to MGOREFL0                                     *
+      *   23  - MG9205 missing                                        *
+      *   24  - MG9210 missing                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  HEADER - Access the header of a multi-message                *
+      *  CALL   - Call cancellation/deletion programs                 *
+      *  REAXS  - Re-access the previously-read reference file        *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Copyright statement array
+      *
+      /SPACE 3
+      *
+     IDBERR     E DSLDA
+      ** Local data area for database error details
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area for getting the rundate
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I            DS
+     I                                        1  16 TRNO
+     I                                        1  14 DTRNO
+     I                                        1   9 WTRNO9                                    186066
+     I                                        1  11 WKMTRN                                    CAS009
+      ** Get only the transaction number.
+      *
+     I            DS
+     I                                        1  16 DKTRN
+     I                                        1  14 DTNUM
+     I                                       15  16 DSEQN
+      ** Create transaction key.
+      *
+     ISDMMOD    E DSSDMMODPD                                              CLE009
+     I** Data Structure for Module details                                CLE009
+      *                                                                   CLE009
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     C/TITLE Main Processing
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTRNO  14        trans. no.
+     C                     PARM           PPROG   2        call'g prog id
+     C                     PARM           PMODI   2        module id
+     C                     PARM           PAVDT   50       trans. value date
+     C                     PARM           PASEQ   30       trans. seq. no.
+     C                     PARM           PRTNC   1        return code
+      *
+      ** Initial Processing
+      ** ------------------
+      *
+     C                     EXSR INIT
+      *
+      ** Detail Processing
+      ** -----------------
+      *
+     C           *IN21     DOWEQ'0'
+     C           DTRNO     ANDEQPTRNO
+     C           MODI      ANDEQPMODI
+     C           *IN21     OREQ '0'                                                           186066
+     C           WTRNL5    ANDEQ*BLANKS                                                       186066
+     C           WTRNO9    ANDEQPTRNO                                                         186066
+     C           MODI      ANDEQPMODI                                                         186066
+     C           CAS009    OREQ 'Y'                                                           CAS009
+     C           *IN21     ANDEQ'0'                                                           CAS009
+     C           PMODI     ANDEQ'DL'                                                          CAS009
+     C           WKMTRN    ANDEQPTRNO                                                         CAS009
+     C           MODI      ANDEQPMODI                                                         CAS009
+      *
+      ** Access header reference record if multiple record before
+      ** calling cancellation/deletion programs. Re-access reference
+      ** file afterwards.
+      *
+     C                     EXSR HEADER
+     C                     EXSR CALL
+     C                     EXSR REAXS
+      *
+      ** Read previous message.
+      *
+     C                     READPMGOREFL0                 21
+      *
+     C                     ENDDO
+      *
+      ** Final Processing ==> Return to calling program.
+      ** -----------------
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      *
+     C/EJECT
+     C/TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           *** INIT   ***
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Initialise LDA field.
+      *
+     C                     MOVEL'MG9300'  DBPGM
+      *                                                                                       CAS009
+      ** Determine if CAS009 is installed                                                     CAS009
+      *                                                                                       CAS009
+     C                     MOVE 'N'       CAS009                                              CAS009
+     C                     CALL 'AOSARDR0'                                                    CAS009
+     C                     PARM *BLANKS   @RTCD                                               CAS009
+     C                     PARM '*VERIFY' @OPTN                                               CAS009
+     C                     PARM 'CAS009'  @SARD   6                                           CAS009
+     C           @RTCD     IFNE *BLANK                                                        CAS009
+     C           @RTCD     ANDNE'*NRF   '                                                     CAS009
+     C                     MOVEL'SCSARDPD'DBFILE                                              CAS009
+     C                     MOVEL'  7'     DBASE                                               CAS009
+     C                     MOVEL'CAS009'  DBKEY                                               CAS009
+     C                     MOVE *ON       *INU7                                               CAS009
+     C                     MOVE *ON       *INU8                                               CAS009
+     C                     EXSR *PSSR                                                         CAS009
+     C                     ENDIF                                                              CAS009
+     C           @RTCD     IFEQ *BLANKS                                                       CAS009
+     C                     MOVE 'Y'       CAS009  1                                           CAS009
+     C                     ENDIF                                                              CAS009
+      *
+      ** Set up key field for access of MGOREFL0 with values from
+      ** calling program.
+      *
+     C                     MOVE PTRNO     WTRNL5  5                                           186066
+     C           WTRNL5    IFEQ *BLANKS                                                       186066
+     C                     MOVELPTRNO     WTTRN  11                                           186066
+     C                     MOVE *HIVAL    WHIVAL  2                                           186066
+     C                     MOVE WHIVAL    WTTRN                                               186066
+     C                     MOVELWTTRN     DTNUM     P                                         186066
+     C                     MOVE *BLANKS   DSEQN                                               186066
+     C                     ELSE                                                               186066
+     C                     MOVELPTRNO     DTNUM
+     C                     MOVE *HIVAL    DSEQN
+     C                     ENDIF                                                              186066
+      *                                                                                       CAS009
+     C           CAS009    IFEQ 'Y'                                                           CAS009
+     C           PMODI     ANDEQ'DL'                                                          CAS009
+     C                     MOVELPTRNO     WKTNUM 14                                           CAS009
+     C                     MOVE *HIVAL    WKMSEQ  30                                          CAS009
+     C                     MOVE WKMSEQ    WKTNUM                                              CAS009
+     C                     MOVE *BLANKS   DTNUM                                               CAS009
+     C                     MOVELWKTNUM    DTNUM                                               CAS009
+     C                     MOVE *BLANKS   DSEQN                                               CAS009
+     C                     ENDIF                                                              CAS009
+      *
+     C** Read AOMMODR0 to retrieve module information                     CLE009
+     C*                                                                   CLE009
+     C                     CALL 'AOMMODR0'                                CLE009
+     C                     PARM '*MSG   ' @RTCD   7                       CLE009
+     C                     PARM '*FIRST ' @OPTN   7                       CLE009
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CLE009
+     C*                                                                   CLE009
+     C** If a DB error , set up LDA and return to calling program         CLE009
+     C*                                                                   CLE009
+     C           @RTCD     IFNE *BLANKS                                   CLE009
+     C                     Z-ADD6         DBASE            * * * * * * * *CLE009
+     C                     MOVEL*BLANKS   DBKEY            *  DBERR 006  *CLE009
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * * *CLE009
+     C                     EXSR *PSSR                                     CLE009
+     C                     END                                            CLE009
+     C*                                                                   CLE009
+      ** Access last generated message for transaction number.
+      *
+     C           DKTRN     SETGTMGOREFL0               21
+     C                     READPMGOREFD0                 21
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/HEADER
+      *****************************************************************
+      *                                                               *
+      *  HEADER - Access the header of a multi-message                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           HEADER    BEGSR                           *** HEADER ***
+      *
+      ** Save transaction reference no., cancellation requested
+      ** and part deleted status of the message being processed.
+      *
+     C                     MOVE TRNO      WTRNO  16
+     C                     MOVE CARQ      WCARQ   1
+     C                     MOVE PTST      WPTST   1
+      *
+      ** Check if a multiple message.
+      *
+     C           TRNF      IFNE *BLANKS
+     C           TRNM      ORNE *BLANKS
+      *
+      ** Determine whether file pointer is on header reference record
+      ** and set up key for chain to LF/MGOREFL0.
+      *
+     C           TRNF      IFEQ *BLANKS
+     C                     MOVELTRNO      WTRNH  16
+     C                     ELSE
+     C                     MOVELTRNF      WTRNH
+     C                     END
+      *
+      ** Chain to header reference record
+      *
+     C           WTRNH     CHAINMGOREFL0             22
+      *
+      ** If a DB error, set up LDA and return to calling program.
+     C           *IN22     IFEQ '1'
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVELWTRNH     DBKEY            * DB ERROR 01 *
+     C                     MOVEL'MGOREFL0'DBFILE           ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/CALL
+      *****************************************************************
+      *                                                               *
+      *  CALL   - Call cancellation/deletion programs                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  MG9205 Message Deletion Program                              *
+      *  MG9210 Message Cancellation Program                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CALL      BEGSR                           *** CALL   ***
+      *
+      ** If live message and not yet deleted, call Deletion program.
+      *
+     C           MGST      IFEQ 'CRTD'
+     C           MGST      OREQ 'AMND'
+     C********** MGST      OREQ 'RSND'                                                        186066
+      *
+     C           WPTST     IFNE 'D'
+      *
+     C                     CALL 'MG9205'               23
+     C                     PARM           WTRNO
+     C                     PARM           PMODI
+     C                     PARM *BLANKS   PRTNC
+      *
+      ** MG9205 missing...
+      *
+     C           *IN23     IFEQ '1'
+     C                     Z-ADD003       DBASE
+     C                     MOVEL'MG9205 N'KEY16  16
+     C                     MOVE 'OT FOUND'KEY16            ***************
+     C                     MOVELKEY16     DBKEY            * DB ERROR 03 *
+     C                     MOVEL*BLANKS   DBFILE           ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Database error on call to MG9205.
+      *
+     C           PRTNC     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If cancellation not yet requested and message is not a
+      ** confirmation, call Cancellation program.
+      *
+     C                     MOVELMTPY      WMTPY   1
+     C***********WCARQ     IFNE 'Y'                                       CLE009
+     C***********WMTPY     ANDNE'3'                                       CLE009
+     C           BGCFMT    IFEQ 'Y'                                       CLE009
+     C           WMTPY     ANDEQ'3'                                       CLE009
+     C           MGSG      ANDNE'2'                                       CLE009
+     C                     CALL 'MG9210'               24
+     C                     PARM           WTRNO
+     C                     PARM           PMODI
+     C                     PARM *BLANKS   PRTNC
+      *
+      ** MG9205 missing...
+      *
+     C           *IN24     IFEQ '1'
+     C                     Z-ADD004       DBASE
+     C                     MOVEL'MG9210 N'KEY16
+     C                     MOVE 'OT FOUND'KEY16  16        ***************
+     C                     MOVELKEY16     DBKEY            * DB ERROR 04 *
+     C                     MOVEL*BLANKS   DBFILE           ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Database error on call to MG9205.
+      *
+     C           PRTNC     IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           MGSG      IFEQ '2'                                       CLE009
+     C           MGSG      OREQ '3'                                       CLE009
+      *                                                                   CLE009
+     C                     MOVELMTPY      HOLD1   1                       CLE009
+      *                                                                   CLE009
+      ** If cancellation not already requested and message is not         CLE009
+      ** yet deleted - generate message cancellation.                     CLE009
+      *                                                                   CLE009
+     C           WCARQ     IFNE 'Y'                                       CLE009
+     C           HOLD1     ANDNE'3'                                       CLE009
+     C           WPTST     ANDNE'D'                                       CLE009
+     C                     CALL 'MG9210'               12                 CLE009
+     C                     PARM           WTRNO                           CLE009
+     C                     PARM           MODI                            CLE009
+     C                     PARM *BLANKS   PRTNC   1                       CLE009
+      *                                                                   CLE009
+      ** If MG9210 not found , set up LDA and return to calling program   CLE009
+      *                                                                   CLE009
+     C           *IN12     IFEQ '1'                                   4   CLE009
+     C                     MOVE '005'     DBASE                           CLE009
+     C                     MOVEL'MG9210 N'KEY16                           CLE009
+     C                     MOVE 'OT FOUND'KEY16  16        * * * * * * * *CLE009
+     C                     MOVELKEY16     DBKEY            *  DBERR 004  *CLE009
+     C                     MOVEL*BLANKS   DBFILE           * * * * * * * *CLE009
+     C                     EXSR *PSSR                                     CLE009
+     C                     END                                            CLE009
+      *                                                                   CLE009
+      ** If database error in MG9210 return control to calling program    CLE009
+      *                                                                   CLE009
+     C           PRTNC     IFNE *BLANKS                                   CLE009
+     C                     EXSR *PSSR                                     CLE009
+     C                     END                                            CLE009
+      *                                                                   CLE009
+     C                     END                                            CLE009
+      *                                                                   CLE009
+     C                     END                                            CLE009
+      *                                                                   CLE009
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REAXS
+      *****************************************************************
+      *                                                               *
+      *  REAXS  - Re-access the previously-read reference file        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REAXS     BEGSR                           *** REAXS  ***
+      *
+      ** Set pointer to previous record read.
+      *
+     C           WTRNO     CHAINMGOREFL0             22
+      *
+      ** If a DB error , set up LDA and return to calling program
+     C           *IN22     IFEQ '1'
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVELWTRNO     DBKEY            * DB ERROR 02 *
+     C                     MOVEL'MGOREFL0'DBFILE           ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ** Write to LDA.
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           PRTNC     IFEQ ' '
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     ENDIF
+      *
+     C                     MOVE 'E'       PRTNC
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

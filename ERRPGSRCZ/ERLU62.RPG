@@ -1,0 +1,455 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER IML Reporting - Decision Key proc.')
+     H****************************************************************
+     H*                                                              *
+     H*          MIDAS ABS - EUROPEAN REPORTING                      *
+     H*                                                              *
+     H*  ERLU62 - IML REPORTING - LOT ID & DECISION KEY PROCESSING   *
+     H*                                                              *
+     H*  (c) Finastra International Limited 2005                     *
+     H*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 225540             Date 11Mar04               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG10452           Date 09Feb06               *
+      *                 CLE042               Date 06Sep05              *
+      *                 CER001             Date 25Apr05               *
+      *                 ULX046             Date 28Oct02               *
+      *                 ULX024             Date 03Sep99               *
+     H*                    ULX008             Date   23Feb00         *
+     H*                    ULX011             Date   21Apr98         *
+     H*                    ULX004             Date   28Oct97         *
+     H*                    165675             Date   10AUG99         *
+     H*                    ERL432 PT          Date   30Aug94         *
+     H*                    ERL386 PT          DATE   01FEB94         *
+     H*                    ER0348 TLI         DATE   03JUN93         *
+     H*                    ER0121 TLI         DATE   15DEC92         *
+     H*                    ER0101 ADs         DATE   24NOV92         *
+     H*                    ER1009             DATE   27NOV92     ThL *
+     H*                                                              *
+      * ------------------------------------------------------------ *
+      *  MD046248 - Finastra Rebranding                               *
+      *  225540 - Split Total of Purchase Amounts eligible for       *
+      *           refinancing with Central Bank (1.02) and Total of  *
+      *           all other Purchase Amounts (1.06)                  *
+      *  BUG10452 - No item reported on CADREPORT job (Recompile)     *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      * ULX046 - Circulars 2002/170-174-175 Integration              *
+      * ULX024 - Trade Innovation/CSSF Reporting Interface           *
+      * ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses *
+      *          Just recompile due to amend in LF INVTPDY6          *
+      * 165675 - IML - Deal types/Sub-types                          *
+      * ULX011 - IML Circular 97/138                                 *
+      * ULX004 - Capital Adequacy                                    *
+      * ERL432 - To manage the databese errors correctly             *
+      * ERL386 - Remove fix ER0348  maintained with Decision Table   *
+      * ER0348 - Customer Positions Development                      *
+      * ER0121 - Store Maturity date in Review date if 'Floating Rate*
+      *          Note Indicator' (from SDDLSTY6) is 'Y'.             *
+     H* ER0101 - Decision Key lenght from 6 to 8                     *
+      * ER1009 - CCY code needed when Mobilisation data to be        *
+      *          retrieved for SE. Incorrect access key.             *
+     F*****************************************************************
+     F***ERLUACL1IF**E           K        DISK                                                CER001
+     FERLACXL1IF  E           K        DISK                                                   CER001
+     F* VB - ER Account Code File
+      *
+     F***ERLUTTL2IF**E           K        DISK                                                CER001
+     FERLTTXL2IF  E           K        DISK                                                   CER001
+     F* VC - ER Decision table - Transaction Type File
+      *
+     F*DDLSTY6IF  E           K        DISK                               165675
+     F* VH - Deal sub-type Extension File                                 165675
+     F***FDDTSTY6IF  E           K        DISK                                         165675 CER001
+     FFDDSX1L0IF  E           K        DISK                                                   CER001
+     F* VH - Deal sub-type Extension File                                 165675
+      *
+     F***SDLOANY6IF**E           K        DISK                                                CER001
+     FSDLNX2L0IF  E           K        DISK                                                   CER001
+     F* VI - Loan type/sub-type Extension File
+      *
+     F***SDFACTY6IF**E           K        DISK                                                CER001
+     FSDFCX2L0IF  E           K        DISK                                                   CER001
+     F* VO - Facility type Extension File
+      *
+     F***INVTPDY6IF**E           K        DISK                                                CER001
+     FSEINX3L0IF  E           K        DISK                                                   CER001
+     F* VU - Investment Type extension file
+      *
+      *===============================================================*
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       80         FAIL CONDITION FOR FILE ACCESS OPERATION
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+      *===============================================================*
+      *
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA        UDS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I* Data structure for KYLOAN key
+     I            DS
+     I                                        1   2 KY1
+     I                                        3   4 KY2
+     I                                        6   9 KY3                                       CLE042
+     I                                        1   9 WWLOAN                                    CLE042
+     I****************************************1   4 WWLOAN                                    CLE042
+      **  Data Structure to access SE investment type extension file
+     I            DS
+     I                                        1   6 KYCYIT
+     I                                        1   3 KCCY
+     I                                        4   6 KINT
+      * Program status data structure
+     I           SDS
+     I                                     *PROGRAM PGM
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CER001
+      ** External DS for SAR Details                                                          CER001
+      *                                                                                       CER001
+     IDSFDY     E DSDSFDY                                                                     CER001
+      ** First DS for Access Programs, Short Data Structure                                   CER001
+      *                                                                                       CER001
+     IEXDECK      DS                             14                                           CER001
+     I                                        6   9 WWCLAS                                    CER001
+      ** Data structure for decision table                                                    CER001
+      *                                                                                       CER001
+     C*================================================================
+      *
+     C                     EXSR #INIT
+     C                     EXSR #SCHA
+     C           EXSCHA    IFNE *ZEROS
+     C                     EXSR #MOB
+     C                     END
+      *
+     C                     RETRN
+     C/EJECT
+     C**=================================================================
+      **
+      **  #INIT       Program initialisation sub-routine                STANDING
+      **                                                               NE.
+      *-----------------------------------------------------------
+     C           #INIT     BEGSR
+      *-----------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+      *  Input Parameters
+     C                     PARM           EXLOTD  3
+     C******               PARM           EXDECK  6                       ER0101
+     C**********           PARM           EXDECK  8                                    ER0101 CER001
+     C                     PARM           EXDECK 14                                           CER001
+     C                     PARM           EXDRCR  10
+     C                     PARM           EXCCYC  3                       ER1009
+      *  Output Parameters
+     C                     PARM           EXSCHA  80
+     C                     PARM           EXEXTT  1
+     C                     PARM           VHFRNI  1                       ER0121
+     C***************      PARM           EXAMTY  1                       ULX004
+     C***************      PARM           EXAMTY  1                       ULX011
+     C                     PARM           EXAMTY  20                      ULX046
+     C                     PARM           EXDEPT  10
+     C                     PARM           EXPORT  10                      ULX011
+     C                     PARM           WWMOBC  1                       225540
+     C                     PARM           WWPMOB  1                       225540
+     C                     PARM           ERROR   1                       ERL432
+     C                     PARM           EXTP10  40                      ULX004
+      *                                                                *****
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+      *
+      **                                                               *****
+     C           KYLOAN    KLIST
+     C                     KFLD           KY1
+     C                     KFLD           KY2
+     C                     KFLD           KY3                                                 CLE042
+      *
+     C           KINVTP    KLIST
+     C                     KFLD           KCCY
+     C                     KFLD           KINT
+      **                                                               NE.
+     C                     MOVE '0'       *INU7
+      **                                                               NE.
+      *                                                                                       CER001
+      ** Check for switchable feature                                                         CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD   7                                           CER001
+     C                     PARM '*VERIFY' POPTN   7                                           CER001
+     C                     PARM 'CDL038'  PSARD   6                                           CER001
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER001
+      *                                                                                       CER001
+     C           PRTCD     IFEQ *BLANKS                                                       CER001
+     C                     MOVE 'Y'       CDL038  1                                           CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE 'N'       CDL038                                              CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+     C                     ENDSR
+     C**=================================================================
+      **
+      **  #SCHA       Extract Type & GLOBAL Schema A Rubrique           STANDING
+      **              (Sub-rubrique will be further determined
+      **               using transaction period code)
+      *-----------------------------------------------------------
+     C           #SCHA     BEGSR
+      *-----------------------------------------------------------
+      *
+      **  ACCESS DECISION TABLE :
+      *     Account extract:
+     C           EXLOTD    IFEQ 'GLA'                      - B1
+     C**********           MOVELEXDECK    KYACOD  40                                          CER001
+     C                     MOVELEXDECK    KYACOD 100                                          CER001
+     C********** KYACOD    CHAINERLUACL1             80                                       CER001
+     C           KYACOD    CHAINERLACXL1             80                                       CER001
+      **   If record not found, or rubrique = 0, not to be reported:
+     C           *IN80     IFEQ '0'                        - B2
+     C                     MOVELVBEXTT    EXEXTT
+     C                     Z-ADDVBPRCD    EXTP10           Product Code   ULX004
+     C           EXDRCR    IFEQ 0                          - B3
+     C                     MOVELVBRBND    EXSCHA
+     C                     ELSE                            - X3
+     C                     MOVELVBRBNC    EXSCHA
+     C                     END                             - E3
+      *
+      ***Setup*Amount Type field                                          ULX004
+     C***********VBAMTY    IFEQ 'G'                        - B3           ULX004
+     C***************      MOVE '1'       EXAMTY                          ULX004
+     C***************      END                             - E3           ULX004
+     C***********VBAMTY    IFEQ 'C'                        - B3           ULX004
+     C***************      MOVE '2'       EXAMTY                          ULX004
+     C***************      END                             - E3           ULX004
+     C***********VBAMTY    IFEQ 'L'                        - B3           ULX004
+     C***************      MOVE '3'       EXAMTY                          ULX004
+     C***************      END                             - E3           ULX004
+      *
+     C                     MOVE VBAMTY    EXAMTY                          ULX011
+     C                     Z-ADDVBPORT    EXPORT                          ULX011
+      *                                                                   ULX011
+     C                     END                             - E2
+      *
+     C                     ELSE                            - X1
+      *
+      *     Transaction record:
+     C******               MOVELEXDECK    KYTRNT  6                       ER0101
+     C**********           MOVELEXDECK    KYTRNT  8                                    ER0101 CER001
+     C                     MOVELEXDECK    KYTRNT 14                                           CER001
+     C********** KYTRNT    CHAINERLUTTL2             80                                       CER001
+     C           KYTRNT    CHAINERLTTXL2             80                                       CER001
+     C           *IN80     IFEQ '0'                        - B2
+     C                     MOVELVCEXTT    EXEXTT
+     C                     Z-ADDVCPRCD    EXTP10           Product Code   ULX004
+     C           EXDRCR    IFEQ 0                          - B3
+     C                     MOVELVCRBND    EXSCHA
+     C                     ELSE                            - X3
+     C                     MOVELVCRBNC    EXSCHA
+     C                     END                             - E3
+      *
+      ***Setup*Amount Type field                                          ULX004
+     C***********VCAMTY    IFEQ 'G'                        - B3           ULX004
+     C***************      MOVE '1'       EXAMTY                          ULX004
+     C***************      END                             - E3           ULX004
+     C***********VCAMTY    IFEQ 'C'                        - B3           ULX004
+     C***************      MOVE '2'       EXAMTY                          ULX004
+     C***************      END                             - E3           ULX004
+     C***********VCAMTY    IFEQ 'L'                        - B3           ULX004
+     C***************      MOVE '3'       EXAMTY                          ULX004
+     C***************      END                             - E3           ULX004
+      *
+     C                     MOVE VCAMTY    EXAMTY                          ULX011
+     C                     Z-ADDVCPORT    EXPORT                          ULX011
+      *                                                                   ULX011
+     C*********************ELSE                            - X2    ER0348 ERL386
+      ***********                                                  ER0348 ERL386
+     C***********EXLOTD    IFEQ 'CPO'                      - B3    ER0348 ERL386
+     C*********************Z-ADD30410000  EXSCHA                   ER0348 ERL386
+     C*********************MOVE '1'       EXAMTY                   ER0348 ERL386
+     C*********************END                             - E3    ER0348 ERL386
+      *                                                                   ULX024
+      ** Special process for Trade innovation                             ULX024
+      *   (Default to product Code if no key found)                       ULX024
+      *                                                                   ULX024
+     C                     ELSE                            - X2           ULX024
+     C           EXLOTD    IFEQ 'TID'                      - B3           ULX024
+     C           4         SUBSTEXDECK:1  KYTRNT    P                     ULX024
+     C********** KYTRNT    CHAINERLUTTL2             80                                ULX024 CER001
+     C           KYTRNT    CHAINERLTTXL2             80                                       CER001
+     C           *IN80     IFEQ '0'                        - B4           ULX024
+     C                     MOVELVCEXTT    EXEXTT                          ULX024
+     C           EXDRCR    IFEQ 0                          - B5           ULX024
+     C                     MOVELVCRBND    EXSCHA                          ULX024
+     C                     ELSE                            - X5           ULX024
+     C                     MOVELVCRBNC    EXSCHA                          ULX024
+     C                     END                             - E5           ULX024
+     C                     MOVE VCAMTY    EXAMTY                          ULX024
+     C                     Z-ADDVCPORT    EXPORT                          ULX024
+     C                     ENDIF                           - E4           ULX024
+     C                     ENDIF                           - E3           ULX024
+      *
+     C                     END                             - E2
+      *
+     C                     END                             - E1
+      *
+     C                     ENDSR
+      **=================================================================
+      **  #MOB        Discount type, Mobilisation-related codes:       *****
+      *-----------------------------------------------------------
+      *
+     C           #MOB      BEGSR
+      *-----------------------------------------------------------
+      *
+      **  ACCESS TRANSACTION TYPE EXTENSION FILE
+      *
+     C           KYDTST    KLIST                                          165675
+     C                     KFLD           KTYPE   2                       165675
+     C                     KFLD           KSTYP   2
+     C                     KFLD           KCLAS   4                                           CER001
+      *     Money Market Deals & Negotiable assets:
+     C           EXLOTD    IFEQ 'MMD'                      - B1
+     C           EXLOTD    OREQ 'NAP'
+     C                     MOVELEXDECK    WWDLST  4
+     C********             MOVE WWDLST    KYDLST  2                       165675
+     C                     MOVELWWDLST    KTYPE                           165675
+     C                     MOVE WWDLST    KSTYP                           165675
+     C           CDL038    IFEQ 'Y'                                                           CER001
+     C                     MOVE WWCLAS    KCLAS                                               CER001
+     C                     ELSE                                                               CER001
+     C                     MOVE *BLANKS   KCLAS                                               CER001
+     C                     ENDIF                                                              CER001
+      *
+     C********** KYDLST    CHAINFDDTSTY6             80                   165675
+     C********** KYDTST    CHAINFDDTSTY6             80                                165675 CER001
+     C           KYDTST    CHAINFDDSX1L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'621'     DBASE            *****************
+     C**********           MOVEL'FDDTSTY6'DBFILE                                              CER001
+     C                     MOVEL'FDDSX1L0'DBFILE                                              CER001
+     C***********          MOVELKYDLST    DBKEY
+     C                     MOVELWWDLST    DBKEY                           165675
+     C                     EXSR #DBERR
+     C                     ELSE                            - X2
+     C***************      Z-ADDEXDEPT    VHDEPT                          165675
+     C                     Z-ADDEXDEPT    XXDEPT                          165675
+     C                     MOVE XXMOBC    WWMOBC                          225540
+     C                     MOVE XXPMOB    WWPMOB                          225540
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      *     Loans & Participations purchased:
+     C           EXLOTD    IFEQ 'LEN'                      - B1
+     C           EXLOTD    OREQ 'PPU'
+     C                     MOVELEXDECK    WWLOAN
+     C********** KYLOAN    CHAINSDLOANY6             80                                       CER001
+     C           KYLOAN    CHAINSDLNX2L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'622'     DBASE            *****************
+     C**********           MOVEL'SDLOANY6'DBFILE                                              CER001
+     C                     MOVEL'SDLNX2L0'DBFILE                                              CER001
+     C                     MOVELWWLOAN    DBKEY
+     C                     EXSR #DBERR
+     C                     ELSE                                           225540
+     C                     MOVE VIMOBC    WWMOBC                          225540
+     C                     MOVE VIPMOB    WWPMOB                          225540
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      *     Facilities :
+     C           EXLOTD    IFEQ 'FCL'                      - B1
+     C                     MOVELEXDECK    KYFACT  30
+     C********** KYFACT    CHAINSDFACTY6             80                                       CER001
+     C           KYFACT    CHAINSDFCX2L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'623'     DBASE            *****************
+     C**********           MOVEL'SDFACTY6'DBFILE                                              CER001
+     C                     MOVEL'SDFCX2L0'DBFILE                                              CER001
+     C                     MOVELKYFACT    DBKEY
+     C                     EXSR #DBERR
+     C                     ELSE                            - X2
+     C                     MOVE VOMOBC    WWMOBC                          225540
+     C                     MOVE VOPMOB    WWPMOB                          225540
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      *     Securities :
+     C           EXLOTD    IFEQ 'SEC'                      - B1
+     C           EXLOTD    OREQ 'SEF'                      - B1
+     C******************** MOVELEXDECK    KYCYIT  6                       ER1009
+     C                     MOVELEXCCYC    KCCY                            ER1009
+     C                     MOVELEXDECK    KINT                            ER1009
+     C********** KINVTP    CHAININVTPDY6             80                                       CER001
+     C           KINVTP    CHAINSEINX3L0             80                                       CER001
+     C           *IN80     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'624'     DBASE            *****************
+     C**********           MOVEL'INVTPDY6'DBFILE                                              CER001
+     C                     MOVEL'SEINX3L0'DBFILE                                              CER001
+     C                     MOVELKYCYIT    DBKEY
+     C                     EXSR #DBERR
+     C                     ELSE                            - X2           225540
+     C                     MOVE VUMOBC    WWMOBC                          225540
+     C                     MOVE VUPMOB    WWPMOB                          225540
+     C                     END                             - E2
+     C                     END                             - E1
+      **                                                               *****
+     C                     ENDSR
+     C*================================================================
+      **
+      **  #DBERR      Program-detected exception OR monitored error     STANDING
+      **              sub-routine.
+      **
+     C*================================================================
+     C           #DBERR    BEGSR
+     C*
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     MOVE 'Y'       ERROR                           ERL432
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Finastra International Limited 2005

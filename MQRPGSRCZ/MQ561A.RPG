@@ -1,0 +1,501 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RTMANAGE report definition i/f')
+      *****************************************************************
+     F*                                                               *
+     F*                  Midas Midas/Q                        *
+     F*                                                               *
+     F*         MQ561A -  Report Definition I/Face for RTMANAGE       *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*     Prev Amend No.: S01419            Date: 17MAY93           *
+     F*                     XXXXXX            Date: DDMMMYY           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*     MD046248 - Finastra Rebranding                            *
+     F*     S01419 - CREATED FOR RTMANAGE SUBSET                      *
+     F*                                                               *
+      *****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+      *****************************************************************
+      **
+      ** Screen Display File
+      **
+     FMQ561ADFCF  E                    WORKSTN
+     F                                        RRN   KSFILE ##SRCD
+     F                                              KINFDS FINFDS
+      **
+     FGLHBCGL1IF  E           K        DISK
+     F/EJECT
+      **
+      ** Array to retrieve function key number
+      **
+     E                    TAB1    1  24  1   TAB2    2
+     E/EJECT
+      **
+     IPGMDS      SDS
+     I                                        1  10 #PGMQ
+      **
+      ** File Information Data Structure
+      **
+     IFINFDS      DS
+     I                                      369 369 KEY
+     I                                    B 370 3710ROWCOL
+      **
+      ** Title Data Structure
+      **
+     I#RNAME      DS                             13
+     I                                        1   2 A
+     I                                        3  12 CPY#NM
+     I                                       13  13 B
+      ** System definition data area - O#XA01
+      **
+     IO#XA01      DS                           1000
+      **
+      ** Bring in the system definition block
+      **
+     I/COPY O#XP04,O#SDBLOCKP
+      **
+      ** Permanent Interface Data Structure
+      **
+     IEXT#IA      DS                            200
+     I                                        1   2 $$CGCD
+     I                                        3   6 $$DU01
+     I                                        7   9 $$DU02
+     I                                       10  12 $$DU03
+     I                                       13  18 $$NU04
+     I                                       19  20 $$DU05
+     I                                       21  24 $$DU06
+     I                                       25  26 $$DU07
+     I                                       27  36 $$DU08
+     I                                       37  46 $$DU09
+     I                                       47  52 $$NU10
+     I                                       53  62 $$DU04
+     I                                       63  72 $$DU10
+     I                                       73 102 $$DESC
+     IA@CPY       DS
+     I                                        1  80 CPY@
+     I/EJECT
+      **
+     C           *ENTRY    PLIST
+     C                     PARM           EXT#RC  1        Return code
+     C                     PARM           EXT#CA  1        Change allowed
+     C                     PARM           EXT#PR 10        Next process
+     C                     PARM           EXT#PD           Current process
+     C                     PARM           EXT#RL  31       ODX release
+     C                     PARM           EXT#ST 20        Site name
+     C           CPY#NM    PARM           EXT#NM 10        Report name
+     C                     PARM           EXT#RD 40        Report title
+     C                     PARM           EXT#IA200        200 byte area
+     C                     MOVE '1'       EXT#PD  1
+      **
+      ** Initialise
+      **
+     C                     EXSR INIT
+      **
+      ** Display Screen
+      **
+      **
+     C                     MOVE 'NO '     EXIT    3
+     C           EXIT      DOUEQ'YES'
+      **
+      ** Write to message subfile if an error has occured
+      **
+     C           *IN98     IFEQ '1'
+     C                     WRITEMSGCTL
+     C                     END
+      **
+      ** Re-Initialsise Action Bar Header Text in Case it has Changed
+      **
+     C                     EXSR SACT
+      **
+     C                     EXSR LOAD
+      **
+      ** Clear Subfile Message Queue
+      **
+     C           *IN98     IFEQ '1'
+     C                     CALL 'ZA0250'
+     C                     SETOF                     98
+     C                     END
+      **
+      ** Has a valid Command Key Been Pressed
+      **
+     C           *IN26     IFEQ '1'
+      **
+      ** Process Command Keys
+      **
+     C                     SETOF                       85
+     C           KEY       LOKUPTAB1      TAB2           85
+     C   85                MOVE TAB2      CMDKEY  2
+      **
+      ** Exit Pressed?
+      **
+     C           CMDKEY    IFEQ O#SCEX
+     C                     MOVE 'E'       EXT#RC
+     C                     MOVE 'YES'     EXIT
+     C                     END
+      **
+      ** Bypass Pressed?
+      **
+     C           CMDKEY    IFEQ O#SCBY
+     C                     MOVE 'B'       EXT#RC
+     C                     MOVE 'YES'     EXIT
+     C                     END
+      **
+      ** Change Pressed?
+      **
+     C           CMDKEY    IFEQ O#SCCH
+     C           *IN30     IFEQ '1'
+     C                     MOVE '0'       *IN30
+     C                     Z-ADDCCH       I
+     C                     MOVE '1'       *IN,I
+     C                     ELSE
+     C                     MOVE '1'       *IN30
+     C                     Z-ADDCCH       I
+     C                     MOVE '0'       *IN,I
+     C                     END
+      **
+     C                     WRITE##FOOT
+     C                     END
+      *
+     C                     ELSE
+      **
+      ** Enter Pressed, Check Cursor position
+      **
+     C           ROWCOL    DIV  256       ROW     20
+     C                     MVR            COL     20
+     C           ROW       IFEQ 1
+     C           COL       ANDEQ3
+     C           ROW       OREQ 2
+     C           COL       ANDNE1
+     C           COL       ANDNE12
+     C           COL       ANDNE23
+     C           COL       ANDNE34
+     C           COL       ANDNE45
+     C           COL       ANDNE56
+     C           COL       ANDNE67
+     C           COL       ANDNE74
+     C           COL       ANDNE80
+      **
+      ** Cursor in Action Bar, Send Error Message
+      **
+     C                     SETON                     98
+     C                     CALL 'MQ501XC'
+     C                     PARM 'R5E0013' @MSGID 10
+     C                     PARM '       ' @MSDTA 50
+     C                     ELSE
+      **
+      ** Enter Pressed, Mode is
+      ** Display so Exit Program
+      **
+     C           *IN30     IFEQ '0'
+     C                     MOVE 'YES'     EXIT
+     C                     ELSE
+      **
+      ** Enter Pressed, Mode is Change, So
+      ** Enable Change Key and move into Display Mode
+      **
+     C                     MOVE 'U'       EXT#RC
+     C                     MOVE '0'       *IN30
+     C                     Z-ADDCCH       I
+     C                     MOVE '1'       *IN,I
+     C                     WRITE##FOOT
+      **
+     C                     EXSR READC
+      **
+     C           EXT#RC    IFEQ 'U'
+     C                     MOVE 'YES'     EXIT
+     C                     END
+      **
+     C                     END
+      **
+     C                     END
+      **
+      ** End of IF Mode Not Display
+      **
+     C                     END
+      **
+      ** End of DO Until Loop
+      **
+     C                     END
+      **
+      ** End Program
+      **
+     C                     SETON                     LR
+     C                     RETRN
+      **
+      ** Subroutines
+      **
+      ** Load Subfile Subroutine
+      **
+     C           LOAD      BEGSR
+      **
+      ** Clear the Subfile
+      **
+     C                     MOVEA'000'     *IN,50
+     C                     WRITE##SCTL
+      **
+      ** Initialise
+      **
+     C                     Z-ADD1         RRN     40
+     C                     Z-ADD0         X       30
+     C                     MOVEA'110'     *IN,50
+      **
+      ** Get First Record
+      **
+     C                     MOVE *BLANKS   KY
+     C           KCT       SETLL@BNRED0
+     C                     EXSR GETREC
+      **
+      ** Do While Rolldown Requested
+      **
+     C           *IN25     DOUEQ'0'
+      **
+      ** Ensure First record is at RRN
+      **
+     C                     Z-ADDRRN       DSPREC
+      **
+      ** Load Next 5 Records
+      **
+     C                     DO   5
+     C                     WRITE##SRCD
+     C                     ADD  1         RRN
+     C                     EXSR GETREC
+     C  N52                END
+      **
+     C                     WRITE##FOOT
+      **
+     C                     EXFMT##SCTL
+      **
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Get Data for Subfile
+      **
+     C           GETREC    BEGSR
+      **
+     C                     READ @BNRED0                  52
+     C           *IN52     IFEQ '0'
+     C                     MOVELHCCGCD    ##CODE
+     C                     MOVELHCCGDS    ##DESC
+     C                     MOVELHCABAC    ##ABAC
+     C                     MOVELHCABCY    ##ABCY
+     C                     MOVELHCABBR    ##ABBR
+     C                     MOVELHCABCU    ##ABCU
+     C                     MOVELHCABAS    ##ABAS
+     C                     MOVELHCABPC    ##ABPC
+     C                     MOVELHCABBK    ##ABBK
+     C                     MOVELHCABTT    ##ABTT
+     C                     MOVELHCABTS    ##ABTS
+     C                     MOVELHCASCU    ##ASCU
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Save Data Input back to File
+      **
+     C           READC     BEGSR
+      **
+     C                     READC##SRCD                 9898
+      **
+     C           *IN98     IFEQ '0'
+     C           ##SEL     ANDNE*BLANK
+     C           ##CODE    CHAIN@BNRED0              97
+      **
+      ** Go to the Selection Pgm if Required
+      **
+     C           *IN97     IFEQ '0'
+      **
+      ** Save existing values
+      **
+     C                     MOVEL$$CGCD    WCGCD   2
+     C                     MOVEL$$DESC    WDESC  30
+     C                     MOVEL$$DU01    WDU01   4
+     C                     MOVEL$$DU02    WDU02   3
+     C                     MOVEL$$DU03    WDU03   3
+     C                     MOVEL$$DU04    WDU04  10
+     C                     MOVEL$$DU05    WDU05   2
+     C                     MOVEL$$DU06    WDU06   4
+     C                     MOVEL$$DU07    WDU07   2
+     C                     MOVEL$$DU08    WDU08  10
+     C                     MOVEL$$DU09    WDU09  10
+     C                     MOVEL$$DU10    WDU10  10
+     C                     MOVEL$$NU04    WNU04   6
+     C                     MOVEL$$NU10    WNU10   6
+      **
+      ** If Control Group code has changed, blank permanent storage
+      ** area
+      **
+     C           ##CODE    IFNE $$CGCD
+     C                     MOVEL##CODE    $$CGCD
+     C                     MOVEL##DESC    $$DESC
+     C                     MOVEL*BLANKS   $$DU01
+     C                     MOVEL*BLANKS   $$DU02
+     C                     MOVEL*BLANKS   $$DU03
+     C                     MOVEL*BLANKS   $$DU04
+     C                     MOVEL*BLANKS   $$DU05
+     C                     MOVEL*BLANKS   $$DU06
+     C                     MOVEL*BLANKS   $$DU07
+     C                     MOVEL*BLANKS   $$DU08
+     C                     MOVEL*BLANKS   $$DU09
+     C                     MOVEL*BLANKS   $$DU10
+     C                     MOVEL*BLANKS   $$NU04
+     C                     MOVEL*BLANKS   $$NU10
+     C                     END
+      **
+     C                     CALL 'MQ56AX'
+     C                     PARM           EXT#RC
+     C                     PARM           CPY#NM
+     C                     PARM           EXT#RD
+     C                     PARM           EXT#IA
+     C                     PARM           ##ABAC
+     C                     PARM           ##ABCY
+     C                     PARM           ##ABBR
+     C                     PARM           ##ABCU
+     C                     PARM           ##ABAS
+     C                     PARM           ##ABPC
+     C                     PARM           ##ABBK
+     C                     PARM           ##ABTT
+     C                     PARM           ##ABTS
+     C                     PARM           ##ASCU
+      *
+     C                     MOVE *BLANKS   ##SEL
+      **
+      ** If no changes made on call to MQ56AX, return permanent
+      ** storage area to original value
+      **
+     C           EXT#RC    IFNE 'U'
+     C                     MOVELWCGCD     $$CGCD
+     C                     MOVELWCGCD     ##CODE
+     C                     MOVELWDESC     $$DESC
+     C                     MOVELWDESC     ##DESC
+     C                     MOVELWDU01     $$DU01
+     C                     MOVELWDU02     $$DU02
+     C                     MOVELWDU03     $$DU03
+     C                     MOVELWDU04     $$DU04
+     C                     MOVELWDU05     $$DU05
+     C                     MOVELWDU06     $$DU06
+     C                     MOVELWDU07     $$DU07
+     C                     MOVELWDU08     $$DU08
+     C                     MOVELWDU09     $$DU09
+     C                     MOVELWDU10     $$DU10
+     C                     MOVELWNU04     $$NU04
+     C                     MOVELWNU10     $$NU10
+     C                     END
+      **
+     C                     END
+      **
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Initialise
+      **
+     C           INIT      BEGSR
+      **
+     C           KCT       KLIST
+     C                     KFLD           KY      2
+      **
+      ** Set Up Return Code
+      **
+     C                     MOVE *BLANKS   EXT#RC
+      **
+      ** Set Up Action Bar Header Text
+      **
+     C                     EXSR SACT
+     C                     MOVE '-'       #BOX1
+     C                     MOVE '-('      A
+     C                     MOVE ')'       B
+      **
+      ** Retrieve MIDAS/Q system definition block...
+      **
+     C           *NAMVAR   DEFN           O#XA01
+     C                     IN   O#XA01
+     C                     MOVELO#XA01    O#SDBK
+      **
+      ** Enable installation defined command keys required in this pgm.
+      **
+     C                     Z-ADDCEX       I       30       Exit
+     C                     MOVE '1'       *IN,I
+     C                     Z-ADDCBY       I                Bypass
+     C                     MOVE '1'       *IN,I
+      **
+      ** Only enable use of CHANGE if user is authorised
+      **
+     C           EXT#CA    IFEQ 'Y'
+     C                     SETOF                     31
+     C                     Z-ADDCCH       I                Change
+     C                     MOVE '1'       *IN,I
+     C                     ELSE
+     C                     SETON                     31
+     C                     END
+      **
+      ** Set up Program to be in Display Mode
+      **
+     C                     SETOF                     30
+      **
+      ** Set up Message File
+      ** Set on Message Subfile end indicator.
+      **
+     C                     MOVE '1'       *IN99
+      **
+      ** Set up Next Process to CATALOG
+      **
+     C                     MOVEL'CATALOG' EXT#PR
+      **
+     C                     ENDSR
+     **
+     **  Subroutine to Set up Action Bar Header Text
+     **
+     C           SACT      BEGSR
+     C                     MOVEL'Report'  #BOX2
+     C                     MOVEL'Options' #BOX3
+     C                     MOVE *BLANKS   #BOX4
+     C                     MOVEL'Refine'  #BOX5
+     C                     MOVEL'Subsets' #BOX6
+     C                     MOVEL'House'   #BOX7
+     C                     MOVE 'keep '   #BOX7
+     C                     MOVEL'AS/400'  #BOX8
+     C                     MOVEL' Help'   #BOX9
+     C                     ENDSR
+     C*
+     **
+     **
+** TAB1, TAB2 Array for command Key Usage
+ 01
+ 02
+ 03
+ 04
+ 05
+ 06
+ 07
+ 08
+ 09
+ 10
+ 11
+ 12
+£13
+¥14
+·15
+©16
+§17
+¶18
+¼19
+½20
+¾21
+[22
+]23
+¯24

@@ -1,0 +1,363 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Man. Accs. Review Initial Screen')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0205 - MANAGEMENT ACCOUNTS REVIEW INITIAL SCREEN           *
+     F*                                                               *
+     F*  Function: This program displays an initial screen through    *
+     F*  (I/C Int) which a user can select a Control Group & Period   *
+     F*            for reviewing Management Accounts.                 *
+     F*                                                               *
+     F*  Called by: MCC0205 - Management Accounts Review Initial Ctl  *
+     F*                                                               *
+     F*  Calls: MCC0210 - Management Accounts Review Control          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 123484             Date 01Jun98               *
+      *                 120835             Date 14Jul97               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  123484 - DB error in AOPERDR0 if 3 instead of 03 enter for   *
+     F*           period number.  Apply fix 101329 to prevent review  *
+     F*           if period set does not exist.                       *
+     F*  120835 - Database error using invalid period number          *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FMC0205DFCF  E                    WORKSTN
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10  -  Error on Control Group input                          *
+      *  11  -  Error on Period Year input                            *
+      *  12  -  Error on Period Number input                          *
+      *  15  -  Work indicator
+      *  16  -  Work indicator
+      *  30  -  At least 1 input field in error                       *
+      *  60  -  SFLEND indicator                                      *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  DSPSCN  -  Display Screen                                    *
+      *  VALID   -  Validate Input                                    *
+      *  ZASNMS  -  Send message to program message queue             *
+      *  MSGSUB  -  Set up message subfile                            *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      /SPACE 3
+     IRUNDAT    E DS
+      *
+      **  Run Date DS
+      *
+     IPSDS       SDS
+      *
+      **  Program Status DS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 SWSID
+     I                                      254 263 SUSER
+      *
+     IDSFDY     E DSDSFDY
+      *
+      **  First DS for access programs, Short Data Structure
+      *
+     IGLHBCG    E DSGLHBCGPD
+      *
+      **  Historic Balance Control Groups
+      *
+     IDSPERD    E DSGLPERDPD                                              123484
+      *                                                                   123484
+      **  Period Details                                                  123484
+      *                                                                   123484
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  In the Dataarea RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      **  Move run date (alpha) to screen field for display
+      *
+     C                     MOVELAGMRDT    SRUNA
+      *
+      **  Set up message subfile
+      *
+     C                     EXSR MSGSUB
+      *
+      **  Display screen
+      *
+     C                     WRITEMC0205F1
+     C                     EXFMTMC0205F2
+      *
+      **  Validate input and display screen until F3 pressed
+      *
+     C           *INKC     DOWEQ'0'
+     C                     EXSR DSPSCN
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DSPSCN - SR TO DISPLAY SCREEN                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DSPSCN    BEGSR
+      *
+      **  Validate field entries
+      *
+     C                     EXSR VALID
+      *
+      **  If no errors on input, call Management Accounts Review pgm
+      *
+     C           *IN30     IFEQ '0'
+     C                     CALL 'MCC0210'
+     C                     PARM           PCGCD   2
+     C                     PARM           PPCYR   4
+     C                     PARM           PPDNY   2
+     C                     PARM           RTCDE   1
+      *                                                                   120835
+      **  If return code = 1, error message 'Period Details not found'    120835
+      *                                                                   120835
+     C           RTCDE     IFEQ '1'                                       120835
+     C                     MOVE '1'       *IN11                           120835
+     C                     MOVE '1'       *IN12                           120835
+     C                     MOVE '1'       *IN30                           120835
+     C                     MOVE *BLANKS   RTCDE                           120835
+     C                     MOVE 'GLX0284' ZAMSID                          120835
+     C                     EXSR ZASNMS                                    120835
+     C                     ELSE                                           120835
+      *
+      **  If return code = Y, F or E exit program, else initialise
+      **  fields
+      *
+     C           RTCDE     IFEQ 'Y'
+     C           RTCDE     OREQ 'F'
+     C           RTCDE     OREQ 'E'
+     C                     MOVE '1'       *INKC
+     C                     ELSE
+     C                     MOVE *BLANKS   RTCDE
+     C                     MOVE *BLANKS   SCGCD
+     C                     MOVE *BLANKS   SPCYR
+     C                     MOVE *BLANKS   SPDNY
+     C                     END
+      *                                                                   120835
+     C                     END                                            120835
+      *
+     C                     END
+      *
+      **  Display error message subfile, display screen
+      *
+     C           *INKC     IFEQ '0'
+     C                     WRITEMC0205F1
+     C                     WRITEMC0205C0
+     C                     EXFMTMC0205F2
+      *
+      **  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VALID - SR TO VALIDATE INPUT                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      **  Initialise error indicators
+      *
+     C                     MOVEA'000'     *IN,10
+     C                     MOVE '0'       *IN30
+      *
+      **  Validate Group Code
+      *
+     C                     CALL 'AOHBCGR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SCGCD     @KEY1   2
+     C           GLHBCG    PARM GLHBCG    DSFDY
+      *
+      **  Group Code not on file, set up error message
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE '1'       *IN10
+     C                     MOVE 'GLX0288' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE SCGCD     PCGCD
+     C                     END
+      *
+      **  Validate Period Year, must be non-blank & numeric
+      *
+     C                     TESTN          SPCYR      15
+     C                     MOVE SPCYR     WORK1
+     C                     TESTZ          WORK1   1      16
+      *
+     C           SPCYR     IFEQ *BLANKS
+     C           SPCYR     ORNE *BLANKS
+     C           *IN15     ANDEQ'0'
+     C           SPCYR     ORNE *BLANKS
+     C           *IN16     ANDEQ'0'
+     C                     MOVE '1'       *IN11
+     C                     MOVE 'GLX0313' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE SPCYR     PPCYR
+     C                     END
+      *
+      **  Validate Period No., must be non-blank & 01 - 52
+      *
+     C***********          MOVE SPDNY     WORK    20                      120835
+     C***********WORK      IFLT 01                                        120835
+     C***********WORK      ORGT 52                                        120835
+     C*                                                                   120835
+     C                     TESTN          SPDNY      15                   123484
+     C                     MOVE SPDNY     WORK1                           123484
+     C                     TESTZ          WORK1          16               123484
+      *                                                                   123484
+     C           SPDNY     IFLT '01'                                      120835
+     C           SPDNY     ORGT '52'                                      120835
+     C           SPDNY     OREQ *BLANKS
+     C           *IN15     OREQ '0'                                       123484
+     C           *IN16     OREQ '0'                                       123484
+     C                     MOVE '1'       *IN12
+     C                     MOVE 'GLX0314' ZAMSID
+     C                     EXSR ZASNMS
+     C***********          ELSE                                           123484
+     C***********          MOVE SPDNY     PPDNY                           123484
+     C                     END
+      *                                                                   123484
+      **  Check Period exists, if other details correct.                  123484
+      *                                                                   123484
+     C           *IN10     IFEQ '0'                                       123484
+     C           *IN11     ANDEQ'0'                                       123484
+     C           *IN12     ANDEQ'0'                                       123484
+     C                     MOVELHCPSTC    W@PDK5  5                       123484
+     C                     MOVE SPCYR     W@PDK5                          123484
+     C                     MOVELW@PDK5    W@PDK7  7                       123484
+     C                     MOVE SPDNY     W@PDK7                          123484
+      *                                                                   123484
+      **  Validate Period.                                                123484
+      *                                                                   123484
+     C                     CALL 'AOPERDR0'                                123484
+     C                     PARM *BLANKS   @RTCD   7                       123484
+     C                     PARM '*VERIFY' @OPTN   7                       123484
+     C                     PARM W@PDK7    @KEY2   7                       123484
+     C           DSPERD    PARM DSPERD    DSFDY                           123484
+      *                                                                   123484
+      **  Period Detail not on file, set up error message                 123484
+      *                                                                   123484
+     C           @RTCD     IFNE *BLANK                                    123484
+     C                     MOVE '1'       *IN11                           123484
+     C                     MOVE '1'       *IN12                           123484
+     C                     MOVE 'GLX0284' ZAMSID                          123484
+     C                     EXSR ZASNMS                                    123484
+     C                     ELSE                                           123484
+     C                     MOVE SPDNY     PPDNY                           123484
+     C                     END                                            123484
+      *                                                                   123484
+     C                     END                                            123484
+      *                                                                   123484
+      *
+      **  If any field in error, set on general error indicator
+      *
+     C           *IN10     IFEQ '1'
+     C           *IN11     OREQ '1'
+     C           *IN12     OREQ '1'
+     C                     MOVE '1'       *IN30
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - SR TO SEND MESSAGE TO PROGRAM MESSAGE QUEUE         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      ** Declare message file name
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MSGSUB - SR SETUP MESSAGE SUBFILE                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MSGSUB    BEGSR
+      *
+      **  Clear all fields to send messages to message queue
+      *
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     C                     MOVE *BLANKS   SPGMQ
+     C                     MOVEL'MC0205'  SPGMQ
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

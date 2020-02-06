@@ -1,0 +1,997 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Fr - Display loan type')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD0281E# - Loan Type/Subtype Enquiry.                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164             Date 28Nov14               *
+      *                 MD030651           Date 28Nov14               *
+      *                 AR1070491          Date 19Dec12               *
+      *                 262376             Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 AR795973           Date 06Jul11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23954           Date 11May09               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BG9718             Date 29Dec05               *
+      *                 CAS009             Date 04May04               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CAAA03             Date 24Mar04               *
+      *                 BG1346             Date 01Mar04               *
+      *                 CGP001             Date 23May03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 06Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPL002             Date 08Mar99               *
+      *                 CSD003             Date 06JAN98               *
+      *                 CLE004             DATE 17FEB97               *
+      *                 CAC001             DATE 23JAN96               *
+      *                 S01486 (2)         DATE 22DEC94               *
+      *                 S01505             DATE 08JUL94               *
+      *                 S01486             DATE 08JUL94               *
+      *                 S01459             DATE 08JUL94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
+      *  MD030651 - Field Subject to KWG 24c reporting is not shown   *
+      *             on Loan Type/Subtype Enquiry. Field #1K24C should *
+      *             be included in #RCDDTL1 and not in #RCDDTL3.      *
+      *  AR1070491 - Created PDCL Details for a LTSY was missing on   *
+      *              enquiry                                          *
+      *  262376 - Add text 'Enter=Next Screen'                        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  AR795973 - Change §24c to plain 24c                          *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23954 - New Field show correct symbol "§"                 *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *  CSD031 - Enhanced Centralised Static Data                    *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  BG9718 - Global Instrument and Global Product not available  *
+      *  CAS009 - Effective Interest Rate/Amortised Cost Accounting   *
+      *  CGL014 - Collateral Processing                               *
+      *  CAAA03 - Webfacing changes. Fields are amendable during      *
+      *           mode.                                               *
+      *  BG1346 - Global instrument and product code not displayed    *
+      *  CGP001 - Global Processing                                   *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  CPB001 - 'Private Banking' Module                            *
+      *  CPL002 - Midas-Plato Interface                               *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - File removed from SD model.                       *
+      *  CLE004 - Lending Enhancements:                               *
+      *           Addition of 3 new fields.                           *
+      *  CAC001 - Profit Centre Accounting.                           *
+      *           S01505 changes removed.                             *
+      *  S01486 - (2) change control.                                 *
+      *           Use only one Instrument Type for PM and PL modules, *
+      *           Make (PM Instrument Code 'BWR') redundant.          *
+      *           Remove F5 processing.                               *
+      *  S01505 - Profit Centre Accounting Development:               *
+      *           - Amend to display new 'Default Product Code' field.*
+      *  S01486 - Private Banking Development:                        *
+      *           - Amend to display new portfolio management fields. *
+      *  S01459 - Addition of Midas headerbox.                        *
+      *                                                               *
+      *****************************************************************
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0281E#99
+     A          R #RCDKEY                   TEXT('(c) Finastra +
+     A                                      International Limited +
+     A                                      2001')
+     A*/COPY WNCPYSRC,SD0281E#98
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A                                      SETOF(31 'Invalid: #1LNTY')
+      **Start of change CAS001
+     A                                      SETOF(41 'Invalid: #1YLDC')
+     A                                      SETOF(42 'Invalid: #1FYLD')
+     A                                      SETOF(43 'Invalid: #1YLDM')
+      **End of change CAS001
+      **Start of change CAS005
+     A                                      SETOF(44 'Invalid: #1FYCM')
+      **End of change CAS005
+      **Start of change CGP001
+     A                                      SETOF(44 'Invalid: #1GPRD')
+     A                                      SETOF(45 'Invalid: #1GINS')
+      **End of change CGP001
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0281E1'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+     A                                  2 29'Display Loan Type Details'
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1LNST         2   H      TEXT('Loan Sub-type')
+      *                                              Begin /CLE042/
+     A            #1LNCL         4   H      TEXT('Loan Class')
+      *                                              End   /CLE042/
+     A                                  4  2'Loan Type....:'
+     A            #1LNTY         2   B  4 17TEXT('Loan Type')
+     A                                      CHECK(FE)
+     A N25                                  OVRDTA
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(UL HI)
+     A N25                                  OVRATR
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0281E#97
+     A          R #CMDTXT1                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0281E#96
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Exit'
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0281E#95
+     A          R #RCDDTL1                  TEXT('Details')
+     A*/COPY WNCPYSRC,SD0281E#94
+     A                                      SETOF(98 'Force input format')
+     A                                      BLINK OVERLAY
+     A                                      INDTXT(86 'Enable PUTOVR')
+     A  86                                  PUTOVR
+     A                                      INDTXT(88 'Protect key fields')
+     A                                      INDTXT(87 'Enable key screen')
+     A* Command keys............................................................
+     A                                      VLDCMDKEY(29 'Valid command key')
+     A                                      CA03(03 'Exit.')
+     A  87                                  CA12(12 'Key screen.')
+     A* SETOFFS.................................................................
+     A                                      SETOF(99 'Global error flag')
+     A*.........................................................................
+     A            ##USR         10      1  2TEXT('*USER')
+     A N25                                  OVRDTA
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0281E2'
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+      **Start of change CSD031
+     A**********                        2 29'Loan Type/Subtype Enquiry'                       CSD031
+     A  52                              2 26'Central Loan Type/Subtype Enquiry'
+     A  53                              2 29'Loan Type/Subtype Enquiry'
+      **End of change CSD031
+     A                                      DSPATR(HI)
+     A            ##TME          6  0   2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+     A            #1LCD          5  0H      TEXT('Last Change Date')
+     A            #1TYLC         1   H      TEXT('Type of Last Change')
+     A            #1DPRC         4   H      TEXT('Default Product Code')
+     A            #1EXPC         5  3H      TEXT('Exposure Percentage')
+     A            #1INN1         3   H      TEXT('PM Instrument Code (Bwr)')
+      *                                              Begin /CLE042/
+     A                                  4  2'Loan Type....................:'
+     A            #1LNTY         2      4 33TEXT('Loan Type')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  5  2'Loan Subtype.................:'
+     A            #1LNST         2      5 33TEXT('Loan Sub-type')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  2'Loan Class...................:'
+     A N66                                  DSPATR(ND)
+     A            #1LNCL         4      6 33TEXT('Loan Class')
+     A N66                                  DSPATR(ND)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A**********************************5  2'Loan Type....................:'
+     A************#1LNTY*********2******5 33TEXT('Loan Type')
+     A*N25******************************    OVRDTA
+     A**********************************    DSPATR(HI)
+     A**********************************6  2'Loan Subtype.................:'
+     A************#1LNST*********2******6 33TEXT('Loan Sub-type')
+     A*N25******************************    OVRDTA
+     A**********************************    DSPATR(HI)
+      *                                              End   /CLE042/
+     A                                  8  2'Loan Type Description........:'
+     A            #1LNTD        30      8 33TEXT('Loan Type Description')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+     A                                  9  2'Loan Processing Type.........:'
+     A            #1LNPT         2  0   9 33TEXT('Loan Processing Type')
+     A                                      EDTCDE(3)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      ** Start of change CAS009
+      ** Start of change BG9718
+     A**57N58***                       10  2'Amortised Cost Accounting +                      BG9718
+     A**********                             Indicator..:'                                    BG9718
+     A**57N58***  #1ACAI         1     10 41TEXT('Amortised Cost Accounting +                 BG9718
+     A**********                                Indicator field')                             BG9718
+     A**57N58***                            DSPATR(HI)                                        BG9718
+     A  59N58                          10  2'Amortised Cost Accounting +
+     A                                       Indicator..:'
+     A  59N58     #1ACAI         1     10 41TEXT('Amortised Cost Accounting +
+     A                                          Indicator field')
+     A  59N58                               DSPATR(HI)
+      ** End of change BG9718
+     A N25N58                               OVRDTA
+      ** End of change CAS009
+     A*/COPY WNCPYSRC,SD0281E#01
+      *                                              Begin /CPB001/
+     A**********                       11  2'Portfolio Management:'
+     A**79******                            DSPATR(ND)
+     A N79                             11  2'Portfolio Management:'
+      *                                              End   /CPB001/
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              Begin /CPB001/
+     A N40                             11  2'Private Banking:'
+     A N40                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CPB001/
+     A                                 12  4'Instrument Code............:'
+      *                                              Begin /CPB001/
+     A**79******                            DSPATR(ND)
+      **Start of change CGL014
+     A**79*40***                            DSPATR(ND)                                        CGL014
+     A  79 40N60                            DSPATR(ND)
+      **End of change CGL014
+      *                                              End   /CPB001/
+     A N25                                  OVRATR
+     A            #1INNR         3     12 33TEXT('PM Instrument Code (Lndr)')
+     A N25                                  OVRDTA
+      *                                              Begin /CPB001/
+     A**79******                            DSPATR(ND)
+     A*N79******                            DSPATR(HI)
+      **Start of change CGL014
+     A**79*40***                            DSPATR(ND)                                        CGL014
+     A  79 40N60                            DSPATR(ND)
+      **End of change CGL014
+     A N40
+     AON79                                  DSPATR(HI)
+      *                                              End   /CPB001/
+     A N25                                  OVRATR
+     A                                 13  4'Loan to be Valued Indicator:'
+     A  79                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1LVLD         1     13 33TEXT('Loan to be Valued Ind')
+     A N25                                  OVRDTA
+     A  79                                  DSPATR(ND)
+     A N79                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 15  2'Range Number.....................-
+     A                                      ..:'
+     A  78                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1RANG         2     15 39TEXT('Range Number (LT/ST)')
+     A N25                                  OVRDTA
+     A  78                                  DSPATR(ND)
+     A N78                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 16  2'Internal Loan Participation Type.-
+     A                                      ..:'
+     A  77                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ILTY         2     16 39TEXT('Internal Loan Part. Type')
+     A N25                                  OVRDTA
+     A  77                                  DSPATR(ND)
+     A N77                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 17  2'Internal Loan Participation Subty-
+     A                                      pe:'
+     A  77                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ILST         2     17 39TEXT('Internal Loan Part SubTyp')
+     A N25                                  OVRDTA
+     A  77                                  DSPATR(ND)
+     A N77                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              Begin /CLE042/
+     A                                 18  2'Internal Loan Participation Class-
+     A                                      ..:'
+     A N66                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1ILCL         4     18 39TEXT('Internal Loan Part Class')
+     A N25                                  OVRDTA
+     A N66                                  DSPATR(ND)
+     A  66                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CLE042/
+      *                                              Begin /CPL002/
+     A                                 19  2'Plato Pricing Group:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+      ** Start of change CAAA03
+     A**********  #1DPCD         5   B 19 24TEXT('Plato Default Pricing Group')               CAAA03
+     A            #1DPCD         5     19 24TEXT('Plato Default Pricing Group')
+      ** End of change CAAA03
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 19 30'Report Group:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+      ** Start of change CAAA03
+     A**********  #1DRCD         8   B 19 44TEXT('Plato Default Report Group')                CAAA03
+     A            #1DRCD         8     19 44TEXT('Plato Default Report Group')
+      ** End of change CAAA03
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+     A                                 19 53'Credit Rating:'
+     A  80                                  DSPATR(ND)
+     A N25                                  OVRATR
+      ** Start of change CAAA03
+     A**********  #1CRED         4   B 19 68TEXT('Plato Default Credit Rating')               CAAA03
+     A            #1CRED         4     19 68TEXT('Plato Default Credit Rating')
+      ** End of change CAAA03
+     A N25                                  OVRDTA
+     A  80                                  DSPATR(ND)
+     A N80                                  DSPATR(HI)
+     A N25                                  OVRATR
+      *                                              End   /CPL002/
+      **Start of change MD030651
+     A                                 20  2'Subject to KWG 24c +
+     A                                      reporting.......:'
+     A  47                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1K24C         1     20 39TEXT('Subject to KWG §24c +
+     A                                      reporting')
+     A  47                                  DSPATR(ND)
+     A N47                                  DSPATR(HI)
+     A N25                                  OVRDTA
+     A N25                                  OVRATR
+      **End of change MD030651
+      **Start of change CAS001
+      **Start of change CAS005
+     A**********                       21  2'Yield Curve :'                                   CAS005
+     A                                 21  2'Reval/Fwd Yield Curve:'
+      **End of change CAS005
+     A N55                                  DSPATR(ND)
+     A N25                                  OVRATR
+      **Start of change CAS005
+     A                                 21 31'/'
+     A N55                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A**********  #1YLDC         5     21 16TEXT('Yield Curve')                               CAS005
+     A            #1YLDC         5     21 25TEXT('Yield Curve')
+      **End of change CAS005
+     A N25                                  OVRDTA
+     A N55                                  DSPATR(ND)
+     A  55                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS005
+     A**********                       21 22'Forward Yield Curve:'                            CAS005
+     A*N55******                            DSPATR(ND)                                        CAS005
+     A*N25******                            OVRATR                                            CAS005
+     A**********  #1FYLD         5     21 44TEXT('Forward Yield Curve')                       CAS005
+     A            #1FYLD         5     21 33TEXT('Forward Yield Curve')
+      **End of change CAS005
+     A N25                                  OVRDTA
+     A N55                                  DSPATR(ND)
+     A  55                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS005
+     A**********                       21 53'YC Mandatory :'                                  CAS005
+     A                                 21 46'Reval Yield Curve Mandatory:'
+     A*N55******                            DSPATR(ND)
+     A N55N56
+     AO 55 56                               DSPATR(ND)
+      **End of change CAS005
+     A N25                                  OVRATR
+      **Start of change CAS005
+     A  56                             21 41'Reval/Fwd Yield Curve Mandatory:'
+     A N56                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A                                 21 77'/'
+     A N56                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A**********  #1YLDM         1     21 68TEXT('Yield Curve Mandatory')                     CAS005
+     A            #1YLDM         1     21 75TEXT('Yield Curve Mandatory')
+      **End of change CAS005
+     A N25                                  OVRDTA
+     A N55                                  DSPATR(ND)
+     A  55                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **Start of change CAS005
+     A  56        #1FYCM         1     21 79TEXT('Forward Y C Mandatory')
+     A N25                                  OVRDTA
+     A N56                                  DSPATR(ND)
+     A  56                                  DSPATR(HI)
+     A N25                                  OVRATR
+      **End of change CAS005
+      **End of change CAS001
+      **Start of change CGP001
+      **Start of change BG1346
+     A*********************************22  2'Global Product Code:'
+     A*N56**********************************DSPATR(ND)
+     A*N25**********************************OVRATR
+     A************#1PRDC********10*****22 23TEXT('Global Product Code')
+     A*N56**********************************DSPATR(ND)
+     A**56**********************************DSPATR(HI)
+     A*N25**********************************OVRDTA
+     A*N25**********************************OVRATR
+     A*********************************22*40'Global Instrument Code:'
+     A*N56**********************************DSPATR(ND)
+     A*N25**********************************OVRATR
+     A************#1INSC********10*****22 64TEXT('Global Instrument Code')
+     A*N56**********************************DSPATR(ND)
+     A**56**********************************DSPATR(HI)
+     A*N25**********************************OVRDTA
+     A*N25**********************************OVRATR
+     A                                 22  2'Global Product:'
+     A N57                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1PRDC        10     22 18TEXT('Global Product Code')
+     A N57                                  DSPATR(ND)
+     A  57                                  DSPATR(HI)
+     A N25                                  OVRDTA
+     A N25                                  OVRATR
+     A                                 22 29'Global Instrument:'
+     A N57                                  DSPATR(ND)
+     A N25                                  OVRATR
+     A            #1INSC        10     22 48TEXT('Global Instrument Code')
+     A N57                                  DSPATR(ND)
+     A  57                                  DSPATR(HI)
+     A N25                                  OVRDTA
+     A N25                                  OVRATR
+      **Start of change CSD031
+     A  49                              5 40'Central Data..:'
+     A  48                                  DSPATR(ND)
+     A  51                              5 40'Accept to Zone:'
+     A  48                                  DSPATR(ND)
+     A  50        #1ACZN         1      5 56DSPATR(HI)
+     A  48                                  DSPATR(ND)
+     A  50                              6 40'Effective Date:'
+     A  48                                  DSPATR(ND)
+     A  50        #1EFDT         6      6 56DSPATR(HI)
+     A  48                                  DSPATR(ND)
+      **End of change CSD031
+      **End of change BG1346
+      **End of change CGP001
+      **Start of change CLE134
+     A          R #RCDDTL2
+      *
+     A                                      TEXT('Details 2')
+     A                                      BLINK OVERLAY
+     A                                      PUTOVR
+     A                                      CA12(12 'Key screen.')
+     A            ##USR         10      1  2TEXT('*USER')
+      *
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0281E3'
+      *
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+      *
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+      *
+     A  52                              2 26'Central Loan Type/Subtype Enquiry'
+      *
+     A  53                              2 29'Loan Type/Subtype Enquiry'
+     A                                      DSPATR(HI)
+      *
+     A            ##TME          6  0O  2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+      *
+     A            #1LCD          5S 0H      TEXT('Last Change Date')
+     A            #1TYLC         1A  H      TEXT('Type of Last Change')
+     A            #1DPRC         4A  H      TEXT('Default Product Code')
+     A            #1LNPT         2S 0H      TEXT('Loan Processing Type')
+      *
+     A                                  4  2'Loan Type....................:'
+     A            #1LNTY         2   O  4 33TEXT('Loan Type')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  5  2'Loan Subtype.................:'
+     A            #1LNST         2A  O  5 33TEXT('Loan Sub-type')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  6  2'Loan Class...................:'
+     A N66                                  DSPATR(ND)
+     A            #1LNCL         4      6 33TEXT('Loan Class')
+     A N66                                  DSPATR(ND)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  8  2'Past Due Call Loan for Principal'
+     A N71                                  DSPATR(ND)
+      *
+     A                                  9  4'Type/Subtype:'
+     A N71                                  DSPATR(ND)
+     A            #2PPLT         2      9 18
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            #2PPLS         2      9 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A  66                              9 28'Class:'
+     A N71                                  DSPATR(ND)
+     A            #2PPLC         4      9 35
+     A  66                                  DSPATR(HI)
+     A N66
+     AON71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 10  4'Principal Past Due Defaults'
+     A N71                                  DSPATR(ND)
+      *
+     A                                 11  6'Base Rate.....:'
+     A N71                                  DSPATR(ND)
+     A            #2PBSR         2     11 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            #2PBRT        12     11 25
+     A                                      DSPATR(HI)
+     A N72
+     AON71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 12  6'Rate/Spread...:'
+     A N71                                  DSPATR(ND)
+     A            #2PRSP        12     12 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 13  6'Spread Ind....:'
+     A N71                                  DSPATR(ND)
+     A            #2PRSI         1     13 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 14  6'Interest Basis:'
+     A N71                                  DSPATR(ND)
+     A            #2PICB         1     14 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  8 42'Past Due Call Loan for Interest'
+     A N71                                  DSPATR(ND)
+      *
+     A                                  9 44'Type/Subtype:'
+     A N71                                  DSPATR(ND)
+     A            #2IPLT         2      9 58
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            #2IPLS         2      9 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A  66                              9 68'Class:'
+     A N71                                  DSPATR(ND)
+     A            #2IPLC         4      9 75
+     A  66                                  DSPATR(HI)
+     A N66
+     AON71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 10 44'Interest Past Due Defaults'
+     A N71                                  DSPATR(ND)
+     A                                 11 46'Base Rate.....:'
+     A N71                                  DSPATR(ND)
+     A            #2IBSR         2     11 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            #2IBRT        12     11 65
+     A                                      DSPATR(HI)
+     A N72
+     AON71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 12 46'Rate/Spread...:'
+     A N71                                  DSPATR(ND)
+     A            #2IRSP        12     12 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 13 46'Spread Ind....:'
+     A N71                                  DSPATR(ND)
+     A            #2IRSI         1     13 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 14 46'Interest Basis:'
+     A N71                                  DSPATR(ND)
+     A            #2IICB         1     14 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 16  2'P/d Rate for Outstanding Prin-
+     A                                      cipal:'
+     A N71                                  DSPATR(ND)
+     A            #2POPR         1     16 38
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 17  2'Overdraft Repayment Allowing:'
+     A N71                                  DSPATR(ND)
+     A            #2OVRD         1     17 32
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+      ** Start of Change CLE164
+     A**********                       19  2'Pre-Checking Order:'                             CLE164
+     A**********  #2PCKO         5     19 22                                                  CLE164
+     A                                 19  2'PDP Priority Group ID:'
+     A            #2PGID         3     19 25
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            #2PDES        50     19 30
+      ** End of Change CLE164
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 16 46'Capitalised Interest Indicator:'
+     A N71                                  DSPATR(ND)
+     A            #2CAPI         1     16 78
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 17 46'Separate Interest Indicator...:'
+     A N71                                  DSPATR(ND)
+     A            #2SIIN         1     17 78
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 18 46'Facility Amount Utilisation...:'
+     A N71                                  DSPATR(ND)
+     A            #2FAMU         1     18 78
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+ 
+     A                                 23  2'F12=Previous'
+      **End of change CLE134
+      **Start of change AR1070491
+     A          R #RCDDTL3
+      *
+     A                                      TEXT('Details 3')
+     A                                      BLINK OVERLAY
+     A                                      PUTOVR
+     A                                      CA12(12 'Key screen.')
+     A            ##USR         10      1  2TEXT('*USER')
+      *
+     A            ##PGM         10   H      TEXT('*PROGRAM')
+     A                                  1 13'SD0281E3'
+      *
+     A            ##MRDT         7      1 72TEXT('Midas Run Date')
+     A N25                                  OVRDTA
+      *
+     A            ##JOB         10      2  2TEXT('*JOB')
+     A N25                                  OVRDTA
+      *
+     A  52                              2 26'Central Loan Type/Subtype Enquiry'
+      *
+     A  53                              2 29'Loan Type/Subtype Enquiry'
+     A                                      DSPATR(HI)
+      *
+     A            ##TME          6  0O  2 71TEXT('*TIME')
+     A                                      EDTWRD('  :  :  ')
+     A N25                                  OVRDTA
+      *
+     A            #1LCD          5S 0H      TEXT('Last Change Date')
+     A            #1TYLC         1A  H      TEXT('Type of Last Change')
+     A            #1DPRC         4A  H      TEXT('Default Product Code')
+     A            #1LNPT         2S 0H      TEXT('Loan Processing Type')
+      *
+     A                                  4  2'Loan Type....................:'
+     A            #1LNTY         2   O  4 33TEXT('Loan Type')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  5  2'Loan Subtype.................:'
+     A            #1LNST         2A  O  5 33TEXT('Loan Sub-type')
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  6  2'Loan Class...................:'
+     A N66                                  DSPATR(ND)
+     A            #1LNCL         4      6 33TEXT('Loan Class')
+     A N66                                  DSPATR(ND)
+     A N25                                  OVRDTA
+     A                                      DSPATR(HI)
+      *
+     A                                  8  2'Past Due Call Loan for Principal'
+     A N71                                  DSPATR(ND)
+      *
+     A                                  9  4'Type/Subtype:'
+     A N71                                  DSPATR(ND)
+     A            #2PPLT         2      9 18
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            #2PPLS         2      9 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A  66                              9 28'Class:'
+     A N71                                  DSPATR(ND)
+     A            #2PPLC         4      9 35
+     A  66                                  DSPATR(HI)
+     A N66
+     AON71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 10  4'Principal Past Due Defaults'
+     A N71                                  DSPATR(ND)
+      *
+     A                                 11  6'Base Rate.....:'
+     A N71                                  DSPATR(ND)
+     A            #2PBSR         2     11 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            #2PBRT        12     11 25
+     A                                      DSPATR(HI)
+     A N72
+     AON71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 12  6'Rate/Spread...:'
+     A N71                                  DSPATR(ND)
+     A            #2PRSP        12     12 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 13  6'Spread Ind....:'
+     A N71                                  DSPATR(ND)
+     A            #2PRSI         1     13 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 14  6'Interest Basis:'
+     A N71                                  DSPATR(ND)
+     A            #2PICB         1     14 22
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  8 42'Past Due Call Loan for Interest'
+     A N71                                  DSPATR(ND)
+      *
+     A                                  9 44'Type/Subtype:'
+     A N71                                  DSPATR(ND)
+     A            #2IPLT         2      9 58
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            #2IPLS         2      9 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A  66                              9 68'Class:'
+     A N71                                  DSPATR(ND)
+     A            #2IPLC         4      9 75
+     A  66                                  DSPATR(HI)
+     A N66
+     AON71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 10 44'Interest Past Due Defaults'
+     A N71                                  DSPATR(ND)
+     A                                 11 46'Base Rate.....:'
+     A N71                                  DSPATR(ND)
+     A            #2IBSR         2     11 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            #2IBRT        12     11 65
+     A                                      DSPATR(HI)
+     A N72
+     AON71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 12 46'Rate/Spread...:'
+     A N71                                  DSPATR(ND)
+     A            #2IRSP        12     12 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 13 46'Spread Ind....:'
+     A N71                                  DSPATR(ND)
+     A            #2IRSI         1     13 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 14 46'Interest Basis:'
+     A N71                                  DSPATR(ND)
+     A            #2IICB         1     14 62
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 15  6'Contr Spread:'
+     A N71                                  DSPATR(ND)
+     A            #YICSP        11A    15 65
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 15 46'Contr Spread:'
+     A N71                                  DSPATR(ND)
+     A            #YPCSP        11A    15 25
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 16  6'Contr Spread/Ind:'
+     A N71                                  DSPATR(ND)
+     A            #YPCSG         1A    16 25
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 16 46'Contr Spread/Ind:'
+     A N71                                  DSPATR(ND)
+     A            #YICSG         1A    16 65
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 17  6'Rounding Method:'
+     A N71                                  DSPATR(ND)
+     A            #YPRMT         7A    17 25
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 17 46'Rounding Method:'
+     A N71                                  DSPATR(ND)
+     A            #YIRMT         7A    17 65
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 18  6'Rounding Frac/Dec:'
+     A N71                                  DSPATR(ND)
+     A            #YPRFD         4A    18 25
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 18 46'Rounding Frac/Dec:'
+     A N71                                  DSPATR(ND)
+     A            #YIRFD         4A    18 65
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                 20  2'P/d Rate for Outstanding Prin-
+     A                                      cipal:'
+     A N71                                  DSPATR(ND)
+     A            #2POPR         1     20 38
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 21  2'Overdraft Repayment Allowing:'
+     A N71                                  DSPATR(ND)
+     A            #2OVRD         1     21 32
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+      **Start of change CLE164
+     A**********                       22  2'Pre-Checking Order:'                             CLE164
+     A                                 22  2'PDP Priority Group ID:'
+     A**********  #2PCKO         5     22 22                                                  CLE164
+     A            #2PGID         3     22 25
+      **End of change CLE164
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                 20 46'Capitalised Interest Indicator:'
+     A N71                                  DSPATR(ND)
+     A            #2CAPI         1     20 78
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 21 46'Separate Interest Indicator...:'
+     A N71                                  DSPATR(ND)
+     A            #2SIIN         1     21 78
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+      *
+     A                                 22 46'Facility Amount Utilisation...:'
+     A N71                                  DSPATR(ND)
+     A            #2FAMU         1     22 78
+     A                                      DSPATR(HI)
+     A N71                                  DSPATR(ND)
+     A                                      OVRDTA
+ 
+     A                                 23  2'F12=Previous'
+      **End of change AR1070491
+      **Start of change CER047
+      **Start of change BUG23954
+     A*N47******                       20  2'Subject to KWG @24c +                          BUG23954
+      **Start of change AR795973
+     A*N47******                       20  2'Subject to KWG §24c +                          AR795973
+     A**********                            reporting......:'                               AR795973
+      **Start of change MD030651
+     A*N47******                       20  2'Subject to KWG 24c +                           MD030651
+     A**********                            reporting.......:'                              MD030651
+      **End of change MD030651
+      **End of change AR795973
+      **End of change BUG23954
+      **Start of change MD030651
+     A**********  #1K24C         1     20 39TEXT('Subject to KWG §24c +                     MD030651
+     A**********                            reporting')                                     MD030651
+     A**47******                            DSPATR(ND)                                      MD030651
+     A*N47******                            DSPATR(HI)                                      MD030651
+     A*N25******                            OVRDTA                                          MD030651
+     A*N25******                            OVRATR                                          MD030651
+      **End of change MD030651
+      **End of change CER047
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0281E#93
+     A          R #CMDTXT2                  TEXT('Command keys')
+     A*/COPY WNCPYSRC,SD0281E#92
+     A                                      OVERLAY PUTOVR
+     A                                 23  2'F3=Main Menu   F12=Previous'
+      **Start of Change 262376
+     A                                    +3'Enter=Next Screen'
+      **End of Change 262376
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0281E#91
+     A          R #MSGRCD                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0281E#90
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0281E#89
+     A          R #MSGCTL                   TEXT('Program messages')
+     A*/COPY WNCPYSRC,SD0281E#88
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  86                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  25
+     AON25                                  SFLEND
+     A            ##PGM                     SFLPGMQ
+     A*=========================================================================
+     A*/COPY WNCPYSRC,SD0281E#87

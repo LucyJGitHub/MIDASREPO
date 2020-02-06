@@ -1,0 +1,455 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Purge I.M.M transactions - phase 2/3')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module
+     F*                                                               *
+     F*  ME1120 - Purge I.M.M. Transactions - Phase 2 of 3            *
+     F*                                                               *
+     F*  Function:  This program runs for a pre-defined amount of     *
+     F*  time and deletes all the I.M.M transactions that may be      *
+     F*  purged from the IMM files.                                   *
+     F*                                                               *
+     F*  Called By: MEC1230 - I.M.M. Purge Phase II of III            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145199             Date 16Oct98               *
+      *                 069250             Date 03May94               *
+     F*                 S01435             DATE 23JUL93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+     F*           in Year 2000 fix 124673.                            *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*****************************************************************
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    Chain fail                                             *
+     F*  99    EOF on Read                                            *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FMEINRMPDUF  E           K        DISK         KINFSR SRFILE     UC
+     F                                              KCOMIT
+      *
+      *  Incoming Message Purge file
+      *
+     FMEINCRM1UF  E           K        DISK         KINFSR SRFILE     UC
+     F                                              KCOMIT
+      *
+      *  Incoming Message Control File - Multiple format
+      *
+     F/COPY WNCPYSRC,ME1120DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,ME1120DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+     E/EJECT
+      *
+      * Allocate record identification indicator to each format
+      * of Incoming Message Detail multiple format file.
+      *
+     I@INCRM1     11
+     I@INMPM1     12
+     I@INDTM1     13
+     I@IN35M1     14
+     I@INFTM1     15
+     I@INLFM1     16
+      *
+     I/COPY WNCPYSRC,ME1120DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     IMEDTA     E DSMEDTA
+      *
+      *  Message Management Data Area
+      *
+     IDSTL        DS
+      *
+      *  Date structure for time/date comparison - time limit
+      *
+     I                                        1   60TLDATE
+     I                                        1   20TLDYY
+     I                                        3   50TLDMM
+     I                                        5   60TLDDD
+      *
+     I                                        7  120TLTIME
+     I                                        7   80TLTHH
+     I                                        9  100TLTMM
+     I                                       11  120TLTSS
+     IDSCU        DS
+      *
+      *  Date structure for time/date comparison - current
+      *
+     I                                        1   60CUDATE
+     I                                        1   20CUDYY
+     I                                        3   40CUDMM
+     I                                        5   60CUDDD
+      *
+     I                                        7  120CUTIME
+     I                                        7   80CUTHH
+     I                                        9  100CUTMM
+     I                                       11  120CUTSS
+     IDSCN        DS
+      *
+      *  Date structure for date conversion to Midas day no.
+      *
+     I                                        1   6 CNDATE
+     I                                        1   20CNDD
+     I                                        3   40CNMM
+     I                                        5   60CNYY
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Read all message references that are to be purged
+      *
+     C                     EXSR SRREAD
+      *
+     C                     MOVEL'1'       *INLR
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRREAD   : Read all message references that are to be purged *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    :         -                                         *
+      *                                                               *
+      *****************************************************************
+     CSR         SRREAD    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRREAD'  @STK,Q
+      *
+      *  Set limits to read all records
+      *
+     C                     READ MEINRMPD                 90
+      *
+      *  Read all records until end of time limit.
+      *
+      *  The time limit is stored in the MEDTA data structure
+      *
+     C           *IN90     DOWEQ'0'
+      *
+      *  Purge all associated records for the message reference
+      *
+     C                     EXSR SRPURG
+     C/COPY WNCPYSRC,ME1120C001
+      *
+      *  Delete Purge File record and COMIT all deletes
+      *
+     C                     DELET@INRMPD
+     C                     COMIT
+      *
+      *  Update current time and date. UDATE is set in Header spec to
+      *  be in the format YYMMDD.
+      *
+     C                     TIME           CUDTTM 120
+     C                     TIME           CUTIME
+     C                     Z-ADDCUDTTM    CUDATE
+      *
+      *  Check if processing is still within the time limit.
+      *  If not leave the processing after setting return code to send
+      *  a message to Audit Log on MRUNQ.
+      *
+     C           DSCU      IFGE DSTL
+     C                     MOVEL'MIN0098' W0RTN
+     C                     LEAVE
+     C                     END
+      *
+      *  Read next record
+      *
+     C                     READ MEINRMPD                 90
+      *
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXREAD    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPURG   : Purge all records for message reference           *
+      *                                                               *
+      *  CALLED BY: SRREAD  - Read all message references to be purged*
+      *                                                               *
+      *  CALLS    :         -                                         *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPURG    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPURG'  @STK,Q
+      *
+      *  /Copy point for Purge Records in Extension Files
+      *
+     C/COPY WNCPYSRC,ME1120DPRG
+      *
+      *  Set limits with the message reference in a partial key to get
+      *  all associated FT transactions.
+      *
+     C           KYINFT    KLIST
+     C                     KFLD           RMMSGR
+      *
+     C           KYINFT    SETLLMEINCRM1
+      *
+     C                     MOVEA'000000'  *IN,11
+     C           KYINFT    READEMEINCRM1                 91
+      *
+      *  Read while equal to the message reference
+      *
+     C           *IN91     DOWEQ'0'
+      *
+      *  Delete relevant format type
+      *
+     C   11                DELET@INCRM1                    Control Rec.
+     C   12                DELET@INMPM1                    Msg Part
+     C   13                DELET@INDTM1                    Details 100
+     C   14                DELET@IN35M1                    Details 35
+     C   15                DELET@INFTM1                    FT Status
+     C   16                DELET@INLFM1                    Log File
+      *
+      *  Read next record
+      *
+     C                     MOVEA'000000'  *IN,11
+     C           KYINFT    READEMEINCRM1                 91
+      *
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPURG    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR  - Error Processing                         *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define fields
+      *
+      *
+      *  Open Files
+      *
+     C                     OPEN MEINRMPD
+     C                     OPEN MEINCRM1
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Get time limit for purge processing from data area
+      *  If not there, default to 3 hours in minutes
+      *
+     C           *NAMVAR   DEFN           MEDTA
+     C           *LOCK     IN   MEDTA
+      *
+      *  If the purge time has not been defined, default to 180 minutes
+      *
+     C                     MOVE DAPURG    ALPURG  3
+     C           ALPURG    IFEQ *BLANKS
+     C           ALPURG    OREQ '000'
+     C                     Z-ADD180       DAPURG
+     C                     END
+      *
+     C                     OUT  MEDTA
+      *
+      *  Determine Time Limit for processing the purge.
+      *
+      *  Store system date
+      *
+     C                     Z-ADDUDATE     TLDATE
+      *
+      *  Convert current time into minutes, add on time limit and reset
+      *  to hours and minutes.
+      *
+     C                     TIME           TLTIME
+      *
+     C           TLTHH     MULT 60        TLMINS  50
+     C                     ADD  TLTMM     TLMINS
+     C                     ADD  DAPURG    TLMINS
+      *
+     C           TLMINS    DIV  60        TLTHH
+     C                     MVR            TLTMM
+      *
+      *  If over 24 hours, subtract 24 from the total hours and
+      *  increment day no. by 1.
+      *
+     C           TLTHH     IFGT 24
+     C                     SUB  24        TLTHH
+      *
+      *  Set date in DDMMYY format for conversion
+      *
+     C                     Z-ADDTLDDD     CNDD
+     C                     Z-ADDTLDMM     CNMM
+     C                     Z-ADDTLDYY     CNYY
+      *
+     C                     CALL 'ZDATE1'               90
+     C                     PARM *BLANKS   W1RTCD  7        Return Code
+     C                     PARM CNDATE    W1DATE  6        Date
+     C                     PARM 'D'       W1DTFM  1        Date Format
+     C                     PARM *ZEROS    W1DAYN  50       Day No.
+      *
+     C                     ADD  1         W1DAYN
+      *
+      *  Convert Midas Day no. to system date
+      *
+     C                     CALL 'ZDATE2'               90
+     C                     PARM W1DAYN    W2DAYN  50       Day No.
+     C                     PARM 'D'       W2DTFM  1        Date Format
+     C                     PARM *ZEROS    W2DATE  60       Date
+     C                     PARM *ZEROS    W2RUND  60       DDM
+      *
+     C                     MOVE W2DATE    CNDATE
+      *
+      *  Set date in YYMMDD format for compare
+      *
+     C                     Z-ADDCNDD      TLDDD
+     C                     Z-ADDCNMM      TLDMM
+     C                     Z-ADDCNYY      TLDYY
+      *
+     C                     END
+     C/COPY WNCPYSRC,ME1120C002
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1120DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1120DOPG
+      *
+      *  /Copy point for Outputs
+      *
+**  CPY@ table
+(c) Finastra International Limited 2001

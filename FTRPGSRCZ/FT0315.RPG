@@ -1,0 +1,2509 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Format fields for rpt/msg/screen')            *
+      *****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module
+     F*                                                               *
+     F*  FT0315 - FT Format Field for Reports/Messages/Screens        *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 263333             Date 20Nov12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG25221           Date 28Jul09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 BUG15201           Date 30Oct07               *
+      *                 250804A            Date 12Oct07               *
+      *                 BUG14771           Date 12Aug07               *
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 230006             Date 06Jun06               *
+      *                 223500             Date 06Jun06               *
+      *                 240687             Date 27Jun06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG1896            Date 24Apr04               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CFT004             Date 27Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 110783             Date 24Sep97
+     F*                 S01408             DATE 15NOV96               *
+     F*                 073155             DATE 23MAY94               *
+     F*                 073156             DATE 03MAY94               *
+     F*                 078189             DATE 22NOV94               *
+     F*                 069250             DATE 03MAY94               *
+     F*                 S01435             DATE 05NOV93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  263333 - FT: Length of field Sender on input or amend cycles *
+      *           does not. Move BBCSID to an 11 character long varia-*
+      *           ble before moving it to ADCHK1 to ensure that the   *
+      *           details on the first line of the Sender field is    *
+      *           displayed correctly and no overlapping happens.     *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  BUG25221 - FTC0520 00001 failed                              *
+      *  BUG15201 - Encounter Database Errors (Recompile)             *
+      *  250804A - Correct BIC test for IBAN.                         *
+      *  BUG14771 - Amended the input function and the message        *
+      *             generation for CFT032                             *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CFT032 - Account Line in Field 50X in MT103                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  230006 - When Account type is "I" (IBAN), do not display     *
+      *           SWIFT ID together with the IBAN as the IBAN gets    *
+      *           truncated on display.                               *
+      *  223500 - IBAN expansion not done on enquiry.  Applied 217981.*
+      *  240687 - Applied fix 217981.                                 *
+      *  217981 - IBAN processing incorrect in SR/SRMSG               *
+      *         - IBAN processing missing in Sr/SRSCR                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  BUG1896- Further changes needed due to CGL029 so that a full *
+      *           GL account number can be on same line as a BIC code *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CFT014 - Straight-through Processing Phase 2 MT103           *
+      *           Messages Generation for FT. Recompile only.         *
+     F*  CFT004 - International Bank Account Number                   *
+     F*           Allows new Account Type IBAN                        *
+     F*  110783 - Use non-critical flag to prevent database error     *
+     F*           if nostro exists but customer record has been       *
+     F*           deleted                                             *
+     F*  S01408 - Addition of core hook FT0315CCP6                    *
+     F*           Addition of core hook FT0315CCP5                    *
+     F*           Addition of core hook FT0315CCP4                    *
+     F*           Addition of core hook FT0315CCP3                    *
+     F*           Addition of core hook FT0315CCP2                    *
+     F*           Addition of core hook FT0315CCP1                    *
+     F*           Addition of core hook FT0315IIP1                    *
+     F*  073155 - Correct database error recording for accounts       *
+     F*  073156 - Do not use SWIFT address info. if customer          *
+     F*           number had been input. Avoids the problem           *
+     F*           where several customers have same BIC but different *
+     F*           physical addresses.                                 *
+     F*  078189 - Reinstate the creation parameters inadvertently     *
+     F*           removed by 069250                                   *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General work indicator                                 *
+     F*  91    General work indicator                                 *
+     F*  92    General work indicator                                 *                      BUG1896
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,FT0315DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,FT0315DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     E/EJECT
+     I/COPY WNCPYSRC,FT0315DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      *  Define Customer Details
+      *
+     IDDCUST      DS                            536                       073156
+      *                                                                   073156
+      *  Dummy Data structure for Customer details                        073156
+      *                                                                   073156
+     ISDCNST    E DSSDCNSTPD
+      *
+      *  Define Counterparty Nostros
+      *
+     ISDNOST    E DSSDNOSTPD
+      *
+      *  Define Nostro Details
+      *
+     IMEBICD    E DSMEBICDPD
+      *
+      *  Define BIC Directory
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      *  Define Bank Details
+      *
+     IACCNT     E DSACCNTAB
+      *
+      *  Define Account Details
+      *
+     ISDALTN    E DSSDALTNPD
+      *
+      *  Define Alternative Addresses
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+     C/COPY FTCPYSRC,SFTADDRI
+      *
+      * Address data structure
+      *
+      *
+     IDSMTR       DS
+      *
+      *  Define fields for message transalation
+      *
+     I                                        1 132 #MSDTA
+     I                                       15  30 #MPREF
+     I                                    P   1   20#MPART
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+      /EJECT
+     IW0FT        DS                            128
+      *
+      * Address data structure
+      *
+      * Currency
+     I                                        1   3 W0CCY
+      * Settlement Type
+     I                                        4   5 W0STMT
+      * Mandatory Text - convert BIC identifiers
+     I                                        6   6 W0MTXT
+      * Message Tag
+     I                                        7  11 W0MTAG
+      * Construct of data in field
+     I                                       12  12 W0TYPE
+      * Number of Lines available
+     I                                       13  140W0NLIN
+      * Network and Message Type
+     I                                       15  20 W0NWRK
+     I                                       21  23 W0MTPY
+      * Calling Program
+     I                                       24  33 W0CPGM
+      * Action *PRINT/*ENQ/*MSG GEN
+     I                                       34  41 W0ACT
+      * Critical reporting - Database error if 'Y'
+      * If no BIC directory and BIC entered no error
+     I                                       42  42 W0CRIT
+      * Force Midas Address - where possible
+     I                                       43  43 W0MADD
+      * If Retail get first address from account
+     I                                       44  44 W0RTAD
+      * Alternative Address
+     I                                       45  45 W0ALTN
+      * Address type selected in W0MSG
+     I                                       46  46 W0ADTP
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,FT0315IIP1                                           S01408
+     I*                                                                   S01408
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0FT
+     C                     PARM           W0LINS256
+     C                     PARM           W0RPT 256
+     C                     PARM           W0MSG 256
+     C                     PARM           W0SCR 256
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELW0LINS    W0PREF
+      *
+      *  Put details into address structure
+      *
+     C                     MOVELW0LINS    ADDRSS
+      *
+      *  Initialise output fields to blanks
+      *
+     C                     MOVEL*BLANKS   ##BIC
+     C                     MOVEL'D'       W0ADTP
+     C                     MOVEL*BLANKS   ##DERR  1
+     C                     MOVEL*BLANKS   W0RPT
+     C                     MOVEL*BLANKS   W0MSG
+     C                     MOVEL*BLANKS   W0SCR
+      *                                                                                     BUG25221
+      ** Initialise working field to blanks                                                 BUG25221
+      *                                                                                     BUG25221
+     C                     MOVEL*BLANKS   @CSNM                                             BUG25221
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  If type is blank then exit no move
+      *
+     C           W0TYPE    IFEQ *BLANKS
+     C                     GOTO EXMAIN
+     C                     END
+      *
+      *  Execute Frequency check processing
+      *
+     C           W0TYPE    CASEQ'F'       SRFNOS           Full Nostro
+     C           W0TYPE    CASEQ'N'       SRNOSN           Nostro Nbr
+     C           W0TYPE    CASEQ'G'       SRGLAC           GL Account
+     C           W0TYPE    CASEQ'P'       SRPTAC           Partial A/c
+     C           W0TYPE    CASEQ'R'       SRRETL           Retail A/c
+     C           W0TYPE    CASEQ'C'       SRCNUM           Customer nbr
+     C           W0TYPE    CASEQ'S'       SRBIC            SWIFT BIC id
+     C           W0TYPE    CASEQ'A'       SRADDR           Address
+     C           W0TYPE    CASEQ'I'       SRIBAN           IBAN           CFT004
+     C                     CAS            SRACT
+     C                     ENDCS
+      *
+      *  No more formatting available as primary ref not found
+      *
+     C           ##DERR    IFEQ 'Y'
+     C                     GOTO EXMAIN
+     C                     END
+      *
+      *  Format Report Lines
+      *
+     C                     EXSR SRRPT
+      *
+      *  Format Message Lines
+      *
+     C                     EXSR SRMSG
+      *
+      *  Format Screen Lines
+      *
+     C                     EXSR SRSCR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMAIN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFNOS   : Format Full Nostro                                *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFNOS    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRFNOS'  @STK,Q
+      *
+      *  /Copy point for Format Nostro
+      *
+     C/COPY WNCPYSRC,FT0315FNOS
+      *
+      *  Get Nostro details
+      *
+     C                     MOVELADFCCY    @CYCD
+     C                     MOVELADFNNB    @NONB
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANKS   @CUST   6
+     C                     PARM           @CYCD   3
+     C**********           PARM *BLANKS   @ACCN   4                                           CGL029
+     C                     PARM *BLANKS   @ACCN  10                                           CGL029
+     C                     PARM *BLANKS   @ACSN   2
+     C                     PARM           @NONB   2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM *BLANKS   DSFDY
+      *
+      *  If error and critical not yes than format and exit
+      *
+     C           W0CRIT    IFEQ *BLANKS
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+      *
+      *  Get Warning information
+      *
+     C                     MOVEL*BLANKS   #MSDTA
+     C                     MOVELADFNOS    #MSDTA
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2344 '#MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    W0RPT
+     C                     MOVEL#MSTX1    W0MSG
+     C                     MOVEL#MSTX1    W0SCR
+     C                     MOVEL'Y'       ##DERR
+     C                     GOTO EXFNOS
+     C                     END
+     C                     END
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AONOSTR0'W0FILE           ***************
+     C                     MOVELADFNOS    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Get Account Details
+      *
+     C                     MOVELA7ACSN    @ACSQ
+      *
+     C                     CALL 'AOACCTR0'             9090
+     C                     PARM *BLANKS   @RTCD   7        B:Return code
+     C                     PARM '*KEY   ' @OPTN   7        I:Option
+     C                     PARM *BLANKS   @RETL  10        I:Retail key
+     C                     PARM A7CUST    @CNUM   6        I:Key field 1
+     C                     PARM A7CYCD    @CUCD   3        I:Key field 2
+     C**********           PARM A7ACCD    @ACCD   4        I:Key field 3                      CGL029
+     C                     PARM A7ACCD    @ACCD  10        I:Key field 3                      CGL029
+     C                     PARM           @ACSQ   2        I:Key field 4
+     C                     PARM A7BRCD    @BRCA   3        I:Key field 5  S01117
+     C           ACCNT     PARM           DSSDY            O:OUTPUT
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AOACCTR0'W0FILE           ***************
+     C                     MOVELADCHK1    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Get Customer Details
+      *
+     C                     MOVELA7CUST    @CSNM
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0315CCP1                                           S01408
+     C*                                                                   S01408
+     C                     EXSR SRCUST
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFNOS    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNOSN   : Format Nostro Number                              *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNOSN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRNOSN'  @STK,Q
+      *
+      *  /Copy point for Format Nostro number
+      *
+     C/COPY WNCPYSRC,FT0315NOSN
+      *
+      *  Get Nostro details
+      *
+     C                     MOVELW0CCY     @CYCD
+     C                     MOVELADNOSN    @NONB
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANKS   @CUST   6
+     C                     PARM           @CYCD   3
+     C**********           PARM *BLANKS   @ACCN   4                                           CGL029
+     C                     PARM *BLANKS   @ACCN                                               CGL029
+     C                     PARM *BLANKS   @ACSN   2
+     C                     PARM           @NONB   2
+     C                     PARM *BLANKS   @BRCD   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM *BLANKS   DSFDY
+      *
+      *  If error and critical not yes than format and exit
+      *
+     C           W0CRIT    IFEQ *BLANKS
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+      *
+      *  Get Warning information
+      *
+     C                     MOVEL*BLANKS   #MSDTA
+     C           W0CCY     CAT  ADNOSN    #MSDTA    P
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2344 '#MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    W0RPT
+     C                     MOVEL#MSTX1    W0MSG
+     C                     MOVEL#MSTX1    W0SCR
+     C                     MOVEL'Y'       ##DERR
+     C                     GOTO EXNOSN
+     C                     END
+     C                     END
+      *
+      *  If error on call
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AONOSTR0'W0FILE           ***************
+     C           W0CCY     CAT  ADNOSN    W0KEY     P      * DB ERROR 03 *
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Get Account Details
+      *
+     C                     MOVELA7ACSN    @ACSQ
+      *
+     C                     CALL 'AOACCTR0'             9090
+     C                     PARM *BLANKS   @RTCD   7        B:Return code
+     C                     PARM '*KEY   ' @OPTN   7        I:Option
+     C                     PARM *BLANKS   @RETL  10        I:Retail key
+     C                     PARM A7CUST    @CNUM   6        I:Key field 1
+     C                     PARM A7CYCD    @CUCD   3        I:Key field 2
+     C**********           PARM A7ACCD    @ACCD   4        I:Key field 3                      CGL029
+     C                     PARM A7ACCD    @ACCD            I:Key field 3                      CGL029
+     C                     PARM           @ACSQ   2        I:Key field 4
+     C                     PARM A7BRCD    @BRCA   3        I:Key field 5  S01117
+     C           ACCNT     PARM           DSSDY            O:OUTPUT
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AOACCTR0'W0FILE           ***************
+     C                     MOVELADCHK1    W0KEY            * DB ERROR 04 *
+     C                     Z-ADD4         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Get Customer Details
+      *
+     C                     MOVELA7CUST    @CSNM
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0315CCP2                                           S01408
+     C*                                                                   S01408
+     C                     EXSR SRCUST
+      *
+      *  Format Address field in case passed with trailling zeroes
+      *
+     C                     MOVEL*BLANKS   W0LINS
+     C                     MOVELADNOSN    W0LINS
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXNOSN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRGLAC   : Format General Ledger Account                     *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRGLAC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRGLAC'  @STK,Q
+      *
+      *  /Copy point for Format General Ledger Account
+      *
+     C/COPY WNCPYSRC,FT0315GLAC
+      *
+      *  If single branched use ICD branch code
+      *
+     C           ADGBRC    IFEQ *BLANKS
+     C           WUMBIN    ANDEQ'N'
+     C                     MOVELBJSBRC    ADGBRC
+     C                     END
+      *
+      *  Get Account Details
+      *
+     C                     CALL 'AOACCTR0'             9090
+     C                     PARM *BLANKS   @RTCD   7        B:Return code
+     C                     PARM '*KEY   ' @OPTN   7        I:Option
+     C                     PARM *BLANKS   @RETL  10        I:Retail key
+     C                     PARM ADGCNM    @CNUM   6        I:Key field 1
+     C                     PARM ADGCCY    @CUCD   3        I:Key field 2
+     C**********           PARM ADGACD    @ACCD   4        I:Key field 3                      CGL029
+     C                     PARM ADGACD    @ACCD            I:Key field 3                      CGL029
+     C                     PARM ADGASQ    @ACSQ   2        I:Key field 4
+     C                     PARM ADGBRC    @BRCA   3        I:Key field 5  S01117
+     C           ACCNT     PARM           DSSDY            O:OUTPUT
+      *
+      *  If error and critical not yes than format and exit
+      *
+      *  if account closed then also print text                           073155
+      *
+     C           W0CRIT    IFEQ *BLANKS
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C           DACC      ORLT WURDNB                                    073155
+     C           DACC      ANDGT0                                         073155
+     C           ACST      ANDEQ'C'                                       073155
+      *
+      *  Get Warning information
+      *
+     C                     MOVEL*BLANKS   #MSDTA
+     C                     MOVELADCHK1    #MSDTA
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2345 '#MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    W0RPT
+     C                     MOVEL#MSTX1    W0MSG
+     C                     MOVEL#MSTX1    W0SCR
+     C                     MOVEL'Y'       ##DERR
+     C                     GOTO EXGLAC
+     C                     END
+     C                     END
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AOACCTR0'W0FILE           ***************
+     C                     MOVELADCHK1    W0KEY            * DB ERROR 05 *
+     C                     Z-ADD5         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Get Customer Details
+      *
+     C                     MOVELCNUM      @CSNM
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0315CCP3                                           S01408
+     C*                                                                   S01408
+     C                     EXSR SRCUST
+      *
+      *  If not multi-branched blank out branch
+      *
+     C           WUMBIN    IFEQ 'N'
+     C                     MOVEL*BLANKS   ADGBRC
+     C                     END
+      *
+      *  Format Address field in case passed with trailling zeroes
+      *
+     C                     MOVEL*BLANKS   W0LINS
+     C                     MOVELADDRSS    W0LINS
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXGLAC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPTAC   : Format Partial Account                            *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPTAC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRPTAC'  @STK,Q
+      *                                                                                       CFT032
+     C           *LIKE     DEFN ADPBRC    WBRC                                                CFT032
+     C           *LIKE     DEFN ADPCNM    WCNM                                                CFT032
+     C           *LIKE     DEFN ADPACD    WACD                                                CFT032
+     C           *LIKE     DEFN ADPASQ    WASQ                                                CFT032
+      *                                                                                       CFT032
+     C           ADSLSH    IFEQ '/'                                                           CFT032
+     C                     MOVE ADPBR2    WBRC                                                CFT032
+     C                     MOVE ADPCN2    WCNM                                                CFT032
+     C                     MOVE ADPAC2    WACD                                                CFT032
+     C                     MOVE ADPAS2    WASQ                                                CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVE ADPBRC    WBRC                                                CFT032
+     C                     MOVE ADPCNM    WCNM                                                CFT032
+     C                     MOVE ADPACD    WACD                                                CFT032
+     C                     MOVE ADPASQ    WASQ                                                CFT032
+     C                     ENDIF                                                              CFT032
+      *
+      *  /Copy point for Format Partial Account
+      *
+     C/COPY WNCPYSRC,FT0315PTAC
+      *
+      *  If single branched use ICD branch code
+      *
+     C********** ADPBRC    IFEQ *BLANKS                                                       CFT032
+     C           WBRC      IFEQ *BLANKS                                                       CFT032
+     C           WUMBIN    ANDEQ'N'
+     C**********           MOVELBJSBRC    ADPBRC                                              CFT032
+     C                     MOVELBJSBRC    WBRC                                                CFT032
+     C                     END
+      *
+      *  Get Account Details
+      *
+     C                     CALL 'AOACCTR0'             9090
+     C                     PARM *BLANKS   @RTCD   7        B:Return code
+     C                     PARM '*KEY   ' @OPTN   7        I:Option
+     C                     PARM *BLANKS   @RETL  10        I:Retail key
+     C**********           PARM ADPCNM    @CNUM   6        I:Key field 1                      CFT032
+     C                     PARM WCNM      @CNUM   6        I:Key field 1                      CFT032
+     C                     PARM W0CCY     @CUCD   3        I:Key field 2
+     C**********           PARM ADPACD    @ACCD   4        I:Key field 3                      CGL029
+     C**********           PARM ADPACD    @ACCD            I:Key field 3               CGL029 CFT032
+     C                     PARM WACD      @ACCD            I:Key field 3                      CFT032
+     C**********           PARM ADPASQ    @ACSQ   2        I:Key field 4                      CFT032
+     C                     PARM WASQ      @ACSQ   2        I:Key field 4                      CFT032
+     C**********           PARM ADPBRC    @BRCA   3        I:Key field 5  S01117              CFT032
+     C                     PARM WBRC      @BRCA   3        I:Key field 5                      CFT032
+     C           ACCNT     PARM           DSSDY            O:OUTPUT
+      *
+      *  If error and critical not yes than format and exit
+      *
+      *  if account closed then also print text                           073155
+      *                                                                   073155
+     C           W0CRIT    IFEQ *BLANKS
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C           DACC      ORLT WURDNB                                    073155
+     C           DACC      ANDGT0                                         073155
+     C           ACST      ANDEQ'C'                                       073155
+      *
+      *  Get Warning information
+      *
+     C                     MOVEL*BLANKS   #MSDTA
+     C           W0CCY     CAT  ADCHK1    #MSDTA    P
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2349 '#MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    W0RPT
+     C                     MOVEL#MSTX1    W0MSG
+     C                     MOVEL#MSTX1    W0SCR
+     C                     MOVEL'Y'       ##DERR
+     C                     GOTO EXPTAC
+     C                     END
+     C                     END
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AOACCTR0'W0FILE           ***************
+     C           W0CCY     CAT  ADCHK1    W0KEY     P      * DB ERROR 06 *
+     C                     Z-ADD6         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Get Customer Details
+      *
+     C                     MOVELCNUM      @CSNM
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0315CCP4                                           S01408
+     C*                                                                   S01408
+     C                     EXSR SRCUST
+      *
+      *  If not multi-branched blank out branch
+      *
+     C           WUMBIN    IFEQ 'N'
+     C           ADSLSH    IFEQ '/'                                                           CFT032
+     C                     MOVE *BLANKS   ADPBR2                                              CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVEL*BLANKS   ADPBRC
+     C                     ENDIF                                                              CFT032
+     C                     END
+      *
+      *  Format Address field in case passed with trailling zeroes
+      *
+     C                     MOVEL*BLANKS   W0LINS
+     C                     MOVELADDRSS    W0LINS
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPTAC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFNOS   : Format Retail Account Number                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRETL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRRETL'  @STK,Q
+      *
+     C           *LIKE     DEFN ADACN2    WACNO                                               CFT032
+      *                                                                                       CFT032
+     C           ADSLSH    IFEQ '/'                                                           CFT032
+     C                     MOVE ADACN2    WACNO                                               CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVE ADACNO    WACNO                                               CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+      *  /Copy point for Format Retail Account
+      *
+     C/COPY WNCPYSRC,FT0315RETL
+      *
+      *  Get Account Details
+      *
+     C                     CALL 'AOACCTR0'             9090
+     C                     PARM *BLANKS   @RTCD   7        B:Return code
+     C                     PARM '*KEY   ' @OPTN   7        I:Option
+     C**********           PARM ADACNO    @RETL  10        I:Retail key                       CFT032
+     C                     PARM WACNO     @RETL  10        I:Retail key                       CFT032
+     C                     PARM *BLANKS   @CNUM   6        I:Key field 1
+     C                     PARM *BLANKS   @CUCD   3        I:Key field 2
+     C**********           PARM *BLANKS   @ACCD   4        I:Key field 3                      CGL029
+     C                     PARM *BLANKS   @ACCD            I:Key field 3                      CGL029
+     C                     PARM *BLANKS   @ACSQ   2        I:Key field 4
+     C                     PARM *BLANKS   @BRCA   3        I:Key field 5  S01117
+     C           ACCNT     PARM           DSSDY            O:OUTPUT
+      *
+      *  If error and critical not yes than format and exit
+      *
+      *  if account closed then also print text                           073155
+      *                                                                   073155
+     C           W0CRIT    IFEQ *BLANKS
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C           DACC      ORLT WURDNB                                    073155
+     C           DACC      ANDGT0                                         073155
+     C           ACST      ANDEQ'C'                                       073155
+      *
+      *  Get Warning information
+      *
+     C                     MOVEL*BLANKS   #MSDTA
+     C                     MOVELADCHK1    #MSDTA
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2346 '#MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    W0RPT
+     C                     MOVEL#MSTX1    W0MSG
+     C                     MOVEL#MSTX1    W0SCR
+     C                     MOVEL'Y'       ##DERR
+     C                     GOTO EXRETL
+     C                     END
+     C                     END
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AOACCTR0'W0FILE           ***************
+     C**********           MOVELADACNO    W0KEY            * DB ERROR 07 *                    CFT032
+     C                     MOVELWACNO     W0KEY                                               CFT032
+     C                     Z-ADD7         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Get Customer Details
+      *
+     C                     MOVELCNUM      @CSNM
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0315CCP5                                           S01408
+     C*                                                                   S01408
+     C                     EXSR SRCUST
+      *
+      *  Format Address field in case passed with trailling zeroes
+      *
+     C                     MOVEL*BLANKS   W0LINS
+     C           ADSLSH    IFEQ '/'                                                           CFT032
+     C           '/'       CAT  WACNO     W0LINS                                              CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVELADACNO    W0LINS
+     C                     ENDIF                                                              CFT032
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRETL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCNUM   : Format Customer                                   *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCNUM    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRCNUM'  @STK,Q
+      *
+      *  /Copy point for Format Customer
+      *
+     C/COPY WNCPYSRC,FT0315CNUM
+      *
+      *  Get Customer Details
+      *
+      *
+      *  First 10 characters should be key for SDCUST
+      *
+     C           ADSLSH    IFNE '/'
+     C                     MOVELADCHK1    @CSNM
+     C                     ELSE
+     C                     MOVELADCHK2    @CSNM
+     C                     END
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FT0315CCP6                                           S01408
+     C*                                                                   S01408
+     C                     CALL 'AOCUSTR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CSNM  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM *BLANKS   DSSDY
+      *
+      *  If error and critical not yes than format and exit
+      *
+     C           W0CRIT    IFEQ *BLANKS
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+      *
+      *  Get Warning information
+      *
+     C                     MOVEL*BLANKS   #MSDTA
+     C                     MOVEL@CSNM     #MSDTA
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2347 '#MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C                     MOVEL#MSTX1    W0RPT
+     C                     MOVEL#MSTX1    W0MSG
+     C                     MOVEL#MSTX1    W0SCR
+     C                     MOVEL'Y'       ##DERR
+     C                     GOTO EXCNUM
+     C                     END
+     C                     END
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AOCUSTR0'W0FILE           ***************
+     C                     MOVEL@CSNM     W0KEY            * DB ERROR 08 *
+     C                     Z-ADD8         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  If Customer is has a BIC access BIC directory
+      *
+     C           BBCSID    IFNE *BLANKS
+      *
+     C                     MOVELBBCSID    W9BICC
+     C           3         SUBSTBBCSID:9  W9BICB  3
+      *
+     C                     CALL 'ME1400'               9090
+     C                     PARM *BLANKS   W9RTN   7
+     C                     PARM           W9BICC  8
+     C                     PARM           W9BICB  3
+     C***********          PARM           SDCUST                          073156
+     C                     PARM *BLANKS   DDCUST                          073156
+     C                     PARM           SDCNST
+     C                     PARM           MEBICD
+     C                     PARM *BLANKS   W9CUST  1
+     C                     PARM *BLANKS   W9CNST  1
+     C                     PARM *BLANKS   W9BICD  1
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ME1400  'W0FILE           ***************
+     C                     MOVEL'*CALL   'W0KEY            * DB ERROR 09 *
+     C                     Z-ADD9         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     SELEC
+      *
+      *  Record not found on directory but found on others
+      *  - BIC directory has data so error
+      *
+     C           W9RTN     WHEQ 'MIN0244'
+     C           W9RTN     OREQ 'MIN0245'
+     C           W9RTN     OREQ 'MIN0246'
+     C                     MOVEL'N'       ##BIC   1
+      *
+      *  Record not found - S.W.I.F.T does not exist
+      *
+     C           W9RTN     WHEQ 'Y2U0005'
+     C                     MOVEL'W'       ##BIC   1
+      *
+      *  Record found - Customer exists
+      *
+     C           W9RTN     WHEQ *BLANKS
+      *
+     C                     MOVEL'Y'       ##BIC
+     C                     ENDSL
+     C                     END
+      *
+      *  Format Address field in case passed with trailling zeroes
+      *
+     C           ADSLSH    IFNE '/'
+     C                     MOVEL*BLANKS   W0LINS
+     C                     MOVELADCNUM    W0LINS
+     C                     ELSE
+     C                     MOVEL*BLANKS   ADXCN2
+     C                     MOVELADDRSS    W0LINS
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCNUM    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBIC    : Format BIC Identifier                             *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRBIC     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRBIC '  @STK,Q
+      *
+      *  /Copy point for Format BIC Identifier
+      *
+     C/COPY WNCPYSRC,FT0315BIC
+      *
+      *  If BIC access BIC directory
+      *
+     C           ADSLSH    IFNE '/'
+     C                     MOVELADCHK1    W9BICC
+     C           3         SUBSTADCHK1:9  W9BICB  3
+     C                     ELSE
+     C                     MOVELADCHK2    W9BICC
+     C           3         SUBSTADCHK2:9  W9BICB  3
+     C                     END
+      *
+     C                     CALL 'ME1400'               9090
+     C                     PARM *BLANKS   W9RTN   7
+     C                     PARM           W9BICC  8
+     C                     PARM           W9BICB  3
+     C                     PARM           SDCUST
+     C                     PARM           SDCNST
+     C                     PARM           MEBICD
+     C                     PARM *BLANKS   W9CUST  1
+     C                     PARM *BLANKS   W9CNST  1
+     C                     PARM *BLANKS   W9BICD  1
+      *
+     C           *IN90     IFEQ '1'
+     C           W9RTN     OREQ 'MIN0244'
+     C           W0CRIT    ANDEQ'Y'
+     C           W9RTN     OREQ 'MIN0245'
+     C           W0CRIT    ANDEQ'Y'
+     C           W9RTN     OREQ 'MIN0246'
+     C           W0CRIT    ANDEQ'Y'
+     C                     MOVEL'ME1400  'W0FILE           ***************
+     C                     MOVEL'*CALL   'W0KEY            * DB ERROR 10 *
+     C                     Z-ADD10        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     SELEC
+      *
+      *  Record not found on directory but found on others
+      *  - BIC directory has data so error
+      *
+     C           W9RTN     WHEQ 'MIN0244'
+     C           W9RTN     OREQ 'MIN0245'
+     C           W9RTN     OREQ 'MIN0246'
+     C                     MOVEL'N'       ##BIC   1
+      *
+      *  Record not found - S.W.I.F.T does not exist
+      *
+     C           W9RTN     WHEQ 'Y2U0005'
+     C                     MOVEL'W'       ##BIC   1
+      *
+      *  Record found - Customer exists
+      *
+     C           W9RTN     WHEQ *BLANKS
+      *
+     C                     MOVEL'Y'       ##BIC
+     C                     ENDSL
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXBIC     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRADDR   : Format Address                                    *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRADDR    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRADDR'  @STK,Q
+      *
+      *  /Copy point for Format Address
+      *
+     C/COPY WNCPYSRC,FT0315ADDR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXADDR    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************   CFT004
+      *                                                               *   CFT004
+      *  SRIBAN   : Format International Bank Account Number          *   CFT004
+      *                                                               *   CFT004
+      *  CALLED BY: Main processing                                   *   CFT004
+      *                                                               *   CFT004
+      *****************************************************************   CFT004
+     CSR         SRIBAN    BEGSR                                          CFT004
+      *                                                                   CFT004
+      *  Set up subroutine stack name                                     CFT004
+      *                                                                   CFT004
+     C                     ADD  1         Q       50                      CFT004
+     C                     MOVEL'SRIBAN'  @STK,Q                          CFT004
+      *                                                                   CFT004
+      *                                                                   CFT004
+     C           CFT004    IFEQ 'Y'                                       CFT004
+     C           ADSLSH    IFEQ '/'                                                           CFT032
+     C           34        SUBSTW0LINS:2  WIBAN  34                       CFT004
+     C                     ELSE                                                               CFT032
+     C                     MOVELW0LINS    WIBAN                                               CFT032
+     C                     ENDIF                                                              CFT032
+      *  Get Account Details                                              CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOIBANR4'             9090               CFT004
+     C                     PARM *BLANKS   @RTCD   7        B:Return code  CFT004
+     C                     PARM '*KEY   ' @OPTN   7        I:Option       CFT004
+     C                     PARM WIBAN     @IBAN  34        I:IBAN Number  CFT004
+     C           ACCNT     PARM           DSSDY            O:OUTPUT       CFT004
+      *                                                                   CFT004
+      *  If error and critical not yes than format and exit               CFT004
+      *                                                                   CFT004
+      *  if account closed then also print text                           CFT004
+      *                                                                   CFT004
+     C           W0CRIT    IFEQ *BLANKS                                   CFT004
+     C           *IN90     IFEQ '1'                                       CFT004
+     C           @RTCD     ORNE *BLANKS                                   CFT004
+     C           DACC      ORLT WURDNB                                    CFT004
+     C           DACC      ANDGT0                                         CFT004
+     C           ACST      ANDEQ'C'                                       CFT004
+      *                                                                   CFT004
+      *  If this is to display on screen or for an enquiry                CFT004
+      *  Get Warning information                                          CFT004
+      *                                                                   CFT004
+     C           W0ACT     IFEQ '*SCR   '                                 CFT004
+     C           W0ACT     OREQ '*ENQ   '                                 CFT004
+     C                     MOVEL*BLANKS   #MSDTA                          CFT004
+     C                     MOVELADCHK1    #MSDTA                          CFT004
+      *                                                                   CFT004
+     C                     CALL 'MEC1150'              9090               CFT004
+     C                     PARM 'FTM2406 '#MSGID  7                       CFT004
+     C                     PARM 'FTUSRMSG'#MSGF  10                       CFT004
+     C                     PARM WIBAN     #MSDTA                          CFT004
+     C                     PARM *BLANKS   #MSTX1                          CFT004
+     C                     PARM *BLANKS   #MSTX2                          CFT004
+      *                                                                   CFT004
+     C                     MOVEL#MSTX1    W0RPT                           CFT004
+     C                     MOVEL#MSTX1    W0SCR                           CFT004
+      *                                                                   CFT004
+     C                     ELSE                                           CFT004
+      * For printing or message                                           CFT004
+     C                     CALL 'AOIBANR3'                                CFT004
+     C                     PARM *BLANKS   @RTCD                           CFT004
+     C                     PARM WIBAN     P@IBN  47                       CFT004
+     C                     PARM           P@IBNW 47                       CFT004
+     C                     PARM           P@IBNN 34                       CFT004
+     C           @RTCD     IFNE *BLANKS                                   CFT004
+     C                     MOVELWIBAN     W0RPT                           CFT004
+     C                     MOVELWIBAN     W0SCR                           CFT004
+     C                     ELSE                                           CFT004
+     C                     MOVELP@IBNW    W0RPT                           CFT004
+     C                     MOVELP@IBNW    W0SCR                           CFT004
+     C                     END                                            CFT004
+     C                     END                                            CFT004
+     C                     MOVELW0LINS    W0MSG                           CFT004
+     C                     MOVEL'Y'       ##DERR                          CFT004
+     C                     GOTO EXIBAN                                    CFT004
+     C                     END                                            CFT004
+     C                     END                                            CFT004
+      *                                                                   CFT004
+     C           *IN90     IFEQ '1'                                       CFT004
+     C           @RTCD     ORNE *BLANKS                                   CFT004
+     C                     MOVEL'AOIBANR4'W0FILE           ***************CFT004
+     C                     MOVELADCHK1    W0KEY            * DB ERROR 17 *CFT004
+     C                     Z-ADD17        W0ERNB           ***************CFT004
+     C                     MOVEL'MEM5003' W0MSGD                          CFT004
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT004
+     C                     EXSR SRERR                                     CFT004
+     C                     END                                            CFT004
+      *                                                                   CFT004
+      *  Get Customer Details                                             CFT004
+      *                                                                   CFT004
+     C                     MOVELCNUM      @CSNM                           CFT004
+     C                     EXSR SRCUST                                    CFT004
+      *                                                                   CFT004
+     C                     END                                            CFT004
+      *                                                                   CFT004
+      *  Unwind subroutine stack name                                     CFT004
+      *                                                                   CFT004
+     C           EXIBAN    TAG                                            CFT004
+     C                     MOVEA*BLANKS   @STK,Q                          CFT004
+     C                     SUB  1         Q                               CFT004
+      *                                                                   CFT004
+     CSR                   ENDSR                                          CFT004
+     C/EJECT                                                              CFT004
+      *****************************************************************
+      *                                                               *
+      *  SRRPT    : Format Report Lines                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRRPT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRRPT '  @STK,Q
+      *
+      *  Put details into address structure
+      *
+     C                     MOVELW0LINS    ADDRSS
+      *
+      *  /Copy point for Format Report Lines
+      *
+     C/COPY WNCPYSRC,FT0315RPT
+      *
+      *  If Address then map input fields directly to outgoing
+      *
+     C           W0TYPE    IFEQ 'A'
+     C                     MOVELW0LINS    W0RPT
+     C                     GOTO EXRPT
+     C                     END
+      *
+      *  If Customer without '/' in first line
+      *  Or BIC      without '/' in first line
+      *  Or Full Nostro
+      *  Or Nostro
+      *  Or General Ledger
+      *  Or Partial Ledger
+      *  Or Retail
+      ** Or IBAN                                                                              230006
+      *
+      *  Map address information into lines 2 to 6
+      *
+     C           W0TYPE    IFEQ 'F'
+     C           W0TYPE    OREQ 'N'
+     C           W0TYPE    OREQ 'G'
+     C           W0TYPE    OREQ 'P'
+     C           W0TYPE    OREQ 'R'
+     C           W0TYPE    OREQ 'I'                                                           230006
+     C           W0TYPE    OREQ 'C'
+     C           ADSLSH    ANDNE'/'
+     C           W0TYPE    OREQ 'S'
+     C           ADSLSH    ANDNE'/'
+      *
+      *  If BIC identifier available for customer number
+      *  show with the BIC along with the customer number
+      *
+     C           W0TYPE    IFEQ 'F'
+     C           W0TYPE    OREQ 'G'
+     C           W0TYPE    OREQ 'P'
+     C           W0TYPE    OREQ 'R'
+     C           W0TYPE    OREQ 'C'
+     C           W0TYPE    OREQ 'N'
+     C**********           MOVE BBCSID    ADCHK1                                              263333
+     C                     MOVELBBCSID    WBCSID 11                                           263333
+     C                     MOVE WBCSID    ADCHK1                                              263333
+     C                     END
+      *                                                                                     BUG14771
+     C           W0TYPE    IFEQ 'I'                                                         BUG14771
+     C**********           MOVE W0LINS    BICTST 13                                 BUG14771 250804A
+     C                     MOVE ADCHK1    BICTST 13                                          250804A
+     C           BICTST    IFEQ *BLANKS                                                     BUG14771
+     C                     MOVE BBCSID    ADCHK1                                            BUG14771
+     C                     END                                                              BUG14771
+     C                     END                                                              BUG14771
+      *
+      *  Fill data structure
+      *
+     C                     SELEC
+      *
+      *  If Midas Address then fill with Customer Info
+      *
+     C           W0MADD    WHEQ 'Y'
+     C           W9CUST    ANDEQ'Y'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'C'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'R'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'P'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'G'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'F'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'N'
+     C           W0MADD    OREQ 'Y'                                                         BUG14771
+     C           W0TYPE    ANDEQ'I'                                                         BUG14771
+     C                     MOVELBBCNA1    ADCHK2
+     C                     MOVELBBCNA2    ADCHK3
+     C                     MOVELBBCNA3    ADCHK4
+     C                     MOVELBBCNA4    ADCHK5
+      *
+      *  If BIC information show in lines 2 to 6
+      *
+     C           ##BIC     WHEQ 'Y'
+     C           W9BICD    ANDEQ'Y'
+     C                     MOVELBDINS1    ADCHK2
+      *
+      *  Check fields not concatenated
+      *
+     C           BDINS2    IFNE *BLANKS
+     C           1         SUBSTBDINS2:1  ##001   1
+     C           ##001     IFNE *BLANKS
+     C                     MOVELBDINS2    ADCHK3
+     C                     ELSE
+     C           34        SUBSTBDINS2:2  ADCHK3
+     C                     END
+      *
+     C                     MOVELBDCITY    ADCHK4
+     C                     MOVELBDBRC1    ADCHK5
+     C                     ELSE
+      *
+     C                     MOVELBDCITY    ADCHK3
+     C                     MOVELBDBRC1    ADCHK4
+     C                     END
+      *
+      *  Else show warning if BIC not on database
+      *  (i.e. BIC not installed)
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           ##BIC     ANDEQ'W'
+     C                     MOVEL##W1      ADCHK2
+     C                     MOVEL##W2      ADCHK3
+     C                     MOVEL##W3      ADCHK4
+      *
+      *  Else use Counterparty information if BIC
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           W9CNST    ANDEQ'Y'
+     C                     MOVELAWCPNM    ADCHK2
+     C                     MOVELAWCNTN    ADCHK3
+      *
+      *  Else use Customer address information
+      *
+     C                     OTHER
+     C                     MOVELBBCNA1    ADCHK2
+     C                     MOVELBBCNA2    ADCHK3
+     C                     MOVELBBCNA3    ADCHK4
+     C                     MOVELBBCNA4    ADCHK5
+     C                     ENDSL
+     C                     END
+      *
+      *  If Customer with '/' in first line
+      *  Or BIC      with '/' in first line
+      *
+      *  Map address information into lines 3 to 6
+      *
+     C           W0TYPE    IFEQ 'C'
+     C           ADSLSH    ANDEQ'/'
+     C           W0TYPE    OREQ 'S'
+     C           ADSLSH    ANDEQ'/'
+      *
+      *  If BIC identifier available for customer number
+      *  show with the BIC along with the customer number
+      *
+     C           W0TYPE    IFEQ 'C'
+     C                     MOVE BBCSID    ADCHK2
+     C                     END
+      *
+      *  Fill data structure
+      *
+     C                     SELEC
+      *
+      *  If Midas Address then fill with Customer Info
+      *
+     C           W0MADD    WHEQ 'Y'
+     C           W9CUST    ANDEQ'Y'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'C'
+     C                     MOVELBBCNA1    ADCHK3
+     C                     MOVELBBCNA2    ADCHK4
+     C                     MOVELBBCNA3    ADCHK5
+     C                     MOVELBBCNA4    ADCHK6
+      *
+      *  If BIC information show in lines 2 to 6
+      *
+     C           ##BIC     WHEQ 'Y'
+     C           W9BICD    ANDEQ'Y'
+     C                     MOVELBDINS1    ADCHK3
+      *
+      *  Check fields not concatenated
+      *
+     C           BDINS2    IFNE *BLANKS
+     C           1         SUBSTBDINS2:1  ##001   1
+     C           ##001     IFNE *BLANKS
+     C                     MOVELBDINS2    ADCHK4
+     C                     ELSE
+     C           34        SUBSTBDINS2:2  ADCHK4
+     C                     END
+      *
+     C                     MOVELBDCITY    ADCHK5
+     C                     MOVELBDBRC1    ADCHK6
+     C                     ELSE
+      *
+     C                     MOVELBDCITY    ADCHK4
+     C                     MOVELBDBRC1    ADCHK5
+     C                     END
+      *
+      *  Else show warning if BIC not on database
+      *  (i.e. BIC not installed)
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           ##BIC     ANDEQ'W'
+     C                     MOVEL##W1      ADCHK3
+     C                     MOVEL##W2      ADCHK4
+     C                     MOVEL##W3      ADCHK5
+      *
+      *  Else use Counterparty information if BIC
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           W9CNST    ANDEQ'Y'
+     C                     MOVELAWCPNM    ADCHK3
+     C                     MOVELAWCNTN    ADCHK4
+      *
+      *  Else use Customer address information
+      *
+     C                     OTHER
+     C                     MOVELBBCNA1    ADCHK3
+     C                     MOVELBBCNA2    ADCHK4
+     C                     MOVELBBCNA3    ADCHK5
+     C                     MOVELBBCNA4    ADCHK6
+     C                     ENDSL
+     C                     END
+      *
+      *  Move formatted information to Output field
+      *
+     C                     MOVELADDRSS    W0RPT
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXRPT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMSG    : Format Message Lines                              *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMSG     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMSG '  @STK,Q
+      *
+      *  Put details into address structure
+      *
+     C                     MOVELW0LINS    ADDRSS
+      *
+      *  /Copy point for Format Message Lines
+      *
+     C/COPY WNCPYSRC,FT0315MSG
+      *
+      *  If Address then map input fields directly to outgoing
+      *
+     C           W0TYPE    IFEQ 'A'
+     C                     MOVEL'D'       W0ADTP
+     C                     MOVELW0LINS    W0MSG
+     C                     GOTO EXMSG
+     C                     END
+      ***********                                                                      CFT004 217981
+      ***If*IBAN*then*map*input*fields*directly*to*outgoing***                         CFT004 217981
+      ***********                                                                      CFT004 217981
+     C***********W0TYPE    IFEQ 'I'                                                    CFT004 217981
+     C***********          MOVELW0LINS    W0MSG                                        CFT004 217981
+     C***********          GOTO EXMSG                                                  CFT004 217981
+     C***********          END                                                         CFT004 217981
+      *
+      *  If not mandatory text and BIC identifier found use this
+      *
+     C           W0MTXT    IFNE 'Y'
+     C           W0MADD    ANDNE'Y'
+     C           ##BIC     ANDNE*BLANKS
+      *
+      *  If Customer without '/' in first line
+      *  Or BIC      without '/' in first line
+      *  Or Full Nostro
+      *  Or Nostro
+      *  Or General Ledger
+      *  Or Partial Ledger
+      *  Or Retail
+      ** Or IBAN                                                                              223500
+      *
+      *  Map address information into lines 1 to 6
+      *
+     C           W0TYPE    IFEQ 'F'
+     C           W0TYPE    OREQ 'N'
+     C           W0TYPE    OREQ 'G'
+     C           W0TYPE    OREQ 'P'
+     C           W0TYPE    OREQ 'R'
+     C           W0TYPE    OREQ 'I'                                                           217981
+     C           W0TYPE    OREQ 'C'
+     C           ADSLSH    ANDNE'/'
+     C           W0TYPE    OREQ 'S'
+     C           ADSLSH    ANDNE'/'
+      *
+      *  Get BIC from correct source
+      *
+     C                     SELEC
+      *
+      *  From BIC directory
+      *
+     C           W9BICD    WHEQ 'Y'
+     C           W9BICC    CAT  W9BICB    ADDRSS    P
+      *
+      *  From Customer Details
+      *
+     C           W9CUST    WHEQ 'Y'
+     C                     MOVELBBCSID    ADDRSS
+      *
+      *  From Counterparty Details
+      *
+     C           W9CNST    WHEQ 'Y'
+     C                     MOVELAWSWID    ADDRSS
+     C                     ENDSL
+     C                     MOVEL'A'       W0ADTP
+     C                     END
+      *
+      *  If Customer with '/' in first line
+      *  Or BIC      with '/' in first line
+      *
+      *  Map address information into lines 3 to 6
+      *
+     C           W0TYPE    IFEQ 'C'
+     C           ADSLSH    ANDEQ'/'
+     C           W0TYPE    OREQ 'S'
+     C           ADSLSH    ANDEQ'/'
+      *
+      *  Get BIC from correct source
+      *
+     C                     SELEC
+      *
+      *  From BIC directory
+      *
+     C           W9BICD    WHEQ 'Y'
+     C           W9BICC    CAT  W9BICB    ADCHK2    P
+      *
+      *  From Customer Details
+      *
+     C           W9CUST    WHEQ 'Y'
+     C                     MOVELBBCSID    ADCHK2
+      *
+      *  From Counterparty Details
+      *
+     C           W9CNST    WHEQ 'Y'
+     C                     MOVELAWSWID    ADCHK2
+     C                     ENDSL
+     C                     MOVEL'A'       W0ADTP
+     C                     END
+      *
+      *  Move formatted information to Output field
+      *
+     C                     MOVELADDRSS    W0MSG
+      *
+      *  Text formatted exit
+      *
+     C                     GOTO EXMSG
+     C                     END
+      *
+      *  Address only - tag type D
+      *
+     C                     MOVEL'D'       W0ADTP
+      *
+      *  If Customer without '/' in first line
+      *  Or BIC      without '/' in first line
+      *  Or Full Nostro
+      *  Or Nostro
+      *  Or General Ledger
+      *  Or Partial Ledger
+      *  Or Retail
+      *  Or IBAN                                                                              217981
+      *
+      *  Map address information into lines 1 to 6
+      *
+     C           W0TYPE    IFEQ 'F'
+     C           W0TYPE    OREQ 'N'
+     C           W0TYPE    OREQ 'G'
+     C           W0TYPE    OREQ 'P'
+     C           W0TYPE    OREQ 'R'
+     C           W0TYPE    OREQ 'I'                                                          217981
+     C           W0TYPE    OREQ 'C'
+     C           ADSLSH    ANDNE'/'
+     C           W0TYPE    OREQ 'S'
+     C           ADSLSH    ANDNE'/'
+      *
+      *  Fill data structure
+      *
+     C                     SELEC
+      *
+      *  If Midas Address then fill with Customer Info
+      *
+     C           W0MADD    WHEQ 'Y'
+     C           W9CUST    ANDEQ'Y'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'C'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'R'
+     C           W0MADD    OREQ 'Y'                                                           217981
+     C           W0TYPE    ANDEQ'I'                                                           217981
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'P'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'G'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'F'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'N'
+     C                     MOVELBBCNA1    ADCHK1
+     C                     MOVELBBCNA2    ADCHK2
+     C                     MOVELBBCNA3    ADCHK3
+     C                     MOVELBBCNA4    ADCHK4
+      *
+      *  If BIC information show in lines 1 to 6
+      *
+     C           ##BIC     WHEQ 'Y'
+     C           W9BICD    ANDEQ'Y'
+     C                     MOVELBDINS1    ADCHK1
+      *
+      *  Check fields not concatenated
+      *
+     C           BDINS2    IFNE *BLANKS
+     C           1         SUBSTBDINS2:1  ##001   1
+     C           ##001     IFNE *BLANKS
+     C                     MOVELBDINS2    ADCHK2
+     C                     ELSE
+     C           34        SUBSTBDINS2:2  ADCHK2
+     C                     END
+      *
+     C                     MOVELBDCITY    ADCHK3
+     C                     MOVELBDBRC1    ADCHK4
+     C                     ELSE
+      *
+     C                     MOVELBDCITY    ADCHK2
+     C                     MOVELBDBRC1    ADCHK3
+     C                     END
+      *
+      *  Else show warning if BIC not on database
+      *  (i.e. BIC not installed)
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           ##BIC     ANDEQ'W'
+      * No action - assumed valid address
+      *             no expansion possible
+      *
+      *  Else use Counterparty information if BIC
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           W9CNST    ANDEQ'Y'
+     C                     MOVELAWCPNM    ADCHK1
+     C                     MOVELAWCNTN    ADCHK2
+      *
+      *  Else use Customer address information
+      *
+     C                     OTHER
+     C                     MOVELBBCNA1    ADCHK1
+     C                     MOVELBBCNA2    ADCHK2
+     C                     MOVELBBCNA3    ADCHK3
+     C                     MOVELBBCNA4    ADCHK4
+     C                     ENDSL
+     C                     END
+      *
+      *  If Customer with '/' in first line
+      *  Or BIC      with '/' in first line
+      *
+      *  Map address information into lines 3 to 6
+      *
+     C           W0TYPE    IFEQ 'C'
+     C           ADSLSH    ANDEQ'/'
+     C           W0TYPE    OREQ 'S'
+     C           ADSLSH    ANDEQ'/'
+      *
+      *  Fill data structure
+      *
+     C                     SELEC
+      *
+      *  If Midas Address then fill with Customer Info
+      *
+     C           W0MADD    WHEQ 'Y'
+     C           W9CUST    ANDEQ'Y'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'C'
+     C                     MOVELBBCNA1    ADCHK2
+     C                     MOVELBBCNA2    ADCHK3
+     C                     MOVELBBCNA3    ADCHK4
+     C                     MOVELBBCNA4    ADCHK5
+      *
+      *  If BIC information show in lines 1 to 6
+      *
+     C           ##BIC     WHEQ 'Y'
+     C           W9BICD    ANDEQ'Y'
+     C                     MOVELBDINS1    ADCHK2
+      *
+      *  Check fields not concatenated
+      *
+     C           BDINS2    IFNE *BLANKS
+     C           1         SUBSTBDINS2:1  ##001   1
+     C           ##001     IFNE *BLANKS
+     C                     MOVELBDINS2    ADCHK3
+     C                     ELSE
+     C           34        SUBSTBDINS2:2  ADCHK3
+     C                     END
+      *
+     C                     MOVELBDCITY    ADCHK4
+     C                     MOVELBDBRC1    ADCHK5
+     C                     ELSE
+      *
+     C                     MOVELBDCITY    ADCHK3
+     C                     MOVELBDBRC1    ADCHK4
+     C                     END
+      *
+      *  Else show warning if BIC not on database
+      *  (i.e. BIC not installed)
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           ##BIC     ANDEQ'W'
+      * No action - assumed valid address
+      *             no expansion possible
+      *
+      *  Else use Counterparty information if BIC
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           W9CNST    ANDEQ'Y'
+     C                     MOVELAWCPNM    ADCHK2
+     C                     MOVELAWCNTN    ADCHK3
+      *
+      *  Else use Customer address information
+      *
+     C                     OTHER
+     C                     MOVELBBCNA1    ADCHK2
+     C                     MOVELBBCNA2    ADCHK3
+     C                     MOVELBBCNA3    ADCHK4
+     C                     MOVELBBCNA4    ADCHK5
+     C                     ENDSL
+     C                     END
+      *
+      *  Move formatted information to Output field
+      *
+     C                     MOVELADDRSS    W0MSG
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMSG     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRSCR    : Format Screen Lines                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRSCR     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSCR '  @STK,Q
+      *
+      *  Put details into address structure
+      *
+     C                     MOVELW0LINS    ADDRSS
+      *
+      *  /Copy point for Format BIC Identifier
+      *
+     C/COPY WNCPYSRC,FT0315SCR
+      *
+      *  If Address then map input fields directly to outgoing
+      *
+     C           W0TYPE    IFEQ 'A'
+     C                     MOVELW0LINS    W0SCR
+     C                     GOTO EXSCR
+     C                     END
+      *
+      *  If Customer without '/' in first line
+      *  Or BIC      without '/' in first line
+      *  Or Full Nostro
+      *  Or Nostro
+      *  Or General Ledger
+      *  Or Partial Ledger
+      *  Or Retail
+      *  Or IBAN                                                                              217981
+      *
+      *  Map address information into lines 2 to 6
+      *
+     C           W0TYPE    IFEQ 'F'
+     C           W0TYPE    OREQ 'N'
+     C           W0TYPE    OREQ 'G'
+     C           W0TYPE    OREQ 'P'
+     C           W0TYPE    OREQ 'R'
+     C           W0TYPE    OREQ 'I'                                                           217981
+     C           W0TYPE    OREQ 'C'
+     C           ADSLSH    ANDNE'/'
+     C           W0TYPE    OREQ 'S'
+     C           ADSLSH    ANDNE'/'
+      *
+      *  If BIC identifier available for customer number
+      *  show with the BIC along with the customer number
+      *
+     C           W0TYPE    IFEQ 'F'
+     C           W0TYPE    OREQ 'N'
+     C           W0TYPE    OREQ 'G'
+     C           W0TYPE    OREQ 'P'
+     C           W0TYPE    OREQ 'R'
+      *                                                                                       230006
+      ** Do not move SWIFT ID on account type IBAN to prevent                                 230006
+      ** overlapping.                                                                         230006
+      *                                                                                       230006
+     C***********W0TYPE    OREQ 'I'                                                           217981
+     C           W0TYPE    OREQ 'C'
+      *                                                                                      BUG1896
+     C           W0TYPE    IFEQ 'G'                                                          BUG1896
+     C           BBCSID    ANDNE*BLANKS                                                      BUG1896
+     C           ' '       SCAN BBCSID    INT     20     92                                  BUG1896
+     C           *IN92     IFEQ *ON                                                          BUG1896
+     C                     MOVE *OFF      *IN92                                              BUG1896
+     C           INT       SUB  1         LEN     20                                         BUG1896
+     C           LEN       SUBSTBBCSID    WBCSID 11                                          BUG1896
+      *                                                                                      BUG1896
+      * BIC code can only be 8 or 11 characters long                                         BUG1896
+     C           LEN       IFEQ 8                                                            BUG1896
+     C                     MOVELWBCSID    CSID08  8                                          BUG1896
+     C                     MOVE *BLANKS   WBCSID                                             BUG1896
+     C                     MOVE CSID08    WBCSID                                             BUG1896
+     C                     ENDIF                                                             BUG1896
+      *                                                                                      BUG1896
+     C                     MOVE WBCSID    ADCHK1                                             BUG1896
+     C                     ELSE                                                              BUG1896
+     C                     MOVE BBCSID    ADCHK1                                             BUG1896
+     C                     ENDIF                                                             BUG1896
+      *                                                                                      BUG1896
+     C                     ELSE                                                              BUG1896
+      *                                                                                      BUG1896
+     C**********           MOVE BBCSID    ADCHK1                                              263333
+     C                     MOVELBBCSID    WBCSID 11                                           263333
+     C                     MOVE WBCSID    ADCHK1                                              263333
+     C                     ENDIF                                                             BUG1896
+     C                     END
+      *                                                                                     BUG14771
+     C           W0TYPE    IFEQ 'I'                                                         BUG14771
+     C                     MOVE W0LINS    BICTST 13                                         BUG14771
+     C           BICTST    IFEQ *BLANKS                                                     BUG14771
+     C                     MOVE BBCSID    ADCHK1                                            BUG14771
+     C                     END                                                              BUG14771
+     C                     END                                                              BUG14771
+      *
+      *  Fill data structure
+      *
+     C                     SELEC
+      *
+      *  If Midas Address then fill with Customer Info
+      *
+     C           W0MADD    WHEQ 'Y'
+     C           W9CUST    ANDEQ'Y'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'C'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'R'
+     C           W0MADD    OREQ 'Y'                                                           217981
+     C           W0TYPE    ANDEQ'I'                                                           217981
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'P'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'G'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'F'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'N'
+     C                     MOVELBBCNA1    ADCHK2
+     C                     MOVELBBCNA2    ADCHK3
+     C                     MOVELBBCNA3    ADCHK4
+     C                     MOVELBBCNA4    ADCHK5
+      *
+      *  If BIC information show in lines 2 to 6
+      *
+     C           ##BIC     WHEQ 'Y'
+     C           W9BICD    ANDEQ'Y'
+     C                     MOVELBDINS1    ADCHK2
+      *
+      *  Check fields not concatenated
+      *
+     C           BDINS2    IFNE *BLANKS
+     C           1         SUBSTBDINS2:1  ##001   1
+     C           ##001     IFNE *BLANKS
+     C                     MOVELBDINS2    ADCHK3
+     C                     ELSE
+     C           34        SUBSTBDINS2:2  ADCHK3
+     C                     END
+      *
+     C                     MOVELBDCITY    ADCHK4
+     C                     MOVELBDBRC1    ADCHK5
+     C                     ELSE
+      *
+     C                     MOVELBDCITY    ADCHK3
+     C                     MOVELBDBRC1    ADCHK4
+     C                     END
+      *
+      *  Else show warning if BIC not on database
+      *  (i.e. BIC not installed)
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           ##BIC     ANDEQ'W'
+     C                     MOVEL##W1      ADCHK2
+     C                     MOVEL##W2      ADCHK3
+     C                     MOVEL##W3      ADCHK4
+      *
+      *  Else use Counterparty information if BIC
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           W9CNST    ANDEQ'Y'
+     C                     MOVELAWCPNM    ADCHK2
+     C                     MOVELAWCNTN    ADCHK3
+      *
+      *  Else use Customer address information
+      *
+     C                     OTHER
+     C                     MOVELBBCNA1    ADCHK2
+     C                     MOVELBBCNA2    ADCHK3
+     C                     MOVELBBCNA3    ADCHK4
+     C                     MOVELBBCNA4    ADCHK5
+     C                     ENDSL
+     C                     END
+      *
+      *  If Customer with '/' in first line
+      *  Or BIC      with '/' in first line
+      *
+      *  Map address information into lines 3 to 6
+      *
+     C           W0TYPE    IFEQ 'C'
+     C           ADSLSH    ANDEQ'/'
+     C           W0TYPE    OREQ 'S'
+     C           ADSLSH    ANDEQ'/'
+      *
+      *  If BIC identifier available for customer number
+      *  show with the BIC along with the customer number
+      *
+     C           W0TYPE    IFEQ 'C'
+     C                     MOVE BBCSID    ADCHK2
+     C                     END
+      *
+      *  Fill data structure
+      *
+     C                     SELEC
+      *
+      *  If Midas Address then fill with Customer Info
+      *
+     C           W0MADD    WHEQ 'Y'
+     C           W9CUST    ANDEQ'Y'
+     C           W0MADD    OREQ 'Y'
+     C           W0TYPE    ANDEQ'C'
+     C                     MOVELBBCNA1    ADCHK3
+     C                     MOVELBBCNA2    ADCHK4
+     C                     MOVELBBCNA3    ADCHK5
+     C                     MOVELBBCNA4    ADCHK6
+      *
+      *  If BIC information show in lines 2 to 6
+      *
+     C           ##BIC     WHEQ 'Y'
+     C           W9BICD    ANDEQ'Y'
+     C                     MOVELBDINS1    ADCHK3
+      *
+      *  Check fields not concatenated
+      *
+     C           BDINS2    IFNE *BLANKS
+     C           1         SUBSTBDINS2:1  ##001   1
+     C           ##001     IFNE *BLANKS
+     C                     MOVELBDINS2    ADCHK4
+     C                     ELSE
+     C           34        SUBSTBDINS2:2  ADCHK4
+     C                     END
+      *
+     C                     MOVELBDCITY    ADCHK5
+     C                     MOVELBDBRC1    ADCHK6
+     C                     ELSE
+      *
+     C                     MOVELBDCITY    ADCHK4
+     C                     MOVELBDBRC1    ADCHK5
+     C                     END
+      *
+      *  Else show warning if BIC not on database
+      *  (i.e. BIC not installed)
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           ##BIC     ANDEQ'W'
+     C                     MOVEL##W1      ADCHK3
+     C                     MOVEL##W2      ADCHK4
+     C                     MOVEL##W3      ADCHK5
+      *
+      *  Else use Counterparty information if BIC
+      *
+     C           W0TYPE    WHEQ 'S'
+     C           W9CNST    ANDEQ'Y'
+     C                     MOVELAWCPNM    ADCHK3
+     C                     MOVELAWCNTN    ADCHK4
+      *
+      *  Else use Customer address information
+      *
+     C                     OTHER
+     C                     MOVELBBCNA1    ADCHK3
+     C                     MOVELBBCNA2    ADCHK4
+     C                     MOVELBBCNA3    ADCHK5
+     C                     MOVELBBCNA4    ADCHK6
+     C                     ENDSL
+     C                     END
+      *
+      *  Move formatted information to Output field
+      *
+     C                     MOVELADDRSS    W0SCR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXSCR     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCUST   : Get Customer details for Midas based accounts     *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRCUST    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCUST'  @STK,Q
+      *
+      *  /Copy point for Format Customer Address etc
+      *
+     C/COPY WNCPYSRC,FT0315CUST
+      *
+      *  Get Customer Details
+      *
+     C                     CALL 'AOCUSTR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @CSNM  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM *BLANKS   DSSDY
+      *                                                                   110783
+      *  If error and critical not yes than format and exit               110783
+      *                                                                   110783
+     C           W0CRIT    IFEQ *BLANKS                                   110783
+     C           *IN90     IFEQ '1'                                       110783
+     C           @RTCD     ORNE *BLANKS                                   110783
+      *                                                                   110783
+      *  Get Warning information                                          110783
+      *                                                                   110783
+     C                     MOVEL*BLANKS   #MSDTA                          110783
+     C           ADFNOS    CAT  @CSNM:1   #MSDTA                          110783
+      *                                                                   110783
+     C                     CALL 'MEC1150'              9090               110783
+     C                     PARM 'FTM2359 '#MSGID  7                       110783
+     C                     PARM 'FTUSRMSG'#MSGF  10                       110783
+     C                     PARM           #MSDTA                          110783
+     C                     PARM *BLANKS   #MSTX1                          110783
+     C                     PARM *BLANKS   #MSTX2                          110783
+      *                                                                   110783
+     C                     MOVEL#MSTX1    W0RPT                           110783
+     C                     MOVEL#MSTX1    W0MSG                           110783
+     C                     MOVEL#MSTX1    W0SCR                           110783
+     C                     MOVEL'Y'       ##DERR                          110783
+     C                     GOTO EXCUST                                    110783
+     C                     END                                            110783
+     C                     END                                            110783
+      *                                                                   110783
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AOCUSTR0'W0FILE           ***************
+     C                     MOVEL@CSNM     W0KEY            * DB ERROR 11 *
+     C                     Z-ADD11        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  If Customer is has a BIC access BIC directory
+      *
+     C           BBCSID    IFNE *BLANKS
+      *
+     C                     MOVELBBCSID    W9BICC
+     C           3         SUBSTBBCSID:9  W9BICB  3
+      *
+     C                     CALL 'ME1400'               9090
+     C                     PARM *BLANKS   W9RTN   7
+     C                     PARM           W9BICC  8
+     C                     PARM           W9BICB  3
+     C***********          PARM           SDCUST                          073156
+     C                     PARM *BLANKS   DDCUST                          073156
+     C                     PARM           SDCNST
+     C                     PARM           MEBICD
+     C                     PARM *BLANKS   W9CUST  1
+     C                     PARM *BLANKS   W9CNST  1
+     C                     PARM *BLANKS   W9BICD  1
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ME1400  'W0FILE           ***************
+     C                     MOVEL'*CALL   'W0KEY            * DB ERROR 12 *
+     C                     Z-ADD12        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     SELEC
+      *
+      *  Record not found on directory but found on others
+      *  - BIC directory has data so error
+      *
+     C           W9RTN     WHEQ 'MIN0244'
+     C           W9RTN     OREQ 'MIN0245'
+     C           W9RTN     OREQ 'MIN0246'
+     C                     MOVEL'N'       ##BIC   1
+      *
+      *  Record not found - S.W.I.F.T does not exist
+      *
+     C           W9RTN     WHEQ 'Y2U0005'
+     C                     MOVEL'W'       ##BIC   1
+      *
+      *  Record found - Customer exists
+      *
+     C           W9RTN     WHEQ *BLANKS
+      *
+     C                     MOVEL'Y'       ##BIC
+     C                     ENDSL
+     C                     END
+      *
+      *  If a Retail account and W0RTAD 'Y' get first address
+      *  for account and not customers address
+      *
+     C           W0ALTN    IFNE *BLANKS
+     C           W0RTAD    OREQ 'Y'
+     C           ATYP      ANDEQ'R'
+     C                     EXSR SRALTN
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCUST    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRALTN   : Get First address defined for Retail Account      *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRALTN    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRALTN'  @STK,Q
+      *
+      *  /Copy point for Format Alternative Address
+      *
+     C/COPY WNCPYSRC,FT0315ALTN
+      *
+      *  Get alternative address
+      *
+     C                     MOVELADREF1    @ADCD
+      *
+      *  If address is B then this is the one on customer details
+      *  exit
+      *
+     C           @ADCD     CABEQ'B'       EXALTN
+      *
+     C                     CALL 'AOALTNR0'             9090
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BBCUST    @CNUM
+     C                     PARM           @ADCD   1        I:Address code
+     C           SDALTN    PARM *BLANKS   DSSDY
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     ORNE *BLANKS
+     C                     MOVEL'AOALTNR0'W0FILE           ***************
+     C           BBCUST    CAT  @ADCD     W0KEY     P      * DB ERROR 14 *
+     C                     Z-ADD14        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Replace address
+      *
+     C                     MOVELBCCNA1    BBCNA1
+     C                     MOVELBCCNA2    BBCNA2
+     C                     MOVELBCCNA3    BBCNA3
+     C                     MOVELBCCNA4    BBCNA4
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXALTN    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*TYPE   'W0FILE           ***************
+     C                     MOVELW0TYPE    W0KEY            * DB ERROR 15 *
+     C                     Z-ADD15        W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Extract bank details
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7        B:Return code
+     C                     PARM '*FIRST ' @OPTN   7        I:Option
+     C           SDBANK    PARM *BLANKS   DSFDY
+      *
+      *  If return with an error (LR seton in called program) then
+      *  process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C           @RTCD     OREQ '*ERROR*'
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD16        W0ERNB           * DB ERROR 16 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Get Warning information
+      *
+     C                     CALL 'MEC1150'              9090
+     C                     PARM 'FTM2329 '#MSGID  7
+     C                     PARM 'FTUSRMSG'#MSGF  10
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+      *
+     C           35        SUBST#MSTX1:1  ##W1   35
+     C           35        SUBST#MSTX1:36 ##W2   35
+     C           35        SUBST#MSTX1:71 ##W3   35
+     C*                                                                   CFT004
+     C** Access SAR details file to determine if CFT004 is switched ON    CFT004
+     C*                                                                   CFT004
+     C                     CALL 'AOSARDR0'                                CFT004
+     C                     PARM *BLANKS   P@RTCD  7                       CFT004
+     C                     PARM '*VERIFY' P@OPTN  7                       CFT004
+     C                     PARM 'CFT004'  P@SARD  7                       CFT004
+     C                     MOVE 'N'       CFT004  1                       CFT004
+     C*                                                                   CFT004
+     C** If core feature is switched ON, set a variable field to          CFT004
+     C** condition the rest of the processing                             CFT004
+     C*                                                                   CFT004
+     C           P@RTCD    IFEQ *BLANKS                                   CFT004
+     C                     MOVE 'Y'       CFT004                          CFT004
+     C                     ELSE                                           CFT004
+     C*                                                                   CFT004
+     C** else, database error (return code other than *NRF)               CFT004
+     C*                                                                   CFT004
+     C           P@RTCD    IFNE '*NRF   '                                 CFT004
+     C                     MOVEL'SCSARDPD'W0FILE                          CFT004
+     C                     MOVEL'*CALL'   W0KEY            ************   CFT004
+     C                     Z-ADD18        W0ERNB           * DBERR 18 *   CFT004
+     C                     MOVEL'MEM5003' W0MSGD           ************   CFT004
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT004
+     C                     EXSR SRERR                                     CFT004
+     C                     END                                            CFT004
+     C                     END                                            CFT004
+     C/COPY WNCPYSRC,FT0315C001
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,FT0315DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+     C/EJECT
+     O/COPY WNCPYSRC,FT0315DOPG
+      *
+      *  /Copy point for Outputs
+      *
+     O/EJECT
+**  CPY@ table
+(c) Finastra International Limited 2001

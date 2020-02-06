@@ -1,0 +1,2742 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Funds transfer Extraction')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  IL0644 - Daily Funds trasnfer extraction for IBLC 2002 Report*
+      *                                                               *
+      *  Function:  This program is running during Close of business  *
+      *             To extract Item to report for iblc 2002 in        *
+      *             Funds transfer Module.                            *
+      *                                                               *
+      *  Called By: ILC0644 - IBLC 2002 - Funds transfer Extraction   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 220750             Date 17Oct06               *
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 201180             Date 17Dec01               *
+      *                 201093             Date 13DEC01               *
+      *                 ULX043             Date 03Oct01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  220750 - Database error if customer is closed                *
+      *  CSD027A - Conversion Of Customer Number to Alpha.            *
+      *            (recompile due to change in OTPAYDD, INPAYDD etc)  *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  201180 - Amount is converted twice if 2 Operation codes      *
+      *           is on Routing Key                                   *
+      *  201093 - Field KCPRE not correctly filled                    *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     F***FPKEYL0 IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FFTAKYXL0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      *** FT A/C keys                                      Prefix none
+      *
+     FILFPKEY IF  E           K        DISK         KINFSR *PSSR
+      *** FT Accounts keys details                         Prefix none
+     F            FPKEYDDF                          KRENAMEILFPKED0
+      *
+     FOTPAY   IF  E           K        DISK         KINFSR *PSSR
+      ***  FT Outgoing Payment details                     Prefix none
+      *
+     FINPAY   IF  E           K        DISK         KINFSR *PSSR
+      ***  FT Incoming Payment details                     Prefix none
+      *
+     FCQCOD   IF  E           K        DISK         KINFSR *PSSR
+      ***  FT Cheques for Collection file                  Prefix none
+      *
+     FCQPAC   IF  E           K        DISK         KINFSR *PSSR
+      ***  FT Cheques to be paid file                      Prefix none
+      *
+     FILICDRPDIF  E                    DISK         KINFSR *PSSR
+      ***  IBLC ICD Record             Retrieval index     Prefix IC
+      *
+     F***OTPAYDYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FFTOPX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Outgoing Payments - Ext file                    Prefix OP
+      *
+     F***INPAYDYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FFTIPX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Incomimg Payments - Ext file                    Prefix IN
+      *
+     F***CQCODYL IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FFTCCX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Cheques for collection - Ext file               Prefix CC
+      *
+     F***CQPACYL IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FFTCPX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Cheques to be paid - Ext file                   Prefix CP
+      *
+     F***SDCUSTYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCUX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Customers - Ext file        Retrieval index     Prefix CU
+      *
+      ***  NOT FOR NOW
+     F***SDBRCHL5IF  E           K        DISK         KINFSR *PSSR
+      ***  Branch code - BICN          Retrieval index     Prefix A8
+      *
+     F***SDBRCHYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDBRX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Branch code - Ext file      Retrieval index     Prefix BR
+      *
+     F***SDCURRYLIF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCYX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      *** Currency Code - Ext file     Retrieval index     Prefix CY
+      *
+     FILOMISPDIF  E           K        DISK         KINFSR *PSSR
+      ***  Special case omission                           Prefix OM
+      *
+     FILRKFTPDIF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC 2002 RK (Funds Transfer)                   Prefix RK
+      *
+     FILDIWKPDO   E                    DISK         KINFSR *PSSR
+      ***  Items generated             Retrieval index     Prefix IT
+      *
+     FILRKAUPDO   E                    DISK         KINFSR *PSSR
+      ***  RK used file                Retrieval index     Prefix AU
+      *
+     FIL0644P1O   E             65     PRINTER      KINFDS SPOOL1
+     FIL0644P2O   E             66     PRINTER      KINFDS SPOOL2
+     FIL0644AUO   E                    PRINTER      KINFDS SPOOLU
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Combination for window Management
+      *
+     E                    WND     7  28  5   OPT     1   WINDOW MANAG.
+      *
+      ***  Combination of A/K key to be treated
+      *
+     E                    CFT1   10  19  5               Valid account key
+      *
+      ***  Standard Subroutine Arrays
+      *
+     E                    POWER   1   7  7 3             std ZCCYCN
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+      ***  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80               Array for Copyright
+      *
+      ***  Working Arrays
+      *
+     E                    ACO         6  3               Operation codes
+      *
+      ***  Standard subroutine Arrays
+      *
+      /COPY ZSRSRC,ZFRPEDZ1                              Std ZFRPED
+      *
+      /EJECT
+      *****************************************************************
+      *
+      ***  Renaming Fields
+      *
+     IFPKEYDDF
+     I              PREF                            PREFFP
+     I              CQSQ                            CQSQFP
+     I              EDAT                            EDATFP
+     I              EAMT                            EAMTFP
+     I              ECCY                            ECCYFP
+     I              VDAT                            VDATFP
+     I              SEAC                            SEACFP
+     I              OTAC                            OTACFP
+     I              RLPR                            RLPRFP
+     I              BRCA                            BRCDFP
+     I              AKEY                            AKEYFP
+      *
+     IILFPKED0
+     I              PREF                            PREFBL
+     I              CQSQ                            CQSQBL
+     I              EDAT                            EDATBL
+     I              EAMT                            EAMTBL
+     I              ECCY                            ECCYBL
+     I              VDAT                            VDATBL
+     I              SEAC                            SEACBL
+     I              OTAC                            OTACBL
+     I              RLPR                            RLPRBL
+     I              BRCA                            BRCDBL
+     I              AKEY                            AKEYBL
+      *
+      ***  Standard subroutine Data Structure
+      *
+      /COPY ZSRSRC,ZFRPEDZ2                                Std ZFRPED
+      *
+      ***  Working Data Structure
+      *
+     IPSDS       SDS
+      ***  Program status data structure for WS/user ID'S
+     I                                     *PROGRAM PGM
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      *
+     I            DS
+      ***  Data structure for AKEY division
+      *                                             Transaction type
+     I                                        1   2 AKEY1
+      *                                             Event type
+     I                                        3   3 AKEY3
+      *                                             Event amount type
+     I                                        4   5 AKEY4
+      *                                             Sub type
+     I                                        9  10 AKEY9
+     I                                        1  10 AKEYFP
+      *
+     IKEYTAB      DS
+      ***  data structure to LOKUP
+     I                                        1   2 TAB01
+     I                                        3   3 TAB02
+     I                                        4   5 TAB03
+     I            DS
+      ***  data structure containing ILRKFTPD key
+     I                                        1   2 KMODI
+     I                                        3   4 KTTYP
+     I                                        5   5 KEVTP
+     I                                        6   7 KOTYP
+     I                                        8   9 KBTYP
+     I                                       10  10 KCPRE
+     I                                       11  11 KSETT
+     I                                       12  13 KEVNT
+     I                                       13  13 EVNT2
+     I                                       14  22 KFIL9
+     I                                        1  22 KEYDS
+     I            DS
+      ***  data structure to move fields in report layout
+     I                                        1   2 RMODI
+     I                                        3   4 RTTYP
+     I                                        5   5 REVTP
+     I                                        6   7 ROTYP
+     I                                        8   9 RBTYP
+     I                                       10  10 RCPRE
+     I                                       11  11 RSETT
+     I                                       12  13 REVNT
+     I                                       14  22 RFIL9
+     I                                        1  22 RFLDS
+     I            DS
+      ***  Data structure to move operation code in ACO array
+     I                                        1   3 RKDRR1
+     I                                        4   6 RKDRR2
+     I                                        7   9 RKDRR3
+     I                                       10  12 RKCRR1
+     I                                       13  15 RKCRR2
+     I                                       16  18 RKCRR3
+     I                                        1  18 OPCODS
+     I            DS
+      ***  Data structure to move operation code in REPORT IL0644P1
+     I                                        1   3 RDRR1
+     I                                        4   6 RDRR2
+     I                                        7   9 RDRR3
+     I                                       10  12 RCRR1
+     I                                       13  15 RCRR2
+     I                                       16  18 RCRR3
+     I                                        1  18 ROPCO
+      *
+     IMRDTDS      DS
+      ***  Data structure to use BJMRDT
+     I                                        1   2 WDLUP
+     I                                        3   5 WMLUP
+     I                                        6   7 WYLUP
+      *
+     I            DS
+      ***  Data structure to use SEAC zones
+     I                                        1   6 DSCUST
+     I                                        7   9 DSCCY
+     I**********                             10  13 DSACOD                                    CER001
+     I**********                             14  15 DSACSQ                                    CER001
+     I**********                             16  18 DSBRCA                                    CER001
+     I**********                              1  18 DSSEAC                                    CER001
+     I                                       10  19 DSACOD                                    CER001
+     I                                       20  21 DSACSQ                                    CER001
+     I                                       22  24 DSBRCA                                    CER001
+     I                                        1  24 DSSEAC                                    CER001
+      *
+     I            DS
+      ***  Data structure to use WWCTP1 zones
+      *                                                    Nostro currency
+     I                                        1   3 CTP1N1
+      *                                                    Nostro number
+     I                                        4   5 CTP1N2
+      *                                                    Nostro number
+     I                                        1   2 CTP1N3
+      *                                                    Retail number
+     I                                        1  10 CTP1R3
+      *                                                    Partial account
+     I                                        1   6 CTP1P4
+      *                                                    Swift
+     I                                        5   6 CTP1S5
+     I                                        1  35 WWCTP1
+     I            DS
+      ***  Data structures to write ILRKAUD0 record
+     I                                        1   2 AUMODI
+     I                                        3  22 AURKEY
+     I                                        1  22 AUKEY
+      *
+     I            DS
+     I                                        1   3 AUDRR1
+     I                                        4   6 AUDRR2
+     I                                        7   9 AUDRR3
+     I                                       10  12 AUCRR1
+     I                                       13  15 AUCRR2
+     I                                       16  18 AUCRR3
+     I                                        1  18 AUOPCO
+      *
+     IITOPER      DS
+      ***  Data structure to redefine ITOPER
+     I                                        4  16 ITOPE3
+     I                                        4   7 OPE301
+     I                                        8  10 OPE302
+     I                                       11  12 OPE303
+     I                                       13  14 OPE304
+     I                                       15  16 OPE305
+      *
+     I            DS
+      ***  data structure to use PREF field
+     I                                        4   7 PREF4
+     I                                        9  11 PREF9
+     I                                       12  13 DSTTYP
+     I                                       14  15 DSSETP
+     I                                        1  15 DSPREF
+      *
+     I            DS
+      ***  Data structure to test if operation code may be used or not
+     I                                        1   5 TWND
+     I                                        1   2 WWTRAN
+     I                                        3   3 WWORDE
+     I                                        4   4 WWBENE
+     I                                        5   5 WSETTW
+      *
+      ***  Data Structure to received details through Access Object programs
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Standing Data - Bank Details
+     ISDGELR    E DSSDGELRPD
+      ***  Standing Data - Midas General Ledger Module details
+     ISDBRCH    E DSSDBRCHPD
+      ***  Standing Data - Branch Details
+     ISDCURR    E DSSDCURRPD
+      ***  Standing Data - Currency Details
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QDFAC                                     MAEFIX
+      ***  Standing Data - Customer Details
+     ISDACOD    E DSSDACODPD
+     I              QQACCD                          QACCD                                     MAEFIX
+      ***  Standing Data - Account Code Details
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QCCD                                      MAEFIX
+      ***  Standing Data - Nostro Accounts Details
+     IACCNT     E DSACCNTAB
+      ***  Standing Data - Customer Accounts Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short DS
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long DS
+     IDSLDY     E DSDSLDY                                                                     220750
+      *  Third DS for access programs, very long data strcture                                220750
+      *
+      ***  Data Structure for RCF
+      *
+     ISPOOLU      DS
+      *
+      **  File Information Data Structure - AU report
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISPOOL1      DS
+      *
+      **  File Information Data Structure - P1 report
+     I                                       83  92 SFIL1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOL2      DS
+      *
+      **  File Information Data Structure - P2 report
+     I                                       83  92 SFIL2
+     I                                    B 123 1240SFNUM2
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+     C**********           READ FPKEYL0                  70Read file                          CER001
+     C                     READ FTAKYXL0                 70Read file                          CER001
+      *
+     C           *IN70     DOWEQ*OFF                       Process until EOF
+      *
+      ***  Check Branch : To be reported ? Branch of consolidation ?
+      *
+     C                     MOVELBRCDFP    KWBRCA  3
+     C********** KWBRCA    CHAINSDBRCHYL             99                                       CER001
+     C           KWBRCA    CHAINSDBRX1L0             99                                       CER001
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFNE *OFF
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C**********           MOVEL'SDBRCHYL'DBFILE    P      * DB ERROR 001 *                   CER001
+     C                     MOVEL'SDBRX1L0'DBFILE    P      * DB ERROR 001 *                   CER001
+     C                     MOVELKWBRCA    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check if branch must be Reported. If no, go to next branch and Loop
+      *
+     C           BRREPT    IFNE 'Y'
+     C           KPOS1     SETGTFPKEYDDF
+     C**********           READ FPKEYL0                  70Read next                          CER001
+     C                     READ FTAKYXL0                 70Read next                          CER001
+     C                     MOVE *BLANKS   KWBRCA
+     C                     MOVE *BLANKS   KWECCY
+     C                     ITER                            Loop
+     C                     ENDIF
+      *
+      ***  Report using branch of Consolidation
+      *
+     C                     MOVE BRCONS    ITBRCD
+      *
+      ***  Access Branch Details to retrieve BICN Immatriculation
+      *
+     C                     CALL 'AOBRCHR0'             99
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM KWBRCA    PBRCA   3
+     C           SDBRCH    PARM SDBRCH    DSFDY
+      *
+      ***  Database error in case of PRoblem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ****************
+     C                     MOVEL'SDBRCHPD'DBFILE    P      * DB ERROR 002 *
+     C                     MOVELKWBRCA    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C********** A8BICN    CHAINSDCUSTYL             99                                       CER001
+     C           A8BICN    CHAINSDCUX1L0             99                                       CER001
+      *
+      ***  Database error in case of PRoblem
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE    P      * DB ERROR 003 *                   CER001
+     C                     MOVEL'SDCUX1L0'DBFILE    P      * DB ERROR 003 *                   CER001
+     C                     MOVELA8BICN    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Save Immatriculation for identification
+      *
+     C           CUIMCO    IFNE *BLANKS                    Defined
+     C           CUIMCO    ANDNE'00'                       and Known
+     C                     MOVELCUIMCO    WKIDCO  2
+     C                     MOVELCUIMNB    WKIDEN  9
+     C                     ELSE                            else use identification
+     C                     MOVELCUIDCO    WKIDCO
+     C                     MOVELCUIDEN    WKIDEN
+     C                     ENDIF
+      *
+      ***  Process While Same branch and End OF File not detected
+      *
+     C           KWBRCA    DOWEQBRCDFP
+     C           *IN70     ANDEQ*OFF
+      *
+      ***  Check Event Currency : To be reported ?
+      *
+     C                     MOVELECCYFP    KWECCY  3
+     C********** KWECCY    CHAINSDCURRYL             99                                       CER001
+     C           KWECCY    CHAINSDCYX1L0             99                                       CER001
+      *
+      ***  Database error in case of Problem
+      *
+     C           *IN99     IFNE *OFF
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ****************
+     C**********           MOVEL'SDCURRYL'DBFILE    P      * DB ERROR 004 *                   CER001
+     C                     MOVEL'SDCYX1L0'DBFILE    P      * DB ERROR 004 *                   CER001
+     C                     MOVELKWECCY    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check if Currency is to be Reported. If no, go to next currency and Loop
+      *
+     C           CYREPT    IFNE 'Y'
+     C           KPOS2     SETGTFPKEYDDF
+     C**********           READ FPKEYL0                  70Read next                          CER001
+     C                     READ FTAKYXL0                 70Read next                          CER001
+     C                     MOVE *BLANKS   KWECCY
+     C                     ITER                            Loop
+     C                     ENDIF
+      *
+      ***  Access Currency details For converison if Required
+      *
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM KWECCY    PCURR
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           *IN99     IFEQ *ON
+     C           PRTCD     ORNE *BLANKS
+     C                     Z-ADD5         DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DB ERROR 005 *
+     C                     MOVELKWECCY    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Keep to convert Eventually Amount in Euro for 'In' Currency
+      *
+     C                     MOVELA6CYCD    ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVELA6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVE A6INCY    KPINCY  1
+     C                     MOVE A6SWCY    WWKCOD  2        For CTRY defaulting
+      *
+      ***  Conver limits of registration for non bank own Account transaction
+      ***  in Current currency (ICLIMR form ICD)
+      *
+     C                     MOVE '*NBANK'  PLIMT   6        Default
+     C                     CALL 'IL0410'
+     C                     PARM *BLANKS   PCODE   3        ==> Lim. of Reg.
+     C                     PARM           PLIMT
+     C                     PARM KWECCY    PTCCY   3
+     C                     PARM PGM       PCPGM  10
+      *
+      ***  Result parameters
+      *
+     C                     PARM '0'       PERID   1
+     C                     PARM '0'       PDBID   1
+     C                     PARM *ZEROS    PCLIM  150
+     C                     PARM *ZEROS    PILIM  150
+     C                     PARM ICLIMR    PLREG  150       Limit of Registration
+      *
+     C                     Z-ADDPLREG     WWREGI 150       for non Bank own A/C Transactions
+      *
+      ***  Process while same currency
+      *
+     C           KWECCY    DOWEQECCYFP                     Process same currency
+     C           KWBRCA    ANDEQBRCDFP                     and same branch
+     C           *IN70     ANDEQ*OFF                       and until EOF
+      *
+      *
+      ***  Validate combination for Extraction
+      *
+     C                     EXSR #CMBFT
+      *
+      ***  IF Event type combination is to be treated, continue
+      *
+     C           *IN60     IFEQ *ON                        Event found
+      *
+      ***  Save amount without any charges.
+      *
+     C           AKEY9     IFEQ ' P'
+     C           AKEY9     OREQ ' R'
+     C                     Z-ADDEAMTFP    EAMTBR 130
+     C                     ENDIF
+      *
+      ***  If the account key is valid : Generate a routing key record
+      ***  but first, determine charges amount (only incoming and outgoing payments)
+      ***  Routing key - setup Event Amiunt Type
+      ***  Event Amount Type
+      *
+     C                     MOVE AKEY9     KEVNT
+      *
+     C           AKEY1     IFEQ 'IN'
+     C           AKEY1     OREQ 'OP'
+     C                     EXSR #CHRG                      Charges amount
+     C                     ENDIF
+      *
+      ***  Access funds transfer details depending of funds transfer type
+      *
+     C                     EXSR #RTVD
+      *
+     C           *IN60     IFEQ *ON
+     C           EAMTFP    ANDGT*ZEROS
+      *
+     C                     EXSR #GENRK
+     C                     ENDIF                           *IN60 + EAMTFP
+      *
+     C                     ENDIF                           *IN60
+      *
+     C**********           READ FPKEYL0                  70Next                               CER001
+     C                     READ FTAKYXL0                 70Next                               CER001
+      *
+     C                     ENDDO                           Same Ccy/Same Branch/EOF
+      *
+     C                     ENDDO                           Same Branch/EOF
+      *
+     C                     ENDDO                           *IN70 ILFOKEY
+      *
+      ***  End Reports
+      *
+     C                     EXSR #END
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  #CMBFT - Validate Trade A/C key depending on combination of  *
+      *  ------   Event Type and Event Amount Type                    *
+      *  Called by : Main lines                                       *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #CMBFT    BEGSR
+      *
+     C                     MOVE *OFF      *IN60            Reset
+      *
+      ***  Do I omit this key ?
+      *
+     C                     MOVE 'FT'      KMODIO
+     C                     MOVE AKEY1     KTYPEO
+     C                     MOVE AKEY4     KSTYPO
+     C                     MOVE *BLANK    KCLAS                                               CER001
+      *
+     C           KOMIS     CHAINILOMISPD             60    Not found = OK
+      *
+      ***  IF *IN60 = *ON : It isn't an omitted key, so validate combination
+      *
+     C           *IN60     IFEQ *ON
+      *
+     C           AKEY1     IFEQ 'RP'                       Regular Payment
+     C                     MOVE 'OP'      AKEY1             is Outgoing Payment
+     C                     ENDIF
+      *
+      ***  Check in array if account key is accepted
+      *
+     C                     MOVE AKEY1     TAB01
+     C                     MOVE AKEY3     TAB02            Event type
+     C                     MOVE AKEY9     TAB03            Event subtype
+     C           KEYTAB    LOKUPCFT1                     60FOUND OK
+      *
+     C                     ENDIF                           *IN60
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #CHRG  - Determine charges amount : Difference between      *
+      *  ------   principal and net amount                           *
+      *  Called by : Mainlines                                       *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #CHRG     BEGSR
+      *
+     C                     MOVE AKEY9     KEVNT            Event subtype
+      *
+     C                     SELEC
+      *
+      ***  Access Outgoing payment details
+      *
+     C           AKEY1     WHEQ 'OP'
+     C           PREFFP    CHAINOTPAY                99
+      *
+      ***  Handle Database Error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 006 *
+     C                     MOVELPREFFP    DBKEY            ****************
+     C                     MOVEL'OTPAYDD 'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access Incoming Payment details
+      *
+     C           AKEY1     WHEQ 'IN'
+     C           PREFFP    CHAININPAY                99
+      *
+      ***  Handle Database Error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD7         DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 007 *
+     C                     MOVELPREFFP    DBKEY            ****************
+     C                     MOVEL'INPAYDD 'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDSL
+      *
+      ***  Check Add Deduct Indicator
+      *
+     C           ADDC      IFEQ 'A'                        ADD
+      *
+     C           AKEY3     IFEQ 'P'                        at settlm. date
+     C           AKEY9     ANDEQ' P'                        settlement Ccy
+     C                     Z-ADDEAMTFP    EAMTFP
+     C                     ENDIF
+      *
+     C           AKEY3     IFEQ 'R'                        at payment date
+     C           AKEY9     ANDEQ' R'                         pay Ccy ?
+     C                     Z-ADDEAMTFP    EAMTFP
+     C                     ENDIF
+      *
+     C           AKEY3     IFEQ 'P'                        at settlement date
+     C           AKEY9     ANDEQ' N'                         net settlement amount
+      *
+      ***  Save key
+      *
+     C                     MOVE AKEYFP    AKEYSV 10
+      *
+      ***  Access key of Settlement in Settlement currency
+      *
+     C                     MOVE ' P'      AKEY9
+      *
+     C                     MOVE PREFFP    PREFKY
+     C                     MOVE AKEYFP    AKEYKY
+     C           KEYBL     CHAINILFPKEY              99
+      *
+      ***  Handle Database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ****************
+     C                     MOVEL'ILFPKEY' DBFILE           * DB ERROR 008 *
+     C                     MOVELPREFKY    DBKEY            ****************
+     C           DBKEY     CAT  AKEYKY:1  DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  If charge Amount is the same, then Refresh AKEYFP else continue
+      *
+     C           EAMTBL    IFEQ EAMTFP
+     C                     Z-ADDEAMTFP    EAMTFP
+     C                     MOVE AKEYSV    AKEYFP
+     C                     ELSE
+      *
+      ***  Charge must be positive.
+      *
+     C           EAMTBL    IFGT EAMTFP
+     C           EAMTBL    SUB  EAMTFP    EAMTFP
+     C                     ELSE
+     C           EAMTFP    SUB  EAMTBL    EAMTFP
+     C                     ENDIF
+      *
+      ***  Restore AKEYFP value
+      *
+     C                     MOVE AKEYSV    AKEYFP
+      *
+      ***  Set Event subtype as Total charge
+      *
+     C                     MOVE 'T'       EVNT2
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  Add Deduct Indicator isn't 'A'dd
+      *
+     C           AKEY3     IFEQ 'R'                        at payment date
+     C           AKEY9     ANDEQ' R'                         pay ccy ?
+      *
+      ***  Save Key
+      *
+     C                     MOVE AKEYFP    AKEYSV 10
+      *
+      ***  Access payment with net pay amount key
+      *
+     C                     MOVE ' L'      AKEY9
+     C                     MOVE PREFFP    PREFKY
+     C                     MOVE AKEYFP    AKEYKY
+     C           KEYBL     CHAINILFPKEY              99
+      *
+      ***  Handle Database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE            ****************
+     C                     MOVEL'ILFPKEY' DBFILE           * DB ERROR 009 *
+     C                     MOVELPREFKY    DBKEY            ****************
+     C           DBKEY     CAT  AKEYKY:1  DBKEY
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E3
+      *
+      ***  Restore AKEYFP value
+      *
+     C                     MOVE AKEYSV    AKEYFP
+      *
+      ***  Set Event subtype as Total charge
+      *
+     C                     MOVE 'T'       EVNT2
+      *
+      ***  Charge must be positive.
+      *
+     C           EAMTBL    IFGT EAMTFP
+     C           EAMTBL    SUB  EAMTFP    EAMTFP
+     C                     ELSE
+     C           EAMTFP    SUB  EAMTBL    EAMTFP
+     C                     ENDIF
+     C                     ENDIF                           Payment date
+      *
+     C           AKEY3     IFEQ 'P'                        at Settlement date
+     C           AKEY9     ANDEQ' P'                        with settlm. Ccy
+     C                     Z-ADDEAMTFP    EAMTFP
+     C                     ENDIF
+      *
+     C           AKEY3     IFEQ 'R'                        At payment date
+     C           AKEY9     ANDEQ' L'                        net pay amount
+     C                     Z-ADDEAMTFP    EAMTFP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #RTVD  - Retrieve data depending of FT type                 *
+      *  ------                                                      *
+      *  Called by : Mainlines                                       *
+      *  Calls     : #OTPAY, #INPAY, #CQCOD, #CQPAC                  *
+      ****************************************************************
+      *
+     C           #RTVD     BEGSR
+      *
+     C                     MOVE *BLANKS   WKIDCO           Ident Resident part
+     C                     MOVE *BLANKS   WKIDEN           Identification number
+      *
+     C                     MOVE *BLANKS   W071OC           071 opcode
+     C                     MOVE *BLANKS   W071IC           071 Identification Code
+     C                     MOVE *BLANKS   W071IN           071 idenetification number
+     C                     MOVE *BLANKS   W071CO           071 Country Code
+      *
+     C                     SELEC
+      *
+      ***  Outgoing Payment details
+      *
+     C           AKEY1     WHEQ 'OP'
+     C                     EXSR #OTPAY
+      *
+      ***  Incoming Payment details
+      *
+     C           AKEY1     WHEQ 'IN'
+     C                     EXSR #INPAY
+      *
+      ***  Cheque for Collection
+      *
+     C           AKEY1     WHEQ 'CC'
+     C                     EXSR #CQCOD
+      *
+      ***  Cheque to be paid
+      *
+     C           AKEY1     WHEQ 'CP'
+     C                     EXSR #CQPAC
+      *
+      ***  Nostro transfer
+      *
+     C           AKEY1     WHEQ 'NT'
+     C                     EXSR #NTRAN
+     C                     OTHER
+     C                     MOVE *OFF      *IN60            Bypass record
+     C                     ENDSL
+      *
+     C           *IN60     IFEQ *ON                        if we treat it
+      *
+      ***  Retrieve the customer identification
+      ***  except for Nostro transfer (already done)
+      *
+     C           AKEY1     IFNE 'NT'
+      *
+     C           WFOUND    IFNE 'Y'                        Customer not found
+     C                     MOVE *BLANKS   WPCUST
+     C                     ELSE
+      *
+      ***  Retrieve Customer identification for IBLC 2002
+      *
+     C********** WPCUST    CHAINSDCUSTYL             99                                       CER001
+     C           WPCUST    CHAINSDCUX1L0             99                                       CER001
+      *
+      ***  Handle Database Error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD10        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 010 *
+     C                     MOVELWPCUST    DBKEY            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE                                              CER001
+     C                     MOVEL'SDCUX1L0'DBFILE                                              CER001
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Use immatriculation of bank resident
+      *
+     C           CUTYPE    IFEQ 'BR'
+     C           CUIMCO    IFNE '  '                       If found
+     C           CUIMCO    ANDNE'00'
+     C                     MOVE CUIMCO    WKIDCO
+     C                     MOVE CUIMNB    WKIDEN
+     C                     ELSE                            else identification
+     C                     MOVE CUIDCO    WKIDCO
+     C                     MOVE CUIDEN    WKIDEN
+     C                     ENDIF
+     C                     ELSE                            not BR
+     C                     MOVE CUIDCO    WKIDCO           use identification
+     C                     MOVE CUIDEN    WKIDEN
+     C                     ENDIF                           CUTYPE = BR
+      *
+     C                     ENDIF                           WFOUND
+      *
+      ***  To reduce Routing keys with same content,
+      ***  Ordering type force to ' R' ot ' O' (may be ' R', 'AR' 'BR' or 'OR')
+      ***  Beneficiary type forced to ' R' or ' O' (may be ' O', 'AO' 'BO' or 'OO')
+      *
+     C                     MOVEL' '       WWORTY
+     C                     MOVEL' '       WWBETY
+      *
+     C                     ENDIF                           Except 'NT'
+      *
+     C                     ENDIF                           *IN60
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      ****************************************************************
+      *  #OTPAY - Outgoing payment validation              (P03)     *
+      *  ------                                                      *
+      *  Called by : #RTVD                                           *
+      *  Calls     : #SETTP, #CTRCO                                  *
+      ****************************************************************
+      *
+     C           #OTPAY    BEGSR
+      *
+      ***  Access to OTPAYYL : Outgoing payment extension file
+      *
+     C********** PREFFP    CHAINOTPAYDYL             99                                       CER001
+     C           PREFFP    CHAINFTOPX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C                     CALL 'FT0045XL'                 create blank details
+     C********** PREFFP    CHAINOTPAYDYL             99                                       CER001
+     C           PREFFP    CHAINFTOPX1L0             99                                       CER001
+     C                     ENDIF
+      *
+      ***  Store working values in W071xx field
+      *
+     C                     MOVE OPORTY    WWORTY  2
+     C                     MOVE OPBETY    WWBETY  2
+      *
+      ***  these fields will be used to Replace eventually a 071 code of RK
+      *
+     C                     MOVE OPOPCO    W071OC  3        Op. code
+     C                     MOVE OPIDCO    W071IC  2        Id. code
+     C                     MOVE OPIDEN    W071IN  9        Id. number
+     C                     MOVE OPCOCO    W071CO  2        Country code
+      *
+      ***  Retrieve the 'Pay currency' account key
+      *
+     C           AKEY9     IFNE ' R'
+      *
+      ***  Save AKEYFP to work with transformed value
+      *
+     C                     MOVE AKEYFP    AKEYSV
+      *
+      ***  Access A/C keys (Pay currency)
+      *
+     C                     MOVE ' R'      AKEY9
+     C                     MOVE PREFFP    PREFKY
+     C                     MOVE AKEYFP    AKEYKY
+     C           KEYBL     CHAINILFPKEY              99
+      *
+      ***  Store SEAC
+      *
+     C           *IN99     IFEQ *OFF                       if found
+     C                     MOVE SEACBL    WWSEAC
+     C                     MOVE BRCDBL    DSBRCA
+     C                     ELSE                            if not found
+     C                     MOVE SEACFP    WWSEAC            use current
+     C                     MOVE BRCDFP    DSBRCA
+     C                     ENDIF
+      *
+      ***  Restore AKEYFP
+      *
+     C                     MOVE AKEYSV    AKEYFP
+      *
+     C                     ELSE
+      *
+      ***  Otherwise, it is the 'Pay currency' account key
+      *
+     C                     MOVE SEACFP    WWSEAC           so use current
+     C                     MOVE BRCDFP    DSBRCA
+     C                     ENDIF
+      *
+      ***  Determine settlement type
+      *
+     C                     EXSR #SETTP
+      *
+      ***  Is Counterparty resident
+      *
+     C           PREFFP    CHAINOTPAY                99
+      *
+      ***  Handle Database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 011 *
+     C                     MOVELPREFFP    DBKEY            ****************
+     C                     MOVEL'OTPAYDD 'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Retrieve Counterparty country :
+      ***  If Account with Bank (ACBT) is blank, use Destination (DSTT);
+      ***  ACBT could be 'S' and 'YOURSELF', in this case don't consider it.
+      *
+     C           ACBT      IFEQ 'S'
+     C           ACB1      ANDEQ'YOURSELF'
+     C                     MOVE 'A'       ACBT
+     C                     ENDIF
+      *
+     C           ACBT      IFNE 'A'
+     C           ACB1      ANDNE*BLANKS
+     C           '/'       SCAN ACB1                     50FOUND?
+     C           ACBT      IFEQ 'C'
+     C           *IN50     ANDEQ'1'                        FOUND
+     C                     MOVE ACBT      WWCTPT
+     C                     MOVELACB2      WWCTP1
+     C                     ELSE
+     C                     MOVE ACBT      WWCTPT
+     C                     MOVELACB1      WWCTP1
+     C                     END
+     C                     ELSE
+     C           DSTT      IFNE 'A'
+     C           DST1      ANDNE*BLANKS
+     C                     MOVE DSTT      WWCTPT
+     C                     MOVELDST1      WWCTP1    P
+     C                     ELSE
+     C                     MOVE SNCT      WWCTPT
+     C                     MOVELSNCO      WWCTP1    P
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE PCCY      WWNTCY  3
+      *
+      ***  Retrieve Counterparty country
+      *
+     C                     EXSR #CTRCO
+      *
+      ***  Retrieve the identification
+      *
+     C           ORCT      IFEQ 'A'
+     C                     MOVE ORBT      WPTYPE  1
+     C                     MOVELORBK      WPLINE 35
+     C                     ELSE
+     C                     MOVE ORCT      WPTYPE
+     C                     MOVE ORC1      WPLINE
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WPOPCL                                              CER001
+     C                     CALL 'IL0421'
+      * Input
+     C                     PARM SMCY      WPCCY   3
+     C                     PARM           WPTYPE
+     C                     PARM           WPLINE
+     C                     PARM           WPOPCL
+      * Output
+     C**********           PARM *BLANKS   WPACCD  4                                           CER001
+     C                     PARM *BLANKS   WPACCD 10                                           CER001
+     C                     PARM *BLANKS   WPCUST  6
+     C                     PARM *BLANK    WFOUND  1
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #SETTP - Determine Settlement type                          *
+      *  ------                                                      *
+      *  Called by : #OTPAY, #INPAY, #CQCOD, #CQPAC                  *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #SETTP    BEGSR
+      *
+      ***  Set up working field
+      *
+     C                     MOVELPREFFP    DSPREF
+     C                     MOVE WWSEAC    DSSEAC           See DSSEAC
+      *
+     C                     MOVE '5'       WWSETT           Default
+     C                     MOVE *BLANKS   WWCOCO  2
+      *
+      ***  NOSTRO ?
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C***********          PARM '*VERIFY' POPTN                           201093
+     C                     PARM '*KEY   ' POPTN                           201093
+     C                     PARM DSCUST    PCUST   6
+     C                     PARM DSCCY     PCCY    3
+     C**********           PARM DSACOD    PACOD   4                                           CER001
+     C                     PARM DSACOD    PACOD  10                                           CER001
+     C                     PARM DSACSQ    PACSQ   2
+     C                     PARM *BLANKS   PNOST   2        Nostro number
+     C                     PARM DSBRCA    PBRCH   3
+     C                     PARM *BLANKS   DUMMY1 10        Cust. shortname
+     C                     PARM *BLANKS   DUMMY2  1        Prime Nostro
+     C           SDNOST    PARM SDNOST    DSFDY            Nostro details 201093
+     C*********  SDNOST    PARM SDNOST    DSSDY            Nostro details 201093
+      *
+     C           PRTCD     IFEQ *BLANKS
+      *
+      ***  its's a nostro , so Read customer extension file
+      *
+     C********** DSCUST    CHAINSDCUSTYL             99                                       CER001
+     C           DSCUST    CHAINSDCUX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 012 *
+     C                     MOVELDSCUST    DBKEY            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE                                              CER001
+     C                     MOVEL'SDCUX1L0'DBFILE                                              CER001
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Set up WWSETT
+     C                     SELEC
+      *
+     C           CUTYPE    WHEQ 'BR'
+     C                     MOVE '2'       WWSETT
+      *
+     C           CUTYPE    WHEQ 'BO'
+     C                     MOVE '4'       WWSETT
+     C                     ENDSL
+      *
+     C                     ELSE
+      *
+      ***  this is not a Nostro,
+      ***  is it a Full Account
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM *BLANKS   PRETL  10        Retail No
+     C                     PARM DSCUST    PCUST   6
+     C                     PARM DSCCY     PCCY    3
+     C**********           PARM DSACOD    PACOD   4                                           CER001
+     C                     PARM DSACOD    PACOD  10                                           CER001
+     C                     PARM DSACSQ    PACSQ   2
+     C                     PARM DSBRCA    PBRCA   3
+     C           ACCNT     PARM ACCNT     DSSDY
+      *
+      ***  handle database error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD13        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 013 *
+     C                     MOVELDSSEAC    DBKEY            ****************
+     C                     MOVEL'ACCNTAB 'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           ATYP      IFEQ 'R'
+     C                     MOVE '1'       WWSETT           retail
+     C                     ELSE
+     C                     MOVE '5'       WWSETT           non retail
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ***  For nostro transfer, Always Blanks
+      *
+     C           AKEY1     IFEQ 'NT'
+     C                     MOVEL*BLANKS   WWSETT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #CTRCO - Determine Counterparty country                     *
+      *  ------                                                      *
+      *  Called by : #OTPAY, #INPAY, #CQCOD, #CQPAC                  *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #CTRCO    BEGSR
+      *
+      ***  Retrieve counterparty depent on type
+      *
+     C                     MOVE *BLANKS   WWCNUM  6
+     C           WWCTPT    IFEQ 'N'                        Short nostro
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C***************      PARM '*VERIFY' POPTN                           201093
+     C                     PARM '*KEY   ' POPTN                           201093
+     C                     PARM *BLANKS   PCUST   6
+     C                     PARM WWNTCY    PCCY    3
+     C**********           PARM *BLANKS   PACOD   4                                           CER001
+     C                     PARM *BLANKS   PACOD  10                                           CER001
+     C                     PARM *BLANKS   PACSQ   2
+     C                     PARM CTP1N3    PNOST   2        Nostro number
+     C                     PARM *BLANKS   PBRCH   3
+     C                     PARM *BLANKS   DUMMY1 10        Cust. shortname
+     C                     PARM *BLANKS   DUMMY2  1        Prime Nostro
+     C           SDNOST    PARM SDNOST    DSFDY            Nostro details 201093
+     C*****      SDNOST    PARM SDNOST    DSSDY            Nostro details 201093
+      *
+      ***  Handle Database error
+      *
+     C           PRTCD     IFNE *BLANKS                    Not found
+     C           *LOCK     IN   LDA
+     C                     Z-ADD14        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 014 *
+     C           PCCY      CAT  PNOST:1   DBKEY     P      ****************
+     C                     MOVEL'SDNOSTL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A7CUST    WWCNUM
+     C                     ENDIF                           Nostro
+      *
+     C           WWCTPT    IFEQ 'F'                        Full nostro
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C***************      PARM '*VERIFY' POPTN                           201093
+     C                     PARM '*KEY   ' POPTN                           201093
+     C                     PARM *BLANKS   PCUST   6
+     C                     PARM CTP1N1    PCCY    3
+     C**********           PARM *BLANKS   PACOD   4                                           CER001
+     C                     PARM *BLANKS   PACOD  10                                           CER001
+     C                     PARM *BLANKS   PACSQ   2
+     C                     PARM CTP1N2    PNOST   2        Nostro number
+     C                     PARM *BLANKS   PBRCH   3
+     C                     PARM *BLANKS   DUMMY1 10        Cust. shortname
+     C                     PARM *BLANKS   DUMMY2  1        Prime Nostro
+     C           SDNOST    PARM SDNOST    DSFDY            Nostro details 201093
+     C*********  SDNOST    PARM SDNOST    DSSDY            Nostro details 201093
+      *
+      ***  Handle Database error
+      *
+     C           PRTCD     IFNE *BLANKS                    Not found
+     C           *LOCK     IN   LDA
+     C                     Z-ADD15        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 015 *
+     C           PCCY      CAT  PNOST:1   DBKEY     P      ****************
+     C                     MOVEL'SDNOSTL0'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A7CUST    WWCNUM
+     C                     ENDIF
+      *
+     C           WWCTPT    IFEQ 'R'                        Retail Number
+     C                     CALL 'AOACCTR0'             99
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM CTP1R3    PRETL  10        Retail Number
+     C                     PARM *BLANKS   PCUST   6
+     C                     PARM *BLANKS   PCCY    3
+     C**********           PARM *BLANKS   PACOD   4                                           CER001
+     C                     PARM *BLANKS   PACOD  10                                           CER001
+     C                     PARM *BLANKS   PACSQ   2
+     C                     PARM *BLANKS   PBRCA   3
+     C           ACCNT     PARM ACCNT     DSSDY
+      *
+     C           *IN99     IFEQ *ON
+     C           PRTCD     ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD16        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 016 *
+     C                     MOVELPRETL     DBKEY            ****************
+     C                     MOVEL'ACNUM   'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   201093
+     C                     MOVE CNUM      WWCNUM                          201093
+     C                     ENDIF                                          201093
+      *                                                                   201093
+      ***  Counterparty contains Partial account ?                        201093
+      *                                                                   201093
+     C           WWCTPT    IFEQ 'C'                                       201093
+     C           WWCTPT    OREQ 'G'                                       201093
+     C           WWCTPT    OREQ 'P'                                       201093
+     C                     MOVE CTP1P4    WWCNUM                          201093
+     C                     ENDIF                                          201093
+      *                                                                   201093
+      ***  Counterparty contains Partial account ?                        201093
+      *                                                                   201093
+     C           WWCTPT    IFEQ 'S'                                       201093
+     C                     MOVE CTP1S5    WWCOLC                          201093
+      *                                                                   201093
+     C           WWCOLC    IFEQ 'LU'                                      201093
+     C                     MOVE 'Y'       WWCPRE                          201093
+     C                     ELSE                                           201093
+     C                     MOVE 'N'       WWCPRE                          201093
+     C                     ENDIF                                          201093
+      *                                                                   201093
+     C                     ELSE                                           201093
+      *
+      ***  Access Customer Ext. Details
+      *
+     C           WWCNUM    IFNE *BLANKS
+      *
+     C********** WWCNUM    CHAINSDCUSTYL             99                                       CER001
+     C           WWCNUM    CHAINSDCUX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD17        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 017 *
+     C                     MOVELWWCNUM    DBKEY            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE                                              CER001
+     C                     MOVEL'SDCUX1L0'DBFILE                                              CER001
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE CUTYPE    WWCTRY  1        Customer defined
+     C           WWCTRY    IFEQ 'R'                         as
+     C                     MOVE 'Y'       WWCPRE           Resident
+     C                     ELSE                             or as
+     C                     MOVE 'N'       WWCPRE           Non-resident
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF                                          201093
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #INPAY - Incoming payment validation                        *
+      *  ------                                                      *
+      *  Called by : #RTVD                                           *
+      *  Calls     : #SETTP, #CTRCO                                  *
+      ****************************************************************
+      *
+     C           #INPAY    BEGSR
+      *
+      ***  Access to INPAYYL : Incoming payment extension file
+      *
+     C********** PREFFP    CHAININPAYDYL             99                                       CER001
+     C           PREFFP    CHAINFTIPX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C                     CALL 'FT0055XL'
+     C********** PREFFP    CHAININPAYDYL             99                                       CER001
+     C           PREFFP    CHAINFTIPX1L0             99                                       CER001
+     C                     ENDIF
+      *
+      ***  Store working values in W071xx field
+      *
+     C                     MOVE INORTY    WWORTY
+     C                     MOVE INBETY    WWBETY
+      *
+      ***  these fields will be used eventually to Replace code 071 of RK
+      *
+     C                     MOVE INOPCO    W071OC  3        Op. code
+     C                     MOVE INIDCO    W071IC  2        Id. code
+     C                     MOVE INIDEN    W071IN  9        Id. number
+     C                     MOVE INCOCO    W071CO  2        Country code
+      *
+      ***  Find 'Settlement Currency' A/C key, if it is not it.
+      *
+     C           AKEY9     IFNE ' P'
+      *
+      ***  Save AKEYFP to work with transformed value
+      *
+     C                     MOVE AKEYFP    AKEYSV
+      *
+      ***  Retrieve the 'Settlement currency' account key
+      *
+     C                     MOVE ' P'      AKEY9
+     C                     MOVE PREFFP    PREFKY
+     C                     MOVE AKEYFP    AKEYKY
+     C           KEYBL     CHAINILFPKEY              99
+      *
+      ***  Store SEAC
+      *
+     C           *IN99     IFEQ *OFF                       If Found
+     C                     MOVE SEACBL    WWSEAC
+     C                     MOVE BRCDBL    DSBRCA
+     C                     ELSE                            else
+     C                     MOVE SEACFP    WWSEAC           use current
+     C                     MOVE BRCDFP    DSBRCA
+     C                     ENDIF
+      *
+      *** Restore Save A/C key treated
+      *
+     C                     MOVE AKEYSV    AKEYFP
+      *
+     C                     ELSE
+      *
+      ***  Otherwise, it is the 'Settlement currency' account key
+      *
+     C                     MOVE SEACFP    WWSEAC           so use current
+     C                     MOVE BRCDFP    DSBRCA
+     C                     ENDIF
+      *
+      ***  Determine settlment type
+      *
+     C                     EXSR #SETTP
+      *
+      ***  Is Counterparty resident ?
+      *
+     C           PREFFP    CHAININPAY                99
+      *
+      ***  Handle Database Error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD018       DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 018 *
+     C                     MOVELPREFFP    DBKEY            ****************
+     C                     MOVEL'INPAY   'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Retrieve Counterparty country :
+      ***  If Ordering bank (ORBT) is blank, use Ordering Customer (ORCT);
+      ***  If Ordering Customer is blank, use Sender (SNTP);
+      ***  If Sender is blank, use Receiver's Correspondant (RCRT).
+      *
+     C           ORBT      IFNE 'A'
+     C           ORB1      ANDNE*BLANKS
+     C                     MOVE ORBT      WWCTPT
+     C                     MOVELORB1      WWCTP1    P
+     C                     ELSE
+     C           ORCT      IFNE 'A'
+     C           ORC1      ANDNE*BLANKS
+     C                     MOVE ORCT      WWCTPT
+     C                     MOVELORC1      WWCTP1    P
+     C                     ELSE
+     C           SNTP      IFNE 'A'
+     C           SND1      ANDNE*BLANKS
+     C                     MOVE SNTP      WWCTPT
+     C                     MOVELSND1      WWCTP1    P
+     C                     ELSE
+     C                     MOVE RCRT      WWCTPT
+     C                     MOVELRCCO      WWCTP1    P
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE SMCY      WWNTCY  3
+      *
+      ***  Retrieve Counterparty country
+      *
+     C                     EXSR #CTRCO
+      *
+      ***  Retrieve the identification
+      *
+     C           BNCT      IFEQ 'A'
+     C           BNCT      OREQ 'S'
+     C                     MOVE ACBT      WPTYPE
+     C                     MOVELACBK      WPLINE
+     C                     ELSE
+     C                     MOVE BNCT      WPTYPE
+     C                     MOVE BNC1      WPLINE
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WPOPCL                                              CER001
+     C                     CALL 'IL0421'
+      * Input
+     C                     PARM PCCY      WPCCY   3
+     C                     PARM           WPTYPE
+     C                     PARM           WPLINE
+     C                     PARM           WPOPCL
+      * Output
+     C**********           PARM *BLANKS   WPACCD  4                                           CER001
+     C                     PARM *BLANKS   WPACCD 10                                           CER001
+     C                     PARM *BLANKS   WPCUST  6
+     C                     PARM *BLANK    WFOUND  1
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      *  #CQCOD - Cheques to be collected validation                 *
+      *  ------                                                      *
+      *  Called by : #RTVD                                           *
+      *  Calls     : #SETTP, #CTRCO                                  *
+      ****************************************************************
+      *
+     C           #CQCOD    BEGSR
+      *
+      ***  Access to CQCODYL : Cheques to be collected extension file
+      *
+     C                     MOVE PREFFP    KPREC
+     C                     Z-ADDCQSQFP    KSEQC
+      *
+     C********** KCCOD     CHAINCQCODYL              99                                       CER001
+     C           KCCOD     CHAINFTCCX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C                     CALL 'FT0070XL'
+     C********** KCCOD     CHAINCQCODYL              99                                       CER001
+     C           KCCOD     CHAINFTCCX1L0             99                                       CER001
+     C                     ENDIF
+      *
+      ***  Store working values in W071xx field
+      *
+     C                     MOVE CCORTY    WWORTY
+     C                     MOVE CCBETY    WWBETY
+      *
+      ***  these fields will be eventually used to replace code 071 of RK.
+      *
+     C                     MOVE CCOPCO    W071OC  3        Op. code
+     C                     MOVE CCIDCO    W071IC  2        Id. code
+     C                     MOVE CCIDEN    W071IN  9        Id. number
+     C                     MOVE CCCOCO    W071CO  2        Country code
+      *
+      ***  Find the 'Settlement currency' account key, if it's not the case
+      *
+     C           AKEY9     IFNE ' P'
+      *
+      ***  Save AKEYFP to work with transformed value
+      *
+     C                     MOVE AKEYFP    AKEYSV
+      *
+      ***  Retrieve the 'Settlement currency' account key
+      *
+     C                     MOVE ' P'      AKEY9
+     C                     MOVE PREFFP    PREFKY
+     C                     MOVE AKEYFP    AKEYKY
+     C           KEYBL     CHAINILFPKEY              99
+      *
+      ***  Store SEAC
+      *
+     C           *IN99     IFEQ *OFF                       Found
+     C                     MOVE SEACBL    WWSEAC
+     C                     MOVE BRCDBL    DSBRCA
+     C                     ELSE                            else
+     C                     MOVE SEACFP    WWSEAC           use current details
+     C                     MOVE BRCDFP    DSBRCA
+     C                     ENDIF
+      *
+      ***  Restore Save A/C key curently treated
+      *
+     C                     MOVE AKEYSV    AKEYFP
+      *
+     C                     ELSE
+      *
+      ***  Otherwise, it is the 'Settlement currency' account key
+      *
+     C                     MOVE SEACFP    WWSEAC           so use current
+     C                     MOVE BRCDFP    DSBRCA
+     C                     ENDIF
+      *
+      ***  Determine settlment type
+      *
+     C                     EXSR #SETTP
+      *
+      ***  Is Counterparty resident ?
+      *
+     C           KCCOD     CHAINCQCOD                99    Detail record
+      *
+      ***  Handle Database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD19        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 019 *
+     C                     MOVELPREFFP    WWFLD  18        ****************
+     C                     MOVE CQSQFP    WWFLD
+     C                     MOVELWWFLD     DBKEY
+     C                     MOVEL'CQCOD   'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADD0         KSEQC
+     C           KCCOD     CHAINCQCOD                99    Header record
+      *
+      ***  handle Database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD20        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 020 *
+     C                     MOVELPREFFP    DBKEY            ****************
+     C                     MOVEL'CQCOD   'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Retrieve Counterparty country :
+      ***  If Collecting bank (COBT) is blank, use Receiver's Corresp. (RCRT);
+      *
+     C           COBT      IFNE 'A'
+     C           COB1      ANDNE*BLANKS
+     C                     MOVE COBT      WWCTPT
+     C                     MOVELCOB1      WWCTP1    P
+     C                     ELSE
+     C                     MOVE RCRT      WWCTPT
+     C                     MOVELRCCO      WWCTP1    P
+     C                     ENDIF
+      *
+     C                     MOVE SMCY      WWNTCY  3
+      *
+      ***  Retrieve Counterparty country
+      *
+     C                     EXSR #CTRCO
+      *
+      *
+      ***  Retrieve the identification
+      *
+     C                     MOVE CRPT      WPTYPE
+     C                     MOVELCRPY      WPLINE
+      *
+     C                     Z-ADD0         WPOPCL                                              CER001
+     C                     CALL 'IL0421'
+      * Input
+     C                     PARM CRCY      WPCCY   3
+     C                     PARM           WPTYPE
+     C                     PARM           WPLINE
+     C                     PARM           WPOPCL
+      * Output
+     C**********           PARM *BLANKS   WPACCD  4                                           CER001
+     C                     PARM *BLANKS   WPACCD 10                                           CER001
+     C                     PARM *BLANKS   WPCUST  6
+     C                     PARM *BLANK    WFOUND  1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      ****************************************************************
+      *  #CQPAC - Cheques to be paid validation            (P06)     *
+      *  ------                                                      *
+      *  Called by : #RTVD                                           *
+      *  Calls     : #SETTP, #CTRCO                                  *
+      ****************************************************************
+      *
+     C           #CQPAC    BEGSR
+      *
+      ***  Access to CQPACYL : Cheques to be paid extension file
+      *
+     C                     MOVE PREFFP    KPREP
+     C                     Z-ADDCQSQFP    KSEQP
+      *
+     C********** KCPAC     CHAINCQPACYL              79                                       CER001
+     C           KCPAC     CHAINFTCPX1L0             79                                       CER001
+     C           *IN79     IFEQ *ON
+     C                     CALL 'FT0080XL'
+     C********** KCPAC     CHAINCQPACYL              79                                       CER001
+     C           KCPAC     CHAINFTCPX1L0             79                                       CER001
+     C                     ENDIF
+      *
+      ***  Store working values in W071xx field
+      *
+     C                     MOVE CPORTY    WWORTY
+     C                     MOVE CPBETY    WWBETY
+      *
+      ***  These fields will be eventually used to replace Code 071 of RK
+      *
+     C                     MOVE CPOPCO    W071OC  3        Op. code
+     C                     MOVE CPIDCO    W071IC  2        Id. code
+     C                     MOVE CPIDEN    W071IN  9        Id. number
+     C                     MOVE CPCOCO    W071CO  2        Country code
+      *
+      ***  Find the 'Pay currency' account key, if it is not the case
+      *
+     C           AKEY9     IFNE ' R'
+      *
+      ***  Save AKEYFP to work with transformed value
+      *
+     C                     MOVE AKEYFP    AKEYSV
+      *
+      ***  Retrieve the 'Pay currency' account key
+      *
+     C                     MOVE ' R'      AKEY9
+     C                     MOVE PREFFP    PREFKY
+     C                     MOVE AKEYFP    AKEYKY
+     C           KEYBL     CHAINILFPKEY              99
+      *
+      ***  Store SEAC
+      *
+     C           *IN99     IFEQ *OFF                       Found
+     C                     MOVE SEACBL    WWSEAC
+     C                     MOVE BRCDBL    DSBRCA
+     C                     ELSE                            otherwise
+     C                     MOVE SEACFP    WWSEAC           us current
+     C                     MOVE BRCDFP    DSBRCA
+     C                     ENDIF
+      *
+      ***  Restore  A/C key currently treated
+      *
+     C                     MOVE AKEYSV    AKEYFP
+      *
+     C                     ELSE
+      *
+      ***  Otherwise, it is the 'Pay currency' account key
+      *
+     C                     MOVE SEACFP    WWSEAC           so use current details
+     C                     MOVE BRCDFP    DSBRCA
+     C                     ENDIF
+      *
+      ***  Determine settlement type
+      *
+     C                     EXSR #SETTP
+      *
+      ***  Is Counterparty resident ?
+      *
+     C           KCPAC     CHAINCQPAC                99    Detail record
+      *
+      ***  Handle database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD21        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 021 *
+     C                     MOVELPREFFP    WWFLD  18        ****************
+     C                     MOVE CQSQFP    WWFLD
+     C                     MOVELWWFLD     DBKEY
+     C                     MOVEL'CQPAC   'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADD0         KSEQP
+     C           KCPAC     CHAINCQPAC                99    Header record
+      *
+      ***  Handle database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD22        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 022 *
+     C                     MOVELPREFFP    DBKEY            ****************
+     C                     MOVEL'CQPAC   'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Retrieve Counterparty country :
+      ***  If Account with bank (ACBT) is blank, use Remitting Bank. (RBKT);
+      ***  If Remitting Bank is blank, use Sender'Correspondant (SNCT).
+      *
+     C           ACBT      IFNE 'A'
+     C           ACB1      ANDNE*BLANKS
+     C                     MOVE ACBT      WWCTPT
+     C                     MOVELACB1      WWCTP1
+     C                     ELSE
+     C           RBKT      IFNE 'A'
+     C           RBK1      ANDNE*BLANKS
+     C                     MOVE RBKT      WWCTPT
+     C                     MOVELRBK1      WWCTP1    P
+     C                     ELSE
+     C                     MOVE SNCT      WWCTPT
+     C                     MOVELSNCO      WWCTP1    P
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE PCCY      WWNTCY  3
+      *
+      ***  Retrieve Counterparty country
+      *
+     C                     EXSR #CTRCO
+      *
+      ***  Retrieve the identification
+      *
+      *
+     C                     MOVE DRPT      WPTYPE
+     C                     MOVELDRPY      WPLINE
+      *
+     C                     Z-ADD0         WPOPCL                                              CER001
+     C                     CALL 'IL0421'
+      * Input
+     C                     PARM DRCY      WPCCY   3
+     C                     PARM           WPTYPE
+     C                     PARM           WPLINE
+     C                     PARM           WPOPCL
+      * Output
+     C*********            PARM *BLANKS   WPACCD  4                                           CER001
+     C                     PARM *BLANKS   WPACCD 10                                           CER001
+     C                     PARM *BLANKS   WPCUST  6
+     C                     PARM *BLANK    WFOUND  1
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      ****************************************************************
+      *  #NTRAN - Nostro transfer validation                         *
+      *  ------                                                      *
+      *  Called by : #RTVD                                           *
+      *  Calls     :                                                 *
+      ****************************************************************
+      *
+     C           #NTRAN    BEGSR
+      *
+     C                     MOVE *BLANKS   WPCUST
+      *
+      ***  Store working fields
+      ***  1: Ordering customer : country or Identification
+      *
+     C                     MOVE SEACFP    DSSEAC
+     C********** DSCUST    CHAINSDCUSTYL             99                                       CER001
+     C           DSCUST    CHAINSDCUX1L0             99                                       CER001
+      *
+      ***  Handle database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD23        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 032 *
+     C                     MOVELDSCUST    DBKEY            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE                                              CER001
+     C                     MOVEL'SDCUX1L0'DBFILE                                              CER001
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE CUTYPE    WWORTY
+      *
+      ***  If ordering cust. is Resident --> Identification, else country code
+      *
+     C           WWORTY    IFEQ 'AR'
+     C           WWORTY    OREQ 'BR'
+     C           WWORTY    OREQ 'OR'
+     C           WWORTY    OREQ ' R'
+      *
+     C           WWORTY    IFNE 'BR'
+     C                     MOVE CUIDCO    WKIDCO
+     C                     MOVE CUIDEN    WKIDEN
+     C                     ELSE
+     C                     MOVE CUIMCO    WKIDCO
+     C                     MOVE CUIMNB    WKIDEN
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  WPCUST : working field to retrieve the country (#GENRK)
+      *
+     C                     MOVE DSCUST    WPCUST
+     C                     ENDIF
+      *
+      ***  2: Beneficiary : country or Identification
+      *
+     C                     MOVE OTACFP    DSSEAC
+     C********** DSCUST    CHAINSDCUSTYL             99                                       CER001
+     C           DSCUST    CHAINSDCUX1L0             99                                       CER001
+      *
+      ***  Handle database error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD24        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 024 *
+     C                     MOVELDSCUST    DBKEY            ****************
+     C**********           MOVEL'SDCUSTYL'DBFILE                                              CER001
+     C                     MOVEL'SDCUX1L0'DBFILE                                              CER001
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE CUTYPE    WWBETY
+      *
+      ***  If beneficiary is Resident --> Identification, else country code
+      *
+     C           WWBETY    IFEQ 'AR'
+     C           WWBETY    OREQ 'BR'
+     C           WWBETY    OREQ 'OR'
+     C           WWBETY    OREQ ' R'
+      *
+     C           WWBETY    IFNE 'BR'
+     C                     MOVE CUIDCO    WKIDCO
+     C                     MOVE CUIDEN    WKIDEN
+     C                     ELSE
+     C                     MOVE CUIMCO    WKIDCO
+     C                     MOVE CUIMNB    WKIDEN
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  WPCUST : working field to retrieve the country (#GENRK)
+      *
+     C                     MOVE DSCUST    WPCUST
+     C                     ENDIF
+      *
+      ***   Counterparty resident is always blank for Nostro transfer RK
+      ***   Settlement type is always blank for nostro transfer RK
+      *
+     C                     MOVE *BLANKS   WWCPRE  1
+     C                     MOVE *BLANKS   WWSETT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #GENRK - Generate a routing key record for Funds transfer    *
+      *  ------                                                       *
+      *  Called by : Main lines                                       *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #GENRK    BEGSR
+      *
+      ***  initialize working fields
+      *
+     C                     MOVE *BLANKS   WWCOCO  2
+      *
+      ***  Build routing key : Module id, transaction type,  Event type,
+      ***                      Ordering type, Beneficiary type, Counterparty resident flag,
+      ***                      Settlement type,  Event amount type
+      ***  MODULE ID
+      *
+     C                     MOVE 'FT'      KMODI
+      *
+      ***  Transaction type
+      *
+     C                     MOVE AKEY1     KTTYP
+      *
+      ***  Event type
+      *
+     C                     MOVE AKEY3     KEVTP
+      *
+      ***  Ordering type
+      *
+     C                     MOVE WWORTY    KOTYP
+      *
+      ***  Beneficiary type
+      *
+     C                     MOVE WWBETY    KBTYP
+      *
+      *
+      ***  Counterparty resident must be blank if WWSETT is 5
+      ***  Counterparty Resident flag
+      *
+     C           WWSETT    IFEQ '5'
+     C                     MOVE ' '       WWCPRE
+     C                     ENDIF
+     C                     MOVE WWCPRE    KCPRE
+      *
+      ***  Settlement type
+      *
+     C                     MOVE WWSETT    KSETT
+      *
+      ***  FILLER
+      *
+     C                     MOVE *BLANKS   KFIL9
+     C                     MOVE AKEYFP    RAKEY
+     C                     MOVE EAMTFP    RAMNT
+      *
+      ***  Check Whether Routine Key exist
+      *
+     C           KRKFF     CHAINILRKFTPD             99
+      *
+      ***  If not Found, Add it in Audit File
+      *
+     C           *IN99     IFEQ *ON                        ILRKFTPD
+     C                     MOVE *BLANKS   C5      5                       201093
+     C                     MOVELKTTYP     C5                              201093
+     C                     MOVELKEVTP     C3      3                       201093
+     C                     MOVE KEVNT     C3                              201093
+     C                     MOVE C3        C5                              201093
+     C           C5        IFNE 'INR R'                                   201093
+     C           C5        ANDNE'INP P'                                   201093
+     C           C5        ANDNE'OPR R'                                   201093
+     C           C5        ANDNE'OPP P'                                   201093
+     C                     EXSR #PRP2                      Print routing key
+     C                     ENDIF                                          201093
+     C                     ELSE                            KEY Found
+      *
+      ***  Output if Required
+      *
+     C           ICPRID    IFEQ 'Y'                        ICD printing ind.
+     C                     EXSR #PRP1
+     C                     ENDIF
+      *
+      ***  Write records in file ILDIWKPD if Required EAMT > than limit amount
+      *
+     C                     EXSR #WIEX
+     C                     ENDIF                           *IN99
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PRP1  - Print transaction in report list (Routing Keys found*
+      *  ------   (Routing key used and found in ILRKFTPD)            *
+      *  Called by : #GENRK                                           *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PRP1     BEGSR
+      *
+      ***  Report IL0644P1 overflow
+      *
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEDETHP1
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+      ***  Write loans in report list IL0644P1
+      *
+     C                     MOVE PREF      RPREF
+     C                     MOVE KEYDS     RFLDS
+     C                     MOVE OPCODS    ROPCO
+     C                     WRITEDETAP1
+      *
+      ***  At least one printed record on IL0641P1
+      *
+     C                     MOVE *ON       *IN68
+      *
+      ***  Write Routing key found in ILRKAUPD
+      *
+     C                     CLEARILRKAUD0
+     C                     MOVE KEYDS     AUKEY
+     C                     MOVELPREFFP    AUTRNB
+     C                     MOVE CQSQFP    AUTRNB
+     C                     MOVELAKEYFP    AUAKEY
+     C                     MOVE EAMTFP    AUAMNT
+     C                     MOVE KWECCY    AUECCY
+     C                     MOVE OPCODS    AUOPCO
+     C                     MOVE 'Y'       AUFOUN
+     C                     WRITEILRKAUD0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PRP2  - Print transaction in audit report (Missing RK)      *
+      *  ------   (Routing key not found in ILRKFTPD)                 *
+      *  Called by : #GENRK                                           *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PRP2     BEGSR
+      *
+      ***  Report IL0644P2 overflow
+      *
+     C           *IN66     IFEQ *ON
+     C                     WRITEHEADP2
+     C                     WRITEDETHEA
+     C                     MOVE *OFF      *IN66
+     C                     ENDIF
+      *
+      ***  Write transaction reference in audit report
+      *
+     C                     MOVE PREF      RPREF
+     C                     MOVE KEYDS     RFLDS
+     C                     WRITEDETAIL                     of P2
+      *
+      ***  At least 1 write in IL0644P2
+      *
+     C                     MOVE *ON       *IN69
+      *
+      ***  Write Routing key not found in ILRKAUPD
+      *
+     C                     CLEARILRKAUD0
+     C                     MOVE KEYDS     AUKEY
+     C                     MOVELPREFFP    AUTRNB
+     C                     MOVE CQSQFP    AUTRNB
+     C                     MOVELAKEYFP    AUAKEY
+     C                     MOVE EAMTFP    AUAMNT
+     C                     MOVE KWECCY    AUECCY
+     C                     MOVE 'N'       AUFOUN
+     C                     WRITEILRKAUD0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #WIEX  - Write Item Extract in file ILDWIKPD                 *
+      *  ------                                                       *
+      *  Called by : #GENRK                                           *
+      *  Calls     : #ITWR                                            *
+      *****************************************************************
+      *
+     C           #WIEX     BEGSR                           ** #WIEX **
+      *
+      ***  Store operation codes in ACO array
+      *
+     C                     MOVEAOPCODS    ACO
+      *
+      ***  Make initialization of ILDIWKPD fields
+      *
+     C                     MOVE 'FT'      ITMODI
+     C                     MOVE ECCYFP    ITCURR
+     C                     Z-ADDEAMTFP    ITAMNT
+     C                     MOVE '0'       ITCORR
+     C                     MOVE '0'       ITGLOB
+     C                     MOVE *ALL'0'   ITOPER
+     C                     MOVEL'006'     ITOPER           0 06 MMDD SSS QQ 00
+      *
+      ***  Set up ITOPE3
+      *
+     C                     MOVE PREFFP    DSPREF
+     C                     MOVELPREF4     OPE301           PREF date
+     C                     MOVELPREF9     OPE302           PREF SEQ at date
+     C                     MOVELDSSETP    OPE304           Payment Sequence
+     C                     MOVEL'00'      OPE305
+     C                     MOVE BJMRDT    MRDTDS
+     C                     Z-ADD1         #J      20       Retrieve Month
+     C           WMLUP     LOKUPZMNM,#J                  99
+     C                     MOVE '00'      WTEMP2  2
+     C                     MOVE #J        WTEMP2
+     C           WDLUP     CAT  WTEMP2:0  WTEMP6  6        DDMMYY
+     C           WTEMP6    CAT  WYLUP:0   WTEMP6
+     C                     MOVE WTEMP6    ITACTD
+      *
+     C                     MOVE WPCUST    ITCUST
+     C                     MOVE PREFFP    ITTEXT
+     C                     MOVE *BLANKS   ITCOCO
+     C                     MOVE *BLANKS   WWCOCO  2
+      *
+      ***  Retrieve the counterparty country of the transaction
+      *
+     C           WPCUST    IFNE *BLANKS
+     C           WPCUST    ANDNE*ZEROS
+      *
+     C                     MOVELWPCUST    PCUST1 10
+     C**********           CALL 'AOCUSTR0'             99                                     220750
+     C                     CALL 'AOCUSTR1'             99                                     220750
+     C                     PARM '       ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           PCUST1
+     C                     PARM *BLANKS   DUMMY7  7
+     C********** SDCUST    PARM SDCUST    DSSDY                                               220750
+     C           SDCUST    PARM SDCUST    DSLDY                                               220750
+      *
+      ***  Database error In case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           BBCLST    ANDNE'Y'                                                           220750
+     C           *IN99     OREQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD25        DBASE            ****************
+     C                     MOVELPGM       DBPGM            * DB ERROR 025 *
+     C                     MOVELWPCUST    DBKEY            ****************
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE BBCOLC    WWCOCO
+      *
+     C                     ENDIF                           WWCUST
+      *******
+      *****Bank own Account Transaction flag
+      *******
+     C*******              MOVE 'N'       ITOWN            Default
+      *******
+      *****Check if Countreprty Customer is Branch internal customer of
+      *****Consolidated Branches pool
+      *******
+     C*******    BBCUST    CHAINSDBRCHL5             99
+     C*******    *IN99     IFNE *OFF                       Not a BICN
+     C*******              MOVE '*NBANK'  PLIMT
+     C*******              ELSE
+      *******
+      *****if Branch Internal customer, Only considered those in
+      *****Consolidation Pool
+      *****Retrieve consolidation Branch of BICN
+      *******
+     C*******    A8BRCD    CHAINSDBRCHYL             99
+     C*******    *IN99     IFEQ *ON
+     C*******              Z-ADD26        DBASE            ****************
+     C*******              MOVEL'SDBRCHYL'DBFILE           * DB ERROR 026 *
+     C*******              MOVELA8BRCD    DBKEY            ****************
+     C*******              MOVELPGM       DBPGM
+     C*******              OUT  LDA
+     C*******              EXSR *PSSR
+     C*******              ENDIF
+      *******
+     C*******    BRCONS    IFNE ITBRCD                     Current Consol. Brch
+     C*******              MOVE '*NBANK'  PLIMT              not in Pool
+     C*******              ELSE
+     C*******              MOVE '*BANK '  PLIMT   6        Bank own A/C Transaction
+     C*******              MOVE 'Y'       ITOWN
+     C*******              ENDIF
+     C*******              ENDIF                           BICN ??
+      *
+      ***  for now as Synoptic program will remove unnecessary items
+      ***  Considered that it's bank own account details
+      *
+     C                     MOVE '*BANK '  PLIMT   6        Bank own A/C Transaction
+     C                     MOVE 'Y'       ITOWN
+      *
+      ***  Check lilmit of Rregistration depending of PLIMT value
+      *
+     C           PLIMT     IFEQ '*BANK'                    At first Euro
+     C           PLIMT     OREQ '*NBANK'                   or not bank Own A/c Transaction
+     C           EAMTFP    ANDGEWWREGI                     at upper of Limit of registration
+      *                                                                   201180
+      ***  Convert Original Amount in Reporting Amount (Euro) for 'In' CCy201180
+      *                                                       for All Ccy 201180
+     C                     Z-ADDITAMNT    ZAMTF                           201180
+     C                     EXSR ZCCYCN                                    201180
+     C           KPINCY    IFEQ 'Y'                        In currency    201180
+     C                     MOVE ITCURR    ITOCUR           Origin Ccy     201180
+     C                     Z-ADDITAMNT    ITOAMN           Origin Amount  201180
+     C                     MOVE BKEURO    ITCURR                          201180
+     C                     Z-ADDZAMTT     ITAMNT                          201180
+     C                     ELSE                                           201180
+     C                     MOVE *BLANK    ITOCUR                          201180
+     C                     MOVE *BLANK    ITOAMN                          201180
+     C                     ENDIF                                          201180
+     C                     Z-ADDZAMTT     ITAMNB           Amount in EUROS201180
+      *
+      ***  Make one write in ILDIWKPD if operation code not null
+      *
+     C                     Z-ADD1         I       10
+     C           I         DOWLT7
+      *
+     C           ACO,I     IFNE '   '
+     C           ACO,I     ANDNE'000'
+     C                     EXSR #ITWR
+     C                     ENDIF
+      *
+     C                     ADD  1         I
+     C                     ENDDO
+     C                     ELSE
+      *
+      ***  Print not taken into Account under limit of Registration
+      *
+     C           ICPRID    IFEQ 'Y'                        ICD printing ind.
+     C                     EXSR #PRP1A                     not Extracted
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PRP1A - Print Deals not extracted due to Event Amount less  *
+      *  ------   than Registration limits                            *
+      *  Called by : #WIEX                                            *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PRP1A    BEGSR
+      *
+      ***  Report IL0641P1 overflow
+      *
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEDETHP1
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+      ***  Print Limit of Regsitration in Event Currency
+      *
+     C                     Z-ADDWWREGI    ZFLD15
+     C                     Z-ADDZCDPF     ZDECS            Event CCy dec. Places
+      *
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    RLCCY            Event Amount
+     C                     MOVE KWECCY    REVCCY
+     C                     MOVE REVCCY    RCCYEV
+      *
+      ***  Print Event Amount
+      *
+     C                     Z-ADDEAMTFP    ZFLD15
+      *
+     C                     EXSR ZFRPED
+     C                     MOVELZOUT25    REAMT            Event Amount
+      *
+      ***  'limit of Registration is not reached (x,xxx.xx  CCY).:
+      ***   Event Amount is y,yyy,yyy.yy CCY'
+      *
+     C                     WRITEREJAP1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #ITWR  - IT record writing in File ILDIWKPD                  *
+      *  ------                                                       *
+      *  Called by : #WIEX                                            *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #ITWR     BEGSR
+      *
+      ***  Take operation currently treated
+      *
+     C                     MOVE ACO,I     ITOPCO
+      *
+     C                     MOVE WWCOCO    ITCOCO
+     C                     MOVE WKIDCO    ITIDCO
+     C                     MOVE WKIDEN    ITIDNB
+      *
+      ***  When 071 , Replace by Extended details if found and valid
+      *
+     C           ITOPCO    IFEQ '071'
+     C           W071OC    ANDNE*BLANKS
+      *
+      ***  Verify if details have been input a
+      *
+     C                     MOVE AKEY1     WWTRAN
+     C                     MOVE RKOTYP    WWORDE
+     C                     MOVE RKBTYP    WWBENE
+     C                     MOVE RKSETT    WSETTW
+     C                     Z-ADD1         W       20
+     C           TWND      LOKUPWND,W                    99
+     C           *IN99     IFEQ *ON                        Found  ?
+     C           OPT,W     IFEQ 'M'                        Mandatory
+     C           OPT,W     OREQ 'O'                        Optional
+     C                     MOVE W071OC    ITOPCO
+     C                     MOVE W071IC    ITIDCO
+     C                     MOVE W071IN    ITIDNB
+     C                     MOVE W071CO    ITCOCO
+     C                     ENDIF                           M or O
+     C                     ENDIF                           *IN99
+     C                     ENDIF                           071 and W071OC
+      *
+      ***  Check Operation Limits and Acceptance
+      *
+     C                     CALL 'IL0410'
+     C                     PARM ITOPCO    PCODE   3        Val operation Code
+     C                     PARM           PLIMT
+     C                     PARM KWECCY    PTCCY   3
+     C                     PARM PGM       PCPGM  10
+      *
+      ***  Result parameters
+      *
+     C                     PARM '0'       PERID   1
+     C                     PARM '0'       PDBID   1
+     C                     PARM *ZEROS    PCLIM  150       Limit for Country
+     C                     PARM *ZEROS    PILIM  150       Limit for Identification
+     C                     PARM           PLREG  150
+      *
+     C           PERID     IFNE '0'                        no more valid, bypass
+      *
+      ***  Write in output file, Operation no more valid
+      *
+     C           ICPRID    IFEQ 'Y'                        ICD printing ind.
+     C                     EXSR #PRP1B                     not Extracted
+     C                     ENDIF
+      *
+     C                     ELSE                            PERID = '0'
+      *
+      ***  Under limit clear Country code
+      *
+     C           EAMTFP    IFLT PCLIM
+     C                     MOVE *BLANKS   ITCOCO
+     C                     ENDIF
+      *
+      ***  Under limit clear Identification
+      *
+     C           EAMTFP    IFLT PILIM
+     C                     MOVE *BLANKS   ITIDCO
+     C                     MOVE *BLANKS   ITIDNB
+     C                     ENDIF
+      *
+      ***  Debit/credit indicator depending of I  and reversal indicator
+      *
+     C           I         IFLT 4
+     C                     MOVE 'D'       ITDRCR           1,2,3 --> D
+     C                     ELSE
+     C                     MOVE 'C'       ITDRCR           Reverse
+     C                     ENDIF
+      *
+      *****                                                               201180
+      *****Convert Original Amount in Reporting Amount (Euro) for 'In' CCy201180
+      *****                                                   for All Ccy 201180
+     C*****                Z-ADDITAMNT    ZAMTF                           201180
+     C*****                EXSR ZCCYCN                                    201180
+     C*****      KPINCY    IFEQ 'Y'                        In currency    201180
+     C*****                MOVE ITCURR    ITOCUR           Origin Ccy     201180
+     C*****                Z-ADDITAMNT    ITOAMN           Origin Amount  201180
+     C*****                MOVE BKEURO    ITCURR                          201180
+     C*****                Z-ADDZAMTT     ITAMNT                          201180
+     C*****                ELSE                                           201180
+     C*****                MOVE *BLANK    ITOCUR                          201180
+     C*****                MOVE *BLANK    ITOAMN                          201180
+     C*****                ENDIF                                          201180
+     C*****                Z-ADDZAMTT     ITAMNB           Amount in EUROS201180
+      *
+      ***  Physical write
+      *
+     C                     WRITEILITEMD0
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PRP1B - Print Deals not extracted due to operation code     *
+      *  ------   that is not more valid                              *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #PRP1B    BEGSR
+      *
+      ***  Report IL0641P1 overflow
+      *
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     WRITEDETHP1
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+      ***  Print Limit of Regsitration in Event Currency
+      *
+     C                     MOVE ACO,I     RCODE
+      *
+      ***  'Not Extracted : Operation Code (xxx) is not valid.'
+      *
+     C                     WRITEREJBP1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Initial processing : Reset static fields            *
+      *  ------                        access standing data           *
+      *  Called by : First RPG Cycle   automatically                  *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVELPGM       DBPGM
+      *
+      ***  Reset indicators
+      *
+     C                     MOVE *OFF      *IN
+      *
+      ***  Retrieve Bank details
+      *
+     C                     CALL 'AOBANKR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Database error in case of Problem
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ *ON
+      *
+     C           *LOCK     IN   LDA
+     C                     Z-ADD27        DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 027 *
+     C                     MOVEL'*FIRST'  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check system data format (DDMMYY or MMDDYY):
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98            ON => MMDDYY
+     C                     ENDIF
+      *
+      ***  Read IBLC I.C.D.
+      *
+     C           1         SETLLILICDRPD
+     C                     READ ILICDRPD                 99
+      *
+      ***  Database error in Case of read with error
+      *
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD28        DBASE            ****************
+     C                     MOVEL'ILICDRPD'DBFILE           * DB ERROR 028 *
+     C                     MOVEL'ICDR  '  DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access General Ledger detail to retrive EURO Ccy code
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD29        DBASE            ****************
+     C                     MOVEL'SDGELRPD'DBFILE    P      * DB ERROR 029 *
+     C                     MOVEL'READ'    DBKEY            ****************
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Access EURO CCy details for Std routine for Currency conversion
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BKEURO    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  If record not found, handle database error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD30        DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DB ERROR 030 *
+     C                     MOVELBKEURO    DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Convert Amounts in Euro  when required; keep "To CCY" details
+      *
+     C                     MOVELA6CYCD    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+      ***  KEYS list definition
+      *
+     C           KOMIS     KLIST                           For ILOMISPD
+     C                     KFLD           KMODIO  2
+     C                     KFLD           KTYPEO  2
+     C                     KFLD           KSTYPO  2
+     C                     KFLD           KCLAS   4                                           CER001
+      *
+     C********** KPOS1     KLIST                           For FPKEYL0                        CER001
+     C           KPOS1     KLIST                           For FTAKYXL0                       CER001
+     C                     KFLD           KWBRCA  3
+      *
+     C********** KPOS2     KLIST                           For FPKEYL0                        CER001
+     C           KPOS2     KLIST                           For FTAKYXL0                       CER001
+     C                     KFLD           KWBRCA  3
+     C                     KFLD           KWECCY  3
+      *
+     C           KRKFF     KLIST                           For ILRKFTPD
+     C                     KFLD           KMODI
+     C                     KFLD           KTTYP
+     C                     KFLD           KEVTP
+     C                     KFLD           KOTYP
+     C                     KFLD           KBTYP
+     C                     KFLD           KCPRE
+     C                     KFLD           KSETT
+     C                     KFLD           KEVNT
+     C                     KFLD           KFIL9
+      *
+     C           KEYBL     KLIST                           For ILFPKEY
+     C                     KFLD           PREFKY 15
+     C                     KFLD           AKEYKY 10
+      *
+     C           KCCOD     KLIST                           For CQCODY7
+     C                     KFLD           KPREC  15
+     C                     KFLD           KSEQC   20
+      *
+     C           KCPAC     KLIST                           For CQPACY7
+     C                     KFLD           KPREP  15
+     C                     KFLD           KSEQP   20
+      *
+      ***  Set on overflow printer file indicators, force Page header
+      *
+     C                     MOVE *ON       *IN65
+     C                     MOVE *ON       *IN66
+      *
+      ***  Start RCF for Printer files
+      *
+     C                     Z-ADDSFNUMU    ZSNUM            IL0644AU
+     C                     MOVELSFILEU    SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     Z-ADDSFNUM1    ZSNUM            IL0644P1
+     C                     MOVELSFIL1     SFILE
+     C                     EXSR SRZSFL
+      *
+     C                     Z-ADDSFNUM2    ZSNUM            IL0644P2
+     C                     MOVELSFIL2     SFILE
+     C                     EXSR SRZSFL
+      *
+      ***  Working fields
+      *
+     C                     Z-ADD0         WPOPCL  10       first call of IL0421
+     C                     MOVE *BLANKS   WWORTY  2
+     C                     MOVE *BLANKS   WWBETY  2
+     C                     MOVE *BLANKS   WWCTPT  1
+     C                     MOVE *BLANKS   WWCTP1 35
+     C                     MOVE *BLANKS   WWCPRE  1
+     C                     MOVE *BLANKS   WWSETT  1
+     C                     MOVE *BLANKS   WWCOLC  2                       201093
+     C**********           MOVE *BLANKS   WWSEAC 18                                           CER001
+     C                     MOVE *BLANKS   WWSEAC 24                                           CER001
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRZSFL - Subroutine to call ZSFILE (Record in RCF)            *
+      * ------                                                        *
+      * Called by : *INZSR                                            *
+      *****************************************************************
+      *
+     C           SRZSFL    BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PRSEQ   5
+     C                     PARM           PRENT   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+      *
+      ***  If an error occurred during ZSFILE processing,
+      ***  return to the calling program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #END   - Leave the program                                   *
+      *  ------                                                       *
+      *  Called by : main lines                                       *
+      *  Calls     : -                                                *
+      *****************************************************************
+      *
+     C           #END      BEGSR
+      *
+      ***  Audit report
+      ***  No detail in the report
+      *
+     C           *IN69     IFEQ *OFF                       No Details
+     C           *IN66     IFEQ *ON                        Overflow *ON
+     C                     WRITEHEADP2
+     C                     ENDIF
+     C                     WRITENOLIP2
+     C                     ENDIF
+     C                     WRITEENDP2
+      *
+      ***  ICD requests the Routing keys Report
+      *
+     C           ICPRID    IFEQ 'Y'
+      *
+      ***  No detail in the report
+      *
+     C           *IN68     IFEQ *OFF                       No details
+     C           *IN65     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     WRITENOLIP1
+     C                     ENDIF
+     C                     WRITEENDP1
+     C                     ENDIF
+      *
+      ***  Call pgm once more just to close files
+      *
+     C                     CALL 'IL0421'
+     C                     PARM           WPCCY            Currency code
+     C                     PARM           WPTYPE           Type
+     C                     PARM           WPLINE           Identification
+     C                     PARM 9         WPOPCL           Open/close
+     C                     PARM           WPACCD           A/c code
+     C                     PARM           WPCUST           Customer
+     C                     PARM           WFOUND           Result (Y/N)
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR   - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      * Called by :                                                   *
+      * Calls     :                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           DBASE     IFEQ 0
+     C                     Z-ADD999       DBASE
+     C                     ENDIF
+      *
+      ***  Print error message in Audit report IL0640AU
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+      ***  Call pgm to ensure all files are correctly closed
+      *
+     C                     CALL 'IL0421'
+     C                     PARM           WPCCY            Currency code
+     C                     PARM           WPTYPE           Type
+     C                     PARM           WPLINE           Identification
+     C                     PARM 9         WPOPCL           Open/close
+     C                     PARM           WPACCD           A/c code
+     C                     PARM           WPCUST           Customer
+     C                     PARM           WFOUND           Result (Y/N)
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE1Z2                                Std ZDATE1
+      /COPY ZSRSRC,ZCCYCN                                  Std ZCCYCN
+      /COPY ZSRSRC,ZFRPEDZ3                                Std ZFRPED
+**  WND OP. CODE management : M(andatory) or O(ptional)
+INOR1MINOR2MINOR4MINOR5OINRO1MINRO5OINOR7M
+OPRO1MOPRO2MOPRO4MOPRO5OOPOR1MOPOR5OOPRO7M
+CCOR1MCCOR2MCCOR4MCCOR5OCCRO1MCCRO5OCCOR7M
+CPRO1MCPRO2MCPRO4MCPRO5OCPOR1MCPOR5OCPRO7M
+**  CFT1 Valid Combinationto treate A/K key
+INP NINP PINR LINR RINR TOPP NOPP POPP TOPR LOPR R
+CCP PCCR RCCR TCCR LCPP PCPP TCPP NCPR RNTV P
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(C) Copyright Finastra International Limited, 2001

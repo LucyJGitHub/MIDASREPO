@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Special migration processing for global')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000075 - Special migration processing for global layer   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP006  *CREATE    Date 22Jul10              */
+/*                      XXXXXX             Date 21Sep05              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP006 - Special migration processing for global layer.     */
+/*                Originally created to handle move of data areas    */
+/*                from GTA to GM library.                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FROMPFX &TOPFX)
+ 
+             DCL        VAR(&FROMPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOPFX) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&FGTLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TGMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LEMUTN) TYPE(*CHAR) LEN(128)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Set status to ACTIVE. */
+             CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
+                          '*UPDATE' 'ACTIVE')
+ 
+             CHGVAR     VAR(&FGTLIB) VALUE(&FROMPFX *TCAT 'GTALIB')
+             CHGVAR     VAR(&TGMLIB) VALUE(&TOPFX *TCAT 'GMLIB')
+ 
+STEP01:
+/* Check if data area LEMUTN exists in 'from' GTALIB ... */
+             CHKOBJ     OBJ(&FGTLIB/LEMUTN) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/* ... if it doesn't then move to next step ... */
+                GOTO       CMDLBL(STEP02)
+             ENDDO
+/* ... otherwise change value of data area. */
+             RTVDTAARA  DTAARA(&FGTLIB/LEMUTN) RTNVAR(&LEMUTN)
+             CHGDTAARA  DTAARA(&TGMLIB/LEMUTN) VALUE(&LEMUTN)
+ 
+STEP02:
+ 
+/* If successful then update driving file. */
+SUCCESS:
+             CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
+                          '*UPDATE' 'PASSED')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+/* Set status to FAILED. */
+             CALL       PGM(SM000008) PARM('SMC000075' '*PGM' +
+                          '*UPDATE' 'FAILED')
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

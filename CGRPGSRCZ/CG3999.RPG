@@ -1,0 +1,672 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Pack/unpack extracted data')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG3999 - Format data string                                  *
+      *                                                               *
+      *  Function:  This program receives extracted data and formats  *
+      *             it with its RDE description (*PACK mode)          *
+      *                                                               *
+      *             - OR -                                            *
+      *                                                               *
+      *             Takes the formatted data and separates out the    *
+      *             information (*SHOP mode)                          *
+      *                                                               *
+      *  Called By: Many programs.                                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23948           Date 10May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 245624             Date 20Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG9646            Date 20Dec05               *
+      *                 BUG3009            Date 01Jun04               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 27Jun01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 096418             Date 23Nov95               *
+      *                 083269             DATE 14FEB95               *
+      *                 082026             DATE 23JAN95               *
+      *                 S01522             DATE 22NOV94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23948 - Problems with Single Tax advice on retest         *
+      *  245624 - Applied fix 205454.                                 *
+      *  205454 - Check whether passed data (amount) from CG4720      *
+      *           is already formatted to avoid looping problem.      *
+      *  BUG9646- Changes in CGPACKE causes programs not to compile   *
+      *           (Recompile)                                         *
+      *  BUG3009 - Balance in A/C currency is BLANK when the amount   *
+      *            is ZERO                                            *
+      *  CCG015 - Correspondence Management                           *
+      *  096418 - Rename ##DATA to allow program to compile           *
+      *           Also add processing for Day format                  *
+      *  083269 - Error in pack if blanks passed                      *
+      *  082026 - Clear data variable ##O leads to extra data in PACK *
+      *  S01522 - User Defined Correspondence                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ---------------                                              *
+      *                                                               *
+      *  30 - SCAN Indicator                                          *
+      *  90 - General Error indicator                                 *
+      *  99 - LOKUP Indicator                                         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      **  Work arrays.
+     E                    #@R        20 10
+     E                    ##T       258  1
+     E                    ##O      5120  1
+      **  Used to format amounts                                          CCG015
+     E                    @AM        20  1                                CCG015
+      *
+      **  Arrays for Packing/Unpacking data.
+      /COPY CGCPYSRC,CGPACKE
+      *
+      **  Copyright Array
+     E                    CPY@    1   1 80               Copyright
+      /COPY CGCPYSRC,SRERRE
+      *
+      /COPY WNCPYSRC,CG3999EPG
+      /EJECT
+      *
+      **  Data Structures for Packing/Unpacking data.
+      /COPY CGCPYSRC,CGPACKI
+      /COPY CGCPYSRC,SRPGN                                                082026
+      *
+     I@@O         DS
+      **  Data Structure defining large field over array.
+     I                                        15120 ##O
+      *
+     I              '0.0000000'           C         DCPT7                                   BUG23948
+     I              '0.00000000'          C         DCPT8                                   BUG23948
+      /COPY CGCPYSRC,SRERRI
+      *
+      /COPY WNCPYSRC,CG3999IPG
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Subroutine usage                                             *
+      *  ----------------                                             *
+      *                                                               *
+      *  SRNWAR - Format New Arrays                                   *
+      *  SRPACK - Format Extracted Data                               *
+      *  SRSHOP - Retrieve Formatted Data                             *
+      *  SREDIT - Edit Formatted Data                                 *
+      *                                                               *
+      *  Copied-in routines:                                          *
+      *                                                               *
+      *  *PSSR  -- Program error routine.                             *
+      *  SRFILE -- File error routine.                                *
+      *  SRERR  -- Error reporting routine.                           *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRPACK - Format Extracted Data                 *
+      *                SRSHOP - Retrieve Formatted Data               *
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0ACT   8        Action Code
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+      ** UDC path structure (a stack with groupset + rde)                 CCG015
+     C                     PARM           W0SPAT 70                       CCG015
+      ** New arrays for new extraction files                              CCG015
+     C                     PARM           ##RN                            CCG015
+     C                     PARM           ##DN                            CCG015
+     C                     PARM           ##FM                            CCG015
+      *
+      **  Add subroutine name to stack:
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      **  Copyright:
+     C                     MOVE CPY@,1    @COPYR 80
+      *
+      **  Initialisation.
+     C                     BITOF'01234567'##SC    1
+     C                     BITON'01234567'##EC    1
+      *
+     C                     MOVEL##EC      ##ES    2
+     C                     MOVE ##SC      ##ES
+      *
+     C                     Z-ADD1         #1      60
+     C                     Z-ADD*ZERO     #2      60
+     C                     Z-ADD*ZERO     #3      60
+      *
+      **  Process according to Action Code received
+     C           W0ACT     CASEQ'*PACK   'SRPACK
+     C           W0ACT     CASEQ'*SHOP   'SRSHOP
+     C           W0ACT     CASEQ'*NEWARR 'SRNWAR                          CCG015
+     C                     END
+      *
+      **  Unwind subroutine stack:
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************   CCG015
+      * Subroutine  :  SRNWAR                                         *   CCG015
+      * Function    :  Format new arrays.                             *   CCG015
+      *****************************************************************   CCG015
+     C           SRNWAR    BEGSR                                          CCG015
+      *                                                                   CCG015
+      **  Add subroutine name to stack:                                   CCG015
+     C                     ADD  1         Q                               CCG015
+     C                     MOVEL'SRNWAR'  @STK,Q                          CCG015
+      *                                                                   CCG015
+      **  Clear work output variable                                      CCG015
+     C                     CLEAR##RN                                      CCG015
+     C                     CLEAR##DN                                      CCG015
+      *                                                                   CCG015
+      ** Variables used to detect empty RDE values                        CCG015
+     C                     MOVEL*ZEROS    ZEROS  29                       CCG015
+     C           *LIKE     DEFN ZEROS     WARDTA                          CCG015
+      ** Index used for new array                                         CCG015
+     C                     Z-ADD0         L       30                      CCG015
+      *                                                                   CCG015
+     C                     DO   20        N       30                      CCG015
+     C           ##R,N     IFEQ *BLANK                                    CCG015
+     C                     LEAVE                                          CCG015
+     C                     ENDIF                                          CCG015
+     C                     MOVEL##D,N     WARDTA                          CCG015
+     C                     MOVEL##R,N     R#DEFN                          CCG015
+     C                     MOVEL*BLANK    WRN   111                       CCG015
+     C           W0SPAT    CAT  '\':0     WRN                             CCG015
+     C           WRN       CAT  ##RDE#:0  WRN                             CCG015
+      ** Don't push RDE record in the array if its value is zeros         CCG015
+      ** or blanks                                                        CCG015
+     C           ##D,N     IFNE *BLANK                                    CCG015
+     C********** WARDTA    ANDNEZEROS                                                 CCG015 BUG3009
+     C                     ADD  1         L                               CCG015
+      *                                                                   CCG015
+      **  New edit according to attribute                                 CCG015
+     C           ##RDEC    IFNE *BLANK                                    CCG015
+     C                     Z-ADDN         #D                              CCG015
+     C                     EXSR SREDIT                                    CCG015
+     C                     MOVELWNWDTA    ##DN,L                          CCG015
+     C                     MOVELWNWFMT    ##FM,L                          CCG015
+     C                     ELSE                                           CCG015
+     C                     MOVEA##D,N     ##DN,L                          CCG015
+     C                     MOVEL*BLANK    ##FM,L                          CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C                     MOVEAWRN       ##RN,L                          CCG015
+     C                     ENDIF                                          CCG015
+     C                     ENDDO                                          CCG015
+      *                                                                   CCG015
+     C           EXNWAR    TAG                                            CCG015
+      *                                                                   CCG015
+      **  Unwind subroutine stack:                                        CCG015
+     C                     MOVE *BLANKS   @STK,Q                          CCG015
+     C                     SUB  1         Q                               CCG015
+      *                                                                   CCG015
+     C                     ENDSR                                          CCG015
+      *****************************************************************   CCG015
+      * Subroutine  :  FMTAMT                                         *   CCG015
+      * Function    :  Format Amount.                                 *   CCG015
+      *****************************************************************   CCG015
+     C           FMTAMT    BEGSR                                          CCG015
+      *                                                                   CCG015
+      **  Add subroutine name to stack:                                   CCG015
+     C                     ADD  1         Q                               CCG015
+     C                     MOVEL'FMTAMT'  @STK,Q                          CCG015
+      *                                                                   CCG015
+     C                     MOVEL*BLANK    @AM                             CCG015
+      *                                                                   CCG015
+      ***If*amount*is*null*exit****************************************               CCG015 BUG3009
+      *                                                                                      BUG3009
+      ** Format zero amounts                                                                 BUG3009
+      *                                                                                      BUG3009
+     C           ##NUMB    IFEQ 0                                         CCG015
+     C                     SELEC                                                             BUG3009
+     C           ##DECP    WHEQ 0                                                            BUG3009
+     C                     MOVEA'0'       @AM                                                BUG3009
+     C           ##DECP    WHEQ 1                                                            BUG3009
+     C                     MOVEA'0.0'     @AM                                                BUG3009
+     C           ##DECP    WHEQ 2                                                            BUG3009
+     C                     MOVEA'0.00'    @AM                                                BUG3009
+     C           ##DECP    WHEQ 3                                                            BUG3009
+     C                     MOVEA'0.000'   @AM                                                BUG3009
+     C           ##DECP    WHEQ 7                                                           BUG23948
+     C                     MOVEADCPT7     @AM                                               BUG23948
+     C           ##DECP    WHEQ 8                                                           BUG23948
+     C                     MOVEADCPT8     @AM                                               BUG23948
+     C                     ENDSL                                                             BUG3009
+     C                     GOTO EXFMAM                                    CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+      ** Determine sign of the amount                                     CCG015
+     C           ##NUMB    IFLT 0                                         CCG015
+     C                     MOVEA'-'       @AM,1                           CCG015
+     C                     Z-ADD2         J       30                      CCG015
+     C                     ELSE                                           CCG015
+     C                     Z-ADD1         J       30                      CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+      ** Determine where to put the decimal point                         CCG015
+     C           20        SUB  ##DECP    WWHDP   20                      CCG015
+      *                                                                   CCG015
+      ** Don't take account of the leading zeros except when the          CCG015
+      ** the decimal point position has been reached.                     CCG015
+      *                                                                   CCG015
+     C                     DO   20        I       30                      CCG015
+     C           1         SUBST##NUMA:I  WCH     1                       CCG015
+     C           WCH       IFNE '0'                                       CCG015
+     C           WWHDP     OREQ I                                         CCG015
+     C                     LEAVE                                          CCG015
+     C                     ENDIF                                          CCG015
+     C                     ENDDO                                          CCG015
+      *                                                                   CCG015
+     C           I         DOWLE20                                        CCG015
+     C           1         SUBST##NUMA:I  WCH     1                       CCG015
+     C                     MOVEAWCH       @AM,J                           CCG015
+      *                                                                   CCG015
+     C                     ADD  1         J                               CCG015
+      *                                                                   CCG015
+      ** Place decimal point (only if number of decimal positions is      CCG015
+      ** not null)                                                        CCG015
+     C           I         IFEQ WWHDP                                     CCG015
+     C           WWHDP     ANDNE20                                        CCG015
+     C                     MOVEA'.'       @AM,J                           CCG015
+     C                     ADD  1         J                               CCG015
+     C                     ENDIF                                          CCG015
+      *                                                                   CCG015
+     C                     ADD  1         I                               CCG015
+     C                     ENDDO                                          CCG015
+      *                                                                   CCG015
+     C           EXFMAM    TAG                                            CCG015
+      *                                                                   CCG015
+      **  Unwind subroutine stack:                                        CCG015
+     C                     MOVE *BLANKS   @STK,Q                          CCG015
+     C                     SUB  1         Q                               CCG015
+      *                                                                   CCG015
+     C                     ENDSR                                          CCG015
+      *****************************************************************
+      * Subroutine  :  SRPACK                                         *
+      * Function    :  Format extracted data.                         *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  SREDIT - Edit Formatted Data                   *
+      *****************************************************************
+     C           SRPACK    BEGSR                           ** SRPACK **
+      *
+      **  Add subroutine name to stack:
+     C                     ADD  1         Q
+     C                     MOVEL'SRPACK'  @STK,Q
+      *                                                                   082026
+      **  Clear work output variable                                      082026
+     C                     CLEAR##O                                       082026
+     C                     CLEAR##S                                       082026
+      *
+      **  Prelude for unpacking algorithm: SORTA to pack ascending
+     C                     DO   20        #3
+     C           ##R,#3    IFNE *BLANKS
+     C                     MOVEL##R,#3    ##RDEF
+     C                     Z-ADD#3        #D
+     C                     MOVEL##RDEF    ##R,#3
+     C                     ELSE
+     C                     MOVEL*HIVAL    ##R,#3
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     SORTA##R
+      *
+     C           #1        DOWLE20
+     C           ##R,#1    ANDNE*BLANK
+      *
+      **  Leave if no more data
+     C           ##R,#1    IFEQ *HIVAL
+     C                     LEAVE
+     C                     ENDIF
+      *
+      **  RDE
+     C                     MOVEL##R,#1    ##RDEF           * RDE + ATTRIB.
+     C                     MOVEL##SC      ##RDES           * START RDE
+     C                     MOVEL##EC      ##RDEE           * END RDE
+      *
+      **  RDE out
+     C                     ADD  1         #2
+     C                     MOVEA##RDE     ##O,#2           * RDE
+     C                     ADD  11        #2
+      *
+      **  Edit according to attribute
+     C           ##RDEC    IFNE *BLANK
+     C                     EXSR SREDIT
+     C                     ENDIF
+      *                                                                ...
+      **  Data
+     C                     MOVE *BLANK    ##T
+     C                     MOVEL##SC      ##T,1            * START DATA
+     C                     MOVEA##D,#D    ##T,2            * DATA
+     C                     Z-ADD258       #3      60
+     C                     MOVE *BLANK    ##T,#3
+      *
+     C           ##T,#3    DOWEQ*BLANK
+     C           #3        ANDGT2
+     C                     SUB  1         #3
+     C                     ENDDO
+      *
+     C                     ADD  1         #3
+     C                     MOVEL##EC      ##T,#3           * END DATA
+      *                                                                ...
+      **  Data Out
+     C                     ADD  1         #2
+     C                     MOVEA##T       ##O,#2           * DATA
+      *
+     C                     ADD  1         #1
+      *
+      **  Determine Next Start Point
+     C           ##EC      LOKUP##O,#2                   99*
+     C                     ENDDO
+      *
+     C                     MOVEA##O       ##S
+      *
+     C           EXPACK    TAG
+      *
+      **  Unwind subroutine stack:
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRSHOP                                         *
+      * Function    :  Retrieve Formatted Data                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRSHOP    BEGSR                           ** SRSHOP **
+      *
+      **  Add subroutine name to stack:
+     C                     ADD  1         Q
+     C                     MOVEL'SRSHOP'  @STK,Q
+      *
+      **  Algorithm here is subtle. Unpacking is driven by packed
+      **  string. When 20 items unpacked shopping list is searched
+      **  from top again. This assumes shopping list is sorted.
+     C                     CLEAR##D
+     C                     CLEAR##O
+      *
+     C                     MOVEA##S,1     ##O
+      * If no data exit:                                                  083269
+     C           @@O       CABEQ*BLANKS   EXSHOP                          083269
+      *
+     C                     DO   20        #1
+     C                     MOVE ##R,#1    #@R,#1
+     C                     ENDDO
+      *
+     C           10        SUBST@@O:2     NXTRDE 10
+     C                     Z-ADD14        #P      70
+     C           ##EC      SCAN @@O:#P    @P             30
+      * No trailer is terminal error:                                     083269
+     C           *IN30     IFEQ *OFF                                      083269
+     C                     MOVEL'*PARM   'W0FILE           ***************083269
+     C                     MOVEA##R       W0KEY            * DB ERROR 01 *083269
+     C                     Z-ADD02        W0ERNB           ***************083269
+     C                     MOVEL'MEM5003' W0MSGD                          083269
+     C                     MOVEL'MIDAS  ' W0MSGF                          083269
+     C                     EXSR SRERR                                     083269
+     C                     END                                            083269
+      *                                                                   083269
+     C           @P        SUB  #P        @P
+     C           @P        SUBST@@O:#P    NXTDTA256 P
+      *
+     C           *LIKE     DEFN #P        @P
+     C                     Z-ADD1         #1
+      *
+     C           #P        DOUEQ5120
+      *
+     C           NXTRDE    DOWGE#@R,#1
+      *
+     C           NXTRDE    IFEQ #@R,#1
+     C                     MOVELNXTDTA    ##D,#1
+     C                     ENDIF
+      *
+     C           #1        IFGE 20
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ADD  1         #1
+      *
+     C                     ENDDO
+      *.....................................................................
+     C           *LIKE     DEFN NXTRDE    LSTRDE
+     C                     MOVE NXTRDE    LSTRDE
+      *
+     C           ##ES      SCAN @@O:#P    @P             30
+     C           *IN30     IFEQ *OFF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           @P        ADD  2         #P
+     C           10        SUBST@@O:#P    NXTRDE
+      *
+     C           ##ES      SCAN @@O:#P    @P             30
+     C           *IN30     IFEQ *OFF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           @P        ADD  2         #P
+      *
+     C           ##EC      SCAN @@O:#P    @P             30
+     C           *IN30     IFEQ *OFF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C           @P        SUB  #P        @P
+     C           @P        SUBST@@O:#P    NXTDTA    P
+      *
+     C           LSTRDE    IFGT NXTRDE
+     C                     Z-ADD1         #1
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C*
+     C           EXSHOP    TAG
+      *
+      **  Unwind subroutine stack:
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SREDIT                                         *
+      * Function    :  Edit Formatted Data                            *
+      *                                                               *
+      * Called by   :  SRPACK - Format Extracted Data                 *
+      * Calls       :  ZA0140 - Standard Date Formatting              *
+      *                ZSEDIT - Standard Amount Formatting            *
+      *****************************************************************
+     C           SREDIT    BEGSR                           ** SREDIT **
+      *
+      **  Add subroutine name to stack:
+     C                     ADD  1         Q
+     C                     MOVEL'SREDIT'  @STK,Q
+      *                                                                   CCG015
+     C           *LIKE     DEFN ##FM      WNWFMT                          CCG015
+     C           *LIKE     DEFN ##DN      WNWDTA                          CCG015
+     C                     MOVEL*BLANK    WNWFMT                          CCG015
+     C                     MOVEL*BLANK    WNWDTA                          CCG015
+      *
+      **  Obtain numeric data and editing controls
+     C                     MOVEA##D,#D    R#DATA
+     C                     MOVE *BLANKS   ##D,#D
+      *                                                                   082026
+      **  Initialise Numeric datastructure                                082026
+     C                     CLEARNUMDS                                     082026
+      *
+      **  Date processing
+     C           ##RDEC    IFEQ 'Date  '
+     C           ##NUMA    IFEQ *BLANKS                                   096418
+     C           ##NUMB    OREQ *ZERO                                     096418
+     C***********##NUMB    ANDNE*ZERO                                     096418
+     C                     MOVE '@'       NUMEDT                          096418
+     C                     MOVELNUMDS     ##D,#D                          096418
+     C                     ELSE                                           096418
+     C                     Z-ADD##NUMB    ##DAYN
+     C                     SELEC                                          CCG015
+     C           W0ACT     WHEQ '*NEWARR '                                CCG015
+     C                     MOVEL'MDT'     WNWFMT                          CCG015
+     C                     MOVEL##DAYN    WNWDTA                          CCG015
+     C                     OTHER                                          CCG015
+     C                     MOVE 'D'       ##DFMT
+      *
+     C                     CALL 'ZA0140'
+     C                     PARM           ##DAYN  50
+     C                     PARM           ##DFMT  1
+     C                     PARM           ##DATE  60
+     C***********          PARM           ##DATA  7                       096418
+     C                     PARM           O#DATA  7                       096418
+     C                     PARM           ##RTCD  1
+     C                     PARM           ##DAT8  80
+      *
+      **  Database error
+     C           ##RTCD    IFNE *ZERO
+      *
+     C                     MOVEL'ZA0140  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD01        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+     C                     ENDSL                                          CCG015
+      *                                                                   CCG015
+     C                     Z-ADD##DAT8    NUMVAL                          082026
+     C                     MOVE '@'       NUMEDT                          082026
+     C                     MOVELNUMDS     ##D,#D                          082026
+     C*********************MOVEL##DAT8    ##D,#D                          082026
+     C                     ENDIF
+     C                     ENDIF                                          096418
+      *                                                                ...082026
+      **  Numeric Processing                                              082026
+     C           ##RDEC    IFEQ 'Amount'
+     C           ##RDEC    OREQ 'Number'                                  082026
+     C           ##RDEC    OREQ 'Day   '                                  096418
+     C           ##RDEC    OREQ 'Rate  '                                  082026
+     C           ##RDEC    OREQ 'Xrate '                                  082026
+      *                                                                ...082026
+     C           ##NUMA    IFNE *BLANK                                    082026
+      *                                                                ...082026
+     C                     MOVE ##DCPA    WDECPN  10                                          205454
+     C                     MOVE WDECPN    WDECPC  1                                           205454
+     C           ##DCPA    IFEQ *BLANK
+     C           ##DCPA    ORNE WDECPC                                                        205454
+     C                     Z-ADD*ZERO     ##DECP
+     C                     ENDIF
+     C*
+     C                     Z-ADD##NUMB    NUMVAL                          082026
+     C                     Z-ADD##DECP    NUMDEC                          082026
+     C                     MOVE ##EDTT    NUMEDT                          082026
+      *                                                                ...082026
+     C           ##RDEC    IFNE 'Number'                                  082026
+     C           ##RDEC    ANDNE'Day   '                                  096418
+     C                     DO   ##DECP                                    082026
+     C                     DIV  10        NUMVAL                          082026
+     C                     END                                            082026
+     C                     END                                            082026
+      *                                                                ...082026
+      ** Format amount according to SQL representation                    CCG015
+     C                     SELEC                                          CCG015
+     C           W0ACT     WHEQ '*NEWARR '                                CCG015
+     C                     EXSR FMTAMT                                    CCG015
+     C                     MOVEA@AM       WNWDTA                          CCG015
+     C                     OTHER                                          CCG015
+     C                     MOVELNUMDS     ##D,#D                          082026
+     C                     ENDSL                                          CCG015
+      *                                                                ...082026
+     C*********************Z-ADD##NUMB    ZFLD15                          082026
+     C*********************Z-ADD##DECP    ZDECS                           082026
+     C*********************MOVE ##EDTT    ZECODE                          082026
+      *                                                                ...082026
+      **  Amount Processing                                               082026
+     C*********************CALL 'ZSEDIT'                                  082026
+     C*********************PARM           ZFLD15 150                      082026
+     C*********************PARM           ZDECS   10                      082026
+     C*********************PARM           ZECODE  1                       082026
+     C*********************PARM           ZOUT21 21                       082026
+      *
+     C*********************MOVELZOUT21    ##D,#D                          082026
+      *                                                                   082026
+     C                     ENDIF                                          082026
+     C                     ENDIF
+      *
+      **  Rate Processing
+     C***********##RDEC    IFEQ 'Rate  '                                  082026
+     C***********##NUMA    ANDNE*BLANK                                    082026
+     C***********##RDEC    OREQ 'Xrate '                                  082026
+     C***********##NUMA    ANDNE*BLANK                                    082026
+     C*********************Z-ADD##NUMB    ZFLD15                          082026
+     C*********************MOVEL##DECP    ZDECS                           082026
+     C*********************MOVE ##EDTT    ZECODE                          082026
+      *
+     C*********************CALL 'ZSEDIT'                                  082026
+     C*********************PARM           ZFLD15                          082026
+     C*********************PARM           ZDECS                           082026
+     C*********************PARM           ZECODE                          082026
+     C*********************PARM           ZOUT21                          082026
+      *
+     C*********************MOVELZOUT21    ##D,#D                          082026
+     C*********************ENDIF                                          082026
+      *
+     C           EXEDIT    TAG
+      *
+      **  Unwind subroutine stack:
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+      /EJECT
+      ********************************************************************
+      * /Copy point for calculation specifications:
+      *
+      /COPY WNCPYSRC,CG3999CPG
+      *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      * /Copy point for output:
+      *
+      /COPY WNCPYSRC,CG3999OPG
+      *
+      ********************************************************************
+      /EJECT
+** CPY@ -- Copyright statement
+(c) Finastra International Limited 2001

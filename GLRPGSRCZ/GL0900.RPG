@@ -1,0 +1,315 @@
+0001 H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Next Day File Set-Up')
+0002 F********************************************************************
+0003 F*                                                                  *
+     F*  Midas - General Ledger Module
+0005 F*                                                                  *
+0006 F*       GL0900  - NEXT DAY SETUP                                   *
+0007 F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+0009 F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CRE005             Date 18Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 DT0072             Date 03May91               *
+0010 F*                 S01154             Date 26Jul88               *
+0009 F*                                                               *
+0012 F********************************************************************
+0009 F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+     F*   CRE005 - Changes to STRAN                                      *
+0009 F*   DT0072 - ADD STRANH                                            *
+0009 F*   S01154 - REMOVAL OF BTRAN AND TABGL.                           *
+0009 F*                                                                  *
+0012 F********************************************************************
+0013 F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0014 FACCNTAA UF  F     400            DISK
+0015 F*
+0016 FACCNTAC UF  F     400            DISK
+0019 F*
+0020 F*TRAN   UF  F     128            DISK                               S01154
+0021 F*
+0022 FSTRAN   UF  F     200            DISK
+0021 F*
+0018 FSTRANH  O   E                    DISK                      A        DT0072
+0021 F*                                                                   DT0072
+0022 F*ABGL   IF  E           K        DISK                               S01154
+0021 F*                                                                                       CRE005
+0018 FRERCHHPAO   E                    DISK                      A                            CRE005
+0026 F/SPACE 3                                                            S01154
+0027 F*                                                                  *
+0028 F* ID F  C  M  L    FUNCTION OF INDICATORS                          *
+0029 F*X
+0030 F* 01            ACCNT FILE - HEADER RECORD
+0031 F* 02                  FILE - TRAILER RECORD
+     F**04**********  BTRAN FILE                                          S01154
+     F* 05            STRAN FILE
+0033 F*       21      UPDATE ACCNT HEADER
+0034 F*       22      UPDATE ACCNT TRAILER
+0036 F********24      UPDATE BTRAN HEADER                                 S01154
+0037 F*       25      UPDATE STRAN HEADER
+     F*       30      FIRST RUN OF PROGRAM THIS EOD
+0038 F*       38      READ-FAIL INDICATOR
+     F*       39      CHAIN FAIL INDICATOR
+     F*       40      ACCNT FILE - HEADER NOT PRESENT
+     F*       41                 - TRAILER NOT PRESENT
+0041 F*          U8   DATABASE ERROR - END PROGRAM
+0042 F*             LRSETON DURING FIRST CYCLE
+     E                    CPY@    1   1 80
+0043 I**   A C C O U N T     M A S T E R
+0050 I**
+0051 I**   ACCNT FILE
+0052 I**
+0055 I**   ACCNTAA FILE - HEADER RECORD.
+0056 I**
+0057 IACCNTAA NS  01
+0058 I                                        1   1 RECI
+0059 I                                        2   2 KEY1
+0060 I                                       23  23 ORDI
+0061 I                                        1 200 LOTAH1
+0062 I                                      201 400 LOTAH2
+0063 I**
+0064 I**   ACCNTAC FILE - TRAILER RECORD
+0065 I**
+0066 IACCNTAC NS  02
+0067 I                                        1   1 RECI
+0068 I                                        2   8 ACMTKY
+0069 I                                    P  23  250NORE
+0070 I                                    P  29  310NOOA
+0071 I                                    P  32  340NINU
+0072 I                                    P  35  370NOAM
+0073 I                                    P  38  400NOCL
+0074 I                                    P  41  430NOAU
+0075 I                                    P  44  460NINP
+0076 I                                    P  47  490NORD
+0077 I                                    P  50  520NOCF
+0078 I                                    P  53  550NAMP
+0079 I                                    P  56  580NAUP
+0080 I                                        1 200 LOTAT1
+0081 I                                      201 400 LOTAT2
+0082 I                                    P 395 3970LCD
+0083 I                                    P 398 4000TNLU
+0088 I*
+0111 I**
+0112 I/SPACE 2
+0113 I**  B T R A N   F I L E
+0114 I**
+0115 I*TRAN   NS  04                                                      S01154
+     I*                                       1   1 RECI                  S01154
+     I*                                       2   60NTBH                  S01154
+     I*                                       7  110NIN                   S01154
+     I*                                      12  160MIN                   S01154
+     I*                                      17  210MTBH                  S01154
+     I*                                      22  230MNBN                  S01154
+0116 I**
+0117 I/SPACE 2
+0118 I**   S T R A N   F I L E
+0119 I**
+0120 ISTRAN   NS  05
+     I                                        1   1 RECI
+     I                                        2   60NAVT
+     I                                        7  110MNT
+     I                                       12  160NORC
+     I                                       17  210NOMA
+0121 I**
+0121 I** STATUS DATA STRUCTURE
+     IGLSTAT     UDS                            256
+     I                                       11  150NBTRAN
+     I                                       26  300NSTRAN
+0122 I/SPACE 2
+     C                     MOVEACPY@      BIS@   80
+0129 C**
+0130 C**   ALL THE PROCESSING IS COMPLETED DURING THE FIRST RPG CYCLE.
+0131 C**   SETON LR TO END THE PROGRAM AT END OF CYCLE.
+0132 C**
+0133 C                     SETON                     LR
+0134 C**
+0135 C**   SET UP BLANK AND ZERO FIELDS
+0136 C                     MOVE ' '       BLNK15 15
+0137 C                     MOVE ' '       BLN200200
+0138 C                     Z-ADD0         ZERO03  30
+0139 C                     Z-ADD0         ZERO05  50
+0139 C                     Z-ADD0         ZERO09  90                                          CRE005
+0140 C                     Z-ADD0         ZERO15 150
+0141 C                     Z-ADD00000     ZERO05  50
+0142 C                     Z-ADD1         ONE     50
+0143 C/SPACE 2
+0144 C                     READ ACCNTAA                  38
+0158 C           RECI      COMP 'H'                  4040
+0146 C**
+0147 C**   DATABASE ERROR IF HEADER NOT FOUND.
+     C   38
+0148 COR 40                SETON                     U8
+0149 C   U8                GOTO END
+     C**
+     C**  CHECK IF FIRST RUN TODAY
+     C           ORDI      COMP 'Y'                      30
+0150 C**
+0151 C**   SET INDICATOR FOR ACCNT HEADER.
+0152 C                     SETON                     21
+0153 C                     EXCPT
+0154 C                     SETOF                     21
+0155 C**
+0156 C**   READ     ACCNT TRAILER
+0157 C                     READ ACCNTAC                  38
+0158 C           RECI      COMP 'T'                  4141
+0159 C**
+0160 C**   DATABASE ERROR IF TRAILER NOT FOUND.
+     C   38
+0161 COR 41                SETON                     U8
+0162 C   U8                GOTO END
+0163 C**
+0164 C                     SETON                     22
+0165 C**
+0166 C**   UPDATE ACCNT TRAILER FIELDS
+0167 C           NORE      ADD  NINU      NORE
+0168 C           NORE      ADD  NINP      NORE
+0169 C**
+     C***  SHOULD USE THE PROCESSING NOT THE UPDATE CONTROL FROM S/ACCN
+     C***  TRAILER RECORD
+     C*
+     C**    ONLY UPDATE IF FIRST RUN OF PROGRAM
+     C   30                Z-ADDNAUP      NOOA
+0175 C                     EXCPT
+0176 C                     SETOF                     22
+0196 C**
+0197 C**   BATCH TRANSACTION FILE HEADER SETUP
+0198 C*          1         CHAINBTRAN                39                   S01154
+0199 C**
+0200 C**   DATABASE ERROR IF CHAIN FAILS
+0201 C*  39                SETON                     U8                   S01154
+0202 C*  U8                GOTO END                                       S01154
+0203 C**
+0204 C**   SET UP OUTPUT FIELDS
+     C*                    MOVEL'01'      KEY    12                       S01154
+     C*                    MOVE '20'      KEY                             S01154
+     C*          KEY       CHAINTABTB20F             39                   S00154
+0205 C*          NOBA      DIV  40        MNBN#   31                      S00154
+0206 C*          MNBN#     ADD  .5        MNBN    20H                     S00154
+0207 C**
+0208 C*          MNBN      MULT 2         NTBH    50                      S00154
+0209 C*          NTBH      ADD  2         NTBH                            S00154
+0210 C**                                                                  S00154
+0211 C*          NOBA      MULT 2         NIN     50                      S00154
+0212 C*          NIN       ADD  NTBH      NIN                             S00154
+0213 C**
+0214 C*          NIN       SUB  2         MTBH    50                      S00154
+0215 C*                    SETON                     24                   S00154
+0216 C*                    EXCPT                                          S00154
+0217 C*                    SETOF                     24                   S00154
+0220 C**
+0221 C**   SET UP STRAN HEADER
+0222 C           1         CHAINSTRAN                39
+0223 C**
+0224 C**   DATABASE ERROR IF CHAIN FAILS
+0225 C   39                SETON                     U8
+0226 C   U8                GOTO END
+      *
+0227 C**
+0228 C                     SETON                     25
+0229 C                     EXCPT
+0230 C                     SETOF                     25
+0231 C**
+     C**   SET UP STRANH HEADER                                           DT0072
+     C                     MOVE 'H'       RECI                            DT0072
+     C                     Z-ADD1         NAVT                            DT0072
+     C                     Z-ADDNSTRAN    MNT                             DT0072
+     C                     WRITESTRANHF                                   DT0072
+      *                                                                                       CRE005
+      ** Setup PF/RERCHHPA Header                                                             CRE005
+     C                     Z-ADD*ZERO     NOREC                                               CRE005
+     C                     WRITERERCHHA0                                                      CRE005
+0232 C           END       TAG                             **  END TAG  **
+0233 C*
+0234 C********************************************************************
+0235 O**   A C C N T   F I L E
+0236 O**
+0237 O**   AMENDMENT TO HEADER RECORD
+0238 OACCNTAA E        21
+0239 O                                   23 ' '
+0240 O**
+0241 O**   AMENDMENT TO TRAILER RECORD
+0242 OACCNTAC E        22
+0243 O                         NORE      25P
+0244 O                         NOOA      31P
+0245 O                         ZERO05    34P
+0246 O                         ZERO05    37P
+0247 O                         ZERO05    40P
+0248 O                         NOOA      43P
+0249 O                         ZERO05    46P
+0250 O                         ZERO05    49P
+0251 O                         ZERO05    52P
+0252 O                         ZERO05    55P
+0253 O                         ZERO05    58P
+0254 O*
+0255 O/SPACE 2
+0268 O**   B T R A N   F I L E
+0269 O**
+0270 O*TRAN   E        24                                                 S01154
+0271 O*                                   1 'H'                           S01154
+0272 O*                        NTBH       6                               S01154
+0273 O*                        NIN       11                               S01154
+0274 O*                        NBTRAN    16                               S01154
+0275 O*                        MTBH      21                               S01154
+0276 O*                        MNBN      23                               S01154
+0277 O*
+0278 O/SPACE 2
+0279 O**   S T R A N   F I L E
+0280 O**
+0281 OSTRAN   E        25
+0282 O                                    1 'H'
+0283 O                                    6 '00002'
+0284 O                         NSTRAN    11
+0285 O                         ZERO05    14P
+0286 O                         ZERO05    17P
+0287 O                         ZERO15    25P
+0288 O                         ZERO03    27P
+0289 O                         ZERO05    30P
+0290 O                         ZERO15    38P
+0291 O                         ZERO03    40P
+0292 O                         ZERO05    43P
+0293 O                         ZERO15    51P
+0294 O                         ZERO03    53P
+0295 O                         ZERO05    56P
+0296 O                         ZERO15    64P
+0297 O                         ZERO03    66P
+0298 O                         ZERO05    69P
+0299 O                         ZERO15    77P
+0300 O                         ZERO03    80P
+0301 O                         ZERO05    83P
+0302 O                         ZERO15    91P
+0303 O                         ZERO03    93P
+0304 O                         ZERO05    96P
+0305 O                         ZERO15   104P
+0306 O                         ZERO03   106P
+0307 O                         ZERO05   109P
+0308 O                         ZERO15   117P
+0309 O                         ZERO03   119P
+0310 O                         ZERO05   122P
+0311 O                         ZERO15   130P
+0312 O                         ZERO03   132P
+0313 O                         ZERO05   135P
+0314 O                         ZERO15   143P
+0315 O                         ZERO03   145P
+0310 O                         ZERO05   148P
+0311 O                         ZERO15   156P
+0312 O                         ZERO03   158P
+0313 O                         ZERO05   161P
+0314 O                         ZERO15   169P
+0315 O                         ZERO03   171P
+0316 O                         ONE      197P
+0317 O                         ZERO05   200P
+0318 O**
+**  CPY@
+(c) Finastra International Limited 2001

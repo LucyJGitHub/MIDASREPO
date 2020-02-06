@@ -1,0 +1,226 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Validity checker for FINDHOOK')
+      *****************************************************************
+      *                                                               *
+      *  Midas - UT Module                                            *
+      *                                                               *
+      *  UT0063 - Validity checker for FINDHOOK                       *
+      *                                                               *
+      *  Called By: UTC0061 (FINDHOOK validity checker)               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CUP038             Date 19Sep07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 XNNNNN             Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CUP038 - Handle 250 library lists.                           *
+      *                                                               *
+      *****************************************************************
+      *
+      * Use of indicators
+      * 71 - Source file not found
+      * 81 - Loop control for finding source member
+      *****************************************************************
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      * Array to contain names of libraries containing source file
+     E**********          LIBA       25 10                                                    CUP038
+     E                    LIBA      250 10                                                    CUP038
+      *
+      * Parameters for creation of user space LIBLUS
+     I            DS
+     I                                        1  20 NAME
+     I                                        1  10 US
+     I                                       11  20 USLIB
+     I                                       21  30 ATTR
+     I                                    B  31  340SIZE
+     I                                       35  35 IVAL
+     I                                       36  45 AUT
+     I                                       46  95 DESC
+     I                                       96 105 REPL
+     I                                      106 130 ERRP
+     I                                    B 106 1090ERR1
+     I                                    B 110 1130ERR2
+     I                                      114 120 ERR3
+     I                                      121 121 ERR4
+     I                                      122 131 ERR5
+      * Parameters for List API
+     I            DS
+     I                                        1   8 FMT
+     I                                        9  28 OBJNL
+     I                                        9  18 SRC
+     I                                       19  28 OBJL
+     I                                       29  38 OTYPE
+      * Parameters for retrieval of user space header
+     IUSHEAD      DS
+     I                                        1 140 ALLDTA
+     I                                    B 125 1280OFFLST
+     I                                    B 133 1360NOENTS
+     I                                    B 137 1400ENTSIZ
+      * Parameters for retrieval of user space list data
+     IUSLIST      DS
+     I                                        1  10 FILEN
+     I                                       11  20 FILEL
+     I                                       21  30 FILET
+      * Parameters for user space retrieval API
+     I            DS
+     I                                    B   1   40USSTRT
+     I                                    B   5   80USLEN
+     I                                        9 158 USDTA
+      * Parameters for retrieval of member description
+     I            DS
+     I                                    B   1   40BRT
+     I                                    B   5   80BAV
+     I                                        9  18 MFILE
+     I                                        1  18 MRCV
+     I                                    B  19  220MLEN
+     I                                       23  30 MFMT
+     I                                       31  50 MFLIB
+     I                                       31  40 SRC2
+     I                                       41  50 MRLIB
+     I                                       51  51 MOVR
+      /SPACE 3
+      * Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      * Parameters passed to program
+     C           *ENTRY    PLIST
+     C                     PARM           SRCM   10        Member
+     C                     PARM           SRCF   10        Source file
+     C                     PARM           SRCL   10        Source lib.(rtn only)
+     C                     PARM           ERR     1        Error return
+      *
+      * Start processing to identify first occurrence of member in
+      *    library list
+     C                     EXSR IDLIB
+      *
+      * If source file was found in library list then look for member
+     C           *IN71     IFNE *ON                        B01
+     C                     EXSR FNDMBR
+     C                     ENDIF                           E01
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *
+     C           IDLIB     BEGSR
+      * Set off indicator for source file not found and set on
+      *     for first print
+     C                     SETOF                     71
+      * Create user space for use by list API (See I specs for DS)
+     C                     MOVEL'LISTUS'  US
+     C                     MOVEL'QTEMP'   USLIB
+     C                     MOVEL'APILIST' ATTR
+     C                     Z-ADD2000      SIZE
+     C                     MOVEL'*USE'    AUT
+     C                     MOVEL'*YES'    REPL
+     C                     Z-ADD8         ERR1
+     C                     CALL 'QUSCRTUS'
+     C                     PARM           NAME
+     C                     PARM           ATTR
+     C                     PARM           SIZE
+     C                     PARM           IVAL
+     C                     PARM           AUT
+     C                     PARM           DESC
+     C                     PARM           REPL
+     C                     PARM           ERRP
+      * Use API to build list of occurences of source file in library
+      *    list (see I specs for DS)
+     C                     MOVEL'OBJL0100'FMT
+     C                     MOVEL'*FILE'   OTYPE
+     C                     MOVEL'*LIBL'   OBJL
+     C                     MOVELSRCF      SRC
+     C                     MOVELSRCF      SRC2
+     C                     CALL 'QUSLOBJ'
+     C                     PARM           NAME
+     C                     PARM           FMT
+     C                     PARM           OBJNL
+     C                     PARM           OTYPE
+      * Use API to retrieve list data from user space; first call gets
+      *    user space header information (See I specs for DS)
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           NAME
+     C                     PARM 1         USSTRT
+     C                     PARM 140       USLEN
+     C           USHEAD    PARM           USDTA
+      * If no entries then set on indicator and skip further processing
+     C           NOENTS    IFEQ 0                          B01
+     C                     SETON                     71
+     C                     ENDIF                           E01
+      * Execute SR to loop through list data from user space if
+      * entries found
+     C  N71                EXSR GETDTA
+     C                     ENDSR
+      *****************************************************************
+     C           GETDTA    BEGSR
+      * Use API to retrieve list data from user space; set up control
+     C                     Z-ADD1         A       20
+     C                     Z-ADDENTSIZ    USLEN
+     C           OFFLST    ADD  1         USSTRT
+      *
+     C           A         DOWLENOENTS                     D01
+     C                     CLEARUSDTA
+      *
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           NAME
+     C                     PARM           USSTRT
+     C                     PARM           USLEN
+     C           USLIST    PARM           USDTA
+      * Move to array
+     C                     MOVEAFILEL     LIBA,A
+     C                     ADD  1         A
+     C                     ADD  ENTSIZ    USSTRT
+     C                     ENDDO                           ED01
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           FNDMBR    BEGSR
+      * Set up loop controls and constant parameters
+     C                     SETOF                     81
+     C                     Z-ADD1         A
+     C                     Z-ADD18        MLEN
+     C                     MOVE 'MBRD0100'MFMT
+     C                     MOVE '0'       MOVR
+     C                     Z-ADD16        ERR1
+      *
+     C           *IN81     DOUEQ*ON                        D01
+     C                     MOVELLIBA,A    MRLIB
+     C           MRLIB     IFEQ *BLANKS                    B01
+      * If no entry then member has not been found; end loop and output
+      * to report
+     C                     SETON                     81
+     C                     MOVE 'Y'       ERR
+     C                     ELSE                            X01
+     C                     MOVE *BLANKS   ERR3
+     C                     CALL 'QUSRMBRD'
+     C                     PARM           MRCV
+     C                     PARM           MLEN
+     C                     PARM           MFMT
+     C                     PARM           MFLIB
+     C                     PARM           SRCM
+     C                     PARM           MOVR
+     C                     PARM           ERRP
+      * If member not found then try next library
+     C           ERR2      IFEQ 0                          B02
+     C                     SETON                     81
+     C                     MOVELMRLIB     SRCL
+     C                     ENDIF                           E02
+     C                     ADD  1         A
+     C                     ENDIF                           E01
+     C                     ENDDO                           ED01
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

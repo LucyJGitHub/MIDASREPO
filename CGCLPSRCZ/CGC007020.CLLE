@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CG Interest Scale Enqry and Reprint- driver')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Correspondence Manager                              */
+/*                                                                   */
+/*       CGC007020 - CG Interest Scale Enquiry and Reprint           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR797795 *CREATE   Date 19Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR797795 - Interest Scale Report Enquiry is missing in      */
+/*                   BFMidas                                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2011')
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Create LDA if it does not exist */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas Local Date Area'))
+ 
+/** Set-off Database Error Switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+                        MONMSG     MSGID(CPF1023)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             OVRMSGF    MSGF(SDUSRMSG) TOMSGF(GBSDUSRMSG)
+             OVRMSGF    MSGF(CGUSRMSG) TOMSGF(GBCGUSRMSG)
+ 
+/** CG Interest Scale Enquiry and Reprint - Selection */
+ 
+             CALL       PGM(CG007020)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC007020 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/** Normal termination */
+ 
+ END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
+             ENDPGM

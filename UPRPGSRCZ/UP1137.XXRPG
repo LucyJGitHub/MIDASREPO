@@ -1,0 +1,203 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP1137 - Process Report MQ RTEVENTS                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP022             Date 07Apr04               *
+      *                 BUG1894            Date 06Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CUP006  *CREATE    Date 09Dec99               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP022 - Replace file UP540XLF with UPX540L0.                *
+      *  BUG1894- Reverse CGL029.  ACODE is not an account code.      *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CUP006  -  Make upgrade of DTALIB files easier               *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     F*****UP540XLFIF  E           K        DISK         KINFSR *PSSR                        CUP022
+     FUPX540L0IF  E           K        DISK         KINFSR *PSSR                             CUP022
+     FMQ540XLFUF  E           K        DISK         KINFSR *PSSR A
+     F            ALLEV                             KRENAMEX540F
+      *
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+     IX540F
+     I              ACODE                           CODE
+     I              AMOD                            MOD
+     I              ADESC                           DESC
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           COMP      KLIST
+     C                     KFLD           AMOD
+     C                     KFLD           ACODE
+      *
+     C******     *LOVAL    SETLLUP540XLF                                                     CUP022
+     C           *LOVAL    SETLLUPX540L0                                                     CUP022
+      *
+     C******               READ UP540XLF               6920                                  CUP022
+     C                     READ UPX540L0               6920                                  CUP022
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+      *
+     C           MQACTC    IFEQ 'I'
+     C                     EXSR SETVAL
+     C                     WRITEX540F                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           MQACTC    IFEQ 'D'
+     C           COMP      CHAINMQ540XLF             3069
+     C           *IN69     IFEQ *ON
+     C           *IN30     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+     C                     EXSR SETVAL
+     C                     DELETX540F                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * If Action code = AMEND then read next record
+     C           MQACTC    IFEQ 'A'
+     C**********           MOVELACODE     CODEX   4                                           CGL029
+     C**********           MOVELACODE     CODEX  10                                   CGL029 BUG1894
+     C                     MOVELACODE     CODEX   4                                          BUG1894
+     C                     MOVELAMOD      MODX    2
+     C******               READ UP540XLF               6920                                   CUP022
+     C                     READ UPX540L0               6920                                   CUP022
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * If Component and sequence number do not match exit
+      *  - or if EOF indicator is on
+     C           ACODE     IFNE CODEX
+     C           AMOD      ANDNEMODX
+     C           *IN20     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           COMP      CHAINMQ540XLF             3069
+     C           *IN69     IFEQ *ON
+     C           *IN30     OREQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+      *
+     C                     ELSE
+      *
+     C                     EXSR SETVAL
+     C                     UPDATX540F                  69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C*****                READ UP540XLF               6920                                  CUP022
+     C                     READ UPX540L0               6920                                  CUP022
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *
+      * SETVAL subroutine - set values for deletes/writes/updates
+      *
+      *****************************************************************
+     C           SETVAL    BEGSR
+      * Set values to update record
+     C                     MOVELACODE     CODE
+     C                     MOVELAMOD      MOD
+     C                     MOVELADESC     DESC
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

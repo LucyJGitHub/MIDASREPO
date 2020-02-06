@@ -1,0 +1,128 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CCB016A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBCE009 - Set all APOSTPD LFs still have *IMMED to *REBLD,  */
+/*                 reorganize APOSTPD and GLACPHPD, then restore     */
+/*                 original contents of CBLATRPA saved by CBCE008.   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*                                                                   */
+/*       Last Amend No. CCB016A *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CCB016  *CREATE    Date 28May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*       CCB016 - COB Enhancements: change APOSTPD LFs to *REBLD     */
+/*                before GLC2550 and GLC4450.                        */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          COPYRIGHT MISYS INTERNATIONAL BANKING +
+                          SYSTEMS 2008')
+ 
+             DCL        VAR(&MIDPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MDPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DLTRC1) TYPE(*DEC)  LEN(10 0)
+             DCL        VAR(&DLTRC2) TYPE(*DEC)  LEN(10 0)
+ 
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+ 
+             DCLF       FILE(QAFDLGL)
+ 
+/******************************************************************************/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ                                                                          */
+ 
+             SNDPGMMSG  MSG('CBCE009 - CB Reorganize APOSTPD and GLACPHPD') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Retrieve system prefix and set program variables                                               */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&MIDPFX)
+ 
+             CHGVAR     VAR(&MDPLIB) VALUE(&MIDPFX *TCAT 'DPLIB')
+ 
+/* Retrieve current number of deleted records for APOSTPD and GLACPHPD                            */
+ 
+             RTVMBRD    FILE(APOSTPD)  NBRDLTRCD(&DLTRC1)
+             RTVMBRD    FILE(GLACPHPD) NBRDLTRCD(&DLTRC2)
+ 
+             IF         COND((&DLTRC1 *EQ 0) *AND (&DLTRC2 *EQ 0)) THEN(DO)
+ 
+                        /* Both files are already reorganized */
+ 
+                        GOTO RSTFIL
+ 
+             ENDDO
+ 
+/* Add to CBLATRPA attributes for logical files buil over GLACPHPD only. Current CBLATRPA data    */
+/* was filled by CBCE003 that runs before GLC42.                                                  */
+ 
+             CALL       PGM(CBCE010) PARM('GLACPHPD  ')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Change access path maintenance to *REBLD for all files that has *IMMED option at CBCE003 time  */
+/* and for logical files buil over GLACPHPD only.                                                 */
+ 
+             OVRDBF     FILE(QAFDLGL) TOFILE(&MDPLIB/CBLATRPA)
+ NEXTLF:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOFILE))
+ 
+             IF         COND(&LGMANT *EQ 'I') THEN(DO)
+                 CHGLF      FILE(&LGLIB/&LGFILE) MAINT(*REBLD)
+                 MONMSG     MSGID(CPF0000)
+             ENDDO
+ 
+             GOTO       CMDLBL(NEXTLF)
+ EOFILE:
+             DLTOVR     FILE(QAFDLGL)
+ 
+/* Reorganize APOSTPD and GLACPHPD if need. RBDACCPTH(*OPTIMIZE) used for asynchronous (by system */
+/* jobs QDBSRVnn) rebuild for files currently have *DLY maintenance.                              */
+ 
+             IF COND(&DLTRC1 *NE 0) THEN(DO)
+ 
+               RGZPFM FILE(APOSTPD) RBDACCPTH(*OPTIMIZE)
+ 
+             ENDDO
+ 
+             IF COND(&DLTRC2 *NE 0) THEN(DO)
+ 
+               RGZPFM FILE(GLACPHPD) RBDACCPTH(*OPTIMIZE)
+ 
+             ENDDO
+ 
+/* Restore original content of CBLATRPA saved by CBCE008 before start of GLC2550. All LFs that    */
+/* has maintenance option equal to *IMMED at the beginning of COB will be rebuild by CBCE005.     */
+ 
+ RSTFIL:
+             CPYF       FROMFILE(&MDPLIB/CBLATRPX) +
+                          TOFILE(&MDPLIB/CBLATRPA) MBROPT(*REPLACE)
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Error processing - Change the job switches and send messages to MRUNQ and MOPERQ               */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     &MSG VALUE('Program CBCE009 terminated abnormally')
+             SNDMSG     TOMSGQ(MRUNQ MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CHGVAR     VAR(&MIBSCPY) VALUE('(C) COPYRIGHT MISYS +
+                          INTERNATIONAL BANKING SYSTEMS 2008')
+ ENDPGM

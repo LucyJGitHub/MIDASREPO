@@ -1,0 +1,248 @@
+/*********************************************************************/
+/**** ***CLP**********************************************************/   /*CAP002*/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SC DB error ctl for interactive jobs')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - System Control Module                       */
+/*                                                                   */
+/*       DBERRCTL - DATABASE ERROR CONTROL - INTERACTIVE JOBS ONLY   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. NAD009             Date 31Mar04              */
+/*                      CSC022             Date 24Feb04              */
+/*                      CPK017             Date 28Oct03              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CAP002             Date 13Jan98              */
+/*                      052828             DATE 17JAN94              */
+/*                      E29436             DATE 15OCT91              */
+/*                      E20506             DATE 15AUG90              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       NAD009 - Midasplus error reporting                          */
+/*       CSC022 - Commitment Control Changes for MidasPlus           */
+/*       CPK017 - Midas Plus packaging.                              */
+/*                Comment out the remove of msg from MSTATUS.        */
+/*       CAP002 - Conversion of Midas inputs to modular API structure*/
+/*                As part of this development, this program has been */
+/*                converted to a module (with a new *PGM member for  */
+/*                use by OPM programs).  Also changes have been made */
+/*                to ensure that this works correctly when used in   */
+/*                batch jobs.                                        */
+/*       052828 - RRTJOB not valid for a group job, i.e. if Midas    */
+/*                Session Manager is active.                         */
+/*       E29436 - MOVED TO SOURCE FILE SCCLSRC FROM SDCLSRC.         */
+/*       E20506 - PROGRAM RE-WRITTEN                                 */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM
+ 
+             DCLF       FILE(DBERRDD)
+ 
+             DCL        VAR(&JBNM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&OUTQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OQLB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
+                                                                      /*CAP002*/
+             DCL        VAR(&RTNCD) TYPE(*CHAR) LEN(7)               /*052828*/
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(10)                /*052828*/
+             DCL        VAR(&SCCMTJOB) TYPE(*CHAR) LEN(256)                               /*CSC022*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CSC022*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)                                      /*CSC022*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CSC022*/
+             DCL        VAR(&CSC022) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
+             DCL        VAR(&CMTNUM) TYPE(*DEC) LEN(3 0)                                  /*CSC022*/
+             DCL        VAR(&CMTJOB1) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB2) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB3) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB4) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB5) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB6) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB7) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB8) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB9) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
+             DCL        VAR(&CMTJOB10) TYPE(*CHAR) LEN(10)                                /*CSC022*/
+             DCL        VAR(&CMTSKP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             RTVJOBA    JOB(&JBNM) USER(&USER) NBR(&JBNO) +
+                          OUTQ(&OUTQ) OUTQLIB(&OQLB) TYPE(&TYPE)
+ 
+ 
+             /* If error has occurred in an interactive job          */
+             /*  - set up output fields for display                  */
+             /*  - display database error control screen to user     */
+             /*  - rollback any uncommitted journal changes          */
+             /*  - print job details and job log                     */
+             /*  - send error message to MOPERQ                      */
+/****************-*remove*one*message*from*MSTATUS*/ /*                                */ /*CPK017*/
+             /*  - restart job by re-routing it using MIDASIC        */
+             /*    (Note - this will add a new message to MSTATUS)   */
+ 
+             RTVDTAARA  DTAARA(RUNDAT (1 7)) RTNVAR(&DDDATE)
+ 
+             CHGVAR     VAR(&DDUSER) VALUE(&USER)
+             CHGVAR     VAR(&DDWSID) VALUE(&JBNM)
+             CHGVAR     VAR(&DDOUTQ) VALUE(&OQLB *TCAT '/' *CAT +
+                          &OUTQ *TCAT '.')
+                                                                                          /*CSC022*/
+             CHGVAR     VAR(&CSC022) VALUE(' ')                                           /*CSC022*/
+             CHGVAR     VAR(&RTNCD) VALUE('       ')                                      /*CSC022*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CSC022*/
+             CHGVAR     VAR(&SAR) VALUE('CSC022')                                         /*CSC022*/
+                                                                                          /*CSC022*/
+             CALLPRC    PRC(AOSARDR0) PARM(&RTNCD &OPTN &SAR &SCSARD)                     /*CSC022*/
+                                                                                          /*CSC022*/
+             IF         COND(&RTNCD *EQ '       ') THEN(DO)                               /*CSC022*/
+                 CHGVAR     VAR(&CSC022) VALUE('Y')                                       /*CSC022*/
+             RTVDTAARA  DTAARA(SCCMTJOB (1 256)) RTNVAR(&SCCMTJOB)                        /*CSC022*/
+             CHGVAR     VAR(&CMTNUM) VALUE(%SST(&SCCMTJOB 1 3))                           /*CSC022*/
+             CHGVAR     VAR(&CMTJOB1) VALUE(%SST(&SCCMTJOB 4 10))                         /*CSC022*/
+             CHGVAR     VAR(&CMTJOB2) VALUE(%SST(&SCCMTJOB 14 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB3) VALUE(%SST(&SCCMTJOB 24 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB4) VALUE(%SST(&SCCMTJOB 34 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB5) VALUE(%SST(&SCCMTJOB 44 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB6) VALUE(%SST(&SCCMTJOB 54 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB7) VALUE(%SST(&SCCMTJOB 64 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB8) VALUE(%SST(&SCCMTJOB 74 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB9) VALUE(%SST(&SCCMTJOB 84 10))                        /*CSC022*/
+             CHGVAR     VAR(&CMTJOB10) VALUE(%SST(&SCCMTJOB 94 10))                       /*CSC022*/
+                                                                                          /*CSC022*/
+             IF         COND((&CMTNUM *GT 0) *AND (&CMTJOB1 *EQ +
+                          &JBNM)) THEN(DO)                                                /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 1) *AND (&CMTJOB2 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 2) *AND (&CMTJOB3 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 3) *AND (&CMTJOB4 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 4) *AND (&CMTJOB5 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 5) *AND (&CMTJOB6 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 6) *AND (&CMTJOB7 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 7) *AND (&CMTJOB8 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 8) *AND (&CMTJOB9 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             IF         COND((&CMTNUM *GT 9) *AND (&CMTJOB10 *EQ +
+                          &JBNM))    THEN(DO)                                             /*CSC022*/
+             CHGVAR     VAR(&CMTSKP) VALUE('Y')                                           /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+                                                                                          /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+ 
+/* Do not display screen for batch jobs                           */  /*CAP002*/
+             IF         COND(&TYPE *NE '0') THEN(DO)                  /*CAP002*/
+/*/COPY WNCPYSRC,DBERRCTL01                                          */
+             SNDRCVF    RCDFMT(DBERRDDF)
+/*/COPY WNCPYSRC,DBERRCTL02                                          */
+             ENDDO                                                    /*CAP002*/
+ 
+             IF         COND(&CSC022 *NE 'Y') THEN(DO)                                    /*CSC022*/
+             ROLLBACK
+/* Monitor for 'Commitment definition not found' message which    */  /*CAP002*/
+/*   will be generated in most batch jobs                             /*CAP002*/
+             MONMSG     MSGID(CPF8350)                                /*CAP002*/
+             ENDDO                                                                        /*CSC022*/
+             ELSE       CMD(DO)                                                           /*CSC022*/
+             IF         COND(&CMTSKP *NE 'Y') THEN(DO)                                    /*CSC022*/
+             ROLLBACK                                                                     /*CSC022*/
+             MONMSG     MSGID(CPF8350)                                                    /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             ELSE       CMD(DO)                                                           /*CSC022*/
+             CHGJOB     SWS(XXXXXX11)                                                     /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+             ENDDO                                                                        /*CSC022*/
+ 
+             DSPJOB     OUTPUT(*PRINT)
+             DSPJOBLOG  OUTPUT(*PRINT)
+ 
+             CRTDTAARA  DTAARA(QTEMP/MPLUS_ERR) TYPE(*CHAR) LEN(1)                        /*NAD009*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                    /*NAD009*/
+                                                                                          /*NAD009*/
+             SNDMSG     MSG('A Midas database error has occurred +
+                          in job ' *CAT &JBNO *TCAT '/' *CAT &USER +
+                          *TCAT '/' *CAT &JBNM *TCAT '.  Details of +
+                          the job and database error will be output +
+                          to ' *CAT &OQLB *TCAT '/' *CAT &OUTQ +
+                          *TCAT ' and the job will be restarted.') +
+                          TOMSGQ(MOPERQ)
+ 
+/************CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)                                      */ /*CPK017*/
+/************RCVMSG     MSGQ(MSTATUS) RMV(*YES)                                        */ /*CPK017*/
+ 
+/* For batch jobs, terminate program here as the RRTJOB is not    */  /*CAP002*/
+/*   relevant and will cause problems.                            */  /*CAP002*/
+             IF         COND(&TYPE *EQ '0') THEN(DO)                  /*CAP002*/
+                GOTO       CMDLBL(PGMEND)                             /*CAP002*/
+             ENDDO                                                    /*CAP002*/
+                                                                      /*CAP002*/
+/*/COPY WNCPYSRC,DBERRCTL03                                          */
+/************RRTJOB     RTGDTA(MIDASIC)                           */ /*052828*/
+/**********  CALL       PGM(AOSARDR0) PARM(&RTNCD '*VERIFY' +         /*CAP002*/
+/**********                  'AUS025' &FMT)              /*052828*/   /*CAP002*/
+             CALLPRC    PRC(AOSARDR0) PARM(&RTNCD '*VERIFY' +
+                             'AUS025' &FMT)                           /*CAP002*/
+             IF         COND(&RTNCD *NE '       ') THEN(RRTJOB +
+                             RTGDTA(MIDASIC))                        /*052828*/
+             ELSE       CMD(CALL PGM(SFC4464) PARM(MIDASIC))         /*052828*/
+ 
+/************MONMSG     MSGID(CPF0000 MCH0000 RPG0000) +          */ /*052828*/
+/************             EXEC(GOTO CMDLBL(ABNORMAL))             */ /*052828*/
+/*/COPY WNCPYSRC,DBERRCTL04                                          */
+ 
+             GOTO       CMDLBL(PGMEND)
+ 
+ 
+ ABNORMAL:   /* If attempt to re-route interactive job fails         */
+             /*  - send message to MOPERQ                            */
+             /*  - cancel job and print job log                      */
+ 
+             SNDMSG     MSG('Attempt to restart job ' *CAT &JBNO +
+                          *TCAT '/' *CAT &USER *TCAT '/' *CAT &JBNM +
+                          *TCAT ' failed.  Job has been cancelled.') +
+                          TOMSGQ(MOPERQ)
+ 
+             SIGNOFF    LOG(*LIST)
+ 
+ 
+ PGMEND:
+             ENDPGM
+ 
+/*===================================================================*/

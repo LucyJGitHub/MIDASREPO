@@ -1,0 +1,107 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+ STANDARD SUBROUTINE - ZFFRT
+ 
+ Purpose:
+ 
+   To determine a Forward Forward Interest Rate
+ 
+   NB.This routine is based on MM1001 & MM1011
+ 
+ Notes for inclusion in an RPG program for compiling:
+ 
+    /COPY ZSRSRC ZFFRTZ1 should be included in the 'C' specifications
+***********************************************************************
+*  File FDCCYTLL must have already been accessed prior to execution of this rout
+*  this routine
+*    The following source statements should be included in the
+*  appropriate places in the program
+*
+* FFDCCYTLLIF  E           K        DISK         KINFSR *PSSR
+*
+* C** SET UP KEY TO LF/FDCCYTLL WITH CURRENCY TO OBTAIN THE DEFAULT
+* C* INTEREST CALCULATION METHOD (@@DICM)
+* C                     MOVE '1'       @@FLD4  4
+* C                     MOVEL'20      '@@TG10 12
+* C                     MOVEL@@CCY     @@FLD4
+* C                     MOVE @@FLD4    @@TG10
+* C*
+* C           @@TG10    CHAINFDCCYTLL             YY
+* C**
+* C           *INYY     IFEQ '1'                        B1
+* C                     MOVE 'XXX'     DBASE            ****************
+* C                     MOVEL'FDCCYTLL'DBFILE           *              *
+* C                     MOVEL@@TG10    DBKEY            * DB ERROR XXX *
+* C                     MOVE '1'       *INU7            *              *
+* C                     MOVE '1'       *INU8            ****************
+* C                     EXSR *PSSR                      *1
+* C                     END                             E1
+***********************************************************************
+ 
+ Input:
+ 
+     @@BORA - Borrow rate for start date
+     @@BORB - Borrow rate for end date
+     @@LERA - Lend rate for start date
+     @@LERB - Lend rate for end date
+     @@DYTA - Number of days to start date
+     @@DYTB - Number of days to end date
+     @@CCY  - Deal currency
+     @@DICM - Default interest calculation method
+ 
+Procedure:
+ 
+    1.Number of days in year is determined from the Default Interest
+      Calculation Method for the specified ccy.
+         i.e for each DICM there is a given working year
+ 
+    2.Market borrow rate is calculated as:-
+ 
+         (Rem * Te) - (Rdn * Td)
+         ----------------------
+         (Te - Td) * (1+ Rdn * Td)
+                         -------
+                         Ty *100
+ 
+          Rem : borrow rate for end date
+          Rdn : lend rate for start date
+          Td  : no.days to start date
+          Te  : no.days to end date
+          Ty  : no.days in year
+ 
+    3.Market lend rate is calculated as:-
+ 
+         (Ren * Te) - (Rdm * Td)
+         ----------------------
+         (Te - Td) * (1+ Rdm * Td)
+                         -------
+                         Ty *100
+ 
+          Ren : lend rate for end date
+          Rdm : borrow rate for start date
+          Td  : no.days to start date
+          Te  : no.days to end date
+          Ty  : no.days in year
+ 
+ Output:
+ 
+     @@BORC - Borrow rate for specified date
+     @@LERC - Lend rate for specified date
+ 

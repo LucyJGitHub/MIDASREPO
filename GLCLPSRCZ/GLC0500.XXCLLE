@@ -1,0 +1,575 @@
+/*********************************************************************/
+/*S*D****CLPBASEMOD***************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas General Ledger Module                                 */
+/*                                                                   */
+/*       CLLE/GLC0500 - Call Equation Close of Business Component    */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. CCB023 *REDUNDANT Date 06Aug12               */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG14878          Date 19Sep07               */
+/*                      BUG14835          Date 13Sep07               */
+/*                      BUG14826A         Date 13Sep07               */
+/*                      BUG14475          Date 01Aug07               */
+/*                      BUG14351          Date 17Jul07               */
+/*                      BUG14162A         Date 30Jun07               */
+/*                      BUG14179          Date 30Jun07               */
+/*                      BUG14162          Date 19Jun07               */
+/*                      BUG13986          Date 21May07               */
+/*                      BUG12168          Date 09Oct06               */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CRE026  *CREATE   Date 24May06               */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       BUG14878 - Component GLC0500 failed                         */
+/*       BUG14835 - DTAQ's not restored in KLIBXHS                   */
+/*       BUG14826A - Transactions made using Equation functions were */
+/*           not reflected in the Projected Nostro Balances Enquiry  */
+/*       BUG14475 - GLC0500 00002 Nxtphs DTAARA was deleted          */
+/*       BUG14351 - GLC0500 Should restore when only restarted       */
+/*       BUG14162A - Error in COB. Looping occurs in the program     */
+/*       BUG14179 - Include save/restore of KINPXzz equation library */
+/*                  when Consumer Banking is switched on.            */
+/*       BUG14162 - Error in COB. Looping occurs in the program      */
+/*       BUG13986 - Error in COB. Added SAR validation               */
+/*       BUG12168 - Address design issues and errors in COB          */
+/*       CRE026 - Consumer Banking                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PGM &NAM &SEQ)
+/**/
+/* Copyright statement definition  */
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+/**/
+/* Initial Processing */
+/**/
+             DCL        VAR(&PGM)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&NAM)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&EQUNT)  TYPE(*CHAR) LEN(3)
+             DCL        VAR(&EQSPRF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EQEPRF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EQERR)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&KAPUNMNM) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&K0043) TYPE(*CHAR) LEN(4)                                  /*BUG12168*/
+             DCL        VAR(&K0040) TYPE(*CHAR) LEN(4)                                  /*BUG12168*/
+             DCL        VAR(&K0015) TYPE(*CHAR) LEN(4)                                  /*BUG12168*/
+             DCL        VAR(&K0012) TYPE(*CHAR) LEN(4)                                  /*BUG12168*/
+             DCL        VAR(&KAPPH) TYPE(*CHAR) LEN(4)                                  /*BUG12168*/
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(2764)                                 /*BUG12168*/
+             DCL        VAR(&LIBLST) TYPE(*CHAR) LEN(2750)                              /*BUG12168*/
+             DCL        VAR(&ACPTH) TYPE(*CHAR) LEN(6)                                  /*BUG12168*/
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)                                    /*BUG12168*/
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                                    /*BUG12168*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                   /*BUG12168*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                 /*BUG12168*/
+             DCL        VAR(&SAV1) TYPE(*CHAR) LEN(10) VALUE('KFIL      ')              /*BUG12168*/
+             DCL        VAR(&SAV2) TYPE(*CHAR) LEN(10) VALUE('KLIB      ')              /*BUG12168*/
+             DCL        VAR(&SAV3) TYPE(*CHAR) LEN(10) VALUE('KOPT      ')              /*BUG12168*/
+             DCL        VAR(&SAV4) TYPE(*CHAR) LEN(10) VALUE('KINP      ')              /*BUG14179*/
+             DCL        VAR(&LIB2) TYPE(*CHAR) LEN(8) VALUE('  DILIB ')                 /*BUG12168*/
+             DCL        VAR(&LIB3) TYPE(*CHAR) LEN(7) VALUE('KFIL   ')                  /*BUG12168*/
+             DCL        VAR(&LIB4) TYPE(*CHAR) LEN(7) VALUE('KLIB   ')                  /*BUG12168*/
+             DCL        VAR(&LIB5) TYPE(*CHAR) LEN(7) VALUE('KOPT   ')                  /*BUG12168*/
+             DCL        VAR(&LIB6) TYPE(*CHAR) LEN(7) VALUE('KINP   ')                  /*BUG14179*/
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)                               /*BUG12168*/
+             DCL        VAR(&DASYS) TYPE(*CHAR) LEN(2000)                               /*BUG12168*/
+             DCL        VAR(&PNL) TYPE(*CHAR) LEN(1)                                    /*BUG12168*/
+             DCL        VAR(&CINEM) TYPE(*CHAR) LEN(1)                                  /*BUG12168*/
+             DCL        VAR(&NOSPROJ) TYPE(*CHAR) LEN(1)                               /*BUG14826A*/
+/**/
+/* Global Monitor Message  */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNOR)
+ 
+                                                                                        /*BUG13986*/
+/* Check if CRE026 feature */                                                           /*BUG13986*/
+                                                                                        /*BUG13986*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                      /*BUG13986*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                      /*BUG13986*/
+             CHGVAR     VAR(&SARD) VALUE('CRE026')                                      /*BUG13986*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                       /*BUG13986*/
+             IF         COND(&RTN *NE '       ') THEN(DO)                               /*BUG13986*/
+             GOTO       CMDLBL(END)                                                     /*BUG13986*/
+             ENDDO                                                                      /*BUG13986*/
+                                                                                        /*BUG13986*/
+             RTVDTAARA  DTAARA(KAPUNMNM) RTNVAR(&KAPUNMNM)
+             RTVDTAARA  DTAARA(KAP0043) RTNVAR(&K0043)                                  /*BUG12168*/
+             RTVDTAARA  DTAARA(KAP0040) RTNVAR(&K0040)                                  /*BUG12168*/
+             RTVDTAARA  DTAARA(KAP0015) RTNVAR(&K0015)                                  /*BUG12168*/
+             RTVDTAARA  DTAARA(KAP0012) RTNVAR(&K0012)                                  /*BUG12168*/
+             CHGVAR     VAR(&EQUNT) VALUE(&KAPUNMNM)
+             CHGVAR     VAR(&EQSPRF) VALUE('          ')
+             CHGVAR     VAR(&EQEPRF) VALUE('          ')
+             CHGVAR     VAR(&EQERR)  VALUE(' ')
+ 
+/**********  RTVJOBA    TYPE(&JOBTYPE)                                      **********/ /*BUG12168*/
+             RTVJOBA    TYPE(&JOBTYPE) USRLIBL(&LIBLST)                                 /*BUG12168*/
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+/**/                                                                                    /*BUG12168*/
+/* Get Profit and Loss Run setting in Equation and check if Cinemex is present */       /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             RTVDTAARA  DTAARA(DASYSCT2) RTNVAR(&DASYS)                                 /*BUG12168*/
+             CHGVAR     VAR(&PNL) VALUE(%SUBSTRING(&DASYS 831 1))                       /*BUG12168*/
+             CHGVAR     VAR(&CINEM) VALUE(%SUBSTRING(&DASYS 1305 1))                    /*BUG12168*/
+/**/                                                                                   /*BUG14826A*/
+/* Check if Nostro Projection Extract is active                                        /*BUG14826A*/
+/**/                                                                                   /*BUG14826A*/
+             IF         COND(&PGM *EQ 'C80') THEN(DO)                                  /*BUG14826A*/
+             CHGVAR     VAR(&NOSPROJ) VALUE(%SUBSTRING(&DASYS 1254 1))                 /*BUG14826A*/
+             IF         COND(&NOSPROJ *EQ 'Y') THEN(DO)                                /*BUG14826A*/
+             CLRPFM     FILE(GLNOSTPD)                                                 /*BUG14826A*/
+             ENDDO                                                                     /*BUG14826A*/
+             ENDDO                                                                     /*BUG14826A*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&CINEM *NE 'Y') THEN(DO)                                   /*BUG12168*/
+                                                                                        /*BUG12168*/
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)                                  /*BUG12168*/
+             CHGVAR     VAR(%SUBSTRING(&LIB2 1 2)) +
+                          VALUE(%SUBSTRING(&SDSTAT 6 2))                                /*BUG12168*/
+             CHGVAR      VAR(&LIB3) VALUE('KFIL' *CAT (&KAPUNMNM))                      /*BUG12168*/
+             CHGVAR      VAR(&LIB4) VALUE('KLIB' *CAT (&KAPUNMNM))                      /*BUG12168*/
+             CHGVAR      VAR(&LIB5) VALUE('KOPT' *CAT (&KAPUNMNM))                      /*BUG12168*/
+             CHGVAR      VAR(&LIB6) VALUE('KINP' *CAT (&KAPUNMNM))                      /*BUG14179*/
+             CHGVAR      VAR(&SAV1) VALUE('KFIL' *CAT (&KAPUNMNM) *CAT (&PGM))          /*BUG12168*/
+             CHGVAR      VAR(&SAV2) VALUE('KLIB' *CAT (&KAPUNMNM) *CAT (&PGM))          /*BUG12168*/
+             CHGVAR      VAR(&SAV3) VALUE('KOPT' *CAT (&KAPUNMNM) *CAT (&PGM))          /*BUG12168*/
+             CHGVAR      VAR(&SAV4) VALUE('KINP' *CAT (&KAPUNMNM) *CAT (&PGM))          /*BUG14179*/
+/* */                                                                                   /*BUG12168*/
+/* Check if access paths to be saved */                                                 /*BUG12168*/
+/* */                                                                                   /*BUG12168*/
+                                                                                        /*BUG12168*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                      /*BUG12168*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                      /*BUG12168*/
+             CHGVAR     VAR(&SARD) VALUE('CSC003')                                      /*BUG12168*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                       /*BUG12168*/
+             IF         COND(&RTN *EQ '       ') THEN(DO)                               /*BUG12168*/
+/* Set flag */                                                                          /*BUG12168*/
+             CHGVAR     VAR(&ACPTH) VALUE('CSC003')                                     /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+                                                                                        /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+/**/
+/**************************************************************/
+/*                                                            */
+/* C A L L   P R O G R A M - CBO160 & CB0150                  */
+/*                                                            */
+/**************************************************************/
+/**/
+/* Call the Program CB0160 to get the value of the restart indicator */
+ 
+             CALL       PGM(CB0160) PARM(&NAM &SEQ &STAT)
+/** Check if Restart indicator is 'Y'  */                                               /*BUG14351*/
+             IF         COND(&STAT *NE 'N') THEN(DO)                                    /*BUG14351*/
+             IF         COND(&PGM *EQ 'C05') THEN(DO)                                   /*BUG14475*/
+             CHGDTAARA  DTAARA(KAPPHS (1 4)) VALUE('DAY ')                              /*BUG14475*/
+             DLTDTAARA  DTAARA(NXTPHS)                                                  /*BUG14475*/
+             MONMSG     MSGID(CPF9801)                                                  /*BUG14475*/
+             ENDDO                                                                      /*BUG14475*/
+             IF         COND(&CINEM *NE 'Y' *AND &PGM *NE 'C05') +
+                          THEN(DO)                                                      /*BUG14351*/
+             DLTDTAQ    DTAQ(&LIB4/DQJ88HMR)                                            /*BUG14835*/
+             MONMSG     MSGID(CPF2105)                                                  /*BUG14835*/
+             DLTDTAQ    DTAQ(&LIB4/DQQ15DMR)                                            /*BUG14835*/
+             MONMSG     MSGID(CPF2105)                                                  /*BUG14835*/
+             RSTOBJ OBJ(*ALL) SAVLIB(&LIB3) DEV(*SAVF) SAVF(&LIB2/&SAV1) MBROPT(*ALL) +
+                        RSTLIB(&LIB3)                                                   /*BUG14351*/
+             MONMSG     MSGID(CPF3773)                                                  /*BUG14351*/
+             RSTOBJ OBJ(*ALL) SAVLIB(&LIB4) DEV(*SAVF) SAVF(&LIB2/&SAV2) MBROPT(*ALL) +
+                        RSTLIB(&LIB4)                                                   /*BUG14351*/
+             MONMSG     MSGID(CPF3773)                                                  /*BUG14351*/
+             RSTOBJ OBJ(*ALL) SAVLIB(&LIB5) DEV(*SAVF) SAVF(&LIB2/&SAV3) MBROPT(*ALL) +
+                        RSTLIB(&LIB5)                                                   /*BUG14351*/
+             MONMSG     MSGID(CPF3773)                                                  /*BUG14351*/
+             RSTOBJ OBJ(*ALL) SAVLIB(&LIB6) DEV(*SAVF) SAVF(&LIB2/&SAV4) MBROPT(*ALL) +
+                        RSTLIB(&LIB6)                                                   /*BUG14351*/
+             MONMSG     MSGID(CPF3773)                                                  /*BUG14351*/
+/**********  DLTDTAARA  DTAARA(NXTPHS)  */                                 /*BUG14351*/ /*BUG14475*/
+/**********  MONMSG     MSGID(CPF9801)  */                                 /*BUG14351*/ /*BUG14475*/
+             IF         COND(&PGM *EQ 'C10') THEN(DO)                                   /*BUG14475*/
+             CHGDTAARA  DTAARA(KAPPHS (1 4)) VALUE('C05 ')                              /*BUG14475*/
+             CHGDTAARA  DTAARA(NXTPHS) VALUE('C10')                                     /*BUG14878*/
+             ENDDO                                                                      /*BUG14475*/
+             ENDDO                                                                      /*BUG14351*/
+             ENDDO                                                                      /*BUG14351*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&PGM *EQ 'C50') THEN(DO)                                   /*BUG12168*/
+             IF         COND(&K0043 *EQ 'YES ' *AND &K0040 *EQ 'NO  ') +
+                          THEN(GOTO CMDLBL(NORUN))                                      /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&PGM *EQ 'C41' *AND &PNL *EQ 'N') +
+                          THEN(GOTO CMDLBL(NORUN))                                      /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&PGM *EQ 'C85' *AND &K0015 *EQ 'NO  ') +
+                          THEN(GOTO CMDLBL(NORUN))                                      /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&PGM *EQ 'C95' *AND &K0012 *EQ 'NO  ') +
+                          THEN(GOTO CMDLBL(NORUN))                                      /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&PGM *EQ 'C90') THEN(DO)                                   /*BUG12168*/
+                   RTVDTAARA  DTAARA(KAPPHS) RTNVAR(&KAPPH)                             /*BUG12168*/
+                   IF         COND(&KAPPH *EQ 'DAY ') +
+                          THEN(GOTO CMDLBL(NORUN))                                      /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+ 
+/* If Restart flag is equal to 'N' */
+ 
+             IF         COND(&STAT *EQ 'N') THEN(DO)
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&CINEM *NE 'Y') THEN(DO)                                   /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&PGM *NE 'C05') THEN(DO)                                   /*BUG12168*/
+/* Save equation libraries */                                                           /*BUG12168*/
+                                                                                        /*BUG12168*/
+             DLTF       FILE(&LIB2/&SAV1)                                               /*BUG12168*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG12168*/
+             DLTF       FILE(&LIB2/&SAV2)                                               /*BUG12168*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG12168*/
+             DLTF       FILE(&LIB2/&SAV3)                                               /*BUG12168*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG12168*/
+             DLTF       FILE(&LIB2/&SAV4)                                               /*BUG14179*/
+             MONMSG     MSGID(CPF0000)                                                  /*BUG14179*/
+                                                                                        /*BUG12168*/
+             CRTSAVF    FILE(&LIB2/&SAV1)                                               /*BUG12168*/
+             CRTSAVF    FILE(&LIB2/&SAV2)                                               /*BUG12168*/
+             CRTSAVF    FILE(&LIB2/&SAV3)                                               /*BUG12168*/
+             CRTSAVF    FILE(&LIB2/&SAV4)                                               /*BUG14179*/
+                                                                                        /*BUG12168*/
+/* Additional Processing */                                                             /*BUG12168*/
+                                                                                        /*BUG12168*/
+             IF         COND(&ACPTH *EQ 'CSC003') THEN(DO)                              /*BUG12168*/
+                                                                                        /*BUG12168*/
+             SAVLIB     LIB(&LIB3) DEV(*SAVF) SAVF(&LIB2/&SAV1) +
+                        USEOPTBLK(*NO) CLEAR(*ALL) ACCPTH(*YES) +
+                        OUTPUT(*PRINT)                                                  /*BUG12168*/
+             SAVLIB     LIB(&LIB4) DEV(*SAVF) SAVF(&LIB2/&SAV2) +
+                        USEOPTBLK(*NO) CLEAR(*ALL) ACCPTH(*YES) +
+                        OUTPUT(*PRINT)                                                  /*BUG12168*/
+             SAVLIB     LIB(&LIB5) DEV(*SAVF) SAVF(&LIB2/&SAV3) +
+                        USEOPTBLK(*NO) CLEAR(*ALL) ACCPTH(*YES) +
+                        OUTPUT(*PRINT)                                                  /*BUG12168*/
+             SAVLIB     LIB(&LIB6) DEV(*SAVF) SAVF(&LIB2/&SAV4) +
+                        USEOPTBLK(*NO) CLEAR(*ALL) ACCPTH(*YES) +
+                        OUTPUT(*PRINT)                                                  /*BUG14179*/
+                                                                                        /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+                                                                                        /*BUG12168*/
+             ELSE       CMD(DO)                                                         /*BUG12168*/
+                                                                                        /*BUG12168*/
+             SAVLIB     LIB(&LIB3) DEV(*SAVF) SAVF(&LIB2/&SAV1) +
+                        USEOPTBLK(*NO) CLEAR(*ALL) +
+                        OUTPUT(*PRINT)                                                  /*BUG12168*/
+             SAVLIB     LIB(&LIB4) DEV(*SAVF) SAVF(&LIB2/&SAV2) +
+                        USEOPTBLK(*NO) CLEAR(*ALL) +
+                        OUTPUT(*PRINT)                                                  /*BUG12168*/
+             SAVLIB     LIB(&LIB5) DEV(*SAVF) SAVF(&LIB2/&SAV3) +
+                        USEOPTBLK(*NO) CLEAR(*ALL) +
+                        OUTPUT(*PRINT)                                                  /*BUG12168*/
+             SAVLIB     LIB(&LIB6) DEV(*SAVF) SAVF(&LIB2/&SAV4) +
+                        USEOPTBLK(*NO) CLEAR(*ALL) +
+                        OUTPUT(*PRINT)                                                  /*BUG14179*/
+                                                                                        /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+                                                                                        /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+                                                                                        /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+ 
+             CHGVAR     VAR(&STAT)  VALUE('Y')
+ 
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+             IF         COND(&PGM *EQ 'C50') THEN(DO)                                   /*BUG12168*/
+             IF         COND(&K0043 *EQ 'YES ' *AND &K0040 *EQ 'YES ') THEN(DO)         /*BUG12168*/
+                  CALL  PGM(EQNRNPH) PARM(&EQUNT 'C65' &EQSPRF +
+                          &EQEPRF &EQERR)                                               /*BUG12168*/
+                  IF    COND(&EQERR *EQ 'N') THEN(CHGJOB SWS(XXXXXX0X))                 /*BUG12168*/
+                  CHGVAR VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                          &LIBLST *CAT ')')                                             /*BUG12168*/
+                  CALL    PGM(QCMDEXC) PARM(&CMD 2764)                                  /*BUG12168*/
+/* If Returned Error parameter is equal to 'Y' */                                       /*BUG12168*/
+                                                                                        /*BUG12168*/
+                  IF         COND(&EQERR *EQ 'Y') THEN(DO)                              /*BUG12168*/
+                  CHGJOB     SWS(XXXXXX11)                                              /*BUG12168*/
+                  GOTO       CMDLBL(STDBERR)                                            /*BUG12168*/
+                  ENDDO                                                                 /*BUG12168*/
+/* END DO ,If Returned Error parameter is equal to 'Y' */                               /*BUG12168*/
+                  ELSE                                                                  /*BUG12168*/
+                  CHGVAR     VAR(&STAT)  VALUE('N')                                     /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+ 
+             CALL       PGM(EQNRNPH) PARM(&EQUNT &PGM &EQSPRF +
+                          &EQEPRF &EQERR)
+ 
+             IF         COND(&EQERR *EQ 'N') THEN(CHGJOB SWS(XXXXXX0X))                 /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                             &LIBLST *CAT ')')                                          /*BUG12168*/
+             CALL       PGM(QCMDEXC) PARM(&CMD 2764)                                    /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+/* If Returned Error parameter is equal to 'Y' */
+ 
+             IF         COND(&EQERR *EQ 'Y') THEN(DO)
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             GOTO       CMDLBL(STDBERR)
+ 
+/* END DO ,If Returned Error parameter is equal to 'Y'  */
+ 
+             ENDDO
+             ELSE                                                                       /*BUG12168*/
+             CHGVAR     VAR(&STAT)  VALUE('N')                                          /*BUG12168*/
+                                                                                        /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&PGM *EQ 'C50') THEN(DO)                                   /*BUG12168*/
+             IF         COND(&K0043 *EQ 'NO  ' *AND &K0040 *EQ 'YES ') THEN(DO)         /*BUG12168*/
+                  CALL  PGM(EQNRNPH) PARM(&EQUNT 'C65' &EQSPRF +
+                          &EQEPRF &EQERR)                                               /*BUG12168*/
+                  IF    COND(&EQERR *EQ 'N') THEN(CHGJOB SWS(XXXXXX0X))                 /*BUG12168*/
+                  CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                             &LIBLST *CAT ')')                                          /*BUG12168*/
+                  CALL       PGM(QCMDEXC) PARM(&CMD 2764)                               /*BUG12168*/
+                  IF         COND(&EQERR *EQ 'Y') THEN(DO)                              /*BUG12168*/
+                  CHGJOB     SWS(XXXXXX11)                                              /*BUG12168*/
+                  GOTO       CMDLBL(STDBERR)                                            /*BUG12168*/
+/* END DO ,If Returned Error parameter is equal to 'Y'  */                              /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+                  ENDDO                                                                 /*BUG12168*/
+                  ELSE                                                                  /*BUG12168*/
+                 CHGVAR     VAR(&STAT)  VALUE('N')                                      /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+/* END DO for Restart Flag to 'N' */
+ 
+             ENDDO
+ 
+/*If Restart flag is equal to 'Y' */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+/**/                                                                                    /*BUG12168*/
+                                                                                        /*BUG12168*/
+             IF         COND(&CINEM *EQ 'Y') THEN(DO)                                   /*BUG12168*/
+ 
+             CALL       PGM(EQNRTPH) PARM(&EQUNT &PGM &EQSPRF +
+                          &EQEPRF &EQERR)
+/* If Returned Error parameter is equal to 'Y'  */
+ 
+             IF         COND(&EQERR *EQ 'Y') THEN(DO)
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             GOTO       CMDLBL(STDBERR)
+ 
+/* ENDDO ,If Returned Error parameter is equal to 'Y' */
+ 
+             ENDDO
+                                                                                        /*BUG12168*/
+/* END DO for check if cinemex is switched on */                                        /*BUG12168*/
+                                                                                        /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+                                                                                        /*BUG12168*/
+/* If Returned Error parameter is equal to 'N' */                                       /*BUG12168*/
+                                                                                        /*BUG12168*/
+             IF         COND((&CINEM *EQ 'Y' *AND &EQERR *EQ 'N') +
+                          *OR &CINEM *NE 'Y') THEN(DO)                                  /*BUG12168*/
+                                                                                        /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+/* Call to Equation Close of Business Program */                                        /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+             IF         COND(&PGM *EQ 'C50') THEN(DO)                                   /*BUG12168*/
+             IF         COND(&K0043 *EQ 'YES ' *AND &K0040 *EQ 'YES ') THEN(DO)         /*BUG12168*/
+                   CALL  PGM(EQNRNPH) PARM(&EQUNT 'C65' &EQSPRF +
+                          &EQEPRF &EQERR)                                               /*BUG12168*/
+                  IF    COND(&EQERR *EQ 'N') THEN(CHGJOB SWS(XXXXXX0X))                 /*BUG12168*/
+                   CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                          &LIBLST *CAT ')')                                             /*BUG12168*/
+                   CALL       PGM(QCMDEXC) PARM(&CMD 2764)                              /*BUG12168*/
+/* If Returned Error parameter is equal to 'Y' */                                       /*BUG12168*/
+                   IF         COND(&EQERR *EQ 'Y') THEN(DO)                             /*BUG12168*/
+                   CHGJOB     SWS(XXXXXX11)                                             /*BUG12168*/
+                   GOTO       CMDLBL(STDBERR)                                           /*BUG12168*/
+/* END DO ,If Returned Error parameter is equal to 'Y' */                               /*BUG12168*/
+                   ENDDO                                                                /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+                CALL       PGM(EQNRNPH) PARM(&EQUNT &PGM &EQSPRF +
+                             &EQEPRF &EQERR)                                            /*BUG12168*/
+                  IF    COND(&EQERR *EQ 'N') THEN(CHGJOB SWS(XXXXXX0X))                 /*BUG12168*/
+                CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                                &LIBLST *CAT ')')                                       /*BUG12168*/
+                CALL       PGM(QCMDEXC) PARM(&CMD 2764)                                 /*BUG12168*/
+/* If Returned Error parameter is equal to 'Y' */                                       /*BUG12168*/
+                IF         COND(&EQERR *EQ 'Y') THEN(DO)                                /*BUG12168*/
+                CHGJOB     SWS(XXXXXX11)                                                /*BUG12168*/
+                GOTO       CMDLBL(STDBERR)                                              /*BUG12168*/
+/* ENDDO ,If Returned Error parameter is equal to 'Y' */                                /*BUG12168*/
+                ENDDO                                                                   /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+                IF         COND(&PGM *EQ 'C50') THEN(DO)                                /*BUG12168*/
+                IF         COND(&K0043 *EQ 'NO  ' *AND &K0040 *EQ 'YES ') THEN(DO)      /*BUG12168*/
+                     CALL  PGM(EQNRNPH) PARM(&EQUNT 'C65' &EQSPRF +
+                             &EQEPRF &EQERR)                                            /*BUG12168*/
+             IF         COND(&EQERR *EQ 'N') THEN(CHGJOB SWS(XXXXXX0X))                 /*BUG12168*/
+                     CHGVAR VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                             &LIBLST *CAT ')')                                          /*BUG12168*/
+                     CALL    PGM(QCMDEXC) PARM(&CMD 2764)                               /*BUG12168*/
+/* If Returned Error parameter is equal to 'Y'  */                                      /*BUG12168*/
+                     IF      COND(&EQERR *EQ 'Y') THEN(DO)                              /*BUG12168*/
+                     CHGJOB  SWS(XXXXXX11)                                              /*BUG12168*/
+                     GOTO    CMDLBL(STDBERR)                                            /*BUG12168*/
+/* ENDDO ,If Returned Error parameter is equal to 'Y' */                                /*BUG12168*/
+                     ENDDO                                                              /*BUG12168*/
+                ENDDO                                                                   /*BUG12168*/
+                ENDDO                                                                   /*BUG12168*/
+/* ENDDO ,If cinemex is off or no error after rollback when cinemex is present */       /*BUG12168*/
+                                                                                        /*BUG12168*/
+             ENDDO                                                                      /*BUG12168*/
+ 
+/* END DO for Restart Flag to 'Y' */
+ 
+             ENDDO
+ 
+/**If*Returned*Error*parameter*is*equal*to*'N'**/                                       /*BUG12168*/
+ 
+/**********  IF         COND(&EQERR *EQ 'N') THEN(DO)                       **********/ /*BUG12168*/
+ 
+/**Call*to*Equation*Close*of*Business*Program**/                                        /*BUG12168*/
+ 
+/**********  CALL       PGM(EQNRNPH) PARM(&EQUNT &PGM &EQSPRF +
+                          &EQEPRF &EQERR)                                   **********/ /*BUG12168*/
+ 
+/**If*Returned*Error*parameter*is*equal*to*'Y'***/
+ 
+/**********  IF         COND(&EQERR *EQ 'Y') THEN(DO)                       **********/ /*BUG12168*/
+ 
+/**********  CHGJOB     SWS(XXXXXX11)                                       **********/ /*BUG12168*/
+ 
+/**********  GOTO       CMDLBL(STDBERR)                                     **********/ /*BUG12168*/
+ 
+/**ENDDO*,If*Returned*Error*parameter*is*equal*to*'Y'***/                               /*BUG12168*/
+ 
+/**********  ENDDO                                                          **********/ /*BUG12168*/
+ 
+/* If Returned Error parameter is equal to 'N' */
+ 
+             IF         COND(&EQERR *EQ 'N') THEN(DO)
+ 
+NORUN:                                                                                  /*BUG12168*/
+             CHGVAR     VAR(&STAT)  VALUE('N')
+ 
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &STAT)
+ 
+             GOTO       CMDLBL(END)                                                     /*BUG12168*/
+ 
+/* ENDDO ,If Returned Error parameter is equal to 'N' */
+ 
+             ENDDO
+ 
+ 
+/**********  ENDDO */                                                                   /*BUG12168*/
+ 
+STDBERR:
+/* Standard database error processing   */
+/* Abnormal termination - batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          EQNRNPH ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/**/                                                                                    /*BUG12168*/
+/**********  IF         COND(&CINEM *NE 'Y' *AND &PGM *NE 'C05') +
+                          THEN(DO)     */                                  /*BUG12168*/ /*BUG14351*/
+/* Rollback/Restore Equation Libraries */                                               /*BUG12168*/
+/**********  RSTOBJ OBJ(*ALL) SAVLIB(&LIB3) DEV(*SAVF) SAVF(&LIB2/&SAV1) MBROPT(*ALL) +
+                        RSTLIB(&LIB3)   */                                /*BUG12168*/  /*BUG14351*/
+/**********  MONMSG     MSGID(CPF3707 CPF3762)    */                      /*BUG14162*/ /*BUG14162A*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                /*BUG14162A*/  /*BUG14351*/
+/**********  RSTOBJ OBJ(*ALL) SAVLIB(&LIB4) DEV(*SAVF) SAVF(&LIB2/&SAV2) MBROPT(*ALL) +
+                        RSTLIB(&LIB4)        */                            /*BUG12168*/ /*BUG14351*/
+/**********  MONMSG     MSGID(CPF3707 CPF3762)    */                      /*BUG14162*/ /*BUG14162A*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                /*BUG14162A*/  /*BUG14351*/
+/**********  RSTOBJ OBJ(*ALL) SAVLIB(&LIB5) DEV(*SAVF) SAVF(&LIB2/&SAV3) MBROPT(*ALL) +
+                        RSTLIB(&LIB5)             */                       /*BUG12168*/ /*BUG14351*/
+/**********  MONMSG     MSGID(CPF3707 CPF3762)    */                      /*BUG14162*/ /*BUG14162A*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                 /*BUG14162A*/ /*BUG14351*/
+/**********  RSTOBJ OBJ(*ALL) SAVLIB(&LIB6) DEV(*SAVF) SAVF(&LIB2/&SAV4) MBROPT(*ALL) +
+                        RSTLIB(&LIB6)             */                       /*BUG14179*/ /*BUG14351*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                  /*BUG14179*/ /*BUG14351*/
+                                                                                        /*BUG12168*/
+/**********  ENDDO       */                                                /*BUG12168*/ /*BUG14351*/
+/**/                                                                                    /*BUG12168*/
+             ENDDO
+ 
+/**************************************************************/
+/*                                                            */
+/* A B N O R M A L   T E R M I N A T I O N                    */
+/*                                                            */
+/**************************************************************/
+ 
+ABNOR:
+/**/                                                                                    /*BUG12168*/
+             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                             &LIBLST *CAT ')')                                          /*BUG12168*/
+             CALL       PGM(QCMDEXC) PARM(&CMD 2764)                                    /*BUG12168*/
+/**/                                                                                    /*BUG12168*/
+/**********  IF         COND(&CINEM *NE 'Y' *AND &PGM *NE 'C05') +
+                          THEN(DO)     */                                  /*BUG12168*/ /*BUG14351*/
+/* Rollback/Restore Equation Libraries */                                               /*BUG12168*/
+/**********  RSTOBJ OBJ(*ALL) SAVLIB(&LIB3) DEV(*SAVF) SAVF(&LIB2/&SAV1) MBROPT(*ALL) +
+                        RSTLIB(&LIB3)  */                                 /*BUG12168*/ /*BUG14351*/
+/**********  MONMSG     MSGID(CPF3707 CPF3762)      */                    /*BUG14162*/ /*BUG14162A*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                /*BUG14162A*/ /*BUG14351*/
+/**********  RSTOBJ OBJ(*ALL) SAVLIB(&LIB4) DEV(*SAVF) SAVF(&LIB2/&SAV2) MBROPT(*ALL) +
+                        RSTLIB(&LIB4)  */                                 /*BUG12168*/ /*BUG14351*/
+/**********  MONMSG     MSGID(CPF3707 CPF3762)      */                    /*BUG14162*/ /*BUG14162A*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                /*BUG14162A*/ /*BUG14351*/
+/**********  RSTOBJ OBJ(*ALL) SAVLIB(&LIB5) DEV(*SAVF) SAVF(&LIB2/&SAV3) MBROPT(*ALL) +
+                        RSTLIB(&LIB5)  */                                  /*BUG12168*/ /*BUG14351*/
+/**********  MONMSG     MSGID(CPF3707 CPF3762)      */                    /*BUG14162*/ /*BUG14162A*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                /*BUG14162A*/  /*BUG14351*/
+/**********  RSTOBJ OBJ(*ALL) SAVLIB(&LIB6) DEV(*SAVF) SAVF(&LIB2/&SAV4) MBROPT(*ALL) +
+                        RSTLIB(&LIB6)  */                                  /*BUG14179*/ /*BUG14351*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000) */                  /*BUG14179*/ /*BUG14351*/
+                                                                                        /*BUG12168*/
+/**********  ENDDO     */                                                  /*BUG12168*/ /*BUG14351*/
+/**/                                                                                    /*BUG12168*/
+/* Abnormal termination - batch job */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC0500 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX1X)                                                   /*BUG12168*/
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+ 
+/**/
+             GOTO       CMDLBL(ENDCLPGM)
+/**/
+ ENDCLPGM:   ENDPGM
+/**/

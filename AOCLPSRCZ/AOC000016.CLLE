@@ -1,0 +1,115 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas AO Wrapper for PDCID Write to GPRESERVID')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Application Programming Interfaces module           */
+/*                                                                   */
+/*       AOC000016 - Midas AO Wrapper for PDCID Write to GPRESERVID  */
+/*                   in QTEMP via store procedure PDCIDWRTSP         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD024182           Date 19Dec13              */
+/*                      MD020241A          Date 30Sep13              */
+/*                      MD020241 *CREATE   Date 30Sep13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD024182 - Error appears after confirm complete of Held     */
+/*                  Items                                            */
+/*       MD020241A- Reservation not cancelled due to missing         */
+/*                  GPWTRAPPD record. Setup library list.            */
+/*       MD020241 - Reservation cancellation process for Held Items  */
+/*                  is not accurate and may cancel reservations for  */
+/*                  other transactions having the same account and   */
+/*                  amount. Do HDIT reservation cancellation via     */
+/*                  ABC GLOBAL_TRANSACTION event as per normal.      */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&RETRNMSG &RESERVID)                    */                /*MD020241A*/
+             PGM        PARM(&RETRNMSG &RESERVID &SBS)                                 /*MD020241A*/
+ 
+             DCL        VAR(&RETRNMSG) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&RESERVID) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(2)                                   /*MD020241A*/
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(2764)                                /*MD020241A*/
+             DCL        VAR(&INLLIBL) TYPE(*CHAR) LEN(2750)                            /*MD020241A*/
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(6)                                   /*MD020241A*/
+             DCL        VAR(&JOBDNAME) TYPE(*CHAR) LEN(10)                             /*MD020241A*/
+             DCL        VAR(&JOBD) TYPE(*CHAR) LEN(20)                                 /*MD020241A*/
+             DCL        VAR(&LEN) TYPE(*CHAR) LEN(4)                                   /*MD020241A*/
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(3193)                               /*MD020241A*/
+             DCL        VAR(&OFFSET) TYPE(*DEC) LEN(9 0)                               /*MD020241A*/
+             DCL        VAR(&LIBCNT) TYPE(*DEC) LEN(9 0)                               /*MD020241A*/
+             DCL        VAR(&OFFLEN) TYPE(*DEC) LEN(9 0)                               /*MD020241A*/
+             DCL        VAR(&ERRCDE) TYPE(*CHAR) LEN(4)                                /*MD020241A*/
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                        CMDLBL(ABNOR))
+                                                                                        /*MD024182*/
+             CHGJOB     SWS(00000000)                                                   /*MD024182*/
+                                                                                       /*MD020241A*/
+             CHGVAR     VAR(&LIB) VALUE(&SBS *CAT 'XLIB')                              /*MD020241A*/
+                                                                                       /*MD020241A*/
+             CHKOBJ     OBJ(&LIB/MIDASIC) OBJTYPE(*JOBD)                               /*MD020241A*/
+             MONMSG     MSGID(CPF9801 CPF9802 CPF9810 CPF9820 +
+                          CPF9830 CPF9899) EXEC(GOTO CMDLBL(ABNOR))                    /*MD020241A*/
+                                                                                       /*MD020241A*/
+                                                                                       /*MD020241A*/
+/* Set up parameters for call to IBM API. */                                           /*MD020241A*/
+             CHGVAR     VAR(&JOBDNAME) VALUE('MIDASIC')                                /*MD020241A*/
+             CHGVAR     VAR(&JOBD) VALUE(&JOBDNAME *CAT &LIB)                          /*MD020241A*/
+             CHGVAR     VAR(%BIN(&LEN 1 4)) VALUE(3193)                                /*MD020241A*/
+             CHGVAR     VAR(%BIN(&ERRCDE 1 4)) VALUE(0)                                /*MD020241A*/
+                                                                                       /*MD020241A*/
+/* Use API to access the job description library list. */                              /*MD020241A*/
+             CALL       PGM(QWDRJOBD) PARM(&PARM &LEN JOBD0100 &JOBD +
+                          &ERRCDE)                                                     /*MD020241A*/
+                                                                                       /*MD020241A*/
+ INLLIBL:    CHGVAR     &OFFSET %BIN(&PARM 361 4)                                      /*MD020241A*/
+             CHGVAR     VAR(&OFFSET) VALUE(&OFFSET + 1)                                /*MD020241A*/
+             CHGVAR     VAR(&LIBCNT) VALUE(%BIN(&PARM 365 4))                          /*MD020241A*/
+             CHGVAR     VAR(&OFFLEN) VALUE(11 * &LIBCNT)                               /*MD020241A*/
+             CHGVAR     VAR(&INLLIBL) VALUE(%SST(&PARM &OFFSET +
+                          &OFFLEN))                                                    /*MD020241A*/
+             MONMSG     MSGID(MCH3601)                                                 /*MD020241A*/
+                                                                                       /*MD020241A*/
+             CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
+                             &INLLIBL *CAT ')')                                        /*MD020241A*/
+                                                                                       /*MD020241A*/
+             CALL       PGM(QCMDEXC) PARM(&CMD 2764)                                   /*MD020241A*/
+ 
+/* Check if the reservation ID dataarea exists, if not create it.  This will hold the */
+/* reservation ID parameter                                                           */
+ 
+             CHKOBJ     OBJ(QTEMP/GPRESERVID) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/GPRESERVID) TYPE(*CHAR) LEN(15))
+             CHGDTAARA  DTAARA(QTEMP/GPRESERVID) VALUE(&RESERVID)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+ /* Send error message to MOPERQ */
+ 
+             SNDPGMMSG  MSG('Program AOC000016 ended abnormally - see joblog') +
+                          TOMSGQ(MOPERQ)
+             CHGVAR     VAR(&RETRNMSG) VALUE('Error in call to +
+                          AOC000016 program')
+ 
+END:
+             ENDPGM

@@ -1,0 +1,246 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER Retrieve General Block Sec. Inds')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6712 - SE Retrieve General Block Security Indicators       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU017             Date 03Apr98               *
+     F*                 CSE007             Date 17Dec97               *
+     F*                 S01496             Date 03Oct94               *
+     F*                 E61731             Date 13Oct93               *
+     F*                 S10978             Date 13Apr93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*  CSE007 - Corporate Actions                                   *
+     F*  S01496 - Incorporation of JYSKE Enhancements (S10978)        *
+     F*  E61731 - GENERAL BLOCK TO 'Y' ONLY FOR BLOCK NOT MATURED     *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*           * GENERAL BLOCKS. . . . . . . . . . . : Y           *
+     F*           * SPECIFIC BLOCKS ON ALL THE POSITION : N           *
+     F*           * SPECIFIC BLOCKS . . . . . . . . . . : N           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F**   SE BLOCKED POSITION PREFIX - VD
+     FSEBLKPL3IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                 ------------------------                        *
+     F**                                                                 *
+     F**       41 - RECORD FOUND ON SEBLKPL3 FILE                        *
+     F**                                                                 *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/EJECT
+     I********************************************************************
+      *                                                                   CSE007
+     ISECOBKD0                                                            CSE007
+     I              MUBRCD                          VDBRCD                CSE007
+     I              MUBLTY                          VDBLTY                CSE007
+     I              MUSESN                          VDSESN                CSE007
+     I              MUBEDT                          VDBEDT                CSE007
+     I              MUBSTT                          VDBSTT                CSE007
+     I*                                                                   E61731
+     I**   RUNDAT DATA AREA                                               E61731
+     IRUNDAT      DS                             13                       E61731
+     I                                    P   8  100AGRDNB                E61731
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR P001
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR P002
+     C*
+     C**   END PROGRAM
+     C*
+     C                     MOVE '0'       *INLR
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**          INDEX TO SUBROUTINES                                   *
+     C**         ----------------------                                  *
+     C**                                                                 *
+     C**   1.  P001   - INITIAL PROCESSING                               *
+     C**   2.  P002   - MAIN PROCESSING                                  *
+     C**   3.  #PSSR  - PROGRAM ERROR HANDLING ROUTINE                   *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** P001      - INITIAL PROCESSING                                  *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           P001      BEGSR
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*
+     C* DEFINE KEY FIELDS
+     C*
+     C           *LIKE     DEFN VDBRCD    @KBRCD
+     C           *LIKE     DEFN VDBLTY    @KBLTY
+     C           *LIKE     DEFN VDBEDT    @KBEDT                          E61731
+     C*
+     C* Key list for LF/SEBLKPL3
+     C*
+     C           @KEY1     KLIST
+     C                     KFLD           @KBRCD
+     C                     KFLD           @PSESN
+     C                     KFLD           @KBLTY
+     C                     KFLD           @KBEDT                          E61731
+     C*
+     C* RECEIVE INPUT PARAMETERS
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           @PBRCD  3
+     C                     PARM           @PSESN 10
+     C                     PARM           @PSPGB  1
+     C                     PARM           @PSSGB  1
+     C*
+     C                     MOVEL'N'       @PSPGB
+     C                     MOVEL'N'       @PSSGB
+     C*
+     C**   CHECK PARAMETERS EXIST
+     C*
+     C           @PBRCD    IFEQ *BLANK                     *B1
+     C           @PSESN    OREQ *BLANK
+     C                     MOVE '0'       *INLR
+     C                     RETRN
+     C                     END                             *E1
+     C*                                                                   E61731
+     C**   RETRIEVE RUN DAY NUMBER IN DATA AREA RUNDAT                    E61731
+     C*                                                                   E61731
+     C           *NAMVAR   DEFN           RUNDAT                          E61731
+     C                     IN   RUNDAT                                    E61731
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** P002      - MAIN PROCESSING                                     *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           P002      BEGSR
+     C*
+     C                     MOVE @PBRCD    @KBRCD
+     C*
+     C                     MOVEL'P'       @KBLTY
+     C                     Z-ADDAGRDNB    @KBEDT                          E61731
+     C*                                                                   E61731
+     C***********@KEY1     SETLLSEBLKPL3                 41               E61731
+     C           @KEY1     SETLLSEBLKPL3                                  E61731
+     C                     READ SEBLKPL3                 41               E61731
+     C*
+     C************IN41     IFEQ '1'                        *B1            E61731
+     C           *IN41     IFEQ '0'                        *B1            E61731
+     C           VDBRCD    ANDEQ@KBRCD                                    E61731
+     C           VDSESN    ANDEQ@PSESN                                    E61731
+     C           VDBLTY    ANDEQ@KBLTY                                    E61731
+     C           VDBSTT    ANDLE@KBEDT                                    CSE007
+     C           VDBEDT    ANDGE@KBEDT                                    CSE007
+     C                     MOVEL'Y'       @PSPGB
+     C                     END                             *E1
+     C*
+     C                     MOVEL'S'       @KBLTY
+     C*                                                                   E61731
+     C***********@KEY1     SETLLSEBLKPL3                 41               E61731
+     C           @KEY1     SETLLSEBLKPL3                                  E61731
+     C                     READ SEBLKPL3                 41               E61731
+     C*
+     C************IN41     IFEQ '1'                        *B1            E61731
+     C           *IN41     IFEQ '0'                        *B1            E61731
+     C           VDBRCD    ANDEQ@KBRCD                                    E61731
+     C           VDSESN    ANDEQ@PSESN                                    E61731
+     C           VDBLTY    ANDEQ@KBLTY                                    E61731
+     C           VDBSTT    ANDLE@KBEDT                                    CSE007
+     C           VDBEDT    ANDGE@KBEDT                                    CSE007
+     C                     MOVEL'Y'       @PSSGB
+     C                     END                             *E1
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR     - PROGRAM ERROR HANDLING ROUTINE                      *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY -                                                     *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001

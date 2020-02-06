@@ -1,0 +1,434 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Last Amend No. BUG16738A          Date 04Apr08               *
+      *  Prev Amend No. BUG13078           Date 31Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 10Mar06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+     C*                 184553             Date  04Oct00              *
+      *                 180663             Date  04Oct00              *
+      * Midas DBA 3.03 -----------------------------------------------*
+     C*                 140770             Date  13Aug00              *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*                 CRT002  *CREATE    DATE  1DEC95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  BUG16738A- Error with Selling travellers cqs if Issuer is an *
+     C*             Alphanumeric Customer. Recompile due to changes in*
+     C*             RBSLTCC1                                          *
+     C*  BUG13078 - DBERRCTL-Database error control                   *
+      *  CSD027 - Change Customer Number to alpha.                    *
+     C*  184553 - Additional code alongside 180663 to ensure a range  *
+     C*           of travellers cheques can be processed correctly.   *
+     C*  180663 - Process a range of cheques copied in RBSLTCF1 and   *
+     C*           RBSLTCC1. All cheques must be in the same denom.    *
+     C*           New file RETCRCL2. Fix patterned after 134981.      *
+     C*  140770 - When record found in RETCRCD0, do not set           *
+     C*           ON the error indicator *IN47 .                      *
+     C*  CRT002 - RBA Interface.                                      *
+     C*                                                               *
+     C*****************************************************************
+      *                                                               *
+      *            VALCQS - Validate Cheque Serial No and amt         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                   -                                           *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           VALCQS    BEGSR                           ** VALCHS **
+      *
+      ** Travellers cheque register control keylist
+      *
+     C           KRCRC     KLIST
+     C                     KFLD           H@CINN
+     C                     KFLD           H@CCY
+     C                     KFLD           @IVLN
+     C                     KFLD           H@STCN
+      *
+     C           KRCRD     KLIST
+     C                     KFLD           H@CINN
+     C                     KFLD           H@CSNN
+      *
+     C           KRCRE     KLIST                                          180663
+     C                     KFLD           H@CINN                          180663
+     C                     KFLD           H@CCY                           180663
+     C                     KFLD           H@STCN                          180663
+      *
+     C           KRCRF     KLIST                                          184553
+     C                     KFLD           H@CINN                          184553
+     C                     KFLD           H@CCY                           184553
+      *                                                                   184553
+     C           KRCRG     KLIST                                          184553
+     C                     KFLD           RNISSU                          184553
+     C                     KFLD           WOTCSN                          184553
+      *                                                                   184553
+     C           KRCRH     KLIST                                          184553
+     C                     KFLD           H@CINN                          184553
+     C                     KFLD           H@CCY                           184553
+     C                     KFLD           RNDNOM                          184553
+     C                     KFLD           WNSTCN                          184553
+      *                                                                   184553
+     C           KRCRK     KLIST                                          184553
+     C                     KFLD           H@CINN                          184553
+     C                     KFLD           H@CCY                           184553
+     C                     KFLD           RNDNOM                          184553
+     C                     KFLD           WOTCSN                          184553
+      *                                                                   184553
+     C                     MOVELH@CIN     H@CIN   6
+     C                     MOVELH@CCY     H@CCY   3
+     C                     MOVELH@AMT     H@AMT  14
+     C                     MOVELH@CSN     H@CSN  12
+     C                     Z-ADDH@NDC     H@NDC   10
+      *
+     C                     Z-ADD0         H@STCN 120
+      *
+      ***Right*justify*cheque*issuer*no*field*
+      *
+     C**********           Z-ADD0         ZADEC                                            BUG16738A
+     C**********           Z-ADD6         ZADIG                                            BUG16738A
+     C**********           MOVEL*BLANK    ZFIELD                                           BUG16738A
+     C**********           MOVE H@CIN     ZFIELD                                           BUG16738A
+     C**********           EXSR ZALIGN                                                     BUG16738A
+     C**********           MOVE ZFIELD    H@CIN                                            BUG16738A
+      *
+      ***Move*H@CIN*to*an*equivalent*numeric*field*                                           CSD027
+     C**********           MOVE H@CIN     H@CINN  60                                          CSD027
+     C                     MOVE H@CIN     H@CINN  6                                           CSD027
+      *
+      ** Right justify check serial no field
+      *
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD12        ZADIG
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVE H@CSN     ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    H@CSN
+      *
+      ** If error found?  Set up error message
+     C           *IN99     IFEQ '1'
+     C           ZFIELD    OREQ *ZERO
+     C                     MOVE '1'       *IN47
+     C                     MOVE 'USR0182' @MSGID
+     C                     EXSR SNDMSG
+      *
+      ** Move H@CSN to an equivalent numeric field
+      *
+     C                     ELSE
+     C                     MOVE H@CSN     H@CSNN 120
+     C                     END
+      *
+     C           PMODE     IFEQ 'P'
+     C           *IN47     ANDEQ'1'
+     C                     GOTO EXTCQS
+     C                     END
+      *
+      ** Remove the decimal place of the amount if any.  This amount
+      ** should have been previously validated, right justified, and
+      ** corresponding decimal place added if any, before the call
+      ** to this subroutine.
+      *
+     C                     MOVE *ZERO     @DVLN
+     C                     MOVE *BLANKS   @IVL13
+     C                     Z-ADD0         @IVLE   30
+      *
+     C           H@NDC     IFEQ 0
+     C                     MOVE H@AMT     @IVL13
+     C                     MOVEL@IVL13    @IVLE
+     C                     END
+     C           H@NDC     IFEQ 1
+     C                     MOVE H@AMT     @DVL1
+     C                     MOVELH@AMT     @IVL12
+     C                     MOVEL@IVL13    @IVLE
+     C                     END
+     C           H@NDC     IFEQ 2
+     C                     MOVE H@AMT     @DVL2
+     C                     MOVELH@AMT     @IVL11
+     C                     MOVEL@IVL13    @IVLE
+     C                     END
+     C           H@NDC     IFEQ 3
+     C                     MOVE H@AMT     @DVL3
+     C                     MOVELH@AMT     @IVL10
+     C                     END
+      *
+      ** Check that decimal value is 0.
+      *
+     C           @DVLN     IFNE 0
+     C                     MOVE '1'       *IN49
+     C                     MOVE 'USR0186' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C           PMODE     IFEQ 'P'
+     C           *IN49     ANDEQ'1'
+     C                     GOTO EXTCQS
+     C                     END
+      *
+      ** Check that integer value will not exceed 10 digits.
+      *
+     C           @IVLE     IFNE 0
+     C                     MOVE '1'       *IN49
+     C                     MOVE 'USR0186' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+      ** If there's no error in the numeric format of the cheque
+      ** issuer no and that of the amount, access RETCRCPD to
+      ** ensure that the range exist for the chq serial no
+      *
+     C           *IN47     IFEQ '0'
+     C           *IN49     ANDEQ'0'
+      *
+      ** Position on first cheque book for issuer                         180663
+      *                                                                   180663
+     C********** KRCRC     SETLLRETCRCD0             70                   180663
+     C           KRCRE     SETLLRETCRCD0             70                   180663
+      *
+      ** If no record found, error.
+      *
+     C           *IN70     IFEQ '1'
+     C                     MOVE '1'       *IN47
+     C                     MOVE 'USR0183' @MSGID
+     C                     EXSR SNDMSG
+     C                     ELSE
+      *
+      ** If no error in SETLL, record could pointed to could either be equal or
+      ** less in value.
+      *
+      ** Find cheque book start number for cheque entered                 180663
+      *                                                                   180663
+     C                     MOVE H@CSN     @@CSN  120                      180663
+     C**********           MOVE '1'       *IN47                           140770
+     C********** @@CSN     DOUGERNSTCN                             180663 184553
+     C********** @@CSN     ANDLERNETCN                             180663 184553
+     C                     MOVE *OFF      *IN47                           140770
+     C                     READ RETCRCD0                 70
+     C**********           END                                     180663 184553
+      *                                                                   184553
+      ** Ensure that the correct cheque book has been found in accordance 184553
+      ** to the starting cheque number.                                   184553
+      *                                                                   184553
+     C           H@CSNN    DOWGTRNETCN                                    184553
+     C           *IN70     ANDEQ'0'                                       184553
+     C           KRCRF     READERETCRCD0                 70               184553
+     C                     ENDDO                                          184553
+      *                                                                   184553
+     C           H@CSNN    IFLT RNSTCN                                    184553
+     C                     SETON                     70                   184553
+     C                     ENDIF                                          184553
+      *                                                                   184553
+      ** If fail on read                                                  184553
+      *                                                                   184553
+     C           *IN70     IFEQ '1'                                       184553
+     C                     MOVE '1'       *IN47                           184553
+     C                     MOVE 'USR0183' @MSGID                          184553
+     C                     EXSR SNDMSG                                    184553
+     C                     END                                            184553
+      *                                                                   184553
+     C                     END
+      *
+     C           *IN70     IFEQ '0'                                       180663
+     C           H@CINN    ANDEQRNISSU                                    180663
+     C           H@CCY     ANDEQRNCCY                                     180663
+     C                     MOVE '0'       *IN47                           180663
+     C                     MOVE RNSTCN    H@STCN                          180663
+     C                     END                                            180663
+      *                                                                   180663
+     C           PMODE     IFEQ 'P'
+     C           *IN70     ANDEQ'1'
+     C                     GOTO EXTCQS
+     C                     END
+      *                                                                   180663
+     C                     Z-ADD0         @@AMT  130                      180663
+      *                                                                   180663
+      ** Amount must be in denomination                                   180663
+      *                                                                   180663
+     C           *IN70     IFEQ '0'                                       180663
+     C           @IVLN     DIV  RNDNOM    @@DIV  130                      180663
+     C                     MVR            @@REM  130                      180663
+     C           @@REM     IFNE 0                                         180663
+     C                     MOVE '1'       *IN53                           180663
+     C                     END                                            180663
+     C                     END                                            180663
+      *                                                                   180663
+      ** Cheque book can not be sold                                      180663
+      *                                                                   180663
+     C           RNBSTS    IFEQ 'S'                                       180663
+     C                     MOVE '1'       *IN54                           180663
+     C                     END                                            180663
+      *                                                                   184553
+      ** Position on first cheque book                                    184553
+      *                                                                   184553
+     C                     Z-ADDRNSTCN    WNSTCN 120                      184553
+     C           KRCRH     SETLLRETCRCBK             71                   184553
+     C                     READ RETCRCBK                 71               184553
+     C                     Z-ADD0         WSQSTP  10                      184553
+     C                     Z-ADD0         WSQAVL  20                      184553
+      *                                                                   184553
+      ** Within each cheque book that has more than one cheque sold,      184553
+      ** work out the number of cheques that are not sold and are         184553
+      ** available in a sequence within the book                          184553
+      *                                                                   184553
+     C           *IN71     DOWEQ*OFF                                      184553
+     C           WSQSTP    ANDEQ0                                         184553
+     C           RNBSTS    IFEQ 'P'                                       184553
+     C           RNBSTS    OREQ 'S'                                       184553
+     C           KSERN     SETLLRETCRDD0                                  184553
+     C                     READ RETCRDD0                 71               184553
+     C                     Z-ADDROTCSN    WOTCSN 120                      184553
+     C                     SETOF                     71                   184553
+     C           WOTCSN    DOWLERNETCN                                    184553
+     C           WSQSTP    ANDEQ0                                         184553
+     C           *IN71     IFEQ *OFF                                      184553
+     C           WOTCSN    IFGE H@CSNN                                    184553
+     C                     ADD  1         WSQSTP                          184553
+     C           WOTCSN    SUB  H@CSNN    WSQAVL                          184553
+     C                     ELSE                                           184553
+     C           RNETCN    ADD  1         WNETCN  20                      184553
+     C           WNETCN    SUB  H@CSNN    WSQAVL                          184553
+     C           H@CSNN    SUB  1         WOTCSN                          184553
+     C                     ENDIF                                          184553
+     C                     ENDIF                                          184553
+     C                     ADD  1         WOTCSN                          184553
+     C           KRCRG     CHAINRETCRDD0             71                   184553
+     C                     ENDDO                                          184553
+     C                     ENDIF                                          184553
+      *                                                                   184553
+      **  If the current cheque book is marked as unsold then all the     184553
+      **  sequential cheques in it are availble for use.   Then position  184553
+      **  on the cheque book whose starting cheque number is sequentially 184553
+      **  the next cheque for that issuer and denomination, i.e. look for 184553
+      **  the next cheque book.                                           184553
+      *                                                                   184553
+     C           RNBSTS    IFEQ 'U'                                       184553
+     C                     Z-ADDRNETCN    WNSTCN                          184553
+     C                     ADD  1         WNSTCN                          184553
+     C           WNSTCN    SUB  H@CSNN    WSQAVL                          184553
+     C           KRCRH     READERETCRCBK                 71               184553
+     C                     ELSE                                           184553
+     C           KRCRK     READERETCRCBK                 71               184553
+     C                     ENDIF                                          184553
+     C                     ENDDO                                          184553
+      *                                                                   184553
+      ** Calculate how many cheques are needed                            184553
+      *                                                                   184553
+     C           *IN70     IFEQ '0'                                                         BUG13078
+     C           @IVLN     DIV  RNDNOM    RNBRND  30                      184553
+     C                     ENDIF                                                            BUG13078
+      *                                                                   184553
+      ** When in cashier check to see if the number of cheques the user   184553
+      ** has entered matches the number of cheques needed corresponding   184553
+      ** to the cash amount of travellers cheques.                        184553
+      *                                                                   184553
+     C           PMODE     IFEQ 'P'                                       184553
+     C           WCQNUM    IFNE RNBRND                                    184553
+     C                     MOVE '1'       *IN53                           184553
+     C                     MOVE 'USR0192' @MSGID                          184553
+     C                     EXSR SNDMSG                                    184553
+     C                     END                                            184553
+     C                     END                                            184553
+      *                                                                   184553
+      *                                                                   184553
+      ** Check to see if the number of cheques that have not been sold    184553
+      ** and are available in a sequence is not less than quantity that   184553
+      ** is needed for the transaction.  If not then send an error msg.   184553
+      *                                                                   184553
+     C           WSQAVL    IFLT RNBRND                                    184553
+     C                     MOVE '1'       *IN47                           184553
+     C                     MOVE 'USR0128' @MSGID                          184553
+     C                     EXSR SNDMSG                                    184553
+     C                     END                                            184553
+      *                                                                   180663
+      ** Loop until amount exceeds or is equal to input amount            180663
+      *                                                                   180663
+     C           *IN70     DOWEQ'0'                                       180663
+     C           *IN47     ANDEQ'0'                                       180663
+     C           *IN53     ANDEQ'0'                                       180663
+     C           *IN54     ANDEQ'0'                                       180663
+     C           H@CINN    ANDEQRNISSU                                    180663
+     C           H@CCY     ANDEQRNCCY                                     180663
+     C           @@AMT     ANDGE@IVLN                                     180663
+      *                                                                   180663
+     C           RNNOTC    MULT RNDNOM    @@BAMT 130                      180663
+     C                     ADD  @@BAMT    @@AMT                           180663
+      *                                                                   180663
+      ** Monitor for sold cheque books within range                       180663
+      *                                                                   180663
+     C           RNBSTS    IFEQ 'S'                                       180663
+     C                     SUB  @@BAMT    @@AMT                           180663
+     C                     END                                            180663
+      *                                                                   180663
+      ** Add up sold cheques in partially sold cheque book                180663
+      *                                                                   180663
+     C           RNBSTS    IFEQ 'P'                                       180663
+     C           KSERN     SETLLRETCRDD0             71                   180663
+     C                     READ RETCRDD0                 71               180663
+      *                                                                   180663
+     C           ROISSU    DOWEQRNISSU                                    180663
+     C           ROTCSN    ANDLERNETCN                                    180663
+     C           *IN71     ANDEQ'0'                                       180663
+     C                     SUB  RNDNOM    @@AMT                           180663
+     C                     READ RETCRDD0                 71               180663
+     C                     END                                            180663
+     C                     END                                            180663
+      *                                                                   180663
+     C                     READ RETCRCD0                 70               180663
+     C                     END                                            180663
+      *
+      ***If*not*EOF/no*error*in*SETLL,*check*if*within*range.*************180663
+      *                                                                   180663
+     C********** *IN70     DOWEQ'0'                                       180663
+     C********** *IN47     ANDEQ'1'                                       180663
+     C********** H@CINN    ANDEQRNISSU                                    180663
+     C********** H@CCY     ANDEQRNCCY                                     180663
+     C********** @IVLN     ANDEQRNDNOM                                    180663
+      *
+     C********** H@CSNN    IFGE RNSTCN                                    180663
+     C********** H@CSNN    ANDLERNETCN                                    180663
+     C**********           MOVE '0'       *IN47                           180663
+     C**********           ELSE                                           180663
+     C**********           READ RETCRCD0                 70               180663
+     C**********           END                                            180663
+     C**********           END                                            180663
+      *
+     C           *IN47     IFEQ '1'
+     C                     MOVE 'USR0183' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C           *IN53     IFEQ '1'                                       180663
+     C                     MOVE 'USR0187' @MSGID                          180663
+     C                     EXSR SNDMSG                                    180663
+     C                     END                                            180663
+      *                                                                   180663
+     C           *IN54     IFEQ '1'                                       180663
+     C                     MOVE 'USR0188' @MSGID                          180663
+     C                     EXSR SNDMSG                                    180663
+     C                     END                                            180663
+      *                                                                   180663
+      ** If the cheque serial no is in the existing range, check if
+      ** the serial no combined with the issuer no, does not
+      ** exist in RETCRDPD.
+      *
+     C           *IN47     IFEQ '0'
+     C           *IN53     ANDEQ'0'                                       180663
+     C           *IN54     ANDEQ'0'                                       180663
+     C           KRCRD     CHAINRETCRDD0             70
+     C           *IN70     IFEQ '0'
+     C                     MOVE '1'       *IN47
+     C                     MOVE 'USR0184' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C           EXTCQS    ENDSR
+      *****************************************************************

@@ -1,0 +1,118 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#COLLATA - Global Collateral Allocation                             */
+/*                                                                             */
+/*       (c) Finastra International Limited 2003                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CLE148             Date 23Jul12                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BUG11623           Date 27Jun06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      BUG5404            Date 16Jan05                        */
+/*                      CLE040             Date 05Jul04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CLE148 - Alpha Loan Reference                                         */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11623 - Sequence No. column should be included (Recompile)         */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CLE040 - Collateralised Lending Phase 2 (Recompile)                   */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+   CACREF, CAFRNT, CAREPA, CATMST, CABRCA, CACNUM, CAAPCT, CAPCNT,              :
+   CAAMT, CAPRTY, CAMODS, CASBRC, CASCCY, CACHTP, CDCCY,                        :
+***DIGITS(CACNUM)*AS*PADCACNUM,*************************************************:             CSD027
+***CASE*WHEN*CAFCUS*=*0*THEN*'*'*ELSE*DIGITS(CAFCUS)*END*AS*PADCAFCUS,**********:             CSD027
+          CACNUM  AS PADCACNUM,                                                 :             CSD027
+   CASE WHEN CAFCUS = '' THEN ' ' ELSE        CAFCUS  END AS PADCAFCUS,         :             CSD027
+   CASE WHEN CAFTYP = 0 THEN ' ' ELSE DIGITS(CAFTYP) END AS PADCAFTYP,          :
+   CASE WHEN CAFSEQ = 0 THEN ' ' ELSE DIGITS(CAFSEQ) END AS PADCAFSEQ,          :
+***CASE*WHEN*CALNLM*=*0*THEN*'*'*ELSE*DIGITS(CALNLM)*END*AS*PADCALNLM,**********:             CLE148
+   CALNLM AS PADCALNLM,                                                         :             CLE148
+***CASE*WHEN*CASCNM*=*0*THEN*'*'*ELSE*DIGITS(CASCNM)*END*AS*PADCASCNM,**********:             CSD027
+   CASE WHEN CASCNM = '' THEN ' ' ELSE        CASCNM  END AS PADCASCNM,         :             CSD027
+   CASE WHEN CASACD = 0 THEN ' ' ELSE DIGITS(CASACD) END AS PADCASACD,          :
+   CASE WHEN CASSEQ = 0 THEN ' ' ELSE DIGITS(CASSEQ) END AS PADCASSEQ,          :
+   CASE WHEN CASACN = 0 THEN ' ' ELSE DIGITS(CASACN) END AS PADCASACN,          :
+   CASE WHEN CAPRTY = 0 THEN ' ' ELSE DIGITS(CAPRTY) END AS PADCAPRTY,          :
+***CASE*WHEN*CAFCUS*=*0*THEN*'*'*ELSE*CHAR(CAST*(DIGITS(CAFCUS)*AS**************:             CSD027
+***CHAR(6))*CONCAT*CAST*(DIGITS(CAFTYP)*AS*CHAR*(3))*CONCAT*CAST****************:             CSD027
+   CASE WHEN CAFCUS = '' THEN ' ' ELSE    (             CAFCUS                  :             CSD027
+            CONCAT CAST (DIGITS(CAFTYP) AS CHAR (3)) CONCAT CAST                :             CSD027
+   (DIGITS(CAFSEQ) AS CHAR(2))) END AS CAFCTY,                                  :
+***CASE*WHEN*CASCNM*=*0*THEN*'*'*ELSE*CHAR((CASBRC)*CONCAT*CAST*****************:             CSD027
+***(DIGITS(CASCNM)*AS*CHAR*(6))*CONCAT*(CASCCY)*CONCAT CAST*********************:             CSD027
+   CASE WHEN CASCNM = '' THEN ' ' ELSE CHAR((CASBRC) CONCAT                     :             CSD027
+           CASCNM               CONCAT (CASCCY) CONCAT CAST                     :             CSD027
+   (DIGITS(CASACD) AS CHAR(4)) CONCAT CAST (DIGITS(CASSEQ) AS CHAR (2)))        :
+   END AS CAREAC,                                                               :
+   CASE WHEN CALCD=0 THEN NULL ELSE DATE(CALCD+719892) END AS FCALCD,           :
+   DEC(CAAMT*C1.SCALING,31,4) AS "SCAAMT",                                      :
+   DEC(CAAMT*C1.SCALING*C1.RATE,31,4) AS "BSCAAMT",                             :
+   A8ZONE AS CUSTZONE, V_GPGLCUSL.*                                             :
+  FROM GZGLCOLAPD                                                               :
+  LEFT JOIN GZGLCOLLPD ON CACREF = CDCREF                                       :
+  LEFT JOIN GZSDBRCHPD ON CABRCA = A8BRCD                                       :
+**LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(CACNUM)***********:BUG1912
+  LEFT JOIN GPGLCUSL V_GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = CACNUM          :BUG1912
+  LEFT JOIN V_GLOBRATE C1 ON C1.CCY=CDCCY;                                      :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+   (CAFCTY IS 'Facility            Reference           No.',                    :
+    CAREAC IS 'Account             Reference           No.');                   :
+                                                                                :
+   LABEL ON COLUMN **********/**********                                        :
+   (CAFCTY TEXT IS 'Facility Reference No.',                                    :
+    CAREAC TEXT IS 'Account Reference No.');                                    :
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADCACNUM  AS CACNUM     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD PADCAFCUS  AS CAFCUS     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD PADCAFTYP  AS CAFTYP     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD PADCAFSEQ  AS CAFSEQ     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD PADCALNLM  AS CALNLM     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD PADCASCNM  AS CASCNM     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD PADCASACD  AS CASACD     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD PADCASSEQ  AS CASSEQ     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD PADCASACN  AS CASACN     USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD FCALCD     AS CALCD      USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD SCAAMT     AS CAAMT      USING GZGLCOLAPD                      :
+ * DESCRIBEFIELD BSCAAMT    AS CAAMT      USING GZGLCOLAPD (BASECCY)            :
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Global collateral allocation - GZGLCOLAPD';                     :
+                                                                                :

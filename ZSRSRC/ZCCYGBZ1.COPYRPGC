@@ -1,0 +1,107 @@
+     C*********************************************************************
+     C/EJECT                                                              *
+     C**                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*+ LAST AMEND NO. 065686             DATE 15JUL93                   *
+     C**                                                                  *
+     C**                                                                  *
+     C** 065686  -  OF FROM AND TO CURRENCIES ARE EQUAL, THEN THE         *
+     C**            CCY DECIMAL PLACES PARAMETER (ZSCYDP) IS NOT          *
+     C**            SET UP.                                               *
+     C**                                                                  *
+     C*********************************************************************
+     C**                                                                  *
+     C** ZCCYGB subroutine to convert an amount in one currency to an     *
+     C** amount in another currency using the Swiss Konventionkurse       *
+     C** exchange rates.                                                  *
+     C**     Input fields:   ZAMTF  15/0   Amount in 'From' Currency      *
+     C**                     ZCCYF  3      'From' Currency                *
+     C**                     ZCCYT  3      'To' Currency                  *
+     C**                     ZCCYB  3      Base Currency                  *
+     C**                                                                  *
+     C**     Output fields:  ZAMTT  ]5/0   Amount in 'To' Currency        *
+     C**                     ZCRSRT 13/8   Cross Exchange Rate            *
+     C**                     ZCRSMD 1      Cross Rate Mult/Div Ind.       *
+     C**                     ZSCYDP 1/0    Settle. Ccy Dec Places         *
+     C**                                                                  *
+     C**     If Indicator 85 is set after calling this subroutine         *
+     C**     standard Database Error processing must be performed         *
+     C**                                                                  *
+     C**     Also Requires:  Currency file (SDCURRJ0)                     *
+     C**                                                                  *
+     C**     Calls:   ZCCYCN                                              *
+     C**                                                                  *
+     C           ZCCYGB    BEGSR                           **  ZCCYGB     *
+     C*
+     C** DEFINE WORK FIELDS
+     C                     Z-ADDZAMTF     ZAMTF  150
+     C                     MOVE ZCCYF     ZCCYF   3
+     C                     MOVE ZCCYT     ZCCYT   3
+     C                     MOVE ZCCYB     ZCCYB   3
+     C                     Z-ADDZAMTT     ZAMTT  150
+     C                     Z-ADDZCRSRT    ZCRSRT 138
+     C                     MOVE ZCRSMD    ZCRSMD  1
+     C                     MOVE ZSCYDP    ZSCYDP  10
+     C                     MOVE 'N'       ZZIND   1
+     C*
+     C** INITIALISE INDICATOR FOR DATABASE ERROR
+     C                     MOVE '0'       *IN85
+     C*
+     C** SET UP FROM CURRENCY MULT/DIV IND, RATE AND CURRENCY DECIMALS
+     C           ZCCYF     IFEQ ZCCYT                      B1
+     C                     Z-ADDZAMTF     ZAMTT
+     C                     Z-ADD1         ZCRSRT
+     C                     MOVE 'M'       ZCRSMD
+     C*                                                                   065686
+     C** ACCESS THE CURRENCY FILE USING THE 'TO' CCY TO OBTAIN DECIMAL    065686
+     C** PLACES                                                           065686
+     C           ZCCYT     CHAINSDCURRL0             80                   065686
+     C*                                                                   065686
+     C** IF RECORD NOT FOUND THEN DB ERROR                                065686
+     C*                                                                   065686
+     C           *IN80     IFEQ '1'                        B2             065686
+     C                     MOVE '1'       *IN85                        ***065686
+     C                     ELSE                            X2             065686
+     C                     Z-ADDA6NBDP    ZSCYDP                          065686
+     C                     END                             E2             065686
+     C*
+     C                     ELSE                            X1
+     C*
+     C** ACCESS THE CURRENCY FILE USING THE 'TO' CCY TO OBTAIN THE SORT
+     C** SEQUENCE
+     C           ZCCYT     CHAINSDCURRL0             80
+     C*
+     C** IF RECORD NOT FOUND THEN DB ERROR
+     C*
+     C           *IN80     IFEQ '1'                        B2
+     C                     MOVE '1'       *IN85                        ***
+     C                     ELSE                            X2
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     MOVE A6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZSCYDP
+     C                     END                             E2
+     C*
+     C** ACCESS THE CURRENCY FILE USING THE 'FROM' CCY
+     C           ZCCYF     CHAINSDCURRL0             80
+     C*
+     C** IF RECORD NOT FOUND OR LAST CHANGE TYPE = 'D' THEN DB ERROR
+     C*
+     C           *IN80     IFEQ '1'                        B2
+     C                     MOVE '1'       *IN85                        ****
+     C                     ELSE                            X2
+     C*
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     END                             E2
+     C*
+     C                     EXSR ZCCYCN
+     C                     END                             E1
+     C*
+     C                     ENDSR

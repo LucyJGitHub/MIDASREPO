@@ -1,0 +1,454 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Corporate action allocation resume prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7549P - Corporate Action Allocation by Depot Prompt        *
+      *                                                               *
+      *  Function:  Prompt Program for Corporate Action Allocation    *
+      *  (I/C)      by Depot Report.                                  *
+      *                                                               *
+      *  Called by: FCC0201A - Standard Report Requests Program for   *
+      *                        reports with prompt programs           *
+      *  Calls    : AOBANKR0 - Access Program for Bank Details        *
+      *             Y2CLMSC  - Program to clear message subfile       *
+      *             Y2SNMGC  - Program to send message to subfile     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 136928  *CREATE    Date 19Jun98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  136928 - New Report created for CEU017, because the existing *
+      *           reports are too detail to be used as a quick check  *
+      *           list.                                               *
+      *                                                               *
+      *****************************************************************
+     FSE7549DFCF  E                    WORKSTN
+      ** Corporate Action Allocation Prompt Screen.
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N    O F    I N D I C A T O R S                *
+      *                                                               *
+      *  01    Reverse Image for Depot Field                          *
+      *  02    Reverse Image for Status Field                         *
+      *                                                               *
+      *  U7-U8 Database error indicator                               *
+      *  LR    End of program indicator                               *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      ****************************************************************
+      *                                                              *
+      *  S U B R O U T I N E    I N D E X                            *
+      *                                                              *
+      *  SRINIT - Initial processing                                 *
+      *  SRSET0 - Reset indicators                                   *
+      *  SRVAL  - SR to validate screen fields                       *
+      *  SRVDPT - SR to validate Corporate Action Reference          *
+      *  ZASNMS - SR to send message on queue                        *
+      *  *PSSR  - Error routine                                      *
+      *                                                              *
+      ****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      ** Copyright Array
+      *
+     E                    AREF        6  1
+      ** References
+      *
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+      /EJECT
+      *
+     IWCUST       DS
+     I                                        1  10 WCSHT
+     I                                        1   1 WINIT
+     I                                        1   6 WCNUM
+     I                                        6   6 WLAST
+     I                                        7  10 WBLNK
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SJOB
+     I                                      254 263 SUSER
+     I                                      282 2870STIME
+      *
+     IWPARM       DS
+      ** Parameters for WPARM - 100 long string passed to RCF
+      *
+     I                                        1 100 WRPRM
+     I                                        1   1 SALCA
+     I                                       13  18 WDEPT
+      *
+     ISDBANK    E DSSDBANKPD
+     I** Data Structure for SDBANKPD
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I** Client Details
+     I*
+     ISDSECS    E DSSDSECSPD
+     I** Securities Client Details
+     I*
+     IDSFDY     E DSDSFDY
+     I** Short Data Structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I**
+      *
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Routine.                             *
+      *                                                               *
+      * CALLS      SRINIT - Program Initialisation.                   *
+      *            SRSET0 - Initialise Indicators.                    *
+      *            SRVAL  - Validate All Fields.                      *
+      *                                                               *
+      * CALLED BY         -                                           *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WRSEQ   5
+     C                     PARM           WRLEV   1
+     C                     PARM           WENT    3
+     C                     PARM           WPARM 100
+     C                     PARM           WACT    1
+     C                     PARM           WCMD    1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      WCPY   80
+      *
+      **  Perform Intialisation
+      *
+     C                     EXSR SRINIT
+      *
+     C           *IN34     DOWEQ'0'
+      *
+      ** Read Input Screen
+      *
+     C                     WRITESE7549C0
+     C                     EXFMTSE7549F1
+      *
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'E'       WCMD
+     C                     MOVE '1'       *IN34
+     C                     MOVE *BLANKS   SALCA
+     C                     MOVE *BLANKS   SDEPT
+     C                     ELSE
+     C                     EXSR SRVAL
+     C           *IN02     IFEQ '0'
+     C           *IN01     ANDEQ'0'
+     C           WINIT     ANDNE'?'
+     C                     MOVE '1'       *IN34
+     C                     MOVELSDEPT     WDEPT
+     C                     END
+     C                     END
+      *
+     C                     ENDDO
+      *
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *            SRINIT - Initial Processing                        *
+      *                                                               *
+      * CALLS      *PSSR  - Database Error Processing.                *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR                           ** SRINIT **
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE7549P 'DBPGM
+     C                     OUT  LDA
+     C*
+     C                     MOVE '0'       *IN34
+      *
+      ** Access the Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE BJMRDT    SMRDT
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+     C                     MOVELSPGM      PGMNAM
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVAL  - Validate Screen Fields.                   *
+      *                                                               *
+      * CALLS      Y2CLMSC- Clear Subfile.                            *
+      *            ZASNMS - Add Error Messages to Message Subfile.    *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Routine.                             *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVAL     BEGSR                           ** SRVAL **
+     C*
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN02
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGM      ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C           SALCA     IFEQ *BLANKS
+     C           SDEPT     ANDEQ*BLANKS
+     C                     MOVEL'CO00588' ZAMSID
+     C                     MOVE '1'       *IN02
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           *IN02     IFEQ '0'
+     C*
+     C           SALCA     IFEQ 'Y'
+     C           SDEPT     ANDNE*BLANKS
+     C                     MOVEL'CO00589' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C*
+     C                     END
+     C*
+     C           *IN02     IFEQ '0'
+     C           *IN01     ANDEQ'0'
+     C*
+     C           SALCA     IFNE 'Y'
+     C           SALCA     ANDNE'N'
+     C           SALCA     ANDNE*BLANK
+     C                     MOVEL'CO00590' ZAMSID
+     C                     MOVE '1'       *IN01
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C*
+     C                     END
+     C*
+     C           *IN02     IFEQ '0'
+     C           *IN01     ANDEQ'0'
+     C*
+     C           SALCA     IFEQ 'N'
+     C           SDEPT     ANDEQ*BLANK
+     C                     MOVEL'CO00593' ZAMSID
+     C                     MOVE '1'       *IN02
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C*
+     C                     END
+      *
+      ** Validate Depot
+      *
+     C           *IN02     IFEQ '0'
+     C           *IN01     ANDEQ'0'
+     C           SDEPT     IFNE *BLANKS
+     C                     EXSR SRVDPT
+     C                     ENDIF
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            SRVDPT - Validate Depot                            *
+      *                                                               *
+      * CALLS      SRALL  - Check If Other Fields are Blank.          *
+      *            ZASNMS - Send Messages to Queue.                   *
+      *                                                               *
+      * CALLED BY  SRVAL  - Validate All Screen Fields.               *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           SRVDPT    BEGSR                           ** SRVREF **
+      *
+     C                     MOVE '0'       *IN12
+     C                     MOVE *BLANKS   WCSHT
+     C                     MOVE SDEPT     WCSHT
+     C*
+     C           WINIT     IFNE '?'
+     C*
+     C                     MOVELSDEPT     WKEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           WKEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELBBCUST    WAENB
+     C                     MOVE *BLANK    SDEPT
+     C                     MOVELWAENB     SDEPT
+     C                     ELSE
+     C                     MOVEL'CO00591' ZAMSID
+     C                     MOVE '1'       *IN02
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C*** Setup customer key for ? processing
+     C*
+     C                     MOVELSDEPT     WAENB
+     C                     END
+     C*
+     C           *IN02     IFEQ '0'
+     C*
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           WAENB   6
+     C           SDSECS    PARM SDSECS    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       *IN02
+     C                     ELSE
+     C*
+     C                     MOVE *BLANK    SDEPT
+     C                     MOVELBFCUST    SDEPT
+     C           BFCLAS    IFEQ 'S'
+     C           BFCLAS    OREQ 'D'
+     C           BFCLAS    OREQ 'I'
+     C                     MOVE '1'       *IN02
+     C*
+     C                     END
+     C                     END
+      *
+     C           *IN02     IFEQ '1'
+     C                     MOVEL'CO00592' ZAMSID
+     C                     MOVE '1'       *IN02
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ZASNMS - Send Message to Program Message Queue.    *
+      *                                                               *
+      * CALLS      Y2SNMGC- Send a Message.                           *
+      *                                                               *
+      * CALLED BY  SRVREF - Validate Corporate Action Reference.      *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS **
+      *
+     C           ZAPGMQ    IFEQ *BLANKS
+     C                     MOVELSPGM      ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZASNM9    ENDSR                           ** ZASNM9 **
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program Exception Error Routine.          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  SRINIT - Initial Processing.                       *
+      *                                                               *
+      * FLDS USED         -                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ** Dump and return to the calling program
+      *
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'E'       WCMD
+     C                     DUMP
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+**  CPY@
+(c) Finastra International Limited 2001

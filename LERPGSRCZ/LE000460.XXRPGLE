@@ -1,0 +1,329 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                     MD021351
+      *****************************************************************
+      *                                                               *
+      *  Midas - Lending Module                                       *
+      *                                                               *
+      *  LE000460 - List Object Locks                                 *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. MD021351 *REDUNDANTDate 06May14               *
+      *  Prev Amend No. CLE134  *CREATE    Date 01Aug12               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD021351 - Design for Kill object locks                      *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *                                                               *
+      *****************************************************************
+ 
+      **------------------------------------------------------------------
+      ** The following /COPY line includes all the defined fields in the
+      ** Program Status Data Structures.  They have meaningful
+      ** names, prefixed by 'PS'.
+     D/COPY ZACPYSRC,PSDS
+     D/COPY ZACPYSRC,STD_D_SPEC
+      **------------------------------------------------------------------
+ 
+      ** +--------------------------------------+
+      **   Manually included D-specs            +
+      **   =========================            +
+      ** +--------------------------------------+
+ 
+     D  MessageID      S              7A   INZ(*BLANKS)
+     D  CommandStr     S            200A   INZ(*BLANKS)
+ 
+     D CrtUsrSpc       PR                  ExtPgm('QUSCRTUS')
+     D   UsrSpc                      20A   CONST
+     D   ExtAttr                     10A   CONST
+     D   InitSize                    10I 0 CONST
+     D   InitVal                      1A   CONST
+     D   PublicAuth                  10A   CONST
+     D   Text                        50A   CONST
+     D   Replace                     10A   CONST
+     D   ErrorCode                32766A   options(*varsize)
+ 
+     D RtvPtrUS        PR                  ExtPgm('QUSPTRUS')
+     D   UsrSpc                      20A   CONST
+     D   Pointer                       *
+ 
+     D LstObjLck       PR                  ExtPgm('QWCLOBJL')
+     D   UsrSpc                      20A   const
+     D   Format                       8A   const
+     D   Object                      20A   const
+     D   ObjType                     10A   const
+     D   Member                      10A   const
+     D   ErrorCode                32766A   options(*varsize)
+ 
+      *****************************************************
+      * API error code data structure
+      *****************************************************
+     D dsEC            DS
+      *                                    Bytes Provided (size of struct)
+     D  dsECBytesP             1      4I 0 INZ(256)
+      *                                    Bytes Available (returned by API)
+     D  dsECBytesA             5      8I 0 INZ(0)
+      *                                    Msg ID of Error Msg Returned
+     D  dsECMsgID              9     15
+      *                                    Reserved
+     D  dsECReserv            16     16
+      *                                    Msg Data of Error Msg Returned
+     D  dsECMsgDta            17    256
+ 
+      *****************************************************
+      * List API generic header data structure
+      *****************************************************
+     D dsLH            DS                   BASED(p_UsrSpc)
+      *                                     Filler
+     D   dsLHFill1                  103A
+      *                                     Status (I=Incomplete,C=Complete
+      *                                             F=Partially Complete)
+     D   dsLHStatus                   1A
+      *                                     Filler
+     D   dsLHFill2                   12A
+      *                                     Header Offset
+     D   dsLHHdrOff                  10I 0
+      *                                     Header Size
+     D   dsLHHdrSiz                  10I 0
+      *                                     List Offset
+     D   dsLHLstOff                  10I 0
+      *                                     List Size
+     D   dsLHLstSiz                  10I 0
+      *                                     Count of Entries in List
+     D   dsLHEntCnt                  10I 0
+      *                                     Size of a single entry
+     D   dsLHEntSiz                  10I 0
+ 
+      *****************************************************
+      *  List Object Locks API format OBJL0100
+      *****************************************************
+     D dsOL            DS                  based(p_Entry)
+      *                                     Job Name
+     D  dsOL_JobName                 10A
+      *                                     Job User Name
+     D  dsOL_UserName                10A
+      *                                     Job Number
+     D  dsOL_JobNbr                   6A
+      *                                     Lock State
+     D  dsOL_LckState                10A
+      *                                     Lock Status
+     D  dsOL_LckSts                  10i 0
+      *                                     Lock Type
+     D  dsOL_LckType                 10i 0
+      *                                     Member (or *BLANK)
+     D  dsOL_Member                  10A
+      *                                     1=Shared File, 0=Not Shared
+      *                                        (or 0=not applicable)
+     D  dsOL_Share                    1A
+      *                                     Lock Scope
+     D  dsOL_LckScope                 1A
+      *                                     Thread identifier
+     D  dsOL_ThreadID                 8A
+ 
+     D p_UsrSpc        S               *
+     D p_Entry         S               *
+     D Msg             S             50A
+     D x               S             10I 0
+ 
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+ 
+     C                   IF        %PARMS < 4
+     C                   EVAL      Msg = 'Usage: objlock NAME LIB TYPE MBR'
+     C                   EVAL      oRetCode = '*ERROR*'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      *******************************************
+      * Create a user space to store output of
+      *  the list object locks API
+      *******************************************
+ 
+     C                   CALLP     CrtUsrSpc('OBJLOCKS  QTEMP': 'USRSPC':
+     C                               1: x'00': '*ALL': 'Output of List ' +
+     C                               'Object Locks API': '*YES': dsEC)
+     C                   IF        dsECBytesA > 0
+     C                   EVAL      Msg = 'QUSCRTUS error ' + dsECMsgID
+     C                   EVAL      oRetCode = '*ERROR*'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      *******************************************
+      * Dump the Object Locks to the user space
+      *******************************************
+ 
+     C                   CALLP     LstObjLck('OBJLOCKS  QTEMP': 'OBJL0100':
+     C                               iObjName+iObjLib: iObjType: iMember: dsEC)
+     C                   IF        dsECBytesA > 0
+     C                   EVAL      Msg = 'QWCLOBJL error ' + dsECMsgID
+     C                   EVAL      oRetCode = '*ERROR*'
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+      *******************************************
+      *  Get a pointer to the user space
+      *******************************************
+ 
+     C                   Callp     RtvPtrUS('OBJLOCKS  QTEMP': p_UsrSpc)
+ 
+      *******************************************
+      * Read each entry in the list
+      *   and (for sake of example) display
+      *   the lock details
+      *******************************************
+ 
+     C                   FOR       x = 0 to (dsLHEntCnt-1)
+     C                   EVAL      p_Entry = p_UsrSpc +
+     C                                 (dsLHLstOff + (dsLHEntSiz*x))
+ 
+     C                   EVAL      Msg = 'Job = '+%trimr(dsOL_JobNbr) +'/'+
+     C                                            %trimr(dsOL_UserName)+'/'+
+     C                                            %trimr(dsOL_JobName)
+ 
+     C                   EVAL      Msg = 'Lock State = ' + dsOL_LckState
+ 
+     C                   SELECT
+     C                   WHEN      dsOL_LckSts = 1
+     C                   EVAL      Msg = 'Lock Status = HELD'
+     C                   WHEN      dsOL_LckSts = 2
+     C                   EVAL      Msg = 'Lock Status = WAIT'
+     C                   WHEN      dsOL_LckSts = 2
+     C                   EVAL      Msg = 'Lock Status = REQ'
+     C                   ENDSL
+ 
+     C                   SELECT
+     C                   WHEN      dsOL_LckType = 1
+     C                   EVAL      Msg = 'Lock Type = OBJECT'
+     C                   WHEN      dsOL_LckType = 2
+     C                   EVAL      Msg = 'Lock Type = MBR CTL BLK'
+     C                   WHEN      dsOL_LckType = 3
+     C                   EVAL      Msg = 'Lock Type = MBR ACC PTH'
+     C                   WHEN      dsOL_LckType = 3
+     C                   EVAL      Msg = 'Lock Type = MBR DATA'
+     C                   ENDSL
+ 
+     C                   EVAL      Msg = 'Member = ' + dsOL_Member
+ 
+     C                   IF        dsOL_Share = '1'
+     C                   EVAL      Msg = 'Share lock = YES'
+     C                   ELSE
+     C                   EVAL      Msg = 'Share lock = NO'
+     C                   ENDIF
+ 
+     C                   IF        dsOL_LckScope = '1'
+     C                   EVAL      Msg = 'Scope = THREAD'
+     C                   ELSE
+     C                   EVAL      Msg = 'Scope = JOB'
+     C                   ENDIF
+ 
+     C                   IF        (dsOL_JobName  <> *BLANKS) AND
+     C                             (dsOL_UserName <> *BLANKS) AND
+     C                             (dsOL_JobNbr   <> *BLANKS) AND
+     C                             (dsOL_JobName = 'QZDASOINIT')
+     C                   EXSR      SrKillJobLock
+     C                   ENDIF
+ 
+     C                   ENDFOR
+ 
+     C                   EVAL      *INLR = *ON
+     C                   RETURN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SrKillJobLock - Kill Object Lock                             *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     SrKillJobLock BEGSR
+     C                   EVAL      CommandStr = 'ENDJOB JOB(' +
+     C                             %TRIM(dsOL_JobNbr) + '/' +
+     C                             %TRIM(dsOL_UserName) + '/' +
+     C                             %TRIM(dsOL_JobName) + ')' +
+     C                             ' OPTION(*IMMED) DELAY(1)'
+     C                   EXSR      SrCommand
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SrCommand - Execute CL Command                               *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: QCMDEXC                                                *
+      *                                                               *
+      *****************************************************************
+     C     SrCommand     BEGSR
+     C                   EVAL      MessageID = *BLANKS
+     C                   EVAL      CommandLen = 200
+     C                   CALL  (E) 'QCMDEXC'
+     C                   PARM                    CommandStr
+     C                   PARM                    CommandLen       15 5
+     C                   IF        %ERROR
+     C                   EVAL      MessageID = PSExcpType+
+     C                             PSExcpNo
+     C                   ENDIF
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Main processing                                    *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     *INZSR        BEGSR
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    oRetCode          7
+     C                   PARM                    iObjName         10
+     C                   PARM                    iObjLib          10
+     C                   PARM                    iObjType         10
+     C                   PARM                    iMember          10
+ 
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+ 
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   CALL      'DBERRCTL'
+     C                   END
+ 
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+ 
+     C                   ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2012

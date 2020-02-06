@@ -1,0 +1,117 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(SMUC00007F) TOFILE(UPOBJDTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Process CAR migration - SDCSINPD')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00213 - Process CAR migration for SDCSINPD              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      262664             Date 11Nov09              */
+/*                      CSM011  *CREATE    Date 05May09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       262664 - Renamed SMUC00007 introduced by GF to remove       */
+/*                overlap with SWIFT 2009.                           */
+/*       CSM011 - New utility to process CAR migration               */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FLIB)
+ 
+             DCL        VAR(&FLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&TFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SFX) TYPE(*CHAR) LEN(2)
+ 
+             DCLF       FILE(SMUC00007F)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2009')
+ 
+ /* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Check where to-file exists. */
+             RTVOBJD    OBJ(SDCSINPD) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
+ 
+/* Display all versions of GLCADDPP files. */
+             DLTF       FILE(QTEMP/SMUC00007F)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/GLCADD)
+             MONMSG     MSGID(CPF0000)
+             CRTDUPOBJ  OBJ(UPOBJDTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(SMUC00007F)
+             DSPOBJD    OBJ(&FLIB/GLCADDPP*) OBJTYPE(*FILE) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/GLCADD)
+/* If no files found then report this as an error */
+             MONMSG     MSGID(CPF2123) EXEC(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             CPYF       FROMFILE(QTEMP/GLCADD) +
+                          TOFILE(QTEMP/SMUC00007F) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Find out if file has archive suffix. */
+             CHGVAR     VAR(&SFX) VALUE(%SST(&ODOBNM 9 2))
+             CHGVAR     VAR(&TFILE) VALUE(*BLANKS)
+             CHGVAR     VAR(&TFILE) VALUE('SDCSINPD' *TCAT &SFX)
+/* Copy file to specific member of template file. */
+             CPYF       FROMFILE(&FLIB/&ODOBNM) TOFILE(SMUGF07PD) +
+                          TOMBR(&TFILE) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+/* If necessary create an archive version of SDCSINPD. */
+             IF         COND(&SFX *NE ' ') THEN(DO)
+                CHKOBJ     OBJ(&RTNLIB/&TFILE) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTDUPOBJ  OBJ(SDCSINPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                                TOLIB(*FROMLIB) NEWOBJ(&TFILE)
+ 
+                   GOTO       CMDLBL(CALL)
+                ENDDO
+                CLRPFM     FILE(&RTNLIB/&TFILE)
+             ENDDO
+ 
+CALL:
+/* Call program to update version of SDCSINPD. */
+             OVRDBF     FILE(SMUGF07PD) TOFILE(*LIBL/SMUGF07PD) +
+                          MBR(&TFILE) OVRSCOPE(*JOB)
+             OVRDBF     FILE(SDCSINPD) TOFILE(*LIBL/&TFILE) +
+                          OVRSCOPE(*JOB)
+             CALL       PGM(SMU00007)
+             CALL       PGM(SMU00009)
+             DLTOVR     FILE(*ALL) LVL(*JOB)
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

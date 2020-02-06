@@ -1,0 +1,81 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas SM COB Optimisation - BOB System Value')        */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       SMUC00037 - COB Optimisation - Change BOB System Value    */
+/*                                                                 */
+/*       (c) Finastra International Limited 2013                   */
+/*                                                                 */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467 *CREATE  Date 02Apr13              */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1097467 - Expected 15% COB run optimization not met     */
+/*                   Change SCCOMXTD value of ICIFINISH based on   */
+/*                   SDSVALPD value of BOBSaveSAVCHGOBJ            */
+/*                                                                 */
+/*******************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SAVCHG) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNOR)
+ 
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'BOBSaveSAVCHGOBJ?' &SVAL1 &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK0 &SVAL10)
+ 
+             CHGVAR     VAR(&SAVCHG) VALUE(%SST(&SVAL1 1 1))
+             IF         COND(&SVAL1 *EQ 'B') THEN(DO)
+ 
+               SCRUNSQL   SQL('update SCCOMXTD set FMDEL = ''N'' +
+                      where FMUNIQ = ''2013-02-22-07.24.04.188000''')
+ 
+             ENDDO
+             ELSE       DO
+ 
+               SCRUNSQL   SQL('update SCCOMXTD set FMDEL = ''Y'' +
+                      where FMUNIQ = ''2013-02-22-07.24.04.188000''')
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

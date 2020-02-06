@@ -1,0 +1,155 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+     C********************************************************************
+     C*
+     C**   ZSEFMT SR. TO FORMAT RATE FIELD FOR OUTPUT.
+     C*
+     C           ZSERPT    BEGSR                           *** ZSERPT ***
+     C*
+     C** INDICATORS:   90 - WORK
+     C**               91 - COUPON RATE ZERO
+     C**               92 - MATURITY DATE ZERO OR NON-
+     C**                    MATURING SECURITY
+     C**               94 - WORK
+     C**               95 - NO SIGNIFICANT FIGS BEFORE DEC              PT
+     C**               96 - WORK
+     C**               97 - WORK
+     C**               98 - DATE FORMAT
+     C*
+     C                     MOVE ZTITLE    ZTITLE 20        SECURITY NAME
+     C                     Z-ADDZCPRAT    ZCPRAT 117       COUPON RATE
+     C                     Z-ADDZMADAT    ZMADAT  60       MATURITY DATE
+     C*
+     C                     MOVE ' '       ZRPNAM 41
+     C                     MOVE ' '       ZRNO
+     C*
+     C           ZCPRAT    COMP 0                        91
+     C           ZMADAT    COMP 0                        92
+     C  N92      ZMADAT    COMP 999999                   92
+     C*
+     C                     MOVEAZTITLE    ZRNN
+     C                     Z-ADD20        Z       20
+     C*
+     C           TGR01A    TAG                             *** TGR01A ***
+     C                     SETOF                     94
+     C           ZRNN,Z    COMP ' '                      93
+     C   93      Z         SUB  1         Z              94
+     C   93N94             GOTO TGR01A
+     C*
+     C  N94      Z         ADD  2         Z
+     C   94                Z-ADD1         Z
+     C                     MOVEAZRNN      ZRNO
+     C*
+     C   91                Z-ADDZ         W       20
+     C   91                GOTO TGR01D
+     C*
+     C                     MOVE ZCPRAT    ZCOUP  11
+     C                     MOVELZCOUP     ZRNWRL  4
+     C                     MOVE ZCOUP     ZRNWRR  7
+     C                     MOVEAZRNWRL    ZRNL
+     C*
+     C           ZRNL,1    COMP '0'                  94
+     C   94                MOVEAZRNL,1    ZRN4
+     C   94                MOVEAZRN4      ZRNO,Z
+     C   94      Z         ADD  4         Z
+     C   94                GOTO TGR01B
+     C*
+     C           ZRNL,2    COMP '0'                  94
+     C   94                MOVEAZRNL,2    ZRN3
+     C   94                MOVEAZRN3      ZRNO,Z
+     C   94      Z         ADD  3         Z
+     C   94                GOTO TGR01B
+     C*
+     C           ZRNL,3    COMP '0'                  94
+     C   94                MOVEAZRNL,3    ZRN2
+     C   94                MOVEAZRN2      ZRNO,Z
+     C   94      Z         ADD  2         Z
+     C   94                GOTO TGR01B
+     C*
+     C           ZRNL,4    COMP '0'                  94
+     C   94                MOVEAZRNL,4    ZRN1
+     C   94                MOVEAZRN1      ZRNO,Z
+     C   94      Z         ADD  1         Z
+     C*
+     C           TGR01B    TAG                             *** TGR01B ***
+     C*
+     C           ZRNWRR    COMP '0000000'                95
+     C  N95                MOVE '.'       ZRNO,Z
+     C           Z         ADD  1         Z
+     C   95                Z-ADDZ         W
+     C   95                GOTO TGR01D
+     C*
+     C                     MOVEAZRNWRR    ZRNR
+     C                     Z-ADD7         Y       10
+     C*
+     C           TGR01C    TAG                             *** TGR01C ***
+     C           ZRNR,Y    COMP '0'                      96
+     C   96                MOVE ' '       ZRNR,Y
+     C           Y         COMP 1                        97
+     C   96N97   Y         SUB  1         Y
+     C   96N97             GOTO TGR01C
+     C*
+     C                     MOVEAZRNR      ZRNO,Z
+     C           Y         ADD  1         Y
+     C           Z         ADD  Y         W
+     C*
+     C           TGR01D    TAG                             *** TGR01D ***
+     C*
+     C  N91                SUB  1         W
+     C  N91                MOVEA'%'       ZRNO,W
+     C  N91                ADD  2         W
+     C*
+     C   92                GOTO TGR01E
+     C*
+     C   98                MOVELZMADAT    ZWRK4   40
+     C   98                MOVELZWRK4     ZWRKM   2
+     C   98                MOVE ZWRK4     ZWRKD   2
+     C   98                MOVELZWRKD     ZWRK4
+     C   98                MOVE ZWRKM     ZWRK4
+     C   98                MOVELZWRK4     ZMADAT
+     C*
+     C                     MOVELZMADAT    ZRNWK2  2
+     C                     MOVEAZRNWK2    ZRN2
+     C           ZRN2,1    COMP '0'                      90
+     C   90                MOVEAZRN2,2    ZRNO,W
+     C   90      W         ADD  1         W
+     C  N90                MOVEAZRN2      ZRNO,W
+     C  N90      W         ADD  2         W
+     C*
+     C                     MOVELZMADAT    ZRNWRL
+     C                     MOVE ZRNWRL    ZMTH    20
+     C                     MOVE ZMNM,ZMTH ZMONTH  3
+     C                     MOVEAZMONTH    ZRNO,W
+     C           W         ADD  3         W
+     C*
+     C                     MOVE ZMADAT    ZRNWK2
+     C                     MOVEAZRNWK2    ZRN2
+     C                     MOVEAZRN2      ZRNO,W
+     C*
+     C           TGR01E    TAG                             *** TGR01E ***
+     C*
+     C                     MOVEAZRNO      ZRPNAM
+     C*
+     C           ZREND     ENDSR                           * ZREND ENDSR *
+     C**
+     C********************************************************************
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

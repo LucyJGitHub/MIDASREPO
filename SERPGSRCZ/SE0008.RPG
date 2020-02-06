@@ -1,0 +1,381 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Update ST Prices from Last Trade')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0008 - Midas SE Update ST Prices from Last Trade           *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CSE112 *CREATE     Date 06Oct17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               8
+      *  CSE112 - SE Market Price Updated with Price of Last Trade    *
+      *                                                               *
+      *****************************************************************
+      *
+     FSECTY   UF  E           K        DISK         KINFSR *PSSR
+     FTRADDT  IF  E           K        DISK         KINFSR *PSSR
+     FTABSE   IF  E           K        DISK         KINFSR *PSSR
+     F            TABLETAF                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FSE0008P1O   E                    PRINTER      KINFDS LNP1DS     UC
+      *
+      *****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *    50            END OF FILE ON TRADDT
+      *    98            DATE FORMAT
+      *    99            GENERAL ERROR
+      *    U7/U8         DATABASE ERROR
+      *
+      *****************************************************************
+      *
+      * I N D E X   O F   S U B R O U T I N E S
+      *
+      *    INIT    - INITIAL PROGRAM SUBROUTINE
+      *    CHKSEC  - CHECK SECURITY FOR UPDATE
+      *    OUTPUT  - REPORT DETAIL OUTPUT PROCESSING
+      *    ZDATE2  - MIDAS DAY NUMBER TO DATE CONVERSION
+      *    ZSEDIT  - TO FORMAT NUMERIC FIELDS FOR OUTPUT
+      *    ZSYSTM  - ACCESSES ICD 1(TABTB10)
+      *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+     I*****************************************************************
+      *
+     ILNP1DS      DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINEP1
+      *
+      ** Data Structure for TRADE DETAILS TO REPORT
+      *
+     ITRDDET      DS
+     I                                        1  10 TDSS
+     I                                       11  16 TDRF
+     I                                       17  18 TDBK
+     I                                    P  19  210TDDT
+     I                                    P  22  298TPDY
+      *
+      ** Data Structure for TRADE DETAILS TO REPORT
+      *
+     ISAVDET      DS
+     I                                        1  10 SVTDSS
+     I                                       11  16 SVTDRF
+     I                                       17  18 SVTDBK
+     I                                    P  19  210SVTDDT
+     I                                    P  22  298SVTPDY
+      *
+      ** Local DATA AREA
+      *
+     ILDA        UDS                            256
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+      *
+      ** Copyright Insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+     IRUNDT       DS
+      *
+      ** RUNDAT data area
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      ** Read Through All Trades Changed Today
+      *
+     C           RUND      SETLLTRADDT
+     C           RUND      READETRADDT                   50
+      *
+     C                     MOVE TDSS      SAVSEC
+      *
+     C           *IN50     DOWEQ'0'
+      *
+     C           RECI      IFNE 'C'
+     C           TOED      ANDEQRUND
+     C                     MOVE TRDDET    SAVDET
+     C                     MOVE 'Y'       CHKIND
+     C                     END
+      *
+     C           RUND      READETRADDT                   50
+      *
+      ** On Change of Security, Check Security for UPDATE if indicator
+      ** SET
+      *
+     C           TDSS      IFNE SAVSEC
+     C           *IN50     OREQ '1'
+     C           CHKIND    IFEQ 'Y'
+     C                     EXSR CHKSEC
+     C                     END
+     C                     MOVE TDSS      SAVSEC
+     C                     END
+      *
+     C                     END
+      *
+     C           OUTIND    IFEQ 'N'
+     C                     WRITENODET1
+     C                     END
+      *
+     C           LINEP1    IFGT 56
+     C                     WRITEHEAD1
+     C                     END
+      *
+     C                     WRITEENDRP1
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                                                               *
+      *  CHKSEC - CHECK SECURITY FOR UPDATE                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHKSEC    BEGSR
+      *
+     C           SAVSEC    CHAINSECTY                99
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'02'      DBASE            ***************
+     C                     MOVEL'SECTY'   DBFILE           **DB ERROR 02**
+     C                     MOVELSAVSEC    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Update Security if last security PRICE update date is more
+      ** than 7 days prior to latest TRADE DATE
+      *
+     C           SVTDDT    SUB  7         CMPDAT
+     C           LPRU      IFLT CMPDAT
+      *
+      ** Output Change Details
+      *
+     C                     EXSR OUTPUT
+      *
+      ** Update Security Detail
+      *
+     C                     Z-ADDSVTDDT    LPRU
+     C                     Z-ADDSVTPDY    MKPR
+     C                     EXCPTUPDSEC
+      *
+     C                     END
+      *
+     C                     MOVE 'N'       CHKIND
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  OUTPUT - REPORT OUTPUT PROCESSING                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTPUT    BEGSR
+      *
+      ** Format Report Details
+      ** - Previous Market PRICE
+      *
+     C                     MOVE MKPR      ZFLD15
+     C                     MOVE 8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    MKPRO
+      *
+      ** - Trade PRICE
+      *
+     C                     MOVE SVTPDY    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TPDYO
+      *
+      ** - Previous Update Date
+      *
+     C                     Z-ADDLPRU      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    LPRUO
+      *
+      ** - Trade DATE
+      *
+     C                     Z-ADDSVTDDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TDDTO
+      *
+      ** Output Report Subheading if first DETAIL
+      *
+     C           OUTIND    IFEQ 'N'
+     C                     WRITESUBHD1
+     C                     MOVE 'Y'       OUTIND
+     C                     END
+      *
+     C           LINEP1    IFGT 56
+     C                     WRITEHEAD1
+     C                     WRITESUBHD1
+     C                     END
+      *
+     C                     WRITEDET1
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *    INIT - Initial Program Subroutine                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Define Program Work Fields
+      *
+     C           *LIKE     DEFN RUND      CMPDAT
+     C           *LIKE     DEFN SESN      SAVSEC
+      *
+      ** Setup LDA error information
+      *
+     C                     MOVEL*BLANKS   DBLOT
+     C                     MOVEL'SE0008'  DBPGM
+     C                     EXSR ZSYSTM
+     C                     MOVE '0'       *IN12
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'01'      DBASE            ***************
+     C                     MOVEL'TABSE'   DBFILE           **DB ERROR 01**
+     C                     MOVEL'*FIRST'  DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Initialise Program Indicator Fields
+      *
+     C                     MOVE 'N'       CHKIND  1
+     C                     MOVE 'N'       OUTIND  1
+      *
+      ** Read in RUNDAT data area
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN30
+     C                     ENDIF
+      *
+     C           *IN12     IFEQ '0'
+     C                     MOVE '1'       *IN12
+     C                     OPEN SE0008P1
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+      ** Output Report Header
+      *
+     C                     WRITEHEAD1
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *   *PSSR - Program Error Subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            ** RCFP1 **
+      *
+      ** Ensure Report Spool File Recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+      *
+      ** Error during ZSFILE processing, Return to calling program
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+     C/COPY ZSRSRC,ZDATE2Z4
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZSYSTMZ1
+      *
+      *****************************************************************
+      *
+     OSECTYDF E                UPDSEC
+     O                         MKPR
+     O                         LPRU
+     O*
+     O*****************************************************************
+**  CPY@
+(c) COPYRIGHT ACT BANKING SYSTEMS 1988. COMPANY CONFIDENTIAL.
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                       #DATE
+0366073110961461                                                           #DATE
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                         #DATE
+000031059090120151181212243273304334365                                    #DATE
+**   ZMNM - MONTHS SHORT NAMES                                             #DATE
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC                                       #DATE

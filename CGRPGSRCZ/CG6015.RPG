@@ -1,0 +1,2328 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Lending principal increase confirmations')    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG6015 - Lending Principal Increase Confirmations            *
+     F*                                                               *
+     F*  Function:  This program extracts data for Principal          *
+     F*  (COB)      Increases.                                        *
+     F*                                                               *
+     F*  Called By: CG6010 - Lending Principal Increase Confirmations *
+     F*                      - Driver                                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 240327             Date 16Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027A            Date 06May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9646            Date 20Dec05               *
+      *                 BUG7960            Date 25Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP075             Date 08Aug03               *
+      *                 CLE031             Date 03Feb03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CCG015             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU014             Date 04Jun98               *
+      *                 CEU003             Date 07Jan98               *
+     F*                 CCG008 *CREATE     Date 30Oct95               *
+     F*                 000000             Date ddmmmyy               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CER049 - Stamp Tax (Portuguese Features Upgrade)             *
+      *  240327 - UDC dumps. Fix is to avoid subtype being blank.     *
+      *           Applied fix 224773. Applied as BUG7960.             *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  BUG9646- Changes in CGPACKE causes programs not to compile   *
+      *  BUG7960- Missing processing for other loan types.            *
+      *           Applied fix 224773.                                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP075 - Lending API enhancements - Loan Amendment.          *
+      *           (amendment in common with CAP079)                   *
+      *  CLE031 - Lending Enhancements.                               *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CCG015 - Correspondence Manager Phase 1                      *
+      *  CSD006 - Recompiled over changed SDCURRPD.                   *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  CEU014 - EMU User Defined Correspondence changes             *
+     F*  CEU003 - EMU DL/LE Settlement Currency Conversion            *
+     F*           Added new RDEs to group set LOANPI (l02PI).         *
+     F*  CCG008 - User Defined Correspondence - Lending               *
+     F*                                                               *
+     F*****************************************************************
+     FCLOAN   IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     F            CLOANHHF                          KIGNORE
+     F/COPY WNCPYSRC,CG6015F001
+     F            CLOANCKF                          KIGNORE
+     F/COPY WNCPYSRC,CG6015F002
+     F            CLOANZ1F                          KIGNORE
+      *                                                                                       CER049
+      ** Stamp Tax file                                                                       CER049
+      *                                                                                       CER049
+     FCLONCLL1IF  E           K        DISK                                                   CER049
+      *                                                                                       CER049
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N  C T I O N    O F    I N D I C A T O R S               *
+     F*                                                               *
+     F*  88   -    No record found indicator for CLOAN file.          *
+     F*  90   -    General work indicator.                            *
+     F*  98   -    MMDDYY date format.                                *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  SRMAIN  -  Main Processing                                   *
+     F*  SRINIT  -  Initial Processing                                *
+     F*  SRINZF  -  Initialise Fields on Each Invocation              *
+     F*  SRDETL  -  Obtain Detail Information                         *
+     F*  L02PI   -  Process Lending Principal Increase Confirmation   *
+     F*  LOANPI  -  Process Loan Principal Increase Detail            *
+     F*  LOANA   -  Process Loan Associated Details                   *
+     F*  SRSDET  -  Set-up Settlement Details                         *
+     F*  SRADTA  -  Accumulate RDEs and Associated Data               *
+     F*  SRODTA  -  Output Accumulated Data to PF/CGUDTAPD            *
+     F*  SRBIND  -  Generate Binding Numbers                          *
+     F*  SRPATH  -  Generate Path String                              *
+     F*  SRRFMN  -  Reformat RDE Data                                 *
+     F*  SRDCDT  -  Determine Currency Details                        *
+     F*  SRGENR  -  Generate Reference Number                         *
+     F*  *PSSR   -  Error Subroutine                                  *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E** Array containing Copyright statement
+     E                    CPY@    1   1 80
+     E/COPY CGCPYSRC,CGPACKE
+     E/COPY CGCPYSRC,SRERRE
+     E**  Number Arrays
+     E                    ##W        20  1
+     E                    ##NUMA     29  1
+     E*
+     E**  Array of Currencies accessed by program
+     E                    ##CY      100  3
+     E*
+     E*****************************************************************
+     I/EJECT
+     I*****************************************************************
+     I*
+     ICLOANCLF
+     I** Rename fields of CLOANCL
+     I              RECI                            ##RECI
+     I              LNRF                            ##LNRF
+     I              MRIN                            ##MRIN
+     I              PTYP                            ##PTYP
+     I              CNUM                            ##CNUM
+     I              BRCA                            ##BRCA
+     I              LTYP                            ##LTYP
+     I              SUTP                            ##SUTP
+     I              VDAT                            ##VDAT
+     I              FCUS                            ##FCUS
+     I              FTYP                            ##FTYP
+     I              FSEQ                            ##FSEQ
+     I              CCY                             ##CCY1
+     I              INTC                            ##INTC
+     I              BRTT                            ##BRTT
+     I              BRTE                            ##BRTE
+     I              SPIN                            ##SPIN
+     I              WTIN                            ##WTIN
+     I              REPT                            ##REPT
+     I              NACD                            ##NACD
+     I              AUTO                            ##AUT1
+     I              FACO                            ##FACO
+     I              FCLB                            ##FCLB
+     I              ORED                            ##ORED
+     I              LCD                             ##LCD
+     I              CHTP                            ##CHTP
+     I              TNLU                            ##TNLU
+     I              RSTM                            ##RSTM
+     I              RONS                            ##RONS
+     I              RIBN                            ##RIBN
+     I              RIBA                            ##RIBA
+     I              ROBN                            ##ROBN
+     I              ROCN                            ##ROCN
+     I              PSTM                            ##PSTM
+     I              PONS                            ##PONS
+     I              PIBN                            ##PIBN
+     I              PIBA                            ##PIBA
+     I              POBN                            ##POBN
+     I              POCN                            ##POCN
+     I              RCRN                            ##RCRN
+     I              RCRA                            ##RCRA
+     I              RVNO                            ##RVNO
+     I              AWBN                            ##AWBN
+     I              AWBA                            ##AWBA
+     I              BENN                            ##BENN
+     I              BENA                            ##BENA
+     I              DTP1                            ##DTP1
+     I              DTP2                            ##DTP2
+     I              DTP3                            ##DTP3
+     I              DTP4                            ##DTP4
+     I              DCHG                            ##DCHG
+     I              BTB1                            ##BTB1
+     I              BTB2                            ##BTB2
+     I              BTB3                            ##BTB3
+     I              BTB4                            ##BTB4
+     I              BTB5                            ##BTB5
+     I              BTB6                            ##BTB6
+     I              CVMR                            ##CVMR
+     I              SCCY                            ##STCY                CEU003
+     I              REXR                            ##REXR                                    CLE031
+     I              REXI                            ##REXI                                    CLE031
+     I              PSCY                            ##PSCY                                    CLE031
+     I              PEXR                            ##PEXR                                    CLE031
+     I              PEXI                            ##PEXI                                    CLE031
+     I/COPY WNCPYSRC,CG6015I001
+     I**  Look-up string for RDE definition Array
+     I*
+     I##SDS       DS
+     I**********                              15120 ##S                                      BUG9646
+     I                                        15632 ##S                                      BUG9646
+     I*
+     I#@SDS       DS
+     I                                     51205120 #@S
+     I**  Packed data string.
+     I*
+     I            DS
+     I                                        1  20 ##W
+     I                                        1  200##WNUM
+     I**  Number Field
+     I*
+     I            DS
+     I                                        1   8 ##ITMA
+     I                                        1   80##ITEM
+     I** Used to convert item reference from character to numeric
+     I*
+     I            DS
+     I                                        1   6 ##NCIT
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     I            DS
+     I                                        1   5 ##CCCC
+     I                                        1   3 ##CCY
+     I                                        4   5 ##CCD
+     I*
+     I** Loan details parameter for call to CG99LSET
+     I*
+     IPDETLS      DS                            256
+     I* Currency
+     I                                        1   3 ##CCY1
+     I* Customer Number
+     I**********                              4   90##CNUM                                    CSD027
+     I                                        4   9 ##CNUM                                    CSD027
+     I* Branch
+     I                                       10  12 ##BRCA
+     I* Loan Processing Type
+     I                                       13  140##PTYP
+     I*
+     I** Settlement Instructions Parameter for call to CG99LSET
+     I*
+     IP0PARM      DS                            768
+     I* Pay - Branch
+     I                                        1   3 P0POBR
+     I* Receipt - Branch
+     I                                        4   6 P0ROBR
+     I* Receipt - Settlement Method
+     I                                        7   80P0RSTM
+     I* Receipt - Our Nostro
+     I**********                              9  20 P0RONS                                    CGL029
+     I                                        9  20 QQRONS                                    CGL029
+     I* Receipt - Intermediary Bank
+     I                                       21  28 P0RIBN
+     I* Receipt - Intermediary Bank a/c
+     I                                       29  63 P0RIBA
+     I* Receipt - Ordering Bank No.
+     I**********                             64  690P0ROBN                                    CSD027
+     I                                       64  69 P0ROBN                                    CSD027
+     I* Receipt - Ordering Customer
+     I**********                             70  750P0ROCN                                    CSD027
+     I                                       70  75 P0ROCN                                    CSD027
+     I* Pay - Settlement Method
+     I                                       76  770P0PSTM
+     I* Pay - Our Nostro
+     I**********                             78  89 P0PONS                                    CGL029
+     I                                       78  89 QQPONS                                    CGL029
+     I* Pay - Intermediary Bank
+     I                                       90  97 P0PIBN
+     I* Pay - Intermediary Bank a/c
+     I                                       98 132 P0PIBA
+     I* Pay - Ordering Bank No.
+     I**********                            133 1380P0POBN                                    CSD027
+     I                                      133 138 P0POBN                                    CSD027
+     I* Pay - Ordering Customer No.
+     I**********                            139 1440P0POCN                                    CSD027
+     I                                      139 144 P0POCN                                    CSD027
+     I* Receiver Correspondent No.
+     I                                      145 152 P0RCRN
+     I* Receiver Correspondent A/C 1
+     I                                      153 187 P0RCRA
+     I* Receiver Number
+     I                                      188 195 P0RVNO
+     I* A/C with Bank No.
+     I                                      196 203 P0AWBN
+     I* A/C with Bank A/C Line
+     I                                      204 238 P0AWBA
+     I* Beneficiary No.
+     I                                      239 246 P0BENN
+     I* Beneficiary A/C Line
+     I                                      247 281 P0BENA
+     I* Details of Pay 1
+     I                                      282 316 P0DTP1
+     I* Details of Pay 2
+     I                                      317 351 P0DTP2
+     I* Details of Pay 3
+     I                                      352 386 P0DTP3
+     I* Details of Pay 4
+     I                                      387 421 P0DTP4
+     I* Details of Charges
+     I                                      422 424 P0DCHG
+     I* Bank to Bank Info 1
+     I                                      425 459 P0BTB1
+     I* Bank to Bank Info 2
+     I                                      460 494 P0BTB2
+     I* Bank to Bank Info 3
+     I                                      495 529 P0BTB3
+     I* Bank to Bank Info 4
+     I                                      530 564 P0BTB4
+     I* Bank to Bank Info 5
+     I                                      565 599 P0BTB5
+     I* Bank to Bank Info 6
+     I                                      600 634 P0BTB6
+     I* Special Instruction 1
+     I                                      635 664 P0SPI1
+     I* Special Instruction 2
+     I                                      665 694 P0SPI2
+     I* Special Instruction 3
+     I                                      695 724 P0SPI3
+     I* Settlement Currency                                               CEU003
+     I                                      725 727 P0STCY                CEU003
+     I* Pay Settlement Currency                                                               CLE031
+     I                                      728 730 P0PSCY                                    CLE031
+     I                                      731 748 P0RONS                                    CGL029
+     I                                      749 766 P0PONS                                    CGL029
+     I*
+     I**  UDC Details for call to CG6001
+     I*
+     IP1PARM      DS                            256
+     I* Output Sequence
+     I                                        1   90P1OSEQ
+     I* UDC item number
+     I                                       10  170P1ITEM
+     I* This bind level
+     I                                       18  250P1TBIN
+     I* Previous bind level
+     I                                       26  330P1PBIN
+     I*
+     I**  Loan details Parameters for call to CG6001
+     I*
+     IP3PARM      DS                            256
+     I**  Loan Reference
+     I                                        1   6 P3LNRF
+     I**  Cancel/Amend Field
+     I                                        7   7 P3CNAM
+     I*
+     I**  Facility details Parameter for call to CG6001
+     I*
+     IP4PARM      DS                            256
+     I**  Facility customer
+     I**********                              1   60P4FCUS                                    CSD027
+     I                                        1   6 P4FCUS                                    CSD027
+     I**  Facility type
+     I                                        7   90P4FTYP
+     I**  Facility Seq
+     I                                       10  110P4FSEQ
+     I*
+     I**  Named constants
+     I*
+     I              'LOAN PRINC'          C         W#PTYP
+     I              'CALL LOAN '          C         W#PST1
+     I              'TERM LOAN '          C         W#PST2
+     I              'TERM PA PU'          C         W#PST3
+     I              'TERM PA SL'          C         W#PST4
+     I              'GUAR ISSUE'          C         W#PST5
+     I              'DISC LOAN '          C         W#PST6                                   BUG7960
+     I              'DISC PA PU'          C         W#PST7                                   BUG7960
+     I              'DISC PA SL'          C         W#PST8                                   BUG7960
+     I              'CALL PA PU'          C         W#PST9                                   BUG7960
+     I              'CALL PA SL'          C         W#PS10                                   BUG7960
+     I              'RISK PA PU'          C         W#PS11                                   BUG7960
+     I              'RISK P SL1'          C         W#PS12                                   BUG7960
+     I              'RISK P SL2'          C         W#PS13                                   BUG7960
+     I*
+     IDSPARM    E DSLOAMSDK
+     I** External DS for parameter passed from CG6010
+     I*
+     I##UDCR    E DSCGUDCRPD
+     I** External DS for incomplete reference
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  External DS for Bank details
+     I*
+     ISDCURR    E DSSDCURRPD                101
+     I**  External DS for currency details
+     I*
+     ISDCUST    E DSSDCUSTPD                                              CEU014
+      **  External DS for customer details                                CEU014
+     I/COPY WNCPYSRC,CG6015I002
+      *                                                                   CEU014
+     ISDGELR    E DSSDGELRPD                                              CEU014
+      **  External DS for General Ledger details                          CEU014
+      *                                                                   CEU014
+     IDSFDY     E DSDSFDY
+     I**  First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I**  Second DS for access programs, long data structure
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I*
+     I/COPY CGCPYSRC,CGPACKI
+     I*
+     I/COPY CGCPYSRC,SRERRI
+     I**  DS to store subroutine specific data.
+     I**  - Saved Path
+     I##PATH      DS                         20
+     I                                        1   6 ##GRPS
+     I*
+     I##BIND      DS                         20
+     I I            1                         1   60##PBIN
+     I I            1                         7  120##TBIN
+     I*
+     I            DS
+     I I            1                         1   60#@BIND
+     I*
+     I#PDS        DS
+     I I            0                         1   30P1
+     I                                        4   60P2
+     I                                        7   90P3
+     I                                       10  120P4
+     I                                       13  150P5
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Process     :  MAINLINE                                      *
+     C*  Function    :  Mainline processing                           *
+     C*                                                               *
+     C*  Called by   :  None                                          *
+     C*  Calls       :  SRINIT - Initial Processing - On First Call   *
+     C*                 SRINZF - Initialise Fields on Each Invocation *
+     C*                 SRMAIN - Main Processing                      *
+     C*****************************************************************
+     C*
+     C**  Parameter list for current program invocation.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+     C                     PARM           ##COPD  1
+     C                     PARM           ##AUTO  1
+     C                     PARM           DSPARM
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C**  Initial processing - Once Only
+     C*
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+     C*
+     C** Initialisation processing
+     C*
+     C                     EXSR SRINZF
+     C*
+     C** Main processing
+     C*
+     C                     EXSR SRMAIN
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C**  Terminate program
+     C*
+     C                     RETRN
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRMAIN                                        *
+     C*  Function    :  Main processing                               *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  SRDETL - Obtain Detail Information            *
+     C*                 SRGENR - Generate reference number by writing *
+     C*                          to PF/CGUDCRPD                       *
+     C*                 L02PI  - Process Lending Principal Increase   *
+     C*                          Confirmation                         *
+     C*****************************************************************
+     C           SRMAIN    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+     C*
+     C                     EXSR SRDETL
+     C*
+     C**  Generate reference number by writing to PF/CGUDCRPD
+     C**  If no confirmation to be produced, then bypass
+     C*
+     C                     MOVE 'N'       ##COPD
+     C/COPY WNCPYSRC,CG6015C007
+     C                     EXSR SRGENR
+     C           ##COPD    CABEQ'N'       EXMAIN
+     C*
+     C** Extract
+     C*
+     C                     EXSR L02PI
+     C*
+     C           EXMAIN    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRDETL                                        *
+     C*  Function    :  Process: Obtain detail information            *
+     C*                                                               *
+     C*  Called by   :  SRMAIN - Main Processing                      *
+     C*  Calls       :  SRERR  - Database Error                       *
+     C*****************************************************************
+     C           SRDETL    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETL'  @STK,Q
+     C*
+     C           CLOANK    KLIST
+     C                     KFLD           LNRF
+     C                     KFLD           RCDT
+     C/COPY WNCPYSRC,CG6015C003
+     C*
+     C                     MOVEL'A'       RCDT
+     C           CLOANK    CHAINCLOAN                88
+     C*
+     C           *IN88     IFEQ '1'
+     C                     MOVEL'CLOAN   'W0FILE           ***************
+     C                     MOVELLNRF      W0KEY            * DB ERROR 06 *
+     C                     Z-ADD06        W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *                                                                                      BUG7960
+     C                     MOVE *BLANK    WOLN70  1                                          BUG7960
+     C           ##PTYP    IFEQ 72                                                           BUG7960
+     C**********           Z-ADDLNRF      WOLNRF  60                                  BUG7960 CLE148
+     C                     MOVELLNRF      WOLNRF  6                                           CLE148
+     C**********           Z-ADDOLNO      LNRF                                       BUG7960 CSD027A
+     C                     MOVE OLNO      LNRF                                               CSD027A
+     C                     MOVEL'A'       RCDT    1                                          BUG7960
+      *                                                                                      BUG7960
+     C           CLOANK    CHAINCLOAN                88                                      BUG7960
+     C           *IN88     IFEQ '1'                                                          BUG7960
+     C                     MOVEL'CLOAN   'W0FILE                                             BUG7960
+     C                     MOVELLNRF      W0KEY                                              BUG7960
+     C                     Z-ADD14        W0ERNB                                             BUG7960
+     C                     MOVEL'MEM5004' W0MSGD                                             BUG7960
+     C                     MOVEL'MIDAS  ' W0MSGF                                             BUG7960
+     C                     EXSR SRERR                                                        BUG7960
+     C                     ENDIF                                                             BUG7960
+      *                                                                                      BUG7960
+     C           ##PTYP    IFEQ 70                                                           BUG7960
+     C                     MOVE 'Y'       WOLN70                                             BUG7960
+     C                     ENDIF                                                             BUG7960
+      *                                                                                      BUG7960
+      ** Re-chain to get the original loan details                                           BUG7960
+     C**********           Z-ADDWOLNRF    LNRF                                        BUG7960 CLE148
+     C                     MOVELWOLNRF    LNRF                                                CLE148
+     C                     MOVEL'A'       RCDT    1                                          BUG7960
+      *                                                                                      BUG7960
+     C           CLOANK    CHAINCLOAN                88                                      BUG7960
+     C           *IN88     IFEQ '1'                                                          BUG7960
+     C                     MOVEL'CLOAN   'W0FILE                                             BUG7960
+     C                     MOVELLNRF      W0KEY                                              BUG7960
+     C                     Z-ADD15        W0ERNB                                             BUG7960
+     C                     MOVEL'MEM5004' W0MSGD                                             BUG7960
+     C                     MOVEL'MIDAS  ' W0MSGF                                             BUG7960
+     C                     EXSR SRERR                                                        BUG7960
+     C                     ENDIF                                                             BUG7960
+      *                                                                                      BUG7960
+     C                     ENDIF                                                             BUG7960
+     C*
+     C           EXDETL    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRGENR                                        *
+     C*  Function    :  Generate reference number by writing to       *
+     C*                 PF/CGUDCRPD                                   *
+     C*                                                               *
+     C*  Called by   :  SRMAIN - Main Processing                      *
+     C*  Calls       :  CG9010 - Create reference record              *
+     C*****************************************************************
+     C           SRGENR    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRGENR'  @STK,Q
+     C*
+     C**  Generate reference number and check if further processing
+     C**  required. Set up all available information in the record
+     C**  format before calling.
+     C*
+     C                     CLEAR##UDCR
+     C*
+     C** Booking/Main Branch (Mandatory)
+     C*
+     C                     MOVELBRCA      DRBRCA
+     C*
+     C** Originating Branch (Optional)
+     C*
+     C                     MOVELORBR      DRORBR
+     C*
+     C** Module identifier (Mandatory)
+     C*
+     C                     MOVEL'LE'      DRMODI
+     C*
+     C** Midas Transaction Number (Mandatory)
+     C*
+     C                     MOVELLNRF      DRMTRN
+     C*
+     C                     MOVELW#PTYP    DRPTYP           * print type
+     C*
+     C                     SELEC
+     C********** PTYP      WHEQ 61                                                           BUG7960
+     C           ##PTYP    WHEQ 61                                                           BUG7960
+     C                     MOVELW#PST1    DRPSTP           * print s/type
+     C********** PTYP      WHEQ 62                                                           BUG7960
+     C           ##PTYP    WHEQ 62                                                           BUG7960
+     C                     MOVELW#PST2    DRPSTP           * print s/type
+     C********** PTYP      WHEQ 64                                                           BUG7960
+     C           ##PTYP    WHEQ 64                                                           BUG7960
+     C                     MOVELW#PST3    DRPSTP           * print s/type
+     C********** PTYP      WHEQ 66                                                           BUG7960
+     C           ##PTYP    WHEQ 66                                                           BUG7960
+     C                     MOVELW#PST4    DRPSTP           * print s/type
+     C********** PTYP      WHEQ 70                                                           BUG7960
+     C           ##PTYP    WHEQ 70                                                           BUG7960
+     C                     MOVELW#PST5    DRPSTP           * print s/type
+     C           ##PTYP    WHEQ 63                                                           BUG7960
+     C                     MOVELW#PST6    DRPSTP                                             BUG7960
+     C           ##PTYP    WHEQ 65                                                           BUG7960
+     C                     MOVELW#PST7    DRPSTP                                             BUG7960
+     C           ##PTYP    WHEQ 67                                                           BUG7960
+     C                     MOVELW#PST8    DRPSTP                                             BUG7960
+     C           ##PTYP    WHEQ 68                                                           BUG7960
+     C                     MOVELW#PST9    DRPSTP                                             BUG7960
+     C           ##PTYP    WHEQ 69                                                           BUG7960
+     C                     MOVELW#PS10    DRPSTP                                             BUG7960
+     C           ##PTYP    WHEQ 71                                                           BUG7960
+     C                     MOVELW#PS11    DRPSTP                                             BUG7960
+     C           ##PTYP    WHEQ 72                                                           BUG7960
+     C           WOLN70    IFEQ 'Y'                                                          BUG7960
+     C                     MOVELW#PS12    DRPSTP                                             BUG7960
+     C                     ELSE                                                              BUG7960
+     C                     MOVELW#PS13    DRPSTP                                             BUG7960
+     C                     ENDIF                                                             BUG7960
+     C                     ENDSL
+     C*
+     C** Auto Transmission indicator
+     C*
+     C                     MOVEL'N'       DRATRM
+     C*
+     C** Customer Number (Mandatory)
+     C*
+     C                     MOVELCNUM      ##CUST
+     C*
+     C                     CALL 'CG9010'
+     C                     PARM           ##RTCD  7
+     C                     PARM '*GEN'    ##MODE 10
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+     C*
+     C**  Blank return code implies generate correspondence.
+     C**  CGD1270 => no error, but suppress output for this transaction.
+     C*
+     C           ##RTCD    IFEQ *BLANK
+      *                                                                                       CCG015
+     C           DRPTYP    CAT  ':':0     COLON  11 P                                         CCG015
+     C           COLON     CAT  DRPSTP:0  ##REFR    P                                         CCG015
+     C                     EXSR WRAPRF                                                        CCG015
+     C*
+     C                     MOVE 'Y'       ##COPD
+     C*
+     C                     ELSE
+     C*
+     C           ##RTCD    IFNE 'CGD1270'
+     C                     MOVEL'CG9010  'W0FILE
+     C                     MOVEL##RTCD    W0KEY            ***************
+     C                     Z-ADD05        W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'CGD1286' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           EXGENR    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  L02PI                                         *
+     C*  Function    :  Process: Lending Principal Inc. Confs         *
+     C*                                                               *
+     C*  Called by   :  SRMAIN - Main Processing                      *
+     C*  Calls       :  SRPATH - Generate Path String                 *
+     C*                 SRSDET - Set-up Settlement Details            *
+     C*                 LOANPI - Process Loan Principal Increase      *
+     C*                          Detail                               *
+     C*                 LOANA  - Process Loan Associated Details      *
+     C*****************************************************************
+     C           L02PI     BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'L02PI '  @STK,Q
+     C*
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'l02PI '  ##GRPS    P
+     C*
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+     C*
+     C                     EXSR LOANPI
+     C*
+     C                     EXSR SRSDET
+     C*
+     C                     EXSR LOANA
+      *                                                                                       CER049
+      ** Stamp Tax                                                                            CER049
+      *                                                                                       CER049
+     C           CER049    IFEQ 'Y'                                                           CER049
+     C                     EXSR LNSTAX                                                        CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       CER049
+     C*
+     C**  Decrement Path DS index
+     C*
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  LOANPI                                        *
+     C*  Function    :  Process: Loan Principal Increase detail       *
+     C*                                                               *
+     C*  Called by   :  L02PI  - Process Lending Principal Increase   *
+     C*                          Confirmation                         *
+     C*  Calls       :  SRPATH - Generate Path String                 *
+     C*                 SRDCDT - Determine Currency Details           *
+     C*                 SRADTA - Accumulate RDEs and Associated Data  *
+     C*                 SRODTA - Output Accumulated Data to           *
+     C*                           PF/CGUDTAPD                         *
+     C*****************************************************************
+     C           LOANPI    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'LOANPI'  @STK,Q
+     C*
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'LOANPI'  ##GRPS    P
+     C*
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+     C*
+     C                     Z-ADD0         R1      30
+     C*
+     C** Loan Reference
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'LOAN REF'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELLNRF      R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C** Currency Description
+     C*
+     C                     MOVELCCY       ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6CYNM    ##WRK  14
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'CCY_DESC'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVEL##WRK     R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C** Principal
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'L '      #@RDE
+     C                     MOVEL'PRINCIPA'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELPRAM      ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELCCY       ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C/COPY WNCPYSRC,CG6015C005
+     C*
+     C** Currency
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'CURRENCY'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELCCY       R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C** Maturity Date
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'TE'      #@RDE
+     C                     MOVEL'MATUR DA'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELMDAT      ##DATA
+     C                     MOVEL'Date  '  ##RDEC
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C** Value Date
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'TE'      #@RDE
+     C                     MOVEL'VALUE DA'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELVDAT      ##DATA
+     C                     MOVEL'Date  '  ##RDEC
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C** Rollover Date
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'E '      #@RDE
+     C                     MOVEL'ROLL DAT'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELRLDT      ##DATA
+     C                     MOVEL'Date  '  ##RDEC
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C** Run date; production time
+     C*
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'RUNDAT  '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELBJRDNB    ##DATA
+     C                     MOVEL'Date  '  ##RDEC
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *                                                                                       CLE031
+      ** Check for Correct Currency to be used in conversion                                  CLE031
+      *                                                                                       CLE031
+     C                     EXSR SRCCHK                                                        CLE031
+      *                                                                                       CLE031
+     C*                                                                   CEU003
+     C** Principal in Settlement Currency; calculate using EU0200.        CEU003
+      *                                                                   CEU003
+     C                     ADD  1         R1                              CEU003
+     C                     CLEARR#DATA                                    CEU003
+     C                     CLEARR#DEFN                                    CEU003
+     C                     CLEAR#@RDE                                     CEU003
+     C                     MOVEL'PRNC_SC '#@RDE                           CEU003
+     C           ##RDE     CAT  #@RDE:1   ##RDE                           CEU003
+     C                     MOVEL'Amount'  ##RDEC                          CEU003
+     C                     MOVEL'L'       ##RDET                          CEU003
+     C                     MOVELR#DEFN    ##R,R1                          CEU003
+      *                                                                   CEU003
+     C           SCCY      IFNE *BLANKS                                   CEU003
+     C           CLE031    ANDEQ'N'                                                           CLE031
+     C           CLE031    OREQ 'Y'                                                           CLE031
+     C           WEURUN    ANDEQ'Y'                                                           CLE031
+     C           WTOCCY    ANDNE*BLANKS                                                       CLE031
+      *                                                                                       CLE031
+     C           *LIKE     DEFN PRAM      PRAMSC                          CEU003
+     C                     CALL 'EU0200'                                  CEU003
+     C                     PARM *BLANKS   P@RTCD  7        Return Code    CEU003
+     C                     PARM PRAM      P@FRAM 183       FROM Ccy AmountCEU003
+     C                     PARM CCY       P@FRCY  3        FROM Currency  CEU003
+     C**********           PARM SCCY      P@TOCY  3        TO Currency    CEU003              CLE031
+     C                     PARM WTOCCY    P@TOCY  3        TO Currency                        CLE031
+     C           PRAMSC    PARM           P@OUTA 150       Outright AmountCEU003
+     C                     PARM           P@INTA 183       Interim Amount CEU003
+     C                     PARM           P@EXRT 159       Exchange Rate  CEU003
+     C                     PARM           P@MDIN  1        Mult/Div Ind.  CEU003
+      *                                                                   CEU003
+      **      Database error handling:                                    CEU003
+      *                                                                   CEU003
+     C           P@RTCD    IFEQ '*ERROR*'                                 CEU003
+     C                     MOVEL'EU0200  'W0FILE                          CEU003
+     C                     MOVEL##RTCD    W0KEY            ***************CEU003
+     C                     Z-ADD08        W0ERNB           * DB ERROR 008*CEU003
+     C                     MOVEL'MEM5003' W0MSGD           ***************CEU003
+     C                     MOVEL'MIDAS   'W0MSGF                          CEU003
+     C                     EXSR SRERR                                     CEU003
+      *                                                                   CEU003
+     C                     ELSE                                           CEU003
+     C                     MOVELPRAMSC    ##DATA                          CEU003
+     C                     ENDIF                                          CEU003
+      *                                                                   CEU003
+      *       Calculate number of decimal places using SRDCDT             CEU003
+     C*                                                                   CEU003
+     C                     MOVELSCCY      ##CCY                           CEU003
+     C                     EXSR SRDCDT                                    CEU003
+     C                     MOVELA6NBDP    ##DCPA                          CEU003
+     C                     MOVELR#DATA    ##D,R1                          CEU003
+     C/COPY WNCPYSRC,CG6015C006
+     C*                                                                   CEU003
+     C                     ENDIF                                          CEU003
+     C*                                                                   CEU014
+     C           CEU014    IFEQ 'Y'                                       CEU014
+     C                     MOVE *BLANKS   EQCY                            CEU014
+     C                     MOVE CCY       ##CCY                           CEU014
+     C                     EXSR SRDCDT                                    CEU014
+     C           A6INCY    IFEQ 'Y'                                       CEU014
+     C                     MOVE BKEURO    EQCY                            CEU014
+     C                     ENDIF                                          CEU014
+     C           CCY       IFEQ BKEURO                                    CEU014
+      *                                                                   CEU014
+      ** Get Customer Details                                             CEU014
+      *                                                                   CEU014
+     C                     MOVELCNUM      ##KEY1                          CEU014
+     C                     CALL 'AOCUSTR0'                                CEU014
+     C                     PARM *BLANKS   ##RTCD                          CEU014
+     C                     PARM '*KEY   ' ##OPTN                          CEU014
+     C                     PARM           ##KEY1 10                       CEU014
+     C                     PARM *BLANKS   ##KYST  7                       CEU014
+     C           SDCUST    PARM SDCUST    DSSDY                           CEU014
+      *                                                                   CEU014
+      ** DATABASE ERROR                                                   CEU014
+      *                                                                   CEU014
+     C           ##RTCD    IFNE *BLANK                                    CEU014
+     C                     MOVEL'SDCUSTPD'W0FILE                          CEU014
+     C                     MOVELCNUM      W0KEY            ***************CEU014
+     C                     Z-ADD11        W0ERNB           * DB ERROR 11 *CEU014
+     C                     MOVEL'MEM5004' W0MSGD           ***************CEU014
+     C                     MOVEL'MIDAS  ' W0MSGF                          CEU014
+     C                     EXSR SRERR                                     CEU014
+     C                     END                                            CEU014
+     C                     MOVE BBDINC    EQCY                            CEU014
+     C                     ENDIF                                          CEU014
+     C                     ENDIF                                          CEU014
+      *                                                                   CEU014
+      ** Extract Principal in Equivalent Currency                         CEU014
+      *                                                                   CEU014
+     C                     ADD  1         R1                              CEU014
+     C                     CLEARR#DATA                                    CEU014
+     C                     CLEARR#DEFN                                    CEU014
+     C                     CLEAR#@RDE                                     CEU014
+     C                     MOVE 'Y '      #@RDE                           CEU014
+     C                     MOVEL'PRNC_EQC'#@RDE                           CEU014
+     C           ##RDE     CAT  #@RDE:1   ##RDE                           CEU014
+     C                     MOVEL'Amount'  ##RDEC                          CEU014
+     C                     MOVEL'L'       ##RDET                          CEU014
+     C                     MOVELR#DEFN    ##R,R1                          CEU014
+     C           CEU014    IFEQ 'Y'                                       CEU014
+     C           EQCY      ANDNE*BLANKS                                   CEU014
+     C                     MOVELEQCY      ##CCY                           CEU014
+     C                     EXSR SRDCDT                                    CEU014
+     C                     Z-ADDPRAM      P@FRAM                          CEU014
+     C                     MOVE CCY       P@FRCY                          CEU014
+     C                     MOVE EQCY      P@TOCY                          CEU014
+     C                     EXSR D@EURO                                    CEU014
+     C                     MOVEL##OUTA    ##DATA                          CEU014
+     C                     MOVELA6NBDP    ##DCPA                          CEU014
+     C                     MOVELR#DATA    ##D,R1                          CEU014
+     C                     ENDIF                                          CEU014
+     C*                                                                   CEU014
+     C* Extract Equivalent Currency                                       CEU014
+     C*                                                                   CEU014
+     C                     ADD  1         R1                              CEU014
+     C                     CLEARR#DATA                                    CEU014
+     C                     CLEARR#DEFN                                    CEU014
+     C                     CLEAR#@RDE                                     CEU014
+     C                     MOVE 'Y '      #@RDE                           CEU014
+     C                     MOVEL'EQUIV_CC'#@RDE                           CEU014
+     C           ##RDE     CAT  #@RDE:1   ##RDE                           CEU014
+     C                     MOVELR#DEFN    ##R,R1                          CEU014
+     C           CEU014    IFEQ 'Y'                                       CEU014
+     C           EQCY      ANDNE*BLANKS                                   CEU014
+     C                     MOVELEQCY      ##DATA                          CEU014
+     C                     MOVELR#DATA    ##D,R1                          CEU014
+     C                     ENDIF                                          CEU014
+     C*                                                                   CEU014
+     C* Extract Equivalent Currency Description                           CEU014
+     C*                                                                   CEU014
+     C                     ADD  1         R1                              CEU014
+     C                     CLEARR#DATA                                    CEU014
+     C                     CLEARR#DEFN                                    CEU014
+     C                     CLEAR#@RDE                                     CEU014
+     C                     MOVE 'YD'      #@RDE                           CEU014
+     C                     MOVEL'EQUIV_CC'#@RDE                           CEU014
+     C           ##RDE     CAT  #@RDE:1   ##RDE                           CEU014
+     C                     MOVELR#DEFN    ##R,R1                          CEU014
+     C           CEU014    IFEQ 'Y'                                       CEU014
+     C           EQCY      ANDNE*BLANKS                                   CEU014
+     C                     MOVELA6CYNM    ##DATA                          CEU014
+     C                     MOVELR#DATA    ##D,R1                          CEU014
+     C                     ENDIF                                          CEU014
+     C/COPY WNCPYSRC,CG6015C004
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+     C*
+     C**  Decrement Path DS index
+     C*
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT                                                                                  CER049
+      *****************************************************************                       CER049
+      *  Subroutine  :  LNSTAX                                        *                       CER049
+      *  Function    :  Process: Stamp Tax details                    *                       CER049
+      *                                                               *                       CER049
+      *  Called by   :  L02PI  - Process Lending Principal Increase   *                       CER049
+      *                          Confirmation                         *                       CER049
+      *  Calls       :  SRPATH - Generate Path String                 *                       CER049
+      *                 SRDCDT - Determine Currency Details           *                       CER049
+      *                 SRADTA - Accumulate RDEs and Associated Data  *                       CER049
+      *                 SRODTA - Output Accumulated Data to           *                       CER049
+      *                           PF/CGUDTAPD                         *                       CER049
+      *****************************************************************                       CER049
+     C           LNSTAX    BEGSR                                                              CER049
+      *                                                                                       CER049
+      **  Set up subroutine stack name                                                        CER049
+      *                                                                                       CER049
+     C                     ADD  1         Q                                                   CER049
+     C                     MOVEL'LNSTAX'  @STK,Q                                              CER049
+      *                                                                                       CER049
+     C                     ADD  1         P1                                                  CER049
+     C           P1        OCUR ##PATH                                                        CER049
+     C                     MOVEL'LNSTAX'  ##GRPS    P                                         CER049
+      *                                                                                       CER049
+     C                     EXSR SRPATH                                                        CER049
+     C                     EXSR PSHGRS                                                        CER049
+      *                                                                                       CER049
+     C                     Z-ADD0         R1      30                                          CER049
+      *                                                                                       CER049
+      **  Set up key for Stamp Tax file                                                       CER049
+      *                                                                                       CER049
+     C**********           Z-ADDLNRF      K1LNRF  60                                  CER049  CLE148
+     C                     MOVELLNRF      K1LNRF  6                                           CLE148
+      *                                                                                       CER049
+      ** Retrieve the stamp tax record for the loan                                           CER049
+      *                                                                                       CER049
+     C           K1LNRF    CHAINCLONCLL1             98                                       CER049
+      *                                                                                       CER049
+      ** If record found, extract stamp tax data                                              CER049
+      *                                                                                       CER049
+     C           *IN98     IFEQ *OFF                                                          CER049
+      *                                                                                       CER049
+      ** Stamp Tax Liable Flag                                                                CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZSTAXFLG'#@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQTAX     R#DATA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Principal Tax flag                                                                   CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZTAXPRFL'#@RDE                                               CER049
+     C                     MOVE 'G '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQPRIN    R#DATA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Start Date for Principal Tax                                                         CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZTAXPRDT'#@RDE                                               CER049
+     C                     MOVE 'E '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQPDTE    R#DATA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Average Balance Flag                                                                 CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZTAXAVFL'#@RDE                                               CER049
+     C                     MOVE 'G '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQAVBL    R#DATA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Start Date for Average Balance                                                       CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZTAXAVDT'#@RDE                                               CER049
+     C                     MOVE 'E '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQADTE    R#DATA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Interest Tax Flag                                                                    CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZTAXINFL'#@RDE                                               CER049
+     C                     MOVE 'G '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQSINT    R#DATA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Start Date for Interest Tax                                                          CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZTAXINDT'#@RDE                                               CER049
+     C                     MOVE 'E '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQIDTE    R#DATA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Debit Account Reference                                                              CER049
+      *                                                                                       CER049
+     C           LQDCST    CAT  LQDCCY    WDRAC1  9                                           CER049
+     C                     MOVELWDRAC1    WDRAC2 19                                           CER049
+     C                     MOVE LQDACD    WDRAC2                                              CER049
+     C                     MOVELWDRAC2    WDRAC3 21                                           CER049
+     C                     MOVE LQDASC    WDRAC3                                              CER049
+     C           WDRAC3    CAT  LQDBRC    WDRACC 24                                           CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ACCOUNT' #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELWDRACC    R#DATA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Stamp Tax amount                                                                     CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'Z_TAX_AM'#@RDE                                               CER049
+     C                     MOVE 'T '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQSTAB    ##DATA                                              CER049
+     C                     MOVEL'Amount'  ##RDEC                                              CER049
+     C                     MOVEL'L'       ##RDET                                              CER049
+     C                     MOVELLQDCCY    ##CCY                                               CER049
+     C                     EXSR SRDCDT                                                        CER049
+     C                     MOVELA6NBDP    ##DCPA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Stamp Tax On Interest                                                                CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZTAXINAM'#@RDE                                               CER049
+     C                     MOVE 'T '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQSTAI    ##DATA                                              CER049
+     C                     MOVEL'Amount'  ##RDEC                                              CER049
+     C                     MOVEL'L'       ##RDET                                              CER049
+     C                     MOVELLQDCCY    ##CCY                                               CER049
+     C                     EXSR SRDCDT                                                        CER049
+     C                     MOVELA6NBDP    ##DCPA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+      ** Stamp Tax on Average This Month                                                      CER049
+      *                                                                                       CER049
+     C                     ADD  1         R1                                                  CER049
+     C                     CLEARR#DATA                                                        CER049
+     C                     CLEARR#DEFN                                                        CER049
+     C                     CLEAR#@RDE                                                         CER049
+     C                     MOVEL'ZTAXAVAM'#@RDE                                               CER049
+     C                     MOVE 'T '      #@RDE                                               CER049
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               CER049
+     C                     MOVELLQTAXE    ##DATA                                              CER049
+     C                     MOVEL'Amount'  ##RDEC                                              CER049
+     C                     MOVEL'L'       ##RDET                                              CER049
+     C                     MOVELLQDCCY    ##CCY                                               CER049
+     C                     EXSR SRDCDT                                                        CER049
+     C                     MOVELA6NBDP    ##DCPA                                              CER049
+     C                     MOVELR#DATA    ##D,R1                                              CER049
+     C                     MOVELR#DEFN    ##R,R1                                              CER049
+      *                                                                                       CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       CER049
+      **  Accumulate RDEs and associated data and output to PF/CGUDTPD.                       CER049
+      *                                                                                       CER049
+     C                     EXSR SRADTA                                                        CER049
+     C                     EXSR SRODTA                                                        CER049
+      *                                                                                       CER049
+      **  Decrement Path DS index                                                             CER049
+      *                                                                                       CER049
+     C           P1        OCUR ##PATH                                                        CER049
+     C                     CLEAR##GRPS                                                        CER049
+     C                     SUB  1         P1                                                  CER049
+     C                     EXSR POPGRS                                                        CER049
+      *                                                                                       CER049
+      **  Unwind subroutine stack name                                                        CER049
+      *                                                                                       CER049
+     C                     MOVEA*BLANKS   @STK,Q                                              CER049
+     C                     SUB  1         Q                                                   CER049
+      *                                                                                       CER049
+     C                     ENDSR                                                              CER049
+     C*****************************************************************                       CER049
+     C/EJECT
+      *****************************************************************   CEU014
+      * Subroutine  :  D@EURO                                         *   CEU014
+      * Function    :  EURO Currency Conversion:                      *   CEU014
+      *                Converts amount P@FRAM in ccy P@FRCY to amount *   CEU014
+      *                ##OUTA in ccy P@TOCY                           *   CEU014
+      * Called by   :  LOANPI                                         *   CEU014
+      *                                                               *   CEU014
+      * Calls       :  EU0200                                         *   CEU014
+      *                SRERR                                          *   CEU014
+      *****************************************************************   CEU014
+     C           D@EURO    BEGSR                                          CEU014
+      *                                                                   CEU014
+     C                     Z-ADD0         ##OUTA 130                      CEU014
+     C                     CALL 'EU0200'                                  CEU014
+     C                     PARM *BLANKS   P@RTCD  7        Return Code    CEU014
+     C                     PARM           P@FRAM 183       FROM Ccy AmountCEU014
+     C                     PARM           P@FRCY  3        FROM Currency  CEU014
+     C                     PARM           P@TOCY  3        TO Currency    CEU014
+     C                     PARM           P@OUTA 150       Outright AmountCEU014
+     C                     PARM           P@INTA 183       Interim Amount CEU014
+     C                     PARM           P@EXRT 159       Exchange Rate  CEU014
+     C                     PARM           P@MDIN  1        Mult/Div Ind.  CEU014
+      *                                                                   CEU014
+      ** Database error handling:                                         CEU014
+      *                                                                   CEU014
+     C           P@RTCD    IFEQ '*ERROR*'                                 CEU014
+     C                     MOVEL'EU0200  'W0FILE                          CEU014
+     C                     MOVEL'*CALL   'W0KEY            ***************CEU014
+     C                     Z-ADD12        W0ERNB           * DB ERROR 12 *CEU014
+     C                     MOVEL'MEM5003' W0MSGD           ***************CEU014
+     C                     MOVEL'MIDAS  ' W0MSGF                          CEU014
+     C                     EXSR SRERR                                     CEU014
+      *                                                                   CEU014
+      ** Otherwise, store amount in settlement currency as ##OUTA         CEU014
+      *                                                                   CEU014
+     C                     ELSE                                           CEU014
+     C                     MOVE P@OUTA    ##OUTA                          CEU014
+     C                     ENDIF                                          CEU014
+      *                                                                   CEU014
+     C                     ENDSR                                          CEU014
+     C/COPY WNCPYSRC,CG6015C008
+      *****************************************************************   CEU014
+     C/EJECT                                                                                  CLE031
+      *****************************************************************                       CLE031
+      * Subroutine  :  SRCCHK                                         *                       CLE031
+      * Function    :  Ensure that the correct currency code is       *                       CLE031
+      *                used when converting the Principal             *                       CLE031
+      * Called by   :  LOANPI                                         *                       CLE031
+      *                                                               *                       CLE031
+      * Calls       :  SRCONV                                         *                       CLE031
+      *****************************************************************                       CLE031
+     C           SRCCHK    BEGSR                                                              CLE031
+      *                                                                                       CLE031
+      ** Setup Flags                                                                          CLE031
+      ** Determine whether Loan Type is Participation Sold or not                             CLE031
+      *                                                                                       CLE031
+     C           PTYP      IFEQ 66                                                            CLE031
+     C           PTYP      OREQ 67                                                            CLE031
+     C           PTYP      OREQ 69                                                            CLE031
+     C           PTYP      OREQ 72                                                            CLE031
+     C                     MOVE 'Y'       WPARTS  1                                           CLE031
+     C                     ELSE                                                               CLE031
+     C                     MOVE 'N'       WPARTS                                              CLE031
+     C                     ENDIF                                                              CLE031
+     C                     MOVE *BLANKS   WTOCCY  3                                           CLE031
+      *                                                                                       CLE031
+      ** Set Receipt OK flag if Receipt Settlement Currency is                                CLE031
+      ** neither blank nor equal to Loan Currency                                             CLE031
+      *                                                                                       CLE031
+     C           CCY       IFNE SCCY                                                          CLE031
+     C           SCCY      ANDNE*BLANKS                                                       CLE031
+     C                     MOVE 'Y'       WOKRCY  1                                           CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+      ** Set Pay OK flag if Pay Settlement Currency is                                        CLE031
+      ** neither blank nor equal to Loan Currency                                             CLE031
+      *                                                                                       CLE031
+     C           CCY       IFNE PSCY                                                          CLE031
+     C           PSCY      ANDNE*BLANKS                                                       CLE031
+     C                     MOVE 'Y'       WOKPCY  1                                           CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+      ** Determine if Loan Currency is an In currency                                         CLE031
+      *                                                                                       CLE031
+     C                     MOVE CCY       ##CCY                                               CLE031
+     C                     EXSR SRDCDT                                                        CLE031
+     C                     MOVE A6INCY    WINCCY  1                                           CLE031
+     C                     MOVE A6NBDP    WCCYDP  1                                           CLE031
+      *                                                                                       CLE031
+     C           WINCCY    IFEQ 'N'                                                           CLE031
+      *                                                                                       CLE031
+      ** Determine if Receipt Settlement Currency is an In Currency                           CLE031
+      *                                                                                       CLE031
+     C                     MOVE SCCY      ##CCY                                               CLE031
+     C                     EXSR SRDCDT                                                        CLE031
+     C                     MOVE A6INCY    WINRCY  1                                           CLE031
+     C                     MOVE A6NBDP    WRCYDP  1                                           CLE031
+      *                                                                                       CLE031
+      ** Determine if Pay Settlement Currency is an In Currency                               CLE031
+      *                                                                                       CLE031
+     C                     MOVE PSCY      ##CCY                                               CLE031
+     C                     EXSR SRDCDT                                                        CLE031
+     C                     MOVE A6INCY    WINPCY  1                                           CLE031
+     C                     MOVE A6NBDP    WPCYDP  1                                           CLE031
+      *                                                                                       CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     MOVE 'Y'       WEURUN  1                                           CLE031
+      *                                                                                       CLE031
+     C           CLE031    IFEQ 'Y'                                                           CLE031
+     C                     MOVE 'N'       WEURUN                                              CLE031
+     C                     MOVE PRAM      PAMT                                                CLE031
+     C                     MOVE WCCYDP    PFDP                                                CLE031
+     C                     MOVE CCY       PFCY                                                CLE031
+      *                                                                                       CLE031
+      ** If Loan Type is Participation Sold and Receipt Settlement Currency                   CLE031
+      ** is not blank nor is it equal to Loan Currency, make Receipt                          CLE031
+      ** Currency as To Currency                                                              CLE031
+      *                                                                                       CLE031
+     C           WPARTS    IFEQ 'Y'                                                           CLE031
+     C           WOKRCY    ANDEQ'Y'                                                           CLE031
+      *                                                                                       CLE031
+     C                     MOVE SCCY      WTOCCY                                              CLE031
+     C           WINCCY    IFEQ 'Y'                                                           CLE031
+     C           WINRCY    OREQ 'Y'                                                           CLE031
+     C                     MOVE 'Y'       WEURUN                                              CLE031
+     C                     ELSE                                                               CLE031
+     C                     MOVE REXR      PEXC                                                CLE031
+     C                     MOVE REXI      PMDI                                                CLE031
+     C                     MOVE WRCYDP    PTDP                                                CLE031
+     C                     EXSR SRCONV                                                        CLE031
+     C                     MOVE POUT      ##DATA                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+      ** If Loan Type is Non Participation Sold and Pay Settlement Currency                   CLE031
+      ** is not blank nor is it equal to Loan Currency, make Pay Settlement                   CLE031
+      ** as To Currency                                                                       CLE031
+      *                                                                                       CLE031
+     C           WPARTS    IFEQ 'N'                                                           CLE031
+     C           WOKPCY    ANDEQ'Y'                                                           CLE031
+      *                                                                                       CLE031
+     C                     MOVE PSCY      WTOCCY                                              CLE031
+     C           WINCCY    IFEQ 'Y'                                                           CLE031
+     C           WINPCY    OREQ 'Y'                                                           CLE031
+     C                     MOVE 'Y'       WEURUN                                              CLE031
+     C                     ELSE                                                               CLE031
+     C                     MOVE PEXR      PEXC                                                CLE031
+     C                     MOVE PEXI      PMDI                                                CLE031
+     C                     MOVE WPCYDP    PTDP                                                CLE031
+     C                     EXSR SRCONV                                                        CLE031
+     C                     MOVE POUT      ##DATA                                              CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     ENDSR                                                              CLE031
+      *****************************************************************                       CLE031
+     C/EJECT                                                                                  CLE031
+      *****************************************************************                       CLE031
+      * Subroutine  :  SRCONV                                         *                       CLE031
+      * Function    :  Converts from one currency to another          *                       CLE031
+      *                using the ZCONV Module                         *                       CLE031
+      * Called by   :  SRCCHK                                         *                       CLE031
+      *                                                               *                       CLE031
+      * Calls       :  ZCONV                                          *                       CLE031
+      *****************************************************************                       CLE031
+     C           SRCONV    BEGSR                                                              CLE031
+      *                                                                                       CLE031
+     C                     CALL 'ZCONVZ1'                                                     CLE031
+     C                     PARM           PAMT   150                                          CLE031
+     C                     PARM           PEXC   138                                          CLE031
+     C                     PARM           PMDI    1                                           CLE031
+     C                     PARM           PFCY    3                                           CLE031
+     C                     PARM WTOCCY    PTCY    3                                           CLE031
+     C                     PARM           PFDP    10                                          CLE031
+     C                     PARM           PTDP    10                                          CLE031
+     C                     PARM           POUT   150                                          CLE031
+      *                                                                                       CLE031
+     C                     ENDSR                                                              CLE031
+      *****************************************************************                       CLE031
+     C/EJECT                                                              CEU014
+     C*****************************************************************
+     C*  Subroutine  :  LOANA                                         *
+     C*  Function    :  Process: Loan Associated Details              *
+     C*                                                               *
+     C*  Called by   :  L02PI  - Process Lending Principal Increase   *
+     C*                          Confirmation                         *
+     C*  Calls       :  SRPATH - Generate Path String                 *
+     C*                 CG6001 - General Loan Details                 *
+     C*****************************************************************
+     C           LOANA     BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'LOANA '  @STK,Q
+     C*
+     C                     EXSR SRPATH
+     C*
+     C                     MOVELS#PATH    P2PARM
+     C                     Z-ADD##OSEQ    P1OSEQ
+     C                     Z-ADD##ITEM    P1ITEM
+     C                     Z-ADD##TBIN    P1TBIN
+     C                     Z-ADD##PBIN    P1PBIN
+     C*
+     C**  Set up data.
+     C*
+     C                     CLEARP3PARM
+     C                     CLEARP4PARM
+     C                     MOVE LNRF      P3LNRF
+     C                     CALL 'CG6001'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM           W0CMT   3
+     C                     PARM           P1PARM           UDC Details
+     C                     PARM           P2PARM140        Path Details
+     C                     PARM           P3PARM           Loan Details
+     C                     PARM           P4PARM           Facility Details
+     C                     PARM           ##AUTO
+     C                     PARM           ##REFR                                              CCG015
+     C                     PARM           P@ICR                                               CCG015
+     C                     PARM 'N'       ##MAST                                              CCG015
+     C*
+     C**  Reset Sequence number.
+     C*
+     C                     Z-ADDP1OSEQ    ##OSEQ
+     C*
+     C           EXXPAY    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRSDET                                        *
+     C*  Function    :  Set-up settlement details.                    *
+     C*                                                               *
+     C*  Called by   :  L02PI  - Process Lending Principal Increase   *
+     C*                          Confirmation                         *
+     C*  Calls       :  CG99LSET - To set-up settlement details       *
+     C*****************************************************************
+     C           SRSDET    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSDET'  @STK,Q
+     C*
+     C                     ADD  1         P1                                                  CCG015
+     C*                                                                                       CCG015
+     C           P1        OCUR ##PATH                                                        CCG015
+     C                     MOVEL'L_SETL'  ##GRPS    P                                         CCG015
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+     C*
+     C                     MOVELS#PATH    P2PARM
+     C*
+     C** Setup the parameters for CG99LSET
+     C*
+     C                     CLEARP0PARM
+     C                     MOVELOSDB      P0POBR
+     C                     MOVELOMDB      P0ROBR
+     C                     Z-ADDRSTM      P0RSTM
+     C                     MOVELRONS      P0RONS
+     C                     MOVELRIBN      P0RIBN
+     C                     MOVELRIBA      P0RIBA
+     C**********           Z-ADDROBN      P0ROBN                                              CSD027
+     C**********           Z-ADDROCN      P0ROCN                                              CSD027
+     C                     MOVE ROBN      P0ROBN                                              CSD027
+     C                     MOVE ROCN      P0ROCN                                              CSD027
+     C                     Z-ADDPSTM      P0PSTM
+     C                     MOVELPONS      P0PONS
+     C                     MOVELPIBN      P0PIBN
+     C                     MOVELPIBA      P0PIBA
+     C**********           Z-ADDPOBN      P0POBN                                              CSD027
+     C**********           Z-ADDPOCN      P0POCN                                              CSD027
+     C                     MOVE POBN      P0POBN                                              CSD027
+     C                     MOVE POCN      P0POCN                                              CSD027
+     C                     MOVELRCRN      P0RCRN
+     C                     MOVELRCRA      P0RCRA
+     C                     MOVELRVNO      P0RVNO
+     C                     MOVELAWBN      P0AWBN
+     C                     MOVELAWBA      P0AWBA
+     C                     MOVELBENN      P0BENN
+     C                     MOVELBENA      P0BENA
+     C                     MOVELDTP1      P0DTP1
+     C                     MOVELDTP2      P0DTP2
+     C                     MOVELDTP3      P0DTP3
+     C                     MOVELDTP4      P0DTP4
+     C                     MOVELDCHG      P0DCHG
+     C                     MOVELBTB1      P0BTB1
+     C                     MOVELBTB2      P0BTB2
+     C                     MOVELBTB3      P0BTB3
+     C                     MOVELBTB4      P0BTB4
+     C                     MOVELBTB5      P0BTB5
+     C                     MOVELBTB6      P0BTB6
+     C                     MOVELSPI1      P0SPI1
+     C                     MOVELSPI2      P0SPI2
+     C                     MOVELSPI3      P0SPI3
+     C                     MOVELSCCY      P0STCY                          CEU003
+     C                     MOVELSCCY      P0PSCY                                              CLE031
+     C*
+     C** Set-up UDC Details
+     C*
+     C                     Z-ADD##OSEQ    P1OSEQ
+     C                     Z-ADD##ITEM    P1ITEM
+     C                     Z-ADD##TBIN    P1TBIN
+     C                     Z-ADD##PBIN    P1PBIN
+     C*
+     C                     CALL 'CG99LSET'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM           W0CMT   3
+     C                     PARM           ##COPD
+     C                     PARM           P1PARM
+     C                     PARM           P2PARM140
+     C                     PARM           PDETLS
+     C                     PARM           P0PARM
+     C                     PARM           ##REFR                                              CCG015
+     C                     PARM           P@ICR                                               CCG015
+     C                     PARM 'N'       ##MAST                                              CCG015
+     C*
+     C           W0RTN     IFNE *BLANK
+     C*
+     C** Database error
+     C*
+     C                     MOVEL'CG99LSET'W0FILE
+     C                     MOVEL'W0RTN'   W0KEY            ***************
+     C                     Z-ADD07        W0ERNB           * DB ERROR 07 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C**  Reset Sequence number.
+     C*
+     C                     Z-ADDP1OSEQ    ##OSEQ
+     C*                                                                                       CCG015
+     C**  Decrement Path DS index                                                             CCG015
+     C*                                                                                       CCG015
+     C           P1        OCUR ##PATH                                                        CCG015
+     C                     CLEAR##GRPS                                                        CCG015
+     C                     SUB  1         P1                                                  CCG015
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRINZF                                        *
+     C*  Function    :  Initialise Fields on Program Invocation       *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  none                                          *
+     C*****************************************************************
+     C           SRINZF    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZF'  @STK,Q
+     C*
+     C**  Initialise work fields
+     C*
+     C                     Z-ADD*ZEROS    ##W050  50
+     C                     Z-ADD*ZEROS    ##W150 150
+     C                     Z-ADD*ZEROS    ##W157 157
+     C                     Z-ADD*ZEROS    #1      60
+     C                     Z-ADD*ZEROS    #2      60
+     C                     Z-ADD*ZEROS    #3      60
+     C                     MOVE *BLANKS   S#PATH256
+     C           *LIKE     DEFN DEOSEQ    ##OSEQ
+     C*                                                                   CEU014
+     C**  Define Equivalent Currency                                      CEU014
+     C           *LIKE     DEFN CCY       EQCY                            CEU014
+     C*
+     C**  Initialise output sequence (to CGUDTAPD)
+     C*
+     C                     Z-ADD*ZEROS    ##OSEQ
+     C*
+     C** DJU Additions for CG4999 1st version **
+     C*
+     C                     MOVE *BLANKS   #@RDE  10
+     C           *LIKE     DEFN ##TBIN    #@TBIN
+     C*
+     C           1         OCUR ##BIND
+     C                     RESET##BIND
+     C                     RESET#@BIND
+     C                     RESET#PDS
+      *                                                                                       CCG015
+      ** Initialise XML increment                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR INIXML                                                        CCG015
+     C*
+     C           EXINZ     TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRINIT                                        *
+     C*  Function    :  Initial processing - First Call Only          *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  SRERR  - Report Error and Close Down Program  *
+     C*                 SRDCDT - Determine Currency Details           *
+     C*****************************************************************
+     C           SRINIT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C/COPY WNCPYSRC,CG6015C001
+      *                                                                   CEU014
+      ** Access SAR details file to determine if CEU014 is installed.     CEU014
+      *                                                                   CEU014
+     C                     CALL 'AOSARDR0'                                CEU014
+     C                     PARM '       ' ##RTCD                          CEU014
+     C                     PARM '*VERIFY' ##OPTN                          CEU014
+     C                     PARM 'CEU014'  ##SARD  6                       CEU014
+      *                                                                   CEU014
+      ** DATABASE ERROR                                                   CEU014
+      *                                                                   CEU014
+     C           ##RTCD    IFNE *BLANK                                    CEU014
+     C           ##RTCD    ANDNE'*NRF   '                                 CEU014
+     C                     MOVEL'SCSARDPD'W0FILE           ***************CEU014
+     C                     MOVEL'*CALL'   W0KEY            * DB ERROR 09 *CEU014
+     C                     Z-ADD09        W0ERNB           ***************CEU014
+     C                     MOVEL'MEM5003' W0MSGD                          CEU014
+     C                     MOVEL'MIDAS  ' W0MSGF                          CEU014
+     C                     EXSR SRERR                                     CEU014
+     C                     END                                            CEU014
+     C*                                                                   CEU014
+     C           ##RTCD    IFEQ *BLANK                                    CEU014
+     C                     MOVEL'Y'       CEU014  1                       CEU014
+     C                     ELSE                                           CEU014
+     C                     MOVEL'N'       CEU014                          CEU014
+     C                     END                                            CEU014
+      *                                                                   CEU014
+     C           CEU014    IFEQ 'Y'                                       CEU014
+      *                                                                   CEU014
+      **  Call access program for General Ledger details                  CEU014
+     C**********           CALL 'AOGELRR0'                                             CEU014 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' ##RTCD                          CEU014
+     C                     PARM '*FIRST ' ##OPTN                          CEU014
+     C********** SDGELR    PARM SDGELR    DSFDY                                        CEU014 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   CEU014
+      **  Database error                                                  CEU014
+     C           ##RTCD    IFNE *BLANK                                    CEU014
+      *                                                                   CEU014
+     C                     MOVEL'AOGELRR0'W0FILE                          CEU014
+     C                     MOVEL'*CALL'   W0KEY            ***************CEU014
+     C                     Z-ADD10        W0ERNB           * DB ERROR 10 *CEU014
+     C                     MOVEL'MEM5003' W0MSGD           ***************CEU014
+     C                     MOVEL'MIDAS  ' W0MSGF                          CEU014
+     C                     EXSR SRERR                                     CEU014
+     C                     ENDIF                                          CEU014
+     C                     ENDIF                                          CEU014
+     C/COPY WNCPYSRC,CG6015C009
+     C*
+     C** Call access program for Bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C** Database error
+     C*
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C**   Determine Number of decimal places - Base currency
+     C*
+     C                     MOVELBJCYCD    ##CCY
+     C                     EXSR SRDCDT
+     C                     Z-ADDA6NBDP    BASCDP  10
+      *                                                                                       CCG015
+      ** Access Switchable Features file and check if CCG015 is                               CCG015
+      ** installed                                                                            CCG015
+      *                                                                                       CCG015
+     C                     CALL 'AOSARDR0'                                                    CCG015
+     C                     PARM *BLANKS   ##RTCD                                              CCG015
+     C                     PARM '*VERIFY' ##OPTN                                              CCG015
+     C                     PARM 'CCG015'  ##SARD                                              CCG015
+      *                                                                                       CCG015
+     C           ##RTCD    IFEQ *BLANK                                                        CCG015
+     C                     MOVE 'Y'       CCG015  1                                           CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVE 'N'       CCG015                                              CCG015
+      *                                                                                       CCG015
+     C           ##RTCD    IFNE '*NRF    '                                                    CCG015
+     C                     MOVEL'SCSARDPD'W0FILE                                              CCG015
+     C                     MOVEL'*CALL   'W0KEY                                               CCG015
+     C                     Z-ADD13        W0ERNB                                              CCG015
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG015
+     C                     EXSR SRERR                                                         CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CLE031
+      ** Check if CLE031 is installed                                                         CLE031
+      *                                                                                       CLE031
+     C                     MOVE 'N'       CLE031  1                                           CLE031
+     C                     CALL 'AOSARDR0'                                                    CLE031
+     C                     PARM *BLANKS   ##RTCD                                              CLE031
+     C                     PARM '*VERIFY' ##OPTN                                              CLE031
+     C                     PARM 'CLE031'  ##SARD                                              CLE031
+      *                                                                                       CLE031
+     C           ##RTCD    IFEQ *BLANK                                                        CLE031
+     C                     MOVE 'Y'       CEU004                                              CLE031
+     C                     ELSE                                                               CLE031
+      *                                                                                       CLE031
+     C           ##RTCD    IFNE '*NRF    '                                                    CLE031
+     C                     MOVEL'SCSARDPD'W0FILE                                              CLE031
+     C                     MOVEL'*CALL   'W0KEY                                               CLE031
+     C                     Z-ADD13        W0ERNB                                              CLE031
+     C                     MOVEL*BLANKS   W0MSGD                                              CLE031
+     C                     MOVEL*BLANKS   W0MSGF                                              CLE031
+     C                     EXSR SRERR                                                         CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+      ** Check if CEU004 is installed                                                         CLE031
+      *                                                                                       CLE031
+     C                     MOVE 'N'       CEU004  1                                           CLE031
+     C                     CALL 'AOSARDR0'                                                    CLE031
+     C                     PARM *BLANKS   ##RTCD                                              CLE031
+     C                     PARM '*VERIFY' ##OPTN                                              CLE031
+     C                     PARM 'CEU004'  ##SARD                                              CLE031
+      *                                                                                       CLE031
+     C           ##RTCD    IFEQ *BLANK                                                        CLE031
+     C                     MOVE 'Y'       CEU004                                              CLE031
+     C                     ELSE                                                               CLE031
+      *                                                                                       CLE031
+     C           ##RTCD    IFNE '*NRF    '                                                    CLE031
+     C                     MOVEL'SCSARDPD'W0FILE                                              CLE031
+     C                     MOVEL'*CALL   'W0KEY                                               CLE031
+     C                     Z-ADD13        W0ERNB                                              CLE031
+     C                     MOVEL*BLANKS   W0MSGD                                              CLE031
+     C                     MOVEL*BLANKS   W0MSGF                                              CLE031
+     C                     EXSR SRERR                                                         CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CLE031
+     C                     ENDIF                                                              CLE031
+      *                                                                                       CER049
+      ** Check if CER049 is installed                                                         CER049
+      *                                                                                       CER049
+     C                     MOVE 'N'       CER049  1                                           CER049
+     C                     CALL 'AOSARDR0'                                                    CER049
+     C                     PARM *BLANKS   ##RTCD                                              CER049
+     C                     PARM '*VERIFY' ##OPTN                                              CER049
+     C                     PARM 'CER049'  ##SARD                                              CER049
+      *                                                                                       CER049
+     C           ##RTCD    IFEQ *BLANK                                                        CER049
+     C                     MOVE 'Y'       CER049                                              CER049
+     C                     ELSE                                                               CER049
+      *                                                                                       CER049
+     C           ##RTCD    IFNE '*NRF    '                                                    CER049
+     C                     MOVEL'SCSARDPD'W0FILE                                              CER049
+     C                     MOVEL'*CALL   'W0KEY                                               CER049
+     C                     Z-ADD16        W0ERNB                                              CER049
+     C                     MOVEL*BLANKS   W0MSGD                                              CER049
+     C                     MOVEL*BLANKS   W0MSGF                                              CER049
+     C                     EXSR SRERR                                                         CER049
+     C                     ENDIF                                                              CER049
+      *                                                                                       CER049
+     C                     ENDIF                                                              CER049
+     C*
+     C**  Copyright
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C           EXINIT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRADTA                                        *
+     C*  Function    :  Accumulate RDEs and associated data for output*
+     C*                                                               *
+     C*  Called by   :  LOANPI - Process Loan Principal Increase Detl *
+     C*  Calls       :  CG3999 - Format and Pack Data                 *
+     C*                 SRRFMN - Reformat RDE Data                    *
+     C*                 SRERR  - Database Error                       *
+     C*****************************************************************
+     C           SRADTA    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRADTA'  @STK,Q
+     C*
+     C**  Reformat RDE data
+     C*
+     C                     EXSR SRRFMN
+     C*
+     C**  Pack RDEs and associated data into data string
+     C*
+     C                     CLEAR##SDS
+      *                                                                                       CCG015
+      ** If CCG015 is installed, value of W0ACT is '*NEWARR'                                  CCG015
+      *                                                                                       CCG015
+     C           CCG015    IFEQ 'Y'                                                           CCG015
+     C                     MOVEL'*NEWARR 'W0ACT                                               CCG015
+     C                     MOVELS#PATH    W0SPAT                                              CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVEL'*PACK   'W0ACT                                               CCG015
+     C                     MOVEL*BLANK    W0SPAT                                              CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     CALL 'CG3999'
+     C                     PARM *BLANK    ##RTCD
+     C**********           PARM '*PACK   'W0ACT                                               CCG015
+     C                     PARM           W0ACT                                               CCG015
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+     C                     PARM           W0SPAT 70                                           CCG015
+     C                     PARM           ##RN                                                CCG015
+     C                     PARM           ##DN                                                CCG015
+     C                     PARM           ##FM                                                CCG015
+     C*
+     C**  Database error
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C                     MOVEL'CG3999  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD02        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     EXSR WRTRDE                                                        CCG015
+     C*
+     C**  Append Data from pack routine.
+     C*
+     C           #@SDS     CAT  ##SDS:0   #@SDS
+     C*
+     C                     MOVEL*BLANK    ##R
+     C                     MOVEL*BLANK    ##D
+     C                     MOVEL*BLANK    ##S
+     C*
+     C           EXADTA    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRODTA                                        *
+     C*  Function    :  Output Accumulated data to PF/CGUDTAPD        *
+     C*                                                               *
+     C*  Called by   :  LOANPI - Process Loan Principal Increase Detl *
+     C*  Calls       :  CG9020 - Output Data to CGUDTAPD              *
+     C*                 SRERR  - Database Error                       *
+     C*****************************************************************
+     C           SRODTA    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRODTA'  @STK,Q
+     C*
+     C**  Initialise Write Format Parameter.
+     C*
+     C                     CLEARW0FMT
+     C*
+     C**  Set up Control Information.
+     C*
+     C                     Z-ADD##ITEM    DEITEM
+     C                     ADD  1         ##OSEQ
+     C                     Z-ADD##OSEQ    DEOSEQ
+     C                     Z-ADD##PBIN    DEPBIN
+     C                     Z-ADD##TBIN    DETBIN
+     C                     MOVE 'FR'      DEFSLI
+     C                     MOVE *BLANKS   W0PATH
+     C                     MOVELS#PATH    W0PATH
+     C*
+     C**  Append Data from pack routine.
+     C*
+     C           W0FMT     CAT  #@SDS:0   W0FMT
+     C*
+     C**  Output PF/CGUDTAPD Record.
+     C*
+     C           CCG015    IFEQ 'N'                                                           CCG015
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*WRITE  'W0ACT
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM *BLANK    W0TITL  7
+     C                     PARM *BLANK    W0ULIN  7
+     C                     PARM           W0CMT
+     C*
+     C**  Database error
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C                     MOVEL'CG9020  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 03 *
+     C                     Z-ADD03        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF                                                              CCG015
+     C*
+     C                     CLEAR#@SDS
+     C*
+     C           EXODTA    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRBIND                                        *
+     C*  Function    :  Generate Binding numbers                      *
+     C*                                                               *
+     C*  Called by   :  All Repeating Group Set Subroutines           *
+     C*  Calls       :  none                                          *
+     C*****************************************************************
+     C           SRBIND    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBIND'  @STK,Q
+     C*
+     C           P1        SUB  1         P2
+     C           P2        OCUR ##BIND
+     C*
+     C                     Z-ADD##TBIN    #@TBIN
+     C           P1        OCUR ##BIND
+     C                     Z-ADD#@TBIN    ##PBIN
+     C*
+     C                     ADD  1         #@BIND
+     C                     Z-ADD#@BIND    ##TBIN
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRPATH                                        *
+     C*  Function    :  Generate Path String /GS1/GS2...              *
+     C*                                                               *
+     C*  Called by   :  L02PI  - Process Lending Principal Increase   *
+     C*                          Confirmation                         *
+     C*                 LOANPI - Process Loan Principal Increase      *
+     C*                          Detail                               *
+     C*                 LOANA  - Process Loan Associated Details      *
+     C*                 SRSDET - Set-up settlement details            *
+     C*  Calls       :  none                                          *
+     C*****************************************************************
+     C           SRPATH    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATH'  @STK,Q
+     C*
+     C                     CLEARS#PATH
+     C*
+     C                     DO   P1        P2
+     C           P2        OCUR ##PATH
+     C           S#PATH    CAT  '\':0     S#PATH
+     C           S#PATH    CAT  ##GRPS:0  S#PATH
+     C                     END
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRRFMN                                        *
+     C*  Function    :  Reformat RDE data                             *
+     C*                                                               *
+     C*  Called by   :  SRADTA - Accumulate RDEs and associated       *
+     C*                          data for outout                      *
+     C*  Calls       :  none                                          *
+     C*****************************************************************
+     C           SRRFMN    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFMN'  @STK,Q
+     C*
+     C** Loop through RDE's and data
+     C*
+     C                     Z-ADD0         #1
+     C           #1        DOUEQ20
+     C                     ADD  1         #1
+     C                     MOVEL##R,#1    R#DEFN
+     C                     MOVEL##D,#1    R#DATA
+     C*
+     C** If data present and RDE is edited
+     C*
+     C           R#DATA    IFNE *BLANK
+     C           ##RDEC    ANDNE*BLANK
+     C*
+     C** Reformat Amount
+     C*
+     C                     Z-ADD1         #2
+     C           *BLANK    LOKUP##NUMA,#2                99*
+     C                     Z-ADD20        #3
+     C                     Z-ADD0         ##WNUM
+     C           #2        DOWGT1
+     C           #2        ANDLE20
+     C           #3        ANDGT1
+     C                     SUB  1         #2
+     C                     MOVEL##NUMA,#2 ##W,#3
+     C                     SUB  1         #3
+     C                     ENDDO
+     C*
+     C** Sign the amount
+     C*
+     C           ##SIGN    IFEQ '-'
+     C                     Z-SUB##WNUM    ##NUMB
+     C                     ELSE
+     C                     Z-ADD##WNUM    ##NUMB
+     C                     END
+     C*
+     C** Default Edit Type
+     C*
+     C           ##EDTT    IFEQ *BLANK
+     C                     MOVEL##RDET    ##EDTT
+     C                     END
+     C*
+     C** Default Decimal Places
+     C*
+     C           ##DCPA    IFEQ *BLANK
+     C                     MOVEL##RDED    ##DCPA
+     C                     END
+     C*
+     C** New RDE data
+     C*
+     C                     MOVELR#DATA    ##D,#1
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           EXRFMN    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*  Subroutine  :  SRDCDT                                        *
+     C*  Function    :  Determine Currency Details                    *
+     C*                                                               *
+     C*  Called by   :  LOANPI - Process Loan Principal Increase      *
+     C*                          Detail                               *
+     C*                 SRINIT - Initial Processing - On First Call   *
+     C*  Calls       :  SRERR  - Database Error                       *
+     C*****************************************************************
+     C           SRDCDT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDCDT'  @STK,Q
+     C*
+     C**  Access array of Currency Details already loaded
+     C*
+     C                     Z-ADD1         C       30
+     C           ##CCY     LOKUP##CY,C                   99
+     C*
+     C**  If no match is found determine the next free space in the
+     C**  loaded currency array.
+     C*
+     C           *IN99     IFEQ *OFF
+     C                     Z-ADD1         C
+     C           *BLANK    LOKUP##CY,C                   99
+     C*
+     C**  If no space is left, set the Currency Data data structure to
+     C**  the 101st occurrence so that when the new details are
+     C**  retrieved no existing details are overwritten.
+     C*
+     C           *IN99     IFEQ *OFF
+     C           101       OCUR SDCURR
+     C*
+     C**  If a space is found, set up the new currency into the array
+     C**  and position the Currency Data data structure on the
+     C**  occurrence matching the array index.
+     C*
+     C                     ELSE
+     C                     MOVE ##CCY     ##CY,C
+     C           C         OCUR SDCURR
+     C                     ENDIF
+     C*
+     C**  Retrieve the currency details.
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   ##RTCD           B:Return Cd
+     C                     PARM '*KEY'    ##OPTN           I:Option
+     C                     PARM ##CCY     ##CCYP  3        I:Currency Code
+     C           SDCURR    PARM *BLANK    DSSDY            O:Format
+     C*
+     C**  Database Error
+     C*
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDCURRPD'W0FILE
+     C                     MOVEL##CCY     W0KEY            ***************
+     C                     Z-ADD04        W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C**  If the currency has been retrieved earlier, position the
+     C**  Currency Data data structure on the relevant occurrence.
+     C*
+     C                     ELSE
+     C           C         OCUR SDCURR
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG6015C002
+     C*
+     C           EXDCDT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C*
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+     C/COPY CGCPYSRC,CGNWEX                                                                   CCG015
+     C/EJECT                                                                                  CCG015
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

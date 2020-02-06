@@ -1,0 +1,343 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Index Current User/Depot Posns.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1505 - PROJECT FORWARD USER DEPOT POSITIONS                *
+     F*                                                               *
+     F*  Function: One record per User/Depot Position is produced     *
+     F*   (COB)    (i.e. per Branch/Security/Book/Market/Depot        *
+     F*            combination for which there is a Current or Forward*
+     F*            Position) for use in projecting forward Events     *
+     F*            on these Positions.                                *
+     F*                                                               *
+     F*  Called by: SEC1110 - Project Forward User/Depot Positions    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 052254             Date 10Jan94               *
+      *                 E34034             Date 7JAn92                *
+     F*                 E29170             DATE 04NOV91               *
+     F*                 S01117             DATE 05JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E34034 - Recompiled over changed printer file                *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Multi-branching                                     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FUDPCF   IPE E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FUDEPPA  IF  E                    DISK
+     FUDEPFA  IF  E                    DISK
+     FPIUDPD  O   E                    DISK
+     FSE1505AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   L1  - Branch/Security/Book/Depot/Market combination change  *
+     F*                                                               *
+     F*   11  - User/Depot Positions - Current File read              *
+     F*   12  - User/Depot Positions - Forward File read              *
+     F*                                                               *
+     F*   40  - Detail records read                                   *
+     F*   50  - Work indicator                                        *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines                          *
+     F*                                                               *
+     F*   U7  - Database Error                                        *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  ZSYSTM - Access ICD record                                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+     IUDEPPDF     11
+     I***********   UDBR                            PIBR  L1              S01117
+     I              UDBA                            PIBH  L1              S01117
+     I              UDSN                            PISS  L1
+     I              UDBK                            PIBK  L1
+     I              UDPT                            PIDP  L1
+     I              UDMK                            PIMK  L1
+     IUDEPFDF     12
+     I***********   UDBR                            PIBR  L1              S01117
+     I              UDBA                            PIBH  L1              S01117
+     I              UDSN                            PISS  L1
+     I              UDBK                            PIBK  L1
+     I              UDPT                            PIDP  L1
+     I              UDMK                            PIMK  L1
+     IUDEPPAF
+     I              NORE                            TRIN
+     IUDEPFAF
+     I              NORE                            TR2IN
+     I*LDA*******UDS                            256                       S01117
+     I***********                           134 177 #DBLOT                S01117
+     I*********** DS                                                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+      *================================================================
+      *
+      *  P R O G R A M     S T A R T  - Initial Processing
+      *
+      *================================================================
+      *
+     C           *IN40     IFEQ '0'
+      *
+      * Prepare LDA for the database error output
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE1505'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *
+      * Access the I.C.D. record (PF/TABTB10)
+      *
+     C                     EXSR ZSYSTM
+      *
+      * Error in ZSYSTM
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INLR            End of job
+     C                     ELSE
+      *
+      * ICD record found.
+      *
+     C                     MOVE '1'       *IN40
+     C                     END
+     C                     END
+      /SPACE 2
+      *================================================================
+      *
+      *  M A I N L I N E   P R O C E S S I N G
+      *
+      *================================================================
+      *
+     C           *IN40     IFEQ '1'
+      *
+      * User/Depot positions - Current
+      *
+     C           *IN11     IFEQ '1'
+     C                     ADD  1         TRCNT
+     C                     END
+      *
+      * User/Depot positions - Forward
+      *
+     C           *IN12     IFEQ '1'
+     C                     ADD  1         TR2CNT
+     C                     END
+     C                     END
+      /SPACE 2
+      *================================================================
+      *
+      *  T O T A L   T I M E   P R O C E S S I N G
+      *
+      *================================================================
+      *
+     CL1                   EXSR SRL1
+      *
+     CLR                   EXSR SRLR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  T O T A L   T I M E   P R O C E S S I N G                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRL1      BEGSR
+      *
+      * Output User/Depot Position index record.
+      *
+     C           *IN40     IFEQ '1'
+     C                     ADD  1         OUTREC
+     C                     MOVE 'D'       RECI
+     C                     WRITEPIUDPDF
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  E.O.J. - C O N T R O L   P R O C E S S I N G                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLR      BEGSR
+      *
+      * If no records read,
+      *  access the I.C.D. record (PF/TABTB10)
+      *
+     C           *IN40     IFEQ '0'
+     C           *IN99     ANDEQ'0'
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE1505'  DBPGM                           S01117
+     C                     EXSR ZSYSTM
+     C                     END
+      *
+      * Write control report headings
+      *
+      * Print Page Header
+      *
+     C                     WRITEHEADAU
+      *
+      * Error in ZSYSTM
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INU7
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C                     Z-ADD1         DBASE            **DB ERROR 01**S01117
+     C                     MOVEL'TABLE'   DBFILE
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEERROR
+     C                     END
+      *
+      *  Access AUDIT records.
+      *
+     C                     READ UDEPPAF                  50
+     C                     READ UDEPFAF                  50
+      *
+      *  Compare Control Totals
+      *
+     C                     WRITETRTOT
+     C                     WRITETR2TOT
+      *
+     C           TR2IN     IFNE TR2CNT
+     C                     WRITEDIFF
+     C           *INU8     IFEQ '0'
+     C                     MOVE '1'       *INU8            ***************
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C***********          MOVEL'UDEPFA  'DBFILE           ***************S01117
+     C***********          MOVEL'AUDIT** 'DBKEY                           S01117
+     C***********          WRITEERROR                                     S01117
+     C                     END
+     C                     END
+      *
+      ***IF*NO*OUTPUT/EMPTY*FILES*-*Print*a*message*to*this*effect*****   E29170
+      ***********                                                         E29170
+     C************IN40     IFEQ '0'                                       E29170
+     C***********          WRITENONE                                      E29170
+      ***********                                                         E29170
+      *          - Print Records Written Total
+      *
+     C***********          ELSE                                           E29170
+      *
+      * In/Out - totals
+      *
+     C                     WRITECONTROL
+      *
+     C***********          END                                            E29170
+      *
+      *  END OF PROGRAM
+      *
+     C***********          WRITETRAILAU                                   E29170
+      ***********                                                         E29170
+      ***If*Database*Errors*found,*update*LDA************************     S01117
+      ***********                                                         S01117
+     C************NAMVAR   DEFN           LDA                             S01117
+      ***********                                                         S01117
+     C************INU8     IFEQ '1'                                       S01117
+      ***********                                                         S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVELDBLOT     #DBLOT                          S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          END                                            S01117
+      *
+     C                     ENDSR
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+**  CPY@
+(c) Finastra International Limited 2001

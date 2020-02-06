@@ -1,0 +1,90 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD MiFID Subfile Menu Option Controller')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC009818 - Midas SD MiFID Subfile Menu Option Controller   */
+/*                                                                   */
+/*       Function:  File overrides for Market Instrument Code,       */
+/*                  Classification of Financial Instument Code and   */
+/*                  External Transaction Systems.                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2008                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CSW208  *CREATE    Date 15Apr08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSW208 - SWIFT 2008 Changes                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PROG &PMODE)
+ 
+             DCL        VAR(&PROG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&NOREPLY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2007')
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* External Transaction System */
+ 
+             IF         COND(&PROG = 'SD009812') THEN(DO)
+             OVRDBF     FILE(SDEXTSL0) SHARE(*NO)
+             CALL       PGM(SD009812) PARM(&PMODE)
+             DLTOVR     FILE(SDEXTSL0)
+             ENDDO
+ 
+/* CFI Code maintenance */
+ 
+             IF         COND(&PROG = 'SD009800') THEN(DO)
+             OVRDBF     FILE(SDCFICL0) SHARE(*NO)
+             CALL       PGM(SD009800) PARM(&PMODE)
+             DLTOVR     FILE(SDCFICL0)
+             ENDDO
+ 
+/* MIC Code maintenence */
+ 
+             IF         COND(&PROG = 'SD009802') THEN(DO)
+             OVRDBF     FILE(SDMICCL0) SHARE(*NO)
+             CALL       PGM(SD009802) PARM(&PMODE)
+             DLTOVR     FILE(SDMICCL0)
+             ENDDO
+ 
+/* IF U7 And U8 are ON Send Data Base Error Message to MOPERQ */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             ROLLBACK
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDCTESTCL ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:        ENDPGM

@@ -1,0 +1,305 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ER Bundesbank Reporting Control')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - European Reporting Module                           */
+/*                                                                   */
+/*       ERC000190 - Midas ER Bundesbank Reporting Control           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG26748           Date 26Nov09              */
+/*                      BUG26221           Date 30Sep09              */
+/*                      BUG25906           Date 04Sep09              */
+/*                      CER045  *CREATE    Date 20Jul09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG26748 - Issue on Flat File Output Splitting              */
+/*       BUG26221 - FX deal TOD transaction was excluded in the csv  */
+/*                  file extracted after COB                         */
+/*       BUG25906 - GF2 Files were not found in library xxDPLIB      */
+/*       CER045 - German Features - Reporting Bundesbank             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+/**********  DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)              */                 /*BUG25906*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)                                 /*BUG25906*/
+             DCL        VAR(&BREPT) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG)   TYPE(*CHAR) LEN(80) VALUE(*BLANKS)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2009')
+ 
+             CHGJOB     SWS(XXXXXX00)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('ERC000190 - Midas ER Bundesbank +
+                          Reporting job stared') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+/**********  CHGVAR     VAR(&DPLIB) VALUE(&SYSID *CAT 'DPLIB')       */                 /*BUG25906*/
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSID *CAT 'DMLIB')                          /*BUG25906*/
+ 
+             RTVDTAARA  DTAARA(ERBUNDREPT (1 10)) RTNVAR(&BREPT)
+ 
+             IF         COND(&BREPT *NE ' ') THEN(DO)
+ 
+             IF         COND(&BREPT *EQ 'TR_EXTRACT') THEN(GOTO +
+                          CMDLBL(TR_EXTRACT))
+ 
+             IF         COND(&BREPT *EQ 'TR_EXPORT') THEN(GOTO +
+                          CMDLBL(TR_EXPORT))
+ 
+             IF         COND(&BREPT *EQ 'TR_REPORT') THEN(GOTO +
+                          CMDLBL(TR_REPORT))
+ 
+             IF         COND(&BREPT *EQ 'CF_EXTRACT') THEN(GOTO +
+                          CMDLBL(CF_EXTRACT))
+ 
+             IF         COND(&BREPT *EQ 'CF_REPORT') THEN(GOTO +
+                          CMDLBL(CF_REPORT))
+ 
+             IF         COND(&BREPT *EQ 'CF_EXPORT') THEN(GOTO +
+                          CMDLBL(CF_EXPORT))
+ 
+             IF         COND(&BREPT *EQ 'OB_EXTRACT') THEN(GOTO +
+                          CMDLBL(OB_EXTRACT))
+ 
+             IF         COND(&BREPT *EQ 'OB_EXPORT') THEN(GOTO +
+                          CMDLBL(OB_EXPORT))
+ 
+/**********  IF         COND(&BREPT *EQ 'FX_EXTRACT') THEN(GOTO +
+                          CMDLBL(FX_EXTRACT))                        */                 /*BUG26221*/
+ 
+/**********  IF         COND(&BREPT *EQ 'FX_EXPORT') THEN(GOTO +
+                          CMDLBL(FX_EXPORT))                         */                 /*BUG26221*/
+ 
+             IF         COND(&BREPT *EQ 'EOM_EXPORT') THEN(GOTO +
+                          CMDLBL(EOM_EXPORT))                                           /*BUG26748*/
+ 
+             ENDDO
+ 
+/* Transaction/Account Balance Extract */
+ 
+TR_EXTRACT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('TR_EXTRACT')
+ 
+/**********  CLRPFM     FILE(&DPLIB/ERGSTIPD)                        */                 /*BUG25906*/
+/**********  CLRPFM     FILE(&DPLIB/ERGSTSPD)                        */                 /*BUG25906*/
+/**********  CLRPFM     FILE(&DPLIB/ERBILIPD)                        */                 /*BUG25906*/
+             CLRPFM     FILE(&DMLIB/ERGSTIPD)                                           /*BUG25906*/
+             CLRPFM     FILE(&DMLIB/ERGSTSPD)                                           /*BUG25906*/
+             CLRPFM     FILE(&DMLIB/ERBILIPD)                                           /*BUG25906*/
+ 
+             MONMSG     MSGID(CPF3142 CPF3203 CPF3156) EXEC(DO)
+                 CHGVAR     VAR(&MSG) VALUE('while clearing the +
+                          Transaction/Account Extract Files')
+                 GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(ER000193)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the +
+                          Transaction/Account Balance Extract')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+ /********** GOTO       CMDLBL(END)                                 */                  /*BUG25906*/
+ 
+TR_EXPORT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('TR_EXPORT')
+ 
+             CALL       PGM(MXC0010) PARM('*NONE   ' 'ERERGSTIPD')
+             CALL       PGM(MXC0010) PARM('*NONE   ' 'ERERGSTSPD')
+             CALL       PGM(MXC0010) PARM('*NONE   ' 'ERERBILIPD')
+ 
+             CALL       PGM(MXC0020) PARM('*NONE   ' '' 'ERERGSTIPD')
+             CALL       PGM(MXC0020) PARM('*NONE   ' '' 'ERERGSTSPD')
+             CALL       PGM(MXC0020) PARM('*NONE   ' '' 'ERERBILIPD')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&MSG) VALUE('while executing the +
+                          Transaction/Account Balance Data Export')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Transaction/Account Balance Extract Report */
+ 
+TR_REPORT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('TR_REPORT')
+ 
+             CALL       PGM(ER000197)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the +
+                          Transaction/Account Balance Extract Report')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Cash Flow Extract */
+ 
+CF_EXTRACT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('CF_EXTRACT')
+ 
+/**********  CLRPFM     FILE(&DPLIB/ERKGLIPD)                        */                 /*BUG25906*/
+             CLRPFM     FILE(&DMLIB/ERKGLIPD)                                           /*BUG25906*/
+ 
+             MONMSG     MSGID(CPF3142 CPF3203 CPF3156) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('while clearing the Cash +
+                          Flow Extract')
+                 GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(ER000194)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the Cash +
+                          Flow Extract')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+CF_EXPORT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('CF_EXPORT')
+ 
+             CALL       PGM(MXC0010) PARM('*NONE   ' 'ERERKGLIPD')
+             CALL       PGM(MXC0020) PARM('*NONE   ' '' 'ERERKGLIPD')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the Cash +
+                          Flow Data Export')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Cash Flow Extract Report */
+ 
+CF_REPORT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('CF_REPORT')
+ 
+             CALL       PGM(ER000198)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the Cash +
+                          Flow Extract Report')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Off Balance Sheet Extract */
+ 
+OB_EXTRACT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('OB_EXTRACT')
+ 
+/**********  CLRPFM     FILE(&DPLIB/ERZUSIPD)                        */                 /*BUG25906*/
+             CLRPFM     FILE(&DMLIB/ERZUSIPD)                                           /*BUG25906*/
+             CLRPFM     FILE(&DMLIB/EREOMSPD)                                           /*BUG26748*/
+ 
+             MONMSG     MSGID(CPF3142 CPF3203 CPF3156) EXEC(DO)
+             CHGVAR     VAR(&MSG) VALUE('while clearing the Off +
+                          Balance Sheet Extract Files')
+                 GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CALL       PGM(ER000195)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the Off +
+                          Balance Sheet Extract')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+OB_EXPORT:
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('OB_EXPORT')
+ 
+             CALL       PGM(MXC0010) PARM('ERZUSIFF' '*NONE     ')
+             CALL       PGM(MXC0020) PARM('ERZUSIFF' 'C' '*NONE     ')
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             CHGVAR     VAR(&MSG) VALUE('while executing the Off +
+                          Balance Data Export')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* FX Deals Extract */
+ 
+/**********FX_EXTRACT:                                               */                 /*BUG26221*/
+/**********  CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('FX_EXTRACT')*/                 /*BUG26221*/
+ 
+/**********  CLRPFM     FILE(&DPLIB/ERDVTIPD)                        */                 /*BUG25906*/
+/**********  CLRPFM     FILE(&DMLIB/ERDVTIPD)                        */    /*BUG25906*/ /*BUG26221*/
+ 
+/**********  MONMSG     MSGID(CPF3142 CPF3203 CPF3156) EXEC(DO)      */                 /*BUG26221*/
+/**********  CHGVAR     VAR(&MSG) VALUE('while clearing the FX Deals +
+                          Extract Files')                            */                 /*BUG26221*/
+/**********      GOTO       CMDLBL(ABNOR)                            */                 /*BUG26221*/
+/**********  ENDDO                                                   */                 /*BUG26221*/
+ 
+/**********  CALL       PGM(ER000196)                                */                 /*BUG26221*/
+ 
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)             */                 /*BUG26221*/
+/**********  CHGVAR     VAR(&MSG) VALUE('while executing the FX +
+                          Deals Extract')                            */                 /*BUG26221*/
+/**********     GOTO       CMDLBL(ABNOR)                             */                 /*BUG26221*/
+/**********  ENDDO                                                   */                 /*BUG26221*/
+ 
+/**********FX_EXPORT:                                                */                 /*BUG26221*/
+/**********  CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('FX_EXPORT') */                 /*BUG26221*/
+ 
+/**********  CALL       PGM(MXC0010) PARM('ERDVTIFF' '*NONE     ')   */                 /*BUG26221*/
+/**********  CALL       PGM(MXC0020) PARM('ERDVTIFF' 'C' '*NONE     ')                    BUG26221*/
+ 
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(DO)             */                 /*BUG26221*/
+/**********  CHGVAR     VAR(&MSG) VALUE('while executing the FX +
+                          Deals Data Export')                        */                 /*BUG26221*/
+/**********     GOTO       CMDLBL(ABNOR)                             */                 /*BUG26221*/
+/**********  ENDDO                                                   */                 /*BUG26221*/
+ 
+EOM_EXPORT:                                                                             /*BUG26748*/
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE('EOM_EXPORT')                   /*BUG26748*/
+             CALL       PGM(MXC0010) PARM('*NONE   ' 'EREOMSPD')                        /*BUG26748*/
+             CALL       PGM(MXC0020) PARM('*NONE   ' '' 'EREOMSPD')                     /*BUG26748*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*BUG26748*/
+             CHGVAR     VAR(&MSG) VALUE('while executing the Data +
+                          Export')                                                      /*BUG26748*/
+                GOTO       CMDLBL(ABNOR)                                                /*BUG26748*/
+             ENDDO                                                                      /*BUG26748*/
+ 
+             GOTO       CMDLBL(END)                                                     /*BUG25906*/
+                                                                                        /*BUG25906*/
+/* Abnormal terminations */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program ERC000190 ended abnormally ' +
+                          *CAT &MSG) TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END2)                                                    /*BUG25906*/
+ 
+END:
+ /********** CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE(*BLANKS) */                     /*BUG25906*/
+             CHGDTAARA  DTAARA(ERBUNDREPT (1 10)) VALUE(' ')                            /*BUG25906*/
+             SNDPGMMSG  MSG('Program ERC000190 ended normally ' *CAT +
+                          &MSG) TOMSGQ(MRUNQ MOPERQ)                                    /*BUG25906*/
+ /**********              &MSG) TOMSGQ(MORUNQ MOPERQ) */                                /*BUG25906*/
+                                                                                        /*BUG25906*/
+END2:                                                                                   /*BUG25906*/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
+             ENDPGM

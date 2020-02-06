@@ -1,0 +1,53 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD CRS High Value A/C Iden Report & Update')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas SD - Standing Data Module                             */
+/*                                                                   */
+/*       SDC000314 - Midas SD CRS High Value Account Identification  */
+/*                  Report & Update                                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. CGL177  *CREATE    Date 11Jan16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCD &MODE &PHGVI &PHGVE &PLVAM &PHVCY)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2016')
+
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PHGVI) TYPE(*CHAR) LEN(18)
+             DCL        VAR(&PHGVE) TYPE(*CHAR) LEN(18)
+             DCL        VAR(&PLVAM) TYPE(*CHAR) LEN(18)
+             DCL        VAR(&PHVCY) TYPE(*CHAR) LEN(3)
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CLRPFM     FILE(SDCRHLPD)
+             CPYF       FROMFILE(SDCRHLPD) TOFILE(QTEMP/SDCRHLPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             CLRPFM     FILE(QTEMP/SDCRHLPD)
+
+             OVRDBF     FILE(SDCRHLL0) TOFILE(QTEMP/SDCRHLL0)
+
+             CALL       PGM(SD000314) PARM(&RTCD &MODE &PHGVI &PHGVE &PLVAM &PHVCY)
+
+             GOTO       CMDLBL(END)
+
+ ABNOR:
+             SNDPGMMSG  MSG('Program SDC000314 ended abnormally') TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ END:
+             ENDPGM

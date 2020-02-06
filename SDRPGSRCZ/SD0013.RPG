@@ -1,0 +1,1193 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD COB customer deletion')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0013 - COB Customer Deletion.                              *
+      *                                                               *
+      *  Function:  This program is only available if switchable      *
+      *             feature S01424 (automatic customer deletion)      *
+      *             is present in the system. The program will        *
+      *             logically delete any customer which passes the    *
+      *             following validation checks:                      *
+      *                                                               *
+      *             1. The customer is flagged as eligible for        *
+      *                deletion on the client details file.           *
+      *                                                               *
+      *             2. No customer references are found for the       *
+      *                client by the standard customer deletion       *
+      *                pre-check program.                             *
+      *                                                               *
+      *             A report of all customers logically deleted       *
+      *             during the run is produced.                       *
+      *                                                               *
+      *  Phases  :  Requested in input cycle.                         *
+      *             Runs in close of business.                        *
+      *                                                               *
+      *  Called By: SDC0013 - COB Customer Deletion Control.          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CGL157             Date 17Aug15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER071             Date 01Aug16               *
+      *                 CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 AR830675           Date 16Sep11               *
+      *                 CSD090             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      *                 BUG22529           Date 09Feb09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027A            Date 11May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10603           Date 14Feb06               *
+      *                 CSD028             Date 22Aug05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 222373             Date 24Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSW024             Date 31Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             DATE 26AUG96               *
+      *                 S01408             DATE 17APR96               *
+      *                 CDL001             DATE 13OCT95               *
+      *                 S01408             DATE 12SEP95               *
+      *                 077335             DATE 12OCT94               *
+      *                 S01505             DATE 18JUL94               *
+      *                 S01486             DATE 18JUL94               *
+      *                 069253             DATE 12APR94               *
+      *                 063444             DATE 17FEB94               *
+      *                 S01421 (S01424)    DATE 20JUL93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CGL157 - CRS Reporting (Recompile)                           *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
+      *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  AR830675 - GF - Maintain Customers - Add. Cust. Inf. 2 -     *
+      *             entered lang. ID not defaulted                    *
+      *             (Child: AR830676)                                 *
+      *  CSD090 - Customer Segmentation (Recompile)                   *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
+      *  BUG22529 - Global Additional Customer Details (Recompile)    *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10603 - Change Control for KYC                            *
+      *  CSD028 - KYC (Standing Data Authorisations)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  222373 - Parameter Mismatch                                  *
+      *  CSW024 - S.W.I.F.T. MT3xx Field 82/83/87. (Recompiled)       *
+      *  CSE022 - Depository Definition                               *
+      *  CSD007 - Customer Closing (Recompiled over SDCUSTL0)         *
+      *  CDL008 - Continuous Linked Settlement (recompile SDCUSTPD)   *
+      *  CPM005 - Private Banking Phase II                            *
+      *           Focus Group Changes Upgraded to DBA                 *
+      *  S01408 - Addition of core hook SD0013CCP3                    *
+      *  CDL001 - Recompiled over changed SDCUSTPD.                   *
+      *  S01408 - Hook SD0013FFP1 added.                              *
+      *           Hook SD0013CCP1 added.                              *
+      *           Hook SD0013CCP2 added.                              *
+      *  077335 - COB auto customer deletion needs to be made faster: *
+      *           - Add a new input parameter to the SD0011X call.    *
+      *           Call SD2464 only if the switchable feature S01383   *
+      *           is switched on.                                     *
+      *  S01505 - Profit Centre Accounting Development:               *
+      *           - Recompiled over changed SDCUSTL0.                 *
+      *  S01486 - Private Banking Development:                        *
+      *           - Add processing to delete Portfolio Lending        *
+      *             Customer file record.                             *
+      *           - Add processing to flag Portfolio Management       *
+      *             Customer file record as deleted.                  *
+      *  069253 - Include BRT details in deletion.                    *
+      *  063444 - To enable the manual deletion process to display    *
+      *           all reasons why a customer may not be deleted at    *
+      *           the same time, the present SD0011X return codes     *
+      *           have to be amended.                                 *
+      *         - Also the call to SD0011X must be amended to pass    *
+      *           five new parameters although they will be blank     *
+      *           from this program.                                  *
+      *  S01421 - New program for BLI Development Phase 1.            *
+      *         - Includes changes for:                               *
+      *           S01424 - Automatic customer deletion during         *
+      *                    close of business.                         *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicators:                                                  *
+      *                                                               *
+      *  75 - Chain fail SDKYCIL0.                                    *                       CSD028
+      *  76 - At least one customer deleted.                          *
+      *  85 - Error in FOCLT background update.                       *
+      *  86 - Error in CLINTSE background update.                     *
+      *  87 - Chain fail SDSECSL0.                                    *
+      *  88 - Chain fail SDFOCSL0.                                    *
+      *  89 - ZDATE2 processing.                                      *
+      *  90 - End of file SDCUSTL5.                                   *
+      *  91 - Chain fail SDCUSTL0.                                    *
+      *  92 - Chain fail SDALTNL0.                                    *
+      *  93 - Error in SDALTNA background update.                     *
+      *  94 - Chain fail SDCMRKL0.                                    *
+      *  95 - Chain fail SDACUSL0.                                    *
+      *  96 - Chain fail SDCFCDL0.                                    *
+      *  97 - Chain fail SDFCTLL0.                                    *
+      *  98 - Date format indicator.                                  *
+      *                                                               *
+      *****************************************************************
+      * Customer details input.
+     FSDCUSTL5IF  E           K        DISK
+      *
+      * Customer details update.
+     FSDCUSTL0UF  E           K        DISK
+     F                                              KCOMIT
+      *
+      * Alternative names and addresses update.
+     FSDALTNL0UF  E           K        DISK
+     F                                              KCOMIT
+      *
+      * Additional customer details update.
+     FSDACUSL0UF  E           K        DISK
+     F                                              KCOMIT
+      *
+      * Customer fees update.
+     FSDCFCDL0UF  E           K        DISK
+     F                                              KCOMIT
+      *
+      * Customer marketing information.
+     FSDCMRKL0UF  E           K        DISK
+     F                                              KCOMIT
+      *
+      * Futures and options clients.
+     FSDFOCSL0UF  E           K        DISK
+     F                                              KCOMIT
+      *
+      * Securities clients.
+     FSDSECSL0UF  E           K        DISK
+     F                                              KCOMIT
+      *                                                                   S01486
+      * Portfolio Lending clients.                                        S01486
+     FSDLBCSL0UF  E           K        DISK                               S01486
+     F                                              KCOMIT                S01486
+      *                                                                   S01486
+      * Portfolio Management clients.                                     S01486
+     FSDPLCSL0UF  E           K        DISK                               S01486
+     F                                              KCOMIT                S01486
+      *
+      * Standing data file controls.
+     FSDFCTLL0UF  E           K        DISK
+     F                                              KCOMIT
+      *                                                                   CPM005
+      * Power of Attorney Details File                                    CPM005
+     FSDPATTL0UF  E           K        DISK                               CPM005
+     F                                              KCOMIT                CPM005
+      *                                                                   CPM005
+      * Joint Account Holder Details File                                 CPM005
+     FSDJUSRL0UF  E           K        DISK                               CPM005
+     F                                              KCOMIT                CPM005
+      *                                                                   CPM005
+      * Related Customer Number Details File                              CPM005
+     FSDRELCL0UF  E           K        DISK                               CPM005
+     F                                              KCOMIT                CPM005
+      *                                                                   CPM005
+      * Customer Credit Card Details File                                 CPM005
+     FSDCCRDL0UF  E           K        DISK                               CPM005
+     F                                              KCOMIT                CPM005
+      *
+     F***SDKYCIL0UF  E           K        DISK                                       CSD028 BUG10603
+     FSDKYCIL1UF  E           K        DISK                                                 BUG10603
+     F                                              KCOMIT                                    CSD028
+      *                                                                                       CSD028
+      **Know Your Customer File                                                               CSD028
+      *                                                                                       CSD028
+      * Customers deleted listing.
+     FSD0013P1O   E                    PRINTER      KINFDS SPOOL      UC
+      *
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,SD0013FFP1                                           S01408
+     F*                                                                   S01408
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      /SPACE 3
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA                         256
+      *
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     IPSDS       SDS
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I/COPY WNCPYSRC,SD0013I001
+      *
+      ** Data structure for Bank ICD record.
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data structure for access programs, short data structure.
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** File data structure for overflow processing.
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLLN
+     I                                    B 367 3680PRTLN
+      *                                                                                       CSD028
+     I            DS                                                                          CSD028
+     I                                        1   6 WCCUST                                    CSD028
+     I**********                              1   60WNCUST                            CSD028 CSD027A
+     I                                        1   6 WNCUST                                   CSD027A
+      *                                                                                       CSD028
+     ISCSARD    E DSSCSARDPD                                                                  CSD028
+      *                                                                                       CSD028
+      **  External data structures for Switchable Features Details                            CSD028
+      *                                                                                       CSD028
+     IDSSDY     E DSDSSDY                                                                     CSD028
+      *                                                                                       CSD028
+      ** Second DS for access programs, Long Date Structure                                   CSD028
+      *
+      ** Input parameters.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5        Report seq number
+     C                     PARM           RLVL    1        Report level
+     C                     PARM           RENT    3        Report entity
+      *
+      ** Initialise program.
+      *
+     C                     EXSR INIT
+      *
+      ** Process SDCUSTL5 records to end of file.
+      *
+     C                     READ @CUSTFT                  90
+     C           *IN90     DOWEQ'0'                        B001
+      *
+      ** If customer flagged as eligible for deletion - run pre-checks.
+      *
+     C                     MOVE 'Y'       QUIT    1                       077335
+      *                                                                   077335
+     C           BBCDEL    IFEQ 'Y'                        B002
+     C                     CALL 'SD0011X'
+     C                     PARM           RTNCDE           Return code
+     C                     PARM           BBCUST           Customer number
+     C                     PARM           DELSTS  7        Customer delete sts
+     C                     PARM           DPARM1200                       063444
+     C                     PARM           DPARM2200                       063444
+     C                     PARM           DPARM3200                       063444
+     C                     PARM           DPARM4200                       063444
+     C                     PARM           DPARM5200                       063444
+     C                     PARM           QUIT                            077335
+      *
+      ** If return code is a delete type then delete the associated
+      ** records.
+      *
+     C           DELSTS    IFEQ 'DELETE'                   B003
+     C           DELSTS    OREQ 'F8'                                      063444
+     C********** DELSTS    OREQ 'SDACUS'                                  063444
+     C********** DELSTS    OREQ 'SDCFCD'                                  063444
+     C********** DELSTS    OREQ 'SDCMRK'                                  063444
+     C********** DELSTS    OREQ 'FOCS'                                    063444
+     C********** DELSTS    OREQ 'SECS'                                    063444
+      *
+      ** Logically delete the customer detail record.
+      *
+     C                     EXSR CUSDEL
+      *
+      ** If return code is not DELETE then some associated records
+      ** on other files also require deletion.
+      *
+     C           DELSTS    IFNE 'DELETE'                   B004
+     C                     EXSR RELDEL
+     C                     END                             E004
+     C/COPY WNCPYSRC,SD0013C006
+      *
+      ** Write detail lines to report.
+      *
+     C                     EXSR OUTDTL
+      *
+     C                     END                             E003
+     C                     END                             E002
+     C                     READ @CUSTFT                  90
+     C                     END                             E001
+      *
+      ** Write out totals/no details to report line.
+      *
+     C                     EXSR REPEND
+      *
+      ** Write out 'End of Report' line.
+      *
+     C                     WRITEZZENDRPT
+     C/COPY WNCPYSRC,SD0013C001
+      *
+      ** Close down program.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Program initialisation routine                       *
+      *                                                               *
+      * Called by: Main.                                              *
+      *                                                               *
+      * Calls: ZDATE2                                                 *
+      *        ZSFILE                                                 *
+      *        DBERR                                                  *
+      *        *PSSR                                                  *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR                           ** INIT SR **
+      *
+      ** Open spool file.
+      *
+     C                     OPEN SD0013P1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Define the rundate and LDA data areas.
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Read in rundate.
+      *
+     C                     IN   RUNDAT
+      *
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0013CCP1                                           S01408
+     C*                                                                   S01408
+     C                     MOVEL'S01383'  WUSARN  6                       077335
+     C                     MOVEL*BLANK    WUAPRC  7                       077335
+     C                     MOVEL*BLANK    WUFDY  76                       077335
+      * SAR switched on check.-                                           077335
+     C                     CALL 'AOSARDR0'                                077335
+     C           WUAPRC    PARM WUAPRC    WQ0280  7                       077335
+     C                     PARM '*VERIFY' WQ0281  7                       077335
+     C           WUSARN    PARM WUSARN    WQ0282  6                       077335
+     C                     PARM WUFDY     WQ0283 76                       077335
+      *                                                                   077335
+      * Check return code.                                                077335
+      *                                                                   077335
+     C           WUAPRC    IFEQ *BLANK                                    077335
+     C                     MOVEL'Y'       WUSARF  1                       077335
+     C                     ELSE                                           077335
+     C                     MOVEL'N'       WUSARF                          077335
+     C                     END                                            077335
+     C/COPY WNCPYSRC,SD0013C008
+      *
+      ** Access Bank ICD for the date format.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM           RTNCDE  7
+     C                     PARM '*FIRST'  ACCTYP  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file SDBANKPD.
+      *
+     C           RTNCDE    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD0013'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'BANK'    DBKEY
+     C                     Z-ADD001       DBASE            **************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERROR 01 *
+     C                     OUT  LDA                        **************
+      *
+      ** Write header.
+      *
+     C                     MOVE AGMRDT    ##MRDT
+     C                     MOVEL'SD0013'  ##PGM
+      *
+     C                     WRITEZZPAGHDR
+      *
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Set up report title and program name.
+      *
+     C                     MOVE BJURPT    ##URPT
+     C                     MOVEL'SD0013'  ##PGM
+     C/COPY WNCPYSRC,SD0013C009
+      *
+      ** Convert rundate to DDMMMYY format for header output.
+      *
+     C                     CALL 'ZDATE2'               89  Check File Date
+     C                     PARM           BJRDNB  50       Work Midas Date
+     C                     PARM           BJDFIN           Date format fla
+     C                     PARM *ZERO     WUWCDT  60       Work Converted
+     C                     PARM *BLANK    ##MRDT           Work Alpha Date
+      *
+      ** Set up last change date and type work fields.
+      *
+     C                     MOVE BJRDNB    WURDNB  50       Run day number
+     C                     MOVE 'D'       WUTYLC  1        Type of Last Ch
+      *
+      ** Write initial header.
+      *
+     C                     WRITEZZPAGHDR
+      *
+      ** Initialise the count of deleted customers.
+      *
+     C                     Z-ADD*ZERO     XXNUMB
+      *
+      ** Log the spool file in the RCF system.
+      *
+      ** Convert binary spool file number.
+      *
+     C                     Z-ADDSFNUM     SPLF    60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM *BLANKS   RENT
+     C                     PARM           SFILE
+     C                     PARM           SPLF
+     C                     PARM           ZSERR   1
+     C           *LOCK     IN   LDA
+      *
+      ** Check for error during ZSFILE processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Check if switchable feature CSD028 is switched on                                    CSD028
+      *                                                                                       CSD028
+     C                     CALL 'AOSARDR0'                                                    CSD028
+     C                     PARM '       ' PRTCD   7                                           CSD028
+     C                     PARM '*VERIFY' POPTN   7                                           CSD028
+     C                     PARM 'CSD028'  PSARD   6                                           CSD028
+     C           SCSARD    PARM SCSARD    DSSDY                                               CSD028
+      *                                                                                       CSD028
+     C           PRTCD     IFEQ *BLANK                                                        CSD028
+     C                     MOVE 'Y'       CSD028  1                                           CSD028
+     C                     ELSE                                                               CSD028
+     C                     MOVE 'N'       CSD028                                              CSD028
+     C                     ENDIF                                                              CSD028
+      *                                                                                       CSD028
+     C/COPY WNCPYSRC,SDH00679
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * RELDEL - Delete associated records on other files.            *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: FOCLT                                                  *
+      *        CLINTSE                                                *
+      *                                                               *
+      *****************************************************************
+     C           RELDEL    BEGSR                           ** RELDEL SR **
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0013CCP3                                           S01408
+     C*                                                                   S01408
+      *                                                                   CPM005
+      ** Delete record on Power of Attorney details file, if present.     CPM005
+      *                                                                   CPM005
+     C           BBCUST    SETLLSDPATTL0                                  CPM005
+     C           BBCUST    READESDPATTL0                 95               CPM005
+      *                                                                   CPM005
+      ** Do until no more records for this customer are found.            CPM005
+      *                                                                   CPM005
+     C           *IN95     DOWEQ'0'                                       CPM005
+     C                     DELET@PATTL0                                   CPM005
+     C                     MOVEL'SDPATTPD'FILNAM 10                       CPM005
+     C                     EXSR FILCTL                                    CPM005
+     C           BBCUST    READESDPATTL0                 95               CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+      ** Delete record on Joint Account Holder details file, if present.  CPM005
+      *                                                                   CPM005
+     C           BBCUST    SETLLSDJUSRL0                                  CPM005
+     C           BBCUST    READESDJUSRL0                 95               CPM005
+      *                                                                   CPM005
+      ** Do until no more records for this customer are found.            CPM005
+      *                                                                   CPM005
+     C           *IN95     DOWEQ'0'                                       CPM005
+     C                     DELET@JUSRL0                                   CPM005
+     C                     MOVEL'SDJUSRPD'FILNAM 10                       CPM005
+     C                     EXSR FILCTL                                    CPM005
+     C           BBCUST    READESDJUSRL0                 95               CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+      ** Delete record on Related Cust. Number details file, if present.  CPM005
+      *                                                                   CPM005
+     C           BBCUST    SETLLSDRELCL0                                  CPM005
+     C           BBCUST    READESDRELCL0                 95               CPM005
+      *                                                                   CPM005
+      ** Do until no more records for this customer are found.            CPM005
+      *                                                                   CPM005
+     C           *IN95     DOWEQ'0'                                       CPM005
+     C                     DELET@RELCL0                                   CPM005
+     C                     MOVEL'SDRELCPD'FILNAM 10                       CPM005
+     C                     EXSR FILCTL                                    CPM005
+     C           BBCUST    READESDRELCL0                 95               CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+      ** Delete record on Customer Credit Cards details file, if present. CPM005
+      *                                                                   CPM005
+     C           BBCUST    SETLLSDCCRDL0                                  CPM005
+     C           BBCUST    READESDCCRDL0                 95               CPM005
+      *                                                                   CPM005
+      ** Do until no more records for this customer are found.            CPM005
+      *                                                                   CPM005
+     C           *IN95     DOWEQ'0'                                       CPM005
+     C                     DELET@CCRDL0                                   CPM005
+     C                     MOVEL'SDCCRDPD'FILNAM 10                       CPM005
+     C                     EXSR FILCTL                                    CPM005
+     C           BBCUST    READESDCCRDL0                 95               CPM005
+     C                     END                                            CPM005
+      *
+      ** Delete record on additional customer details file, if present.
+      *
+     C           BBCUST    CHAINSDACUSL0             95
+     C           *IN95     IFEQ '0'
+     C                     DELET@ACUSL0
+     C                     END
+     C/COPY WNCPYSRC,SDH00680
+      *
+      ** Delete record on customer fees file, if present.
+      *
+     C           BBCUST    CHAINSDCFCDL0             96
+     C           *IN96     IFEQ '0'
+     C                     DELET@CFCDL0
+     C                     MOVEL'SDCFCDPD'FILNAM 10
+     C                     EXSR FILCTL
+     C                     END
+      *                                                                   S01486
+      ** Delete record on portfolio lending file, if present.             S01486
+      *                                                                   S01486
+     C           BBCUST    CHAINSDLBCSL0             96                   S01486
+     C           *IN96     IFEQ '0'                                       S01486
+     C                     DELET@LBCSL0                                   S01486
+     C                     MOVEL'SDLBCSPD'FILNAM 10                       S01486
+     C                     EXSR FILCTL                                    S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+      ** Flag record on portfolio management file as deleted.             S01486
+      *                                                                   S01486
+     C           BBCUST    CHAINSDPLCSL0             96                   S01486
+     C           *IN96     IFEQ '0'                                       S01486
+     C                     MOVE 'D'       QBTYLC                          S01486
+     C                     UPDAT@PLCSL0                                   S01486
+     C                     MOVEL'SDPLCSPD'FILNAM                          S01486
+     C                     EXSR FILCTL                                    S01486
+     C                     END                                            S01486
+      *
+      ** Delete record on customer marketing info file, if present.
+      *
+     C           BBCUST    CHAINSDCMRKL0             94
+     C           *IN94     IFEQ '0'
+     C                     DELET@D7REJA
+     C                     MOVEL'SDCMRKPD'FILNAM
+     C                     EXSR FILCTL
+     C                     END
+      *
+      ** Check if CSD028 is switched on                                                       CSD028
+      *                                                                                       CSD028
+     C           CSD028    IFEQ 'Y'                                                           CSD028
+      *                                                                                       CSD028
+      ** Delete record on Know Your Customer File, if present.                                CSD028
+      *                                                                                       CSD028
+     C                     MOVELBBCUST    WCCUST                                              CSD028
+     C********** WNCUST    CHAINSDKYCIL0             75                              CSD028 BUG10603
+     C           WNCUST    CHAINSDKYCIL1             75                                     BUG10603
+     C           *IN75     IFEQ *OFF                                                          CSD028
+     C                     DELETSDKYCID0                                                      CSD028
+     C                     MOVEL'SDKYCIPD'FILNAM                                              CSD028
+     C                     ENDIF                                                              CSD028
+      *                                                                                       CSD028
+     C                     ENDIF                                                              CSD028
+      *                                                                                       CSD028
+      ** Delete record on futures & options customers file, if present.
+      *
+     C           BBCUST    CHAINSDFOCSL0             88
+     C           *IN88     IFEQ '0'
+     C                     DELET@BHRED0
+     C                     MOVEL'SDFOCSPD'FILNAM
+     C                     EXSR FILCTL
+      *
+      * Update FOCLT - Futures & Options Clients.
+      *
+     C                     CALL 'FOCLT'                85  Update FOCLT
+     C                     PARM *BLANK    RTNCDE           *Return code
+     C                     PARM           BHCUST           Customer Number
+     C                     PARM           BHCYCD           Currency Code
+     C                     PARM           BHSTFQ           Statement frequ
+     C                     PARM           BHDMFS           Day in month fo
+     C                     PARM           BHNSDT           Next statement
+     C                     PARM           BHFACO           For Account of
+     C                     PARM           BHBKIN           Broker Indicato
+     C                     PARM           BHSTTY           Settlement Type
+     C                     PARM           BHSMAC           Settlement Acco
+     C                     PARM           BHCPNO           Counterparty No
+     C                     PARM           BHCOAD           Correspondence
+     C                     PARM           BHFTAO           For the Attenti
+     C                     PARM           BHTXCI           Telex Confirmat
+     C                     PARM           BHCTLM           Contract Limit
+     C                     PARM           BHRVFQ           Revaluation Fre
+     C                     PARM           BHRVBD           Revaluation Bas
+     C                     PARM           BHNRDT           Next revaluatio
+     C                     PARM           BHPCIN           Positions combi
+     C                     PARM           BHACIN           Automatic Closu
+     C                     PARM           BHCODE           Collateral Desc
+     C                     PARM           BHCOAM           Collateral Amou
+     C                     PARM           BHSEBR           Settlement Bran
+     C                     PARM           WUTYLC           Type of Last Ch
+     C                     PARM           WURDNB           Run day number
+      *
+      ** Error in FOCLT processing.
+      *
+     C           RTNCDE    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD0013'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELBBCUST    DBKEY
+     C                     Z-ADD004       DBASE            **************
+     C                     MOVEL'FOCLT'   DBFILE           * DBERROR 04 *
+     C                     OUT  LDA                        **************
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,SD0013C002
+      *
+     C                     END
+      *
+      ** Delete record on securities customers file, if present.
+      *
+     C           BBCUST    CHAINSDSECSL0             87
+     C           *IN87     IFEQ '0'
+     C                     DELET@BFREDP
+     C                     MOVEL'SDSECSPD'FILNAM
+     C                     EXSR FILCTL
+     C/COPY WNCPYSRC,SD0013C007
+      *
+      * Update CLINTSE - Securities Clients.
+      *
+     C                     CALL 'CLINTSE'              86  Update CLINTSE
+     C                     PARM *BLANK    RTNCDE           *Return code
+     C                     PARM           BFCUST           Customer Number
+     C                     PARM           BFACCD           Account Code
+     C                     PARM           BFPCYC           Portfolio curre
+     C                     PARM           BFCYCD           Currency Code
+     C                     PARM           BFADCD           Address Code
+     C                     PARM           BFACSN           Account sequenc
+     C                     PARM           BFCLAS           Classification
+     C                     PARM           BFDRF1           Depot Reference
+     C                     PARM           BFDRF2           Depot Reference
+     C                     PARM           BFDRF3           Depot Reference
+     C                     PARM           BFDRF4           Depot Reference
+     C                     PARM           BFDRF5           Depot Reference
+     C                     PARM           BFDRF6           Depot Reference
+     C                     PARM           BFDRF7           Depot Reference
+     C                     PARM           BFDRF8           Depot Reference
+     C                     PARM           BFDRF9           Depot Reference
+     C                     PARM           BFDRF0           Depot Reference
+     C                     PARM           BFPNP1           Part./Non-part.
+     C                     PARM           BFPNP2           Part./Non-part.
+     C                     PARM           BFPNP3           Part./Non-part.
+     C                     PARM           BFPNP4           Part./Non-part.
+     C                     PARM           BFPNP5           Part./Non-part.
+     C                     PARM           BFPNP6           Part./Non-part.
+     C                     PARM           BFPNP7           Part./Non-part.
+     C                     PARM           BFPNP8           Part./Non-part.
+     C                     PARM           BFPNP9           Part./Non-part.
+     C                     PARM           BFPNP0           Part./Non-part.
+     C                     PARM           BFCFIN           Cedel Fungibili
+     C                     PARM           BFSTFQ           Statement frequ
+     C                     PARM           BFNSDT           Next statement
+     C                     PARM           BFSBDM           Stat.Base Date
+     C                     PARM           BFPLAG           Pledge Agreemen
+     C                     PARM           BFNARR           Narrative
+     C                     PARM           BFNTFC           No. of Trades f
+     C                     PARM           BFSRCD           Statutory retur
+     C                     PARM           BFTCD            Tax Code
+     C                     PARM           BFASIN           Auto-Settle Ind
+     C                     PARM           WURDNB           Run day number
+     C                     PARM           WUTYLC           Type of Last Ch
+     C**********           PARM           BFNDR1           New Depo Ref 1              CSE022 222373
+     C**********           PARM           BFNDR2           New Depo Ref 2              CSE022 222373
+     C**********           PARM           BFNDR3           New Depo Ref 3              CSE022 222373
+     C**********           PARM           BFNDR4           New Depo Ref 4              CSE022 222373
+     C**********           PARM           BFNDR5           New Depo Ref 5              CSE022 222373
+     C**********           PARM           BFNDR6           New Depo Ref 6              CSE022 222373
+     C**********           PARM           BFNDR7           New Depo Ref 7              CSE022 222373
+     C**********           PARM           BFNDR8           New Depo Ref 8              CSE022 222373
+     C**********           PARM           BFNDR9           New Depo Ref 9              CSE022 222373
+     C**********           PARM           BFNDR0           New Depo Ref 10             CSE022 222373
+      *
+      ** Error in CLINTSE processing.
+      *
+     C           RTNCDE    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD0013'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELBBCUST    DBKEY
+     C                     Z-ADD005       DBASE            **************
+     C                     MOVEL'CLINTSE' DBFILE           * DBERROR 05 *
+     C                     OUT  LDA                        **************
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     END
+     C/COPY WNCPYSRC,SD0013C003
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CUSDEL - Delete customer details.                             *
+      *                                                               *
+      * Called by: Main.                                              *
+      *                                                               *
+      * Calls: OUTDTL                                                 *
+      *        DBERR                                                  *
+      *        *PSSR                                                  *
+      *        SDCLINT                                                *
+      *        SDALTNA                                                *
+      *        CLINTCC                                                *
+      *                                                               *
+      *****************************************************************
+     C           CUSDEL    BEGSR                           ** CUSDEL SR **
+      *
+      ** Delete record on customer details file.
+      *
+     C           BBCUST    CHAINSDCUSTL0             91
+     C           *IN91     IFEQ '0'
+     C                     MOVE WUTYLC    BBTYLC           Type of Last Change
+     C                     MOVE WURDNB    BBLCD            Date of Last Change
+     C                     MOVE WURDNB    BBDTDL           Date Deleted
+     C                     UPDAT@BBREBG
+     C/COPY WNCPYSRC,SD0013C010
+     C                     MOVEL'SDCUSTPD'FILNAM
+     C                     EXSR FILCTL
+     C                     END
+      *
+      ** Save details of record to be deleted for report.
+      *
+     C                     MOVE BBCUST    XXCUST
+     C                     MOVE BBCSSN    XXCSSN
+     C                     MOVE BBCNA1    XXCNA1
+     C                     MOVE BBCNA2    XXCNA2
+     C                     MOVE BBCNA3    XXCNA3
+     C                     MOVE BBCNA4    XXCNA4
+     C                     MOVE BBCRNM    XXCRNM
+     C                     MOVE BBCRTN    XXCRTN
+      *
+      ** Get customer marketing groups for CLINT update.
+      *
+     C           BBCUST    CHAINSDCMRKL0             94
+     C           *IN94     IFEQ '0'
+     C                     MOVE D7GPC1    WUGPC1  4        Group 1
+     C                     MOVE D7GPC2    WUGPC2  4        Group 2
+     C                     MOVE D7GPC3    WUGPC3  4        Group 3
+     C                     MOVE D7GPC4    WUGPC4  4        Group 4
+     C                     MOVE D7GPC5    WUGPC5  4        Group 5
+     C                     ELSE
+     C                     MOVE *BLANKS   WUGPC1           Group 1
+     C                     MOVE *BLANKS   WUGPC2           Group 2
+     C                     MOVE *BLANKS   WUGPC3           Group 3
+     C                     MOVE *BLANKS   WUGPC4           Group 4
+     C                     MOVE *BLANKS   WUGPC5           Group 5
+     C                     END
+      *
+      ** Delete record on CLINT.
+      *
+     C/COPY WNCPYSRC,SD0013C004
+     C                     CALL 'SDCLINT'
+     C                     PARM *BLANK    RTNCDE           *Return code
+     C                     PARM           BBCUST           Customer Number
+     C                     PARM           BBCSSN           Customer Shortn
+     C                     PARM           BBCRTN           Customer Report
+     C                     PARM           BBPAIN           Parent Indicato
+     C                     PARM           BBCRNM           Customer Report
+     C                     PARM           BBACOC           Account Officer
+     C                     PARM           BBCNCZ           Country of Citi
+     C                     PARM           BBCOLC           Country of Loca
+     C                     PARM           BBSSDT           Suspended Date
+     C                     PARM           BBDOIC           Date of Initial
+     C                     PARM           BBPCNB           Parent Customer
+     C                     PARM           BBCASC           Customer Alpha
+     C                     PARM           BBBRCD           Branch code
+     C                     PARM           BBBNBI           Bank/non-bank I
+     C                     PARM           BBLINC           Local Instituti
+     C                     PARM           BBLICD           Local Industry
+     C                     PARM           BBCTNB           Customer Teleph
+     C                     PARM           BBREID           Reuter Id.
+     C                     PARM           BBBSIN           Branch/Subsidia
+     C                     PARM           BBCSTY           Customer Type
+     C                     PARM           BBTAIN           Taxable Indicat
+     C                     PARM           BBCSID           Customer Swift
+     C                     PARM           BBSTAD           STTX Address
+     C                     PARM           BBTXA1           MIDAS Telex Sho
+     C                     PARM           BBCHID           Chips Id
+     C                     PARM           BBCHSC           Chaps sort code
+     C                     PARM           BBCABA           Chips ABA
+     C                     PARM           BBRWCD           Risk Weighting
+     C                     PARM           BBCGRP           Retail Customer
+     C                     PARM           BBABA2           Chips ABA for C
+     C                     PARM           WUTYLC           Type of Last Ch
+     C                     PARM           WURDNB           Run day number
+     C                     PARM           WUGPC1           Group 1
+     C                     PARM           WUGPC2           Group 2
+     C                     PARM           WUGPC3           Group 3
+     C                     PARM           WUGPC4           Group 4
+     C                     PARM           WUGPC5           Group 5
+     C                     PARM           E5LNID           Language ID                      AR830675
+     C                     PARM           E5CTYP           Correspondent Type               AR830675
+     C/COPY WNCPYSRC,SD0013C005
+      *
+      ** Error in SDCLINT processing.
+      *
+     C           RTNCDE    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD0013'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELBBCUST    DBKEY
+     C                     Z-ADD002       DBASE            **************
+     C                     MOVEL'SDCLINT' DBFILE           * DBERROR 02 *
+     C                     OUT  LDA                        **************
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Update the main address record ('B' record) on PF/CLINTCC
+      *
+     C                     CALL 'SDALTNA'              93  Update CLINTCC
+     C                     PARM *BLANK    RTNCDE           *Return code
+     C                     PARM           BBCUST           Customer Number
+     C                     PARM           BBCNA1           Cust. Name & Ad
+     C                     PARM           BBCNA2           Cust. Name & Ad
+     C                     PARM           BBCNA3           Cust. Name & Ad
+     C                     PARM           BBCNA4           Cust. Name & Ad
+     C                     PARM           BBCRTN           Customer Report
+     C                     PARM           WUTYLC           Type of Last Ch
+     C                     PARM           WURDNB           Run day number
+      *
+      ** Error in SDALTNA processing.
+      *
+     C           RTNCDE    IFNE *BLANK                     B001
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD0013'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELBBCUST    DBKEY
+     C                     Z-ADD003       DBASE            **************
+     C                     MOVEL'SDALTNA' DBFILE           * DBERROR 03 *
+     C                     OUT  LDA                        **************
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END                             E001
+      *
+      ** Update the alternate customer details background file
+      ** (non 'B' records).
+      *
+     C           BBCUST    SETLLSDALTNL0
+      *
+     C           BBCUST    READESDALTNL0                 92
+      *
+      ** Do until no more records for this customer are found.
+      *
+     C           *IN92     DOWEQ'0'                        B001
+      *
+      ** Flag the record as deleted on both SDALTNL0 and CLINTCC
+      ** (if it is not already deleted).
+      *
+     C           BCTYLC    IFNE 'D'                        B002
+      *
+      ** Delete record on alternate customer details file.
+      *
+     C                     MOVE WUTYLC    BCTYLC           Type of Last Change
+     C                     MOVE WURDNB    BCLCD            Date of Last Change
+     C                     UPDAT@BCREDD
+     C                     MOVEL'SDALTNPD'FILNAM
+     C                     EXSR FILCTL
+      *
+      ** Delete record on alternate customer details background file.
+      *
+     C                     CALL 'CLINTCC'              90  Update CLINTCC
+     C                     PARM *BLANK    RTNCDE           *Return code
+     C                     PARM           BCCUST           Customer Number
+     C                     PARM           BCADCD           Address Code
+     C                     PARM           BCCNA1           Cust. Name & Ad
+     C                     PARM           BCCNA2           Cust. Name & Ad
+     C                     PARM           BCCNA3           Cust. Name & Ad
+     C                     PARM           BCCNA4           Cust. Name & Ad
+     C                     PARM           BCCRTN           Customer Report
+     C                     PARM           BCCTNB           Customer Teleph
+     C                     PARM           BCTXNB           Telex Number
+     C                     PARM           BCCNCD           Country Code
+     C                     PARM           WURDNB           Last Change Dat
+     C                     PARM           WUTYLC           Type of Last Ch
+      *
+      ** Error in CLINTCC processing.
+      *
+     C           RTNCDE    IFNE *BLANK                     B003
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD0013'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELBBCUST    DBKEY
+     C                     Z-ADD006       DBASE            **************
+     C                     MOVEL'CLINTCC' DBFILE           * DBERROR 06 *
+     C                     OUT  LDA                        **************
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END                             E003
+      *
+     C                     END                             E002
+      *
+     C           BBCUST    READESDALTNL0                 92
+      *
+     C                     END                             E001
+      *                                                                   077335
+      * Call SD2464 only if the switchable feature S01383                 077335
+      * is switched ON.                                                   077335
+      *                                                                   077335
+     C           WUSARF    IFEQ 'Y'                                       077335
+      *
+      ** Delete BRT records if they exist                                 069253
+      *                                                                   069253
+     C                     MOVEL'D'       WUANCD           Action Code    069253
+     C                     MOVE BBCUST    WUCNBR           Customer number069253
+      * Call Base Rate Tax pgm - Standard Functions  *                    069253
+     C                     CALL 'SD2464'               90  Call Base Rate 069253
+     C                     PARM           WUANCD  1        Action Code    069253
+     C                     PARM *BLANKS   RTNCDE           *Return code   069253
+     C**********           PARM           WUCNBR  60       Customer number             069253 CSD027
+     C                     PARM           WUCNBR  6        Customer number                    CSD027
+     C                     PARM           BBTAIN           Account Holder 069253
+      *                                                                   077335
+     C                     END                                            077335
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,SD0013CCP2                                           S01408
+     C*                                                                   S01408
+      *                                                                   069253
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * OUTDTL - Write report detail lines.                           *
+      *                                                               *
+      * Called by: CUSDEL                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OUTDTL    BEGSR                           ** OUTDTL SR **
+      *
+      ** Write page header if the detail record will not fit on
+      ** the present page.
+      *
+     C           OFLLN     SUB  PRTLN     REMLN   30
+     C           REMLN     IFLE 5
+     C                     WRITEZZPAGHDR
+     C                     END
+      *
+     C                     WRITEZZDTLRCD
+      *
+      ** Seton IN76 to show that at least one detail record exists.
+      *
+     C                     SETON                     76
+      *
+      ** Increase the count of deleted customers.
+      *
+     C                     ADD  1         XXNUMB
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * REPEND - Write totals.                                        *
+      *                                                               *
+      * Called by: MAIN                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPEND    BEGSR                           ** REPEND SR **
+      *
+      ** Write page header if the record will not fit on
+      ** the present page.
+      *
+     C           OFLLN     SUB  PRTLN     REMLN
+     C           REMLN     IFLE 5
+     C                     WRITEZZPAGHDR
+     C                     END
+      *
+     C                     WRITEZZFINTTL
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * FILCTL - Update standing data file controls.                  *
+      *                                                               *
+      * Called by: CUSDEL                                             *
+      *            RELDEL                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FILCTL    BEGSR                           ** FILCTL SR **
+      *
+      ** Chain to SDFCTLL0.
+      *
+     C           FILNAM    CHAIN@AHREAU              97
+      *
+      ** Record not found in standing data file controls.
+      *
+     C           *IN97     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     MOVEL'SD0013'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELFILNAM    DBKEY
+     C                     Z-ADD006       DBASE            **************
+     C                     MOVEL'SDFCTLPA'DBFILE           * DBERROR 06 *
+     C                     OUT  LDA                        **************
+     C                     EXSR DBERR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Decrease the number of live records by 1.
+      *
+     C                     SUB  1         AHNORC           No. of Records
+      *
+      ** Increase the number of deleted records by 1.
+      *
+     C                     ADD  1         AHNODL           No. of Deletes
+      *
+      ** Update the file control record.
+      *
+     C                     UPDAT@AHREAU
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: INIT                                               *
+      *            CUSDEL                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * DBERR  - Program database error routine.                      *
+      *                                                               *
+      * Called by: CUSDEL                                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DBERR     BEGSR                           ** DBERR SR **
+      *
+      ** Write database error on a new page.
+      *
+     C           *IN76     IFEQ '1'
+     C                     WRITEZZPAGHDR
+     C                     END
+      *
+      ** Output data base error message to printer file.
+      *
+     C                     WRITEZZDBERR
+      *
+      ** Output 'End of Report' line.
+      *
+     C                     WRITEZZENDRPT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

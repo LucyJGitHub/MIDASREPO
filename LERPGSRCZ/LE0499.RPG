@@ -1,0 +1,545 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Update participant percentages')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0499 - Update Participant Percentages                      *
+      *                                                               *
+      *  Function:  This program will update participant percentages  *
+      *             (for all prime syndicated facilities), where      *
+      *             current file value is incorrect.                  *
+      *                                                               *
+      *  Called By: LERC30A - Facility history update                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE029             Date 04Sep02               *
+      *                 CAP073             Date 08Aug02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP068             Date 25Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163188             Date 08Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 157759  *CREATE    Date 14Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE029 - Addition of Severity code and Limit ID to FCLTYFM   *
+      *  CAP073 - Conversion of MN inputs into modular structure to   *
+      *           use as APIs. Facility input Transaction Details     *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  CAP068 - Recompiled for changes to FCLTYFM and FCLTYFN.      *
+      *  163188 - Facility amount of Credit Agreement participants    *
+      *           should be updated instead of Shared percentage.     *
+      *  157759 - Correct participant share percentages               *
+      *                                                               *
+      *****************************************************************
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+      *
+     FLEFCLTL4UF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTL4F
+      *                                                                   163188
+     FFCLTYZZ UF  E                    DISK         KINFSR *PSSR          163188
+      /EJECT                                                              163188
+      *****************************************************************   163188
+      *                                                               *   163188
+      *    F U N C T I O N   O F   I N D I C A T O R S                *   163188
+      *                                                               *   163188
+      *    20           End of file on FCLTYZZ                        *   163188
+      *                                                               *   163188
+      *****************************************************************   163188
+      *----------------------------------------------------------------
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+      *----------------------------------------------------------------
+     IFCLTYFMF
+     I              FAMT                            FAMTPR
+     I              PRTR                            PRTRPR
+      /SPACE 3                                                            163188
+     ILDA       E DSLDA                         256                       163188
+      *                                                                   163188
+      ** Local data area for database error details                       163188
+      ** *LOCK IN LDA immediately before and OUT LDA immediately          163188
+      ** after each database error handling.                              163188
+      **                                                                  163188
+      **                                    134 141 DBFILE                163188
+      **       Defines:                     142 170 DBKEY                 163188
+      **                                    171 180 DBPGM                 163188
+      **                                    181 1830DBASE                 163188
+      *                                                                   163188
+     ISDBANK    E DSSDBANKPD                                              163188
+      ** External data structures for Bank Details                        163188
+      *                                                                   163188
+     IDSFDY     E DSDSFDY                                                 163188
+      ** Short data structure for access objects                          163188
+      *----------------------------------------------------------------
+     I              100000000000000       C         C#100
+      *----------------------------------------------------------------
+     C           *NAMVAR   DEFN           LDA                             163188
+     C           *LOCK     IN   LDA                                       163188
+     C                     MOVE *BLANKS   DBFILE                          163188
+     C                     MOVE *BLANKS   DBKEY                           163188
+     C                     MOVEL'LE0499'  DBPGM                           163188
+     C                     MOVE *BLANKS   DBASE                           163188
+     C                     OUT  LDA                                       163188
+      *                                                                   163188
+     C                     Z-ADD0         WDIFF  130                      163188
+     C                     Z-ADD0         WTOTD  180                      163188
+     C           *LIKE     DEFN SHPC      W#SHPC
+     C           *LIKE     DEFN SHPC      SHRTOT
+     C           *LIKE     DEFN PMFC      K#PMFC
+     C           *LIKE     DEFN PMFT      K#PMFT
+     C           *LIKE     DEFN PMFN      K#PMFN
+      *
+     C           K#FCL4    KLIST
+     C                     KFLD           K#PMFC
+     C                     KFLD           K#PMFT
+     C                     KFLD           K#PMFN
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    6
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *                                                                   163188
+      ** Call access program for bank details                             163188
+      *                                                                   163188
+     C                     CALL 'AOBANKR0'                                163188
+     C                     PARM '*MSG   ' PRTCD   7                       163188
+     C                     PARM '*FIRST ' POPTN   7                       163188
+     C           SDBANK    PARM SDBANK    DSFDY                           163188
+      *                                                                   163188
+      ** Handle database error                                            163188
+      *                                                                   163188
+     C           PRTCD     IFNE *BLANKS                                   163188
+     C           *LOCK     IN   LDA                                       163188
+     C                     MOVEL'SDBANKPD'DBFILE           ************   163188
+     C                     Z-ADD1         DBASE            * DBERR 01 *   163188
+     C                     OUT  LDA                        ************   163188
+     C                     EXSR *PSSR                                     163188
+     C                     ENDIF                                          163188
+      *-------------------------------------------------------------------------
+      *
+      ** Read all facility records and process participants
+      *
+     C           *LOVAL    SETLLFCLTY
+     C           *INLR     DOUEQ*ON
+     C                     READ FCLTYFMF                 LR
+      *
+     C           *INLR     IFEQ *ON
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C********** PMFC      IFNE *ZERO                                                         CSD027
+     C           PMFC      IFNE *BLANKS                                                       CSD027
+     C           FAMTPR    OREQ *ZERO
+     C                     ITER
+     C                     ENDIF
+      *
+     C                     EXSR CALCPC
+     C                     ENDDO
+      *                                                                   163188
+      ** Update trailer values if total difference in the facility        163188
+      ** amounts adjusted is not equal to zero                            163188
+      *                                                                   163188
+     C           WTOTD     IFNE 0                                         163188
+     C                     EXSR SRTRLR                                    163188
+     C                     ENDIF                                          163188
+      *
+     C                     RETRN
+      *****************************************************************
+      *
+      ** Calculate percentage share of the primary facility
+      *
+     C           CALCPC    BEGSR
+      *
+     C                     MOVE FAMTPR    P#PAMT
+     C                     Z-ADD*ZERO     SHRTOT
+      *
+     C                     MOVE CNUM      K#PMFC
+     C                     MOVE FACT      K#PMFT
+     C                     MOVE FCNO      K#PMFN
+     C                     MOVE TRCA      WTRCA   2                       163188
+     C           K#FCL4    CHAINFCLTL4F              10
+     C           *IN10     DOWEQ*OFF
+      *                                                                   163188
+      ** Calculate facility amount depending on Shared percentage         163188
+      ** if Primary facility is a Credit Agreement                        163188
+      *                                                                   163188
+     C           WTRCA     IFEQ 'CA'                                      163188
+     C                     MOVE SHPC      P#SHPC                          163188
+     C                     MOVE *BLANKS   P#FAMT                          163188
+     C                     MOVE 'P'       P#SHTP                          163188
+      *                                                                   163188
+     C                     CALL 'LE2024'                                  163188
+     C                     PARM           P#PAMT                          163188
+     C                     PARM           P#SHPC                          163188
+     C                     PARM           P#FAMT                          163188
+     C                     PARM           P#SHTP                          163188
+      *                                                                   163188
+     C                     MOVE P#FAMT    W#FAMT 130                      163188
+     C                     Z-ADDSHPC      W#SHPC                          163188
+      *                                                                   163188
+     C                     ELSE                                           163188
+      *
+     C                     MOVE FAMT      P#FAMT
+     C                     CALL 'LE2024'
+     C                     PARM           P#PAMT 13
+     C                     PARM *BLANKS   P#SHPC 15
+     C                     PARM           P#FAMT 13
+     C                     PARM 'A'       P#SHTP  1
+     C                     MOVE P#SHPC    W#SHPC
+     C                     Z-ADDFAMT      W#FAMT                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** Save facility amount before updating to be used for trailer      163188
+      ** update                                                           163188
+      *                                                                   163188
+     C                     Z-ADDFAMT      WPFAMT 130                      163188
+      *
+     C           W#SHPC    IFNE SHPC
+     C           W#FAMT    ORNE FAMT                                      163188
+      *
+     C           MODE      IFEQ 'UPDATE'
+     C                     Z-ADDW#SHPC    SHPC
+     C                     Z-ADDW#FAMT    FAMT                            163188
+     C                     EXCPTFCLUPD
+      *                                                                   163188
+      ** Compute for total difference in the facility amts adjusted       163188
+      *                                                                   163188
+     C           FAMT      IFNE WPFAMT                                    163188
+     C           FAMT      SUB  WPFAMT    WDIFF                           163188
+     C                     ADD  WDIFF     WTOTD                           163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  SHPC      SHRTOT
+     C           K#FCL4    READEFCLTL4F                  10
+      *
+     C           *IN10     IFEQ *ON
+     C           PRTRPR    IFEQ 'A'
+     C           SHRTOT    ANDNEC#100
+     C           PRTRPR    ORNE 'A'
+     C           SHRTOT    ANDGTC#100
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT                                                              163188
+      *****************************************************************   163188
+      * SRTRLR   : Update trailer                                     *   163188
+      * Called by: CALCPC                                             *   163188
+      * Calls    : None                                               *   163188
+      *****************************************************************   163188
+     C           SRTRLR    BEGSR                                          163188
+      *                                                                   163188
+      ** Update trailer file if there are facility amounts updated        163188
+      *                                                                   163188
+     C                     READ FCLTYZZF                 20               163188
+      *                                                                   163188
+     C           *IN20     IFEQ '1'                                       163188
+     C           *LOCK     IN   LDA                                       163188
+     C                     MOVEL'*READ   'DBKEY            ************   163188
+     C                     MOVEL'FCLTYZZ 'DBFILE           * DBERR 02 *   163188
+     C                     Z-ADD2         DBASE            ************   163188
+     C                     OUT  LDA                                       163188
+     C                     EXSR *PSSR                                     163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+     C                     Z-ADD0         ZZAMT                           163188
+     C           WTOTD     DIV  1000      ZZAMT                           163188
+     C                     Z-ADDVLBF      ZZTOTI                          163188
+     C                     Z-ADDVLBL      ZZTOTD                          163188
+     C                     EXSR GLZADD                                    163188
+     C                     Z-ADDZZTOTI    VLBF                            163188
+     C                     Z-ADDZZTOTD    VLBL                            163188
+      *                                                                   163188
+     C                     Z-ADDVLAF      ZZTOTI                          163188
+     C                     Z-ADDVLAL      ZZTOTD                          163188
+     C                     EXSR GLZADD                                    163188
+     C                     Z-ADDZZTOTI    VLAF                            163188
+     C                     Z-ADDZZTOTD    VLAL                            163188
+      *                                                                   163188
+     C                     Z-ADDBJRDNB    LCD                             163188
+     C                     MOVE 'A'       CHTP                            163188
+     C                     UPDATFCLTYZZF                                  163188
+      *                                                                   163188
+     C                     MOVE '1'       *INLR                           163188
+      *                                                                   163188
+     C                     ENDSR                                          163188
+      /EJECT                                                              163188
+      *****************************************************************   163188
+      *                                                               *   163188
+      *  GLZADD - Adds an amount (ZZAMT) to the total (ZZTOTI,ZZTOTD) *   163188
+      *  Called by: Main Processing                                   *   163188
+      *  Calls    : GLZSUM - Carries out the addition of the amounts  *   163188
+      *                                                               *   163188
+      *****************************************************************   163188
+      *                                                                   163188
+     C           GLZADD    BEGSR                                          163188
+      *                                                                   163188
+     C           ZZAMT     IFNE *ZERO                                     163188
+      *                                                                   163188
+      ** Split ZZAMT into integer and decimal fields                      163188
+      *                                                                   163188
+     C                     Z-ADDZZAMT     ZZAMTI 150                      163188
+     C                     MOVE ZZAMT     ZZAMTD  30                      163188
+      *                                                                   163188
+      ** Both ZZAMTI and ZZAMTD contain a 'sign' zone now                 163188
+      *                                                                   163188
+     C                     EXSR GLZSUM                                    163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+     C                     ENDSR                                          163188
+      /EJECT                                                              163188
+      *****************************************************************   163188
+      *                                                               *   163188
+      *  GLZSUM - Carries out the addition of the amounts             *   163188
+      *                                                               *   163188
+      *  Called by: GLZADD                                            *   163188
+      *  Calles   : None                                              *   163188
+      *                                                               *   163188
+      *****************************************************************   163188
+      *                                                                   163188
+     C           GLZSUM    BEGSR                                          163188
+      *                                                                   163188
+      ** Save values of indicators to be used in the program              163188
+      *                                                                   163188
+     C                     MOVE *IN91     WIN91   1                       163188
+     C                     MOVE *IN92     WIN92   1                       163188
+     C                     MOVE *IN93     WIN93   1                       163188
+     C                     MOVE *IN94     WIN94   1                       163188
+     C                     MOVE *IN95     WIN95   1                       163188
+     C                     MOVEA'00000'   *IN,91                          163188
+     C                     MOVE '0'       *IN99                           163188
+      *                                                                   163188
+     C                     DO                                             163188
+      *                                                                   163188
+      ** Determine sign of ZZAMTI and ZZAMTD, 92 IF NEG                   163188
+      ** If both are zero, bypass processing                              163188
+      *                                                                   163188
+     C           ZZAMTI    IFEQ *ZEROS                                    163188
+     C           ZZAMTD    ANDEQ*ZEROS                                    163188
+     C                     LEAVE                                          163188
+     C                     ELSE                                           163188
+     C           ZZAMTI    IFLT *ZEROS                                    163188
+     C           ZZAMTD    ORLT *ZEROS                                    163188
+     C                     MOVE '1'       *IN92                           163188
+     C                     ENDIF                                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** Determine sign of ZZTOTI and ZZTOTD, 91 IF NEG.                  163188
+      ** If ZZTOTAL is ZERO, return ZZAMOUNT.                             163188
+      *                                                                   163188
+     C           ZZTOTI    IFEQ *ZEROS                                    163188
+     C           ZZTOTD    ANDEQ*ZEROS                                    163188
+     C                     Z-ADDZZAMTI    ZZTOTI 150                      163188
+     C                     Z-ADDZZAMTD    ZZTOTD  30                      163188
+     C                     LEAVE                                          163188
+     C                     ELSE                                           163188
+     C           ZZTOTI    IFLT *ZEROS                                    163188
+     C           ZZTOTD    ORLT *ZEROS                                    163188
+     C                     MOVE '1'       *IN91                           163188
+     C                     ENDIF                                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** If signs differ, bypass overflow checks                          163188
+      *                                                                   163188
+     C           *IN91     IFEQ '0'                                       163188
+     C           *IN92     ANDEQ'0'                                       163188
+     C           *IN91     OREQ '1'                                       163188
+     C           *IN92     ANDEQ'1'                                       163188
+      *                                                                   163188
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40                      163188
+     C           ZZWK2     IFGT 999                                       163188
+     C           ZZWK2     ORLE 999                                       163188
+     C           ZZWK2     ANDLT-999                                      163188
+      *                                                                   163188
+     C           *IN92     IFEQ '0'                                       163188
+     C           ZZAMTI    ADD  1         ZZWK3  150                      163188
+     C                     ELSE                                           163188
+     C           ZZAMTI    SUB  1         ZZWK3                           163188
+     C                     ENDIF                                          163188
+     C           ZZTOTI    ADD  ZZWK3     ZZWK3                           163188
+      *                                                                   163188
+     C                     ELSE                                           163188
+     C           ZZTOTI    ADD  ZZAMTI    ZZWK3                           163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** If the modulus of ZZWK3 is less than the modulus of ZZTOTI,      163188
+      ** then overflow has occurred                                       163188
+      *                                                                   163188
+     C           *IN92     IFEQ '0'                                       163188
+     C           ZZWK3     COMP ZZTOTI                 99                 163188
+     C                     ELSE                                           163188
+     C           ZZWK3     COMP ZZTOTI               99                   163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** If overflow occurs, zeroise ZZAMT                                163188
+      *                                                                   163188
+     C           *IN99     IFEQ '1'                                       163188
+     C                     Z-ADD0         ZZAMT  153                      163188
+     C                     ELSE                                           163188
+     C                     Z-ADDZZWK2     ZZTOTD                          163188
+     C                     Z-ADDZZWK3     ZZTOTI                          163188
+     C                     ENDIF                                          163188
+     C                     LEAVE                                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** the signs are different                                          163188
+      *                                                                   163188
+     C           *IN91     IFEQ '1'                                       163188
+     C           *IN92     ANDEQ'0'                                       163188
+     C           *IN91     OREQ '0'                                       163188
+     C           *IN92     ANDEQ'1'                                       163188
+      *                                                                   163188
+      ** If ZZAMT was negative, make it positive to compare with ZZTOT    163188
+      *                                                                   163188
+     C           *IN92     IFEQ '1'                                       163188
+     C                     Z-SUBZZAMTI    ZZAMTI 150                      163188
+     C                     Z-SUBZZAMTD    ZZAMTD  30                      163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** If ZZTOT was negative, make it positive to compare with ZZAMT    163188
+      *                                                                   163188
+     C           *IN91     IFEQ '1'                                       163188
+     C                     Z-SUBZZTOTI    ZZTOTI                          163188
+     C                     Z-SUBZZTOTD    ZZTOTD                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** Both ZZAMT and ZZTOT are now positive                            163188
+      ** If ZZTOT equals ZZAMT, return zero                               163188
+      *                                                                   163188
+     C                     MOVE '0'       *IN93                           163188
+     C           ZZTOTI    IFEQ ZZAMTI                                    163188
+     C           ZZTOTD    ANDEQZZAMTD                                    163188
+     C                     Z-ADD0         ZZTOTI                          163188
+     C                     Z-ADD0         ZZTOTD                          163188
+     C                     LEAVE                                          163188
+     C                     ELSE                                           163188
+     C           ZZTOTI    IFGT ZZAMTI                                    163188
+     C           ZZTOTD    OREQ ZZAMTD                                    163188
+     C                     MOVE '1'       *IN93                           163188
+     C                     ENDIF                                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** If ZZTOT greater than ZZAMT                                      163188
+      *                                                                   163188
+     C           *IN93     IFEQ '1'                                       163188
+     C           ZZAMTD    IFGT ZZTOTD                                    163188
+     C           ZZTOTI    SUB  1         ZZTOTI                          163188
+     C           ZZTOTD    ADD  1000      ZZWK2                           163188
+     C           ZZTOTI    SUB  ZZAMTI    ZZTOTI                          163188
+     C           ZZWK2     SUB  ZZAMTD    ZZTOTD                          163188
+     C                     ELSE                                           163188
+     C           ZZTOTI    SUB  ZZAMTI    ZZTOTI                          163188
+     C           ZZTOTD    SUB  ZZAMTD    ZZTOTD                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** If ZZAMT greater than ZZAMT                                      163188
+      *                                                                   163188
+     C                     ELSE                                           163188
+     C           ZZTOTD    IFGT ZZAMTD                                    163188
+     C           ZZAMTI    SUB  1         ZZWK3  150                      163188
+     C           ZZAMTD    ADD  1000      ZZWK2                           163188
+     C           ZZWK3     SUB  ZZTOTI    ZZTOTI                          163188
+     C           ZZWK2     SUB  ZZTOTD    ZZTOTD                          163188
+     C                     ELSE                                           163188
+     C           ZZAMTI    SUB  ZZTOTI    ZZTOTI                          163188
+     C           ZZAMTD    SUB  ZZTOTD    ZZTOTD                          163188
+     C                     ENDIF                                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** Reverse sign of ZZTOT if larger input fields were negative       163188
+      *                                                                   163188
+     C           *IN93     IFEQ '1'                                       163188
+     C           *IN91     ANDEQ'1'                                       163188
+     C           *IN93     OREQ '0'                                       163188
+     C           *IN92     ANDEQ'1'                                       163188
+     C                     Z-SUBZZTOTI    ZZTOTI                          163188
+     C                     Z-SUBZZTOTD    ZZTOTD                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** Restore sign of ZZAMTI & ZZAMTD if reversed                      163188
+      *                                                                   163188
+     C           *IN92     IFEQ '1'                                       163188
+     C                     Z-SUBZZAMTI    ZZAMTI                          163188
+     C                     Z-SUBZZAMTD    ZZAMTD                          163188
+     C                     ENDIF                                          163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+     C                     ENDDO                                          163188
+      *                                                                   163188
+      ** If ZZTOTD is zero, and ZZTOTI is negative, setup  ZZNEGD         163188
+      *                                                                   163188
+     C           ZZTOTD    IFEQ *ZEROS                                    163188
+     C           ZZTOTI    ANDLT*ZEROS                                    163188
+     C                     MOVE '.000-'   ZZNEGD  5                       163188
+     C                     ENDIF                                          163188
+      *                                                                   163188
+      ** Restore previous indicator values                                163188
+      *                                                                   163188
+     C                     MOVE WIN91     *IN91                           163188
+     C                     MOVE WIN92     *IN92                           163188
+     C                     MOVE WIN93     *IN93                           163188
+     C                     MOVE WIN94     *IN94                           163188
+     C                     MOVE WIN95     *IN95                           163188
+      *                                                                   163188
+     C                     ENDSR                                          163188
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           W#PSSR    IFEQ *BLANK
+     C                     MOVE 'Y'       W#PSSR  1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+     OFCLTL4F E                FCLUPD
+     O                         FAMT                                       163188
+     O                         SHPC
+      *-------------------------------------------------------------------------
+**  CPY@
+(c) Finastra International Limited 2001

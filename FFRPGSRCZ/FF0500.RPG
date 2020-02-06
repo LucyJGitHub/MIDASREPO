@@ -1,0 +1,1953 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Dealing Event Generation (+ CPK003)')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Futures and Options Module
+     F*                                                               *
+     F*  FF0500  -  DEALING EVENTS GENERATION                         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*      1991                                                     *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG6688            Date 30May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 208818             Date 16Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CFF007             Date 13Feb01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFF006             Date 28Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 12Sep96               *
+      *                 098711             Date 28Jun96               *
+     F*                 S71062             DATE 19DEC95               *
+     F*                 073714             DATE 01MAR95               *
+     F*                 CPK003             DATE 15MAY95               *
+     F*                 046303             DATE 14JAN94               *
+     F*                 E49809             DATE 15FEB93               *
+     F*                 S01393             DATE 13AUG92               *
+     F*                 FUJI-FF0011        DATE 10AUG92               *
+     F*                 E38323             DATE 30JUL92               *
+     F*                 AUS022             DATE 11AUG92               *
+     F*                 E24170             DATE 21JAN91               *
+     F*                 FO0016             DATE 04JAN91               *
+     F*                 LN0933             DATE 30OCT90               *
+     F*                 E22483             DATE 03AUG90               *
+     F*                 E20526             DATE 03MAY90               *
+     F*                 S01117             DATE 11APR90               *
+     F*                 HK0000             DATE 11APR90               *
+     F*                 E14169             DATE 24/01/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG6688- Branch record not found in TABLETR                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  208818 - FOEVED records get written with blank EBRC causing  *
+      *           db error in GLC0802A.                               *
+      *  CFF007 - Futures and Options Enhancement for Private Banking *
+      *  CFF006 - Fractional Ticks Enhancement.  (Recompiled)         *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  098711 - Events by nostro report (GL0580P1) cannot print out *
+     F*           premium due events, even after installing the OTC   *
+     F*           enhancements. Our Settlement Branch (OSBR) should   *
+     F*           be set up with Customer Settlement Branch (CBID)    *
+     F*           from PF/TRSETD. OSBR on PF/FOEVED can then be used  *
+     F*           for setting up BRCA on PF/NOSEXFF in pgm GL0554.    *
+     F*  S71062 - FF/PM Interface (Just recompiled)                   *
+     F*  073714 - OTC ENHANCEMENTS                                    *
+     F*  CPK003 - RMFFEVP was made redundant by CRM001 (T-Mark        *
+     F*           interface). However this program was overlooked.    *
+     F*           RMFFEVP has been temporarily reinstated in DPLIB for*
+     F*           Release 10.6 packaging to allow the pgm to compile. *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array   *
+     F*           error if no holiday record found - fixed by S01434. *
+     F*           Program recompiled.                                 *
+     F*  E49809 - Check SDMMODPD to find if Risk Management installed *
+     F*           instead of attempting to retrieve RM ICD record, as *
+     F*           SDRISKPD file will be empty if RM not switched on   *
+     F*  S01393 - Amended to generate events for ALL Foreign          *
+     F*           Exchange book positions and for Interest and        *
+     F*           Commodity Futures book positions - For Strategic    *
+     F*           Risk Management                                     *
+     F*  FUJI-FF0011 - The system does not differentiate between      *
+     F*           american and european option on exercise            *
+     F*           validation and OTC confirmation wording.            *
+     F*           *** RECOMPILE ONLY ***                              *
+     F*  E38323 - Recompilation of the program done due to a change   *
+     F*           in copy source ZFWDT subroutine                     *
+     F*  AUS022 - AUSTRALIAN CHANGE : Contract Type (CNTT) added to   *
+     F*           PF/INTYPD.  Recompile program only.                 *
+     F*  E24170 - Use Current Average Price as Exchange Rate.         *
+     F*  FO0016 - The text description of error E22483 has been       *
+     F*         - changed to match the details on the original        *
+     F*         - error report on MEMOS.                              *
+     F*  LN0933 - Change the program to take account of the renaming  *
+     F*           of the customer number field on pf/foeved to CUNR   *
+     F*           from CNUM.                                          *
+     F*  E22483 - Save values of Instrument currency and other        *
+     F*           currency in new fields to use in calculating        *
+     F*           exchange rate.                                      *
+     F*  E20526 - RECOMPILED OVER CHANGED FILES PRICS1 & PRISP1       *
+     F*  S01117 - MULTIBRANCHING                                      *
+     F*  HK0000 - COMMENT FOR ZSRSRC/ZZADDZ1 INCORRECT.               *
+     F*  E14169 - EVENTS FOR FUTURES SHOULD USE PRICE OF TRADE        *
+     F*           TAKING POSITION NOT CURRENT MARKET PRICE.           *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                     *
+     F*                                                               *
+     F*     IGNDECERR(*NO )                                           *
+     F*                                                               *
+     F*****************************************************************
+     F*ABLETJ*IF* E           K        DISK                               S01195
+     F***TABLETR IF  E           K        DISK                                               BUG6688
+     FTABTG10 IF  E           K        DISK
+     F*ABTB10*IF* E                    DISK                               S01117
+     F*ABTB11*IF* E                    DISK                               S01117
+     FMARKT   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     F*PRICS1**IF**E***********K********DISK********                      E24170
+     FPRISP1  IF  E           K        DISK
+     FBOOKD   IF  E           K        DISK
+     FPOSTNK1 IF  E           K        DISK
+     FTRANS6  IF  E           K        DISK                               073714
+     FTRSET1  IF  E           K        DISK                               073714
+     FFOEVEZZ O   E                    DISK                      A
+     FFOEVED  O   E                    DISK                      A
+     FRMFFEVP O   E                    DISK                      A        S01393
+     F            FOEVEDF                           KRENAMERMFFEVPF       S01393
+     F/COPY WNCPYSRC,FF0500F001
+     F*
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*********01*******READ TRANS3                                       073714
+     F*        01       READ BOOKD                                        073714
+     F*        02       SET LOWER LIMIT ON POSTNK1 USING BOOK CODE
+     F*        03       READ EQUAL POSTNK1
+     F*        04       READ TRANS6                                       073714
+     F*
+     F*        69       WWCCY NOT FOUND ON CURRENCIES TABLE FILE - TABTG10
+     F*                 DATABASE ERROR
+     F*
+     F*        64       WWCCY NOT FOUND ON WCY ARRAY
+     F*
+     F*        79       CHAIN FAIL OR DB ERROR
+     F*
+     F*     80-89       Reserved for Standard FF Subroutines
+     F*
+     F*     90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*     U7+U8       Database Errors
+     F*
+     F/SPACE 2
+     E**  ARRAYS FOR CCY,SPOT RATE,DEC. PLACES,SORT SEQ AND MULT/DIV IND. E22483
+     F*
+     E                    CPY@    1   1 80
+     E                    WCY       150  3
+     E                    WSP       150 13 8                              E22483
+     E                    WDP       150  1 0
+     E                    WSS       150  2 0
+     E                    WMD       150  1 0
+     E****ARRAYS*FOR*CCY,*CPD,*SSNO*AND*MDIN                              E22483
+     E*
+     E/COPY ZSRSRC,ZDATE1Z1
+     E**  ARRAYS FOR ZDATE1Z1 SR  CALLED BY FFDATE
+     E*
+     E/COPY ZSRSRC,FFDATEZ1
+     E**  ARRAYS FOR FFDATE SR
+     E*
+     E*  REPLACE ZDATE3Z1 & ZDATE5Z1 BY ZHOLE                             S01195
+     E*COPY*ZSRSRC,ZDATE3Z1                                               S01195
+     E****ARRAYS*FOR*ZDATE3Z1*SR**CALLED*BY*FFDATE************************S01195
+     E***********                                                         S01195
+     E*COPY*ZSRSRC,ZDATE5Z1                                               S01195
+     E****ARRAYS*FOR*ZDATE5Z1*SR**CALLED*BY*FFDATE************************S01195
+     E*                                                                   S01195
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E** SR.ARRAY FOR HOLIDAY SUBROUTINES                                 S01195
+     E*
+     I*COPY*ZSRSRC,ZDATE3Z2                                               S01195
+     I*COPY*ZSRSRC,ZDATE3Z3                                               S01195
+     I***DATA*STRUCTURE*FOR*ZDATE3Z3*CALLED*BY*FFDATE*********************S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+      **  EXTERNAL DS FOR HOLIDAY DETAILS                                 S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+      **  EXTERNAL DS FOR HOLIDAY DETAILS AND ACCESS OBJECTS              S01195
+     I*
+     I/COPY ZSRSRC,FFDATEZ2
+     I**  DATA STRUCTURE FOR FFDATE SR
+     I*
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 180 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      **                                                                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01195
+     I** BANK DETAILS                                                     S01195
+     I              BJCYCD                          BCCY                  S01195
+     I              BJSLCD                          SYSL                  S01195
+      *                                                                   CFF007
+     ISCSARD    E DSSCSARDPD                                              CFF007
+      ** External data structure for SAR details                          CFF007
+      **                                                                  S01393
+     ISDMMOD    E DSSDMMODPD                                              E49809
+     I*                                                                   E49809
+     I** Module Details                                                   E49809
+     I*                                                                   E49809
+     I*SDRISK****E DSSDRISKPD                                       S01393E49809
+     I***RISK*DETAILS                                               S01393E49809
+     I**                                                                  S01117
+     ISDCUST    E DSSDCUSTPD                                              073714
+     I*                                                                   073714
+     ISDBRCH    E DSSDBRCHPD                                                                 BUG6688
+      ** Midas SD Branch Codes                                                               BUG6688
+     I              QQDFAC                          QQDFCX                                   BUG6688
+      *                                                                                      BUG6688
+     I@DSFDY    E DSDSFDY                                                 S01117
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01117
+     I*
+     I*KEYPRI******DS*                            21                      E24170
+     I***DATA*STRUCTURE*FOR*PRICS1*KEY*                                   E24170
+     I**********                              1   5 ISTT                  E24170
+     I**********                              6   70YRNO                  E24170
+     I**********                              8   90MTHN                  E24170
+     I**********                             10  10 PCAL                  E24170
+     I**********                             11  217STRP                  E24170
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C**********                                                          E24170
+      ***KEYP*TO*CHAIN*TO*PRISC1*FILE*                                    E24170
+     C**********                                                          E24170
+     C********** KEYP      KLIST                                          E24170
+     C**********           KFLD           ISTT                            E24170
+     C**********           KFLD           YRNO                            E24170
+     C**********           KFLD           MTHN                            E24170
+     C**********           KFLD           PCAL                            E24170
+     C**********           KFLD           STRP                            E24170
+     C*
+     C**  DEFINE THE FIELDS LENGTH OF SOME WORK FIELDS
+     C*
+     C           *LIKE     DEFN CDP       ICDP
+     C           *LIKE     DEFN CDP       OCDP
+     C           *LIKE     DEFN CDP       TCDP
+     C           *LIKE     DEFN CDP       TTCDP
+     C*
+     C           *LIKE     DEFN SSNO      ISSNO
+     C           *LIKE     DEFN SSNO      OSSNO
+     C*
+     C           *LIKE     DEFN MDIN      IMDIN
+     C           *LIKE     DEFN MDIN      OMDIN
+     C*
+     C           *LIKE     DEFN CTAM      TCTAM
+     C           *LIKE     DEFN CTAM      CTGCA
+     C           *LIKE     DEFN CTAM      INTCA
+     C*
+     C           *LIKE     DEFN ISTT      AISTT
+     C           *LIKE     DEFN ISTT      TISTT
+     C*
+     C           *LIKE     DEFN SPOT      FRCCY
+     C           *LIKE     DEFN SPOT      TOCCY
+     C           *LIKE     DEFN SPOT      ISPOT                           E22483
+     C           *LIKE     DEFN SPOT      OSPOT                           E22483
+     C*
+     C           *LIKE     DEFN OTHC      TOTHC
+     C           *LIKE     DEFN OTHC      WWCCY
+     C*
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+      ** START PROCESS - THE INITIAL DATA RETRIEVALS
+     C*
+     C                     EXSR START
+     C*
+      ** MAIN PROCESS - THE MAIN PROGRAM LOGIC
+     C*
+     C                     EXSR MAIN
+     C*
+      ** END PROCESS - UPDATING COMPLETED OR DB ERRORS
+     C*
+     C                     SETON                     LR
+     C*
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+      /EJECT
+      ********************************************************************
+      ** INDEX OF SUBROUTINES
+      **
+      ** START             ACCESS VARIOUS FILES AND THE 1ST BOOKD
+      **                   RECORD
+      **
+      ** MAIN              THE MAIN LOGIC
+      **
+      ** EVTPTN            READ POSTNK1 AND DETERMINE WHETHER TO GENERATE
+      **                   A FUTURE OR OPTION EVENT
+      **
+      ** EVTTRD            GENERATE OTC PREMIUM EVENTS                    073714
+      **                                                                  073714
+      ** ATG10F            ACCESS TABTG10 FILE USING INSTRUMENT CURRENCY
+      **                   AND OTHER CURRENCY
+      **
+      ** OPTEVT            FIND CONTIGENT AMOUNT, INSTRUMENT AMOUNT AND
+      **                   EVENT DATE TO WRITE OPTION EVENTS
+      **
+      ** FTREVT            FIND CONTIGENT AMOUNT, INSTRUMENT AMOUNT AND
+      **                   EVENT DATE TO WRITE FUTURE EVENTS
+      **
+      ** CALFLD            CALCULATE CONTIGENT CURRENCY AMOUNT,
+      **                   INSTRUMENT CURRENCY AMOUNT AND EVENT DATE
+      **
+      ** SPOTPR            FIND THE OPTION SPOT PRICE
+      **
+      ** ALETRF            ACCESS TABLETR FILE
+      **
+      ** WRITE1            WRITE FOEVED FILE PATTERN 1
+      **
+      ** WRITE2            WRITE FOEVED FILE PATTERN 2
+      **                                                                  S01393
+      ** WRITE3            WRITE RMFFEVP FILE PATTERN 1                   S01393
+      **                                                                  S01393
+      ** WRITE4            WRITE RMFFEVP FILE PATTERN 2                   S01393
+      **                                                                  S01393
+      **
+      ** WWSTDP            ACCESS CURRENCY DETAILS
+      **                                                                  S01393
+      ** INTEVT            PRODUCE EVENT RECORDS FOR INTEREST FUTURES     S01393
+      **                                                                  S01393
+      ** COMEVT            PRODUCE EVENT RECORDS FOR COMMODITY FUTURES    S01393
+      **                                                                  S01393
+      ** WRTEVT            WRITE EVENT RECORD TO FILE RMFFEVP             S01393
+      **                                                                  S01117
+      ** *PSSR             DATABASE ERROR HANDLING                        S01117
+      **
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      **
+      ** START S/R - TO INITIALISE STATIC FIELDS AND ACCESS TABTB11 FOR
+      **             THE BASE CURRENCY
+      ** CALLED ONCE AT START OF PROGRAM
+      ** CALLS NO OTHER ROUTINES
+      **
+      ********************************************************************
+     C*
+     C           START     BEGSR                           * START BEGSR *
+     C*
+      ** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'FF0500'  DBPGM
+     C                     Z-ADD0         DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+      ***GET*INSTALLATION*CONTROL*DATA*RECORD*1***************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 79               S01117
+      ***DB*ERROR*********************************************************S01117
+     C***********RECI      IFNE 'D'                                       S01117
+     C************IN79     OREQ '1'                                       S01117
+     C***********          SETON                     U7U8  ***************S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABFF'   DBFILE           ***************S01117
+     C***********          MOVEL'01'      ZTABKY 12                       S01117
+     C***********          MOVE '10'      ZTABKY                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C*
+      ** CHECK SYSTEM FORMAT DATE, DDMMYY OR MMDDYY(98 ON)
+     C*
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     ELSE
+     C                     SETOF                     98
+     C                     END
+     C*
+      ***GET*BASE*CURRENCY*FROM*TABTB11***********************************S01117
+     C***********                                                         S01117
+     C***********          READ TABTB11                  79               S01117
+      ***DB*ERROR*********************************************************S01117
+     C***********RECI      IFNE 'D'                                       S01117
+     C************IN79     OREQ '1'                                       S01117
+     C***********          SETON                     U7U8  ***************S01117
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01117
+     C***********          MOVEL'TABFF'   DBFILE           ***************S01117
+     C***********          MOVEL'01'      ZTABKY                          S01117
+     C***********          MOVE '11'      ZTABKY                          S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+     C**                                                                  S01117
+     C**   GET BANK DETAILS & BASE CURRENCY                               S01117
+     C**                                                                  S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*DBERR ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     SETON                     U7U8    *************S01117
+     C                     Z-ADD01        DBASE              * DBERR 001 *S01117
+     C                     MOVEL@OPTN     DBOPTN  7          *************S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   S01393
+     C** CHECK IF Midas RISK MANAGEMENT SWITCHED ON IN SYSTEM             E49809
+     C*                                                                   E49809
+     C                     CALL 'AOMMODR0'                                E49809
+     C                     PARM '*MSG   ' @RTCD   7                       E49809
+     C                     PARM '*FIRST ' @OPTN   7                       E49809
+     C           SDMMOD    PARM SDMMOD    @DSFDY                          E49809
+     C           @RTCD     IFNE *BLANKS                                   E49809
+     C           *LOCK     IN   LDA                                       E49809
+     C                     MOVEL'SDMMODPD'DBFILE           ***************E49809
+     C                     Z-ADD8         DBASE            **DB ERROR 08**E49809
+     C                     SETON                     U7U8  ***************E49809
+     C                     OUT  LDA                                       E49809
+     C                     EXSR *PSSR                                     E49809
+     C                     END                                            E49809
+      *                                                                   CFF007
+     C                     MOVE 'N'       CFF007  1                       CFF007
+     C                     CALL 'AOSARDR0'                                CFF007
+     C                     PARM *BLANKS   PRTCD   7                       CFF007
+     C                     PARM '*VERIFY' POPTN   7                       CFF007
+     C                     PARM 'CFF007'  PSARD   6                       CFF007
+     C           SCSARD    PARM SCSARD    @DSFDY                          CFF007
+     C           PRTCD     IFEQ *BLANKS                                   CFF007
+     C                     MOVE 'Y'       CFF007                          CFF007
+     C                     ELSE                                           CFF007
+     C           PRTCD     IFNE '*NRF   '                                 CFF007
+     C           *LOCK     IN   LDA                                       CFF007
+     C                     Z-ADD12        DBASE                           CFF007
+     C                     MOVEL'CFF007  'DBKEY                           CFF007
+     C                     MOVEL'SCSARDPD'DBFILE                          CFF007
+     C                     OUT  LDA                                       CFF007
+     C                     MOVE *ON       *INU7                           CFF007
+     C                     MOVE *ON       *INU8                           CFF007
+     C                     EXSR *PSSR                                     CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+     C*                                                                   S01393
+      ***GET*MIDAS*ABS*RISK*MANAGEMENT*ICD************************* S01393E49809
+     C*                                                             S01393E49809
+     C***********          CALL 'AORISKR0'                          S01393E49809
+     C***********          PARM '*MSG   ' @RTCD   7                 S01393E49809
+     C***********          PARM '*FIRST ' @OPTN   7                 S01393E49809
+     C***********SDRISK    PARM SDBANK    @DSFDY                    S01393E49809
+     C***********@RTCD     IFNE *BLANKS                             S01393E49809
+     C***********          SETON                     U7U8  *********S01393E49809
+     C***********          MOVEL'08'      DBASE            **DB ERROS01393E49809
+     C***********          MOVEL'SDRISKPD'DBFILE           *********S01393E49809
+     C***********          SETON                     LR             S01393E49809
+     C***********          RETRN                                    S01393E49809
+     C***********          END                                      S01393E49809
+     C**
+     C**  Set up array indices for FFSTDP SR.
+     C**
+     C                     Z-ADD151       N1      30
+     C                     Z-ADD150       N2      30
+     C/COPY WNCPYSRC,FF0500C011
+     C**                                                                  S01117
+     C**  HARD CODE IBRE & ICYE FOR OUTPUT TO PF/FOEVED                   S01117
+     C**                                                                  S01117
+     C                     MOVE 'N'       IBRE                            S01117
+     C                     MOVE 'Y'       ICYE                            S01117
+     C/COPY WNCPYSRC,FF0500C001
+     C*
+     C           XTSTAR    ENDSR                           ** XTSTAR ESR**
+     C*===================================================================
+      /EJECT
+      ********************************************************************
+      **
+      ** MAIN  S/R TO PROCESS BOOKD RECORD
+      ** CALLED ONCE AT START OF THE PROGRAM
+      ** CALLS: EVTPTN TO ACCESS POSTNK1 RECORD
+      **
+      ********************************************************************
+     C*
+     C           MAIN      BEGSR                           ** MAIN  BSR **
+     C*
+     C                     READ BOOKD                    01
+     C*
+     C           *IN01     DOWEQ'0'
+     C*
+      ****PROCESS*POSTNK1*FOR*HEDGE*AND*ACTIVE*RECORDS                    S01393
+      **  PROCESS POSTNK1 FOR ACTIVE RECORDS                              S01393
+     C*                                                                   S01393
+     C           RECI      IFEQ 'D'
+     C           HDGI      ANDEQ'Y'
+     C           RECI      OREQ 'D'                                       S01393
+     C           BGRKMG    ANDEQ'Y'                                       E49809
+     C***********EUNXDT    ANDLTBJDNWD                              S01393E49809
+     C                     EXSR EVTPTN
+     C                     END
+     C*
+     C                     READ BOOKD                    01
+     C                     END
+     C/COPY WNCPYSRC,FF0500C002
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'N'                                       CFF007
+     C*                                                                   073714
+     C                     READ TRANS6                   04               073714
+     C*                                                                   073714
+     C           *IN04     DOWEQ'0'                                       073714
+     C*                                                                   073714
+      **  PRODUCE PREMIUM EVENTS FOR OTC TRADES                           073714
+      **  WHICH HAVE NOT YET REACHED VALUE DATE                           073714
+     C*                                                                   073714
+     C           VALD      IFGE BJDNWD                                    073714
+     C                     EXSR EVTTRD                                    073714
+     C                     END                                            073714
+     C*                                                                   073714
+     C                     READ TRANS6                   04               073714
+     C                     END                                            073714
+     C/COPY WNCPYSRC,FF0500C003
+      *                                                                   CFF007
+     C                     ENDIF                                          CFF007
+     C*
+      **  WRITE THE DEALING EVENTS TRAILER
+     C*
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C                     MOVE 'T'       RECI
+     C                     WRITEFOEVEZZF
+     C*
+     C           XTMAIN    ENDSR                           ** XTMAIN ESR**
+     C*===================================================================
+      /EJECT
+     C********************************************************************
+      **
+      ** EVTPTN S/R TO ACCESS ALL POSTNK1 RECORD FOR THE BOOK CODE AND
+      **            GENERATE THE OPTION OR FUTURE EVENTS
+      ** CALLED FROM MAIN S/R
+      ** CALLS: SPOTPR TO FIND THE SPOT PRICE FOR OPTION EVENTS
+      **        OPTEVT TO GENERATE OPTION EVENTS
+      **        FTREVT TO GENERATE FUTURE EVENTS
+      **        ATG10F TO ACCESS TABTG10 FILE
+      **
+     C********************************************************************
+     C*
+     C           EVTPTN    BEGSR                           ** EVTPTN BSR**
+     C*
+      ** SET LOWER LIMIT ON POSTNK1 FILE TO RETRIEVE THE RESPECTIVE RECORD
+     C*
+     C           BOKC      SETLLPOSTNK1                  02
+     C*
+      ** IF FOUND, *IN02 ON
+     C*
+     C           *IN02     IFEQ '1'
+     C           BOKC      READEPOSTNK1                  03
+     C*
+      **  DO WHILE POSTNK1 RECORD EXISTS FOR THE BOOK CODE
+     C*
+     C           *IN03     DOWEQ'0'
+     C*
+      ** IF THERE IS A OPEN POSITION
+     C*
+     C           LOPC      IFNE 0
+     C           SOPC      ORNE 0
+     C*
+     C           ISTT      CHAININTYP                79
+      ** DB ERROR
+     C           RECI      IFNE 'D'
+     C           *IN79     OREQ '1'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                        *             *S01117
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C                     Z-ADD3         DBASE            *             *S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C                     END
+      *                                                                   073714
+      ** IF THE INSTRUMENT IS NOT AN OTC                                  073714
+      *                                                                   073714
+     C           ISTI      IFEQ 'N'                                       073714
+     C           CFF007    OREQ 'Y'                                       CFF007
+     C/COPY WNCPYSRC,FF0500C004
+     C*
+      ** STORE ISTT INTO AISTT IN ORDER TO REACCESS INTYP FOR STANDARD
+      ** SUBROUTINE FFDATE USES.
+     C                     MOVE ISTT      AISTT
+     C*
+     C           ISPT      IFEQ 2
+     C           ISPT      OREQ 5
+     C           ISPT      OREQ 1                                         S01393
+     C           ISPT      OREQ 3                                         S01393
+     C           ISPT      OREQ 7                                         S01393
+     C                     EXSR ATG10F
+     C                     END
+     C*                                                                   S01393
+      ** PRODUCE EVENT RECORDS FOR INTEREST FUTURES                       S01393
+     C*                                                                   S01393
+     C           ISPT      IFEQ 1                                         S01393
+     C           ISPT      OREQ 7                                         S01393
+     C           BGRKMG    ANDEQ'Y'                                       E49809
+     C***********EUNXDT    ANDLTBJDNWD                              S01393E49809
+     C                     EXSR INTEVT                                    S01393
+     C                     END                                            S01393
+     C*                                                                   S01393
+     C*                                                                   S01393
+      ** PRODUCE EVENT RECORDS FOR COMMODITY FUTURES                      S01393
+     C*                                                                   S01393
+     C           ISPT      IFEQ 3                                         S01393
+     C           BGRKMG    ANDEQ'Y'                                       E49809
+     C***********EUNXDT    ANDLTBJDNWD                              S01393E49809
+     C                     EXSR COMEVT                                    S01393
+     C                     END                                            S01393
+     C*                                                                   S01393
+     C*
+      ** FOREIGN EXCHANGE FUTURE
+     C*
+     C           ISPT      IFEQ 2
+     C                     EXSR FTREVT
+     C                     END
+     C*
+      ** FOREIGN EXCHANGE OPTION
+     C*
+     C           ISPT      IFEQ 5
+     C           HDGI      ANDEQ'Y'                                       S01393
+     C*
+      ** FIND OPTION SPOT PRICE
+     C*
+     C                     EXSR SPOTPR
+     C*
+      ** CREATE OPTION EVENT IF IT IS 'IN THE MONEY'. NO FURTHER PROCESS
+      ** IF IT IS ' OUT OF THE MONEY'
+     C*
+     C           PCAL      IFEQ 'P'
+     C           NSPR      ANDLTSTRP
+     C           PCAL      OREQ 'C'
+     C           NSPR      ANDGTSTRP
+     C                     EXSR OPTEVT
+     C                     END
+     C*                                                                   073714
+     C                     END                                            073714
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           BOKC      READEPOSTNK1                  03
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           XTEVTP    ENDSR                           ** XTEVTP ESR**
+     C*
+     C********************************************************************
+      /EJECT                                                              073714
+     C********************************************************************073714
+      **                                                                  073714
+      ** EVTTRD S/R TO GENERATE OTC PREMIUM EVENTS                        073714
+      ** CALLED FROM MAIN S/R                                             073714
+      ** CALLS: ATG10F TO ACCESS TABTG10 FILE                             073714
+      **        ZZADD TO ADD THE EVENT AMOUNT TO THE HASH FIELDS          073714
+      **                                                                  073714
+     C********************************************************************073714
+     C*                                                                   073714
+     C           EVTTRD    BEGSR                           ** EVTTRD BSR**073714
+     C*                                                                   073714
+      ** ACCESS THE TRADE SETTLEMENT DETAILS                              073714
+     C*                                                                   073714
+     C           TNBR      CHAINTRSETDF              79                   073714
+      ** DB ERROR                                                         073714
+     C           RECI      IFNE 'D'                                       073714
+     C           *IN79     OREQ '1'                                       073714
+     C                     SETON                     U7U8                 073714
+     C           *LOCK     IN   LDA                        ***************073714
+     C                     Z-ADD08        DBASE            **DB ERROR 08**073714
+     C                     MOVEL'TRSET'   DBFILE           ***************073714
+     C                     MOVELTNBR      DBKEY                           073714
+     C                     OUT  LDA                                       073714
+     C                     EXSR *PSSR                                     073714
+     C                     END                                            073714
+     C*                                                                   073714
+      ** ACCESS THE CUSTOMER REPORT NAME AND TOWN                         073714
+     C*                                                                   073714
+     C                     MOVE *BLANK    @KEY1                           073714
+     C                     MOVELCUSC      @KEY1                           073714
+     C                     CALL 'AOCUSTR0'                                073714
+     C                     PARM '*MSG   ' @RTCD                           073714
+     C                     PARM '*KEY   ' @OPTN                           073714
+     C                     PARM           @KEY1  10                       073714
+     C                     PARM *BLANK    @KYST   7                       073714
+     C           SDCUST    PARM SDCUST    DSSDY                           073714
+      ** DB ERROR                                                         073714
+     C           @RTCD     IFNE *BLANK                                    073714
+     C                     SETON                     U7U8                 073714
+     C           *LOCK     IN   LDA                        ***************073714
+     C                     Z-ADD09        DBASE            **DB ERROR 09**073714
+     C                     MOVEL'SDCUSTPD'DBFILE           ***************073714
+     C                     MOVEL@KEY1     DBKEY                           073714
+     C                     OUT  LDA                                       073714
+     C                     EXSR *PSSR                                     073714
+     C                     END                                            073714
+     C*                                                                   073714
+     C                     MOVELBBCRNM    CRNM                            073714
+     C                     MOVELBBCRTN    CTWN                            073714
+     C*                                                                   073714
+      ** ACCESS THE INSTRUMENT TYPE                                       073714
+     C*                                                                   073714
+     C           ISTT      CHAININTYP                79                   073714
+      ** DB ERROR                                                         073714
+     C           RECI      IFNE 'D'                                       073714
+     C           *IN79     OREQ '1'                                       073714
+     C                     SETON                     U7U8                 073714
+     C           *LOCK     IN   LDA                        ***************073714
+     C                     Z-ADD10        DBASE            **DB ERROR 10**073714
+     C                     MOVEL'INTYP'   DBFILE           ***************073714
+     C                     MOVELISTT      DBKEY                           073714
+     C                     OUT  LDA                                       073714
+     C                     EXSR *PSSR                                     073714
+     C                     END                                            073714
+     C*                                                                   073714
+      ** ACCESS TABTG10 FILE (FOR INSTRUMENT CURRENCY SORT SEQUENCE)      073714
+     C*                                                                   073714
+     C                     EXSR ATG10F                                    073714
+     C*                                                                   073714
+      ** ACCESS BRANCH FILE FOR COMPANY OF BRANCH                         073714
+     C*                                                                   073714
+     C********** BRCA      CHAINTABLETR              79                               073714 BUG6688
+      *                                                                                      BUG6688
+     C                     CALL 'AOBRCHR1'                                                   BUG6688
+     C                     PARM *BLANKS   PRTCD   7                                          BUG6688
+     C                     PARM '*KEY   ' POPTN   7                                          BUG6688
+     C                     PARM BRCA      PBRCH   3                                          BUG6688
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG6688
+      ** DB ERROR                                                         073714
+     C           PRTCD     IFNE *BLANKS                                                      BUG6688
+     C********** RECI      IFNE 'D'                                                   073714 BUG6688
+     C********** *IN79     OREQ '1'                                                   073714 BUG6688
+     C                     SETON                     U7U8                 073714
+     C           *LOCK     IN   LDA                        ***************073714
+     C                     Z-ADD11        DBASE            **DB ERROR 11**073714
+     C**********           MOVEL'TABFF'   DBFILE           ***************            073741 BUG6688
+     C                     MOVEL'SDBRCHPD'DBFILE                                             BUG6688
+     C                     MOVELBRCA      DBKEY                           073714
+     C                     OUT  LDA                                       073714
+     C                     EXSR *PSSR                                     073714
+     C                     END                                            073714
+     C*                                                                   073714
+      ** SET UP FIELDS OUTPUT TO FOEVED                                   073714
+     C*                                                                   073714
+     C                     MOVE 'D'       RECI                            073714
+     C*                                                                   073714
+     C                     MOVE CUSC      CUNR                            073714
+     C                     MOVE '93V1'    ETYP                            073714
+     C                     MOVE VALD      EDAT                            073714
+     C*                                                                   073714
+      ** FOR OTC'S, PREMIUM IS PAYABLE IN INSTRUMENT CURRENCY.            073714
+      ** INCLUDE ANY CHARGES AND COMMISSIONS IN THE EVENT AMOUNT.         073714
+     C*                                                                   073714
+     C                     Z-ADDPRMP      EAMT                            073714
+     C                     ADD  CCHA      EAMT                            073714
+     C                     ADD  CCMA      EAMT                            073714
+     C                     MOVE ISCY      ECCY                            073714
+     C                     MOVE ISSNO     ECSS                            073714
+     C*                                                                   073714
+     C                     Z-ADD*ZERO     EXRT                            073714
+     C                     Z-ADD*ZERO     OTHA                            073714
+     C                     MOVE *BLANK    OTHC                            073714
+     C*                                                                   073714
+      ** BOUGHT OPTIONS REQUIRE PREMIUM TO BE PAID OUT                    073714
+     C*                                                                   073714
+     C           TRTY      IFEQ 'P'                                       073714
+     C                     MOVE 'O'       INOI                            073714
+     C                     ELSE                                           073714
+     C                     MOVE 'I'       INOI                            073714
+     C                     END                                            073714
+     C*                                                                   073714
+     C                     MOVELCSLT      SETP                            073714
+     C                     MOVELCSLA      NOSA                            073714
+     C*                                                                   073714
+     C                     MOVELBRCA      EBRC                            073714
+     C**********           MOVELCMPYM     ECPY                                        073714 BUG6688
+     C                     MOVELA8CMCD    ECPY                                               BUG6688
+     C*                                                                   098711
+     C**  Set up Our Settlement Branch with Customer Settlement Branch    098711
+     C**  from PF/TRSETD                                                  098711
+     C*                                                                   098711
+     C                     MOVELCBID      OSBR                            098711
+     C*                                                                   073714
+     C           OSBR      IFNE BRCA                                                          208818
+     C           OSBR      ANDNE*BLANKS                                                       208818
+     C                     MOVELOSBR      EBRC                                                208818
+     C                     ELSE                                                               208818
+     C                     MOVELBRCA      EBRC                                                208818
+     C                     ENDIF                                                              208818
+      *                                                                                       208818
+     C                     ADD  1         NORE                            073714
+     C                     WRITEFOEVEDF                                   073714
+     C/COPY WNCPYSRC,FF0500C012
+     C*                                                                   073714
+      ** USE ZZADD STD SUBROUTINE TO ADD THE AMOUNTS TO HASH FIELDS       073714
+     C*                                                                   073714
+     C           EAMT      DIV  1000      ZZAMT                           073714
+     C                     EXSR ZZADD                                     073714
+     C*                                                                   073714
+     C*                                                                   073714
+     C           XTEVTT    ENDSR                           ** XTEVTT ESR**073714
+     C*                                                                   073714
+     C********************************************************************073714
+      /EJECT
+     C********************************************************************
+      ** ATG10F S/R TO ACCESS CURRENCY SORT SEQUENCE AND CURRENCY DECIMAL
+      **            PLACES FROM TABTG10 FILE FOR BOTH INSTRUMENT CURRENCY
+      **            AND OTHER CURRENCY.
+      ** CALLED FROM S/R EVTPTN
+      ** CALLS  WWSTDP
+     C********************************************************************
+     C*
+     C           ATG10F    BEGSR                           ** ATG10F BSR**
+     C*
+      ** USE WWSTDP TO ACCESS CURRENCY DETAILS USING INSTRUMENT CURRENCY
+     C*
+     C                     MOVE ISCY      WWCCY
+     C                     EXSR WWSTDP
+     C*
+     C                     MOVE WWCDP     ICDP
+     C                     MOVE WWSSNO    ISSNO
+     C                     MOVE WWMDIN    IMDIN
+     C                     MOVE WWSPOT    ISPOT                           E22483
+     C*
+      ** USE WWSTDP TO ACCESS CURRENCY DETAILS USING OTHERT CURRENCY
+     C*
+     C           ISPT      IFEQ 2                                         S01393
+     C           ISPT      OREQ 5                                         S01393
+     C                     MOVE OTHC      WWCCY
+     C                     EXSR WWSTDP
+     C*
+     C                     MOVE WWCDP     OCDP
+     C                     MOVE WWSSNO    OSSNO
+     C                     MOVE WWMDIN    OMDIN
+     C                     MOVE WWSPOT    OSPOT                           E22483
+     C                     END                                            S01393
+     C*
+     C           XTATG1    ENDSR                           ** XTATG1 ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** SPOTPR S/R TO FIND THE SPOT PRICE FOR OPTION EVENTS
+      ** CALLED FROM EVTPTN S/R
+      ** CALLS  NO S/R
+      **
+     C********************************************************************
+     C*
+     C           SPOTPR    BEGSR                           ** SPOTPR BSR**
+     C/COPY WNCPYSRC,FF0500C005
+      *                                                                   CFF007
+     C           CFF007    IFEQ 'N'                                       CFF007
+     C*
+      ***ACCESS*NEW SPOT PRICE (NSPR) DIRECTLY FROM PRISP1 IF IT IS A     073714
+      ***MARKET*INSTRUMENT OTHERWISE CALCULATE IT (OTC)                   073714
+     C***********                                                         073714
+     C***********ISTI      IFEQ 'N'                                       073714
+      ***********                                                         073714
+     C*                                                                   073714
+      ** ACCESS NEW SPOT PRICE (NSPR) DIRECTLY FROM PRISP1                073714
+     C*                                                                   073714
+     C           ISTT      CHAINPRISP1               79
+      **
+     C           RECI      IFNE 'D'
+     C           *IN79     OREQ '1'
+     C*
+      ** IF NO SPOT PRICE EXISTS TREAT THIS INSTRUMENT
+      ** AS 'OUT OF THE MONEY' IE IGNORE IT FOR EVENTS PURPOSES
+     C*
+     C           PCAL      IFEQ 'P'
+     C                     Z-ADD*HIVAL    NSPR
+     C                     ELSE
+     C                     Z-ADD*LOVAL    NSPR
+     C                     END
+     C*
+     C                     END
+     C*
+     C***********          ELSE                                           073714
+     C***********                                                         073714
+      ***SET*UP*'OTHER CURRENCY DETAILS' :                                073714
+      ***IF*THE*'OTHER CURRENCY' FOR THE INSTRUMENT IS EQUAL TO BASE      073714
+      ***CURRENCY, SET THE 'FROM CURRENCT RATE' TO 1 OTHERWISE EXAMINE    073714
+      ***THE*MULTIPLY/DIVIDE INDICATOR. IF IT IS EQUAL TO 0 THE 'FROM     073714
+      ***CURRENCY RATE' IS TO BE SET TO THE SPOT RATE. IF IT IS EQUAL     073714
+      ***TO*1*'FROM CURRENCY RATE' IS TO BE SET TO THE INVERSE OF SPOT    073714
+      ***RATE.***                                                         073714
+     C***********                                                         073714
+     C***********OTHC      IFEQ BCCY                                      073714
+     C***********          Z-ADD1         FRCCY                           073714
+     C***********          ELSE                                           073714
+     C***********OMDIN     IFEQ 0                                         073714
+     C*********************Z-ADDSPOT      FRCCY                           E22483
+     C***********          Z-ADDOSPOT     FRCCY                    E22483 073714
+     C***********          ELSE                                           073714
+     C***********1*********DIV  SPOT      FRCCY     H                     E22483
+     C***********1         DIV  OSPOT     FRCCY     H              E22483 073714
+     C***********          END                                            073714
+     C***********          END                                            073714
+     C***********                                                         073714
+      ***SET*UP*'TO CURRENCY DETAILS' :                                   073714
+      ***IF*THE*INSTRUMENT CURRENCY IS EQUAL TO THE BASE CURRENCY,        073714
+      ***SET*THE*'FROM CURRENCT RATE' TO 1 OTHERWISE EXAMINE              073714
+      ***THE*MULTIPLY/DIVIDE INDICATOR. IF IT IS EQUAL TO 0 THE 'TO       073714
+      ***CURRENCY RATE' IS TO BE SET TO THE SPOT RATE. IF IT IS EQUAL     073714
+      ***TO*1*'TO   CURRENCY RATE' IS TO BE SET TO THE INVERSE OF SPOT    073714
+      ***RATE.***                                                         073714
+     C***********                                                         073714
+     C***********ISCY      IFEQ BCCY                                      073714
+     C***********          Z-ADD1         TOCCY                           073714
+     C***********          ELSE                                           073714
+     C***********IMDIN     IFEQ 0                                         073714
+     C*********************Z-ADDSPOT      TOCCY                           E22483
+     C***********          Z-ADDISPOT     TOCCY                    E22483 073714
+     C***********          ELSE                                           073714
+     C***********1*********DIV  SPOT      TOCCY     H                     E22483
+     C***********1         DIV  ISPOT     TOCCY     H              E22483 073714
+     C***********          END                                            073714
+     C***********          END                                            073714
+     C***********                                                         073714
+      ***SPOT*RATE = FROM CURRENCY RATE DIVIDEBYYTOOCURRENCYYRATEE        073714
+     C***********                                                         073714
+     C***********FRCCY     DIV  TOCCY     NSPR      H                     073714
+     C***********                                                         073714
+     C***********          END                                            073714
+     C/COPY WNCPYSRC,FF0500C006
+      *                                                                   CFF007
+     C                     ELSE                                           CFF007
+      ** Access New Spot Price (NSPR) directly from PRISP1 if it is a     CFF007
+      ** Market Instrument. Otherwise, calculate it (OTC).                CFF007
+      *                                                                   CFF007
+     C           ISTI      IFEQ 'N'                                       CFF007
+      *                                                                   CFF007
+     C           ISTT      CHAINPRISP1               79                   CFF007
+      *                                                                   CFF007
+     C           *IN79     IFEQ *ON                                       CFF007
+     C           *IN79     OREQ *OFF                                      CFF007
+     C           RECI      ANDNE'D'                                       CFF007
+      *                                                                   CFF007
+      ** If no Spot Price exists, treat this instrument as                CFF007
+      ** 'OUT OF THE MONEY' i.e. ignore it for events purposes            CFF007
+     C           PCAL      IFEQ 'P'                                       CFF007
+     C                     Z-ADD*HIVAL    NSPR                            CFF007
+     C                     ELSE                                           CFF007
+     C                     Z-ADD*LOVAL    NSPR                            CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     ELSE                                           CFF007
+      *                                                                   CFF007
+      ** Set up 'OTHER CURRENCY DETAILS':                                 CFF007
+      ** If the 'OTHER CURRENCY' for the instrument is equal to base      CFF007
+      ** currency, set the 'FROM CURRENCT RATE' to 1. Otherwise examine   CFF007
+      ** the multiply/divide indicator. If it is equal to 0, the 'FROM    CFF007
+      ** CURRENCY RATE' is to be set to the spot rate. If it is equal     CFF007
+      ** to 1, 'FROM CURRENCY RATE' is to be set to the inverse of spot   CFF007
+      ** rate.                                                            CFF007
+      *                                                                   CFF007
+     C           OTHC      IFEQ BCCY                                      CFF007
+     C                     Z-ADD1         FRCCY                           CFF007
+     C                     ELSE                                           CFF007
+     C           OMDIN     IFEQ 0                                         CFF007
+     C                     Z-ADDOSPOT     FRCCY                           CFF007
+     C                     ELSE                                           CFF007
+     C           1         DIV  OSPOT     FRCCY     H                     CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+      ** Set up 'TO CURRENCY DETAILS':                                    CFF007
+      ** If the instrument currency is equal to the base currency,        CFF007
+      ** set the 'FROM CURRENCY RATE' to 1. Otherwise, examine            CFF007
+      ** the multiply/divide indicator. If it is equal to 0, the 'TO      CFF007
+      ** CURRENCY RATE' is to be set to the spot rate. If it is equal     CFF007
+      ** to 1, 'TO   CURRENCY RATE' is to be set to the inverse of spot   CFF007
+      ** rate.                                                            CFF007
+      *                                                                   CFF007
+     C           ISCY      IFEQ BCCY                                      CFF007
+     C                     Z-ADD1         TOCCY                           CFF007
+     C                     ELSE                                           CFF007
+     C           IMDIN     IFEQ 0                                         CFF007
+     C                     Z-ADDISPOT     TOCCY                           CFF007
+     C                     ELSE                                           CFF007
+     C           1         DIV  ISPOT     TOCCY     H                     CFF007
+     C                     ENDIF                                          CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+      ** Spot Rate = From Currency Rate divided by To Currency Rate       CFF007
+      *                                                                   CFF007
+     C           FRCCY     DIV  TOCCY     NSPR      H                     CFF007
+      *                                                                   CFF007
+     C                     ENDIF                                          CFF007
+      *                                                                   CFF007
+     C                     ENDIF                                          CFF007
+     C*
+     C           XTSPOT    ENDSR                           ** XTSPOT ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** OPTEVT S/R TO CALCULATE INSTRUMENT CURRENCY AMOUNT, CONTIGENT
+      **               CURRENCY AMOUNT AND EVENT DATE TO WRITE
+      **               LONG/SHORT, PUT/CALL, PURCHASE AND SALE RECORDS
+      ** CALLED FROM EVTPTN S/R
+      ** CALLS  FFDATE TO CALCULATE THE EVENT DATE IF IT IS A MARKET
+      **                  INSTRUMENT
+      **        CALFLD TO CALCULATE FIELDS
+      **        WRITE1 TO WRITE FOEVED FILE PATTERN 1
+      **        WRITE2 TO WRITE FOEVED FILE PATTERN 2
+      **
+     C********************************************************************
+     C*
+     C           OPTEVT    BEGSR                           ** OPTEVT BSR**
+     C*
+      ** STORE OPTION CONTIGENT AMOUNT BEFORE ACCESSING UNDERLYING
+      ** FUTURE
+     C                     Z-ADDCTAM      TCTAM
+     C*
+      ** FIND INSTRUMENT CURRENCY AMOUNT, ACCESS THE UNDERLYING FUTURE
+      ** FOR QUOTATION CONVENTION
+     C/COPY WNCPYSRC,FF0500C007
+     C*
+     C           CFF007    IFEQ 'N'                                       CFF007
+     C           CFF007    OREQ 'Y'                                       CFF007
+     C           ISTI      ANDEQ'N'                                       CFF007
+      *                                                                   CFF007
+     C***********ISTI      IFEQ 'N'                                       073714
+     C***********                                                         073714
+     C                     MOVE ISTT      TISTT
+     C                     MOVE FTRF      TISTT
+     C           TISTT     CHAININTYP                79
+      ** DB ERROR
+     C           RECI      IFNE 'D'
+     C           *IN79     OREQ '1'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                        *             *S01117
+     C***********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
+     C                     Z-ADD4         DBASE            *             *S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELTISTT     DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C                     END
+     C*
+     C***********          END                                            073714
+     C/COPY WNCPYSRC,FF0500C008
+      *                                                                   CFF007
+     C                     ENDIF                                          CFF007
+     C*
+      ** MOVE STRIKE PRICE TO EXCHANGE RATE, EXRT
+     C                     Z-ADDSTRP      EXRT
+     C*
+      ** STORE OTHC INTO TOTHC FOR WRITE2
+     C                     MOVE OTHC      TOTHC
+     C*
+      ** CREATE OPTION EVENTS
+     C*
+     C           LOPC      IFGT 0
+     C*
+      ** FIND CONTIGENT CURRENCY AMOUNT
+     C           LOPC      MULT TCTAM     CTGCA
+     C*
+      ** CALL FOR CALFLD
+     C                     EXSR CALFLD
+      ** GENERATE A LONG FUTURE PURCHASE EVENT
+     C*
+     C           PCAL      IFEQ 'P'
+      ** GENERATE A LONG-PUT-OPTION-PURCHASE EVENT
+     C                     MOVE '96V1'    ETYP
+     C                     MOVE 'I'       INOI
+     C                     EXSR WRITE1
+     C*
+      ** GENERATE A LONG-PUT-OPTION-SALE EVENT
+     C                     MOVE '96V2'    ETYP
+     C                     MOVE 'O'       INOI
+     C                     EXSR WRITE2
+     C                     END
+     C*
+     C           PCAL      IFEQ 'C'
+      ** GENERATE A LONG-CALL-OPTION-PURCHASE EVENT
+     C                     MOVE '98V1'    ETYP
+     C                     MOVE 'I'       INOI
+     C                     EXSR WRITE2
+     C*
+      ** GENERATE A LONG-CALL-OPTION-SALE EVENT
+     C                     MOVE '98V2'    ETYP
+     C                     MOVE 'O'       INOI
+     C                     EXSR WRITE1
+     C                     END
+     C*
+     C                     END
+     C*
+     C           SOPC      IFGT 0
+     C*
+      ** FIND CONTIGENT CURRENCY AMOUNT
+     C           SOPC      MULT TCTAM     CTGCA
+     C*
+      ** CALL FOR CALFLD
+     C                     EXSR CALFLD
+     C*
+     C           PCAL      IFEQ 'P'
+      ** GENERATE A SHORT-PUT-OPTION-PURCHASE EVENT
+     C                     MOVE '97V1'    ETYP
+     C                     MOVE 'I'       INOI
+     C                     EXSR WRITE2
+     C*
+      ** GENERATE A SHORT-PUT-OPTION-SALE EVENT
+     C                     MOVE '97V2'    ETYP
+     C                     MOVE 'O'       INOI
+     C                     EXSR WRITE1
+     C                     END
+     C*
+     C           PCAL      IFEQ 'C'
+      ** GENERATE A SHORT-CALL-OPTION-PURCHASE EVENT
+     C                     MOVE '99V1'    ETYP
+     C                     MOVE 'I'       INOI
+     C                     EXSR WRITE1
+     C*
+      ** GENERATE A SHORT-CALL-OPTION-SALE EVENT
+     C                     MOVE '99V2'    ETYP
+     C                     MOVE 'O'       INOI
+     C                     EXSR WRITE2
+     C                     END
+     C*
+     C                     END
+     C*
+     C           XTOPTE    ENDSR                           ** XTOPTE ESR**
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      **
+      ** FTREVT S/R TO CALCULATE INSTRUMENT CURRENCY AMOUNT, CONTIGENT
+      **               CURRENCY AMOUNT AND EVENT DATE TO WRITE
+      **               LONG/SHORT, FUTURE, PURCHASE AND SALE RECORDS
+      ** CALLED FROM EVTPTN S/R
+      ** CALLS  FFDATE TO CALCULATE THE EVENT DATE IF IT IS A MARKET
+      **                  INSTRUMENT
+      **        CALFLD TO CALCULATE FIELDS
+      **        WRITE1 TO WRITE FOEVED FILE PATTERN 1
+      **        WRITE2 TO WRITE FOEVED FILE PATTERN 2
+      **
+     C********************************************************************
+     C*
+     C           FTREVT    BEGSR                           ** FTREVT BSR**
+     C**********                                                          E24170
+      ***FIND*INSTRUMENT*CURRENCY*AMOUNT**                                E24170
+     C**********                                                          E24170
+     C********** KEYP      CHAINPRICS1               79                   E24170
+      ***DB*ERROR                                                         E24170
+     C********** RECI      IFNE 'D'                                       E24170
+     C********** *IN79     OREQ '1'                                       E24170
+     C**********           SETON                     U7U8  ***************E24170
+     C********** *LOCK     IN   LDA                        *       *S01117E24170
+     C***********          MOVEL'05'      DBASE            **DB ERROR 05**S01117
+     C**********           Z-ADD5         DBASE            *       *S01117E24170
+     C**********           MOVEL'PRICS1'  DBFILE           ***************E24170
+     C**********           MOVELKEYPRI    DBKEY                           E24170
+     C**********           OUT  LDA                                 S01117E24170
+     C**********           EXSR *PSSR                               S01117E24170
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C**********           END                                            E24170
+     C*
+      ***MOVE*NEW*PRICE*TO*EXCHANGE*RATE,*EXRT                            E14169
+     C***                  Z-ADDNEWP      EXRT                            E14169
+      ***MOVE*STRIKE*PRICE*TO*EXCHANGE*RATE,*EXRT*                  E14169E24170
+     C**********           Z-ADDSTRP      EXRT                      E14169E24170
+     C*                                                                   E24170
+     C** FOR FUTURES, USE CURRENT AVERAGE PRICE.                          E24170
+     C*                                                                   E24170
+     C                     Z-ADDSOPC      FFSHRT                          E24170
+     C                     Z-ADDLOPC      FFLONG                          E24170
+     C                     Z-ADDCUTV      FFCUTV                          E24170
+     C                     Z-ADDTKDM      FFTKDM                          E24170
+     C                     Z-ADDMNPF      FFMNPF                          E24170
+     C                     EXSR FFAVPR                                    E24170
+     C                     Z-ADDFFAVER    EXRT                            E24170
+     C*
+      ** STORE OTHC INTO TOTHC FOR WRITE2
+     C                     MOVE OTHC      TOTHC
+     C*
+      ** CREATE FUTURE EVENTS
+     C*
+     C           LOPC      IFGT 0
+     C*
+      ** FIND CONTIGENT CURRENCY AMOUNT
+     C           LOPC      MULT CTAM      CTGCA
+     C*
+      ** CALL FOR CALFLD
+     C                     EXSR CALFLD
+     C*                                                                   S01393
+     C           HDGI      IFEQ 'Y'                                       S01393
+     C*                                                                   S01393
+      ***GENERATE*A*LONG*FUTURE*PURCHASE*EVENT                            S01393
+      ** GENERATE A LONG-FUTURE-PURCHASE EVENT FOR HEDGED BOOK            S01393
+     C                     MOVE '94V1'    ETYP
+     C                     MOVE 'I'       INOI
+     C                     EXSR WRITE2
+     C*
+      ***GENERATE*A*LONG*FUTURE*SALE*EVENT                                S01393
+      ** GENERATE A LONG-FUTURE-SALE EVENT FOR HEDGED BOOK                S01393
+     C                     MOVE '94V2'    ETYP
+     C                     MOVE 'O'       INOI
+     C                     EXSR WRITE1
+     C*                                                                   S01393
+     C                     ELSE                                           S01393
+     C*                                                                   S01393
+      ** GENERATE A LONG-FUTURE-PURCHASE EVENT FOR NON-HEDGED BOOK        S01393
+     C                     MOVE '93S1'    ETYP                            S01393
+     C                     MOVE 'I'       INOI                            S01393
+     C                     EXSR WRITE4                                    S01393
+     C*                                                                   S01393
+      ** GENERATE A LONG-FUTURE-SALE EVENT FOR NON-HEDGED BOOK            S01393
+     C                     MOVE '93S1'    ETYP                            S01393
+     C                     MOVE 'O'       INOI                            S01393
+     C                     EXSR WRITE3                                    S01393
+     C                     END                                            S01393
+     C                     END
+     C*
+     C           SOPC      IFGT 0
+     C*
+      ** FIND CONTIGENT CURRENCY AMOUNT
+     C           SOPC      MULT CTAM      CTGCA
+     C*
+      ** CALL FOR CALFLD
+     C                     EXSR CALFLD
+     C*                                                                   S01393
+     C           HDGI      IFEQ 'Y'                                       S01393
+     C*                                                                   S01393
+      ***GENERATE*A*SHORT*FUTURE*PURCHASE*EVENT                           S01393
+      ** GENERATE A SHORT-FUTURE-PURCHASE EVENT FOR HEDGED BOOK           S01393
+     C                     MOVE '95V1'    ETYP
+     C                     MOVE 'I'       INOI
+     C                     EXSR WRITE1
+     C*
+      ***GENERATE*A*SHORT*FUTURE*SALE*EVENT                               S01393
+      ** GENERATE A SHORT-FUTURE-SALE EVENT FOR HEDGED BOOK               S01393
+     C                     MOVE '95V2'    ETYP
+     C                     MOVE 'O'       INOI
+     C                     EXSR WRITE2
+     C*                                                                   S01393
+     C                     ELSE                                           S01393
+     C*                                                                   S01393
+      ** GENERATE A SHORT-FUTURE-PURCHASE EVENT FOR NON-HEDGED BOOK       S01393
+     C                     MOVE '93S1'    ETYP                            S01393
+     C                     MOVE 'I'       INOI                            S01393
+     C                     EXSR WRITE3                                    S01393
+     C*                                                                   S01393
+      ** GENERATE A SHORT-FUTURE-SALE EVENT FOR NON-HEDGED BOOK           S01393
+     C                     MOVE '93S1'    ETYP                            S01393
+     C                     MOVE 'O'       INOI                            S01393
+     C                     EXSR WRITE4                                    S01393
+     C*                                                                   S01393
+     C                     END                                            S01393
+     C                     END
+     C*                                                                   S01393
+     C           XTFTRE    ENDSR                           ** XTFTRE ESR**
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** CALFLD S/R TO CALCULATE THE CONTIGENT CURRENCY AMT, INSTRUMENT
+      **               CURRENCY AMOUNT AND EVENT DATE
+      ** CALLED FROM S/R OPTEVT AND FTREVT
+      ** CALLS  ALETRF TO ACCESS TABLETR FILE
+      **        FFDATE TO CALCULATE THE SETTLEMENT DATE
+     C********************************************************************
+     C*
+     C           CALFLD    BEGSR                           ** CALFLD BSR**
+     C*
+      ** ACCESS FILE FOR FIELDS
+     C*
+     C                     EXSR ALETRF
+     C*
+      ** THE FORMULA TO CALCULATE THE INSTRUMENT CURRENCY AMOUNT IS AS
+      ** FOLLOWS:
+      **
+      ***INSTR-CCY-AMT*=*CONTG-CCY-AMT*X*STRP-PRICE*OR CUR-MARKET-PRICE   E14169
+      ** INSTR-CCY-AMT = CONTG-CCY-AMT X STRP-PRICE                       E14169
+      **
+      **                     ICDP - OCDP      QUOTATION CONVENTION
+      **                 X 10             X 10
+      **
+      ** FIRST, FIND THE VALUE OF ICDP - OCDP + QUOTATION CONVENTION
+      **
+     C           ICDP      SUB  OCDP      TCDP
+     C           TCDP      ADD  QOTC      TCDP
+      **
+      ** THEN , FIND THE VALUE OF 10 TO THE POWER TCDP
+     C*
+     C                     Z-ADD1         AMTCDP 158
+     C*
+     C           TCDP      IFLT 0
+     C           TCDP      MULT -1        TTCDP
+     C                     ELSE
+     C                     Z-ADDTCDP      TTCDP
+     C                     END
+     C*
+     C           TTCDP     DOWGT0
+     C           TCDP      IFGT 0
+     C           AMTCDP    MULT 10        AMTCDP
+     C                     ELSE
+     C           AMTCDP    DIV  10        AMTCDP
+     C                     END
+     C                     SUB  1         TTCDP
+     C                     END
+     C*
+      ***NOW*MULTIPLY*THE*STRIKE*OR*CURRENT*MARKET PRICE TO 10 TO THE     E14169
+      ** NOW MULTIPLY THE STRIKE PRICE BY 10 TO THE                       E14169
+      ** POWER OF TCDP WHICH IS AMTCDP.
+     C*
+     C           EXRT      MULT AMTCDP    TPRICE 159
+     C*
+      ** FINALLY, MULTIPLY TPRICE TO THE CONTIGENT CURRENCY AMOUNT TO
+      ** GIVE THE INSTRUMENT CURRENCY AMOUNT.
+      **
+     C           CTGCA     MULT TPRICE    INTCA     H
+     C*
+      ** RE-ACCESS INTYP FROM UNDERLYING FUTURE BACK TO OPTION FOR
+      ** OPTION
+     C           AISTT     CHAININTYP                79
+     C*
+      ***IF*THE*INSTRUMENT IS AN OTC (ISTT = 'Y'),SET THE EVENT DATE TO   073714
+      ***THE*SETTLEMENT DATE OTHERWISE CALCULATE THE EVENT DATE USING     073714
+      ***THE*STANDARD SUBROUTINE FFDATE                                   073714
+     C***********                                                         073714
+     C***********ISTI      IFEQ 'Y'                                       073714
+     C***********          MOVE SETD      EDAT                            073714
+     C***********          ELSE                                           073714
+     C*                                                                   073714
+      ** CALCULATE THE EVENT DATE USING                                   073714
+      ** THE STANDARD SUBROUTINE FFDATE                                   073714
+     C/COPY WNCPYSRC,FF0500C009
+      *                                                                   CFF007
+     C           ISTI      IFEQ 'Y'                                       CFF007
+     C           CFF007    ANDEQ'Y'                                       CFF007
+     C                     MOVE SETD      EDAT                            CFF007
+     C                     ELSE                                           CFF007
+     C*                                                                   073714
+     C                     MOVE SEDF      FFDATC
+     C                     MOVE MTHN      FFMTH
+     C                     MOVE YRNO      FFYR
+     C*
+     C                     MOVELISTT      KMARKT  2
+     C           KMARKT    CHAINMARKT                79
+      ** DB ERROR
+     C           RECI      IFNE 'D'
+     C           *IN79     OREQ '1'
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                        *             *S01117
+     C***********          MOVEL'06'      DBASE            **DB ERROR 06**S01117
+     C                     Z-ADD6         DBASE            *             *S01117
+     C                     MOVEL'MARKT'   DBFILE           ***************
+     C                     MOVELKMARKT    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C                     END
+     C                     MOVE MKLC      FFCCY1
+     C                     MOVE MLOC      FFLOC                           S01117
+     C*
+     C                     MOVE ISCY      FFCCY2
+     C                     MOVE OTHC      FFCCY3
+     C*
+      ** CALCULATE THE NUMERIC VALUE OF THE SETTLEMENT DATE BY CALLING
+      ** THE STD SUBROUTINE FFDATE. THE VALUE WILL BE STORED IN FFDAY
+     C*
+     C                     EXSR FFDATE
+     C                     MOVE FFDAY     EDAT
+     C*
+     C***********          END                                            073714
+     C/COPY WNCPYSRC,FF0500C010
+      *                                                                   CFF007
+     C                     ENDIF                                          CFF007
+     C*
+     C           XTCALF    ENDSR                           ** XTCALF ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** ALETRF S/R TO ACCESS BRANCH INTERNAL CUSTOMER NUMBER FROM
+      **            TABLETR
+      ** CALLED FROM S/R CALFLD
+      ** CALLS  NO S/R
+     C********************************************************************
+     C*
+     C           ALETRF    BEGSR                           ** ALETRF BSR**
+     C*
+      ** ACCESS BRANCH INTERNAL CUSTOMER NUMBER
+     C*
+     C***********BRCD      CHAINTABLETR              79                   S01117
+     C********** BRCA      CHAINTABLETR              79                               S01117 BUG6688
+      *                                                                                      BUG6688
+     C                     CALL 'AOBRCHR1'                                                   BUG6688
+     C                     PARM *BLANKS   PRTCD                                              BUG6688
+     C                     PARM '*KEY   ' POPTN                                              BUG6688
+     C                     PARM BRCA      PBRCH                                              BUG6688
+     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG6688
+      ** DB ERROR
+     C           PRTCD     IFNE *BLANKS                                                      BUG6688
+     C********** RECI      IFNE 'D'                                                          BUG6688
+     C********** *IN79     OREQ '1'                                                          BUG6688
+     C                     SETON                     U7U8  ***************
+     C           *LOCK     IN   LDA                        *             *S01117
+     C***********          MOVEL'07'      DBASE            **DB ERROR 07**S01117
+     C                     Z-ADD7         DBASE            *             *S01117
+     C**********           MOVEL'TABFF'   DBFILE           ***************                   BUG6688
+     C                     MOVEL'SDBRCHPD'DBFILE                                             BUG6688
+     C                     MOVEL'10'      ZTABKY
+     C***********          MOVE BRCD      ZTABKY                          S01117
+     C                     MOVE BRCA      ZTABKY 12                       S01117
+     C                     MOVELZTABKY    DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C                     END
+     C*
+     C**********           MOVE BICN      CNUM                            LN0933
+     C**********           MOVE BICN      CUNR                                        LN0933 BUG6688
+     C                     MOVE A8BICN    CUNR                                               BUG6688
+     C*
+     C           XTALET    ENDSR                           ** XTALET ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** WRITE1 S/R TO WRITE OUT FOEVED RECORD WITH PATTERN 1          AL
+      ** CALLED FROM S/R OPTEVT, FTREVT
+      ** CALLS  NO S/R
+     C********************************************************************
+     C*
+     C           WRITE1    BEGSR                           ** WRITE1 BSR**
+     C*
+     C                     MOVE INTCA     EAMT
+     C                     MOVE ISCY      ECCY
+     C                     MOVE ISSNO     ECSS
+     C                     MOVE CTGCA     OTHA
+     C                     MOVE TOTHC     OTHC
+      *                                                                                       208818
+     C           OSBR      IFNE BRCA                                                          208818
+     C           OSBR      ANDNE*BLANKS                                                       208818
+     C                     MOVELOSBR      EBRC                                                208818
+     C                     ELSE                                                               208818
+     C                     MOVELBRCA      EBRC                                                208818
+     C                     ENDIF                                                              208818
+      *                                                                                       208818
+     C                     ADD  1         NORE
+     C                     WRITEFOEVEDF
+     C/COPY WNCPYSRC,FF0500C013
+     C*
+      ** USE ZZADD STD SUBROUTINE TO ADD THE AMOUNTS TO HASH FIELDS
+     C*
+     C           EAMT      DIV  1000      ZZAMT
+     C                     EXSR ZZADD
+     C           XTWRI1    ENDSR                           ** XTWRI1 ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+      ** WRITE2 S/R TO WRITE OUT FOEVED RECORD WITH PATTERN 2          AL
+      ** CALLED FROM S/R OPTEVT, FTREVT
+      ** CALLS  NO S/R
+     C********************************************************************
+     C*
+     C           WRITE2    BEGSR                           ** WRITE2 BSR**
+     C*
+     C                     MOVE CTGCA     EAMT
+     C                     MOVE TOTHC     ECCY
+     C                     MOVE OSSNO     ECSS
+     C                     MOVE INTCA     OTHA
+     C                     MOVE ISCY      OTHC
+      *                                                                                       208818
+     C           OSBR      IFNE BRCA                                                          208818
+     C           OSBR      ANDNE*BLANKS                                                       208818
+     C                     MOVELOSBR      EBRC                                                208818
+     C                     ELSE                                                               208818
+     C                     MOVELBRCA      EBRC                                                208818
+     C                     ENDIF                                                              208818
+      *                                                                                       208818
+     C                     ADD  1         NORE
+     C                     WRITEFOEVEDF
+     C/COPY WNCPYSRC,FF0500C014
+     C*
+      ** USE ZZADD STD SUBROUTINE TO ADD THE AMOUNTS TO HASH FIELDS
+     C*
+     C           EAMT      DIV  1000      ZZAMT
+     C                     EXSR ZZADD
+     C*
+     C           XTWRI2    ENDSR                           ** XTWRI2 ESR**
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************S01393
+      ** WRITE3 S/R TO WRITE OUT NON-HEDGED RECORD TO FILE RMFFEVP     AL S01393
+      ** CALLED FROM S/R FTREVT                                           S01393
+      ** CALLS  NO S/R                                                    S01393
+     C********************************************************************S01393
+     C*                                                                   S01393
+     C           WRITE3    BEGSR                                          S01393
+     C*                                                                   S01393
+     C                     MOVE INTCA     EAMT                            S01393
+     C                     MOVE ISCY      ECCY                            S01393
+     C                     MOVE ISSNO     ECSS                            S01393
+     C                     MOVE CTGCA     OTHA                            S01393
+     C                     MOVE TOTHC     OTHC                            S01393
+      *                                                                                       208818
+     C           OSBR      IFNE BRCA                                                          208818
+     C           OSBR      ANDNE*BLANKS                                                       208818
+     C                     MOVELOSBR      EBRC                                                208818
+     C                     ELSE                                                               208818
+     C                     MOVELBRCA      EBRC                                                208818
+     C                     ENDIF                                                              208818
+      *                                                                                       208818
+     C                     WRITERMFFEVPF                                  S01393
+     C*                                                                   S01393
+     C                     ENDSR                                          S01393
+     C*                                                                   S01393
+     C********************************************************************S01393
+      /EJECT                                                              S01393
+     C********************************************************************S01393
+      ** WRITE4 S/R TO WRITE OUT NON-HEDGED RECORD TO FILE RMFFEVP     AL S01393
+      ** CALLED FROM S/R FTREVT                                           S01393
+      ** CALLS  NO S/R                                                    S01393
+     C********************************************************************S01393
+     C*                                                                   S01393
+     C           WRITE4    BEGSR                                          S01393
+     C*                                                                   S01393
+     C                     MOVE CTGCA     EAMT                            S01393
+     C                     MOVE TOTHC     ECCY                            S01393
+     C                     MOVE OSSNO     ECSS                            S01393
+     C                     MOVE INTCA     OTHA                            S01393
+     C                     MOVE ISCY      OTHC                            S01393
+      *                                                                                       208818
+     C           OSBR      IFNE BRCA                                                          208818
+     C           OSBR      ANDNE*BLANKS                                                       208818
+     C                     MOVELOSBR      EBRC                                                208818
+     C                     ELSE                                                               208818
+     C                     MOVELBRCA      EBRC                                                208818
+     C                     ENDIF                                                              208818
+      *                                                                                       208818
+     C                     WRITERMFFEVPF                                  S01393
+     C*                                                                   S01393
+     C                     ENDSR                                          S01393
+     C*                                                                   S01393
+     C********************************************************************S01393
+      /EJECT                                                              S01393
+     C********************************************************************S01393
+     C**
+     C**   WWSTDP SR. TO DETERMINE NUMBER OF CURRENCY DECIMAL PLACES,
+     C**   SORT SEQUENCE AND MULTIPLY/DIVIDE INDICATOR
+     C**
+     C**    INPUT:  WWCCY  (3A)   CURRENCY
+     C**    OUTPUT: WWCDP  (1 0)  CURRENCY DECIMAL PLACES
+     C**            WWSPOT(13 8)  CURRENCY SPOT RATE                      E22483
+     C**            WWSSNO (1 0)  CURRENCY SORT SEQUENCE
+     C**            WWMDIN (1 0)  CURRENCY MULTIPLY/DIVIDE INDICATOR
+     C**
+     C**    69 - WWCCY NOT FOUND ON CURRENCIES TABLE FILE - TABTG10
+     C**         DATABASE ERROR
+     C**
+     C**    64 - WWCCY NOT FOUND ON WCY ARRAY
+      ** CALLED FROM S/R ATG10F
+      ** CALLS  NO S/R
+     C**
+     C********************************************************************
+     C**
+     C           WWSTDP    BEGSR                           ** WWSTDP SR **
+     C**
+     C**   TEST FOR INVALID ARRAY INDEX
+     C**
+     C           N2        IFLT 1
+     C                     SETON                     69
+     C                     GOTO WWSEND
+     C                     END
+     C**
+     C**   CHECK ARRAY FOR CURRENCY DECIMAL PLACES
+     C**
+     C           WWCCY     LOKUPWCY,N2                   64
+     C**
+     C**   IF CURRENCY FOUND
+     C**
+     C           *IN64     IFEQ '1'
+     C                     Z-ADDWDP,N2    WWCDP   10
+     C                     Z-ADDWSP,N2    WWSPOT 138                      E22483
+     C                     Z-ADDWSS,N2    WWSSNO  20
+     C                     Z-ADDWMD,N2    WWMDIN  10
+     C**
+     C                     ELSE
+     C**
+     C**   IF CURRENCY NOT FOUND:-
+     C**   - ACCESS TABLE CURRENCIES RECORD
+     C**
+     C           WWCCY     CHAINTABTG10F             69
+     C  N69      RECI      COMP 'D'                  6969
+     C**
+     C           *IN69     IFEQ '0'
+     C           N1        SUB  1         N1
+     C**
+     C**   MOVE CURRENCY AND NO. OF DECIMAL PLACES INTO ARRAYS
+     C**
+     C                     MOVE WWCCY     WCY,N1
+     C                     Z-ADDCDP       WDP,N1
+     C                     Z-ADDCDP       WWCDP
+     C                     Z-ADDSPOT      WSP,N1                          E22483
+     C                     Z-ADDSPOT      WWSPOT                          E22483
+     C                     Z-ADDSSNO      WSS,N1
+     C                     Z-ADDSSNO      WWSSNO
+     C                     Z-ADDMDIN      WMD,N1
+     C                     Z-ADDMDIN      WWMDIN
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     Z-ADDN1        N2
+     C**
+     C           WWSEND    ENDSR                           *** WWSEND ***
+     C**
+     C********************************************************************
+      /EJECT                                                              S01117
+     C********************************************************************S01393
+     C**                                                                  S01393
+     C**   INTEVT SR. TO PRODUCE EVENT RECORDS FOR INTEREST FUTURES.      S01393
+      ** CALLED FROM S/R EVTPTN                                           S01393
+      ** CALLS  ALETRF TO GET BRANCH INTERNAL CUSTOMER NO.                S01393
+     C**                                                                  S01393
+     C********************************************************************S01393
+      **                                                                  S01393
+     C           INTEVT    BEGSR                           ** INTEVT SR **S01393
+      *                                                                   S01393
+      *  ACCESS INTERNAL BRANCH CUSTOMER NUMBER                           S01393
+      *                                                                   S01393
+     C                     EXSR ALETRF                                    S01393
+      *                                                                   S01393
+      *  CALCULATE EVENT AMOUNT                                           S01393
+      *                                                                   S01393
+     C           LOPC      SUB  SOPC      WRK1    70                      S01393
+     C           WRK1      MULT CTAM      EAMT                            S01393
+      *                                                                   S01393
+      *  CALCULATE NEAR EVENT DATE :                                      S01393
+      *  IF THE INSTRUMENT IS AN OTC (ISTT = 'Y'),SET THE EVENT DATE TO   S01393
+      *  THE SETTLEMENT DATE OTHERWISE CALCULATE THE EVENT DATE USING     S01393
+      *  THE STANDARD SUBROUTINE FFDATE                                   S01393
+      *                                                                   S01393
+     C           ISTI      IFEQ 'Y'                                       S01393
+     C                     MOVE SETD      EDAT                            S01393
+     C                     ELSE                                           S01393
+     C                     MOVE SEDF      FFDATC                          S01393
+     C                     MOVE MTHN      FFMTH                           S01393
+     C                     MOVE YRNO      FFYR                            S01393
+      *                                                                   S01393
+     C                     MOVELISTT      KMARKT  2                       S01393
+     C           KMARKT    CHAINMARKT                79                   S01393
+      *                                                                   S01393
+      ** DB ERROR                                                         S01393
+     C           RECI      IFNE 'D'                                       S01393
+     C           *IN79     OREQ '1'                                       S01393
+     C                     SETON                     U7U8  ***************S01393
+     C                     MOVEL'09'      DBASE            **DB ERROR 09**S01393
+     C                     MOVEL'MARKT'   DBFILE           ***************S01393
+     C                     MOVELKMARKT    DBKEY                           S01393
+     C                     SETON                     LR                   S01393
+     C                     RETRN                                          S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+     C                     MOVE MKLC      FFCCY1                          S01393
+     C                     MOVE ISCY      FFCCY2                          S01393
+     C                     MOVE OTHC      FFCCY3                          S01393
+      *                                                                   S01393
+      ** CALCULATE THE NUMERIC VALUE OF THE SETTLEMENT DATE BY CALLING    S01393
+      ** THE STD SUBROUTINE FFDATE. THE VALUE WILL BE STORED IN FFDAY     S01393
+      *                                                                   S01393
+     C                     EXSR FFDATE                                    S01393
+     C                     MOVE FFDAY     EDAT                            S01393
+      *                                                                   S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+      *   SET EVENT CODE                                                  S01393
+      *                                                                   S01393
+     C                     MOVE '93S2'    ETYP                            S01393
+      *                                                                   S01393
+      *   SET I/O INDICATOR                                               S01393
+      *                                                                   S01393
+     C           WRK1      IFNE 0                                         S01393
+     C           WRK1      IFGT 0                                         S01393
+     C                     MOVE 'O'       INOI                            S01393
+     C                     ELSE                                           S01393
+     C                     MOVE 'I'       INOI                            S01393
+     C                     Z-SUBEAMT      EAMT                            S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+      *  WRITE EVENT RECORD FOR INTEREST FUTURES                          S01393
+      *                                                                   S01393
+     C                     EXSR WRTEVT                                    S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+      *  CALCULATE FAR EVENT DATE :                                       S01393
+      *                                                                   S01393
+     C           EDAT      ADD  ALPD      EDAT                            S01393
+      *                                                                   S01393
+      *   SET EVENT CODE                                                  S01393
+      *                                                                   S01393
+     C                     MOVE '93S3'    ETYP                            S01393
+      *                                                                   S01393
+      *   SET I/O INDICATOR                                               S01393
+      *                                                                   S01393
+     C           WRK1      IFNE 0                                         S01393
+     C           WRK1      IFGT 0                                         S01393
+     C                     MOVE 'I'       INOI                            S01393
+     C                     ELSE                                           S01393
+     C                     MOVE 'O'       INOI                            S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+      *  WRITE EVENT RECORD FOR INTEREST FUTURES                          S01393
+      *                                                                   S01393
+     C                     EXSR WRTEVT                                    S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+     C                     ENDSR                                          S01393
+      *                                                                   S01393
+     C********************************************************************S01393
+      /EJECT                                                              S01393
+     C********************************************************************S01393
+      **                                                                  S01393
+      ** COMEVT SR. TO PRODUCE EVENT RECORDS FOR COMMODITY FUTURES.       S01393
+      ** CALLED FROM S/R EVTPTN                                           S01393
+      ** CALLS  ALETRF TO GET BRANCH INTERNAL CUSTOMER NO.                S01393
+      **                                                                  S01393
+     C********************************************************************S01393
+      **                                                                  S01393
+     C           COMEVT    BEGSR                           ** COMEVT SR **S01393
+      *                                                                   S01393
+      *  ACCESS INTERNAL BRANCH CUSTOMER NUMBER                           S01393
+      *                                                                   S01393
+     C                     EXSR ALETRF                                    S01393
+      *                                                                   S01393
+      *  CALCULATE EVENT AMOUNT                                           S01393
+      *                                                                   S01393
+     C           LOPC      SUB  SOPC      WRK1    70                      S01393
+     C           WRK1      MULT CTAM      EAMT                            S01393
+      *                                                                   S01393
+      *  CALCULATE EVENT DATE :                                           S01393
+      *  IF THE INSTRUMENT IS AN OTC (ISTT = 'Y'),SET THE EVENT DATE TO   S01393
+      *  THE SETTLEMENT DATE OTHERWISE CALCULATE THE EVENT DATE USING     S01393
+      *  THE STANDARD SUBROUTINE FFDATE                                   S01393
+      *                                                                   S01393
+     C           ISTI      IFEQ 'Y'                                       S01393
+     C                     MOVE SETD      EDAT                            S01393
+     C                     ELSE                                           S01393
+     C                     MOVE SEDF      FFDATC                          S01393
+     C                     MOVE MTHN      FFMTH                           S01393
+     C                     MOVE YRNO      FFYR                            S01393
+      *                                                                   S01393
+     C                     MOVELISTT      KMARKT  2                       S01393
+     C           KMARKT    CHAINMARKT                79                   S01393
+      *                                                                   S01393
+      ** DB ERROR                                                         S01393
+     C           RECI      IFNE 'D'                                       S01393
+     C           *IN79     OREQ '1'                                       S01393
+     C                     SETON                     U7U8  ***************S01393
+     C                     MOVEL'10'      DBASE            **DB ERROR 10**S01393
+     C                     MOVEL'MARKT'   DBFILE           ***************S01393
+     C                     MOVELKMARKT    DBKEY                           S01393
+     C                     SETON                     LR                   S01393
+     C                     RETRN                                          S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+     C                     MOVE MKLC      FFCCY1                          S01393
+     C                     MOVE ISCY      FFCCY2                          S01393
+     C                     MOVE OTHC      FFCCY3                          S01393
+      *                                                                   S01393
+      ** CALCULATE THE NUMERIC VALUE OF THE SETTLEMENT DATE BY CALLING    S01393
+      ** THE STD SUBROUTINE FFDATE. THE VALUE WILL BE STORED IN FFDAY     S01393
+      *                                                                   S01393
+     C                     EXSR FFDATE                                    S01393
+     C                     MOVE FFDAY     EDAT                            S01393
+      *                                                                   S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+      *   SET EVENT CODE                                                  S01393
+      *                                                                   S01393
+     C                     MOVE '93S4'    ETYP                            S01393
+      *                                                                   S01393
+      *   SET I/O INDICATOR                                               S01393
+      *                                                                   S01393
+     C           WRK1      IFNE 0                                         S01393
+     C           WRK1      IFGT 0                                         S01393
+     C                     MOVE 'O'       INOI                            S01393
+     C                     ELSE                                           S01393
+     C                     MOVE 'I'       INOI                            S01393
+     C                     Z-SUBEAMT      EAMT                            S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+      *  WRITE EVENT RECORD FOR COMMODITY FUTURES                         S01393
+      *                                                                   S01393
+     C                     EXSR WRTEVT                                    S01393
+     C                     END                                            S01393
+      *                                                                   S01393
+      *                                                                   S01393
+     C                     ENDSR                                          S01393
+      *                                                                   S01393
+     C********************************************************************S01393
+     C** WRTEVT SR. TO WRITE EVENT RECORD FOR INTEREST & COMMODITY        S01393
+     C** FUTURES                                                          S01393
+      ** CALLED FROM S/R INTEVT & COMEVT                                  S01393
+      ** CALLS  NO OTHER ROUTINES                                         S01393
+     C**                                                                  S01393
+     C********************************************************************S01393
+     C**                                                                  S01393
+     C           WRTEVT    BEGSR                           ** WRTEVT SR **S01393
+     C*                                                                   S01393
+     C                     MOVE 'D'       RECI                            S01393
+     C                     MOVE *BLANK    PCAL                            S01393
+     C                     MOVE *BLANK    STRP                            S01393
+     C                     MOVE ISCY      ECCY                            S01393
+     C                     MOVE ISSNO     ECSS                            S01393
+     C                     MOVE *BLANK    EXRT                            S01393
+     C                     MOVE *BLANK    OTHA                            S01393
+     C                     MOVE *BLANK    OTHC                            S01393
+     C                     MOVE *BLANK    DBCE                            S01393
+     C                     MOVE *BLANK    BCEQ                            S01393
+     C*                                                                   S01393
+     C           OSBR      IFNE BRCA                                                          208818
+     C           OSBR      ANDNE*BLANKS                                                       208818
+     C                     MOVELOSBR      EBRC                                                208818
+     C                     ELSE                                                               208818
+     C                     MOVELBRCA      EBRC                                                208818
+     C                     ENDIF                                                              208818
+      *                                                                                       208818
+     C                     WRITERMFFEVPF                                  S01393
+     C*                                                                   S01393
+     C                     ENDSR                                          S01393
+     C*                                                                   S01393
+     C********************************************************************S01393
+      /EJECT                                                              S01393
+     C********************************************************************S01117
+     C**                                                                  S01117
+     C** *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C** CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+     C** CALLS: NOTHING                                                   S01117
+     C**                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C                     SETON                     LR                   S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     RETRN                                          S01117
+     C*                                                                   S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT
+     C** STD SUBROUTINE FOR FFDATE
+     C/COPY ZSRSRC,FFDATEZ3
+     C*
+     C/EJECT
+     C** STD SUBROUTINE FOR ZDATE1 CALLED BY FFDATE
+     C/COPY ZSRSRC,ZDATE1Z2
+     C*
+     C/EJECT
+     C***STD*SUBROUTINE*FOR*ZDATE3*CALLED*BY*FFDATE***********************S01195
+     C*COPY*ZSRSRC,ZDATE3Z4                                               S01195
+     C***********                                                         S01195
+     C*EJECT*****                                                         S01195
+     C***STD*SUBROUTINE*FOR*ZDATE5*CALLED*BY*FFDATE***********************S01195
+     C*COPY*ZSRSRC,ZDATE5Z2                                               S01195
+     C**                                                                  S01195
+     C** STD HOLIDAY SUBROUTINES                                          S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZBKDT                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C*
+     C/EJECT
+     C***STD*SUBROUTINE*FOR*ZDATE5*CALLED*BY*FFDATE***********************HK0000
+     C** STD SUBROUTINE TO CALCULATE HASH TOTAL                           HK0000
+     C/COPY ZSRSRC,ZZADDZ1
+     C*
+     C/EJECT
+     C** STD. SUBROUTINE FOR CALCULATING CURRENT AVERAGE PRICE            E24170
+     C/COPY ZSRSRC,FFAVPRZ1                                               E24170
+     C/EJECT                                                              E24170
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6

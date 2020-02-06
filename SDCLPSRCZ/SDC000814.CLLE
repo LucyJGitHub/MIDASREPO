@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Threshold Amount Update')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000814 - Midas SD Threshold Amount Update                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2008                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM   (&RSEQ &RLEV &RENT &PARM)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                        Finastra International Limited 2008')
+ 
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(17)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+ 
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) +
+                                   EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Begin commitment control */
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+ 
+/** Call the program for Threshold Update. */
+             CALL       PGM(SD000814) PARM(&PARM)
+ 
+/** If U7 or U8 is switched on */
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                    RTVDTAARA  DTAARA(LDA *ALL) RTNVAR(&LDA)
+                    CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                    SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                    TOMSGQ(MRUNQ MOPERQ)
+ 
+             ROLLBACK
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             COMMIT
+             GOTO       CMDLBL(ENDPGM)
+ 
+ /** Send error message */
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program SD000814 ended abnormally') +
+                          TOMSGQ(MRUNQ MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+ 
+ ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                        Finastra International Limited')
+ 
+             ENDPGM

@@ -1,0 +1,424 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Update of Activity Dates')                       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - General Ledger Module
+     F*                                                               *
+     F*  GL2551 - UPDATE ACTIVITY DATES                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD009             Date 10Oct00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 073515             Date 11Aug94               *
+     F*                 059490             DATE 07FEB94               *
+     F*                 E16900             DATE 16/02/89              *
+     F*                 LN0623             DATE 14AUG90               *
+     F*                 S01195             DATE 10/10/89              *
+     F*                 S01194             DATE 28/03/89              *
+     F*                 E16900             DATE 16/02/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+     F*  073515 - For new installations ECAC & ELAC were being set up *
+     F*           incorrectly due to RUND being '0', although it has  *
+     F*           already been entered at this stage. Call AOBANKR0   *
+     F*           with *FREE in order to pick up correct value of RUND*
+     F*                                                               *
+     F*  059490 - Ensure that ELAC & ECAC are updated on TABTB20 when *
+     F*           APFQ is 'L'.                                        *
+     F*  LN0623 - REINSTATE ERROR PROCESSING REMOVED BY               *
+     F*           S01194 CHANGES                                      *
+     F*  LN0623 - REINSTATE ERROR PROCESSING REMOVED BY               *
+     F*           S01194 CHANGES                                      *
+     F*  S01195 - NEW STANDING DATA - HOLIDAY PROCESSING              *
+     F*  S01194 - NEW STANDING DATA                                   *
+     F*  E16900 - ELAC AND ECAC WERE NOT BEING SET UP THE FIRST       *
+     F*           TIME THE PROGRAM WAS RUN SO A DATABASE ERROR WAS    *
+     F*           OCCURRING IN RE0860. ALSO PROGRAM WAS NOT TAKING    *
+     F*           ACCOUNT OF WHETHER SYSTEM WAS ON DAILY OR MONTHLY   *
+     F*           ACCRUALS. PROCESSING USED TO BE DONE IN RE0860      *
+     F*           PRIOR TO COB ENHANCEMENTS (S01161)                  *
+     F*           FIELD SLAC IN GLSTAT ALSO REMOVED- UNNECESSARY      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF  E                    DISK                         E16900S01194
+     F*ABTB11*IF  E                    DISK                               S01194
+     FTABTB20 UF  E                    DISK                               S01194
+     F*ABLETJ*IF**E           K        DISK                         E16900S01194
+     FSDGELRPDUF  E                    DISK                               S01194
+     F*
+     F*
+     F*
+     F* 03       ECAC AND ELAC WERE ZERO - SET UP INITIAL VALUES          E16900
+     F**11*******DATA*BASE*ERROR*/*TABTB11******************              S01194
+     F**20*******DATA BASE ERROR / TABTB20                                S01194
+     F**99*******RECORD ON TABTB10/11/20 MISSING                          S01194
+     F* 99       RECORD ON SDGELRPD/TABTB20 MISSING                       S01194
+     F* U7       DATABASE ERROR
+     F* U8       DATABASE ERROR
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1                                               E16900
+     E/COPY ZSRSRC,ZFRQAZ1                                                E16900
+     E/COPY ZSRSRC,ZHOLE                                                  E16900
+     I*ABTB11F***                                                         S01194
+     I*
+     I*ABTB20F                                                            S01194
+     I*
+     I*
+     I**GLSTAT*****UDS**************************256                       E16900
+     I***************************************68**720SLAC                  E16900
+     I*
+     I/COPY ZSRSRC,ZAOZ2                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     ILDA        UDS                            256
+     I***********                           134 138 LFILE                 S01194
+     I***********                           139 167 LKEY                  S01194
+     I***********                           168 175 LPROG                 S01194
+     I***********                           176 1770DBASE                 S01194
+     I                                      134 141 DBFILE                S01194
+     I                                      142 170 DBKEY                 S01194
+     I                                      171 180 DBPGM                 S01194
+     I                                      181 1830DBASE                 S01194
+     I*
+     I            DS
+     I                                        1  12 KEY
+     I                                        1   20RECT
+     I                                       11  120RCDE
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     E/COPY ZSRSRC,ZHOLI                                                  E16900
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I              BJDNWD                          DNWD                  S01194
+     I*
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C**                                                                  S01194
+     C** SET PROGRAM NAME                                                 S01194
+     C**                                                                  S01194
+     C                     MOVEL'GL2551'  DBPGM                           S01194
+     C*                                                                   E16900
+     C*****Check*that valid TABTB10 record has been read           E16900 S01194
+     C*****If*no*record or invalid record SETON LR and RETURN.     E16900 S01194
+     C********                                                     E16900 S01194
+     C********             READ TABTB10                  99        E16900 S01194
+     C********   *IN99     IFEQ '1'                                E16900 S01194
+     C********             EXSR DERR3                              E16900 S01194
+     C********             END                                     E16900 S01194
+     C********                                                     E16900 S01194
+     C********   *IN99     IFEQ '0'                                E16900 S01194
+     C********   RECI      IFEQ 'D'                                E16900 S01194
+     C********   DATF      COMP 'M'                      98MMDDYY  E16900 S01194
+     C********             END                                     E16900 S01194
+     C********             END                                     E16900 S01194
+     C********                                                     E16900 S01194
+     C********   RECI      IFNE 'D'                                E16900 S01194
+     C********   RECT      ORNE 01                                 E16900 S01194
+     C********   RCDE      ORNE 10                                 E16900 S01194
+     C********             EXSR DERR3                              E16900 S01194
+     C********             END                                     E16900 S01194
+     C**                                                                  S01194
+     C**  OBTAIN SDBANK DETAILS                                           S01194
+     C**  First call AOBANKR0 with *FREE to ensure correct values are     073515
+     C**  read.                                                           073515
+     C                     CALL 'AOBANKR0'                                073515
+     C                     PARM '       ' @RTCD   7                       073515
+     C                     PARM '*FREE  ' @OPTN   7                       073515
+     C           SDBANK    PARM SDBANK    DSFDY                           073515
+     C           @RTCD     IFNE *BLANKS                                   073515
+     C                     SETON                     12                   073515
+     C                     MOVEL'SDBANKPD'DBFILE                          073515
+     C                     MOVEL@OPTN     DBOPTN  7                       073515
+     C                     MOVEL@OPTN     DBKEY            ***************073515
+     C                     Z-ADD4         DBASE            *  DB ERROR 04 073515
+     C                     EXSR DERR3                      ***************073515
+     C                     END                                            073515
+     C**                                                                  073515
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETON                     12                   S01194
+     C                     MOVEL'SDBANKPD'DBFILE                          S01194
+     C                     MOVEL@OPTN     DBOPTN  7                       S01194
+     C                     MOVEL@OPTN     DBKEY            ***************S01194
+     C                     Z-ADD1         DBASE            *  DB ERROR 01 S01194
+     C                     EXSR DERR3                      ***************S01194
+     C                     ELSE                                           S01194
+     C                     MOVE BJRDNB    RUND    50
+     C           BJDFIN    IFEQ 'M'                                       S01194
+     C                     SETON                     98                   S01194
+     C                     END                                            S01194
+     C                     END                                            S01194
+     C*****Check*that*valid*TABTB11*record*has*been*read***               S01194
+     C*****If*no*record*or*invalid*record*SETON*LR*and*RETURN.**          S01194
+     C*                                                                   S01194
+     C***********          READ TABTB11F                 99               S01194
+     C************IN99     IFEQ '1'                                       S01194
+     C***********          EXSR DERR1                                     S01194
+     C***********          END                                            S01194
+     C*                                                                   S01194
+     C************IN99     IFEQ '0'                                       S01194
+     C***********RECI      IFNE 'D'                                       S01194
+     C***********RECT      ORNE 01                                        S01194
+     C***********RCDE      ORNE 11                                        S01194
+     C***********                                                         S01194
+     C***********          EXSR DERR1                                     S01194
+     C***********                                                         S01194
+     C***********          END                             *    END IF   *S01194
+     C***********          END                                            S01194
+     C************                                                        S01194
+     C**   Check that valid TABTB20 record has been read
+     C**   If no record or invalid record SETON LR and RETURN.
+     C*
+     C                     READ TABTB20                  99
+     C           *IN99     IFEQ '0'                                       LN0623
+     C           RECI      IFNE 'D'                                       LN0623
+     C           RECT      ORNE 01                                        LN0623
+     C           RCDE      ORNE 20                                        LN0623
+     C*                                                                   LN0623
+     C                     EXSR DERR1                                     LN0623
+     C*                                                                   LN0623
+     C                     END                             *    END IF   *LN0623
+     C                     END                                            LN0623
+     C*    read new SD general file directly so that it can be            S01194
+     C*    updated later.                                                 S01194
+     C                     READ SDGELRD0                 99               S01194
+     C           *IN99     IFEQ '1'
+     C                     EXSR DERR2
+     C                     END
+     C************IN99     IFEQ '0'                                       S01194
+     C***********RECI      IFNE 'D'                                       S01194
+     C***********RECT      ORNE 01                                        S01194
+     C***********RCDE      ORNE 20                                        S01194
+     C***********                                                         S01194
+     C***********          EXSR DERR2                                     S01194
+     C***********                                                         S01194
+     C***********                                                         S01194
+     C***********                                                         S01194
+     C***********          END                             *    END IF   *S01194
+     C***********          END                                            S01194
+     C*
+     C                     MOVE BKAPFQ    APFQ    1                       S01194
+     C                     MOVE BKELAP    ELAC                            S01194
+     C                     MOVE BKECAP    ECAC                            S01194
+     C                     MOVE BKAPDT    APDA    50                      S01194
+     C****************************************************************    E16900
+     C* DETERMINE WHETHER ELAC AND ECAC NEED TO BE GIVEN INITIAL          E16900
+     C* VALUES OR WHETHER THEY JUST NEED TO BE UPDATED.                   E16900
+     C*                                                                   E16900
+     C           ELAC      IFEQ *ZEROS                                    E16900
+     C           ECAC      ANDEQ*ZEROS                                    E16900
+     C*                                                                   E16900
+     C                     MOVE '1'       *IN03                           E16900
+     C*                                                                   E16900
+     C                     END                                            E16900
+     C****************************************************************    E16900
+     C**IF*UPDATING*AND*SYSTEM*IS*ON*MONTHLY*ACCRUALS**************E16900 059490
+     C**ECAC*IS*OBTAINED*FROM*ACCRUAL/PROFIT*DATE******************E16900 059490
+     C***********                                                  E16900 059490
+     C***********APFQ      IFEQ 'M'                                E16900 059490
+     C************IN03     IFEQ '0'                                E16900 059490
+     C***********                                                  E16900 059490
+     C***********          MOVE ECAC      ELAC                            059490
+     C***********          MOVE APDA      ECAC                            059490
+     C***********                                                  E16900 059490
+     C***********          END                                     E16900 059490
+     C***********          END                                     E16900 059490
+     C*****************************************************************   E16900
+     C* IF UPDATING AND SYSTEM IS ON DAILY ACCRUALS                       E16900
+     C* SET ECAC TO LAST CALENDAR DAY OF NEXT MONTH                       E16900
+     C*                                                                   E16900
+     C           *IN03     IFEQ '0'                                       E16900
+     C***********APFQ      ANDEQ'D'                                E16900 059490
+     C*                                                                   E16900
+     C*    RESET ECAC (AND ELAC) ONLY FOR DAILY ACCRUALS IF DNWD IS       E16900
+     C*     GREATER THAN THE CURRENT ECAC                                 E16900
+     C           DNWD      IFGT ECAC                                      E16900
+     C*                                                                   E16900
+     C                     MOVE ECAC      ELAC                            E16900
+     C*                                                                   E16900
+     C                     MOVE ECAC      ZDAYNO                          E16900
+     C                     MOVE 'L'       ZFREQ                           E16900
+     C                     Z-ADD31        ZMDAY                           E16900
+     C                     EXSR ZFRQA                                     E16900
+     C*                                                                   E16900
+     C                     MOVE ZDAYNO    ECAC                            E16900
+     C                     END                                            E16900
+     C                     END                                            E16900
+     C*****************************************************************   E16900
+     C*  AT NEW INSTALLATION OR IF RETAIL BEING ADDED TO SYSTEM,          E16900
+     C*  ELAC AND ECAC WILL BE ZERO. THIS SECTION CALCULATES A VALUE      E16900
+     C*  FOR ELAC - IT SETS IT TO THE LAST DAY OF THE PREVIOUS MONTH.     E16900
+     C*                                                                   E16900
+     C           *IN03     IFEQ '1'                                       E16900
+     C*                                                                   E16900
+     C                     Z-ADDRUND      ZDAYNO                          E16900
+     C                     EXSR ZDATE2                                    E16900
+     C           *IN98     IFEQ '0'                                       E16900
+     C                     MOVEL'01'      ZDATE                           E16900
+     C                     END                                            E16900
+     C           *IN98     IFEQ '1'                                       E16900
+     C                     MOVELZDATE     ZWORK   40                      E16900
+     C                     MOVE '01'      ZWORK                           E16900
+     C                     MOVELZWORK     ZDATE                           E16900
+     C                     END                                            E16900
+     C                     EXSR ZDATE1                                    E16900
+     C                     MOVE ZDAYNO    ELAC                            E16900
+     C           ELAC      SUB  1         ELAC                            E16900
+     C*                                                                   E16900
+     C                     END                                            E16900
+     C*****************************************************************   E16900
+     C**IF*INITIAL*SET*UP*AND*SYSTEM*ON*MONTHLY*ACCRUALS*ECAC*IS***E16900 059490
+     C**TO*BE*EQUAL*TO*ACCRUAL/PROFIT*DATE.************************E16900 059490
+     C***********                                                  E16900 059490
+     C************IN03     IFEQ '1'                                E16900 059490
+     C***********APFQ      ANDEQ'M'                                E16900 059490
+     C***********                                                  E16900 059490
+     C***********          MOVE APDA      ECAC                     E16900 059490
+     C***********                                                  E16900 059490
+     C***********          END                                     E16900 059490
+     C*****************************************************************   E16900
+     C* IF INITIAL SET UP AND SYSTEM ON DAILY ACCRUALS ECAC IS            E16900
+     C* TO BE LAST DAY OF THIS MONTH                                      E16900
+     C*                                                                   E16900
+     C           *IN03     IFEQ '1'                                       E16900
+     C***********APFQ      ANDEQ'D'                                E16900 059490
+     C*                                                                   E16900
+     C*    SET ECAC FOR DAILY ACCRUALS                                    E16900
+     C*                                                                   E16900
+     C                     MOVE ELAC      ZDAYNO                          E16900
+     C                     MOVE 'L'       ZFREQ                           E16900
+     C                     Z-ADD31        ZMDAY                           E16900
+     C                     EXSR ZFRQA                                     E16900
+     C*                                                                   E16900
+     C                     MOVE ZDAYNO    ECAC                            E16900
+     C                     END                                            E16900
+     C******************************************************************  E16900
+     C*    Update  the new standing data file                             S01194
+     C*                                                                   S01194
+     C                     MOVE ELAC      BKELAP                          S01194
+     C                     MOVE ECAC      BKECAP                          S01194
+     C                     UPDATSDGELRD0                                  S01194
+     C*                                                                   S01194
+     C**                                                                  S01194
+     C** Since the New Standing Data may have not been applied to         S01194
+     C** all programs TABTB20 must also be updated until the old          S01194
+     C** SD has been removed.                                             S01194
+     C*    Update  TABTB20
+     C*
+     C                     UPDATTABTB20F
+     C*
+     C                     SETON                         LR
+     C*
+     C*****************************************************************
+     C*                                                    ***************
+     C*                                                    *     01      *
+     C***********DERR1     BEGSR                           *DATA BASE ERR*S01194
+     C***********          MOVE '01'      DBASE            ***************S01194
+     C***********          MOVE KEY       LKEY                            S01194
+     C***********          MOVE 'TABLE'   LFILE                           S01194
+     C***********          MOVE 'GL2551 ' LPROG                           S01194
+     C***********          SETON                     U7U8LR               S01194
+     C***********          RETRN                           *RETURN TO CL *S01194
+     C***********          ENDSR                                          S01194
+     C***********                                                         S01194
+     C           DERR1     BEGSR                                          LN0623
+     C                     MOVE '01'      DBASE                           LN0623
+     C                     MOVE KEY       DBKEY                           LN0623
+     C                     MOVE 'TABTB20' DBFILE                          LN0623
+     C                     SETON                     U7U8LR               LN0623
+     C                     RETRN                           *RETURN TO CL *LN0623
+     C                     ENDSR                                          LN0623
+     C*                                                                   LN0623
+     C********************************************************************
+     C*                                                    ***************
+     C*                                                    *     02      *
+     C*                                                    *DATA BASE ERR*
+     C           DERR2     BEGSR                           *             *
+     C***********          MOVE '02'      DBASE            ***************S01194
+     C***********          MOVE KEY       LKEY                            S01194
+     C***********          MOVE 'TABLE'   LFILE                           S01194
+     C***********          MOVE 'GL2551 ' LPROG                           S01194
+     C                     MOVEL'SDGELRPD'DBFILE                          S01194
+     C                     MOVEL'002'     DBASE                        *  S01194
+     C                     MOVEL*BLANK    DBKEY                        *  S01194
+     C                     MOVEL*BLANK    DBOPTN  7                    *  S01194
+     C*
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR                                  *  S01194
+     C                     RETRN                           *RETURN TO CL *
+     C                     ENDSR
+0102 C********************************************************************S01194
+     C*                                                                   S01194
+     C* *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01194
+     C*                                                                   S01194
+     C* CALLED FROM: AFTER ABNORNAL OPERATION OCCURS                      S01194
+     C*                                                                   S01194
+     C* CALLS: NOTHING                                                    S01194
+     C*                                                                   S01194
+     C*****************************************************************   S01194
+     C*                                                                   S01194
+     C           *PSSR     BEGSR                           ** *PSSR **    S01194
+     C*                                                                   S01194
+     C           @RUN      IFEQ *BLANKS                                   S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C*                                                                   S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                           ** *PSSR **    S01194
+     C********************************************************************S01194
+     C*                                                    ***************E16900
+     C*                                                    *     03      *E16900
+     C           DERR3     BEGSR                           *DATA BASE ERR*E16900
+     C                     MOVE '03'      DBASE            ***************E16900
+     C**********           MOVE KEY       LKEY                     E16900 S01117
+     C                     MOVE KEY       DBKEY                           S01117
+     C**********           MOVE 'TABLE'   LFILE                    E16900 S01117
+     C                     MOVE 'TABLE'   DBFILE                          S01117
+     C**********           MOVE 'GL2551 ' LPROG                    E16900 S01117
+     C                     MOVE 'GL2551 ' DBPGM                           S01117
+     C                     SETON                     U7U8LR               E16900
+     C                     RETRN                           *RETURN TO CL *E16900
+     C                     ENDSR                                          E16900
+     C*                                                                   E16900
+     C/COPY ZSRSRC,ZDATE1Z2                                               E16900
+     C/COPY ZSRSRC,ZDATE2Z2                                               E16900
+     C/COPY ZSRSRC,ZFRQAZ2                                                E16900
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031

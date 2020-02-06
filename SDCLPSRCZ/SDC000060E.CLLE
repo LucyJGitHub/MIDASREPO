@@ -1,0 +1,81 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD Central Data Acceptance End Job')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000060E - Midas SD Central Data Acceptance End Job       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG12657           Date 13Nov06              */
+/*                      CSD031  *CREATE    Date 10Apr06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG12657 - The Central Data Acceptance Job may have been    */
+/*                  ended manually during I/C or during manual       */
+/*                  restart of CoB.                                  */
+/*       CSD031 - Enhanced Centralised Static Data                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&WAACT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&WAJOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WAUSR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&WANUM) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/* Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Get job details from the acceptance status data area. */
+ 
+/***         ALCOBJ     OBJ((SDACCPSTS *DTAARA *EXCL)) WAIT(0)  ***/
+/****        MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ABNOR)) ***/
+ 
+             RTVDTAARA  DTAARA(SDACCPSTS (1 1)) RTNVAR(&WAACT)
+             RTVDTAARA  DTAARA(SDACCPSTS (2 10)) RTNVAR(&WAJOB)
+             RTVDTAARA  DTAARA(SDACCPSTS (12 10)) RTNVAR(&WAUSR)
+             RTVDTAARA  DTAARA(SDACCPSTS (22 6)) RTNVAR(&WANUM)
+ 
+/* End the acceptance job if it is currently active. */
+ 
+             IF         COND(&WAACT *EQ 'Y') THEN(DO)
+                 ENDJOB     JOB(&WANUM/&WAUSR/&WAJOB) OPTION(*IMMED)
+                 MONMSG     MSGID(CPF1362)                                              /*BUG12657*/
+/**********      MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))  */                 /*BUG12657*/
+                 CHGDTAARA  DTAARA(SDACCPSTS) VALUE(' ')
+                 CHGDTAARA  DTAARA(SDACCPSTS (1 1)) VALUE('N')
+             ENDDO
+ 
+             DLCOBJ     OBJ((SDACCPSTS *DTAARA *EXCL))
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                        SDC000060E ended abnormally - see job log.') +
+                        TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

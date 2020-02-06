@@ -1,0 +1,3108 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Routine for Retail Teller info')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG0501 - Extract for Retail Teller Information               *
+     F*                                                               *
+     F*  Function:  This program creates an extract for UDC           *
+     F*  (phase(s)) Retail Teller correspondence.                     *
+     F*                                                               *
+     F*  Called By: RE4*    - (program name)                          *
+     F*                                                               *
+     F*  (C) COPYRIGHT Finastra International Limited 1996            *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042745           Date 20Nov16               *
+      *                 CCG016 *C *CREATE  Date 13Sep16               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD042745 - Travellers Cheque Number is 12 char long.         *
+     F*  CCG016 - Correspondence Manager for Retail Teller System     *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*           Hooks added                                         *
+     F*           CG0501C001                                          *
+     F*           CG0501C002                                          *
+     F*           CG0501C003                                          *
+     F*           CG0501C004                                          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  90   -    Poffered for READE LOOPS                           *
+     F*  99   -    General error indicator                            *
+     F*                                                               *
+     F*****************************************************************
+     E/COPY CGCPYSRC,CGPACKE
+     E/COPY CGCPYSRC,SRERRE
+     E**  Number Arrays
+     E                    ##W        20  1
+     E                    ##NUMA     29  1
+     E*
+     E**  Array of Currencies accessed by program
+     E                    ##CY      100  3
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     I**  Look-up string for RDE definition Array
+     I*
+     I##SDS       DS
+     I                                        15632 ##S
+     I*
+     I#@SDS       DS
+     I                                     56325632 #@S
+     I**  Packed data string.
+     I*
+     I            DS
+     I                                        1  20 ##W
+     I                                        1  200##WNUM
+     I**  Number Field
+     I*
+     I            DS
+     I                                        1   8 ##ITMA
+     I                                        1   80##ITEM
+     I** Used to convert item reference from character to numeric
+     I*
+     I            DS
+     I                                        1   6 ##NCIT
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     I            DS
+     I                                        1   5 ##CCCC
+     I                                        1   3 ##CCY
+     I                                        4   5 ##CCD
+     I**  For error reporting
+     I*
+     I*----------------------------------------------------------------
+     I*Named constants
+     I*
+     I              'PRINT_TYPE'          C         W#PTYP
+     I              'SUB_TYPE  '          C         W#PSTY
+     I              'ZE TELLER'           C         W#CN01
+     I              'A/C TRANS '          C         W#CN02
+     I              'CASH'                C         W#CN03
+     I              'CHARGES'             C         W#CN04
+     I              'CLOSE'               C         W#CN05
+     I              'FX TRANS'            C         W#CN06
+     I              'GL TRANS'            C         W#CN07
+     I              'NAC CASH'            C         W#CN08
+     I              'NAC CLOSE'           C         W#CN09
+     I              'UNKNOWN'             C         W#CN99
+     I*----------------------------------------------------------------
+     I##UDCR    E DSCGUDCRPD
+      ** External DS for incomplete reference
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External DS for Bank details
+      *
+     ISCSARD    E DSSCSARDPD                                              CCG015
+     I              LCD                             XXLCD                 CCG015
+     ISDGELR    E DSSDGELRPD
+      **  External DS for General Ledger details
+      *
+     ISDMMOD    E DSSDMMODPD
+      **  External DS for Module details
+      *
+     ISDSTRD    E DSSDSTRDPD
+      **  External DS for Securities Trading Module details
+      *
+     ISDTRAD    E DSSDTRADPD
+     I              QQACCD                          QQACC1
+      **  External DS for Trading Module details
+      *
+     ISDDEAL    E DSSDDEALPD
+     I              QQACCD                          QQACC2
+      **  External DS for Dealing Module details
+      *
+     ISDRETL    E DSSDRETLPD
+     I              QQACCD                          QQACC3
+      **  External DS for Retail details
+      *
+     ISDMGME    E DSSDMGMEPD
+      **  External DS for Message Management details
+      *
+     ISDFTFR    E DSSDFTFRPD
+      **  External DS for Funds Transfer details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  External DS for branch details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1
+      **  External DS for customer details
+      *
+     ISDCURR    E DSSDCURRPD                101
+      **  External DS for currency details
+      *
+     IACFMT     E DSACCNTAB
+      **  External DS for account details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data structure
+      *
+     IW0FMT     E DSCGUDTAPD
+      **  Record format of PF/CGUDTAPD for use as a parameter
+      *
+     I/COPY CGCPYSRC,CGPACKI
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I/COPY CGCPYSRC,SRERRI
+      **  DS to store subroutine specific data.
+      **  - Saved Path
+     I##PATH      DS                         20
+     I                                        1   6 ##GRPS
+      *
+     I##BIND      DS                         20
+     I I            1                         1   60##PBIN
+     I I            1                         7  120##TBIN
+      *
+     I            DS
+     I I            1                         1   60#@BIND
+      *
+     I#PDS        DS
+     I I            0                         1   30P1
+     I                                        4   60P2
+     I                                        7   90P3
+     I                                       10  120P4
+     I                                       13  150P5
+     II#DERI      DS
+      ** Derived fields
+     I                                        1  35 I#CNA1
+     I                                       36  70 I#CNA2
+     I                                       71 105 I#CNA3
+     I                                      106 140 I#CNA4
+     I                                      141 160 I#CRNM
+     I                                      161 170 I#CRTN
+     I                                      171 190 I#ANAM
+     I                                      191 210 I#ANA1
+     I                                      211 230 I#ANA2
+     I                                      231 231 I#ATYP
+     I                                      232 232 I#ATY1
+     I                                      233 233 I#ATY2
+     I                                      234 2390I#BICN
+     I                                      240 263 I#GLAX
+     I                                      264 269 I#CNUX
+     I                                      270 274 I#DLVI
+     I                                      275 279 I#DLV1
+     I                                      280 284 I#DLV2
+      *
+     II#PARM      DS                           1024
+      ** Passed fields
+      **  Classification
+     I                                        1   3 I#BRCT
+     I                                        4   6 I#TLID
+     I                                        7   9 I#TBID
+     I                                       10  14 I#TBTN
+     I                                       15  17 I#FUNC
+     I                                       18  18 I#CLOS
+     I**********                             19  28 I#CHQN                           CCG016 MD042745
+     I                                       19  30 I#CHQN                                  MD042745
+      **  Accounts single, dr and cr
+     I                                       41  46 I#CNUM
+     I                                       47  49 I#CCY
+     I                                       50  59 I#ACOD
+     I                                       60  61 I#ACSQ
+     I                                       62  64 I#BRCA
+     I                                       41  64 I#GLAR
+     I                                       65  74 I#ACNO
+     I                                       77  82 I#CNU1
+     I                                       83  85 I#CCY1
+     I                                       86  89 I#ACO1
+     I                                       90  91 I#ACS1
+     I                                       92  94 I#BRC1
+     I                                       77  94 I#GLA1
+     I                                       95 104 I#ACN1
+     I                                      107 112 I#CNU2
+     I                                      113 115 I#CCY2
+     I                                      116 119 I#ACO2
+     I                                      120 121 I#ACS2
+     I                                      122 124 I#BRC2
+     I                                      107 124 I#GLA2
+     I                                      125 134 I#ACN2
+      **  Transaction dets
+     I                                    P 137 1440I#AMNT
+     I                                      145 147 I#CCYT
+     I                                      148 198 I#NARR
+     I                                    P 199 2060I#CHQA
+     I                                    P 207 2138I#EXRT
+     I                                    P 217 2240I#BUYA
+     I                                      225 227 I#BUYC
+     I                                    P 228 2350I#SELA
+     I                                      236 238 I#SELC
+     I                                      239 288 I#NAR1
+     I                                      289 338 I#NAR2
+     I                                    P 347 3540I#INTA
+     I                                      355 357 I#INTC
+     I                                      358 407 I#INTN
+     I                                    P 417 4240I#TAXA
+     I                                      425 427 I#TAXC
+     I                                      428 477 I#TAXN
+     I                                    P 487 4940I#CHGA
+     I                                      495 497 I#CHGC
+     I                                      498 557 I#CHGN
+     I                                    P 567 5740I#TOTA
+     I                                      575 577 I#TOTC
+     I                                      578 627 I#TOTN
+     IO#PARM      DS                            256
+     I                                        1  10 O#ITEM
+     I                                       11  20 O#CUST
+     I                                       21  25 O#RSEQ
+     I                                       26  26 O#RLVL
+     I                                       27  29 O#RBCH
+     I                                       30  30 O#RARC
+      *
+     6/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+     C                     PARM           ##COPD  1
+     C                     PARM           ##AUTO  1
+     C                     PARM           I#PARM
+     C                     PARM           O#PARM
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+B01  C           ##INIT    IFEQ *BLANK
+ 01  C                     EXSR SRINIT
+ 01  C                     MOVE 'Y'       ##INIT  1
+E01  C                     ENDIF
+      *
+      ** Initialisation processing
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+     C                     EXSR SRMAIN
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Get all keys that reference the passed accounts (+ details)
+      *
+     C                     EXSR GETAC
+      *
+      **  Generate reference number by writing to PF/CGUDCRPD
+      **  If no confirmation to be produced, then bypass
+      *
+     C                     MOVE 'N'       ##COPD
+     C                     EXSR SRGENR
+     C           ##COPD    CABEQ'N'       EXMAIN
+      *
+      ** Extract
+      *
+B01  C           DRPSTP    CASEQW#CN06    ZE0FXT           FX TRANS
+B01  C           DRPSTP    CASEQW#CN03    ZE1CSH           CASH
+B01  C           DRPSTP    CASEQW#CN08    ZE1CSH           NAC CASH
+B01  C           DRPSTP    CASEQW#CN05    ZE1CSH           CLOSE
+B01  C           DRPSTP    CASEQW#CN09    ZE1CSH           NAC CLOSE
+B01  C           DRPSTP    CASEQW#CN07    ZE5GLX           GL TRANS
+B01  C           DRPSTP    CASEQW#CN02    ZE6REX           A/C TRANS
+B01  C           DRPSTP    CASEQW#CN04    ZE7CHG           CHARGES
+E01  C                     ENDCS
+      *
+      ** Compose return parms
+      *
+     C                     MOVEL##ITMA    O#ITEM
+     C**********           MOVEL##CUST    O#CUST
+     C                     MOVELDRDCOR    O#CUST
+     C                     MOVEL*BLANKS   O#RSEQ
+     C                     MOVEL'S'       O#RLVL
+     C                     MOVEL*BLANKS   O#RBCH
+     C                     MOVEL*BLANKS   O#RARC
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZE0FXT                                         *
+      * Function    :  Process: Teller FX Transactions      TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZE0FXT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZE0FXT'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'zE0FXT'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     EXSR BRANCH
+     C                     EXSR CUST
+     C                     EXSR ZETCLS
+     C                     EXSR ZEFXTN
+     C                     EXSR ZECHRG
+     C                     EXSR ZETOTL
+     C                     EXSR ZENARR
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZE1CSH                                         *
+      * Function    :  Process: Teller Cash AC and NAC      TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZE1CSH    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZE1CSH'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'zE1CSH'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     EXSR BRANCH
+     C                     EXSR CUST
+     C                     EXSR ZETCLS
+     C                     EXSR ACCNT
+     C                     EXSR ZEAMNT
+     C                     EXSR ZECHEQ
+     C                     EXSR ZECHRG
+     C                     EXSR ZETOTL
+     C                     EXSR ZENARR
+     C                     EXSR ZEFXTN
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZE5GLX                                         *
+      * Function    :  Process: Teller GL Transfer          TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZE5GLX    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZE5GLX'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'zE5GLX'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     EXSR BRANCH
+     C                     EXSR CUST
+     C                     EXSR ZETCLS
+     C                     EXSR ACCNT
+     C                     EXSR ZEAMNT
+     C                     EXSR ZENARR
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZE6REX                                         *
+      * Function    :  Process: Teller Retail Transfer      TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZE6REX    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZE6REX'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'zE6REX'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     EXSR BRANCH
+     C                     EXSR CUST
+     C                     EXSR ZETCLS
+     C                     EXSR ZEACCR
+     C                     EXSR ZEACDR
+     C                     EXSR ZEAMNT
+     C                     EXSR ZENAR2
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZE7CHG                                         *
+      * Function    :  Process: Teller Charges              TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZE7CHG    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZE7CHG'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'zE7CHG'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     EXSR BRANCH
+     C                     EXSR CUST
+     C                     EXSR ZETCLS
+     C                     EXSR ACCNT
+     C                     EXSR ZEAMNT
+     C                     EXSR ZENARR
+     C                     EXSR ZETOTL
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZECHEQ                                         *
+      * Function    :  Process: Cheque Information                    *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZECHEQ    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZECHEQ'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZECHEQ'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Credit/Cheque Amount
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'T '      #@RDE
+     C                     MOVEL'CR_AMOUN'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CHQA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#CCYT    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Credit/Cheque Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'CR_CCY  '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CCYT    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Cheque number
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'BR'      #@RDE
+     C                     MOVEL'ZE CHQ N'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CHQN    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZEREVL                                         *
+      * Function    :  Process: Reversal Information        TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZEREVL    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZEREVL'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZEREVL'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZENAR2                                         *
+      * Function    :  Process: Narrative DR and CR         TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZENAR2    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZENAR2'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZENAR2'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Narrative field - 1
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NARRAT_1'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#NAR1    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Narrative field - 2
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NARRAT_2'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#NAR2    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZEACDR                                         *
+      * Function    :  Process: Debit Account               TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZEACDR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZEACDR'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZEACDR'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Account name
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACC_NAME'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ANA1    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Account Type
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACC_TYPE'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ATY1    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Midas account identifier
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACCOUNT '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#GLA1    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Retail Account Number
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'O '      #@RDE
+     C                     MOVEL'RETL_ACN'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ACN1    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZEACCR                                         *
+      * Function    :  Process: Credit Account              TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZEACCR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZEACCR'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZEACCR'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Account name
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACC_NAME'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ANA2    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Account Type
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACC_TYPE'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ATY2    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Midas account identifier
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACCOUNT '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#GLA2    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Retail Account Number
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'O '      #@RDE
+     C                     MOVEL'RETL_ACN'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ACN2    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZEFXTN                                         *
+      * Function    :  Process: FX Transaction              TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZEFXTN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZEFXTN'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZEFXTN'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Exchange Rate
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'E '      #@RDE
+     C                     MOVEL'EXCH RAT'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+      *
+     C/COPY WNCPYSRC,CG0501C001
+      *
+     C                     MOVELI#EXRT    ##DATA
+     C                     MOVEL'Xrate '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'8'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Purchase Amount
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'NT'      #@RDE
+     C                     MOVEL'PURCH AM'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#BUYA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#BUYC    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Purchase Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'Y '      #@RDE
+     C                     MOVEL'PURCH CC'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#BUYC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Sale Amount
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'T '      #@RDE
+     C                     MOVEL'SALE AMN'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#SELA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#SELC    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Sale Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'SALE CCY'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#SELC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZENARR                                         *
+      * Function    :  Process: Narrative                   TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZENARR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZENARR'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZENARR'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Narrative field
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'NARRAT_1'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#NARR    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZETOTL                                         *
+      * Function    :  Process: Total                       TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZETOTL    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZETOTL'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZETOTL'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Total Amount
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE ' A'      #@RDE
+     C                     MOVEL'ZE TOTAL'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TOTA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#TOTC    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Total Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE ' C'      #@RDE
+     C                     MOVEL'ZE TOTAL'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TOTC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Total Narrative
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE ' N'      #@RDE
+     C                     MOVEL'ZE TOTAL'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TOTN    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZECHRG                                         *
+      * Function    :  Process: Charge                      TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZECHRG    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZECHRG'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZECHRG'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Charge Amount
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'MT'      #@RDE
+     C                     MOVEL'CHARGE_A'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CHGA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#CHGC    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Charge Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'CY'      #@RDE
+     C                     MOVEL'CHARGE_C'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CHGC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Charge Narrative
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'AR'      #@RDE
+     C                     MOVEL'CHARGE_N'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CHGN    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Exchange Rate
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'E '      #@RDE
+     C                     MOVEL'EXCH RAT'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+      *
+     C/COPY WNCPYSRC,CG0501C002
+      *
+     C                     MOVELI#EXRT    ##DATA
+     C                     MOVEL'Xrate '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'8'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZEAMNT                                         *
+      * Function    :  Process: Amount                      TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZEAMNT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZEAMNT'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZEAMNT'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Amount Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'CY'      #@RDE
+     C                     MOVEL'ZE AMNT '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CCYT    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Amount
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'T '      #@RDE
+     C                     MOVEL'ZE AMOUN'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#AMNT    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#CCYT    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZETCLS                                         *
+      * Function    :  Process: Transaction Classification  TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZETCLS    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZETCLS'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZETCLS'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Teller Identifier
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'R '      #@RDE
+     C                     MOVEL'ZE TELLE'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TLID    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Teller Batch Number
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ZE BNUM '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TBID    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Teller Batch Item
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ZE BITEM'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TBTN    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* RTS Function Code
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'NC'      #@RDE
+     C                     MOVEL'ZE RTSFU'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#FUNC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Closed Indicator
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'D '      #@RDE
+     C                     MOVEL'ZE CLOSE'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CLOS    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ZECLSD                                         *
+      * Function    :  Process: Closing Account Details     TL        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ZECLSD    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ZECLSD'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ZECLSD'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Charge Amount
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'MT'      #@RDE
+     C                     MOVEL'CHARGE_A'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CHGA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#CHGC    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Charge Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'CY'      #@RDE
+     C                     MOVEL'CHARGE_C'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CHGC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Exchange Rate
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'E '      #@RDE
+     C                     MOVEL'EXCH RAT'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+      *
+     C/COPY WNCPYSRC,CG0501C003
+      *
+     C                     MOVELI#EXRT    ##DATA
+     C                     MOVEL'Xrate '  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVEL'8'       ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Gross Interest
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'ST'      #@RDE
+     C                     MOVEL'GRS INTR'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#INTA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#INTC    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Closing Balance
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'MT'      #@RDE
+     C                     MOVEL'ZE BAL A'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TOTA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#TOTC    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Account Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'CY'      #@RDE
+     C                     MOVEL'ZE BAL C'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TOTC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Interest Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'CY'      #@RDE
+     C                     MOVEL'ZE INT C'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#INTC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Withholding Tax Amount
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'MT'      #@RDE
+     C                     MOVEL'ZE WHT A'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TAXA    ##DATA
+     C                     MOVEL'Amount'  ##RDEC
+     C                     MOVEL'L'       ##RDET
+     C                     MOVELI#TAXC    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6NBDP    ##DCPA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Withholding Tax Currency
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'CY'      #@RDE
+     C                     MOVEL'ZE WHT C'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#TAXC    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  CUST                                           *
+      * Function    :  Process: Customer Details                      *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           CUST      BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'CUST  '  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'CUST  '  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+      ** If no customer valid, set up branch internal
+B01  C           I#CNUM    IFEQ *BLANKS
+ 01  C           I#CNU1    ANDEQ*BLANKS
+ 01  C           I#CNU2    ANDEQ*BLANKS
+ 01  C                     MOVELI#BICN    I#CNUM
+E01  C                     END
+      *
+      ** If single customer valid, use it
+B01  C           I#CNUM    IFNE *BLANKS
+ 01  C           I#CNU1    ANDEQ*BLANKS
+ 01  C           I#CNU2    ANDEQ*BLANKS
+ 01  C                     MOVELI#CNUM    P@CUST    P
+      ** otherwise use dr customer when given
+ 01  C                     ELSE
+B02  C           I#CNU1    IFNE *BLANKS
+ 02  C                     MOVELI#CNU1    P@CUST    P
+      ** otherwise use cr customer
+ 02  C                     ELSE
+ 02  C                     MOVEL*BLANKS   P@CUST    P
+E02  C                     END
+E01  C                     END
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C                     PARM           P@CUST 10
+     C                     PARM *BLANKS   P@KYST  7
+     C           SDCUST    PARM *BLANKS   DSSDY
+      *
+     C                     MOVELBBCNA1    I#CNA1
+     C                     MOVELBBCNA2    I#CNA2
+     C                     MOVELBBCNA3    I#CNA3
+     C                     MOVELBBCNA4    I#CNA4
+     C                     MOVELBBCNA4    I#CNA4
+     C                     MOVELBBCRNM    I#CRNM
+     C                     MOVELBBCRTN    I#CRTN
+      *
+     C                     Z-ADD0         R1      30
+     C* Customer address line 1
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE '1 '      #@RDE
+     C                     MOVEL'CUST_ADR'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CNA1    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Customer address line 2
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE '2 '      #@RDE
+     C                     MOVEL'CUST_ADR'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CNA2    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Customer address line 3
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE '3 '      #@RDE
+     C                     MOVEL'CUST_ADR'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CNA3    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Customer address line 4
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE '4 '      #@RDE
+     C                     MOVEL'CUST_ADR'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CNA4    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Customer Name
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'E '      #@RDE
+     C                     MOVEL'CUST_NAM'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CRNM    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Customer Town
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'N '      #@RDE
+     C                     MOVEL'CUST_TOW'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CRTN    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Customer Number
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'CUSTOMER'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#CNUM    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  BRANCH                                         *
+      * Function    :  Process: Branch Details                        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           BRANCH    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'BRANCH'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'BRANCH'  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Branch (Code)
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'BRANCH  '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELA8BRCD    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Branch Name
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'AM'      #@RDE
+     C                     MOVEL'BRANCH N'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELA8BRNM    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C*
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  ACCNT                                          *
+      * Function    :  Process: Account Details                       *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           ACCNT     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ACCNT '  @STK,Q
+      *
+      *................................................................
+      *
+     C                     ADD  1         P1
+     C           P1        OCUR ##PATH
+     C                     MOVEL'ACCNT '  ##GRPS    P
+      *
+     C                     EXSR SRPATH
+     C                     EXSR PSHGRS                                                        CCG015
+      *                                                                                       CCG015
+      *
+     C                     Z-ADD0         R1      30
+     C* Account name
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACC_NAME'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ANAM    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Account Type
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACC_TYPE'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ATYP    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Midas account identifier
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVEL'ACCOUNT '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#GLAR    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C* Retail Account Number
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'O '      #@RDE
+     C                     MOVEL'RETL_ACN'#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#ACNO    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+      *
+     C/COPY WNCPYSRC,CG0501C004
+     C*
+     C* Statement Delivery Method
+     C                     ADD  1         R1
+     C                     CLEARR#DATA
+     C                     CLEARR#DEFN
+     C                     CLEAR#@RDE
+     C                     MOVE 'DV'      #@RDE
+     C                     MOVEL'ZE STMT '#@RDE
+     C           ##RDE     CAT  #@RDE:1   ##RDE
+     C                     MOVELI#DLVI    R#DATA
+     C                     MOVELR#DATA    ##D,R1
+     C                     MOVELR#DEFN    ##R,R1
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Decrement Path DS index
+     C           P1        OCUR ##PATH
+     C                     CLEAR##GRPS
+     C                     SUB  1         P1
+      *                                                                                       CCG015
+     C                     EXSR POPGRS                                                        CCG015
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  GETAC                                          *
+      * Function    :  Process: Get full a/c id keys control          *
+      *                                                               *
+      * Called by   :  MAIN                                           *
+      * Calls       :  GETACR                                         *
+      *****************************************************************
+     C           GETAC     BEGSR
+      *
+      **  Identify branch internal customer
+     C                     MOVELI#BRCT    P@BRCD    P
+     C                     CALL 'AOBRCHR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@BRCD  3
+     C           SDBRCH    PARM *BLANKS   DSSDY
+      *
+     C                     MOVELA8BICN    I#BICN
+      *
+      **  Identify full account id keys for passed accounts
+      *
+      **   Single account...
+B01  C           I#CNUM    IFNE *BLANKS
+ 01  C           I#ACNO    ORNE *ZEROS
+ 01  C                     MOVELI#BRCA    W#BRCA
+ 01  C                     MOVELI#CNUM    W#CNUM
+ 01  C                     MOVELI#CCY     W#CCY
+ 01  C                     MOVELI#ACOD    W#ACOD
+ 01  C                     MOVELI#ACSQ    W#ACSQ
+ 01  C                     MOVELI#ACNO    W#ACNO
+ 01  C                     EXSR GETACR
+ 01  C                     MOVELW#BRCA    I#BRCA
+ 01  C                     MOVELW#CNUM    I#CNUM
+ 01  C                     MOVELW#CCY     I#CCY
+ 01  C                     MOVELW#ACOD    I#ACOD
+ 01  C                     MOVELW#ACSQ    I#ACSQ
+ 01  C                     MOVELW#ACNO    I#ACNO
+ 01  C                     MOVELW#ANAM    I#ANAM
+ 01  C                     MOVELW#ATYP    I#ATYP
+ 01  C                     MOVELW#DLVI    I#DLVI
+E01  C                     END
+      **   Dr account...
+B01  C           I#CNU1    IFNE *BLANKS
+ 01  C           I#ACN1    ORNE *ZEROS
+ 01  C                     MOVELI#BRC1    W#BRCA
+ 01  C                     MOVELI#CNU1    W#CNUM
+ 01  C                     MOVELI#CCY1    W#CCY
+ 01  C                     MOVELI#ACO1    W#ACOD
+ 01  C                     MOVELI#ACS1    W#ACSQ
+ 01  C                     MOVELI#ACN1    W#ACNO
+ 01  C                     EXSR GETACR
+ 01  C                     MOVELW#BRCA    I#BRC1
+ 01  C                     MOVELW#CNUM    I#CNU1
+ 01  C                     MOVELW#CCY     I#CCY1
+ 01  C                     MOVELW#ACOD    I#ACO1
+ 01  C                     MOVELW#ACSQ    I#ACS1
+ 01  C                     MOVELW#ACNO    I#ACN1
+ 01  C                     MOVELW#ANAM    I#ANA1
+ 01  C                     MOVELW#ATYP    I#ATY1
+ 01  C                     MOVELW#DLVI    I#DLV1
+E01  C                     END
+      **   Cr account...
+B01  C           I#CNU2    IFNE *BLANKS
+ 01  C           I#ACN2    ORNE *ZEROS
+ 01  C                     MOVELI#BRC2    W#BRCA
+ 01  C                     MOVELI#CNU2    W#CNUM
+ 01  C                     MOVELI#CCY2    W#CCY
+ 01  C                     MOVELI#ACO2    W#ACOD
+ 01  C                     MOVELI#ACS2    W#ACSQ
+ 01  C                     MOVELI#ACN2    W#ACNO
+ 01  C                     EXSR GETACR
+ 01  C                     MOVELW#BRCA    I#BRC2
+ 01  C                     MOVELW#CNUM    I#CNU2
+ 01  C                     MOVELW#CCY     I#CCY2
+ 01  C                     MOVELW#ACOD    I#ACO2
+ 01  C                     MOVELW#ACSQ    I#ACS2
+ 01  C                     MOVELW#ACNO    I#ACN2
+ 01  C                     MOVELW#ANAM    I#ANA2
+ 01  C                     MOVELW#ATYP    I#ATY2
+ 01  C                     MOVELW#DLVI    I#DLV2
+E01  C                     END
+      *
+      ** If no customer valid, set up branch internal
+B01  C           I#CNUM    IFEQ *BLANKS
+ 01  C           I#CNU1    ANDEQ*BLANKS
+ 01  C           I#CNU2    ANDEQ*BLANKS
+ 01  C                     MOVELI#BICN    I#CNUX
+E01  C                     END
+      *
+      ** If single customer valid, use it
+B01  C           I#CNUM    IFNE *BLANKS
+ 01  C           I#CNU1    ANDEQ*BLANKS
+ 01  C           I#CNU2    ANDEQ*BLANKS
+ 01  C                     MOVELI#GLAR    I#GLAX
+ 01  C                     MOVELI#CNUM    I#CNUX
+      ** otherwise use dr customer when given
+ 01  C                     ELSE
+B02  C           I#CNU1    IFNE *BLANKS
+ 02  C                     MOVELI#GLA1    I#GLAX
+ 02  C                     MOVELI#CNU1    I#CNUX
+      ** otherwise use cr customer
+ 02  C                     ELSE
+B03  C           I#CNU2    IFNE *BLANKS
+ 03  C                     MOVELI#GLA2    I#GLAX
+ 03  C                     MOVELI#CNU2    I#CNUX
+E03  C                     END
+E02  C                     END
+E01  C                     END
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  GETACR                                         *
+      * Function    :  Process: Get full a/c id keys                  *
+      *                                                               *
+      * Called by   :  GETAC                                          *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           GETACR    BEGSR
+      *
+      ** Presence of valid a/c code means full a/c given
+      *
+B01  C           W#ACOD    IFNE *ZEROS
+ 01  C           W#ACNO    ANDEQ*ZEROS
+ 01  C                     CALL 'AOACCTR0'
+ 01  C                     PARM           P@RTCD  7
+ 01  C                     PARM '*KEY'    P@OPTN  7
+ 01  C                     PARM *BLANKS   P@RETL 10
+ 01  C                     PARM W#CNUM    P@CNUM  6
+ 01  C                     PARM W#CCY     P@CUCD  3
+ 01  C                     PARM W#ACOD    P@ACCD 10
+ 01  C                     PARM W#ACSQ    P@ACSQ  2
+ 01  C                     PARM W#BRCA    P@BRCA  3
+ 01  C           ACFMT     PARM *BLANKS   DSSDY
+      *
+      ** else Retail a/c given
+      *
+ 01  C                     ELSE
+ 01  C                     CALL 'AOACCTR0'
+ 01  C                     PARM           P@RTCD  7
+ 01  C                     PARM '*KEY'    P@OPTN  7
+ 01  C                     PARM W#ACNO    P@RETL 10
+ 01  C                     PARM *BLANKS   P@CNUM  6
+ 01  C                     PARM *BLANKS   P@CUCD  3
+ 01  C                     PARM *ZEROS    P@ACCD 10
+ 01  C                     PARM *ZEROS    P@ACSQ  2
+ 01  C                     PARM *BLANKS   P@BRCA  3
+ 01  C           ACFMT     PARM *BLANKS   DSSDY
+E01  C                     END
+      *
+     C                     MOVELBRCA      W#BRCA  3
+     C                     MOVELCNUM      W#CNUM  6
+     C                     MOVELCCY       W#CCY   3
+     C                     MOVELACOD      W#ACOD 10
+     C                     MOVELACSQ      W#ACSQ  2
+     C                     MOVELACNO      W#ACNO 10
+     C                     MOVELANAM      W#ANAM 20
+     C                     MOVELATYP      W#ATYP  1
+     C                     MOVEL'*****'   W#DLVI  5
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##W050  50
+     C                     Z-ADD*ZEROS    ##W150 150
+     C                     Z-ADD*ZEROS    ##W157 157
+     C                     Z-ADD*ZEROS    #1      60
+     C                     Z-ADD*ZEROS    #2      60
+     C                     Z-ADD*ZEROS    #3      60
+     C                     MOVE *BLANKS   S#PATH256
+     C           *LIKE     DEFN DEOSEQ    ##OSEQ
+      *
+      **  Initialise output sequence (to CGUDTAPD)
+     C                     Z-ADD*ZEROS    ##OSEQ
+      *
+      ** DJU Additions for CG4999 1st version **
+      *
+     C                     MOVE *BLANKS   #@RDE  10
+     C           *LIKE     DEFN ##TBIN    #@TBIN
+      *
+     C           1         OCUR ##BIND
+     C                     RESET##BIND
+     C                     RESET#@BIND
+     C                     RESET#PDS
+      *
+      *                                                                                       CCG015
+      ** Initialise XML increment                                                             CCG015
+      *                                                                                       CCG015
+     C                     EXSR INIXML                                                        CCG015
+     C           EXINZ     TAG
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Call access program for Bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+     C*
+B01  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 01  C                     MOVEL'AOBANKR0'W0FILE
+ 01  C                     MOVEL'*CALL'   W0KEY            ***************
+ 01  C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+ 01  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 01  C                     MOVEL'MIDAS  ' W0MSGF
+ 01  C                     EXSR SRERR
+E01  C                     END
+     C*
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C**   Determine Number of decimal places - Base currency
+     C*
+     C                     MOVELBJCYCD    ##CCY
+     C                     EXSR SRDCDT
+     C                     Z-ADDA6NBDP    BASCDP  10
+      *
+      ** Call access program for General Ledger Details
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*FIRST  '##OPTN
+     C           SDGELR    PARM SDGELR    DSSDY
+     C*
+B01  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 01  C                     MOVEL'AOGELRR0'W0FILE
+ 01  C                     MOVEL'*CALL'   W0KEY            ***************
+ 01  C                     Z-ADD02        W0ERNB           * DB ERROR 02 *
+ 01  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 01  C                     MOVEL'MIDAS  ' W0MSGF
+ 01  C                     EXSR SRERR
+E01  C                     END
+      *
+      ** Call access program for Midas Modules Details
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*FIRST  '##OPTN
+     C           SDMMOD    PARM SDMMOD    DSSDY
+     C*
+B01  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 01  C                     MOVEL'AOMMODR0'W0FILE
+ 01  C                     MOVEL'*CALL'   W0KEY            ***************
+ 01  C                     Z-ADD03        W0ERNB           * DB ERROR 03 *
+ 01  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 01  C                     MOVEL'MIDAS  ' W0MSGF
+ 01  C                     EXSR SRERR
+E01  C                     END
+     C*
+     C** Call acces program for Securities Trading Data Details
+     C*
+B01  C           BGSECS    IFEQ 'Y'
+ 01  C                     CALL 'AOSTRDR0'
+ 01  C                     PARM *BLANKS   ##RTCD
+ 01  C                     PARM '*FIRST  '##OPTN
+ 01  C           SDSTRD    PARM SDSTRD    DSSDY
+     C*
+B02  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 02  C                     MOVEL'AOSTRDR0'W0FILE
+ 02  C                     MOVEL'*CALL'   W0KEY            ***************
+ 02  C                     Z-ADD04        W0ERNB           * DB ERROR 04 *
+ 02  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 02  C                     MOVEL'MIDAS  ' W0MSGF
+ 02  C                     EXSR SRERR
+E02  C                     END
+E01  C                     ENDIF
+     C*
+     C** Call access program for trading data details
+     C*
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*FIRST  '##OPTN
+     C           SDTRAD    PARM SDTRAD    DSSDY
+     C*
+B01  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 01  C                     MOVEL'AOTRADR0'W0FILE
+ 01  C                     MOVEL'*CALL'   W0KEY            ***************
+ 01  C                     Z-ADD05        W0ERNB           * DB ERROR 05 *
+ 01  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 01  C                     MOVEL'MIDAS  ' W0MSGF
+ 01  C                     EXSR SRERR
+E01  C                     END
+     C*
+     C** Call access program for Dealing data details
+     C*
+B01  C           BGDLMM    IFEQ 'Y'
+ 01  C           BGDLFX    OREQ 'Y'
+ 01  C                     CALL 'AODEALR0'
+ 01  C                     PARM *BLANKS   ##RTCD
+ 01  C                     PARM '*FIRST  '##OPTN
+ 01  C           SDDEAL    PARM SDDEAL    DSSDY
+     C*
+B02  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 02  C                     MOVEL'AODEALR0'W0FILE
+ 02  C                     MOVEL'*CALL'   W0KEY            ***************
+ 02  C                     Z-ADD06        W0ERNB           * DB ERROR 06 *
+ 02  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 02  C                     MOVEL'MIDAS  ' W0MSGF
+ 02  C                     EXSR SRERR
+E02  C                     END
+E01  C                     END
+     C*
+     C** Call access program for Retail details
+     C*
+B01  C           BGRTBN    IFEQ 'Y'
+ 01  C           BGIOAC    OREQ 'Y'
+ 01  C                     CALL 'AORETLR0'
+ 01  C                     PARM *BLANKS   ##RTCD
+ 01  C                     PARM '*FIRST  '##OPTN
+ 01  C           SDRETL    PARM SDRETL    DSSDY
+     C*
+B02  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 02  C                     MOVEL'AORETLR0'W0FILE
+ 02  C                     MOVEL'*CALL'   W0KEY            ***************
+ 02  C                     Z-ADD07        W0ERNB           * DB ERROR 07 *
+ 02  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 02  C                     MOVEL'MIDAS  ' W0MSGF
+ 02  C                     EXSR SRERR
+E02  C                     END
+E01  C                     END
+     C*
+     C** Call access program for Message Management Details
+     C*
+B01  C           BGNWMI    IFEQ 'Y'
+ 01  C                     CALL 'AOMGMER0'
+ 01  C                     PARM *BLANKS   ##RTCD
+ 01  C                     PARM '*FIRST  '##OPTN
+ 01  C           SDMGME    PARM SDMGME    DSSDY
+     C*
+B02  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 02  C                     MOVEL'AOMGMER0'W0FILE
+ 02  C                     MOVEL'*CALL'   W0KEY            ***************
+ 02  C                     Z-ADD08        W0ERNB           * DB ERROR 08 *
+ 02  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 02  C                     MOVEL'MIDAS  ' W0MSGF
+ 02  C                     EXSR SRERR
+E02  C                     END
+E01  C                     END
+     C*
+     C** Call access program for Funds Transfer Details
+     C*
+B01  C           BGFDTR    IFEQ 'Y'
+ 01  C                     CALL 'AOFTFRR0'
+ 01  C                     PARM *BLANKS   ##RTCD
+ 01  C                     PARM '*FIRST  '##OPTN
+ 01  C           SDFTFR    PARM SDFTFR    DSSDY
+     C*
+B02  C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+ 02  C                     MOVEL'AOFTFRR0'W0FILE
+ 02  C                     MOVEL'*CALL'   W0KEY            ***************
+ 02  C                     Z-ADD09        W0ERNB           * DB ERROR 09 *
+ 02  C                     MOVEL'MEM5003' W0MSGD           ***************
+ 02  C                     MOVEL'MIDAS  ' W0MSGF
+ 02  C                     EXSR SRERR
+E02  C                     END
+E01  C                     END
+      *
+      *                                                                                       CCG015
+      ** Access Switchable Features file and check if CCG015 is                               CCG015
+      ** installed                                                                            CCG015
+      *                                                                                       CCG015
+     C                     CALL 'AOSARDR0'                                                    CCG015
+     C                     PARM *BLANKS   ##RTCD                                              CCG015
+     C                     PARM '*VERIFY' ##OPTN                                              CCG015
+     C                     PARM 'CCG015'  PSARD   1                                           CCG015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CCG015
+      *                                                                                       CCG015
+     C           ##RTCD    IFEQ *BLANK                                                        CCG015
+     C                     MOVE 'Y'       CCG015  1                                           CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVE 'N'       CCG015                                              CCG015
+      *                                                                                       CCG015
+     C           ##RTCD    IFNE '*NRF    '                                                    CCG015
+     C                     MOVEL'SCSARDPD'W0FILE                                              CCG015
+     C                     MOVEL'*CALL   'W0KEY                                               CCG015
+     C                     Z-ADD19        W0ERNB                                              CCG015
+     C                     MOVEL'MEM5003' W0MSGD                                              CCG015
+     C                     MOVEL'MIDAS  ' W0MSGF                                              CCG015
+     C                     EXSR SRERR                                                         CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     ENDIF                                                              CCG015
+     C                     MOVE 'Y'       CCG015  1                                           CCG015
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRADTA                                         *
+      * Function    :  Accumulate RDEs and associated data for output *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG3999 - Format and Pack Data                  *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRADTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRADTA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Reformat RDE data
+      *
+     C                     EXSR SRRFMN
+      *
+      **  Pack RDEs and associated data into data string
+     C                     CLEAR##SDS
+      *                                                                                       CCG015
+      ** If CCG015 is installed, value of W0ACT is '*NEWARR'                                  CCG015
+      *                                                                                       CCG015
+     C                     MOVEL'Y'       CCG015  1                                           CCG015
+     C           CCG015    IFEQ 'Y'                                                           CCG015
+     C                     MOVEL'*NEWARR 'W0ACT                                               CCG015
+     C                     MOVELS#PATH    W0SPAT                                              CCG015
+     C                     ELSE                                                               CCG015
+     C                     MOVEL'*PACK   'W0ACT                                               CCG015
+     C                     MOVEL*BLANK    W0SPAT                                              CCG015
+     C                     ENDIF                                                              CCG015
+      *                                                                                       CCG015
+     C                     CALL 'CG3999'
+     C                     PARM *BLANK    ##RTCD
+     C**********           PARM '*PACK   'W0ACT                                               CCG015
+     C                     PARM           W0ACT                                               CCG015
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+     C                     PARM           W0SPAT 70                                           CCG015
+     C                     PARM           ##RN                                                CCG015
+     C                     PARM           ##DN                                                CCG015
+     C                     PARM           ##FM                                                CCG015
+      *
+      **  Database error
+B01  C           ##RTCD    IFNE *BLANK
+      *
+ 01  C                     MOVEL'CG3999  'W0FILE           ***************
+ 01  C                     MOVEL##RTCD    W0KEY            * DB ERROR 10 *
+ 01  C                     Z-ADD10        W0ERNB           ***************
+ 01  C                     MOVEL'MEM5003' W0MSGD
+ 01  C                     MOVEL'MIDAS  ' W0MSGF
+ 01  C                     EXSR SRERR
+E01  C                     ENDIF
+     C                     EXSR WRTRDE                                                        CCG015
+      *
+      **  Append Data from pack routine.
+     C           #@SDS     CAT  ##SDS:0   #@SDS
+      *
+     C                     MOVEL*BLANK    ##R
+     C                     MOVEL*BLANK    ##D
+     C                     MOVEL*BLANK    ##S
+      *
+      *................................................................
+      *
+     C           EXADTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRODTA                                         *
+      * Function    :  Output Accumulated data to PF/CGUDTAPD         *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG9020 - Output Data to CGUDTAPD               *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRODTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRODTA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise Write Format Parameter.
+     C                     CLEARW0FMT
+      *
+      **  Set up Control Information.
+     C                     Z-ADD##ITEM    DEITEM
+     C                     ADD  1         ##OSEQ
+     C                     Z-ADD##OSEQ    DEOSEQ
+     C                     Z-ADD##PBIN    DEPBIN
+     C                     Z-ADD##TBIN    DETBIN
+     C                     MOVE 'FR'      DEFSLI
+     C                     MOVE *BLANKS   W0PATH
+     C                     MOVELS#PATH    W0PATH
+      *
+      **  Append Data from pack routine.
+     C           W0FMT     CAT  #@SDS:0   W0FMT
+      *
+      **  Output PF/CGUDTAPD Record.
+     C           1         IFEQ 2                                                             CCG015
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*WRITE  'W0ACT
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM *BLANK    W0TITL  7
+     C                     PARM *BLANK    W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Database error
+B01  C           ##RTCD    IFNE *BLANK
+      *
+ 01  C                     MOVEL'CG9020  'W0FILE           ***************
+ 01  C                     MOVEL##RTCD    W0KEY            * DB ERROR 11 *
+ 01  C                     Z-ADD11        W0ERNB           ***************
+ 01  C                     MOVEL'MEM5003' W0MSGD
+ 01  C                     MOVEL'MIDAS  ' W0MSGF
+ 01  C                     EXSR SRERR
+E01  C                     ENDIF
+     C                     ENDIF                                                              CCG015
+      *
+     C                     CLEAR#@SDS
+      *
+      *................................................................
+      *
+     C           EXODTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRBIND                                         *
+      * Function    :  Generate Binding numbers                       *
+      *                                                               *
+      * Called by   :  All Repeating Group Set Subroutines            *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRBIND    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRBIND'  @STK,Q
+      *
+      *................................................................
+      *
+     C           P1        SUB  1         P2
+     C           P2        OCUR ##BIND
+      *
+     C                     Z-ADD##TBIN    #@TBIN
+     C           P1        OCUR ##BIND
+     C                     Z-ADD#@TBIN    ##PBIN
+      *
+     C                     ADD  1         #@BIND
+     C                     Z-ADD#@BIND    ##TBIN
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRPATH                                         *
+      * Function    :  Generate Path String /GS1/GS2...               *
+      *                                                               *
+      * Called by   :  All Group Set subroutines                      *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRPATH    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRPATH'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     CLEARS#PATH
+      *
+B01  C                     DO   P1        P2
+ 01  C           P2        OCUR ##PATH
+ 01  C           S#PATH    CAT  '\':0     S#PATH
+ 01  C           S#PATH    CAT  ##GRPS:0  S#PATH
+E01  C                     END
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRRFMN                                         *
+      * Function    :  Reformat RDE data                              *
+      *                                                               *
+      * Called by   :  SRADTA                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRRFMN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFMN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Loop through RDE's and data
+      *
+     C                     Z-ADD0         #1
+B01  C           #1        DOUEQ20
+ 01  C                     ADD  1         #1
+ 01  C                     MOVEL##R,#1    R#DEFN
+ 01  C                     MOVEL##D,#1    R#DATA
+      *
+      ** If data present and RDE is edited
+      *
+B02  C           R#DATA    IFNE *BLANK
+ 02  C           ##RDEC    ANDNE*BLANK
+      *
+      * Reformat Amount
+ 02  C                     Z-ADD1         #2
+ 02  C           *BLANK    LOKUP##NUMA,#2                99*
+ 02  C                     Z-ADD20        #3
+ 02  C                     Z-ADD0         ##WNUM
+B03  C           #2        DOWGT1
+ 03  C           #2        ANDLE20
+ 03  C           #3        ANDGT1
+ 03  C                     SUB  1         #2
+ 03  C                     MOVEL##NUMA,#2 ##W,#3
+ 03  C                     SUB  1         #3
+E03  C                     ENDDO
+      *
+      * Sign the amount
+B03  C           ##SIGN    IFEQ '-'
+ 03  C                     Z-SUB##WNUM    ##NUMB
+ 03  C                     ELSE
+ 03  C                     Z-ADD##WNUM    ##NUMB
+E03  C                     END
+      *
+      * Default Edit Type
+B03  C           ##EDTT    IFEQ *BLANK
+ 03  C                     MOVEL##RDET    ##EDTT
+E03  C                     END
+      *
+      * Default Decimal Places
+B03  C           ##DCPA    IFEQ *BLANK
+ 03  C                     MOVEL##RDED    ##DCPA
+E03  C                     END
+      * New RDE data
+ 02  C                     MOVELR#DATA    ##D,#1
+E02  C                     ENDIF
+E01  C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXRFMN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRDCDT                                         *
+      * Function    :  Determine Currency Details                     *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRDCDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRDCDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Access array of Currency Details already loaded
+     C                     Z-ADD1         C       30
+     C           ##CCY     LOKUP##CY,C                   99
+      *
+      **  If no match is found determine the next free space in the
+      **  loaded currency array.
+B01  C           *IN99     IFEQ *OFF
+ 01  C                     Z-ADD1         C
+ 01  C           *BLANK    LOKUP##CY,C                   99
+      *
+      **  If no space is left, set the Currency Data data structure to
+      **  the 101st occurrence so that when the new details are
+      **  retrieved no existing details are overwritten.
+B02  C           *IN99     IFEQ *OFF
+ 02  C           101       OCUR SDCURR
+      *
+      **  If a space is found, set up the new currency into the array
+      **  and position the Currency Data data structure on the
+      **  occurrence matching the array index.
+ 02  C                     ELSE
+ 02  C                     MOVE ##CCY     ##CY,C
+ 02  C           C         OCUR SDCURR
+E02  C                     ENDIF
+      *
+      **  Retrieve the currency details.
+ 01  C                     CALL 'AOCURRR0'
+ 01  C                     PARM *BLANKS   ##RTCD           B:Return Cd
+ 01  C                     PARM '*KEY'    ##OPTN           I:Option
+ 01  C                     PARM ##CCY     ##CCYP  3        I:Currency Code
+ 01  C           SDCURR    PARM *BLANK    DSSDY            O:Format
+      *
+      **  Database Error
+B02  C           ##RTCD    IFNE *BLANK
+ 02  C                     MOVEL'SDCURRPD'W0FILE
+ 02  C                     MOVEL##CCY     W0KEY            ***************
+ 02  C                     Z-ADD12        W0ERNB           * DB ERROR 12 *
+ 02  C                     MOVEL'MEM5004' W0MSGD           ***************
+ 02  C                     MOVEL'MIDAS  ' W0MSGF
+ 02  C                     EXSR SRERR
+E02  C                     ENDIF
+      *
+      **  If the currency has been retrieved earlier, position the
+      **  Currency Data data structure on the relevant occurrence.
+ 01  C                     ELSE
+ 01  C           C         OCUR SDCURR
+E01  C                     ENDIF
+     C*
+     C           EXDCDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRGENR                                         *
+      * Function    :  Generate reference number                      *
+      *                by writing to PF/CGUDCRPD                      *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :  CG9010 - Create reference record               *
+      *****************************************************************
+     C           SRGENR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRGENR'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Generate reference number and check if further processing
+      **  required. Set up all available information in the record
+      **  format before calling.
+      *
+     C                     CLEAR##UDCR
+      * Booking/Main Branch (Mandatory)
+     C                     MOVELI#BRCT    DRBRCA
+      * Originating Branch (Optional)
+     C                     MOVELI#BRCT    DRORBR
+      * Module identifier (Mandatory)
+     C                     MOVEL'RE'      DRMODI
+      * Midas Transaction Number (Mandatory)
+     C                     MOVELI#TLID    DRMTRN    P
+     C           DRMTRN    CAT  I#TBID:0  DRMTRN
+     C           DRMTRN    CAT  I#TBTN:0  DRMTRN
+      * Midas GL Account Reference CNUMCCYACODACSQBRCA  (Optional)
+     C                     MOVELI#GLAX    DRMACT
+      *
+     C***********          MOVELW#PTYP    DRPTYP           * print type
+     C***********          MOVELW#PSTY    DRPSTP           * print s/type
+     C                     MOVELW#CN01    DRPTYP           * print type
+B01  C           I#FUNC    IFEQ 'MJM'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ 'MJM'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JA'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JA'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JE'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN99    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JE'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN99    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JF'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN99    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JF'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN99    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JH'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JH'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JI'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN06    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JI'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN06    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JK'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JK'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JL'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JL'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JN'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JN'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JO'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JO'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JP'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JP'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JQ'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JQ'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JT'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JT'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JV'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JV'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00A'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN02    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00A'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN02    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00B'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN99    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00B'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN99    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00E'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN99    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00E'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN99    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00H'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00H'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00I'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN04    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00I'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN04    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00K'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00K'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00L'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00L'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00N'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00N'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00O'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00O'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00P'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00P'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00Q'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00Q'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+      *
+B01  C           I#FUNC    IFEQ '00R'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00R'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JR'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JR'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JW'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN08    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JW'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN09    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00W'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN03    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00W'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN05    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00S'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00S'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JS'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN06    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JS'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN06    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00X'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '00X'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN07    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JX'
+ 01  C           I#CLOS    ANDEQ'N'
+ 01  C                     MOVELW#CN06    DRPSTP
+E01  C                     END
+B01  C           I#FUNC    IFEQ '0JX'
+ 01  C           I#CLOS    ANDEQ'Y'
+ 01  C                     MOVELW#CN06    DRPSTP
+E01  C                     END
+      *
+      * Auto Transmission indicator
+     C                     MOVEL'N'       DRATRM
+      *
+      * Cheque Reference (Optional)
+     C                     MOVELI#CHQN    DRCHQR
+      * Further Reference (Optional)
+     C                     MOVEL*BLANKS   DRFREF
+      * Customer Number (Mandatory)
+     C                     MOVELI#CNUX    ##CUST
+      *
+     C                     CALL 'CG9010'
+     C                     PARM           ##RTCD  7
+     C                     PARM '*GEN'    ##MODE 10
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+      *
+      **  Blank return code implies generate correspondence.
+      **  CGD1270 => no error, but suppress output for this transaction.
+      *
+B01  C           ##RTCD    IFEQ *BLANK
+      *                                                                                       CCG015
+     C           DRPTYP    CAT  ':':0     COLON  11 P                                         CCG015
+     C           COLON     CAT  DRPSTP:0  ##REFR    P                                         CCG015
+     C                     EXSR WRAPRF                                                        CCG015
+      *
+ 01  C                     MOVE 'Y'       ##COPD
+      *
+ 01  C                     ELSE
+      *
+B02  C           ##RTCD    IFNE 'CGD1270'
+ 02  C                     MOVEL'CG9010  'W0FILE
+ 02  C                     MOVEL##RTCD    W0KEY            ***************
+ 02  C                     Z-ADD09        W0ERNB           * DB ERROR 09 *
+ 02  C                     MOVEL'CGD1286' W0MSGD           ***************
+ 02  C                     MOVEL'CGUSRMSG'W0MSGF
+ 02  C                     EXSR SRERR
+E02  C                     ENDIF
+E01  C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXGENR    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      *****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     C/SPACE 5
+     C/COPY CGCPYSRC,CGNWEXZE                                                                 CCG015
+     C/EJECT                                                                                  CCG015
+** ##CPY  **      OBJECT COPYRIGHT
+(c) COPYRIGHT Finastra International Limited, 1995

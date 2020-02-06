@@ -1,0 +1,394 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SE Statement Production - Message Generation')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Securities Trading Module                        */
+/*                                                                   */
+/*       SEC4664  - MIDAS SE Statement Production - Message          */
+/*                  generation                                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP005             Date 27Aug10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSE040  *CREATE    Date 02Jul03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP005 - Change processing of temporary files for IASP      */
+/*       CSE040 - Securities Statement Processing                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/*/COPY WNCPYSRC,SEC4664INT                                          */
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBNBR) TYPE(*CHAR) LEN(6)                                   /*CUP005*/
+/**********  DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)                                 */ /*CUP005*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                   /*CUP005*/
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)                                   /*CUP005*/
+             DCL        VAR(&XPLIB) TYPE(*CHAR) LEN(10)                                   /*CUP005*/
+             DCL        VAR(&NEWPFG) TYPE(*CHAR) LEN(10)                                  /*CUP005*/
+             DCL        VAR(&NEWPFL) TYPE(*CHAR) LEN(10)                                  /*CUP005*/
+             DCL        VAR(&NEWPFR) TYPE(*CHAR) LEN(10)                                  /*CUP005*/
+             DCL        VAR(&NEWLFG1) TYPE(*CHAR) LEN(10)                                 /*CUP005*/
+             DCL        VAR(&NEWLFG2) TYPE(*CHAR) LEN(10)                                 /*CUP005*/
+             DCL        VAR(&NEWLFR1) TYPE(*CHAR) LEN(10)                                 /*CUP005*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2003')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas SD AS400 LOCAL +
+                          DATA AREA EQUIVALENT')
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*/COPY WNCPYSRC,SEC4664MPS                                          */
+ 
+             RTVJOBA    NBR(&JOBNBR)                                                      /*CUP005*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+/**********  CHGVAR     VAR(&JLIB) VALUE(&SYSID *CAT 'JLIB')                           */ /*CUP005*/
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSID *CAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&SYSID *CAT 'DPLIB')                            /*CUP005*/
+             CHGVAR     VAR(&DVLIB) VALUE(&SYSID *CAT 'DVLIB')                            /*CUP005*/
+             CHGVAR     VAR(&XPLIB) VALUE(&SYSID *CAT 'XPLIB')                            /*CUP005*/
+             CHGVAR     VAR(&NEWPFG) VALUE('CG' *TCAT &JOBNBR *TCAT +
+                          'GD')                                                           /*CUP005*/
+             CHGVAR     VAR(&NEWPFR) VALUE('CG' *TCAT &JOBNBR *TCAT +
+                          'RD')                                                           /*CUP005*/
+             CHGVAR     VAR(&NEWPFL) VALUE('CG' *TCAT &JOBNBR *TCAT +
+                          'LD')                                                           /*CUP005*/
+             CHGVAR     VAR(&NEWLFG1) VALUE('CG' *TCAT &JOBNBR *TCAT +
+                          'G1')                                                           /*CUP005*/
+             CHGVAR     VAR(&NEWLFG2) VALUE('CG' *TCAT &JOBNBR *TCAT +
+                          'G2')                                                           /*CUP005*/
+             CHGVAR     VAR(&NEWLFR1) VALUE('CG' *TCAT &JOBNBR *TCAT +
+                          'R1')                                                           /*CUP005*/
+ 
+/**To*avoid*to*fill*the*journal*with*entry*corresponding*to*QTEMP*file**/ /*           */ /*CUP005*/
+/**And,*to*avoid*to*modify*the*Correspondence*Manager*Extract***********/ /*           */ /*CUP005*/
+/**->*Create*a*temporary*Journal****************************************/ /*           */ /*CUP005*/
+ 
+/**********  CHKOBJ     OBJ(SEC4664RCV) OBJTYPE(*JRNRCV)                               */ /*CUP005*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                                        */ /*CUP005*/
+/**********  CRTJRNRCV  JRNRCV(&JLIB/SEC4664RCV)                                       */ /*CUP005*/
+/**********  CRTJRN     JRN(&JLIB/SEC4664JRN) JRNRCV(&JLIB/SEC4664RCV)                 */ /*CUP005*/
+/**********  ENDDO                                                                     */ /*CUP005*/
+ 
+/**********  CHKOBJ     OBJ(SEC4664JRN) OBJTYPE(*JRN)                                  */ /*CUP005*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                                        */ /*CUP005*/
+/**********  CRTJRN     JRN(&JLIB/SEC4664JRN) JRNRCV(&JLIB/SEC4664RCV)                 */ /*CUP005*/
+/**********  ENDDO                                                                     */ /*CUP005*/
+ 
+/* Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE))
+             MONMSG     MSGID(CPF8351)
+ 
+ 
+/* General details extract */
+ 
+             CALLPRC    PRC(SE4656) PARM(&RTNCODE)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11) *OR &RTNCODE *NE ' ') +
+                          THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* --------------------- */
+/* Process SWIFT Request */
+/* --------------------- */
+ 
+/* In fact, the LF/SEHDRVL4 selects requests with a network different than "PAPER" */
+ 
+/* Prepare Correspondence Manager files */
+ 
+/* Override files                                                   */
+/**Files*are*duplicated*in*library*QTEMP*****************************/ /*              */ /*CUP005*/
+/* An extraction job will handle its own set of data                */
+/**CGUXMGPD*and*CGUXMRPD*are*temporary*files,*and*are*not*under******/ /*              */ /*CUP005*/
+/**commitment*control************************************************/ /*              */ /*CUP005*/
+/* Create temporary set of files based on job number and journal them. */                 /*CUP005*/
+/**********  CHKOBJ     OBJ(QTEMP/CGUXMGPD) OBJTYPE(*FILE)                             */ /*CUP005*/
+             CHKOBJ     OBJ(&XPLIB/CGUXMGPD) OBJTYPE(*FILE)                               /*CUP005*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/**********    CPYF       FROMFILE(CGUXMGPD) TOFILE(QTEMP/CGUXMGPD) +                  */ /*CUP005*/
+/**********               CRTFILE(*YES)                                                */ /*CUP005*/
+                CPYF       FROMFILE(CGUXMGPD) TOFILE(&XPLIB/CGUXMGPD) +
+                             CRTFILE(*YES)                                                /*CUP005*/
+             ENDDO
+/**********  CLRPFM QTEMP/CGUXMGPD                                                     */ /*CUP005*/
+             CLRPFM     FILE(&XPLIB/CGUXMGPD)                                             /*CUP005*/
+ 
+/**********  CHKOBJ     OBJ(QTEMP/CGUXMRPD) OBJTYPE(*FILE)                             */ /*CUP005*/
+             CHKOBJ     OBJ(&XPLIB/CGUXMRPD) OBJTYPE(*FILE)                               /*CUP005*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/**********    CPYF       FROMFILE(CGUXMRPD) TOFILE(QTEMP/CGUXMRPD) +                  */ /*CUP005*/
+/**********               CRTFILE(*YES)                                                */ /*CUP005*/
+                CPYF       FROMFILE(CGUXMRPD) TOFILE(&XPLIB/CGUXMRPD) +
+                             CRTFILE(*YES)                                                /*CUP005*/
+             ENDDO
+/**********  CLRPFM QTEMP/CGUXMRPD                                                     */ /*CUP005*/
+             CLRPFM     FILE(&XPLIB/CGUXMRPD)                                             /*CUP005*/
+ 
+/**********  CHKOBJ     OBJ(QTEMP/CGUXMLPD) OBJTYPE(*FILE)                             */ /*CUP005*/
+             CHKOBJ     OBJ(&XPLIB/CGUXMLPD) OBJTYPE(*FILE)                               /*CUP005*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+/*****         CPYF       FROMFILE(CGUXMLPD) TOFILE(QTEMP/CGUXMLPD) +       *****/
+/*****                    CRTFILE(*YES)                                     *****/
+/**********    CRTDUPOBJ  OBJ(CGUXMLPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +               */ /*CUP005*/
+/**********               TOLIB(QTEMP) NEWOBJ(CGUXMLPD) DATA(*NO)                      */ /*CUP005*/
+                CRTDUPOBJ  OBJ(CGUXMLPD) FROMLIB(&DMLIB) OBJTYPE(*FILE) +
+                             TOLIB(&XPLIB) NEWOBJ(CGUXMLPD) DATA(*NO)                     /*CUP005*/
+             ENDDO
+/**********  CLRPFM QTEMP/CGUXMLPD                                                     */ /*CUP005*/
+             CLRPFM     FILE(&XPLIB/CGUXMLPD)                                             /*CUP005*/
+ 
+/**********  CHKOBJ     OBJ(QTEMP/CGUXMGL1) OBJTYPE(*FILE)                             */ /*CUP005*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                                        */ /*CUP005*/
+/**********    CRTOBJ     SRCMBR(CGUXMGL1) SRCFILE(CGDDSSRCQT) +                       */ /*CUP005*/
+/**********               PLIB(QTEMP)                                                  */ /*CUP005*/
+/**********  ENDDO                                                                     */ /*CUP005*/
+ 
+/**********  CHKOBJ     OBJ(QTEMP/CGUXMGL2) OBJTYPE(*FILE)                             */ /*CUP005*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                                        */ /*CUP005*/
+/**********    CRTOBJ     SRCMBR(CGUXMGL2) SRCFILE(CGDDSSRCQT) +                       */ /*CUP005*/
+/**********               PLIB(QTEMP)                                                  */ /*CUP005*/
+/**********  ENDDO                                                                     */ /*CUP005*/
+ 
+/**********  CHKOBJ     OBJ(QTEMP/CGUXMRL1) OBJTYPE(*FILE)                             */ /*CUP005*/
+/**********  MONMSG     MSGID(CPF9801) EXEC(DO)                                        */ /*CUP005*/
+/**********    CRTOBJ     SRCMBR(CGUXMRL1) SRCFILE(CGDDSSRCQT) +                       */ /*CUP005*/
+/**********               PLIB(QTEMP)                                                  */ /*CUP005*/
+/**********  ENDDO                                                                     */ /*CUP005*/
+ 
+/* Create duplicates of logicals and rename them to ensure correct access paths. */       /*CUP005*/
+             CRTDUPOBJ  OBJ(CGUXMGL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(&XPLIB) NEWOBJ(&NEWLFG1)                                  /*CUP005*/
+             CRTDUPOBJ  OBJ(CGUXMGL2) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(&XPLIB) NEWOBJ(&NEWLFG2)                                  /*CUP005*/
+             CRTDUPOBJ  OBJ(CGUXMRL1) FROMLIB(&DVLIB) OBJTYPE(*FILE) +
+                          TOLIB(&XPLIB) NEWOBJ(&NEWLFR1)                                  /*CUP005*/
+             MOVOBJ     OBJ(&NEWLFG1) OBJTYPE(*FILE) TOLIB(&DPLIB)                        /*CUP005*/
+             MOVOBJ     OBJ(&NEWLFG2) OBJTYPE(*FILE) TOLIB(&DPLIB)                        /*CUP005*/
+             MOVOBJ     OBJ(&NEWLFR1) OBJTYPE(*FILE) TOLIB(&DPLIB)                        /*CUP005*/
+             CRTDUPOBJ  OBJ(&NEWLFG1) FROMLIB(&DPLIB) OBJTYPE(*FILE) +
+                          TOLIB(&XPLIB) NEWOBJ(CGUXMGL1)                                  /*CUP005*/
+             CRTDUPOBJ  OBJ(&NEWLFG2) FROMLIB(&DPLIB) OBJTYPE(*FILE) +
+                          TOLIB(&XPLIB) NEWOBJ(CGUXMGL2)                                  /*CUP005*/
+             CRTDUPOBJ  OBJ(&NEWLFR1) FROMLIB(&DPLIB) OBJTYPE(*FILE) +
+                          TOLIB(&XPLIB) NEWOBJ(CGUXMRL1)                                  /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWLFG1)                                             /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWLFG2)                                             /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWLFR1)                                             /*CUP005*/
+             RNMOBJ     OBJ(&XPLIB/CGUXMGPD) OBJTYPE(*FILE) +
+                          NEWOBJ(&NEWPFG)                                                 /*CUP005*/
+             RNMOBJ     OBJ(&XPLIB/CGUXMLPD) OBJTYPE(*FILE) +
+                          NEWOBJ(&NEWPFL)                                                 /*CUP005*/
+             RNMOBJ     OBJ(&XPLIB/CGUXMRPD) OBJTYPE(*FILE) +
+                          NEWOBJ(&NEWPFR)                                                 /*CUP005*/
+             RNMOBJ     OBJ(&XPLIB/CGUXMGL1) OBJTYPE(*FILE) +
+                          NEWOBJ(&NEWLFG1)                                                /*CUP005*/
+             RNMOBJ     OBJ(&XPLIB/CGUXMGL2) OBJTYPE(*FILE) +
+                          NEWOBJ(&NEWLFG2)                                                /*CUP005*/
+             RNMOBJ     OBJ(&XPLIB/CGUXMRL1) OBJTYPE(*FILE) +
+                          NEWOBJ(&NEWLFR1)                                                /*CUP005*/
+             MOVOBJ     OBJ(&NEWPFG) OBJTYPE(*FILE) TOLIB(&DPLIB)                         /*CUP005*/
+             MOVOBJ     OBJ(&NEWPFL) OBJTYPE(*FILE) TOLIB(&DPLIB)                         /*CUP005*/
+             MOVOBJ     OBJ(&NEWPFR) OBJTYPE(*FILE) TOLIB(&DPLIB)                         /*CUP005*/
+             MOVOBJ     OBJ(&NEWLFG1) OBJTYPE(*FILE) TOLIB(&DPLIB)                        /*CUP005*/
+             MOVOBJ     OBJ(&NEWLFG2) OBJTYPE(*FILE) TOLIB(&DPLIB)                        /*CUP005*/
+             MOVOBJ     OBJ(&NEWLFR1) OBJTYPE(*FILE) TOLIB(&DPLIB)                        /*CUP005*/
+ 
+/**********  OVRDBF     FILE(CGUXMGPD) TOFILE(QTEMP/CGUXMGPD) +                        */ /*CUP005*/
+/**********               OVRSCOPE(*JOB)                                               */ /*CUP005*/
+/**********  OVRDBF     FILE(CGUXMRPD) TOFILE(QTEMP/CGUXMRPD) +                        */ /*CUP005*/
+/**********               OVRSCOPE(*JOB)                                               */ /*CUP005*/
+/**********  OVRDBF     FILE(CGUXMLPD) TOFILE(QTEMP/CGUXMLPD) +                        */ /*CUP005*/
+/**********               OVRSCOPE(*JOB)                                               */ /*CUP005*/
+/**********  OVRDBF     FILE(CGUXMGL1) TOFILE(QTEMP/CGUXMGL1) +                        */ /*CUP005*/
+/**********               OVRSCOPE(*JOB)                                               */ /*CUP005*/
+/**********  OVRDBF     FILE(CGUXMGL2) TOFILE(QTEMP/CGUXMGL2) +                        */ /*CUP005*/
+/**********               OVRSCOPE(*JOB)                                               */ /*CUP005*/
+/**********  OVRDBF     FILE(CGUXMRL1) TOFILE(QTEMP/CGUXMRL1) +                        */ /*CUP005*/
+/**********               OVRSCOPE(*JOB)                                               */ /*CUP005*/
+             OVRDBF     FILE(CGUXMGPD) TOFILE(&NEWPFG) OVRSCOPE(*JOB)                     /*CUP005*/
+             OVRDBF     FILE(CGUXMLPD) TOFILE(&NEWPFL) OVRSCOPE(*JOB)                     /*CUP005*/
+             OVRDBF     FILE(CGUXMRPD) TOFILE(&NEWPFR) OVRSCOPE(*JOB)                     /*CUP005*/
+             OVRDBF     FILE(CGUXMGL1) TOFILE(&NEWLFG1) OVRSCOPE(*JOB)                    /*CUP005*/
+             OVRDBF     FILE(CGUXMGL2) TOFILE(&NEWLFG2) OVRSCOPE(*JOB)                    /*CUP005*/
+             OVRDBF     FILE(CGUXMRL1) TOFILE(&NEWLFR1) OVRSCOPE(*JOB)                    /*CUP005*/
+ 
+/*****       STRJRNPF   FILE(QTEMP/CGUXMLPD) JRN(ICJRN) +     *****/
+/*****                    IMAGES(*BOTH) OMTJRNE(*OPNCLO)      *****/
+/**********  STRJRNPF   FILE(QTEMP/CGUXMLPD) JRN(SEC4664JRN) +                         */ /*CUP005*/
+/**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO)                               */ /*CUP005*/
+             STRJRNPF   FILE(&NEWPFL) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)                                                /*CUP005*/
+             MONMSG     MSGID(CPF7030)
+ 
+/* Midas CG SE Statement of Holding Driver */
+ 
+             CALLPRC    PRC(SE4663) PARM(&RTNCODE 'NO ')
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11) *OR &RTNCODE *NE ' ') +
+                          THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Merge XML lines */
+ 
+             CALL       PGM(ZA3616) PARM(&RTNCODE)
+ 
+             IF         COND(%SWITCH(XXXXXX11) *OR &RTNCODE *NE ' ') +
+                          THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Save the XML data for audit purpose  */
+ 
+/**********  CPYF       FROMFILE(QTEMP/CGUXMLPD) +                                     */ /*CUP005*/
+/**********               TOFILE(&DMLIB/XSEUXMLPD) MBROPT(*ADD) +                      */ /*CUP005*/
+/**********               CRTFILE(*YES)                                                */ /*CUP005*/
+             CPYF       FROMFILE(&NEWPFL) TOFILE(&DMLIB/XSEUXMLPD) +
+                          MBROPT(*ADD) CRTFILE(*YES)                                      /*CUP005*/
+             MONMSG     MSGID(CPF0000)
+ 
+/* Midas SE Holding - Send data to MMMM */
+ 
+             CALLPRC    PRC(SE4657)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Delete overrides */
+ 
+             DLTOVR     FILE(CGUXMGPD) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(CGUXMRPD) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(CGUXMLPD) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(CGUXMGL1) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(CGUXMGL2) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+             DLTOVR     FILE(CGUXMRL1) LVL(*JOB)
+             MONMSG     MSGID(CPF9841)
+ 
+/* Delete copies. */                                                                      /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWLFG1)                                             /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWLFG2)                                             /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWLFR1)                                             /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWPFG)                                              /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWPFL)                                              /*CUP005*/
+             DLTF       FILE(&DPLIB/&NEWPFR)                                              /*CUP005*/
+ 
+/* Update the Generation flag */
+ 
+             CALLPRC    PRC(SE4658) PARM(&RTNCODE)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11) *OR &RTNCODE *NE ' ') +
+                          THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* --------------------- */
+/* Process PAPER Request */
+/* --------------------- */
+ 
+/* In fact, the LF/SEHDRVL5 selects requests with a network equal to "PAPER" */
+ 
+/* When the Correspondence Manager will be completed set up it, duplicate the */
+/* processing for SWIFT, but override SEHDRVL4 by SEHDRVL5, call CGC3605 to   */
+/* override CGXML* files and do not call SE4657 - Send data to MMM            */
+ 
+/* Update Statement Request */
+ 
+             CALLPRC    PRC(SE4659) PARM(&RTNCODE)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11) *OR &RTNCODE *NE ' ') +
+                          THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                ROLLBACK
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/*/COPY WNCPYSRC,SEC4664MPE                                          */
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/*/COPY WNCPYSRC,SEC4664ERR                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination  */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SEC4664 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/*/COPY WNCPYSRC,SEC4664END                                          */
+ 
+             ENDPGM

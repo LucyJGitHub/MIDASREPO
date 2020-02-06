@@ -1,0 +1,614 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Write MDF file messages')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1462 - Write MDF file messages                             *
+      *                                                               *
+      *  Function:  This program is used to write records in MDF      *
+      *  file depending the mode                                      *
+      *                                                               *
+      *  Called By: SD1460 - Market data feed requests messaging      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 196570             Date 06Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006  *CREATE    Date 13Oct00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  196570 - Patch for Market Data Feed                          *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+      *
+      ** Data Request Start File
+     FSDDRQSPDO   E                    DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** Data Request Detail File
+     FSDDRQDPDO   E                    DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** Data Request End File
+     FSDDRQEPDO   E                    DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** Data Request Cancel File
+     FSDDRQCPDO   E                    DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      *
+      ** Data Request Items
+     FSDMDFIL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** Currency file
+     FSDCURRL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** Securities
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** Base rates
+     FSDBSRTL0IF  E           K        DISK
+     F                                              KINFSR *PSSR
+      /EJECT
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      ** Array of QCMDEXC commands
+     E                    CMD@    1   1 80
+      ** To handle file to be fetched depending the API type value
+     E                    @A      1   6 10
+      ** To handle origin of MDF identifier
+     E                    @MI         6 20
+      ** Array of QCMDEXC command to edit
+      /COPY SDCPYSRC,SD1453E001
+      ** Named constants
+     I              6                     C         @ASIZ
+     I              '*START'              C         START
+     I              '*END'                C         ENDPRC
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Structure of each entry in array @A
+      ** API type
+      ** Semi column
+      ** File name
+      ** Semi column
+      ** Title
+     IADTL        DS
+     I                                        1   1 AAPIT
+     I                                        2   2 ASMC1
+     I                                        3  10 AFILN
+      ** To fill array of MDF identifier (same order as array @A)
+      ** 1 spot rate
+      ** 2 forward rate
+      ** 3 borrow rate
+      ** 4 lend rate
+      ** 5 security price
+      ** 6 base rate
+     I@MIDS       DS
+     I                                        1  20 @MSRID
+     I                                       21  40 @MFRNT
+     I                                       41  60 @MBOID
+     I                                       61  80 @MLEID
+     I                                       81 100 @MSPID
+     I                                      101 120 @MBFNT
+     I                                        1 120 @MI
+      ** Parameters
+     IP@SCHD      DS                            300
+      *
+      ** Midas SD MDF ICD
+     ISDMDFC    E DSSDMDFCPD
+      ** Midas SD Mapping Code
+     ISDMAPC    E DSSDMAPCPD
+      ** For S/R RTVMTX
+      /COPY SDCPYSRC,SD1453I001
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+      ** Message data
+     C                     PARM           P@MSGD256
+      ** Mode
+     C                     PARM           P@MODE 10
+      ** Scheduled times
+     C                     PARM           P@SCHD
+      ** Request Id
+     C                     PARM           P@REQI
+      ** Mapping code of the request
+     C                     PARM           P@MAPC
+      ** Data source of the request
+     C                     PARM           P@DTSC
+      ** Commit changes
+     C                     PARM           P@COMT  1
+      *
+     C           *LIKE     DEFN MIREQI    P@REQI
+     C           *LIKE     DEFN MCMAPC    P@MAPC
+     C           *LIKE     DEFN A6BODS    P@DTSC
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C           P@RTN     IFEQ *BLANK
+     C           P@COMT    IFEQ 'Y'
+     C                     COMIT
+     C                     ENDIF
+     C                     ELSE
+     C           P@COMT    IFEQ 'Y'
+     C                     ROLBK
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR TERPGM
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL*BLANK    P@MSGD
+     C                     MOVEL'N'       WEND    1
+      ** Open file with option SHARE *NO
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDDRQSPD'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDDRQSPD
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDDRQDPD'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDDRQDPD
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDDRQEPD'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDDRQEPD
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDDRQCPD'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDDRQCPD
+      *
+      ** Retrieve system data
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR RTVSYD
+     C                     ENDIF
+      *
+     C           EINZPG    ENDSR
+      *****************************************************************
+      * TERPGM - Terminate program                                    *
+      *****************************************************************
+     C           TERPGM    BEGSR
+     C                     CLOSESDDRQSPD
+     C                     CLOSESDDRQDPD
+     C                     CLOSESDDRQEPD
+     C                     CLOSESDDRQCPD
+     C                     ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      ** Check mode
+     C           P@RTN     IFEQ *BLANK
+     C           P@MODE    CASEQSTART     STRTMG
+     C           P@MODE    CASEQENDPRC    ENDMG
+     C                     CAS            ERRMG
+     C                     ENDCS
+     C                     ENDIF
+      *
+     C           EMAIN     ENDSR
+      *****************************************************************
+      * ERRMG - Error                                                 *
+      *****************************************************************
+     C           ERRMG     BEGSR
+     C                     MOVEL'SDM0072' P@RTN
+     C                     ENDSR
+      *****************************************************************
+      * ENDMG - End message                                           *
+      *****************************************************************
+     C           ENDMG     BEGSR
+      ** Write end request
+     C                     EXSR WRTCRQ
+     C           P@RTN     IFNE *BLANK
+     C                     GOTO EENDMG
+     C                     ENDIF
+     C           EENDMG    ENDSR
+      *****************************************************************
+      * STRTMG - Start message                                        *
+      *****************************************************************
+     C           STRTMG    BEGSR
+      *
+      ** Retrieve range number of API type in array @A
+     C                     MOVELMCAPIT    WAPITY
+     C                     EXSR IDXAPI
+     C           WIDXRT    IFNE *BLANK
+     C                     MOVEL'SDM0040' P@RTN
+     C                     MOVELMCAPIT    P@MSGD
+     C                     GOTO ESTRMG
+     C                     ENDIF
+      *
+      ** Write start request
+     C                     EXSR WRTSRQ
+     C           P@RTN     IFNE *BLANK
+     C                     GOTO ESTRMG
+     C                     ENDIF
+     C                     CLOSESDDRQSPD                                                      196570
+     C                     OPEN SDDRQSPD                                                      196570
+      *
+     C           P@REQI    SETLLSDMDFIL0
+     C           P@REQI    READESDMDFIL0                 90
+     C           *IN90     DOWEQ'0'
+     C           P@RTN     ANDEQ*BLANK
+      ** Retrieve MDF info from appropriate file according value of
+      ** the index of API type in array @A
+     C                     MOVELMIDITM    WKYRTV
+     C                     Z-ADDWIDXAP    WRTVIX
+     C                     EXSR RTVMDF
+     C           WRTMRC    IFEQ *BLANK
+     C                     Z-ADDWIDXAP    WWRTIX
+      ** Write detail request
+     C                     EXSR WRTDRQ
+     C           P@RTN     IFNE *BLANK
+     C                     GOTO ESTRMG
+     C                     ENDIF
+     C                     ENDIF
+     C           P@REQI    READESDMDFIL0                 90
+      *
+     C                     ENDDO
+      *
+      ** Write end request
+     C                     EXSR WRTERQ
+     C           P@RTN     IFNE *BLANK
+     C                     GOTO ESTRMG
+     C                     ENDIF
+      *
+     C           ESTRMG    ENDSR
+      *****************************************************************
+      * WRTCRQ - Write Cancel Request                                 *
+      *****************************************************************
+     C           WRTCRQ    BEGSR
+      *
+     C                     CLEARSDDRQCD0
+     C                     MOVELMDTRGI    QCNODK
+     C                     MOVEL'0'       QCACKN
+     C                     MOVELP@REQI    QCDIWS
+     C                     WRITESDDRQCD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0077' P@RTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * WRTSRQ - Write Start Request                                  *
+      *****************************************************************
+     C           WRTSRQ    BEGSR
+     C                     CLEARSDDRQSD0
+     C                     MOVELMDTRGI    QSNODK
+     C                     MOVEL'0'       QSACKN
+     C                     MOVELP@REQI    QSDIWS
+     C*********************MOVELMCMAPC    QSRPYT                                              196570
+     C                     SELEC                                                              196570
+     C* Forward Rates                                                                         196570
+     C           MCAPIT    WHEQ 'F'                                                           196570
+     C                     MOVEL'FDFWRT'  QSRPYT                                              196570
+     C* Spot Rates                                                                            196570
+     C           MCAPIT    WHEQ 'S'                                                           196570
+     C                     MOVEL'SDSPTR'  QSRPYT                                              196570
+     C* Lend Rates                                                                            196570
+     C           MCAPIT    WHEQ 'L'                                                           196570
+     C                     MOVEL'FDINTR'  QSRPYT                                              196570
+     C* Borrow Rates                                                                          196570
+     C           MCAPIT    WHEQ 'B'                                                           196570
+     C                     MOVEL'FDINTR'  QSRPYT                                              196570
+     C* Security Prices                                                                       196570
+     C           MCAPIT    WHEQ 'P'                                                           196570
+     C                     MOVEL'SEPRCS'  QSRPYT                                              196570
+     C* Base Rates                                                                            196570
+     C           MCAPIT    WHEQ 'M'                                                           196570
+     C                     MOVEL'SDBSRS'  QSRPYT                                              196570
+     C                     ENDSL                                                              196570
+     C                     MOVEL'1'       QSALLD
+      *
+     C                     MOVEL'SDM0084' P@RTMI
+     C                     EXSR RTVMTX
+     C                     MOVELP@RTT1    QSDELV
+      *
+     C                     Z-ADD0         QSPOLL
+     C                     MOVELP@SCHD    QSSCHD
+     C                     MOVELP@DTSC    QSSERV
+     C                     MOVELMCVIEW    QSVIEW
+     C*********************MOVELP@DTSC    QSRECN                                              196570
+     C                     MOVEL*BLANKS   QSRECN                                              196570
+     C                     WRITESDDRQSD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0074' P@RTN
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * WRTDRQ - Write Detail Request                                 *
+      *****************************************************************
+     C           WRTDRQ    BEGSR
+     C           *LIKE     DEFN WIDXAP    WWRTIX
+      *
+     C                     CLEARSDDRQDD0
+     C                     MOVELMDTRGI    QDNODK
+     C                     MOVEL'0'       QDACKN
+     C                     MOVELP@REQI    QDDIWS
+     C*********************MOVEA@MI,WWRTIXQDDIWK                                              196570
+     C                     MOVE *BLANKS   WDDIWK 20                                           196570
+     C                     MOVEA@MI,WWRTIXWDDIWK                                              196570
+     C                     MOVELWDDIWK    QDDIWK                                              196570
+     C                     MOVELP@DTSC    QDSERV
+     C                     MOVELMCVIEW    QDVIEW
+     C                     MOVEL'0'       QDAUTO
+     C                     MOVEL'1'       QDSNAP
+     C                     MOVEL'0'       QDNOMG
+     C*********************MOVEA@MI,WWRTIXQDRECN                                              196570
+     C                     MOVE *BLANKS   WDRECN 20                                           196570
+     C                     MOVEA@MI,WWRTIXWDRECN                                              196570
+     C                     MOVELWDRECN    QDRECN                                              196570
+      *
+     C                     WRITESDDRQDD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0075' P@RTN
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WWRTIX
+     C                     ENDSR
+      *****************************************************************
+      * WRTERQ - Write End Request                                    *
+      *****************************************************************
+     C           WRTERQ    BEGSR
+     C                     CLEARSDDRQED0
+     C                     MOVELMDTRGI    QENODK
+     C                     MOVEL'0'       QEACKN
+     C                     MOVELP@REQI    QEDIWS
+     C                     WRITESDDRQED0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0076' P@RTN
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * RTVMDF - Retrieve record from market data feed files          *
+      *****************************************************************
+     C           RTVMDF    BEGSR
+     C           *LIKE     DEFN A6SRID    WMDFID
+     C                     MOVEL*BLANK    WMDFID
+     C                     MOVEL*BLANK    WRTMRC  2
+      *
+     C                     MOVEA@A,WRTVIX ADTL
+     C                     SELEC
+     C           AFILN     WHEQ 'SDCURRL0'
+     C                     MOVELWKYRTV    A6CYCD
+     C           A6CYCD    CHAINSDCURRL0             90
+     C           *IN90     IFEQ '0'
+      ** Fill array @MI
+     C                     MOVELA6SRID    @MSRID
+     C                     MOVELA6FRNT    @MFRNT
+     C                     MOVELA6BOID    @MBOID
+     C                     MOVELA6LEID    @MLEID
+     C                     ENDIF
+     C           AFILN     WHEQ 'SECTY'
+     C                     MOVELWKYRTV    SESN
+     C           SESN      CHAINSECTY                90
+     C           *IN90     IFEQ '0'
+      ** Fill array @MI
+     C                     MOVELSPID      @MSPID
+     C                     ENDIF
+     C           AFILN     WHEQ 'SDBSRTL0'
+     C           KBSRT0    KLIST
+     C                     KFLD           BACYCD
+     C                     KFLD           BABSRC
+     C           3         SUBSTWKYRTV:1  BACYCD
+     C           2         SUBSTWKYRTV:4  BABSRC
+     C           KBSRT0    CHAINSDBSRTL0             90
+     C           *IN90     IFEQ '0'
+      ** Fill array @MI
+     C                     MOVELBAFRNT    @MBFNT
+     C                     ENDIF
+     C                     OTHER
+     C                     MOVEL'02'      WRTMRC
+     C                     GOTO EXRMDF
+     C                     ENDSL
+      *
+     C           *IN90     IFEQ '0'
+     C                     MOVEA@MI,WRTVIXWMDFID
+     C                     ELSE
+     C                     MOVEL'01'      WRTMRC
+     C                     ENDIF
+      *
+     C           EXRMDF    TAG
+     C                     MOVEL*BLANK    WKYRTV256
+     C                     Z-ADD0         WRTVIX  30
+     C                     ENDSR
+      *****************************************************************
+      * RTVSYD - Retrieve System Data                                 *
+      *****************************************************************
+     C           RTVSYD    BEGSR
+      ** Retrieve MDF ICD
+     C                     CALL 'AOMDFCR0'             90
+     C                     PARM           P@RTCD
+     C                     PARM '*FIRST'  P@OPTN
+     C           SDMDFC    PARM           SDY
+     C           P@RTCD    IFNE *BLANK
+     C           *IN90     OREQ '1'
+     C                     MOVEL'SDM0041' P@RTN
+     C                     GOTO ERTSYD
+     C                     ENDIF
+      *
+      ** Retrieve mapping code
+     C                     MOVELP@MAPC    WMAPC
+     C                     EXSR RTVMPC
+     C           WMPRTN    IFNE *BLANK
+     C                     MOVEL'SDM0028' P@RTN
+     C                     GOTO ERTSYD
+     C                     ENDIF
+      *
+     C           ERTSYD    ENDSR
+      *****************************************************************
+      * RTVMPC - Retrieve Mapping code info                           *
+      *****************************************************************
+     C           RTVMPC    BEGSR
+     C           *LIKE     DEFN P@MAPC    WMAPC
+     C                     MOVEL*BLANK    WMPRTN  2
+     C                     MOVELWMAPC     P@MAPC    P
+      *
+     C                     CALL 'AOMAPCR0'             90
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@MAPC
+     C           SDMAPC    PARM           SDY
+      *
+     C           P@RTCD    IFNE *BLANK
+     C                     MOVEL'01'      WMPRTN
+     C                     ENDIF
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'99'      WMPRTN
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    WMAPC
+     C                     ENDSR
+      *****************************************************************
+      * IDXAPI - Retrieve index used for API type checkings           *
+      *****************************************************************
+     C           IDXAPI    BEGSR
+     C           *LIKE     DEFN AAPIT     WAPITY
+     C                     Z-ADD0         WIDXAP  30
+     C                     MOVEL*BLANK    WIDXRT  2
+      *
+     C                     DO   @ASIZ     I       30
+     C                     MOVEA@A,I      ADTL
+     C           AAPIT     IFEQ WAPITY
+     C                     Z-ADDI         WIDXAP
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Argument not found : return an error
+     C           WIDXAP    IFEQ 0
+     C                     MOVEL'01'      WIDXRT  2
+     C                     ENDIF
+     C                     MOVEL*BLANK    WAPITY
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      **  Execute an OS400 command
+      /COPY SDCPYSRC,SD1453C002
+      **  Retrieve a message text RTVMTX
+      /COPY SDCPYSRC,SD1453C001
+**  CPY@
+(c) Finastra International Limited 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)
+**  @A
+S;SDCURRL0                                        1 spot rate
+F;SDCURRL0                                        2 forward rate
+B;SDCURRL0                                        3 borrow rate
+L;SDCURRL0                                        4 lend rate
+P;SECTY                                           5 security price
+M;SDBSRTL0                                        6 base rate

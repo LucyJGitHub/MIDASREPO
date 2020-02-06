@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update Change User on GPCURRPD')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00219 - Midas SM Update Change User on GPCURRPD         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD031342           Date 24Nov14              */
+/*                      CFB001  *CREATE    Date 12Nov14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD031342 - Error encountered when running from Bridge.      */
+/*       CFB001 - FusionBanking Midas Rebranding                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2014')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/**********  SNDPGMMSG  MSG('SMUC00219 -  Midas SM Update +       */                    /*MD031342*/
+/**********               Change User in GPCURRPD') TOMSGQ(MRUNQ) */                    /*MD031342*/
+             SNDPGMMSG  MSG('SMUC00219 - Midas SM Update +
+                          Change User in GPCURRPD') TOMSGQ(GPOPERQ)                     /*MD031342*/
+ 
+             CHGVAR     VAR(&MODE) VALUE('A')
+ 
+/** Call GPCURRPD Conversion Utility  */
+ 
+CALL:
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CALL       PGM(SMU00219) PARM(&MODE)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&MODE = 'A') THEN(DO)
+             CHGVAR     VAR(&MODE) VALUE('U')
+             GOTO       CMDLBL(CALL)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+/**********  SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +*/                /*MD031342*/
+/**********               SMUC00219 ended abnormally - see job log') +*/                /*MD031342*/
+/**********               TOMSGQ(MOPERQ)                              */                /*MD031342*/
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SMUC00219 ended abnormally - see job log') +
+                          TOMSGQ(GPOPERQ)                                               /*MD031342*/
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

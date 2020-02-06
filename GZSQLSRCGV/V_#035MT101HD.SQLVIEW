@@ -1,0 +1,71 @@
+/************************************************************************************/
+/*                                                                                  */
+/*       Midas - Global Processing Module                                           */
+/*                                                                                  */
+/*       V_#MT101HD - Global MT101 Header File                                      */
+/*                                                                                  */
+/*       (c) Finastra International Limited 2003                                    */
+/*                                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*       Prev Amend No. CSD031             Date 10Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      BUG5605            Date 24Jan05                        */
+/*                      221761             Date 02Apr04                             */
+/*                      CGL029             Date 01Sep03                             */
+/*                      CGP001  *CREATE    Date 20Aug03                             */
+/*                                                                                  */
+/*----------------------------------------------------------------------------------*/
+/*                                                                                  */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       BUG5605 - Performance Enhancement                                          */
+/*       221761 - Additional field RSEQNO. (Recompile)                              */
+/*       CGL029 - Increase Account Code to 10 digits (Recompile)                    */
+/*       CGP001 - Global Processing                                                 */
+/*                                                                                  */
+/************************************************************************************/
+  CREATE VIEW                                                                        :
+  **********/**********                                                              :
+  AS                                                                                 :
+   SELECT                                                                            :
+    RFTID, STID, SNDREF, PYTP, PYST, BRCA, ORBR, BOKC, PRFC, RFTDST,                 :
+    CUSTRF, HINPTY, HOCUS1, HOCUS2, HOCUS3, HOCUS4, HOCUS5, CUSTTP,                  :
+    ASITTP, HACSV1, HACSV2, SINST, AUTHTX, HANDCY,                                   :
+    HANDAC, SWPRIO, INUSER, INTIME, UPDUSR, UPDTIM, AUP1,                            :
+    AUP2, RDUAL, AUIN, BAUTH, BATUSR, ADVCRT, TOTDBT, GEN101, AKEYHC,                :
+    AKEYAL, CSEQNO, RHMSGR, FXSRST, SWSTCC, SWPRCC, SWSTDC, SWPRIC,                  :
+    OMICC1, OMICC2, OMICC3, OMICC4, OMICC5, OMIC1, OMIC2, OMIC3, OMIC4,              :
+    OMIC5, VOMIC1, VOMIC2, VOMIC3, VOMIC4, VOMIC5, VSSCH, VSPCH, VATRAT,             :
+    VATAMO, A8ZONE AS CUSTZONE,                                                      :
+    CASE WHEN EXDATE=0 THEN NULL ELSE DATE(EXDATE+719892) END AS FEXDATE,            :
+    CASE WHEN DBTVDT=0 THEN NULL ELSE DATE(DBTVDT+719892) END AS FDBTVDT,            :
+    CASE WHEN INDATE=0 THEN NULL ELSE DATE(INDATE+719892) END AS FINDATE,            :
+    CASE WHEN UPDDTE=0 THEN NULL ELSE DATE(UPDDTE+719892) END AS FUPDDTE,            :
+****DEC(HANDCG*C1.SCALING,31,4) AS "SHANDCG",****************************************:/*BUG5605*/
+****DEC(HANDCG*C1.SCALING*C1.RATE,31,4) AS "BSHANDCG"********************************:/*BUG5605*/
+    HANDCG AS SHANDCG                                                                :/*BUG5605*/
+   FROM GZFT101HPD                                                                   :
+***LEFT JOIN GZSDBRCHPD ON BRCA = A8BRCD*********************************************:/*BUG5605*/
+   LEFT JOIN GZSDBRCHPD ON BRCA = A8BRCD;                                            :/*BUG5605*/
+***LEFT JOIN V_GLOBRATE C1 ON C1.CCY=HANDCY;*****************************************:/*BUG5605*/
+                                                                                     :
+ * DESCRIBESTART                                                                     :
+ * DESCRIBEFIELD FEXDATE    AS EXDATE     USING GZFT101HPD                           :
+ * DESCRIBEFIELD FDBTVDT    AS DBTVDT     USING GZFT101HPD                           :
+ * DESCRIBEFIELD FINDATE    AS INDATE     USING GZFT101HPD                           :
+ * DESCRIBEFIELD FUPDDTE    AS UPDDTE     USING GZFT101HPD                           :
+ * DESCRIBEFIELD SHANDCG    AS HANDCG     USING GZFT101HPD                           :
+***DESCRIBEFIELD BSHANDCG   AS HANDCG     USING GZFT101HPD (BASECCY)*****************:/*BUG5605*/
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                           :
+ * DESCRIBEEND                                                                       :
+                                                                                     :
+/************************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ MT101 header file - GZFT101HPD           ';                     :
+                                                                                :

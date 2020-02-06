@@ -1,0 +1,61 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas SD Avail cust number rpt control CL')           */
+/*********************************************************************/
+/*                                                                   */
+/*  Midas - Standing Data Module                             */
+/*                                                                   */
+/*  SDC1100 - CL Component to Control Available Customer Number Rpt. */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       Prev Amend No. E27499             Date 10Oct91              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*  E27499 - New program to allow 1) input of customer number        */
+/*           range to report on. 2) type of report to produce.       */
+/*                                                                   */
+/*********************************************************************/
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARM)
+ 
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RPARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CALL       PGM(SD1100) PARM(&RSEQ &RPARM)
+ 
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                             TOMSGQ(MOPERQ)
+             ENDDO
+ 
+             IF         COND(%SWITCH(XXXXXX10)) THEN(DO)
+                SNDPGMMSG  MSG('SD1100 - Available customer numbers +
+                             report ended abnormally') TOMSGQ(MOPERQ)
+             ENDDO
+ 
+ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

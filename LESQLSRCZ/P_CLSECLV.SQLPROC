@@ -1,0 +1,294 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       P_CLSECLV  - Security Lending Value Enquiry                           */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2004                     */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                       */
+/*       Prev Amend No. CRE073             Date 06Dec10                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 29May08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027A            Date 08May06                        */
+/*                      CSE075             Date 17Nov05                        */
+/*                      CSE071             Date 19Jul05                        */
+/*                      CLE040             Date 05Jul04                        */
+/*                      CLE024  *CREATE    Date 20Oct03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */     
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027A - Conversion Of Customer Number to Alpha                      */
+/*       CSE075 - US Enhanced Treasury Upgrade to MidasPlus (Recompile)        */
+/*       CSE071 - Multiple Holidays Re Securities (recompile)                  */
+/*       CLE040 - Collateralised Lending Phase 2 (Recompile)                   */
+/*       CLE024 - Collateralised Lending                                       */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  (IN CREF VARCHAR(10),                                                         :
+   IN STRORDERBY VARCHAR(100)                                                   :
+  )                                                                             :
+  DYNAMIC RESULT SETS 1                                                         :
+  LANGUAGE SQL                                                                  :
+  SPECIFIC                                                                      :
+  **********/**********                                                         :
+  NOT DETERMINISTIC                                                             :
+  MODIFIES SQL DATA                                                             :
+  CALLED ON NULL INPUT                                                          :
+                                                                                :
+  BEGIN                                                                         :
+                                                                                :
+  DECLARE SQLSTMT VARCHAR ( 6000 ) ;                                            :
+  DECLARE DCURSOR DYNAMIC SCROLL CURSOR WITH RETURN FOR PSTMT ;                 :
+                                                                                :
+  SET SQLSTMT =                                                                 :
+  '(SELECT DISTINCT '                                                           :
+*****'RUNDATES.RDATE AS LVDATE'                                                 :           BG18886
+*****',GLCOLLPD.CDCREF AS LVCREF '                                              :           BG18886
+*****',GLCOLLPD.CDCOPT AS LVCOPT '                                              :           BG18886
+*****',SDCOTPPD.CTRVLM AS LVRVLM '                                              :           BG18886
+*****',GLCOLLPD.CDCSEC AS LVSREF '                                              :           BG18886
+*****',GLCOLLPD.CDCSCN AS LVSCUS '                                              :           BG18886
+*****',GLCOLLPD.CDCSBR AS LVSBRC '                                              :           BG18886
+*****',GLCOLLPD.CDPTFR AS LVSPTFR '                                             :           BG18886
+*****',CASE WHEN RUNDATES.RDATE = FCLTYFN.RUN1 THEN GLCOLLPD.CDCLV2 '           :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN2 THEN GLCOLLPD.CDCLV3 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN3 THEN GLCOLLPD.CDCLV4 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN4 THEN GLCOLLPD.CDCLV5 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN5 THEN GLCOLLPD.CDCLV6 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN6 THEN GLCOLLPD.CDCLV7 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN7 THEN GLCOLLPD.CDCLV8 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN8 THEN GLCOLLPD.CDCLV9 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN9 THEN GLCOLLPD.CDCL10 '                 :           BG18886
+*****'ELSE 0 '                                                                  :           BG18886
+*****'END AS LVCLVC '                                                           :           BG18886
+*****',CASE WHEN RUNDATES.RDATE = FCLTYFN.RUN1 THEN GLCOLLPD.CDCAV2 '           :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN2 THEN GLCOLLPD.CDCAV3 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN3 THEN GLCOLLPD.CDCAV4 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN4 THEN GLCOLLPD.CDCAV5 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN5 THEN GLCOLLPD.CDCAV6 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN6 THEN GLCOLLPD.CDCAV7 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN7 THEN GLCOLLPD.CDCAV8 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN8 THEN GLCOLLPD.CDCAV9 '                 :           BG18886
+*****'WHEN RUNDATES.RDATE = FCLTYFN.RUN9 THEN GLCOLLPD.CDCA10 '                 :           BG18886
+*****'ELSE 0 '                                                                  :           BG18886
+*****'END AS LVCAVC '                                                           :           BG18886
+*****',INSTCWO.WOWEIG AS LVINSTWC '                                             :           BG18886
+*****',INSTCWO.PDPERC AS LVINSTPCN '                                            :           BG18886
+*****',INSTCWO.PDCUML AS LVINSTCF '                                             :           BG18886
+*****',SDCURRPD.A6CYCD AS LVCURR '                                              :           BG18886
+*****',CURRCWO.WOWEIG AS LVCURRWC '                                             :           BG18886
+*****',CURRCWO.PDPERC AS LVCURRPCN '                                            :           BG18886
+*****',CURRCWO.PDCUML AS LVCURRCF '                                             :           BG18886
+*****',SECTYD.SCOR AS LVCTRY '                                                  :           BG18886
+*****',CTRYCWO.WOWEIG AS LVCTRYWC '                                             :           BG18886
+*****',CTRYCWO.PDPERC AS LVCTRYPCN '                                            :           BG18886
+*****',SDCURRPD.A6SPRT AS LVSPRC '                                              :           BG18886
+*****',SDCURRPD.A6NBDP AS LVNDPC '                                              :           BG18886
+*****',SDCURRPD.A6MDIN AS LVMDIC '                                              :           BG18886
+*****'FROM '                                                                    :           BG18886
+*****'V_CLRDATES RUNDATES '                                                     :           BG18886
+*****',FCLTYFN FCLTYFN '                                                        :           BG18886
+*****',GLCOLLPD GLCOLLPD '                                                      :           BG18886
+*****',GLCOLAPD GLCOLAPD '                                                      :           BG18886
+*****',SDCOTPPD SDCOTPPD '                                                      :           BG18886
+*****',V_CLGPTRAP GPTRAPPD '                                                    :           BG18886
+*****',V_CLINSCWO INSTCWO '                                                     :           BG18886
+*****',V_CLCCYCWO CURRCWO '                                                     :           BG18886
+*****',V_CLCTYCWO CTRYCWO '                                                     :           BG18886
+*****',SECTYD     SECTYD '                                                      :           BG18886
+*****',SDCURRPD SDCURRPD '                                                      :           BG18886
+*****'WHERE '                                                                   :           BG18886
+*****'RRN(FCLTYFN) = 1 '                                                        :           BG18886
+*****'AND GLCOLLPD.CDCREF = ? '                                                 :           BG18886
+*****'AND GPTRAPPD.T_MOD  = ''SE'' '                                            :           BG18886
+*****'AND GPTRAPPD.T_SMOD = ''SCPS'' '                                          :           BG18886
+*****'AND GLCOLLPD.CDCOPT = ''P'' '                                             :           BG18886
+*****'AND GLCOLLPD.CDCCY = SDCURRPD.A6CYCD '                                    :           BG18886
+*****'AND GLCOLLPD.CDCOLT = SDCOTPPD.CTCOLT '                                   :           BG18886
+*****'AND GPTRAPPD.T_BRCA = GLCOLLPD.CDCSBR '                                   :           BG18886
+*****'AND GPTRAPPD.T_CNUM = GLCOLLPD.CDCSCN '                                   :           BG18886
+*****'AND GPTRAPPD.T_PTFR = GLCOLLPD.CDPTFR '                                   :           BG18886
+*****'AND GPTRAPPD.T_SESN = GLCOLLPD.CDCSEC '                                   :           BG18886
+*****'AND GPTRAPPD.T_SESN = SECTYD.SESN '                                       :           BG18886
+*****'AND ( '                                                                   :           BG18886
+*****'(T_CNUM = INSTCWO.WOCNUM AND T_PTFR = INSTCWO.WOPTFR AND                  :           BG18886
+  CONCAT 'RUNDATES.RDATE AS LVDATE'                                             :           BG18886
+  CONCAT ',GLCOLLPD.CDCREF AS LVCREF '                                          :           BG18886
+  CONCAT ',GLCOLLPD.CDCOPT AS LVCOPT '                                          :           BG18886
+  CONCAT ',SDCOTPPD.CTRVLM AS LVRVLM '                                          :           BG18886
+  CONCAT ',GLCOLLPD.CDCSEC AS LVSREF '                                          :           BG18886
+  CONCAT ',GLCOLLPD.CDCSCN AS LVSCUS '                                          :           BG18886
+  CONCAT ',GLCOLLPD.CDCSBR AS LVSBRC '                                          :           BG18886
+  CONCAT ',GLCOLLPD.CDPTFR AS LVSPTFR '                                         :           BG18886
+  CONCAT ',CASE WHEN RUNDATES.RDATE = FCLTYFN.RUN1 THEN GLCOLLPD.CDCLV2 '       :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN2 THEN GLCOLLPD.CDCLV3 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN3 THEN GLCOLLPD.CDCLV4 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN4 THEN GLCOLLPD.CDCLV5 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN5 THEN GLCOLLPD.CDCLV6 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN6 THEN GLCOLLPD.CDCLV7 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN7 THEN GLCOLLPD.CDCLV8 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN8 THEN GLCOLLPD.CDCLV9 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN9 THEN GLCOLLPD.CDCL10 '             :           BG18886
+  CONCAT 'ELSE 0 '                                                              :           BG18886
+  CONCAT 'END AS LVCLVC '                                                       :           BG18886
+  CONCAT ',CASE WHEN RUNDATES.RDATE = FCLTYFN.RUN1 THEN GLCOLLPD.CDCAV2 '       :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN2 THEN GLCOLLPD.CDCAV3 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN3 THEN GLCOLLPD.CDCAV4 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN4 THEN GLCOLLPD.CDCAV5 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN5 THEN GLCOLLPD.CDCAV6 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN6 THEN GLCOLLPD.CDCAV7 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN7 THEN GLCOLLPD.CDCAV8 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN8 THEN GLCOLLPD.CDCAV9 '             :           BG18886
+  CONCAT 'WHEN RUNDATES.RDATE = FCLTYFN.RUN9 THEN GLCOLLPD.CDCA10 '             :           BG18886
+  CONCAT 'ELSE 0 '                                                              :           BG18886
+  CONCAT 'END AS LVCAVC '                                                       :           BG18886
+  CONCAT ',INSTCWO.WOWEIG AS LVINSTWC '                                         :           BG18886
+  CONCAT ',INSTCWO.PDPERC AS LVINSTPCN '                                        :           BG18886
+  CONCAT ',INSTCWO.PDCUML AS LVINSTCF '                                         :           BG18886
+  CONCAT ',SDCURRPD.A6CYCD AS LVCURR '                                          :           BG18886
+  CONCAT ',CURRCWO.WOWEIG AS LVCURRWC '                                         :           BG18886
+  CONCAT ',CURRCWO.PDPERC AS LVCURRPCN '                                        :           BG18886
+  CONCAT ',CURRCWO.PDCUML AS LVCURRCF '                                         :           BG18886
+  CONCAT ',SECTYD.SCOR AS LVCTRY '                                              :           BG18886
+  CONCAT ',CTRYCWO.WOWEIG AS LVCTRYWC '                                         :           BG18886
+  CONCAT ',CTRYCWO.PDPERC AS LVCTRYPCN '                                        :           BG18886
+  CONCAT ',SDCURRPD.A6SPRT AS LVSPRC '                                          :           BG18886
+  CONCAT ',SDCURRPD.A6NBDP AS LVNDPC '                                          :           BG18886
+  CONCAT ',SDCURRPD.A6MDIN AS LVMDIC '                                          :           BG18886
+  CONCAT 'FROM '                                                                :           BG18886
+  CONCAT 'V_CLRDATES RUNDATES '                                                 :           BG18886
+  CONCAT ',FCLTYFN FCLTYFN '                                                    :           BG18886
+  CONCAT ',GLCOLLPD GLCOLLPD '                                                  :           BG18886
+  CONCAT ',GLCOLAPD GLCOLAPD '                                                  :           BG18886
+  CONCAT ',SDCOTPPD SDCOTPPD '                                                  :           BG18886
+  CONCAT ',V_CLGPTRAP GPTRAPPD '                                                :           BG18886
+  CONCAT ',V_CLINSCWO INSTCWO '                                                 :           BG18886
+  CONCAT ',V_CLCCYCWO CURRCWO '                                                 :           BG18886
+  CONCAT ',V_CLCTYCWO CTRYCWO '                                                 :           BG18886
+  CONCAT ',SECTYD     SECTYD '                                                  :           BG18886
+  CONCAT ',SDCURRPD SDCURRPD '                                                  :           BG18886
+  CONCAT 'WHERE '                                                               :           BG18886
+  CONCAT 'RRN(FCLTYFN) = 1 '                                                    :           BG18886
+  CONCAT 'AND GLCOLLPD.CDCREF = ? '                                             :           BG18886
+  CONCAT 'AND GPTRAPPD.T_MOD  = ''SE'' '                                        :           BG18886
+  CONCAT 'AND GPTRAPPD.T_SMOD = ''SCPS'' '                                      :           BG18886
+  CONCAT 'AND GLCOLLPD.CDCOPT = ''P'' '                                         :           BG18886
+  CONCAT 'AND GLCOLLPD.CDCCY = SDCURRPD.A6CYCD '                                :           BG18886
+  CONCAT 'AND GLCOLLPD.CDCOLT = SDCOTPPD.CTCOLT '                               :           BG18886
+  CONCAT 'AND GPTRAPPD.T_BRCA = GLCOLLPD.CDCSBR '                               :           BG18886
+  CONCAT 'AND GPTRAPPD.T_CNUM = GLCOLLPD.CDCSCN '                               :           BG18886
+  CONCAT 'AND GPTRAPPD.T_PTFR = GLCOLLPD.CDPTFR '                               :           BG18886
+  CONCAT 'AND GPTRAPPD.T_SESN = GLCOLLPD.CDCSEC '                               :           BG18886
+  CONCAT 'AND GPTRAPPD.T_SESN = SECTYD.SESN '                                   :           BG18886
+  CONCAT 'AND ( '                                                               :           BG18886
+  CONCAT '(T_CNUM = INSTCWO.WOCNUM AND T_PTFR = INSTCWO.WOPTFR AND              :           BG18886
+  T_SESN = INSTCWO.WOSESN) '                                                    :
+*****'OR (T_CNUM = INSTCWO.WOCNUM AND T_PTFR = INSTCWO.WOPTFR                   :           BG18886
+  CONCAT 'OR (T_CNUM = INSTCWO.WOCNUM AND T_PTFR = INSTCWO.WOPTFR               :           BG18886
+  AND INSTCWO.WOSESN = '''') '                                                  :
+*****'OR (T_CNUM = INSTCWO.WOCNUM AND INSTCWO.WOPTFR = '''' AND                 :           BG18886
+  CONCAT 'OR (T_CNUM = INSTCWO.WOCNUM AND INSTCWO.WOPTFR = '''' AND             :           BG18886
+  INSTCWO.WOSESN = '''') '                                                      :
+************ 'OR (INSTCWO.WOCNUM = 0 AND T_SESN = INSTCWO.WOSESN) '             :            CSD027A
+*****'OR (INSTCWO.WOCNUM = '''' AND T_SESN = INSTCWO.WOSESN) '                  :    CSD027A BG18886
+*****') '                                                                       :            BG18886
+*****'AND INSTCWO.PRIORY = (SELECT MIN(PRIORY) FROM V_CLINSCWO '                :            BG18886
+*****'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND                            :            BG18886
+  CONCAT 'OR (INSTCWO.WOCNUM = '''' AND T_SESN = INSTCWO.WOSESN) '              :    CSD027A BG18886
+  CONCAT ') '                                                                   :            BG18886
+  CONCAT 'AND INSTCWO.PRIORY = (SELECT MIN(PRIORY) FROM V_CLINSCWO '            :            BG18886
+  CONCAT 'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND                        :            BG18886
+  T_SESN = WOSESN) '                                                            :
+*****'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOSESN = '''') '              :            BG18886
+*****'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOSESN = '''') '                :            BG18886
+  CONCAT 'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOSESN = '''') '          :            BG18886
+  CONCAT 'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOSESN = '''') '            :            BG18886
+************ 'OR (WOCNUM = 0 AND T_SESN = WOSESN) '                             :            CSD027A
+*****'OR (WOCNUM = '''' AND T_SESN = WOSESN) '                                  :            CSD027A
+*****') '                                                                       :
+*****'AND ( '                                                                   :
+*****'(T_CNUM = CURRCWO.WOCNUM AND T_PTFR = CURRCWO.WOPTFR AND T_RCCY =         :
+  CONCAT 'OR (WOCNUM = '''' AND T_SESN = WOSESN) '                              :    CSD027A BG18886
+  CONCAT ') '                                                                   :            BG18886
+  CONCAT 'AND ( '                                                               :            BG18886
+  CONCAT '(T_CNUM = CURRCWO.WOCNUM AND T_PTFR = CURRCWO.WOPTFR AND T_RCCY =     :            BG18886
+  CURRCWO.WOCYCD) '                                                             :
+*****'OR (T_CNUM = CURRCWO.WOCNUM AND T_PTFR = CURRCWO.WOPTFR AND               :            BG18886
+  CONCAT 'OR (T_CNUM = CURRCWO.WOCNUM AND T_PTFR = CURRCWO.WOPTFR AND           :            BG18886
+  CURRCWO.WOCYCD = '''') '                                                      :
+*****'OR (T_CNUM = CURRCWO.WOCNUM AND CURRCWO.WOPTFR = '''' AND                 :            BG18886
+  CONCAT 'OR (T_CNUM = CURRCWO.WOCNUM AND CURRCWO.WOPTFR = '''' AND             :            BG18886
+  CURRCWO.WOCYCD = '''') '                                                      :
+************ 'OR (CURRCWO.WOCNUM = 0 AND T_RCCY = CURRCWO.WOCYCD) '             :            CSD027A
+*****'OR (CURRCWO.WOCNUM = '''' AND T_RCCY = CURRCWO.WOCYCD) '                  :            CSD027A
+*****') '                                                                       :
+*****'AND CURRCWO.PRIORY = (SELECT MIN(PRIORY) FROM V_CLCCYCWO '                :
+*****'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND                            :
+  CONCAT 'OR (CURRCWO.WOCNUM = '''' AND T_RCCY = CURRCWO.WOCYCD) '              :    CSD027A BG18886
+  CONCAT ') '                                                                   :            BG18886
+  CONCAT 'AND CURRCWO.PRIORY = (SELECT MIN(PRIORY) FROM V_CLCCYCWO '            :            BG18886
+  CONCAT 'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND                        :            BG18886
+  T_RCCY = WOCYCD) '                                                            :
+*****'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOCYCD = '''') '              :            BG18886
+*****'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOCYCD = '''') '                :            BG18886
+  CONCAT 'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOCYCD = '''') '          :            BG18886
+  CONCAT 'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOCYCD = '''') '            :            BG18886
+************ 'OR (WOCNUM = 0 AND T_RCCY = WOCYCD) '                             :            CSD027A
+*****'OR (WOCNUM = '''' AND T_RCCY = WOCYCD) '                                  :    CSD027A BG18886
+*****') '                                                                       :            BG18886
+*****'AND ( '                                                                   :            BG18886
+*****'(T_CNUM = CTRYCWO.WOCNUM AND T_PTFR = CTRYCWO.WOPTFR AND                  :            BG18886
+  CONCAT 'OR (WOCNUM = '''' AND T_RCCY = WOCYCD) '                              :    CSD027A BG18886
+  CONCAT ') '                                                                   :            BG18886
+  CONCAT 'AND ( '                                                               :            BG18886
+  CONCAT '(T_CNUM = CTRYCWO.WOCNUM AND T_PTFR = CTRYCWO.WOPTFR AND              :            BG18886
+  SECTYD.SCOR = CTRYCWO.WOCNCD) '                                               :
+*****'OR (T_CNUM = CTRYCWO.WOCNUM AND T_PTFR = CTRYCWO.WOPTFR AND               :            BG18886
+  CONCAT 'OR (T_CNUM = CTRYCWO.WOCNUM AND T_PTFR = CTRYCWO.WOPTFR AND           :            BG18886
+  CTRYCWO.WOCNCD = '''') '                                                      :
+*****'OR (T_CNUM = CTRYCWO.WOCNUM AND CTRYCWO.WOPTFR = '''' AND                 :            BG18886
+  CONCAT 'OR (T_CNUM = CTRYCWO.WOCNUM AND CTRYCWO.WOPTFR = '''' AND             :            BG18886
+  CTRYCWO.WOCNCD = '''') '                                                      :
+************ 'OR (CTRYCWO.WOCNUM = 0 AND SECTYD.SCOR = CTRYCWO.WOCNCD) '        :            CSD027A
+*****'OR (CTRYCWO.WOCNUM = '''' AND SECTYD.SCOR = CTRYCWO.WOCNCD) '             :            CSD027A
+*****') '                                                                       :
+*****'AND CTRYCWO.PRIORY = (SELECT MIN(PRIORY) FROM V_CLCTYCWO '                :
+*****'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND SECTYD.SCOR =              :
+  CONCAT 'OR (CTRYCWO.WOCNUM = '''' AND SECTYD.SCOR = CTRYCWO.WOCNCD) '         :    CSD027A BG18886
+  CONCAT ') '                                                                   :            BG18886
+  CONCAT 'AND CTRYCWO.PRIORY = (SELECT MIN(PRIORY) FROM V_CLCTYCWO '            :            BG18886
+  CONCAT 'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND SECTYD.SCOR =          :            BG18886
+  WOCNCD) '                                                                     :
+*****'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOCNCD = '''') '              :            BG18886
+*****'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOCNCD = '''') '                :            BG18886
+  CONCAT 'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOCNCD = '''') '          :            BG18886
+  CONCAT 'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOCNCD = '''') '            :            BG18886
+************ 'OR (WOCNUM = 0 AND SECTYD.SCOR = WOCNCD) '                        :            CSD027A
+*****'OR (WOCNUM = '''' AND SECTYD.SCOR = WOCNCD) '                             :            CSD027A
+*****'))  '                                                                     :
+*****STRORDERBY ;                                                               :
+  CONCAT 'OR (WOCNUM = '''' AND SECTYD.SCOR = WOCNCD) '                         :    CSD027A BG18886
+  CONCAT '))  '                                                                 :            BG18886
+  CONCAT STRORDERBY ;                                                           :            BG18886
+                                                                                :
+  PREPARE PSTMT FROM SQLSTMT ;                                                  :
+  OPEN DCURSOR USING CREF ;                                                     :
+                                                                                :
+  END  ;                                                                        :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas LE Security Lending Value Enquiry           ';                     :
+                                                                                :

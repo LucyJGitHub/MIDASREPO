@@ -1,0 +1,1223 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG FT DR/CR advices generation - input cycle')   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG4620 - FT DR/CR Advices Generation - I/C Driver            *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185107             Date 17Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             Date 07Feb00               *
+      *                 CFT008             Date 04Jan00               *
+      *                 CFT006             Date 01Oct99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFT003             Date 18Nov98               *
+      *                 095577             Date 07Nov95               *
+     F*                 089213             DATE 16JUN95               *
+     F*                 087989             DATE 18MAY95               *
+     F*                 087990             DATE 12MAY95               *
+     F*                 086166             DATE 30MAR95               *
+     F*                 086176             DATE 15MAR95               *
+     F*                 S01522             DATE 24JAN95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CFT009 - FT Fees and Charge Development-Recompiled           *
+      *  185107 - Mapping of details from swift message - recompile   *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+     A*  175479 - Incorporate Fontis : dealer's reference             *
+      *  CFT008 - Funds Transfer/Swift Messages MT102                 *
+      *  CFT006 - Funds Transfer/Swift Messages MT101                 *
+     F*  CFT003 - Settlement Method '14'                              *
+     F*  095577 - Add copy source CG4995PTYP                          *
+     F*  089213 - Select authorised ... not unauthorised              *
+     F*  087989 - Update collect file for cheques                     *
+     F*  087990 - Pass cheque sequence number                         *
+     F*  086166 - Correct *NOPRNT processing                          *
+     F*  086176 - Set up W0CMT for *AUDIT call to CG9020              *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  01   -    Detail posting - Standing order                    *
+     F*  99   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+     FADVGENB IF  E           K        DISK         KINFDS FILE1
+     F            CQCOCDDF                          KRENAMECQCOCDDR
+     F            CQPADDDF                          KRENAMECQPADDDR
+     F            INPAYDDF                          KRENAMEINPAYDDR
+     F            OTPAYDDF                          KRENAMEOTPAYDDR
+     F            FT101HD0                          KRENAMERFTHDRDR       CFT006
+     F            FT102HD0                          KRENAMECCTHDRDR       CFT008
+     FCQCOD   UF  E           K        DISK
+     F********                                      KCOMIT
+     FCQPAC   UF  E           K        DISK
+     F******                                        KCOMIT
+     FINPAY   UF  E           K        DISK
+     F****                                          KCOMIT
+     FOTPAY   UF  E           K        DISK
+     F***                                           KCOMIT
+     FFT101HL3UF  E           K        DISK                               CFT006
+     FFT102HL3UF  E           K        DISK                               CFT008
+     F/COPY WNCPYSRC,CG4620F001
+     E/SPACE 5
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     I/SPACE 5
+     IFT101HD0                                                            CFT006
+     I              SINST                           SINTX                 CFT006
+     ICQCOCDDR    01
+     I*
+     ICQPADDDR    02
+     I*
+     IINPAYDDR    03
+     I*
+     IOTPAYDDR    04
+     I*
+     IRFTHDRDR    05                                                      CFT006
+     I              SINST                           SINTX                 CFT006
+      *                                                                   CFT006
+     ICCTHDRDR    06                                                      CFT008
+      *                                                                   CFT008
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I*
+     I**  External DS to pass to programs.
+     I***DSPAR1      DS                                                   087990
+     IDSPAR1      DS                            256                       087990
+      *
+      ** Print Item Type
+     I                                        1  10 ##PTYP
+      *
+      ** Print Item Sub-Type
+     I                                       11  20 ##PSTP
+      *
+      ** File containing document data
+     I                                       21  27 ##FILE
+      *
+      ** Branch
+     I                                       28  30 ##BRCA
+      *
+      ** Payment type
+     I                                       31  32 ##PYTP
+      *
+      ** Payment Reference
+     I                                       33  47 ##PREF
+      *
+      ** Commit (YES/NO )
+     I I            'YES'                    48  50 W0CMT
+      *
+      ** Update files (YES/NO )
+     I I            'YES'                    51  53 W0UPF
+      *
+      ** Item suppressed
+     I I            'NO '                    54  56 ##ISUP
+      *
+      ** Cheque Number
+     I                                       57  650##CQNM
+      *
+      ** Number of cheques 'extracted'
+     I                                       66  700##RECU
+      *                                                                   087990
+      ** Cheques sequence number                                          087990
+     I                                       71  720##CQSQ                087990
+      *
+     IFILE1       DS
+     I                                      261 270 ##FMT
+      *
+     I*------------------------------------------------------------------
+     I* Named constants
+     I              'FT_ADV_CR '          C         #TEXT1
+     I              'FT_ADV_DR '          C         #TEXT2
+     I              'IN_PAY    '          C         #TEXT3
+     I              'OUT_PAY   '          C         #TEXT4
+     I              'CHQ_TO_COL'          C         #TEXT5
+     I              'CHQ_TO_PAY'          C         #TEXT6
+     I              'FT_RFT    '          C         #TEXT7                CFT006
+     I              'FT_CCT    '          C         #TEXT8                CFT008
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     I/COPY WNCPYSRC,CG4620I001
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - only once        *
+      *                SRINZ  - Initial Processing                    *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W1CMT   3
+      *
+     C***********          MOVEL*BLANKS   DSPARM 70                       087990
+     C                     MOVEL*BLANKS   DSPARM256                       087990
+     C***********          CLEARDSPAR1                                    086166
+     C                     RESETDSPAR1                                    086166
+      *
+     C                     MOVELDSPAR1    DSPARM
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+     C                     EXSR SRMAIN
+      *
+      ** Audit processing
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main Processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+     C           *LOVAL    SETLLADVGENB
+     C                     READ ADVGENB                  98
+      *
+     C           *IN98     DOWEQ*OFF
+      *
+     C/COPY WNCPYSRC,CG4620C002
+     C           ##FMT     IFNE 'FT101HD0'                                CFT006
+     C           ##FMT     ANDNE'FT102HD0'                                CFT008
+     C           ADIN      IFEQ 'Y'
+     C                     GOTO NXTREC
+     C                     ENDIF
+     C                     ENDIF                                          CFT006
+      *
+     C                     SELEC
+     C           ##FMT     WHEQ 'CQCOCDDF'
+     C           ##FMT     OREQ 'CQPADDDF'
+     C           RECI      IFEQ 'C'
+     C                     GOTO NXTREC
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG4620C004
+      *
+     C           ##FMT     WHEQ 'INPAYDDF'
+     C           AUIN      IFNE 'Y'
+     C                     GOTO NXTREC
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,CG4620C003
+     C           ##FMT     WHEQ 'OTPAYDDF'
+     C           AUIN      IFNE 'Y'
+     C           PYTP      OREQ 'RP'
+     C                     GOTO NXTREC
+     C                     ENDIF
+     C/COPY WNCPYSRC,CG4620C005
+      *
+     C                     ENDSL
+      *
+      ** FT Cheques for collection
+     C           *IN01     IFEQ *ON
+     C                     EXSR SRCFC
+     C           ##RTCD    IFNE '*NOPRNT'
+     C           W0CMT     ANDEQ'YES'
+     C           KKEY01    CHAINCQCOD                94
+     C           *IN94     IFEQ *OFF
+      *                                                                   087989
+      *  Set up cheque sequence number chain and update                   087989
+      *                                                                   087989
+     C                     Z-ADD##CQSQ    WCQSQX                          087989
+      *                                                                   087989
+     C           KKEY01    CHAINCQCOD                97                   087989
+     C                     MOVEL'Y'       ADIN
+     C***********          UPDATCQCODDDF                                  087989
+     C                     UPDATCQCOCDDF                                  087989
+     C                     Z-ADD*ZERO     WCQSQX                          087989
+     C                     COMIT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** FT Cheques to be paid
+     C           *IN02     IFEQ *ON
+     C                     EXSR SRCTBP
+     C           ##RTCD    IFNE '*NOPRNT'
+     C           W0CMT     ANDEQ'YES'
+     C           KKEY01    CHAINCQPAC                94
+     C           *IN94     IFEQ *OFF
+      *                                                                   087989
+      *  Set up cheque sequence number chain and update                   087989
+      *                                                                   087989
+     C                     Z-ADD##CQSQ    WCQSQX                          087989
+      *                                                                   087989
+     C           KKEY01    CHAINCQPAC                97                   087989
+     C                     MOVEL'Y'       ADIN
+     C***********          UPDATCQPACDDF                                  087989
+     C                     UPDATCQPADDDF                                  087989
+     C                     Z-ADD*ZERO     WCQSQX                          087989
+     C                     COMIT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** FT in payments
+     C           *IN03     IFEQ *ON
+     C                     EXSR SRFIP
+     C           ##RTCD    IFNE '*NOPRNT'
+     C           W0CMT     ANDEQ'YES'
+     C           PREF      CHAININPAY                94
+     C           *IN94     IFEQ *OFF
+     C                     MOVEL'Y'       ADIN
+     C                     UPDATINPAYDDF
+     C                     COMIT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** FT out payments
+     C           *IN04     IFEQ *ON
+     C                     EXSR SROPAY
+     C           ##RTCD    IFNE '*NOPRNT'
+     C           W0CMT     ANDEQ'YES'
+     C           PREF      CHAINOTPAY                94
+     C           *IN94     IFEQ *OFF
+     C/COPY WNCPYSRC,CG4620C017
+     C                     MOVEL'Y'       ADIN
+     C                     UPDATOTPAYDDF
+     C                     COMIT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   CFT006
+     C           *IN05     IFEQ '1'                                       CFT006
+     C                     EXSR SRRFTP                                    CFT006
+     C           ##RTCD    IFNE '*NOPRNT'                                 CFT006
+     C           W0CMT     ANDEQ'YES'                                     CFT006
+     C           RFTID     CHAINFT101HL3             94                   CFT006
+     C           *IN94     IFEQ '0'                                       CFT006
+     C                     MOVEL'Y'       ADVCRT                          CFT006
+     C                     UPDATFT101HD0                                  CFT006
+     C                     COMIT                                          CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C           *IN06     IFEQ '1'                                       CFT008
+     C                     EXSR SRCCTP                                    CFT008
+     C           ##RTCD    IFNE '*NOPRNT'                                 CFT008
+     C           W0CMT     ANDEQ'YES'                                     CFT008
+     C           CCTID     CHAINFT102HL3             94                   CFT008
+     C           *IN94     IFEQ '0'                                       CFT008
+     C                     MOVEL'Y'       ADVCRT                          CFT008
+     C                     UPDATFT102HD0                                  CFT008
+     C                     COMIT                                          CFT008
+     C                     ENDIF                                          CFT008
+     C                     ENDIF                                          CFT008
+     C                     ENDIF                                          CFT008
+      *
+     C           NXTREC    TAG
+      *
+     C                     MOVEA'0000'    *IN,01
+     C                     MOVEA'00'      *IN,05                          CFT008
+      *
+     C                     READ ADVGENB                  98
+      *
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRCFC                                          *
+      * Function    :  FT Cheques for collection                      *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRCFC     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRCFC '  @STK,Q
+      *
+      *................................................................
+      *
+     C           KKEY01    KLIST
+     C                     KFLD           PREF
+     C                     KFLD           WCQSQX  20
+      *                                                                   087990
+      *  Set up cheque sequence number                                    087990
+      *                                                                   087990
+     C                     Z-ADDCQSQ      ##CQSQ                          087990
+      *
+     C           KKEY01    CHAINCQCOD                97
+      *
+      ** DATABASE ERROR
+      *
+     C           *IN97     IFEQ *ON
+     C                     MOVELPREF      W#PREF 17
+     C                     MOVE '00'      W#PREF
+     C                     MOVEL'CQCOD   'W0FILE
+     C                     MOVELW#PREF    W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      **  Bypass if not authorised.
+     C***********AUIN      CABEQ'Y'       EXCFC                           089213
+     C           AUIN      IFNE 'Y'                                       089213
+     C                     MOVEL'*NOPRNT' ##RTCD                          089213
+     C                     GOTO EXCFC                                     089213
+     C                     ENDIF                                          089213
+      *
+     C/COPY WNCPYSRC,CG4620C006
+     C                     MOVEL#TEXT1    ##PTYP           Print item type
+     C/COPY WNCPYSRC,CG4620C007
+     C                     MOVEL#TEXT5    ##PSTP           Print item sub-type
+     C                     MOVEL'CQCOD  ' ##FILE           File
+     C                     MOVELBRCA      ##BRCA           Branch
+     C                     MOVELPYTP      ##PYTP           Payment Type
+     C                     MOVELPREF      ##PREF           Payment Reference
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      ** Produce Advice
+      *
+     C                     MOVELDSPAR1    DSPARM
+      *
+     C                     CALL 'CG4630'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C           ##RTCD    IFNE '*NOPRNT'
+     C                     EXSR SRAUDT
+     C***********          ELSE                                           086166
+      *
+      ** Database error
+     C                     MOVEL'CG4630  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXCFC     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRCTBP                                         *
+      * Function    :  FT Cheques to be paid                          *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRCTBP    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRCTBP'  @STK,Q
+      *
+      *................................................................
+      *                                                                   087990
+      *  Set up cheque sequence number                                    087990
+      *                                                                   087990
+     C                     Z-ADDCQSQ      ##CQSQ                          087990
+      *
+     C           KKEY01    CHAINCQPAC                97
+      *
+      ** DATABASE ERROR
+      *
+     C           *IN97     IFEQ *ON
+     C                     MOVELPREF      W#PREF
+     C                     MOVE '00'      W#PREF
+     C                     MOVEL'CQPAC   'W0FILE
+     C                     MOVELW#PREF    W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      **  Bypass if not authorised.
+      *
+     C***********AUIN      CABEQ'Y'       EXCTBP                          089213
+     C           AUIN      IFNE 'Y'                                       089213
+     C                     MOVEL'*NOPRNT' ##RTCD                          089213
+     C                     GOTO EXCTBP                                    089213
+     C                     ENDIF                                          089213
+     C/COPY WNCPYSRC,CG4620C008
+     C                     MOVEL#TEXT2    ##PTYP           Print item type
+     C/COPY WNCPYSRC,CG4620C009
+     C                     MOVEL#TEXT6    ##PSTP           Print item sub-type
+     C                     MOVEL'CQPAC  ' ##FILE           File
+     C                     MOVELBRCA      ##BRCA           Branch
+     C                     MOVELPYTP      ##PYTP           Payment Type
+     C                     MOVELPREF      ##PREF           Payment Reference
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      ** Produce Advice
+      *
+     C                     MOVELDSPAR1    DSPARM
+      *
+     C                     CALL 'CG4630'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C           ##RTCD    IFNE '*NOPRNT'
+     C                     EXSR SRAUDT
+     C***********          ELSE                                           086166
+      *
+      ** Database error
+     C                     MOVEL'CG4630  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 05 *
+     C                     Z-ADD5         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXCTBP    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRFIP                                          *
+      * Function    :  FT in payments                                 *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRFIP     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRFIP '  @STK,Q
+      *
+      *................................................................
+      *
+      *
+      **  Bypass if outgoing payment to be generated
+     C           OPIN      CABEQ'Y'       EXFIP
+      *
+     C/COPY WNCPYSRC,CG4620C010
+     C                     MOVEL#TEXT1    ##PTYP           Print item type
+     C/COPY WNCPYSRC,CG4620C011
+     C                     MOVEL#TEXT3    ##PSTP           Print item sub-type
+     C                     MOVEL'INPAY  ' ##FILE           File
+     C                     MOVELBRCA      ##BRCA           Branch
+     C                     MOVELPYTP      ##PYTP           Payment Type
+     C                     MOVELPREF      ##PREF           Payment Reference
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+     C/COPY WNCPYSRC,CG4620C015
+      *                                                                   CFT003
+     C                     MOVEL*BLANKS   ##OK                            CFT003
+     C                     MOVEL*BLANKS   W#SETM                          CFT003
+     C                     CALL 'CG4640'                                  CFT003
+     C                     PARM PYTP      W#PYTP  2                       CFT003
+     C                     PARM PYST      W#PYST  2                       CFT003
+     C                     PARM           ##OK    1                       CFT003
+     C                     PARM           W#SETM  2                       CFT003
+     C                     PARM           W#DRAD  1                       CFT003
+     C                     PARM           W#CRAD  1                       CFT003
+      ** Produce Crebit Advice if either not found or found and OK        CFT003
+     C           ##OK      IFEQ *BLANKS                                   CFT003
+     C           ##OK      OREQ 'Y'                                       CFT003
+     C           W#CRAD    ANDEQ'Y'                                       CFT003
+     C           ##OK      OREQ 'Y'                                       CFT003
+     C           W#CRAD    ANDEQ*BLANKS                                   CFT003
+      ** Produce Advice
+      *
+     C                     MOVELDSPAR1    DSPARM
+      *
+     C                     CALL 'CG4630'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C           ##RTCD    IFNE '*NOPRNT'
+     C                     EXSR SRAUDT
+     C***********          ELSE                                           086166
+      *
+      ** Database error
+     C                     MOVEL'CG4630  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 07 *
+     C                     Z-ADD7         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   CFT003
+      * endif for credit advices                                          CFT003
+     C                     ENDIF                                          CFT003
+      *                                                                   CFT003
+     C                     MOVEL*BLANKS   ##OK                            CFT003
+     C                     MOVEL*BLANKS   W#SETM                          CFT003
+     C                     CALL 'CG4640'                                  CFT003
+     C                     PARM PYTP      W#PYTP  2                       CFT003
+     C                     PARM PYST      W#PYST  2                       CFT003
+     C                     PARM           ##OK    1                       CFT003
+     C                     PARM           W#SETM  2                       CFT003
+     C                     PARM           W#DRAD  1                       CFT003
+     C                     PARM           W#CRAD  1                       CFT003
+      ** Produce Debit advice if payment subtype is IX                    CFT003
+      ** check if debit advice flag is blank or Y for Yes                 CFT003
+     C           ##OK      IFEQ 'Y'                                       CFT003
+     C           W#DRAD    ANDEQ*BLANKS                                   CFT003
+     C           ##OK      OREQ 'Y'                                       CFT003
+     C           W#DRAD    ANDEQ'Y'                                       CFT003
+     C                     MOVEL#TEXT2    ##PTYP           Print item typeCFT003
+      ** Produce Advice                                                   CFT003
+      *                                                                   CFT003
+     C                     MOVELDSPAR1    DSPARM                          CFT003
+      *                                                                   CFT003
+     C                     CALL 'CG4630'                                  CFT003
+     C                     PARM *BLANKS   ##RTCD                          CFT003
+     C                     PARM           DSPARM                          CFT003
+      *                                                                   CFT003
+      **  Error in called program.                                        CFT003
+     C           ##RTCD    IFNE *BLANK                                    CFT003
+      *                                                                   CFT003
+     C           ##RTCD    IFNE '*NOPRNT'                                 CFT003
+     C                     EXSR SRAUDT                                    CFT003
+      *                                                                   CFT003
+      ** Database error                                                   CFT003
+     C                     MOVEL'CG4630  'W0FILE           ***************CFT003
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 09 *CFT003
+     C                     Z-ADD9         W0ERNB           ***************CFT003
+     C                     MOVEL'MEM5003' W0MSGD                          CFT003
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT003
+     C                     EXSR SRERR                                     CFT003
+     C                     ENDIF                                          CFT003
+     C                     ENDIF                                          CFT003
+     C                     ENDIF                                          CFT003
+     C/COPY WNCPYSRC,CG4620C016
+      *
+      *................................................................
+      *
+     C           EXFIP     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SROPAY                                         *
+      * Function    :  FT out payments                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SROPAY    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SROPAY'  @STK,Q
+      *
+      *................................................................
+      *
+      *
+      **  Bypass if outgoing payment to be generated
+     C           OPIN      CABEQ'Y'       EXOPAY
+      *
+     C/COPY WNCPYSRC,CG4620C012
+     C                     MOVEL#TEXT2    ##PTYP           Print item type
+     C/COPY WNCPYSRC,CG4620C013
+     C                     MOVEL#TEXT4    ##PSTP           Print item sub-type
+     C                     MOVEL'OTPAY  ' ##FILE           File
+     C                     MOVELBRCA      ##BRCA           Branch
+     C                     MOVELPYTP      ##PYTP           Payment Type
+     C                     MOVELPREF      ##PREF           Payment Reference
+      *                                                                   095577
+      * /COPY for additional sub-types                                    095577
+      *                                                                   095577
+     C/COPY WNCPYSRC,CG4620PTYP                                           095577
+      *                                                                   CFT003
+     C                     MOVEL*BLANKS   ##OK                            CFT003
+     C                     MOVELSTMT      W#SETM                          CFT003
+     C                     CALL 'CG4640'                                  CFT003
+     C                     PARM PYTP      W#PYTP  2                       CFT003
+     C                     PARM PYST      W#PYST  2                       CFT003
+     C                     PARM           ##OK    1                       CFT003
+     C                     PARM           W#SETM  2                       CFT003
+     C                     PARM           W#DRAD  1                       CFT003
+     C                     PARM           W#CRAD  1                       CFT003
+      ** Produce Debit Advice if either not found or found and OK         CFT003
+     C           ##OK      IFEQ *BLANKS                                   CFT003
+     C           ##OK      OREQ 'Y'                                       CFT003
+     C           W#DRAD    ANDEQ'Y'                                       CFT003
+     C           ##OK      OREQ 'Y'                                       CFT003
+     C           W#DRAD    ANDEQ*BLANKS                                   CFT003
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      ** Produce Advice
+      *
+     C                     MOVELDSPAR1    DSPARM
+      *
+     C                     CALL 'CG4630'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+      *
+     C           ##RTCD    IFNE '*NOPRNT'
+     C                     EXSR SRAUDT
+     C***********          ELSE                                           086166
+      *
+      ** Database error
+     C                     MOVEL'CG4630  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 08 *
+     C                     Z-ADD8         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,CG4620C001
+      *                                                                   CFT003
+      * endif for debit advices                                           CFT003
+     C                     ENDIF                                          CFT003
+      *                                                                   CFT003
+     C                     MOVEL*BLANKS   ##OK                            CFT003
+     C                     MOVELSTMT      W#SETM                          CFT003
+     C                     CALL 'CG4640'                                  CFT003
+     C                     PARM PYTP      W#PYTP  2                       CFT003
+     C                     PARM PYST      W#PYST  2                       CFT003
+     C                     PARM           ##OK    1                       CFT003
+     C                     PARM           W#SETM  2                       CFT003
+     C                     PARM           W#DRAD  1                       CFT003
+     C                     PARM           W#CRAD  1                       CFT003
+      ** Produce Credit advice if settlement type 14.                     CFT003
+     C           STMT      IFEQ 14                                        CFT003
+     C           ##OK      OREQ 'Y'                                       CFT003
+     C           W#CRAD    ANDEQ*BLANKS                                   CFT003
+     C           ##OK      OREQ 'Y'                                       CFT003
+     C           W#CRAD    ANDEQ'Y'                                       CFT003
+     C                     MOVEL#TEXT1    ##PTYP           Print item typeCFT003
+      ** Produce Advice                                                   CFT003
+      *                                                                   CFT003
+     C                     MOVELDSPAR1    DSPARM                          CFT003
+      *                                                                   CFT003
+     C                     CALL 'CG4630'                                  CFT003
+     C                     PARM *BLANKS   ##RTCD                          CFT003
+     C                     PARM           DSPARM                          CFT003
+      *                                                                   CFT003
+      **  Error in called program.                                        CFT003
+     C           ##RTCD    IFNE *BLANK                                    CFT003
+      *                                                                   CFT003
+     C           ##RTCD    IFNE '*NOPRNT'                                 CFT003
+     C                     EXSR SRAUDT                                    CFT003
+      *                                                                   CFT003
+      ** Database error                                                   CFT003
+     C                     MOVEL'CG4630  'W0FILE           ***************CFT003
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 09 *CFT003
+     C                     Z-ADD9         W0ERNB           ***************CFT003
+     C                     MOVEL'MEM5003' W0MSGD                          CFT003
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT003
+     C                     EXSR SRERR                                     CFT003
+     C                     ENDIF                                          CFT003
+     C                     ENDIF                                          CFT003
+     C                     ENDIF                                          CFT003
+      *................................................................
+      *
+     C           EXOPAY    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************   CFT006
+      * Subroutine  :  SRRFTP                                         *   CFT006
+      * Function    :  Request for Transfer                           *   CFT006
+      *                                                               *   CFT006
+      * Called by   :  Mainline                                       *   CFT006
+      * Calls       :  None                                           *   CFT006
+      *****************************************************************   CFT006
+     C           SRRFTP    BEGSR                                          CFT006
+      *                                                                   CFT006
+      **  Set up subroutine stack name                                    CFT006
+     C                     ADD  1         Q                               CFT006
+     C                     MOVEL'SRRFTP'  @STK,Q                          CFT006
+      *                                                                   CFT006
+     C                     MOVEL#TEXT1    ##PTYP           Print item typeCFT006
+     C                     MOVEL#TEXT7    ##PSTP           Print sub-type CFT006
+     C                     MOVEL'FT101H ' ##FILE           File           CFT006
+     C                     MOVELBRCA      ##BRCA           Branch         CFT006
+     C                     MOVELPYTP      ##PYTP           Payment Type   CFT006
+     C                     MOVELRFTID     ##PREF                          CFT006
+      *                                                                   CFT006
+      **  Increment the count of records read.                            CFT006
+     C                     ADD  1         ##DREC                          CFT006
+      *                                                                   CFT006
+     C                     MOVEL*BLANKS   ##OK                            CFT006
+     C                     MOVEL*BLANKS   W#SETM                          CFT006
+     C                     CALL 'CG4640'                                  CFT006
+     C                     PARM PYTP      W#PYTP  2                       CFT006
+     C                     PARM PYST      W#PYST  2                       CFT006
+     C                     PARM           ##OK    1                       CFT006
+     C                     PARM           W#SETM  2                       CFT006
+     C                     PARM           W#DRAD  1                       CFT006
+     C                     PARM           W#CRAD  1                       CFT006
+      ** Produce Crebit Advice if either not found or found and OK        CFT006
+     C           ##OK      IFEQ *BLANKS                                   CFT006
+     C           ##OK      OREQ 'Y'                                       CFT006
+     C           W#CRAD    ANDEQ'Y'                                       CFT006
+     C           ##OK      OREQ 'Y'                                       CFT006
+     C           W#CRAD    ANDEQ*BLANKS                                   CFT006
+      ** Produce Advice                                                   CFT006
+      *                                                                   CFT006
+     C                     MOVELDSPAR1    DSPARM                          CFT006
+      *                                                                   CFT006
+     C                     CALL 'CG4630'                                  CFT006
+     C                     PARM *BLANKS   ##RTCD                          CFT006
+     C                     PARM           DSPARM                          CFT006
+      *                                                                   CFT006
+      **  Error in called program.                                        CFT006
+     C           ##RTCD    IFNE *BLANK                                    CFT006
+      *                                                                   CFT006
+     C           ##RTCD    IFNE '*NOPRNT'                                 CFT006
+     C                     EXSR SRAUDT                                    CFT006
+      *                                                                   CFT006
+      ** Database error                                                   CFT006
+     C                     MOVEL'CG4630  'W0FILE           ***************CFT006
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 10 *CFT006
+     C                     Z-ADD10        W0ERNB           ***************CFT006
+     C                     MOVEL'MEM5003' W0MSGD                          CFT006
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT006
+     C                     EXSR SRERR                                     CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+      * endif for credit advices                                          CFT006
+     C                     ENDIF                                          CFT006
+      *                                                                   CFT006
+     C                     MOVEL*BLANKS   ##OK                            CFT006
+     C                     MOVEL*BLANKS   W#SETM                          CFT006
+     C                     CALL 'CG4640'                                  CFT006
+     C                     PARM PYTP      W#PYTP  2                       CFT006
+     C                     PARM PYST      W#PYST  2                       CFT006
+     C                     PARM           ##OK    1                       CFT006
+     C                     PARM           W#SETM  2                       CFT006
+     C                     PARM           W#DRAD  1                       CFT006
+     C                     PARM           W#CRAD  1                       CFT006
+      ** Produce Debit advice if payment subtype is IX                    CFT006
+      ** check if debit advice flag is blank or Y for Yes                 CFT006
+     C           ##OK      IFEQ 'Y'                                       CFT006
+     C           W#DRAD    ANDEQ*BLANKS                                   CFT006
+     C           ##OK      OREQ 'Y'                                       CFT006
+     C           W#DRAD    ANDEQ'Y'                                       CFT006
+     C                     MOVEL#TEXT2    ##PTYP           Print item typeCFT006
+      ** Produce Advice                                                   CFT006
+      *                                                                   CFT006
+     C                     MOVELDSPAR1    DSPARM                          CFT006
+      *                                                                   CFT006
+     C                     CALL 'CG4630'                                  CFT006
+     C                     PARM *BLANKS   ##RTCD                          CFT006
+     C                     PARM           DSPARM                          CFT006
+      *                                                                   CFT006
+      **  Error in called program.                                        CFT006
+     C           ##RTCD    IFNE *BLANK                                    CFT006
+      *                                                                   CFT006
+     C           ##RTCD    IFNE '*NOPRNT'                                 CFT006
+     C                     EXSR SRAUDT                                    CFT006
+      *                                                                   CFT006
+      ** Database error                                                   CFT006
+     C                     MOVEL'CG4630  'W0FILE           ***************CFT006
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 11 *CFT006
+     C                     Z-ADD11        W0ERNB           ***************CFT006
+     C                     MOVEL'MEM5003' W0MSGD                          CFT006
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT006
+     C                     EXSR SRERR                                     CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+     C                     ENDIF                                          CFT006
+     C                     MOVEA*BLANKS   @STK,Q                          CFT006
+     C                     SUB  1         Q                               CFT006
+      *                                                                   CFT006
+     C                     ENDSR                                          CFT006
+      *****************************************************************   CFT008
+      * Subroutine  :  SRCCTP                                         *   CFT008
+      * Function    :  Customer Credit Transfer                       *   CFT008
+      *                                                               *   CFT008
+      * Called by   :  Mainline                                       *   CFT008
+      * Calls       :  None                                           *   CFT008
+      *****************************************************************   CFT008
+     C           SRCCTP    BEGSR                                          CFT008
+      *                                                                   CFT008
+      **  Set up subroutine stack name                                    CFT008
+     C                     ADD  1         Q                               CFT008
+     C                     MOVEL'SRCCTP'  @STK,Q                          CFT008
+      *                                                                   CFT008
+     C                     MOVEL#TEXT1    ##PTYP           Print item typeCFT008
+     C                     MOVEL#TEXT8    ##PSTP           Print sub-type CFT008
+     C                     MOVEL'FT102H ' ##FILE           File           CFT008
+     C                     MOVELBRCA      ##BRCA           Branch         CFT008
+     C                     MOVELCCTTYP    ##PYTP           Payment Type   CFT008
+     C                     MOVELCCTID     ##PREF                          CFT008
+      *                                                                   CFT008
+      **  Increment the count of records read.                            CFT008
+     C                     ADD  1         ##DREC                          CFT008
+      *                                                                   CFT008
+     C                     MOVEL*BLANKS   ##OK                            CFT008
+     C                     MOVEL*BLANKS   W#SETM                          CFT008
+     C                     CALL 'CG4640'                                  CFT008
+     C                     PARM CCTTYP    W#PYTP  2                       CFT008
+     C                     PARM CCTTST    W#PYST  2                       CFT008
+     C                     PARM           ##OK    1                       CFT008
+     C                     PARM           W#SETM  2                       CFT008
+     C                     PARM           W#DRAD  1                       CFT008
+     C                     PARM           W#CRAD  1                       CFT008
+      ** Produce Crebit Advice if either not found or found and OK        CFT008
+     C           ##OK      IFEQ *BLANKS                                   CFT008
+     C           ##OK      OREQ 'Y'                                       CFT008
+     C           W#CRAD    ANDEQ'Y'                                       CFT008
+     C           ##OK      OREQ 'Y'                                       CFT008
+     C           W#CRAD    ANDEQ*BLANKS                                   CFT008
+      ** Produce Advice                                                   CFT008
+      *                                                                   CFT008
+     C                     MOVELDSPAR1    DSPARM                          CFT008
+      *                                                                   CFT008
+     C                     CALL 'CG4630'                                  CFT008
+     C                     PARM *BLANKS   ##RTCD                          CFT008
+     C                     PARM           DSPARM                          CFT008
+      *                                                                   CFT008
+      **  Error in called program.                                        CFT008
+     C           ##RTCD    IFNE *BLANK                                    CFT008
+      *                                                                   CFT008
+     C           ##RTCD    IFNE '*NOPRNT'                                 CFT008
+     C                     EXSR SRAUDT                                    CFT008
+      *                                                                   CFT008
+      ** Database error                                                   CFT008
+     C                     MOVEL'CG4630  'W0FILE           ***************CFT008
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 12 *CFT008
+     C                     Z-ADD12        W0ERNB           ***************CFT008
+     C                     MOVEL'MEM5003' W0MSGD                          CFT008
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT008
+     C                     EXSR SRERR                                     CFT008
+     C                     ENDIF                                          CFT008
+     C                     ENDIF                                          CFT008
+      *                                                                   CFT008
+      * endif for credit advices                                          CFT008
+     C                     ENDIF                                          CFT008
+      *                                                                   CFT008
+     C                     MOVEL*BLANKS   ##OK                            CFT008
+     C                     MOVEL*BLANKS   W#SETM                          CFT008
+     C                     CALL 'CG4640'                                  CFT008
+     C                     PARM CCTTYP    W#PYTP  2                       CFT008
+     C                     PARM CCTTST    W#PYST  2                       CFT008
+     C                     PARM           ##OK    1                       CFT008
+     C                     PARM           W#SETM  2                       CFT008
+     C                     PARM           W#DRAD  1                       CFT008
+     C                     PARM           W#CRAD  1                       CFT008
+      ** Produce Debit advice if payment subtype is IX                    CFT008
+      ** check if debit advice flag is blank or Y for Yes                 CFT008
+     C           ##OK      IFEQ 'Y'                                       CFT008
+     C           W#DRAD    ANDEQ*BLANKS                                   CFT008
+     C           ##OK      OREQ 'Y'                                       CFT008
+     C           W#DRAD    ANDEQ'Y'                                       CFT008
+     C                     MOVEL#TEXT2    ##PTYP           Print item typeCFT008
+      ** Produce Advice                                                   CFT008
+      *                                                                   CFT008
+     C                     MOVELDSPAR1    DSPARM                          CFT008
+      *                                                                   CFT008
+     C                     CALL 'CG4630'                                  CFT008
+     C                     PARM *BLANKS   ##RTCD                          CFT008
+     C                     PARM           DSPARM                          CFT008
+      *                                                                   CFT008
+      **  Error in called program.                                        CFT008
+     C           ##RTCD    IFNE *BLANK                                    CFT008
+      *                                                                   CFT008
+     C           ##RTCD    IFNE '*NOPRNT'                                 CFT008
+     C                     EXSR SRAUDT                                    CFT008
+      *                                                                   CFT008
+      ** Database error                                                   CFT008
+     C                     MOVEL'CG4630  'W0FILE           ***************CFT008
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 13 *CFT008
+     C                     Z-ADD13        W0ERNB           ***************CFT008
+     C                     MOVEL'MEM5003' W0MSGD                          CFT008
+     C                     MOVEL'MIDAS  ' W0MSGF                          CFT008
+     C                     EXSR SRERR                                     CFT008
+     C                     ENDIF                                          CFT008
+     C                     ENDIF                                          CFT008
+     C                     ENDIF                                          CFT008
+     C                     MOVEA*BLANKS   @STK,Q                          CFT008
+     C                     SUB  1         Q                               CFT008
+      *                                                                   CFT008
+     C                     ENDSR                                          CFT008
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##DREC  50
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4620AU'I#SPLN
+     C                     MOVEL'CG4620  'I#REF
+     C                     MOVE 'CGD1779' I#TITL
+     C                     MOVE 'CGD1780' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C/COPY WNCPYSRC,CG4620C014
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing                             *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+      **  Cheque Number
+     C                     Z-ADD*ZEROS    ##CQNM
+      *
+      **
+     C                     Z-ADD*ZEROS    WCQSQX
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *                CG9020   - Write Data to UDC Data Files - Audit*
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4620  'I#REF
+     C                     MOVE 'CGD1779' I#TITL
+     C                     MOVE 'CGD1780' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'        'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Produce the Audit Report.
+     C                     MOVELW1CMT     W0CMT                           086176
+      *                                                                   086176
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD1779' W0TITL  7
+     C                     PARM 'CGD1780' W0ULIN  7
+     C                     PARM           W0CMT   3
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4620  'I#REF
+     C                     MOVE 'CGD1779' I#TITL
+     C                     MOVE 'CGD1780' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C           ##DREC    IFNE *ZEROS
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     ENDIF
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

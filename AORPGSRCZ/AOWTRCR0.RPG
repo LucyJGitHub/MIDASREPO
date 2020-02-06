@@ -1,0 +1,229 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Access Objects                                       *
+      *                                                               *
+      *  AOWTRCRO - Read Access to Withholding Tax Rate Code File     *
+      *                                                               *
+      *  (c) Finastra International Limited 2015                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *      
+      *  Prev Amend No. CGL1165 *CREATE    Date 23Feb15               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *       
+      *  CGL165 - Dual Withholding Tax                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L  FUNCTION OF INDICATORS                         *
+      *                                                               *
+      *       01       OFF ON THE FIRST RUN                           *
+      *       90       FILE ERROR                                     *
+      *       91       OPEN ERROR                                     *
+      *       92       CLOSE ERROR                                    *
+      *       93       EMPTY FILE                                     *
+      *       94       END OF FILE                                    *
+      *       95       NO RECORD FOUND                                *
+      *       96       OPTION ERROR                                   *
+      *       97       NO SELECTION                                   *
+      *       98       CALL ERROR (SDMDSRR)                           *
+      *       99       CALL ERROR (ZASNMG)                            *
+      *****************************************************************
+      /EJECT
+     F*FSTART
+      *****************************************************************
+     FSDWTRCL1IF  E           K        DISK                           UC
+      * IN  - SDWTRCD2 WITHHOLDING TAX RATE DETAIL  (WTRC)
+      *****************************************************************
+      /EJECT
+     E*ESTART
+      *****************************************************************
+     E                    @MG     1   1 50
+     E*
+     E* Description     : Copyright notice for inclusion in all progra
+     E*****************************************************************
+     E                    CPY@    1   1 80
+      *****************************************************************
+      /EJECT
+     I*ISTART
+      *****************************************************************
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     IA@CPY       DS
+      * Finastra Copyright array
+     I                                        1  80 CPY@
+     I*
+     IP@MGDA      DS
+     I                                        1  50 @MG
+     IPGMDS      SDS
+      * Program Status data structure
+     I                                        1  10 PGNAME
+     I                                       81  90 PGLIBR
+     I                                      244 253 PGJBNM
+     I                                      254 263 PGUSER
+     I                                      264 2690PGJBNO
+      *
+     ID@FMT     E DSSDWTRCPD
+      * SDWTRCD2 - WITHHOLDING TAX RATE DETAILS RECORD FORMAT
+      *            DATA STRUCTURE
+      *
+     IP@FMT     E DSDSFDY
+      * Internal book code data structure.
+      *
+     IP@WTRC      DS
+      * Key slicing data structure (for Record Selection)
+     I                                        1   1 W@SL01
+     I                                        2   2 W@SL02
+      *
+      *****************************************************************
+      /EJECT
+     C*CSTART
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C           W@RTCD    PARM           P@RTCD  7
+     C                     PARM           P@OPTN  7
+     C                     PARM           P@WTRC  2
+     C                     PARM           P@FMT
+      *****************************************************************
+      *MAIN
+     C           P@OPTN    IFEQ '*SAME  '
+     C           *IN01     COMP '0'                      91
+     C                     GOTO T@SKIP
+     C                     END
+     C                     SETOF                     909192
+     C                     SETOF                     939495
+     C                     SETOF                     969798
+      *
+      * First call - open file :
+      *
+     C           *IN01     IFEQ '0'
+     C                     SETON                     01
+     C                     OPEN SDWTRCL1               91
+     C           *IN91     CABEQ'1'       T@SKIP         LR
+     C                     END
+      *
+      * Last call - close file and terminate program :
+      *
+     C           P@OPTN    IFEQ '*FREE  '
+     C                     CLOSESDWTRCL1               92
+     C           *IN92     CABEQ'1'       T@SKIP         LR
+     C                     SETON                     LR
+     C                     END
+      *
+      * Caller requests first record :
+      *
+     C           P@OPTN    IFEQ '*FIRST '
+     C           *LOVAL    SETLLSDWTRCD0             9390
+     C           *IN93     CABEQ'1'       T@SKIP
+     C           *IN90     CABEQ'1'       T@SKIP         LR
+     C                     MOVE '*NEXT  ' P@OPTN
+     C                     END
+      *
+      * Caller requests next record :
+      *
+     C           P@OPTN    IFEQ '*NEXT  '
+     C                     READ SDWTRCD0               9094
+     C           *IN94     CABEQ'1'       T@SKIP
+     C           *IN90     CABEQ'1'       T@SKIP         LR
+     C                     END
+      *
+      * Caller requests last record :
+      *
+     C           P@OPTN    IFEQ '*LAST  '
+     C           *HIVAL    SETGTSDWTRCD0               90
+     C           *IN90     CABEQ'1'       T@SKIP         LR
+     C                     MOVE '*PREV  ' P@OPTN
+     C                     END
+      *
+      * Caller requests previous record :
+      *
+     C           P@OPTN    IFEQ '*PREV  '
+     C                     READPSDWTRCD0               9094
+     C           *IN94     CABEQ'1'       T@SKIP
+     C           *IN90     CABEQ'1'       T@SKIP         LR
+     C                     END
+      *
+      * Caller requests record indicated by key :
+      *
+     C           P@OPTN    IFEQ '*KEY   '
+     C           P@OPTN    OREQ '*VERIFY'
+     C           P@WTRC    CHAINSDWTRCL1             9590
+     C           *IN95     CABEQ'1'       T@SKIP
+     C           *IN90     CABEQ'1'       T@SKIP         LR
+     C                     END
+      *
+     C           P@OPTN    IFNE '*KEY   '
+     C           P@OPTN    ANDNE'*NEXT  '
+     C           P@OPTN    ANDNE'*PREV  '
+     C           P@OPTN    ANDNE'*VERIFY'
+     C           P@OPTN    ANDNE'*FREE  '
+     C                     SETON                       96
+     C                     END
+      *
+      * No record found or End of file - return error code :
+      *          _____________
+     C           T@SKIP    TAG
+      *          ~~~~~~~~~~~~~
+     C                     MOVE *BLANK    P@RTCD
+     C   90                MOVE '*ERROR ' P@RTCD
+     C   91                MOVE '*OPEN  ' P@RTCD
+     C   92                MOVE '*CLOSE ' P@RTCD
+     C   93                MOVE '*EMPTY ' P@RTCD
+     C   94                MOVE '*EOF   ' P@RTCD
+     C   95                MOVE '*NRF   ' P@RTCD
+     C   96                MOVE '*OPTION' P@RTCD
+     C   97                MOVE '*NOSEL ' P@RTCD
+     C   98                MOVE '*CALL  ' P@RTCD
+      *
+      * Caller requests message sent to program queue :
+      *
+     C           W@RTCD    IFEQ '*MSG   '
+     C           P@RTCD    ANDNE*BLANK
+     C   90                MOVE 'ACO1001' P@MGID
+     C   91                MOVE 'ACO1002' P@MGID
+     C   92                MOVE 'ACO1003' P@MGID
+     C   93                MOVE 'ACO1004' P@MGID
+     C   94                MOVE 'ACO1005' P@MGID
+     C   95                MOVE 'ACO1006' P@MGID
+     C   96                MOVE 'ACO1007' P@MGID
+     C   97                MOVE 'ACO1009' P@MGID
+     C   98                MOVE 'ACO1010' P@MGID
+     C                     CALL 'ZASNMG'
+     C                     PARM *BLANK    W@RTCD  7
+     C                     PARM PGNAME    P@PGNM 10
+     C                     PARM '*PRV'    P@DEST  5
+     C                     PARM           P@MGID  7
+     C                     PARM *BLANK    P@MSGF 10
+     C                     PARM *BLANK    P@MGKY  4
+     C                     PARM           P@MGDA 50
+     C                     PARM '*DIAG'   P@MGTP  7
+     C                     END
+      *
+      * Caller Requests DB Error Handling
+      *
+     C           W@RTCD    IFEQ '*DBERR'
+     C           P@RTCD    ANDNE*BLANK
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C           P@OPTN    IFNE '*VERIFY'
+     C           P@OPTN    ANDNE'*FREE'
+     C           P@RTCD    ANDNE'*OPTION'
+     C                     MOVELD@FMT     P@FMT
+     C                     END
+      *
+      * Return to caller :
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      *ENDMAIN
+**
+SDWTRCPD  AOWTRCR0  Withholding Tax Rate Code
+** CPY@
+(c) Finastra International Limited 2015

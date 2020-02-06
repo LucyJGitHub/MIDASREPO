@@ -1,0 +1,1137 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 SE Routing key duplication')
+/*OVR *: OVRDBF FILE(ILRKSEXX) TOFILE(ILRKSEPD) SHARE(*NO)          : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0253    - Routing keys SE duplication                  *
+      *                                                               *
+      *  Function: Create new keys with existing ones                 *
+      *                                                               *
+      *  (phase(s)) *all                                              *
+      *                                                               *
+      *  Called By: ILC0250 -                                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 IL0046             Date 15Feb01               *
+      *                 ULX043             Date 28Jun01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  IL0046 - complete validation to allow complete duplication   *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC standing data - general info               Prefix BJ.
+      *
+     FILRKSEXXIF  E           K        DISK         KINFSR *PSSR
+      ***  Overridden ILRKSEPD                             Prefix RK
+     F            ILRKSED0                          KRENAMEILRKSE0X
+      *
+     FILRKSEPDUF  E           K        DISK         KINFSR *PSSR A
+      ***  IBLC Routing keys for SE                        Prefix RK
+     F                                              KINFDS INFDS
+     F                                              KCOMIT
+      *
+     FILFCTLPAUF  E           K        DISK         KINFSR *PSSR
+      ***  IBLC file control record    Retrieval index     Prefix FC
+     F                                              KCOMIT
+      *
+     FIL0253DFCF  E                    WORKSTN
+      ***  IBLC Routing keys SE duplication
+      *
+      /EJECT
+      *=====================================================================
+      ***  Array for copyright, fields tests
+      *
+     E                    CIT     8   8  2               Counterparty/issuer tab
+      *
+     E                    EAT    10  10  2               Event amount
+      *
+     E                    COMB   13  13  3
+      *
+     E                    CPY@    1   1 80               Copyright
+      *
+      /EJECT
+      *=====================================================================
+      *
+      ***  Data structure for rpg 01021 error handling
+      *
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+      *
+      ***  Local data area for database error details
+      *
+     IWLDA        DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ***  MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+      *
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+      *
+      ***  Data structure for setup of commit text
+      *
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 JOBX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USERX
+      *
+      ***  Program status data structure foR WS/user ID's
+      *
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ***  Data structure for last update
+      *
+     I            DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I                                        1   7 WWHLUP
+      *
+      ***  Data structure to set up the screens fields to blanks
+      *
+     I            DS
+     I                                        1   1 SPTYP
+     I                                        2   2 STRTY
+     I                                        3   3 SEVTY
+     I                                        4   5 SCTTY
+     I                                        6   7 SISTY
+     I                                        8   8 SDURA
+     I                                        9   9 SCRCU
+     I                                       10  10 SSETY
+     I                                       11  12 SEATY
+     I                                       13  20 ZFIL
+     I                                        1  20 FLD1
+      *
+     I            DS
+     I                                        1   1 SPTYPD
+     I                                        2   2 STRTYD
+     I                                        3   3 SEVTYD
+     I                                        4   5 SCTTYD
+     I                                        6   7 SISTYD
+     I                                        8   8 SDURAD
+     I                                        9   9 SCRCUD
+     I                                       10  10 SSETYD
+     I                                       11  12 SEATYD
+     I                                       13  20 ZFILD
+     I                                        1  20 FLD1D
+      *
+      ***  Data structure for file fields
+      *
+     I            DS
+     I                                        1   1 RKPTYP
+     I                                        2   2 RKTTYP
+     I                                        3   3 RKEVTP
+     I                                        4   5 RKCTYP
+     I                                        6   7 RKITYP
+     I                                        8   8 RKDURA
+     I                                        9   9 RKCCCY
+     I                                       10  10 RKSETT
+     I                                       11  12 RKEVNT
+     I                                       13  20 RKFIL8
+     I                                        1  20 DSFIL1
+      *
+     I            DS
+     I                                        1   3 RKDRR1
+     I                                        4   6 RKDRR2
+     I                                        7   9 RKDRR3
+     I                                       10  12 RKCRR1
+     I                                       13  15 RKCRR2
+     I                                       16  18 RKCRR3
+     I                                        1  18 DSFIL2
+      *
+      ***  Data structure to set up th key fields to blank
+      *
+     I            DS
+     I                                        1   1 KPTYP
+     I                                        2   2 KTRTY
+     I                                        3   3 KEVTY
+     I                                        4   5 KCTYP
+     I                                        6   7 KISTY
+     I                                        8   8 KDURA
+     I                                        9   9 KCRCU
+     I                                       10  10 KSETY
+     I                                       11  12 KEATY
+     I                                       13  20 KFIL
+     I                                        1  20 KEYDS
+      *
+     I            DS
+     I                                        1   3 DSDRR1
+     I                                        4   6 DSDRR2
+     I                                        7   9 DSDRR3
+     I                                       10  12 DSCRR1
+     I                                       13  15 DSCRR2
+     I                                       16  18 DSCRR3
+     I                                        1  18 DSCRDS
+      *
+     I            DS
+      ***  test zone for combinations validation
+     I                                        1   1 ZC1
+     I                                        2   3 ZC2
+     I                                        1   3 ZCNN
+      /EJECT
+      *----------------------------------------------------------------
+      ***  Main processing
+      *----------------------------------------------------------------
+      *
+      ***  Perform setup of standard fields
+      *
+     C                     EXSR #INIT
+      *
+      ***  Do until F3 or error
+      *
+     C           WWAID     DOUEQ'03'
+      *
+     C           *IN10     CASEQ'1'       #SCR1
+     C                     ENDCS
+     C                     ENDDO
+      *
+      ***  Terminate program
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      ** INIT S/R - To initialize static fields and access standing data
+      ** Called once at start of program from main processing.
+      ** Calls  *PSSR
+      *
+      *----------------------------------------------------------------
+      *
+     C           #INIT     BEGSR                           ** #INIT BSR **
+      *
+     C                     MOVEACPY@      CPY@2  80        Copyrights
+      *
+      ***  receive entry parameter
+      *
+      ***  Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C                     MOVEL'*'       DDPGMQ
+     C**********           MOVEL'ILUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+      *
+      ***  Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVEL'IL0253'  ZAPGM  10        Message queue
+     C**********           MOVEL'ILUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+     C                     Z-ADD0         WWNUMB  40
+      *
+      ***  Redefine database error fields
+      *
+     C           *LIKE     DEFN DBFILE    WWBFIL
+     C           *LIKE     DEFN DBASE     WWBASE
+     C           *LIKE     DEFN DBKEY     WWBKEY
+      *
+      ***  Prepare commitment text
+      *
+     C                     MOVEL'IL'      MDID
+     C                     MOVEL'IL0253'  PGMN
+     C                     MOVEL'IL0253'  JOBX      P
+     C                     MOVELUSER      USERX
+      *
+      ***  Get installation control : data record 1
+      *
+     C                     READ SDBANKL1                 97
+     C           *IN97     IFEQ *ON
+     C                     Z-ADD1         WWBASE           ****************
+     C                     MOVEL'SDBANKL1'WWBFIL           * DB ERROR 001 *
+     C                     MOVE *BLANKS   WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVE '1'       *IN10
+      *
+     C                     MOVE WSID      SWSID
+     C                     MOVEL'IL0253'  SJOB      P
+     C                     MOVE USER      SUSER
+     C                     MOVE BJMRDT    SRUNA
+      *
+      ***  Routing file key
+      *
+     C           KDKLE     KLIST
+     C                     KFLD           KMODI   2
+     C                     KFLD           KPTYP   1
+     C                     KFLD           KTRTY   1
+     C                     KFLD           KEVTY   1
+     C                     KFLD           KCTYP   2
+     C                     KFLD           KISTY   2
+     C                     KFLD           KDURA   1
+     C                     KFLD           KCRCU   1
+     C                     KFLD           KSETY   1
+     C                     KFLD           KEATY   2
+     C                     KFLD           KFIL    8
+     C                     MOVE *BLANK    FLD1
+     C                     MOVE *BLANK    FLD1D
+     C                     MOVE 'SE'      KMODI
+      *
+     C                     ENDSR                           **#INIT ENDSR**
+      *
+      /EJECT
+      *-------------------------------------------------------------------
+      *
+      **  SCR1  S/R to output first screen and process
+      **  CALLED: from main processing
+      **  CALLS: #ZBAA  to validate key fields
+      **         #VAL1  to validate fields input
+      **         #PRC1  to process file
+      *
+      *-------------------------------------------------------------------
+      *
+     C           #SCR1     BEGSR                           ** #SCR1 BSR **
+      *
+      ***  Set screen indicators - Protect key, set off error indicators,
+      ***  Position cursor
+      *
+     C                     MOVE '0'       *IN10
+      *
+      ***  Do until F3
+      *
+     C           WWAID     DOUEQ'03'
+      *
+      *
+      ***  Detail screen OUTPUT
+      *
+     C                     WRITEIL0253C0
+     C                     EXFMTIL0253X0
+      *
+      ***  Reset field used indicators
+      *
+     C                     MOVEA'000000'  *IN,20
+     C                     MOVEA'000'     *IN,26
+     C                     MOVEA'000000'  *IN,69
+     C                     MOVEA'000'     *IN,75
+     C                     MOVE '0'       *IN80
+      *
+      ***  Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+      *
+      ***  Call S/R to move values into WWAID
+      *
+     C                     EXSR #ZBAA
+      *
+      ***  F5  - return to initial screen
+      *
+     C           WWAID     IFEQ '05'
+     C                     MOVE *BLANK    FLD1
+     C                     MOVE *BLANK    FLD1D
+     C                     ENDIF
+      *
+      ***  Validate detail screen INPUT
+      *
+     C           WWAID     IFNE '03'
+     C           WWAID     ANDNE'05'
+      *
+      ***  Execute Treatment if at least ine value is entered
+      *
+     C           FLD1      IFNE *BLANK
+     C           FLD1D     ORNE *BLANK
+      *
+     C                     EXSR #VAL1
+      *
+     C           *IN80     IFEQ *OFF
+     C                     EXSR #PRC1
+     C                     MOVE *BLANK    FLD1
+     C                     MOVE *BLANK    FLD1D
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR                           ** #SCR1 ENDSR**
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  #VAL1 S/R : validate detail screen input
+      **  Called by : #SCR1
+      *
+      *----------------------------------------------------------------
+      *
+     C           #VAL1     BEGSR                           ** #VAL1  BSR**
+      *
+      ***  Process key input fields
+      *
+     C           SPTYP     IFNE *BLANK
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *
+     C           STRTY     IFNE *BLANK
+     C                     MOVE '1'       *IN21
+     C                     ENDIF
+      *
+     C           SEVTY     IFNE *BLANK
+     C                     MOVE '1'       *IN22
+     C                     ENDIF
+      *
+     C           SCTTY     IFNE *BLANK
+     C                     MOVE '1'       *IN23
+     C                     ENDIF
+      *
+     C           SISTY     IFNE *BLANK
+     C                     MOVE '1'       *IN24
+     C                     ENDIF
+      *
+     C           SDURA     IFNE *BLANK
+     C                     MOVE '1'       *IN25
+     C                     ENDIF
+      *
+      *
+     C           SCRCU     IFNE *BLANK
+     C                     MOVE '1'       *IN26
+     C                     ENDIF
+      *
+     C           SSETY     IFNE *BLANK
+     C                     MOVE '1'       *IN27
+     C                     ENDIF
+      *
+     C           SEATY     IFNE *BLANK
+     C                     MOVE '1'       *IN28
+     C                     ENDIF
+      *
+      ***  Process key output fields
+      *
+     C           SPTYPD    IFNE *BLANK
+     C                     MOVE '1'       *IN20
+     C                     ENDIF
+      *
+     C           STRTYD    IFNE *BLANK
+     C                     MOVE '1'       *IN21
+     C                     ENDIF
+      *
+     C           SEVTYD    IFNE *BLANK
+     C                     MOVE '1'       *IN22
+     C                     ENDIF
+      *
+     C           SCTTYD    IFNE *BLANK
+     C                     MOVE '1'       *IN23
+     C                     ENDIF
+      *
+     C           SISTYD    IFNE *BLANK
+     C                     MOVE '1'       *IN24
+     C                     ENDIF
+      *
+     C           SDURAD    IFNE *BLANK
+     C                     MOVE '1'       *IN25
+     C                     ENDIF
+      *
+     C           SCRCUD    IFNE *BLANK
+     C                     MOVE '1'       *IN26
+     C                     ENDIF
+      *
+     C           SSETYD    IFNE *BLANK
+     C                     MOVE '1'       *IN27
+     C                     ENDIF
+      *
+     C           SEATYD    IFNE *BLANK
+     C                     MOVE '1'       *IN28
+     C                     ENDIF
+      *
+      ***  Validate output fields (either input or output is not blank)
+      *
+      *
+      ***  Processing type field is mandatory
+      ***
+      ***  REMARK : TO AVOID ROUTING KEYS MULTIPLICATION |||
+      ***  ------   ----------------------------------------
+      ***  Processing type values 3, 5, 7 and 8 aren't tested because
+      ***
+      ***  - Floating rate notes        (3) is working as Fixed commodities (1),
+      ***  - Yen bonds                  (5)            as Fixed commodities (1),
+      ***  - Unit trust & mutual funds  (7)            as Shares            (4),
+      ***  - Mortgage-Backed securities (8)            as Fixed commodities (1).
+      ***
+      *
+     C           *IN20     IFEQ *ON
+     C           SPTYPD    IFEQ *BLANK
+     C                     MOVEL'IL25301' ZAMSID           mandatory
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN69
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           SPTYPD    IFNE '1'
+     C           SPTYPD    ANDNE'2'
+     C           SPTYPD    ANDNE'4'
+     C           SPTYPD    ANDNE'9'
+     C                     MOVEL'IL25302' ZAMSID
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN69
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Trade type : P, S OR  BLANK
+      *
+     C           *IN21     IFEQ *ON
+     C           STRTYD    IFNE *BLANK
+     C           STRTYD    ANDNE'P'
+     C           STRTYD    ANDNE'S'
+     C           STRTYD    ANDNE'C'                                       IL0046
+     C                     MOVEL'IL25303' ZAMSID
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN70
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Event type is mandatory and has allowed value
+      ***
+      ***  REMARK : TO AVOID ROUTING KEYS MULTIPLICATION |||
+      ***  ------   ----------------------------------------
+      ***  Event type P, C, H and M aren't tested because
+      ***
+      ***  - Partly paid call date (P) is working as Position settl. date (V),
+      ***  - Coupon date           (C)            as Position settl. date (V),
+      ***  - Dividend              (H)            as Position settl. date (V),
+      ***  - Maturity date         (M)            as Position settl. date (V).
+      ***
+      *
+     C           *IN22     IFEQ *ON
+     C           SEVTYD    IFEQ *BLANK
+     C                     MOVEL'IL25304' ZAMSID
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN71
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           SEVTYD    IFNE 'V'
+     C           SEVTYD    ANDNE'S'
+     C           SEVTYD    ANDNE'C'
+     C           SEVTYD    ANDNE'H'
+     C           SEVTYD    ANDNE'M'
+     C                     MOVEL'IL25305' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN71
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Counterparty type must be in CIT array
+      *
+     C           *IN23     IFEQ *ON
+     C           SCTTYD    LOKUPCIT                      96
+     C           *IN96     IFEQ *OFF
+     C                     MOVEL'IL25306' ZAMSID
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN72
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Issuer type must be in CIT array
+      *
+     C           *IN24     IFEQ *ON
+     C           SISTYD    LOKUPCIT                      96
+     C           *IN96     IFEQ *OFF                       Not found
+     C                     MOVEL'IL25307' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN73
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Duration < 1 year : 'Y', 'N' (default N)
+      *
+     C           *IN25     IFEQ *ON
+     C           SDURAD    IFEQ *BLANK
+     C                     MOVE 'N'       SDURAD
+     C                     ENDIF
+     C           SDURAD    IFNE 'Y'
+     C           SDURAD    ANDNE'N'
+     C                     MOVEL'IL25308' ZAMSID
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN74
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Cross currency : 'Y', 'N' (default N)
+      *
+     C           *IN26     IFEQ *ON
+     C***        SCRCUD    IFEQ *BLANK                                    IL0046
+     C***                  MOVE 'N'       SCRCUD                          IL0046
+     C***                  ENDIF                                          IL0046
+     C***        SCRCUD    IFNE 'Y'                                       IL0046
+     C***        SCRCUD    ANDNE'N'                                       IL0046
+     C***                  MOVEL'IL25308' ZAMSID                          IL0046
+     C***                  MOVE '1'       *IN80                           IL0046
+     C***                  MOVE '1'       *IN75                           IL0046
+     C***                  EXSR ZASNMS                                    IL0046
+     C***                  ENDIF                                          IL0046
+      *                                                                   IL0046
+      *** ALWAYS BLANKS                                                   IL0046
+      *                                                                   IL0046
+     C                     MOVE *BLANKS   SCRCUD                          IL0046
+     C                     ENDIF
+      *
+      ***  Settlement type is mandatory and between 1 and 5
+      *
+     C           *IN27     IFEQ *ON
+     C           SSETYD    IFNE '1'
+     C           SSETYD    ANDNE'2'
+     C           SSETYD    ANDNE'4'
+     C           SSETYD    ANDNE'5'
+     C                     MOVEL'IL25309' ZAMSID
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN76
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***   Event amount type has allowed values
+      ***
+      ***  REMARK : TO AVOID ROUTING KEYS MULTIPLICATION |||
+      ***  ------   ----------------------------------------
+      ***  Event amount CP, CR and AI aren't tested because
+      ***
+      ***  - Commissions payable    (CP) works as Charges payable         (FP),
+      ***  - Commissions receivable (CR)        as Charges receivable     (FR),
+      ***  - AIR to post            (AI)        as Purch. Inter. on trade (PI).
+      ***
+      *
+     C           *IN28     IFEQ *ON
+     C           SEATYD    IFEQ *BLANK
+     C                     MOVEL'IL25310' ZAMSID
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN77
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C           SEATYD    LOKUPEAT                      96
+     C           *IN96     IFEQ *OFF                       Not found
+     C                     MOVEL'IL25311' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN77
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Check if Combination is valid
+      ***
+      ***  REMARK : TO AVOID ROUTING KEYS MULTIPLICATION |||
+      ***  ------   ----------------------------------------
+      ***  The following combination aren't tested because
+      ***
+      ***  - . CP is equivalent to . FP
+      ***  - . CR is equivalent to . FR
+      ***  - . AI is equivalent to . PI
+      ***  - . PP is equivalent to . CO
+      ***  - . MR is equivalent to . CV
+      ***
+      *
+     C           *IN20     IFEQ *ON
+     C           *IN22     ANDEQ*ON
+     C           *IN28     ANDEQ*ON
+     C           *IN69     ANDEQ*OFF
+     C           *IN71     ANDEQ*OFF
+     C           *IN77     ANDEQ*OFF
+     C                     MOVE *BLANK    ZCNN
+     C                     MOVE SEVTYD    ZC1
+     C                     MOVE SEATYD    ZC2
+      *
+     C           ZCNN      LOKUPCOMB                     96
+     C           *IN96     IFEQ *OFF
+     C                     MOVEL'IL25312' ZAMSID
+     C                     MOVE *ON       *IN80
+     C                     MOVE *ON       *IN69
+     C                     MOVE *ON       *IN71
+     C                     MOVE *ON       *IN77
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR                           ** #VAL1 END **
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  #PRC1 S/R : process output file
+      **  Called by : #SCR1
+      *
+      *----------------------------------------------------------------
+      *
+     C           #PRC1     BEGSR                           ** #PRC1  BSR**
+      *
+     C                     MOVE 'SE'      KMODI
+     C                     MOVE FLD1      KEYDS
+     C                     Z-ADD0         INSERT  40
+     C                     Z-ADD0         AMEND   40
+     C           KDKLE     SETLLILRKSEXX
+     C                     MOVE '0'       *IN81
+     C                     READ ILRKSE0X                 81
+     C           *IN81     DOWEQ*OFF
+     C                     MOVE '0'       *IN82
+     C           KMODI     IFEQ 'SE'
+      *
+      ***  Compare processing type
+      *
+     C           *IN20     IFEQ *ON
+     C           RKPTYP    IFNE SPTYP
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE SPTYPD    RKPTYP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Compare trade type
+      *
+     C           *IN82     IFEQ *OFF
+     C           *IN21     IFEQ *ON
+     C           RKTTYP    IFNE STRTY
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE STRTYD    RKTTYP
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Compare event type
+      *
+     C           *IN82     IFEQ *OFF
+     C           *IN22     IFEQ *ON
+     C           RKEVTP    IFNE SEVTY
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE SEVTYD    RKEVTP
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Compare counterparty type
+      *
+     C           *IN82     IFEQ *OFF
+     C           *IN23     IFEQ *ON
+     C           RKCTYP    IFNE SCTTY
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE SCTTYD    RKCTYP
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Compare issuer type
+      *
+     C           *IN82     IFEQ *OFF
+     C           *IN24     IFEQ *ON
+     C           RKITYP    IFNE SISTY
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE SISTYD    RKITYP
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Compare duration
+      *
+     C           *IN82     IFEQ *OFF
+     C           *IN25     IFEQ *ON
+     C           RKDURA    IFNE SDURA
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE SDURAD    RKDURA
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Compare cross currency
+      *
+     C           *IN82     IFEQ *OFF
+     C           *IN26     IFEQ *ON
+     C           RKCCCY    IFNE SCRCU
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE SCRCUD    RKCCCY
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Compare settlement type
+      *
+     C           *IN82     IFEQ *OFF
+     C           *IN27     IFEQ *ON
+     C           RKSETT    IFNE SSETY
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE SSETYD    RKSETT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Compare event amount
+      *
+     C           *IN82     IFEQ *OFF
+     C           *IN28     IFEQ *ON
+     C           RKEVNT    IFNE SEATY
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE SEATYD    RKEVNT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Validate record key before it'll be writing
+      *
+     C           *IN82     IFEQ *OFF
+     C                     EXSR #VALW
+     C                     ENDIF
+      *
+     C           *IN82     IFEQ *OFF
+     C                     MOVE DSFIL1    KEYDS
+     C                     MOVE DSFIL2    DSCRDS
+     C                     MOVE '0'       *IN80
+      *
+     C                     EXSR #UPDT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ ILRKSE0X                 81
+     C                     ENDDO
+      *
+      ***  Update ILFCTLPA files amends file.
+      *
+     C                     EXSR #UPDA
+      *
+     C                     ENDSR                           ** #PRC1 END **
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  #UPDT  S/R: to update file records
+      **  Called from #PRC1
+      *
+      *----------------------------------------------------------------
+      *
+     C           #UPDT     BEGSR                           ** #UPDT  BSR**
+      *
+     C                     Z-ADD*ZERO     WWTNLU  50
+      *
+      ***   Retrieve next transaction number
+      *
+     C                     EXSR ZTNLU1
+      *
+     C           KDKLE     CHAINILRKSEPD             67
+      *
+      ***  Translate record details from screen layout to file layout
+      *
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    RKDLUP
+     C                     MOVE WWMLUP    RKMLUP
+     C                     Z-ADDWWYLUP    RKYLUP
+     C                     TIME           RKTLUP
+     C                     MOVE 'I'       RKCHTP
+     C                     MOVELNATN      RKTNLU
+     C                     Z-ADDBJRDNB    RKLCD
+     C                     MOVE KEYDS     DSFIL1
+     C                     MOVE DSCRDS    DSFIL2
+     C                     MOVE USER      RKULUP
+      *
+     C           *IN67     IFEQ *ON
+     C                     ADD  1         INSERT
+      ***  Format Commitment text
+      *
+     C                     TIME           MTIME
+      *
+     C                     WRITEILRKSED0               79
+      *
+      ***  COMMIT
+      *
+     C           CMTTXT    COMIT
+      *
+      ***  Test for update by another W/S, or terminal error
+      *
+     C           *IN79     IFEQ *ON
+     C           STATUS    ANDEQ01021
+      *
+     C           KDKLE     CHAINILRKSEXX             67
+     C           *IN67     IFEQ *OFF
+     C                     EXSR #UPDW
+     C                     GOTO XTUPDF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN79     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ELSE
+     C           RKLCD     IFNE BJRDNB
+     C                     MOVEL'A'       RKCHTP
+     C                     MOVE '1'       WWAMEN  1
+     C                     ELSE
+     C                     MOVE '0'       WWAMEN
+     C                     ENDIF
+     C                     Z-ADDBJRDNB    RKLCD
+     C                     ADD  1         AMEND
+      *
+      ***  Format Commitment text
+      *
+     C                     TIME           MTIME
+      *
+     C                     UPDATILRKSED0
+      *
+      ***  COMMIT
+      *
+     C           CMTTXT    COMIT
+      *
+     C                     ENDIF
+      *
+     C           XTUPDF    ENDSR                           **#UPDT  ENDSR**
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  #UPDW S/R : Message : record updated by another workstation
+      **  Called by : #UFR
+      *
+      *----------------------------------------------------------------
+      *
+     C           #UPDW     BEGSR                           ** #UPDW BSR **
+      *
+     C                     ROLBK
+     C                     MOVEA'100'     *IN,10
+     C                     MOVE '1'       *IN80
+     C                     MOVEL'IL00015' ZAMSID
+      *
+     C                     ENDSR                           ** #UPDW END **
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  #ZBAA S/R : Validate command key pressed, move appropriate
+      *              value on WWAID.
+      **  Called by : #SCR1
+      *              #SBFSC
+      *----------------------------------------------------------------
+      *
+     C           #ZBAA     BEGSR
+      *
+      ***  If ENTER pressed, the VLDCMDKEY indicator will be off
+      *
+     C           *IN56     IFEQ *OFF
+     C                     MOVE 'RA'      WWAID   2
+     C                     ENDIF
+      *
+      ***  If F3
+      *
+     C           *INKC     IFEQ *ON
+     C                     MOVE '03'      WWAID
+     C                     MOVE '0'       *INKC
+     C                     ENDIF
+      *
+      ***  If F05
+      *
+     C           *INKE     IFEQ *ON
+     C                     MOVE '05'      WWAID
+     C                     MOVE '0'       *INKE
+     C                     ENDIF
+      *
+     C                     ENDSR                           **#ZBAA  ENDSR**
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA,
+      **  ~~~~~~~~~~   ACCESS THE NEXT AVAILABLE TRANSACTION NUMBER,
+      *                THEN UPDATE AND RELEASE THE DATA AREA.
+      *
+      *----------------------------------------------------------------
+      *
+     C           ZTNLU1    BEGSR
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  *PSSR  S/R
+      **  CALLED FROM #UFR, #INIT
+      **  CALLS NO OTHER S/R'S
+      *
+      *----------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL'IL0253'  DBPGM
+     C                     MOVELWWBFIL    DBFILE
+     C                     MOVELWWBKEY    DBKEY
+     C                     MOVE WWBASE    DBASE
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Roll back changes, print DUMP and cancel program
+      *
+     C                     ROLBK
+     C                     DUMP
+      *
+      ***  Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      **
+      ** ZASNMS - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE
+      ** CALLS  - Y2SNMSGC - SEND MESSAGE.
+      ** CALLED BY SCREENS VALIDATIONS
+      **
+      *----------------------------------------------------------------
+      *
+     C           ZASNMS    BEGSR
+      *
+      ***   message file specified use PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***   Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  #UPDA  S/R: to update file records
+      **  CALLED from #PRC1
+      *
+      *----------------------------------------------------------------
+      *
+     C           #UPDA     BEGSR                           ** #UPDA  BSR**
+      *
+      ***  Get audit record
+      *
+     C                     MOVEL'ILRKSEPD'FCFNCT
+     C           FCFNCT    CHAINILFCTLPA             95
+      *
+      ***  Update audit record if found
+      *
+     C           *IN95     IFEQ *OFF
+      *
+      ***  Update no. of live and amended, inserted records
+      *
+     C                     ADD  INSERT    FCNRCD
+     C                     ADD  AMEND     FCNAMD
+     C                     ADD  INSERT    FCNINS
+     C                     MOVE 'Y'       FCCPTI
+      *
+      ***  Format Commitment text
+      *
+     C                     TIME           MTIME
+      *
+      ***  Update audit record
+      *
+     C                     UPDATILFCTLA0
+      *
+      ***  COMMIT
+      *
+     C           CMTTXT    COMIT
+      *
+      ***  Audit record not found: database error
+      *
+     C                     ELSE
+     C                     Z-ADD2         WWBASE           ****************
+     C                     MOVEL'ILFCTLPA'WWBFIL           * DB ERROR 002 *
+     C                     MOVEL'AUDIT'   WWBKEY           ****************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR                           **#UPDA  ENDSR**
+      *
+      /EJECT
+      *----------------------------------------------------------------
+      *
+      **  #VALW  S/R: Validate record key before it'll be writing
+      **  CALLED from #PRC1
+      *
+      *----------------------------------------------------------------
+      *
+     C           #VALW     BEGSR                           ** #VALW BSR **
+      *
+     C                     MOVE *BLANK    ZCNN
+     C                     MOVE RKEVTP    ZC1
+     C                     MOVE RKEVNT    ZC2
+      *
+     C           ZCNN      LOKUPCOMB                     96
+     C           *IN96     IFEQ *OFF
+     C                     MOVE *ON       *IN82
+     C                     ENDIF
+      *
+     C                     ENDSR                           ** #VALW END **
+      /EJECT
+      *----------------------------------------------------------------
+**  CIT Counterparty / issuer table
+BRBOOROOARAO R O
+**  EAT Event amount type
+COCVFPFRRERRPISADIWN
+**  COMB valid combinations
+VCOVFPVFRVREVRRVPICDIHDIMCVSSASDISCVVWN
+**  CPY@
+(c) Finastra International Limited 2005

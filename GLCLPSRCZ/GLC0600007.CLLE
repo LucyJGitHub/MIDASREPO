@@ -1,0 +1,64 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GLC0600007)                           */
+/*EXI    TEXT('Midas GL Populate ZACCNTABC with closing accounts')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC0600007 - GL Populate ZACCNTAB with closing accounts     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097218          Date 05Apr13              */
+/*                      CGL142  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1097218 - GLC0720 seq 10001 failed Out of Balance         */
+/*       CGL142 - Tactical COB changes GL                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+/* Declare file and variables */
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('GLC0600007 - Closing accounts in ZACCNTAB') +
+                          TOMSGQ(MRUNQ)                                                /*AR1097218*/
+ 
+/* Set Job switches */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CALL       PGM(GL0600007)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program GLC0600007 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

@@ -1,0 +1,85 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Submit Proj Bal View Rebuild in COB')        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       GLC009062 - Submit Projected Balance View Rebuild in COB    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027176A          Date 29May14              */
+/*                      CGL155  *CREATE    Date 25Mar14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD027176A - Group Total is zero as rebuild was not performed*/
+/*       CGL155 - Forecast Group Limits                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+/**********  DCL        VAR(&DTQDTA) TYPE(*CHAR) LEN(4021) +         */                /*MD027176A*/
+/**********               VALUE(*BLANKS)                             */                /*MD027176A*/
+             DCL        VAR(&DTQDTA) TYPE(*CHAR) LEN(4021) +
+                          VALUE(' ')                                                   /*MD027176A*/
+ 
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check if the FORIUPD_xx job is running */
+ 
+             ALCOBJ     OBJ((GLFORILCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(ABNOR))
+             DLCOBJ     OBJ((GLFORILCK *DTAARA *EXCL))
+ 
+/** Create data area in QTEMP */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CHGJOB     SWS(XXXXXX00)
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+ 
+/* Call Rebuild program */
+ 
+             CLRPFM     FILE(GLFRBLTD)
+             MONMSG     MSGID(CPF0000)
+ 
+             CALL       PGM(GL009071) PARM(&DTQDTA)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ELSE       CMD(DO)
+             GOTO       ENDPGM
+             ENDDO
+ 
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC009062 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ROLLBACK
+ ENDPGM:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF8350)
+             ENDPGM
+ 

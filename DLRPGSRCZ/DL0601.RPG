@@ -1,0 +1,1887 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Average rates by currency report')            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module                                       *
+     F*                                                               *
+     F*  DL0601 - AVERAGE RATES REPORT                                *
+     F*           THIS PROGRAM HAS BEEN GENERATED FROM DL0600         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      *                 225984 (bug8936)   Date 24Oct05               *
+      *                 CDL033             Date 10Feb05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 172406             Date 31May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 162980             Date 25Nov99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163486             Date 14Oct99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      * m               CDL006             Date 12May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 139970             Date 03Aug98               *
+      *                 CEU011             Date 11Mar98               *
+     F*                 089743             Date 06Feb98               *
+     F*                 CLE005             Date 22May97               *
+     F*                 CFF004             Date 02Oct96               *
+     F*                 105140             Date 18Nov96               *
+     F*                 090468             DATE 19JUL95               *
+     F*                 042920             DATE 14JAN94               *
+     F*                 E48220             DATE 01FEB93               *
+     F*                 S01393             DATE 30OCT92               *
+     F*                 S01392             DATE 22SEP92               *
+     F*                 S01117             DATE 29JAN92               *
+     F*                 E34885             DATE 23JAN92               *
+     F*                 S01354             DATE 09JAN92               *
+     F*                 E33042             DATE 09DEC91               *
+     F*                 E28817             DATE 14OCT91               *
+     F*                 E25515             DATE 07AUG91               *
+     F*                 S01270             DATE 07JUN91               *
+     F*                 LN0746             DATE 17SEP90               *
+     F*                 BHF342             DATE 31JUL90               *
+     F*                 S01243             DATE 22MAY90               *
+     F*                 E296               DATE 04APR90               *
+     F*                 E299               DATE 23MAR90               *
+     F*                 E257               DATE 09MAR90               *
+     F*                 E131               DATE 30NOV89               *
+     F*                 E57                DATE 20NOV89               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (recompiled)                                        *
+      *  225984 - Fix array index error caused by CLE028 amendment.   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL033 - Floating Rate CDs Issued                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  172406 - Re-compiled over changed DLEVNTL1  logical file .   *
+      *             Report showed erroneous rates for currencies that *
+      *           should have no entries.  Ignored unnecessary record *
+      *           formats that are causing error to currency of the   *
+      *           report's header.  Patterned to DL0600.              *
+      *               Applied fix #162913 .                           *
+      *           Inserted validation to skip  Events type  11V1 & 11V2
+      *           Foreign Exchange Cross Deal  since there is no coding
+      *           originally done for their  processing .             *
+      *                Applied  Core #162980  as  preventative step   *
+      *           Printing a page with a blank currency. Make sure fix*
+      *           139970 is condtioned on CEU011 being switched on.   *
+     F*  162980 - Printing a page with a blank currency. Make sure fix*
+     F*           139970 is condtioned on CEU011 being switched on.   *
+     F*  163486 - Recompile due to changes in LVENTEL.                *
+      *  CDL006 - Fiduciary Dealing.                                  *
+     F*  139970 - Amounts and Rates for Consolidated Euro in Average  *
+     F*           Rates report are wrong.                             *
+     F*  CEU011 - Position/Risk Enquiries & Reports                   *
+     F*  089743 - Calculate average balances correctly:               *
+     F*             Av bal = Ttl bal * days to mat/days in period     *
+     F*        1) Set up the correct no of days for each period,      *
+     F*           not the no of days different to previous period.    *
+     F*           i.e. monthly is 30 days not 30 less 7 (weekly)      *
+     F*        1) Calculate No of Days to Maturity from Event Control *
+     F*           date - not no of days from end of previous period,  *
+     F*           i.e. 22 days is 22 days not 22 - 7 (weekly)         *
+     F*  CLE005 - Customer Lending Enhancements - Others (T3)         *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  105140 - Recompile over changed LVENTZZ.                     *
+     F*  090468 - FOR NON-DETAIL (TRAILER) RECORDS, SHOULD SKIP DETAIL*
+     F*           PROCESSING                                          *
+     F*         - Include internal contracts in the over 1 year col.  *
+     F*           (APPLY FIX 068202)                                  *
+     F*  042920 - Adjust ARR1 and AVR to accomodate large amounts     *
+     F*  E48220 - Divide by 0 if both legs of a swap are              *
+     F*           value same day                                      *
+     F*  S01393 - Recompiled for SRM                                  *
+     F*  S01392 - JAPANESE SUBMODULE ENHANCEMENTS                     *
+     F*  S01117 - Recompile due to change to EVNTML1                  *
+     F*  E34885 - Remove Customer Lending Changes S01270              *
+     F*           Risk loan PI should remain                          *
+     F*  S01354 - Add internal funding deal types                     *
+     F*  E33042 - Recompile due to change to EVNTML1                  *
+     F*  E28817 - Recompile due to change to EVNTML1                  *
+     F*  E25515 - REMOVAL OF SYNDICATED LOANS                         *
+     F*  S01270 - CUSTOMER LENDING CHANGES                            *
+     F*  LN0746 - P1 & AU FILES CHANGED TO SAME NAME AS PROGRAM       *
+     F*           DUMMY FILES CREATED                                 *
+     F*  BHF342 - AOSYLNR0 SHOULD ONLY BE CALLED IF SYNDICATED LOANS  *
+     F*         - IS ON IN THE SYSTEM. ALSO IF THERE IS A DATABASE    *
+     F*         - ERROR AT LR TIME SHOULD ONLY PRINT IF P1 IS OPEN    *
+     F*  S01243 - PRINCIPAL INCREASES FOR TERM LOANS                  *
+     F*  E296   - SHOULD READ SDBANK WHEN RUN ON EMPTY FILES          *
+     F*  E299   - 'AU' REPORT SHOULD NOT WRITE 'END OF REPORT'        *
+     F*  E257   - CHANGE SPOOL FILE NAME TO DL0600P1/AU               *
+     F*  S01117/E131 - STOP PAGE THROW ON NO DETAILS TO REPORT        *
+     F*  E57    - CHANGE TO CHECK BRCH REQ. EQUALS ONE OF NEW FIELDS  *
+     F*                                                               *
+     F*****************************************************************
+     F***EVNTML1*IP**E           K        DISK                            CEU011
+      *                                                                   CEU011
+     FDLEVNTL1IP  E           K        DISK                               CEU011
+     F            FPVNTDDF                          KIGNORE               172406
+     F            FOEVEDF                           KIGNORE               172406
+     F            FPVNTZZF                          KIGNORE               172406
+     F            FOEVEZZF                          KIGNORE               172406
+     F            TREVEDF                           KIGNORE               172406
+     F            CPEVEDF                           KIGNORE               172406
+     F            DPEVEDF                           KIGNORE               172406
+     F            BPEVEDF                           KIGNORE               172406
+     F            EVNTXZZF                          KIGNORE               172406
+     F            LVENTZZF                          KIGNORE               172406
+      *                                                                   CEU011
+      ** Merged Events File                                               CEU011
+      *                                                                   CEU011
+     FSDCURRL1IF  E           K        DISK                               CEU011
+      *                                                                   CEU011
+      ** Currencies File                                                  CEU011
+      *                                                                   CEU011
+     F***DL0601AUO   F     132     OA     PRINTER      KINFDS SPOOLU      E257
+     F***DL0600AUO***F*****132*****OA*****PRINTER******KINFDS*SPOOLU E257 LN0746
+     FDL0601AUO   F     132     OA     PRINTER      KINFDS SPOOLU         LN0746
+     F***DL0601P1O   F     132     OF     PRINTER      KINFDS SPOOL    UC E257
+     F***DL0600P1O***F*****132*****OF*****PRINTER******KINFDS*SPOOLUC E257LN0746
+     FDL0601P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  LN0746
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            EVNTM DETAIL - DEALING
+     F**04************EVNTM*DETAIL*RECORD*-*COMMERCIAL*LOAN***************E25515
+     F* 07            EVNTM DETAIL - CUSTOMER LENDING
+     F* 10            RECORD TO BE IGNORED
+     F*       11      DEAL TYPE IS 'IT','CD','CI' OR EVENT TYPE '20V1'
+     F*       12      DEAL TYPE IS 'TD'
+     F*       13      DEAL TYPE IS 'IP' OR 'CL' OR EVENT TYPE '20V2'
+     F*       14      DEAL TYPE IS 'DL','TI' OR 'LN'
+     F*    15         CONTINUE UPDATING ARRAYS FOR FIXED LOAN/DEPOSITS
+     F*       18      DAYS IN PERIOD GREATER THAN EVENT DAYS
+     F*    19         DO NOT CALCULATE AVERAGES
+     F*    20         NOTICE DAYS POSITIVE
+     F*       21      EVENT AMOUNT IS NEGATIVE
+     F*       22      EVENT CURRENCY IS STERLING
+     F*       23      CALCULATE TOTAL AMOUNT ON CALL
+     F*       24      DEALING TRAILER HAS BEEN READ
+     F*       25      CONTROLS INCREMENTATION OF I AT TOTAL TIME
+     F*       30      NO. OF RECORDS IMBALANCE
+     F*       31      VALUE OF RECORDS IMBALANCE
+     F*       33      CONTROLS ARRAY INDEX IN CALL/NOTICE DEALS PROCESSING
+     F*       34      CONTROLS ARRAY INDEX IN 'SPECIAL DEPOSITS' PROCESS
+     F*       35      EVENT DATE EQUALS ZERO - ETYP 15M1 OR 16M1
+     F*       36      EDAT EQUALS NOTD - ETYP 15M1 OR 16M1
+     F*       37      EDAT NOT EQUAL TO NOTD - ETYP 15M1 OR 16M1
+     F*       40      CONTROL OF FIRST CYCLE
+     F*       41      DETAIL RECORD(S) EXIST ON FILE
+     F*       42      OTHER DATE FALLS OVER 1 YEAR AHEAD
+     F*       45      CURRENCY HAS 0 DECIMAL PLACES
+     F*       46      CURRENCY HAS 1 DECIMAL PLACE
+     F*       47      CURRENCY HAS 2 DECIMAL PLACES
+     F*       48      CURRENCY HAS 3 DECIMAL PLACES
+     F*       49      IC SWAP LEG INDICATOR IS 2
+     F**   EVENT TYPES
+     F*       43      20V1
+     F*       44      20V2
+     F*       50      14V5
+     F*       51      14V6
+     F*       52      15M1
+     F*       53      16M1
+     F*       54      15M4
+     F*       55      16M4
+     F*       56      17M1
+     F*       57      17M3
+     F*       58  - Currencies EOF indicator                          *   CEU011
+     F*       59  - Currencies array lokup indicator                  *   CEU011
+     F*       61      15V1, 16V1
+     F*       62      15V3, 16V3
+     F********63******41S1,*41R3,*42S8************************************E25515
+     F********64******41M1,*41R1,*42M1************************************E25515
+     F******  63      62V1,63V1,64V1,65V1,66M1,67M1,62V3,64V3,66V3,66R1   S01392
+     F******          70V3,62R4                                           S01392
+     F******  64      62M1,63M1,64M1,65M1,66V1,67V1,62R1,64R1,62R3        S01392
+     F*       63      62V1,63V1,64V1,65V1,66M1,67M1,62V3,64V3,66V3,66R1   S01392
+     F*               70V3,62R4,63R3                                      S01392
+     F*       64      62M1,63M1,64M1,65M1,66V1,67V1,62R1,64R1,62R3,63R4   S01392
+     F**
+     F*       58      56 AND DEAL TYPE IS C1
+     F*       OR      57 AND DEAL TYPE IS NOT C1
+     F*       59      REPORT CONTROL DATE PRECEDES OTHER DATE
+     F*       60      DIVISOR IS ZERO
+     F*       70      FIRST CHARACTER OF DEAL SUB-TYPE IS 'Z'
+     F*       71      FIRST CHARACTER OF DEAL SUB-TYPE IS NOT 'Z'
+     F********72******COMMERCIAL*LOANS*TO*END*OF*BOOK*-*YES***************E25515
+     F*       85      ALLOW MULTIBRANCHING OUTPUT
+     F*             L1CHANGE OF CURRENCY
+     F*             L2CHANGE OF BRANCH
+     E********************************************************************
+     E                    CPY@    1   1 80
+     E                    ARR1       48 15 0
+     E                    ARR2       48 15 0
+     E                    ARR3       48  5 0
+     E                    PERD        7  5 0
+     E                    ARR4       48  8 0
+     E*    PERD IS ARRAY OF NUMBER OF DAYS IN EACH PERIOD
+     E*    TABCUM IS TABLE OF NO. OF DAYS - CUMULATIVE, TO END OF PERIOD
+     E                    AVA        48  9 0
+     E                    AVR        48 11 7
+      *                                                                   CEU011
+     E                    EAM        48  9 0                              CEU011
+     E                    ERT        48 11 7                              CEU011
+     E                    CTR        48  2 0                              139970
+      *                                                                   CEU011
+      **  Array for Average Balances and Rates for storing Euro           CEU011
+      **  Equivalent amounts                                              CEU011
+      *                                                                   CEU011
+     E                    TEMP       48  2 0                              042920
+     E                    TMP1       48  6 2                              042920
+     E                    TMP2       48  6 2                              042920
+      *                                                                   CEU011
+     E                    CUR       200  3   ICY     1                    CEU011
+      *                                                                   CEU011
+      ** Array to store Ccy and Sort Sequence no.                         CEU011
+      *                                                                   CEU011
+     E********************************************************************
+     I*
+     IEVNTXEDF    01
+     I*    MERGED EVENTS FILE - DETAIL RECORD - DEALING
+     I                                              ECCY  L1
+     I                                              NOTD        20
+     I***************                               EBRC  L2                 E57
+     I                                              BRCA  L2                 E57
+     I*
+     I***********                                                         E25515
+     I***CEVNXCCF****04                                                   E25515
+     I*****EVNTM*-*MERGED*EVENTS*FILE*DETAIL*-*COMMERCIAL*LOAN            E25515
+     I***********                                   ECCY  L1              E25515
+     I***********   LNTP                            DTYP                  E25515
+     I**************BRCA                            EBRC  L2                 E57
+     I***********   BRCA                            BRCA  L2           E57E25515
+     I*
+     I*
+     ILVENTELF    07
+     I                                              ECCY  L1
+     I              DFCE                            LCEQ
+     I              CDOM                            CLOC
+     I              ECDP                            DEC1
+     I              FACT                            FTYP
+     I              FCNO                            FSEQ
+     I***************                               EBRC  L2                 E57
+     I                                              BRCA  L2                 E57
+     I*
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDTRAD    E DSSDTRADPD
+     I** EXTERNAL DS FOR TRADING DETAILS
+     I*
+     I***SDSYLN****E DSSDSYLNPD                                           E25515
+     I***EXTERNAL*DS*FOR*SYNDICATED*LOANS*DETAILS                         E25515
+     I***********                                                         E25515
+     ISDCURR    E DSSDCURRPD
+     I** EXTERNAL DS FOR CURRENCY DETAILS
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I** EXTERNAL DS FOR BRANCH DETAILS
+     I*                                                                   BHF342
+     ISDMMOD    E DSSDMMODPD                                              BHF342
+     I** EXTERNAL DS FOR MIDAS MODULES DETAILS                            BHF342
+     I*
+     ISCSARD    E DSSCSARDPD                                              CLE005
+      ** Switchable Features File                                         CLE005
+      *                                                                   CLE005
+     ISDGELR    E DSSDGELRPD                                              CEU011
+      ** General ledger details                                           CEU011
+     I              QQACCD                          QQACD1                                    CGL029
+      *                                                                   CEU011
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     ISPOOL       DS
+     I** FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     ISPOOLU      DS
+     I** FILE INFORMATION DATA STRUCTURE
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I/EJECT
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5
+     C                     PARM           BRNCH   3
+     C**
+     C*    FIRST CYCLE CALCS
+     C                     Z-ADDDLNO      DLNO
+     C   40                GOTO START
+     C                     Z-ADD0         RECRED  50
+     C                     SETON                     40
+     C                     MOVEACPY@      BIS@   80
+     C** READ BANK DETAILS VIA ACCESS PROGRAM
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE 10        ************
+     C                     MOVEL'01'      DBASE   2        * DBERR 01 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*
+     C*    SET UP THE REPORT CONTROL DATE AS THE NEXT
+     C*    WORKING DAY IN THE LOCAL CURRENCY LESS ONE
+     C*    CALENDAR DAY
+     C           BJDNWD    SUB  1         RCD     50
+     C*
+     C** READ TRADING DETAILS VIA ACCESS PROGRAM FOR CURRENCY CODE
+     C                     CALL 'AOTRADR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDTRADPD'DBFILE 10        ************
+     C                     MOVEL'02'      DBASE   2        * DBERR 02 *
+     C                     MOVEL@OPTN     DBKEY            ************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C*                                                                   BHF342
+     C** ACCESS MIDAS MODULE DETAILS VIA ACCESS PROGRAM                   BHF342
+     C                     CALL 'AOMMODR0'                                BHF342
+     C                     PARM '*MSG   ' @RTCD                           BHF342
+     C                     PARM '*FIRST ' @OPTN                           BHF342
+     C           SDMMOD    PARM SDMMOD    DSFDY                           BHF342
+     C           @RTCD     IFNE *BLANK                                    BHF342
+     C                     MOVEL'SDMMODPD'DBFILE           ************   BHF342
+     C                     MOVEL'07'      DBASE            * DBERR 03 *   BHF342
+     C                     MOVEL@OPTN     DBKEY            ************   BHF342
+     C                     SETON                     U7U8LR               BHF342
+     C                     EXSR *PSSR                                     BHF342
+     C                     GOTO END                                       BHF342
+     C                     END                                            BHF342
+      *                                                                   CLE005
+      ** Check if CLE005 is switched *ON.                                 CLE005
+      *                                                                   CLE005
+     C                     MOVE 'N'       CLE005  1                       CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   @RTCD   7                       CLE005
+     C                     PARM '*VERIFY' @OPTN   7                       CLE005
+     C                     PARM 'CLE005'  @SARD   6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+      *                                                                   CLE005
+     C           @RTCD     IFEQ *BLANKS                                   CLE005
+     C                     MOVE 'Y'       CLE005                          CLE005
+     C                     END                                            CLE005
+      *                                                                   CLE005
+     C           @RTCD     IFNE *BLANKS                                   CLE005
+     C           @RTCD     ANDNE'*NRF  '                                  CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE005
+     C                     MOVEL'08'      DBASE            * DBERR 08 *   CLE005
+     C                     MOVEL@OPTN     DBKEY            ************   CLE005
+     C                     SETON                     U7U8LR               CLE005
+     C                     EXSR *PSSR                                     CLE005
+     C                     GOTO END                                       CLE005
+     C                     END                                            CLE005
+      *                                                                   CLE005
+      ** Check if Position/Risk Enquiries & Reports feature (CEU011)      CEU011
+      ** is on.                                                           CEU011
+      *                                                                   CEU011
+     C                     CALL 'AOSARDR0'                                CEU011
+     C                     PARM *BLANKS   @RTCD   7                       CEU011
+     C                     PARM '*VERIFY' @OPTN   7                       CEU011
+     C                     PARM 'CEU011'  @SARD   6                       CEU011
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU011
+      *                                                                   CEU011
+     C                     MOVE 'N'       CEU011                          CEU011
+     C           @RTCD     IFEQ *BLANK                                    CEU011
+     C                     MOVE 'Y'       CEU011  1                       CEU011
+     C                     ELSE                                           CEU011
+      *                                                                   CEU011
+      ** database error (return code other than *NRF)                     CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANKS                                   CEU011
+     C           @RTCD     ANDNE'*NRF   '                                 CEU011
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CEU011
+     C                     MOVEL'03'      DBASE            * DBERR 03 *   CEU011
+     C                     MOVEL'CEU011 ' DBKEY            ************   CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     END                                            CEU011
+     C                     END                                            CEU011
+      *                                                                   CDL006
+      ** Access Switchable Feature Details, Check if CDL006 is            CDL006
+      ** switch on.                                                       CDL006
+      *                                                                   CDL006
+     C                     CALL 'AOSARDR0'                                CDL006
+     C                     PARM *BLANKS   PRTCD   7                       CDL006
+     C                     PARM '*VERIFY 'POPTN   7                       CDL006
+     C                     PARM 'CDL006'  PSARD   6                       CDL006
+     C           SCSARD    PARM SCSARD    DSFDY                           CDL006
+      *                                                                   CDL006
+     C           PRTCD     IFNE *BLANKS                                   CDL006
+     C           PRTCD     ANDNE'*NRF '                                   CDL006
+     C                     MOVEL'015'     DBASE                           CDL006
+     C                     MOVEL'SCSARDPD'DBFILE                          CDL006
+     C                     MOVELPSARD     DBKEY                           CDL006
+     C                     EXSR *PSSR                                     CDL006
+     C                     GOTO END                                       CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           PRTCD     IFEQ *BLANKS                                   CDL006
+     C                     MOVE 'Y'       CDL006  1                       CDL006
+     C                     ELSE                                           CDL006
+     C                     MOVE 'N'       CDL006                          CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,DL0601C005
+      *                                                                                       CLE028
+      ** Determine if CLE028 enhancement is installed                                         CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD                                               CLE028
+     C                     PARM '*VERIFY 'POPTN                                               CLE028
+     C                     PARM 'CLE028'  PSARD                                               CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFNE *BLANKS                                                       CLE028
+     C           PRTCD     ANDNE'*NRF '                                                       CLE028
+     C                     MOVEL'16'      DBASE                                               CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     MOVELPSARD     DBKEY                                               CLE028
+     C                     MOVE *ON       *INU7                                               CLE028
+     C                     MOVE *ON       *INU8                                               CLE028
+     C                     MOVE *ON       *INLR                                               CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     GOTO END                                                           CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                   CEU011
+      ** Retrieve general ledger details                                  CEU011
+      *                                                                   CEU011
+     C**********           CALL 'AOGELRR0'                                CEU011              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*FIRST ' @OPTN                           CEU011
+     C********** SDGELR    PARM SDGELR    DSFDY                           CEU011              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANKS                                   CEU011
+     C           @RTCD     ANDNE'*NRF   '                                 CEU011
+     C                     MOVEL'SDGELRPD'DBFILE           ************   CEU011
+     C                     MOVEL'09'      DBASE            * DBERR 09 *   CEU011
+     C                     MOVEL'*FIRST'  DBKEY            ************   CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+      ** Retrieve 'In' ccy field indicator and store into                 CEU011
+      ** array for later use.                                             CEU011
+      *                                                                   CEU011
+     C           CEU011    IFEQ 'Y'                                       CEU011
+     C                     Z-ADD1         S       30                      CEU011
+     C           *LOVAL    SETLLSDCURRL1                                  CEU011
+     C           *IN58     DOUEQ'1'                                       CEU011
+     C                     READ SDCURRL1                 58               CEU011
+     C           *IN58     IFEQ '0'                                       CEU011
+     C                     MOVE A6CYCD    CUR,S                           CEU011
+     C                     MOVE A6INCY    ICY,S                           CEU011
+     C                     ADD  1         S                               CEU011
+     C                     ENDIF                                          CEU011
+     C                     ENDDO                                          CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C*****CHECK*FOR*SYNDICATED*LOANS                               BHF342E25515
+     C***********BGSYLN    IFEQ 'Y'                                 BHF342E25515
+     C***********                                                         E25515
+     C***READ*SYNDICATED*LOANS*DETAILS*VIA*ACCESS*PROGRAM                 E25515
+     C***********          CALL 'AOSYLNR0'                                E25515
+     C***********          PARM '*MSG   ' @RTCD                           E25515
+     C***********          PARM '*FIRST ' @OPTN                           E25515
+     C***********SDSYLN    PARM SDSYLN    DSFDY                           E25515
+     C***********@RTCD     IFNE *BLANK                                    E25515
+     C***********          MOVEL'SDSYLNPD'DBFILE           ************   E25515
+     C***********          MOVEL'03'      DBASE            * DBERR 03 *   E25515
+     C***********          MOVEL@OPTN     DBKEY            ************   E25515
+     C***********          SETON                     U7U8LR               E25515
+     C***********          EXSR *PSSR                                     E25515
+     C***********          GOTO END                                       E25515
+     C***********          END                                            E25515
+     C***********          END                                      BHF342E25515
+     C*****CHECK*FOR*COMMERCIAL*LOANS*TO*END*OF*BOOK                      E25515
+     C***********BOGEEB    COMP 'Y'                      72               E25515
+     C**
+     C                     EXSR PERDAY
+      *                                                                                       CDL033
+      ** Access Switchable Feature Details, Check if CDL033 is switch on.                     CDL033
+      *                                                                                       CDL033
+     C                     CALL 'AOSARDR0'                                                    CDL033
+     C                     PARM *BLANKS   @RTCD                                               CDL033
+     C                     PARM '*VERIFY '@OPTN                                               CDL033
+     C                     PARM 'CDL033'  PSARD   6                                           CDL033
+     C           SCSARD    PARM SCSARD    DSFDY                                               CDL033
+      *                                                                                       CDL033
+     C           @RTCD     IFNE *BLANKS                                                       CDL033
+     C           @RTCD     ANDNE'*NRF '                                                       CDL033
+     C                     MOVEL'17'      DBASE                                               CDL033
+     C                     MOVEL'SCSARDPD'DBFILE                                              CDL033
+     C                     MOVELPSARD     DBKEY                                               CDL033
+     C                     EXSR *PSSR                                                         CDL033
+     C                     GOTO END                                                           CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+     C           @RTCD     IFEQ *BLANKS                                                       CDL033
+     C                     MOVE 'Y'       CDL033  1                                           CDL033
+     C                     ELSE                                                               CDL033
+     C                     MOVE 'N'       CDL033                                              CDL033
+     C                     ENDIF                                                              CDL033
+      *                                                                                       CDL033
+     C           START     TAG                             ** START TAG **
+     C                     EXSR SETOF
+     C*
+     C*   TO ALLOW BRANCH OUTPUT
+     C*
+     C           *INL2     IFEQ '1'
+     C******               CLOSEDL0601P1                                  E257
+     C******               CLOSEDL0600P1                             E257 LN0746
+     C                     CLOSEDL0601P1                                  LN0746
+     C           BRNCH     IFEQ 'ALL'
+     C***********BRNCH     OREQ EBRC                                         E57
+     C           BRNCH     OREQ BRCA                                         E57
+     C                     SETON                     85
+     C********             OPEN DL0601P1                                  E257
+     C********             OPEN DL0600P1                             E257 LN0746
+     C                     OPEN DL0601P1                                  LN0746
+     C                     Z-ADD0         PAGE
+     C*
+     C** INDICATE THAT THE P1 SPOOL FILE HAS BEEN OPENED
+     C                     MOVE '1'       *IN75
+     C*
+      ** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C** ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C***************      PARM EBRC      @PARM                              E57
+     C                     PARM BRCA      @PARM                              E57
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C**
+     C** READ BRANCH DETAILS VIA ACCESS PROGRAM FOR BRANCH NAME
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C***************      PARM EBRC      @DSNB   3                          E57
+     C                     PARM BRCA      @DSNB   3                          E57
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVEL'04'      DBASE            * DBERR 04 *
+     C                     MOVEL@OPTN     DBOPTN  7        ************
+     C***************      MOVELEBRC      DBKEY  29                          E57
+     C                     MOVELBRCA      DBKEY  29                          E57
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C                     ELSE
+     C                     SETOF                     85
+     C                     END
+     C                     END
+     C**
+     C*    ACC. NO. OF RECORDS READ.
+     C*    IN FUTURE AND OPTION, TRAILER IS NOT INCLUDED IN NORE
+     C           RECRED    ADD  1         RECRED
+     C***01******                                                         E25515
+     C*R*07******                                                         E25515
+     C*R*04******          SETON                     41                   E25515
+     C   01                                                               E25515
+     COR 07                SETON                     41                   E25515
+     C*                                                                   090468
+     C** SKIP DETAILS PROCESSING IF TRAILER RECORD                        090468
+     C           *IN01     IFNE '1'                                       090468
+     C           *IN07     ANDNE'1'                                       090468
+     C                     GOTO END                                       090468
+     C                     END                                            090468
+      ***********                                                  CEU011 139970
+     C***********CEU011    IFEQ 'Y'                                CEU011 139970
+      ***********                                                  CEU011 139970
+      ***Check*if*Event*Ccy is an 'In' currency                    CEU011 139970
+      ***********                                                  CEU011 139970
+     C***********          Z-ADD1         S                        CEU011 139970
+     C***********ECCY      LOKUPCUR,S                    59        CEU011 139970
+     C************IN59     IFEQ *ON                                CEU011 139970
+     C***********          MOVE ICY,S     WINCY   1                CEU011 139970
+     C***********          ENDIF                                   CEU011 139970
+      ***********                                                  CEU011 139970
+     C************IN59     IFEQ *ON                                CEU011 139970
+     C************INL1     ANDEQ*ON                                CEU011 139970
+     C************IN41     ANDEQ*ON                                CEU011 139970
+     C***********WINCY     IFEQ 'Y'                                CEU011 139970
+     C***********ECCY      OREQ BKEURO                             CEU011 139970
+     C***********BRNCH     IFEQ 'ALL'                              CEU011 139970
+     C***********BRNCH     OREQ BRCA                               CEU011 139970
+     C***********          ADD  1         WEUR    20               CEU011 139970
+     C***********          ENDIF                                   CEU011 139970
+     C***********          ENDIF                                   CEU011 139970
+     C***********          ENDIF                                   CEU011 139970
+     C***********          ENDIF                                   CEU011 139970
+     C*
+     C*    ACC. NUMBER AND VALUE OF DETAIL RECORDS READ ONLY VALUE SAR0012
+     C           EAMT      DIV  1000      ZZAMT        21
+     C   21                Z-SUBZZAMT     ZZAMT
+     C*  01
+     C*
+     C*    OBTAIN NO. OF D.P. FOR CURRENCY
+     C** READ CURRENCY DETAILS VIA ACCESS PROGRAM
+     C*
+     C           *INL1     IFEQ '1'
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM ECCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVEL'05'      DBASE            * DBERR 05 *
+     C                     MOVEL@OPTN     DBOPTN           ************
+     C                     MOVELECCY      DBKEY  29
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     GOTO END
+     C                     END
+     C           A6NBDP    COMP 1                      4546
+     C           A6NBDP    COMP 2                    48  47
+     C*
+     C                     END
+     C*
+     C                     EXSR GLZADD
+      *                                                                   CDL006
+      ** Skip all the processing if CDL006 is on and the                  CDL006
+      ** the Deal Type = FL, DP, LP, FT, DT or LT.                        CDL006
+      *                                                                   CDL006
+     C           DTYP      IFEQ 'FL'                                      CDL006
+     C           CDL006    ANDEQ'Y'                                       CDL006
+     C           DTYP      OREQ 'DP'                                      CDL006
+     C           CDL006    ANDEQ'Y'                                       CDL006
+     C           DTYP      OREQ 'LP'                                      CDL006
+     C           CDL006    ANDEQ'Y'                                       CDL006
+     C           DTYP      OREQ 'FT'                                      CDL006
+     C           CDL006    ANDEQ'Y'                                       CDL006
+     C           DTYP      OREQ 'DT'                                      CDL006
+     C           CDL006    ANDEQ'Y'                                       CDL006
+     C           DTYP      OREQ 'LT'                                      CDL006
+     C           CDL006    ANDEQ'Y'                                       CDL006
+     C                     GOTO END                                       CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   172406
+      * Skip Events type 11V1 & 11V2 - Foreign Exchange Cross Deal  since 172406
+      * there isn't  originally designed coding to process them .         172406
+      *                                                                   172406
+     C           ETYP      IFEQ '11V1'                                    172406
+     C           ETYP      OREQ '11V2'                                    172406
+     C                     MOVE '0'       *IN41                           172406
+     C                     GOTO END                                       172406
+     C                     END                                            172406
+      *                                                                   172406
+     C*
+     C*    SET INDICATORS ACCORDING TO EVENT TYPE
+     C*
+     C           ETYP      COMP '20V1'                   43
+     C           ETYP      COMP '20V2'                   44
+     C   43
+     COR 44      FSLI      COMP 2                        49
+     C   43N49
+     COR 44N49             GOTO END
+     C           ETYP      COMP '14V5'                   50
+     C           ETYP      COMP '14V6'                   51
+     C           ETYP      COMP '15M1'                   52
+     C  N52      ETYP      COMP '61M1'                   52
+      *                                                                   CLE005
+      ** Check if CLE005 is *ON                                           CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN52     IFEQ '0'                                       CLE005
+     C           ETYP      ANDEQ'68M1'                                    CLE005
+     C                     SETON                     52                   CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C           ETYP      COMP '16M1'                   53
+     C           ETYP      COMP '15M4'                   54
+     C           ETYP      COMP '16M4'                   55
+     C           ETYP      COMP '17M1'                   56
+     C           ETYP      COMP '17M3'                   57
+     C           ETYP      COMP '15V1'                   61
+     C  N61      ETYP      COMP '16V1'                   61
+     C           ETYP      COMP '15V3'                   62
+     C  N62      ETYP      COMP '16V3'                   62
+     C***********ETYP      COMP '41S1'                   63               E25515
+     C**N63*72***ETYP      COMP '41R3'                   63               E25515
+     C**N63******ETYP      COMP '42S8'                   63               E25515
+     C** ALL EVENTS FOR LE CALL LOAN EXCEPT FOR 61M1 ARE NOW IGNORED
+     C**N63******ETYP      COMP '62V1'                   63               E25515
+     C           ETYP      COMP '62V1'                   63               E25515
+     C  N63      ETYP      COMP '63V1'                   63
+     C  N63      ETYP      COMP '63R3'                   63               S01392
+     C  N63      ETYP      COMP '64V1'                   63
+     C  N63      ETYP      COMP '65V1'                   63
+     C  N63      ETYP      COMP '66M1'                   63
+     C  N63      ETYP      COMP '67M1'                   63
+     C  N63      ETYP      COMP '62V3'                   63               S01243
+     C  N63      ETYP      COMP '64V3'                   63               S01243
+     C  N63      ETYP      COMP '66V3'                   63               S01243
+     C  N63      ETYP      COMP '66R1'                   63
+     C*
+     C*                                                                   S01270
+     C****ADDITION*OF*70V3,62R4*EVENTS******                       S01270 E34885
+     C**  Addition of 70V3 event                                          E34885
+     C*
+     C           *IN63     IFEQ '0'                                       S01270
+     C           ETYP      ANDEQ'70V3'                                    S01270
+     C                     SETON                         63               S01270
+     C                     END                                            S01270
+      *                                                                   CLE005
+      ** Check if CLE005 is *ON                                           CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN63     ANDEQ'0'                                       CLE005
+      *                                                                   CLE005
+     C           ETYP      IFEQ '69M1'                                    CLE005
+     C           ETYP      OREQ '69V3'                                    CLE005
+     C           ETYP      OREQ '69R1'                                    CLE005
+     C           ETYP      OREQ '71V3'                                    CLE005
+     C           ETYP      OREQ '72M1'                                    CLE005
+     C           ETYP      OREQ '72V3'                                    CLE005
+     C           ETYP      OREQ '72R1'                                    CLE005
+     C                     SETON                     63                   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                                       CLE028
+      ** When CLE028 is installed                                                             CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           *IN63     ANDEQ*OFF                                                          CLE028
+     C********** ETYP      OREQ '80V1'                                                 CLE028 225984
+     C           ETYP      IFEQ '80V1'                                                        CLE028
+     C                     MOVE *ON       *IN63                                               CLE028
+     C                     ENDIF                                                              225984
+     C                     ENDIF                                                              CLE028
+     C*                                                            S01270 E34885
+     C************IN63     IFEQ '0'                                S01270 E34885
+     C***********ETYP      ANDEQ'62R4'                             S01270 E34885
+     C***********          SETON                         63        S01270 E34885
+     C***********          END                                     S01270 E34885
+     C***********                                                  S01270 E34885
+     C***********ETYP      COMP '41M1'                   64               E25515
+     C**N64******ETYP      COMP '41R1'                   64               E25515
+     C**N64******ETYP      COMP '42M1'                   64               E25515
+     C**N64******ETYP      COMP '41M3'                   64               E25515
+     C**N64******ETYP      COMP '41R4'                   64               E25515
+     C**N64******ETYP      COMP '62M1'                   64               E25515
+     C           ETYP      COMP '62M1'                   64               E25515
+     C  N64      ETYP      COMP '63M1'                   64
+     C  N64      ETYP      COMP '64M1'                   64
+     C  N64      ETYP      COMP '65M1'                   64
+     C  N64      ETYP      COMP '66V1'                   64
+     C  N64      ETYP      COMP '67V1'                   64
+     C  N64      ETYP      COMP '62R1'                   64
+     C  N64      ETYP      COMP '64R1'                   64
+     C  N64      ETYP      COMP '63R4'                   64               S01392
+      *                                                                   CLE005
+      ** Check if CLE005 is *ON                                           CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+     C           *IN64     ANDEQ'0'                                       CLE005
+      *                                                                   CLE005
+     C           ETYP      IFEQ '69V1'                                    CLE005
+     C           ETYP      OREQ '72V1'                                    CLE005
+     C                     SETON                     64                   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                                       CLE028
+      ** When CLE028 is installed                                                             CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           *IN64     ANDEQ*OFF                                                          CLE028
+     C********** ETYP      OREQ '80M1'                                                 CLE028 225984
+     C           ETYP      IFEQ '80M1'                                                        225984
+     C           ETYP      OREQ '80R1'                                                        CLE028
+     C                     MOVE *ON       *IN64                                               CLE028
+     C                     ENDIF                                                              225984
+     C                     ENDIF                                                              CLE028
+     C**************************************                       S01270 E34885
+     C****ADDITION*OF*62R3*EVENT************                       S01270 E34885
+     C**************************************                       S01270 E34885
+     C************IN64     IFEQ '0'                                S01270 E34885
+     C***********ETYP      ANDEQ'62R3'                             S01270 E34885
+     C***********          SETON                         64        S01270 E34885
+     C***********          END                                     S01270 E34885
+     C***********                                                  S01270 E34885
+     C*
+     C*
+     C*    NEGATE THE EVENT AMOUNT FOR CERTAIN TYPES OF
+     C*****EVENTS.*15V1,*16V1,*15V3,*16V3,*41S1,*41R1,*42S8               E25515
+     C*    EVENTS. 15V1, 16V1, 15V3, 16V3                                 E25515
+     C   61
+     COR 62
+     COR 63                Z-SUBEAMT      EAMT
+     C  N56N57   EDAT      COMP RCD                      10
+     C   43N10
+     COR 44N10   OTHD      COMP RCD                  10
+     C*
+     C  N50N51N52
+     CANN53N54N55
+     CANN56N57N43
+     CANN61N62
+     CANN63N64
+     CANN44                GOTO END
+     C   10                GOTO END
+     C   50
+     COR 51                EXSR SWAPS
+     C                     MOVELDLST      DLST1   1
+     C   52N07
+     COR 61
+     COR 62
+     COR 53
+     COR 54
+     COR 55      DLST1     COMP 'Z'                  717170
+     C   70                EXSR SPDEP
+     C   52 07
+     COR 71                EXSR SUBDIV
+     C*
+     C   43
+     COR 63
+     COR 64
+     COR 44                EXSR FIXLD
+     C*
+     C   56      DTYP      COMP 'C1'                     58
+     C   57      DTYP      COMP 'C1'                 5858
+     C   58                EXSR NEGASS
+     C           END       TAG                             ** END TAG **
+     C*
+     C********************************************************************
+     C*
+     C*    LEVEL BREAK AND SUBROUTINES
+     C*
+     C*    AT CHANGE OF CURRENCY, CALCULATE AVERAGE BALANCES AND RATES,
+     C*    PRINT REPORTS, AND ZEROISE ARRAYS
+     C*    DO NOT CALCULATE AVERAGES FOR ELEMENTS 37,38,40,42 AND 44
+     C*
+     C*    ZEROISE O/P ARRAYS
+     CL1                   Z-ADD0         AVA
+     CL1                   Z-ADD0         AVR
+     CL1                   Z-ADD1         I
+     C*    ADJUST VALUES IN ARR3 APPROPRIATELY
+     CL1                   EXSR ADJUST
+     CL1         LOOP      TAG                             ** LOOP TAG **
+     CL1         I         COMP 37                       19
+     CL1N19      I         COMP 38                       19
+     CL1N19      I         COMP 40                       19
+     CL1N19      I         COMP 42                       19
+     CL1N19      I         COMP 44                       19
+     CL1 19                GOTO INC
+     CL1         I         COMP 8                      2323
+     CL1 23                Z-ADD1         ARR3,I
+     CL1         ARR2,I    COMP 0                        60
+     CL1N60      ARR2,I    DIV  100       TEMP4  152                      042920
+     C***L1N60***   ARR1,I    DIV  ARR2,I    AVR,I     H                  042920
+     CL1N60      ARR1,I    DIV  TEMP4     AVR,I     H                     042920
+     CL1N60      TMP2,I    DIV  ARR2,I    TEMP3  117H                     042920
+     CL1N60      TEMP3     ADD  AVR,I     AVR,I                           042920
+     CL1         ARR3,I    COMP 0                        60
+     CL1N60      ARR3,I    MULT 1000      ARR4,I
+     CL1N60      ARR2,I    DIV  ARR4,I    AVA,I     H
+     CL1         INC       TAG                             ** INC TAG **
+     CL1                   Z-ADD0         ARR1,I
+     CL1                   Z-ADD0         ARR2,I
+     CL1                   Z-ADD0         ARR3,I
+     CL1                   Z-ADD0         ARR4,I
+     CL1                   Z-ADD0         TEMP,I                          042920
+     CL1                   Z-ADD0         TMP1,I                          042920
+     CL1                   Z-ADD0         TMP2,I                          042920
+     CL1                   Z-ADD0         TEMP3                           042920
+     CL1         I         ADD  1         I
+     CL1         I         COMP 48                     2525
+     CL1 25                GOTO LOOP
+     C*
+     C*    CONVERT AMOUNTS TO WHOLE NOS.
+     CL1 46      AVA       DIV  10        AVA       H
+     CL1 47      AVA       DIV  100       AVA       H
+     CL1 48      AVA       DIV  1000      AVA       H
+      *                                                                   CEU011
+     CL1         CEU011    IFEQ 'Y'                                       CEU011
+     CL1         BRNCH     IFEQ 'ALL'                                     CEU011
+     CL1         BRNCH     OREQ BRCA                                      CEU011
+      *                                                                   139970
+      ** Check if Event Ccy is an 'In' currency                           139970
+      *                                                                   139970
+     CL1                   Z-ADD1         S                               139970
+     CL1         ECCY      LOKUPCUR,S                    59               139970
+     CL1         *IN59     IFEQ *ON                                       139970
+     CL1                   MOVE ICY,S     WINCY   1                       139970
+     CL1                   ENDIF                                          139970
+      *                                                                   139970
+     CL1         WINCY     IFEQ 'Y'                                       CEU011
+     CL1         ECCY      OREQ BKEURO                                    CEU011
+     CL1                   Z-ADD1         X       20                      CEU011
+     CL1         X         DOWLE48                                        CEU011
+     CL1         X         IFNE 37                                        CEU011
+     CL1         X         ANDNE38                                        CEU011
+     CL1         X         ANDNE40                                        CEU011
+     CL1         X         ANDNE42                                        CEU011
+     CL1         X         ANDNE44                                        CEU011
+     CL1         ECCY      IFEQ BKEURO                                    CEU011
+     CL1                   ADD  AVA,X     EAM,X                           CEU011
+     CL1                   ADD  AVR,X     ERT,X                           CEU011
+      *                                                                   139970
+     CL1         AVA,X     IFNE 0                                         139970
+     CL1                   ADD  1         CTR,X                           139970
+     CL1                   ENDIF                                          139970
+      *                                                                   139970
+     CL1                   ELSE                                           CEU011
+     CL1                   MOVE *BLANKS   PRTCD                           CEU011
+     CL1                   Z-ADDAVA,X     PFRAM                           CEU011
+     CL1                   MOVE ECCY      PFRCY                           CEU011
+     CL1                   MOVE BKEURO    PTOCY                           CEU011
+     CL1                   Z-ADD0         POUTA                           CEU011
+     CL1                   Z-ADD0         PINTA                           CEU011
+     CL1                   Z-ADD0         PEXRT                           CEU011
+     CL1                   MOVE *BLANKS   PMDIN                           CEU011
+      *                                                                   CEU011
+     CL1                   CALL 'EU0200'                                  CEU011
+     CL1                   PARM           PRTCD   7                       CEU011
+     CL1                   PARM           PFRAM  183                      CEU011
+     CL1                   PARM           PFRCY   3                       CEU011
+     CL1                   PARM           PTOCY   3                       CEU011
+     CL1                   PARM           POUTA  150                      CEU011
+     CL1                   PARM           PINTA  183                      CEU011
+     CL1                   PARM           PEXRT  159                      CEU011
+     CL1                   PARM           PMDIN   1                       CEU011
+      *                                                                   CEU011
+     CL1         PRTCD     IFEQ *BLANKS                                   CEU011
+     CL1                   ADD  POUTA     EAM,X                           CEU011
+     CL1                   ADD  AVR,X     ERT,X                           CEU011
+      *                                                                   139970
+     CL1         POUTA     IFNE 0                                         139970
+     CL1                   ADD  1         CTR,X                           139970
+     CL1                   ENDIF                                          139970
+      *                                                                   139970
+     CL1                   ELSE                                           CEU011
+     CL1                   MOVEL'*CALL   'DBFILE                          CEU011
+     CL1                   MOVEL'EU0200  'DBKEY             ************  CEU011
+     CL1                   MOVEL'10'      DBASE             * DBERR 10 *  CEU011
+     CL1                   EXSR *PSSR                       ************  CEU011
+     CL1                   ENDIF                                          CEU011
+     CL1                   ENDIF                                          CEU011
+     CL1                   ENDIF                                          CEU011
+     CL1                   ADD  1         X                               CEU011
+     CL1                   ENDDO                                          CEU011
+     CL1                   ENDIF                                          CEU011
+     CL2                   ENDIF                                          CEU011
+     C*                                                                   162980
+     C** Too soon for the ENDIF of the CEU011 equal to 'Y' condition.     162980
+     C** Move it to after the following CEU011 processing.                162980
+     C*                                                                   162980
+     C***L2******          ENDIF                                    CEU011162980
+      *                                                                   CEU011
+     C***L2*85***WEUR      IFGT 0                                  CEU011 139970
+     C***L2*85***EAM       DIV  WEUR      EAM                      CEU011 139970
+     C***L2*85***ERT       DIV  WEUR      ERT                      CEU011 139970
+     CL2 85                Z-ADD1         X                               139970
+     CL2 85      X         DOWLE48                                        139970
+     CL2 85      X         IFNE 37                                        139970
+     CL2         X         ANDNE38                                        139970
+     CL2         X         ANDNE40                                        139970
+     CL2         X         ANDNE42                                        139970
+     CL2         X         ANDNE44                                        139970
+     CL2 85      CTR,X     IFGT 0                                         139970
+     CL2 85      EAM,X     DIV  CTR,X     EAM,X                           139970
+     CL2 85      ERT,X     DIV  CTR,X     ERT,X                           139970
+     CL2                   ENDIF                                          139970
+     CL2                   ENDIF                                          139970
+     CL2 85                ADD  1         X                               139970
+     CL2 85                ENDDO                                          139970
+     CL2 85                EXCPT                                          CEU011
+      *                                                                   CEU011
+     C***L2*85***          Z-ADD0         WEUR                     CEU011 139970
+     CL2 85                Z-ADD0         EAM                             CEU011
+     CL2 85                Z-ADD0         ERT                             CEU011
+     CL2 85                Z-ADD0         CTR                             139970
+     C***L2******          ENDIF                                   CEU011 139970
+     CL2                   ENDIF                                          162980
+     C*
+     C** TOTAL CALCULATIONS
+     C*
+      ** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C** ENSURE TOTALS SPOOL FILE RECORDED BY RCF
+     CLR                   CALL 'ZSFILE'
+     CLR                   PARM           SEQ     5
+     CLR                   PARM *BLANK    @PARM   3
+     CLR                   PARM           SFILEU
+     CLR                   PARM           ZSNUMU
+     CLR                   PARM *BLANK    ZSERR                           S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     C*
+     C** READ BANK DETAILS VIA ACCESS PROGRAM                             E296
+     CLRN40                CALL 'AOBANKR0'                                E296
+     C                     PARM '*MSG   ' @RTCD   7                       E296
+     C                     PARM '*FIRST ' @OPTN   7                       E296
+     C           SDBANK    PARM SDBANK    DSFDY                           E296
+     CLRN40      BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  E296
+     CLRN40      @RTCD     IFNE *BLANK                                    E296
+     CLRN40                MOVEL'SDBANKPD'DBFILE 10        ************   E296
+     CLRN40                MOVEL'06'      DBASE   2        * DBERR 06 *   E296
+     CLRN40                MOVEL@OPTN     DBKEY            ************   E296
+     CLRN40                SETON                     U7U8                 E296
+     CLRN40                EXSR *PSSR                                     E296
+     CLR                   END                                            E296
+     C*                                                                   E296
+     C********************************************************************
+     C*
+     C*    FILE CONTROL CHECKS
+     C*    CHECK THE DEALS FILE
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+     C*   IND '99' IS SET BY AN OVERFLOW ERROR
+     C*
+     CSR         GLZADD    BEGSR                           *** GLZADD ****
+     C*
+     CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+     CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+     C*
+     C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+     CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+     CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+     C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+     C*
+     CSR                   EXSR GLZSUM
+     CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+     C*
+     C********************************************************************
+     C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+     C*                        GLZADD, GLZSUB, GLZCMP.
+     C*          PARAMETERS PASSED -
+     C*                     I/P ZZAMTI ZZAMTD
+     C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+     C*
+     CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+     C*
+     CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+     CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+     CSR                   SETOF                     919293
+     CSR                   SETOF                     949599
+     C*
+     C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+     CSR         ZZAMTI    COMP 0                      9293
+     CSR 93      ZZAMTD    COMP 0                      9293
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*
+     C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+     CSR         ZZTOTI    COMP 0                      9193
+     CSR 93      ZZTOTD    COMP 0                      9193
+     C*
+     C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+     CSR 93                Z-ADDZZAMTI    ZZTOTI
+     CSR 93                Z-ADDZZAMTD    ZZTOTD
+     CSR 93                GOTO ZZSEND                     ZERO BYPASS
+     C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+     CSR 91N92
+     CORN91 92             GOTO ZZOFPS
+     C*
+     CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+     CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+     C*
+     CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+     CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+     CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+     C*
+     C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+     CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+     CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+     CSRN99                Z-ADDZZWK2     ZZTOTD
+     CSRN99                Z-ADDZZWK3     ZZTOTI
+     C*
+     C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+     CSR 99                Z-ADD0         ZZAMT  153
+     CSR                   GOTO ZZSEND
+     C*
+     C* THE 'SIGNS' ARE DIFFERENT
+     CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+     C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+     C*
+     CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+     CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+     C*
+     C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+     C*
+     CSR 91                Z-SUBZZTOTI    ZZTOTI
+     CSR 91                Z-SUBZZTOTD    ZZTOTD
+     C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+     C*
+     CSR         ZZTOTI    COMP ZZAMTI               93  95
+     CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+     C*
+     C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+     CSR 95                Z-ADD0         ZZTOTI
+     CSR 95                Z-ADD0         ZZTOTD
+     CSR 95                GOTO ZZSEND
+     C*
+     C* IF ZZTOT GT. ZZAMT.
+     CSR 93      ZZAMTD    COMP ZZTOTD               94
+     CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+     CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+     CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+     C*
+     C*
+     C* IF ZZAMT GT. ZZTOT.
+     CSRN93      ZZTOTD    COMP ZZAMTD               94
+     CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+     CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+     CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+     C*
+     C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+     CSR                   SETOF                     94
+     CSR 93 91
+     CORN93 92             SETON                     94
+     CSR 94                Z-SUBZZTOTI    ZZTOTI
+     CSR 94                Z-SUBZZTOTD    ZZTOTD
+     C**
+     C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+     CSR 92                Z-SUBZZAMTI    ZZAMTI
+     CSR 92                Z-SUBZZAMTD    ZZAMTD
+     CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+     C**
+     C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+     CSR                   SETOF                     96
+     CSR         ZZTOTD    COMP 0                        91
+     CSR 91      ZZTOTI    COMP 0                      96
+     CSR 96                MOVE '.000-'   ZZNEGD  5
+     CSR                   ENDSR                             ** ENDSR **
+     C********************************************************************
+     C*
+     C*    SUBROUTINE TO HASH TOTAL THE INPUT RECORDS FOR
+     C*    THE DEALS EVENTS FILE
+     C*****THE*COMMERCIAL*LOANS*EVENTS*FILE*******************************E25515
+     C*
+     C*
+     C*
+     C*
+     C********************************************************************
+     C           PERDAY    BEGSR
+     C*
+     C*    ALLOCATES TO ARRAY 'PERD' THE NUMBER OF DAYS IN EACH PERIOD
+     C                     Z-ADD1         PERD,1
+     C***********          Z-ADD6         PERD,2                          089743
+     C***********          Z-ADD23        PERD,3                          089743
+     C***********          Z-ADD61        PERD,4                          089743
+     C***********          Z-ADD91        PERD,5                          089743
+     C***********          Z-ADD183       PERD,6                          089743
+     C                     Z-ADD7         PERD,2                          089743
+     C                     Z-ADD30        PERD,3                          089743
+     C                     Z-ADD91        PERD,4                          089743
+     C                     Z-ADD183       PERD,5                          089743
+     C                     Z-ADD365       PERD,6                          089743
+     C                     MOVE 99999     PERD,7
+     C                     ENDSR
+     C********************************************************************
+     C           SETOF     BEGSR
+     C*
+     C*    SUBROUTINES TO SET OFF INDICATORS
+     C                     SETOF                     103335
+     C                     SETOF                     363758
+     C                     SETOF                     707142
+     C                     ENDSR
+     C********************************************************************
+     C           SWAPS     BEGSR                           SR - SWAPS
+     C*
+     C*    SUBROUTINE FOR UPDATING ARRAYS WHEN EVENT TYPE IS
+     C*    14V5 OR 14V6 - SWAPS
+     C*
+     C           OTHD      SUB  EDAT      N1      50
+     C           OTHD      SUB  RCD       N2      50
+     C           N2        COMP N1                   59
+     C   59                Z-ADDN1        N2
+     C*    SET ARRAY INDEX TO APPROPRIATE VALUE
+     C   50                MOVE 43        I       20
+     C   51                MOVE 41        I
+     C           EAMT      MULT N2        SWWK   150
+     C           SWWK      ADD  ARR2,I    ARR2,I
+     C           ECCY      COMP BLCYCD                   22
+     C           N2        MULT OTHA      SWWK
+     C   22      SWWK      MULT 36500     SWWK
+     C  N22      SWWK      MULT 36000     SWWK
+     C           N1        IFNE *ZERO                                     E48220
+     C           SWWK      DIV  N1        SWWK      H
+     C                     END                                            E48220
+     C                     MOVE SWWK      TEMP,I                          042920
+     C           TEMP,I    ADD  TMP2,I    TMP2,I                          042920
+     C           SWWK      DIV  100       SWWK                            042920
+     C           SWWK      ADD  ARR1,I    ARR1,I
+     C           ARR3,I    ADD  N2        ARR3,I
+     C                     ENDSR
+     C********************************************************************
+     C           SPDEP     BEGSR                           SR - SPDEP
+     C*    SUBROUTINE FOR UPDATING ARRAYS WHEN EVENT TYPE IS
+     C*    15V1, 16V1, 15V3, 16V3
+     C*    15M1, 15M4, 16M1, 16M4 AND POSITION 1 OF DEAL SUB TYPE IS Z
+     C*
+     C/COPY WNCPYSRC,DL0601C001
+     C*    SET ARRAY INDEX ACCORDING TO DEAL TYPE
+     C           DTYP      COMP 'IT'                     34
+     C  N34      DTYP      COMP 'CD'                     34
+     C  N34      DTYP      COMP 'CI'                     34
+     C/COPY WNCPYSRC,DL0601C003
+      *                                                                                       CDL033
+     C  N34      DTYP      COMP 'CF'                     34                                   CDL033
+      *                                                                                       CDL033
+0692 C  N34      DTYP      COMP 'ID'                     34               S01354
+     C   34                Z-ADD45        I
+     C*
+     C           DTYP      COMP 'TD'                     34
+     C   34                MOVE 46        I
+     C*
+     C           DTYP      COMP 'IP'                     34
+     C  N34      DTYP      COMP 'CL'                     34
+0692 C  N34      DTYP      COMP 'IL'                     34               S01354
+     C   34                MOVE 47        I
+     C*
+     C           DTYP      COMP 'DL'                     34
+     C  N34      DTYP      COMP 'TI'                     34
+     C  N34      DTYP      COMP 'LN'                     34
+     C   34                MOVE 48        I
+     C                     MOVE EAMT      TEMP,I                          042920
+     C           TEMP,I    MULT EXRT      TMP1,I                          042920
+     C           TMP1,I    ADD  TMP2,I    TMP2,I                          042920
+     C           EAMT      DIV  100       EAMT                            042920
+     C           EAMT      MULT EXRT      SWWK
+     C           EAMT      MULT 100       EAMT                            042920
+     C           SWWK      ADD  ARR1,I    ARR1,I
+     C           EAMT      ADD  ARR2,I    ARR2,I
+     C   52
+     COR 53      ARR3,I    ADD  1         ARR3,I
+     C                     ENDSR
+     C********************************************************************
+     C           ADJUST    BEGSR                            SR - ADJUST
+     C*
+     C*    PUTS NO. OF DAYS IN PERIOD INTO APPROPRIATE ELEMENTS OF ARR3
+     C*
+     C                     Z-ADD9         J       20
+     C           LOOPJ     TAG                             ** LOOPJ TAG **
+     C           J         COMP 12                     8080
+     C   80                MOVE PERD,1    ARR3,J
+     C   80                GOTO INCJ
+     C           J         COMP 16                     8080
+     C   80                MOVE PERD,2    ARR3,J
+     C   80                GOTO INCJ
+     C           J         COMP 20                     8080
+     C   80                MOVE PERD,3    ARR3,J
+     C   80                GOTO INCJ
+     C           J         COMP 24                     8080
+     C   80                MOVE PERD,4    ARR3,J
+     C   80                GOTO INCJ
+     C           J         COMP 28                     8080
+     C   80                MOVE PERD,5    ARR3,J
+     C   80                GOTO INCJ
+     C           J         COMP 32                     8080
+     C   80                MOVE PERD,6    ARR3,J
+     C           INCJ      TAG                             ** INCJ TAG **
+     C           J         ADD  1         J
+     C           J         COMP 32                   80
+     C  N80                GOTO LOOPJ
+     C                     ENDSR
+     C********************************************************************
+     C           SUBDIV    BEGSR                            SR - SUBDIV
+     C*
+     C*    THIS SUBROUTINE EXECUTED FOR EVENT TYPES 15M1, 16M1, 15M4, 16M4
+     C*    15V1, 16V1, 15V3, 16V3
+     C*    AND POSITIONS 1 OF DEAL SUB-STYPE NOT EQUAL TO Z
+     C*
+     C   52
+     COR 53      EDAT      COMP 0                        35
+     C   52N35N07
+     COR 53N35   EDAT      COMP NOTD                 373736
+     C   52N35 07          SETON                     37
+     C******************************************
+     C** IF NOTICE DATE = -999 & IS TYPE 15/16V1
+     C******************************************
+     C   61N20   NOTD      COMP -999                     37
+     C   35
+     COR 61N37
+     COR 36
+     COR 62
+     COR 54
+     COR 55                EXSR CALNOT
+     C*
+     C   37                EXSR FIXLD
+     C                     ENDSR
+     C********************************************************************
+     C           CALNOT    BEGSR
+     C*
+     C*    ARRAY UPDATING FOR CALL DEALS OR NOTICE DEALS
+     C*
+     C   36
+     COR 20                GOTO NOTICE
+     C*    CALL DEALS
+     C           DTYP      COMP 'CD'                     33
+     C  N33      DTYP      COMP 'ID'                     33               S01354
+     C   33                MOVE '01'      I
+     C           DTYP      COMP 'CL'                     33
+     C  N33      DTYP      COMP 'IL'                     33               S01354
+     C   33                MOVE '03'      I
+     C           DTYP      COMP 'DL'                     33
+     C   33                MOVE '04'      I
+     C   07                MOVE '04'      I
+     C                     GOTO UPDATE
+     C           NOTICE    TAG                             ** NOTICE TAG *
+     C           DTYP      COMP 'CD'                     33
+     C  N33      DTYP      COMP 'ID'                     33               S01354
+     C   33                MOVE '05'      I
+     C           DTYP      COMP 'CL'                     33
+     C  N33      DTYP      COMP 'IL'                     33               S01354
+     C   33                MOVE '07'      I
+     C           DTYP      COMP 'DL'                     33
+     C   33                MOVE '08'      I
+     C           UPDATE    TAG                             ** UPDATE TAG *
+     C                     MOVE EAMT      TEMP,I                          042920
+     C           EAMT      DIV  100       EAMT                            042920
+     C           EAMT      MULT EXRT      PROD   150H
+     C           TEMP,I    MULT EXRT      TMP1,I                          042920
+     C   07      EAMT      MULT INTR      PROD
+     C           TEMP,I    MULT INTR      TMP1,I                          042920
+     C           TMP1,I    ADD  TMP2,I    TMP2,I                          042920
+     C           EAMT      MULT 100       EAMT                            042920
+     C           ARR1,I    ADD  PROD      ARR1,I
+     C           EAMT      ADD  ARR2,I    ARR2,I
+     C*  52
+     C                     ENDSR
+     C********************************************************************
+     C           FIXLD     BEGSR
+     C*
+     C*    ARRAY UPDATING FOR FIXED LOANS/DEPOSITS
+     C*
+     C                     SETOF                     42
+     C*    FIND NO. OF DAYS FROM LATER OF 'OTHD' AND 'RCD' TO 'EDAT'
+     C*
+     C*
+     C*    FIND THE NUMBER OF DAYS FROM THE REPORT CONTROL
+     C*    DATE TO, BUT EXCLUDING THE EVENT DATE .
+     C           EDAT      SUB  RCD       EDYS    50
+     C                     Z-ADD1         D       10
+     C*
+     C*    THIS PART DONE WHEN REPORT CONTROL DATE IS NOT LATER THAN
+     C*    OTHER DATE
+     C*
+     C*
+     C*    FIND PERIOD IN WHICH OTHER DATE FALLS
+     C           TAG16     TAG                             ** TAG16 TAG **
+     C*
+     C*    ASSIGN SMALLER OF PERD,D AND EVENT DAYS TO N
+     C           PERD,D    COMP EDYS                 18
+     C   18                MOVE EDYS      N       50
+     C  N18                MOVE PERD,D    N
+     C*
+     C*
+     C*    SET INDICATORS ACCORDING TO DEAL TYPE
+     C*
+     C           DTYP      COMP 'IT'                     11
+     C  N11      DTYP      COMP 'CD'                     11
+     C  N11      DTYP      COMP 'CI'                     11
+     C/COPY WNCPYSRC,DL0601C004
+      *                                                                                       CDL033
+     C  N11      DTYP      COMP 'CF'                     11                                   CDL033
+      *                                                                                       CDL033
+0826 C  N11      DTYP      COMP 'ID'                     11               S01354
+     C/COPY WNCPYSRC,DL0601C002
+     C   43                SETON                     11
+     C*
+     C           DTYP      COMP 'TD'                     12
+     C*
+     C           DTYP      COMP 'IP'                     13
+     C  N13      DTYP      COMP 'CL'                     13
+0826 C  N13      DTYP      COMP 'IL'                     13               S01354
+     C   44                SETON                     13
+     C*
+     C           DTYP      COMP 'DL'                     14
+     C  N14      DTYP      COMP 'TI'                     14
+     C  N14      DTYP      COMP 'LN'                     14
+     C  N14      DTYP      COMP 'TE'                     14
+     C  N14      DTYP      COMP 'RC'                     14
+     C  N14      DTYP      COMP 'DS'                     14
+     C   07                MOVEA'0001'    *IN,11
+     C*
+     C*    CALCULATE ARRAY ELEMENT NUMBER TO BE UPDATED - PUT IN FIELD I
+     C           D         SUB  1         I
+     C           I         MULT 4         I
+     C   11      I         ADD  9         I
+     C   12      I         ADD  10        I
+     C   13      I         ADD  11        I
+     C   14      I         ADD  12        I
+     C*
+     C*
+     C*    IF PERIOD IS OVER 1 YEAR, ADD NUMBER OF DAYS OVER 1 YEAR INTO
+     C*    APPROPRIATE ELEMENT OF ARRAY 3
+     C*
+     C   52
+     COR 53
+     COR 43                                                               090468
+     COR 44                                                               090468
+     COR 64      ARR3,I    ADD  N         ARR3,I
+     C   61
+     COR 63      ARR3,I    SUB  N         ARR3,I
+     C*
+     C  N43N44   EAMT      MULT N         EAMTXN 150
+     C   43
+     COR 44      ICAM      MULT N         EAMTXN
+     C           ARR2,I    ADD  EAMTXN    ARR2,I
+     C                     MOVE EAMTXN    TEMP,I                          042920
+     C           EAMTXN    DIV  100       EAMTXN                          042920
+     C  N43N44   TEMP,I    MULT EXRT      TMP1,I                          042920
+     C  N43N44   EAMTXN    MULT EXRT      AAA    150
+     C   43
+     COR 44      EAMTXN    MULT ICIR      AAA
+     C   43                                                               042920
+     COR 44      TEMP,I    MULT ICIR      TMP1,I                          042920
+     C***04******EAMTXN    MULT EINR      AAA                             E25515
+     C   07      EAMTXN    MULT INTR      AAA
+     C   07      TEMP,I    MULT INTR      TMP1,I                          042920
+     C           EAMTXN    MULT 100       EAMTXN                          042920
+     C           TMP1,I    ADD  TMP2,I    TMP2,I                          042920
+     C           ARR1,I    ADD  AAA       ARR1,I
+     C***********EDYS      SUB  N         EDYS       15                   089743
+     C***15******D         ADD  1         D                               089743
+     C***15N42***          GOTO TAG16                                     089743
+     C  N18      D         ADD  1         D                               089743
+     C  N18N42             GOTO TAG16                                     089743
+     C*    END OF PROCESSING IF EDAYS IS NOT GREATER THAN ZERO
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C           NEGASS    BEGSR
+     C*
+     C*    ARRAY UPDATING FOR NEGOTIABLE ASSETS
+     C                     Z-ADD39        I
+     C                     MOVE EAMT      TEMP,I                          042920
+     C           EAMT      DIV  100       EAMT                            042920
+     C           TEMP,I    MULT EXRT      TMP1,I                          042920
+     C           EAMT      MULT EXRT      AAA
+     C           EAMT      MULT 100       EAMT                            042920
+     C           TMP1,I    ADD  TMP2,I    TMP2,I                          042920
+     C           ARR1,I    ADD  AAA       ARR1,I
+     C           ARR2,I    ADD  EAMT      ARR2,I
+     C           ARR3,I    ADD  1         ARR3,I
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     O***DL0601P1T  203   L1 41 85                                        E257
+     O***DL0600P1T  203   L1 41 85                                   E257 LN0746
+     ODL0601P1T  203   L1 41 85                                           LN0746
+     O                                   24 'REFERENCE DL0601P1'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+     O        T  1     L1 41 85
+     O                                   71 'AVERAGE RATES IN 000''S'
+     O                         ECCY      75
+     O        T  2     L1 41 85
+     O                                   73 '------------------------'
+     O                                   75 '--'
+     O        T  2     L1 41 85
+     O                                   12 'BRANCH'
+     O***************          EBRC      16                                  E57
+     O                         BRCA      16                                  E57
+     O                         A8BRNM    48
+     O        T  1     L1 41 85
+     O       AND      NU7
+     O                                   31 'TAKINGS'
+     O                                   60 'DEPOSITS'
+     O                                   87 'PLACINGS'
+     O                                  112 'LOANS'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    6 'PERIOD'
+     O                                   34 'AMOUNT   RATE'
+     O                                   61 'AMOUNT   RATE'
+     O                                   88 'AMOUNT   RATE'
+     O                                  115 'AMOUNT   RATE'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    4 'CALL'
+     O                         AVA,1 1   26
+     O                         AVR,1     39 '  0 .       -'
+     O                         AVA,2 1   53
+     O                         AVR,2     66 '  0 .       -'
+     O                         AVA,3 1   80
+     O                         AVR,3     93 '  0 .       -'
+     O                         AVA,4 1  107
+     O                         AVR,4    120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    6 'NOTICE'
+     O                         AVA,5 1   26
+     O                         AVR,5     39 '  0 .       -'
+     O                         AVA,6 1   53
+     O                         AVR,6     66 '  0 .       -'
+     O                         AVA,7 1   80
+     O                         AVR,7     93 '  0 .       -'
+     O                         AVA,8 1  107
+     O                         AVR,8    120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    5 '1 DAY'
+     O                         AVA,9 1   26
+     O                         AVR,9     39 '  0 .       -'
+     O                         AVA,101   53
+     O                         AVR,10    66 '  0 .       -'
+     O                         AVA,111   80
+     O                         AVR,11    93 '  0 .       -'
+     O                         AVA,121  107
+     O                         AVR,12   120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    5 '7 DAY'
+     O                         AVA,131   26
+     O                         AVR,13    39 '  0 .       -'
+     O                         AVA,141   53
+     O                         AVR,14    66 '  0 .       -'
+     O                         AVA,151   80
+     O                         AVR,15    93 '  0 .       -'
+     O                         AVA,161  107
+     O                         AVR,16   120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    7 '1 MONTH'
+     O                         AVA,171   26
+     O                         AVR,17    39 '  0 .       -'
+     O                         AVA,181   53
+     O                         AVR,18    66 '  0 .       -'
+     O                         AVA,191   80
+     O                         AVR,19    93 '  0 .       -'
+     O                         AVA,201  107
+     O                         AVR,20   120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    7 '3 MONTH'
+     O                         AVA,211   26
+     O                         AVR,21    39 '  0 .       -'
+     O                         AVA,221   53
+     O                         AVR,22    66 '  0 .       -'
+     O                         AVA,231   80
+     O                         AVR,23    93 '  0 .       -'
+     O                         AVA,241  107
+     O                         AVR,24   120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    7 '6 MONTH'
+     O                         AVA,251   26
+     O                         AVR,25    39 '  0 .       -'
+     O                         AVA,261   53
+     O                         AVR,26    66 '  0 .       -'
+     O                         AVA,271   80
+     O                         AVR,27    93 '  0 .       -'
+     O                         AVA,281  107
+     O                         AVR,28   120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    6 '1 YEAR'
+     O                         AVA,291   26
+     O                         AVR,29    39 '  0 .       -'
+     O                         AVA,301   53
+     O                         AVR,30    66 '  0 .       -'
+     O                         AVA,311   80
+     O                         AVR,31    93 '  0 .       -'
+     O                         AVA,321  107
+     O                         AVR,32   120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                   11 'OVER 1 YEAR'
+     O                         AVA,331   26
+     O                         AVR,33    39 '  0 .       -'
+     O                         AVA,341   53
+     O                         AVR,34    66 '  0 .       -'
+     O                         AVA,351   80
+     O                         AVR,35    93 '  0 .       -'
+     O                         AVA,361  107
+     O                         AVR,36   120 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                   11 'NEG. ASSETS'
+     O                         AVA,391   80
+     O                         AVR,39    93 '  0 .       -'
+     O        T  2     L1 41 85
+     O       AND      NU7
+     O                                    5 'SWAPS'
+     O                         AVA,411   26
+     O                         AVR,41    39 '  0 .       -'
+     O                         AVA,431   80
+     O                         AVR,43    93 '  0 .       -'
+     O        T  3     L1 41 85
+     O       AND      NU7
+     O                                   11 'SPEC. DEPS.'
+     O                         AVA,451   26
+     O                         AVR,45    39 '  0 .       -'
+     O                         AVA,461   53
+     O                         AVR,46    66 '  0 .       -'
+     O                         AVA,471   80
+     O                         AVR,47    93 '  0 .       -'
+     O                         AVA,481  107
+     O                         AVR,48   120 '  0 .       -'
+     O*
+     O        T 2      L2 U7 U8
+     O       AND       85
+     O       OR        LR U7 U8
+     O       AND       75                                                 BHF342
+     O                                   24 'REFERENCE DL0601P1'
+     O                                   62 'PRINT TERMINATED, '
+     O                                   80 'DATABASE IN ERROR'
+     O        TF2      L2 41 85
+     O                                   66 '*** END OF REPORT FOR'
+     O                                   77 ' BRANCH ***'
+     O**********                         71 '*** END OF BRANCH REPORT'
+     O**********                         75 ' ***'
+     O*
+     O        E  203   L1                                                 CEU011
+     O                                   24 'REFERENCE DL0601P1'          CEU011
+     O                         BJURPT    89                               CEU011
+     O                                  104 'DATE'                        CEU011
+     O                         BJMRDT   112                               CEU011
+     O                                  122 'PAGE'                        CEU011
+     O                         PAGE  Z  127                               CEU011
+     O        E  1     L1                                                 CEU011
+     O                                   71 'AVERAGE RATES IN 000''S'     CEU011
+     O                         BKEUCP    75                               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                   73 '------------------------'    CEU011
+     O                                   75 '--'                          CEU011
+     O        E  2     L1                                                 CEU011
+     O                                   12 'BRANCH'                      CEU011
+     O                         BRCA      16                               CEU011
+     O                         A8BRNM    48                               CEU011
+     O        E  1     L1                                                 CEU011
+     O                                   31 'TAKINGS'                     CEU011
+     O                                   60 'DEPOSITS'                    CEU011
+     O                                   87 'PLACINGS'                    CEU011
+     O                                  112 'LOANS'                       CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    6 'PERIOD'                      CEU011
+     O                                   34 'AMOUNT   RATE'               CEU011
+     O                                   61 'AMOUNT   RATE'               CEU011
+     O                                   88 'AMOUNT   RATE'               CEU011
+     O                                  115 'AMOUNT   RATE'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    4 'CALL'                        CEU011
+     O                         EAM,1 1   26                               CEU011
+     O                         ERT,1     39 '  0 .       -'               CEU011
+     O                         EAM,2 1   53                               CEU011
+     O                         ERT,2     66 '  0 .       -'               CEU011
+     O                         EAM,3 1   80                               CEU011
+     O                         ERT,3     93 '  0 .       -'               CEU011
+     O                         EAM,4 1  107                               CEU011
+     O                         ERT,4    120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    6 'NOTICE'                      CEU011
+     O                         EAM,5 1   26                               CEU011
+     O                         ERT,5     39 '  0 .       -'               CEU011
+     O                         EAM,6 1   53                               CEU011
+     O                         ERT,6     66 '  0 .       -'               CEU011
+     O                         EAM,7 1   80                               CEU011
+     O                         ERT,7     93 '  0 .       -'               CEU011
+     O                         EAM,8 1  107                               CEU011
+     O                         ERT,8    120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    5 '1 DAY'                       CEU011
+     O                         EAM,9 1   26                               CEU011
+     O                         ERT,9     39 '  0 .       -'               CEU011
+     O                         EAM,101   53                               CEU011
+     O                         ERT,10    66 '  0 .       -'               CEU011
+     O                         EAM,111   80                               CEU011
+     O                         ERT,11    93 '  0 .       -'               CEU011
+     O                         EAM,121  107                               CEU011
+     O                         ERT,12   120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    5 '7 DAY'                       CEU011
+     O                         EAM,131   26                               CEU011
+     O                         ERT,13    39 '  0 .       -'               CEU011
+     O                         EAM,141   53                               CEU011
+     O                         ERT,14    66 '  0 .       -'               CEU011
+     O                         EAM,151   80                               CEU011
+     O                         ERT,15    93 '  0 .       -'               CEU011
+     O                         EAM,161  107                               CEU011
+     O                         ERT,16   120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    7 '1 MONTH'                     CEU011
+     O                         EAM,171   26                               CEU011
+     O                         ERT,17    39 '  0 .       -'               CEU011
+     O                         EAM,181   53                               CEU011
+     O                         ERT,18    66 '  0 .       -'               CEU011
+     O                         EAM,191   80                               CEU011
+     O                         ERT,19    93 '  0 .       -'               CEU011
+     O                         EAM,201  107                               CEU011
+     O                         ERT,20   120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    7 '3 MONTH'                     CEU011
+     O                         EAM,211   26                               CEU011
+     O                         ERT,21    39 '  0 .       -'               CEU011
+     O                         EAM,221   53                               CEU011
+     O                         ERT,22    66 '  0 .       -'               CEU011
+     O                         EAM,231   80                               CEU011
+     O                         ERT,23    93 '  0 .       -'               CEU011
+     O                         EAM,241  107                               CEU011
+     O                         ERT,24   120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    7 '6 MONTH'                     CEU011
+     O                         EAM,251   26                               CEU011
+     O                         ERT,25    39 '  0 .       -'               CEU011
+     O                         EAM,261   53                               CEU011
+     O                         ERT,26    66 '  0 .       -'               CEU011
+     O                         EAM,271   80                               CEU011
+     O                         ERT,27    93 '  0 .       -'               CEU011
+     O                         EAM,281  107                               CEU011
+     O                         ERT,28   120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    6 '1 YEAR'                      CEU011
+     O                         EAM,291   26                               CEU011
+     O                         ERT,29    39 '  0 .       -'               CEU011
+     O                         EAM,301   53                               CEU011
+     O                         ERT,30    66 '  0 .       -'               CEU011
+     O                         EAM,311   80                               CEU011
+     O                         ERT,31    93 '  0 .       -'               CEU011
+     O                         EAM,321  107                               CEU011
+     O                         ERT,32   120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                   11 'OVER 1 YEAR'                 CEU011
+     O                         EAM,331   26                               CEU011
+     O                         ERT,33    39 '  0 .       -'               CEU011
+     O                         EAM,341   53                               CEU011
+     O                         ERT,34    66 '  0 .       -'               CEU011
+     O                         EAM,351   80                               CEU011
+     O                         ERT,35    93 '  0 .       -'               CEU011
+     O                         EAM,361  107                               CEU011
+     O                         ERT,36   120 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                   11 'NEG. ASSETS'                 CEU011
+     O                         EAM,391   80                               CEU011
+     O                         ERT,39    93 '  0 .       -'               CEU011
+     O        E  2     L1                                                 CEU011
+     O                                    5 'SWAPS'                       CEU011
+     O                         EAM,411   26                               CEU011
+     O                         ERT,41    39 '  0 .       -'               CEU011
+     O                         EAM,431   80                               CEU011
+     O                         ERT,43    93 '  0 .       -'               CEU011
+     O        E  3     L1                                                 CEU011
+     O                                   11 'SPEC. DEPS.'                 CEU011
+     O                         EAM,451   26                               CEU011
+     O                         ERT,45    39 '  0 .       -'               CEU011
+     O                         EAM,461   53                               CEU011
+     O                         ERT,46    66 '  0 .       -'               CEU011
+     O                         EAM,471   80                               CEU011
+     O                         ERT,47    93 '  0 .       -'               CEU011
+     O                         EAM,481  107                               CEU011
+     O                         ERT,48   120 '  0 .       -'               CEU011
+     O*    RUN CONTROLS REPORT
+     O***DL0601AUT  203   LR                                              E257
+     O***DL0600AUT  203   LR                                         E257 LN0746
+     ODL0601AUT  203   LR                                                 LN0746
+     O                                   24 'REFERENCE DL0601AU'
+     O                         BJURPT    89
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE1 Z  127
+     O        T   05   LR
+     O                                   69 'AVERAGE RATES REPORT - R'
+     O                                   80 'UN CONTROLS'
+     O        T   06   LR
+     O                                   69 '------------------------'
+     O                                   80 '-----------'
+     O        T   36   LRNU7
+     O                                   18 'RUN CONTROLS'
+     O        T   38   LRNU7
+     O                                   59 'NUMBER'
+     O                                   84 'VALUE'
+     O        T 22     LRNU7
+     O                                   32 'EVENTS FILE RECORDS READ'
+     O                         RECRED3   59
+     O                         ZZTOTIZ   81
+     O                         ZZTOTD    84
+     O******* T   22   LRNU7N75                                           E131
+     O        T 22     LRNU7N75                                           E131
+     O                                   71 '*** NO DETAILS TO REPORT'
+     O                                   75 ' ***'
+     O        T 3      LR U7 U8
+     O                                   71 '*** PRINT TERMINATED ***'
+     O        T 1      LR U7 U8
+     O                                   57 'DATABASE ERROR'
+     O                         DBASE     61
+     O                                   67 'FILE'
+     O                         DBFILE    78
+     O        T 13     LR U7 U8
+     O                                   46 'KEY'
+     O                         DBKEY     76
+     O******  T 2      LR                                                 E299
+     O******                             72 '*** END OF REPORT ***'       E299
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

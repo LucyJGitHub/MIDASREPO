@@ -1,0 +1,1015 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Margin extr. (dummy loans) for profity')      *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module
+     F*                                                               *
+     F*  LER315 - Margin Extract for Profitability Reporting          *
+     F*           on Dummy Loans.                                     *
+     F*                                                               *
+     F*  Function: An audit trail reporting run controls of the       *
+     F*   (COB)    extract file                                       *
+     F*                                                               *
+     F*  Called By: CLP/LERC315                                       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 CGL184             Date 07Dec16               *
+      *                 AR830785           Date 07May13               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 126017             Date 17Nov97               *
+      *                 097885             Date 31Jan97               *
+     F*                 095244             DATE 01NOV95               *
+     F*                 095238             DATE 31OCT95               *
+     F*                 066550             DATE 04FEB94               *
+     F*                 052817             DATE 05JAN94               *
+     F*                 E49419             DATE 11JAN93               *
+     F*                 BH3450             DATE 28JUL92               *
+     F*                 MOF60              DATE 03APR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *      
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  AR830785 - Recompiled due to changes in core hook RULE78Z1.  *
+      *             (Child: AR830786)                                 *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to GLINTC and ZINTDY changes         *
+     F*  126017 - Correction to interest calculation for calculation  *
+     F*           basis 6 in SR/GLINTC. Add SR/ZDAT10                 *
+     F*  097885 - Recompiled for wrong calculation of number of day   *
+     F*           interest (ZINTDYZ2).                                *
+     F*  095244 - Recompiled for Calculation method 3                 *
+     F*  095238 - Recompiled for Calculation method 3                 *
+     F*  066550 - GLINTC has had historical problems and inaccuracies *
+     F*           and is now externaly descibed and changed to use    *
+     F*           ZINTDYZ1. See document atached to error no on GEMS  *
+     F*  052817 - Prevent DIVIDE BY ZERO during Margin computation if *
+     F*           Run Date equals Interest Accrual Date.              *
+     F*  E49419 - Amended to use the calculation basis from the       *
+     F*           loan rather than the default for the currency       *
+     F*  BH3450 - MARGIN ADJUSTMENT AMOUNT NOT INITIALISED            *
+     F*  MOF60  - CUSTOMER PROFITABILITY & FEES PROCESSING            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FPETEMPL0IF  E                    DISK
+     FLEPELND IF  E           K        DISK
+     FLEPEMGD UF  E           K        DISK                      A
+     FLEPEMGZ UF  E                    DISK
+     FSDCURRPDIF  E                    DISK
+     FLER315AUO   E                    PRINTER
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   10  - LOKUP indicator                                       *
+     F*   25  - Indicator for CHAIN to LEPEMGD                        *
+     F*   26  - Indicator for CHAIN to LEPELND                        *
+     F*   80  - Work indicator                                        *
+     F*   82  - Work indicator                                        *
+     F*   89  - Work indicator                                        *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7-U8 - Data Base Error                                       *
+     F*    U8 - File Controls out of Balance                          *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  MGNCAL - To calculate margin on loan                         *
+     F*  INIT   - To perform first cycle calculations                 *
+     F*  ZDATE2 - To Convert a Day Number to Date Formats             *
+     F*  DBERR  - To perform database error processing                *
+     F*  *PSSR  - To Handle Abnormal Error Conditions                 *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E                    COD       150  3   CYD    15
+     E                    PWR     1   4  4 0
+     E                    AGB        12 15 0             AVERAGE BALANCES
+     E                    AGM        12 15 0             MARGINS
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZDATE9Z1                                               066550
+     E/COPY ZSRSRC,ZFREQBZ1                                                                   CLE028
+     E/COPY ZSRSRC,ZHOLE                                                                      CLE028
+     I/EJECT
+     I*
+     I            DS
+     I* SPLIT RUN DATE INTO MONTH & YEAR
+     I*
+     I                                        1   7 RUNDAX
+     I                                        3   5 MMM
+     I                                        6   7 YY
+     I            DS
+     I* DEFINE CURRENCY INFORMATION
+     I*
+     I                                        1  15 CYDDS
+     I                                        1  138SPT
+     I                                       14  140CDP
+     I                                       15  15 MDI
+     I*
+     I            DS
+     I* AGGREGATE BALANCES DATA STRUCTURE
+     I*
+     I                                    P   1  960AGB
+     I                                    P   1   80LDJANA
+     I                                    P   9  160LDFEBA
+     I                                    P  17  240LDMARA
+     I                                    P  25  320LDAPRA
+     I                                    P  33  400LDMAYA
+     I                                    P  41  480LDJUNA
+     I                                    P  49  560LDJULA
+     I                                    P  57  640LDAUGA
+     I                                    P  65  720LDSEPA
+     I                                    P  73  800LDOCTA
+     I                                    P  81  880LDNOVA
+     I                                    P  89  960LDDECA
+     I*
+     I            DS
+     I* MARGIN DATA STRUCTURE
+     I*
+     I                                    P   1  960AGM
+     I                                    P   1   80MDJANA
+     I                                    P   9  160MDFEBA
+     I                                    P  17  240MDMARA
+     I                                    P  25  320MDAPRA
+     I                                    P  33  400MDMAYA
+     I                                    P  41  480MDJUNA
+     I                                    P  49  560MDJULA
+     I                                    P  57  640MDAUGA
+     I                                    P  65  720MDSEPA
+     I                                    P  73  800MDOCTA
+     I                                    P  81  880MDNOVA
+     I                                    P  89  960MDDECA
+     I*
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE - AU
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*
+     IPSDS       SDS
+     I** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ILDA       E DSLDA
+     I* DATABASE ERROR DS
+     I*
+     IRUNDAT    E DSRUNDAT
+     I* RUNDAT DATA AREA
+     I*
+     ILERSTS    E DSLERSTS                                                  0078
+     I** Fees/Profitability enhancement status data area                    0078
+     I              FACHISD                         WHISST                  0078
+     I              LERC2030                        LERC20                  0078
+     I              LERC135                         LERC13                  0078
+     I              LERC315                         LERC35                  0078
+     I              LERC425                         LERC42                  0078
+     I              EOYFLAG                         EOYFLG                  0078
+     ISDBANK    E DSSDBANKPD
+     I**  EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDGELR    E DSSDGELRPD
+     I**  EXTERNAL DS FOR GENERAL LEDGER DETAILS
+     I*
+     ISDCURR    E DSSDCURRPD
+     I**  EXTERNAL DS FOR CURRENCY DETAILS
+     I*
+     ISCSARD    E DSSCSARDPD                                                                  CLE028
+      ** External DS for SAR details                                                          CLE028
+      *                                                                                       CLE028
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     I/COPY ZSRSRC,ZINTDYZ1                                               066550
+     I/COPY ZSRSRC,ZDATE9Z2                                               066550
+     I/COPY ZSRSRC,ZDAT10Z1                                               126017
+     I/COPY ZSRSRC,ZHOLI                                                                      CLE028
+     C/EJECT
+     C*
+     C* PERFORM INITIAL PROCESSING.
+     C*
+     C                     EXSR INIT
+     C*
+     C* READ PETEMPL0.
+     C* ACCESS LOAN & MARGIN EXTRACT RECORDS FOR EACH LOAN READ.
+     C*
+     C                     MOVE '0'       *IN80
+     C           *IN80     DOWEQ'0'
+     C                     READ PETEMPL0                 80
+     C           *IN80     IFEQ '0'
+     C*                                                                   E49419
+     C* Calculate the number of days using calc basis from the loan       E49419
+     C*                                                                   E49419
+     C           ICBS      IFEQ 1                                         E49419
+     C           ICBS      OREQ 4                                         E49419
+     C                     Z-ADD365       CALCB   30                      E49419
+     C                     ELSE                                           E49419
+     C           ICBS      IFEQ 6                                         E49419
+     C                     Z-ADD366       CALCB                           E49419
+     C                     ELSE                                           E49419
+     C                     Z-ADD360       CALCB                           E49419
+     C                     END                                            E49419
+     C                     END                                            E49419
+     C*
+     C* GET MARGIN EXTRACT.
+     C*
+     C           EXTKEY    CHAINLEPEMGD              25
+     C*
+     C* IF LOAN IS REVERSED, DELETE MARGIN EXTRACT IF FOUND.
+     C*
+     C           RECI      IFEQ 'R'
+     C*
+     C           *IN25     IFEQ '0'
+     C                     DELETLEPEMGDF
+     C                     ADD  1         NDEL    50
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C*
+     C* OTHERWISE, GET LOANS EXTRACT AND CALCULATE MARGIN.
+     C* IF NO RECORD FOUND, IGNORE.
+     C*
+     C           EXTKEY    CHAINLEPELND              26
+     C           *IN26     IFEQ '0'
+     C*
+     C* IF NO MARGIN RECORD FOUND, CALCULATE MARGIN FOR THIS YEAR UP
+     C* TO & INCLUDING THIS MONTH.
+     C*
+     C           *IN25     IFEQ '1'
+     C*
+     C* SET UP NEW FIELDS.
+     C*
+     C                     MOVE CNUM      MDCNUM
+     C                     MOVE LNRF      MDLNRF
+     C                     MOVE LTYP      MDLTYP
+     C                     MOVE SUTP      MDSUTP
+     C                     MOVE CLAS      MDCLAS                                              CLE042
+     C                     Z-ADDMARG      MDMGNR
+     C                     Z-ADD0         MDMATD
+     C                     Z-ADD0         MDPSTD
+     C                     Z-ADD0         MDIATD
+     C                     Z-ADD0         AGM
+     C                     Z-ADD0         MDADJA                          BH3450
+     C*
+     C           MARG      IFNE 0
+     C           INTR      IFEQ 0
+     C                     Z-ADD1         X       20
+     C           X         DOWLEMN
+     C                     EXSR MGNCAL
+     C                     ADD  1         X
+     C                     END
+     C                     ELSE
+     C           BKAPDT    IFGE BJDNWD
+     C                     EXSR MGNACC
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* WRITE MARGIN EXTRACT RECORD.
+     C*
+     C                     ADD  1         NADD    50
+     C                     WRITELEPEMGDF
+     C*
+     C* IF MARGIN EXTRACT RECORD FOUND, UPDATE THIS MONTHS MARGIN.
+     C*
+     C                     ELSE
+     C*
+     C           MARG      IFNE 0
+     C           INTR      IFEQ 0
+     C                     Z-ADDMN        X
+     C                     EXSR MGNCAL
+     C                     ELSE
+     C           BKAPDT    IFGE BJDNWD
+     C                     EXSR MGNACC
+     C                     END
+     C                     END
+     C                     END
+     C                     UPDATLEPEMGDF
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C* END OF READS, UPDATE EXTRACT TRAILER
+     C*
+     C                     READ LEPEMGZ                  82
+     C           *IN82     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ'   DBKEY            ************
+     C                     Z-ADD2         DBASE            * DBERR 2
+     C                     MOVEL'LEPEMGZ' DBFILE           ************
+     C                     MOVEL'LER315'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C                     Z-ADDMZNREC    NPREV   50
+     C                     ADD  NADD      MZNREC
+     C                     SUB  NDEL      MZNREC
+     C                     UPDATLEPEMGZF
+     C*
+     C* WRITE TOTAL LINES TO REPORT
+     C*
+     C                     WRITELER315H1
+     C                     WRITELER315T1
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  MGNCAL SUBROUTINE TO CALCULATE MARGIN ON LOAN.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           MGNCAL    BEGSR
+     C*
+     C           AGB,X     MULT MARG      WRK15  150
+     C                     DIV  CALCB     WRK15     H
+     C                     Z-ADDWRK15     AGM,X
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  MGNACC SUBROUTINE TO CALCULATE MARGIN THAT SHOULD HAVE
+     C***  ACCRUED ON THE LOAN
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: GLINTC
+     C*
+     C********************************************************************
+     C*
+     C** Note that the source for this processing has been copied from
+     C** LE1110 and is therefore not 'very nice'|
+     C*
+     C           MGNACC    BEGSR
+     C*
+     C** If this is any other type of record calculate the margin
+     C** for this month so far
+     C**
+     C                     TESTB'3'       LONI           42
+     C*
+     C**  IF STOP ACCRUALS IS ON, SET TO ZERO AND SKIP ROUND
+     C   42                Z-ADD0         ZINTR
+     C   42                GOTO TAG05
+     C**
+     C**   IF MATURITY DATE IS LESS THAN CONTROL DATE, SKIP CALCULATION
+     C**   OF INTEREST.  INSTEAD, ADD PDIN, AIAP, AIMN TO OBTAIN
+     C**   INTEREST ACCRUED.
+     C**
+     C           MDAT      COMP 0                    35
+     C   35      MDAT      COMP IACD                   35
+     C   35      PDIN      ADD  AIMN      TOTINT
+     C   35      TOTINT    ADD  AIAP      TOTINT
+     C   35                GOTO SKPCLC
+     C**
+0321 C           MDAT      COMP AGRDNB                 35
+0322 C           MDAT      COMP 0                    36
+0323 C**
+0324 C                     Z-ADDIACD      ZIBEG
+0325 C                     Z-ADDAGRDNB    ZIEND
+0326 C   35 36             Z-ADDMDAT      ZIEND
+0327 C                     MOVE ICBS      ZICALC
+0328 C                     Z-ADDCPAM      ZIAMT
+0329 C                     Z-ADDINTR      ZIRATE
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+      *                                                                                       CLE028
+     C           IACD      IFEQ VDAT                                                          CLE028
+     C                     Z-ADDIACD      W78BEG                                              CLE028
+     C                     ELSE                                                               CLE028
+     C                     Z-ADDNRPD      W78BEG                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C                     Z-ADDAGRDNB    W78END                                              CLE028
+      *                                                                                       CLE028
+     C                     EXSR SROSIN                                                        CLE028
+     C                     ELSE                                                               CLE028
+0330 C                     EXSR GLINTC
+     C/COPY WNCPYSRC,LEH01285
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+0331 C           TAG05     TAG                             ** TAG05 TAG **
+0332 C**
+0333 C**   ACCUMULATE TOTAL INTEREST TO DATE
+0334 C**
+0335 C***********ZINTR     ADD  AITC      TOTINT 130H
+     C                     Z-ADDZINTR     TOTINT 130H
+     C           TOTINT    ADD  AIMN      TOTINT
+     C           TOTINT    ADD  AIAP      TOTINT
+     C*
+     C** Adjust the amount calculated for the number of days
+     C*
+     C           AGRDNB    SUB  IACD      DAYS    50
+     C*
+     C** If the loan currency is not base currency convert the total
+     C** interest
+     C*
+     C           BJCYCD    IFNE CCY
+     C                     EXSR CCYCVT
+     C                     END
+     C*
+     C           DAYS      IFEQ 0                                         052817
+     C                     Z-ADD0         DAYINT                          052817
+     C                     ELSE                                           052817
+     C           TOTINT    DIV  DAYS      DAYINT 130H
+     C                     END                                            052817
+     C           AGRDNB    SUB  MIDMON    DAYSL   50
+     C           DAYINT    MULT DAYSL     MTHINT 130
+     C           MTHINT    MULT MARG      MTHINT
+     C           MTHINT    DIV  INTR      MTHINT
+     C           MDADJA    ADD  MTHINT    MDADJA
+     C*
+     C           SKPCLC    ENDSR
+     C/EJECT
+      *****************************************************************                       CLE028
+      *  SROSIN - Compute for outstanding interest                    *                       CLE028
+      *****************************************************************                       CLE028
+     C           SROSIN    BEGSR                                                              CLE028
+      *                                                                                       CLE028
+     C                     Z-ADDVDAT      W78VDT                                              CLE028
+     C                     Z-ADDMDAT      W78MDT                                              CLE028
+     C                     Z-ADDFLTI      W78FLT                                              CLE028
+     C                     MOVE RFRQ      W78RPF                                              CLE028
+     C                     Z-ADDFRPD      W78FRD                                              CLE028
+     C                     Z-ADDRDYN      W78RPM                                              CLE028
+     C                     MOVE CCY       W78CCY                                              CLE028
+     C                     MOVE *BLANKS   W78LCN                                              CLE028
+     C                     MOVE 'A'       W78ROA                                              CLE028
+      *                                                                                       CLE028
+     C                     EXSR RULE78                                                        CLE028
+     C                     Z-ADDW78INT    ZINTR                                               CLE028
+      *                                                                                       CLE028
+     C                     ENDSR                                                              CLE028
+      *****************************************************************                       CLE028
+      /EJECT                                                                                  CLE028
+     C*****************************************************************
+     C*
+     C***  CCYCVT SUBROUTINE TO CONVERT AGGREGATE BALANCE TO BASE CCY
+     C*
+     C***  CALLED FROM: MGNACC
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           CCYCVT    BEGSR
+     C*
+     C                     Z-ADD1         Z
+     C           CCY       LOKUPCOD,Z                    20
+     C                     MOVE CYD,Z     CYDDS
+     C           MDI       IFEQ 'M'
+     C                     MULT SPT       TOTINT
+     C                     ELSE
+     C                     DIV  SPT       TOTINT    H
+     C                     END
+     C           CDP       ADD  1         DP      10
+     C                     DIV  PWR,DP    TOTINT    H
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C***  INIT SUBROUTINE TO PERFORM FIRST CYCLE CALCS.
+     C*
+     C***  CALLED FROM: MAIN PROCESSING
+     C*
+     C***  CALLS: *PSSR,DBERR
+     C*
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C           *NAMVAR   DEFN           LERSTS                            0078
+     C                     IN   LERSTS                                      0078
+     C*
+     C                     MOVEL'LER315'  DBPGM
+     C*
+     C*     ACCESS BANK DETAILS FOR TITLE & RUN DATE.
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C                     SETON                     89
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DBERROR 1   *
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'LER315'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     ELSE
+     C*
+     C***  CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C*
+     C           AGDFF     COMP 'M'                      98 ON=MMDDYY
+     C*
+     C                     END
+     C*
+     C* READ IN INFORMATION FOR CURRENCIES.
+     C* STORE IN ARRAY/DATASTRUCTURE.
+     C*
+     C                     MOVE *BLANK    MDI
+     C                     Z-ADD0         SPT
+     C                     Z-ADD0         CDP
+     C                     Z-ADD0         Z       30
+     C           *IN70     DOWEQ'0'
+     C                     READ SDCURRPD                 70
+     C           *IN70     IFEQ '0'
+     C                     ADD  1         Z
+     C                     MOVE A6CYCD    COD,Z
+     C                     MOVELA6SPRT    SPT              SPOT RATE
+     C                     MOVE A6NBDP    CDP              DEC.PLACES
+     C                     MOVE A6MDIN    MDI              MULT/DIV
+     C                     MOVE CYDDS     CYD,Z
+     C                     END
+     C                     END
+     C*
+     C* CHECK THE BASE CURRENCY DEFAULT CALCULATION BASIS ON SDCURRPD
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           BJCYCD
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C           A6DICB    OREQ *BLANKS
+     C                     SETON                     89
+     C           *LOCK     IN   LDA
+     C                     MOVELBJCYCD    DBKEY            ************
+     C                     Z-ADD4         DBASE            * DBERR 4
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVEL'LER315'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+     C*                                                                   E49419
+     C**CALCULATE*THE*NUMBER*OF*DAYS*RELATED*TO*THE*CALCULATION*BASIS*    E49419
+     C*                                                                   E49419
+     C***********A6DICB    IFEQ '1'                                       E49419
+     C***********A6DICB    OREQ '4'                                       E49419
+     C***********          Z-ADD365       CALCB   30                      E49419
+     C***********          ELSE                                           E49419
+     C***********A6DICB    IFEQ '6'                                       E49419
+     C***********          Z-ADD366       CALCB                           E49419
+     C***********          ELSE                                           E49419
+     C***********          Z-ADD360       CALCB                           E49419
+     C***********          END                                            E49419
+     C***********          END                                            E49419
+     C*
+     C* CALCULATE RUN DATE IN CASE SECOND RUN OF EOM. IN THIS CASE
+     C* RUN DATE MUST BE RESET TO THE FIRST OF THE NEW MONTH.
+     C*
+     C***  THIS APPEARS TO BE ALL THE OLD ROUTINE RUNCHK USED TO DO
+     C***  FOR THIS PROGRAM, SO I'VE REPLACED IT WITH THE FOLLOWING
+     C***  20-ODD LINES
+     C*
+     C*     ACCESS GENERAL LEDGER DETAILS FOR ACCRUALS/PROFIT DATE.
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     SETON                     89
+     C           *LOCK     IN   LDA
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DBERR 3     *
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL'LER315'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     EXSR DBERR
+     C                     END
+      *                                                                                       CLE028
+      ** Check if Flat Rate Personal Loans (Rule of 78s) is installed                         CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD   7                                           CLE028
+     C                     PARM '*VERIFY' POPTN   7                                           CLE028
+     C                     PARM 'CLE028'  PSARD   6                                           CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFNE *BLANKS                                                       CLE028
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     Z-ADD5         DBASE                                               CLE028
+     C                     MOVELPSARD     DBKEY                                               CLE028
+     C                     MOVEL'LER315'  DBPGM                                               CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   @RTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           @RTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+     C/COPY WNCPYSRC,LEH01286
+     C*
+     C                     Z-ADDBKAPDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RUNDAX
+     C                     Z-ADDBKAPDT    RUNDAY  50
+     C*
+     C* GET CURRENT MONTH NUMBER.
+     C*
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPZMNM,MN                  10
+     C*
+     C* DEFINE KEY LIST FOR EXTRACT FILES.
+     C*
+     C           EXTKEY    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           LNRF
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+     C*****************************************************************
+     C*
+     C***  DBERR SUBROUTINE TO PERFORM DATABASE ERROR PROCESSING
+     C*
+     C***  CALLED FROM: MAIN PROCESSING,INIT
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C                     WRITELER315H1
+     C                     WRITEDBFMT
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C*
+     C***  *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C***  CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C/EJECT
+0449 C********************************************************************066550
+0450 C***********                                                         066550
+0451 C*****GLINTC SR. TO CALCULATE INTEREST BETWEEN ANY TWO DAY NUMBERS.  066550
+0452 C***********                                                         066550
+0453 C*****THIS*VERSION REPLACES THE ORIGINAL GLINTC SR. NOW NAMED        066550
+0454 C*****GLINTO.                                                        066550
+0455 C***********                                                         066550
+0456 C*****CALCULATION METHODS ARE -                                      066550
+0457 C*****1**ACTUAL/365                                                  066550
+0458 C*****2**ACTUAL/360                                                  066550
+0459 C*****3**360/360 (SOMETIMES CALLED 30/360)                           066550
+0460 C*****4**365/365 (EXCLUDING 29/02)                                   066550
+0461 C*****5**365/360 (EXCLUDING 29/02)                                   066550
+0462 C*****6**ACTUAL/366                                                  066550
+0463 C***********                                                         066550
+0464 C*****REQUIRES SUBRS. - ZDATE2, ZSAVE, & ZRSTOR.                     066550
+0465 C***********                                                         066550
+0466 C***********                                                         066550
+0467 C*R*********GLINTC    BEGSR                           ** GLINTC  **  066550
+0468 C***********                                                         066550
+0469 C*****CALCULATIONS TO DEFINE INPUT FIELDS.                           066550
+0470 C*R*********          Z-ADDZIBEG     ZIBEG   50       STARTING DATE  066550
+0471 C*R*********          Z-ADDZIEND     ZIEND   50       FINISHING DATE 066550
+0472 C*R*********          Z-ADDZICALC    ZICALC  10       CALC. BASIS    066550
+0473 C*R*********          Z-ADDZIAMT     ZIAMT  150       PRINCIPAL      066550
+0474 C*R*********          Z-ADDZIRATE    ZIRATE 117       RATE OF INTRST 066550
+0475 C***********                                                         066550
+0476 C****TO*DETERMINE NUMBER OF DAYS INTEREST TO BE CALCULATED           066550
+0477 C*R*********ZIEND     SUB  ZIBEG     ZDAYN1  50                      066550
+0478 C***********                                                         066550
+0479 C****CHECK*FOR INTEREST CALCULATION BASIS                            066550
+0480 C*****USE*OF INDICATRS                                               066550
+0481 C*****1,92**2,90  3,91  4,97  5,96  6,95                             066550
+0482 C***********          SETOF                     959697               066550
+0483 C*R*********ZICALC    COMP 2                    919290               066550
+0484 C**N91******          GOTO ZICAL                                     066550
+0485 C***********ZICALC    COMP 5                    959796               066550
+0486 C***97******ZICALC    COMP 3                    97  91               066550
+0487 C***95******                                                         066550
+0488 C*R*96******          SETOF                     91                   066550
+0489 C**N91******          GOTO ZILPCK                                    066550
+0490 C***********                                                         066550
+0491 C*****THIS*CODING WILL CALCULATE THE NUMBER OF DAYS TO USE WHEN      066550
+0492 C*****USING*THE 30/360 BASIS - METHOD 3.                             066550
+0493 C***********          EXSR ZSAVE                                     066550
+0494 C***********          Z-ADDZIBEG     ZDAYNO                          066550
+0495 C***********          EXSR ZDATE2                                    066550
+0496 C***********          MOVE ZDAY      ZISD    20                      066550
+0497 C***********          MOVE ZMTH      ZISM    20                      066550
+0498 C***********          MOVE ZYEAR     ZISY    20                      066550
+0499 C***********          Z-ADDZIEND     ZDAYNO                          066550
+0500 C***********          EXSR ZDATE2                                    066550
+0501 C***********          MOVE ZDAY      ZIFD    20                      066550
+0502 C***********          MOVE ZMTH      ZIFM    20                      066550
+0503 C***********          MOVE ZYEAR     ZIFY    20                      066550
+0504 C***********          EXSR ZRSTOR                                    066550
+0505 C***********          SETOF                     93                   066550
+     C****IN*ORDER FOR THE FINISH YEAR TO BE LESS THAN THE START YEAR IF  066550
+     C****ZIEND*IS GREATER THAN ZIBEG,THEN THE DATE ZIEND MUST BE IN A    066550
+     C****DIFFERENT CENTURY TO ZIBEG.IF SO ADD 100 YEARS TO IT.           066550
+     C***********ZIEND     COMP ZIBEG                93                   066550
+     C***93******ZIFY      COMP ZISY                   93                 066550
+     C***********          Z-ADDZISY      ZISY2   30                      066550
+     C**N93******          Z-ADDZIFY      ZIFY2   30                      066550
+     C***93******ZIFY      ADD  100       ZIFY2                           066550
+2209 C***********30        SUB  ZISD      ZID1    50   93                 S01147
+2210 C***93******          Z-ADD0         ZID1                     S01147 066550
+2211 C***********ZISM      COMP 12                       93               066550
+2212 C***93******          Z-ADD0         ZISM                            066550
+2213 C***93******ZISY      ADD  1         ZISY                            066550
+     C***93******ZISY2     ADD  1         ZISY2                           066550
+     C***********                                                         066550
+2214 C***********ZIFD      COMP 31                       93        S01147 066550
+0512 C***93******ZID1      ADD  30        ZID1                            066550
+0513 C**N93******ZID1      ADD  ZIFD      ZID1                            066550
+0514 C***********ZIFM      SUB  1         ZIFM                            066550
+     C***********ZISY      COMP ZIFY                     93               066550
+0516 C***93******ZIFM      SUB  ZISM      ZINOM   30                      066550
+0517 C***93******          GOTO ZIOUT                                     066550
+0518 C***********12        SUB  ZISM      ZIM1    20                      066550
+0519 C***********          Z-ADD1         ZISM                            066550
+     C*****USE*ENLARGED FIELDS THAT CAN HANDLE 1999 ONWARDS               066550
+     C***********ZISY2     ADD  1         ZISY2                           066550
+     C***********ZIFY2     SUB  ZISY2     ZIY1    20                      066550
+0522 C***********ZIY1      MULT 12        ZIM2    30                      066550
+0523 C***********ZIM2      ADD  ZIFM      ZIM2                            066550
+0524 C***********ZIM1      ADD  ZIM2      ZINOM                           066550
+0525 C***********ZIOUT     TAG                             * ZIOUT TAG *  066550
+0526 C***********ZINOM     MULT 30        ZID2    50                      066550
+0527 C***********ZID2      ADD  ZID1      ZDAYN1                          066550
+0528 C***********          SETOF                     93                   066550
+0529 C***********ZILPCK    TAG                             * ZILPCK TAG * 066550
+0530 C**N96N97***          GOTO ZICAL                                     066550
+0531 C*****THE*FOLLOWING CODING APPLIES FOR METHODS 4 AND 5 ONLY.         066550
+0532 C*****1*DAY*IS SUBTRACTED FROM ZDAYN1 FOR EACH OCCURANCE OF 29 FEB   066550
+0533 C*****IN*THE INTEREST CALCULATION PERIOD INCLUSIVE OF ZIBEG, & ZIEND.066550
+0534 C***********                                                         066550
+0535 C*****FIND*NO OF 4 YEAR PERIODS BETWEEN DATES                        066550
+0536 C***********ZDAYN1    DIV  1461      ZIMAN   20                      066550
+0537 C***********          MVR            ZIREM   50                      066550
+0538 C*****FIND*NEXT 29 FEB DAY NO. ON OR AFTER ZIBEG.                    066550
+0539 C***********ZIBEG     SUB  60        ZIBW1   50                      066550
+0540 C***********ZIBW1     DIV  1461      ZIDW1   20                      066550
+0541 C***********          MVR            ZIDREM  50                      066550
+0542 C***********ZIDREM    COMP 0                        94               066550
+0543 C***94******          Z-ADDZIBEG     ZIDW2   50                      066550
+0544 C***94******          GOTO ZILP1                                     066550
+0545 C*****ROUND*UP RESULT                                                066550
+0546 C***********ZIDW1     ADD  1         ZIDW2                           066550
+0547 C*****CALCULATE NEXT 29 FEB.                                         066550
+0548 C***********ZIDW2     MULT 1461      ZIDW2                           066550
+0549 C***********ZIDW2     ADD  60        ZIDW2                           066550
+0550 C***********ZILP1     TAG                             * ZILP1 TAG *  066550
+0551 C*****IF*THIS NEXT 29 FEB. DAYNO - ZIBEG IS GR. TH. OR EQ. TO        066550
+0552 C*****ZIREM*THEN ADD 1 TO ZIMAN.                                     066550
+0553 C***********ZIDW2     SUB  ZIBEG     ZILPCP  50                      066550
+0554 C***********ZIREM     COMP ZILPCP               94  94               066550
+0555 C***94******ZIMAN     ADD  1         ZIMAN                           066550
+0556 C*****SUBTRACT ZIMAN FROM ZDAYN1 TO GIVE VALUE OF ZDAYN1             066550
+0557 C*****REQUIRED FOR THIS INTEREST CALCULATION.                        066550
+0558 C***********ZDAYN1    SUB  ZIMAN     ZDAYN1                          066550
+0559 C***********          SETOF                     94                   066550
+0560 C***********ZICAL     TAG                             * ZICAL TAG *  066550
+0561 C***********                                                         066550
+0562 C****CALCULATE INTEREST                                              066550
+0563 C***90******                                                         066550
+0564 C*R*91******                                                         066550
+0565 C*R*96******ZIAMT     DIV  36000     ZIWRK1 155H                     066550
+0566 C***92******                                                         066550
+0567 C*R*97******ZIAMT     DIV  36500     ZIWRK1    H                     066550
+0568 C***95******ZIAMT     DIV  36600     ZIWRK1    H                     066550
+0569 C*R*********ZIWRK1    MULT ZIRATE    ZIWRK2 155H                     066550
+0570 C*R*********ZIWRK2    MULT ZDAYN1    ZINTR  152H      AMT. OF INTRST 066550
+0571 C***********                                                         066550
+0572 C***********          SETOF                     909192               066550
+0573 C***********          SETOF                     959697               066550
+0574 C*R*********          ENDSR                                          066550
+0575 C***********                                                         066550
+0576 C********************************************************************066550
+     C/EJECT
+0577 C********************************************************************
+0578 C**
+0579 C**   ZSAVE SR. TO MEMORISE THE SETTINGS AND TO SET OFF INDICATORS
+0580 C**              90 - 97 BEFORE EXECUTION OF A Z-SUBROUTINE.
+0581 C**
+0605 C********************************************************************
+     C/EJECT
+0605 C********************************************************************
+0606 C**
+0607 C**   ZRSTOR SR. TO RESTORE INDICATORS 90 - 97 TO THE SETTINGS
+0608 C**              THEY HAD BEFORE THE EXECUTION OF SR. ZSAVE.
+0609 C**
+     C/COPY ZSRSRC,ZRSTORZ1
+     C/COPY ZSRSRC,ZSAVEZ1
+0623 C**
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZINTDYZ2                                               066550
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZDATE9Z3                                               066550
+     C/COPY ZSRSRC,ZDAT10Z2                                               126017
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,GLINTCZ1                                               066550
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZFREQBZ2                                                                   CLE028
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   CLE028
+     C/COPY ZSRSRC,ZACCH                                                                      CLE028
+     C/COPY ZSRSRC,ZCHKH                                                                      CLE028
+     C/COPY ZSRSRC,RULE78Z1                                                                   CLE028
+0624 C********************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   PWR  - POWER ARRAY FOR CONVERSION OF AGGREGATE AMOUNTS
+0001
+0010
+0100
+1000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH                                                     CLE028
+312831303130313130313031                                                                      CLE028

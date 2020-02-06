@@ -1,0 +1,100 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD CRS Housekeeping Program')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000723 - Midas SD CRS Housekeeping Program               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. MD039670 *CREATE   Date 26Jul16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD039670 - FATCA Housekeeping Program                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSTS) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&EMSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(7) VALUE('  DILIB')
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             SNDPGMMSG  MSG('SDC000723 - Midas SD CRS Housekeeping Program') +
+                          TOMSGQ(MRUNQ)
+
+/** Initialise job switches and create data area */
+
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+/** Determine full DPLIB library name */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DILIB 1 2)) VALUE(&SYSID)
+
+/** Call program CB0160 to get value of restart indicator */
+
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &CSTS)
+
+/** If it is a restart. */
+
+             IF         COND(&CSTS *EQ 'Y') THEN(DO)
+
+             RSTOBJ     OBJ(SDCRNHPD SDCRSNPD) +
+                          SAVLIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/DBIC)
+             ENDDO
+
+/** Call CB0150 to update restart indicator */
+
+             CHGVAR     VAR(&CSTS) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+
+/** Call SD Account Review program */
+
+             CALL       PGM(SD000723) PARM(&CNAM &CSEQ)
+
+/** Database error processing */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&EMSG)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&EMSG) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+
+             CHGVAR     VAR(&CSTS) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+
+             GOTO       CMDLBL(END)
+
+/** Abnormal terminations */
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC000723 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             ENDPGM

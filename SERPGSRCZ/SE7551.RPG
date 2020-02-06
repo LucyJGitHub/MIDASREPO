@@ -1,0 +1,627 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Selected Securities by Bulk Report')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7551 - List of Securities for Redenomination by Bulk       *
+      *                                                               *
+      *  Function:  Report Program for EMU SE Redenomination.         *
+      *  (I/C)                                                        *
+      *                                                               *
+      *  Called By: Standart RCF processing                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 146151             Date 29Oct98               *
+      *                 137878  *CREATE    Date 01Jul98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  146151 - Add ISIN code                                       *
+      *  137878 - New Report for CEU017 - Securities Redenomination   *
+      *           List of Securities selected in a Bulk.              *
+      *                                                               *
+      *****************************************************************
+     FSECORBL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Redenomination Bulk Detail file - prefix NB
+      *
+     FSECORSL0IF  E           K        DISK         KINFSR *PSSR
+      ***  Redenomination Bulk Selected Securities Detail - prefix NC
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ***  Securities Details
+      *
+     FSE7551AUO   E                    PRINTER      KINFSR *PSSR      UC
+      ***  Bulk Definitions - Audit
+     F                                              KINFDS SPOOLU
+      *
+     FSE7551P1O   E             70     PRINTER      KINFSR *PSSR      UC
+      ***  Bulk Definitions Details - Report
+     F                                              KINFDS SPOOL1
+      *
+      /EJECT
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     E                    #SNAR   1   7 50
+      ***  Status narrative
+      *
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      /SPACE 3
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE7551P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE7551AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  Customer extension file
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  Bank Details
+      *
+     IDSSDY     E DSDSSDY
+      ***  Second DS For Access Programs, Long Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      ***  First DS for access programs, short data structure
+      *
+     ICPYR@$      DS
+      ***  Data structure for compilation - Copyright Insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+      *
+      /EJECT
+      *****************************************************************
+      *                M A I N   P R O C E S S I N G                  *
+      *****************************************************************
+      *
+      ***  If Parameter Bulk Definition is blank than read all Bulk Definition
+      ***  else read the details for the parameter Bulk Defintion
+      *
+     C           WSLAD     IFEQ 'Y'
+     C                     EXSR #ALL
+     C                     ELSE
+     C                     EXSR #SELEC
+     C                     ENDIF
+      *
+      ***  If RCOUNT >< 0, Then Print Trailer
+      *
+     C           RCOUNT    IFNE 0
+     C           WWOPEN    ANDEQ'Y'
+     C           *IN70     ANDEQ'0'
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+      ***  Close Output file
+      *
+     C                     CLOSESE7551P1
+      *
+      ***  Perform audit report
+      *
+     C                     EXSR AUDIT
+      *
+      ***  Normal End of Program
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *         E N D   O F   M A I N   P R O C E S S I N G           *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #ALL   - Read All Bulk Definitions                           *
+      *  ----                                                         *
+      *  Called By : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #ALL      BEGSR
+      *
+      ***  read file for record
+      *
+     C                     READ SECORBL0                 89
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     EXSR #REPD1
+      *
+      ***  Read next record.
+      *
+     C                     READ SECORBL0                 89
+     C                     ENDDO                           EOF not reached
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SELEC - Read Bulk Definition equal to parameter             *
+      *  ------                                                       *
+      *  Called By : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #SELEC    BEGSR
+      *
+      ***  read file for record equal to the parameter
+      *
+     C                     MOVE WBLKR     WWBLKR  60
+     C           WWBLKR    SETLLSECORBL0                 89
+     C           WWBLKR    READESECORBL0                 89
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     EXSR #REPD1
+      *
+      ***  Read next record.
+      *
+     C           WWBLKR    READESECORBL0                 89
+     C                     ENDDO                           EOF not reached
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #REPD1 - Process Report Lines.                               *
+      *  ------                                                       *
+      *  Called By : Main processing                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #REPD1    BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C           WWOPEN    IFNE 'Y'
+     C                     EXSR RCFP1
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+      *
+      ***  Report Details
+      *
+     C                     MOVE NBBLKR    RBLKR            Bulk Ref.
+     C                     MOVELNBBLKN    RBLKN     P      Bulk Nar.
+     C                     SELEC
+     C           NBSTAT    WHEQ 'I'
+      ***  Incomplete
+     C                     MOVEL#SNAR,1   RSTAT
+     C           NBSTAT    WHEQ 'G'
+      ***  Securities Details Generated
+     C                     MOVEL#SNAR,2   RSTAT
+     C           NBSTAT    WHEQ 'L'
+      ***  Allocated/Events generated
+     C                     MOVEL#SNAR,3   RSTAT
+     C           NBSTAT    WHEQ 'X'
+      ***  Authorised
+     C                     MOVEL#SNAR,4   RSTAT
+     C           NBSTAT    WHEQ 'C'
+      ***  Complete
+     C                     MOVEL#SNAR,5   RSTAT
+     C           NBSTAT    WHEQ 'S'
+      ***  Stock authorised
+     C                     MOVEL#SNAR,6   RSTAT
+     C           NBSTAT    WHEQ 'R'
+      ***  Reversed
+     C                     MOVEL#SNAR,7   RSTAT
+     C                     OTHER
+     C                     MOVE *BLANKS   RSTAT
+     C                     ENDSL
+      *
+     C                     MOVE NBLCD     ZDAYNO           Last change date
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RLCD             DDMMMYY
+     C                     MOVE *BLANKS   RLCTY            Last change type
+      *
+      ***  If Type = 'I' move 'INSERT', Type = A  move 'AMEND'
+      ***  If Type = 'D' move 'DELETE'
+      *
+     C                     MOVEL'INSERT'  RLCTY
+     C           NBCHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  RLCTY
+     C                     ENDIF
+     C           NBCHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  RLCTY
+     C                     ENDIF
+      *
+     C                     MOVE NBSENC    RSENC            Nom. Ccy
+     C                     MOVE NBSEVC    RSEVC            Value Ccy
+     C                     MOVE NBSEMC    RSEMC            Market center
+     C                     MOVE NBSEPT    RSEPT            Proc. Type
+     C                     MOVE NBSEIT    RSEIT            Inv. Type
+     C                     MOVELNBSESS    RSESS     P      Security
+      *
+     C********** NBSEIS    IFNE *ZEROS                                                        CSD027
+     C           NBSEIS    IFNE *BLANKS                                                       CSD027
+     C                     MOVE *BLANKS   @KEYC
+     C                     MOVELNBSEIS    @KEYC  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEYC
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCSSN    RSEIS     P      Issuer
+     C                     ELSE
+     C                     MOVE *BLANKS   RSEIS
+     C                     ENDIF
+      *
+     C********** NBSIDY    IFNE *ZEROS                                                        CER020
+     C**********           MOVE NBSIDY    RSIDY                                 Industry Code CER020
+     C           NBLOIC    IFNE *BLANKS                                                       CER020
+     C                     MOVE NBLOIC    RSIDY                                               CER020
+     C                     ELSE
+     C                     MOVE *BLANKS   RSIDY
+     C                     ENDIF
+      *
+     C           NBMATY    IFNE *ZEROS
+     C                     MOVE NBMATY    ZDAYNO           After Maturity
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RMATY            DDMMMYY
+     C                     ELSE
+     C                     MOVE *BLANKS   RMATY
+     C                     ENDIF
+      *
+      ***  Write out Detail Record.
+      *
+     C                     WRITEHEADP2
+     C                     ADD  1         RCOUNT
+      *
+      ***  Read all Bulk Selected Securities Detail from the Bulk Reference
+      *
+     C                     EXSR #SELB2
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  #SELB2 - Read Bulk Selected Securities detail                *
+      *  ------   with Bulk Reference from LF/SECORBL0                *
+      *  Called By :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           #SELB2    BEGSR
+      *
+      ***  read file for record equal to the parameter
+      *
+     C                     MOVELNBBLKR    W2BLKR  60P
+     C           W2BLKR    SETLLSECORSL0                 88
+     C           W2BLKR    READESECORSL0                 88
+      *
+     C                     Z-ADD0         X       50
+      *
+      ***  Do While End of File not reached.
+      *
+     C           *IN88     DOWEQ*OFF
+      *
+      ***  Report Details
+     C           NCOSEC    CHAINSECTY                87
+      *
+     C           *IN87     IFEQ *ON
+     C           RECI      OREQ '*'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 01 *
+     C                     MOVE 'SECTY   'DBFILE           ***************
+     C                     MOVELNCOSEC    DBKEY
+     C                     MOVEL'SE7551'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           X         IFEQ 0
+     C                     MOVE NCOSEC    RSESN1
+     C                     MOVE SRPN      RSRPN1
+     C                     MOVE NCNSEC    RNSEC1
+     C                     MOVE ISIN      RISIN1                          146151
+     C                     MOVE *BLANKS   RSESN2
+     C                     MOVE *BLANKS   RSRPN2
+     C                     MOVE *BLANKS   RNSEC2
+     C                     MOVE *BLANKS   RISIN2                          146151
+     C                     ADD  1         X
+     C                     ELSE
+     C                     MOVE NCOSEC    RSESN2
+     C                     MOVE SRPN      RSRPN2
+     C                     MOVE NCNSEC    RNSEC2
+     C                     MOVE ISIN      RISIN2                          146151
+     C                     ADD  1         X
+     C                     ENDIF
+      *
+     C           X         IFEQ 2
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     MOVE '0'       *IN70
+     C                     ENDIF
+      *
+     C                     WRITEDETLP1
+     C                     Z-ADD0         X
+     C                     ENDIF
+      *
+      ***  Read next record.
+      *
+     C           W2BLKR    READESECORSL0                 88
+     C                     ENDDO                           EOF not reached
+      *
+     C           X         IFEQ 1
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITEHEADP1
+     C                     WRITEHEADP2
+     C                     MOVE '0'       *IN70
+     C                     ENDIF
+      *
+     C                     WRITEDETLP1
+     C                     Z-ADD0         X
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *  ------                                                       *
+      *  Called By : Main Processing, *PSSR                           *
+      *  Calls     : None.                                            *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+     C           *INU7     IFEQ *ON
+     C           RCOUNT    OREQ 0
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C                     WRITENODTLS
+     C                     ENDIF                           U7 = *ON
+     C                     ENDIF                           U7 = *ON or RCOUNT=0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Open Report file
+      *
+     C                     CLOSESE7551P1
+      *
+     C                     OPEN SE7551P1
+     C                     MOVE 'Y'       WWOPEN
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM @RSEQ     SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVE 'SE7551P1'DBFILE           * DB ERROR 02 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE7551'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Open printer File
+      *
+     C                     CLOSESE7551AU
+     C                     Z-ADD0         RCOUNT  50
+     C                     OPEN SE7551AU
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM @RSEQ     SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVE 'SE7551AU'DBFILE           * DB ERROR 03 *
+     C           'ZSFILE R'CAT  'OUTINE'  DBKEY     P      ***************
+     C                     MOVEL'SE7551'  DBPGM     P
+     C                     OUT  LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *   *INZSR - Initial Processing                                 *
+      *   ------                                                      *
+      *   Called by : Main processing                                 *
+      *   Calls     : None.                                           *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           @RSEQ   5        Sequence Number
+     C                     PARM           @RLEV   1        Level
+     C                     PARM           @RENT   3        Entity
+     C                     PARM           WSLAD   1        Select all Bulks
+     C                     PARM           WBLKR   6        Bulk Reference
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Access Bank details file
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' WWRTCD  7
+     C                     PARM '*FIRST ' WWOPTN  7
+     C           SDBANK    PARM SDBANK    DSSDY
+      *
+     C           WWRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE    P      * DB ERROR 04 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ***************
+     C                     MOVEL'SE7551'  DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Set indicator 98 for date format used in ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     END
+      *
+      ***  Report Work fields.
+     C                     Z-ADD0         RCOUNT
+     C                     MOVE 'N'       WWOPEN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Error control subroutine                            *
+      *  ------                                                       *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C                     SETON                     U7U8
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWOPEN  1        To avoid RCFAU in AUDIT
+     C                     EXSR AUDIT
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  SNAR
+INCOMPLETE
+SECURITIES DETAILS GENERATED
+ALLOCATED/EVENTS GENERATED
+AUTHORISED
+COMPLETE
+STOCK AUTHORISED
+REVERSED
+**  CPY@
+(c) Finastra International Limited 2001

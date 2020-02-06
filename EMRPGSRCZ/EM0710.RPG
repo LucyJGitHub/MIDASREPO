@@ -1,0 +1,186 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Leo update of EMCEX')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Exposure Management Module                       *
+     F*                                                               *
+     F*  EM0710 - Update of PF/EMCEX   (I/C Exposure Detail File)     *
+     F*           Lending Exposure with the Leo Exposure Amount       *
+     F*                                                               *
+     F*  Function:  This program was created for the Leo Midas        *
+     F*             Integration project. The EMCEX record for the     *
+     F*             LC Received from Customer is updated. The         *
+     F*             Lending Exposure field is updated with the        *
+     F*             exposure amount passed in, the Last Change Date   *
+     F*             and Change type Fields are also amended. If an    *
+     F*             error occurs in this program, a return code of    *
+     F*             *ERROR is passed back to CMIU50.                  *
+     F*                                                               *
+     F*  Phases - Input Cycle                                         *
+     F*                                                               *
+     F*  Called By: CMIU50 - Leo On Line Facility Availability Update *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CTI002 EM / TI Interface 23/09/98             *
+     F*                 081189             DATE 28NOV94               *
+     F*                 S01473             DATE 27JUL94               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  MD046248 - Finastra Rebranding                               *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  081189 - Remove LDA data area processing, as this program    *
+     F*           is called from the Leo system, and the data area    *
+     F*           cannot be found. Also change the call to AOBANKR0.  *
+     F*           Change the call to AOBANKR0 to pick up the library  *
+     F*           name from the Leo *LDA.                             *
+     F*           EXLAMT should be 13,0 not 13,8.                     *
+     F*  S01492 - Created for Leo Midas Integration                   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F****************************************************************
+     F*
+     FEMCEX   UF  E           K        DISK
+     F            EMCEXX1F                          KIGNORE
+     F            EMCEXX3F                          KIGNORE
+      ********************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *       10         NRF on EMCEX
+      *       U7+U8   Database Error
+     F********************************************************************
+     E                    CPY@    1   1 80               Copyright
+     E                    @WRK       21  1               Work Array       081189
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External Data structure for bank details.
+      *
+     IDSFDY     E DSDSFDY
+      **  Short data structure for access programs
+      *
+     I*LDA*********DS                            256                      081189
+     I*************                         134 141 DBFILE                081189
+     I*************                         142 170 DBKEY                 081189
+     I*************                         171 180 DBPGM                 081189
+     I*************                         181 1830DBASE                 081189
+     I           UDS                                                      081189
+     I                                      101 110 LIBNM                 081189
+      *
+      /EJECT
+      *****************************************************************
+      *   MAIN - main process                                         *
+      *   Called by -                                                 *
+      *   Calls - INIT   Initial Processing                           *
+      *   Calls - *PSSR  Error Handling Subroutine                    *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      ** Access exposure management file LF/EMCEX using key of L/C received
+      ** from customer. Update lending exposure field MLEE by change in
+      ** the L/C liability (increase = +ve/decrease = -ve), if a record
+      ** exists.
+     C           @LCRFC    CHAINEMCEX                10
+     C           *IN10     IFNE '1'
+     C                     ADD  EXLAMT    MLEE
+     C                     EXCPTUPDEXM
+     C                     END
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      *   INIT - Initial Processing                                   *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      **  Parameter Entry
+     C           *ENTRY    PLIST
+     C                     PARM           @ERR    7
+     C                     PARM           @LCRFC  6
+     C***********          PARM           EXLAMT 138                      081189
+     C                     PARM           EXLAMT 130                      081189
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ****Set up LDA                                                      081189
+     C************NAMVAR   DEFN           LDA                             081189
+     C************LOCK     IN   LDA                                       081189
+     C************         MOVE *BLANKS   DBFILE                          081189
+     C************         MOVE *BLANKS   DBKEY                           081189
+     C************         MOVEL'EM0710'  DBPGM                           081189
+     C************         MOVE *BLANKS   DBASE                           081189
+     C************         OUT  LDA                                       081189
+      **  Set up the database error fields                                081189
+     C                     MOVE *BLANKS   DBFILE  8                       081189
+     C                     MOVE *BLANKS   DBKEY  29                       081189
+     C                     MOVEL'EM0710'  DBPGM  10                       081189
+     C                     MOVE *BLANKS   DBASE   30                      081189
+     C*                                                                   081189
+     C**  Access SDBANKPD for report title and Midas Run Date
+     C***********          CALL 'AOBANKR0'                                081189
+     C                     MOVEA*BLANKS   @WRK                            081189
+     C                     MOVEALIBNM     @WRK                            081189
+     C                     Z-ADD1         H                               081189
+     C*                                                                   081189
+     C           *BLANK    LOKUP@WRK,H                   10               081189
+     C                     MOVEA'/'       @WRK,H                          081189
+     C                     ADD  1         H       20                      081189
+     C                     MOVEA'AOBANKR0'@WRK,H                          081189
+     C*                                                                   081189
+     C                     MOVE *BLANKS   VARI                            081189
+     C                     MOVEA@WRK      VARI   21                       081189
+     C*                                                                   081189
+     C                     CALL VARI                                      081189
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If no record is found on sdbankpd.
+     C           @RTCD     IFNE *BLANKS
+     C************LOCK     IN   LDA                                       081189
+     C                     MOVE '001'     DBASE              * * * * * * *
+     C                     MOVEL'FIRST'   DBKEY              * DBERR 001 *
+     C                     MOVEL'SDBANKPD'DBFILE             * * * * * * *
+     C                     MOVEL'EM0710'  DBPGM
+     C************         OUT  LDA                                       081189
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Set the last Change Date to Todays Date, and the Type of
+      ** Last Change to 'A' (Amend).
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'A'       CHTP
+      *
+     C                     ENDSR
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '*ERROR'  @ERR
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     OEMCEXX2FE                UPDEXM
+     O                         MLEE
+     O                         LCD
+     O                         CHTP
+** CPY@   Object Copyright
+(c) Finastra International Limited 2001

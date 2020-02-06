@@ -1,0 +1,275 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Set Off 2"O Clock flag')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE2004 - Set Off 2'O Clock flag                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD035554           Date 25May16               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CRE023  *CREATE    Date 29Jul05               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CRE023 - 2 O'clock Flag Upgrade to MidasPlus                 *
+      *                                                               *
+      *****************************************************************
+     FRE2004DFCF  E                    WORKSTN
+     FRE2CLKL0UF  E           K        DISK         KCOMIT
+     FREOSECL0IF  E           K        DISK
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  87 - ROLBCK                                                  *
+      *  88 - Error                                                   *
+      *  89 - General-purpose indicator                               *
+      *  90 - 99 - Core standard routine indicators                   *
+      *  U7 - Database error                                          *
+      *  U8 - Database error                                          *
+      *****************************************************************
+     E                    NCHR   37  37  1
+     E                    ECOD   41  82  1
+     E                    AMSG    1   3 30
+     E                    CHEK        8  1
+     E                    APAS        8  1
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** Data structure to update last transaction number DTAARA
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+      *
+      ** Program status data structure
+     IPSDS       SDS
+     I                                      244 246 PWSID
+     I                                      247 248 WSID
+     I                                      254 263 USRID
+      *
+      ** Data structure to provide text on COMIT entry in journal
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 SCHTP
+     I                                       26  35 USRIDX
+     I                                       51 306 SLOT1
+     I                                      307 365 SLOT2X
+     I                                      366 371 SLNBRX
+     I                                      372 3770SLNBR
+     I                                      378 378 SACTCD
+      *
+      *****************************************************************
+      *                                                               *
+      *  Start Process                                                *
+      *                                                               *
+      *****************************************************************
+     C           *NAMVAR   DEFN           LDA
+     C                     UNLCKLDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE2004'  DBPGM
+     C                     OUT  LDA
+     C                     UNLCKLDA
+      *
+     C                     EXSR P100
+     C  N88                EXSR P200
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  P100 - Screen-1 (User ID and User Password)                  *
+      *                                                               *
+      *****************************************************************
+     C           P100      BEGSR
+      *
+     C           *INKC     DOWEQ'0'
+     C                     MOVEL*BLANKS   MPSWD
+     C                     EXFMTRE2004S1
+     C                     MOVE '0'       *IN88
+     C                     MOVE *BLANKS   ERRMSG
+      *
+     C                     SELEC
+     C           *INKC     WHEQ '1'
+     C                     MOVE '1'       *IN88
+     C                     OTHER
+     C                     EXSR V100
+     C  N88                LEAVE
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  P200 - Update 2'O clock flag                                 *
+      *                                                               *
+      *****************************************************************
+     C           P200      BEGSR
+      *
+     C                     MOVE '1'       *IN87
+      *
+      ** Setup key
+      *
+     C           RE2KEY    KLIST
+     C                     KFLD           GCLOCK
+      *
+      ** Setup key
+      *
+     C                     MOVEL*BLANKS   GCLOCK
+     C                     MOVEL'CLOCK'   GCLOCK
+      *
+     C           RE2KEY    CHAINRE2CLKL0             89
+      *
+     C           *IN89     IFEQ '0'
+     C                     MOVE '0'       GTFLG
+     C                     UPDATRE2CLKD0               87
+     C                     ELSE
+     C                     UNLCKRE2CLKL0
+     C                     EXSR DBERR1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     ENDIF
+      *
+     C  N87                EXSR CMTUPD
+     C  N87      CMTTXT    COMIT
+     C   87                ROLBK
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  V100 - Screen-1 Validation for GUSID , Password              *
+      *                                                               *
+      *****************************************************************
+     C           V100      BEGSR
+     C           SMSID     CHAINREOSECL0             89
+      *
+     C                     SELEC
+     C           GRECI     WHEQ 'H'
+     C                     MOVELGMPAS     ENPSWD  8
+     C           GRECI     WHEQ 'D'
+     C                     MOVELGPSWD     ENPSWD  8
+     C                     OTHER
+     C                     MOVE '1'       *IN89
+     C                     ENDSL
+      *
+     C           *IN89     IFEQ '0'
+      *
+      ** class type 'A', 'B' or 'C'.
+      *
+     C           GCTYP     IFEQ 'A'
+     C           GCTYP     OREQ 'B'
+     C           GCTYP     OREQ 'C'
+     C           GRECI     OREQ 'H'
+     C                     MOVEAMPSWD     CHEK
+     C                     EXSR ENCR
+     C                     MOVEAAPAS      WPSWD   8
+      *
+     C           WPSWD     IFNE ENPSWD
+     C                     MOVE '1'       *IN88
+     C                     MOVELAMSG,2    ERRMSG
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE '1'       *IN88
+     C                     MOVELAMSG,3    ERRMSG
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVE '1'       *IN88
+     C                     MOVELAMSG,1    ERRMSG
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ENCR - Password encryption                                   *
+      *                                                               *
+      *****************************************************************
+     C           ENCR      BEGSR
+      *
+     C                     SETOF                     30
+      *
+     C                     Z-ADD1         P       20
+     C           CHEK,8    LOKUPNCHR,P                   30
+     C                     Z-ADD1         N       20
+      *
+     C           ENCD      TAG
+      *
+     C                     Z-ADD1         S       20
+     C           CHEK,N    LOKUPNCHR,S                   30
+     C           P         ADD  N         P
+     C           P         ADD  S         P
+     C                     MOVEAECOD,P    APAS,N
+     C                     Z-ADDS         P
+     C           N         ADD  1         N
+     C           N         COMP 8                      3030
+      *
+     C           *IN30     IFEQ '1'
+     C                     GOTO ENCD
+     C                     END
+      *
+     C                     ENDSR
+      *
+      ** Obtain last transaction number and set up standard output
+      ** information
+      *
+     C           CMTUPD    BEGSR
+     C                     EXSR ZTNLU1
+     C                     MOVE 'RE'      MDID    2
+     C                     MOVEL'RE2004'  PGMN    8
+     C                     MOVE WSID      WSIDX   3
+     C                     MOVE USRID     USRIDX 10
+     C                     TIME           MTIME
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DBERR1 - Database error 1.                                   *
+      *                                                               *
+      *****************************************************************
+     C           DBERR1    BEGSR
+      *
+     C                     UNLCKLDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'RE2004'  DBPGM
+     C                     MOVEL'RE2CLKL0'DBFILE
+     C                     MOVEL'01'      DBASE
+     C                     MOVEL'NONE    'DBKEY
+     C                     OUT  LDA
+     C                     UNLCKLDA
+     C                     SETON                     U7U8LR
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/ZTNLU1
+     C/COPY ZSRSRC,ZTNLU1Z2
+      *****************************************************************
+** Alphanumer Characters
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789
+** Encryption code
+SDKJFIENVQPWOCMUXZ293847501LRBAGYHT6ZSDKJ
+FIENVQPWOCMUXZ293847501LRBAGYHT6ZSDKJFIEN
+** Error messages
+Invalid user ID
+Invalid password
+Invalid class type

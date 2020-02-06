@@ -1,0 +1,124 @@
+/*********************************************************************/
+/*S*D****CLPBASEMOD***************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       CLLE/GLC001600 - Transfer Equation Accounting Information   */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*                                                                   */
+/*       Last Amend No. CCB023 *REDUNDANT Date 06Aug12               */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BUG13986           Date 21May07              */
+/*                      CRE026  *CREATE    Date 24May06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       BUG13986 - Error in COB. Added SAR validation               */
+/*       CRE026 - Consumer Banking                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POST &NAM &SEQ)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+             DCL        VAR(&POST) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NAM)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ)  TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)                                    /*BUG13986*/
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                                    /*BUG13986*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                   /*BUG13986*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                 /*BUG13986*/
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+                                                                                        /*BUG13986*/
+/* Check if CRE026 feature */                                                           /*BUG13986*/
+                                                                                        /*BUG13986*/
+             CHGVAR     VAR(&RTN) VALUE('       ')                                      /*BUG13986*/
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')                                      /*BUG13986*/
+             CHGVAR     VAR(&SARD) VALUE('CRE026')                                      /*BUG13986*/
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                       /*BUG13986*/
+             IF         COND(&RTN *NE '       ') THEN(DO)                               /*BUG13986*/
+             GOTO       CMDLBL(END)                                                     /*BUG13986*/
+             ENDDO                                                                      /*BUG13986*/
+                                                                                        /*BUG13986*/
+/* Create LDA for job in QTEMP if it does not already exist */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             ENDDO
+ 
+             SNDPGMMSG  MSG('GLC001600 - Transfer Equation Accounting +
+                           Information Program') TOMSGQ(MRUNQ)
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Call CB0150 to set the variable to 'Y' */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &BUSY)
+ 
+             IF         COND(&POST *EQ '1') THEN(DO)
+             CLRPFM   FILE(GECBPD)
+             MONMSG   MSGID(CPF0000)
+             CLRPFM   FILE(GECBZZ)
+             MONMSG   MSGID(CPF0000)
+             ENDDO
+ 
+             IF         COND(&POST *EQ '5') THEN(DO)
+             CLRPFM   FILE(GECB2PD)
+             MONMSG   MSGID(CPF0000)
+             CLRPFM   FILE(GECB2ZZ)
+             MONMSG   MSGID(CPF0000)
+ 
+             OVRDBF   FILE(GECBPD)   TOFILE(GECB2PD)
+             OVRDBF   FILE(GECBZZ)   TOFILE(GECB2ZZ)
+             OVRDBF   FILE(AF4PF1)   TOFILE(AF4PF2)
+             OVRDBF   FILE(AF3PF1)   TOFILE(AF3PF2)
+             ENDDO
+ 
+             CALL       PGM(GL001600)
+ 
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/* Database error processing */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                        TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Call CB0150 to set the variable to 'N' */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('N')
+             CALL       PGM(CB0150) PARM(&NAM &SEQ &BUSY)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/* Abnormal termination - batch job */
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                       GLC001600 ended abnormally - see job log') +
+                       TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ 
+             END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd. 2006')
+             ENDPGM

@@ -1,0 +1,462 @@
+/*********************************************************************/
+/*STD    CLPBASEBNN                                                  */
+/*EXI    TEXT('Midas MR MBI/Almonde interface')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - MidasPlus Reporting Module                          */
+/*                                                                   */
+/*       MRC001000 - Midas Extracts for MBI Interface                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR844222           Date 05Oct11              */
+/*                      AR828013           Date 12Sep11              */
+/*                      AR809328           Date 02Aug11              */
+/*                      CMR002  *CREATE    Date 14Feb11              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR844222 - MBI signal file format update (CCR003)           */
+/*       AR828013 - Incremental database for MBI (CCR036)            */
+/*       AR809328 - Standardise field names for MRMBIFPD             */
+/*       CMR002 - MBI/Almonde Interface                              */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* MR001000 parameters */
+             DCL        VAR(&BJRDNB) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&BJEYD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MONTHEND) TYPE(*DEC) LEN(5 0)
+/**********  DCL        VAR(&RUNDATEA) TYPE(*CHAR) LEN(6)                            */ /*AR844222*/
+             DCL        VAR(&RUNDATEA) TYPE(*CHAR) LEN(8)                               /*AR844222*/
+             DCL        VAR(&RUNDATE6) TYPE(*CHAR) LEN(6)                               /*AR844222*/
+             DCL        VAR(&DATEA) TYPE(*CHAR) LEN(5)                                  /*AR828013*/
+ 
+/* AOSVALR0 parameters */
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+ 
+/* QCLSCAN parameters */
+             DCL        VAR(&STRING) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATTERN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&TRANSLATE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TRIM) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&WILD) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3 0)
+ 
+/* RUNSQLSTM parameters */
+             DCL        VAR(&STM_STR) TYPE(*CHAR) LEN(80)
+ 
+/* Work variables */
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&LIBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USRDFNATR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PROCESSED) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RUNDAYA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&QSRLNBR) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&ENDPOS) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&PRVRESULT) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&FLRNAME) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&INFLR) TYPE(*CHAR) LEN(200)
+/**********  DCL        VAR(&STREAMF) TYPE(*CHAR) LEN(12)            */                 /*AR844222*/
+             DCL        VAR(&FTPUSED) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRUNA) TYPE(*CHAR) LEN(3)                                  /*AR828013*/
+             DCL        VAR(&PRUN) TYPE(*DEC) STG(*DEFINED) +
+                           LEN(5 0) DEFVAR(&PRUNA)                                      /*AR828013*/
+ 
+             DCLF       FILE(MRMBIFPD)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CHGJOB     SWS(XXXXXX00)
+ 
+             SNDPGMMSG  MSG('MRC001000 - Midas Extracts for MBI +
+                          Interface') TOMSGQ(MRUNQ)
+ 
+/* Create data area LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+/* Create and rename temporary source file for RUNSQLSTM. */
+             DLTF       FILE(QTEMP/RUNSQLSTM)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/RUNSQL)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UTWRTSQL')
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)
+ 
+/* Create FTP command files                         */
+             DLTF       FILE(QTEMP/FTPCOMMAND)
+             MONMSG     MSGID(CPF0000)
+             CRTSRCPF   FILE(QTEMP/FTPCOMMAND) RCDLEN(212)
+             ADDPFM     FILE(QTEMP/FTPCOMMAND) MBR(INPUT)
+             ADDPFM     FILE(QTEMP/FTPCOMMAND) MBR(OUTPUT)
+             OVRDBF     FILE(INPUT) TOFILE(QTEMP/FTPCOMMAND) +
+                          MBR(INPUT) OVRSCOPE(*JOB)
+             OVRDBF     FILE(OUTPUT) TOFILE(QTEMP/FTPCOMMAND) +
+                          MBR(OUTPUT) OVRSCOPE(*JOB)
+ 
+/* Create file for CPYTOPCD command  */
+/**********  DLTF       FILE(QTEMP/MSIGNAL)                          */                 /*AR844222*/
+/**********  MONMSG     MSGID(CPF0000)                               */                 /*AR844222*/
+/**********  DLTF       FILE(QTEMP/MSIGNALF)                         */                 /*AR844222*/
+/**********  MONMSG     MSGID(CPF0000)                               */                 /*AR844222*/
+/**********  CRTPF      FILE(QTEMP/MSIGNALF) RCDLEN(100)             */                 /*AR844222*/
+/**********  RNMOBJ     OBJ(QTEMP/MSIGNALF) OBJTYPE(*FILE) +
+                          NEWOBJ(MSIGNAL)                            */                 /*AR844222*/
+ 
+/* Get system prefix variable from SDSTAT data area */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+                                                                                        /*AR828013*/
+/** Get previous rundate from JNSTAT data area */                                       /*AR828013*/
+                                                                                        /*AR828013*/
+             RTVDTAARA  DTAARA(JNSTAT (103 3)) RTNVAR(&PRUNA)                           /*AR828013*/
+ 
+/* Get today's rundate and runday for today, end of month, and end of year */
+             CALL       PGM(MR001000) PARM(&RETURNCODE &BJRDNB +
+                          &MONTHEND &BJEYD &RUNDATEA)
+             IF         COND(&RETURNCODE = '*Error*') THEN(GOTO +
+                          CMDLBL(ABNOR))
+             CHGVAR     VAR(&DATEA) VALUE(&BJRDNB)                                      /*AR828013*/
+             CHGVAR     VAR(&RUNDATE6) VALUE(%SST(&RUNDATEA 3 6))                       /*AR844222*/
+ 
+/* Create extract library name ZZYYMMDD */
+/**********  CHGVAR     VAR(&LIBNAME) VALUE(&SYSID *CAT &RUNDATEA)                   */ /*AR844222*/
+             CHGVAR     VAR(&LIBNAME) VALUE(&SYSID *CAT &RUNDATE6)                      /*AR844222*/
+             CHGVAR     VAR(&RUNDAYA) VALUE(&BJRDNB)
+             CRTDTAARA  DTAARA(QTEMP/EXTRLIB) TYPE(*CHAR) LEN(10)                       /*AR828013*/
+             MONMSG     MSGID(CPF1023)                                                  /*AR828013*/
+             CHGDTAARA  DTAARA(QTEMP/EXTRLIB) VALUE(&LIBNAME)                           /*AR828013*/
+             CRTUSRSPC  USRSPC(QTEMP/MBIUSR) DELETE(*YES)                               /*AR828013*/
+ 
+/* Create extract library  */
+             CRTLIB     LIB(&LIBNAME) TEXT('Midas extract library +
+                          for MBI interface')
+             MONMSG     MSGID(CPF2111) EXEC(DO)
+ 
+/* Library exists - check if Midas Library */
+/* User Defined Attribute should contain MIDASnnnnn */
+                CALL       PGM(ZACRTVUSRA) PARM(&RETURNCODE &LIBNAME +
+                             '*LIB' &USRDFNATR)
+                IF         COND(%SST(&USRDFNATR 1 5) *EQ 'MIDAS' *AND +
+                             %SST(&USRDFNATR 6 5) *EQ &RUNDAYA) THEN(DO)
+                   CLRLIB     LIB(&LIBNAME)
+                ENDDO
+                ELSE       CMD(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+ 
+/* Change user defined attribute (this is to ensure that the   */
+/* housekeeping process will only delete MIDAS libraries) .    */
+             CHGVAR     VAR(&USRDFNATR) VALUE('MIDAS' *CAT &RUNDAYA)
+             CHGOBJINF  OBJ(QSYS/&LIBNAME) TYPE(*LIB) +
+                          USRDFNATR(&USRDFNATR)
+ 
+/* Copy audit file into extract library */
+             CPYF       FROMFILE(MRMBIFPD) TOFILE(&LIBNAME/AUDIT) +
+                          CRTFILE(*YES)
+ 
+/* Reset audit file  */
+/**********  CHGVAR     VAR(&STM_STR) VALUE('UPDATE ' *CAT &LIBNAME +
+                          *TCAT '/AUDIT SET EXTRCT = ''N'', RCDCNT +
+                          = 0')                                                      */ /*AR809328*/
+             CHGVAR     VAR(&STM_STR) VALUE('UPDATE ' *CAT &LIBNAME +
+                          *TCAT '/AUDIT SET MREXTO = ''N'', MRNORE +
+                          = 0')                                                         /*AR809328*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(CPD32CC)
+             MONMSG     MSGID(SQL0952) CMPDTA(CPA32B2)
+ 
+/* Now read through the configuration file, and process all */
+/* files due to be copied today                             */
+FileLoop:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(FLR))
+ 
+             CHGVAR     VAR(&PROCESSED) VALUE('Y')
+ 
+/* Check if file is to be extracted - checks are:            */
+/* 1 Whether the file is to be downloaded at all, and if so, */
+/*   whether it is to be downloaded today, ie:               */
+/* 2 Download frequency is D(aily) or                        */
+/*   frequency is M(onthly) and today is the last working    */
+/*   day of the month or                                     */
+/*   frequency is Y(early) and today is the last working     */
+/*   day of the year                                         */
+/* 3 If to be downloaded, whether by direct copy or via an   */
+/*   extract program                                         */
+ 
+/**********  IF         COND(&DWNLOD *EQ 'Y') THEN(DO)                               */ /*AR809328*/
+/**********     IF         COND(&FREQ *EQ 'D' *OR (&FREQ *EQ 'M' *AND +
+                             &BJRDNB *EQ &MONTHEND) *OR (&FREQ *EQ 'Y' +
+                             *AND &BJRDNB *EQ &BJEYD)) THEN(DO)                      */ /*AR809328*/
+/**********        IF         COND(&EXTPGM *EQ '          ') THEN(DO)                */ /*AR809328*/
+/**********           CPYF       FROMFILE(&FILNAM) TOFILE(&LIBNAME/&FILNAM) +
+                                   FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES)       */ /*AR809328*/
+             IF         COND(&MRDWNL *EQ 'Y') THEN(DO)                                  /*AR809328*/
+               IF COND(&MREXDT *LT &PRUN) THEN(DO)                                      /*AR828013*/
+                 IF COND(&MRMIOR *EQ 'I' *AND +
+                    &BJRDNB *EQ &MONTHEND) +
+                    THEN(CHGVAR VAR(&MRMIOR) VALUE('R'))                                /*AR828013*/
+                 IF COND(&MRYIOR *EQ 'I' *AND +
+                    &BJRDNB *EQ &BJEYD)   +
+                    THEN(CHGVAR VAR(&MRYIOR) VALUE('R'))                                /*AR828013*/
+               ENDDO                                                                    /*AR828013*/
+/**********     IF         COND(&MRFREQ *EQ 'D' *OR (&MRFREQ *EQ 'M' *AND +
+                             &BJRDNB *EQ &MONTHEND) *OR (&MRFREQ *EQ 'Y' +
+                             *AND &BJRDNB *EQ &BJEYD)) THEN(DO) */             /*AR809328 AR828013*/
+               IF COND(&MRDIOR *EQ 'R' *OR (&MRMIOR *EQ 'R' *AND +
+                  &BJRDNB *EQ &MONTHEND) *OR (&MRYIOR *EQ 'R'  +
+                  *AND &BJRDNB *EQ &BJEYD)) THEN(DO)                                    /*AR828013*/
+                   IF         COND(&MRXPGM *EQ '          ') THEN(DO)                   /*AR809328*/
+                      CPYF       FROMFILE(&MRFNAM) TOFILE(&LIBNAME/&MRFNAM) +
+                                   FROMMBR(*ALL) TOMBR(*FROMMBR) CRTFILE(*YES)          /*AR809328*/
+                      MONMSG     MSGID(CPF0000) EXEC(CHGVAR VAR(&PROCESSED) +
+                                   VALUE('E'))
+                     CHGVAR VAR(&STM_STR) VALUE('ALTER TABLE ' +
+                        *CAT &LIBNAME *TCAT '/' *TCAT &MRFNAM +
+                        *TCAT ' ADD COLUMN ACTION ' +
+                        *CAT 'CHAR(1)')                                                 /*AR828013*/
+                     CALL PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                         /*AR828013*/
+                     RUNSQLSTM SRCFILE(QTEMP/RUNSQL) +
+                        SRCMBR(RUNSQLSTM) COMMIT(*NONE)                                 /*AR828013*/
+                     MONMSG MSGID(CPD32CC)                                              /*AR828013*/
+                     MONMSG MSGID(SQL0952) CMPDTA(CPA32B2)                              /*AR828013*/
+                   ENDDO
+                   ELSE       CMD(DO)
+/**********           CALL       PGM(&EXTPGM) PARM(&RETURNCODE &FILNAM &LIBNAME)     */ /*AR809328*/
+                      CALL       PGM(&MRXPGM) PARM(&RETURNCODE &MRFNAM &LIBNAME)        /*AR809328*/
+                      IF         COND(&RETURNCODE *EQ 'Error') THEN(CHGVAR +
+                                   VAR(&PROCESSED) VALUE('E'))
+                   ENDDO
+ 
+/* Now get the record count and update the audit file with the  */
+/* processed flag - Y(es), N(o), E(rror), and the record count  */
+/**********        CHGVAR     VAR(&STM_STR) VALUE('UPDATE ' *CAT &LIBNAME +
+                                *TCAT '/AUDIT SET EXTRCT = ''' *CAT +
+                                &PROCESSED *CAT ''', RCDCNT = (select +
+                                count(*) from ')                                    */ /*AR809328*/
+                   CHGVAR     VAR(&STM_STR) VALUE('UPDATE ' *CAT &LIBNAME +
+                                *TCAT '/AUDIT SET MREXTO = ''' *CAT +
+                                &PROCESSED *CAT ''', MRNORE = (select +
+                                count(*) from ')                                       /*AR809328*/
+                   CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
+/**********        CHGVAR     VAR(&STM_STR) VALUE(&LIBNAME *TCAT '/' *CAT +
+                                &FILNAM *BCAT ') where FILNAM = ''' *CAT +
+                                &FILNAM *tcat '''')                                 */ /*AR809328*/
+                   CHGVAR     VAR(&STM_STR) VALUE(&LIBNAME *TCAT '/' *CAT +
+                                &MRFNAM *BCAT ') where MRFNAM = ''' *CAT +
+                                &MRFNAM *tcat '''')                                    /*AR809328*/
+                   CALL       PGM(UTWRTSQL) PARM(&STM_STR '*ADD')
+                   RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                                COMMIT(*NONE)
+                   MONMSG     MSGID(CPD32CC)
+                   MONMSG     MSGID(SQL0952) CMPDTA(CPA32B2)
+                   CHGVAR VAR(&STM_STR) VALUE('UPDATE MRMBIFPD SET +
+                      MREXDT=' *CAT &DATEA *CAT ' WHERE +
+                      MRFNAM=''' *CAT &MRFNAM *CAT '''')                                /*AR828013*/
+                   CALL PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*AR828013*/
+                   RUNSQLSTM SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                      COMMIT(*NONE)                                                     /*AR828013*/
+                   MONMSG MSGID(CPD32CC)                                                /*AR828013*/
+                   MONMSG MSGID(SQL0952) CMPDTA(CPA32B2)                                /*AR828013*/
+                ENDDO
+                ELSE CMD(DO)                                                            /*AR828013*/
+                  IF COND(&MRDIOR *EQ 'I' *OR (&MRMIOR *EQ 'I' *AND +
+                     &BJRDNB *EQ &MONTHEND) *OR (&MRYIOR *EQ 'I'  +
+                     *AND &BJRDNB *EQ &BJEYD)) THEN(DO)                                 /*AR828013*/
+                    IF COND(&MRXPGM *EQ '          ') THEN(DO)                          /*AR828013*/
+                      DLTF FILE(QTEMP/&MRFNAM)                                          /*AR828013*/
+                      MONMSG MSGID(CPF0000)                                             /*AR828013*/
+                      DLTF FILE(&LIBNAME/&MRFNAM)                                       /*AR828013*/
+                      MONMSG MSGID(CPF0000)                                             /*AR828013*/
+                      CRTDUPOBJ OBJ(&MRFNAM) FROMLIB(*LIBL) +
+                         OBJTYPE(*FILE) TOLIB(QTEMP) TRG(*NO)                           /*AR828013*/
+                      CRTDUPOBJ OBJ(&MRFNAM) FROMLIB(*LIBL) +
+                         OBJTYPE(*FILE) TOLIB(&LIBNAME) TRG(*NO)                        /*AR828013*/
+                      CALL PGM(MR001004) PARM('ADD' &MRFNAM &BJRDNB)                    /*AR828013*/
+                    ENDDO                                                               /*AR828013*/
+                    ELSE CMD(DO)                                                        /*AR828013*/
+                      CALL PGM(&MRXPGM) PARM(&RETURNCODE &MRFNAM &LIBNAME)              /*AR828013*/
+                      IF COND(&RETURNCODE *EQ 'Error') THEN(CHGVAR +
+                         VAR(&PROCESSED) VALUE('E'))                                    /*AR828013*/
+                    ENDDO                                                               /*AR828013*/
+                  ENDDO                                                                 /*AR828013*/
+                ENDDO                                                                   /*AR828013*/
+             ENDDO
+ 
+             GOTO       CMDLBL(FILELOOP)
+ 
+FLR:
+ 
+/** Process Incremental Changes to the File */                                          /*AR828013*/
+ 
+             CALL PGM(MR001004) PARM('RUN' ' ' &BJRDNB)                                 /*AR828013*/
+ 
+/* Get location of local IFS folder and remote system name */
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                          'MBILocalPath' &SVAL1 +
+                          'MBIRemoteSystem' &SVAL2 &SVALK3 &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                          &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK0 &SVAL10)
+ 
+/* If the system values are missing, or the local folder location  */
+/* is blank, then end abnormally.  Remote system is checked later. */
+             IF         COND((%SST(&RTNCDE 1 4) *EQ '*NRF') *OR +
+                          (&SVAL1 *EQ ' ')) THEN(GOTO CMDLBL(ABNOR))
+ 
+/* Initialise variables used to build/check local folder path */
+/**********  CHGVAR     VAR(&STRING)  VALUE(&SVAL1)                  */                 /*AR844222*/
+/**********  CHGVAR     VAR(&STRLEN) VALUE(200)                      */                 /*AR844222*/
+/**********  CHGVAR     VAR(&STRPOS) VALUE(1)                        */                 /*AR844222*/
+/**********  CHGVAR     VAR(&PATTERN) VALUE('/')                     */                 /*AR844222*/
+/**********  CHGVAR     VAR(&PATLEN) VALUE(1)                        */                 /*AR844222*/
+/**********  CHGVAR     VAR(&RESULT) VALUE(0)                        */                 /*AR844222*/
+/**********  CHGVAR     VAR(&PRVRESULT) VALUE(1)                     */                 /*AR844222*/
+ 
+ScanLoop:
+/* Extract the individual folder(s) from the folder path */
+/**********  CALL       PGM(QCLSCAN) PARM(&STRING &STRLEN &STRPOS +
+                          &PATTERN &PATLEN &TRANSLATE &TRIM &WILD +
+                          &RESULT)                                                   */ /*AR844222*/
+ 
+/* First time through... */
+/**********  IF         COND(&PRVRESULT = 1) THEN(DO)                                */ /*AR844222*/
+ 
+/* Check for nested folders, if so, extract first level folder */
+/**********     IF         COND(&RESULT > 0) THEN(DO)                */                 /*AR844222*/
+/**********        CHGVAR     VAR(&ENDPOS) VALUE(&RESULT - &STRPOS)  */                 /*AR844222*/
+/**********        CHGVAR     VAR(&FLRNAME) VALUE(%SST(&STRING 1 &ENDPOS)) */           /*AR844222*/
+/**********        CRTFLR     FLR(&FLRNAME)                          */                 /*AR844222*/
+/**********        MONMSG     MSGID(CPF8A85 CPF8A18)                 */                 /*AR844222*/
+/**********        CHGVAR     VAR(&STRPOS) VALUE(&RESULT + 1)        */                 /*AR844222*/
+/**********        CHGVAR     VAR(&PRVRESULT) VALUE(&RESULT)         */                 /*AR844222*/
+/**********        GOTO       CMDLBL(SCANLOOP)                       */                 /*AR844222*/
+/**********     ENDDO                                                */                 /*AR844222*/
+ 
+/* Otherwise only one folder to create */
+/**********     ELSE       CMD(DO)                                   */                 /*AR844222*/
+/**********        CHGVAR     VAR(&FLRNAME) VALUE(%SST(&STRING 1 8)) */                 /*AR844222*/
+/**********        CRTFLR     FLR(&FLRNAME)                          */                 /*AR844222*/
+/**********        MONMSG     MSGID(CPF8A85 CPF8A18)                 */                 /*AR844222*/
+/**********        GOTO       CMDLBL(FTP)                            */                 /*AR844222*/
+/**********     ENDDO                                                */                 /*AR844222*/
+/**********  ENDDO                                                   */                 /*AR844222*/
+ 
+/* If we have got to here, we may be creating nested folders */
+/* so check.  Folder name extraction depends on how many     */
+/* levels of nesting there are.                              */
+/**********  IF         COND(%SST(&STRING &STRPOS 1) *NE ' ') +
+                          THEN(DO)                                   */                 /*AR844222*/
+ 
+/* Another level exists */
+/**********     IF         COND(&RESULT > 0) THEN(DO)                */                 /*AR844222*/
+/**********        CHGVAR     VAR(&ENDPOS) VALUE(&RESULT - &STRPOS)  */                 /*AR844222*/
+/**********     ENDDO                                                */                 /*AR844222*/
+ 
+/* Top level folder reached */
+/**********     ELSE       CMD(DO)                                   */                 /*AR844222*/
+/**********        CHGVAR     VAR(&ENDPOS) VALUE(&STRPOS + 8)        */                 /*AR844222*/
+/**********     ENDDO                                                */                 /*AR844222*/
+/**********     CHGVAR     VAR(&FLRNAME) VALUE(%SST(&STRING &STRPOS +
+                             &ENDPOS))                               */                 /*AR844222*/
+/**********     CHGVAR     VAR(&PRVRESULT) VALUE(&PRVRESULT - 1)     */                 /*AR844222*/
+/**********     CHGVAR     VAR(&INFLR) VALUE(%SST(&STRING 1 &PRVRESULT)) */             /*AR844222*/
+/**********     CRTFLR     FLR(&FLRNAME) INFLR(&INFLR)               */                 /*AR844222*/
+/**********     MONMSG     MSGID(CPF8A85 CPF8A18)                    */                 /*AR844222*/
+ 
+ /* Check if top level folder, and exit if so. */
+/**********     IF         COND(&RESULT = 0) THEN(GOTO CMDLBL(FTP))  */                 /*AR844222*/
+/**********     CHGVAR     VAR(&STRPOS) VALUE(&RESULT + 1)           */                 /*AR844222*/
+/**********     CHGVAR     VAR(&PRVRESULT) VALUE(&RESULT)            */                 /*AR844222*/
+/**********     GOTO       CMDLBL(SCANLOOP)                          */                 /*AR844222*/
+/**********  ENDDO                                                   */                 /*AR844222*/
+ 
+FTP:
+/* Get system serial number */
+             RTVSYSVAL  SYSVAL(QSRLNBR) RTNVAR(&QSRLNBR)
+ 
+/* Generate signal file and FTP data (if required) */
+             CALL       PGM(MR001001) PARM(&RETURNCODE &LIBNAME +
+                          &QSRLNBR &SYSID &RUNDATEA &FTPUSED)
+             IF         COND(&RETURNCODE = '*Error*') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create the signal file....                                        */
+/**********  CHGVAR     VAR(&STREAMF) VALUE(&LIBNAME *TCAT '.SIG')   */                 /*AR844222*/
+/**********  CPYTOPCD   FROMFILE(QTEMP/MSIGNAL) TOFLR(&SVAL1) +
+                          TODOC(&STREAMF) REPLACE(*YES)              */                 /*AR844222*/
+ 
+/* ...and send it (but only if we are using FTP).             */
+/* Because of the overrides to FTPCOMMAND, FTP will run the commands */
+/* contained in member INPUT, and generate a log in member OUTPUT.   */
+             IF         COND(&FTPUSED *NE 'N') THEN(DO)
+ 
+/* If the remote location system value is missing, then end       */
+/* abnormally.                                                    */
+                IF         COND(&SVAL2 *EQ ' ') THEN(GOTO CMDLBL(ABNOR))
+                FTP        RMTSYS(&SVAL2)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+/* Abnormal termination - batch job. */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             IF         COND(&JOBTYPE *EQ '0') THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MRC001000 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ MRUNQ)
+                MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+/* Print FTP logfile */
+             CPYF       FROMFILE(QTEMP/FTPCOMMAND) TOFILE(*PRINT) +
+                          FROMMBR(OUTPUT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+/* Get rid of command file (contains password) in case this is */
+/* run interactively.                                          */
+             DLTF       FILE(QTEMP/FTPCOMMAND)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             ENDPGM

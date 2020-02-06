@@ -1,0 +1,803 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas A/C Keys Report for DL, LE, FT')                 *
+      ********************************************************************
+      *                                                                  *
+      *  Midas - General Ledger Module                                *
+      *                                                                  *
+      *      GL0051 - Account Keys Report - Dealing, Lending             *
+      *                                        and Funds Transfer        *
+      *                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CLE042             Date 06Sep05               *
+      *                 CDL038             Date 10May05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 086064             Date 02May96               *
+      *                 047369             Date 10Jan94               *
+      *                    E29343             DATE 09OCT91               *
+      *                    S01304             DATE 26SEP91               *
+      *                    RT0094             DATE 14MAY91               *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *      CLE134 - Past Due Call Loan Processing (Recompile)       *
+      *      CLE042 - Extended Loan Sub Type
+      *      CDL038 - Extended Deal Sub Type                          *
+      *      086064 - Amend array TAB to include Internal Deals.         *
+      *      047369 - NARRATIVE CODES SHOULD BE ALPHA AND NOT NUMERIC    *
+      *      E29343 - Check overflow before writing headings.            *
+      *      S01304 - Output blanks to report instead of zeroes.         *
+      *      RT0094 - Recompiled over changed PRTF/GL0051P1              *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      ********************************************************************
+      *  C R E A T I O N     P A R A M E T E R S                         *
+      *                                                                  *
+      *                                                                  *
+      ********************************************************************
+     F*
+     FACKEYL1 IF  E           K        DISK
+     FFDDTSTL1IF  E           K        DISK                                                   CDL038
+     FSDFACTL1IF  E           K        DISK
+     FSDLOANL1IF  E           K        DISK
+     FGL0051P1O   E             99     PRINTER      KINFDS SPOOL
+     FGL0051AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F*
+     F********************************************************************
+     F*
+     F*  Function of Indicators
+     F*
+     F*  05 - Facility type indicator
+     F*  10 - No records in file ACKEYL1 read
+     F*  20 - Chain to LF/SDFACTL1 or LF/SDLOANL1 has failed
+     F*  30 - Deals type indicator - LOKUP operation to TABA complete
+     F*  40 - Funds transfer ind. - LOKUP operation to TABB complete
+     F*  60 - Remaining lines on pg < than lines required for headings    E29343
+     F*  70 - Output '*Continued*'
+     F*  90 - Lending ON, Funds Transfer ON
+     F*  91 - Lending ON, Funds Transfer OFF
+     F*  92 - Lending OFF, Funds Transfer ON
+     F*  93 - Lending OFF, Funds Transfer OFF
+     F*  99 - Overflow indicator
+     F*
+     F********************************************************************
+     F/EJECT
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright Array
+     E*
+     E********************TABA    1  39  2   TAB1   37                    086064
+     E                    TABA    1  41  2   TAB1   37                    086064
+     E                    TABB    1   4  2   TAB2   23
+     E                    DESC    1   4 15
+     E** Description Tables and Array
+     E*
+     E********************************************************************
+     E/EJECT
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I** Data Structure for Compilation  - Copyright Insertion
+     I*
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 152 1530SFLIN
+     I                                    B 188 1890OFLLN                 E29343
+     I                                    B 367 3680PRTLN                 E29343
+     I** P1 printer file information data structure
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I** AU printer file information data structure
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     ISDMMOD    E DSSDMMODPD
+     I** Module Indicators
+     I*
+     IDSFDY     E DSDSFDY
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** Local Data Area
+     I*
+     IAKEY        DS
+     I                                        1   2 TYP
+     I                                        4   5 SUBTYP
+     I                                        1   3 FACTYP
+     I                                        5   5 AKEY5
+     I                                       11  14 CLAS                                      CDL038
+     I** Account Key Data Structure
+     I*
+     ITYPE@       DS                                                                          CDL038
+     I                                        1   2 TYP@                                      CDL038
+     I                                        4   5 SUBTY@                                    CDL038
+     I                                        7  10 CLAS@                                     CDL038
+     I*                                                                                       CDL038
+     I********************************************************************
+     I/EJECT
+     C*
+     C** Receive entry parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO   5        RPT SEQ NO.
+     C*
+     C** Concatenate Type and Subtype fields
+     C*
+     C           TYPSTD    KLIST                                                              CDL038
+     C                     KFLD           TYP                                                 CDL038
+     C                     KFLD           SUBTYP                                              CDL038
+     C                     KFLD           CLAS                                                CDL038
+     C           TYPSTL    KLIST                                                              CDL038
+     C                     KFLD           TYP                                                 CDL038
+     C                     KFLD           SUBTYP                                              CDL038
+     C                     KFLD           CLAS                                                CLE042
+     C***********TYPSTY****KLIST                                                              CDL038
+     C*********************KFLD           KTYP    2                                           CDL038
+     C*********************KFLD           KSUBTY  2                                           CDL038
+     C*
+     C** Define Local Data Area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** Use access program AOMMODR0 to retrieve module
+     C** indicator details
+     C*
+     C                     CALL 'AOMMODR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0051'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDMMODPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DBERROR 002 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** Check which modules are on for different report headings
+     C*
+     C           BGCSLN    IFEQ 'Y'
+     C           BGFDTR    ANDEQ'Y'
+     C                     MOVE 1         *IN90
+     C                     END
+     C*
+     C           BGCSLN    IFEQ 'Y'
+     C           BGFDTR    ANDEQ'N'
+     C                     MOVE 1         *IN91
+     C                     END
+     C*
+     C           BGCSLN    IFEQ 'N'
+     C           BGFDTR    ANDEQ'Y'
+     C                     MOVE 1         *IN92
+     C                     END
+     C*
+     C           BGCSLN    IFEQ 'N'
+     C           BGFDTR    ANDEQ'N'
+     C                     MOVE 1         *IN93
+     C                     END
+     C*
+     C** Use access program AOBANKR0 to retrieve header details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GL0051'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DBERROR 001 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** Write report headings
+     C*
+     C                     WRITEFMTW01
+     C*
+     C** Ensure totals spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C*
+     C** Call ZSFILE for GL0051P1
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO   5
+     C                     PARM *BLANKS   ENTY    3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C** If error in ZSFILE, exit via DBERR subroutine
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C***Initialise*work*fields*for*Previous*Type/Subtype/Facility Type                       CDL038
+     C** Initialise work fields for Previous Type/Subtype/Class/Facility Type                 CDL038
+     C*
+     C                     MOVE *BLANKS   PRVTYP  2
+     C                     MOVE *BLANKS   PRVSTY  2
+     C                     MOVE *BLANKS   PRVCLS  4                                           CDL038
+     C                     MOVE *BLANKS   PRVFTY  3
+     C*
+     C                     MOVE *BLANKS   DESNM  37
+     C                     MOVE *BLANKS   TYPE@                                               CDL038
+     C*********************MOVE *BLANKS   TYPE@   5                                           CDL038
+     C*
+     C** Set record counter to zero
+     C*
+     C                     Z-ADD0         RECCNT
+     C*
+     C** Read first record for Ackeyl1
+     C*
+     C                     READ ACKEYL1                  10
+     C           *IN10     IFEQ '1'
+     C                     WRITEFMTW02
+     C                     ELSE
+     C*
+     C** Add one to record counter
+     C*
+     C                     ADD  1         RECCNT
+     C                     END
+     C*
+     C** Do while record in Ackeyl1
+     C*
+     C           *IN10     DOWEQ'0'
+     C*
+     C** Consider Dealing Funds Transfer and Lending/Loan records
+     C*
+     C           AKEY5     IFNE *BLANKS
+     C*
+     C***Type/Subtype*same*as*previous*Type/Subtype                                           CDL038
+     C** Type/Subtype/Class same as previous Type/Subtype/Class                               CDL038
+     C*
+     C           TYP       IFEQ PRVTYP
+     C           SUBTYP    ANDEQPRVSTY
+     C           CLAS      ANDEQPRVCLS                                                        CDL038
+     C                     EXSR ALPHA                                     S01304
+     C                     WRITEFMTW05
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   TYPE@
+     C                     MOVELTYP       TYP@                                                CDL038
+     C                     MOVELSUBTYP    SUBTY@                                              CDL038
+     C                     MOVELCLAS      CLAS@                                               CDL038
+     C*********************MOVELTYP       TYPE@                                               CDL038
+     C*********************MOVE SUBTYP    TYPE@                                               CDL038
+     C*
+     C***Type/Subtype*different*to*previous*Type/Subtype                                      CDL038
+     C** Type/Subtype/Class different to previous Type/Subtype/Class                          CDL038
+     C*
+     C                     EXSR P03
+     C                     EXSR ALPHA                                     S01304
+     C                     WRITEFMTW05
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** Consider Lending/Facility records
+     C** Facility Type same as previous Facility Type
+     C*
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN40
+     C*
+     C           FACTYP    IFEQ PRVFTY
+     C                     EXSR ALPHA                                     S01304
+     C                     WRITEFMTW05
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   DESNM
+     C                     MOVE *BLANKS   DESCR
+     C*
+     C                     MOVE *BLANKS   TYPE@
+     C                     MOVELFACTYP    TYPE@
+     C*
+     C** Facility Type different to previous Facility Type
+     C** Chain to LF/SDFACTL1 to retrieve Facility name description
+     C*
+     C           FACTYP    CHAIN@AMRECU              20
+     C*
+     C           *IN20     IFEQ '0'
+     C                     MOVE '1'       *IN05
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVELAMFCNM    DESNM
+     C                     MOVE DESC,1    DESCR
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   DESNM
+     C                     MOVE *BLANKS   DESCR
+     C                     END
+     C*
+     C                     WRITEFMTW03
+     C                     MOVE '0'       *IN05
+     C                     WRITEFMTW04
+     C                     EXSR ALPHA                                     S01304
+     C                     WRITEFMTW05
+     C*
+     C** Move Facility Type into Previous Facility Type
+     C*
+     C                     MOVE FACTYP    PRVFTY
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Read record for Ackeyl1
+     C*
+     C                     READ ACKEYL1                  10
+     C*
+     C** Overflow
+     C*
+     C           *IN99     IFEQ '1'
+     C                     WRITEFMTW01
+     C*
+     C           *IN10     IFEQ '0'
+     C*
+     C           AKEY5     IFNE *BLANKS
+     C*
+     C           TYP       IFEQ PRVTYP
+     C           SUBTYP    ANDEQPRVSTY
+     C           CLAS      ANDEQPRVCLS                                                        CDL038
+     C                     MOVE '1'       *IN70
+     C                     WRITEFMTW03
+     C                     MOVE '0'       *IN70
+     C                     WRITEFMTW04
+     C                     END
+     C                     ELSE
+     C           FACTYP    IFEQ PRVFTY
+     C                     MOVE '1'       *IN70
+     C                     WRITEFMTW03
+     C                     MOVE '0'       *IN70
+     C                     WRITEFMTW04
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     MOVE '0'       *IN99
+     C*
+     C** Output end of report
+     C*
+     C           *IN10     IFEQ '1'
+     C                     WRITEFMTEND
+     C                     ELSE
+     C*
+     C** Add one to record counter
+     C*
+     C                     ADD  1         RECCNT
+     C                     END
+     C*
+     C                     END
+     C                     SETON                         LR
+     C/EJECT
+     C********************************************************************
+     C*
+     C* INDEX OF SUBROUTINES
+     C*
+     C* P03    - Discover text for Deal/Loan Type/Subtypes.
+     C* DBERR  - Database errors.
+     C*
+     C********************************************************************
+     C*                                                                  *
+     C* P03:        Subroutine for Dealing, Lending/Loans and Funds      *
+     C*             Transfer headings.                                   *
+     C*                                                                  *
+     C* CALLED BY:  Main                                                 *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           P03       BEGSR
+     C*
+     C** Check against hard/coded list for Deal Type or Funds Transfer
+     C** records
+     C*
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN60
+     C*
+     C                     MOVE *BLANKS   DESNM
+     C                     MOVE *BLANKS   DESCR
+     C*
+     C** Look up Description Tables
+     C*
+     C           TYP       LOKUPTABA      TAB1           30
+     C           TYP       LOKUPTABB      TAB2           40
+     C*
+     C           *IN30     IFEQ '1'
+     C           *IN40     OREQ '1'
+     C*
+     C           *IN30     IFEQ '1'
+     C           TYPSTD    CHAINFDDTSTL1             30    *                                  CDL038
+     C           *IN30     IFEQ '0'                                                           CDL038
+     C                     MOVELNARR11    DESNM                                               CDL038
+     C                     ELSE                                                               CDL038
+     C                     MOVE TAB1      DESNM
+     C                     END                                                                CDL038
+     C                     MOVE DESC,2    DESCR
+     C                     END
+     C*
+     C           *IN40     IFEQ '1'
+     C                     MOVELTAB2      DESNM
+     C                     MOVE DESC,3    DESCR
+     C                     END
+     C*
+     C                     MOVE '0'       *IN80
+     C*
+     C           TYP       IFEQ 'OP'
+     C                     MOVE *BLANKS   DESCR
+     C                     MOVE '1'       *IN80
+     C*
+     C           BGFDTR    IFEQ 'N'
+     C                     MOVE *BLANKS   DESNM
+     C                     MOVEL'Option'  DESNM
+     C                     END
+     C*
+     C                     END
+     C*                                                                   E29343
+     C**  Check enough lines remaining on page before printing headings   E29343
+     C*                                                                   E29343
+     C                     Z-ADD10        RQDLN   20                      E29343
+     C                     EXSR OFLW                                      E29343
+     C*                                                                   E29343
+     C**  If not enough lines available on page, start new page &         E29343
+     C**  write main headings                                             E29343
+     C*                                                                   E29343
+     C           *IN60     IFEQ '1'                                       E29343
+     C                     MOVE '1'       *IN99                           E29343
+     C                     WRITEFMTW01                                    E29343
+     C                     MOVE '0'       *IN99                           E29343
+     C                     END                                            E29343
+     C*                                                                   E29343
+     C                     WRITEFMTW03
+     C                     WRITEFMTW04
+     C*
+     C***Move*Type/Subtype*into*previous*Type/Subtype*work*fields                             CDL038
+     C** Move Type/Subtype/Class into previous Type/Subtype work fields                       CDL038
+     C*
+     C                     MOVE TYP       PRVTYP
+     C                     MOVE SUBTYP    PRVSTY
+     C                     MOVE CLAS      PRVCLS                                              CDL038
+     C                     ELSE
+     C*
+     C** Chain to LF/SDLOANL1 to retrieve Loan Type description
+     C*
+     C*********************MOVE TYP       KTYP                                                CDL038
+     C*********************MOVE SUBTYP    KSUBTY                                              CDL038
+     C***********TYPSTY****CHAIN@AYRECL              20                                       CDL038
+     C           TYPSTL    CHAIN@AYRECL              20                                       CDL038
+     C*
+     C           *IN20     IFEQ '0'
+     C                     MOVE '1'       *IN60
+     C                     MOVELAYLNTD    DESNM
+     C                     MOVE DESC,4    DESCR
+     C                     ELSE
+     C                     MOVE *BLANKS   DESNM
+     C                     MOVE *BLANKS   DESCR
+     C                     END
+     C*                                                                   E29343
+     C**  Check enough lines remaining on page before printing headings   E29343
+     C*                                                                   E29343
+     C                     Z-ADD10        RQDLN   20                      E29343
+     C                     EXSR OFLW                                      E29343
+     C*                                                                   E29343
+     C**  If not enough lines available on page, start new page &         E29343
+     C**  write main headings                                             E29343
+     C*                                                                   E29343
+     C           *IN60     IFEQ '1'                                       E29343
+     C                     MOVE '1'       *IN99                           E29343
+     C                     WRITEFMTW01                                    E29343
+     C                     MOVE '0'       *IN99                           E29343
+     C                     END                                            E29343
+     C*                                                                   E29343
+     C                     WRITEFMTW03
+     C                     WRITEFMTW04
+     C*
+     C***Move*Type/Subtype*into*previous*Type/Subtype*work*fields                             CDL038
+     C** Move Type/Subtype/Class into previous Type/Subtype work fields                       CDL038
+     C*
+     C                     MOVE TYP       PRVTYP
+     C                     MOVE SUBTYP    PRVSTY
+     C                     MOVE CLAS      PRVCLS                                              CDL038
+     C                     END
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT                                                              S01304
+     C********************************************************************S01304
+     C*                                                                  *S01304
+     C* ALPHA:      Subroutine to move numeric file fields to alpha      *S01304
+     C*             report fields, and ensure that if file field         *S01304
+     C*             is zero then blanks are printed.                     *S01304
+     C*                                                                  *S01304
+     C* CALLED BY:  Main                                                 *S01304
+     C*                                                                  *S01304
+     C* CALLS:                                                           *S01304
+     C*                                                                  *S01304
+     C********************************************************************S01304
+     C*                                                                   S01304
+     C           ALPHA     BEGSR                                          S01304
+     C*                                                                   S01304
+     C** Set up Account Codes                                             S01304
+     C*                                                                   S01304
+     C           ACD1      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA1                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD1      ACDA1                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD2      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA2                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD2      ACDA2                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD3      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA3                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD3      ACDA3                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD4      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA4                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD4      ACDA4                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD5      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA5                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD5      ACDA5                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           ACD6      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   ACDA6                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE ACD6      ACDA6                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C** Set up Narrative Codes                                           S01304
+     C*                                                                   S01304
+     C                     MOVE NCD1      NCDA1                           047369
+     C                     MOVE NCD2      NCDA2                           047369
+     C                     MOVE NCD3      NCDA3                           047369
+     C                     MOVE NCD4      NCDA4                           047369
+     C                     MOVE NCD5      NCDA5                           047369
+     C                     MOVE NCD6      NCDA6                           047369
+     C***********NCD1      IFEQ *ZERO                               S01304047369
+     C***********          MOVE *BLANKS   NCDA1                     S01304047369
+     C***********          ELSE                                     S01304047369
+     C***********          MOVE NCD1      NCDA1                     S01304047369
+     C***********          END                                      S01304047369
+     C***********NCD2      IFEQ *ZERO                               S01304047369
+     C***********          MOVE *BLANKS   NCDA2                     S01304047369
+     C***********          ELSE                                     S01304047369
+     C***********          MOVE NCD2      NCDA2                     S01304047369
+     C***********          END                                      S01304047369
+     C***********NCD3      IFEQ *ZERO                               S01304047369
+     C***********          MOVE *BLANKS   NCDA3                     S01304047369
+     C***********          ELSE                                     S01304047369
+     C***********          MOVE NCD3      NCDA3                     S01304047369
+     C***********          END                                      S01304047369
+     C***********NCD4      IFEQ *ZERO                               S01304047369
+     C***********          MOVE *BLANKS   NCDA4                     S01304047369
+     C***********          ELSE                                     S01304047369
+     C***********          MOVE NCD4      NCDA4                     S01304047369
+     C***********          END                                      S01304047369
+     C***********NCD5      IFEQ *ZERO                               S01304047369
+     C***********          MOVE *BLANKS   NCDA5                     S01304047369
+     C***********          ELSE                                     S01304047369
+     C***********          MOVE NCD5      NCDA5                     S01304047369
+     C***********          END                                      S01304047369
+     C***********NCD6      IFEQ *ZERO                               S01304047369
+     C***********          MOVE *BLANKS   NCDA6                     S01304047369
+     C***********          ELSE                                     S01304047369
+     C***********          MOVE NCD6      NCDA6                     S01304047369
+     C***********          END                                      S01304047369
+     C***********                                                         047369
+     C*                                                                   S01304
+     C** Set up Posting References                                        S01304
+     C*                                                                   S01304
+     C           PRF1      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA1                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF1      PRFA1                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF2      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA2                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF2      PRFA2                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF3      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA3                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF3      PRFA3                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF4      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA4                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF4      PRFA4                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF5      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA5                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF5      PRFA5                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C           PRF6      IFEQ *ZERO                                     S01304
+     C                     MOVE *BLANKS   PRFA6                           S01304
+     C                     ELSE                                           S01304
+     C                     MOVE PRF6      PRFA6                           S01304
+     C                     END                                            S01304
+     C*                                                                   S01304
+     C                     ENDSR                                          S01304
+     C*                                                                   S01304
+     C********************************************************************E29343
+     C/EJECT                                                              E29343
+     C*****************************************************************   E29343
+     C*                                                               *   E29343
+     C* OFLW:       Subroutine to check remaining lines on page       *   E29343
+     C*                                                               *   E29343
+     C* CALLED BY:  P03                                               *   E29343
+     C*                                                               *   E29343
+     C* CALLS:                                                        *   E29343
+     C*                                                               *   E29343
+     C*****************************************************************   E29343
+     C*                                                                   E29343
+     C           OFLW      BEGSR                                          E29343
+     C*                                                                   E29343
+     C           OFLLN     SUB  PRTLN     REMLN   20                      E29343
+     C           REMLN     IFLT RQDLN                                     E29343
+     C                     MOVE '1'       *IN60                           E29343
+     C                     ELSE                                           E29343
+     C                     MOVE '0'       *IN60                           E29343
+     C                     END                                            E29343
+     C*                                                                   E29343
+     C                     ENDSR                                          E29343
+     C*                                                                   E29343
+     C********************************************************************E29343
+     C/EJECT
+     C*                                                                  *
+     C* DBERR:      Database error processing subroutine                 *
+     C*                                                                  *
+     C* CALLED BY:  Main                                                 *
+     C*                                                                  *
+     C* CALLS:                                                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** Release the LDA
+     C*
+     C                     OUT  LDA
+     C*
+     C** Open file GL0051AU
+     C*
+     C                     OPEN GL0051AU
+     C*
+     C** Ensure totals spool file recorded by RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUM
+     C*
+     C** Call ZSFILE for GL0051AU
+     C*
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO
+     C                     PARM *BLANKS   ENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR
+     C*
+     C** Write header
+     C*
+     C                     WRITEFIRST
+     C*
+     C** Write database error details
+     C*
+     C                     WRITEDBERROR
+     C*
+     C** Write 'End of Report'
+     C*
+     C                     WRITELAST
+     C*
+     C** Set on database error indicators and exit program
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  DEAL TYPE
+OPOption or Outgoing Payments
+OTOption Takedown
+SWSwap
+FSForeign Exchange Sold
+FPForeign Exchange Purchased
+CXCross Deal
+ITInterbank Taking
+IPInterbank Placing
+TDTime Deposit
+TITime Loan
+CICD Issued
+LNCommercial Loan
+CDCall/Notice Deposit Taken
+CLCall/Notice Deposit Placed
+DLDemand Loan
+C1Primary CD
+C2Secondary CD
+BPBond
+BDBill
+TBTreasury Bill
+DABank Acceptance
+BABank Acceptance
+TATrade Acceptance
+CSPrimary Or Secondary CD Sold
+BSBond
+BRBill
+TSTreasury Bill
+RABank Acceptance
+TRTrade Acceptance
+PIPurchase to cover Interest Commitment
+SISale to cover Interest Commitment
+NXNostro Transfer
+FRForward Rate Agreement
+RSInterest Rate Swap
+RPInterest Rate Cap
+RRInterest Rate Collar
+RFInterest Rate Floor
+RXCross Currency Interest Rate Swap
+PSInternal Contract
+ILInternal Loan                                                           086064
+IDInternal Deposit                                                        086064
+**  FUNDS TRANSFER TYPE
+INIncoming Payments
+CCCheques To Be Collected
+CPCheques To Be Paid
+NTNostro Transfers
+**  DESCRIPTION ARRAY
+*LOAN FACILITY*
+*DEAL*
+*PAYMENT*
+*LOAN*

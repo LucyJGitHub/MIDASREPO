@@ -1,0 +1,173 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Load JEs header off standing journal')
+     H/TITLE Create Journal Header From Interface File
+     F********************************************************************
+     F*                                                               *
+     F*  Midas  GENERAL LEDGER MODULE
+     F*                                                               *
+     F*   GL0160U - CREATE JOURNAL HEADER FROM STANDING JOURNAL FILE  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 244686             Date 28Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSC024             Date 07Feb05               *
+      *                 BUG2798            Date 26May04               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 206564             Date 28Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 186206             Date 26Oct00               *
+      *                 178093             Date 03May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 01Mar99               *
+      *                 S01340             Date 21Feb92               *
+      *                 S01199             Date 02May90               *
+     F*                 S01251             Date 09FEB90               *
+     F*                                                               *
+     F*                                                               *
+     F********************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  244686 - Added the missing fields to GLJESHPD which CAP086   *
+      *           and CSC024 introduced to GZGLJENHPD in order for    *
+      *           the 2 files to be synchronized. (Recompiled Only)   *
+      *  CSC024 - Open Month End (Recompile)                          *
+      *  BUG2798 - Make sure GLBTNOPD is updated.                     *
+      *  206564 - Commit GLBTNOPD so that when adding a batch and     *
+      *           F3 is pressed, the batch number will not be         *
+      *           written. Applied 206736.                            *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  186206 - Journal Entry API fixes. Produce only one dump      *
+      *           per JE batch. Generate JE Valid errors report.      *
+      *           Prevent record locking error in JE database         *
+      *           updater.                                            *
+      *  178093 - This program should have been recompiled over the   *
+      *           database changes introduced at DBA3.02.             *
+      *  CGL008 - Security on Journal Entry Input                     *
+     F*   S01340 - RECOMPILED FOR MIS RELEASE 10                      *
+     F*   S01199 - RECOMPILED FOR CURSOR SENSITIVE HELP               *
+     F*   S01251 - SYNON FIELD/PROGRAM CHANGES                        *
+     F*                                                               *
+     F********************************************************************
+     F*                                                               *
+     F*   CREATED FOR SAR S01234. GL TEMPLATE ENHANCEMENTS            *
+     F*                                                               *
+     F********************************************************************
+     F************GLBRTEL1IF  E           K        DISK                   S01251
+     FGLJESHL1IF  E           K        DISK                               S01251
+      * RTV: GL Batch Header Stand Jou File   Retrieval index
+      *
+     F************GLBRREL0O   E           K        DISK              A    S01251
+     FGLJENHL0O   E           K        DISK                      A        S01251
+     F                                              KCOMIT
+      * UPD: GL Batch header           Update index
+      *                                                                   186206
+      ** Today's batch numbers used                                       186206
+     FGLBTNOL0O   E                    DISK                               186206
+     F                                              KCOMIT                                    206564
+      *                                                                   186206
+     F/COPY WNCPYSRC,GL0160UF02
+      *
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80               Copyright     array
+      /EJECT
+      * Data structures:-
+     E/COPY WNCPYSRC,GL0160UE02
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     IZMUSER      DS                                                      CGL008
+     I                                        1  10 USID                  CGL008
+     I                                       11  13 UDBC                  CGL008
+     I                                       14  16 UDDP                  CGL008
+     I                                       17  17 UBLA                  CGL008
+      /EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C                     PARM           P@IFBN  3        ST/Jo  Batch No
+     C                     PARM           P@BHNO  3        ADD Batch No
+      *****************************************************************
+     C/COPY WNCPYSRC,GL0160UC03
+     C           *NAMVAR   DEFN           ZMUSER                          CGL008
+     C                     IN   ZMUSER                                    CGL008
+      *                                                                   CGL008
+      ** Check if CGL008 is installed                                     CGL008
+      *                                                                   CGL008
+     C                     CALL 'AOSARDR0'                                CGL008
+     C                     PARM *BLANKS   PRTCD   7                       CGL008
+     C                     PARM '*VERIFY' POPTN   7                       CGL008
+     C                     PARM 'CGL008'  PSARD   6                       CGL008
+      *                                                                   CGL008
+     C           PRTCD     IFEQ *BLANKS                                   CGL008
+     C                     MOVE 'Y'       CGL008  1                       CGL008
+     C                     ELSE                                           CGL008
+     C                     MOVE 'N'       CGL008                          CGL008
+     C                     ENDIF                                          CGL008
+     C/COPY WNCPYSRC,GL0160UC07
+      **********                                                                      186206 BUG2798
+      ***Check*if*CAP032*is*installed.*********************************************   186206 BUG2798
+      **********                                                                      186206 BUG2798
+     C**********           CALL 'AOSARDR0'                                            186206 BUG2798
+     C**********           PARM *BLANKS   PRTCD                                       186206 BUG2798
+     C**********           PARM '*VERIFY' POPTN                                       186206 BUG2798
+     C**********           PARM 'CAP032'  PSARD                                       186206 BUG2798
+      **********                                                                      186206 BUG2798
+     C********** PRTCD     IFEQ *BLANKS                                               186206 BUG2798
+     C**********           MOVE 'Y'       CAP032  1                                   186206 BUG2798
+     C**********           ELSE                                                       186206 BUG2798
+     C**********           MOVE 'N'       CAP032                                      186206 BUG2798
+     C**********           ENDIF                                                      186206 BUG2798
+     C*
+     C* Locate Stand Jou Header Record using  Batch Number
+     C*
+     C           P@IFBN    CHAIN@BRREAH              89
+     C*
+     C           *IN89     IFEQ '0'                        .IF 1
+     C*                                                    ¦
+     C* Once Stand Jou Header Record found Write it to GL Batch Header File
+     C* with ADD Batch Number as key to the record.
+     C*                                                    ¦
+     C* NB: The check to see if it already exist within the Header File is
+     C*     Carried out within the Synon Program GLHWDFR before this
+     C*     Program is called.
+     C*                                                    ¦
+     C******************** MOVE P@BHNO    BRJDNB           ¦              S01251
+     C                     MOVE P@BHNO    BRBTNB           ¦              S01251
+     C           CGL008    IFEQ 'Y'                                       CGL008
+     C/COPY WNCPYSRC,GL0160UC08
+     C                     MOVE USID      BRUSRI                          CGL008
+     C                     ENDIF                                          CGL008
+      *                                                                   186206
+      ***If*Journal*Entry*API*is*on,*write*batch*in********************************   186206 BUG2798
+      ** Today's Batch numbers used file.                                 186206
+      *                                                                   186206
+     C********** CAP032    IFEQ 'Y'                                                   186206 BUG2798
+     C                     MOVELBRBTNB    B3BTNB                          186206
+     C                     MOVEL'N'       B3DUMP                          186206
+     C                     WRITEGLBTNOD0                                  186206
+     C**********           ENDIF                                                      186206 BUG2798
+      *                                                                   186206
+     C                     MOVEASTAMP,1   BRTMST           Default Timestamp                  CPK015
+     C                     WRITE@BRREAG                11  ¦
+     C/COPY WNCPYSRC,GL0160UC04
+     C*                                                    ¦
+     C                     END                             'FI 1
+     C*
+     C                     SETON                         LR
+     C*
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+** CPY@
+(c) Finastra International Limited 2001

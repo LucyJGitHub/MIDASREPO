@@ -1,0 +1,1056 @@
+     H        1                           F
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER - CSSF SE Extract')
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting (CSSF)                            *
+      *                                                               *
+      *  ERLUSE - SE Extract for CSSF Reporting                       *
+      *                                                               *
+      *  Function:  This program will read TRADSDV0 file to select    *
+      *  (phase(s)) trades to be reported at CSSF. These are written  *
+      *             in ERLUCBPP flat file.                            *
+      *             only trade on Secondary market are read           *
+      *  Called  in : COB automatically  (Rundat)                     *
+      *             : I/C by menu (Choosen date)                      *
+      *                                                               *
+      *  Called By: ERC0650 - CCSF Reporting                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 223136             DATE 05DEC03               *
+      *                 ULX042             DATE 14Apr03               *
+      *                 UPG402             Date 03Oct04               *
+      *                 186797             DATE 07MAR01               *
+      *                 ULX008             Date 25Jul00               *
+      *                 180013             Date 29Jun00               *
+      *                 180219             Date 14Jun00               *
+      *                 179959             Date 06Jun00               *
+      *                 ULX008             Date 17Apr00               *
+      *                 ULX008             Date 21Feb00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  223136 - Do not divide the price by 100 if pourcentage       *
+      *  ULX042 - Change Control D to ULX008 (TAF Reporting)          *
+      *  UPG402 - Recompile due to upgrade to R4.02                   *
+      *  186797 - "Succursales" should also be reported to CSSF.      *
+      *  ULX008 - "Commissariat aux Bourses" - Change control C       *
+      *  180013 - Delete trades are reported as input trades          *
+      *  180219 - Confusion between Beneficiary and Counterparty      *
+      *           on Depot Movements                                  *
+      *  179959 - BFCLAS to Be 'K' for depositairy and not 'D'        *
+      *  ULX008 - "Commissariat aux Bourses" - Change control B       *
+      *  ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses *
+      *                                                               *
+      *****************************************************************
+     F***TRADSDV0IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSETRDLX1IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Trades details - Rtvidx
+      *
+     FERLUICL1IF  E           K        DISK         KINFSR *PSSR
+      ***  LU I.C.D.
+      *
+     F***SDBRCHY6IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDBRX2L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Branch Codes - Ext Details
+      *
+     F***INVTPDY6IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSEINX2L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Investment Type - Ext Details
+      *
+     F***SEMKCDY6IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSEMKX1L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Market Centre - Ext Details
+      *
+     F***SDCUSTY6IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSDCUX2L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Customer - Ext Details
+      *
+     F***TRADSDY6UF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSETRX1L0UF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  Trades Ext. details - Rtvidx
+      *
+     F***SECTYDY6IF  E           K        DISK         KINFSR *PSSR                           CER001
+     FSESDX3L0IF  E           K        DISK         KINFSR *PSSR                              CER001
+      ***  SE Security - Ext Details
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ***  SE Security details
+      *
+     FERLUCBPPO   E                    DISK         KINFSR *PSSR
+      ***  ER LU - CSSF Flat File
+      *
+      /EJECT
+      /COPY ZSRSRC,ZSDESCZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZDATE9Z1
+     E                    CPY@    1   1 80
+      ***  Array containing Copyright statement
+      *
+      /SPACE 3
+     ITRADSDF                                                             180013
+      *****Rename*CHTP*of*TRADSDV0*************************************                180013 CER001
+      ***  Rename CHTP of SETRDLX1                                                            CER001
+     I              CHTP                            LASTCH                180013
+      *                                                                   180013
+     ILDA       E DSLDA                         256
+      ***  Local data area for database error details
+      *
+     IRUNDAT    E DSRUNDAT
+      ***  Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ***  Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDSTRD    E DSSDSTRDPD
+      ***  SD Securities Trading I.C.D.
+      *
+     ISDBANK    E DSSDBANKPD                                                                  CER001
+      ** Bank Details                                                                         CER001
+      *                                                                                       CER001
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          XXDFAC                                    CER001
+      ***  SD Branch Details
+      *
+     ISDSECS    E DSSDSECSPD
+      ***  SD Customer for Sec. Trading
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  SD Customer Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  SD Currency Details
+      *
+     IDSFDY     E DSDSFDY                                                                     CER001
+      ***  Short DS for Access Objects Programs                                               CER001
+      *                                                                                       CER001
+     IDSSDY     E DSDSSDY
+      ***  Long DS for Access Objects Programs
+      *
+      /COPY ZSRSRC,ZSDESCZ2
+      /COPY ZSRSRC,ZDATE9Z2
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  Read Records with LCD = date to work with
+      *
+     C********** *LOVAL    SETLLTRADSDV0                   First Record                       CER001
+     C           *LOVAL    SETLLSETRDLX1                   First Record                       CER001
+     C**********           READ TRADSDV0                 35                                   CER001
+     C                     READ SETRDLX1                 35                                   CER001
+      *
+      ***  While record exist for this date,
+      *
+     C           *IN35     DOWEQ*OFF
+      *
+      ***  Verify that the record is eligible to be reported to CSSF
+      *
+     C                     MOVE 'N'       WKDOIT  1        FLAG
+      *
+      ***  When branch Break, read branch details
+      *
+     C           TDBA      IFNE WKBRCA
+     C                     MOVE TDBA      WKBRCA  3        Read TDBA details
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM           WKBRCA
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS                    Error or not found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD5         DBASE            * DBERROR 005 *
+     C                     MOVEL'SDBRCHPD'DBFILE    P      ***************
+     C                     MOVELTDBA      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *****Access*LF/SDBRCHY6*to*retrieve*flag*"Include*data*for*******                       CER001
+      ** Access LF/SDBRX2L0 to retrieve flag "Include data for                                CER001
+      ***  Reporting"
+     C********** TDBA      CHAINSDBRCHY6             99                                       CER001
+     C           TDBA      CHAINSDBRX2L0             99                                       CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD6         DBASE            * DBERROR 006 *
+     C**********           MOVEL'SDBRCHY6'DBFILE    P      ***************                    CER001
+     C                     MOVEL'SDBRX2L0'DBFILE    P      ***************                    CER001
+     C                     MOVELTDBA      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                           Branch break
+      *
+     C           VEINCL    IFNE 'Y'
+     C********** TDBA      SETGTTRADSDV0                   Next Branch                        CER001
+     C           TDBA      SETGTSETRDLX1                   Next Branch                        CER001
+     C                     ELSE
+     C                     MOVE 'Y'       WKDOIT  1        Continue
+     C                     ENDIF
+      *
+      ***  Only records with "Exclude from CAB Reporting" flag set to
+      ***  'N' should be treated
+      *
+     C           WKDOIT    IFEQ 'Y'                        Branch to be reported
+     C********** TDRF      CHAINTRADSDY6            N99                                       CER001
+     C           TDRF      CHAINSETRX1L0            N99                                       CER001
+      *
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *IN99     OREQ *OFF                       or Excluded
+     C           CCCABR    ANDNE'N'
+     C                     MOVE 'N'       WKDOIT           Bypass
+     C                     ENDIF
+      *
+     C                     ENDIF                           WKDOIT
+      *
+     C           WKDOIT    IFEQ 'Y'
+     C                     EXSR #CHKP                      Check to process
+     C                     ENDIF
+      *
+      ***  Create Record into Flat File ERLUCBPP
+      *
+     C           WKDOIT    IFEQ 'Y'
+     C                     EXSR #PROC
+     C                     ENDIF
+      *
+      ***  Read next record
+      *
+     C**********           READ TRADSDV0                 35                                   CER001
+     C                     READ SETRDLX1                 35                                   CER001
+     C                     ENDDO
+      *****************************************************************
+      *               E N D    O F    M A I N L I N E S               *
+      *****************************************************************
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *  #CHKP  - This routine is used to verify that record is to be *
+      *  ------   processed                                           *
+      *  Called by : Mainlines                                        *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           #CHKP     BEGSR
+      *
+     C                     MOVE 'N'       WKDOIT  1        FLAG
+      *
+      ***  If the "Extract trades at trade date of at date made complete" ULX008
+      ***  indicator from LF/ERLUICL1 is equal to 'T' (Trade Date),       ULX008
+      ***  the selection criteria based on the dates and the change type  ULX008
+      ***  remain unchanged.                                              ULX008
+      *                                                                   ULX008
+     C           VPEXTT    IFEQ 'T'                                       ULX008
+      *                                                                   ULX008
+      ***  Trades will be processed
+      ***       if they are cancelled this WKDATE
+      ***       or if they are input this WKDATE
+      *
+     C***********CHTP******IFEQ 'D'                        Deleted        180013
+     C           LASTCH    IFEQ 'D'                        Deleted        180013
+     C           LCD       ANDEQWKDATE                     At Working Date
+     C***********CHTP******ORNE 'D'                        or Inserted    180013
+     C           LASTCH    ORNE 'D'                        or Inserted    180013
+     C           TOED      ANDEQWKDATE                     At Working Date
+      *
+     C                     MOVE 'Y'       WKDOIT           Rec. to process
+      *
+      ***  Excluded trades which doesn't correspond to following criteria
+      *
+      ***  1) Trades with "Extracted Flag" to D
+      ***      OR trades with "Extracted Flag" to I but
+      ***      last change type not D
+      *
+     C********** TDRF      CHAINTRADSDY6            N99                                       CER001
+     C           TDRF      CHAINSETRX1L0            N99                                       CER001
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD16        DBASE            * DBERROR 016 *
+     C**********           MOVEL'TRADSDY6'DBFILE    P      ***************                    CER001
+     C                     MOVEL'SETRX1L0'DBFILE    P      ***************                    CER001
+     C                     MOVELTDRF      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           CCEXFL    IFEQ 'D'                        Reported as deleted
+     C                     MOVE 'N'       WKDOIT
+     C                     ENDIF
+      *
+     C           CCEXFL    IFEQ 'I'                        already reported as inserted
+     C***********CHTP******ANDNE'D'                        Except for dele180013
+     C           LASTCH    ANDNE'D'                        Except for dele180013
+     C                     MOVE 'N'       WKDOIT
+     C                     ENDIF
+      *
+      ***  1A) Trades inserted and deleted the same day not yet reported, bypass
+      *
+     C           WKDOIT    IFEQ 'Y'                        if to be reported
+     C***********CHTP******IFEQ 'D'                        when deleted   180013
+     C           LASTCH    IFEQ 'D'                        when deleted   180013
+     C           TOED      ANDEQWKDATE                      at Transaction Date
+     C           CCEXFL    ANDEQ' '                         and not yet reported
+     C                     MOVE 'N'       WKDOIT              don't reported it
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                           Select         ULX008
+      *                                                                   ULX008
+     C                     ELSE                                           ULX008
+      *                                                                   ULX008
+      ***  If the "Extract trades at trade date or at date made complete" ULX008
+      ***  indicator from LF/ERLUICL1 is equal to 'C', the trades are     ULX008
+      ***  extracted or excluded in the following cases :                 ULX008
+      *                                                                   ULX008
+      ***    A) Extract if date made complete equals work date            ULX008
+      *                                                                   ULX008
+      ***    B) Extract if the last change date is equal to the working   ULX008
+      ***       date and is equal to or greater than the date made        ULX008
+      ***       complete, if the last change type is 'D'                  ULX008
+      *                                                                   ULX008
+     C           LASTCH    IFNE 'D'                                       ULX008
+     C           TDMC      ANDEQWKDATE                                    ULX008
+     C           LASTCH    OREQ 'D'                                       ULX008
+     C           TDMC      ANDGEWKDATE                                    ULX008
+     C           LCD       ANDEQWKDATE                                    ULX008
+     C                     MOVE 'Y'       WKDOIT                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+      ***    C) Ignore if the extracted flag equals 'D'                   ULX008
+      ***       Ignore if the extracted flag equals 'I' and the last      ULX008
+      ***       change type is different from 'D'                         ULX008
+      *                                                                   ULX008
+     C           WKDOIT    IFEQ 'Y'                                       ULX008
+     C           CCEXFL    IFEQ 'D'                                       ULX008
+     C           CCEXFL    OREQ 'I'                                       ULX008
+     C           LASTCH    ANDNE'D'                                       ULX008
+     C                     MOVE 'N'       WKDOIT                          ULX008
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+      ***    D) Ignore if the date made complete is equal to the          ULX008
+      ***       working day, if the last change type is equal to 'D',     ULX008
+      ***       and if the extracted indicator is equal to blank          ULX008
+      *                                                                   ULX008
+     C           WKDOIT    IFEQ 'Y'                                       ULX008
+     C           TDMC      IFEQ WKDATE                                    ULX008
+     C           LASTCH    ANDEQ'D'                                       ULX008
+     C           CCEXFL    ANDEQ*BLANK                                    ULX008
+     C                     MOVE 'N'       WKDOIT                          ULX008
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C                     ENDIF                                          ULX008
+      *
+      ***  2) check if Security is to be included in CAB reporting
+      ***     (Depending of Investment type for Security Nominal Currency)
+      *
+     C           WKDOIT    IFEQ 'Y'                        to be processed
+      *
+     C           TDSS      CHAINSECTY                99
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD10        DBASE            * DBERROR 010 *
+     C                     MOVEL'SECTY'   DBFILE    P      ***************
+     C                     MOVELTDSS      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                            And I have NMCY
+      *
+      ***  Access investment type extended details using NMCY/SITP
+      *
+     C                     MOVE NMCY      KCCYI
+     C                     MOVE SITP      KINVS
+      *
+     C********** KINVT     CHAININVTPDY6             99                                       CER001
+     C           KINVT     CHAINSEINX2L0             99                                       CER001
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD11        DBASE            * DBERROR 011 *
+     C**********           MOVEL'INVTPDY6'DBFILE    P      ***************                    CER001
+     C                     MOVEL'SEINX2L0'DBFILE    P      ***************                    CER001
+     C           KCCYI     CAT  KINVS:1   DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  If not included in CAB reporting, Bypass
+      *
+     C           VUCABR    IFNE 'Y'
+     C                     MOVE 'N'       WKDOIT
+     C                     ENDIF
+      *
+     C                     ENDIF                           WKDOIT = 'Y'
+      *
+      ***  3) If not market centre is specifed, The trade is ignored
+      *
+     C           WKDOIT    IFEQ 'Y'                        to be processed
+     C           TMKC      IFEQ *BLANK
+     C                     MOVE 'N'       WKDOIT
+     C                     ENDIF
+     C                     ENDIF                           WKDOIT = 'Y'
+      *
+      ***  If the "EEE Indicator from Market Centre or from Security"     ULX008
+      *****from*LF/ERLUICL1*equals*'M',*then*LF/SEMKCDY6*should*be*****                ULX008 CER001
+      ** from LF/ERLUICL1 equals 'M', then LF/SEMKX1L0 should be                              CER001
+      ***  accessed to retrieve the "EEE Regulated Market Centre"         ULX008
+      ***  indicator                                                      ULX008
+      *                                                                   ULX008
+      ***  4) Access Market centre ext. details to check EEE Regulated Market
+      ***     centre flag (must be set to 'Y')
+      *
+     C           WKDOIT    IFEQ 'Y'                        to be processed
+      *                                                                   ULX008
+     C           VPMKSE    IFEQ 'M'                                       ULX008
+      *                                                                   ULX008
+     C********** TMKC      CHAINSEMKCDY6             99                                       CER001
+     C           TMKC      CHAINSEMKX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD12        DBASE            * DBERROR 012 *
+     C**********           MOVEL'SEMKCDY6'DBFILE    P      ***************                    CER001
+     C                     MOVEL'SEMKX1L0'DBFILE    P      ***************                    CER001
+     C                     MOVELTMKC      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           X8ERMC    IFNE 'Y'
+     C                     MOVE 'N'       WKDOIT
+     C                     ENDIF
+      *                                                                   ULX008
+     C                     ELSE                                           ULX008
+      *                                                                   ULX008
+      ***  If the "EEE Indicator from Market Centre or from Security"     ULX008
+      *****from*LF/ERLUICL1*equals*'S',*then*LF/SECTYDY6*should be*****                ULX008 CER001
+      ** from LF/ERLUICL1 equals 'S', then LF/SESDX3L0 should be                              CER001
+      ***  accessed to retieve the "EEE Regulated Market Centre"          ULX008
+      ***  indicator                                                      ULX008
+      *                                                                   ULX008
+     C           VPMKSE    IFEQ 'S'                                       ULX008
+     C********** TDSS      CHAINSECTYDY6             99                                ULX008 CER001
+     C           TDSS      CHAINSESDX3L0             99                                       CER001
+     C           *IN99     IFEQ *ON                        Not Found      ULX008
+     C           *LOCK     IN   LDA                                       ULX008
+     C                     MOVELPGM       DBPGM            ***************ULX008
+     C                     Z-ADD16        DBASE            * DBERROR 016 *ULX008
+     C**********           MOVEL'SECTYDY6'DBFILE    P      ***************             ULX008 CER001
+     C                     MOVEL'SESDX3L0'DBFILE    P      ***************                    CER001
+     C                     MOVELTDSS      DBKEY     P                     ULX008
+     C                     OUT  LDA                                       ULX008
+     C                     EXSR *PSSR                                     ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C           VVEEEM    IFNE 'Y'                                       ULX008
+     C                     MOVE 'N'       WKDOIT                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C                     ENDIF                                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C                     ENDIF                           WKDOIT = 'Y'
+      *
+      ***  5) If the market is the 'LU Market'
+      ***     and if Counterparty is 'LU' Market Customer
+      ***     then Bypass the trade
+      *
+     C           WKDOIT    IFEQ 'Y'                        to be processed
+      *
+     C                     MOVE TCNR      ALPH06  6        ALPHA 06
+      *
+     C           X8MCIN    IFEQ 'Y'                        LU Market = 'Y'
+     C           X8LMCN    ANDEQALPH06                     Counterparty
+     C                     MOVE 'N'       WKDOIT
+     C                     ENDIF
+     C                     ENDIF                           WKDOIT = 'Y'
+      *
+      ***  6) if counterparty Company code is blanks and
+      ***        counterparty citizenship is 'LU', ignore the trade
+      ***     when counterparty classifiaction is 'E'uroclear, or 'C'edel or
+      ***     K'assenverein or 'X' Market customer, take A8BICN as Counterparty
+      *
+     C           WKDOIT    IFEQ 'Y'                        to be processed
+      *
+     C                     MOVE TCNR      PCUST   6
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY'    POPTN   7
+     C                     PARM           PCUST   6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS                    Error
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD13        DBASE            * DBERROR 013 *
+     C                     MOVEL'SDSECSPD'DBFILE    P      ***************
+     C                     MOVELPCUST     DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  If the Customer Classification is equal to 'I' (Internal)      ULX008
+      ***  then ignore the trade                                          ULX008
+     C           BFCLAS    IFEQ 'I'                                       ULX008
+     C                     MOVE 'N'       WKDOIT                          ULX008
+     C                     ENDIF                                          ULX008
+      *                                                                   ULX008
+     C           BFCLAS    IFNE 'D'                                       ULX042
+     C           BFCLAS    ANDNE'S'                                       ULX042
+     C           ORDE      IFNE *ZEROS                                    ULX042
+     C           BLKR      ORNE *BLANKS                                   ULX042
+     C                     MOVE 'N'       WKDOIT                          ULX042
+     C                     ENDIF                                          ULX042
+     C                     ENDIF                                          ULX042
+      *                                                                   ULX008
+     C           WKDOIT    IFEQ 'Y'                                       ULX008
+     C           BFCLAS    IFEQ 'C'
+     C****       BFCLAS    OREQ 'D'                                       179959
+     C           BFCLAS    OREQ 'K'                                       179959
+     C           BFCLAS    OREQ 'E'
+     C           BFCLAS    OREQ 'X'
+      *
+      ***  use Branch internal Customer
+      *
+     C                     MOVE A8BICN    WKCUST  6
+     C                     ELSE
+      *
+      ***  use the counterparty itself
+      *
+     C                     MOVE TCNR      WKCUST
+     C                     ENDIF
+      *
+      ***  Access Customer details and Customer ext details
+      *
+     C                     MOVELWKCUST    WWCUST 10 P
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM           WWCUST
+     C                     PARM *BLANKS   DUMMY   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD14        DBASE            * DBERROR 014 *
+     C                     MOVEL'SDCUSTPD'DBFILE    P      ***************
+     C                     MOVELWWCUST    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C********** WKCUST    CHAINSDCUSTY6             99                                       CER001
+     C           WKCUST    CHAINSDCUX2L0             99                                       CER001
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD15        DBASE            * DBERROR 015 *
+     C**********           MOVEL'SDCUSTY6'DBFILE    P      ***************                    CER001
+     C                     MOVEL'SDCUX2L0'DBFILE    P      ***************                    CER001
+     C                     MOVELWKCUST    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *****If*Investment*Company*code*is*Blank*and*Customer*Citizenship*is180219
+      *****Then Bypass*************************************************** 180219
+      ******                                                              180219
+     C******     VFICCD    IFEQ *BLANKS                                   180219
+     C******     BBCNCZ    ANDEQ'LU'                                      180219
+     C******               MOVE 'N'       WKDOIT                          180219
+     C******               ENDIF                                          180219
+      *
+     C                     ENDIF                           WKDOIT = 'N'
+     C                     ENDIF                           WKDOIT = 'N'   ULX008
+      *
+     C******               ENDIF                           Select         ULX008
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  #PROC  - This routine will fill in ERLUCBD0 record Fields    *
+      *  ------   and write it out                                    *
+      *  Called by : Mainlines                                        *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           #PROC     BEGSR
+      *
+      ***  Reset Record Format
+      *
+     C                     CLEARERLUCBD0
+      *
+      *** C072 : Transaction Reference (External Identification)
+      *
+     C                     MOVE TDRF      ALPH06  6        6 alpha
+     C           'SE'      CAT  ALPH06:0  LUC072    P
+     C***********CHTP******IFEQ 'D'                        Deletion       180013
+     C           LASTCH    IFEQ 'D'                        Deletion       180013
+     C           LUC072    CAT  'D':0     LUC072            Transaction Ref.
+      *
+      ***  C009 : Cancellation indicator
+      *
+     C                     MOVEL'O'       LUC009            Cancellation Flag
+     C                     ELSE
+     C           LUC072    CAT  'I':0     LUC072           Insertion
+     C                     MOVEL'N'       LUC009            Cancellation Flag
+     C                     ENDIF
+      *
+      ***  C011 : Date of Transaction
+      *
+     C                     Z-ADDTDDT      @@DAYN  50
+     C                     EXSR ZDATE9
+      *
+     C           @@RTN     IFEQ '1'                        Error flag
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD20        DBASE            * DBERROR 020 *
+     C           'TRADE DA'CAT  'TE'      DBFILE    P      ***************
+     C                     MOVELTDDT      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADD@@VDT     LUC011            Trade Date
+      *
+      ***  C012 : time of Transaction
+      *
+     C********** TDRF      CHAINTRADSDY6            N99                                       CER001
+     C           TDRF      CHAINSETRX1L0            N99                                       CER001
+     C           *IN99     IFEQ *ON                         Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD21        DBASE            * DBERROR 021 *
+     C**********           MOVEL'TRADSDY6'DBFILE    P      ***************                    CER001
+     C                     MOVEL'SETRX1L0'DBFILE    P      ***************                    CER001
+     C                     MOVELTDRF      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           CCTIME    MULT 1000      LUC012            Time of Trans.
+      *
+      ***  C013 : Ext. ID of Cancelled Transaction
+      *
+     C           LUC009    IFEQ 'O'                        Cancelled trade ?
+     C           'SE'      CAT  ALPH06:0  LUC013
+     C           LUC013    CAT  'I':0     LUC013            Ext. ID of Cancel. Trans.
+     C                     ENDIF
+      *
+      ***  C014 : Reference of Investment Company
+      *
+     C******     LUC009    IFEQ 'N'
+     C                     MOVELLUC072    LUC014            Ref of Invst. Company
+     C******               ENDIF
+      *
+      ***  C015 : ID of Investment Company
+      *
+     C                     MOVELVPINCC    LUC015            ID of Invst. Company
+      *
+      ***  C016 : Identification of Customer Account
+      *
+     C           BFCLAS    IFEQ 'D'
+     C           BFCLAS    OREQ 'S'
+     C                     MOVE 'O'       LUC016            Id of Cust. Account
+     C                     ELSE
+     C                     MOVE 'N'       LUC016            Id of Cust. Account
+     C                     ENDIF
+      *
+      ***  C017 : Type of counterparty
+      *
+     C           BBCNCZ    IFEQ 'LU'
+     C           BBCOLC    OREQ 'LU'                                      186797
+     C           VFICCD    ANDEQ*BLANKS                                   186797
+     C                     MOVEL'LUX'     LUC017            Type of Counterparty
+     C                     ELSE
+     C                     MOVEL'ETR'     LUC017            Type of Counterparty
+     C                     ENDIF
+      *
+      ***  C018 : Counterpart (Lux)
+      ***  If the retrieved Investment Company Code is blank when C017    180219
+      ***  is equal to 'LUX, C018 must be set to C015 (VPINCC)            180219
+      *                                                                   180219
+      ***  C019 : Counterpart (Not Lux)
+      *
+     C           LUC017    IFEQ 'LUX'
+     C           VFICCD    IFEQ *BLANKS                                   180219
+     C                     MOVE VPINCC    LUC018                          180219
+     C                     ELSE                                           180219
+     C                     MOVELVFICCD    LUC018            Counterpart (Lux)
+     C                     ENDIF                                          180219
+     C                     ENDIF                                          ULX008
+      *                                                                   180219
+     C******               ELSE                                           ULX008
+      *                                                                   ULX008
+      ***  Counterpart should be blank if flag from LF/ERLUICL1 is 'N'    ULX008
+     C           LUC017    IFEQ 'ETR'                                     ULX008
+     C           VPCTLN    IFEQ 'Y'                                       ULX008
+     C                     MOVELBBCRNM    LUC019            Counterpart (Not Lux)
+     C                     ELSE                                           ULX008
+     C                     MOVEL*BLANKS   LUC019                          ULX008
+     C                     ENDIF                                          ULX008
+     C                     ENDIF
+      *
+      ***  C020 : ISIN Code
+      *
+     C           TDSS      CHAINSECTY                99
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD22        DBASE            * DBERROR 022 *
+     C                     MOVEL'SECTY'   DBFILE    P      ***************
+     C                     MOVELTDSS      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELISIN      LUC020
+      *
+      ***  C021 : Security code
+      ***  C022 : Security Code Type
+      *
+     C           LUC020    IFEQ *BLANKS
+      *
+      ***  Access Security Ext Details
+      *
+     C********** TDSS      CHAINSECTYDY6             99                                       CER001
+     C           TDSS      CHAINSESDX3L0             99                                       CER001
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD23        DBASE            * DBERROR 023 *
+     C**********           MOVEL'SECTYDY6'DBFILE    P      ***************                    CER001
+     C                     MOVEL'SESDX3L0'DBFILE    P      ***************                    CER001
+     C                     MOVELTDSS      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELVVSECD    LUC021            Security Code
+     C                     MOVELVVSNCD    LUC022            Security National Code
+     C                     ENDIF
+      *
+      ***  C023 : Security description (using ZSDESC)
+      *
+      ***  input fields
+      *
+     C                     MOVELSRPN      ZSRPN            Sec. Report Name
+     C                     MOVELSFN1      ZSFN1                 Full name 1
+     C                     MOVELSFN2      ZSFN2                 Full name 2
+     C*                    Z-ADDCPNR      CPNR             Coupon rate
+     C*                    Z-ADDMATY      MATY             Maturity date
+     C*                    Z-ADDSCPP      SCPP             Redemption Price
+     C*                    Z-ADDSCPD      SCPD             1st Redemption Price
+     C                     MOVELBVRIDF    ZRSFD            Redemp. in Sec. Full Ind.
+     C*                    MOVELSCPI      SCPI             Put/Call ind.
+      *
+     C                     EXSR ZSDESC
+      *
+     C                     MOVELZRNME     LUC023    P       Sec. Description
+      *
+      ***  C024 : Quantity
+      *
+     C           VUPRCD    IFEQ 'ACT'                      Equity
+     C           VUPRCD    OREQ 'WAR'                      Warrants
+     C           VUPRCD    OREQ 'OPT'                      Options
+     C           VUPRCD    OREQ 'FUT'                      Futures
+     C                     Z-ADDNOML      LUC024            Quantity
+      *
+      ***  Quantity taken into Account Nominal CCY dec. places
+      *
+     C                     Z-ADDTNMD      #I      10       (0 to 4)
+     C                     DO   #I
+     C           LUC024    DIV  10        LUC024            Quantity
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ***  C025 : Amount
+      *
+     C           VUPRCD    IFEQ 'OBL'                      Bonds
+     C           VUPRCD    OREQ 'OCW'                      Bonds Cum Warrants
+     C                     Z-ADDNOML      LUC025            Amount
+      *
+      ***  Amount taken into Account Nominal CCY dec. places
+      *
+     C                     Z-ADDTNMD      #I      10       (0 to 4)
+     C                     DO   #I
+     C           LUC025    DIV  10        LUC025            Amount
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ***  C026 : Transaction Price
+      *
+     C                     Z-ADDPRIC      LUC026            Trans. Price
+     C****       SPBS      IFEQ 'P'                        Percenatge price      223136
+     C****       PRIC      DIV  100       LUC026            Trans. Price         223136
+     C****                 ENDIF                                                 223136
+      *
+      ***  C027 : Flag Exchange Traded / OTC
+      ***  180219 : Take flag Coming from trade ext. details (TRADSDX6)   180219
+      *
+     C******     VFMCID    IFEQ 'Y'                                       180219
+     C           CCMTRD    IFEQ 'Y'                                       180219
+     C                     MOVE 'O'       LUC027            Exchange Traded / OTC
+     C                     ELSE
+     C                     MOVE 'N'       LUC027            Exchange Traded / OTC
+     C                     ENDIF
+      *
+      ***  C028 : Aggregation Flag
+      *
+     C                     MOVE 'N'       LUC028            No Aggregation
+      *
+      ***  C029 : Product Code of the Security
+      *
+     C                     MOVE VUPRCD    LUC029            Product Code
+      *
+      ***  C007 : ISO country Code
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM           TNMC
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS                    Error or Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD24        DBASE            * DBERROR 024 *
+     C                     MOVEL'SDCURRPD'DBFILE    P      ***************
+     C                     MOVELTNMC      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA6SWCY    LUC007            ISO Currency
+      *
+      ***  C030 : Purchase/Sale Code
+      *
+     C           LUC016    IFEQ 'N'                                       ULX042
+     C           TDTP      IFEQ 'TP'
+     C                     MOVE 'A'       LUC030            Purchase
+     C                     ELSE
+     C                     MOVE 'V'       LUC030            Sale
+     C                     ENDIF
+     C                     ENDIF                                          ULX042
+      *
+     C           LUC016    IFEQ 'O'                                       ULX042
+     C           TDTP      IFEQ 'TP'                                      ULX042
+     C                     MOVE 'V'       LUC030            Purchase      ULX042
+     C                     ELSE                                           ULX042
+     C                     MOVE 'A'       LUC030            Sale          ULX042
+     C                     ENDIF                                          ULX042
+     C                     ENDIF                                          ULX042
+      *
+      ***  Additional Fields for Audit Report
+      *
+     C                     MOVELTDSS      LUSSHN            Sec. Shortname
+     C                     MOVELWKCUST    LUCNUM            Counterparty
+     C                     MOVELBBCNCZ    LUCOCZ            Country of Citizenship
+     C                     MOVELTDBA      LUBKBR            Booking Branch
+      *
+      ***  Write out Record
+      *
+     C                     WRITEERLUCBD0
+      *
+      *****Update*LF/TRADSDY6,*Extracted*Flag*to*setup*****************                       CER001
+      ** Update LF/SETRX1L0, Extracted Flag to setup                                          CER001
+      ***  Trades Cancelled : Flag = D
+      ***  Others           : Flag = I
+      *
+     C********** TDRF      CHAINTRADSDY6             99                                       CER001
+     C           TDRF      CHAINSETRX1L0             99                                       CER001
+     C           *IN99     IFEQ *ON                        Not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD25        DBASE            * DBERROR 025 *
+     C**********           MOVEL'TRADSDY6'DBFILE    P      ***************                    CER001
+     C                     MOVEL'SETRX1L0'DBFILE    P      ***************                    CER001
+     C                     MOVELTDRF      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C***********CHTP******IFEQ 'D'                                       180013
+     C           LASTCH    IFEQ 'D'                                       180013
+     C                     MOVE 'D'       CCEXFL
+     C                     ELSE
+     C                     MOVE 'I'       CCEXFL
+     C                     ENDIF
+     C                     UPDATTRADSDD6
+      *
+     C                     ENDSR
+      /EJECT
+      /COPY ZSRSRC,ZSDESCZ3
+      /COPY ZSRSRC,ZDATE2Z2
+      /COPY ZSRSRC,ZDATE9Z3
+      /EJECT
+      *****************************************************************
+      *  *INZSR - Innitial subroutine : automatically called at start *
+      *  ------                                                       *
+      *  Called by : at pgm start                                     *
+      *  Calls     : *PSSR                                            *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ***  Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PDATE   5        5 ALPHA
+      *
+      ***  If equl to Zero, take midas rundate
+      *
+     C           PDATE     IFEQ '00000'
+     C                     Z-ADDAGRDNB    WKDATE  50       Midas Run date
+     C                     ELSE
+     C                     MOVE PDATE     WKDATE  50
+     C                     ENDIF
+      *
+      ***  Validate date as correct using ZDATE2
+      *
+     C                     Z-ADDWKDATE    ZDAYNO
+     C                     EXSR ZDATE2
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD1         DBASE            * DBERROR 001 *
+     C                     MOVEL'*NONE'   DBFILE           ***************
+     C           'WRONG '  CAT  'DATE'    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                                       CER001
+      ***  Access Bank Details                                                                CER001
+      *                                                                                       CER001
+     C                     CALL 'AOBANKR0'                                                    CER001
+     C                     PARM *BLANKS   PRTCD                                               CER001
+     C                     PARM '*FIRST ' POPTN                                               CER001
+     C           SDBANK    PARM SDBANK    DSFDY                                               CER001
+      *                                                                                       CER001
+     C           PRTCD     IFNE *BLANKS                                                       CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     MOVELPGM       DBPGM                                               CER001
+     C                     Z-ADD4         DBASE                                               CER001
+     C                     MOVEL'SDBANKPD'DBFILE                                              CER001
+     C                     MOVEL'*FIRST'  DBKEY                                               CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                                                              CER001
+      *
+      ***  Read LU ICD
+      *
+     C           'LU'      CHAINERLUICL1             99
+     C           *IN99     IFEQ *ON                        not Found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD2         DBASE            * DBERROR 002 *
+     C                     MOVEL'ERLUICL1'DBFILE           ***************
+     C                     MOVEL'LU'      DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Read SDSTRDPD details
+      *
+     C                     CALL 'AOSTRDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDSTRD    PARM SDSTRD    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS                    Error or not found
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM            ***************
+     C                     Z-ADD3         DBASE            * DBERROR 003 *
+     C                     MOVEL'SDSTRDPD'DBFILE           ***************
+     C                     MOVEL'*FIRST'  DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Key list for INVTYPX6
+      *
+     C           KINVT     KLIST
+     C                     KFLD           KCCYI   3        Currency code
+     C                     KFLD           KINVS   3        investment type
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Program exception error routine                     *
+      *  ------   Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+** FILE TRANS. ERLUCBPP FILE TO REMOVE ALL NON STANDARD CHARACTERS
+*EQUATE ERLUCBPP
+*EQUATE C144504EC551C552C554C956C164C368406A406FC571C572C5744079407A407D407E407F
+*EQUATE C181C282C383C484C585C686C787C888C989D191D292D393D494D595D696D797D898D999
+*EQUATE E2A2E3A3E4A4E5A5E6A6E7A7E8A8E9A940E0E4FE409D4B6B4B9D
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  CPY@
+(c) Finastra International Limited 2005

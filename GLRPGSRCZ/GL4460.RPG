@@ -1,0 +1,369 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Batch history file purge')                    *
+      ********************************************************************
+      *                                                                  *
+      *  Midas - General Ledger Module                                *
+      *                                                                  *
+      *  GL4460 - BATCH HISTORY FILE PURGE                               *
+      *                                                                  *
+      *  Function: This program will check all Historic batch entries    *
+      *  COB       against the Journal Retention Period and will         *
+      *            delete those that are out of date.                    *
+      *                                                                  *
+      *  Called By: GLC4460                                              *
+      *                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 159921             Date 12Feb16               *
+      *                 CGL135B            Date 04Nov13               *
+      *                 CGL127             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL013             Date 20Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  159921 - Define RTDY as 4,0.                                    *
+      *         - Applied for MD037474.                                  *
+      *  CGL135B - Accounting Rules Process                           *
+      *            Added hooks: CGL135_108, CGL135_109, CGL135_110    *
+      *  CGL127 - COB Restructure - GL COB Optimisation Phase 1       *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL013 - MT94x Message Generation.                           *
+      *                                                                  *
+     F*****************************************************************
+     F***GLJEHHL0UF  E                    DISK                                                CGL127
+     F***GLJEHPL0UF  E                    DISK                                                CGL127
+     F***GLJEHSL0UF  E                    DISK                                                CGL127
+     FGLJEHHL0UF  E           K        DISK                                                   CGL127
+     FGLJEHPL0UF  E           K        DISK                                                   CGL127
+     FGLJEHSL0UF  E           K        DISK                                                   CGL127
+     FGLJEHXL2UF  E           K        DISK                                                   CGL013
+     F                                              KINFSR *PSSR                              CGL013
+     F/COPY OFCPYSRCZ,CGL135_108                                                             CGL135B
+     FGL4460AUO   E                    DISK
+     F/COPY WNCPYSRC,GL4460F001
+      *****************************************************************
+      *  F U N C T I O N   O f   I N D I C A T O R S
+      *
+      *       01      END OF FILE - LF/GLJEHHL0
+      *       02      END OF FILE - LF/GLJEHPL0
+      *       03      END OF FILE - LF/GLJEHSL0
+      *       11      MT94x Message Generation Installed                                      CGL013
+      *       U7&U8   DATABASE IN ERROR
+      *
+     F******************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E** Copyright array
+      /SPACE 3
+     ICPYR@#      DS
+     I*
+     I** Data Structure for compilation - Copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+     ISDBANK    E DSSDBANKPD
+     I** Bank details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I*
+     I** General Ledger details
+     ISCSARD    E DSSCSARDPD                                                                  CGL013
+      ** Data Structure for SAR Details                                                       CGL013
+      *                                                                                       CGL013
+     IDSFDY     E DSDSFDY
+     I*
+     I* First DS for Access Programs, short Data Structure
+     ILDA       E DSLDA
+     I*
+     I**     Local Data Area
+     IPSDS       SDS
+     I*
+     I** Program Status Data Structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/EJECT
+      *
+     C**   Define Local Data Area
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Access Bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'GL4460'  DBPGM            ** DBERR 001 **
+     C                     Z-ADD001       DBASE            ***************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Access General Ledger details
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBPGM
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     MOVEL'GL4460'  DBPGM            ** DBERR 002 **
+     C                     Z-ADD002       DBASE            ***************
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     END
+     C/COPY WNCPYSRC,GL4460C002
+      *                                                                                       CGL013
+      ** Determine if MT94x Message Generation is installed.                                  CGL013
+      *                                                                                       CGL013
+     C                     CALL 'AOSARDR0'                                                    CGL013
+     C                     PARM *BLANKS   PRTCD   7                                           CGL013
+     C                     PARM '*VERIFY 'POPTN   7                                           CGL013
+     C                     PARM 'CGL013'  PSARD   6                                           CGL013
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL013
+      *                                                                                       CGL013
+      ** Database Error                                                                       CGL013
+      *                                                                                       CGL013
+     C           PRTCD     IFNE *BLANK                                                        CGL013
+     C           PRTCD     ANDNE'*NRF   '                                                     CGL013
+     C           *LOCK     IN   LDA                                                           CGL013
+     C                     MOVEL'CGL013'  DBKEY                                               CGL013
+     C                     MOVEL'SCSARDPD'DBFILE                                              CGL013
+     C                     MOVE 'GL4460'  DBPGM                                               CGL013
+     C                     Z-ADD003       DBASE                                               CGL013
+     C                     MOVE *ON       *INU7                                               CGL013
+     C                     MOVE *ON       *INU8                                               CGL013
+     C                     OUT  LDA                                                           CGL013
+     C                     EXSR *PSSR                                                         CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+     C           PRTCD     IFEQ *BLANKS                                                       CGL013
+     C                     MOVE 'Y'       CGL013  1                                           CGL013
+     C                     MOVE *ON       *IN11                                               CGL013
+     C                     ELSE                                                               CGL013
+     C                     MOVE 'N'       CGL013                                              CGL013
+     C                     MOVE *OFF      *IN11                                               CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+      ** Key List for Midas GL Journal Entry History Additional                               CGL013
+      ** Information by Batch Number and Batch Item Number                                    CGL013
+      *                                                                                       CGL013
+     C           KGLJHX    KLIST                                                              CGL013
+     C                     KFLD           KPTDT   50                                          CGL013
+     C                     KFLD           KBTNB   3                                           CGL013
+     C                     KFLD           KBINB   30                                          CGL013
+     C/COPY OFCPYSRCZ,CGL135_109                                                             CGL135B
+     C*
+     C** Set Number of Records deleted to zero
+     C                     Z-ADD0         NHDL   150
+     C                     Z-ADD0         NPDL   150
+     C                     Z-ADD0         NSDL   150
+     C                     Z-ADD0         NXDL   150                                          CGL013
+     C*
+     C** Set up report heading fields
+     C                     MOVE BJURPT    RURPT  53
+     C                     MOVE BJMRDT    RMRDT   7
+     C*
+     C** Multiply Journal Retention months by 31 (= Retention days)
+     C***********BKJREP    MULT 31        RTDY    30                                          159921
+     C           BKJREP    MULT 31        RTDY    40                                          159921
+     C*
+     C** Subtract Retention days from run day number (= Target Date)
+     C********** BJRDNB    SUB  RTDY      TGDT    60                                          CGL127
+     C           BJRDNB    SUB  RTDY      TGDT    50                                          CGL127
+     C*
+     C***Loop*to*read*&*process*records*on*LF/GLJEHHL0***                                     CGL127
+      *                                                                                       CGL127
+      ** Using the back valued date, SETGT to GLJEHHL0.                                       CGL127
+      ** READP to GLJEHHL0                                                                    CGL127
+      *                                                                                       CGL127
+     C                     SETOF                         010203
+     C**********           READ GLJEHHL0                 01                                   CGL127
+     C           TGDT      SETGTGLJEHHL0                                                      CGL127
+     C                     READPGLJEHHL0                 01                                   CGL127
+     C*
+     C***While*not*End*of*File*and*History*Date*is*less*than*or*equal                         CGL127
+     C***to*Target*Date                                                                       CGL127
+      *                                                                                       CGL127
+      ** While record is found. Delete record from GLJEHHL0.                                  CGL127
+      ** Increment record deleted count.                                                      CGL127
+      *                                                                                       CGL127
+     C           *IN01     DOWEQ'0'
+     C********** HHBEDT    IFLE TGDT                                                          CGL127
+     C*
+     C** Delete the record from LF/GLJEHHL0
+     C                     DELETGLJEHHL0
+     C*
+     C** Add 1 to Number of records deleted
+     C                     ADD  1         NHDL
+     C**********           END                                                                CGL127
+     C*
+     C***Read*next*record*from*LF/GLJEHHPD                                                    CGL127
+     C**********           READ GLJEHHL0                 01                                   CGL127
+      *                                                                                       CGL127
+      ** Read previous record from LF/GLJEHHPD                                                CGL127
+      *                                                                                       CGL127
+     C                     READPGLJEHHL0                 01                                   CGL127
+     C                     END
+     C/COPY WNCPYSRC,GLH00603
+     C*
+     C***Loop*to*read*&*process*records*on*LF/GLJEHPL0                                        CGL127
+     C*                                                                                       CGL127
+     C** Using the back valued date, SETGT to GLJEHPL0.                                       CGL127
+     C** READP to GLJEHPL0                                                                    CGL127
+     C*                                                                                       CGL127
+     C**********           READ GLJEHPL0                 02                                   CGL127
+     C           TGDT      SETGTGLJEHPL0                                                      CGL127
+     C                     READPGLJEHPL0                 02                                   CGL127
+     C*
+     C***While*not*End*of*File*and*History*Date*is*less*than*or*equal                         CGL127
+     C***to*Target*Date                                                                       CGL127
+      *                                                                                       CGL127
+      ** While record is found. Delete record from GLJEHPL0.                                  CGL127
+      ** Increment record deleted count.                                                      CGL127
+      *                                                                                       CGL127
+     C           *IN02     DOWEQ'0'
+     C********** HPBEDT    IFLE TGDT                                                          CGL127
+     C*
+     C** Delete the record from LF/GLJEHPL0
+     C                     DELETGLJEHPL0
+     C*
+     C** Add 1 to Number of records deleted
+     C                     ADD  1         NPDL
+      *                                                                                       CGL013
+      ** If MT94x Message Generation is installed, for each posting                           CGL013
+      ** in GLJEHPPD that will be purged, if additional information                           CGL013
+      ** exists in GLJEHXPD for the same batch and item number, delete                        CGL013
+      ** the record.                                                                          CGL013
+      *                                                                                       CGL013
+     C           CGL013    IFEQ 'Y'                                                           CGL013
+     C                     MOVELHPPTDT    KPTDT                                               CGL013
+     C                     MOVELHPBTNB    KBTNB                                               CGL013
+     C                     Z-ADDHPBINB    KBINB                                               CGL013
+      *                                                                                       CGL013
+     C           KGLJHX    CHAINGLJEHXL2             04                                       CGL013
+      *                                                                                       CGL013
+     C           *IN04     IFEQ *OFF                                                          CGL013
+     C                     DELETGLJEHXL2                                                      CGL013
+     C                     ADD  1         NXDL                                                CGL013
+     C                     ENDIF                                                              CGL013
+      *                                                                                       CGL013
+     C                     ENDIF                                                              CGL013
+     C/COPY OFCPYSRCZ,CGL135_110                                                             CGL135B
+     C/COPY WNCPYSRC,GL4460C003
+     C**********           END                                                                CGL127
+     C*
+     C***Read*next*record*from*LF/GLJEHPPD                                                    CGL127
+     C**********           READ GLJEHPL0                 02                                   CGL127
+      *                                                                                       CGL127
+      ** Read previous record from LF/GLJEHPPD                                                CGL127
+      *                                                                                       CGL127
+     C                     READPGLJEHPL0                 02                                   CGL127
+     C                     END
+     C*
+     C***Loop*to*read*&*process*records*on*LF/GLJEHSL0                                        CGL127
+      *                                                                                       CGL127
+      ** Using the back valued date, SETGT to GLJEHSL0.                                       CGL127
+      ** READP to GLJEHSL0                                                                    CGL127
+      *                                                                                       CGL127
+     C**********           READ GLJEHSL0                 03                                   CGL127
+     C           TGDT      SETGTGLJEHSL0                                                      CGL127
+     C                     READPGLJEHSL0                 03                                   CGL127
+     C*
+     C***While not*End*of*File*and*History*Date*is*less*than*or*equal                         CGL127
+     C***to*Target*Date                                                                       CGL127
+      *                                                                                       CGL127
+      ** While record is found. Delete record from GLJEHSL0.                                  CGL127
+      ** Increment record deleted count.                                                      CGL127
+      *                                                                                       CGL127
+     C           *IN03     DOWEQ'0'
+     C********** HSBEDT    IFLE TGDT                                                          CGL127
+     C*
+     C** Delete the record from LF/GLJEHSL0
+     C                     DELETGLJEHSL0
+     C*
+     C** Add 1 to Number of records deleted
+     C                     ADD  1         NSDL
+     C**********           END                                                                CGL127
+     C/COPY WNCPYSRC,GL4460C001
+     C*
+     C***Read*next*record from LF/GLJEHSPD                                                    CGL127
+     C**********           READ GLJEHSL0                 03                                   CGL127
+      *                                                                                       CGL127
+      ** Read previous record from LF/GLJEHSPD                                                CGL127
+      *                                                                                       CGL127
+     C                     READPGLJEHSL0                 03                                   CGL127
+     C                     END
+     C*
+     C** Write report headings, details and end of report text
+     C                     WRITEGL4460AH
+     C                     WRITEGL4460AD
+     C                     WRITEGL4460AT
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *
+      * *PSSR - Exception Error Processing. Performed when SDBANKPD or
+      *         SDGELRPD in error or an exception error occurs.
+      *
+      * CALLED BY : MAIN PROCESSING
+      *
+      * CALLS     : NONE
+      *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      * Check that this is the first time through the routine
+      * to prevent recursive calling which would loop the program.
+     C           RUN1      IFNE 'Y'
+     C                     MOVE 'Y'       RUN1    1
+     C*
+     C** Write report headings and error text if Database Error.
+     C           *INU7     IFEQ '1'
+     C                     WRITEGL4460AH
+     C                     WRITEGL4460AE
+     C                     OUT  LDA
+     C                     END
+      *
+      ** Dump Program and Return control
+     C                     DUMP
+     C                     END
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

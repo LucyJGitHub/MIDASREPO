@@ -1,0 +1,113 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas GP Global access object message handling')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing                                   */
+/*                                                                   */
+/*       GPZASNMG - Global Access Object Message Handling Program    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG1950            Date 21May04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG1950- New program.                                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCD &PGNM &DEST &MGID &MSGF &MGKY +
+                          &MGDA &MGTP)
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&RTCD)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PGNM)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DEST)   TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MGID)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MGKY)   TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MGDA)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MGTP)   TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MGIDS)  TYPE(*CHAR) LEN(3)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global message monitor */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(TAGEND))
+ 
+/* Send message from message file */
+ 
+ DO_1:       IF         COND(&MGID *NE '*CLEAR ') THEN(DO)
+ 
+             CHGVAR     VAR(&MGIDS) VALUE(%SST(&MGID 1 3))
+ 
+/* Determine Queue to send message to */
+ 
+             IF         COND((&DEST *NE '*PRV') *AND (&DEST *NE +
+                          '*EXT') *AND (&DEST *NE '*SAME')) +
+                          THEN(CHGVAR VAR(&DEST) VALUE('*SAME'))
+ 
+/* Check message ID; if blank, use message data as message text */
+ 
+             IF         COND(&MGID *EQ ' ') THEN(CHGVAR VAR(&MGID) +
+                          VALUE('RQS0001'))
+ 
+/* Check message type */
+ 
+             IF         COND((&MGTP *NE '*INFO') *AND (&MGTP *NE +
+                          '*INQ') *AND (&MGTP *NE '*COMP') *AND +
+                          (&MGTP *NE '*DIAG') *AND (&MGTP *NE +
+                          '*NOTIFY') *AND (&MGTP *NE '*ESCAPE') +
+                          *AND (&MGTP *NE '*RQS') *AND (&MGTP *NE +
+                          '*STATUS')) THEN(CHGVAR VAR(&MGTP) +
+                          VALUE('*DIAG'))
+ 
+/* Check message file from which to send message */
+ 
+             IF         COND((&MSGF *EQ ' ') *AND ((&MGIDS *EQ +
+                          'CPF') *OR (&MGIDS *EQ 'CPD') *OR (&MGIDS +
+                          *EQ 'MCH') *OR (&MGIDS *EQ 'RPG') *OR +
+                          (&MGIDS *EQ 'CBL') *OR (&MGIDS *EQ +
+                          'PLI'))) THEN(CHGVAR VAR(&MSGF) +
+                          VALUE('QCPFMSG'))
+ 
+             IF         COND(&MSGF *EQ ' ') THEN(CHGVAR VAR(&MSGF) +
+                          VALUE('GPUSRMSG'))
+ 
+/* If to *EXT, send without program name */
+ 
+             IF         COND(&DEST *EQ '*EXT') THEN(SNDPGMMSG +
+                          MSGID(&MGID) MSGF(&MSGF) MSGDTA(&MGDA) +
+                          TOPGMQ(*EXT) MSGTYPE(&MGTP) KEYVAR(&MGKY))
+ 
+/* Else send message to program queue requested */
+ 
+             ELSE       CMD(SNDPGMMSG MSGID(&MGID) MSGF(&MSGF) +
+                          MSGDTA(&MGDA) TOPGMQ(&DEST &PGNM) +
+                          MSGTYPE(&MGTP) KEYVAR(&MGKY))
+ 
+ OD_1:       ENDDO
+ 
+/* *CLEAR requested - clear the message queue */
+ 
+             ELSE       CMD(RMVMSG PGMQ(&DEST &PGNM) CLEAR(*ALL))
+ 
+             GOTO       CMDLBL(PGMEND)
+ 
+ TAGEND:
+             SNDPGMMSG  MSG('Error in message handling program - +
+                          contact System Supervisor')
+ 
+ PGMEND:
+ 
+             ENDPGM

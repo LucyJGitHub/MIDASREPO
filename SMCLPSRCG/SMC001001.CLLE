@@ -1,0 +1,145 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM SQL Processor - Global')                     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC001001 - SQL Processor - Global                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1076132 *CREATE  Date 18Feb13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1076132 - Automate SQL delivery deployment                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &GPFXSVAL &BRGSVAL &LAYER)
+ 
+             /* Valid Modes: */
+             /*  *VAL        */
+             /*  *RUN        */
+ 
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PTFDTA) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPGSVALJ0)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International +
+                          Limited 2013')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+/* Create temporary file to hold error messages. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')
+ 
+ 
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&PTFDTA) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC001001' 'ENTER' ' ')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Save library list. */
+             SAVLIBL    SAVDTL(SMC001001)
+ 
+/* Set up library list. */
+             CALL       PGM(GPC000016) PARM(&GPSBSID)
+ 
+/* Delete, if exists, SMDBRFPD in QTEMP */
+             DLTF       FILE(QTEMP/SMSQLPQT)
+             MONMSG     MSGID(CPF0000)
+/* Copy SMSQLPQT file to temporary version. */
+             DLTF       FILE(QTEMP/SMSQLPQT)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(&PTFDTA/SMSQLPTD) +
+                          TOFILE(QTEMP/SMSQLPQT) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+ 
+/* Start SQL Processor */
+          /* OVRDBF     FILE(SMSQLPTD) TOFILE(QTEMP/SMSQLPQT) */
+             CALL       PGM(SM000100) PARM(&MODE)
+          /* DLTOVR     FILE(SMSQLPTD) */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMSQLRUN') MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SM000100' 'JOBLOG' 'Y')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC001001') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC001001' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+/* Restore original library list. */
+             RSTLIBL    SAVEDLIBL(SMC001001)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

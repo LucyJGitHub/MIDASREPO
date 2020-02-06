@@ -1,0 +1,132 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  XXXXXXX - (/COPY Name)                                       *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *  Last Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *  Prev Amend No. nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  nnnnnn - (change description)                                *
+      *                                                               *
+      *****************************************************************
+  SD STANDARD SUB-ROUTINE - ZBKDT
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Purpose:
+  ~~~~~~~~
+   To calculate the nth working day back from a given start date for
+   any particular currency and (optional) location.
+ 
+  Notes for when including in RPG pgm for compiling:
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  NB: ZHOLE, ZHOLI ,ZHOLDS & ZACCH should only be included in
+      a source program ONCE <<<-------
+ 
+   /COPY ZSRSRC,ZHOLE should be included in the 'E' specifications
+      This is an array that allows individual days in a year to be
+      accessed in the sub-routine.
+ 
+   /COPY ZSRSRC,ZHOLI should be included in the 'I' specifications
+      This includes a data structure specification that allows the
+      fields of the holiday record to be manipulated more easily.
+      It also contains a data structure that defines all the fields
+      used in the sub-routine.
+ 
+   /COPY ZSRSRC,ZHOLDS should be included in the 'I' spec to define
+      the datastructure required for the call of the access program.
+ 
+   /COPY ZSRSRC,ZACCH should be included in the subroutine section
+      This sub-routine will access the holiday file as necessary and
+      sets up the holiday array for use by the main sub-routine.
+ 
+   /COPY ZSRSRC,ZBKDT should be included in the subroutine section
+      This is the sub-routine that will actually determine the nth
+      working day back from the given input date.
+ 
+   Requirements:
+   ~~~~~~~~~~~~
+   Input:
+   ~~~~~
+   ZDAYNO - A five digit numeric field containing the day number, as a
+            number of days from 31DEC71, that we wish to calculate the
+            number of days back from.
+ 
+   ZCCY   - A three-character alphabetic field containing the name of
+            the required currency.
+ 
+   ZLOC   - A three-character alphabetic field containing the name of
+            the required location. This field is optional and should be
+            blank if no location is to be specified.
+ 
+   ZNRDYS - A two digit numeric field containing the number of days
+            back that is to be calculated. Note that zero is a valid
+            value.
+ 
+   Procedure:
+   ~~~~~~~~~
+   1. - Move input date to output date.
+ 
+   2. - Execute ZACCH to determine if a file access needs to be made
+        and set up holiday array correctly.
+ 
+   3. - If no record was found, then subtract no. of days back from
+        input date and try to find record again. Move the original
+        input date back again (is still in the output date field).
+ 
+   3.1 - If a record still hasn't been found, then just subtract the no
+         of days back required from input date to give output date. No
+         more processing will be done.
+ 
+   3.2 - Otherwise, need to do some more calculations:
+ 
+   3.2.1 - A record was found for the previous year. Subtracting 31st
+           Dec date from input date and taking off another one gives us
+           the no. of working days in THIS year. Subtracting this value
+           from no. required, gives the no. still left to find in the
+           previous year. Subtract no. in this year from output date to
+           give current output date. Subtract 31st Dec date from 1st
+           Jan date and add two to give day in year index for one day
+           PAST 31st Dec date.
+ 
+   3.2.2 - Do step 5.
+ 
+   4. - Otherwise, a record was found for THIS year at first attempt
+        (step 3). Subtract 1st Jan date from input date and add one to
+        give day in year index.
+ 
+   5. - If no. of days back required is zero and input date is a
+        holiday, then change no. required to 1.
+ 
+   6. - While the no. of days left to find is greater than zero, do the
+        following:
+ 
+   6.1 - Subtract one from day in year index and output date.
+ 
+   6.2 - If output date is beyond 1st Jan date, then need to get record
+         for previous year using new parameters. Input date is current
+         output date; no. of working days is just the no. still left to
+         find.
+ 
+   6.2.1 - If no record was found, then subtract no. of days left to
+           find from output date and add one to give correct output
+           date. Change no. left to find to zero to terminate loop, and
+           set day in year index to one.
+ 
+   6.2.2 - Otherwise, reset day in year index value.
+ 
+   6.3 - If value of ZHL,ZINDX equals ' ', then no. of working days
+         left to find is one less.
+ 
+   Output:
+   ~~~~~~
+   ZDYNBR - A five digit numeric field that contains the value of the
+            nth working day back from the input date, expressed as a
+            number of days from 31DEC71.
+ 

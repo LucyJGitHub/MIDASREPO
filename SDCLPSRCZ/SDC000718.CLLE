@@ -1,0 +1,77 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD FATCA Due Diligence Action')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       CLP/SDC000718 - Midas SD FATCA Due Diligence Action         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&RSEQ &RLEV &RENT)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2014')
+ 
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/** Monitor for any errors and send appropriate message to MOPERQ */
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             SNDMSG     MSG('SDC000718 - FATCA Due Diligence Action') +
+                        TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Clear FATCA Due Diligence File Extract */
+             CLRPFM     FILE(SDDDACPD)
+ 
+/** Call the FATCA Due Diligence Action Extract */
+             CALL       PGM(SD000718)
+ 
+/** Monitor for database error and send appropriate message to MOPERQ */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Call the FATCA Due Diligence Action Extract */
+             CALL       PGM(SD000718P)  PARM(&RSEQ)
+ 
+/** Monitor for database error and send appropriate message to MOPERQ */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+               GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             SNDMSG     MSG('FATCA Due Diligence Action has +
+                          terminated abnormally.') TOMSGQ(MOPERQ MRUNQ)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

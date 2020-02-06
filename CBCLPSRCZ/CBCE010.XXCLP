@@ -1,0 +1,89 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CCB016A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Close of Business Processing                        */
+/*                                                                   */
+/*       CBCE010 - CB Add to CBLATRPA LF attributes for files built  */
+/*                 over specific physical file only.                 */
+/*                                                                   */
+/*      (c) Misys International Banking Systems Ltd. 2008            */
+/*                                                                   */
+/*       Last Amend No. CCB016A *REDUNDANT Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CCB016  *CREATE    Date 28May08              */
+/*      Midas Plus 1.4 Base -----------------------------------------*/
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*       CCB016 - COB Enhancements: change APOSTPD LFs to *REBLD     */
+/*                before GLC2550 and GLC4450.                        */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&FILNAM)
+ 
+             DCL        VAR(&FILNAM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          COPYRIGHT MISYS INTERNATIONAL BANKING +
+                          SYSTEMS 2008')
+ 
+             DCL        VAR(&MIDPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MDMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MDPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGTXT) TYPE(*CHAR) LEN(75)
+ 
+             DCLF       FILE(QADSPDBR)
+ 
+/******************************************************************************/
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Retrieve system prefix and set program variables                                               */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&MIDPFX)
+ 
+             CHGVAR     VAR(&MDMLIB) VALUE(&MIDPFX *TCAT 'DMLIB')
+             CHGVAR     VAR(&MDPLIB) VALUE(&MIDPFX *TCAT 'DPLIB')
+ 
+/* Obtain list of all logicals based over file                                                    */
+ 
+             DSPDBR     FILE(&MDMLIB/&FILNAM) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/QADSPDBR)
+ 
+/* For each logical based over file, obtain file attributes and place it to QTEMP file            */
+ 
+             OVRDBF     FILE(QADSPDBR) TOFILE(QTEMP/QADSPDBR)
+ READ:       RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
+ 
+             DSPFD      FILE(&WHRELI/&WHREFI) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*LF) +
+                          OUTFILE(QTEMP/CBLATRPA) OUTMBR(*FIRST *ADD)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(READ)
+ 
+ EOF:        DLTOVR     FILE(*ALL)
+ 
+/* Add to CBLATRPA LF attributes for files built over specific file only                          */
+ 
+             CPYF       FROMFILE(QTEMP/CBLATRPA) TOFILE(&MDPLIB/CBLATRPA) +
+                          MBROPT(*ADD) INCREL((*IF LGNOFM *EQ 1))
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Error processing - Change the job switches and send messages to MRUNQ and MOPERQ               */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&MSGTXT) VALUE('Program CBCE010 +
+                          terminated abnormally')
+             SNDMSG     TOMSGQ(MRUNQ MOPERQ) MSG(&MSGTXT)
+             DMPCLPGM
+ 
+ END:        CHGVAR     VAR(&MIBSCPY) VALUE('(C) COPYRIGHT MISYS +
+                          INTERNATIONAL BANKING SYSTEMS 2008')
+ ENDPGM

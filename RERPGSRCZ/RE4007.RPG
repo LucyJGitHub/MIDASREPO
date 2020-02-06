@@ -1,0 +1,520 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                    : *
+/*EXI *  TEXT('Midas RE T&N Accounts - COB Component')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas     - Retail T&N Accounts                              *
+      *                                                               *
+      *  RPG/RE4007  - COB Component                                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 BUG28023           Date 17Aug10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 236066             Date 18Dec09               *
+      *                 223858             Date 18Dec09               *
+      *                 155676             Date 18Dec09               *
+      *                 BUG27460           Date 18Dec09               *
+      *                 CRE015             Date 18Dec09               *
+      *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  BUG28023 - Penalty was charge on journal entry to set up     *
+      *             account balances of Term and Notice accounts      *
+      *  236066 - Amount of Penalty in Record Today's Movement should *
+      *           be followed during COB.                             *
+      *  223858 - Penalty value date should match value date of       *
+      *           original posting.                                   *
+      *  155676 - Update the narrative text field in postings with    *
+      *           the narrative text not narrative code.              *
+      *  BUG27460 - Applied client fix AH0014 AH0013 AH0005           *
+      *  AH0014 - Do not create postings with zero amounts            *
+      *  AH0013 - Set up RIND                                         *
+      *  AH0005 - COMIC required                                      *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *****************************************************************
+     FRERTMVPDUF  E           K        DISK         KCOMIT       A    UC                      AH0005
+     FGLPPOSPDUF  E           K        DISK                           UC
+     F            APOSTPDF                          KRENAMEGLPPOSF
+     FGLSUNDPDO   E           K        DISK                      A
+      *****************************************************************
+     IP@FMT     E DSDSSDY
+      *
+      ** Parameters
+      *
+     IACFMT     E DSACCNTAB
+      *
+      ** Account details
+      *
+     IADFMT     E DSSDACODPD
+      *
+      ** Account code details
+      *
+     IBRFMT     E DSSDBRCHPD
+      *
+      ** Branch details
+      *
+     INAFMT     E DSSDNARRPD                                                                  155676
+      *                                                                                       155676
+      ** Narrative details                                                                    155676
+      *                                                                                       155676
+     IRUNDAT    E DSRUNDAT                                                                    223858
+      *                                                                                       223858
+      ** Run date                                                                             223858
+      *                                                                                       223858
+     IBKFMT     E DSSDBANKPD                                                                  236066
+      *                                                                                       236066
+      ** Bank details                                                                         236066
+      *                                                                                       236066
+      *****************************************************************
+     C           KRTMV1    KLIST
+     C                     KFLD           E4KEY1
+     C                     KFLD           E4TRR2
+      *
+     C           KPPOS1    KLIST
+     C                     KFLD           ACNO
+     C                     KFLD           DRCR
+     C                     KFLD           PSTA
+      *
+     C           *NAMVAR   DEFN           RUNDAT                                              223858
+     C                     IN   RUNDAT                                                        223858
+      *                                                                                       223858
+     C           *LIKE     DEFN BJDNWD    WDNWD                                               236066
+     C                     CALL 'AOBANKR0'                                                    236066
+     C                     PARM *BLANKS   P@RTCD  7                                           236066
+     C                     PARM '*FIRST'  P@OPTN  7                                           236066
+     C           BKFMT     PARM *BLANKS   P@FMT                                               236066
+      *                                                                                       236066
+     C                     MOVELBJDNWD    WDNWD                                               236066
+      *
+      ** RESET RECORD MATCHING INDICATORS
+      *
+     C                     EXSR RSTMAT
+      *
+      ** IDENTIFY MATCHES
+      *
+     C                     EXSR IDMTCH
+      *
+      ** DELETE EXCESS RECORDED MVTS
+      *
+     C                     EXSR DLTEXC
+      *
+      ** ADD UNMATCHED POSTINGS TO RECORDED MVTS
+      *
+     C                     EXSR ADDUNP
+      *
+      ** CREATE PENALTY POSTINGS
+      *
+     C                     EXSR CRTPOS
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *                                                               *
+      *  RSTMAT: Reset Record Matching Indicators                     *
+      *                                                               *
+      *****************************************************************
+     C           RSTMAT    BEGSR
+      *
+      ** RESET RECORDED MVTS
+      *
+     C                     OPEN RERTMVPD
+     C           *LOVAL    SETLLRERTMVPD
+     C                     READ RERTMVPD                 71
+     C           *IN71     DOWEQ'0'
+     C                     MOVEL'?'       E4RSTA
+     C                     MOVEL*BLANKS   E4TNRF
+     C                     UPDATRERTMVD0
+     C                     READ RERTMVPD                 71
+     C                     END
+      *
+     C           '2+2'     IFEQ '5'
+     C                     WRITERERTMVD0
+     C                     END
+      *
+     C                     CLOSERERTMVPD
+      *
+      ** RESET POSTINGS
+      *
+     C                     OPEN GLPPOSPD
+     C           *LOVAL    SETLLGLPPOSPD
+     C                     READ GLPPOSPD                 72
+     C           *IN72     DOWEQ'0'
+     C                     MOVEL'?'       RECI
+     C                     UPDATGLPPOSF
+     C                     READ GLPPOSPD                 72
+     C                     END
+     C                     CLOSEGLPPOSPD
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  IDMTCH: Identify Matches                                     *
+      *                                                               *
+      *****************************************************************
+     C           IDMTCH    BEGSR
+      *
+      ** USE RECORDED MVTS AS PRIMARY FILE
+      *
+     C                     OPEN RERTMVPD
+     C                     OPEN GLPPOSPD
+     C           *LOVAL    SETLLRERTMVPD
+     C                     READ RERTMVPD                 71
+     C           *IN71     DOWEQ'0'
+      *
+      ** ACCESS (UNMATCHED) POSTING
+      *
+     C                     MOVELE4KEY1    ACNO
+     C           E4AJAA    IFLT 0
+     C                     MOVEL'1'       DRCR
+     C                     Z-SUBE4AJAA    PSTA
+     C                     ELSE
+     C                     MOVEL'0'       DRCR
+     C                     Z-ADDE4AJAA    PSTA
+     C                     END
+     C           KPPOS1    CHAINGLPPOSPD             72
+     C           *IN72     DOWEQ'0'
+     C           E4RSTA    ANDEQ'M'
+     C           *IN72     OREQ '0'                                                           236066
+     C           E4RSTA    ANDNE'M'                                                           236066
+     C           VALD      ANDGEWDNWD                                                         236066
+     C           KPPOS1    READEGLPPOSPD                 72
+     C                     END
+     C           *IN72     IFEQ '0'
+     C                     MOVEL'M'       RECI
+     C                     UPDATGLPPOSF
+     C                     MOVEL'M'       E4RSTA
+     C                     Z-ADDVALD      E4VALD                                              223858
+     C           DLREF     IFEQ *BLANKS
+     C                     MOVELSPOS      E4TNRF    P
+     C                     ELSE
+     C                     MOVELDLREF     E4TNRF    P
+     C                     END
+     C                     UPDATRERTMVD0
+     C                     END
+     C                     READ RERTMVPD                 71
+     C                     END
+     C                     CLOSEGLPPOSPD
+     C                     CLOSERERTMVPD
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DLTEXC: Delete excess recorded movements                     *
+      *                                                               *
+      *****************************************************************
+     C           DLTEXC    BEGSR
+      *
+      ** PROCESS UNMATCHED RECORDED MVTS
+      *
+     C                     OPEN RERTMVPD
+     C                     MOVEL*LOVAL    E4KEY1
+     C                     MOVEL*LOVAL    E4TRR2
+     C           KRTMV1    SETGTRERTMVPD
+     C                     READ RERTMVPD            N    71
+     C           *IN71     DOWEQ'0'
+      *
+     C           E4RSTA    IFEQ '?'
+     C                     CALL 'RE4013'
+     C                     PARM '*DLT    'PMODE   7
+     C                     PARM E4KEY1    PKEY1  24
+     C                     PARM E4TRR2    PTRR2   8
+     C                     PARM E4AJAA    PAJAA  150
+     C                     PARM E4DC01    PDC01   1
+     C                     PARM E4PNIN    PPNIN  150
+     C                     PARM E4DC02    PDC02   1
+     C                     PARM 0         PDATE   50
+     C                     END
+      *
+     C           KRTMV1    SETGTRERTMVPD
+     C                     READ RERTMVPD            N    71
+     C                     END
+     C                     CLOSERERTMVPD
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  ADDUNP: Add unmatched postings to recorded movements         *
+      *                                                               *
+      *****************************************************************
+     C           ADDUNP    BEGSR
+      *
+      ** PROCESS UNMATCHED POSTINGS
+      *
+     C                     OPEN GLPPOSPD
+     C                     OPEN RERTMVPD
+     C           *LOVAL    SETLLGLPPOSPD
+     C                     READ GLPPOSPD            N    72
+     C           *IN72     DOWEQ'0'
+      *
+     C           VALD      IFLT WDNWD                                                         236066
+      *
+     C           RECI      IFEQ '?'
+     C                     MOVELACNO      PKEY1     P
+     C                     Z-ADDPSTA      PAJAA
+     C           DRCR      IFEQ 0
+     C                     MOVEL'D'       PDC01
+     C                     ELSE
+     C                     MOVEL'C'       PDC01
+     C                     END
+     C                     Z-ADD*ALL'9'   PPNIN
+     C                     MOVEL'D'       PDC02
+     C                     CALL 'RE4013'
+     C                     PARM '*UPD    'PMODE
+     C                     PARM           PKEY1
+     C                     PARM *BLANKS   PTRR2
+     C                     PARM           PAJAA
+     C                     PARM           PDC01
+     C                     PARM           PPNIN
+     C                     PARM           PDC02
+     C                     PARM PSTD      PDATE
+     C                     END
+      *
+     C                     MOVELPKEY1     E4KEY1
+     C                     MOVELPTRR2     E4TRR2
+     C           KRTMV1    CHAINRERTMVPD             71
+     C           *IN71     IFEQ '0'
+     C                     MOVEL'M'       E4RSTA
+     C           DLREF     IFEQ *BLANKS
+     C                     MOVELSPOS      E4TNRF    P
+     C                     ELSE
+     C                     MOVELDLREF     E4TNRF    P
+     C                     END
+     C                     Z-ADDVALD      E4VALD                                              223858
+     C                     UPDATRERTMVD0
+     C                     END
+      *
+     C                     COMIT
+      *
+     C                     ENDIF                                                              236066
+     C                     READ GLPPOSPD            N    72
+     C                     END
+     C                     CLOSERERTMVPD
+     C                     CLOSEGLPPOSPD
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  CRTPOS: Create penalty postings                              *
+      *                                                               *
+      *****************************************************************
+     C           CRTPOS    BEGSR
+      *
+      ** PROCESS RECORDED MVTS (THERE IS ONE FOR EVERY POSTING)
+      *
+     C                     OPEN RERTMVPD
+     C                     MOVEL*LOVAL    E4KEY1
+     C                     MOVEL*LOVAL    E4TRR2
+     C           KRTMV1    SETGTRERTMVPD
+     C                     READ RERTMVPD            N    71
+     C           *IN71     DOWEQ'0'
+      *
+     C                     RESETAPOSTPDF
+      *
+      ** GET CUSTOMER ACCOUNT DETAILS
+      *
+     C                     MOVELE4KEY1    P@RETL    P
+     C                     CALL 'AOACCTR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@RETL 10
+     C                     PARM *BLANKS   P@CNUM  6
+     C                     PARM *BLANKS   P@CUCD  3
+     C                     PARM *BLANKS   P@ACCD 10
+     C                     PARM *BLANKS   P@ACSQ  2
+     C                     PARM *BLANKS   P@BRCA  3
+     C           ACFMT     PARM *BLANKS   P@FMT
+      *                                                                                     BUG28023
+      ** Do not generate penalties on the date the account is opened                        BUG28023
+      *                                                                                     BUG28023
+     C           DACO      IFNE BJRDNB                                                      BUG28023
+      *
+     C                     MOVE BRCA      WCBRCA  3
+     C                     MOVE CNUM      WCCNUM  6
+     C                     MOVE CCY       WCCCY   3
+     C                     MOVE ACOD      WCACOD 10
+     C                     MOVE ACSQ      WCACSQ  2
+     C                     MOVE ACNO      WCACNO 10
+     C                     MOVE RRNM      WCRRNM 100
+     C                     MOVE ATYP      WCATYP  1
+      *
+      ** GET CUSTOMER ACCOUNT CODE DETAILS
+      *
+     C                     MOVELWCACOD    P@ACCD    P
+     C                     CALL 'AOACODR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@ACCD 10
+     C           ADFMT     PARM *BLANKS   P@FMT
+      *
+     C                     MOVE A5ACSC    WCACSC  2
+      *
+      ** GET CUSTOMER ACCOUNT CODE LEVEL T&N DETAILS
+      *
+     C                     MOVELWCACOD    PACCD
+     C                     CALL 'SD0031T'
+     C                     PARM           PACCD  10
+     C                     PARM           A5ATTY  1
+     C                     PARM           A5CHIA 10
+     C                     PARM           A5RTTY  5
+     C                     PARM           A5NVCD  2
+     C                     PARM           A5PRFC  4
+     C                     PARM           XXRTDN  2
+     C                     PARM           XXRTDI  2
+     C                     PARM           PRTCD   7
+      *
+     C                     MOVE A5ATTY    WCATTY  1
+     C                     MOVE A5CHIA    WCCHIA 10
+     C                     MOVE A5RTTY    WCTRAT  5
+     C                     MOVE A5NVCD    WCNVCD  2
+     C                     MOVE A5PRFC    WCPRFC  4
+     C                     MOVE XXRTDN    WCRTDN  2
+     C                     MOVE XXRTDI    WCRTDI  2
+      *
+      ** Get narrative text
+      *
+     C                     MOVELA5NVCD    P@NVCD
+     C                     CALL 'AONARRR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@NVCD  2
+     C           NAFMT     PARM *BLANKS   P@FMT
+      *
+      ** GET BRANCH DETAILS
+      *
+     C                     MOVELWCBRCA    P@BRCD    P
+     C                     CALL 'AOBRCHR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@BRCD  3
+     C           BRFMT     PARM *BLANKS   P@FMT
+      *
+      ** IDENTIFY INTERNAL ACCOUNT
+      *
+     C                     MOVE WCBRCA    WIBRCA  3
+     C                     MOVE A8BICN    WICNUM  6
+     C                     MOVE CCY       WICCY   3
+     C                     MOVE A5CHIA    WIACOD 10
+     C                     MOVE 01        WIACSQ  2
+     C                     MOVE *ZEROS    WIACNO 10
+     C                     MOVE *ZEROS    WIRRNM 100
+     C                     MOVE 'G'       WIATYP  1
+      *
+      ** GET INTERNAL ACCOUNT CODE DETAILS
+      *
+     C                     MOVELWIACOD    P@ACCD    P
+     C                     CALL 'AOACODR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@ACCD 10
+     C           ADFMT     PARM *BLANKS   P@FMT
+      *
+     C                     MOVE A5ACSC    WIACSC  2
+      *
+     C                     MOVE *ALL'?'   WIATTY  1
+     C                     MOVE *ALL'?'   WICHIA 10
+     C                     MOVE *ZEROS    WITRAT  5
+     C                     MOVE *ALL'?'   WINVCD  2
+     C                     MOVE *ALL'?'   WIPRFC  4
+      *
+      ** FILL CUSTOMER POSTING RECORD
+      *
+     C                     MOVE WCBRCA    BRCA
+     C                     MOVE WCCNUM    CNUM
+     C                     MOVE WCCCY     CCY
+     C                     MOVE WCACOD    ACOD
+     C                     MOVE WCACSQ    ACSQ
+     C                     MOVE WCACNO    ACNO
+     C                     MOVE WCRRNM    RRNM
+     C                     Z-ADD1         RIND                                                AH0013
+     C                     MOVE WCATYP    ATYP
+     C                     MOVELWCTRAT    TRAT
+     C                     MOVELWCACSC    ACSC
+     C                     EXSR COMDET
+     C           PSTA      IFNE 0                                                             AH0014
+     C                     WRITEAPOSTPDF
+     C                     END                                                                AH0014
+      *
+      ** FILL INTERNAL POSTING RECORD
+      *
+     C                     MOVE WIBRCA    BRCA
+     C                     MOVE WICNUM    CNUM
+     C                     MOVE WICCY     CCY
+     C                     MOVE WIACOD    ACOD
+     C                     MOVE WIACSQ    ACSQ
+     C                     MOVE WIACNO    ACNO
+     C                     MOVE WIRRNM    RRNM
+     C                     MOVE WIATYP    ATYP
+     C                     MOVELWITRAT    TRAT
+     C                     MOVELWIACSC    ACSC
+     C                     Z-ADD0         RIND                            AH0013
+     C                     EXSR COMDET
+     C           DRCR      IFEQ 0
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C                     Z-ADD0         DRCR
+     C                     END
+     C           PSTA      IFNE 0                                         AH0014
+     C                     WRITEAPOSTPDF
+     C                     END                                            AH0014
+      *
+     C                     ENDIF                                                            BUG28023
+      *                                                                                     BUG28023
+     C           KRTMV1    SETGTRERTMVPD
+     C                     READ RERTMVPD            N    71
+     C                     END
+     C                     CLOSERERTMVPD
+     C                     ENDSR
+      *****************************************************************
+     C           COMDET    BEGSR
+     C                     MOVEL'P'       RECI
+     C                     MOVEL*BLANKS   IPDN
+     C                     Z-ADDAGRDNB    PSTD                                                223858
+     C                     Z-ADDE4VALD    VALD                                                223858
+     C                     MOVELALDON     PNAR      P                                         155676
+     C                     Z-ADDE4PNIN    PSTA
+     C           E4DC02    IFEQ 'D'
+     C                     MOVEL'0'       DRCR
+     C                     ELSE
+     C                     MOVEL'1'       DRCR
+     C                     END
+     C                     MOVEL*BLANKS   ASOC
+     C                     Z-ADD0         CHQN
+     C                     MOVEL'  GE-SU' SPOS
+     C                     Z-ADD0         REJC
+     C                     MOVEL*BLANKS   DPMT
+     C                     MOVEL*BLANKS   ZZ009
+     C                     MOVEL*BLANKS   ZZ002
+     C                     MOVEL*BLANKS   EXIN
+     C                     MOVEL*BLANKS   PRIN
+     C                     MOVEL'2'       GETP
+     C                     Z-ADD0         ACUM
+     C                     MOVELA5PRFC    PRFC
+     C                     Z-ADD235959    PTIM
+     C                     Z-ADD0         VOIN
+     C                     MOVEL*BLANKS   MGTT
+     C                     Z-ADD0         LTAI
+     C                     MOVEL*BLANKS   ZZ007
+     C                     MOVEL*BLANKS   RINO
+     C                     MOVEL*BLANKS   SWCR
+     C                     MOVELE4TNRF    DLREF
+     C                     MOVEL*BLANKS   FACO
+     C                     MOVEL*BLANKS   DBCNUM
+     C                     MOVEL*BLANKS   PREF
+     C                     MOVEL*BLANKS   OTRF
+     C                     MOVEL*BLANKS   OTST
+     C                     MOVEL*BLANKS   OTTP
+     C                     Z-ADD0         SDCB
+     C                     Z-ADD0         SDLB
+     C                     MOVEL*BLANKS   BOKC
+     C                     Z-ADD0         NITMS
+     C                     MOVEL*BLANKS   REBI
+     C                     Z-ADD0         CHGA
+     C                     MOVEL*BLANKS   ZZ019
+     C                     MOVEL*BLANKS   TLIN
+     C                     MOVEL*BLANKS   TRCCY
+     C                     MOVEL*BLANKS   STYP
+     C                     MOVEL*BLANKS   CQRI
+     C                     MOVEL*BLANKS   PBTT
+     C                     MOVELBRCA      ORBR
+     C                     Z-ADD0         ORAMT
+      *
+     C                     ENDSR

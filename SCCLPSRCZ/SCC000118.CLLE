@@ -1,0 +1,172 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC PEA Transfer Transaction Data')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000118 - PEA Transfer Transaction Data                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1037730          Date 15Oct12              */
+/*                      AR1034553          Date 16Oct12              */
+/*                      AR1042302          Date 11Oct12              */
+/*                      AR995693           Date 02Jul12              */
+/*                      AR989228           Date 13Jun12              */
+/*                      CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1037730 - Add CLASSPATH environment variable              */
+/*                   (Child:AR1037731)                               */
+/*       AR1034553 - JOB PEACLOSE DOES not complete correctly        */
+/*                   (Child:AR1034555)                               */
+/*       AR1042302 - PEA COB Output must be allowed for archiving    */
+/*                   (Child:AR1042303)                               */
+/*       AR995693 - Corrective batch inserted in PEA system did not  */
+/*                  transfer to the Live system after COB in PEA     */
+/*       AR989228 - The MQ clear processing during closing of PEA    */
+/*                  should be called from the Live system            */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PACT)
+ 
+             DCL        VAR(&PACT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRFL) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PRFP) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&ERMS) TYPE(*CHAR) LEN(50)                               */ /*AR989228*/
+/**********  DCL        VAR(&FCHK) TYPE(*CHAR) LEN(1)                                */ /*AR989228*/
+/**********  DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)                               */ /*AR989228*/
+/**********  DCL        VAR(&SHTC) TYPE(*CHAR) LEN(4)                                */ /*AR989228*/
+/**********  DCL        VAR(&RDNB) TYPE(*DEC) LEN(5 0)                               */ /*AR989228*/
+/**********  DCL        VAR(&DNWD) TYPE(*DEC) LEN(5 0)                               */ /*AR989228*/
+/**********  DCL        VAR(&CCY) TYPE(*CHAR) LEN(3)                                 */ /*AR989228*/
+/**********  DCL        VAR(&NJOB) TYPE(*DEC) LEN(1 0)                               */ /*AR989228*/
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&IMQUEUE) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&OMQUEUE) TYPE(*CHAR) LEN(48)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(2000)
+             DCL        VAR(&PEAIND) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JPATH) TYPE(*CHAR) LEN(200)                                /*AR995693*/
+             DCL        VAR(&JHOME) TYPE(*CHAR) LEN(1024)                              /*AR1034553*/
+ 
+/*/COPY SDCPYSRC,SDSVALDCL  */
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Get system values */
+ 
+             CHGVAR     VAR(&SVALK1) VALUE('PEAHandShakingQM')
+             CHGVAR     VAR(&SVALK2) VALUE('PEAHandShakingIQ')
+             CHGVAR     VAR(&SVALK3) VALUE('PEAHandShakingOQ')
+             CHGVAR     VAR(&SVALK4) VALUE('PEALiveSystemPrefix')
+             CHGVAR     VAR(&SVALK5) VALUE('PEASystemPrefix')
+             CHGVAR     VAR(&SVALK6) VALUE('PEAIndicator')
+             CHGVAR     VAR(&SVALK7) VALUE('JavaPathStem')                              /*AR995693*/
+             CHGVAR     VAR(&SVALK8) VALUE('JavaHome')                                 /*AR1034553*/
+ 
+             CALL       PGM(AOSVALR0) PARM(&RTCD +
+                        &SVALK1 &SVAL1 &SVALK2 +
+                        &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                        &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                        &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                        &SVALK10 &SVAL10)
+ 
+/** If system values are missing then end abnormally */
+ 
+             IF COND(%SST(&SVAL1 1 4) *EQ '*NRF') THEN(GOTO +
+               CMDLBL(ABNOR))
+             ELSE (DO)
+               CHGVAR VAR(&MQMGR) VALUE(&SVAL1)
+               CHGVAR VAR(&IMQUEUE) VALUE(&SVAL2)
+               CHGVAR VAR(&OMQUEUE) VALUE(&SVAL3)
+               CHGVAR VAR(&PRFL) VALUE(&SVAL4)
+               CHGVAR VAR(&PRFP) VALUE(&SVAL5)
+               CHGVAR VAR(&PEAIND) VALUE(&SVAL6)
+               CHGVAR VAR(&JPATH) VALUE(&SVAL7)                                         /*AR995693*/
+               CHGVAR VAR(&JHOME) VALUE(&SVAL8)                                        /*AR1034553*/
+             ENDDO
+ 
+/** Call PEA Transfer */
+ 
+             RMVENVVAR  ENVVAR(JAVA_HOME)                                              /*AR1034553*/
+             MONMSG     MSGID(CPFA981)                                                 /*AR1034553*/
+                                                                                       /*AR1034553*/
+             RMVENVVAR  ENVVAR(CLASSPATH)                                              /*AR1037730*/
+             MONMSG     MSGID(CPFA981)                                                 /*AR1037730*/
+             RMVLNK     OBJLNK(PEA)                                                     /*AR995693*/
+             MONMSG     MSGID(CPFA0A9)                                                  /*AR995693*/
+             RMVLNK     OBJLNK(PEAS)                                                    /*AR995693*/
+             MONMSG     MSGID(CPFA0A9)                                                  /*AR995693*/
+             ADDLNK     OBJ(&JPATH) NEWLNK(PEAS)                                        /*AR995693*/
+             CHGVAR     VAR(&JPATH) VALUE(&JPATH *TCAT +
+                          '/lib/ext')                                                   /*AR995693*/
+             ADDLNK     OBJ(&JPATH) NEWLNK(PEA)                                         /*AR995693*/
+             ADDENVVAR  ENVVAR(CLASSPATH) VALUE(&JPATH)                                /*AR1037730*/
+             MONMSG     MSGID(CPFA0A0)                                                 /*AR1037730*/
+             ADDENVVAR  ENVVAR(JAVA_HOME) VALUE(&JHOME)                                /*AR1034553*/
+             MONMSG     MSGID(CPFA0A0)                                                 /*AR1034553*/
+                                                                                       /*AR1034553*/
+             CALL       PGM(SC000116) PARM(&PRTCD)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                             CMDLBL(ABNOR))
+ 
+             IF         COND(&PACT *EQ 'C') THEN(DO)
+ 
+/***Get*Zone*details**/                                                                 /*AR989228*/
+/**********                                                                             /*AR989228*/
+/**********  CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FCHK &ZONE +                */ /*AR989228*/
+/**********               &SHTC &RDNB &DNWD &CCY &NJOB)                              */ /*AR989228*/
+/**********                                                                             /*AR989228*/
+/***Clear*MQ*Queue****/                                                                 /*AR989228*/
+/**********                                                                             /*AR989228*/
+/**********  CALL       PGM(SC000119) PARM(&PRTCD &ZONE)                             */ /*AR989228*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +                          */ /*AR989228*/
+/**********                  CMDLBL(ABNOR))                                          */ /*AR989228*/
+ 
+/** Update PEA status to closed */
+ 
+             CHGVAR     VAR(&MSG) VALUE('PEA Closed')
+             CALL       PGM(ZAMSGTOMQ) PARM(&PRTCD &PRFL &MQMGR +
+                          &OMQUEUE &MSG)
+ 
+             CHGVAR     VAR(&MSG) VALUE('PEA Closed')
+             CALL       PGM(ZAMSGTOMQ) PARM(&PRTCD &PRFP &MQMGR +
+                          &IMQUEUE &MSG)
+ 
+/** Run Archiving */                                                                   /*AR1042302*/
+             CHGDTAARA  DTAARA(SDSTAT (110 5)) VALUE('BEGIN')                          /*AR1042302*/
+             CALL       PGM(SCC0420)                                                   /*AR1042302*/
+                                                                                       /*AR1042302*/
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000118 ended abnormally - see joblog +
+                          ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             RMVLNK     OBJLNK(PEA)                                                     /*AR995693*/
+             MONMSG     MSGID(CPFA0A9)                                                  /*AR995693*/
+             RMVLNK     OBJLNK(PEAS)                                                    /*AR995693*/
+             MONMSG     MSGID(CPFA0A9)                                                  /*AR995693*/
+             ENDPGM

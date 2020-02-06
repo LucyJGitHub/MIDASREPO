@@ -1,0 +1,1272 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM FF events extract')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM1422 - PM FF events extract                                *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 21Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CFF004             Date 11Sep96               *
+     F*                 CPM003             DATE 05DEC95               *
+     F*                 S71062             DATE 15MAR94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPB001 -  'Private Banking' Module                           *
+     F*  CFF004 - Increase in size of Price Fields                    *
+     F*  CPM003 - FF PM Interface Upgrade to R10.                     *
+     F*  S71062 - PM FF EVENTS EXTRACT                                *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      ************                                                        CPM003
+     F***BANK*DETAILS*******************************PREFIX*'BJ'***********CPM003
+     F***SDBANKL1IF**E           K        DISK                            CPM003
+     F************                                  KINFSR *PSSR          CPM003
+      ************                                                        CPM003
+     F***CURRENCY*DETAILS***************************PREFIX*'A6'***********CPM003
+     F***SDCURRL1IF**E           K        DISK                            CPM003
+     F************                                  KINFSR *PSSR          CPM003
+      ************                                                        CPM003
+     F***CUSTOMERS*DETAILS*PM***********************PREFIX*'QB'***********CPM003
+     F***SDPLCSL0IF**E           K        DISK                            CPM003
+     F************                                  KINFSR *PSSR          CPM003
+      *
+      ** PORTFOLIO DETAILS                          PREFIX 'PN'
+     F***PMPORTPPIF**E           K        DISK                            CPM003
+     FPMPORTPDIF  E           K        DISK                               CPM003
+     F                                              KINFSR *PSSR
+      *
+      ** EVENTS DETAILS
+     FPMFOEVLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+      *
+      ** INSTRUMENT TYPES DETAILS
+     FINTYP   IF  E           K        DISK
+     F            INTYPDF                           KRENAMEINTYPDF1
+     F                                              KINFSR *PSSR
+      *
+      ** TRANSACTIONS DETAILS
+     FTRANS2  IF  E           K        DISK
+     F            TRANSDF                           KRENAMETRANSDF2
+     F                                              KINFSR *PSSR
+      *
+      ** PORTFOLIO CASHFLOW DETAILS                 PREFIX 'Q9'
+     F***PMEVNTPPO***E                    DISK                            CPM003
+     FPMEVNTPDO   E                    DISK                               CPM003
+     F                                              KINFSR *PSSR
+      *
+      ** EVENTS EXTRACT AUDIT                       PREFIX 'RR'
+     FPM1422AUO   E                    PRINTER
+      *****************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZPOWERZ1
+      *
+      ** ARRAYS USE TO CONVERT EVENT TYPE IN EVENT NARRATIVE AND
+      ** TO CHECK MATURITY DATE
+     E                    ARA     1   2  4
+     E                    ARB     1   2 18
+      *
+      ** COPYRIGHT INSERTION
+     E                    CPY@    1   1 80
+      *
+      ** TABLES/ARRAYS USED TO AVOID FILE ACCESS OPERATIONS
+     E                    CYCD      200  3
+     E                    SPRT      200 13 8
+     E                    NBDP      200  1 0
+     E                    MDIN      200  1
+     E                    RKSQ      200  3 0                              CPM003
+      *
+      ** ARRAY FOR FORMATTING FF DETAILS FOR OUTPUT SR/ZFDLLN
+     E                    ZLI        20  1
+      *****************************************************************
+      *
+      ** RENAME FIELDS FROM INTYP
+     IINTYPDF1
+     I              ISTT                            ISTT1
+     I              ISTN                            ISTN1
+      *
+      ** RENAME FIELDS FROM TRANS2
+     ITRANSDF2
+     I              ISTT                            ISTT2
+     I              YRNO                            YRNO2
+     I              MTHN                            MTHN2
+     I              PCAL                            PCAL2
+     I              STRP                            STRP2
+     I              ISCY                            ISCY2
+      *
+      ** DEFINE DATA AREA PMSTAT
+     IPMSTAT      DS
+     I                                        1   50WWECD
+     I                                        1 256 WWSTAT
+      *
+      ***DATA*STRUCTURE*TO*FILL*DBKEY*IF*ERROR*ON*PF/PMPORTPP*************CPM003
+     I** DATA STRUCTURE TO FILL DBKEY IF ERROR ON PF/PMPORTPD             CPM003
+     IEKEY        DS
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7  10 PTFR
+      *
+      ** DATA STRUCTURE TO RETRIEVE TRANSACTION NUMBER
+     I            DS
+     I                                        1 241 ZZ241
+     I                                        1   60WWTNBR
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     ILDA         DS                            256
+     I************                          132 183 DBLOT                 CPM003
+     I************                          132 141 DBFILE                CPM003
+     I                                      134 183 DBLOT                 CPM003
+     I                                      134 141 DBFILE                CPM003
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD                                              CPM003
+     I**  Midas  Bank details                                             CPM003
+     ISDMMOD    E DSSDMMODPD                                              CPB001
+     I** Midas   Module details                                           CPB001
+     ISDCURR    E DSSDCURRPD                                              CPM003
+     I**  Midas  Currencies details                                       CPM003
+     ISDPLCS    E DSSDPLCSPD                                              CPM003
+     I**  Midas  Portfolio customers                                      CPM003
+     ISDCUST    E DSSDCUSTPD                                              CPM003
+     I**  Midas  Customers                                                CPM003
+     IDSFDY     E DSDSFDY                                                 CPM003
+     I**  Short data structure                                            CPM003
+     I*                                                                   CPM003
+     IDSSDY     E DSDSSDY                                                 CPM003
+     I**  Long data structure                                             CPM003
+     IDSLDY     E DSDSLDY                                                 CPB001
+     I* THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE            CPB001
+      *
+      ** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * SRINIT   - INITIAL PROCESSING                                    *
+      * SRMAIN   - MAIN PROCESSING                                       *
+      * SRTERM   - TERMINATION PROCESSING                                *
+      * SRPROC   - PROCESS RECORD                                        *
+      * SRCUST   - PROCESS CUSTOMER CHANGEMENT                           *
+      * SRPORT   - PROCESS PORTFOLIO CHANGEMENT                          *
+      * SRINST   - PROCESS INSTRUMENT CHANGEMENT                         *
+      * SRTRAD   - RETRIEVE TRADE DETAILS                                *
+      * SREVNT   - PREPARE EVENT GENERATION                              *
+      * SRPREP   - PREPARE EVENT RECORD                                  *
+      * ZFDLLN   -                                                       *
+      * *PSSR    - ERROR IN FILE                                         *
+      * SRAUDT   - PRINT AUDIT REPORT                                    *
+      * ZFFFLN   -                                                       *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C                     EXSR SRINIT
+      *
+     C                     EXSR SRMAIN
+      *
+     C                     EXSR SRTERM
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRINIT   - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWI      - WORK FIELD TO ACCESS TABLE                            *
+      * WWCNUM   - SAVE CUSTOMER NUMBER                                  *
+      * WWPTFR   - SAVE PORTFOLIO REFERENCE                              *
+      * WWISTT   - SAVE INSTRUMENT TYPE                                  *
+      * WWECPX   - WORK FIELD EVENT CONTROL DATE + 365                   *
+      *                                                                  *
+      ********************************************************************
+     C           SRINIT    BEGSR
+      *
+     C           *LIKE     DEFN A6SPRT    W1SPOT
+     C           *LIKE     DEFN A6MDIN    W1MDIN
+     C           *LIKE     DEFN A6NBDP    W1CDP
+     C           *LIKE     DEFN A6SPRT    W2SPOT
+     C           *LIKE     DEFN A6MDIN    W2MDIN
+     C           *LIKE     DEFN A6NBDP    W2CDP
+     C           *LIKE     DEFN A6SPRT    W3SPOT
+     C           *LIKE     DEFN A6MDIN    W3MDIN
+     C           *LIKE     DEFN A6NBDP    W3CDP
+     C           *LIKE     DEFN CNUM      WWCNUM
+     C           *LIKE     DEFN PTFR      WWPTFR
+     C           *LIKE     DEFN ISTT      WWISTT
+      *
+      ***  Copyright Statement.                                           CPM003
+     C                     MOVEACPY@      ACT@   80                       CPM003
+     C           *NAMVAR   DEFN           LDA                             CPM003
+      ***KLIST*ELIST*TO*ACCESS*PF/PMPORTPP********************************CPM003
+      ** KLIST ELIST TO ACCESS PF/PMPORTPD                                CPM003
+     C           ELIST     KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           PTFR
+      *
+      ** SETUP DATA BASE ERROR FIELDS
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'PM1422  'DBPGM
+     C                     OUT  LDA                                       CPM003
+      *
+      ** DEFINE DATA AREA PMSTAT
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C*                                                                   CPB001
+     C**   Access module details                                          CPB001
+     C                     CALL 'AOMMODR0'                                CPB001
+     C                     PARM *BLANKS   @RTCD   7                       CPB001
+     C                     PARM '*FIRST ' @OPTN   7                       CPB001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB001
+      ***********                                                         CPM003
+      ***DEFINE*DATA*AREA*FOR*DATABASE*ERROR******************************CPM003
+     C************NAMVAR   DEFN           LDA                             CPM003
+      ***********                                                         CPM003
+      ***READ*ICD1*FROM*LF/SDBANKL1***************************************CPM003
+     C************LOVAL    SETLLSDBANKL1                                  CPM003
+     C***********          READ SDBANKL1                 71               CPM003
+     C************IN71     IFEQ '1'                        *B1            CPM003
+     C                     CALL 'AOBANKR0'                                CPM003
+     C                     PARM *BLANKS   P@RTCD  7                       CPM003
+     C                     PARM '*FIRST'  P@OPTN  7                       CPM003
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM003
+     C*                                                                   CPM003
+     C           P@RTCD    IFNE *BLANKS                                   CPM003
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C***********          MOVEL'SDBANKL1'DBFILE           **DB ERROR 01**CPM003
+     C                     MOVE 'SDBANKPD'DBFILE           **DB ERROR 01**CPM003
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** SETUP DATE FORMAT INDICATOR
+     C           BJDFIN    IFEQ 'M'                        *B1
+     C                     MOVE '1'       *IN98
+     C                     END                             *E1
+     C***********                                                         CPM003
+     C***READ*THROUGH*SDCURRL1*SETTING*UP*ARRAY*OF*CURRENCIES*************CPM003
+     C************LOVAL    SETLLSDCURRL1                                  CPM003
+     C***********          READ SDCURRL1                 72               CPM003
+     C***********          Z-ADD1         B       30                      CPM003
+     C************IN72     DOWEQ'0'                        *BW1           CPM003
+     C***********          MOVE A6CYCD    CYCD,B                          CPM003
+     C***********          Z-ADDA6SPRT    SPRT,B                          CPM003
+     C***********          MOVE A6MDIN    MDIN,B                          CPM003
+     C***********          Z-ADDA6NBDP    NBDP,B                          CPM003
+     C***********          ADD  1         B                               CPM003
+     C***********          READ SDCURRL1                 72               CPM003
+     C***********          END                             *EW1           CPM003
+     C***********                                                         CPM003
+     C***ACCESS*LF/SDCURRL1*USING*THE*BASE*CURRENCY*FROM*LF/SDBANKL1******CPM003
+     C***FOR*THE*SPOT*RATE*AND*NUMBER*OF*DECIMAL*PLACES*******************CPM003
+     C***********          Z-ADD1         B                               CPM003
+     C***********BJCYCD    LOKUPCYCD,B                   72               CPM003
+     C***ERROR************************************************************CPM003
+     C************IN72     IFEQ '0'                        *B1            CPM003
+     C************LOCK     IN   LDA                                       CPM003
+     C***********          MOVELBJCYCD    DBKEY            ***************CPM003
+     C***********          Z-ADD2         DBASE            **DB ERROR 02**CPM003
+     C***********          MOVEL'SDCURRL1'DBFILE           ***************CPM003
+     C***********          OUT  LDA                                       CPM003
+     C***********          EXSR *PSSR                                     CPM003
+     C***********          ELSE                            *X1            CPM003
+     C***********          Z-ADDSPRT,B    A6SPRT                          CPM003
+     C***********          MOVE MDIN,B    A6MDIN                          CPM003
+     C***********          Z-ADDNBDP,B    A6NBDP                          CPM003
+     C***********          Z-ADDA6SPRT    W3SPOT                          CPM003
+     C***********          MOVE A6MDIN    W3MDIN                          CPM003
+     C***********          Z-ADDA6NBDP    W3CDP                           CPM003
+     C***********          END                             *E1            CPM003
+     C***********                                                         CPM003
+     C*                                                                   CPM003
+     C**  Read the first Currency record                                  CPM003
+     C*                                                                   CPM003
+     C                     CALL 'AOCURRR0'                                CPM003
+     C                     PARM *BLANKS   P@RTCD                          CPM003
+     C                     PARM '*FIRST'  P@OPTN                          CPM003
+     C                     PARM           P@CYCD  3                       CPM003
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM003
+     C*                                                                   CPM003
+     C           P@RTCD    IFNE *BLANKS                                   CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     Z-ADD3         DBASE            ***************CPM003
+     C                     MOVE 'SDCURRPD'DBFILE           *DB ERROR   3 *CPM003
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM003
+     C                     OUT  LDA                                       CPM003
+     C                     EXSR *PSSR                                     CPM003
+     C                     ENDIF                                          CPM003
+     C*                                                                   CPM003
+     C**  Set up array of currencies                                      CPM003
+     C*                                                                   CPM003
+     C                     Z-ADD1         B       30                      CPM003
+     C           P@RTCD    DOWNE'*EOF'                                    CPM003
+     C                     MOVE A6CYCD    CYCD,B                          CPM003
+     C                     Z-ADDA6SPRT    SPRT,B                          CPM003
+     C                     Z-ADDA6NBDP    NBDP,B                          CPM003
+     C                     MOVE A6MDIN    MDIN,B                          CPM003
+     C                     Z-ADDA6RKSQ    RKSQ,B                          CPM003
+     C                     ADD  1         B                               CPM003
+     C*                                                                   CPM003
+     C**  Read the next record in currencies file                         CPM003
+     C*                                                                   CPM003
+     C                     CALL 'AOCURRR0'                                CPM003
+     C                     PARM *BLANKS   P@RTCD                          CPM003
+     C                     PARM '*NEXT '  P@OPTN                          CPM003
+     C                     PARM           P@CYCD  3                       CPM003
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM003
+     C*                                                                   CPM003
+     C           P@RTCD    IFNE *BLANKS                                   CPM003
+     C           P@RTCD    ANDNE'*EOF'                                    CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     Z-ADD4         DBASE            ***************CPM003
+     C                     MOVE 'SDCURRPD'DBFILE           *DB ERROR   4 *CPM003
+     C                     MOVEL'*NEXT '  DBKEY            ***************CPM003
+     C                     OUT  LDA                                       CPM003
+     C                     EXSR *PSSR                                     CPM003
+     C                     ENDIF                                          CPM003
+     C                     ENDDO                                          CPM003
+      *
+      ** INITIALIZE THE COUNTER FIELD FOR AUDIT PRINT
+     C                     Z-ADD*ZEROS    RRCNT
+      *
+      ** EVENT CONTROL DATE + 365 DAYS
+     C           WWECD     ADD  365       WWECPX  50
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRMAIN   - MAIN PROCESSING                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * SRPROC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** READ FIRST RECORD
+     C                     READ PMFOEVLL                 89
+     C           *IN89     IFEQ *ON                                       CPM003
+     C                     MOVE 'Y'       WEMPTY  1                       CPM003
+     C                     ELSE                                           CPM003
+     C                     MOVE 'N'       WEMPTY                          CPM003
+     C                     END                                            CPM003
+     C           *IN89     DOWEQ'0'                        *BW1
+      *
+      * PERFORM MAIN SUB-ROUTINE
+     C                     EXSR SRPROC
+      *
+      ** READ NEXT RECORD
+     C                     READ PMFOEVLL                 89
+      *
+     C                     END                             *EW11
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRTERM   - TERMINATION PROCESSING                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * SRAUDT   - PRINT AUDIT REPORT                                    *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           SRTERM    BEGSR
+      *
+      **PRINT AUDIT REPORT
+     C                     EXSR SRAUDT
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRPROC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * SRPORT   - PROCESS PORTFOLIO CHANGEMENT                          *
+      * SRCUST   - PROCESS CUSTOMER CHANGEMENT                           *
+      * SRINST   - PROCESS INSTRUMENT CHANGEMENT                         *
+      * SRTRAD   - RETRIEVE TRADE DETAILS                                *
+      * SREVNT   - PREPARE EVENT GENERATION                              *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRMAIN   - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWI      - WORK FIELD TO ACCESS TABLE                            *
+      * WWECPX   - WORK FIELD EVENT CONTROL DATE + 365                   *
+      * WWPTFR   - SAVE PORTFOLIO REFERENCE                              *
+      * WWCNUM   - SAVE CUSTOMER NUMBER                                  *
+      * WWISTT   - SAVE INSTRUMENT TYPE                                  *
+      *                                                                  *
+      ********************************************************************
+     C           SRPROC    BEGSR
+      *
+      ** EVENT MUST BE PERFORMED ?
+     C                     Z-ADD1         WWI     20
+     C           ETYP      LOKUPARA,WWI                  73
+      *
+      ** EVENT MUST BE PERFORMED AND EVENT DATE IS LOWER OR EQUAL THAN EVENT
+      ** CONTROL DATE + 365
+     C           *IN73     IFEQ '1'                        *B1
+     C           EDAT      ANDLEWWECPX
+      *
+      ** PORTFOLIO REFERENCE <> SAVES PORT.FOLIO OR CUST.NB <> SAVED CUST.NB
+     C           PTFR      IFNE WWPTFR                     **B2
+     C           CNUM      ORNE WWCNUM
+     C                     EXSR SRPORT
+      *
+      ** CUST.NB <> SAVED CUST.NB
+     C           CNUM      IFNE WWCNUM                     ***B3
+     C                     EXSR SRCUST
+     C                     END                             ***E3
+     C                     END                             **E2
+      *
+      ** INSTRUMENT TYPE <> SAVED INSTR.TYPE
+     C           ISTT      IFNE WWISTT                     **B2
+     C                     EXSR SRINST
+     C                     END                             **E2
+      *
+      ** RETRIEVE TRADE DETAILS
+     C                     EXSR SRTRAD
+      *
+      ** PREPARE EVENT GENERATION
+     C                     EXSR SREVNT
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRCUST   - PROCESS CUSTOMER CHANGEMENT                           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRPROC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCUST   - WORK FIELD TO ACCESS TO SDPLCSL0                      *
+      * WWCNUM   - SAVE CUSTOMER NUMBER                                  *
+      *                                                                  *
+      ********************************************************************
+     C           SRCUST    BEGSR
+      *
+      ** ACCESS TO CUST.PORT.DET. TO RETRIEVE ACCOUNT OFFICER CODE, CUST.BASE
+      ** CURRENCY AND CUST.CURR.DEC.PLACE
+     C                     MOVE CNUM      WWCUST  6
+     C***********WWCUST    CHAINSDPLCSL0             74                   CPM003
+     C************IN74     IFEQ '1'                        *B1            CPM003
+      ***********                                                         CPM003
+      ***NO*RECORD FOUND, DATABASE ERROR                                  CPM003
+     C                     CALL 'AOPLCSR0'                                CPM003
+     C                     PARM *BLANKS   P@RTCD                          CPM003
+     C                     PARM '*KEY  '  P@OPTN                          CPM003
+     C                     PARM WWCUST    P@CUST 10                       CPM003
+     C           SDPLCS    PARM SDPLCS    DSFDY                           CPM003
+     C*                                                                   CPM003
+     C           P@RTCD    IFNE *BLANKS                                   CPM003
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C           *LOCK     IN   LDA
+     C***********          Z-ADD3         DBASE            ***************CPM003
+     C***********          MOVEL'SDPLCSL0'DBFILE           **DB ERROR 03**CPM003
+     C                     Z-ADD5         DBASE            ***************CPM003
+     C                     MOVE 'SDPLCSPD'DBFILE           **DB ERROR 05**CPM003
+     C                     MOVE CNUM      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *                                                                   CPM003
+      ** READ CLIENT FILE TO OBTAIN ACCOUNT OFFICER CODE                  CPM003
+     C*****                CALL 'AOCUSTR0'                          CPM003CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM *BLANKS   P@RTCD                          CPM003
+     C                     PARM '*KEY  '  P@OPTN                          CPM003
+     C                     PARM WWCUST    P@CUST 10                       CPM003
+     C                     PARM *BLANKS   P@KYST  7                       CPM003
+     C*****      SDCUST    PARM SDCUST    DSSDY                     CPM003CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+     C*                                                                   CPM003
+     C           P@RTCD    IFNE *BLANKS                    *B1            CPM003
+     C           *LOCK     IN   LDA                                       CPM003
+     C                     Z-ADD13        DBASE            ***************CPM003
+     C                     MOVE 'SDCUSTPD'DBFILE           **DB ERROR 13**CPM003
+     C                     MOVE CNUM      DBKEY            ***************CPM003
+     C                     OUT  LDA                                       CPM003
+     C                     EXSR *PSSR                                     CPM003
+     C                     END                             *E1            CPM003
+     C*                                                                   CPB001
+     C           BBPRBA    IFEQ 'Y'                                       CPB001
+     C           ELIST     CHAINPMPORTPD             75                   CPB001
+     C           *IN75     IFEQ '1'                                       CPB001
+     C           *LOCK     IN   LDA                                       CPB001
+     C                     Z-ADD19        DBASE            ***************CPB001
+     C                     MOVE 'PMPORTPD'DBFILE           **DB ERROR 19**CPB001
+     C                     MOVELEKEY      DBKEY            ***************CPB001
+     C                     OUT  LDA                                       CPB001
+     C                     EXSR *PSSR                                     CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVELPNPTCY    QBCSBY                          CPB001
+     C                     Z-ADDPNPCDP    QBBYDP                          CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+      *
+      ** GET DETAILS OF CURRENT FX RATE & CUSTOMER CCY DECIMAL PLACES
+     C                     Z-ADD1         B
+     C           QBCSBY    LOKUPCYCD,B                   72
+      ** ERROR
+     C           *IN72     IFEQ '0'                        *B1
+     C           *LOCK     IN   LDA
+     C                     MOVELQBCSBY    DBKEY            ***************
+     C***********          Z-ADD4         DBASE            **DB ERROR 04**CPM003
+     C***********          MOVEL'SDCURRL1'DBFILE           ***************CPM003
+     C                     Z-ADD6         DBASE            **DB ERROR 06**CPM003
+     C                     MOVE 'SDCURRPD'DBFILE           ***************CPM003
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE                            *X1
+     C                     Z-ADDSPRT,B    A6SPRT
+     C                     MOVE MDIN,B    A6MDIN
+     C                     Z-ADDNBDP,B    A6NBDP
+     C                     Z-ADDA6SPRT    W1SPOT
+     C                     MOVE A6MDIN    W1MDIN
+     C                     Z-ADDA6NBDP    W1CDP
+     C                     END                             *E1
+      *
+      ** SAVE CUSTOMER NUMBER
+     C                     MOVE CNUM      WWCNUM
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRPORT   - PROCESS PORTFOLIO CHANGEMENT                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRPROC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPTFR   - SAVE PORTFOLIO REFERENCE                              *
+      *                                                                  *
+      ********************************************************************
+     C           SRPORT    BEGSR
+      *
+      ** IF PORTFOLIO NOT EQUAL TO '9997' ACCESS TO PORT.DET.
+     C           PTFR      IFNE '9997'                     *B1
+     C***********ELIST     CHAINPMPORTPP             75                   CPM003
+     C           ELIST     CHAINPMPORTPD             75                   CPM003
+      ** ERROR
+     C           *IN75     IFEQ '1'                        **B2
+     C           *LOCK     IN   LDA
+     C***********          Z-ADD5         DBASE            ***************CPM003
+     C***********          MOVEL'PMPORTPP'DBFILE           **DB ERROR 05**CPM003
+     C                     Z-ADD7         DBASE            ***************CPM003
+     C                     MOVE 'PMPORTPD'DBFILE           **DB ERROR 07**CPM003
+     C                     MOVELEKEY      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             **E2
+      *
+      ** GET CURRENT FX RATES
+     C                     Z-ADD1         B
+     C           PNPTCY    LOKUPCYCD,B                   72
+      ** ERROR
+     C           *IN72     IFEQ '0'                        **B2
+     C           *LOCK     IN   LDA
+     C                     MOVELPNPTCY    DBKEY            ***************
+     C************         Z-ADD6         DBASE            **DB ERROR 06**CPM003
+     C************         MOVEL'SDCURRL1'DBFILE           ***************CPM003
+     C                     Z-ADD8         DBASE            **DB ERROR 08**CPM003
+     C                     MOVE 'SDCURRPD'DBFILE           ***************CPM003
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE                            **X2
+     C                     Z-ADDSPRT,B    A6SPRT
+     C                     MOVE MDIN,B    A6MDIN
+     C                     Z-ADDNBDP,B    A6NBDP
+     C                     Z-ADDA6SPRT    W2SPOT
+     C                     MOVE A6MDIN    W2MDIN
+     C                     Z-ADDA6NBDP    W2CDP
+     C                     END                             **E2
+      *
+     C                     ELSE                            *X1
+      *
+     C                     MOVELQBCSBY    PNPTCY
+     C                     Z-ADDW1SPOT    W2SPOT
+     C                     MOVE W1MDIN    W2MDIN
+     C                     Z-ADDW1CDP     W2CDP
+      *
+     C                     END                             *E1
+      *
+      ** SAVE PORTFOLIO REFERENCE
+     C                     MOVE PTFR      WWPTFR
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRINST   - PROCESS INSTRUMENT CHANGEMENT                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRPROC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWISTT   - SAVE INSTRUMENT TYPE                                  *
+      *                                                                  *
+      ********************************************************************
+     C           SRINST    BEGSR
+      *
+      ** ACCESS TO INSTRUMENT DETAILS TO RETRIEVE INST.NAME
+     C           ISTT      CHAININTYP                75
+      ** ERROR
+     C           *IN75     IFEQ '1'                        *B1
+     C           *LOCK     IN   LDA
+     C************         Z-ADD7         DBASE            ***************CPM003
+     C************         MOVEL'INTYP'   DBFILE           **DB ERROR 07**CPM003
+     C                     Z-ADD9         DBASE            ***************CPM003
+     C                     MOVE 'INTYP'   DBFILE           **DB ERROR 09**CPM003
+     C                     MOVELISTT      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E1
+      *
+      ** SAVE INSTRUMENT TYPE
+     C                     MOVELISTT1     WWISTT
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRTRAD   - RETRIEVE TRADE DETAILS                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRPROC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWTNBR   - TRADE REFERENCE FROM ZZ241/PMFOEVLL                   *
+      *                                                                  *
+      ********************************************************************
+     C           SRTRAD    BEGSR
+      *
+      ** ACCESS TO TRADE DETAILS TO RETRIEVE DETAILS TO FORMAT INSTR.ENQ.DET.
+      ** WITH SR/ZFFFLN
+     C           WWTNBR    CHAINTRANS2               75
+      ** ERROR
+     C           *IN75     IFEQ '1'                        *B2
+     C           *LOCK     IN   LDA
+     C************         Z-ADD8         DBASE            ***************CPM003
+     C************         MOVEL'TRANS2'  DBFILE           **DB ERROR 08**CPM003
+     C                     Z-ADD10        DBASE            ***************CPM003
+     C                     MOVE 'TRANS2'  DBFILE           **DB ERROR 10**CPM003
+     C                     MOVELWWTNBR    DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E2
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SREVNT   - PREPARE EVENT GENERATION                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZFFFLN   -                                                       *
+      * *PSSR    - ERROR IN FILE                                         *
+      * ZCCYCN   -                                                       *
+      * SRPREP   - PREPARE EVENT RECORD                                  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRPROC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           SREVNT    BEGSR
+      *
+      ** FORMAT INSTR.ENQ.DET.
+     C                     MOVELISCY2     ZISCY
+     C                     Z-ADDMTHN2     ZMTHN
+     C                     Z-ADDYRNO2     ZYRNO
+     C                     MOVELPCAL2     ZPCAL
+     C                     Z-ADDSTRP2     ZSTRP
+     C                     EXSR ZFFFLN
+     C                     MOVE ZLIN      Q9T2XT           Inst.Enq.Det.
+      *
+      ** EVENT CURRENCY DETAILS
+     C                     Z-ADD1         B
+     C           ECCY      LOKUPCYCD,B                   72
+      ** ERROR
+     C           *IN72     IFEQ '0'                        *B1
+     C           *LOCK     IN   LDA
+     C                     MOVELECCY      DBKEY            ***************
+     C************         Z-ADD9         DBASE            **DB ERROR 09**CPM003
+     C************         MOVEL'SDCURRL1'DBFILE           ***************CPM003
+     C                     Z-ADD11        DBASE            **DB ERROR 11**CPM003
+     C                     MOVE 'SDCURRPD'DBFILE           ***************CPM003
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE                            *X1
+     C                     Z-ADDSPRT,B    A6SPRT
+     C                     MOVE MDIN,B    A6MDIN
+     C                     Z-ADDNBDP,B    A6NBDP
+     C                     END                             *E1
+      *
+      ** CONVERT EVENT AMOUNT IN EVENT CURRENCY TO PORTFOLIO CURRENCY
+     C                     Z-ADDEAMT      ZAMTF
+     C                     MOVELECCY      ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVELPNPTCY    ZCCYT
+     C                     Z-ADDW2SPOT    ZRATET
+     C                     MOVE W2MDIN    ZMDINT
+     C                     Z-ADDW2CDP     ZCDPT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9PTFA           Event Amount Port.Ccy
+      *
+      ** CONVERT EVENT AMOUNT IN EVENT CURRENCY TO CUSTOMER CURRENCY
+     C                     Z-ADDEAMT      ZAMTF
+     C                     MOVELECCY      ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVELQBCSBY    ZCCYT
+     C                     Z-ADDW1SPOT    ZRATET
+     C                     MOVE W1MDIN    ZMDINT
+     C                     Z-ADDW1CDP     ZCDPT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9CUCA           Event Amount Cust.Ccy
+      *
+      ** CONVERT EVENT AMOUNT IN EVENT CURRENCY TO BASE CURRENCY
+     C                     Z-ADDEAMT      ZAMTF
+     C                     MOVELECCY      ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVELBJCYCD    ZCCYT
+     C                     Z-ADDW3SPOT    ZRATET
+     C                     MOVE W3MDIN    ZMDINT
+     C                     Z-ADDW3CDP     ZCDPT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9BCYA           Event Amount Base Ccy
+      *
+      ** PREPARE FIELDS TO WRITE RECORD
+     C                     EXSR SRPREP
+      *
+      ** WRITE RECORD
+     C                     WRITEPMEVNTP0
+      *
+      ** ADD 1 TO COUNT FOR AUDIT REPORT
+     C                     ADD  1         RRCNT
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRPREP   - PREPARE EVENT RECORD                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SREVNT   - PREPARE EVENT GENERATION                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCNUM   - SAVE CUSTOMER NUMBER                                  *
+      * WWPTFR   - SAVE PORTFOLIO REFERENCE                              *
+      * WWTNBR   - TRADE REFERENCE FROM ZZ241/PMFOEVLL                   *
+      * WWI      - WORK FIELD TO ACCESS TABLE                            *
+      *                                                                  *
+      ********************************************************************
+     C           SRPREP    BEGSR
+      *
+     C                     MOVE 'D'       Q9RECI           Reci
+     C                     MOVE BBACOC    Q9ACOC           Acc.Off.code
+     C**********           Z-ADDWWCNUM    Q9CNUM           Cust.Nbr                           CSD027
+     C                     MOVE WWCNUM    Q9CNUM           Cust.Nbr                           CSD027
+     C                     MOVE WWPTFR    Q9PTFR           Port.Ref
+     C                     MOVE WWTNBR    Q9TTRF           Trans.Ref
+     C                     MOVEL*BLANKS   Q9SEPR           Sec.Pay.Ref.
+     C                     MOVEL'FF'      Q9MODI           Module id.
+     C                     MOVELQBCSBY    Q9CSBY           Cust.Base Ccy
+     C                     Z-ADDQBBYDP    Q9BYDP           Cust.Base Ccy Dec.Pl.
+      *
+      ** PORTFOLIO CURRENCY CODE & DEC.PLACE SAME AS CUSTOMER BASE FOR '9997'
+      ** ELSE FROM PMPORTPP
+     C           WWPTFR    IFEQ '9997'                     *B1
+     C                     MOVE QBCSBY    Q9PTCY           Port.Ccy Code
+     C                     Z-ADDQBBYDP    Q9PCDP           Port.Ccy Code Dec.Pl.
+     C                     ELSE                            *X1
+     C                     MOVE PNPTCY    Q9PTCY           Port.Ccy Code
+     C                     Z-ADDPNPCDP    Q9PCDP           Port.Ccy Code Dec.Pl.
+     C                     END                             *E1
+      *
+     C                     MOVELISTT1     Q9INNR           Inst.Type
+     C                     MOVELISTN1     Q9T1XT           Inst.Name
+     C                     Z-ADDEDAT      Q9EVTD           Event Date
+      *
+     C                     Z-ADD1         WWI
+     C           ETYP      LOKUPARA,WWI                  73
+     C           *IN73     IFNE '1'                        *B1
+     C           *LOCK     IN   LDA
+     C************         Z-ADD10        DBASE            ***************CPM003
+     C************         MOVEL'PMFOEVLL'DBFILE           **DB ERROR 10**CPM003
+     C                     Z-ADD12        DBASE            ***************CPM003
+     C                     MOVE 'PMFOEVLL'DBFILE           **DB ERROR 12**CPM003
+     C                     MOVELETYP      DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             *E1
+     C                     MOVE ARB,WWI   Q9ENAR           Event Narr.
+      *
+     C                     MOVELECCY      Q9ECCY           Event Ccy
+     C                     Z-ADDEAMT      Q9ETAM           Event Amount
+      *
+      ** 'R' WHEN INCOMING & 'P' WHEN OUTGOING
+     C           INOI      IFEQ 'O'
+     C                     MOVEL'R'       Q9AMTR           Event Amount P.R
+     C                     ELSE
+     C                     MOVEL'P'       Q9AMTR
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZCCYCN
+      /EJECT
+      /COPY ZSRSRC,ZCCYXR
+      /EJECT
+     C********************************************************************
+     C*
+     C*  ZFDLLN SR. TO FORMAT THE 20A PORTFOLIO MANAGMENT LINE DESCRIPTION
+     C*                                 FOR DEALING
+     C*
+     C*  CASE 1 FX DEALS (DEALSDB)        FORMAT: YYY VVVVVVV(DDDDDDD)
+     C*          YYY = CUSTOMER SELL CURRENCY (IE BANK BUY CURRENCY)
+     C*          VVVVVVV = VALUE DATE IN DDMMMYY FORMAT
+     C*          DDDDDDD = DEAL DATE IN DDMMMYY FORMAT
+     C*
+     C*  CASE 2 MM DEALS (DEALSDC)        FORMAT: XXX 999.9999 DDMMMYY
+     C*                                        OR: XXX 999.9999 999
+     C*          XXX = CURRENCY
+     C*          999.9999 = INTEREST RATE
+     C*          DDMMMYY = MATURITY DATE (IF MATURITY DATE NOT = 0)
+     C*          999 = NOTICE DAYS       (IF MATURITY DATE = 0 )
+     C*
+     C*  CASE 3 FRA/IRS DEALS (DEALSDG) DEAL TYPES FR, RS AND RL
+     C*                                    FORMAT: XXX 999.9999 DDMMMYY
+     C*          XXX = CURRENCY
+     C*          999.9999 = INTEREST RATE
+     C*          DDMMMYY = MATURITY DATE
+     C*
+     C*  CASE 4 FRA/IRS DEALS (DEALSDG) DEAL TYPE  RX
+     C*                                    FORMAT: XXX XXX DDMMMYY
+     C*          XXX = OUR AND THEIR CURRENCY
+     C*          DDMMMYY = MATURITY DATE
+     C*
+     C*
+     C*  INPUT  FIELDS
+     C*       ZPUCY   3A     PURCHASE CURRENCY
+     C*       ZDDAT   50     DEAL DATE
+     C*       ZVDAT   50     VALUE DATE
+     C*       ZCCY    3A     CURRENCY
+     C*       ZINRT  117     INTEREST RATE
+     C*       ZMDAT   50     MATURITY DATE
+     C*       ZNOTD   30     NOTICE DAYS
+     C*       ZUCUCY  3A     FRA/IRS OUR CURRENCY
+     C*       ZUEINR 117     FRA/IRS OUR INTEREST RATE
+     C*       ZTCUCY  3A     FRA/IRS THEIR CURRENCY
+     C*
+     C*  OUTPUT  FIELDS
+     C*       ZLIN   20A     LINE DESCRIPTION
+     C*
+     C*  ARRAY USED
+     C*       ZLI    20 ELEMENTS, EACH 1 CHARACTER LONG
+     C*
+     C********************************************************************
+     C           ZFDLLN    BEGSR                           *** ZFDLLN ***
+     C*
+     C** CLEAR LINE DESCRIPTION .
+     C                     MOVEA*BLANKS   ZLI
+     C*
+     C** FORMAT DETAIL OUTPUT FOR DEAL TYPE CASE 1
+     C           ZDDAT     IFNE 0
+     C                     MOVEAZPUCY     ZLI,01
+     C                     Z-ADDZVDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C*
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     END
+     C                     MOVEAZADATE    ZLI,05
+     C                     MOVEA'('       ZLI,12
+     C*
+     C                     Z-ADDZDDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C*
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     END
+     C                     MOVEAZADATE    ZLI,13
+     C                     MOVEA')'       ZLI,20
+     C                     END
+     C*
+     C** FORMAT DETAIL OUTPUT FOR DEAL TYPE CASE 2
+     C           ZCCY      IFNE *BLANKS
+     C                     MOVEAZCCY      ZLI,01
+     C                     Z-ADDZINRT     ZWRKN
+     C                     MOVELZWRKN     ZWRKA3
+     C                     MOVELZWRKA3    ZWRKA2  2
+     C*
+     C** SUPPRESS LEADING ZEROES
+     C           ZWRKA2    IFEQ '00'
+     C                     MOVEL'  '      ZWRKA3
+     C                     END
+     C*
+     C                     MOVELZWRKA3    ZWRKA1  1
+     C           ZWRKA1    IFEQ '0'
+     C                     MOVEL' '       ZWRKA3
+     C                     END
+     C*
+     C                     MOVE ZWRKN     ZWRKA4  4
+     C                     MOVEAZWRKA3    ZLI,05
+     C                     MOVEA'.'       ZLI,08
+     C                     MOVEAZWRKA4    ZLI,09
+     C*
+     C** IF MATURITY DATE ZERO OUTPUT NOTICE DAYS TO FORMATTED LINE
+     C           ZMDAT     IFEQ *ZERO
+     C                     MOVE ZNOTD     ZWRKA3
+     C                     MOVEAZWRKA3    ZLI,14
+     C                     ELSE
+     C*
+     C** OTHERWISE OUTPUT MATURITY DATE
+     C                     Z-ADDZMDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     END
+     C                     MOVEAZADATE    ZLI,14
+     C                     END
+     C*
+     C                     END
+     C*
+     C** FORMAT DETAIL OUTPUT FOR DEAL TYPE CASE 3
+     C           ZUCUCY    IFNE *BLANKS
+     C           ZTCUCY    ANDEQ*BLANKS
+     C                     MOVEAZUCUCY    ZLI,01
+     C                     Z-ADDZUEINR    ZWRKN
+     C                     MOVELZWRKN     ZWRKA3
+     C                     MOVELZWRKA3    ZWRKA2  2
+     C*
+     C** SUPPRESS LEADING ZEROES
+     C           ZWRKA2    IFEQ '00'
+     C                     MOVEL'  '      ZWRKA3
+     C                     END
+     C*
+     C                     MOVELZWRKA3    ZWRKA1  1
+     C           ZWRKA1    IFEQ '0'
+     C                     MOVEL' '       ZWRKA3
+     C                     END
+     C*
+     C                     MOVE ZWRKN     ZWRKA4  4
+     C                     MOVEAZWRKA3    ZLI,05
+     C                     MOVEA'.'       ZLI,08
+     C                     MOVEAZWRKA4    ZLI,09
+     C*
+     C                     Z-ADDZMDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     END
+     C                     MOVEAZADATE    ZLI,14
+     C*
+     C                     END
+     C*
+     C** FORMAT DETAIL OUTPUT FOR DEAL TYPE CASE 4
+     C           ZUCUCY    IFNE *BLANKS
+     C           ZTCUCY    ANDNE*BLANKS
+     C                     MOVEAZUCUCY    ZLI,01
+     C                     MOVEAZTCUCY    ZLI,05
+     C                     Z-ADDZMDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ZWRKA1  1
+     C           ZWRKA1    IFEQ ' '
+     C                     MOVEL'0'       ZADATE
+     C                     END
+     C                     MOVEAZADATE    ZLI,09
+     C*
+     C                     END
+     C*
+     C** SET ALL  FIELDS TO BLANK OR ZERO
+     C                     MOVE *BLANKS   ZCCY    3
+     C                     MOVE *BLANKS   ZSLCY   3
+     C                     Z-ADD*ZEROS    ZVDAT   50
+     C                     MOVE *BLANKS   ZPUCY   3
+     C                     Z-ADD*ZEROS    ZINRT  117
+     C                     Z-ADD*ZEROS    ZDDAT   50
+     C                     Z-ADD*ZEROS    ZMDAT   50
+     C                     Z-ADD*ZEROS    ZNOTD   30
+     C                     MOVE *BLANKS   ZUCUCY  3
+     C                     Z-ADD*ZEROS    ZUEINR 117
+     C                     MOVE *BLANKS   ZTCUCY  3
+     C*
+     C                     MOVEAZLI       ZLIN   20
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRINIT   - INITIAL PROCESSING                                    *
+      * SRCUST   - PROCESS CUSTOMER CHANGEMENT                           *
+      * SRPORT   - PROCESS PORTFOLIO CHANGEMENT                          *
+      * SRINST   - PROCESS INSTRUMENT CHANGEMENT                         *
+      * SRTRAD   - RETRIEVE TRADE DETAILS                                *
+      * SREVNT   - PREPARE EVENT GENERATION                              *
+      * SRPREP   - PREPARE EVENT RECORD                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+     C***********          WRITEENDAU                                     CPM003
+     C                     DUMP
+     C                     SETON                     LRU7U8
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * SRAUDT   - PRINT AUDIT REPORT                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * SRTERM   - TERMINATION PROCESSING                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           SRAUDT    BEGSR
+      *
+     C                     MOVELBJURPT    RRURPT
+     C                     MOVELBJMRDT    RRMRDT
+     C                     WRITEHEADAU
+     C           WEMPTY    IFEQ 'Y'                                       CPM003
+     C                     WRITENODTLS                                    CPM003
+     C                     ELSE                                           CPM003
+     C                     WRITETOTAU
+     C                     ENDIF                                          CPM003
+     C***********          WRITEENDAU                                     CPM003
+      *
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C*  ZFFFLN SR. TO FORMAT THE 20A PORTFOLIO MANAGMENT LINE DESCRIPTION
+     C*                                 FOR FUTURE & OPTIONS
+     C*
+     C*  FORMAT: XXX MMMYY X 9999.999
+     C*          XXX = INSTRUMENT CURRENCY
+     C*          MMMYY = MONTH/YEAR
+     C*          X = PUT/CALL INDICATOR
+     C*          999.9999 = STRIKE PRICE
+     C*
+     C*  INPUT  FIELDS
+     C*       ZISCY   3A     INSTRUMENT CURRENCY
+     C*       ZMTHN   20     MONTH NUMBER
+     C*       ZYRNO   20     YEAR NUMBER
+     C*       ZPCAL   1A     PUT/CALL INDICATOR
+     C********ZSTRP**117*****STRIKE*PRICE*********************************CFF004
+     C*       ZSTRP  158     STRIKE PRICE                                 CFF004
+     C*
+     C*  OUTPUT  FIELDS
+     C*       ZLIN   20A     LINE DESCRIPTION
+     C*
+     C*  ARRAY USED
+     C*       ZLI    20 ELEMENTS, EACH 1 CHARACTER LONG
+     C*
+     C********************************************************************
+     C           ZFFFLN    BEGSR                           *** ZFFFLN ***
+     C*
+     C** CLEAR LINE DESCRIPTION .
+     C                     MOVEA*BLANKS   ZLI
+     C*
+     C** MOVE INTRUMENT CURRENCY TO LINE DESCRIPTION
+     C                     MOVEAZISCY     ZLI,01
+     C*
+     C** IF MARKET INSTRUMENT, RETRIEVE DATE
+     C           ISTI      IFEQ 'N'
+     C*
+     C** MOVE MONTH NAME TO LINE DESCRIPTION
+     C                     Z-ADDZMTHN     ZC      30
+     C           ZC        IFNE 0
+     C                     MOVEAZMNM,ZC   ZWRKA3
+     C                     ELSE
+     C                     MOVE *BLANKS   ZWRKA3
+     C                     END
+     C                     MOVEAZWRKA3    ZLI,05
+     C*
+     C** MOVE YEAR  NAME TO LINE DESCRIPTION
+     C                     MOVE ZYRNO     ZWRKA2  2
+     C                     MOVEAZWRKA2    ZLI,08
+     C                     END
+     C*
+     C** MOVE PUT/CALL INDICATOR TO LINE DESCRIPTION
+     C                     MOVEAZPCAL     ZLI,11
+     C*
+     C** IF OPTION (STRIKE PRICE NOT ZERO) OUTPUT STRIKE PRICE IN ARRAY
+     C** OTHERWISE LEAVE SECTION OF ARRAY BLANK
+     C           ZSTRP     IFNE 0
+     C*
+     C                     Z-ADDZSTRP     ZWRKN   84
+     C                     MOVELZWRKN     ZWRKA3  4
+     C                     MOVELZWRKA3    ZWRKC2  3
+     C                     MOVELZWRKC2    ZWRKB2  2
+     C*
+     C** SUPRESS LEADING ZEROES
+     C           ZWRKC2    IFEQ '000'
+     C                     MOVEL'   '     ZWRKA3
+     C                     END
+     C           ZWRKB2    IFEQ '00'
+     C                     MOVEL'  '      ZWRKA3
+     C                     END
+     C*
+     C                     MOVELZWRKA3    ZWRKA1  1
+     C           ZWRKA1    IFEQ '0'
+     C                     MOVEL' '       ZWRKA3
+     C                     END
+     C                     MOVE ZWRKN     ZWRKA4  4
+     C                     MOVEAZWRKA3    ZLI,12
+     C                     MOVEA'.'       ZLI,16
+     C                     MOVEAZWRKA4    ZLI,17
+     C                     END
+     C*
+     C** SET ALL   FIELDS TO BLANKS OR ZEROS
+     C                     MOVE *BLANKS   ZISCY   3
+     C                     Z-ADD*ZEROS    ZYRNO   20
+     C                     Z-ADD*ZEROS    ZMTHN   20
+     C                     MOVE *BLANKS   ZPCAL   1
+     C***********          Z-ADD*ZEROS    ZSTRP  117                      CFF004
+     C           *LIKE     DEFN STRP2     ZSTRP                           CFF004
+     C                     Z-ADD*ZEROS    ZSTRP                           CFF004
+     C*
+     C                     MOVEAZLI       ZLIN   20
+     C*
+     C                     ENDSR
+     C**************************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  ARA
+31P1
+31S1
+**  ARB
+CUSTOMER PURCHASE
+CUSTOMER SALE
+**  CPY@
+(c) Finastra International Limited 2001

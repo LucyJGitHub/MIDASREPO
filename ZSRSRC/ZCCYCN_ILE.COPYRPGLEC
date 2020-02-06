@@ -1,0 +1,162 @@
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZCCYCN SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER            *
+     C*  CURRENCY USING THE SPOT RATES FOR THE TWO CURRENCIES                  *
+     C*                                                                        *
+     C*  Any changes made to this /COPY member may also need to be             *
+     C*  applied to ZCCYCN.                                                    *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                         *
+     C*       ZCCYF   3A     FROM CURRENCY                                     *
+     C*       ZCCYT   3A     TO CURRENCY                                       *
+     C*       ZRATEF 138     SPOT RATE FOR 'FROM' CURRENCY                     *
+     C*       ZRATET 138     SPOT RATE FOR 'TO' CURRENCY                       *
+     C*       ZMDINF  1A     MULTIPLY/DIVIDE INDICATOR FOR 'FROM' CURRENCY     *
+     C*       ZMDINT  1A     MULTIPLY/DIVIDE INDICATOR FOR 'TO' CURRENCY       *
+     C*       ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CURRENCY       *
+     C*       ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CURRENCY   *
+     C*                                                                  *
+     C*  OUTPUT  FIELDS                                                  *
+     C*       ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED AMOUNT)    *
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                         *
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR        *
+     C*                                                                  *
+     C*                                                                  *
+     C*  CALLS:                                                          *
+     C*       ZCCYCA - CONVERT AMOUNT                                 *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDL033             Date 15Mar05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. BUG6293 *CREATE    Date 15Mar05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CDL033 - Included this /COPY as part of delivery.  This was  *
+      *           introduced by BUG6293 which is still outstanding.   *
+      *  BUG6293- DUPLICATE COPY OF ZCCYCN CONVERTED TO ILE VERSION   *
+      *  062594 - OUTPUT DOUBLE PRECISION FX RATE EVEN FOR SAME CCCY  *
+      *  047719 - CORRECT CONVERSION OF AMOUNTS                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C     ZCCYCN        BEGSR                                                  *** ZCCYCN ***
+      *
+      ** DEFINE ALL FIELDS
+     C                   Z-ADD     ZAMTF         ZAMTF            15 0
+     C                   MOVE      ZCCYF         ZCCYF             3
+     C                   MOVE      ZCCYT         ZCCYT             3
+     C                   Z-ADD     ZRATEF        ZRATEF           13 8
+     C                   Z-ADD     ZRATET        ZRATET           13 8
+     C                   MOVE      ZMDINF        ZMDINF            1
+     C                   MOVE      ZMDINT        ZMDINT            1
+     C                   Z-ADD     ZCDPF         ZCDPF             1 0
+     C                   Z-ADD     ZCDPT         ZCDPT             1 0
+     C                   Z-ADD     ZAMTT         ZAMTT            15 0
+     C                   Z-ADD     ZCRSRT        ZCRSRT           13 8
+     C                   MOVE      ZCRSMD        ZCRSMD            1
+     C*
+     C** IF 'FROM' CURRENCY EQUAL TO 'TO' CURRENCY SET AMOUNT IN 'TO' CURRENCY
+     C** EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C     ZCCYF         IFEQ      ZCCYT
+     C                   Z-ADD     ZAMTF         ZAMTT
+     C                   Z-ADD     1             ZCRSRT
+     C                   MOVE      'M'           ZCRSMD
+     C     1000000000    MULT      1000000       ZCRSRN
+     C                   GOTO      CCYEND
+     C                   END
+     C*
+     C** INITIALIZE CROSS EXCHANGE RATE (ZCRSSRT) TO ZERO
+     C                   Z-ADD     *ZEROS        ZCRSRT
+     C*
+     C** CONVERT 'FROM' RATE TO MULTIPLY RATE
+     C     ZMDINF        IFEQ      'M'
+     C                   Z-ADD     ZRATEF        ZRATF1           13 8
+     C     1000000000    MULT      ZRATEF        ZRATF2           30 8
+     C     10            MULT      ZRATF2        ZRATF2
+     C                   ELSE
+     C     1             DIV       ZRATEF        ZRATF1
+     C     1000000000    MULT      10            ZRWORK           20 0
+     C     ZRWORK        DIV(H)    ZRATEF        ZRATF2
+     C                   END
+     C*
+     C** CONVERT 'TO' RATE TO MULTIPLY RATE
+     C     ZMDINT        IFEQ      'M'
+     C                   Z-ADD     ZRATET        ZRATT1           13 8
+     C     1000000000    MULT      ZRATET        ZRATT2           30 8
+     C     10            MULT      ZRATT2        ZRATT2
+     C                   ELSE
+     C     1             DIV       ZRATET        ZRATT1
+     C     1000000000    MULT      10            ZRWORK
+     C     ZRWORK        DIV(H)    ZRATET        ZRATT2
+     C                   END
+     C*
+     C** NOW CALCULATE CROSS RATE
+     C     ZRATT1        IFNE      *ZEROS
+     C     ZRATF1        DIV       ZRATT1        ZCRSRT
+     C*
+     C** CALCULATE DOUBLE PRECISION FX RATE
+     C** FIRST SPLIT FIGURE INTO TWO PARTS
+     C     1000000000    MULT      1000000       ZRWORK
+     C     ZRATF2        MULT      ZRWORK        ZRATBF           30 0
+     C                   Z-ADD     ZRATF2        ZRATSF           15 8
+     C*
+     C** DIVIDE BOTH BIG AND SMALL PARTS BY TO FX RATE AND ADD TO CROSS RA
+     C** TO BE USED IN CALCULATIONS
+     C     ZRATBF        DIV(H)    ZRATT2        ZCRSRN           30 9
+     C     ZRATSF        DIV(H)    ZRATT2        ZCRSR1           30 9
+     C                   ADD       ZCRSR1        ZCRSRN
+     C                   END
+     C*
+     C** MOVE MULT/DIV INDIC FOR 'FROM' CURRENCY TO CROSS RATE MULT/DIV
+     C** INDICATOR (ZCRSMD)
+     C                   MOVE      'M'           ZCRSMD
+     C*
+     C*
+     C** IF CROSS EXCHANGE RATE IS EQUAL TO ZERO
+     C** SET ZAMTT  TO *ZERO  & EXIT
+     C     ZCRSRN        IFEQ      0
+     C                   Z-ADD     *ZEROS        ZAMTT
+     C                   GOTO      CCYEND
+     C                   END
+     C*
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF) EQUALS DECIMAL
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY CONVERT AMOUNT BY SIMPLE
+     C** MULTIPLICATION
+     C     ZCDPF         IFEQ      ZCDPT
+     C     ZAMTF         MULT(H)   ZCRSRN        ZAMTO            30 0
+     C                   END
+     C*
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF)  NOT EQUALS DECIMA
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY ADJUST AMOUNT FOR DIFFERENT DP
+     C     ZCDPF         IFNE      ZCDPT
+     C*
+     C** SUBTRACT DECIMAL PLACES 'FROM' FROM DECIMAL PLACES 'TO' IN POWER
+     C     ZCDPT         SUB       ZCDPF         ZWKPX             1 0
+     C     ZWKPX         ADD       4             B                 3 0
+     C*
+     C** IF POWER ELEMENT (8,4) LESS THAN 1
+     C     POWER(B)      IFLT      1
+     C*
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY
+     C     POWER(B)      MULT      ZAMTF         ZWK153           15 3
+     C*
+     C     ZWK153        MULT(H)   ZCRSRN        ZAMTO
+     C                   END
+     C*
+     C** IF POWER ELEMENT (8,4) GREATER OR EQUAL TO 1
+     C     POWER(B)      IFGE      1
+     C     ZAMTF         MULT      POWER(B)      ZAMTO
+     C     ZAMTO         MULT(H)   ZCRSRN        ZAMTO
+     C                   END
+     C                   END
+     C*
+     C     ZAMTO         DIV(H)    ZRWORK        ZAMTT
+     C*
+     C     CCYEND        ENDSR
+     C********************************************************************

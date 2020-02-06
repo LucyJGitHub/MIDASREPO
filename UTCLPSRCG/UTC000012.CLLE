@@ -1,0 +1,178 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CPP for RMVSRCHEX utility')                  */
+/*XBI    OVRDBF FILE(RSHOF) TOFILE(UPMBRLTPD)                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000012 - CPP for RMVSRCHEX utility                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015  *CREATE    Date 13Jun07              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT015 - New utility.  Part of take on of ClearCase.        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILEQ &MBR &CHGINPLC &REPORT &NEWLIB)
+ 
+             DCL        VAR(&FILEQ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CHGINPLC) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&REPORT) TYPE(*CHAR) LEN(4)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&SPECMBR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYMBR) TYPE(*CHAR) LEN(10)
+ 
+/* Parameters for QCLSCAN. */
+             DCL        VAR(&STRPOS) TYPE(*DEC) LEN(3) VALUE(1)
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3) VALUE(10)
+             DCL        VAR(&PATTERN) TYPE(*CHAR) LEN(10) +
+                        VALUE('*')
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3) VALUE(1)
+             DCL        VAR(&TRANSLATE) TYPE(*CHAR) LEN(1) VALUE('1')
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3)
+             DCL        VAR(&TRIM) TYPE(*DEC) LEN(1)
+             DCL        VAR(&WILD) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+ 
+             DCLF       FILE(RSHOF)
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create temporary file to hold messages for UP008010. */
+             DLTF       FILE(QTEMP/UPERRMQT)
+             MONMSG     MSGID(CPF2105)
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) TEXT('Temp. +
+                          file for holding msg from RMVSRCHEX') +
+                          SIZE(99999999 9999)
+ 
+/* Ensure work libraries do not already exist. */
+             DLTF       FILE(QTEMP/RSHOF)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(QTEMP/UTC000012F)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Break down file and library fields. */
+             CHGVAR     VAR(&FILE) VALUE(%SST(&FILEQ 1 10))
+             CHGVAR     VAR(&LIB) VALUE(%SST(&FILEQ 11 10))
+ 
+/* If a copy of the library has been requested then make the copy. */
+             IF         COND(&CHGINPLC *EQ '*NO') THEN(DO)
+                CHKOBJ     OBJ(&NEWLIB) OBJTYPE(*LIB)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTLIB     LIB(&NEWLIB) TEXT('Copy of' *BCAT &LIB *BCAT +
+                                'for RMVSRCHEX')
+                ENDDO
+                CLRLIB     LIB(&NEWLIB)
+                CRTDUPOBJ  OBJ(&FILE) FROMLIB(&LIB) OBJTYPE(*FILE) +
+                             TOLIB(&NEWLIB) DATA(*YES)
+                CHGVAR     VAR(&LIB) VALUE(&NEWLIB)
+             ENDDO
+ 
+/* Create outfile of file members (physical files only) direct from parameters. */
+             CRTDUPOBJ  OBJ(UPMBRLTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
+                          TOLIB(QTEMP) NEWOBJ(RSHOF)
+             DSPFD      FILE(&LIB/&FILE) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) FILEATR(*PF) +
+                          OUTFILE(QTEMP/UTC000012F)
+             MONMSG     MSGID(CPF3011 CPF3012 CPF3014 CPF3020) EXEC(DO)
+                CHGVAR     VAR(&ERRORMSG) VALUE('No files were found to +
+                             check')
+                CALL       PGM(UP008010) PARM('*WRITE' 'RMVSRCHEX' +
+                             &ERRORMSG)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             CPYF       FROMFILE(QTEMP/UTC000012F) +
+                          TOFILE(QTEMP/RSHOF) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+ 
+/* Check if member is generic or specific. */
+             IF         COND(&MBR *NE '*ALL') THEN(DO)
+/* Call QCLSCAN to look for "*"; if it is not found (&RESULT = 0) then a      */
+/*  specific member has been requested.  If "*" is found then a generic       */
+/*  member name has been requested.                                           */
+                CALL       PGM(QCLSCAN) PARM(&MBR &STRLEN &STRPOS +
+                             &PATTERN &PATLEN &TRANSLATE &TRIM &WILD +
+                             &RESULT)
+                IF         COND(&RESULT *EQ 0) THEN(DO)
+                   CHGVAR     VAR(&CPYMBR) VALUE(&MBR)
+/* Note: if specific member specified then flag because the following CPYF    */
+/*  only works like a wildcard.                                               */
+                   CHGVAR     VAR(&SPECMBR) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&CPYMBR) VALUE('          ')
+                   CHGVAR     VAR(&RESULT) VALUE(&RESULT - 1)
+                   CHGVAR     VAR(&CPYMBR) VALUE(%SST(&MBR 1 &RESULT))
+                ENDDO
+/* Once the contents of &MBR have been worked out then copy out records   */
+/*  that match ...                                                            */
+                CPYF       FROMFILE(QTEMP/RSHOF) TOFILE(QTEMP/RSHOF_QT) +
+                             MBROPT(*REPLACE) CRTFILE(*YES) +
+                             INCCHAR(MLNAME 1 *EQ &CPYMBR)
+/* ... and then copy them back in. */
+                CPYF       FROMFILE(QTEMP/RSHOF_QT) TOFILE(QTEMP/RSHOF) +
+                             MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                   CLRPFM     FILE(RSHOF)
+                ENDDO
+             ENDDO
+ 
+/* File RSHOF should now only consist of records that are required to be scanned. */
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&MLNAME *NE ' ') THEN(DO)
+/* First check that member meets specific selection criteria. */
+                IF         COND(&SPECMBR *EQ 'Y') THEN(DO)
+                   IF         COND(&MBR *NE &MLNAME) THEN(DO)
+                      GOTO       CMDLBL(READNEXT)
+                   ENDDO
+                ENDDO
+ 
+/* Call program to scan for invalid hex values. */
+                OVRDBF     FILE(CHECKSRC) TOFILE(&MLLIB/&MLFILE) +
+                             MBR(&MLNAME)
+                CALL       PGM(UT000012) PARM(&MLNAME &MLFILE &REPORT)
+                DLTOVR     FILE(CHECKSRC)
+                IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                          occurred in RMVSRCHEX.  Check joblog for +
+                          details.') MSGTYPE(*ESCAPE)
+             MONMSG     MSGID(CPF0000)
+ 
+ ENDPGM:
+             CALL       PGM(UP008010) PARM('*REPORT' 'RMVSRCHEX' ' ')
+             MONMSG     MSGID(CPF0000 RPG0000)
+ 
+             ENDPGM

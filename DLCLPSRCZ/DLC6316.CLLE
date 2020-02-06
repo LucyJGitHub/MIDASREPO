@@ -1,0 +1,265 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas DL Pay/receive messages extract for CLS')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - Dealing Module                                   */
+/*                                                                   */
+/*       DLC6316 - Dealing Pay/Receive message extract for           */
+/*                 Continuous Linked Settlement                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CAP084             Date 13Apr04              */
+/*                      TDA109             Date 02Apr04              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      196191             Date 07Mar02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.04 ---------------------------------------------------*/
+/*                      CDL008  *CREATE    Date 02May00              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CAP084 - ENDCMTCTL causes loop in Midasplus (BUG1636)       */
+/*       TDA109 - Stop looping problem on ENDCMTCTL.                 */
+/*       196191 - Messages not always generated.                     */
+/*       CDL008 - Continuous Linked Settlement                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MPGT)
+ 
+/*/COPY WNCPYSRC,DLC6316INT                                          */
+ 
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MPGT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MULT) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GROUP) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SLEVEL) TYPE(*DEC) LEN(4)
+             DCL        VAR(&TIMEO) TYPE(*DEC) LEN(5)
+             DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1) VALUE(0)
+             DCL        VAR(&MIDASLG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DLSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&CLSSTAT) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&DELAY) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PAYMSG) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&RCVMSG) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+/* Global monitor message                                            */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* End if job is already active                                      */
+ 
+VERIFY1:                                                                                  /*196191*/
+             RTVDTAARA  DTAARA(FXCLSSTAT) RTNVAR(&CLSSTAT)
+/**********  IF         COND(%SUBSTRING(&CLSSTAT 7 1) *EQ 'Y') + */                       /*196191*/
+/**********     THEN(GOTO CMDLBL(END))                           */                       /*196191*/
+             IF         COND(%SUBSTRING(&CLSSTAT 7 1) *EQ 'Y') +
+                          THEN(DO)                                                        /*196191*/
+               DLYJOB     DLY(5)                                                          /*196191*/
+               GOTO       CMDLBL(VERIFY1)                                                 /*196191*/
+             ENDDO                                                                        /*196191*/
+ 
+/* Retrieve job details                                              */
+ 
+             CHGJOB     SWS(00000000)
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             ALCOBJ     OBJ((FXCLSSTAT *DTAARA *EXCLRD)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
+ 
+/* Change FXCLSSTAT data area to include job details */
+ 
+             CHGDTAARA  DTAARA(FXCLSSTAT (7 1)) VALUE('Y')
+             CHGDTAARA  DTAARA(FXCLSSTAT (8 10)) VALUE(&JOB)
+             CHGDTAARA  DTAARA(FXCLSSTAT (18 10)) VALUE(&USR)
+             CHGDTAARA  DTAARA(FXCLSSTAT (28 6)) VALUE(&NBR)
+ 
+/* Multiple language support                                         */
+ 
+             CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
+                          &ERRORC &MULT)
+ 
+             IF         COND(&MULT *EQ '  ') THEN(DO)
+               CHGVAR     VAR(&MULT) VALUE('GB')
+             ENDDO
+ 
+/* Build multiple language support object name                       */
+ 
+             CHGVAR     VAR(&MIDASLG) VALUE(&MULT *CAT 'MIDAS     ')
+ 
+/* Apply multiple language support overrides                         */
+ 
+             OVRMSGF    MSGF(MIDAS) TOMSGF(&MIDASLG)
+ 
+/*/COPY WNCPYSRC,DLC6316MPS                                          */
+ 
+/* Send program message to MRUNQ that this component is running */
+ 
+             SNDPGMMSG  MSG('DLC6316 - Dealing Pay/Receive message +
+                          extract for Continuous Linked +
+                          Settlement') TOMSGQ(MRUNQ)
+ 
+/* Start commitment control */
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                          CMTSCOPE(*JOB)
+ 
+/* Check if pay/receive reporting already active.  If so, delay this */
+/* job and verify status again.                                      */
+VERIFY:
+             RTVDTAARA  DTAARA(DLSTAT) RTNVAR(&DLSTAT)
+             IF         COND((%SUBSTRING(&DLSTAT 7 1) *EQ 'Y') *OR +
+                          (%SUBSTRING(&DLSTAT 100 1) *NE ' ') *OR +
+                          (%SUBSTRING(&DLSTAT 97 1) *NE ' ')) THEN(DO)
+               DLYJOB     DLY(60)
+               GOTO       CMDLBL(VERIFY)
+             ENDDO
+ 
+/* Update busy flag in DLSTAT                                        */
+             ALCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))
+             RTVDTAARA  DTAARA(DLSTAT) RTNVAR(&DLSTAT)
+             CHGVAR     VAR(%SUBSTRING(&DLSTAT 7 1)) VALUE(Y)
+             CHGDTAARA  DTAARA(DLSTAT) VALUE(&DLSTAT)
+             DLCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))
+ 
+/* Call pay/receive message exrtaction for CLS                       */
+NEXTB:
+             CALL       PGM(DL6316)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               ROLLBACK
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Commit changes if no database error occurred                      */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+               COMMIT
+             ENDDO
+ 
+/* Determine if pay/receive messages are to be generated             */
+ 
+             CHGVAR     VAR(&PAYMSG) VALUE(0)
+             CHGVAR     VAR(&RCVMSG) VALUE(0)
+             RTVMBRD    FILE(MGF202PD) NBRCURRCD(&PAYMSG)
+             RTVMBRD    FILE(MGF210PD) NBRCURRCD(&RCVMSG)
+             RTVSYSVAL  SYSVAL(QTIME) RTNVAR(&STIME)
+             RTVSYSVAL  SYSVAL(QDATE) RTNVAR(&SDATE)
+ 
+/* Process bank transfer messages                                    */
+ 
+             CALL       PGM(MG0202)
+ 
+             IF         COND(%SWITCH(XXXXXX1X) *OR +
+                          %SWITCH(XXXXXXX1)) THEN(SNDPGMMSG +
+                          MSG('Bank transfer formatting failure') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ) MSGTYPE(*INFO))
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                ROLLBACK
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Process notice to receive messages                                */
+ 
+             CALL       PGM(MG0210)
+ 
+/* Reset busy flag in DLSTAT                                         */
+             ALCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD)) WAIT(32000)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             CHGDTAARA  DTAARA(DLSTAT (7 1)) VALUE(N)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DLCOBJ     OBJ((DLSTAT *DTAARA *EXCLRD))
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             IF         COND(%SWITCH(XXXXXX1X) *OR +
+                          %SWITCH(XXXXXXX1)) THEN(SNDPGMMSG +
+                          MSG('Bank transfer formatting failure') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ) MSGTYPE(*INFO))
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
+                ROLLBACK
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If pay/receive messages were generated, create Message Generation */
+/* Audit report with parameters of Module ID, Type of run, Current   */
+/* journal, and Date and Time of Job                                 */
+ 
+             IF         COND((&PAYMSG *GT 0) *OR (&RCVMSG *GT 0)) +
+                          THEN(DO)
+                CALL       PGM(MEC0890) PARM('DL' 'P' 'ICJRN     ' +
+                             &SDATE &STIME)
+                MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             ENDDO
+ 
+/*/COPY WNCPYSRC,DLC6316MPE                                          */
+ 
+/* Terminate this job if multiple pay-in generated by time indicator */
+/* is 'N', otherwise delay job and process next batch of pay/receive.*/
+ 
+             IF         COND(&MPGT *EQ 'N') THEN(DO)
+                SNDPGMMSG  MSG('DLC6316 - Dealing Pay/Receive message +
+                             extract for Continuous Linked Settlement +
+                             completed normally') TOMSGQ(MRUNQ)
+                GOTO CMDLBL(CLEAR)
+             ENDDO
+             CHGVAR     VAR(&DELAY) VALUE(%SUBSTRING(&CLSSTAT 1 6))
+             DLYJOB     DLY(&DELAY)
+             GOTO       CMDLBL(NEXTB)
+ 
+ ABNOR:
+/*/COPY WNCPYSRC,DLC6316ERR                                          */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Abnormal termination - batch job */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          DLC6316 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ CLEAR:
+ 
+/* Reset allocation flag and clear job details in FXCLSSTAT dataarea */
+ 
+             CHGDTAARA  DTAARA(FXCLSSTAT (7 1)) VALUE('N')
+             CHGDTAARA  DTAARA(FXCLSSTAT (8 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(FXCLSSTAT (18 10)) VALUE('          ')
+             CHGDTAARA  DTAARA(FXCLSSTAT (28 6)) VALUE('      ')
+ 
+             DLCOBJ     OBJ((FXCLSSTAT *DTAARA *SHRRD))
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             RCLRSC                                                                       /*CAP084*/
+             ENDCMTCTL
+/*********   MONMSG     MSGID(CPF8350)                                                 */ /*TDA109*/
+             MONMSG     MSGID(CPF8350 CPF8355)                                            /*TDA109*/
+ 
+ END:
+ 
+/*/COPY WNCPYSRC,DLC6316END                                          */
+ 
+             ENDPGM

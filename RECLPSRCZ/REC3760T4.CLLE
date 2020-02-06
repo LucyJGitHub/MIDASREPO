@@ -1,0 +1,109 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Referral/Excess Rpt Extr-End Task Split')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC3760T4 - Midas RE Referral and Excess Report Extract -   */
+/*                   End Task Split                                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083BU *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE083BU - COB Restructure - RE COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE('RERACDPD')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('REC3760T4 - Referral and Excess Report +
+                          Extract - End Task Split') TOMSGQ(MRUNQ)
+ 
+/* Call trailer file update program */
+ 
+             OVRDBF     FILE(ODACTX) TOFILE(RTZZ) MBR(ODACTX)
+             OVRDBF     FILE(REFRLTX) TOFILE(RTZZ) MBR(REFRLTX)
+             OVRDBF     FILE(FRLGTX) TOFILE(REFRLGZ) MBR(FRLGTX)
+             OVRDBF     FILE(ODAC) TOFILE(RTZZ) MBR(ODAC)
+             OVRDBF     FILE(REFRL) TOFILE(RTZZ) MBR(REFRL)
+             OVRDBF     FILE(ACRL) TOFILE(REFRLGZ) MBR(ACRL)
+             CALL       PGM(RE3760T4)
+             DLTOVR FILE(*ALL)
+ 
+/* Check if error */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Remove temporary members added by tasksplit's T1 job */
+ 
+             RMVM       FILE(RTZZ) MBR(ODACTX)
+             MONMSG     MSGID(CPF7301 CPF7303)
+             RMVM       FILE(RTZZ) MBR(REFRLTX)
+             MONMSG     MSGID(CPF7301 CPF7303)
+             RMVM       FILE(REFRLGZ) MBR(FRLGTX)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Determine full DTAQLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Retrieve first member description */
+ 
+             RTVMBRD    FILE(&DRIVER) RTNMBR(&MEMBER)
+ 
+/* Delete sub-task data queue */
+ 
+ LOOP:       DLTDTAQ    DTAQ(&DTAQLIB/&MEMBER)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+/* Retrieve next member description */
+ 
+             RTVMBRD    FILE(&DRIVER) MBR(&MEMBER *NEXT) +
+                          RTNMBR(&MEMBER)
+             MONMSG     MSGID(CPF3049) EXEC(GOTO CMDLBL(REMOVE))
+ 
+/* Loop for all members in driving file */
+ 
+             GOTO       CMDLBL(LOOP)
+ 
+ REMOVE:
+ 
+/* Remove all members from driving file */
+ 
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+             SNDPGMMSG  MSG('Program REC3760T4 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+             ENDPGM

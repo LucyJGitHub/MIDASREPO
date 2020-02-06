@@ -1,0 +1,157 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE PDCL Process - Files save')                  */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC007001 - PDCL Process - Files Saves                    */
+/*                                                                 */
+/*       (c) Finastra International Limited 2012                   */
+/*                                                                 */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD022460A          Date 22Sep13              */
+/*                      AR649939           Date 01Aug12              */
+/*                      263800             Date 01Aug12            */
+/*                      263074             Date 01Aug12            */
+/*                      CLE134  *CREATE    Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD022460A - Move LENEWLPD from DPLIB to DMLIB             */
+/*       AR649939 - Lending facility availability neg. value.      */
+/*                  Added back up of LELOMKPD from IC to LELOMKPDx */
+/*                  (Child:AR650139)                               */
+/*       263800 - Add MATLNMT & MATLNZX to the files to be saved   */
+/*       263074 - Wrong Postings when interest and principal are   */
+/*                paid on the same day (Recompile)                 */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+             PGM        PARM(&CONAM &COSEQ)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2012')
+ 
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
+                           VALUE('PDCL PROCESS - FILES SAVE')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&CONAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&COSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STUS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRE)  TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVDM) TYPE(*CHAR) LEN(10) +
+                           VALUE('LEC07001DM')
+             DCL        VAR(&SAVDP) TYPE(*CHAR) LEN(10) +
+                           VALUE('LEC07001DP')
+ 
+ 
+/** Check if Normal CoB or PDCL CoB */
+/**********  CALL       PGM(LE000489)                                                     /*CLE134*/
+ 
+/** SAVE CLOAN*  and LOAMS* files */
+ 
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ)
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+ 
+             CLRPFM     FILE(MKEYHH)
+             CLRPFM     FILE(MKEYDP)
+             CLRPFM     FILE(MKEYZZ)
+             CLRPFM     FILE(LKEY3HH)
+             CLRPFM     FILE(LKEY3DP)
+             CLRPFM     FILE(LKEY3ZZ)
+             CLRPFM     FILE(LKEYCFA)
+             CLRPFM     FILE(LKEYCFD)
+             CLRPFM     FILE(LKEYCFZ)
+ 
+             DLTF       FILE(&DILIB/&SAVDM)
+             MONMSG     MSGID(CPF2105)
+ 
+             DLTF       FILE(&DILIB/&SAVDP)
+             MONMSG     MSGID(CPF2105)
+ 
+             CRTSAVF    FILE(&DILIB/&SAVDM)
+             CRTSAVF    FILE(&DILIB/&SAVDP)
+/**********  SAVOBJ     OBJ(CLOANCL CLOANCK CLOANZ1 LOAMSDK LOAMSZ1 +
+                           LEFEED LEFEEZ FCLTYFN FCLTYFM FACHISA +
+                           FACHISH) LIB(&DMLIB) DEV(*SAVF) +
+                           SAVF(&DILIB/&SAVDM)                        */               /*MD022460A*/
+/**/                                                                                   /*MD022460A*/
+             SAVOBJ     OBJ(CLOANCL CLOANCK CLOANZ1 LOAMSDK LOAMSZ1 +
+                           LEFEED LEFEEZ FCLTYFN FCLTYFM FACHISA +
+                           FACHISH LENEWLPD) LIB(&DMLIB) DEV(*SAVF) +
+                           SAVF(&DILIB/&SAVDM)                                         /*MD022460A*/
+ 
+/**********  SAVOBJ     OBJ(LETLXDK LETLXZX CONFSDK CONFSZX +
+                           INTSTHN INTSTHQ INTSTHP INTSTZX +
+                           CUTX1HN CUTX1HP CUTX1HQ CUTX1ZX +
+                           MKEYDP MKEYZZ GELEHH +
+                           GELEPD GELEZZ GELE2HH GELE2PD GELE2ZZ +
+                           LENXTAA LENXTAB LENXTAC LKEY1DP +
+                           LKEY1ZZ LKEYFED LKEYFEZ ACTN1DK +
+                           ACTN1DN ACTN3DK ACTN3DN ACTN5DK +
+                           ACTN5DN ACTN1ZX ACTN3ZX +
+                           ACTN5ZX LEPK1DPD LEPK2DPD LEPK3DPD +
+                           LEPK1ZZ LEPK2ZZ LEPK3ZZ LENEWLPD +
+                           LVNTXHH LVNTXEL LVNTXZZ LVENTEL +
+                           LVENTZZ LVENTHH) LIB(&DPLIB) +
+                           DEV(*SAVF) SAVF(&DILIB/&SAVDP) */                              /*263800*/
+/**/                                                                                      /*263800*/
+/**********  SAVOBJ     OBJ(LETLXDK LETLXZX CONFSDK CONFSZX INTSTHN +
+                           INTSTHQ INTSTHP INTSTZX CUTX1HN CUTX1HP +
+                           CUTX1HQ CUTX1ZX MKEYDP MKEYZZ GELEHH +
+                           GELEPD GELEZZ GELE2HH GELE2PD GELE2ZZ +
+                           LENXTAA LENXTAB LENXTAC LKEY1DP LKEY1ZZ +
+                           LKEYFED LKEYFEZ ACTN1DK ACTN1DN ACTN3DK +
+                           ACTN3DN ACTN5DK ACTN5DN ACTN1ZX ACTN3ZX +
+                           ACTN5ZX LEPK1DPD LEPK2DPD LEPK3DPD +
+                           LEPK1ZZ LEPK2ZZ LEPK3ZZ LENEWLPD LVNTXHH +
+                           LVNTXEL LVNTXZZ LVENTEL LVENTZZ LVENTHH +
+                           MATLNMT MATLNZX) +
+                           LIB(&DPLIB) DEV(*SAVF) SAVF(&DILIB/&SAVDP) */        /*263800 MD022460A*/
+/**/                                                                                   /*MD022460A*/
+             SAVOBJ     OBJ(LETLXDK LETLXZX CONFSDK CONFSZX INTSTHN +
+                           INTSTHQ INTSTHP INTSTZX CUTX1HN CUTX1HP +
+                           CUTX1HQ CUTX1ZX MKEYDP MKEYZZ GELEHH +
+                           GELEPD GELEZZ GELE2HH GELE2PD GELE2ZZ +
+                           LENXTAA LENXTAB LENXTAC LKEY1DP LKEY1ZZ +
+                           LKEYFED LKEYFEZ ACTN1DK ACTN1DN ACTN3DK +
+                           ACTN3DN ACTN5DK ACTN5DN ACTN1ZX ACTN3ZX +
+                           ACTN5ZX LEPK1DPD LEPK2DPD LEPK3DPD +
+                           LEPK1ZZ LEPK2ZZ LEPK3ZZ LVNTXHH +
+                           LVNTXEL LVNTXZZ LVENTEL LVENTZZ LVENTHH +
+                           MATLNMT MATLNZX) +
+                           LIB(&DPLIB) DEV(*SAVF) SAVF(&DILIB/&SAVDP)                  /*MD022460A*/
+ 
+/** Clear after save */
+ 
+             CLRPFM     FILE(LKEYFED)
+             CLRPFM     FILE(LKEYFEZ)
+             CLRPFM     FILE(LKEYFEA)
+             CLRPFM     FILE(LENEWLPD)
+/**/                                                                                    /*AR649939*/
+             CPYF       FROMFILE(&DMLIB/LELOMKPD) +
+                           TOFILE(&DPLIB/LELOMKPDX) MBROPT(*REPLACE)                    /*AR649939*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                                  /*AR649939*/
+/**/                                                                                    /*AR649939*/
+             CLRPFM     FILE(LELOMHPD)
+             CLRPFM     FILE(LELOMKPD)
+             CLRPFM     FILE(LELOMZPD)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited')
+ 
+             ENDPGM

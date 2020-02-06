@@ -1,0 +1,1508 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LB Commitment Limit report')
+     H/TITLE TOTAL COMMITMENT LINES
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0351 - Total Commitment Lines                              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01498             Date 11Aug94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*
+     F***ICD*record*1***Prefix*-*BJ************************************   S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F** Trailer file   Prefix - TR
+     FLBTRAIPDIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F***Branch*codes***Prefix*-*AZ************************************   S01498
+     F***SDACOFL0IF**E           K        DISK         KINFSR *PSSR       S01498
+     F*
+     F***Currency*codes*Prefix*-*A6************************************   S01498
+     F***SDCURRL1IF**E           K        DISK         KINFSR *PSSR       S01498
+     F*
+     F***portfolio*lending*ICD*Prefix*-*LB*****************************   S01498
+     F***SDLOMBPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F** Run controls
+     FLB0351AUO   E             11     PRINTER
+     F                                              KINFDS SPOOLU         S01498
+     F*
+     F** Client master  Prefix - BB
+     F***SDLBCSL0IF**E           K        DISK         KINFSR *PSSR       S01498
+     FLBLBCSJ0IF  E           K        DISK         KINFSR *PSSR          S01498
+     F            SDLBCSJ0                          KRENAMESDLBCSF1
+     F*
+     F** Client master  Prefix - BB
+     F***SDLBCSL2IF**E           K        DISK         KINFSR *PSSR       S01498
+     FLBLBCSJ2IF  E           K        DISK         KINFSR *PSSR          S01498
+     F            SDLBCSJ0                          KRENAMESDLBCSF2
+     F*
+     F** Commitment line authorisation file Prefix - CA
+     FLBCOMAL2IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F** Total commitment lines awaiting authorisation
+     F****LB0351P1O***E             10     PRINTER      KINFDS ERF1DS     S01498
+     FLB0351P1O   E             10     PRINTER      KINFDS SPOOL      UC  S01498
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                                                                 *
+     F**      23         Conditions first notes line for authorisation   *
+     F**      24         Conditions second notes line for authorisation  *
+     F********70*********Read*fail*on*SDBANKPD****************************S01498
+     F********71*********Read*fail*on*SDLBCSL2****************************S01498
+     F********72*********Read*equals*fail*on*SDLBCSL2*********************S01498
+     F********73*********Read*fail*on*SDACOFL0****************************S01498
+     F********74*********Chain*fail*on*SDLBCSL0***************************S01498
+     F********75*********Chain*fail*on*SDCURRL1***************************S01498
+     F**      71         Read fail on LBLBCSJ2                           *S01498
+     F**      72         Read equals fail on LBLBCSJ2                    *S01498
+     F**      74         Chain fail on LBLBCSJ0                           S01498
+     F**      77         Read fail on LBCOMAL2                           *
+     F**      78         On if currency look up fails                    *
+     F**      79         Chain to trailer file LBTRAIPD fails            *
+     F**      98         Used by ZDATE2                                  *
+     F********************************************************************
+     E/EJECT
+     E********************************************************************
+     E*
+     E**   Array for COPYRIGHT
+     E                    CPY@    1   1 80
+     E********************************************************************
+     E/EJECT
+     E*****************************************************************
+     E/COPY ZSRSRC,ZSEDITZ1
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E** SCONV S/R array for powers of 10
+     E*
+     E                    POWER   1   7  7 3
+     E********************************************************************
+     E/EJECT
+     E********************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+     E********************************************************************
+     E/EJECT
+     E********************************************************************
+     E                    CURR      500  3  A            CURRENCIES
+     E                    CAMT      500 15 0A            AMOUNTS
+     E********************************************************************
+     E/EJECT
+     E*****************************************************************
+     ISDLBCSF1
+     I              BBCUST                          SDCUST
+     I              BBCRNM                          SDCRNM
+     I              BBACOC                          SDACOC
+     I              BBPCNB                          SDPCNB
+     I              BBBRCD                          SDBRCD
+     I              BBTYLC                          SDTYLC
+     I***********   CULOMB                          SDLOMB                S01498
+     I              CUCCY                           SDCCY
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - Copyright Insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I** Data structures for decimal places formatting subroutine
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     I*    PROGRAM STATUS DATA STRUCTURE
+     I*
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     I*    FILE INFORMATION DATA STRUCTURE
+     I*
+     I***ERF1DS******DS                                                   S01498
+     ISPOOL       DS                                                      S01498
+     I                                       83  92 SFILE                 S01498
+     I                                    B 123 1240SFNUM                 S01498
+     I*    FOR OVERFLOW
+     I*
+     I                                    B 367 3680LINE
+     ISPOOLU      DS                                                      S01498
+     I                                       83  92 SFILEU                S01498
+     I                                    B 123 1240SFNUMU                S01498
+     I*
+     I* Local Data Area
+     I*
+     I***LDA********UDS                            256                    S01498
+     ILDA         DS                            256                       S01498
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01498
+     IRUNDAT    E DS                                                      S01498
+     I**  Standard Data Area Layout for System flags and Run Date         S01498
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Data structure for bank details                                 S01498
+     I*                                                                   S01498
+     ISDBRCH    E DSSDBRCHPD                                              S01498
+     I**  Data structure for branch details                               S01498
+     I*                                                                   S01498
+     ISDLMB     E DSSDLOMBPD                                              S01498
+     I**  Data structure for Portfolio Lending ICD                        S01498
+     I*                                                                   S01498
+     ISDCURR    E DSSDCURRPD                                              S01498
+     I**  Data structure for currency details                             S01498
+     I*                                                                   S01498
+     ISDACOF    E DSSDACOFPD                                              S01498
+     I**  Data structure for account officer details                      S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure for access objects                         S01498
+     I*                                                                   S01498
+     IDSSDY     E DSDSSDY                                                 S01498
+     I**  Long data structure for access programs                         S01498
+     I*                                                                   S01498
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************   S01498
+     C*                                                                   S01498
+     C** Entry parameters                                                 S01498
+     C*                                                                   S01498
+     C           *ENTRY    PLIST                                          S01498
+     C                     PARM           @RSEQ   5                       S01498
+     C                     PARM           @RLEV   1                       S01498
+     C                     PARM           @RENT   3                       S01498
+     C*                                                                   S01498
+     C********************************************************************
+     C*
+     C* Mainline
+     C*
+     C** Initialization Subroutine
+     C                     EXSR #A
+     C*
+     C** Main Processing
+     C                     EXSR #B
+     C*
+     C***No*details*to*report*variable*********************************   S01498
+     C***********WWNOD     IFEQ '0'                                       S01498
+     C***********          WRITEHEAD1                                     S01498
+     C***********          WRITENODETL                                    S01498
+     C***********          END                                            S01498
+     C***********                                                         S01498
+     C***End*of*report*line********************************************   S01498
+     C***********          WRITEENDREP                                    S01498
+     C*
+     C** Output run controls report
+     C                     EXSR #C
+     C                     SETON                       LR
+     C*****************************************************************
+     C*                                                               *
+     C*                  INDEX TO SUBROUTINES                         *
+     C*                  ~~~~~~~~~~~~~~~~~~~~                         *
+     C*             1.  ZDATE2-  Convert 5-figure day no to date fmt  *
+     C*             2.  SCONV-  Produces specified output currency    *
+     C*                          given specified input currency value *
+     C*             2.  ZSEDIT-  Format currency for output           *
+     C*             3.  #ZB   -  Format Customer Lines For Output     *
+     C*             4.  #ZA   -  Update Array & Add To Branch Totals  *
+     C*             5.  #BAA  -  Access Account Officer File SDACOFL0 *
+     C*             6.  #BABAA-  Format Parent Totals For Output      *
+     C*             7.  #BABA -  Process The Children                 *
+     C*             8.  #BAB  -  Access SDLBCSL0 File                 *
+     C*             9.  #BA   -  Account Officer Processing           *
+     C*            10.  #BBA  -  Format Decimal Places                *
+     C*            11.  #BB   -  Process branch totals                *
+     C*            12.  #A    -  Initialisation                       *
+     C*            13.  #B    -  Main Processing Subroutine           *
+     C*            14.  #C    -  Produce Run Controls Report          *
+     C*            15.  #DBAS1-  Database Error Subroutine 1          *
+     C*            16.  #DBAS2-  Database Error Subroutine 2          *
+     C*            17.  #DBAS3-  Database Error Subroutine 3          *
+     C*            18.  #DBAS4-  Database Error Subroutine 4          *
+     C*            19.  #DBAS5-  Database Error Subroutine 5          *
+     C*            20.  #DBAS6-  Database Error Subroutine 6          *
+     C*            21.  #DBASZ-  Output Database Error Subroutine     *
+     C*            22.  #PSSR -  Program error handling routine       *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZDATE2   -  Convert date from 5 numeric to DDMMMYY format     *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY-  #ZB                                               *
+     C*                                                               *
+     C*****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZSEDIT   -  Currency formatting subroutine                    *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY-  #ZB #BABAA #BBA                                   *
+     C*                                                               *
+     C*****************************************************************
+     C/COPY ZSRSRC,ZSEDITZ3
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SCONV    -  Convert value to specified currency               *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY-  #ZA #BB                                           *
+     C*                                                               *
+     C********************************************************************
+     C**                                                                 *
+     C**  SCONV - Converts an amount from one currency to another.       *
+     C**                                                                 *
+     C**  Input Fields - WWAMTI 15/0 amount in input currency            *
+     C**                 WWSRI  13/8 spot rate for input currency        *
+     C**                 WWSRO  13/8 spot rate for output currency       *
+     C**                 WWDPI  1/0  no. of decimals for input currency  *
+     C**                 WWDPO  1/0  no. of decimals for output currency *
+     C**                 WWMDI  1    mult/div indicator for input curr.  *
+     C**                 WWMDO  1    mult/div indicator for output curr. *
+     C**                                                                 *
+     C**  Arrays       - POWER  powers of 10                             *
+     C**                                                                 *
+     C**  Output Fields- WWAMTO 15/0 output amount converted to new curr *
+     C**                                                                 *
+     C**  CALLS    - NONE                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           SCONV     BEGSR                           **  SCONV    **
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDWWAMTI    WWAMTI 150
+     C                     Z-ADD0         WWAMTO 150
+     C           *LIKE     DEFN A6SPRT    WWSRI
+     C           *LIKE     DEFN A6SPRT    WWSRO
+     C           *LIKE     DEFN A6NBDP    WWDPI
+     C           *LIKE     DEFN A6NBDP    WWDPO
+     C           *LIKE     DEFN A6MDIN    WWMDI
+     C           *LIKE     DEFN A6MDIN    WWMDO
+     C*
+     C           WWDPO     SUB  WWDPI     Z       10
+     C           Z         ADD  4         Z
+     C*
+     C           WWMDI     IFNE WWMDO
+     C*
+     C** MULT/DIV INDICATORS DIFFERENT
+     C           WWSRI     MULT WWSRO     WWRATE 159H
+     C                     ELSE
+     C*
+     C** MULT/DIV INDICATORS THE SAME
+     C           WWSRO     IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           WWSRI     DIV  WWSRO     WWRATE    H
+     C                     END
+     C*
+     C           WWMDI     IFEQ 'D'
+     C           WWRATE    IFEQ 0
+     C                     GOTO SC0
+     C                     END
+     C           POWER,Z   DIV  WWRATE    WWRATE    H
+     C                     ELSE
+     C           POWER,Z   MULT WWRATE    WWRATE    H
+     C                     END
+     C*
+     C           WWAMTI    MULT WWRATE    WWAMTO    H
+     C*
+     C           SC0       ENDSR                           **  SC0      **
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #ZB      -  Format customer lines for output                  *
+     C*                                                               *
+     C* CALLS    -  #DBAS3 #DBASZ ZDATE2 ZSEDIT                       *
+     C*                                                               *
+     C* CALLED BY-  #BABA #BA                                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #ZB       BEGSR
+     C*
+     C** Authorisation fields are moved to PRTF for output
+     C                     MOVE BBCUST    RRCNUM
+     C                     MOVE BBCRNM    RRCRNM
+     C                     MOVE CACCY     RRCACY
+     C***********CACCY     CHAINSDCURRL1             75                   S01498
+     C************IN75     IFEQ '1'                                       S01498
+     C***********A6TYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C** Get currency details using access object                         S01498
+     C*                                                                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM CACCY     P@CCY   3                       S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*                                                                   S01498
+     C** Check if error occurred                                          S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVELCACCY     DBKEY
+     C                     EXSR #DBAS3
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #DBASZ
+     C                     END
+     C*
+     C** Format currency
+     C                     MOVE A6NBDP    ZDECS
+     C                     Z-ADDCACMTL    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C*
+     C** Format correct number of decimal places
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRAMC
+     C*
+     C** Convert a 5 figure day number into date format - start date
+     C                     Z-ADDCASTTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRCATD
+     C*
+     C** Convert a 5 figure day number into date format - expiry date
+     C                     Z-ADDCAEXPD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRCAEX
+     C*
+     C** Convert a 5 figure day number into date format - review date
+     C                     Z-ADDCAREVD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRCAVD
+     C*
+     C                     MOVE CAREVF    RRCAVF
+     C                     MOVE CAREVN    RRCAVN
+     C*
+     C** Convert a 5 figure day number into date format - last change date
+     C                     Z-ADDCALCD     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRCALC
+     C*
+     C           CACHTP    IFEQ 'I'
+     C                     MOVE 'INSERT'  RRCACH
+     C                     END
+     C           CACHTP    IFEQ 'A'
+     C                     MOVE 'AMEND '  RRCACH
+     C                     END
+     C           CACHTP    IFEQ 'D'
+     C                     MOVE 'DELETE'  RRCACH
+     C                     END
+     C*
+     C                     MOVE CAUSR     RRCAUS
+     C           CANOT1    IFNE *BLANKS
+     C           CANOT2    ORNE *BLANKS
+     C                     MOVE CANOT1    RRCAN1
+     C                     MOVE CANOT2    RRCAN2
+     C                     MOVE '1'       *IN23
+     C                     END
+     C           CANOT3    IFNE *BLANKS
+     C           CANOT4    ORNE *BLANKS
+     C                     MOVE CANOT3    RRCAN3
+     C                     MOVE CANOT4    RRCAN4
+     C                     MOVE '1'       *IN24
+     C                     END
+     C*                                                                   S01498
+     C**  Process if there is a change in branch                          S01498
+     C*                                                                   S01498
+     C           WLBRCA    IFNE RRBRCA                                    S01498
+     C                     EXSR #BRPR                                     S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C           LINE      IFGT 56
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     END
+     C           WWNOT     IFEQ '0'
+     C                     MOVE '1'       *IN30
+     C                     END
+     C                     MOVE '0'       WWNO
+     C                     WRITECUSTR
+     C                     ADD  1         RRCT1
+     C                     MOVEA'0000'    *IN,21
+     C                     MOVE '0'       *IN30
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #ZA      -  Output branch totals array & update               *
+     C*             parent totals                                     *
+     C*                                                               *
+     C* CALLS    -  #DBAS3 #DBASZ SCONV                               *
+     C*                                                               *
+     C* CALLED BY-  #BA #BABA                                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #ZA       BEGSR
+     C*
+     C** Access authorisation file LBCOMAL2
+     C                     MOVELBBCUST    WWCUST
+     C           WWCUST    SETLLLBCOMAL2
+     C           WWCUST    READELBCOMAL2                 77
+     C           *IN77     DOWEQ'0'                                     OFFICER
+     C           CARECI    IFEQ 'D'
+     C                     Z-ADD1         X                          OFFICER
+     C           CACCY     LOKUPCURR,X                   78
+     C           *IN78     IFNE '1'
+     C                     ADD  1         Y
+     C                     MOVE CACCY     CURR,Y
+     C                     Z-ADDCACMTL    CAMT,Y
+     C                     ELSE
+     C                     ADD  CACMTL    CAMT,X
+     C                     END
+     C           WWNOT     IFEQ '1'
+     C***********CACCY     CHAINSDCURRL1             75                   S01498
+     C************IN75     IFEQ '1'                                       S01498
+     C***********A6TYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C** Get currency details using access object                         S01498
+     C*                                                                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM CACCY     P@CCY                           S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*                                                                   S01498
+     C** Check if error occurred                                          S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVELCACCY     DBKEY
+     C                     EXSR #DBAS3
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #DBASZ
+     C                     END
+     C*
+     C** Set up fields for input currency
+     C           CACCY     IFNE SDCCY
+     C                     MOVE CACMTL    WWAMTI
+     C                     MOVE A6SPRT    WWSRI
+     C                     MOVE A6NBDP    WWDPI
+     C                     MOVE A6MDIN    WWMDI
+     C                     EXSR SCONV
+     C                     ADD  WWAMTO    WWTMT
+     C                     ELSE
+     C                     ADD  CACMTL    WWTMT
+     C                     END
+     C                     END
+     C                     MOVELBBCUST    WWCUST
+     C           WWCUST    READELBCOMAL2                 77
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BAA     -  Access account officer file SDACOFL0              *
+     C*                                                               *
+     C* CALLS    -  #DBAS2 #DBASZ                                     *
+     C*                                                               *
+     C* CALLED BY-  #BA                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #BAA      BEGSR
+     C           BBACOC    IFNE *BLANKS
+     C                     MOVE BBACOC    AZACOC
+     C*
+     C** Chain to A/C Officer file for A/C Officer name
+     C***********AZACOC    CHAINSDACOFL0             73                   S01498
+     C************IN73     IFEQ '1'                                       S01498
+     C***********AZTYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C                     CALL 'AOACOFR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM AZACOC    P@ACOC  2                       S01498
+     C           SDACOF    PARM SDACOF    DSFDY                           S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANK                                    S01498
+     C                     EXSR #DBAS2
+     C                     EXSR #DBASZ
+     C                     END
+     C                     MOVE AZACON    RRACON
+     C                     ELSE
+     C                     MOVE *BLANKS   RRACON
+     C                     END
+     C                     MOVE BBBRCD    RRSPTA
+     C                     MOVE BBACOC    RRACOC
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BABAA   -  Format parent totals for output                   *
+     C*             parent totals                                     *
+     C*                                                               *
+     C* CALLS    -  ZSEDIT                                            *
+     C*                                                               *
+     C* CALLED BY-  #BABA                                             *
+     C*                                                               *
+     C*****************************************************************
+     C           #BABAA    BEGSR
+     C*
+     C** Access authorisation file LBCOMAL2
+     C                     MOVE WWTMT     WWAMTP
+     C*
+     C** Format correct number of decimal places
+     C                     MOVE WWDEC2    A6NBDP
+     C*
+     C** Format currency
+     C                     MOVE A6NBDP    ZDECS
+     C                     Z-ADDWWAMTP    ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C*
+     C** Format correct number of decimal places
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRAMP
+     C*                                                                   S01498
+     C**  Process if there is a change in branch                          S01498
+     C*                                                                   S01498
+     C           WLBRCA    IFNE RRBRCA                                    S01498
+     C                     EXSR #BRPR                                     S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     WRITEPARENT
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BABA    -  Process the children                              *
+     C*                                                               *
+     C* CALLS    -  #DBAS3 #DBASZ #ZA #BABAA #ZB                      *
+     C*                                                               *
+     C* CALLED BY-  #BAB                                              *
+     C*                                                               *
+     C*****************************************************************
+     C           #BABA     BEGSR
+     C*
+     C** Set up output fields for parent currency
+     C***********SDCCY     CHAINSDCURRL1             75                   S01498
+     C************IN75     IFEQ '1'                                       S01498
+     C***********A6TYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C** Get currency details using access object                         S01498
+     C*                                                                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM SDCCY     P@CCY                           S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*                                                                   S01498
+     C** Check if error occurred                                          S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVELSDCCY     DBKEY
+     C                     EXSR #DBAS3
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #DBASZ
+     C                     END
+     C                     MOVE A6NBDP    WWDEC2
+     C                     MOVE A6SPRT    WWSRO
+     C                     MOVE A6NBDP    WWDPO
+     C                     MOVE A6MDIN    WWMDO
+     C                     MOVE *ZEROS    WWTMT
+     C                     MOVE *BLANKS   RRPACY
+     C*
+     C** Set up key list for SDLBCSL2 file
+     C                     MOVE BBBRCD    WWBRCD
+     C                     MOVE BBACOC    WWACOC
+     C                     MOVE BBPCNB    WWPCNB
+     C           *IN72     DOWEQ'0'
+     C*
+     C** Flag to ensure output of parent running totals
+     C                     MOVE '1'       WWNOT
+     C*
+     C** Update branch totals array and add to parent running totals
+     C                     EXSR #ZA
+     C***********KLIST1    READESDLBCSL2                 72               S01498
+     C           KLIST1    READELBLBCSJ2                 72               S01498
+     C                     END
+     C                     MOVE BBPCNB    RRPNUM
+     C                     MOVE SDCRNM    RRCRNM
+     C                     MOVE SDCCY     RRPACY
+     C                     MOVE WWDEC2    A6NBDP
+     C*
+     C***Re-read*SDLBCSL2*file*to*output*customer*lines****************   S01498
+     C***********KLIST1    SETLLSDLBCSL2                                  S01498
+     C***********          READ SDLBCSL2                 72               S01498
+     C*                                                                   S01498
+     C** Re-read LBLBCSJ2 file to output customer lines                   S01498
+     C           KLIST1    SETLLLBLBCSJ2                                  S01498
+     C                     READ LBLBCSJ2                 72               S01498
+     C                     MOVE 'Y'       WWFTT   1
+     C           *IN72     DOWEQ'0'
+     C           BBTYLC    ANDNE'D'
+     C                     MOVE BBCUST    WWCUST
+     C           WWCUST    SETLLLBCOMAL2
+     C           WWCUST    READELBCOMAL2                 77
+     C           *IN77     DOWEQ'0'
+     C           CARECI    IFEQ 'D'
+     C*
+     C** Write parent line if first time through
+     C           WWFTT     IFEQ 'Y'
+     C                     EXSR #BABAA
+     C                     MOVE 'N'       WWFTT
+     C                     END
+     C*
+     C** Write customer line
+     C                     EXSR #ZB
+     C                     END
+     C           WWCUST    READELBCOMAL2                 77
+     C                     END
+     C***********KLIST1    READESDLBCSL2                 72               S01498
+     C           KLIST1    READELBLBCSJ2                 72               S01498
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BAB     -  Access SDLBCSL0 file                              *
+     C*                                                               *
+     C* CALLS    -  #BABA #DBAS4 #DBASZ                               *
+     C*                                                               *
+     C* CALLED BY-  #BA                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #BAB      BEGSR
+     C***********BBPCNB    CHAINSDLBCSL0             74                   S01498
+     C           BBPCNB    CHAINLBLBCSJ0             74                   S01498
+     C           *IN74     IFEQ '0'
+     C           SDTYLC    ANDNE'D'
+     C***********SDLOMB    ANDEQ'Y'                                       S01498
+     C                     MOVE SDCRNM    RRPRNM
+     C                     EXSR #BABA
+     C                     ELSE
+     C           *IN74     IFEQ '1'
+     C           SDTYLC    OREQ 'D'
+     C                     EXSR #DBAS4
+     C                     EXSR #DBASZ
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BA      -  Account officer processing                        *
+     C*                                                               *
+     C* CALLS    -  #BAA #BAB #ZA #ZB                                 *
+     C*                                                               *
+     C* CALLED BY-  #B                                                *
+     C*                                                               *
+     C*****************************************************************
+     C           #BA       BEGSR
+     C***********          WRITEHEAD1                                     S01498
+     C*
+     C** Access account officer file
+     C                     EXSR #BAA
+     C***********          WRITEHEAD2                                     S01498
+     C*
+     C** Process until change in account officer
+     C           *IN72     DOWEQ'0'
+     C           BBTYLC    IFNE 'D'
+     C*
+     C** If parent no. exists
+     C           BBPCNB    IFNE *BLANKS
+     C*
+     C** Access SDLBCSL0 file
+     C                     EXSR #BAB
+     C                     ELSE
+     C*
+     C** If customer is not a parent
+     C           BBPAIN    IFNE 'P'
+     C*
+     C***If*customer*is*a*portfolio*lending*customer*******************   S01498
+     C***********CULOMB    ANDEQ'Y'                                       S01498
+     C*
+     C** Flag to prevent parent processing in this case
+     C                     MOVE '0'       WWNOT
+     C*
+     C** Access authorisation file & maintain running totals
+     C                     EXSR #ZA
+     C           *IN72     IFEQ '0'
+     C*
+     C** Write customer line
+     C                     MOVE BBCUST    WWCUST
+     C           WWCUST    SETLLLBCOMAL2
+     C           WWCUST    READELBCOMAL2                 77
+     C           *IN77     DOWEQ'0'
+     C           CARECI    IFEQ 'D'
+     C                     EXSR #ZB
+     C                     END
+     C           WWCUST    READELBCOMAL2                 77
+     C                     END
+     C                     END
+     C                     END
+     C                     MOVE BBBRCD    WWBRCD
+     C                     MOVE BBACOC    WWACOC
+     C*                    MOVE *BLANKS   WWE1NB
+     C                     END
+     C                     END
+     C***********KLIST2    READESDLBCSL2                 72               S01498
+     C           KLIST2    READELBLBCSJ2                 72               S01498
+     C                     END
+     C***********KLIST2    SETGTSDLBCSL2                                  S01498
+     C           KLIST2    SETGTLBLBCSJ2                                  S01498
+     C***********WWNO      IFEQ '1'                                       S01498
+     C***********          WRITENODETL                                    S01498
+     C***********          END                                            S01498
+     C***********          MOVE '1'       WWNO                            S01498
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBA     -  Process branch totals                             *
+     C*                                                               *
+     C* CALLS    -  ZSEDIT                                            *
+     C*                                                               *
+     C* CALLED BY-  #BB                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #BBA      BEGSR
+     C*
+     C** Format currency
+     C                     MOVE A6NBDP    ZDECS
+     C                     Z-ADDWWAMT     ZFLD15
+     C                     MOVE 'J'       ZECODE
+     C*
+     C** Format correct number of decimal places
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRBRC
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BB      -  Process branch totals                             *
+     C*                                                               *
+     C* CALLS    -  #DBASZ #DBAS3 #BBA SCONV                          *
+     C*                                                               *
+     C* CALLED BY-  #B                                                *
+     C*                                                               *
+     C*****************************************************************
+     C           #BB       BEGSR
+     C*
+     C** Write headings
+     C                     WRITEHEAD1
+     C*
+     C** Write branch sub heading
+     C                     WRITEBRTOTS
+     C                     Z-ADD1         X
+     C***********LBCCY     CHAINSDCURRL1             75                   S01498
+     C************IN75     IFEQ '1'                                       S01498
+     C***********A6TYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C** Get currency details using access object                         S01498
+     C*                                                                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM LBCYCD    P@CCY                           S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*                                                                   S01498
+     C** Check if error occurred                                          S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C***********          MOVELLBCCY     DBKEY                           S01498
+     C                     MOVELLBCYCD    DBKEY                           S01498
+     C                     EXSR #DBAS3
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #DBASZ
+     C                     END
+     C                     MOVE A6SPRT    WWSRO
+     C                     MOVE A6NBDP    WWDPO
+     C                     MOVE A6MDIN    WWMDO
+     C                     MOVE A6NBDP    WWDECP
+     C*
+     C** Output line for each branch currency total
+     C           CURR,X    DOWNE*BLANKS
+     C                     MOVE CURR,X    RRBCCY
+     C                     MOVE CAMT,X    WWAMTI
+     C***********CURR,X    CHAINSDCURRL1             75                   S01498
+     C************IN75     IFEQ '1'                                       S01498
+     C***********A6TYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C** Get currency details using access object                         S01498
+     C*                                                                   S01498
+     C                     CALL 'AOCURRR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM CURR,X    P@CCY                           S01498
+     C           SDCURR    PARM SDCURR    DSSDY                           S01498
+     C*                                                                   S01498
+     C** Check if error occurred                                          S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVELCURR,X    DBKEY
+     C                     EXSR #DBAS3
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #DBASZ
+     C                     END
+     C                     Z-ADDCAMT,X    WWAMT
+     C                     EXSR #BBA
+     C*
+     C** Write branch detail line
+     C                     WRITEBRDETL
+     C*
+     C** Set up fields for input currency
+     C***********LBCCY     IFNE CURR,X                                    S01498
+     C           LBCYCD    IFNE CURR,X                                    S01498
+     C                     MOVE A6SPRT    WWSRI
+     C                     MOVE A6NBDP    WWDPI
+     C                     MOVE A6MDIN    WWMDI
+     C                     EXSR SCONV
+     C                     Z-ADDWWAMTO    WWAMT
+     C                     END
+     C*
+     C** Add converted amount to branch running total
+     C                     ADD  WWAMT     WWTOT
+     C                     ADD  1         X
+     C                     END
+     C*
+     C** If there are no details for a whole branch
+     C           CURR,1    IFEQ *BLANKS
+     C                     Z-ADD0         WWTOT
+     C                     WRITEBLKLIN
+     C                     END
+     C*
+     C** Set up fields for output of branch total
+     C                     MOVE WWTOT     WWAMT
+     C                     MOVE WWDECP    A6NBDP
+     C                     EXSR #BBA
+     C*
+     C** Output final branch sub heading
+     C                     WRITEBRFINL
+     C*
+     C** Output final detail line
+     C***********          MOVE LBCCY     RRBCCY                          S01498
+     C                     MOVE LBCYCD    RRBCCY                          S01498
+     C                     WRITEBRDETL
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A       -  Initialisation Subroutine                         *
+     C*                                                               *
+     C* CALLS    -  #DBAS1 #DBASZ #DBAS6                              *
+     C*                                                               *
+     C* CALLED BY-  MAINLINE                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*                                                                   S01498
+     C**  Copyright statement                                             S01498
+     C*                                                                   S01498
+     C                     MOVEACPY@      ACT@   80                       S01498
+     C*                                                                   S01498
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator           S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           RUNDAT                          S01498
+     C                     IN   RUNDAT                                    S01498
+     C           AGMBIN    IFEQ 'Y'                                       S01498
+     C                     MOVE '1'       *IN39                           S01498
+     C                     ELSE                                           S01498
+     C*                                                                   S01498
+     C**  Else, setup appropriate level and entity                        S01498
+     C                     MOVE 'S'       @RLEV                           S01498
+     C                     MOVE *BLANKS   @RENT                           S01498
+     C                     END                                            S01498
+     C*
+     C** Flag to test for no details for individual acc officers
+     C                     MOVE '1'       WWNO    1
+     C*
+     C** Flag to test for no details for individual acc officers
+     C                     MOVE '1'       WWNOD   1
+     C*
+     C** Klist for accessing SDLBCSL0 SDLBCSL2
+     C           KLIST1    KLIST
+     C                     KFLD           WWBRCD  3
+     C                     KFLD           WWACOC  2
+     C                     KFLD           WWPCNB  6
+     C*
+     C** Klist for accessing SDLBCSL2
+     C           KLIST2    KLIST
+     C                     KFLD           WWBRCD
+     C                     KFLD           WWACOC
+     C*
+     C** Initialize printer file fields (Authorisation file)
+     C                     MOVE *BLANKS   RRSPTA
+     C                     MOVE *BLANKS   RRACOC
+     C                     MOVE *BLANKS   RRACON
+     C                     MOVE *BLANKS   RRPNUM
+     C                     MOVE *BLANKS   RRCNUM
+     C                     MOVE *BLANKS   RRCRNM
+     C                     MOVE *BLANKS   RRCACY
+     C                     MOVE *BLANKS   RRPACY
+     C                     MOVE *ZEROS    RRAMP
+     C                     MOVE *ZEROS    RRAMC
+     C                     MOVE *ZEROS    RRBRC
+     C                     MOVE *BLANKS   RRCATD
+     C                     MOVE *BLANKS   RRCAEX
+     C                     MOVE *BLANKS   RRCAVD
+     C                     MOVE *BLANKS   RRCAVF
+     C                     Z-ADD*ZEROS    RRCAVN
+     C                     MOVE *BLANKS   RRCALC
+     C                     MOVE *BLANKS   RRCACH
+     C                     MOVE *BLANKS   RRCAUS
+     C                     MOVE *BLANKS   RRCAN1
+     C                     MOVE *BLANKS   RRCAN2
+     C                     MOVE *BLANKS   RRCAN3
+     C                     MOVE *BLANKS   RRCAN4
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C*
+     C** Initialise database error fields
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'LB0351'  DBPGM
+     C                     MOVE *ZEROS    DBASE
+     C                     OUT  LDA                                       S01498
+     C*
+     C** Initialise switches
+     C                     MOVE '0'       *INU7
+     C                     MOVE '0'       *INU8
+     C*
+     C** Define file controls fields and work fields
+     C           *LIKE     DEFN CACMTL    WWAMTP
+     C           *LIKE     DEFN CACMTL    WWTMT
+     C           *LIKE     DEFN ZFLD15    WWAMT
+     C           *LIKE     DEFN ZFLD15    WWTOT
+     C           *LIKE     DEFN ZDECS     WWDEC2
+     C           *LIKE     DEFN ZDECS     WWDECP
+     C*
+     C** Initialize indicators
+     C                     MOVEA'0000000' *IN,70
+     C                     MOVEA'00'      *IN,78
+     C                     MOVE '0'       *IN98
+     C*
+     C** Initialize run controls and work fields
+     C                     Z-ADD0         RRCT1
+     C                     Z-ADD0         RRNOR1
+     C**********           MOVE *ZEROS    WWCUST  60                                          CSD027
+     C                     MOVE *BLANKS   WWCUST  6                                           CSD027
+     C                     MOVE *BLANKS   WWIND   1
+     C                     MOVE *ZEROS    WWAMTP
+     C                     MOVE *ZEROS    WWDEC2
+     C                     MOVE *ZEROS    WWDECP
+     C                     MOVE *BLANKS   WWNOT   1
+     C                     MOVE *ZEROS    X       30
+     C                     MOVE *ZEROS    Y       30
+     C                     MOVE *ZEROS    WWAMT
+     C                     MOVE *ZEROS    WWTMT
+     C                     MOVE *ZEROS    WWTOT
+     C*
+     C**Access*table*file*for*title*and*date***************************   S01498
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 70               S01498
+     C************IN70     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+     C*                                                                   S01498
+     C**  Get title and date using access object                          S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM '*DBERR'  P@RTCD  7                       S01498
+     C                     PARM '*FIRST'  P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C*                                                                   S01498
+     C**  Check if error occurred                                         S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANK                                    S01498
+     C                     EXSR #DBAS1
+     C                     EXSR #DBASZ
+     C                     END
+     C*
+     C** Check contents of date format indicator
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ELSE
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE '0'       *IN98
+     C                     END
+     C                     END
+     C***********1         SETLLSDLOMBPD                                  S01498
+     C***********          READ SDLOMBPD                 76               S01498
+     C************IN76     IFEQ '1'                                       S01498
+     C***********LBRECI    ORNE 'D'                                       S01498
+     C*                                                                   S01498
+     C**  Access Portfolio Lending ICD using access object                S01498
+     C*                                                                   S01498
+     C                     CALL 'AOLOMBR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*FIRST'  P@OPTN                          S01498
+     C           SDLMB     PARM SDLMB     DSFDY                           S01498
+     C*                                                                   S01498
+     C**  Check if error occurred                                         S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C                     EXSR #DBAS6
+     C                     EXSR #DBASZ
+     C                     END
+     C*                                                                   S01498
+     C** Ensure Audit Spool File recorded by RCF                          S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUMU    ZSNUM2  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @RSEQ                           S01498
+     C                     PARM *BLANK    SENTY                           S01498
+     C                     PARM           SFILEU                          S01498
+     C                     PARM           ZSNUM2                          S01498
+     C                     PARM           ZSERR                           S01498
+     C*                                                                   S01498
+     C** If an error occurred during ZSFILE processing,                   S01498
+     C** return to the calling program.                                   S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #B       -  Main Processing Subroutine                        *
+     C*                                                               *
+     C* CALLS    -  #BA #BB                                           *
+     C*                                                               *
+     C* CALLED BY-  mainline                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C**Access*first*record*on*CLIENT*file*****************************   S01498
+     C***********          READ SDLBCSL2                 71               S01498
+     C*                                                                   S01498
+     C**  If 'ALL' branches selected or entity is blank, access           S01498
+     C**  first record                                                    S01498
+     C*                                                                   S01498
+     C           @RENT     IFEQ 'ALL'                                     S01498
+     C           @RENT     OREQ *BLANKS                                   S01498
+     C                     READ LBLBCSJ2                 71               S01498
+     C*                                                                   S01498
+     C**  Else, position to the selected branch                           S01498
+     C                     ELSE                                           S01498
+     C           @RENT     SETLLLBLBCSJ2                                  S01498
+     C           @RENT     READELBLBCSJ2                 71               S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C           *IN71     IFEQ '1'
+     C                     MOVE '0'       WWNOD
+     C                     END
+     C*
+     C* Process all records
+     C           *IN71     DOWEQ'0'
+     C                     MOVE '0'       *IN72
+     C                     MOVE *BLANKS   CURR
+     C                     MOVE *ZEROS    CAMT
+     C                     MOVE *ZEROS    WWTOT
+     C                     Z-ADD0         X
+     C                     Z-ADD0         Y
+     C*
+     C* Process one branch
+     C           *IN72     DOWEQ'0'
+     C                     MOVE BBBRCD    WWBRCD
+     C                     MOVE BBACOC    WWACOC
+     C                     MOVE BBPCNB    WWPCNB
+     C                     MOVE BBBRCD    WLBRCA  3                       S01498
+     C*
+     C* Process one account officer
+     C                     EXSR #BA
+     C***********BBBRCD    READESDLBCSL2                 72               S01498
+     C           BBBRCD    READELBLBCSJ2                 72               S01498
+     C                     END
+     C*                                                                   S01498
+     C**  Write to printer file if it is open                             S01498
+     C*                                                                   S01498
+     C           WLOPN     IFEQ 'Y'                                       S01498
+     C*
+     C* Output branch totals
+     C                     EXSR #BB
+     C*                                                                   S01498
+     C**  Output "End of Report" if entity is not blank                   S01498
+     C           @RENT     IFNE *BLANKS                                   S01498
+     C                     WRITEENDREP                                    S01498
+     C                     CLOSELB0351P1                                  S01498
+     C                     MOVE *BLANK    WLOPN   1                       S01498
+     C                     END                                            S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C***********BBBRCD    SETGTSDLBCSL2                                  S01498
+     C***********          READ SDLBCSL2                 71               S01498
+     C           BBBRCD    SETGTLBLBCSJ2                                  S01498
+     C                     READ LBLBCSJ2                 71               S01498
+     C*                                                                   S01498
+     C**  If report is only for a specific branch, exit loop              S01498
+     C*                                                                   S01498
+     C           @RENT     IFNE 'ALL'                                     S01498
+     C           @RENT     ANDNE*BLANKS                                   S01498
+     C                     MOVE '1'       *IN71                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C       -  Process run controls report                       *
+     C*                                                               *
+     C* CALLS    -  #DBAS5 #DBASZ                                     *
+     C*                                                               *
+     C* CALLED BY-  mainline                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*                                                                   S01498
+     C** Print footer if entity is blank and printer file is open         S01498
+     C*                                                                   S01498
+     C           @RENT     IFEQ *BLANKS                                   S01498
+     C           WLOPN     ANDEQ'Y'                                       S01498
+     C                     WRITEENDREP                                    S01498
+     C                     CLOSELB0351P1                                  S01498
+     C                     MOVE *BLANK    WLOPN   1                       S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     MOVEL'LBCOMAPD'WWFILE  8
+     C           WWFILE    CHAINLBTRAIPD             79
+     C           *IN79     IFEQ '1'
+     C           TRRECI    ORNE 'T'
+     C                     EXSR #DBAS5
+     C                     EXSR #DBASZ
+     C                     END
+     C                     Z-ADDTRLIVE    RRNOR1
+     C           RRNOR1    COMP RRCT1                2929
+     C*                                                                   S01498
+     C**  Set indicator for DIFFERENCE only if 'ALL' branches selected    S01498
+     C**  or entity is blank                                              S01498
+     C*                                                                   S01498
+     C           @RENT     IFNE 'ALL'                                     S01498
+     C           @RENT     ANDNE*BLANKS                                   S01498
+     C                     MOVE '0'       *IN29                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C           *IN29     IFEQ '1'
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     WRITEPAGEHD
+     C                     WRITERUNCTL
+     C*                                                                   S01498
+     C**  No details to report                                            S01498
+     C*                                                                   S01498
+     C           RRCT1     IFEQ *ZERO                                     S01498
+     C                     WRITENODTLS                                    S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT                                                              S01498
+     C********************************************************************S01498
+     C**                                                                 *S01498
+     C** #BRPR     - Subroutine to process a change in branch            *S01498
+     C**                                                                 *S01498
+     C** CALLS     - none                                                *S01498
+     C**                                                                 *S01498
+     C** CALLED BY - #BABAA, #ZB                                         *S01498
+     C**                                                                 *S01498
+     C********************************************************************S01498
+     C           #BRPR     BEGSR                           **  #BRPR    **S01498
+     C*                                                                   S01498
+     C**  Open printer file LB0351P1 if entity is not blank               S01498
+     C**  or the printer file is not yet open                             S01498
+     C*                                                                   S01498
+     C           @RENT     IFNE *BLANKS                                   S01498
+     C           WLOPN     ORNE 'Y'                                       S01498
+     C                     OPEN LB0351P1                                  S01498
+     C                     MOVE 'Y'       WLOPN                           S01498
+     C*                                                                   S01498
+     C** Ensure Report Spool File recorded by RCF                         S01498
+     C*                                                                   S01498
+     C           @RENT     IFNE *BLANKS                                   S01498
+     C                     MOVE WLBRCA    SENTY                           S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     Z-ADDSFNUM     ZSNUM1  60                      S01498
+     C                     CALL 'ZSFILE'                                  S01498
+     C                     PARM           @RSEQ                           S01498
+     C                     PARM           SENTY   3                       S01498
+     C                     PARM           SFILE                           S01498
+     C                     PARM           ZSNUM1                          S01498
+     C                     PARM           ZSERR   1                       S01498
+     C*                                                                   S01498
+     C** If an error occurred during ZSFILE processing,                   S01498
+     C** return to the calling program.                                   S01498
+     C*                                                                   S01498
+     C           ZSERR     IFEQ 'Y'                                       S01498
+     C                     SETON                     U7U8LR               S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     RETRN                                          S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C**  Reset page and line numbers and initialise fields               S01498
+     C*                                                                   S01498
+     C                     Z-ADD*ZEROS    PAGE                            S01498
+     C                     Z-ADD*ZEROS    LINE                            S01498
+     C                     MOVE WLBRCA    RRBRCA                          S01498
+     C*                                                                   S01498
+     C**  Get branch name using access object                             S01498
+     C*                                                                   S01498
+     C**********           CALL 'AOBRCHR0'                                S01498              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY   ' P@OPTN                          S01498
+     C                     PARM RRBRCA    P@BRCA  3                       S01498
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01498              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   S01498
+     C**  Check if error occurred                                         S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************S01498
+     C                     Z-ADD50        DBASE            * DBERROR 050 *S01498
+     C                     MOVE *BLANKS   DBKEY            ***************S01498
+     C                     MOVELRRBRCA    DBKEY                           S01498
+     C                     OUT  LDA                                       S01498
+     C                     EXSR #ZA                                       S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C                     MOVE A8BRNM    RRBRNM                          S01498
+     C*                                                                   S01498
+     C                     END                                            S01498
+     C*                                                                   S01498
+     C**  Output report headers                                           S01498
+     C*                                                                   S01498
+     C                     WRITEHEAD1                                     S01498
+     C                     WRITEHEAD2                                     S01498
+     C*                                                                   S01498
+     C           #BRPRO    ENDSR                                          S01498
+     C*EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DBAS1   - First database error subroutine                    *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY- #A                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBAS1    BEGSR                           ***************
+     C           *LOCK     IN   LDA                        ***************S01498
+     C                     Z-ADD1         DBASE            *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 001 *
+     C                     MOVE 'SDBANKPD'DBFILE           *             *
+     C                     OUT  LDA                        ***************S01498
+     C                     ENDSR                           ***************
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DBAS2   - Second database error subroutine                   *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY- #BAA                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBAS2    BEGSR                           ***************
+     C           *LOCK     IN   LDA                        ***************S01498
+     C                     Z-ADD2         DBASE            *             *
+     C                     MOVELAZACOC    DBKEY            * DBERROR 002 *
+     C***********          MOVE 'SDACOFL0'DBFILE           *             *S01498
+     C                     MOVE 'SDACOFPD'DBFILE           *             *S01498
+     C                     OUT  LDA                        ***************S01498
+     C                     ENDSR                           ***************
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DBAS3   - Third database error subroutine                    *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY- #ZB #ZA #BABA #BB                                  *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBAS3    BEGSR                           ***************
+     C                     Z-ADD3         DBASE            *             *
+     C*                                                    * DBERROR 003 *
+     C***********          MOVE 'SDCURRL1'DBFILE           *             *S01498
+     C                     MOVE 'SDCURPD1'DBFILE           *             *S01498
+     C                     ENDSR                           ***************
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DBAS4   - Forth database error subroutine                    *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY- #BAB                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBAS4    BEGSR                           ***************
+     C           *LOCK     IN   LDA                        ***************S01498
+     C                     Z-ADD4         DBASE            *             *
+     C                     MOVELBBPCNB    DBKEY            * DBERROR 004 *
+     C***********          MOVE 'SDLBCSL0'DBFILE           *             *S01498
+     C                     MOVE 'LBLBCSJ0'DBFILE           *             *S01498
+     C                     OUT  LDA                        ***************S01498
+     C                     ENDSR                           ***************
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DBAS5   - Fifth database error subroutine                    *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY- #C                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBAS5    BEGSR                           ***************
+     C           *LOCK     IN   LDA                        ***************S01498
+     C                     Z-ADD5         DBASE            *             *
+     C                     MOVELWWFILE    DBKEY            * DBERROR 005 *
+     C                     MOVE 'LBTRAIPD'DBFILE           *             *
+     C                     OUT  LDA                        ***************S01498
+     C                     ENDSR                           ***************
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DBAS6   - Sixth database error subroutine                    *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY- #A                                                 *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBAS6    BEGSR                           ***************
+     C           *LOCK     IN   LDA                        ***************S01498
+     C                     Z-ADD6         DBASE            *             *
+     C                     MOVE *BLANKS   DBKEY            * DBERROR 006 *
+     C                     MOVE 'LBCOMBPD'DBFILE           *             *
+     C                     OUT  LDA                        ***************S01498
+     C                     ENDSR                           ***************
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #DBASZ   - File controls after a database error               *
+     C*                                                               *
+     C* CALLS    -                                                    *
+     C*                                                               *
+     C* CALLED BY- #A #BAA #BAB #BABA #BB #ZB #ZA #C                  *
+     C*                                                               *
+     C*****************************************************************
+     C           #DBASZ    BEGSR
+     C                     WRITEPAGEHD
+     C                     WRITEDBASERR
+     C*                                                                   S01498
+     C**  If printer file LB0351P1 is open, report database error         S01498
+     C           WLOPN     IFEQ 'Y'                                       S01498
+     C                     WRITEDBERROR                                   S01498
+     C                     END                                            S01498
+     C                     EXSR *PSSR                                     S01498
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C* *PSSR    - Program error handling routine.
+     C*
+     C* CALLS             -
+     C*
+     C* CALLED BY         -
+     C*
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C           #PSSR0    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+**   CPY@
+(c) Finastra International Limited 2001
+** Array of powers of 10 for currency conversion S/R SCONV
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

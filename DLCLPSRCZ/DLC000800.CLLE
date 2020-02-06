@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas DMLIB DL files Reorganisation')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Dealing Module                                      */
+/*                                                                   */
+/*       DLC000800 - DL DMLIB Files Reorganisation                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD032067           Date 05Aug15              */
+/*                      MD030178 *CREATE   Date 29May15              */
+/*                      MDnnnnnn           Date nnXxxnn              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD032067 - New trailer files are never organized.           */
+/*                  Included the new trailer files for RGZPFM.       */
+/*       MD030178 - Some DL files are never reorganized. Introduce   */
+/*                  new component to organize DL file in COB.        */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(70)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2015')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('DLC000800 - DL DMLIB Files Reorganisation') TOMSGQ(MRUNQ)
+ 
+/* Reorganise files */
+ 
+             CALL       PGM(SCC000060) PARM('DLBHISPD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+ 
+             CALL       PGM(SCC000060) PARM('DLDLDBQD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+ 
+             CALL       PGM(SCC000060) PARM('DLDLDCQD' '*FIRST')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+ 
+             CALL       PGM(SCC000060) PARM('DLDEAZTD' '*FIRST')                        /*MD032067*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))                /*MD032067*/
+                                                                                        /*MD032067*/
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('DLC000800 - DL DMLIB Files Reorganisation FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

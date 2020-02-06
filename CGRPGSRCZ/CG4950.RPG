@@ -1,0 +1,697 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG FT Mail Payment Orders - Driver')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CG4950 - FT Mail Payment Orders - Driver                     *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 11May06               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 01Jun00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 175479             Date 16Feb00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CEU006             DATE 20APR98               *
+     F*                 S01522             DATE 11JAN95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Change Customer Number to alpha.                    *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  CFT009 - FT Fees and Charge Development-Recompiled           *
+     A*  175479 - Incorporate Fontis : dealer's reference             *
+     A*           Recompiled due to changes in file OTPAYDD.          *
+     F*  CEU006 - EMU FT Payments and Settlements                     *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  01   -    Detail posting - Standing order                    *
+     F*  99   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+     FPRFP8   UF  E           K        DISK         KINFDS FILE1
+     E/SPACE 5
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     E/COPY CGCPYSRC,SRERRE
+     I/SPACE 5
+     IDSPARM    E DSCQPACDD
+     I**  External DS to pass to programs.
+     IDSPAR1    E DSOTPAYDD
+     I              RECI                            ##RECI
+     I              PREF                            ##PREF
+     I              PYTP                            ##PYTP
+     I              PYST                            ##PYST
+     I              SNCT                            ##SNCT
+     I              SNCO                            ##SNCO
+     I              PCCY                            ##PCCY
+     I              PVDT                            ##PVDT
+     I              PVDTD1                          #VDTD1
+     I              PVDTD2                          #VDTD2
+     I              PVDTD3                          #VDTD3
+     I              SWPC                            ##SWPC
+     I              STMT                            ##STMT
+     I              SNMT                            ##SNMT
+     I              RCRT                            ##RCRT
+     I              RCO1                            ##RCO1
+     I              RCO2                            ##RCO2
+     I              RCO3                            ##RCO3
+     I              RCO4                            ##RCO4
+     I              RCO5                            ##RCO5
+     I              ACBT                            ##ACBT
+     I              ACB1                            ##ACB1
+     I              ACB2                            ##ACB2
+     I              ACB3                            ##ACB3
+     I              ACB4                            ##ACB4
+     I              ACB5                            ##ACB5
+     I              BBI1                            ##BBI1
+     I              BBI2                            ##BBI2
+     I              BBI3                            ##BBI3
+     I              BBI4                            ##BBI4
+     I              BBI5                            ##BBI5
+     I              BBI6                            ##BBI6
+     I              LCHT                            ##LCHT
+     I              LCD                             ##LCD
+     I              CHTP                            ##CHTP
+     I              AUP1                            ##AUP1
+     I              AUP2                            ##AUP2
+     I              AUIN                            ##AUIN
+     I              IACG                            ##IACG
+     I              OEDT                            ##OEDT
+     I              OEDTD1                          #EDTD1
+     I              OEDTD2                          #EDTD2
+     I              OEDTD3                          #EDTD3
+     I              CQIN                            ##CQIN
+     I              PRIN                            ##PRIN
+     I              MT202                           #MT202
+     I              TXIN                            ##TXIN
+     I              BAIN                            ##BAIN
+     I              ISIN                            ##ISIN
+     I              MPYI                            ##MPYI
+     I              PBCQ                            ##PBCQ
+     I              AMTS                            ##AMTS
+     I              SVDT                            ##SVDT
+     I              NSTR                            ##NSTR
+     I              TSKS                            ##TSKS
+     I              INUSR1                          #NUSR1
+     I              INUSR2                          #NUSR2
+     I              BRCA                            ##BRCA
+     I              ORBR                            ##ORBR
+     I              MT202C                          #T202C
+     I              BOKC                            ##BOKC
+     I              PRFC                            ##PRFC
+     I              PDCY                            ##PDCY                CEU006
+     I              PDAM                            ##PDAM                CEU006
+     I**  External DS to pass to programs.
+     I*
+     I*
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     IFILE1       DS                                                      S01117
+     I                                      261 270 ##FMT                 S01117
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+     I              LCD                             SDLCD                                     CSC022
+      ** Switchable Features File                                                             CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      ** First DS for Access Programs, short data structure                                   CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - only once        *
+      *                SRINZ  - Initial Processing                    *
+      *                SRAUDT - Audit Report Processing               *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0UPF   3        Update files
+     C                     PARM           W0CMT   3
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+     C                     EXSR SRRFP8                     LF/READVL1
+      *
+      ** Audit processing
+     C                     EXSR SRAUDT
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRRFP8                                         *
+      * Function    :  Process LF/PRFP8                               *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      *****************************************************************
+     C           SRRFP8    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFP8'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Read from FT Pay/Receive Extract
+      *
+     C           *LOVAL    SETLLPRFP8
+     C                     READ PRFP8                    99*
+      *
+      ** Read until End of File
+      *
+     C           *IN99     DOWEQ'0'
+      *
+      **
+     C           ##FMT     IFEQ 'OTPAYDDF'
+     C                     SETON                     01
+     C                     ELSE
+     C                     SETON                     02
+     C                     ENDIF
+      ** Mail Transfers - Outgoing Payments
+      *
+     C           *IN01     IFEQ *ON
+     C                     EXSR SROPAY                     Mail Tfrs - Out Pay
+      *
+      ** Confirmation produced?
+     C           ##RTCD    IFNE 'NOPRNT'
+     C           W0UPF     ANDEQ'YES'
+     C                     MOVEL'C'       MPYI
+     C                     UPDATOTPAYDDF
+      **                                                                                      CSC022
+      ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Mail Transfers - Cheques.
+      *
+     C           *IN02     IFEQ *ON
+     C                     EXSR SRCHQS                     Mail Tfrs - Cheques
+      *
+      ** Confirmation produced?
+     C           ##RTCD    IFNE 'NOPRNT'
+     C           W0UPF     ANDEQ'YES'
+     C                     MOVEL'C'       MPYI
+     C                     UPDATCQPACDDF
+      **                                                                                      CSC022
+      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
+      **   job is not currently running in batch mode                                         CSC022
+      **                                                                                      CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           CSC022    OREQ 'Y'                                                           CSC022
+     C           WCMTSK    ANDEQ'N'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVEA'00'      *IN,01
+      *
+      ** Read next record from FT Pay/Receive Extract
+      *
+     C                     READ PRFP8                    99*
+      *
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXRFP8    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRCHQS                                         *
+      * Function    :  Mail Transfers - Cheques                       *
+      *                                                               *
+      * Called by   :  SRRFP8                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRCHQS    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHQS'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      ** Cheques
+      *
+     C                     CALL 'CG4960'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPARM
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK                     B1
+      *
+     C           ##RTCD    IFNE '*NOPRNT'                  B*2
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4960  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF                           E*2
+     C                     ENDIF                           E1
+      *
+      *................................................................
+      *
+     C           EXCHQS    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SROPAY                                         *
+      * Function    :  Mail Transfers - Outgoing Payments             *
+      *                                                               *
+      * Called by   :  SRRFP8                                         *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SROPAY    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SROPAY'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Increment the count of records read.
+     C                     ADD  1         ##DREC
+      *
+      ** Set up parameter
+     C                     EXSR SRMDTA
+      ** Outgoing payments
+      *
+     C                     CALL 'CG4970'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           DSPAR1
+      *
+      **  Error in called program.
+     C           ##RTCD    IFNE *BLANK                     B1
+      *
+     C           ##RTCD    IFNE '*NOPRNT'                  B*2
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+     C                     MOVEL'CG4970  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 02 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      *................................................................
+      *
+     C           EXOPAY    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRMDTA                                         *
+      * Function    :  Move data into parameter for call              *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRMDTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRMDTA'  @STK,Q
+      *
+      *................................................................
+      *
+     C                     MOVELRECI      ##RECI
+     C                     MOVELPREF      ##PREF
+     C                     MOVELPYTP      ##PYTP
+     C                     MOVELPYST      ##PYST
+     C                     MOVELSNCT      ##SNCT
+     C**********           Z-ADDSNCO      ##SNCO                                              CSD027
+     C                     MOVELSNCO      ##SNCO                                              CSD027
+     C                     MOVELPCCY      ##PCCY
+     C                     Z-ADDPVDT      ##PVDT
+     C                     Z-ADDPVDTD1    #VDTD1
+     C                     Z-ADDPVDTD2    #VDTD2
+     C                     Z-ADDPVDTD3    #VDTD3
+     C                     Z-ADDSWPC      ##SWPC
+     C                     Z-ADDSTMT      ##STMT
+     C                     MOVELSNMT      ##SNMT
+     C                     MOVELRCRT      ##RCRT
+     C                     MOVELRCO1      ##RCO1
+     C                     MOVELRCO2      ##RCO2
+     C                     MOVELRCO3      ##RCO3
+     C                     MOVELRCO4      ##RCO4
+     C                     MOVELRCO5      ##RCO5
+     C                     MOVELACBT      ##ACBT
+     C                     MOVELACB1      ##ACB1
+     C                     MOVELACB2      ##ACB2
+     C                     MOVELACB3      ##ACB3
+     C                     MOVELACB4      ##ACB4
+     C                     MOVELACB5      ##ACB5
+     C                     MOVELBBI1      ##BBI1
+     C                     MOVELBBI2      ##BBI2
+     C                     MOVELBBI3      ##BBI3
+     C                     MOVELBBI4      ##BBI4
+     C                     MOVELBBI5      ##BBI5
+     C                     MOVELBBI6      ##BBI6
+     C                     Z-ADDLCHT      ##LCHT
+     C                     Z-ADDLCD       ##LCD
+     C                     MOVELCHTP      ##CHTP
+     C                     MOVELAUP1      ##AUP1
+     C                     MOVELAUP2      ##AUP2
+     C                     MOVELAUIN      ##AUIN
+     C                     MOVELIACG      ##IACG
+     C                     Z-ADDOEDT      ##OEDT
+     C                     Z-ADDOEDTD1    #EDTD1
+     C                     Z-ADDOEDTD2    #EDTD2
+     C                     Z-ADDOEDTD3    #EDTD3
+     C                     MOVELCQIN      ##CQIN
+     C                     MOVELPRIN      ##PRIN
+     C                     MOVELMT202     #MT202
+     C                     MOVELTXIN      ##TXIN
+     C                     MOVELBAIN      ##BAIN
+     C                     MOVELISIN      ##ISIN
+     C                     MOVELMPYI      ##MPYI
+     C                     Z-ADDPBCQ      ##PBCQ
+     C                     MOVELAMTS      ##AMTS
+     C                     MOVELSVDT      ##SVDT
+     C                     MOVELNSTR      ##NSTR
+     C                     MOVELTSKS      ##TSKS
+     C                     MOVELINUSR1    #NUSR1
+     C                     MOVELINUSR2    #NUSR2
+     C                     MOVELBRCA      ##BRCA
+     C                     MOVELORBR      ##ORBR
+     C                     MOVELMT202C    #T202C
+     C                     MOVELBOKC      ##BOKC
+     C                     MOVELPRFC      ##PRFC
+     C                     MOVELPDCY      ##PDCY                          CEU006
+     C                     MOVELPDAM      ##PDAM                          CEU006
+      *
+      *................................................................
+      *
+     C           EXMDTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4950AU'I#SPLN
+     C                     MOVEL'CG4950  'I#REF
+     C                     MOVE 'CGD1765' I#TITL
+     C                     MOVE 'CGD1766' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing                             *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      *
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##DREC  50
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   PRTCD   7                                           CSC022
+     C                     PARM '*VERIFY' POPTN   7                                           CSC022
+     C                     PARM 'CSC022'  PSARD   7                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           PRTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMTJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           PRTCD     IFNE '*NRF'                                                        CSC022
+     C           *LOCK     IN   LDA                                                           CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     MOVEL'CGZERROR'DBPGM                                               CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     Z-ADD2         DBASE                                               CSC022
+     C                     OUT  LDA                                                           CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRAUDT                                         *
+      * Function    :  Audit Report Processing                        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  CGZAUDIT - Audit Processing                    *
+      *                CG9020   - Write Data to UDC Data Files - Audit*
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG4950  'I#REF
+     C                     MOVE 'CGD1765' I#TITL
+     C                     MOVE 'CGD1766' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'PRFP8   'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      **  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD1765' W0TITL  7
+     C                     PARM 'CGD1766' W0ULIN  7
+     C                     PARM           W0CMT   3
+      *
+      **  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG7800  'I#REF
+     C                     MOVE 'CGD1765' I#TITL
+     C                     MOVE 'CGD1766' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+      *
+     C           ##DREC    IFNE *ZEROS
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     ENDIF
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+      *................................................................
+      *
+     C           EXAUDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

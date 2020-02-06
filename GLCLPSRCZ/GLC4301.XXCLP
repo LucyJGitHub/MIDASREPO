@@ -1,0 +1,203 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CGL061A*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC4301 - Balance Statements - Task Split Server            */
+/*                 Start task Split                                  */
+/*       (c) Misys Banking Systems Ltd. 2006                         */
+/*                                                                   */
+/*       Last Amend No. CGL061A *REDUNDANT Date 06Aug12              */
+/*       Prev Amend No. 256930             Date 30Sep08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      252651             DATE 07Feb08              */
+/*                      252196             Date 07Jan08              */
+/*                      242963             Date 11Oct06              */
+/*                      CGL061  *Create    Date 27Jun06              */
+/*                      xxxxxx             Date ddmmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CGL061A - Statements Task Split Processing                  */
+/*       256930 - Only journal the files if CCB009 is Off            */
+/*       252651 - COB Error - GLC4302                                */
+/*       252196 - CHKOBJ STMTSERVE before creating it                */
+/*       242963 - STMTSERVE Data Queue needs to be created too.      */
+/*       CGL061 - Multi-streaming GL Statements - Task Split         */
+/*                  (Start Task Split)                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* Declare file and variables */
+ 
+             DCLF       FILE(CBCMPNLC)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLC43     ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOURNAL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RECEIVER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NAME1) TYPE(*CHAR) LEN(4) VALUE('STMT')
+             DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
+             DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2006')
+/*                                                                      CCB009*/
+/* Declare variable CCB009 - flag for switchable feature                CCB009*/
+/*                                                                      CCB009*/
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+/* Send message to MRUNQ */
+             SNDPGMMSG  MSG('GLC4301 - Balance Statements +
+                           - Start Task Split') +
+                          TOMSGQ(MRUNQ)
+/*                                                                      CCB009*/
+/** Check for Switchable feature CCB009.                                CCB009*/
+/*                                                                      CCB009*/
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)                            /*CCB009*/
+ 
+/* Determine full JLIB and DTAQLIB library name */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&JLIB) VALUE(&SYSID *CAT 'JLIB')
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Define journal and receiver name */
+ 
+             CHGVAR     VAR(&JOURNAL) VALUE('J' *CAT &CNAME)
+             CHGVAR     VAR(&RECEIVER) VALUE('JR' *CAT &CNAME)
+ 
+/*                                                                      CCB009*/
+/* If Feature CCB009 is NOT 'on' (close of business journaling),        CCB009*/
+/*                                                                      CCB009*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)          /*CCB009*/
+/* Delete journal */
+ 
+             ENDJRNPF   FILE(*ALL) JRN(&JLIB/&JOURNAL)
+             MONMSG     MSGID(CPF7032 CPF9801)
+ 
+             DLTJRN     JRN(&JLIB/&JOURNAL)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+/* Delete journal receiver without any display if not fully saved */
+ 
+             CHGJOB     INQMSGRPY(*DFT)
+ 
+             DLTJRNRCV  JRNRCV(&JLIB/&RECEIVER)
+             MONMSG     MSGID(CPF2105 CPF9801)
+ 
+             CHGJOB     INQMSGRPY(*RQD)
+ 
+/* Create journal/receiver */
+ 
+             CRTJRNRCV  JRNRCV(&JLIB/&RECEIVER) AUT(*LIBCRTAUT)
+             CRTJRN     JRN(&JLIB/&JOURNAL) JRNRCV(&JLIB/&RECEIVER) +
+                          AUT(*LIBCRTAUT)
+ 
+             ENDDO                                                    /*CCB009*/
+/* Clear index file */
+ 
+             CLRPFM     FILE(GLSTMIPD)
+ 
+/* Remove all members from driving file and trailer file */
+ 
+             RMVM       FILE(GLSTAMPD) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+             RMVM       FILE(GLSTAMPA) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Create main data queue */
+ 
+             CHKOBJ     OBJ(&DTAQLIB/STMTSERVE) OBJTYPE(*DTAQ)                            /*252196*/
+             MONMSG     MSGID(CPF9801 CPF2105) EXEC(GOTO +
+                          CMDLBL(CRT_DTAQ))                                               /*252651*/
+             DLTDTAQ    DTAQ(&DTAQLIB/STMTSERVE)                                          /*252651*/
+ CRT_DTAQ:   CRTDTAQ    DTAQ(&DTAQLIB/STMTSERVE) MAXLEN(50)                               /*252651*/
+/*****       MONMSG     MSGID(CPF9801) EXEC(CRTDTAQ +
+                          DTAQ(&DTAQLIB/STMTSERVE) MAXLEN(50))                     /*252196 252651*/
+/**********  CRTDTAQ    DTAQ(&DTAQLIB/STMTSERVE) MAXLEN(50)                          242963 252196*/
+             CALL       PGM(QCLRDTAQ) PARM(STMTSERVE '*LIBL')
+             MONMSG     MSGID(CPF9801)
+ 
+/* Retrieve number of sub-tasks */
+ 
+ CHAIN:      RCVF
+             IF         COND(&DHCOTT *NE &CNAME) THEN(DO)
+             GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+/* Add all members and create data queues */
+ 
+ LOOP:       IF         COND(&LOOP *GT &DHTSNO) THEN(GOTO +
+                          CMDLBL(START))
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
+             ADDPFM     FILE(GLSTAMPD) MBR(&MEMBER)
+             ADDPFM     FILE(GLSTAMPA) MBR(&MEMBER)
+ 
+/* Create data queue if it doesn't already exist and set authorities. */
+             CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)
+                RTVOBJD    OBJ(&DTAQLIB) OBJTYPE(*LIB) OWNER(&OWNER)
+                CHGOBJOWN  OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ) +
+                             NEWOWN(&OWNER)
+             ENDDO
+             CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
+ 
+             IF         COND(&LOOP = 1) THEN(DO)
+             IF         COND(&DHCSEQ = '00001') THEN(DO)
+             CHGVAR     VAR(&NAME2_N) VALUE(01000)
+             ENDDO
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&NAME2_N) VALUE(02000)
+             ENDDO
+             ENDDO
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
+             CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
+             GOTO       CMDLBL(LOOP)
+ 
+/* Start journalling driving/update files */
+/* if Feature CCB009 is NOT 'on' (close of business journaling) */                        /*256930*/
+ 
+ START:                                                                                   /*256930*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)                              /*256930*/
+/**********START:      STRJRNPF   FILE(GLSTAMPD GLSTAMPA GLSTMIPD ACCNTAB) +   */         /*256930*/
+/**********  STRJRNPF   FILE(GLSTAMPD GLSTAMPA GLSTMIPD ACCNTAB) +             */         /*256930*/
+/**********               JRN(&JLIB/&JOURNAL) IMAGES(*BOTH) +                  */         /*256930*/
+/**********               OMTJRNE(*OPNCLO)                                     */         /*256930*/
+             STRJRNPF   FILE(GLSTAMPD GLSTAMPA GLSTMIPD ACCNTAB) +
+                          JRN(&JLIB/&JOURNAL) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)                                                /*256930*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*CCB009*/
+             ENDDO                                                                        /*256930*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GLC4301 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

@@ -1,0 +1,223 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(RETR1)*TOFILE(UPRETRTPD)**************************                       CUP021
+/*X*IB***OVRDBF*FILE(RETR2)*TOFILE(UPRETRTPD)**************************                       CUP021
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      *  UP1300 - Build Action File for SDRETRPD                      *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Prev Amend No. CUP019 *CREATE     Date 30May02               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP019 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - 81 Indicators for changed fields
+      *
+     FRETR1     IF   E             DISK    INFSR(*PSSR)
+     FRETR2     IF   E           K DISK    INFSR(*PSSR)
+     F                                     RENAME(SDRETRD0:RETRF) PREFIX(X)
+     FUPRETRPD  O    E             DISK    INFSR(*PSSR)
+      *
+      /EJECT
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *       Defines:                      142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      * Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    MODE              1
+      *
+     C     COMP          KLIST
+     C                   KFLD                    A1RTTY
+      *
+     C                   READ      RETR1                                6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+     C     COMP          CHAIN     RETRF                              3069
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * If record not found then record has been deleted or added
+      *  depending on mode.
+     C     *IN30         IFEQ      *ON
+     C                   MOVE      MODE          A1ACTC
+     C                   WRITE     UPRETRD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Need to find differences but this should only be run once;
+      *  run only if mode is 'Delete'.
+     C     MODE          IFEQ      'D'
+      *
+      * If record found then look for any differences; only look in
+      *  fields that have data all of the time.
+     C     *IN30         IFEQ      *OFF
+     C                   MOVE      'A'           A1ACTC
+      * Retail Transaction Name
+     C     A1RTNM        IFNE      XA1RTNM
+     C                   SETON                                        70
+     C                   ENDIF
+      * Customer Originated Ind.
+     C     A1COIN        IFNE      XA1COIN
+     C                   SETON                                        71
+     C                   ENDIF
+      * Debit/Credit Indicator
+     C     A1DCIN        IFNE      XA1DCIN
+     C                   SETON                                        72
+     C                   ENDIF
+      * Reversal Indicator
+     C     A1RVIN        IFNE      XA1RVIN
+     C                   SETON                                        73
+     C                   ENDIF
+      * Print Advices Indicator
+     C     A1PADI        IFNE      XA1PADI
+     C                   SETON                                        74
+     C                   ENDIF
+      * Account Commission Ind.
+     C     A1ACOM        IFNE      XA1ACOM
+     C                   SETON                                        75
+     C                   ENDIF
+      * Change to P/folio Capital
+     C     A1CPTC        IFNE      XA1CPTC
+     C                   SETON                                        76
+     C                   ENDIF
+      * Performance Event Type
+     C     A1PFMC        IFNE      XA1PFMC
+     C                   SETON                                        77
+     C                   ENDIF
+      * Applies to Retail Account
+     C     A1ATRA        IFNE      XA1ATRA
+     C                   SETON                                        78
+     C                   ENDIF
+      * Associated GL Number
+     C     A1ASGL        IFNE      XA1ASGL
+     C                   SETON                                        79
+     C                   ENDIF
+      * Passbook Transaction Type
+     C     A1PASB        IFNE      XA1PASB
+     C                   SETON                                        80
+     C                   ENDIF
+      * Cash Indicator
+     C     A1CIND        IFNE      XA1CIND
+     C                   SETON                                        81
+     C                   ENDIF
+      * Clearing Indicator
+     C     A1CLIN        IFNE      XA1CLIN
+     C                   SETON                                        82
+     C                   ENDIF
+      *
+      * Change length of INTEST and INTNUM to match number of fields compared
+     C                   MOVEA     *IN(70)       INTEST           13
+     C                   MOVE      INTEST        INTNUM           13 0
+      * If any indicators are set on then write record.
+     C     INTNUM        IFNE      0
+     C                   WRITE     UPRETRD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      * Set values to write second record.
+     C                   MOVEL     XA1RTNM       A1RTNM
+     C                   MOVEL     XA1COIN       A1COIN
+     C                   MOVEL     XA1DCIN       A1DCIN
+     C                   MOVEL     XA1RVIN       A1RVIN
+     C                   MOVEL     XA1PADI       A1PADI
+     C                   MOVEL     XA1ACOM       A1ACOM
+     C                   MOVEL     XA1CPTC       A1CPTC
+     C                   MOVEL     XA1PFMC       A1PFMC
+     C                   MOVEL     XA1ATRA       A1ATRA
+     C                   MOVEL     XA1ASGL       A1ASGL
+     C                   MOVEL     XA1PASB       A1PASB
+     C                   MOVEL     XA1CIND       A1CIND
+     C                   MOVEL     XA1CLIN       A1CLIN
+      *
+     C                   WRITE     UPRETRD0                             69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+     C                   ENDIF
+      *
+      * Read next record
+     C                   MOVEA     '0000000000'  *IN(70)
+     C                   MOVEA     '0000000000'  *IN(80)
+     C                   READ      RETR1                                6920
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      ********************************************************************

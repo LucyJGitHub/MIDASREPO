@@ -1,0 +1,731 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Future Postings Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0536 - Future Postings Report                              *
+      *                                                               *
+      *  Function: To show the forward valued postings                *
+      *    (COB)   (saved until value date is reached).               *
+      *                                                               *
+      *  Called By: GLC0802C - Midas GL Events by Nostro              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL010 *CREATE     Date 08Nov99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL010 - Future Value Dated Journal Entries for Non-Retail   *
+      *           Accounts                                            *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *           Function of Indicators                              *
+      *           ----------------------                              *
+      *                                                               *
+      *       11     EOF in GLVALPPD                                  *
+      *       20     Close GL0536P1                                   *
+      *       75     Anything to Report                               *
+      *       76     BRCA, CCY & TRAC Continue on the Next Page       *
+      *                                                               *
+      *       U7     Database Error                                   *
+      *       U8     Database Error                                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     FGLVALPL0IF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS INFDS1
+      ** Future Postings - prefix V1
+      ** (sorted by BRCA, CCY, TRAC, CNUM, ACOD & ACSQ)
+      *
+     F/COPY WNCPYSRC,GL0536F001
+     FGL0536P1O   E                    PRINTER      KINFSR *PSSR      UC
+     F                                              KINFDS SPOOL1
+      ** Printer File
+      *
+     FGL0536AUO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+      ** Audit File
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E                    CPY@    1   1 80
+      ** Copyright
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     ILDA         DS                            256
+      ** Local Data Area for Database Error
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     IRUNDAT      DS
+      ** Rundate data area layout file
+      *
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNO
+     I                                       11  11 SUCP
+     I                                       12  12 DTFF
+     I                                       13  13 MBIN
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+      ** PSDS - Fields Appearing as the Commit Text in the Journal
+      *
+     I                                      244 246 WSID
+     I                                      254 263 USRID
+     ISPOOL1      DS
+      ** Printer File Info Area
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OVL
+     I                                    B 367 3680LASTL
+     ISPOOLU      DS
+      ** File Information Data Structure for GL0536AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     IINFDS1    E DSY2I1DSP
+      ** File Information Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Data Structure for Bank Details Access Program
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Data Structure for Currency Details Access Program
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Data Structure for Branch Details Access Program
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure for Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Data Structure for Access Programs
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *          Index of Subroutines                                 *
+      *          --------------------                                 *
+      *                                                               *
+      *  SRINIT - Initialisation Processing                           *
+      *  SRMAIN - Main Processing                                     *
+      *  SRAUDT - Print Audit Report                                  *
+      *  SRTERM - Termination Processing                              *
+      *  *PSSR  - Error Handling Subroutine                           *
+      *  SRRCF1 - Subroutine to register the P1 Printer File via RCF  *
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MAIN     - Top Level of Program                              *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls    : SRINIT  - Initialisation Processing               *
+      *             SRMAIN  - Main Processing                         *
+      *             SRAUDT  - Print Audit Report                      *
+      *             SRTERM  - Termination Processing                  *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Receive entry paramater
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ** Initialisation processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Test existence of Future Postings file
+      *
+     C           *LOVAL    SETLL@VALPL0                10
+      *
+      ** Main processing
+      *
+     C           @1NROP    IFNE 0
+     C                     EXSR SRMAIN
+     C                     ELSE
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** Termination processing
+      *
+     C                     EXSR SRTERM
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   - Initialisation Processing                         *
+      *                                                               *
+      *  Called by: MAIN   - Top Level of Program                     *
+      *                                                               *
+      *  Calls    : *PSSR  - Error Handling Subroutine                *
+      *             SRRCFA - Register AU Printer File via RCF         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Reference Copyright Array
+      *
+     C                     MOVEACPY@      CPY@@   1
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     MOVEL'GL0536  'DBPGM
+     C/COPY WNCPYSRC,GL0536C001
+      *
+      ** Get Multi-Branch indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE *ON       *IN37
+     C                     ELSE
+     C                     MOVE *OFF      *IN37
+     C                     ENDIF
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     Z-ADD001       DBASE            * DBERR 01 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** RCF Processing for Audit File
+      *
+     C                     EXSR SRRCFA
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAIN   - Main Processing                                   *
+      *                                                               *
+      *  Called by: MAIN    - Top Level of Program                    *
+      *                                                               *
+      *  Calls    : *PSSR   - Error Handling Subroutine               *
+      *             SRRCF1  - Register P1 Printer File via RCF        *
+      *             ZFRPED  - Edit Output Amount                      *
+      *             ZDATE2  - Convert Midas Day Number to DDMMYY      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRMAIN    BEGSR
+      *
+     C                     Z-ADD0         WTRACT 150
+     C                     Z-ADD0         WCCYT  150
+     C                     Z-ADD0         WBRCAT 150
+      *
+      ** Read first future posting, save BRCA, CCY & TRAC,
+      ** get number of dec. pos. for the first CCY,
+      ** print first page header
+      *
+     C                     READ @VALPL0                  11
+     C           *IN11     IFEQ *OFF
+     C                     MOVE V1CCY     RCCY
+     C                     MOVE V1TRAC    RTRAC
+     C                     MOVE V1CCY     WCCY    3
+     C                     MOVE V1BRCA    WBRCA   3
+     C**********           MOVE V1TRAC    WTRAC   40                                          CGL029
+     C                     MOVE V1TRAC    WTRAC  100                                          CGL029
+     C                     ELSE
+     C                     MOVE *BLANKS   RCCY
+     C                     MOVE *BLANKS   RTRAC
+     C                     MOVE *BLANKS   A8BRCD
+     C                     MOVE *BLANKS   A8BRNM
+     C                     ENDIF
+      *
+      ** Get Branch Name
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM V1BRCA    WDSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ************
+     C                     Z-ADD004       DBASE            * DBERR 04 *
+     C                     MOVELV1BRCA    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           V1CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCURRL1'DBFILE           ************
+     C                     Z-ADD002       DBASE            * DBERR 02 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN20
+     C                     OPEN GL0536P1
+      *
+      ** RCF Processing for file (spool 1)
+      *
+     C                     EXSR SRRCF1
+      *
+     C                     WRITEHEADP1
+      *
+      ** Loop over all future postings
+      *
+     C           *IN11     DOWEQ*OFF
+      *
+      ** If TRAC, CCY or BRCA has changed, new page
+      *
+     C           V1TRAC    IFNE WTRAC
+     C           V1CCY     ORNE WCCY
+     C           V1BRCA    ORNE WBRCA
+      *
+     C                     MOVE WTRAC     RTRACW
+     C                     MOVE WCCY      RCCYW
+     C                     MOVE WBRCA     RBRCAW
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WTRACT    ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTRACT
+     C                     WRITETOTAL1
+     C                     MOVE V1TRAC    RTRAC
+     C                     MOVE V1TRAC    WTRAC
+     C                     Z-ADD0         WTRACT
+      *
+     C           V1CCY     IFNE WCCY
+     C                     MOVE WCCY      RCCYW
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WCCYT     ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCCYT
+      *
+      ** If overflow by next posting, new page
+      *
+     C           OVL       SUB  LASTL     REST    20
+     C           6         IFGT REST
+     C                     MOVE *ON       *IN76
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN76
+     C                     ENDIF
+     C                     WRITETOTAL2
+     C                     MOVE V1CCY     RCCY
+     C                     MOVE V1CCY     WCCY
+     C                     Z-ADD0         WCCYT
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           V1CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCURRL1'DBFILE           ************
+     C                     Z-ADD003       DBASE            * DBERR 03 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           V1BRCA    IFNE WBRCA
+     C                     MOVE WBRCA     RBRCAW
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WBRCAT    ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RBRCAT
+      *
+      ** If overflow by next posting, new page
+      *
+     C           OVL       SUB  LASTL     REST    20
+     C           7         IFGT REST
+     C                     MOVE *ON       *IN76
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN76
+     C                     ENDIF
+     C                     WRITETOTAL3
+     C                     WRITETRAILP1
+     C                     MOVE *ON       *IN20
+     C                     CLOSEGL0536P1
+     C                     MOVE V1BRCA    WBRCA
+     C                     Z-ADD0         WBRCAT
+      *
+      ** Get Branch Name
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM V1BRCA    WDSNB
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ************
+     C                     Z-ADD005       DBASE            * DBERR 05 *
+     C                     MOVELV1BRCA    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN20     IFEQ *ON
+     C                     MOVE *OFF      *IN20
+     C                     OPEN GL0536P1
+     C                     ENDIF
+      *
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** If overflow by next posting, new page
+      *
+     C           OVL       SUB  LASTL     REST    20
+     C           5         IFGT REST
+     C                     MOVE *ON       *IN76
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN76
+     C                     ENDIF
+      *
+      ** Convert posting date to alpha
+      *
+     C                     Z-ADDV1PSTD    CALCD
+     C                     CALL 'ZDATE2'
+     C                     PARM           CALCD   50
+     C                     PARM '1'       WWFMT   1
+     C                     PARM           WWNUM   60
+     C                     PARM           WWLCD   7
+     C                     MOVE WWLCD     RPSTD
+      *
+      ** Convert value date to alpha
+      *
+     C                     Z-ADDV1VALD    CALCD
+     C                     CALL 'ZDATE2'
+     C                     PARM           CALCD   50
+     C                     PARM '1'       WWFMT   1
+     C                     PARM           WWNUM   60
+     C                     PARM           WWLCD   7
+     C                     MOVE WWLCD     RVALD
+      *
+      ** Print future posting line (1 line)
+      *
+     C                     MOVE V1CNUM    RCNUM
+      *
+     C                     MOVEL*BLANKS   RPNAR  30
+     C                     MOVELV1PNAR    RPNAR
+      *
+     C                     MOVE V1ACOD    RACOD
+     C                     MOVE V1ACSQ    RACSQ
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE V1PSTA    ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RPSTA
+     C           V1DRCR    IFEQ 0
+     C                     MOVE '  '      RPSTA
+     C                     ADD  V1PSTA    WTRACT
+     C                     ADD  V1PSTA    WCCYT
+     C                     ADD  V1PSTA    WBRCAT
+     C                     ELSE
+     C                     MOVE 'CR'      RPSTA
+     C                     SUB  V1PSTA    WTRACT
+     C                     SUB  V1PSTA    WCCYT
+     C                     SUB  V1PSTA    WBRCAT
+     C                     ENDIF
+     C/COPY WNCPYSRC,GL0536C002
+     C                     WRITEDETAIL
+     C                     MOVE *ON       *IN75
+      *
+      ** Read next future posting
+      *
+     C                     READ @VALPL0                  11
+      *
+     C                     ENDDO
+      *
+      ** If at least one record is read, print report
+      *
+     C           *IN75     IFEQ *ON
+      *
+      ** If overflow by next posting, new page
+      *
+     C           OVL       SUB  LASTL     REST    20
+     C           5         IFGT REST
+     C                     MOVE *ON       *IN76
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN76
+     C                     ENDIF
+     C                     MOVE WTRAC     RTRACW
+     C                     MOVE WCCY      RCCYW
+     C                     MOVE WBRCA     RBRCAW
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WTRACT    ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RTRACT
+     C                     WRITETOTAL1
+      *
+     C                     MOVE WCCY      RCCYW
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WCCYT     ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RCCYT
+      *
+      ** If overflow by next posting, new page
+      *
+     C           OVL       SUB  LASTL     REST    20
+     C           6         IFGT REST
+     C                     MOVE *ON       *IN76
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN76
+     C                     ENDIF
+     C                     WRITETOTAL2
+      *
+     C                     MOVE WBRCA     RBRCAW
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE WBRCAT    ZFLD15
+     C                     MOVE 'A'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    RBRCAT
+      *
+      ** If overflow by next posting, new page
+      *
+     C           OVL       SUB  LASTL     REST    20
+     C           7         IFGT REST
+     C                     MOVE *ON       *IN76
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN76
+     C                     ENDIF
+     C                     WRITETOTAL3
+     C                     ENDIF
+      *
+      ** Print end of report
+      *
+     C                     WRITETRAILP1
+     C                     CLOSEGL0536P1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Output Audit Report                                 *
+      *                                                               *
+      *  Called by: MAIN  - Top Level of Program                      *
+      *             *PSSR - Error Handling Subroutine                 *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls
+      *
+     C                     WRITEHEADAU
+      *
+      ** If no records read, output "No Details" message
+      *
+     C           @1NROP    IFEQ 0
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+      ** If there is a DB error, output the DB error information
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRTERM   - Termination Processing                            *
+      *                                                               *
+      *  Called by: MAIN  - Top Level of Program                      *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTERM    BEGSR
+     C/COPY WNCPYSRC,GL0536C003
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR    - Error Handling Subroutine                         *
+      *                                                               *
+      *  Called by: SRMAIN  - Main Processing                         *
+      *                                                               *
+      *  Calls    : SRAUDT  - Print Audit Report                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCF1   - Subroutine to register the P1 Printer File via RCF*
+      *                                                               *
+      *  Called by: SRMAIN  - Main Processing                         *
+      *                                                               *
+      *  Calls    : ZSFILE  - Set up Spool File Numbers File          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCF1    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCFA   - Subroutine to register the AU Printer File via RCF*
+      *                                                               *
+      *  Called By: SRMAIN  - Main Processing                         *
+      *                                                               *
+      *  Calls    : ZSFILE  - Set up Spool File Numbers File          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZFRPEDZ3
+** CPY@
+(c) Finastra International Limited 2001

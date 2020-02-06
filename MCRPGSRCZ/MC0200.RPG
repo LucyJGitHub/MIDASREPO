@@ -1,0 +1,428 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Hist Bal Ctl Group Initial Screen')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Management Accounting Module
+     F*                                                               *
+     F*  MC0200 - Historic Balance Control Groups Maintenance         *
+     F*           (Initial Screen)                                    *
+     F*                                                               *
+     F*  Function: This program displays an initial screen through    *
+     F*  (I/C Int) which a user can input a new historic balance      *
+     F*            control group or amend/delete/enquire upon         *
+     F*            existing historic balance control groups.          *
+     F*                                                               *
+     F*  Called by: MCC0200 - Historic Balance Control Groups         *
+     F*             Maintenance Control                               *
+     F*                                                               *
+     F*  Calls: MC0201 - Historic Balance Control Groups Detail       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 120832             Date 30Jul97               *
+      *                                    Date                       *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  120832 - Deletion not allowed for Primary Control Group      *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FMC0200DFCF  E                    WORKSTN
+     F                                        PRCNO KSFILE SFLRCD
+      * Historic Balance Control Groups Initial Screen
+      *
+     FGLHBCGL1IF  E           K        DISK
+      * Historic Balance Control Groups file - Input
+      *
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  06  -  No records to display                                 *
+      *  10  -  Error on selection field                              *
+      *  30  -  Validation error has occurred                         *
+      *  50  -  End of file on GLHBCGL1 or main subfile               *
+      *  81  -  Clear subfile (N81 Display subfile)                   *
+      *  82  -  SFLNXTCHG
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SETSUB  -  Set up subfiles                                   *
+      *  DSPSCN  -  Display/validate screen                           *
+      *  VALID   -  Validate Input                                    *
+      *  PROREQ  -  Process request(s)                                *
+      *  ZASNMS  -  Send message to program message queue             *
+      *  MSGSUB  -  Set up message subfile                            *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      /SPACE 3
+     IRUNDAT    E DS
+      *
+      **  Run Date DS
+      *
+     IPSDS       SDS
+      *
+      **  Program Status DS
+      *
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I*                                                                   120832
+     ISDMMOD    E DSSDMMODPD                                              120832
+     I**  Modules File Details                                            120832
+     I*                                                                   120832
+     ISDPCAC    E DSSDPCACPD                                              120832
+     I**  Profit Centre Accounting ICD                                    120832
+     I*                                                                   120832
+     IDSFDY     E DSDSFDY                                                 120832
+     I** Short Data Structure for Access Programs                         120832
+     I*                                                                   120832
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  In the Dataarea RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*                                                                   120832
+     C**  Check if Analytical Accounting module is installed.             120832
+     C*                                                                   120832
+     C                     CALL 'AOMMODR0'                                120832
+     C                     PARM '*DBERR  'WRTCD   7                       120832
+     C                     PARM '*FIRST  'WOPTN   7                       120832
+     C           SDMMOD    PARM SDMMOD    DSFDY                           120832
+     C*                                                                   120832
+     C**  Access Profit Centre Accounting details.                        120832
+     C*                                                                   120832
+     C           BGN0ST    IFEQ 'Y'                                       120832
+     C                     CALL 'AOPCACR0'                                120832
+     C                     PARM '*DBERR  'WRTCD                           120832
+     C                     PARM '*FIRST  'WOPTN                           120832
+     C           SDPCAC    PARM SDPCAC    DSFDY                           120832
+     C                     ENDIF                                          120832
+      *
+      **  Move run date (alpha) to screen field for display
+      *
+     C                     MOVELAGMRDT    SMRDT
+      *
+      **  Set up message subfile
+      *
+     C                     EXSR MSGSUB
+      *
+      **  Loop to refresh screen if F5 pressed
+      *
+     C           *INKE     DOUEQ'0'                        *B1
+      *
+      **  Fill main subfile
+      *
+     C                     EXSR SETSUB                     * 1
+      *
+      **  Validate input and display screen until F3 or F5 pressed
+      **  or MC0201 return code of 'E' (exit to menu)
+      *
+     C           *INKC     DOUEQ'1'                        *B2
+     C           *INKE     OREQ '1'                        * 2
+     C           XRETN     OREQ 'E'                        * 2
+     C                     EXSR DSPSCN                     * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                         LR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SETSUB - SR TO INITIALIZE SUBFILES                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SETSUB    BEGSR
+      *
+      **  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      **  Clear subfile
+      *
+     C                     SETON                     81
+     C                     WRITESFLCTLR
+     C                     SETOF                     81
+      *
+      **  Initialize subfile relative record number and position
+      *
+     C                     Z-ADD0         PRCNO   40
+     C                     Z-ADD1         SPOSN
+      *
+      **  Set pointer at start of GLHBCGL1 and read all records on
+      **  file. Create subfile records from those with 'Last Change
+      **  Type' not 'D'.
+      *
+     C           *LOVAL    SETLL@BNRED0
+     C           *IN50     DOUEQ'1'                        *B1
+     C                     READ @BNRED0                  50* 1
+      *
+     C           *IN50     IFEQ '0'                        *B2
+     C           HCTYLC    ANDNE'D'                        * 2
+     C                     SETOF                     10  81* 2
+     C                     MOVEL*BLANKS   SACTN            * 2
+     C                     MOVELHCCGCD    SCGCD            * 2
+     C                     MOVELHCCGDS    SCGDS            * 2
+     C                     MOVELHCPSTC    SPSTC            * 2
+     C                     MOVELHCPSTB    SPSTB            * 2
+     C                     MOVELHCCCYB    SCCYB            * 2
+     C                     ADD  1         PRCNO            * 2
+     C                     WRITESFLRCD                     * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      **  Display error message if no records
+      *
+     C           PRCNO     COMP 0                        06
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DSPSCN - SR TO DISPLAY/VALIDATE SCREEN                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DSPSCN    BEGSR
+      *
+      **  Output screen
+      *
+     C                     WRITEHEADING
+     C                     WRITEFOOTER
+     C                     WRITESFLCTLM
+     C                     EXFMTSFLCTLR
+      *
+      **  Validate screen
+      **  Process requests if no errors found (*IN30 = '0')
+      *
+     C           *INKC     IFEQ '0'                        *B1
+     C           *INKE     ANDEQ'0'                        * 1
+     C                     EXSR VALID                      * 1
+     C  N30                EXSR PROREQ                     * 1
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  VALID - SR TO VALIDATE INPUT                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      **  Clear messages from program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      **  Initialise indicators
+      *
+     C                     SETOF                     30  50
+      *
+      **  Reset SFLRCDNBR
+      *
+     C                     Z-ADD0         SPOSN
+      *
+      **  Read all changed records in subfile (note if *IN06 on
+      **  loop is not performed at all).
+      *
+     C           *IN50     DOWEQ'0'                        *B1
+     C           *IN06     ANDEQ'0'                        * 1
+     C                     READCSFLRCD                   50
+     C           *IN50     IFEQ '0'                        *B2
+      *
+      **  Reset error indicator
+     C                     SETOF                     10    * 2
+      *
+      **  If selection field is blank, set off SFLNXTCHG. If it is
+      **  non-blank set SFLNXTCHG on so that record will be picked up
+      **  by READC either on next validation pass if field invalid, or
+      **  by SR/PROREQ (process requests).
+      *
+     C           SACTN     COMP *BLANKS              8282  * 2
+      *
+      **  If selection field is non-blank, check that it is
+      **  either A, D or E
+      *
+     C           SACTN     IFNE 'A'                        *B3
+     C           SACTN     ANDNE'D'                        * 3
+     C           SACTN     ANDNE'E'                        * 3
+     C           SACTN     ANDNE*BLANKS                    * 3
+     C                     SETON                     10    * 3
+      *
+      **  If first error found, send error message and set subfile
+      **  position
+      *
+     C           *IN30     IFEQ '0'                        * 4
+     C                     SETON                     30    * 4
+     C                     Z-ADDPRCNO     SPOSN            * 4
+     C                     MOVE 'GLX0353' ZAMSID           * 4
+     C                     EXSR ZASNMS                     * 4
+     C                     END                             *E4
+     C                     END                             *E3
+     C*                                                                   120832
+     C**  Deletion not valid for Primary Control Croup.                   120832
+     C*                                                                   120832
+     C           BGN0ST    IFEQ 'Y'                                       120832
+     C           SACTN     ANDEQ'D'                                       120832
+     C           SCGCD     ANDEQFTPRCG                                    120832
+     C                     SETON                     10                   120832
+     C           *IN30     IFEQ '0'                                       120832
+     C                     SETON                     30                   120832
+     C                     Z-ADDPRCNO     SPOSN                           120832
+     C                     MOVE 'GLX0396' ZAMSID                          120832
+     C                     EXSR ZASNMS                                    120832
+     C                     ENDIF                                          120832
+     C                     ENDIF                                          120832
+      *
+     C                     UPDATSFLRCD
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+      **  Set subfile position to 1 if not set
+      *
+     C           SPOSN     IFEQ 0                          *B1
+     C                     Z-ADD1         SPOSN            * 1
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PROREQ - SR TO PROCESS REQUESTS                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROREQ    BEGSR
+      *
+      **  Reset indicators and return code
+      *
+     C                     SETOF                     50
+     C                     MOVEL*BLANKS   XRETN
+      *
+      **  If F9 pressed, call MC0201 to insert record
+      *
+     C           *INKI     IFEQ '1'                        *B1
+     C                     CALL 'MC0201'                   * 1
+     C                     PARM 'I'       XACTN   1        * 1
+     C                     PARM *BLANKS   XCGCD   2        * 1
+     C                     PARM *BLANKS   XRETN   1        * 1
+     C                     END                             *E1
+      *
+      **  Read all subfile records with SFLNXTCHG set on (this will have
+      **  been set on by the validation subroutine SR/VALID).
+      **  Call MC0201 to process each request (exit loop if return code
+      **  non-blank)
+      *
+     C           *IN50     DOWEQ'0'                        *B1
+     C           *IN06     ANDEQ'0'                        * 1
+     C           XRETN     ANDEQ*BLANKS                    * 1
+     C                     READCSFLRCD                   50* 1
+      *
+     C           *IN50     IFEQ '0'                        *B2
+     C                     Z-ADDPRCNO     SPOSN            * 2
+     C                     CALL 'MC0201'                   * 2
+     C                     PARM SACTN     XACTN            * 2
+     C                     PARM SCGCD     XCGCD            * 2
+     C                     PARM *BLANKS   XRETN            * 2
+     C           XRETN     IFEQ *BLANKS                    *B3
+     C                     MOVEL*BLANKS   SACTN            * 3
+     C                     SETOF                     10  82* 3
+     C                     END                             *E3
+      *
+     C                     UPDATSFLRCD                     * 2
+     C                     END                             *E2
+     C                     END                             *E1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS - SR TO SEND MESSAGE TO PROGRAM MESSAGE QUEUE         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      ** Declare message file name
+      *
+     C                     MOVEL'GLUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  MSGSUB - SR SETUP MESSAGE SUBFILE                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MSGSUB    BEGSR
+      *
+      **  Clear all fields to send messages to message queue
+      *
+     C                     MOVEL*BLANK    ZAPGM
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *
+     C                     MOVE *BLANKS   SPGMQ
+     C                     MOVEL'MC0200'  SPGMQ
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

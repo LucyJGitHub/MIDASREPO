@@ -1,0 +1,2450 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL FRA/IRS i/c rate fixing and fix re-run')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL4030 - FRA/IRS Input Cycle Rate Fixing and Rate Fix Re-run *
+      *                                                               *
+      *  Function:  This program runs in two modes to specify FRA and *
+      *             IRS transactions for rate fixing/re-fixing.  For  *
+      *             every deal selected on fixing mode, the rate fix  *
+      *             required indicator on PF/DEALSDG will be updated  *
+      *             with 'P'. On re-run mode, the same indicator will *
+      *             be updated with 'R' which will signify that a deal*
+      *             that has been fixed before is now being fixed     *
+      *             again.                                            *
+      *                                                               *
+      *  (phase(s)) - Input Cycle                                     *
+      *                                                               *
+      *  Called By: DLC4030 - FRAIRS Rate Fixing and Rate Fix Re-run  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 245692             Date 09Dec13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 235350             Date 02Aug05               *
+      *                 CSD031             Date 10Apr06               *
+      *                 227642             Date 24Aug04               *
+      *                 226723             Date 03Mar06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 BUG6872            Date 28Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 217684             Date 12May03               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP056             Date 13Mar02               *
+      *                 CIR008             Date 13Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 177837             Date 05Jun00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW097             Date 02Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSW005  *Create    Date 01Aug96               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for MD23981.                                *
+      *  235350 - Historic Deals should not be displayed. Remove      *
+      *           additional coding on selection introduced by        *
+      *           CSW097. Additionally only show Deals where the     *
+      *           rate has not already been set.                     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  227642 - If short term rate was amended, show short term     *
+      *           rate instead of new base rate.  Changes to logical  *
+      *           file DLDLDGLI.                                      *
+      *  226723 - Correctly display negative rates.                   *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  BUG6872 - Do not include unauthorised / complete deals       *
+      *            on the Rate Fixing maintenance screen.             *
+      *            Filtering done in PF/DLDLDGLH (for rate fixing)    *
+      *            and PF/DLDLDGLH (for re-fixing) so only            *
+      *            recompilation needed for DL4030. (RECOMPILE)       *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  217684 - Authorisation User Malfunction (Recompile)          *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CAP056 - Automatic Authorisation of Interface deals          *
+      *           (Recompile)                                         *
+      *  CIR008 - FRA/IRS Deals Authorisation (Recompile)             *
+      *  CSD006 - Use long DS with SDBSRTPD and SDCURRPD              *
+      *  177837 - Identify properly the rate to be fixed.             *
+      *  CSW097 - MT34*, MT36* message generation.                    *
+      *  CSW005 - MG34n and MG36n Message Generation                  *
+      *                                                               *
+      *****************************************************************
+     FDLDLDGLHUF  E           K        DISK         KINFSR *PSSR      UC
+     F            DLDLDGHF1                         KRENAMEDLDGHF1
+     F            DLDLDGHF2                         KRENAMEDLDGHF2
+     F                                              KCOMIT
+     FDLDLDGLIUF  E           K        DISK         KINFSR *PSSR      UC
+     F            DLDLDGIF1                         KRENAMEDLDGIF1
+     F            DLDLDGIF2                         KRENAMEDLDGIF2
+     F                                              KCOMIT
+     F/COPY WNCPYSRC,DL4030F001
+     FDL4030DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE DL4030S0
+     F                                        RRN1  KSFILE DL4030S1
+      *
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N    O F   I N D I C A T O R S                 *
+      *                                                               *
+      *   01      Condition screen title                              *
+      *   03      Function key 3 (Exit)                               *
+      *   05      Function key 5 (Refresh)                            *
+      *   12      Function key 12 (Initial screen)                    *
+      *   13      Function key 13 (Select all)                        *
+      *   33      Function key 13 (Select all)                        *
+      *   40      End of file (DLDLDGLH & DLDLDGLI)                   *
+      *   41      End of subfile (READC & CHAIN)                      *
+      *   50      Error in booking branch                             *
+      *   51      Error in deal type                                  *
+      *   52      Error in currency code                              *
+      *   53      Error in base rate code                             *
+      *   71      Read format 1 of DLDLDGLH (DLDGHF1)                 *
+      *   72      Read format 2 of DLDLDGLH (DLDGHF2)                 *
+      *   73      Read format 1 of DLDLDGLI (DLDGIF1)                 *
+      *   74      Read format 2 of DLDLDGLI (DLDGIF2)                 *
+      *  N75      Subfile display  (SFLDSP)                           *
+      *  N75      Subfile dispaly control (SFLDSPCTL)                 *
+      *   75      Subfile clear (SFLCLR)                              *
+      *   95      Subfile next change (SFLNXTCHG)& riverse image      *
+      *   96      Subfile (SEL field) protect                         *
+      *   U7      Database error                                      *
+      *   U8      Databse error                                       *
+      *   LR      Exit program                                        *
+      *****************************************************************
+      /EJECT
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  #INTLZ - Initialisation process                              *
+      *  #VALDT - Input validation process                            *
+      *  CLRMSG - Clear program message queue                         *
+      *  #SFLSC - Subfile screen process                              *
+      *  #SFLLD - Subfile load process                                *
+      *  SFLFIX - Load records due for rate fixing                    *
+      *  SFLREF - Load records due for rate re-fixing                 *
+      *  WRTSFL - Write records to subfile                            *
+      *  ZEDIT  - Put decimal point currency                          *
+      *  ZDATE1 - Convert charater date to numeric   (5,0)            *
+      *  ZDATE2 - Convert numeric date to character  (DDMMMYY-7A)     *
+      *  #UPDF  - File update process                                 *
+      *  FIXREC - Fix/Refix a subfile record                          *
+      *  PRCALL - Process all subfile records                         *
+      *  PRCSEL - Process selected subfile records                    *
+      *  RGZSFL - Reorganize subfile (Remove fixed/re-fixed from SFL) *
+      *  VALSEL - Validate Select field (Must be 'X')                 *
+      *  ENDPGM - End program process                                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+      *
+     IDLDGHF1     71
+     IDLDGHF2     72
+     IDLDGIF1     73
+     IDLDGIF2     74
+     I/COPY WNCPYSRC,DL4030I002
+      *
+     I/SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     I            DS
+     I                                        1   20DD
+     I                                        3   40MM
+     I                                        5   60YY
+     I                                        1   60ZDATE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDBSRT    E DSSDBSRTPD
+      *
+      ** SD Base Rate Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** SD Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** SD Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** SD Currency Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+      *
+      ** SD Customer Details
+      *
+     ISDDEAL    E DSSDDEALPD                                                                  245692
+     I              QQACCD                          @@ACCD                                    245692
+     I** DUMMY RECORD FORMAT FOR DEALING ICD DETAILS                                          245692
+     I*                                                                                       245692
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Long Data Structure
+      *
+     I/COPY WNCPYSRC,DL4030I001
+     I              'Booking Branch'      C         BRANCH
+     I              'Deal Type'           C         DEAL
+     I              'Currency'            C         CURRY
+     I              '       STR  '        C         @SNRT                 CSW097
+      /EJECT
+      /TITLE Main Processing
+      *****************************************************************
+      * P R O G R A M    S T A R T
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Perform Initialisation
+      *
+     C                     EXSR #INTLZ
+      *
+      ** Do until F3 is pressed
+      *
+     C           *IN03     DOUEQ'1'
+      *
+      ** Display Error Message(s)
+      *
+     C                     WRITE#MSGCTL
+      *
+      ** Move work fields to save fields
+      *
+     C                     MOVE SBRCA     SVBRCA
+     C                     MOVE SDTYP     SVDTYP
+     C                     MOVE SCCY      SVCCY
+     C                     MOVE SBRTT     SVBRTT
+     C/COPY WNCPYSRC,DL4030C001
+      *
+      ** Display and Read Initial Screen
+      *
+     C                     EXFMTDL4030F0
+      *
+      ** Clear Program Message Queue
+      *
+     C                     EXSR CLRMSG
+      *
+      ** F5 is pressed (Refresh)
+      ** Initialise screen fields
+      *
+     C           *IN05     IFEQ '1'
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SDTYP
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SBRTT
+     C                     MOVE *BLANKS   WFIX
+     C/COPY WNCPYSRC,DL4030C002
+     C                     ENDIF
+      *
+      ** Enter is pressed
+      ** Validate Screen Input
+      *
+     C           *IN05     IFEQ '0'
+     C           *IN03     ANDEQ'0'
+      *
+     C                     EXSR #VALDT
+      *
+     C           DTAOK     IFEQ 'Y'
+     C/COPY WNCPYSRC,DL4030C003
+     C           WFIX      IFEQ '1'
+     C           SBRCA     IFNE SVBRCA
+     C           SDTYP     ORNE SVDTYP
+     C           SCCY      ORNE SVCCY
+     C           SBRTT     ORNE SVBRTT
+     C                     ITER
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C004
+      *
+     C                     EXSR CLRMSG
+     C                     EXSR #SFLSC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     EXSR ENDPGM
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #VALDT - Validate Input                                       *
+      *                                                               *
+      * Called by: Main Processing Routine                            *
+      *                                                               *
+      * Calls: AOBRCHR0 - Access object for SDBRCHPD                  *
+      *        AOCURRR0 - Access object for SDCURRPD                  *
+      *        AOBSRTR0 - Access object for SDBSRTPD                  *
+      *        ZVACTBU  - Check for authorisation                     *
+      *        ZASNMS   - Send program message                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #VALDT    BEGSR
+      *
+      ** I. Validate Branch Code
+      *
+      ** 1. Booking Branch entered must be a valid record in SDBRCHPD
+      *
+     C           SBRCA     IFNE *BLANK
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY '@OPTN   7
+     C                     PARM           SBRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFEQ '*NRF'
+     C                     MOVEL'DLM1000 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *
+      ** 2. If Booking Branch entered is valid
+      **       Check if user is authorised
+      *
+     C           *IN50     IFEQ '0'
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       ZACTN   1
+     C                     PARM SBRCA     ZBRCD   3
+     C                     PARM           ERR     10
+      *
+     C           ERR       IFNE 0
+     C                     MOVEL'DLM1001 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** II. Validate Deal Type
+      *
+      * 1. Booking branch must not be blank if deal type is not
+      *    blank
+      *
+     C           SDTYP     IFNE *BLANK
+     C           SBRCA     ANDEQ*BLANK
+     C                     MOVEL'DLM1009 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *
+      ** 2. Deal type must either be 'FR', 'RS', 'RX' or BLANK
+      *
+     C           SDTYP     IFNE 'FR'
+     C           SDTYP     ANDNE'RS'
+     C           SDTYP     ANDNE'RX'
+     C           SDTYP     ANDNE*BLANK
+      *
+     C                     MOVEL'DLM1002 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN51
+      *
+     C                     ENDIF
+      *
+      ** III. Validate Currency
+      *
+      **      Branch Code and/or Deal Type must not be blank if currency
+      **      is not blank
+      *
+     C           SCCY      IFNE *BLANKS
+      *
+     C           SBRCA     IFEQ *BLANK
+     C           SDTYP     OREQ *BLANK
+      *
+     C                     MOVE *BLANKS   ZAMSDA
+      *
+     C                     SELEC
+      *
+     C           SBRCA     WHEQ *BLANK
+     C           SDTYP     ANDEQ*BLANK
+      *
+     C           ZAMSDA    CAT  BRANCH:1  ZAMSDA    P
+     C           ZAMSDA    CAT  'and':1   ZAMSDA    P
+     C           ZAMSDA    CAT  DEAL:1    ZAMSDA    P
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN51
+      *
+     C           SDTYP     WHEQ *BLANK
+      *
+     C           ZAMSDA    CAT  DEAL:1    ZAMSDA    P
+     C                     MOVE '1'       *IN51
+      *
+     C                     ENDSL
+      *
+     C           *IN51     IFEQ '1'
+     C                     MOVEL'DLM1004 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * 2. Currency Code entered must be a valid record in SDCURRPD
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY '@OPTN   7
+     C                     PARM           SCCY
+     C***********SDCURR    PARM SDCURR    DSFDY                                               CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                                               CSD006
+      *
+     C           @RTCD     IFEQ '*NRF'
+     C                     MOVEL'DLM1003 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN52
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** IV. Validate Base Rate Code
+      *
+     C                     MOVE *BLANK    WFIX
+      *
+     C           SBRTT     IFNE *BLANK
+      *
+      * 1. If Base Rate Code entered is valid and Currency is valid
+      *       Branch Code, Deal Type and Currency must not be BLANK
+      *
+     C           SBRCA     IFEQ *BLANK
+     C           SDTYP     OREQ *BLANK
+     C           SCCY      OREQ *BLANK
+      *
+     C                     MOVE *BLANKS   ZAMSDA
+      *
+     C                     SELEC
+      *
+     C           SBRCA     WHEQ *BLANK
+     C           SDTYP     ANDEQ*BLANK
+     C           SCCY      ANDEQ*BLANK
+      *
+     C           ZAMSDA    CAT  BRANCH:1  ZAMSDA    P
+     C           ZAMSDA    CAT  ',':0     ZAMSDA    P
+     C           ZAMSDA    CAT  DEAL:1    ZAMSDA    P
+     C           ZAMSDA    CAT  'and':1   ZAMSDA    P
+     C           ZAMSDA    CAT  CURRY:1   ZAMSDA    P
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN52
+      *
+     C           SDTYP     WHEQ *BLANK
+     C           SCCY      ANDEQ*BLANK
+      *
+     C           ZAMSDA    CAT  DEAL:1    ZAMSDA    P
+     C           ZAMSDA    CAT  'and':1   ZAMSDA    P
+     C           ZAMSDA    CAT  CURRY:1   ZAMSDA    P
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN52
+      *
+     C           SCCY      WHEQ *BLANK
+      *
+     C           ZAMSDA    CAT  CURRY:1   ZAMSDA    P
+     C                     MOVE '1'       *IN52
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C           *IN52     IFEQ '1'
+     C           SCCY      ANDEQ*BLANKS
+     C                     MOVEL'DLM1006 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+      * 2. Base Rate Code entered must from range 01-99
+      *
+     C                     Z-ADD*ZERO     NBRTT   20
+     C                     TESTN          SBRTT      80
+     C           *IN80     IFEQ '1'
+     C                     MOVE SBRTT     NBRTT
+     C                     ENDIF
+     C*
+     C           NBRTT     IFLE *ZERO
+     C           *IN80     OREQ '0'
+      *
+     C                     MOVEL'DLM1005 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN53
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      * 3. Combination of Currency and Base Rate Code
+      *    must exist on file (SDBSRTPD)
+      *
+     C           *IN50     IFEQ '0'
+     C           *IN51     ANDEQ'0'
+     C           *IN52     ANDEQ'0'
+     C           *IN53     ANDEQ'0'
+     C           SBRTT     ANDNE*BLANK
+     C           SCCY      ANDNE*BLANK
+      *
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCCY
+     C                     PARM           SBRTT
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                                 CSD006
+      *
+     C           @RTCD     IFEQ '*NRF'
+      *
+     C                     MOVEL'DLM1007 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN53
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C005
+      *
+      ** If an error occur on any field
+      *
+     C           *IN50     IFEQ '1'
+     C           *IN51     OREQ '1'
+     C           *IN52     OREQ '1'
+     C           *IN53     OREQ '1'
+      *
+     C                     MOVE 'N'       DTAOK
+      *
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C006
+      *
+      * V. If MODE = 0 (Rate Fix) and Base Rate Code has value
+      *       Set WFIX to blank and access Last Change Date (BALCD)
+      *       If Last Change Date is not equal to Run Date
+      *          Display warning message and set WFIX to '1'
+      *
+     C           DTAOK     IFEQ 'Y'
+      *
+     C           SBRTT     IFNE *BLANKS
+     C           MODE      ANDEQ'0'
+      *
+     C                     MOVE *BLANK    WFIX
+     C           BALCD     IFNE BJRDNB
+      *
+     C                     MOVEL'DLM1008 'ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       WFIX
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #SFLSC - Subfile Screen Process                               *
+      *                                                               *
+      * Called by: Main Processing Routine                            *
+      *                                                               *
+      * Calls: #SFLLD - Subfile load process                          *
+      *        CLRMSG - Clear program message queue                   *
+      *        PRCALL - Process all subfile records                   *
+      *        PRCSEL - Process selected records                      *
+      *        RGZSFL - Reorganize subfile                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #SFLSC    BEGSR
+      *
+      ** Initialise first subfile to blank
+      *
+     C                     MOVE '1'       *IN75
+     C                     WRITEDL4030C0
+     C                     MOVE '0'       *IN75
+      *
+     C                     Z-ADD0         RRN     40
+     C                     Z-ADD0         SVRRN   40
+      *
+      ** Enable  'F13=Select All' and 'F13' key
+      *
+     C                     MOVE '1'       *IN33
+      *
+      ** Position the file pointer
+      *
+     C/COPY WNCPYSRC,DL4030C007
+     C           MODE      IFEQ '0'
+      *
+     C                     SELEC
+      *
+     C           SBRTT     WHNE *BLANK
+      *
+     C           @KEY3     SETLLDLDLDGLH
+      *
+     C           SCCY      WHNE *BLANK
+      *
+     C           @KEY2     SETLLDLDLDGLH
+      *
+     C           SDTYP     WHNE *BLANK
+      *
+     C           @KEY1     SETLLDLDLDGLH
+      *
+     C           SBRCA     WHNE *BLANK
+      *
+     C           SBRCA     SETLLDLDLDGLH
+      *
+     C                     OTHER
+      *
+     C           *LOVAL    SETLLDLDLDGLH
+      *
+     C                     ENDSL
+      *
+     C                     ELSE
+      *
+     C                     SELEC
+      *
+     C           SBRTT     WHNE *BLANK
+      *
+     C           @KEY3     SETLLDLDLDGLI
+      *
+     C           SCCY      WHNE *BLANK
+      *
+     C           @KEY2     SETLLDLDLDGLI
+      *
+     C           SDTYP     WHNE *BLANK
+      *
+     C           @KEY1     SETLLDLDLDGLI
+      *
+     C           SBRCA     WHNE *BLANK
+      *
+     C           SBRCA     SETLLDLDLDGLI
+      *
+     C                     OTHER
+      *
+     C           *LOVAL    SETLLDLDLDGLI
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C008
+      *
+      ** Load record(s) to subfile
+      *
+     C                     EXSR #SFLLD
+      *
+      ** Initialise RRN to 1 to position the
+      ** cursor to the first subfile record
+      *
+     C           SVRRN     IFGT 1
+     C                     Z-ADD1         RRN
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN12
+      *
+      ** Continue until F3 or F12 is pressed
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+      *
+      ** Display Screen Header, Footer & Messages
+      *
+     C                     WRITEDL4030F1
+     C                     WRITEDL4030F3
+     C                     WRITE#MSGCTL
+      *
+      ** Commit updated record(s)
+      *
+     C           #UPDAT    IFEQ 'Y'
+     C                     COMIT
+     C                     MOVE 'N'       #UPDAT  1
+     C                     ENDIF
+      *
+      ** Display '***  NO DETAIL TO DISPLAY  ***'
+      *
+     C           RRN       IFEQ 0
+     C                     EXFMTDL4030F2
+     C                     ITER
+     C                     ENDIF
+      *
+      ** Display for available record(s) for fixing/refixing
+      *
+     C                     EXFMTDL4030C0
+      *
+      ** Clear program message queue
+      *
+     C                     EXSR CLRMSG
+      *
+      ** F12 is taken (Initial Screen)
+      *
+     C           *IN12     IFEQ '1'
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SDTYP
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SBRTT
+     C                     MOVE *BLANK    WFIX
+     C/COPY WNCPYSRC,DL4030C009
+     C                     ENDIF
+      *
+      ** F13 is taken (Select All)
+      *
+     C           *IN13     IFEQ '1'
+     C                     EXSR PRCALL
+     C                     EXSR RGZSFL
+     C           RRN       IFGT *ZERO
+     C                     Z-ADD1         RRN
+     C           MODE      IFEQ '0'
+     C                     MOVE 'DLM1010' ZAMSID
+     C                     ELSE
+     C                     MOVE 'DLM1011' ZAMSID
+     C                     ENDIF
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Roll Up is taken
+      *
+     C           *IN28     IFEQ '1'
+     C                     EXSR #SFLLD
+     C                     ENDIF
+      *
+      ** Enter is taken
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C           *IN13     ANDEQ'0'
+     C           *IN28     ANDEQ'0'
+      *
+     C                     EXSR PRCSEL
+     C                     EXSR RGZSFL
+      *
+     C           SVRRN     IFGT *ZERO
+      *
+     C           WRNREC    IFGT SVRRN
+     C                     Z-ADDSVRRN     RRN
+     C                     ELSE
+     C                     Z-ADDWRNREC    RRN
+     C                     ENDIF
+      *
+     C           WSLCTD    IFNE 'Y'
+     C                     Z-ADD1         RRN
+     C                     ENDIF
+      *
+     C           SELERR    IFEQ '1'
+     C                     MOVE 'DLM1014' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           DSPWRN    IFEQ 'Y'
+      *
+     C           MODE      IFEQ '0'
+     C                     MOVE 'DLM1012' ZAMSID
+     C                     ELSE
+     C                     MOVE 'DLM1013' ZAMSID
+     C                     ENDIF
+     C                     EXSR ZASNMS
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * RGZSFL - Re-organize Subfile                                  *
+      *          Since 'DELET' operation code is not applicable to    *
+      *          subfile this subroutine is written to perform such   *
+      *          function.                                            *
+      *                                                               *
+      * Called by: #SFLSC                                             *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RGZSFL    BEGSR
+      *
+      ** Initialise the second subfile to blank
+      *
+     C                     MOVE '1'       *IN75
+     C                     WRITEDL4030C1
+     C                     MOVE '0'       *IN75
+      *
+     C                     Z-ADD0         RRN1    40
+     C                     Z-ADD1         Z       40
+      *
+      ** Transfer all non-blank records (SDLNO NE *BLANK)
+      ** in the first subfile to second subfile
+      *
+     C           Z         DOWLESVRRN
+      *
+     C           Z         CHAINDL4030S0             41
+     C           SDLNO     IFNE *BLANK
+      *
+     C                     MOVE SEL       SEL1
+     C                     MOVE SSERR     SSERR1
+     C                     MOVE SDLNO     SDLNO1
+     C                     MOVE SCNUM     SCNUM1
+     C                     MOVE SBRCH     SBRCH1
+     C                     MOVE SDLTP     SDLTP1
+     C                     MOVE SCCYS     SCCYS1
+     C                     MOVE SBRTC     SBRTC1
+     C                     MOVE SWIFT     SWIFT1
+     C                     MOVE SBSOT     SBSOT1
+     C                     MOVE SEINR     SEINR1
+     C                     MOVE SSIGN     SSIGN1                                              226723
+     C                     MOVE SNRT      SNRT1
+     C                     MOVE SNSGN     SNSGN1                                              226723
+     C                     MOVE SLCD      SLCD1                           CSW097
+     C                     MOVE WARN      WARN1
+     C                     MOVE SRFIN     SRFIN1
+     C                     ADD  1         RRN1
+     C                     WRITEDL4030S1
+      *
+     C                     ENDIF
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADDRRN1      SVRRN
+      *
+      ** Initialise the first subfile to blank
+      *
+     C                     MOVE '1'       *IN75
+     C                     WRITEDL4030C0
+     C                     MOVE '0'       *IN75
+      *
+     C                     Z-ADD*ZERO     RRN
+     C                     Z-ADD1         Z       40
+      *
+      ** Transfer all records from the
+      ** second subfile to the first subfile
+      *
+     C           Z         DOWLESVRRN
+      *
+     C           Z         CHAINDL4030S1             41
+     C                     MOVE SSERR1    *IN02
+     C                     MOVE SEL1      SEL
+     C                     MOVE SSERR1    SSERR
+     C                     MOVE SDLNO1    SDLNO
+     C                     MOVE SCNUM1    SCNUM
+     C                     MOVE SBRCH1    SBRCH
+     C                     MOVE SDLTP1    SDLTP
+     C                     MOVE SCCYS1    SCCYS
+     C                     MOVE SBRTC1    SBRTC
+     C                     MOVE SWIFT1    SWIFT
+     C                     MOVE SBSOT1    SBSOT
+     C                     MOVE SEINR1    SEINR
+     C                     MOVE SSIGN1    SSIGN                                               226723
+     C                     MOVE SNRT1     SNRT
+     C                     MOVE SNSGN1    SNSGN                                               226723
+     C                     MOVE SLCD1     SLCD                            CSW097
+     C                     MOVE WARN1     WARN
+     C                     MOVE SRFIN1    SRFIN
+     C                     ADD  1         RRN
+     C                     ADD  1         Z
+     C                     WRITEDL4030S0
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #SFLLD - Subfile Load Process                                 *
+      *                                                               *
+      * Called by: #SFLSC                                             *
+      *                                                               *
+      * Calls: SFLFIX - Load Subfile Records Due for Fixing           *
+      *        SFLREF - Load Subfile Records Due for Re-fixing        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #SFLLD    BEGSR
+      *
+     C           MODE      IFEQ '0'
+      *
+     C                     EXSR SFLFIX
+      *
+     C                     ELSE
+      *
+     C                     EXSR SFLREF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SFLFIX - Load Subfile Records Due for Fixing                  *
+      *                                                               *
+      * Called by: #SFLLD                                             *
+      *                                                               *
+      * Calls: ZVACTBU - Check for authorisation                      *
+      *        WRTSFL  - Write to subfile record                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SFLFIX    BEGSR
+      *
+     C                     Z-ADD0         PSIZE   40
+      *
+      ** Set Off Format Indicator
+      ** Indicate which record format was read
+      *
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN72
+      *
+      ** 1. Booking Branch is BLANK
+      *
+     C           SBRCA     IFEQ *BLANK
+      *
+     C/COPY WNCPYSRC,DL4030C010
+     C                     READ DLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C011
+      *
+      ** Do While Not End of File
+      *
+     C           *IN40     DOWEQ'0'
+      *
+     C                     MOVE BRCA      SVBRCH  3
+     C                     Z-ADD0         PSIZE
+      *
+      ** Check if user is authorise to this branch
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       ZACTN   1
+     C                     PARM SVBRCH    ZBRCD   3
+     C                     PARM           ERR     10
+      *
+      ** If authorise (ERR = 0)
+      *
+     C           ERR       IFEQ 0
+      *
+      ** Do while not end of file (DLDLDGLH) and
+      ** there's no change in booking branch and
+      ** subfile page not full
+      *
+     C           *IN40     DOWEQ'0'
+     C           BRCA      ANDEQSVBRCH
+     C           PSIZE     ANDLT5
+      *
+      ** Check if this record is due for fixing
+      ** if it is then write to subfile
+      *
+     C                     TESTB'1'       ACEI           96               CSW097
+     C                     TESTB'0'       DNSI           97               CSW097
+     C           BJRDNB    IFGE INFD
+     C           INFD      ANDNE*ZERO
+     C           EINR      ANDEQ*ZERO                                                         235350
+     C********** *IN96     OREQ '0'                        NOT YET VALUDTECSW097              235350
+     C********** *IN97     ANDEQ'1'                        EFF INT RTE SETCSW097              235350
+     C********** VDAT      ANDGEBJRDNB                                    177837              235350
+      *
+     C                     EXSR WRTSFL
+      *
+     C                     ENDIF
+      *
+      ** Set off format indicators
+      *
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN72
+      *
+     C/COPY WNCPYSRC,DL4030C012
+     C                     READ DLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C013
+      *
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+      ** User is not authorise skip to next branch
+      *
+     C/COPY WNCPYSRC,DL4030C014
+     C           SVBRCH    SETGTDLDLDGLH             40
+      *
+     C                     READ DLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C015
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** 2. If Booking Branch is NOT BLANK and
+      **      Deal Type       is     BLANK and
+      **      Currency Code   is     BLANK and
+      **      Base Rate Code  is     BLANK
+      *
+     C           SBRCA     IFNE *BLANK
+     C           SDTYP     ANDEQ*BLANK
+     C           SCCY      ANDEQ*BLANK
+     C           SBRTT     ANDEQ*BLANK
+      *
+     C/COPY WNCPYSRC,DL4030C016
+     C           SBRCA     READEDLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C017
+      *
+     C           *IN40     DOWEQ'0'
+     C           PSIZE     ANDLT5
+      *
+     C                     TESTB'1'       ACEI           96               CSW097
+     C                     TESTB'0'       DNSI           97               CSW097
+     C           BJRDNB    IFGE INFD
+     C           INFD      ANDNE*ZERO
+     C           EINR      ANDEQ*ZERO                                                         235350
+     C********** *IN96     OREQ '0'                        NOT YET VALUDTECSW097              235350
+     C********** *IN97     ANDEQ'1'                        EFF INT RTE SETCSW097              235350
+     C********** VDAT      ANDGEBJRDNB                                    177837              235350
+      *
+     C                     EXSR WRTSFL
+      *
+     C                     ENDIF
+      *
+      ** Set Off Format Indicator
+      *
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN72
+      *
+     C           PSIZE     IFLT 5
+     C/COPY WNCPYSRC,DL4030C018
+     C           SBRCA     READEDLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C019
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** 3. If Booking Branch is NOT BLANK and
+      **       Deal type      is NOT BLANK and
+      **       Currency Code  is     BLANK and
+      **       Base Rate Code is     BLANK
+      *
+     C           SBRCA     IFNE *BLANK
+     C           SDTYP     ANDNE*BLANK
+     C           SCCY      ANDEQ*BLANK
+     C           SBRTT     ANDEQ*BLANK
+      *
+     C/COPY WNCPYSRC,DL4030C020
+     C           @KEY1     READEDLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C021
+     C           *IN40     DOWEQ'0'
+     C           PSIZE     ANDLT5
+      *
+     C                     TESTB'1'       ACEI           96               CSW097
+     C                     TESTB'0'       DNSI           97               CSW097
+     C           BJRDNB    IFGE INFD
+     C           INFD      ANDNE*ZERO
+     C           EINR      ANDEQ*ZERO                                                         235350
+     C********** *IN96     OREQ '0'                        NOT YET VALUDTECSW097              235350
+     C********** *IN97     ANDEQ'1'                        EFF INT RTE SETCSW097              235350
+     C********** VDAT      ANDGEBJRDNB                                    177837              235350
+      *
+     C                     EXSR WRTSFL
+      *
+     C                     ENDIF
+      *
+      ** Set Off Format Indicator
+      *
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN72
+      *
+     C           PSIZE     IFLT 5
+     C/COPY WNCPYSRC,DL4030C022
+     C           @KEY1     READEDLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C023
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** 4. If Booking Branch is NOT BLANK and
+      **       Deal Type      is NOT BLANK and
+      **       Currency Code  is NOT BLANK and
+      **      Base Rate Code is     BLANK
+      **
+     C           SBRCA     IFNE *BLANK
+     C           SDTYP     ANDNE*BLANK
+     C           SCCY      ANDNE*BLANK
+     C           SBRTT     ANDEQ*BLANK
+      *
+     C/COPY WNCPYSRC,DL4030C024
+     C           @KEY2     READEDLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C025
+      *
+     C           *IN40     DOWEQ'0'
+     C           PSIZE     ANDLT5
+      *
+     C                     TESTB'1'       ACEI           96               CSW097
+     C                     TESTB'0'       DNSI           97               CSW097
+     C           BJRDNB    IFGE INFD
+     C           INFD      ANDNE*ZERO
+     C           EINR      ANDEQ*ZERO                                                         235350
+     C********** *IN96     OREQ '0'                        NOT YET VALUDTECSW097              235350
+     C********** *IN97     ANDEQ'1'                        EFF INT RTE SETCSW097              235350
+     C********** VDAT      ANDGEBJRDNB                                    177837              235350
+      *
+     C                     EXSR WRTSFL
+      *
+     C                     ENDIF
+      *
+      ** Set Off Format Indicator
+      *
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN72
+      *
+     C           PSIZE     IFLT 5
+     C/COPY WNCPYSRC,DL4030C026
+     C           @KEY2     READEDLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C027
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** 5. If Booking Branch is NOT BLANK and
+      **       Deal type      is NOT BLANK and
+      **       Currency Code  is NOT BLANK and
+      **       Base Rate Code is NOT BLANK
+      *
+     C           SBRCA     IFNE *BLANK
+     C           SDTYP     ANDNE*BLANK
+     C           SCCY      ANDNE*BLANK
+     C           SBRTT     ANDNE*BLANK
+      *
+     C                     MOVE SBRTT     NBRTT   20
+      *
+     C/COPY WNCPYSRC,DL4030C028
+     C           @KEY3     READEDLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C029
+      *
+     C           *IN40     DOWEQ'0'
+     C           PSIZE     ANDLT5
+      *
+     C                     TESTB'1'       ACEI           96               CSW097
+     C                     TESTB'0'       DNSI           97               CSW097
+     C           BJRDNB    IFGE INFD
+     C           INFD      ANDNE*ZERO
+     C           EINR      ANDEQ*ZERO                                                         235350
+     C********** *IN96     OREQ '0'                        NOT YET VALUDTECSW097              235350
+     C********** *IN97     ANDEQ'1'                        EFF INT RTE SETCSW097              235350
+     C********** VDAT      ANDGEBJRDNB                                    177837              235350
+      *
+     C                     EXSR WRTSFL
+      *
+     C                     ENDIF
+      *
+      ** Set Off Format Indicator
+      *
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN72
+      *
+     C           PSIZE     IFLT 5
+     C/COPY WNCPYSRC,DL4030C030
+     C           @KEY3     READEDLDLDGLH                 40
+     C/COPY WNCPYSRC,DL4030C031
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * WRTSFL - Write Record to Subfile                              *
+      *                                                               *
+      * Called by: SFLFIX                                             *
+      *                                                               *
+      * Calls:  ZEDIT  - Put decimal period                           *
+      *         ZDATE2 - Convert numeric date to character            *
+      *         AOBSRTR0 - Access object for SDBSRTPD                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTSFL    BEGSR
+      *
+      ** Move file fields to subfile fields
+      *
+     C                     Z-ADDSVRRN     RRN
+     C                     MOVE *BLANK    SEL
+     C                     MOVE DLNO      SDLNO
+      *
+     C                     MOVE CNUM      CNUMA   6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM CNUMA     @KEY   10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C                     MOVE BBCSSN    SCNUM
+      *
+     C                     MOVE BRCA      SBRCH
+     C                     MOVE DTYP      SDLTP
+     C                     MOVE CCY       SCCYS
+     C                     MOVE BRTT      SBRTC
+      *
+      ** Obtain Base Rate SWIFT Code
+      *
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCCYS
+     C                     PARM           SBRTC
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                                 CSD006
+      *
+     C           @RTCD     IFEQ '*NRF'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDBSRTPD'DBFILE           *DB ERROR 002 *
+     C                     MOVEL'*KEY    'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVELBASCDD    SWIFT
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'FR'
+      *
+     C           *IN71     IFEQ '1'
+     C           *IN73     OREQ '1'
+     C                     MOVE 'S'       SBSOT
+     C                     ENDIF
+      *
+     C           *IN72     IFEQ '1'
+     C           *IN74     OREQ '1'
+     C                     MOVE 'B'       SBSOT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           DTYP      IFEQ 'RS'
+     C           DTYP      OREQ 'RX'
+      *
+     C           *IN71     IFEQ '1'
+     C           *IN73     OREQ '1'
+     C                     MOVE 'O'       SBSOT
+     C                     ENDIF
+      *
+     C           *IN72     IFEQ '1'
+     C           *IN74     OREQ '1'
+     C                     MOVE 'T'       SBSOT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           EINR      IFLT 0                                                             226723
+     C                     Z-SUBEINR      W#EINR 117                                          226723
+     C                     MOVE W#EINR    ZFIELD                                              226723
+     C                     ELSE                                                               226723
+     C                     MOVE EINR      ZFIELD 16
+     C                     ENDIF                                                              226723
+      *                                                                                       226723
+     C                     Z-ADD7         ZADEC   10
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SEINR     P
+      *                                                                                       226723
+     C           EINR      IFLT 0                                                             226723
+     C                     MOVE '-'       SSIGN                                               226723
+     C                     ELSE                                                               226723
+     C                     MOVE ' '       SSIGN                                               226723
+     C                     ENDIF                                                              226723
+      *                                                                   CSW097
+     C                     TESTB'1'       ACEI           96               CSW097
+     C                     TESTB'0'       DNSI           97               CSW097
+     C                     TESTB'2'       DNSI           95                                   227642
+      *                                                                   CSW097
+      * Specify 'STR' if initial fixing                                   CSW097
+      ** Or when short term rate was amended                                                  227642
+      *                                                                   CSW097
+     C           *IN96     IFEQ '0'                        NOT YET VALUDTECSW097
+     C           *IN97     ANDEQ'1'                        EFF INT RTE SETCSW097
+     C           VDAT      ANDGEBJRDNB                                    177837
+     C           *IN95     OREQ '1'                                                           227642
+     C           SRFIN     ANDNE'A'                                                           227642
+     C                     MOVE *BLANKS   SNRT                            CSW097
+     C                     MOVE 'STR  '   SNRT                            CSW097
+     C                     MOVE ' '       SNSGN                                               226723
+     C                     MOVE *BLANK    SLCD                            CSW097
+      *                                                                   CSW097
+      ** Do not output record to subfile if current rate is zero          CSW097
+      ** (as in the case of refixing and short term rate has been         CSW097
+      ** amended to zero)                                                 CSW097
+     C           EINR      IFEQ *ZERO                                     CSW097
+     C                     GOTO ENDWRT                                    CSW097
+     C                     ENDIF                                          CSW097
+      *                                                                   CSW097
+     C                     ELSE                                           CSW097
+      *
+      ** Obtain New Base Rate and
+      ** Last Base Rate Change Date
+      *
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCCYS
+     C                     PARM           SBRTC
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                                 CSD006
+      *
+     C           @RTCD     IFEQ '*NRF'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDBSRTPD'DBFILE           *DB ERROR 003 *
+     C                     MOVEL'*KEY    'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           BAVDNR    IFLE INFD
+      *                                                                                       226723
+     C           BANBRT    IFLT 0                                                             226723
+     C                     Z-SUBBANBRT    W#BRAT 117                                          226723
+     C                     MOVE W#BRAT    ZFIELD                                              226723
+     C                     ELSE                                                               226723
+     C                     MOVE BANBRT    ZFIELD 16
+     C                     ENDIF                                                              226723
+      *                                                                                       226723
+     C                     Z-ADD7         ZADEC   10
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SNRT      P
+      *                                                                                       226723
+     C           BANBRT    IFLT 0                                                             226723
+     C                     MOVE '-'       SNSGN                                               226723
+     C                     ELSE                                                               226723
+     C                     MOVE ' '       SNSGN                                               226723
+     C                     ENDIF                                                              226723
+      *
+     C                     MOVE BAVDNR    ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SLCD
+      *
+     C                     ELSE
+      *                                                                                       226723
+     C           BACBSR    IFLT 0                                                             226723
+     C                     Z-SUBBACBSR    W#BRAT                                              226723
+     C                     MOVE W#BRAT    ZFIELD                                              226723
+     C                     ELSE                                                               226723
+     C                     MOVE BACBSR    ZFIELD 16
+     C                     ENDIF                                                              226723
+      *                                                                                       226723
+     C                     Z-ADD7         ZADEC   10
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    SNRT      P
+      *                                                                                       226723
+     C           BANBRT    IFLT 0                                                             226723
+     C                     MOVE '-'       SNSGN                                               226723
+     C                     ELSE                                                               226723
+     C                     MOVE ' '       SNSGN                                               226723
+     C                     ENDIF                                                              226723
+      *
+     C                     MOVE BAVDRC    ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SLCD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF                                          CSW097
+      *
+     C                     MOVE RFIN      SRFIN
+     C                     MOVE *BLANK    WARN
+     C           MODE      IFEQ '0'
+     C           WFIX      ANDEQ'1'
+      *
+     C                     MOVE '1'       WARN
+      *
+     C                     ENDIF
+      *
+      ** Increment relative record number and
+      ** Page size
+      *
+     C                     ADD  1         RRN
+     C                     ADD  1         SVRRN
+     C                     ADD  1         PSIZE
+      *
+      ** Write to subfile record
+      *
+     C                     WRITEDL4030S0
+      *
+     C           ENDWRT    TAG                                            CSW097
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SFLREF - Load Subfile Records Due for Re-fixing               *
+      *                                                               *
+      * Called by: #SFLLD                                             *
+      *                                                               *
+      * Calls:  ZEDIT  - Put decimal period                           *
+      *         ZDATE2 - Convert numeric date to character            *
+      *         AOBSRTR0 - Access object for SDBSRTPD                 *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SFLREF    BEGSR
+      *
+     C                     Z-ADD0         PSIZE   40
+      *
+      ** Set Off Format Indicator
+      ** Indicate which record format was read
+      *
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN74
+      *
+      ** 1. Booking Branch is BLANK
+      *
+     C           SBRCA     IFEQ *BLANK
+      *
+     C/COPY WNCPYSRC,DL4030C032
+     C                     READ DLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C033
+      *
+      ** Do While Not End of File
+      *
+     C           *IN40     DOWEQ'0'
+      *
+     C           DTYP      IFEQ 'FR'
+     C           BJRDNB    ANDLEVDAT
+     C           DTYP      ORNE 'FR'
+      *
+     C                     Z-ADD0         PSIZE
+     C                     MOVE BRCA      SVBRCH  3
+      *
+      ** Check if user is authorise
+      *
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       ZACTN   1
+     C                     PARM SVBRCH    ZBRCD   3
+     C                     PARM           ERR     10
+      *
+      ** If authorise then write record(s) to subfile
+      *
+     C           ERR       IFEQ 0
+      *
+      ** Do while not end of file (DLDLDGLI) and
+      ** there's no change in booking branch and
+      ** subfile page not full
+      *
+     C           *IN40     DOWEQ'0'
+     C           BRCA      ANDEQSVBRCH
+     C           PSIZE     ANDLT5
+      *
+     C           DTYP      IFEQ 'FR'
+     C           BJRDNB    ANDLEVDAT
+     C           DTYP      ORNE 'FR'
+      *
+      ** Write record to subfile
+      *
+     C                     EXSR WRTSFL
+      *
+      ** Set off format indicators
+      *
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN74
+      *
+     C/COPY WNCPYSRC,DL4030C034
+     C                     READ DLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C035
+     C                     ELSE
+     C/COPY WNCPYSRC,DL4030C036
+     C                     READ DLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C037
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ELSE
+      *
+      ** User is not authorise skip to next branch
+      *
+     C/COPY WNCPYSRC,DL4030C038
+     C           SVBRCH    SETGTDLDLDGLI
+      *
+     C                     READ DLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C039
+      *
+     C                     ENDIF
+     C                     ELSE
+     C/COPY WNCPYSRC,DL4030C040
+     C                     READ DLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C041
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** 2. If Booking Branch is NOT BLANK and
+      **      Deal Type       is     BLANK and
+      **      Currency Code   is     BLANK and
+      **      Base Rate Code  is     BLANK
+      *
+     C           SBRCA     IFNE *BLANK
+     C           SDTYP     ANDEQ*BLANK
+     C           SCCY      ANDEQ*BLANK
+     C           SBRTT     ANDEQ*BLANK
+      *
+     C/COPY WNCPYSRC,DL4030C042
+     C           SBRCA     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C043
+      *
+     C           *IN40     DOWEQ'0'
+     C           PSIZE     ANDLT5
+      *
+     C           DTYP      IFEQ 'FR'
+     C           BJRDNB    ANDLEVDAT
+     C           DTYP      ORNE 'FR'
+      *
+     C                     EXSR WRTSFL
+      *
+      ** Set Off Format Indicator
+      *
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN74
+      *
+     C           PSIZE     IFLT 5
+     C/COPY WNCPYSRC,DL4030C044
+     C           SBRCA     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C045
+     C                     ENDIF
+      *
+     C                     ELSE
+     C/COPY WNCPYSRC,DL4030C046
+     C           SBRCA     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C047
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** 3. If Booking Branch is NOT BLANK and
+      **       Deal type      is NOT BLANK and
+      **       Currency Code  is     BLANK and
+      **       Base Rate Code is     BLANK
+      *
+     C           SBRCA     IFNE *BLANK
+     C           SDTYP     ANDNE*BLANK
+     C           SCCY      ANDEQ*BLANK
+     C           SBRTT     ANDEQ*BLANK
+      *
+     C/COPY WNCPYSRC,DL4030C048
+     C           @KEY1     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C049
+     C           *IN40     DOWEQ'0'
+     C           PSIZE     ANDLT5
+      *
+     C           DTYP      IFEQ 'FR'
+     C           BJRDNB    ANDLEVDAT
+     C           DTYP      ORNE 'FR'
+      *
+     C                     EXSR WRTSFL
+      *
+      ** Set Off Format Indicator
+      *
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN74
+      *
+     C           PSIZE     IFLT 5
+     C/COPY WNCPYSRC,DL4030C050
+     C           @KEY1     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C051
+     C                     ENDIF
+      *
+     C                     ELSE
+     C/COPY WNCPYSRC,DL4030C052
+     C           @KEY1     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C053
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** 4. If Booking Branch is NOT BLANK and
+      **       Deal Type      is NOT BLANK and
+      **       Currency Code  is NOT BLANK and
+      **      Base Rate Code is     BLANK
+      **
+     C           SBRCA     IFNE *BLANK
+     C           SDTYP     ANDNE*BLANK
+     C           SCCY      ANDNE*BLANK
+     C           SBRTT     ANDEQ*BLANK
+      *
+     C/COPY WNCPYSRC,DL4030C054
+     C           @KEY2     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C055
+      *
+     C           *IN40     DOWEQ'0'
+     C           PSIZE     ANDLT5
+      *
+     C           DTYP      IFEQ 'FR'
+     C           BJRDNB    ANDLEVDAT
+     C           DTYP      ORNE 'FR'
+      *
+     C                     EXSR WRTSFL
+      *
+      ** Set Off Format Indicator
+      *
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN74
+      *
+     C           PSIZE     IFLT 5
+     C/COPY WNCPYSRC,DL4030C056
+     C           @KEY2     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C057
+     C                     ENDIF
+      *
+     C                     ELSE
+     C/COPY WNCPYSRC,DL4030C058
+     C           @KEY2     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C059
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** 5. If Booking Branch is NOT BLANK and
+      **       Deal type      is NOT BLANK and
+      **       Currency Code  is NOT BLANK and
+      **       Base Rate Code is NOT BLANK
+      *
+     C           SBRCA     IFNE *BLANK
+     C           SDTYP     ANDNE*BLANK
+     C           SCCY      ANDNE*BLANK
+     C           SBRTT     ANDNE*BLANK
+      *
+     C                     MOVE SBRTT     NBRTT   20
+      *
+     C/COPY WNCPYSRC,DL4030C060
+     C           @KEY3     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C061
+      *
+     C           *IN40     DOWEQ'0'
+     C           PSIZE     ANDLT5
+      *
+     C           DTYP      IFEQ 'FR'
+     C           BJRDNB    ANDLEVDAT
+     C           DTYP      ORNE 'FR'
+      *
+     C                     EXSR WRTSFL
+      *
+      ** Set Off Format Indicator
+      *
+     C                     MOVE '0'       *IN73
+     C                     MOVE '0'       *IN74
+      *
+     C           PSIZE     IFLT 5
+     C/COPY WNCPYSRC,DL4030C062
+     C           @KEY3     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C063
+     C                     ENDIF
+      *
+     C                     ELSE
+     C/COPY WNCPYSRC,DL4030C064
+     C           @KEY3     READEDLDLDGLI                 40
+     C/COPY WNCPYSRC,DL4030C065
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C           *IN40     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PRCALL - Process all record(s)                                *
+      *                                                               *
+      * Called by: #SFLSC                                             *
+      *                                                               *
+      * Calls: #SFLLD                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRCALL    BEGSR
+      *
+      ** Disable F13
+      *
+     C                     MOVE '0'       *IN33
+      *
+      ** Select all records
+      *
+     C                     Z-ADD1         Z       40
+     C           Z         DOWLESVRRN
+      *
+     C           Z         CHAINDL4030S0             41
+     C           *IN41     IFEQ '0'
+     C                     MOVE 'X'       SEL
+     C                     UPDATDL4030S0
+      *
+     C           Z         IFGT SVRRN
+     C                     EXSR #SFLLD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+      ** Transfer all selected records to
+      ** second subfile for confirmation
+      *
+     C                     EXSR SRTRAN
+      *
+      ** Display confirmation screen
+      *
+     C           WCTR      IFGT *ZERO
+     C                     EXSR SRCNFI
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * PRCSEL- Process select records(s)                             *
+      *                                                               *
+      * Called by: #SFLSC                                             *
+      *                                                               *
+      * Calls: ZASNMS - Send message                                  *
+      *        VALSEL - Validate select field (Must be 'X')           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRCSEL    BEGSR
+      *
+     C                     MOVE '0'       SELERR  1
+      *
+      ** Validate if 'SELECT' field is 'X'
+      *
+     C                     EXSR VALSEL
+      *
+     C           SELERR    IFEQ '0'
+      *
+      ** Transfer all selected records to
+      ** second subfile for confirmation
+      *
+     C                     EXSR SRTRAN
+      *
+      ** Display confirmation screen
+      *
+     C           WCTR      IFGT *ZERO
+     C                     EXSR SRCNFI
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * VALSEL- Validate Select Field                                 *
+      *                                                               *
+      * Called by: PRCSEL                                             *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALSEL    BEGSR
+      *
+     C                     MOVE 'N'       WSLCTD  1
+     C                     MOVE 'N'       @ERROR  1
+     C                     Z-ADD1         Z       40
+     C           Z         DOWLESVRRN
+      *
+     C           Z         CHAINDL4030S0             41
+     C                     MOVE '0'       SSERR
+      *
+     C           SEL       IFNE *BLANK
+     C           SEL       ANDNE'X'
+      *
+     C                     MOVE '1'       SSERR
+     C           @ERROR    IFNE 'Y'
+     C                     Z-ADDRRN       WRNREC  40
+     C                     MOVE '1'       SELERR
+     C                     MOVE 'Y'       @ERROR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           SEL       IFEQ 'X'
+     C           WSLCTD    ANDNE'Y'
+     C                     MOVEL'Y'       WSLCTD
+     C                     ENDIF
+      *
+     C                     UPDATDL4030S0
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRTRAN - Transfer selected records from first subfile         *
+      *          to second subfile for confirmation                   *
+      *                                                               *
+      * Called by: PRCALL                                             *
+      *            PRCSEL                                             *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTRAN    BEGSR
+      *
+      ** Clear second subfile
+      *
+     C                     MOVE '1'       *IN75
+     C                     WRITEDL4030C1
+     C                     MOVE '0'       *IN75
+      *
+     C                     Z-ADD*ZERO     RRN1
+     C                     Z-ADD*ZERO     WCTR    40
+     C                     Z-ADD1         Z       40
+     C                     MOVE 'Y'       FSTWRN  1
+     C                     MOVE 'N'       DSPWRN  1
+     C                     MOVE 'Y'       FSTSEL  1
+     C           Z         DOWLESVRRN
+      *
+     C           Z         CHAINDL4030S0             41
+     C           *IN41     IFEQ '0'
+     C           SEL       ANDEQ'X'
+      *
+     C           FSTSEL    IFEQ 'Y'
+     C                     Z-ADDZ         WRNREC
+     C                     MOVE 'N'       FSTSEL
+     C                     ENDIF
+      *
+     C           MODE      IFEQ '0'
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY    '@OPTN   7
+     C                     PARM           SCCYS
+     C                     PARM           SBRTC
+     C********** SDBSRT    PARM SDBSRT    DSFDY                                 CSD006
+     C           SDBSRT    PARM SDBSRT    DSSDY                                 CSD006
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDBSRTPD'DBFILE           *DB ERROR 004 *
+     C                     MOVELSCCYS     DBKEY            ***************
+     C           DBKEY     CAT  SBRTC     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8LR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           MODE      IFEQ '0'
+     C           BALCD     ANDNEBJRDNB
+     C           WARN      ANDEQ*BLANK
+     C           SNRT      ANDNE@SNRT                                     CSW097
+     C           MODE      OREQ '1'
+     C           SRFIN     ANDEQ'X'
+     C           WARN      ANDEQ*BLANK
+     C           MODE      OREQ '1'                                                           227642
+     C           SRFIN     ANDEQ'A'                                                           227642
+     C           WARN      ANDEQ*BLANK                                                        227642
+     C           MODE      OREQ '1'                                                           227642
+     C           SRFIN     ANDEQ'B'                                                           227642
+     C           WARN      ANDEQ*BLANK                                                        227642
+      *
+     C           FSTWRN    IFNE 'N'
+     C                     Z-ADDRRN       WRNREC
+     C                     MOVE 'Y'       DSPWRN
+     C                     MOVE 'N'       FSTWRN
+     C                     ENDIF
+     C                     MOVE '1'       WARN
+     C                     UPDATDL4030S0
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         RRN1
+     C                     MOVE SEL       SEL1
+     C                     MOVE SDLNO     SDLNO1
+     C                     MOVE SCNUM     SCNUM1
+     C                     MOVE SBRCH     SBRCH1
+     C                     MOVE SDLTP     SDLTP1
+     C                     MOVE SCCYS     SCCYS1
+     C                     MOVE SBRTC     SBRTC1
+     C                     MOVE SWIFT     SWIFT1
+     C                     MOVE SBSOT     SBSOT1
+     C                     MOVE SEINR     SEINR1
+     C                     MOVE SSIGN     SSIGN1                                              226723
+     C                     MOVE SNRT      SNRT1
+     C                     MOVE SNSGN     SNSGN1                                              226723
+     C                     MOVE SLCD      SLCD1
+     C                     MOVE WARN      WARN1
+     C                     MOVE SRFIN     SRFIN1
+     C                     WRITEDL4030S1
+     C                     ADD  1         WCTR
+     C                     ENDIF
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * SRCNFI - Display process confirmation screen                  *
+      *                                                               *
+      * Called by: PRCALL                                             *
+      *            PRCSEL                                             *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCNFI    BEGSR
+      *
+      ** Clear error message(s) before
+      ** displaying confirmation screen
+      *
+     C                     EXSR CLRMSG
+     C                     WRITE#MSGCTL
+      *
+      ** Display Confirmation Screen until
+      ** F3 or F12 or ENTER is taken
+      *
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+      *
+     C                     WRITEDL4030F4
+     C                     EXFMTDL4030C1
+      *
+      ** Enter is taken
+      *
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C                     EXSR #UPDF
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDDO
+     C                     MOVE '0'       *IN12
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #UPDF  - File Update PF/DEALSDG                               *
+      *                                                               *
+      * Called by: SRCNFI - Confirmation screen                       *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #UPDF     BEGSR
+      *
+     C                     MOVE 'Y'       #UPDAT  1
+     C                     Z-ADD1         Z       40
+     C           Z         DOWLESVRRN
+      *
+     C           Z         CHAINDL4030S0             41
+     C           SEL       IFEQ 'X'
+      *
+     C           DSPWRN    IFEQ 'Y'
+     C                     Z-ADDRRN       WRNREC
+     C                     LEAVE
+     C                     ENDIF
+      *
+      ** Move screen value to key field
+      *
+     C                     MOVE SBRTC     SBRTN
+     C                     MOVE SDLNO     SDLNN
+      *
+     C           MODE      IFEQ '0'
+      *
+     C           SDLTP     IFEQ 'FR'
+     C           SBSOT     ANDEQ'S'
+      *   OR
+     C           SDLTP     OREQ 'RS'
+     C           SBSOT     ANDEQ'O'
+      *   OR
+     C           SDLTP     OREQ 'RX'
+     C           SBSOT     ANDEQ'O'
+      *
+     C/COPY WNCPYSRC,DL4030C066
+     C           @KEY4     CHAINDLDGHF1              50
+     C           *IN50     IFEQ '0'
+     C                     MOVE 'P'       RFIN
+     C                     UPDATDLDGHF1
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C067
+     C                     ENDIF
+      *
+     C           SDLTP     IFEQ 'FR'
+     C           SBSOT     ANDEQ'B'
+      *   OR
+     C           SDLTP     OREQ 'RS'
+     C           SBSOT     ANDEQ'T'
+      *   OR
+     C           SDLTP     OREQ 'RX'
+     C           SBSOT     ANDEQ'T'
+      *
+     C/COPY WNCPYSRC,DL4030C068
+     C           @KEY4     CHAINDLDGHF2              50
+     C           *IN50     IFEQ '0'
+     C                     MOVE 'P'       RFIN
+     C                     UPDATDLDGHF2
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C069
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           MODE      IFEQ '1'
+      *
+     C           SDLTP     IFEQ 'FR'
+     C           SBSOT     ANDEQ'S'
+      *   OR
+     C           SDLTP     OREQ 'RS'
+     C           SBSOT     ANDEQ'O'
+      *   OR
+     C           SDLTP     OREQ 'RX'
+     C           SBSOT     ANDEQ'O'
+      *
+     C/COPY WNCPYSRC,DL4030C070
+     C           @KEY5     CHAINDLDGIF1              50
+     C           *IN50     IFEQ '0'
+     C           ORFI      IFNE *BLANK
+     C           ORFI      ANDNE'R'
+     C           NICD      ANDEQXNICD
+     C                     MOVE 'Y'       OFRF
+     C                     ELSE
+     C                     MOVE *BLANK    OFRF
+     C                     ENDIF
+     C                     MOVE *BLANK    FRRF
+     C           SRFIN     IFEQ 'B'                                                           227642
+     C           SRFIN     OREQ 'A'                                                           227642
+     C                     ELSE                                                               227642
+     C                     MOVE 'R'       RFIN
+     C                     ENDIF                                                              227642
+     C                     UPDATDLDGIF1
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C071
+      *
+     C           SDLTP     IFEQ 'FR'
+     C           SBSOT     ANDEQ'B'
+      *   OR
+     C           SDLTP     OREQ 'RS'
+     C           SBSOT     ANDEQ'T'
+      *   OR
+     C           SDLTP     OREQ 'RX'
+     C           SBSOT     ANDEQ'T'
+      *
+     C/COPY WNCPYSRC,DL4030C072
+     C           @KEY5     CHAINDLDGIF2              50
+     C           *IN50     IFEQ '0'
+     C           ORFI      IFNE *BLANK
+     C           ORFI      ANDNE'R'
+     C           NICD      ANDEQXNICD
+     C                     MOVE 'Y'       OFRF
+     C                     ELSE
+     C                     MOVE *BLANK    OFRF
+     C                     ENDIF
+     C                     MOVE *BLANK    FRRF
+     C           SRFIN     IFEQ 'B'                                                           227642
+     C           SRFIN     OREQ 'A'                                                           227642
+     C                     ELSE                                                               227642
+     C                     MOVE 'R'       RFIN
+     C                     ENDIF                                                              227642
+     C                     UPDATDLDGIF2
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C073
+      *
+     C                     ENDIF
+      *
+      ** Blank out deal number (SDLNO) to indicate that
+      ** this record has been fixed or updated
+      *
+     C                     Z-ADDRRN       WRNREC
+     C                     MOVE *BLANK    SDLNO
+     C                     UPDATDL4030S0
+      *
+     C                     ENDIF
+     C                     ADD  1         Z
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #INTLZ - Initialisation process                               *
+      *                                                               *
+      * Called by: Main Processing Routine                            *
+      *                                                               *
+      * Calls: *PSSR    - Database error routine                      *
+      *        AOBANKR0 - Access object for SDBANKPD                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #INTLZ    BEGSR
+      *
+      ** Initialise LDA Data Structure
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'DL4030'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Initialise Work Fields
+      *
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SDTYP
+     C                     MOVE *BLANKS   SCCY
+     C                     MOVE *BLANKS   SBRTT
+     C                     MOVE *BLANK    WFIX    1
+      *
+      ** Work fields for warning message
+      *
+     C           *LIKE     DEFN SBRCA     SVBRCA
+     C           *LIKE     DEFN SDTYP     SVDTYP
+     C           *LIKE     DEFN SCCY      SVCCY
+     C           *LIKE     DEFN SBRTT     SVBRTT
+      *
+      ** Initialise Error Indicators
+      *
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN53
+      *
+      ** Access Bank Details (SDBANKPD)
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file (file)
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *DB ERROR 001 *
+     C                     MOVEL'*FIRST  'DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     SETON                     U7U8LR
+     C                     ENDIF
+      *                                                                                       245692
+      ** Access Dealing ICD Details                                                           245692
+      *                                                                                       245692
+     C                     CALL 'AODEALR0'                                                    245692
+     C                     PARM *BLANKS   @RTCD   7                                           245692
+     C                     PARM '*FIRST  '@OPTN   7                                           245692
+     C           SDDEAL    PARM SDDEAL    DSFDY                                               245692
+      *                                                                                       245692
+      ** Data base error in file (file)                                                       245692
+      *                                                                                       245692
+     C           @RTCD     IFNE *BLANKS                                                       245692
+     C           *LOCK     IN   LDA                                                           245692
+     C                     Z-ADD005       DBASE                                               245692
+     C                     MOVEL'SDDEALPD'DBFILE                                              245692
+     C                     MOVEL'*FIRST  'DBKEY                                               245692
+     C                     OUT  LDA                                                           245692
+     C                     EXSR *PSSR                                                         245692
+     C                     SETON                     U7U8LR                                   245692
+     C                     ENDIF                                                              245692
+      *
+      ** Setup Screen Title Fields
+      *
+     C                     MOVE USER      SUSER
+     C                     MOVE WSID      SWSID
+     C                     MOVE BJMRDT    SRUNA
+      *
+      ** Initialise variables for error message
+      *
+     C                     MOVEL*BLANKS   ZAPGMQ 10
+     C                     MOVEL*BLANKS   ZAPGRL  5
+     C                     MOVEL*BLANKS   ZAMSID  7
+     C                     MOVEL*BLANKS   ZAMSGF 10
+     C                     MOVEL*BLANKS   ZAMSDA132
+     C                     MOVEL*BLANKS   ZAMSTP  7
+      *
+     C                     MOVE *BLANK    DTAOK   1
+      *
+      ** Condition Screen Title
+      *
+     C                     MOVE MODE      *IN01
+      *
+      ** Set up key  fields
+      *
+     C           @KEY1     KLIST
+     C                     KFLD           SBRCA
+     C                     KFLD           SDTYP
+      *
+     C           @KEY2     KLIST
+     C                     KFLD           SBRCA
+     C                     KFLD           SDTYP
+     C                     KFLD           SCCY
+      *
+     C                     MOVE SBRTT     NBRTT   20
+     C           @KEY3     KLIST
+     C                     KFLD           SBRCA
+     C                     KFLD           SDTYP
+     C                     KFLD           SCCY
+     C                     KFLD           NBRTT
+      *
+     C           *LIKE     DEFN DLNO      SDLNN
+     C           *LIKE     DEFN BRTT      SBRTN
+     C           @KEY4     KLIST
+     C                     KFLD           SBRCH
+     C                     KFLD           SDLTP
+     C                     KFLD           SCCYS
+     C                     KFLD           SBRTN
+     C                     KFLD           SDLNN
+      *
+     C           @KEY5     KLIST
+     C                     KFLD           SBRCH
+     C                     KFLD           SDLTP
+     C                     KFLD           SCCYS
+     C                     KFLD           SBRTN
+     C                     KFLD           SRFIN
+     C                     KFLD           SDLNN
+      *
+      **  Set on *IN98 according to date format
+      *
+     C           BJDFIN    IFEQ 'D'
+     C                     MOVE *OFF      *IN98
+     C                     ELSE
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Open necessary input file
+      *
+     C/COPY WNCPYSRC,DL4030C074
+     C           MODE      IFEQ '0'
+     C                     OPEN DLDLDGLH
+     C                     ELSE
+     C                     OPEN DLDLDGLI
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C075
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ENDPGM - End Program Subroutine                               *
+      *                                                               *
+      * Called by: Main Processing Routine                            *
+      *                                                               *
+      * Calls: NONE                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ENDPGM    BEGSR
+      *
+     C/COPY WNCPYSRC,DL4030C076
+     C           MODE      IFEQ '0'
+     C                     CLOSEDLDLDGLH
+     C                     ELSE
+     C                     CLOSEDLDLDGLI
+     C                     ENDIF
+     C/COPY WNCPYSRC,DL4030C077
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ZASNMS - Send Message on subfile message queue                *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM 'GBDRSMM' ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CLRMSG     : Clear message subfile and set off indicators    *
+      *                                                               *
+      *  Called by  : Main Progcessing Routine                        *
+      *                                                               *
+      *  Calls      : Y2CLMSC                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLRMSG    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+      ** Set off error indicators
+      *
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN51
+     C                     MOVE '0'       *IN52
+     C                     MOVE '0'       *IN53
+     C/COPY WNCPYSRC,DL4030C078
+      *
+     C                     MOVE 'Y'       DTAOK
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+     C*COPY*ZSRSRC,ZEDITZ2***                                                                 245692
+     C/COPY ZSRSRC,ZEDITZ3                                                                    245692
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+      *
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

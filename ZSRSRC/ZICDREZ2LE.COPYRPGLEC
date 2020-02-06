@@ -1,0 +1,363 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  ZICDREZ2LE - To compute the no. of days according to calc    *
+      *               basis                                           *
+      *                                                               *
+      *  (c) Copyright Finastra International Limited, 2012           *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE093  *CREATE    Date 06Aug12               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE093 - Tactical COB changes REC3666                        *
+      *           Converted SR to ILE (original sr/ZICDREZ2LE created *
+      *           by SC260297.                                        *
+      *                                                               *
+     C*****************************************************************
+      **
+      ** ZICD subroutine to find number of days to calculate interest
+      ** according to calculation basis
+      **
+      *
+     C     ZICD          BEGSR                                                  **ZICD BEGSR**
+      *
+      ** To determine number of days interest to be calculated
+      *
+     C     ZIEND         SUB       ZIBEG         ZDAYN2
+      *
+      ** Check for interest calculation basis
+      *
+     C     ZICALC        IFEQ      3                                            - B1
+     C     ZICALC        OREQ      6
+      *
+     C     ZIEND         IFGT      ZIBEG                                        - B2
+      *
+      ** Calculating date from day number (beginning date)
+      *
+     C                   Z-ADD     ZIBEG         ZDAYNO
+      *
+      ** *IN99 set off as ZDATE2Z2 does not reset. ZDATE2Z4 Not used.
+      *
+     C                   SETOFF                                       99
+     C                   EXSR      ZDATE2
+      *
+      ** Verify if error
+      *
+     C     *IN99         IFEQ      '1'                                          - B3
+     C     *LOCK         IN        LDA
+     C                   Z-ADD     90            DBASE                          ***************
+     C                   MOVE      'ZDATE2'      DBFILE                         *DB ERROR 090 *
+     C                   MOVE      *BLANKS       DBKEY                          ***************
+     C                   OUT       LDA
+     C                   EXSR      DBSR
+     C                   ENDIF                                                  - E3
+      *
+     C     *IN98         IFEQ      '0'                                          - B3
+     C                   Z-ADD     ZDATE         SRES
+     C                   ELSE                                                   - X3
+     C                   Z-ADD     ZDATE         SRESX
+     C                   Z-ADD     ZISDX         ZISD
+     C                   Z-ADD     ZISMX         ZISM
+     C                   Z-ADD     ZISYX         ZISY
+     C                   ENDIF                                                  - E3
+      *
+      ** Calculating date from day number (finishing date)
+      *
+     C                   Z-ADD     ZIEND         ZDAYNO
+      *
+      ** *IN99 set off as ZDATE2Z2 does not reetT. ZDATE2Z4 not used.
+      *
+     C                   SETOFF                                       99
+     C                   EXSR      ZDATE2
+      *
+      ** Verify if error
+      *
+     C     *IN99         IFEQ      '1'                                          - B3
+     C     *LOCK         IN        LDA
+     C                   Z-ADD     91            DBASE                          ***************
+     C                   MOVE      'ZDATE2'      DBFILE                         *DB ERROR 091 *
+     C                   MOVE      *BLANKS       DBKEY                          ***************
+     C                   OUT       LDA
+     C                   EXSR      DBSR
+     C                   ENDIF                                                  - E3
+      *
+     C     *IN98         IFEQ      '0'                                          - B3
+     C                   Z-ADD     ZDATE         FRES
+     C                   ELSE                                                   - X3
+     C                   Z-ADD     ZDATE         FRESX
+     C                   Z-ADD     ZIFDX         ZIFD
+     C                   Z-ADD     ZIFMX         ZIFM
+     C                   Z-ADD     ZIFYX         ZIFY
+     C                   ENDIF                                                  - E3
+      *
+     C     ZICALC        IFEQ      3
+      *
+      ** In order for the finish year to be less tahn the start year if
+      ** ZIEND is greater than ZIBEG, then the date ZIEND must be in
+      ** a different century to ZIBEG. If so ADD 100 years to it.
+      *
+     C     ZIFY          IFLT      ZISY                                         - B3
+     C     ZIFY          ADD       100           ZIFY2             3 0
+     C                   ELSE                                                   - X3
+     C                   Z-ADD     ZIFY          ZIFY2
+     C                   ENDIF                                                  - E3
+      *
+     C                   Z-ADD     ZISY          ZISY2             3 0
+      *
+      ** Determine whether start year is a leap year and if start month
+      ** is february. Then consider last day of february as date 30ND.
+      ** of the month.
+      *
+     C     ZISM          IFEQ      2                                            - B3
+     C     ZISY2         ADD       1900          ZLYCHK
+     C     ZLYCHK        DIV       4             ZLYCHK
+     C                   MVR                     ZLYREM
+     C     ZLYREM        IFEQ      0                                            - B4
+     C     ZISD          IFEQ      29                                           - B5
+     C                   Z-ADD     30            ZISD
+     C                   ENDIF                                                  - E5
+     C                   ELSE                                                   - X4
+     C     ZISD          IFEQ      28                                           - B5
+     C                   Z-ADD     30            ZISD
+     C                   ENDIF                                                  - E5
+     C                   ENDIF                                                  - E4
+     C                   ENDIF                                                  - E3
+      *
+     C     30            SUB       ZISD          ZID1
+      *
+     C     ZID1          IFLT      0                                            - B3
+     C                   Z-ADD     *ZEROS        ZID1
+     C                   ENDIF                                                  - E3
+      *
+     C     ZISM          IFEQ      12                                           - B3
+     C                   Z-ADD     *ZEROS        ZISM
+     C                   ADD       1             ZISY
+     C                   ADD       1             ZISY2
+     C                   ENDIF                                                  - E3
+      *
+      ** Determine whether end year is a leap year and if end of month
+      ** is February.
+      *
+     C     ZIFM          IFEQ      2                                            - B3
+     C     ZIFY2         ADD       1900          ZLYCHK
+     C     ZLYCHK        DIV       4             ZLYCHK
+     C                   MVR                     ZLYREM
+     C     ZLYREM        IFEQ      0                                            - B4
+     C     ZIFD          IFEQ      29                                           - B5
+     C                   Z-ADD     30            ZIFD
+     C                   ENDIF                                                  - E5
+     C                   ELSE                                                   - X4
+     C     ZIFD          IFEQ      28                                           - B5
+     C                   Z-ADD     30            ZIFD
+     C                   ENDIF                                                  - E5
+     C                   ENDIF                                                  - E4
+     C                   ENDIF                                                  - E3
+      *
+     C     ZIFD          IFEQ      31                                           - B3
+     C                   ADD       30            ZID1
+     C                   ELSE                                                   - X3
+     C                   ADD       ZIFD          ZID1
+     C                   ENDIF                                                  - E3
+      *
+     C                   SUB       1             ZIFM
+      *
+     C     ZISY          IFEQ      ZIFY                                         - B3
+     C     ZIFM          SUB       ZISM          ZINOM             3 0
+     C                   ELSE                                                   - X3
+     C     12            SUB       ZISM          ZIM1
+     C                   Z-ADD     1             ZISM
+      *
+      ** Use enlarge fields that can handle 1999 onwards.
+      *
+     C                   ADD       1             ZISY2
+     C     ZIFY2         SUB       ZISY2         ZIY1
+     C     ZIY1          MULT      12            ZIM2              3 0
+     C     ZIM2          ADD       ZIFM          ZIM2
+     C     ZIM2          ADD       ZIM1          ZINOM
+      *
+     C                   ENDIF                                                  - E3
+      *
+     C     ZINOM         MULT      30            ZID2
+     C     ZID2          ADD       ZID1          ZDAYN2
+      *
+      ** End for Calc Method = 3
+      *
+     C                   ENDIF
+      *
+      ** Perform no. of days calculation for method 6
+      ** Find the number of leap year and non-leap year days in the
+      ** interest period. The non-leap year days are then adjusted by a
+      ** factor of 366/365 to allow for the divisor of 366 in Retail PGM
+      ** This figure is then added to the actual leap year days to give
+      ** a factored number of days in the interest period.
+      *
+     C     ZICALC        IFEQ      6
+      *
+     C                   Z-ADD     0             LEAP50            5 0
+     C                   Z-ADD     0             NLEAP             5 0
+      *
+      ** If start and end date are in the same year, check if the
+      ** year is a leap year and add no. of interest days to the
+      ** relevant total
+      *
+     C     ZISY          IFEQ      ZIFY                                         B2
+     C     ZISY          DIV       4             ZZWN5             5 0
+     C                   MVR                     ZZWN5
+     C     ZZWN5         IFNE      0                                            B3
+     C                   ADD       ZDAYN2        NLEAP
+     C                   ELSE                                                   X3
+     C                   ADD       ZDAYN2        LEAP50
+     C                   ENDIF                                                  E3
+      *
+      ** Else must break down the interest period into leap years
+      ** and non-leap years
+      *
+     C                   ELSE                                                   X2
+      *
+      ** Save end date year value
+      *
+     C                   Z-ADD     FRES          DATSV1            6 0
+     C                   Z-ADD     ZIFY          YY2SV1            2 0
+      *
+      ** Add 1 to starting year number
+      *
+     C     ZISY          ADD       1             ZIFY
+      *
+      ** Get Midas day number for 1st Jan of year after start date
+      *
+     C                   MOVE      '01'          ZIFM
+     C                   MOVE      '01'          ZIFD
+     C                   MOVE      FRES          ZDATE
+     C                   EXSR      ZDATE1
+     C     ZDAYNO        SUB       1             ZZENDW            5 0
+     C     ZZENDW        SUB       ZIBEG         ZDAYN2
+      *
+      ** Check if current year is a leap year
+      *
+     C     ZISY          DIV       4             ZZWN5
+     C                   MVR                     ZZWN5
+     C     ZZWN5         IFNE      0                                            B3
+     C                   ADD       ZDAYN2        NLEAP
+     C                   ELSE                                                   X3
+     C                   ADD       ZDAYN2        LEAP50
+     C                   ENDIF                                                  E3
+      *
+      ** Accumulate leap year and non-leap year days for complete
+      ** years in the interest period
+      *
+     C     ZIFY          DOWLT     YY2SV1                                       B3
+      *
+      ** Check if current year is a leap year
+      *
+     C     ZIFY          DIV       4             ZZWN5
+     C                   MVR                     ZZWN5
+     C     ZZWN5         IFNE      0                                            B4
+     C                   ADD       365           NLEAP
+     C                   ELSE                                                   X4
+     C                   ADD       366           LEAP50
+     C                   ENDIF                                                  E4
+      *
+      ** Add 1 to year number
+      *
+     C                   ADD       1             ZIFY
+     C                   ENDDO                                                  E3
+      *
+      ** Finally calculate the days for the last part-year up
+      ** to the end date
+      **
+      ** Get Midas day number for 1st Jan of current year
+      *
+     C                   MOVE      '01'          ZIFM
+     C                   MOVE      '01'          ZIFD
+     C                   MOVE      FRES          ZDATE
+     C                   EXSR      ZDATE1
+     C     ZDAYNO        SUB       1             ZIBEGW            5 0
+     C     ZIEND         SUB       ZIBEGW        ZDAYN2
+      *
+      ** Check if year is a leap year
+      *
+     C     ZIFY          DIV       4             ZZWN5
+     C                   MVR                     ZZWN5
+     C     ZZWN5         IFNE      0                                            B3
+     C                   ADD       ZDAYN2        NLEAP
+     C                   ELSE                                                   X3
+     C                   ADD       ZDAYN2        LEAP50
+     C                   ENDIF                                                  E3
+      *
+     C                   END                                                    E2
+      *
+      ** Multiply non-leap year days by 366/365
+      *
+     C     NLEAP         MULT      366           WNLP1            15 0
+     C     WNLP1         DIV(H)    365           WNLP2            15 9
+      *
+      ** Add the result to the number of leap year days to give
+      ** the total days in interest period
+      *
+     C     ZIEND         SUB       ZIBEG         ZDAYN2
+     C     LEAP50        ADD(H)    WNLP2         INT6DY           15 9
+      *
+      ** Restore saved data
+      *
+     C                   Z-ADD     DATSV1        FRES
+      *
+      ** End for Calc Method = 6
+      *
+     C                   ENDIF
+      *
+     C                   END                                                    - E2
+      *
+     C                   END                                                    - E1
+      *
+     C     ZICALC        IFEQ      4                                            - B1
+     C     ZICALC        OREQ      5
+      *
+      ** One day is subtracted from ZDAYN2 for each occurance of 29 Feb in the
+      ** the interest calculation period inclusive of ZIBEG and ZIEND
+      *
+      ** Find no of four year periods between dates
+      *
+     C     ZDAYN2        DIV       1461          ZIMAN
+     C                   MVR                     ZIREM
+      *
+      ** Find next 29 Feb day no. on or after ZIBEG.
+      *
+     C     ZIBEG         SUB       60            ZIBW1
+     C     ZIBW1         DIV       1461          ZIDW1
+     C                   MVR                     ZIDREM
+      *
+     C     ZIDREM        IFEQ      0                                            - B2
+     C                   Z-ADD     ZIBEG         ZIDW2
+     C                   ENDIF                                                  - E2
+      *
+      ** Round up result
+      *
+     C     ZIDW1         ADD       1             ZIDW2
+      *
+      ** Calculate next 29 Feb.
+      *
+     C     ZIDW2         MULT      1461          ZIDW2
+     C     ZIDW2         ADD       60            ZIDW2
+      *
+      ** If this next 29 Feb. DAYNO - ZIBEG is greater or equal to ZIREM then
+      ** ADD 1 To ZIMAN.
+      *
+     C     ZIDW2         SUB       ZIBEG         ZILPCP
+      *
+     C     ZIREM         IFGE      ZILPCP                                       - B2
+     C                   ADD       1             ZIMAN
+     C                   ENDIF                                                  - E2
+      *
+      ** Subtract ZIMAN from ZDAYN2 to give value of ZDAYN2 required for this
+      ** interest calculation
+      *
+     C     ZDAYN2        SUB       ZIMAN         ZDAYN2
+      *
+     C                   ENDIF                                                  - E1
+      *
+     C                   ENDSR                                                  **ZICD ENDSR**
+      *

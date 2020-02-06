@@ -1,0 +1,1535 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FD Set up Days and Months Shortnames')
+     F****************************************************************
+     F*                                                              *
+     F*                                                              *
+     F*  Midas - Standing Data Module
+     F*                                                              *
+     F*     FD0500 - DAY/MONTH SHORTNAME MAINTENANCE                 *
+     F*                                                              *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAAA03             Date 25Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01319             Date 08Oct91               *
+     F*                                                              *
+     F*****************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes. Recompile due to changes in      *
+      *     S01319 - Remove redundant processing                      *
+     F****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       KC         END
+     F********KL         GO TO PREVIOUS SCREEN                                                CAAA03
+     F*       KE         REFRESH SCREEN                                                       CAAA03
+     F*
+     F*       10         SFLEND FD0500S1
+     F*
+     F*       20         ERROR ON DDACTN
+     F*       21         ERROR ON DDD1NM
+     F*       22         ERROR ON DDD1SN
+     F*       23         ERROR ON DDD2NM
+     F*       24         ERROR ON DDD2SN
+     F*       25         ERROR ON DDD3NM
+     F*       26         ERROR ON DDD3SN
+     F*       27         ERROR ON DDD4NM
+     F*       28         ERROR ON DDD4SN
+     F*       29         ERROR ON DDD5NM
+     F*       30         ERROR ON DDD5SN
+     F*       31         ERROR ON DDD6NM
+     F*       32         ERROR ON DDD6SN
+     F*       33         ERROR ON DDD7NM
+     F*       34         ERROR ON DDD7SN
+     F*       35         ERROR ON DDNM1
+     F*       36         ERROR ON DDNM2
+     F*       37         ERROR ON DDNM3
+     F*       38         ERROR ON DDNM4
+     F*       39         ERROR ON DDNM5
+     F*       40         ERROR ON DDNM6
+     F*       41         ERROR ON DDNM7
+     F*       42         ERROR ON DDNM8
+     F*       43         ERROR ON DDNM9
+     F*       44         ERROR ON DDNM10
+     F*       45         ERROR ON DDNM11
+     F*       46         ERROR ON DDNM12
+     F*
+     F*       60         CHAIN FAIL FDDAYSLL
+     F*       61         CHAIN FAIL FDMNTHLL
+     F*       62         RECORD ON LF/FDDAYSLL OR LF/FDMNTHLL LOCKED
+     F*       63         END OF SCREEN FILE REACHED
+     F*       64         ERROR INDICATOR
+     F*       69         GENERAL WORK INDICATOR
+     F*       70         ADDITIONAL WORK IND USED IN MONTH VALIDATION
+     F*
+     F*       U7         DATA BASE ERROR
+     F*       U8         DATA BASE ERROR
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*FDICDRLLIF**E**********K********DISK*********KINFSR**PSSR**********S01319
+     F************TABTB11F**************************KIGNORE***************S01319
+     F************TABTB20F**************************KIGNORE***************S01319
+     FFDDAYSLLUF  E                    DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FFDMNTHLLUF  E                    DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FFD0500DDCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        @RRN1 KSFILE FD0500D0
+     E                    CPY@    1   1 80
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT
+     E*
+     E** ARRAY OF MONTH SHORTNAMES
+     E                    @MTH   12  12  3               MONTH S/NAMES
+     E*
+     E** ARRAY OF DAY NAMES
+     E                    @DAY    4   7 20               DAY NAMES
+     E*
+     E** ARRAY OF DAY SHORTNAMES
+     E                    @DSN    7   7  2               DAY S/NAMES
+     E*
+     E** ARRAY OF VALID ALPHANUMERIC CHARACTERS
+     E                    @A     36  36  1               ALPHAMERIC CHR
+     E*
+     E** ARRAY OF VALID ALPHAMERIC CHARACTERS
+     E                    @AA    37  37  1               ALPHAMERIC CHR
+     E*
+     E** ARRAY OF DAY SHORTNAMES RECEIVED FROM SCREEN
+     E                    @B          7  2               DAY S/NAMES
+     E                    @C          7  2               DAY S/NAMES
+     E                    @NM         7 20               DAY NAMES
+     E*
+     E** ARRAY HOLDING CHARACTERS MAKING UP MONTH SHORTNAMES
+     E                    @D          3  1               CHR MTH S/NAME
+     E*
+     E** ARRAY OF MONTH SHORTNAMES RECEIVED FROM SCREENNAMES
+     E                    @SN        12  3               CHR MTH S/NAME
+     E                    @S2        12  3               CHR MTH S/NAME
+     I/EJECT
+     I*
+     I**  PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+     I*
+     I**  LOCAL DATA AREA FOR DATA BASE ERROR
+     I           UDS
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPROG
+     I                                      181 183 DBASE
+     I*
+     I** DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I**  DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I                                       51  70 DDD1NM
+     I                                       71  72 DDD1SN
+     I                                       73  92 DDD2NM
+     I                                       93  94 DDD2SN
+     I                                       95 114 DDD3NM
+     I                                      115 116 DDD3SN
+     I                                      117 136 DDD4NM
+     I                                      137 138 DDD4SN
+     I                                      139 158 DDD5NM
+     I                                      159 160 DDD5SN
+     I                                      161 180 DDD6NM
+     I                                      181 182 DDD6SN
+     I                                      183 202 DDD7NM
+     I                                      203 204 DDD7SN
+     I                                      205 207 DDNM1
+     I                                      208 210 DDNM2
+     I                                      211 213 DDNM3
+     I                                      214 216 DDNM4
+     I                                      217 219 DDNM5
+     I                                      220 222 DDNM6
+     I                                      223 225 DDNM7
+     I                                      226 228 DDNM8
+     I                                      229 231 DDNM9
+     I                                      232 234 DDNM10
+     I                                      235 237 DDNM11
+     I                                      238 240 DDNM12
+     I** D/S TO TEST 2 BYTE SHORT DAY NAME AS VALID ALPHAMERIC FIELD
+     ISHDAY       DS                              2
+     I                                        1   1 @LEFT
+     I                                        2   2 @RIGHT
+     I*
+     I** D/S TO MOVE MIDAS RUNDATE INTO LAST UPDATE FIELDS
+     IRUNDAT      DS
+     I                                        1   7 RUNA
+     I*
+     I                                        1   20MNDLUP
+     I                                        3   5 MNMLUP
+     I                                        6   70MNYLUP
+     I*
+     I                                        1   20DNDLUP
+     I                                        3   5 DNMLUP
+     I                                        6   70DNYLUP
+     I                                       13  13 @MBIN                 S01319
+      *                                                                   S01319
+     ISDBANK    E DSSDBANKPD                                              S01319
+      ** BANK DETAILS ACCESSED VIA ACCESS PROGRAM                         S01319
+     I*                                                                   S01319
+     IDSFDY     E DSDSFDY                                                 S01319
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01319
+     I*                                                                   S01319
+     IZMUSER      DS                             17                       S01319
+     I                                       11  13 DBRN                  S01319
+     I*                                                                   S01319
+     I/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN PROCESSING - THIS ROUTINE CONTROLS THE WHOLE PROGRAM     *
+     C*                                                               *
+     C* CALLED BY :                                                   *
+     C*                                                               *
+     C* CALLS :      #A                                               *
+     C*              #B                                               *
+     C*              #C                                               *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C                     EXSR #A
+     C*
+     C           *INU7     IFEQ '0'                        B1
+     C                     EXSR #B                         *1
+     C                     END                             E1
+     C*
+     C                     EXSR #C
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* SUBROUTINES USED                                              *
+     C* ----------------                                              *
+     C*                                                               *
+     C* 1  #ZA   -   WRITE SCREEN                                     *
+     C* 2  #B    -   MAIN CONTROLLING ROUTINE                         *
+     C* 3  #BA   -   SET UP SCREEN DETAILS                            *
+     C* 4  #BB   -   PROCESSING IF ACTION CODE IS 'A'                 *
+     C* 5  #BBA  -   PERFORM FIELD VALIDATION                         *
+     C* 6  #BBB  -   UPDATE FDMNTHLL AND FDDAYSLL WITH SCREEN DETAILS *
+     C* 7  #BBC  -   SETOF ERROR INDICATORS ON CF12                   *
+     C* 8  #BBD  -   SETON ERROR INDS. FOR INVALID DAY S/NAME         *
+     C* 9  #BBE  -   SET ERROR INDS FOR INVALIB MONTH S/NAME          *
+     C* 10 #A    -   INITIAL PROCESSING                               *
+     C* 11 #C    -   TERMINATION PROCESSING                           *
+     C**12*ZA0150*-**ROUTINE*ACCESSES*MIDAS*INSTALLATION*CONTROL*DATA*****S01319
+     C* 12 ZTNLU1 -  ROUTINE TO BTAIN NEXT AVAILABLE TRANSACTION NO.  *
+     C* 13 *PSSR -   EXCEPTION ERROR SUBROUTINE                       *
+     C*                                                               *
+     C* EXTERNAL SUBROUTINES                                          *
+     C*                                                               *
+     C* 1  ZA0240 - SEND MESSAGE TO PROGRAMS MESSAGE QUEUE            *
+     C* 2  ZA0250 - CLEAR PROGRAMS MESSAGE QUEUE                      *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #ZA  - THIS SUBROUTINE DISPLAYS THE MAIN SCREEN.              *
+     C*                                                               *
+     C* CALLED BY : #B                                                *
+     C*             #BA                                               *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C                     TIME           DDTIME
+     C*
+     C                     WRITEFD0500D1
+     C*
+     C                     WRITEFD0500D2
+     C*
+     C           #ZA9      ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**#B***-*THIS*SUBROUTINE*LOOPS*UNTIL*CF3*IS*PRESSED*OR*CF12*IS***                       CAAA03
+     C* #B   - THIS SUBROUTINE LOOPS UNTIL CF3 IS PRESSED OR CF5  IS  *                       CAAA03
+     C*        PRESSED AT THE INITIAL LEVEL                           *
+     C*                                                               *
+     C* CALLED BY : MAIN                                              *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR                           #B
+     C*
+     C** SET UP DEFAULT ACTION CODE
+     C                     MOVE 'E'       DDACTN           *1
+     C*
+     C** LOOP HERE UNTIL CF3
+     C           *INKC     DOWEQ'0'                        B1
+     C*
+     C** ATTEMPT TO LOCK FIRST RECORD ON LF/FDDAYSLL
+     C           @RRN1     SETLLFDDAYSLL                   *1
+     C                     READ FDDAYSLL               6260*1
+     C*
+     C** IF UNABLE TO LOCK RECORD SEND ERROR MESSAGE & GOTO END OF LOOP
+     C           *IN62     IFEQ '1'                        B*2
+     C                     CALL 'ZA0250'                   **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM 'FDM0120' @MSGID 10        **2
+     C                     GOTO #B1                        **2
+     C                     END                             E*2
+     C*
+     C** ATTEMPT TO LOCK FIRST RECORD ON LF/FDMNTHLL
+     C           @RRN1     SETLLFDMNTHLL                   *1
+     C                     READ FDMNTHLL               6260*1
+     C*
+     C** IF UNABLE TO LOCK RECORD SEND ERROR MESSAGE & GOTO END OF LOOP
+     C           *IN62     IFEQ '1'                        B*2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM 'FDM0120' @MSGID 10        **2
+     C                     EXCPT@RLSFL                     **2
+     C                     GOTO #B1                        **2
+     C                     END                             E*2
+     C*                                                                   S01319
+      ** If multibranching, -                                             S01319
+     C           @MBIN     IFEQ 'Y'                        B1             S01319
+      **                                                                  S01319
+      ** - check the action and default branch security                   S01319
+      **                                                                  S01319
+     C                     CALL 'ZVACTBU'                                 S01319
+     C                     PARM           DDACTN                          S01319
+     C                     PARM           DBRN                            S01319
+     C                     PARM           @ERR                            S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                          B*2            S01319
+      ** Set code and message if ZVACTBU ended in error.                  S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVEL'FXM0290' @MSGID                          S01319
+     C                     CALL 'ZA0240'                                  S01319
+     C                     PARM           @MSGID                          S01319
+     C                     GOTO #B1                                       S01319
+     C                     END                             E*2            S01319
+      **                                                                  S01319
+     C                     ELSE                            X1             S01319
+      **                                                                  S01319
+      ** If not multibranching check the user's action code               S01319
+     C                     CALL 'ZVACTU'                   *1             S01319
+     C                     PARM           DDACTN           *1             S01319
+     C                     PARM           @ERR    10       *1             S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                          B*2            S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVEL'FXM0292' @MSGID           **2            S01319
+     C                     CALL 'ZA0240'                   **2            S01319
+     C                     PARM           @MSGID           **2            S01319
+     C                     GOTO #B1                        **2            S01319
+     C                     END                             E*2            S01319
+      **                                                                  S01319
+     C                     END                             E1             S01319
+     C*
+     C** IF RECORDS SUCCESSFULLY LOCKED SET UP SCREEN DETAILS
+     C                     EXSR #BA                        *1
+     C*
+     C** WRITE SCREEN
+     C           #B1       TAG                             *1
+     C                     EXSR #ZA                        *1
+     C*
+     C** READ SCREEN
+     C                     READ FD0500D1                 63*1
+     C*
+     C***IF*ACTION*CODE*IS*'E'*OR*CF12*ENTERED*GO*TO*END*OF*LOOP******                        CAAA03
+     C** IF ACTION CODE IS 'E' OR CF5 ENTERED GO TO END OF LOOP                               CAAA03
+     C           DDACTN    IFEQ 'E'                        B*2
+     C********** *INKL     OREQ '1'                        B*2                                CAAA03
+     C           *INKE     OREQ '1'                                                           CAAA03
+     C                     CALL 'ZA0250'                   **2
+     C                     MOVE '0'       *IN20            **2
+     C                     MOVE 'E'       DDACTN           **2
+     C                     GOTO #B8                        **2
+     C                     END                             E*2
+     C*
+     C** AMEND NOT ALLOWED IF SYSTEM SET UP FLAG ON
+     C***********SFLG******IFEQ*1**************************B*2************S01319
+     C           BJSUC     IFEQ 'Y'                        B*2            S01319
+     C                     MOVE '1'       *IN20            **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM 'FDM0477' @MSGID 10        **2
+     C                     GOTO #B8                        **2
+     C                     END                             E*2
+     C*
+     C** IF ACTION CODE IS AMEND PERFORM VALIDATION AND UPDATE FILES
+     C                     EXSR #BB                        *1
+     C*
+     C           #B8       TAG                             *1
+     C                     END                             E1
+     C*
+     C           #B9       ENDSR                           #B9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BA  - THIS SUBROUTINE SETS UP FIELDS TO BE WRITTEN TO SCREEN *
+     C*                                                               *
+     C* CALLED BY : #B                                                *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR                           #BA
+     C*
+     C** SET UP SCREEN FIELDS FROM LF/FDDAYSLL
+     C                     MOVE DND1NM    DDD1NM
+     C                     MOVE DND2NM    DDD2NM
+     C                     MOVE DND3NM    DDD3NM
+     C                     MOVE DND4NM    DDD4NM
+     C                     MOVE DND5NM    DDD5NM
+     C                     MOVE DND6NM    DDD6NM
+     C                     MOVE DND7NM    DDD7NM
+     C*
+     C                     MOVE DND1SN    DDD1SN
+     C                     MOVE DND2SN    DDD2SN
+     C                     MOVE DND3SN    DDD3SN
+     C                     MOVE DND4SN    DDD4SN
+     C                     MOVE DND5SN    DDD5SN
+     C                     MOVE DND6SN    DDD6SN
+     C                     MOVE DND7SN    DDD7SN
+     C*
+     C** SET UP SCREEN FIELDS FROM LF/FDMNTHLL
+     C                     MOVE MNNM1     DDNM1
+     C                     MOVE MNNM2     DDNM2
+     C                     MOVE MNNM3     DDNM3
+     C                     MOVE MNNM4     DDNM4
+     C                     MOVE MNNM5     DDNM5
+     C                     MOVE MNNM6     DDNM6
+     C                     MOVE MNNM7     DDNM7
+     C                     MOVE MNNM8     DDNM8
+     C                     MOVE MNNM9     DDNM9
+     C                     MOVE MNNM10    DDNM10
+     C                     MOVE MNNM11    DDNM11
+     C                     MOVE MNNM12    DDNM12
+     C*
+     C           #BA9      ENDSR                           #BA9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**#BB**-*THIS*SUBROUTINE*LOOPS*UNTIL*CF3*OR*CF12*IS*PRESSED,*OR**                       CAAA03
+     C* #BB  - THIS SUBROUTINE LOOPS UNTIL CF3 OR CF5 IS PRESSED, OR  *                       CAAA03
+     C*        UNTIL VALID DATA IS ENTERED                            *
+     C*                                                               *
+     C* CALLED BY : #B      - MAIN CONTROLLING ROUTINE                *
+     C*                                                               *
+     C* CALLS:      #BBA    - VALIDATE DATA RECEIVED FROM SCREEN      *
+     C*             #BBB    - UPDATE FDMNTHLL AND FDDAYSLL            *
+     C**************#BBC****-*SETOF*INDICATORS*IF*CF12*****************                       CAAA03
+     C*             #BBC    - SETOF INDICATORS IF CF5                 *                       CAAA03
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR                           #BB
+     C*
+     C***LOOP*HERE*UNTIL*CF3*OR*CF12*PRESSED*OR*VALID*DATA*ENTERED*****                       CAAA03
+     C** LOOP HERE UNTIL CF3 OR CF5 PRESSED OR VALID DATA ENTERED                             CAAA03
+     C           *INKC     DOUEQ'1'                        B1
+     C********** *INKL     OREQ '1'                        *1                                 CAAA03
+     C           *INKE     OREQ '1'                                                           CAAA03
+     C           *IN64     OREQ '0'                        *1
+     C           DDACTN    OREQ 'E'                        *1
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE AND SWITCH OFF ERROR INDICATORS
+     C                     EXSR #BBC                       *1
+     C*
+     C** VALIDATE ACTION CODE - MUST BE 'A' OR 'E'
+     C           DDACTN    IFNE 'E'                        B*2
+     C           DDACTN    ANDNE'A'                        **2
+     C                     MOVE '1'       *IN20            **2
+     C                     MOVE '1'       *IN64            **2
+     C                     CALL 'ZA0240'                   **2
+     C                     PARM 'FDM0471' @MSGID 10        **2
+     C*                                                                   S01319
+     C                     ELSE                                           S01319
+      *                                                                   S01319
+      ** If multibranching, -                                             S01319
+     C           @MBIN     IFEQ 'Y'                                       S01319
+      **                                                                  S01319
+      ** - check the action and default branch security                   S01319
+      **                                                                  S01319
+     C                     CALL 'ZVACTBU'                                 S01319
+     C                     PARM           DDACTN                          S01319
+     C                     PARM           DBRN                            S01319
+     C                     PARM           @ERR                            S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                                         S01319
+      ** Set code and message if ZVACTBU ended in error.                  S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVE '1'       *IN64                           S01319
+     C                     MOVEL'FXM0290' @MSGID                          S01319
+     C                     CALL 'ZA0240'                                  S01319
+     C                     PARM           @MSGID                          S01319
+     C                     END                                            S01319
+      **                                                                  S01319
+     C                     ELSE                                           S01319
+      **                                                                  S01319
+      ** If not multibranching check the user's action code               S01319
+     C                     CALL 'ZVACTU'                                  S01319
+     C                     PARM           DDACTN                          S01319
+     C                     PARM           @ERR    10                      S01319
+      **                                                                  S01319
+     C           @ERR      IFNE 0                                         S01319
+     C                     MOVE '1'       *IN20                           S01319
+     C                     MOVE '1'       *IN64                           S01319
+     C                     MOVEL'FXM0292' @MSGID                          S01319
+     C                     CALL 'ZA0240'                                  S01319
+     C                     PARM           @MSGID                          S01319
+     C                     END                                            S01319
+      **                                                                  S01319
+     C                     END                                            S01319
+      **                                                                  S01319
+     C                     END                             E*2
+     C*
+     C** VALIDATE DATA INPUT FROM SCREEN.
+     C                     EXSR #BBA                       *1
+     C*
+     C** IF DATA VALID UPDATE FILES; OTHERWISE REDISPLAY SCREEN
+     C           *IN64     IFEQ '0'                        B*2
+     C                     EXSR #BBB                       **2
+     C                     ELSE                            X*2
+     C                     EXSR #ZA                        **2
+     C                     READ FD0500D1                 65**2
+     C                     END                             E*2
+     C*
+     C***IF*CF12*PRESSED*SETOF*INDICATORS*&*CLEAR*PROGRAM*MESSAGE*QUEUE                       CAAA03
+     C** IF CF5 PRESSED SETOF INDICATORS & CLEAR PROGRAM MESSAGE QUEUE                        CAAA03
+     C********** *INKL     IFEQ '1'                        B*2                                CAAA03
+     C           *INKE     IFEQ '1'                                                           CAAA03
+     C           DDACTN    OREQ 'E'                        **2
+     C                     EXSR #BBC                       **2
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C** RESET DEFAULT ACTION CODE
+     C                     MOVE 'E'       DDACTN
+     C*
+     C           #BB9      ENDSR                           #BB9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBA - THIS SUBROUTINE IS USED TO VALIDATE SCREEN DATA        *
+     C*                                                               *
+     C* CALLED BY : #BB     - CONTROL AMENDMENT PROCESSING            *
+     C*                                                               *
+     C* CALLS:      ZA0240  - SEND MESSAGE TO PROGRAM MESSAGE QUEUE   *
+     C*             #BBD    - SETON ERROR INDS. FOR INVALID DAY S/NAME*
+     C*             #BBE    - SET ERROR INDS FOR INVALIB MONTH S/NAME *
+     C*                                                               *
+     C* USES :      @MSGID  - MESSAGE ID                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BBA      BEGSR                           #BBA
+     C*
+     C** VALIDATE DETAILS TO BE WRITTEN TO LF/FDDAYSLL FIRST.
+     C** CHECK TO ENSURE THAT ALL DAY NAMES HAVE BEEN ENTERED.
+     C           DDD1NM    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN21            *1
+     C                     END                             E1
+     C*
+     C           DDD2NM    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN23            *1
+     C                     END                             E1
+     C*
+     C           DDD3NM    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN25            *1
+     C                     END                             E1
+     C*
+     C           DDD4NM    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN27            *1
+     C                     END                             E1
+     C*
+     C           DDD5NM    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN29            *1
+     C                     END                             E1
+     C*
+     C           DDD6NM    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN31            *1
+     C                     END                             E1
+     C*
+     C           DDD7NM    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN33            *1
+     C                     END                             E1
+     C*
+     C** IF ANY OF DAY NAMES BLANK SEND ERROR MESSAGE & SETON ERROR IND
+     C           DDD1NM    IFEQ *BLANKS                    B1
+     C           DDD2NM    OREQ *BLANKS                    *1
+     C           DDD3NM    OREQ *BLANKS                    *1
+     C           DDD4NM    OREQ *BLANKS                    *1
+     C           DDD5NM    OREQ *BLANKS                    *1
+     C           DDD6NM    OREQ *BLANKS                    *1
+     C           DDD7NM    OREQ *BLANKS                    *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM 'FDM0472' @MSGID           *1
+     C                     MOVE '1'       *IN64            *1
+     C                     END                             E1
+     C*
+     C** CHECK THAT DAY SHORTNAMES CONTAIN VALID ALPHAMERIC DATA
+     C                     MOVE DDD1SN    SHDAY
+     C*
+     C           @LEFT     LOKUP@A,1                     69
+     C*
+     C           *IN69     IFEQ '1'                        B*1
+     C           @RIGHT    ANDNE*BLANK                     X*1
+     C           @RIGHT    LOKUP@A,1                     69 *1
+     C                     END                             E*1
+     C*
+     C           *IN69     IFEQ '0'                        B*1
+     C                     MOVE '1'       *IN22            **1
+     C                     END                             E*1
+     C*
+     C                     MOVE DDD2SN    SHDAY
+     C*
+     C           @LEFT     LOKUP@A,1                     69
+     C*
+     C           *IN69     IFEQ '1'                        B*1
+     C           @RIGHT    ANDNE*BLANK                     X*1
+     C           @RIGHT    LOKUP@A,1                     69 *1
+     C                     END                             E*1
+     C*
+     C           *IN69     IFEQ '0'                        B*1
+     C                     MOVE '1'       *IN24            **1
+     C                     END                             E*1
+     C*
+     C                     MOVE DDD3SN    SHDAY
+     C*
+     C           @LEFT     LOKUP@A,1                     69
+     C*
+     C           *IN69     IFEQ '1'                        B*1
+     C           @RIGHT    ANDNE*BLANK                     X*1
+     C           @RIGHT    LOKUP@A,1                     69 *1
+     C                     END                             E*1
+     C*
+     C           *IN69     IFEQ '0'                        B*1
+     C                     MOVE '1'       *IN26            **1
+     C                     END                             E*1
+     C*
+     C                     MOVE DDD4SN    SHDAY
+     C*
+     C           @LEFT     LOKUP@A,1                     69
+     C*
+     C           *IN69     IFEQ '1'                        B*1
+     C           @RIGHT    ANDNE*BLANK                     X*1
+     C           @RIGHT    LOKUP@A,1                     69 *1
+     C                     END                             E*1
+     C*
+     C           *IN69     IFEQ '0'                        B*1
+     C                     MOVE '1'       *IN28            **1
+     C                     END                             E*1
+     C*
+     C                     MOVE DDD5SN    SHDAY
+     C*
+     C           @LEFT     LOKUP@A,1                     69
+     C*
+     C           *IN69     IFEQ '1'                        B*1
+     C           @RIGHT    ANDNE*BLANK                     X*1
+     C           @RIGHT    LOKUP@A,1                     69 *1
+     C                     END                             E*1
+     C*
+     C           *IN69     IFEQ '0'                        B*1
+     C                     MOVE '1'       *IN30            **1
+     C                     END                             E*1
+     C*
+     C                     MOVE DDD6SN    SHDAY
+     C*
+     C           @LEFT     LOKUP@A,1                     69
+     C*
+     C           *IN69     IFEQ '1'                        B*1
+     C           @RIGHT    ANDNE*BLANK                     X*1
+     C           @RIGHT    LOKUP@A,1                     69 *1
+     C                     END                             E*1
+     C*
+     C           *IN69     IFEQ '0'                        B*1
+     C                     MOVE '1'       *IN32            **1
+     C                     END                             E*1
+     C*
+     C                     MOVE DDD7SN    SHDAY
+     C*
+     C           @LEFT     LOKUP@A,1                     69
+     C*
+     C           *IN69     IFEQ '1'                        B*1
+     C           @RIGHT    ANDNE*BLANK                     X*1
+     C           @RIGHT    LOKUP@A,1                     69 *1
+     C                     END                             E*1
+     C*
+     C           *IN69     IFEQ '0'                        B*1
+     C                     MOVE '1'       *IN34            **1
+     C                     END                             E*1
+     C*
+     C** IF ANY OF FIELDS IN ERROR SETON ERROR IND & SEND ERROR MESSAGE
+     C           *IN22     IFEQ '1'                        B1
+     C           *IN24     OREQ '1'                        *1
+     C           *IN26     OREQ '1'                        *1
+     C           *IN28     OREQ '1'                        *1
+     C           *IN30     OREQ '1'                        *1
+     C           *IN32     OREQ '1'                        *1
+     C           *IN34     OREQ '1'                        *1
+     C                     MOVE '1'       *IN64            *1
+     C                     MOVE '0'       *IN69            *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM 'FDM0473' @MSGID           *1
+     C                     END                             E1
+     C*
+     C** CHECK THAT DAY SHORTNAMES ARE UNIQUE
+     C** SET UP ARRAY OF DAY SHORNAMES
+     C                     MOVE DDD1SN    @B,1
+     C                     MOVE DDD2SN    @B,2
+     C                     MOVE DDD3SN    @B,3
+     C                     MOVE DDD4SN    @B,4
+     C                     MOVE DDD5SN    @B,5
+     C                     MOVE DDD6SN    @B,6
+     C                     MOVE DDD7SN    @B,7
+     C                     MOVEA@B        @C
+     C*
+     C           1         DO   6         @I      30       B1
+     C           @I        ADD  1         @J      30       *1
+     C           @C,@I     LOKUP@B,@J                    69*1
+     C*
+     C           *IN69     CABEQ'1'       #BBA1            *1
+     C                     END                             E1
+     C*
+     C** DETERMINE WHICH FIELD CONTAINS NON-UNIQUE DAY SHORTNAME AND
+     C** SET RELEVANT INDICATOR ON.
+     C           #BBA1     TAG                             #BBA1
+     C           *IN69     IFEQ '1'                        B1
+     C                     MOVE '1'       *IN64            *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM 'FDM0474' @MSGID           *1
+     C                     EXSR #BBD                       *1
+     C                     END                             E1
+     C*
+     C** CHECK THAT DAY LONG NAMES ARE UNIQUE
+     C** SET UP ARRAY OF DAY LONG NAMES
+     C                     MOVE DDD1NM    @NM,1
+     C                     MOVE DDD2NM    @NM,2
+     C                     MOVE DDD3NM    @NM,3
+     C                     MOVE DDD4NM    @NM,4
+     C                     MOVE DDD5NM    @NM,5
+     C                     MOVE DDD6NM    @NM,6
+     C                     MOVE DDD7NM    @NM,7
+     C*
+     C           1         DO   6         @I      30       B1
+     C           @I        ADD  1         @J      30       *1
+     C                     MOVE @NM,@I    @X20   20
+     C           @X20      LOKUP@NM,@J                   69*1
+     C*
+     C           *IN69     CABEQ'1'       #BBA3            *1
+     C                     END                             E1
+     C*
+     C** DETERMINE WHICH FIELD CONTAINS NON-UNIQUE DAY SHORTNAME AND
+     C** SET RELEVANT INDICATOR ON.
+     C           #BBA3     TAG                             #BBA1
+     C           *IN69     IFEQ '1'                        B1
+     C                     MOVE '1'       *IN64            *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM 'FDM0479' @MSGID           *1
+     C                     EXSR #BBF                       *1
+     C                     END                             E1
+     C*
+     C** NOW VALIDATE DETAILS TO BE OUTPUT TO LF/FDMNTHLL
+     C** CHECK TO ENSURE THAT ALL DAY NAMES HAVE BEEN ENTERED.
+     C           DDNM1     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN35            *1
+     C                     END                             E1
+     C*
+     C           DDNM2     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN36            *1
+     C                     END                             E1
+     C*
+     C           DDNM3     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN37            *1
+     C                     END                             E1
+     C*
+     C           DDNM4     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN38            *1
+     C                     END                             E1
+     C*
+     C           DDNM5     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN39            *1
+     C                     END                             E1
+     C*
+     C           DDNM6     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN40            *1
+     C                     END                             E1
+     C*
+     C           DDNM7     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN41            *1
+     C                     END                             E1
+     C*
+     C           DDNM8     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN42            *1
+     C                     END                             E1
+     C*
+     C           DDNM9     IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN43            *1
+     C                     END                             E1
+     C*
+     C           DDNM10    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN44            *1
+     C                     END                             E1
+     C*
+     C           DDNM11    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN45            *1
+     C                     END                             E1
+     C*
+     C           DDNM12    IFEQ *BLANKS                    B1
+     C                     MOVE '1'       *IN46            *1
+     C                     END                             E1
+     C*
+     C** IF ANY OF MONTH SHORTNAME FIELDS BLANK SEN ERROR MESSAGE
+     C           *IN35     IFEQ '1'                        B1
+     C           *IN36     OREQ '1'                        *1
+     C           *IN37     OREQ '1'                        *1
+     C           *IN38     OREQ '1'                        *1
+     C           *IN39     OREQ '1'                        *1
+     C           *IN40     OREQ '1'                        *1
+     C           *IN41     OREQ '1'                        *1
+     C           *IN42     OREQ '1'                        *1
+     C           *IN43     OREQ '1'                        *1
+     C           *IN44     OREQ '1'                        *1
+     C           *IN45     OREQ '1'                        *1
+     C           *IN46     OREQ '1'                        *1
+     C                     MOVE '1'       *IN64            *1
+     C                     MOVE '0'       *IN69            *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM 'FDM0475' @MSGID           *1
+     C                     END                             E1
+     C*
+     C** SET UP ARRAY CONTAINING MONTH SHORTNAMES RECEIVED FROM SCREEN
+     C                     MOVE DDNM1     @SN,1
+     C                     MOVE DDNM2     @SN,2
+     C                     MOVE DDNM3     @SN,3
+     C                     MOVE DDNM4     @SN,4
+     C                     MOVE DDNM5     @SN,5
+     C                     MOVE DDNM6     @SN,6
+     C                     MOVE DDNM7     @SN,7
+     C                     MOVE DDNM8     @SN,8
+     C                     MOVE DDNM9     @SN,9
+     C                     MOVE DDNM10    @SN,10
+     C                     MOVE DDNM11    @SN,11
+     C                     MOVE DDNM12    @SN,12
+     C*
+     C** CHECK THAT MONTH SHORTNAMES CONTAIN VALID ALPHAMERIC DATA
+     C           1         DO   12        @J               B1
+     C                     MOVEA@SN,@J    @D               *1
+     C           1         DO   3         @K      10       B*2
+     C           @D,@K     LOKUP@AA,1                    69**2
+     C*
+     C** SET UP ERROR INDICATORS
+     C           *IN69     IFEQ '0'                        B**3
+     C                     Z-ADD*ZERO     @I               ***3
+     C                     EXSR #BBE                       ***3
+     C                     MOVE '1'       *IN70            ***3
+     C                     END                             E**3
+     C                     END                             E*2
+     C                     END                             E1
+     C*
+     C** IF INVALID MONTH NAME OUTPUT ERROR MESSAGE
+     C           *IN70     IFEQ '1'                        B1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM 'FDM0475' @MSGID           *1
+     C                     MOVE '1'       *IN64            *1
+     C                     MOVE '0'       *IN70            *1
+     C                     END                             E1
+     C*
+     C** CHECK THAT MONTH SHORTNAMES ARE UNIQUE
+     C           1         DO   11        @I               B1
+     C                     MOVEA@SN       @S2              *1
+     C                     Z-ADD1         @J      30       *1
+     C           @SN,@I    LOKUP@S2,@J                   69*1
+     C                     ADD  1         @J               *1
+     C           @SN,@I    LOKUP@S2,@J                   69*1
+     C*
+     C           *IN69     CABEQ'1'       #BBA2            *1
+     C                     END                             E1
+     C*
+     C** DETERMINE WHICH FIELD CONTAINS NON-UNIQUE DAY SHORTNAME AND
+     C** SET RELEVANT INDICATOR ON.
+     C           #BBA2     TAG                             #BBA2
+     C           *IN69     IFEQ '1'                        B1
+     C                     MOVE '1'       *IN64            *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM 'FDM0476' @MSGID           *1
+     C                     EXSR #BBE                       *1
+     C                     END                             E1
+     C*
+     C           #BBA9     ENDSR                           #BBA9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBB - SETS UP FIELDS AND UPDATES LF/FDDAYSLL AND LF/FDMNTHLL *
+     C*                                                               *
+     C* CALLED BY : #BB     - CONTROL AMENDMENT PROCESSING            *
+     C*                                                               *
+     C* CALLS:   ZA0240 - SEND MESSAGE TO PROGRAM MESSAGE QUEUE       *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BBB      BEGSR                           #BBB
+     C*
+     C** PREPARE DETAILS TO BE WRITTEN TO LF/FDDAYSLL FIRST.
+     C                     MOVE 'DN'      DNRCID
+     C                     MOVE ' '       DNDLTF
+     C                     MOVE 'A'       DNCHTP
+     C*
+     C** GET TIME RUNDATE AND USER INFORMATION FIELDS
+     C                     TIME           DNTLUP
+     C*********************Z-ADDRUND******DNLCD***************************S01319
+     C                     Z-ADDBJRDNB    DNLCD                           S01319
+     C                     MOVEL@USER     DNLUID
+     C*
+     C** SET UP DAY NAMES TO BE OUTPUT TO FILE
+     C                     MOVE DDD1NM    DND1NM
+     C                     MOVE DDD2NM    DND2NM
+     C                     MOVE DDD3NM    DND3NM
+     C                     MOVE DDD4NM    DND4NM
+     C                     MOVE DDD5NM    DND5NM
+     C                     MOVE DDD6NM    DND6NM
+     C                     MOVE DDD7NM    DND7NM
+     C*
+     C** SET UP DAY SHORTNAMES TO BE OUTPUT TO FILE
+     C                     MOVE DDD1SN    DND1SN
+     C                     MOVE DDD2SN    DND2SN
+     C                     MOVE DDD3SN    DND3SN
+     C                     MOVE DDD4SN    DND4SN
+     C                     MOVE DDD5SN    DND5SN
+     C                     MOVE DDD6SN    DND6SN
+     C                     MOVE DDD7SN    DND7SN
+     C*
+     C** UPDATE FILE LF/FDDAYSLL
+     C                     UPDATFDDAYSP0
+     C*
+     C** SET UP STANDARD FIELDS OUTPUT TO LF/FDMNTHLL
+     C                     MOVE 'MN'      MNRCID
+     C                     MOVE ' '       MNDLTF
+     C                     MOVE 'A'       MNCHTP
+     C                     MOVE DNTLUP    MNTLUP
+     C                     MOVE DNCHTP    MNCHTP
+     C                     MOVE DNLUID    MNLUID
+     C                     Z-ADDDNLCD     MNLCD
+     C*
+     C** SET UP MONTH SHORTNAMES TO BE OUTPUT TO FILE
+     C                     MOVE DDNM1     MNNM1
+     C                     MOVE DDNM2     MNNM2
+     C                     MOVE DDNM3     MNNM3
+     C                     MOVE DDNM4     MNNM4
+     C                     MOVE DDNM5     MNNM5
+     C                     MOVE DDNM6     MNNM6
+     C                     MOVE DDNM7     MNNM7
+     C                     MOVE DDNM8     MNNM8
+     C                     MOVE DDNM9     MNNM9
+     C                     MOVE DDNM10    MNNM10
+     C                     MOVE DDNM11    MNNM11
+     C                     MOVE DDNM12    MNNM12
+     C*
+     C** UPDATE FILE LF/FDMNTHLL
+     C                     UPDATFDMNTHP0
+     C*
+     C** SET UP COMIT TEXT
+     C                     EXSR ZTNLU1
+     C*
+     C** COMMIT RECORDS AND SEND CONFIRMATION MESSAGES
+     C           CMTTXT    COMIT
+     C                     CALL 'ZA0240'
+     C                     PARM 'FDM0478' @MSGID
+     C*
+     C           #BBB9     ENDSR                           #BB9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**#BBC*-*THIS*SUBROUTINE*RESETS*ERROR*INDICATORS*ON*CF12*********                       CAAA03
+     C* #BBC - THIS SUBROUTINE RESETS ERROR INDICATORS ON CF5         *                       CAAA03
+     C*                                                               *
+     C* CALLED BY : #BB     - SCREEN DETAILS VALIDATION               *
+     C*                                                               *
+     C* CALLS: ZA0250 - CLEAR PROGRAM MESSAGE QUEUE                   *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BBC      BEGSR                           #BBC
+     C*
+     C***IF*CF12*RESET*ACTION*CODE.************************************                       CAAA03
+     C** IF CF5 RESET ACTION CODE.                                                            CAAA03
+     C********** *INKL     IFEQ '1'                        B1                                 CAAA03
+     C           *INKE     IFEQ '1'                                                           CAAA03
+     C                     MOVE 'E'       DDACTN           *1
+     C                     END                             E1
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     CALL 'ZA0250'
+     C*
+     C** SET OFF ALL SCREEN ERROR INDICATORS.
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN27
+     C                     MOVE '0'       *IN28
+     C                     MOVE '0'       *IN29
+     C                     MOVE '0'       *IN30
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN37
+     C                     MOVE '0'       *IN38
+     C                     MOVE '0'       *IN39
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN41
+     C                     MOVE '0'       *IN42
+     C                     MOVE '0'       *IN43
+     C                     MOVE '0'       *IN44
+     C                     MOVE '0'       *IN45
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN64
+     C                     MOVE '0'       *IN69
+     C*
+     C           BBC9      ENDSR                           #BBC9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBD - THIS SUBROUTINE SETS ON DAY S/NAME ERROR INDICATORS    *
+     C*                                                               *
+     C* CALLED BY : #BB     - SCREEN DETAILS VALIDATION               *
+     C*                                                               *
+     C* CALLS:                                                        *
+     C*                                                               *
+     C* USES :      @J      - INVALID DAY SHORTNAME                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BBD      BEGSR                           #BBD
+     C*
+     C           @I        IFEQ 1                          B*2
+     C           @J        OREQ 1                          **2
+     C                     MOVE '1'       *IN22            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 2                          B*2
+     C           @J        OREQ 2                          **2
+     C                     MOVE '1'       *IN24            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 3                          B*2
+     C           @J        OREQ 3                          **2
+     C                     MOVE '1'       *IN26            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 4                          B*2
+     C           @J        OREQ 4                          **2
+     C                     MOVE '1'       *IN28            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 5                          B*2
+     C           @J        OREQ 5                          **2
+     C                     MOVE '1'       *IN30            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 6                          B*2
+     C           @J        OREQ 6                          **2
+     C                     MOVE '1'       *IN32            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 7                          B*2
+     C           @J        OREQ 7                          **2
+     C                     MOVE '1'       *IN34            **2
+     C                     END                             E*2
+     C*
+     C           #BBD9     ENDSR                           #BBD9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBE - THIS SUBROUTINE SETS ON MONTH S/NAME ERROR INDICATORS  *
+     C*                                                               *
+     C* CALLED BY : #BB     - SCREEN DETAILS VALIDATION               *
+     C*                                                               *
+     C* CALLS:                                                        *
+     C*                                                               *
+     C* USES :      @J      - INVALID MONTH SHORTNAME                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BBE      BEGSR                           #BBE
+     C*
+     C           @J        IFEQ 1                          B1
+     C           @I        OREQ 1                          *1
+     C                     MOVE '1'       *IN35            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 2                          B1
+     C           @I        OREQ 2                          *1
+     C                     MOVE '1'       *IN36            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 3                          B1
+     C           @I        OREQ 3                          *1
+     C                     MOVE '1'       *IN37            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 4                          B1
+     C           @I        OREQ 4                          *1
+     C                     MOVE '1'       *IN38            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 5                          B1
+     C           @I        OREQ 5                          *1
+     C                     MOVE '1'       *IN39            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 6                          B1
+     C           @I        OREQ 6                          *1
+     C                     MOVE '1'       *IN40            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 7                          B1
+     C           @I        OREQ 7                          *1
+     C                     MOVE '1'       *IN41            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 8                          B1
+     C           @I        OREQ 8                          *1
+     C                     MOVE '1'       *IN42            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 9                          B1
+     C           @I        OREQ 9                          *1
+     C                     MOVE '1'       *IN43            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 10                         B1
+     C           @I        OREQ 10                         *1
+     C                     MOVE '1'       *IN44            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 11                         B1
+     C           @I        OREQ 11                         *1
+     C                     MOVE '1'       *IN45            *1
+     C                     END                             E1
+     C*
+     C           @J        IFEQ 12                         B1
+     C           @I        OREQ 12                         *1
+     C                     MOVE '1'       *IN46            *1
+     C                     END                             E1
+     C*
+     C           #BBE9     ENDSR                           #BBE9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #BBF - THIS SUBROUTINE SETS ON DAY L/NAME ERROR INDICATORS    *
+     C*                                                               *
+     C* CALLED BY : #BB     - SCREEN DETAILS VALIDATION               *
+     C*                                                               *
+     C* CALLS:                                                        *
+     C*                                                               *
+     C* USES :      @J      - INVALID DAY LONG NAME                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #BBF      BEGSR                           #BBF
+     C*
+     C           @I        IFEQ 1                          B*2
+     C           @J        OREQ 1                          **2
+     C                     MOVE '1'       *IN21            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 2                          B*2
+     C           @J        OREQ 2                          **2
+     C                     MOVE '1'       *IN23            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 3                          B*2
+     C           @J        OREQ 3                          **2
+     C                     MOVE '1'       *IN25            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 4                          B*2
+     C           @J        OREQ 4                          **2
+     C                     MOVE '1'       *IN27            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 5                          B*2
+     C           @J        OREQ 5                          **2
+     C                     MOVE '1'       *IN29            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 6                          B*2
+     C           @J        OREQ 6                          **2
+     C                     MOVE '1'       *IN31            **2
+     C                     END                             E*2
+     C*
+     C           @I        IFEQ 7                          B*2
+     C           @J        OREQ 7                          **2
+     C                     MOVE '1'       *IN33            **2
+     C                     END                             E*2
+     C*
+     C           #BBF9     ENDSR                           #BBF9
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #A  - PERFORMS PROGRAM AND FILE INITIALISATION                *
+     C*                                                               *
+     C* CALLED BY : MAIN                                              *
+     C*                                                               *
+     C**CALLS*:*ZA0150*-*ACCESSES*LF/FDINSTLL*****************************S01319
+     C*                                                               *
+     C* USES : ZA0250 - CLEAR PROGRAM MESSGE QUEUE                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** SET UP PROGRAM NAME AND WORKSTATION ID
+     C                     MOVEL'FD0500'  DBPROG
+     C                     MOVEL@JOB      DDWID
+     C                     Z-ADD1         @RRN1   30
+     C                     MOVE '1'       *IN10
+     C                     MOVEL'*'       PGMQ
+     C*
+     C***ACCESS*TABTB10*TO*GET*HOLD*OF*SYSTEM*SETUP*FLAG******************S01319
+     C*********************EXSR*ZA0150************************************S01319
+     C********************************************************************S01319
+     C************IN80*****IFEQ*'1'***************************************S01319
+     C*********************MOVE*'1'********INU7***************************S01319
+     C*********************MOVE*'1'********INU8***************************S01319
+     C*********************GOTO*#A9***************************************S01319
+     C*********************END********************************************S01319
+     C*   Call AOBANKR0 to access MIDAS run date.                         S01319
+     C                     CALL 'AOBANKR0'                                S01319
+     C                     PARM '*DBERR ' @RTCD   7                       S01319
+     C                     PARM '*FIRST ' @OPTN   7                       S01319
+     C           SDBANK    PARM SDBANK    DSFDY                           S01319
+     C*                                                                   S01319
+     C                     MOVE BJMRDT    RUNA                            S01319
+     C*
+     C           #A1       TAG
+     C*
+     C** CLEAR PROGRAM MESSAGE QUEUE
+     C                     CALL 'ZA0250'
+     C*
+     C** CHECK THAT DETAILS OF DAY AND MONTH SHORTNAMES ALREADY ON
+     C** LF/FDDAYSLL AND LF/FDMNTHLL
+     C                     READ FDDAYSLL               6260
+     C*
+     C** ATTEMPT TO LOCK FIRST RECORD ON LF/FDMNTHLL
+     C                     READ FDMNTHLL               6261
+     C*
+     C** IF RECORD LOCKED GOTO END OF SUBROUTINE
+     C           *IN62     IFEQ '1'                        B1
+     C                     CALL 'ZA0250'                   *1
+     C                     CALL 'ZA0240'                   *1
+     C                     PARM 'FDM0120' @MSGID           *1
+     C                     EXSR #ZA                        *1
+     C                     READ FD0500D1                 63*1
+     C*
+     C********** *INKL     IFEQ '1'                        B*2                                CAAA03
+     C           *INKE     IFEQ '1'                                                           CAAA03
+     C                     MOVE '1'       *INKC            **2
+     C                     END                             E*2
+     C*
+     C           *INKC     CABEQ'1'       #A9              *1
+     C                     GOTO #A1                        *1
+     C                     END                             E1
+     C*
+     C** IF SYSTEM SET UP FLAG ON AND NO RECORD FOUND DB ERROR
+     C***********SFLG******IFEQ*1**************************B1*************S01319
+     C           BJSUC     IFEQ 'Y'                        B1             S01319
+     C           *IN60     ANDEQ'1'                        ***************
+     C                     MOVEL'FDDAYSLL'DBFILE           *             *
+     C                     MOVEL'001'     DBASE            * DBERROR 001 *
+     C                     MOVEL*BLANKS   DBKEY            *             *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C** IF SYSTEM SET UP FLAG ON AND NO RECORD FOUND DB ERROR
+     C***********SFLG******IFEQ*1**************************B1*************S01319
+     C           BJSUC     IFEQ 'Y'                        B1             S01319
+     C           *IN61     ANDEQ'1'                        ***************
+     C                     MOVEL'FDMNTHLL'DBFILE           *             *
+     C                     MOVEL'002'     DBASE            * DBERROR 002 *
+     C                     MOVEL*BLANKS   DBKEY            *             *
+     C                     MOVE '1'       *INU7            ***************
+     C                     MOVE '1'       *INU8            *1
+     C                     GOTO #A9                        *1
+     C                     END                             E1
+     C*
+     C** IF NO RECORD ON LF/FDDAYSLL, WRITE NEW RECORD USING COMPILE
+     C** TIME ARRAYS.
+     C           *IN60     IFEQ '1'                        B1
+     C                     MOVE 'DN'      DNRCID           *1
+     C                     MOVE ' '       DNDLTF           *1
+     C                     MOVE 'I'       DNCHTP           *1
+     C*
+     C** GET TIME RUNDATE AND USER INFORMATION FIELDS
+     C                     TIME           DNTLUP           *1
+     C*********************Z-ADDRUND******DNLCD*************1*************S01319
+     C                     Z-ADDBJRDNB    DNLCD            *1             S01319
+     C                     MOVEL@USER     DNLUID           *1
+     C*
+     C** SET UP DAY NAMES TO BE OUTPUT TO FILE
+     C                     MOVE @DAY,1    DND1NM           *1
+     C                     MOVE @DAY,2    DND2NM           *1
+     C                     MOVE @DAY,3    DND3NM           *1
+     C                     MOVE @DAY,4    DND4NM           *1
+     C                     MOVE @DAY,5    DND5NM           *1
+     C                     MOVE @DAY,6    DND6NM           *1
+     C                     MOVE @DAY,7    DND7NM           *1
+     C*
+     C** SET UP DAY SHORTNAMES TO BE OUTPUT TO FILE
+     C                     MOVE @DSN,1    DND1SN           *1
+     C                     MOVE @DSN,2    DND2SN           *1
+     C                     MOVE @DSN,3    DND3SN           *1
+     C                     MOVE @DSN,4    DND4SN           *1
+     C                     MOVE @DSN,5    DND5SN           *1
+     C                     MOVE @DSN,6    DND6SN           *1
+     C                     MOVE @DSN,7    DND7SN           *1
+     C*
+     C** WRITE NEW RECORD TO FILE LF/FDDAYSLL
+     C                     WRITEFDDAYSP0                   *1
+     C                     END                             E1
+     C*
+     C** IF NO RECORD ON LF/FDDAYSLL, WRITE NEW RECORD USING COMPILE
+     C** TIME ARRAYS.
+     C           *IN61     IFEQ '1'                        B1
+     C                     MOVE 'MN'      MNRCID           *1
+     C                     MOVE ' '       MNDLTF           *1
+     C                     MOVE 'I'       MNCHTP           *1
+     C*
+     C** GET TIME RUNDATE AND USER INFORMATION FIELDS
+     C                     TIME           MNTLUP           *1
+     C*********************Z-ADDRUND******MNLCD*************1*************S01319
+     C                     Z-ADDBJRDNB    MNLCD            *1             S01319
+     C                     MOVEL@USER     MNLUID           *1
+     C*
+     C** SET UP DAY NAMES TO BE OUTPUT TO FILE
+     C                     MOVE @MTH,1    MNNM1            *1
+     C                     MOVE @MTH,2    MNNM2            *1
+     C                     MOVE @MTH,3    MNNM3            *1
+     C                     MOVE @MTH,4    MNNM4            *1
+     C                     MOVE @MTH,5    MNNM5            *1
+     C                     MOVE @MTH,6    MNNM6            *1
+     C                     MOVE @MTH,7    MNNM7            *1
+     C                     MOVE @MTH,8    MNNM8            *1
+     C                     MOVE @MTH,9    MNNM9            *1
+     C                     MOVE @MTH,10   MNNM10           *1
+     C                     MOVE @MTH,11   MNNM11           *1
+     C                     MOVE @MTH,12   MNNM12           *1
+     C                     WRITEFDMNTHP0                   *1
+     C                     END                             E1
+     C*
+     C** IF NO RECORDS ON LF/FDDAYSLL OR LF/FDMNTHLL
+     C           *IN60     IFEQ '1'
+     C           *IN61     OREQ '1'
+     C*
+     C*
+     C** SET UP COMIT TEXT
+     C                     EXSR ZTNLU1
+     C*
+     C** COMMIT RECORDS
+     C           CMTTXT    COMIT
+     C*
+     C                     END
+     C**                                                                  S01319
+     C** READ DATA AREA - RUNDAT                                          S01319
+     C           *NAMVAR   DEFN           RUNDAT                          S01319
+     C                     IN   RUNDAT                                    S01319
+     C**  GET ZMUSER to access default branch.                            S01319
+     C**                                                                  S01319
+     C           *NAMVAR   DEFN           ZMUSER                          S01319
+     C                     IN   ZMUSER                                    S01319
+     C                     UNLCKZMUSER                                    S01319
+     C*
+     C           #A9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C  - TERMINATES THE PROGRAM BY SETTING ON LR                 *
+     C*                                                               *
+     C* CALLED BY : MAIN                                              *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C           #C9       ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C********************************************************************S01319
+     C********SUBROUTINE*ZA0150*-*THIS*SUBROUTINE*CHAINS*TO*FILE*LF/******S01319
+     C********FDICDRLL*TO*GET*THE*INSTALLATION*CONTROL*DETAILS*RECORD*****S01319
+     C********1*(HELD*ON*PF/TABTB10)**************************************S01319
+     C********INDICATOR*80*IS*SET*ON*IF*THE*CHAIN*FAILS*OR*THE*RECORD*****S01319
+     C********IS*FLAGGED*FOR*DELETION.************************************S01319
+     C********IF*INDICATOR*80*IS*SET*ON*DETAILS*OF*THE*ATTEMPTED**********S01319
+     C********ACCESS*ARE*PLACED*IN*THE*LDA.*******************************S01319
+     C********************************************************************S01319
+     C********FIELDS*USED*:*SS0150*-*KEY*USED*TO*ACCESS*FDICDRLL**********S01319
+     C********************************************************************S01319
+     C********************************************************************S01319
+     C********************************************************************S01319
+     C***********ZA0150****BEGSR******************************************S01319
+     C********************************************************************S01319
+     C***SET*UP*KEY*TO*OBTAIN*FORMAT*TABTB10F*'01********10'**************S01319
+     C*********************MOVEL'01'******SS0150*12***********************S01319
+     C*********************MOVE*'10'******SS0150**************************S01319
+     C********************************************************************S01319
+     C***CHAIN*TO*FILE*FDICDRLL*******************************************S01319
+     C***********SS0150****CHAINFDICDRLL*************80*******************S01319
+     C***********RECI******IFNE*'D'************************B1*************S01319
+     C*********************MOVE*'1'********IN80*************1*************S01319
+     C*********************END*****************************E1*************S01319
+     C********************************************************************S01319
+     C***DEAL*WITH*DATA*BASE*ERROR****************************************S01319
+     C************IN80*****IFEQ*'1'***************************************S01319
+     C*********************MOVEL'FDICDRLL'DBFILE**************************S01319
+     C*********************MOVEL'900'*****DBASE**************DBERROR*900**S01319
+     C*********************MOVELSS0150****DBKEY***************************S01319
+     C*********************END********************************************S01319
+     C********************************************************************S01319
+     C***********ZA0159****ENDSR******************************************S01319
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* ZTNLU1- TO LOCK AND UPDATE THE TRANSACTION NUMBER DATA AREA   *
+     C*                                                               *
+     C* CALLED BY : #BBB - PERFORM UPDATE OF LF/FDMNTHLL & FDDAYSLL   *
+     C*             #A   - SET UP INITIAL DETAILS                     *
+     C*                                                               *
+     C* CALLS :                                                       *
+     C*                                                               *
+     C* USES :                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C*
+     C** SET UP COMMIT TEXT
+     C                     MOVE 'FD'      MDID
+     C                     MOVEL'FD0500'  PGMN
+     C                     MOVE DDWID     WSIDX
+     C                     TIME           MTIME
+     C                     MOVE DNCHTP    ACTCDX
+     C                     MOVE @USER     USRIDX
+     C*
+     C           ZTNLU9    ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*       EXCEPTION ERROR SUBROUTINE                              *
+     C*                                                               *
+     C*       SUBROUTINE CALLED: EXECUTES WHENEVER EITHER             *
+     C*       FILE OR PROGRAM ERROR OCCURS                            *
+     C*       SUBROUTINE CALSS : NO OTHER SUBROUTINES                 *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C                     DUMP
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     OFDDAYSP0E                @RLSFL
+** CPY@
+(c) Finastra International Limited 2001
+** ARRAY TO HOLD MONTHS NAMES FOR THE UPDATES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** ARRAY OF DAY NAMES
+MONDAY              TUESDAY             WEDNESDAY           THURSDAY
+FRIDAY              SATURDAY            SUNDAY
+** ARRAY OF DAY SHORTNAMES
+01020304050607
+** ARRAY OF ALPHANUMERIC CHARACTERS
+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+** ARRAY OF ALPHAMERIC CHARACTERS
+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789

@@ -1,0 +1,1128 @@
+     H        1
+      *****************************************************************
+     F/COPY WNCPYSRC,SD9173RF01
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD General ledger ICD maintenance 3')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9173R - Maintain General Ledger ICD - Screen 3             *
+      *                                                               *
+      *  Function:  This program maintains the general ledger ICD     *
+      *                                                               *
+      *  Called By: SD9172R - General Ledger Maintenance              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD049513           Date 12Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG26717           Date 11Nov09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRE009             Date 13Sep02               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD009             Date 10Oct00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CGL010  *Create        Date  08Nov99          *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD049513 - CGL010: ICD set up inconsistency                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG26717 - GLC30 00001 - Database Error in GL0600            *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CRE009 - Projected Account Movements for RE accounts         *
+      *  CSD009 - Profit Centre Accounting Default Matrix Enhancement *
+      *  CGL010 - Future Value Dated Journal Entries for              *
+      *           Non-Retail Accounts                                 *
+      *                                                               *
+      *****************************************************************
+     FSDGELRL0UF  E           K        DISK                      A
+     F            @BKREEB                           KRENAMESDGELR0
+     F                                              KCOMIT
+     FSDGELRL1IF  E           K        DISK
+     F            @BKREEC                           KRENAMESDGELR1
+     F/COPY WNCPYSRC,SD9173RF02
+     FSD9173R#CF  E                    WORKSTN
+     F            SD9173F0                          KRENAMESCREEN
+     FGLVALPL1IF  E           K        DISK
+     FSDACODL1IF  E           K        DISK
+     FACACOD  IF  E           K        DISK                                                 BUG26717
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *       F U N C T I O N   O F   I N D I C A T O R S             *
+      *                                                               *
+      *       03      F3  Pressed Exit Program                        *
+      *       12      F12 Pressed Goto Previous Screen                *
+      *       30      Error Indicator                                 *
+      *       50      Invalid Number of days to Forward Value         *
+      *       51      Invalid Allow Future Value - Nostro             *
+      *       52      Invalid Transitory Debit Account Code - Nostro  *
+      *       53      Invalid Transitory Credit Account Code- Nostro  *
+      *       54      Invalid Allow Future Value - Dealing            *
+      *       55      Invalid Transitory Debit Account Code - Dealing *
+      *       56      Invalid Transitory Credit Account Code- Dealing *
+      *       57      Invalid Allow Future Value - Contingent         *
+      *       58      Invalid Transitory Debit Account Code - Conting *
+      *       59      Invalid Transitory Credit Account Code- Conting *
+      *       60      Invalid Allow Future Value - GL                 *
+      *       61      Invalid Transitory Debit Account Code - GL      *
+      *       62      Invalid Transitory Credit Account Code- GL      *
+      *       70      Error Indicator                                 *
+      *       84      Chain Indicator for SDGELRL0                    *
+      *       85      Chain Indicator for SDGELRL1                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IRUNDAT      DS                             13
+     I                                        1   7 MRDT
+     ILDA       E DSLDA                         256
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     INWRCD     E DSSDGELRL1
+      ** Current/previous file fields
+      *
+     I*SVRCD****   DS                            121                      CSD009
+     I***SVRCD**     DS                            133                                 CSD009 CGL029
+     ISVRCD       DS                           9999                                           CGL029
+      ** Stored  file fields
+      *                                                                   CRE009
+     ISCSARD    E DSSCSARDPD                                              CRE009
+      **  SAR File Details Accessed via Access Program AOSARDR0           CRE009
+      *                                                                   CRE009
+     IDSFDY     E DSDSFDY                                                 CRE009
+      ** DS for access programs, short data structure                     CRE009
+     I/COPY WNCPYSRC,SD9173RI01
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                   Index to subroutines                        *
+      *  Main routine                                                 *
+      *  SRINIT  -  Initial processing                                *
+      *  SRCLR   -  Clear message file                                *
+      *  SREND   -  Exit from program                                 *
+      *  SREXIT  -  Exit from program if F3  has been pressed         *
+      *  SRPREV  -  Exit from program if F12 has been pressed         *
+      *  SRUDAT  -  Write/Update Record in SDGELRPD                   *
+      *  SRVALD  -  Validate details                                  *
+      *  SRNODS  -  Validate 'Number of Days to Forward Value'        *
+      *  SRALOW  -  Validate 'Allow Future Valued Postings'           *
+      *  SRACAM  -  Validate Account Codes                            *
+      *  SRACMD  -  Validate Account Codes                            *
+      *  SRACPD  -  Validate Account Codes                            *
+      *  ZASNMS  -  Send message to program's message queue           *
+      *  *PSSR   -  Error handling subroutine                         *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR SRINIT
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C           *IN30     DOUEQ'1'
+      *
+      ** If error write messages
+      *
+     C           *IN70     IFEQ '1'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+      *
+      ** Main Format of the Display File
+      *
+     C                     EXFMTSCREEN
+     C                     EXSR SRCLR
+      *
+     C           *IN03     CASEQ'1'       SREXIT
+     C           *IN12     CASEQ'1'       SRPREV
+     C                     CAS            SRVALD
+      *
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+      ** Exit from program
+      *
+     C                     EXSR SREND
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLR   -  Clear Message File                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : Y2CLMSC - Clear specifield program message queue  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCLR     BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREND   -  Exit from Program                                 *
+      *  Called by: Main routine, SREXIT, SRPREV                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREND     BEGSR
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREXIT  -  Exit from Program if F3 has been pressed          *
+      *  Called by: Main routine                                      *
+      *  Calls    : SREND                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREXIT    BEGSR
+      *
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR SREND
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT  -  Initial Processing                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           PARC   10
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Only do first time through
+      *
+     C           WFIRST    IFEQ *BLANKS
+      *
+      ** Define the RUNDAT to obtain rundate
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C                     MOVE ##PGM     DBPGM
+     C                     MOVE USER      ##USR
+     C                     MOVE JOB       ##JOB
+     C                     MOVE MRDT      ##MRDT
+      *
+     C                     MOVE 'N'       WFIRST  1
+      *
+     C                     ENDIF
+      *
+     C           PARC      CHAINSDGELRL1             85
+      *
+      ** Load sreen fields
+      *
+     C           *IN85     IFEQ '0'
+      *
+     C                     MOVE BKNDFV    SFDAY
+     C                     MOVE BKAFVN    SAFVN
+      *
+     C           BKTDAN    IFEQ 0
+     C                     MOVE *BLANKS   STDAN
+     C                     ELSE
+     C                     MOVE BKTDAN    STDAN
+     C                     ENDIF
+      *
+     C           BKTCAN    IFEQ 0
+     C                     MOVE *BLANKS   STCAN
+     C                     ELSE
+     C                     MOVE BKTCAN    STCAN
+     C                     ENDIF
+      *
+     C                     MOVE BKAFVD    SAFVD
+      *
+     C           BKTDAD    IFEQ 0
+     C                     MOVE *BLANKS   STDAD
+     C                     ELSE
+     C                     MOVE BKTDAD    STDAD
+     C                     ENDIF
+      *
+     C           BKTCAD    IFEQ 0
+     C                     MOVE *BLANKS   STCAD
+     C                     ELSE
+     C                     MOVE BKTCAD    STCAD
+     C                     ENDIF
+      *
+     C                     MOVE BKAFVC    SAFVC
+      *
+     C           BKTDAC    IFEQ 0
+     C                     MOVE *BLANKS   STDAC
+     C                     ELSE
+     C                     MOVE BKTDAC    STDAC
+     C                     ENDIF
+      *
+     C           BKTCAC    IFEQ 0
+     C                     MOVE *BLANKS   STCAC
+     C                     ELSE
+     C                     MOVE BKTCAC    STCAC
+     C                     ENDIF
+      *
+     C                     MOVE BKAFVG    SAFVG
+      *
+     C           BKTDAG    IFEQ 0
+     C                     MOVE *BLANKS   STDAG
+     C                     ELSE
+     C                     MOVE BKTDAG    STDAG
+     C                     ENDIF
+      *
+     C           BKTCAG    IFEQ 0
+     C                     MOVE *BLANKS   STCAG
+     C                     ELSE
+     C                     MOVE BKTCAG    STCAG
+     C                     ENDIF
+      *
+      ** Save record before modification
+      *
+     C**********           MOVE NWRCD     SVRCD                                               CGL029
+     C                     MOVELNWRCD     SVRCD                                               CGL029
+      *
+     C                     ELSE
+      *
+      ** Load sreen fields
+      *
+     C                     MOVE *BLANKS   SFDAY
+     C                     MOVE 'N'       SAFVN
+     C                     MOVE *BLANKS   STDAN
+     C                     MOVE *BLANKS   STCAN
+     C                     MOVE 'N'       SAFVD
+     C                     MOVE *BLANKS   STDAD
+     C                     MOVE *BLANKS   STCAD
+     C                     MOVE 'N'       SAFVC
+     C                     MOVE *BLANKS   STDAC
+     C                     MOVE *BLANKS   STCAC
+     C                     MOVE 'N'       SAFVG
+     C                     MOVE *BLANKS   STDAG
+     C                     MOVE *BLANKS   STCAG
+      *
+     C                     ENDIF
+      *
+     C                     MOVE '0'       *IN98
+     C/COPY WNCPYSRC,SD9173RC01
+      *
+      ** Check if CRE009 is ON
+      *                                                                   CRE009
+     C                     CALL 'AOSARDR0'                                CRE009
+     C                     PARM '       ' @RTCD   7                       CRE009
+     C                     PARM '*VERIFY' @OPTN   7                       CRE009
+     C                     PARM 'CRE009'  @SARD   6                       CRE009
+     C           SCSARD    PARM SCSARD    DSFDY                           CRE009
+      *                                                                   CRE009
+     C           @RTCD     IFEQ *BLANKS                                   CRE009
+     C                     MOVE 'Y'       CRE009  1                       CRE009
+     C                     ELSE                                           CRE009
+     C                     MOVE 'N'       CRE009                          CRE009
+     C                     ENDIF                                          CRE009
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPREV  -  Exit from program if F12 has been pressed         *
+      *  Called by: Main routine                                      *
+      *  Calls    : SREND                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPREV    BEGSR
+      *
+      ** Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR SREND
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRUDAT  -  Update/Write Record in SDGELRPD                   *
+      *  Called by: SRVALD                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRUDAT    BEGSR
+      *
+      ** Insert Mode
+      *
+     C           *IN85     IFEQ '1'
+      *
+     C           PARC      CHAINSDGELRL0             84
+      *
+      ** If the record exists, the details has been modified by another user
+      *
+     C           *IN84     IFEQ '0'
+      *
+     C                     MOVEL'USR8660' ZAMSID
+     C                     MOVE '0'       *IN30
+     C                     MOVEA'11111111'*IN,50
+     C                     MOVEA'11111'   *IN,58
+     C                     MOVE '1'       *IN70
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+     C                     MOVEL'GELR'    BKGNLG
+     C                     MOVE SFDAY     BKNDFV
+     C                     MOVE SAFVN     BKAFVN
+     C                     MOVE STDAN     BKTDAN
+     C                     MOVE STCAN     BKTCAN
+     C                     MOVE SAFVD     BKAFVD
+     C                     MOVE STDAD     BKTDAD
+     C                     MOVE STCAD     BKTCAD
+     C                     MOVE SAFVC     BKAFVC
+     C                     MOVE STDAC     BKTDAC
+     C                     MOVE STCAC     BKTCAC
+     C                     MOVE SAFVG     BKAFVG
+     C                     MOVE STDAG     BKTDAG
+     C                     MOVE STCAG     BKTCAG
+      *
+     C                     WRITESDGELR0
+      *
+     C                     ENDIF
+      *
+      ** Amend Mode
+      *
+     C                     ELSE
+      *
+     C           PARC      CHAINSDGELRL0             84
+      *
+      ** If the record does not exist, or has been modified by another user
+      *
+     C           *IN84     IFEQ '1'
+     C           *IN84     OREQ '0'
+     C           NWRCD     ANDNESVRCD
+      *
+     C                     MOVEL'USR8660' ZAMSID
+     C                     MOVE '0'       *IN30
+     C                     MOVEA'11111111'*IN,50
+     C                     MOVEA'11111'   *IN,58
+     C                     MOVE '1'       *IN70
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+     C                     MOVE SFDAY     BKNDFV
+     C                     MOVE SAFVN     BKAFVN
+     C                     MOVE STDAN     BKTDAN
+     C                     MOVE STCAN     BKTCAN
+     C                     MOVE SAFVD     BKAFVD
+     C                     MOVE STDAD     BKTDAD
+     C                     MOVE STCAD     BKTCAD
+     C                     MOVE SAFVC     BKAFVC
+     C                     MOVE STDAC     BKTDAC
+     C                     MOVE STCAC     BKTCAC
+     C                     MOVE SAFVG     BKAFVG
+     C                     MOVE STDAG     BKTDAG
+     C                     MOVE STCAG     BKTCAG
+      *
+     C                     UPDATSDGELR0
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVALD  -  Validate Details in Screen                        *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRNODS, SRALOW, SRACAM, SRACMD, SRACPD, SRUDAT    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRVALD    BEGSR
+      *
+     C                     MOVE '1'       *IN30
+     C                     MOVEA'00000000'*IN,50
+     C                     MOVEA'00000'   *IN,58
+     C                     MOVE '0'       *IN70
+      *
+      ** Move character account codes to numeric fields
+      *
+     C           STDAN     IFEQ *BLANKS
+     C**********           Z-ADD0         W#DAN   40                                          CGL029
+     C                     Z-ADD0         W#DAN  100                                          CGL029
+     C                     ELSE
+     C                     MOVE STDAN     W#DAN
+     C                     ENDIF
+      *
+     C           STCAN     IFEQ *BLANKS
+     C**********           Z-ADD0         W#CAN   40                                          CGL029
+     C                     Z-ADD0         W#CAN  100                                          CGL029
+     C                     ELSE
+     C                     MOVE STCAN     W#CAN
+     C                     ENDIF
+      *
+     C           STDAD     IFEQ *BLANKS
+     C**********           Z-ADD0         W#DAD   40                                          CGL029
+     C                     Z-ADD0         W#DAD  100                                          CGL029
+     C                     ELSE
+     C                     MOVE STDAD     W#DAD
+     C                     ENDIF
+      *
+     C           STCAD     IFEQ *BLANKS
+     C**********           Z-ADD0         W#CAD   40                                          CGL029
+     C                     Z-ADD0         W#CAD  100                                          CGL029
+     C                     ELSE
+     C                     MOVE STCAD     W#CAD
+     C                     ENDIF
+      *
+     C           STDAC     IFEQ *BLANKS
+     C**********           Z-ADD0         W#DAC   40                                          CGL029
+     C                     Z-ADD0         W#DAC  100                                          CGL029
+     C                     ELSE
+     C                     MOVE STDAC     W#DAC
+     C                     ENDIF
+      *
+     C           STCAC     IFEQ *BLANKS
+     C**********           Z-ADD0         W#CAC   40                                          CGL029
+     C                     Z-ADD0         W#CAC  100                                          CGL029
+     C                     ELSE
+     C                     MOVE STCAC     W#CAC
+     C                     ENDIF
+      *
+     C           STDAG     IFEQ *BLANKS
+     C**********           Z-ADD0         W#DAG   40                                          CGL029
+     C                     Z-ADD0         W#DAG  100                                          CGL029
+     C                     ELSE
+     C                     MOVE STDAG     W#DAG
+     C                     ENDIF
+      *
+     C           STCAG     IFEQ *BLANKS
+     C**********           Z-ADD0         W#CAG   40                                          CGL029
+     C                     Z-ADD0         W#CAG  100                                          CGL029
+     C                     ELSE
+     C                     MOVE STCAG     W#CAG
+     C                     ENDIF
+     C/COPY WNCPYSRC,SD9173RC02
+      *
+      ** Validate 'Number of Days to Forward Value'
+      *
+     C                     EXSR SRNODS
+      *
+      ** Validate 'Allow Future Valued Postings'
+      *
+     C                     EXSR SRALOW
+      *
+      ** Validate if 'Account Code' is mandatory
+      *
+     C                     EXSR SRACMD
+      *
+      ** Validate if 'Account Code' is amendable
+      *
+     C                     EXSR SRACAM
+      *
+      ** Validate if 'Account Code' exists in SDACODPD
+      *
+     C                     EXSR SRACPD
+     C/COPY WNCPYSRC,SD9173RC03
+      *
+      ** Update Extension File if no errors encountered
+      *
+     C           *IN30     IFEQ '1'
+     C                     EXSR SRUDAT
+     C/COPY WNCPYSRC,SD9173RC04
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNODS  -  Validate Number of Days to Forward Value          *
+      *  Called by: SRVALD                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRNODS    BEGSR
+      *
+     C           SAFVN     IFEQ 'Y'
+     C           SAFVD     OREQ 'Y'
+     C           SAFVC     OREQ 'Y'
+     C           SAFVG     OREQ 'Y'
+     C/COPY WNCPYSRC,SD9173RC05
+      *
+     C           SFDAY     IFEQ 0
+     C                     MOVE '1'       *IN50
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8661' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *                                                                                     MD049513
+      ** If Allow Future is all 'N', entry to No. of Days is not allowed                    MD049513
+      *                                                                                     MD049513
+     C           SAFVN     IFEQ 'N'                                                         MD049513
+     C           SAFVD     ANDEQ'N'                                                         MD049513
+     C           SAFVC     ANDEQ'N'                                                         MD049513
+     C           SAFVG     ANDEQ'N'                                                         MD049513
+     C           SFDAY     ANDNEBKNDFV                                                      MD049513
+     C           SFDAY     ANDNE*ZERO                                                       MD049513
+     C                     MOVE '1'       *IN50                                             MD049513
+     C                     MOVE '0'       *IN30                                             MD049513
+     C                     MOVE '1'       *IN70                                             MD049513
+     C                     MOVEL'USS1000' ZAMSID                                            MD049513
+     C                     EXSR ZASNMS                                                      MD049513
+     C                     ENDIF                                                            MD049513
+      *                                                                                     MD049513
+      *                                                                                  CRE009
+      ** If CRE009 is ON, BKNDFW must be greater than 0                                  CRE009
+      *                                                                                  CRE009
+     C           CRE009    IFEQ 'Y'                                                      CRE009
+      *                                                                                  CRE009
+     C           SFDAY     IFEQ 0                                                        CRE009
+     C                     MOVE '1'       *IN50                                          CRE009
+     C                     MOVE '0'       *IN30                                          CRE009
+     C                     MOVE '1'       *IN70                                          CRE009
+     C                     MOVEL'USR9405' ZAMSID                                         CRE009
+     C                     EXSR ZASNMS                                                   CRE009
+     C                     ENDIF                                                         CRE009
+      *                                                                                  CRE009
+     C                     ENDIF                                                         CRE009
+      *
+     C           SFDAY     IFGT 366
+     C                     MOVE '1'       *IN50
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8662' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRALOW  -  Validate 'Allow Future Valued Postings'           *
+      *  Called by: SRVALD                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRALOW    BEGSR
+      *
+      ** 'Allow Future Value' can only be 'Y' or 'N'
+      *
+     C           SAFVN     IFNE 'Y'
+     C           SAFVN     ANDNE'N'
+     C                     MOVE '1'       *IN51
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8663' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           SAFVD     IFNE 'Y'
+     C           SAFVD     ANDNE'N'
+     C                     MOVE '1'       *IN54
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8663' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           SAFVC     IFNE 'Y'
+     C           SAFVC     ANDNE'N'
+     C                     MOVE '1'       *IN57
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8663' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C           SAFVG     IFNE 'Y'
+     C           SAFVG     ANDNE'N'
+     C                     MOVE '1'       *IN60
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8663' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+     C/COPY WNCPYSRC,SD9173RC06
+      *
+      ** 'Allow Future Value' cannot be amended fronm 'Y' to 'N'
+      ** if future valued transitory postings exist for the
+      ** account type
+      *
+     C           *IN30     IFEQ '1'
+      *
+     C           SAFVN     IFEQ 'N'
+     C           BKAFVN    ANDEQ'Y'
+     C                     MOVE 'N'       W#KEY   1
+     C           W#KEY     CHAINGLVALPL1             51
+     C           *IN51     IFEQ '0'
+     C                     MOVE '1'       *IN51
+     C                     ELSE
+     C                     MOVE '0'       *IN51
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SAFVD     IFEQ 'N'
+     C           BKAFVD    ANDEQ'Y'
+     C                     MOVE 'D'       W#KEY
+     C           W#KEY     CHAINGLVALPL1             54
+     C           *IN54     IFEQ '0'
+     C                     MOVE '1'       *IN54
+     C                     ELSE
+     C                     MOVE '0'       *IN54
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SAFVC     IFEQ 'N'
+     C           BKAFVC    ANDEQ'Y'
+     C                     MOVE 'C'       W#KEY
+     C           W#KEY     CHAINGLVALPL1             57
+     C           *IN57     IFEQ '0'
+     C                     MOVE '1'       *IN57
+     C                     ELSE
+     C                     MOVE '0'       *IN57
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SAFVG     IFEQ 'N'
+     C           BKAFVG    ANDEQ'Y'
+     C                     MOVE 'G'       W#KEY
+     C           W#KEY     CHAINGLVALPL1             60
+     C           *IN60     IFEQ '0'
+     C                     MOVE '1'       *IN60
+     C                     ELSE
+     C                     MOVE '0'       *IN60
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,SD9173RC07
+      *
+     C           *IN51     IFEQ '1'
+     C           *IN54     OREQ '1'
+     C           *IN57     OREQ '1'
+     C           *IN60     OREQ '1'
+     C/COPY WNCPYSRC,SD9173RC08
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8664' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACAM  -  Validate Account Codes                            *
+      *  Called by: SRVALD                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACAM    BEGSR
+      *
+     C           *IN30     IFEQ '1'
+      *
+      ** Account code cannot be amended if transitory postings exist
+      *
+     C                     MOVE 'N'       W#KEY
+     C           W#KEY     CHAINGLVALPL1             51
+     C           *IN51     IFEQ '0'
+     C           W#DAN     IFNE BKTDAN
+     C                     MOVE '1'       *IN52
+     C                     ENDIF
+     C           W#CAN     IFNE BKTCAN
+     C                     MOVE '1'       *IN53
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE '0'       *IN51
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       W#KEY
+     C           W#KEY     CHAINGLVALPL1             54
+     C           *IN54     IFEQ '0'
+     C           W#DAD     IFNE BKTDAD
+     C                     MOVE '1'       *IN55
+     C                     ENDIF
+     C           W#CAD     IFNE BKTCAD
+     C                     MOVE '1'       *IN56
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE '0'       *IN54
+     C                     ENDIF
+      *
+     C                     MOVE 'C'       W#KEY
+     C           W#KEY     CHAINGLVALPL1             57
+     C           *IN57     IFEQ '0'
+     C           W#DAC     IFNE BKTDAC
+     C                     MOVE '1'       *IN58
+     C                     ENDIF
+     C           W#CAC     IFNE BKTCAC
+     C                     MOVE '1'       *IN59
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE '0'       *IN57
+     C                     ENDIF
+      *
+     C                     MOVE 'G'       W#KEY
+     C           W#KEY     CHAINGLVALPL1             60
+     C           *IN60     IFEQ '0'
+     C           W#DAG     IFNE BKTDAG
+     C                     MOVE '1'       *IN61
+     C                     ENDIF
+     C           W#CAG     IFNE BKTCAG
+     C                     MOVE '1'       *IN62
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE '0'       *IN60
+     C                     ENDIF
+     C/COPY WNCPYSRC,SD9173RC09
+      *
+     C           *IN52     IFEQ '1'
+     C           *IN53     OREQ '1'
+     C           *IN55     OREQ '1'
+     C           *IN56     OREQ '1'
+     C           *IN58     OREQ '1'
+     C           *IN59     OREQ '1'
+     C           *IN61     OREQ '1'
+     C           *IN62     OREQ '1'
+     C/COPY WNCPYSRC,SD9173RC10
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8665' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVEA'00000000'*IN,50
+     C                     MOVEA'00000'   *IN,58
+     C/COPY WNCPYSRC,SD9173RC11
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACMD  -  Validate Account Codes                            *
+      *  Called by: SRVALD                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACMD    BEGSR
+      *
+     C           *IN30     IFEQ '1'
+      *
+     C           SAFVN     IFEQ 'Y'
+     C           W#DAN     IFEQ 0
+     C           W#CAN     OREQ 0
+     C                     MOVE '1'       *IN52
+     C                     MOVE '1'       *IN53
+     C                     ENDIF
+     C                     ELSE
+     C           W#DAN     IFNE 0
+     C           W#CAN     ORNE 0
+     C                     MOVE '1'       *IN52
+     C                     MOVE '1'       *IN53
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SAFVD     IFEQ 'Y'
+     C           W#DAD     IFEQ 0
+     C           W#CAD     OREQ 0
+     C                     MOVE '1'       *IN55
+     C                     MOVE '1'       *IN56
+     C                     ENDIF
+     C                     ELSE
+     C           W#DAD     IFNE 0
+     C           W#CAD     ORNE 0
+     C                     MOVE '1'       *IN55
+     C                     MOVE '1'       *IN56
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SAFVC     IFEQ 'Y'
+     C           W#DAC     IFEQ 0
+     C           W#CAC     OREQ 0
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN59
+     C                     ENDIF
+     C                     ELSE
+     C           W#DAC     IFNE 0
+     C           W#CAC     ORNE 0
+     C                     MOVE '1'       *IN58
+     C                     MOVE '1'       *IN59
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SAFVG     IFEQ 'Y'
+     C           W#DAG     IFEQ 0
+     C           W#CAG     OREQ 0
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN62
+     C                     ELSE                                                             BUG26717
+      *                                                                                     BUG26717
+      ** General Ledger account only                                                        BUG26717
+      *                                                                                     BUG26717
+     C           W#DAG     CHAINACACOD               61                                     BUG26717
+     C           *IN61     IFEQ '1'                                                         BUG26717
+     C                     MOVE '0'       *IN30                                             BUG26717
+     C                     MOVE '1'       *IN70                                             BUG26717
+     C                     MOVEL'USR0283' ZAMSID                                            BUG26717
+     C                     EXSR ZASNMS                                                      BUG26717
+     C                     ELSE                                                             BUG26717
+     C           ATYP      IFNE 'G'                                                         BUG26717
+     C                     MOVE '1'       *IN61                                             BUG26717
+     C                     MOVE '0'       *IN30                                             BUG26717
+     C                     MOVE '1'       *IN70                                             BUG26717
+     C                     MOVEL'USR2769' ZAMSID                                            BUG26717
+     C                     EXSR ZASNMS                                                      BUG26717
+     C                     ENDIF                                                            BUG26717
+     C                     ENDIF                                                            BUG26717
+      *                                                                                     BUG26717
+     C           W#CAG     CHAINACACOD               62                                     BUG26717
+     C           *IN62     IFEQ '1'                                                         BUG26717
+     C                     MOVE '0'       *IN30                                             BUG26717
+     C                     MOVE '1'       *IN70                                             BUG26717
+     C                     MOVEL'USR0283' ZAMSID                                            BUG26717
+     C                     EXSR ZASNMS                                                      BUG26717
+     C                     ELSE                                                             BUG26717
+     C           ATYP      IFNE 'G'                                                         BUG26717
+     C                     MOVE '1'       *IN62                                             BUG26717
+     C                     MOVE '0'       *IN30                                             BUG26717
+     C                     MOVE '1'       *IN70                                             BUG26717
+     C                     MOVEL'USR2769' ZAMSID                                            BUG26717
+     C                     EXSR ZASNMS                                                      BUG26717
+     C                     ENDIF                                                            BUG26717
+     C                     ENDIF                                                            BUG26717
+      *                                                                                     BUG26717
+     C                     ENDIF
+     C                     ELSE
+     C           W#DAG     IFNE 0
+     C           W#CAG     ORNE 0
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN62
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,SD9173RC12
+      *
+     C           *IN52     IFEQ '1'
+     C           *IN53     OREQ '1'
+     C           *IN55     OREQ '1'
+     C           *IN56     OREQ '1'
+     C           *IN58     OREQ '1'
+     C           *IN59     OREQ '1'
+     C           *IN61     OREQ '1'
+     C           *IN62     OREQ '1'
+     C/COPY WNCPYSRC,SD9173RC13
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8666' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACPD  -  Validate Account Codes                            *
+      *  Called by: SRVALD                                            *
+      *  Calls    : ZASNMS                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRACPD    BEGSR
+      *
+     C           *IN30     IFEQ '1'
+      *
+      ** Must be a valid account code
+      *
+     C           SAFVN     IFNE 'N'
+     C           W#DAN     ORNE 0
+     C**********           MOVE W#DAN     W#ACT   4                                           CGL029
+     C                     MOVE W#DAN     W#ACT  10                                           CGL029
+     C           W#ACT     CHAINSDACODL1             52
+     C                     ENDIF
+     C           SAFVN     IFNE 'N'
+     C           W#CAN     ORNE 0
+     C                     MOVE W#CAN     W#ACT
+     C           W#ACT     CHAINSDACODL1             53
+     C                     ENDIF
+      *
+     C           SAFVD     IFNE 'N'
+     C           W#DAD     ORNE 0
+     C                     MOVE W#DAD     W#ACT
+     C           W#ACT     CHAINSDACODL1             55
+     C                     ENDIF
+     C           SAFVD     IFNE 'N'
+     C           W#CAD     ORNE 0
+     C                     MOVE W#CAD     W#ACT
+     C           W#ACT     CHAINSDACODL1             56
+     C                     ENDIF
+      *
+     C           SAFVC     IFNE 'N'
+     C           W#DAC     ORNE 0
+     C                     MOVE W#DAC     W#ACT
+     C           W#ACT     CHAINSDACODL1             58
+     C                     ENDIF
+     C           SAFVC     IFNE 'N'
+     C           W#CAC     ORNE 0
+     C                     MOVE W#CAC     W#ACT
+     C           W#ACT     CHAINSDACODL1             59
+     C                     ENDIF
+      *
+     C           SAFVG     IFNE 'N'
+     C           W#DAG     ORNE 0
+     C                     MOVE W#DAG     W#ACT
+     C           W#ACT     CHAINSDACODL1             61
+     C                     ENDIF
+     C           SAFVG     IFNE 'N'
+     C           W#CAG     ORNE 0
+     C                     MOVE W#CAG     W#ACT
+     C           W#ACT     CHAINSDACODL1             62
+     C                     ENDIF
+     C/COPY WNCPYSRC,SD9173RC14
+      *
+     C           *IN52     IFEQ '1'
+     C           *IN53     OREQ '1'
+     C           *IN55     OREQ '1'
+     C           *IN56     OREQ '1'
+     C           *IN58     OREQ '1'
+     C           *IN59     OREQ '1'
+     C           *IN61     OREQ '1'
+     C           *IN62     OREQ '1'
+     C/COPY WNCPYSRC,SD9173RC15
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN70
+     C                     MOVEL'USR8667' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY WNCPYSRC,SD9173RC16
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZASNMS  -  Send message to Program's Message Queue           *
+      *  Called by: SRUDAT, SRNODS, SRALOW, SRACAM, SRACMD, SRACPD    *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *  Called by: Main routine                                      *
+      *  Calls    : DBERRCTL                                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** CPY@
+(c) Finastra International Limited 2001

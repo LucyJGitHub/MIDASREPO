@@ -1,0 +1,339 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                 /*MD022045*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - System Control Module                           */
+/*                                                                   */
+/*       SCC0404 - Initial Next Day set up component                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. MD022045 *REDUNDANTDate 27Aug13              */
+/*       Prev Amend No. AR1097467          Date 26Mar13              */
+/*                      CSC056             Date 06Aug12              */
+/*                      CER059             Date 19Jul10              */
+/*                      CAP190             Date 19May08              */
+/*                      BUG28093           Date 03Sep10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BG18886            Date 22May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CAP185             Date 21Apr06              */
+/*                      CRE023             Date 29Jul05              */
+/*                      CPK018             Date 19Nov03              */
+/*                      CPK017             Date 28Oct03              */
+/*                      CFC002             Date 29Apr02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      S01408             Date 15Nov96              */
+/*                      089821             Date 29Jun95              */
+/*                      S01495 *CREATE     DATE 01OCT94              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD022045 - SCC0404 performance degradation                  */
+/*       AR1097467 - Expected 15% COB run optimization not met       */
+/*       CSC056 - COB Restructure - SC COB Optimisation Phase 1      */
+/*              - Physically Deleted lines (house kept)              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       CAP190 - Customer Exchange MQ enabling (Recompile)          */
+/*       BUG28093 - Primary key error                                */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       CAP185 - MQ Series Interface                                */
+/*       CRE023 - 2 O'clock Flag Upgrade to MidasPlus                */
+/*       CPK018 - MidasPlus additional packaging.  Calls programs    */
+/*                with incorrect names.                              */
+/*       CPK017 - MidasPlus packaging.                               */
+/*                Comment out the remove of msg from MSTATUS and     */
+/*                the send of 'MIDAS' to MSTATUS.                    */
+/*       CFC002 - Multiple Output Queues In Std Output Instructions  */
+/*       S01408 - Addition of core hook SCC0404001                   */
+/*       089821 - Do not send message BACKUP To MSPECIAL - no longer */
+/*                required.                                          */
+/*       S01495 - COB enhancements.                                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+/*/COPY WNCPYSRC,SCC0404004                                          */
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/**/
+             DCL        VAR(&JOB)     TYPE(*CHAR)  LEN(10)
+             DCL        VAR(&USER)    TYPE(*CHAR)  LEN(10)
+             DCL        VAR(&DATE)    TYPE(*CHAR)  LEN(6)
+             DCL        VAR(&STATMSG) TYPE(*CHAR)  LEN(5)
+             DCL        VAR(&RPY)     TYPE(*CHAR)  LEN(1)
+             DCL        VAR(&RTCD)    TYPE(*CHAR)  LEN(7)  VALUE(' ')
+             DCL        VAR(&OPTN)    TYPE(*CHAR)  LEN(7)  VALUE('*FIRST ')
+             DCL        VAR(&FMT)     TYPE(*CHAR)  LEN(200)
+             DCL        VAR(&MSG)     TYPE(*CHAR)  LEN(75)
+/**********  DCL        VAR(&LDA)     TYPE(*CHAR)  LEN(256)        */                  /*AR1097467*/
+/**********  DCL        VAR(&MMOD)    TYPE(*CHAR)  LEN(256)        */                  /*AR1097467*/
+/**********  DCL        VAR(&JNSTAT)  TYPE(*CHAR)  LEN(200)        */                  /*AR1097467*/
+/**********  DCL        VAR(&CPSTAT)  TYPE(*CHAR)  LEN(256)        */                  /*AR1097467*/
+             DCL        VAR(&DTQDLEN) TYPE(*DEC) LEN(5) VALUE(1)
+             DCL        VAR(&T) TYPE(*CHAR) LEN(1) VALUE('T')
+             DCL        VAR(&MFLAG) TYPE(*CHAR) LEN(1)                                    /*CFC002*/
+             DCL        VAR(&OUTQ0) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ1) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ2) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ3) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ4) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ5) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ6) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ7) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ8) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&OUTQ9) TYPE(*CHAR) LEN(10)                                   /*CFC002*/
+             DCL        VAR(&CFC002) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CFC002*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CFC002*/
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)                                   /*CFC002*/
+             DCL        VAR(&CRE023) TYPE(*CHAR) LEN(1)                                   /*CRE023*/
+                                                                                          /*CAP185*/
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CAP185*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CAP185*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CAP185*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CAP185*/
+/**********  DCL        VAR(&CAP185) TYPE(*CHAR) LEN(1)              */         /*CAP185 AR1097467*/
+             DCL        VAR(&CSF003) TYPE(*CHAR) LEN(1)                                 /*BUG28093*/
+/*/COPY WNCPYSRC,SCC0404005                                          */
+/**/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) +
+                           EXEC(GOTO ABNORMAL)
+/**/
+             CHGJOB     SWS(00000000)
+/*/COPY WNCPYSRC,SCC0404008                                          */
+             RTVJOBA    JOB(&JOB)  USER(&USER)  DATE(&DATE)
+/*********************************************************************/         /*CAP185 AR1097467*/
+/**Check*if*CAP185*is*enabled*****************************************/         /*CAP185 AR1097467*/
+/*********************************************************************/         /*CAP185 AR1097467*/
+/**********CHGVAR     VAR(&RTCD) VALUE('       ')                    */         /*CAP185 AR1097467*/
+/**********CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                    */         /*CAP185 AR1097467*/
+/**********CHGVAR     VAR(&SARD) VALUE('CAP185')                     */         /*CAP185 AR1097467*/
+/*********************************************************************/         /*CAP185 AR1097467*/
+/**********CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  */         /*CAP185 AR1097467*/
+/*********************************************************************/         /*CAP185 AR1097467*/
+/**********CHGVAR     VAR(&CAP185) VALUE('N')                        */         /*CAP185 AR1097467*/
+/**********IF         COND(&RTCD *EQ '       ') +                    */                /*AR1097467*/
+/**********           THEN(CHGVAR VAR(&CAP185) VALUE('Y'))           */         /*CAP185 AR1097467*/
+                                                                                        /*BUG28093*/
+           CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*BUG28093*/
+           CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*BUG28093*/
+           CHGVAR     VAR(&SARD) VALUE('CSF003')                                        /*BUG28093*/
+                                                                                        /*BUG28093*/
+           CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                     /*BUG28093*/
+                                                                                        /*BUG28093*/
+           CHGVAR     VAR(&CSF003) VALUE('N')                                           /*BUG28093*/
+           IF         COND(&RTCD *EQ '       ') +
+                      THEN(CHGVAR VAR(&CSF003) VALUE('Y'))                              /*BUG28093*/
+/**/
+/* Terminate report distribution program */
+/**/
+             ALCOBJ     OBJ((FC0100 *DTAARA *EXCL)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(DO)
+               CALL       PGM(QSNDDTAQ) PARM('FCDTAQ' '*LIBL' +
+                            &DTQDLEN &T)
+ DISTLP:       ALCOBJ     OBJ((FC0100 *DTAARA *EXCL)) WAIT(30)
+               MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(DISTLP))
+             ENDDO
+             DLCOBJ     OBJ((FC0100 *DTAARA *EXCL))
+/**/
+/*  Microfiche Module active = (&FMT 54) is 'Y'                    */
+/*  Optical Disk Module active = (&FMT 85) is 'Y'                  */
+/**/
+             CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &FMT)
+/**/
+/*  Database error handling                                        */
+/**/
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+               SNDPGMMSG  MSG('Error on access to ICD file +
+                          AOMMODPD') TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(DBETAG)
+             ENDDO
+ 
+/**/
+/*  Set MIDAS control msg queues, check for other jobs             */
+/**/
+/*********   ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(9999)   /*089821*/
+/*********   SNDPGMMSG  MSG('BACKUP') TOMSGQ(MSPECIAL)           /*089821*/
+/**/
+/************CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)                                      */ /*CPK017*/
+/************RCVMSG     MSGQ(MSTATUS) RMV(*YES)                                        */ /*CPK017*/
+ LOOP1:      CHGMSGQ    MSGQ(MSTATUS) RESET(*YES)
+             RCVMSG     MSGQ(MSTATUS) RMV(*NO) MSG(&STATMSG)
+             IF         COND(&STATMSG *NE '     ') THEN(DO)
+ LOOP2:      SNDPGMMSG  MSG('Job cannot be run now - do you wish to +
+                          re-try - Y or N?') TOMSGQ(&JOB) MSGTYPE(*INQ)
+             RCVMSG     MSGQ(*PGMQ) MSGTYPE(*RPY) WAIT(*MAX) +
+                          RMV(*YES) MSG(&RPY)
+             IF         COND((&RPY *EQ 'Y') *OR (&RPY *EQ 'y')) +
+                          THEN(GOTO CMDLBL(LOOP1))
+             IF         COND((&RPY *EQ 'N') *OR (&RPY *EQ 'n')) +
+                          THEN(DO)
+/*********     DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))        /*089821*/
+               GOTO       CMDLBL(ENDCLPGM)
+             ENDDO
+             ELSE       CMD(GOTO CMDLBL(LOOP2))
+             ENDDO
+/*********   DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))          /*089821*/
+/*/COPY WNCPYSRC,SCC0404002                                          */
+/**/
+/*  Check end of year processing                                   */
+/**/
+             CALL       PGM(SC002500)                                                     /*CSC056*/
+/**********  IF         COND(&CAP185 *EQ 'Y') THEN(CALL PGM(SC002500))*/        /*CAP185 AR1097467*/
+                                                                                          /*CAP185*/
+             IF         COND(&CSF003 *EQ 'Y') THEN(CALL PGM(SC002501))                  /*BUG28093*/
+                                                                                        /*BUG28093*/
+/**********  CALL       GLC100                                     */                  /*AR1097467*/
+/**********  IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(DO)      */                  /*AR1097467*/
+/*******************************************************************/                  /*AR1097467*/
+/***Database*error*in*GLC100****************************************/                  /*AR1097467*/
+/*******************************************************************/                  /*AR1097467*/
+/**********    GOTO       CMDLBL(ENDCLPGM)                         */                  /*AR1097467*/
+/**********  ENDDO                                                 */                  /*AR1097467*/
+/**/
+/**  Run copying of Microfiche data file */                                               /*CFC002*/
+/**/                                                                                      /*CFC002*/
+/** Check if SAR CFC002 is on                                                             /*CFC002*/
+/**/                                                                                      /*CFC002*/
+             CHGVAR     VAR(&CFC002) VALUE(' ')                                           /*CFC002*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CFC002*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CFC002*/
+             CHGVAR     VAR(&SARD) VALUE('CFC002')                                        /*CFC002*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SFMT)                       /*CFC002*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CFC002*/
+                CHGVAR     VAR(&CFC002) VALUE('Y')                                        /*CFC002*/
+             ENDDO                                                                        /*CFC002*/
+/**/                                                                                      /*CFC002*/
+/** If SAR CFC002 is ON */                                                                /*CFC002*/
+/**/                                                                                      /*CFC002*/
+             IF     COND(&CFC002 *EQ 'Y') THEN(DO)                                        /*CFC002*/
+/**/                                                                                      /*CFC002*/
+/**********     CALL       PGM(MA0341) PARM(&MFLAG &OUTQ0 &OUTQ1 &OUTQ2 +              */ /*CPK018*/
+/**********                &OUTQ3 &OUTQ4 &OUTQ5 &OUTQ6 &OUTQ7 &OUTQ8 +                 */ /*CPK018*/
+/**********                &OUTQ9)                                          */ /*CFC002*/ /*CPK018*/
+                CALL       PGM(MA000011) PARM(&MFLAG &OUTQ0 &OUTQ1 +
+                             &OUTQ2 &OUTQ3 &OUTQ4 &OUTQ5 &OUTQ6 &OUTQ7 +
+                             &OUTQ8 &OUTQ9)                                               /*CPK018*/
+                IF         COND(&MFLAG *EQ 'N') THEN(GOTO +
+                           CMDLBL(MICROF##))                                              /*CFC002*/
+/**********     CALL       PGM(MAC0341)                                     */ /*CFC002*/ /*CPK018*/
+                CALL       PGM(MAC000011)                                                 /*CPK018*/
+             ENDDO                                                                        /*CFC002*/
+MICROF##:                                                                                 /*CFC002*/
+/*/COPY WNCPYSRC,SCC0404003                                          */
+/*********************************************************************/                /*AR1097467*/
+/***Run*End*Of*Day*Backup*********************************************/                /*AR1097467*/
+/*********************************************************************/                /*AR1097467*/
+/*********************************************************************/                /*AR1097467*/
+/**********  RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)                     */                /*AR1097467*/
+/**********  RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)                   */                /*AR1097467*/
+/**********  RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)               */                /*AR1097467*/
+/*/COPY WNCPYSRC,SCC0404006                                          */
+/**/
+/*                                                                                        /*CRE023*/
+/** Determine if 2 O'clock flag SAR switch is on                    */                    /*CRE023*/
+/*                                                                                        /*CRE023*/
+             CHGVAR     VAR(&CRE023) VALUE('N')                                           /*CRE023*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CRE023*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN 'CRE023' &SFMT)                    /*CRE023*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CRE023*/
+                CHGVAR     VAR(&CRE023) VALUE('Y')                                        /*CRE023*/
+             ENDDO                                                                        /*CRE023*/
+             IF         COND(&RTCD *NE '       ' *AND &RTCD *NE +
+                          '*NRF   ') THEN(DO)                                             /*CRE023*/
+                SNDPGMMSG  MSG('AOSARDR0 - Program error') TOMSGQ(MOPERQ)                 /*CRE023*/
+                MONMSG     MSGID(CPF0000 MCH0000)                                         /*CRE023*/
+             ENDDO                                                                        /*CRE023*/
+/**********  CHGVAR     &MSG VALUE(' End of day backup executing')    */               /*AR1097467*/
+/**********  SNDMSG     TOMSGQ(MOPERQ) MSG(&MSG)                      */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO DBETAG)     */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  CHGVAR     &MSG VALUE(' Day number determination for end of day +         /*AR1097467*/
+/**********               backup executing')                          */               /*AR1097467*/
+/**********  SNDMSG     TOMSGQ(MOPERQ) MSG(&MSG)                      */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  CALL       SD1050                                        */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO DBETAG)     */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  CALL       GLC01                                         */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO DBETAG)     */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  IF         COND((%SUBSTRING(&MMOD 2 1)) *EQ 'Y') +       */               /*AR1097467*/
+/**********               THEN(CALL PGM(DLC01))                       */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  IF         COND((%SUBSTRING(&MMOD 10 1)) *EQ 'Y') +      */               /*AR1097467*/
+/**********               THEN(CALL PGM(LEC09))                       */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  IF         COND((%SUBSTRING(&MMOD 4 1)) *EQ 'Y') +       */               /*AR1097467*/
+/**********               THEN(CALL PGM(CLC2180) PARM(LOANS))         */               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/***Reorganise*Futures*and*Options*files*******************************/               /*AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  IF         COND(%SST(&MMOD 50 1) *EQ 'Y') THEN(DO)       */               /*AR1097467*/
+/**********     CALL       FFC01                                      */               /*AR1097467*/
+/**********     IF         COND(**%SWITCH(XXXXXX00)) THEN(GOTO +     */                  /*BG18886*/
+/**********                  CMDLBL(DBETAG))                         */                  /*BG18886*/
+/**********     IF         COND(*NOT %SWITCH(XXXXXX00)) THEN(GOTO +   */               /*AR1097467*/
+/**********                  CMDLBL(DBETAG))                          */       /*BG18886 AR1097467*/
+/**********  ENDDO                                                    */               /*AR1097467*/
+/**********************************************************************/        /*S01408 AR1097467*/
+/*/COPY*WNCPYSRC,SCC0404001********************************************/        /*S01408 AR1097467*/
+/**********************************************************************/        /*S01408 AR1097467*/
+/**********************************************************************/               /*AR1097467*/
+/**********  IF         COND(((%SST(&MMOD 16 1)) *EQ 'Y') *OR +       */               /*AR1097467*/
+/**********               (%SST(&MMOD 23 1) *EQ 'Y')) THEN(CLRPFM +   */               /*AR1097467*/
+/**********               FILE(RETAGD) MBR(*FIRST))                   */               /*AR1097467*/
+/*/COPY WNCPYSRC,SCC0404007                                          */
+/**/
+             IF COND(&CRE023 *EQ 'Y') THEN(DO)                                            /*CRE023*/
+                CALL PGM(REC2003)                                                         /*CRE023*/
+                IF COND(%SWITCH(XXXXXX1X)) THEN(GOTO CMDLBL(DBETAG))                      /*CRE023*/
+                IF COND(%SWITCH(XXXXXXX1)) THEN(GOTO CMDLBL(ABNORMAL))                    /*CRE023*/
+             ENDDO                                                                        /*CRE023*/
+             GOTO       ENDCLPGM
+/**/
+ 
+ DBETAG:     SNDPGMMSG  MSG('JOB TERMINATED - DATABASE IN ERROR') +
+                          TOMSGQ(MOPERQ)
+/**/
+ ABNORMAL:
+/*           An abnormal message has been issued and to prevent    */
+/*           further errors  being  sent to the ABNORMAL tag by    */
+/*           the general MONMSG command  in  the  first line of    */
+/*           executable code each of the  following  lines  are    */
+/*           individually  monitored  to  prevent  any  further    */
+/*           errors which may occur from causing a loop.           */
+/*                                                                 */
+             SNDPGMMSG  MSG('Program SCC0404 ended abnormally - job +
+                          cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+/**********  ALCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))          /*089821*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)               /*089821*/
+/**********  CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)           /*089821*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)               /*089821*/
+/**********  RCVMSG     MSGQ(MSPECIAL)                       /*089821*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)               /*089821*/
+/**********  DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))          /*089821*/
+/**********  MONMSG     MSGID(CPF0000 MCH0000)               /*089821*/
+/**/
+             GOTO       CMDLBL(END)
+/**/
+ ENDCLPGM:                                                                                /*CPK017*/
+/*ENDCLPGM:**SNDMSG     MSG('MIDAS') TOMSGQ(MSTATUS)                                   */ /*CPK017*/
+/**********  ALCOBJ   OBJ((MSPECIAL *MSGQ *EXCL)) WAIT(9999) /*089821*/
+/**********  CHGMSGQ    MSGQ(MSPECIAL) RESET(*YES)           /*089821*/
+/**********  RCVMSG     MSGQ(MSPECIAL)                       /*089821*/
+/**********  DLCOBJ     OBJ((MSPECIAL *MSGQ *EXCL))          /*089821*/
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM     /* END CL PGM */

@@ -1,0 +1,142 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0255 - Logical Files Installation                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. CUP041  *REDUNDANT Date 01Aug14              */
+/*       Prev Amend No. A1076141           Date 11Jan13              */
+/*                      CBF012             Date 04Jul11              */
+/*                      CUT008              Date 09Feb11             */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK018             Date 03Mar04              */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                      CSC011             Date 19Aug02              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*                      CPK015             Date 02Apr02              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP002             Date 28Apr99              */
+/*                      CUP001 *CREATE     Date 06Aug98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       A1076141 - Change back to only having one type of DBU.      */
+/*       CBF012 - BF Infrastructure: Upgradability                   */
+/*       CUT008  - CRTOBJ rewrite.                                   */
+/*                 Change of CRTOBJ parameters.                      */
+/*       CPK018 - MidasPlus packaging.  Upgrade of global layer.     */
+/*       CSC011 - 24x7 availability.  Upgrade of Support system.     */
+/*       CPK015 - 4.01 packaging.  Handling DZLIB.                   */
+/*       CUP002 - Additional monitoring of CRTOBJ.                   */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&PTFSRC &SBS &OWNER &AUTL &RETURN)  */                       /*CBF012*/
+/**********  PGM        PARM(&PTFSRC &SBS &OWNER &AUTL &RETURN &MODE)         */ /*CBF012 A1076141*/
+             PGM        PARM(&PTFSRC &SBS &OWNER &AUTL &RETURN)                         /*A1076141*/
+ 
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+/**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)                         */ /*CBF012 A1076141*/
+ 
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(10)                                   /*CPK015*/
+             DCL        VAR(&GVLIB) TYPE(*CHAR) LEN(10)                                   /*CPK018*/
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBTYPE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&USTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DZ_EXIST) TYPE(*CHAR) LEN(4) VALUE(*YES)                     /*CSC011*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+ 
+             DCLF       FILE(UPDLVCL3)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&RETURN) VALUE(' ')
+             CHGVAR     VAR(&USTS) VALUE('C')
+             CHGVAR     VAR(&DVLIB) VALUE(&SBS *CAT 'DVLIB')
+             CHGVAR     VAR(&DTALIB) VALUE(&SBS *CAT 'DTALIB')
+             CHGVAR     VAR(&DZLIB) VALUE(&SBS *CAT 'DZLIB')                              /*CPK015*/
+             CHKOBJ     OBJ(&DZLIB) OBJTYPE(*LIB)                                         /*CSC011*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CSC011*/
+                CHGVAR     VAR(&DZ_EXIST) VALUE(*NO)                                      /*CSC011*/
+             ENDDO                                                                        /*CSC011*/
+             CHGVAR     VAR(&GVLIB) VALUE(&SBS *CAT 'GVLIB')                              /*CPK018*/
+ 
+READNEXT:
+             IF         COND(&AUMBNM *NE ' ') THEN(DO)
+/*/COPY UPCPYSRCG,C_UP0020A                                          */
+             ENDDO
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**********  IF         COND(((&MODE *EQ '*NML') *AND +                              */ /*A1076141*/
+/**********               (%SUBSTRING(&AUSRCF 1 2) *EQ 'HI')) *OR +                  */ /*A1076141*/
+/**********               ((&MODE *EQ '*HIL') *AND +                                 */ /*A1076141*/
+/**********               (%SUBSTRING(&AUSRCF 1 2) *NE 'HI'))) THEN(DO)       */ /*CBF012 A1076141*/
+/**********     GOTO       CMDLBL(READNEXT)                                   */ /*CBF012 A1076141*/
+/**********  ENDDO                                                            */ /*CBF012 A1076141*/
+ 
+             CHKOBJ     OBJ(&AUMBNM) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&LIBTYPE) VALUE('   ')
+                CHGVAR     VAR(&LIBTYPE) VALUE(%SST(&AUSRCF 9 2))
+                IF         COND(&LIBTYPE *EQ 'QT') THEN(GOTO +
+                          CMDLBL(READNEXT))
+                IF         COND(&LIBTYPE *EQ 'DT') THEN(CHGVAR +
+                          VAR(&TOLIB) VALUE(&DTALIB))
+                IF         COND(&LIBTYPE *EQ 'DV') THEN(CHGVAR +
+                          VAR(&TOLIB) VALUE(&DVLIB))
+/************   IF         COND(&LIBTYPE *EQ 'DZ') THEN(CHGVAR +                       */ /*CSC011*/
+/************             VAR(&TOLIB) VALUE(&DZLIB))                        */ /*CPK015*/ /*CSC011*/
+                IF         COND(&LIBTYPE *EQ 'DZ') THEN(DO)                               /*CSC011*/
+                   IF         COND(&DZ_EXIST *NE '*YES') THEN(DO)                         /*CSC011*/
+                      GOTO       CMDLBL(READNEXT)                                         /*CSC011*/
+                   ENDDO                                                                  /*CSC011*/
+                   CHGVAR     VAR(&TOLIB) VALUE(&DZLIB)                                   /*CSC011*/
+                ENDDO                                                                     /*CSC011*/
+                IF         COND(&LIBTYPE *EQ 'GV') THEN(CHGVAR +
+                          VAR(&TOLIB) VALUE(&GVLIB))                                      /*CPK018*/
+CRTOBJ:
+/**********     CRTOBJ     SRCMBR(&AUMBNM) SRCFILE(&PTFSRC/&AUSRCF) +                  */ /*CUT008*/
+/**********               PLIB(&TOLIB) OWNER(&OWNER) AUTL(&AUTL)                       */ /*CUT008*/
+                CRTOBJ     OBJ(&TOLIB/&AUMBNM) SRCFILE(&PTFSRC/&AUSRCF) +
+                          SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)                          /*CUT008*/
+/************   MONMSG     MSGID(SYS9898 SYS0011) EXEC(DO)         */ /*CUP002*/
+                MONMSG     MSGID(SYS9898 SYS0011 SYS0017) EXEC(DO)    /*CUP002*/
+                   CHGVAR     VAR(&USTS) VALUE('F')
+                ENDDO
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+             CHGVAR     VAR(&USTS) VALUE('F')
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+             CHGVAR     VAR(&RETURN) VALUE('F')
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

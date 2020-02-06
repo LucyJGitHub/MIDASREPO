@@ -1,0 +1,58 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Customer Lending Module                                       */
+/*                                                                             */
+/*       V_LEFEEAD1 - LE Fee Adj & Set File Zonal                              */
+/*                                                                             */
+/*       (c) Finastra International Limited 2013                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. AR787635 *CREATE   Date 10Jun13                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       AR787635 - Redelivery of AR214066. Also amended CGZONE where clause   */
+/*                  to prevent an SQL error when multiple records is           */
+/*                  retrieved. (Child: AR787636)                               */
+/*       AR214066 - UDF Files are not properly populated during migration.     */
+/*                  Created SQL for use in T_GZFEADEX & T_GZFESTEX population. */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  (                                                                             :
+  CGGLOB ,                                                                      :
+  FAVDAT ,                                                                      :
+  S_FACT,                                                                       :
+  S_FCNO,                                                                       :
+  S_FSEQ,                                                                       :
+  S_VDAT )                                                                      :
+  AS                                                                            :
+  (SELECT                                                                       :
+  CGGLOB, FAVDAT,                                                               :
+  SUBSTR(CONCAT(SUBSTR('00000',LENGTH(TRIM(FAFACL))+1),FAFACL),1,3) AS S_FACT,  :
+  SUBSTR(CONCAT(SUBSTR('00000',LENGTH(TRIM(FAFACL))+1),FAFACL),4,2) AS S_FCNO,  :
+  CONCAT(SUBSTRING('00',LENGTH(TRIM(FAFSEQ)) + 1), FAFSEQ) AS S_FCNO,           :
+  CHAR(DATE(FAVDAT+719892),ISO) AS S_VDAT                                       :
+  FROM LEFEEAD                                                                  :
+  LEFT JOIN GPGLCUSL                                                            :
+  ON                                                                            :
+  FACNUM = CGCUST                                                               :
+  WHERE                                                                         :
+  CGZONE IN (SELECT DISTINCT A8ZONE FROM SDBRCHPD)                              :
+  ) ;                                                                           :
+  LABEL ON COLUMN                                                               :
+  **********/**********                                                         :
+  (                                                                             :
+  CGGLOB  IS 'Global Customer ID'         ,                                     :
+  S_FACT  IS 'Fac. Type'                  ,                                     :
+  S_FCNO  IS 'Fac. No.'                   ,                                     :
+  S_FSEQ  IS 'Fee Seq'                    ,                                     :
+  FAVDAT  IS 'Midas Day No'               ,                                     :
+  S_VDAT  IS 'Value Date');                                                     :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas LE Fee Adj & Set File Zonal                 ';                     :
+                                                                                :

@@ -1,0 +1,335 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  CGL145_016 - Midas OF Facility Availability Enquiry          *
+      *                                                               *
+      *  (c) Finastra International Limited 2013                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031009           Date 16Oct14               *
+      *                 MD024097A          Date 19Dec13               *
+      *                 MD024097           Date 12Dec13               *
+      *                 MD023687           Date 22Nov13               *
+      *                 CGL145B  *CREATE   Date 25Oct13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD031009 - Re-compile missing sources (Recompile)            *
+      *  MD024097A - If facility type is 'CA' for credit agreement    *
+      *            use correct facility type and number as key        *
+      *  MD024097- If facility type is 'CA' for credit agreement      *
+      *            use correct facility type and number as key        *
+      *  MD023687- Forecast not displayed correctly                   *
+      *  CGL145B - Subsidiaries Daily Sweeping Forcast                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * FORSBS -- Subroutine to consider Forecasts in Available       *
+      *           Amounts if CGL145 is active                         *
+      *                                                               *
+      * CALLED FROM: After FALAMD sr.                                 *
+      *                                                               *
+      *****************************************************************
+     C           FORSBS    BEGSR
+      *
+      ** Initialize the new amount table
+      *
+     C                     Z-ADDOAM1A     WTA,1
+     C                     Z-ADDOAM2A     WTA,2
+     C                     Z-ADDOAM3A     WTA,3
+     C                     Z-ADDOAM4A     WTA,4
+     C                     Z-ADDOAM5A     WTA,5
+     C                     Z-ADDOAM6A     WTA,6
+     C                     Z-ADDOAM7A     WTA,7
+     C                     Z-ADDOAM8A     WTA,8
+     C                     Z-ADDOAM9A     WTA,9
+     C                     Z-ADDOA10A     WTA,10
+      *
+      ** Initialize the new date table
+      *
+     C                     Z-ADDDAY,2     WTD,1
+     C                     Z-ADDDAY,3     WTD,2
+     C                     Z-ADDDAY,4     WTD,3
+     C                     Z-ADDDAY,5     WTD,4
+     C                     Z-ADDDAY,6     WTD,5
+     C                     Z-ADDDAY,7     WTD,6
+     C                     Z-ADDDAY,8     WTD,7
+     C                     Z-ADDDAY,9     WTD,8
+     C                     Z-ADDDAY,10    WTD,9
+     C                     Z-ADDDAY,11    WTD,10
+      *
+      ** Initialize forecasts amounts
+      *
+     C                     Z-ADD0         FOR1A  130
+     C                     Z-ADD0         FOR2A  130
+     C                     Z-ADD0         FOR3A  130
+     C                     Z-ADD0         FOR4A  130
+     C                     Z-ADD0         FOR5A  130
+     C                     Z-ADD0         FOR6A  130
+     C                     Z-ADD0         FOR7A  130
+     C                     Z-ADD0         FOR8A  130
+     C                     Z-ADD0         FOR9A  130
+     C                     Z-ADD0         FO10A  130
+      *
+      ** First time we try to access FACILITY file it seems that TRCA is Blank             MD024097A
+      *                                                                                    MD024097A
+     C                     MOVE FANO1     FCAO1                                            MD024097A
+     C                     MOVE FANO2     FCAO2                                            MD024097A
+      *                                                                                    MD024097A
+     C           FCAKEY    CHAINFCLTYL0              10                                    MD024097A
+      *                                                                                    MD024097A
+      ** Retrieve the facility details and then execute the subroutine
+      ** SRFDET
+      *
+     C           TRCA      IFNE 'CA'
+     C                     EXSR SRFDET
+     C                     ELSE
+      *
+      ** If Facility is a Credit Agreement (TRCA = 'CA') retrieve all
+      ** tranches linked to this Credit Agreement
+      *
+     C********** FCKEY     SETLLLEFCLTLE                                                    MD023687
+     C********** FCKEY     READELEFCLTLE                 77                                 MD023687
+     C           FCAMK     SETLLLEFCLTLE                                                    MD023687
+     C           FCAMK     READELEFCLTLE                 77                                 MD023687
+      *
+     C           *IN77     DOWEQ*OFF
+      *
+     C***                  MOVE CNUM      WCNUM                                  MD024097  MD024097A
+     C***                  MOVE FACT      WFACT                                  MD024097  MD024097A
+     C***                  MOVE FCNO      WFCNO                                  MD024097  MD024097A
+      *
+     C                     EXSR SRFDET
+      *
+     C********** FCKEY     READELEFCLTLE                 77                                 MD023687
+     C           FCAMK     READELEFCLTLE                 77                                 MD023687
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDWTA,1     FOR1A
+     C                     Z-ADDWTA,2     FOR2A
+     C                     Z-ADDWTA,3     FOR3A
+     C                     Z-ADDWTA,4     FOR4A
+     C                     Z-ADDWTA,5     FOR5A
+     C                     Z-ADDWTA,6     FOR6A
+     C                     Z-ADDWTA,7     FOR7A
+     C                     Z-ADDWTA,8     FOR8A
+     C                     Z-ADDWTA,9     FOR9A
+     C                     Z-ADDWTA,10    FO10A
+      *
+     C                     Z-ADDOAM1A     OAM1A
+     C                     Z-ADDOAM2A     OAM2A
+     C                     Z-ADDOAM3A     OAM3A
+     C                     Z-ADDOAM4A     OAM4A
+     C                     Z-ADDOAM5A     OAM5A
+     C                     Z-ADDOAM6A     OAM7A
+     C                     Z-ADDOAM7A     OAM7A
+     C                     Z-ADDOAM8A     OAM8A
+     C                     Z-ADDOAM9A     OAM9A
+     C                     Z-ADDOA10A     OA10A
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRFDet -- Subroutine to consider all tranches of a Credit     *
+      *           Agreement Facitliy if CGL145 is active              *
+      *                                                               *
+      * CALLED FROM: After FORSBS sr.                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFDET    BEGSR
+      *
+      ** Read next facility number of ACCNTAB file
+      *
+     C********** FCKEY     SETLLACCNTLA                                                     MD023687
+     C********** FCKEY     READEACCNTLA                  75                                 MD023687
+     C***        FCAMK     SETLLACCNTLA                                           MD023687 MD024097A
+     C***        FCAMK     READEACCNTLA                  75                       MD023687 MD024097A
+     C           FCKEY     SETLLACCNTLA                                                    MD024097A
+     C           FCKEY     READEACCNTLA                  75                                MD024097A
+      *
+     C           *IN75     DOWEQ*OFF
+      *
+      ** For each account linked to this facility, retrieve all the
+      ** existing Individual Forecasts
+      *
+     C                     MOVE BRCA      BRCAK
+     C                     MOVE CNUM      CNUMK
+     C                     MOVE CCY       CCYK
+     C                     MOVE ACOD      ACODK
+     C                     Z-ADDACSQ      ACSQK
+      *
+     C           FCACK     SETLLGLFORIL0
+     C           FCACK     READEGLFORIL0                 76
+      *
+     C           *IN76     DOWEQ*OFF
+      *
+      ** If System Value 'ForecastIncUnmatched' in 'N' and Forecast
+      ** Date < Run date
+      ** Read the next Forecast
+      ** or
+      ** If feature CLE025 is 'ON' and system value 'ForecastAppyNetForCL'
+      ** if 'N' and Forecast amount is negative Debit Retail Account
+      ** or
+      ** If Value Date of Forecast is greater than the last day of the table
+      *
+     C           WINC      IFEQ 'N'
+     C           IFDATE    ANDLTBJRDNB
+     C                     GOTO NEWREC
+     C                     ENDIF
+      *
+     C           CLE025    IFEQ 'Y'
+     C           WANET     ANDEQ'N'
+     C           IFAMNT    ANDGT0
+     C                     GOTO NEWREC
+     C                     ENDIF
+      *
+     C           IFDATE    IFGT WTD,10
+     C                     GOTO NEWREC
+     C                     ENDIF
+      *
+      ** If forecast ccy is not the same as the facility currency, convert
+      ** and keep the result in FAAMNT new field
+      *
+     C           IFCCY     IFNE FCCY
+     C                     MOVE IFCCY     WCCY1   3
+     C                     MOVE FCCY      WCCY2   3
+     C                     EXSR SRCONV
+     C                     Z-ADDPOAMNT    FAAMNT 130
+     C                     ELSE
+     C                     Z-ADDIFAMNT    FAAMNT
+     C                     ENDIF
+      *
+      ** Available amount of the facility will be increased or decreased
+      *
+     C                     Z-ADD1         X       20
+     C           X         DOWLE10
+     C********** IFDATE    IFGE WTD,X                                                       MD023687
+     C           IFDATE    IFLE WTD,X                                                       MD023687
+     C********** FAAMNT    IFGT 0                                                           MD023687
+     C                     ADD  FAAMNT    WTA,X
+     C**********           ELSE                                                             MD023687
+     C**********           SUB  FAAMNT    WTA,X                                             MD023687
+     C**********           ENDIF                                                            MD023687
+     C                     ENDIF
+      *
+     C                     ADD  1         X
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADDWTA,1     FOR1A
+     C                     Z-ADDWTA,2     FOR2A
+     C                     Z-ADDWTA,3     FOR3A
+     C                     Z-ADDWTA,4     FOR4A
+     C                     Z-ADDWTA,5     FOR5A
+     C                     Z-ADDWTA,6     FOR6A
+     C                     Z-ADDWTA,7     FOR7A
+     C                     Z-ADDWTA,8     FOR8A
+     C                     Z-ADDWTA,9     FOR9A
+     C                     Z-ADDWTA,10    FO10A
+      *
+     C                     Z-ADDOAM1A     OAM1A
+     C                     Z-ADDOAM2A     OAM2A
+     C                     Z-ADDOAM3A     OAM3A
+     C                     Z-ADDOAM4A     OAM4A
+     C                     Z-ADDOAM5A     OAM5A
+     C                     Z-ADDOAM6A     OAM6A
+     C                     Z-ADDOAM7A     OAM7A
+     C                     Z-ADDOAM8A     OAM8A
+     C                     Z-ADDOAM9A     OAM9A
+     C                     Z-ADDOA10A     OA10A
+      *
+     C           NEWREC    TAG
+      *
+     C           FCACK     READEGLFORIL0                 76
+      *
+     C                     ENDDO
+      *
+     C********** FCKEY     READEACCNTLA                  75                                 MD023687
+     C***        FCAMK     READEACCNTLA                  75                       MD023687 MD024097A
+     C           FCKEY     READEACCNTLA                  75                                MD024097A
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRConvert - Convert Currency                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRCONV    BEGSR
+      *
+      ** From currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WCCY1     PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELWCCY1     DBKEY
+     C                     Z-ADD10        DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SPRT    WSPRT1 138
+     C                     MOVE A6MDIN    WMDIN1  1
+     C                     Z-ADDA6NBDP    WNBDP1  10
+      *
+      ** TO currency
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WCCY2     PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELWCCY2     DBKEY
+     C                     Z-ADD11        DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDA6SPRT    WSPRT2 138
+     C                     MOVE A6MDIN    WMDIN2  1
+     C                     Z-ADDA6NBDP    WNBDP2  10
+      *
+      ** Get exchange rate
+      *
+     C                     CALL 'ZXRATE'
+     C                     PARM WSPRT1    PSPRT1 138
+     C                     PARM WMDIN1    PMDIN1  1
+     C                     PARM WSPRT2    PSPRT2 138
+     C                     PARM WMDIN2    PMDIN2  1
+      ** Output
+     C                     PARM           PXRATE 138
+     C                     PARM           PXMDIN  1
+      *
+      ** Convert amount
+      *
+     C                     CALL 'ZCONVZ1'
+     C                     PARM           IFAMNT
+     C                     PARM           PXRATE
+     C                     PARM           PXMDIN
+     C                     PARM           WCCY1
+     C                     PARM           WCCY2
+     C                     PARM           WNBDP1
+     C                     PARM           WNBDP2
+      ** Output
+     C                     PARM           POAMNT 150
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  End of /COPY CGL145_016                                      *
+      *****************************************************************

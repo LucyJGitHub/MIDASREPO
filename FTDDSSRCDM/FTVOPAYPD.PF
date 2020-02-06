@@ -1,0 +1,444 @@
+      *****************************************************************
+/*STD *  PFBASE                                                       *
+/*EXS *  PF_STD                                                       *
+/*EXI *  TEXT('Midas FT Valid outgoing payments details')             *
+     A*****************************************************************
+     A*                                                               *
+      *  Midas - FT ILE Module                                        *
+     A*                                                               *
+      *  PF/FTVOPAYPD - Valid Outgoing Payments                       *
+     A*                                                               *
+      *  This file has the same layout as OTPAYDD                     *
+      *  (but its field names are prefixed 'OT')                      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 CFT120             Date 28Sep12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CDL049             Date 31Mar06               *
+      *                 CSD027             Date 05Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 175479             Date 23May00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 01Jun99               *
+      *                 CAP031  *CREATE    Date 09Apr99               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT157 - Stop FT Transaction after Authorisation.            *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature                            *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field                  *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  175479 - FONTIS: Dealer's reference field                    *
+      *  CPB001 - Meridian DBA Middleware Replication Customization.  *
+      *           Add Replication Indicator.                          *
+      *  CAP031 - Conversion of FT inputs into modular structure to   *
+      *           use as APIs.                                        *
+     A*                                                               *
+     A*****************************************************************
+     A                                      REF(MFRFL)
+     A          R FTVOPAYD0                 TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+ 
+     A            OTRECI    R               REFFLD(RECI)
+     A            OTPREF    R               REFFLD(PREF)
+     A            OTPYTP    R               REFFLD(PYTP)
+     A            OTPYST    R               REFFLD(PYST)
+     A            OTDSTT    R               REFFLD(DSTT)
+     A            OTDST1    R               REFFLD(DST1)
+     A            OTDST2    R               REFFLD(DST2)
+     A            OTDST3    R               REFFLD(DST3)
+     A            OTDST4    R               REFFLD(DST4)
+     A            OTSNCT    R               REFFLD(SNCT)
+      * Start of CSD027
+      * field changed as it can contain customer even though it was originally 10,0
+     A************OTSNCO    R               REFFLD(SNCO)
+     A            OTSNCO        10A         TEXT('Senders Correspondent')
+     A                                      COLHDG('Senders Correspondnt')
+      * End of CSD027
+     A            OTORBT    R               REFFLD(ORBT)
+     A**Start of change CGL029
+     A**********  OTORBK    R               REFFLD(ORBK)                                      CGL029
+     A            QQORBK        12S
+     A**End of change CGL029
+     A            OTORCT    R               REFFLD(ORCT)
+     A            OTORC1    R               REFFLD(ORC1)
+     A            OTORC2    R               REFFLD(ORC2)
+     A            OTORC3    R               REFFLD(ORC3)
+     A            OTORC4    R               REFFLD(ORC4)
+     A            OTSMAM    R               REFFLD(SMAM)
+     A            OTSMAMD   R               REFFLD(SMAMD)
+     A            OTSMCY    R               REFFLD(SMCY)
+     A            OTMDIN    R               REFFLD(MDIN)
+     A            OTRATE    R               REFFLD(RATE)
+     A            OTRATED   R               REFFLD(RATED)
+     A            OTOVRD    R               REFFLD(OVRD)
+     A            OTPYAM    R               REFFLD(PYAM)
+     A            OTPYAMD   R               REFFLD(PYAMD)
+     A            OTPCCY    R               REFFLD(PCCY)
+     A            OTSLDT    R               REFFLD(SLDT)
+     A            OTSLDTD1  R               REFFLD(SLDTD1)
+     A            OTSLDTD2  R               REFFLD(SLDTD2)
+     A            OTSLDTD3  R               REFFLD(SLDTD3)
+     A            OTPVDT    R               REFFLD(PVDT)
+     A            OTPVDTD1  R               REFFLD(PVDTD1)
+     A            OTPVDTD2  R               REFFLD(PVDTD2)
+     A            OTPVDTD3  R               REFFLD(PVDTD3)
+     A            OTADDC    R               REFFLD(ADDC)
+     A            OTRPAY    R               REFFLD(RPAY)
+     A            OTPAYF    R               REFFLD(PAYF)
+     A            OTDYIM    R               REFFLD(DYIM)
+     A            OTFDAT    R               REFFLD(FDAT)
+     A            OTFDATD1  R               REFFLD(FDATD1)
+     A            OTFDATD2  R               REFFLD(FDATD2)
+     A            OTFDATD3  R               REFFLD(FDATD3)
+     A            OTSWPC    R               REFFLD(SWPC)
+     A            OTSTMT    R               REFFLD(STMT)
+     A            OTSNMT    R               REFFLD(SNMT)
+     A            OTRCRT    R               REFFLD(RCRT)
+     A            OTRCO1    R               REFFLD(RCO1)
+     A            OTRCO2    R               REFFLD(RCO2)
+     A            OTRCO3    R               REFFLD(RCO3)
+     A            OTRCO4    R               REFFLD(RCO4)
+     A            OTRCO5    R               REFFLD(RCO5)
+     A            OTACBT    R               REFFLD(ACBT)
+     A            OTACB1    R               REFFLD(ACB1)
+     A            OTACB2    R               REFFLD(ACB2)
+     A            OTACB3    R               REFFLD(ACB3)
+     A            OTACB4    R               REFFLD(ACB4)
+     A            OTACB5    R               REFFLD(ACB5)
+     A            OTBNCT    R               REFFLD(BNCT)
+     A            OTBNC1    R               REFFLD(BNC1)
+     A            OTBNC2    R               REFFLD(BNC2)
+     A            OTBNC3    R               REFFLD(BNC3)
+     A            OTBNC4    R               REFFLD(BNC4)
+     A            OTBNC5    R               REFFLD(BNC5)
+     A            OTDTP1    R               REFFLD(DTP1)
+     A            OTDTP2    R               REFFLD(DTP2)
+     A            OTDTP3    R               REFFLD(DTP3)
+     A            OTDTP4    R               REFFLD(DTP4)
+     A            OTDTCH    R               REFFLD(DTCH)
+     A            OTBBI1    R               REFFLD(BBI1)
+     A            OTBBI2    R               REFFLD(BBI2)
+     A            OTBBI3    R               REFFLD(BBI3)
+     A            OTBBI4    R               REFFLD(BBI4)
+     A            OTBBI5    R               REFFLD(BBI5)
+     A            OTBBI6    R               REFFLD(BBI6)
+     A            OTDNBC    R               REFFLD(DNBC)
+     A            OTTRCT    R               REFFLD(TRCT)
+     A            OTTRCM    R               REFFLD(TRCM)
+     A            OTTRCMD   R               REFFLD(TRCMD)
+     A            OTTXCH    R               REFFLD(TXCH)
+     A            OTTXCHD   R               REFFLD(TXCHD)
+     A            OTCQCH    R               REFFLD(CQCH)
+     A            OTCQCHD   R               REFFLD(CQCHD)
+     A            OTCSTA    R               REFFLD(CSTA)
+     A            OTCSTAD   R               REFFLD(CSTAD)
+     A            OTSPCH    R               REFFLD(SPCH)
+     A            OTSPCHD   R               REFFLD(SPCHD)
+     A            OTMSCH    R               REFFLD(MSCH)
+     A            OTMSCHD   R               REFFLD(MSCHD)
+     A            OTCDRT    R               REFFLD(CDRT)
+     A**Start of change CGL029
+     A**********  OTCDRO    R               REFFLD(CDRO)                                      CGL029
+     A            QQCDRO        12S
+     A**End of change CGL029
+     A            OTLCHT    R               REFFLD(LCHT)
+     A            OTLCD     R               REFFLD(LCD)
+     A            OTCHTP    R               REFFLD(CHTP)
+     A            OTAUP1    R               REFFLD(AUP1)
+     A            OTAUP2    R               REFFLD(AUP2)
+     A            OTAUIN    R               REFFLD(AUIN)
+     A            OTIACG    R               REFFLD(IACG)
+     A            OTSACG    R               REFFLD(SACG)
+     A            OTPACG    R               REFFLD(PACG)
+     A            OTSMSG    R               REFFLD(SMSG)
+     A            OTPMSG    R               REFFLD(PMSG)
+     A            OTOEDT    R               REFFLD(OEDT)
+     A            OTOEDTD1  R               REFFLD(OEDTD1)
+     A            OTOEDTD2  R               REFFLD(OEDTD2)
+     A            OTOEDTD3  R               REFFLD(OEDTD3)
+     A            OTNPDT    R               REFFLD(NPDT)
+     A            OTNPDTD1  R               REFFLD(NPDTD1)
+     A            OTNPDTD2  R               REFFLD(NPDTD2)
+     A            OTNPDTD3  R               REFFLD(NPDTD3)
+     A            OTPRBD    R               REFFLD(PRBD)
+     A            OTFAIN    R               REFFLD(FAIN)
+     A            OTADIN    R               REFFLD(ADIN)
+     A            OTCQIN    R               REFFLD(CQIN)
+     A            OTPRIN    R               REFFLD(PRIN)
+     A            OTMT100   R               REFFLD(MT100)
+     A            OTMT202   R               REFFLD(MT202)
+     A            OTTXIN    R               REFFLD(TXIN)
+     A            OTBAIN    R               REFFLD(BAIN)
+     A            OTISIN    R               REFFLD(ISIN)
+     A            OTMPYI    R               REFFLD(MPYI)
+     A            OTRLPR    R               REFFLD(RLPR)
+     A            OTINBT    R               REFFLD(INBT)
+     A            OTINB1    R               REFFLD(INB1)
+     A            OTINB2    R               REFFLD(INB2)
+     A            OTINB3    R               REFFLD(INB3)
+     A            OTINB4    R               REFFLD(INB4)
+     A            OTINB5    R               REFFLD(INB5)
+     A            OTCHAP    R               REFFLD(CHAP)
+     A            OTLVL1    R               REFFLD(LVL1)
+     A            OTLVL2    R               REFFLD(LVL2)
+     A            OTSBCQ    R               REFFLD(SBCQ)
+     A            OTPBCQ    R               REFFLD(PBCQ)
+      ** Start of change CFT032
+     A**********  OTODMT    R               REFFLD(ODMT)                                      CFT032
+     A            OTODM1    R    6A         REFFLD(ODMT)
+     A                                      TEXT('Ordering Customer 5')
+     A                                      COLHDG('Ordering Customer 5')
+      ** End of change CFT032
+     A            OTOPIN    R               REFFLD(OPIN)
+     A            OTOXPREF  R               REFFLD(OXPREF)
+     A            OTZZ011   R               REFFLD(ZZ011)
+     A            OTAMTS    R               REFFLD(AMTS)
+     A            OTSVDT    R               REFFLD(SVDT)
+     A            OTNSTR    R               REFFLD(NSTR)
+     A            OTTSKS    R               REFFLD(TSKS)
+     A            OTINUSR1  R               REFFLD(INUSR1)
+     A            OTINUSR2  R               REFFLD(INUSR2)
+      *  STORE OF DUMMY AMOUNTS
+     A            OTDUMA1   R               REFFLD(DUMA1)
+     A            OTDUMA2   R               REFFLD(DUMA2)
+     A            OTDUMA3   R               REFFLD(DUMA3)
+     A            OTDUMA4   R               REFFLD(DUMA4)
+     A            OTDUMA5   R               REFFLD(DUMA5)
+     A            OTDUMA6   R               REFFLD(DUMA6)
+     A            OTBRCA    R               REFFLD(BRCA)
+     A            OTORBR    R               REFFLD(ORBR)
+     A            OTORBB    R               REFFLD(ORBB)
+     A            OTCDBR    R               REFFLD(CDBRFT)
+     A            OTMT202C  R               REFFLD(MT202C)
+     A            OTBOKC    R               REFFLD(BOKC)
+     A            OTPRFC    R               REFFLD(PRFC)
+     A            OTOPORBT  R               REFFLD(ORBT)
+     A            OTOPORB1  R               REFFLD(ORB1)
+     A            OTOPORB2  R               REFFLD(ORB2)
+     A            OTOPORB3  R               REFFLD(ORB3)
+     A            OTOPORB4  R               REFFLD(ORB4)
+     A            OTOPORB5  R               REFFLD(ORB5)
+     A            OTOPMSGR  R               TEXT('Msg Unique Reference')
+     A                                      COLHDG('Msg Unique' +
+     A                                             'Reference')
+     A                                      REFFLD(MSGR)
+     A            OTOPKPRT  R               TEXT('Part Number (Key)')
+     A                                      COLHDG('Part Number' +
+     A                                             '(Key)')
+     A                                      REFFLD(KPRT)
+     A            OTOPVAT1  R               TEXT('Trf C V.A.T. Flag')
+     A                                      COLHDG('Trf Com. ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+     A            OTOPVAT2  R               TEXT('Telex V.A.T. Flag')
+     A                                      COLHDG('Telex V.A.T.' +
+     A                                             ' Flag')
+     A                                      REFFLD(IND)
+     A            OTOPVAT3  R               TEXT('Cheq. V.A.T. Flag')
+     A                                      COLHDG('Cheq. V.A.T.' +
+     A                                             ' Flag')
+     A                                      REFFLD(IND)
+     A            OTOPVAT4  R               TEXT('Advice V.A.T. Flag')
+     A                                      COLHDG('Advice ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+     A            OTOPVAT5  R               TEXT('Tel. V.A.T. Flag')
+     A                                      COLHDG('Telephone ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+     A            OTOPVAT6  R               TEXT('Misc V.A.T. Flag')
+     A                                      COLHDG('Miscellaneous ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+     A            OTOPVAT7  R               TEXT('FX cm V.A.T. Flag')
+     A                                      COLHDG('FX/Change Com ' +
+     A                                             'V.A.T. Flag')
+     A                                      REFFLD(IND)
+     A            OTOPCHCM  R               TEXT('FX/Chnge Commission')
+     A                                      COLHDG('FX/Change Comm' +
+     A                                             'ission')
+     A                                      REFFLD(TRCM)
+     A            OTOPVATT  R               TEXT('Total V.A.T. Charge')
+     A                                      COLHDG('Total V.A.T. ' +
+     A                                             'Charge')
+     A                                      REFFLD(TRCM)
+     A            OTOPDUM7  R               TEXT('FX/Chnge (Ccy Ent.)')
+     A                                      COLHDG('FX/Change Commi' +
+     A                                             'ssion (Ccy ent.)')
+     A                                      REFFLD(DUMA1)
+     A            OTOPDUM8  R               TEXT('Total VAT(Ccy Ent.)')
+     A                                      COLHDG('Total V.A.T. Ch' +
+     A                                             'arge (Ccy Ent.)')
+     A                                      REFFLD(DUMA1)
+     A            OTOPRPRF  R               TEXT('Linked to Regular P.')
+     A                                      COLHDG('Linked to Regul' +
+     A                                             'ar Payment')
+     A                                      REFFLD(PREF)
+     A            OTOPVATR  R               TEXT('V.A.T. Rate')
+     A                                      COLHDG('V.A.T. Rate')
+     A                                      REFFLD(CPNR)
+     A            OTFXMP    R               REFFLD(FWPP)
+     A                                      TEXT('FX Margin Points')
+     A                                      COLHDG('FX' +
+     A                                             'Margin' +
+     A                                             'Points')
+      *
+     A            OTFXMD    R               REFFLD(MDIN)
+     A                                      TEXT('FX Multiply/Divide Indicator')
+     A                                      COLHDG('FX' +
+     A                                             'Multiply/Divide' +
+     A                                             'Indicator')
+      *
+     A            OTMBSI    R               REFFLD(SPIN)
+     A                                      TEXT('Margin Buy/Sell Indicator')
+     A                                      COLHDG('Margin' +
+     A                                             'Buy/Sell' +
+     A                                             'Indicator')
+      *
+     A            OTMSIG    R               REFFLD(SPIN)
+     A                                      TEXT('Margin Sign')
+     A                                      COLHDG('Margin' +
+     A                                             'Sign')
+      *
+     A            OTMAMT    R               REFFLD(AABC)
+     A                                      TEXT('Margin Amount')
+     A                                      COLHDG('Margin' +
+     A                                             'Amount')
+     A            OTNDCY    R               REFFLD(SMCY)
+     A                                      TEXT('Notified Delivery Currency')
+     A                                      COLHDG('Notified' +
+     A                                             'Delivery' +
+     A                                             'Currency')
+     A            OTNDAM    R               REFFLD(PSAT)
+     A                                      TEXT('Notified Delivery Amount')
+     A                                      COLHDG('Notified' +
+     A                                             'Delivery Amount')
+     A            OTPDCY    R               REFFLD(PYCY)
+     A                                      TEXT('Pay Delivery Currency')
+     A                                      COLHDG('Pay' +
+     A                                             'Delivery' +
+     A                                             'Currency')
+     A            OTPDAM    R               REFFLD(PYMT)
+     A                                      TEXT('Pay Delivery Amount')
+     A                                      COLHDG('Pay Delivery' +
+     A                                             'Amount')
+     A            OTFRNT    R               REFFLD(FOTRNID)
+     A            OTREPA    R               REFFLD(RPRLOC)
+ 
+      ** Timestamp
+     A            OTTMESTMP R               REFFLD(TIMESTMP)
+      *                                              Begin  /CPB001/
+     A            OTREPI         1          TEXT('Replication Indicator')
+     A                                      COLHDG('Replication' 'Indicator')
+      *                                              End    /CPB001/
+      *                                                /* Beg 175479 */
+      *
+      ** Dealer's reference
+     A            OTFDLR        30A
+     A                                      TEXT('Dealer''s Ref.')
+      *                                                /* End 175479 */
+     A**Start of change CGL029
+      * Start of CSD027
+     A************OTORBK        18S
+     A            OTORBK    R   18A         REFFLD(ORBK)
+     A************OTCDRO        18S
+     A            OTCDRO    R   18A         REFFLD(CDRO)
+      * End of CSD027
+     A**End of change CGL029
+     A**Start of change CDL049
+     A            OTRRAT        13P 8       TEXT('Reference Rate')
+     A                                      COLHDG('Reference Rate')
+     A**End of change CDL049
+      ** Start of change CFT032
+     A            OTORC5    R   35A         REFFLD(ORC5)
+     A            OTOMDR         1A         TEXT('MT103 Account Type')
+     A                                      COLHDG('MT103 Account Type')
+     A            OTODMT        34A         TEXT('MT103 Account')
+     A                                      COLHDG('MT103 Account')
+      ** End of change CFT032
+      ** Start of change CER030
+     A            OTRTTY         5A         TEXT('Transaction Type')
+     A                                      COLHDG('Transaction Type')
+      *
+     A            OTEXT1        65A         TEXT('Extended Narrative +
+     A                                            1')
+     A                                      COLHDG('Ext Narr 1')
+      *
+     A            OTEXT2        65A         TEXT('Extended Narrative +
+     A                                            2')
+     A                                      COLHDG('Ext Narr 2')
+      *
+     A            OTEXT3        65A         TEXT('Extended Narrative +
+     A                                            3')
+     A                                      COLHDG('Ext Narr 3')
+      *
+     A            OTEXT4        65A         TEXT('Extended Narrative +
+     A                                            4')
+     A                                      COLHDG('Ext Narr 4')
+      *
+     A            OTEXT5        65A         TEXT('Extended Narrative +
+     A                                            5')
+     A                                      COLHDG('Ext Narr 5')
+      *
+     A            OTEXT6        65A         TEXT('Extended Narrative +
+     A                                            6')
+     A                                      COLHDG('Ext Narr 6')
+      *
+     A            OTEXC1        65A         TEXT('Extended Narrative +
+     A                                            1 (Crd)')
+     A                                      COLHDG('Ext Narr 1 (Crd)')
+      *
+     A            OTEXC2        65A         TEXT('Extended Narrative +
+     A                                            2 (Crd)')
+     A                                      COLHDG('Ext Narr 2 (Crd)')
+      *
+     A            OTEXC3        65A         TEXT('Extended Narrative +
+     A                                            3 (Crd)')
+     A                                      COLHDG('Ext Narr 3 (Crd)')
+      *
+     A            OTEXC4        65A         TEXT('Extended Narrative +
+     A                                            4 (Crd)')
+     A                                      COLHDG('Ext Narr 4 (Crd)')
+      *
+     A            OTEXC5        65A         TEXT('Extended Narrative +
+     A                                            5 (Crd)')
+     A                                      COLHDG('Ext Narr 5 (Crd)')
+      *
+     A            OTEXC6        65A         TEXT('Extended Narrative +
+     A                                            6 (Crd)')
+     A                                      COLHDG('Ext Narr 6 (Crd)')
+      ** End of change CER030
+      **Start of change CFT120
+     A            OTCDRC         3A         TEXT('Charges to Debit of+
+     A                                            Currency')
+     A                                      COLHDG('Charges' 'DR' 'Ccy')
+      **End of change CFT120
+      **Start of change CFT157
+     A            OTDATE    R               TEXT('Stop Date')
+     A                                      COLHDG('Stop' 'Date')
+     A                                      REFFLD(LCD)
+     A            OTSUSR    R               TEXT('Stop User')
+     A                                      COLHDG('Stop' 'User')
+     A                                      REFFLD(INUSR1)
+     A            OTSAUS    R               TEXT('Stop Authorise User')
+     A                                      COLHDG('Stop' 'Auth' 'User')
+     A                                      REFFLD(INUSR1)
+      **End of change CFT157

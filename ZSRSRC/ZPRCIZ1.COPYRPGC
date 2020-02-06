@@ -1,0 +1,90 @@
+     C*****************************************************************
+     C*
+     C*  ZPRCI - SUBROUTINE TO OUTPUT PRICE AS %PRICE
+     C*
+     C*  INPUT  - ZPRCIN (15,8) PRICE IN AS PRICE/DISC/YIELD
+     C*           ZFDATE (5,0) FROM DATE
+     C*           STBS (1) TRADE BASIS FROM SECURITY
+     C*           MATY (5,0) MATURITY DATE FROM SECURITY
+     C*           SYBS (2) YIELD BASIS FROM SECURITY
+     C*
+     C*  OUTPUT - ZPRCOT (15,8) OUTPUT PRICE AS PERCENTAGE
+     C*
+     C*  CALLS  - ZDAYS (ZDATE2)      YOU WILL ALSO NEED; ZDATE1,
+     C*           ZDYYR (ZDAYS)                           ZYLD,
+     C*           ZYLDI                                   ZNCD, ZLCD
+     C********************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*    LAST AMEND NO.E20019                   DATE 03NOV89           *S01199
+     C*                                                                  *
+     C********************************************************************
+     C*                                                                  *
+     C* E20019 - Discount-to-Price conversion truncates discount rate.   *E20019
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZPRCI     BEGSR                           ** ZPRCI **
+     C*
+     C* DEFINE INPUT FIELDS
+     C*
+     C                     Z-ADDZPRCIN    ZPRCIN 158
+     C                     Z-ADDZFDATE    ZFDATE  50
+     C                     Z-ADD0         ZPRCOT 158
+     C*
+     C* TRADE BASIS IS 'P' (PRICE)
+     C*
+     C           STBS      IFEQ 'P'
+     C                     Z-ADDZPRCIN    ZPRCOT
+     C                     ELSE
+     C*
+     C* TRADE BASIS IS 'D' (DISCOUNT)
+     C*
+     C           STBS      IFEQ 'D'
+     C*
+     C***** CALCULATE NO OF DAYS BETWEEN FROM DATE AND MATURITY DATE
+     C*     D = ZDDAYS
+     C                     Z-ADDZFDATE    ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    #DDAYS  50
+     C*
+     C**** CALCULATE NO OF DAYS IN INTEREST YEAR
+     C*    Y = ZINTDD
+     C                     EXSR ZDYYR
+     C*
+     C           ZINTDD    IFEQ 0
+     C                     Z-ADD0         ZPRCOT
+     C                     ELSE
+     C*
+     C*                   (     (  PRICE IN    DAYS BETWEEN DATES ) )
+     C*  PRICE OUT= 100 X ( 1 - ( ---------- * ------------------ ) )
+     C*                   (     (    100       INTEREST YEAR DAYS ) )
+     C*
+     C***********ZPRCIN    MULT 0.01      WPRICE 158                      E20019
+     C***********WPRICE    MULT #DDAYS    WPRICE                          E20019
+     C           ZPRCIN    MULT #DDAYS    WPRICE 158                      E20019
+     C           WPRICE    DIV  ZINTDD    WPRICE    H
+     C***********1         SUB  WPRICE    WPRICE                          E20019
+     C***********WPRICE    MULT 100       ZPRCOT 158                      E20019
+     C           100       SUB  WPRICE    ZPRCOT                          E20019
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C* TRADE BASIS IS 'Y' (YIELD)
+     C*
+     C           STBS      IFEQ 'Y'
+     C                     EXSR ZYLDI
+     C                     Z-ADDZYLDOT    ZPRCOT
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************

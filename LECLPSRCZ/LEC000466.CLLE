@@ -1,0 +1,120 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Merge Profitability Tables')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending                                             */
+/*                                                                   */
+/*       LEC000466 - Merge Profitability Tables                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE075AL *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE075AL - COB Restructure - LE COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ &MODE)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+ 
+/* Journalling variables */
+ 
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JRNPF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Start Journalling */
+ 
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)
+             CHGVAR     VAR(&JRNPF) VALUE('LENQ')
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                          *CAT &CSEQA)
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('S') TEXT(&STEXT)
+ 
+/* Call LENQCPY to begin file copy */
+ 
+             CALL       PGM(LENQCPY) PARM(&MODE)
+ 
+/* Handle error on program call */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ERROR:
+                CALLSUBR   SUBR(JRNRECOVR)
+                SNDPGMMSG  MSG('Job terminated, database in error. +
+                             Contact Systems Department.') +
+                             TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ 
+/*********************************************************************/
+/*                                                                   */
+/*       JRNRECOVR - Removes changes to LENQ using journal           */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(JRNRECOVR)
+ 
+/* Begin recovery from error */
+/* Retrieve attributes of current job */
+ 
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)
+ 
+/* Retrieve the most recent journal entry sequence number for the */
+/* specific job. */
+ 
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) +
+                          SEARCH(*DESCEND) JOB(&NBR/&USR/&JOB) +
+                          FROMENT(*LAST) TOENT(*FIRST) +
+                          RTNRCV(&SJRNRCVR) RTNSEQNBR(&START)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+                CHGVAR     VAR(&START) VALUE(0)
+             ENDDO
+ 
+/* Determine starting journal sequence number of current job. */
+ 
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                          SEQ(&FINISH)
+ 
+/* Remove journal changes. */
+ 
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)
+                RMVJRNCHG  JRN(ICJRN) FILE((&JRNPF)) RCVRNG(&SJRNRCVR +
+                          &FJRNRCVR) FROMENT(&START) TOENT(&FINISH)
+                MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)
+             ENDDO
+ 
+             ENDSUBR
+ 
+/* End JRNRECOVR subroutine. */
+ 
+ENDPGM:
+             ENDPGM

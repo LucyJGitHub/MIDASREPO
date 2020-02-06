@@ -1,0 +1,99 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_GPEPORPD - Midas GZ Portfolio Management ICD View                   */
+/*                                                                             */
+/*       (c) Misys International Banking Systems Ltd. 2006                     */
+/*                                                                             */
+/*       Last Amend No. CGP016  *REDUNDANT Date 06Aug12                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CER059             Date 19Jul10                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BUG14382B          Date 02Aug07                        */
+/*                      BUG14382           Date 20Jul07                        */
+/*                      BG13009            Date 19Jan07                        */
+/*                      CRE026  *CREATE    Date 24May06                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CGP016 - Global database - Re-use deleted records                     */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi (Recompile)                  */
+/*       BUG14382B - Customer Portfolio Enquiry Does not Work properly for     */
+/*                   Consumer banking                                          */
+/*       BUG14382 - Missing Customer Portfoliio Enquiry                        */
+/*       BG13009 - Missing Customer Portfoliio Enquiry                         */
+/*       CRE026 - Consumer Banking                                             */
+/*                                                                             */
+/*******************************************************************************/
+/*CREATE*VIEW*******************************************************************:             CGP016
+  **********/**********                                                         :
+  AS                                                                            :
+   SELECT                                                                       :
+   CASE WHEN GPPRODPD.PDGPRD IS NULL THEN 'OTHER' ELSE GPPRODPD.PDDESC          :
+    END AS PRODDESC,                                                            :
+   CASE WHEN GPPRODPD.PDDSEQ IS NULL THEN '9' ELSE GPPRODPD.PDDSEQ              :
+    END AS PRODSEQ,                                                             :
+     GPTRAPPD.T_SMOD,GPTRAPPD.T_ID,GPTRAPPD.T_BRCA, GPTRAPPD.T_SNAM,            :
+     GPTRAPPD.T_SDAT,GPTRAPPD.T_EDAT,GPTRAPPD.T_LICD,GPTRAPPD.T_CNCD,           :
+     GPTRAPPD.T_TRTP,GPTRAPPD.T_TRST,GPTRAPPD.T_STRP,GPTRAPPD.T_PCAL,           :
+     GPTRAPPD.T_ZONE,GPTRAPPD.T_BOOK,GPTRAPPD.T_SESN,GPTRAPPD.T_ISTT,           :
+     GPTRAPPD.T_YRNO,GPTRAPPD.T_MTHN,GPTRAPPD.T_ACSQ,GPTRAPPD.T_ACOD,           :
+     GPTRAPPD.T_ACCY,GPTRAPPD.T_TREF,GPTRAPPD.T_MOD,GPTRAPPD.T_CNUM,            :
+*****DIGITS(T_CNUM)*AS*PADCNUM,*************************************************:          BUG14382B
+     T_CNUM AS PADCNUM,                                                         :          BUG14382B
+     GPGLCUSL.CGGLOB,GPGLCUSL.CGCSSN,                                           :
+     GPPOSNPD.P_TVDI,GPPOSNPD.P_ASLI,GPPOSNPD.P_ID,GPPOSNPD.P_CCY,              :
+     GPPOSNPD.P_NOML,                                                           :
+     GPPOSNPD.P_ONOM,GPPOSNPD.P_MKPR,GPPOSNPD.P_MKVL,GPPOSNPD.P_AITD,           :
+     GPPOSNPD.P_OCCY,T_SMODSEC.SMSMOD,T_SMODSEC.SMMODDESC                       :
+     FROM GPTRAPPD                                                              :
+     LEFT JOIN GPGLCUSL ON T_ZONE = CGZONE AND T_CNUM=CGCNUM                    :
+     LEFT JOIN GPPOSNPD ON P_ID=T_ID                                            :
+     LEFT JOIN T_SMODSEC ON T_SMOD=SMSMOD                                       :
+     LEFT JOIN GPPRODXPD ON PDTRTP = T_TRTP AND PDTRST = T_TRST                 :
+     AND PDZONE = T_ZONE                                                        :
+     LEFT JOIN GPPRODPD ON GPPRODXPD.PDGPRD=GPPRODPD.PDGPRD                     :
+                                                                                :
+ UNION                                                                          :
+                                                                                :
+ SELECT                                                                         :
+**'CONSUMER*BANKING'*AS*PRODDESC,***********************************************:            BG13009
+ 'Consumer Banking' AS PRODDESC,                                                :            BG13009
+ '9'  AS PRODSEQ,                                                               :
+**GPETRAPPD.T_SMOD,GPETRAPPD.T_ID,GPETRAPPD.T_BRCA,*GPETRAPPD.T_SNAM,***********:            BG13009
+**GPETRAPPD.T_SDAT,GPETRAPPD.T_EDAT,GPETRAPPD.T_LICD,GPETRAPPD.T_CNCD,**********:            BG13009
+**GPETRAPPD.T_TRTP,GPETRAPPD.T_TRST,GPETRAPPD.T_STRP,GPETRAPPD.T_PCAL,**********:            BG13009
+**GPETRAPPD.T_ZONE,GPETRAPPD.T_BOOK,GPETRAPPD.T_SESN,GPETRAPPD.T_ISTT,**********:            BG13009
+**GPETRAPPD.T_YRNO,GPETRAPPD.T_MTHN,GPETRAPPD.T_ACSQ,GPETRAPPD.T_ACOD,**********:            BG13009
+**GPETRAPPD.T_ACCY, GPETRAPPD.T_TREF,GPETRAPPD.T_MOD,GPETRAPPD.T_CNUM,**********:            BG13009
+**GETRAPPD.T_SMOD, GETRAPPD.T_ID,   GETRAPPD.T_BRCA, GETRAPPD.T_SNAM,***********:   BG13009 BUG14382
+**GETRAPPD.T_SDAT, GETRAPPD.T_EDAT, GETRAPPD.T_LICD, GETRAPPD.T_CNCD,***********:   BG13009 BUG14382
+**GETRAPPD.T_TRTP, GETRAPPD.T_TRST, GETRAPPD.T_STRP, GETRAPPD.T_PCAL,***********:   BG13009 BUG14382
+**GETRAPPD.T_ZONE, GETRAPPD.T_BOOK, GETRAPPD.T_SESN, GETRAPPD.T_ISTT,***********:   BG13009 BUG14382
+**GETRAPPD.T_YRNO, GETRAPPD.T_MTHN, GETRAPPD.T_ACSQ, GETRAPPD.T_ACOD,***********:   BG13009 BUG14382
+**GETRAPPD.T_ACCY, GETRAPPD.T_TREF, GETRAPPD.T_MOD,  GETRAPPD.T_CNUM,***********:   BG13009 BUG14382
+ GPETRAPPD.T_SMOD, GPETRAPPD.T_ID,   GPETRAPPD.T_BRCA, GPETRAPPD.T_SNAM,        :           BUG14382
+ GPETRAPPD.T_SDAT, GPETRAPPD.T_EDAT, GPETRAPPD.T_LICD, GPETRAPPD.T_CNCD,        :           BUG14382
+ GPETRAPPD.T_TRTP, GPETRAPPD.T_TRST, GPETRAPPD.T_STRP, GPETRAPPD.T_PCAL,        :           BUG14382
+ GPETRAPPD.T_ZONE, GPETRAPPD.T_BOOK, GPETRAPPD.T_SESN, GPETRAPPD.T_ISTT,        :           BUG14382
+ GPETRAPPD.T_YRNO, GPETRAPPD.T_MTHN, GPETRAPPD.T_ACSQ, GPETRAPPD.T_ACOD,        :           BUG14382
+ GPETRAPPD.T_ACCY, GPETRAPPD.T_TREF, GPETRAPPD.T_MOD,  GPETRAPPD.T_CNUM,        :           BUG14382
+**DIGITS(T_CNUM)*AS*PADCNUM,****************************************************:          BUG14382B
+ T_CNUM AS PADCNUM,                                                             :          BUG14382B
+ GPGLCUSL.CGGLOB,GPGLCUSL.CGCSSN,                                               :
+ 'T' AS P_TVDI,' ' AS P_ASLI,                                                   :
+**CAST(NULL*AS*DECIMAL)*AS**P_ID,GPETRAPPD.T_ACCY*AS*P_CCY,*********************:            BG13009
+**CAST(NULL AS DECIMAL)*AS**P_ID,*GETRAPPD.T_ACCY*AS*P_CCY,*********************:   BG13009 BUG14382
+ CAST(NULL AS DECIMAL) AS  P_ID, GPETRAPPD.T_ACCY AS P_CCY,                     :           BUG14382
+ CAST(NULL AS DECIMAL) AS P_NOML,                                               :
+ CAST(NULL AS DECIMAL) AS P_ONOM,                                               :
+ CAST(NULL AS DECIMAL) AS P_MKPR,CAST(NULL AS DECIMAL) AS P_MKVL                :
+ ,CAST(NULL AS DECIMAL) AS P_AITD,                                              :
+ '' AS P_OCCY,T_SMOD AS SMSMOD,T_SMOD AS SMMODDESC                              :
+**FROM*GPETRAPPD****************************************************************:            BG13009
+**FROM*GETRAPPD*****************************************************************:   BG13009 BUG14382
+ FROM GPETRAPPD                                                                 :           BUG14382
+ LEFT JOIN GPGLCUSL ON T_ZONE = CGZONE AND T_CNUM=CGCNUM                        :

@@ -1,0 +1,450 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Todays Broken Down Deposits Report')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Delaing Module                                       *
+      *                                                               *
+      *  DL0206 - Today's Broken Down Deposits Report                 *
+      *                                                               *
+      *  Function:  This program list all deposits broken during the  *
+      *             day                                               *
+      *  (phase(s)) I/C and COB                                       *
+      *                                                               *
+      *  Called By: DLC0206 - Today's Broken Down Deposit Report      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      *                 CER048             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CAS009             Date 16May05               *
+      *                 CDL038             Date 10May05               *
+      *                 CGL014             Date 20Oct03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CDL007  *CREATE    Date 19Oct99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CER048 - German Features - Taxes (Recompile)                 *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CGL014 - Collaterals Processing (Recompile)                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CDL007 - Deposit Breakdown Penalty                           *
+      *                                                               *
+      *****************************************************************
+     FDLDEALL4UF  E           K        DISK         KINFSR *PSSR
+     FDL0206AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+     FDL0206P1O   E             10     PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  TERM   - Termination Program                                 *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for MMNNNNPY.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for MMNNNNAU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+     ISDCURR    E DSSDCURRPD
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     C/COPY ZSRSRC,ZSEDITZ2
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      ***  End Program.
+     C                     EXSR TERM
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  ZDAT   -
+      *  ZDAT   -
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+     C           *ENTRY    PLIST
+     C                     PARM           PRUNTP  1
+     C                     PARM           PSEQ    5
+     C                     PARM           PLVL    1
+     C                     PARM           PENT    3
+      *
+      **   Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0206'  DBPGM
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+     C           PRUNTP    IFEQ 'I'
+     C                     MOVEL'*Interim'RRINTR
+     C                     MOVE '*'       RRINTR
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRINTR
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       WWOPEN  1
+     C                     MOVE *BLANKS   WWBRCA  3
+      *
+      ***  RCF Processing for Audit File and Report File
+     C                     EXSR RCFP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+     C           PLVL      IFEQ 'S'
+     C           PLVL      OREQ 'B'
+     C           PENT      ANDEQ'ALL'
+      ***  Read first record from File.
+     C           *LOVAL    SETLLDEALSDCF
+     C                     READ DEALSDCF                 89
+     C                     ELSE
+     C           PENT      SETLLDEALSDCF
+     C           PENT      READEDEALSDCF                 89
+     C                     ENDIF
+      *
+      ***  If End of Records, (*IN89), Perform: Reporting (No
+      ***  Records).
+     C           *IN89     IFEQ *ON
+     C                     MOVE PENT      RRBRCA
+     C                     WRITEHEADP1
+     C                     WRITENODETS
+     C                     ENDIF
+      *
+      ***  Do While End of File.
+     C           *IN89     DOWEQ*OFF
+      *
+      ***  Break with the Branch
+     C           BRCA      IFNE WWBRCA
+     C           WWBRCA    IFNE *BLANKS
+     C                     MOVE WWBRCA    RRBRCA
+     C                     WRITETRAILP1
+     C                     ENDIF
+     C                     MOVE BRCA      RRBRCA
+     C                     MOVE BRCA      WWBRCA
+     C                     MOVE *ON       *IN10
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN10
+     C                     ENDIF
+      *
+     C                     MOVE DLNO      RRDLNO
+      *
+     C           PENA      IFNE *ZEROS
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM           CCY
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0206'  DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DB ERROR 02 *
+     C                     MOVELCCY       DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Format amount
+     C                     MOVE PENA      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRPENA
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRPENA
+     C                     ENDIF
+      *
+     C                     MOVELBUSR      RRUSRI
+      *
+      ***  Write detail on report
+     C                     WRITEDETAIL                 10
+      *
+      ***  Overflow
+     C           *IN10     IFEQ *ON
+     C                     WRITEHEADP1
+     C                     MOVE *OFF      *IN10
+     C                     ENDIF
+      *
+      ***  Indicate that record has been printed
+     C           PRUNTP    IFEQ 'C'
+     C                     MOVE 'Y'       PRIN
+     C                     UPDATDEALSDCF
+     C                     ENDIF
+      *
+      ***  Read next record.
+      *
+     C           PLVL      IFEQ 'S'
+     C           PLVL      OREQ 'B'
+     C           PENT      ANDEQ'ALL'
+      ***  Read first record from File.
+     C                     READ DEALSDCF                 89
+     C                     ELSE
+     C           PENT      READEDEALSDCF                 89
+     C                     ENDIF
+      *
+      ***  End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  TERM   - Termination program                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TERM      BEGSR
+      *
+     C                     WRITETRAILP1
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     EXSR RCFAU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+     C           WWOPEN    IFEQ 'Y'
+     C                     CLOSEDL0206P1
+     C                     ENDIF
+     C                     OPEN DL0206P1
+     C                     MOVE 'Y'       WWOPEN
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM PENT      SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+     C                     OPEN DL0206AU
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZSEDITZ3
+**  CPY@
+(c) Finastra International Limited 2001

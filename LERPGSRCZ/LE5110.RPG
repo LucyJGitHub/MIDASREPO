@@ -1,0 +1,1292 @@
+     H        1
+      *****************************************************************
+/*OVR *  OVRDBF FILE(CLOANC) TOFILE(CLOAN) SHARE(*NO)                 *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Interest Accruals Using Net Treasury Rate')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE5110 - Interest Accruals Using Net-Treasury-Rate           *
+      *                                                               *
+      *  NOTE: Check LE1110 for changes that may apply to it if there *
+      *        are amendments done to this program.                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 245082             Date 30Jan07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG8157            Date 25Apr05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005  *CREATE    Date 16Dec02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
+      *  AR996895 - Incorrect accrual interest calculation.           *
+      *             (Child:AR996897) (Recompile)                      *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE064 - Enhancement of Lending Frequencies                  *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  245082 - Loans with first and last day accrual should be     *
+      *           treated as first day accruals until maturity        *
+      *           date.  Then add one day on the maturity date.       *
+      *           Patterned after fix 235784 from Release 4.          *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  BUG8157 - LEC5110  00001 failed due to DBERR                 *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *                                                               *
+      *****************************************************************
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FCLOANC  IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANCKF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     F            CLOANCLF                          KRENAMECLONCLF
+     FMLOAN   IF  E           K        DISK                                                  BUG8157
+     F            CLOANHHF                          KIGNORE                                  BUG8157
+     F            CLOANCKF                          KIGNORE                                  BUG8157
+     F            CLOANZ1F                          KIGNORE                                  BUG8157
+     F            CLOANCLF                          KRENAMEMLONCLF                           BUG8157
+     FLEACNHH O   E                    DISK
+     FLEACNAC O   E                    DISK
+     FLEACNZZ O   E                    DISK
+     FLE5110AUO   E                    PRINTER
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    ZFMD   12  12  2
+     E                    ZHC        50  3
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /COPY ZSRSRC,ZHOLE
+      /COPY ZSRSRC,ZDATE9Z1
+      *
+      /SPACE 3
+     ICLONCLF
+     I              PTYP                            SPTYP
+     I              CNUM                            SCNUM
+     I              CPAM                            SCPAM
+     I              INTR                            SINTR
+     I              OLNO                            SOLNO
+     I              RCSI                            SRCSI
+     IMLONCLF                                                                                BUG8157
+     I              PTYP                            MPTYP                                    BUG8157
+     I              CNUM                            MCNUM                                    BUG8157
+     I              CPAM                            MCPAM                                    BUG8157
+     I              INTR                            MINTR                                    BUG8157
+     I              OLNO                            MOLNO                                    BUG8157
+     I              RCSI                            MRCSI                                    BUG8157
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External DS for Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** External DS for General Ledger Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External DS for Branch Code Details
+      *
+     ISDNOST    E DSSDNOSTPD
+      ** External DS for Nostro Details
+      *
+     I              QQACCD                          QQACC1                                    CGL029
+     ISCSARD    E DSSCSARDPD
+      ** External DS for SAR Details
+      *
+     IDSFDY     E DSDSFDY
+      ** External DS for dummy data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** External DS for dummy data Structure
+      *
+     IDSCSNM      DS                             10
+     I                                        8  10 NRLC
+      ** Data area for the location code in Customer Shortname field
+      *
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+      /COPY ZSRSRC,ZHOLI
+      /COPY ZSRSRC,ZINTDYZ1
+      /COPY ZSRSRC,ZDATE9Z2
+      /COPY ZSRSRC,ZDAT10Z1
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C                     EXSR SRINIT
+      *
+      ** Main Processing
+      *
+     C           *LOVAL    SETLLCLOAN
+     C                     READ CLOAN                    89
+      *
+     C           *IN89     DOWEQ*OFF
+     C           RECI      IFEQ 'D'
+     C                     EXSR SRMAIN
+     C           *IN46     IFEQ *ON
+     C                     EXSR SRFLDS
+     C                     ENDIF
+     C                     ENDIF
+     C                     READ CLOAN                    89
+     C                     ENDDO
+      *
+     C                     EXSR SRUPDZ
+     C                     MOVE *ON       *INLR
+      *
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  SRINIT - Initialization Subroutine                          *
+      *                                                              *
+      ****************************************************************
+     C           SRINIT    BEGSR
+      *
+     C                     MOVEL'LE5110 ' DBPGM
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access General Ledger Details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'SDGELRPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check if S01465 is installed
+      *
+     C                     MOVE *OFF      *IN47
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'S01465'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE *ON       *IN47
+     C                     ELSE
+     C           PRTCD     IFNE '*NRF   '
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL'*VERIFY' DBKEY
+     C                     Z-ADD3         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check if CLE005 is installed
+      *
+     C                     MOVE 'N'       CLE005  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CLE005'  PSARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CLE005
+     C                     ELSE
+     C           PRTCD     IFNE '*NRF   '
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL'*VERIFY' DBKEY
+     C                     Z-ADD4         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check if CEU004 is installed
+      *
+     C                     MOVE 'N'       CEU004  1
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CEU005'  PSARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CEU004
+     C                     ELSE
+     C           PRTCD     IFNE '*NRF   '
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL'*VERIFY' DBKEY
+     C                     Z-ADD5         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   PRTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           PRTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+      *
+      ** Calculate Title Date and Report Control Date
+      *
+     C           BKAPDT    IFLT BJDNWD
+     C                     MOVE *ON       *IN45
+     C                     ENDIF
+      *
+     C                     Z-ADDBJDNWD    TDAT    50
+     C           *IN45     IFEQ *ON
+     C                     Z-ADDBKAPDT    TDAT
+     C           TDAT      ADD  1         TDAT
+     C                     ENDIF
+      *
+     C                     Z-ADDBJDNWD    REPCD   50
+     C           *IN45     IFEQ *ON
+     C           BKAPDT    ADD  1         REPCD
+     C                     ENDIF
+      *
+      ** Store original report control date
+      *
+     C                     Z-ADDREPCD     STRREP  50
+      *
+     C                     Z-ADD1         CONTIN  50
+     C                     Z-ADD1         CNTOUT  50
+      *
+     C                     MOVE 'A'       KRCDT   1
+      *
+      ** Output header
+      *
+     C                     MOVE 'H'       RECI
+     C                     WRITELEACXHHF
+      *
+     C           DATF      IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+     C           KLOKEY    KLIST
+     C**********           KFLD           KLNRF   60                                          CLE148
+     C                     KFLD           KLNRF   6                                           CLE148
+     C                     KFLD           KRCDT
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  SRMAIN - Main Processing                                    *
+      *                                                              *
+      ****************************************************************
+     C           SRMAIN    BEGSR
+      *
+     C                     MOVE *OFF      *IN46
+      *
+      ** Check whether stop accruals indicator is on
+      *
+     C                     TESTB'3'       LONI           42
+      *
+     C           MARG      IFLT 0
+     C                     Z-SUBMARG      WAVMAR  75
+     C                     ELSE
+     C                     Z-ADDMARG      WAVMAR
+     C                     ENDIF
+      *
+      ** Restore the original value of the report control field
+      ** before further processing of each loan
+      *
+     C                     Z-ADDSTRREP    REPCD
+      *
+      ** Check for conditions to skip interest calculations
+      *
+     C           ADDI      IFNE 'F'
+     C           ADDI      ANDNE'B'                                                           245082
+     C                     SUB  1         REPCD
+     C                     ENDIF
+      *
+      ** Loan not started
+      *
+     C           SLID      IFGT REPCD
+     C                     Z-ADD*ZEROS    AMAD   130
+     C                     Z-ADD*ZEROS    WTAD   130
+     C           *IN47     IFEQ *ON
+     C                     MOVE *OFF      *IN46
+     C                     GOTO EMAIN
+     C                     ELSE
+     C                     GOTO TAG20
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check if Principal is negative
+      *
+     C           CPAM      IFLT *ZEROS
+     C                     Z-ADD*ZEROS    ZINTR
+     C                     GOTO TAG15
+     C                     ENDIF
+      *
+      ** Calculate interest from control date
+      ** If stop accruals is on, set to zero and skip round
+      *
+     C           *IN42     IFEQ *ON
+     C                     Z-ADD*ZEROS    ZINTR
+     C                     GOTO TAG15
+     C                     ENDIF
+      *
+      ** If maturity date is less than control date, skip calculation
+      ** of interest. Instead, add PDNN, AINN, AIAN to obtain
+      ** interest accrued.
+      *
+     C           MDAT      IFNE *ZEROS
+     C           MDAT      ANDLTIACD
+     C           PDNN      ADD  AINN      TOTINT
+     C           TOTINT    ADD  AIAN      TOTINT
+     C                     GOTO SKPCAL
+     C                     ENDIF
+      *
+     C                     Z-ADDIACD      ZIBEG
+     C                     Z-ADDREPCD     ZIEND
+     C           MDAT      IFLT REPCD
+     C           MDAT      ANDNE*ZEROS
+     C                     Z-ADDMDAT      ZIEND
+     C                     ENDIF
+      *
+      ** Adjust end date according to 'additional day indicator'
+      *
+     C**********           Z-ADDVDAT      ZVDAT                                               245082
+     C                     Z-ADDMDAT      ZMDAT                                               245082
+     C                     EXSR ZFLAC
+      *
+     C                     Z-ADDICBS      ZICALC
+     C                     Z-ADDCPAM      ZIAMT
+     C           INTR      IFGT WAVMAR
+     C           INTR      SUB  MARG      ZIRATE
+     C                     ELSE
+     C                     Z-ADD0         ZIRATE
+     C                     ENDIF
+     C                     EXSR GLINTC
+      *
+     C           TAG15     TAG
+      *
+      ** Accumulate total interest to date
+      *
+     C           RDFC      IFNE 'Y'
+     C           ZINTR     ADD  AITN      TOTINT 130H
+     C                     ELSE
+     C           ZINTR     ADD  AITN      TOTINT
+     C                     ENDIF
+      *
+     C           TOTINT    ADD  AINN      TOTINT
+     C           TOTINT    ADD  AIAN      TOTINT
+      *
+     C           SKPCAL    TAG
+      *
+      ** Calculate interest accrued
+      *
+     C           TOTINT    SUB  IPRN      AMAD
+     C           AMAD      SUB  ICTN      AMAD
+     C           AMAD      SUB  IWON      AMAD
+      *
+     C                     MOVE *ON       *IN46
+      *
+     C           WTIN      IFEQ ' '
+     C                     MOVE *OFF      *IN35
+     C                     ELSE
+     C                     MOVE *ON       *IN35
+     C                     ENDIF
+      *
+     C           TAG20     TAG
+      *
+      ** Determine whether interest is to be accrued to end of
+      ** period and set up to date if required
+      *
+     C           NIDT      IFNE 0
+     C                     EXSR SETLOC
+     C                     MOVE WSTBL     ZLOC
+     C           NIDT      IFLT REPCD
+     C                     MOVE *ON       *IN35
+     C                     ELSE
+     C                     MOVE *OFF      *IN35
+     C                     ENDIF
+     C           *IN35     IFEQ *ON
+     C                     MOVE IPFR      ZFREQ
+     C                     MOVE CCY       ZCCY
+     C                     ENDIF
+      *
+      ** If feature CEU004 is on, as well as *IN35
+      ** If Settlement currency for EMU non-blank, set the currency field
+      *
+     C           CEU004    IFEQ 'Y'
+     C           *IN35     ANDEQ*ON
+      *
+     C           SCCY      IFNE *BLANKS
+     C                     MOVE SCCY      ZCCY
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           *IN35     IFEQ *ON
+     C                     MOVE IFDY      ZMDAY
+     C                     MOVE NIDT      ZDAYNO
+     C                     EXSR ZFRQA
+     C                     Z-ADDZDAYNO    NIDT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           REPT      IFEQ 1
+     C           REPT      OREQ 3
+     C           NRPD      IFEQ 0
+     C                     Z-ADDMDAT      TODAT   50
+     C                     ELSE
+     C                     Z-ADDNRPD      TODAT
+     C                     ENDIF
+     C                     ELSE
+     C           NIDT      IFEQ 0
+     C                     Z-ADDMDAT      TODAT
+     C                     ELSE
+     C           NIDT      IFLT MDAT
+     C                     Z-ADDNIDT      TODAT
+     C                     ELSE
+     C                     Z-ADDMDAT      TODAT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           NIDT      IFGT MDAT
+     C           MDAT      ANDLTREPCD
+     C           NIDT      ANDNE*ZEROS
+     C           *IN35     OREQ *OFF
+     C           MDAT      ANDLTREPCD
+     C           NIDT      ANDEQ*ZEROS
+     C           *IN42     OREQ *ON
+     C                     Z-ADD*ZEROS    AMTA
+     C                     GOTO EMAIN
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *IN46
+      *
+      ** Calculate interest to accrue
+      *
+     C                     Z-ADDREPCD     ZIBEG
+     C           SLID      IFGT REPCD
+     C                     Z-ADDSLID      ZIBEG
+     C                     ENDIF
+     C                     Z-ADDTODAT     ZIEND
+     C           ADDI      IFEQ 'B'
+     C           ZIEND     ADD  1         ZIEND
+     C                     ENDIF
+     C                     MOVE ICBS      ZICALC
+     C                     Z-ADDCPAM      ZIAMT
+     C           INTR      IFGT WAVMAR
+     C           INTR      SUB  MARG      ZIRATE
+     C                     ELSE
+     C                     Z-ADD0         ZIRATE
+     C                     ENDIF
+     C                     EXSR GLINTC
+      *
+     C           RDFC      IFNE 'Y'
+     C                     Z-ADDZINTR     AMTA      H
+     C                     ELSE
+     C                     Z-ADDZINTR     AMTA
+     C                     ENDIF
+      *
+     C           EMAIN     ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  SRFLDS - Set up file fields and write to file               *
+      *                                                              *
+      ****************************************************************
+     C           SRFLDS    BEGSR
+      *
+     C                     MOVE *OFF      *IN81
+      *
+     C           CNTOUT    ADD  1         CNTOUT
+      *
+     C**********           MOVE CNUM      SNUM    60                                          CSD027
+     C                     MOVE CNUM      SNUM    6                                           CSD027
+      *
+     C           PTYP      IFEQ 64
+     C           PTYP      OREQ 65
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+      *
+      ** Interest Rate
+      *
+     C                     Z-ADDZIRATE    INTR
+      *
+      ** Check for Processing Types 68 or 71
+      *
+     C           CLE005    IFEQ 'Y'
+     C           PTYP      IFEQ 68
+     C           PTYP      OREQ 71
+     C                     MOVE *ON       *IN81
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN81     IFEQ *ON
+     C           RCSI      ANDNE'Y'
+     C                     MOVE OLNO      SNUM
+     C                     ENDIF
+      *
+      ** Validate the Branch Code
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BRCA      PDSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVELPDSNB     DBKEY
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     Z-ADD6         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDSLID      ACFR
+     C                     Z-ADDTODAT     ACTD
+     C                     MOVE A8CMCD    CMPYM
+      *
+      ** Check if loan is parts sold
+      *
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C           PTYP      OREQ 69
+     C           CLE005    ANDEQ'Y'
+     C           PTYP      OREQ 72
+     C           CLE005    ANDEQ'Y'
+      *
+     C**********           Z-ADDLNRF      PSLN                                                CLE148
+     C                     MOVELLNRF      PSLN                                                CLE148
+     C**********           Z-ADDOLNO      LNRF                                                CSD027
+     C                     MOVE OLNO      LNRF                                                CSD027
+     C                     MOVELOLNO      KLNRF
+      *
+     C           KLOKEY    CHAINCLOANC               88
+      *
+     C           *IN88     IFEQ *ON
+     C           KLOKEY    CHAINMLOAN                88                                      BUG8157
+     C           *IN88     IFEQ *ON                                                          BUG8157
+     C                     Z-ADD7         DBASE
+     C                     MOVEL'CLOANCL' DBFILE
+     C                     MOVELKLNRF     DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                                             BUG8157
+      *
+     C                     MOVE SCNUM     SNUM
+      *
+     C                     ELSE
+     C**********           Z-ADD*ZEROS    PSLN                                                CLE148
+     C                     MOVEL*BLANKS   PSLN                                                CLE148
+      *
+     C                     ENDIF
+      *
+      ** Check if the original loan was purchased, and, if so
+      ** was it purchased with recourse?
+      *
+     C           SPTYP     IFLE 65
+     C           SPTYP     ANDGE64
+     C           SRCSI     ANDNE'Y'
+      *
+      ** If the original loan was purchased without recourse,
+      ** use the original borrower as a customer
+      *
+     C                     MOVE SOLNO     SNUM
+     C                     ENDIF
+      *
+      ** Check for Processing Types 68 or 71
+      *
+     C           CLE005    IFEQ 'Y'
+     C           SPTYP     IFEQ 68
+     C           SPTYP     OREQ 71
+      *
+     C           SRCSI     IFNE 'Y'
+     C                     MOVE SOLNO     SNUM
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE SNUM      CNUM
+      *
+     C                     WRITELEACXACF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      ****************************************************************
+      *                                                              *
+      *  SRUPDZ - Accumulate hash totals for records                 *
+      *                                                              *
+      ****************************************************************
+     C           SRUPDZ    BEGSR
+      *
+     C                     ADD  1         CNTOUT
+     C                     MOVE 'T'       RECI
+     C                     Z-ADDCNTOUT    NORE
+     C                     WRITELEACXZZF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SETLOC - Determines the settlement locations                 *
+      *                                                               *
+      *****************************************************************
+     C           SETLOC    BEGSR
+      *
+      ** Initialize working variable - settlement branch location
+      *
+     C           *LIKE     DEFN NRLC      WSTBL
+     C                     MOVE *BLANKS   WSTBL
+      *
+      ** For type 01,02,07,08 or 12, Settlement location is determined
+      ** by the nostro branch
+      *
+     C           MDST      IFEQ 01
+     C           MDST      OREQ 02
+     C           MDST      OREQ 07
+     C           MDST      OREQ 08
+     C           MDST      OREQ 12
+      *
+      ** If feature CEU004 is on
+      ** If Settlement currency for EMU non-blank, set the Nostro Currency
+      *
+     C                     MOVE CCY       PKEYB
+      *
+     C           CEU004    IFEQ 'Y'
+      *
+     C           SCCY      IFNE *BLANKS
+     C                     MOVE SCCY      PKEYB
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM *BLANKS   PKEYA   6
+     C                     PARM           PKEYB   3
+     C**********           PARM *BLANKS   PKEYC   4                                           CGL029
+     C                     PARM *BLANKS   PKEYC  10                                           CGL029
+     C                     PARM *BLANKS   PKEYD   2
+     C                     PARM OMDA      PKEYE   2
+     C                     PARM *BLANKS   BRCD    3
+     C                     PARM           CSSN   10
+     C                     PARM *BLANKS   PNOI    1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C           PRTCD     IFEQ *BLANKS
+      *
+      ** Move the last 3 characters of customer short code (which
+      ** is the location code) to start location code field
+      *
+     C                     MOVE A7NOSN    DSCSNM
+     C                     MOVE NRLC      WSTBL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  ZFRQA - Increment a day number date by a period value        *
+      *          determined by a code (Standard ZFREQ amended to      *
+      *          accomodate extra codes P, K, H, G)                   *
+      *                                                               *
+      *****************************************************************
+     C           ZFRQA     BEGSR
+      *
+      ** Calculations to define/Clear fields
+      *
+     C                     MOVE ZFREQ     ZFREQ   1
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     Z-ADDZMDAY     ZMDAY   20
+     C                     MOVE ZCCY      ZCCY    3
+      *
+      ** Convert day number to date
+      *
+     C                     EXSR ZDATE2
+      *
+      ** Check for and increment for code D-Daily-working day
+      *
+     C           ZFREQ     COMP 'D'                      91
+     C           *IN91     IFEQ *ON
+     C           ZDAYNO    ADD  1         ZDAYNO
+     C                     GOTO ZFHCHK
+     C                     ENDIF
+      *
+      ** Check for and increment for code W-Weekly
+      *
+     C           ZFREQ     COMP 'W'                      91
+     C           *IN91     IFEQ *ON
+     C           ZDAYNO    ADD  7         ZDAYNO
+     C                     GOTO ZFEND
+     C                     ENDIF
+      *
+      ** Check for and increment for code F-Fortnightly
+      *
+     C           ZFREQ     COMP 'F'                      91
+     C           *IN91     IFEQ *ON
+     C           ZDAYNO    ADD  14        ZDAYNO
+     C                     GOTO ZFEND
+     C                     ENDIF
+      *
+      ** Check for and increment for code S-Semi-monthly
+      *
+     C           ZFREQ     COMP 'S'                      91
+     C           *IN91     IFEQ *ON
+     C           ZDAY      COMP 15                   939292
+     C           *IN92     IFEQ *ON
+     C                     Z-ADD31        ZDAY
+     C                     ENDIF
+     C           *IN93     IFEQ *ON
+     C                     Z-ADD15        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     ENDIF
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code M-Monthly
+      *
+     C           ZFREQ     COMP 'M'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code R-Six days before end of month
+      *
+     C           ZFREQ     COMP 'R'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code T-Bi-monthly
+      *
+     C           ZFREQ     COMP 'T'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  2         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code Q-Quarterly
+      *
+     C           ZFREQ     COMP 'Q'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  3         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code X-Six monthly
+      *
+     C           ZFREQ     COMP 'X'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZMTH      ADD  6         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code Y-Yearly
+      *
+     C           ZFREQ     COMP 'Y'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADDZMDAY     ZDAY
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code L-Last calendar day of month
+      *
+     C           ZFREQ     COMP 'L'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code B-Last working day of month
+      *
+     C           ZFREQ     COMP 'B'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code P-Penult. Work/Day of Month
+      *
+     C           ZFREQ     COMP 'P'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  1         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code-K Penult. Work/Day of quarter
+      *
+     C           ZFREQ     COMP 'K'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  3         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code H-Penult Work/Day of Half year
+      *
+     C           ZFREQ     COMP 'H'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADD31        ZDAY
+     C           ZMTH      ADD  6         ZMTH
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *
+      ** Check for and increment for code G-Penult. Work/Day of year
+      *
+     C           ZFREQ     COMP 'G'                      91
+     C           *IN91     IFEQ *ON
+     C                     Z-ADD31        ZDAY
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     GOTO ZFDATE
+     C                     ENDIF
+      *                                                                                       CLE064
+      ** Check for and increment for code 4- 4 Monthly                                        CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '4'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  4         ZMTH                                                CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code 5- 5 Monthly                                        CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '5'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  5         ZMTH                                                CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code 7- 7 Monthly                                        CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '7'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  7         ZMTH                                                CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code 8- 8 Monthly                                        CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '8'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  8         ZMTH                                                CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code 9- 9 Monthly                                        CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP '9'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  9         ZMTH                                                CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code V- 10 Monthly                                       CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'V'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  10        ZMTH                                                CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code E- 11 Monthly                                       CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'E'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZMTH      ADD  11        ZMTH                                                CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code C- 24 Monthly                                       CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'C'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  2         ZYEAR                                               CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code I- 36 Monthly                                       CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'I'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  3         ZYEAR                                               CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code J- 48 Monthly                                       CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'J'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  4         ZYEAR                                               CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code N- 60 Monthly                                       CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'N'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  5         ZYEAR                                               CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *                                                                                       CLE064
+      ** Check for and increment for code U- 120 Monthly                                      CLE064
+      *                                                                                       CLE064
+     C           ZFREQ     COMP 'U'                      91                                   CLE064
+     C           *IN91     IFEQ *ON                                                           CLE064
+     C                     Z-ADDZMDAY     ZDAY                                                CLE064
+     C           ZYEAR     ADD  10        ZYEAR                                               CLE064
+     C                     GOTO ZFDATE                                                        CLE064
+     C                     ENDIF                                                              CLE064
+      *
+      ** Check for and increment for code A-Monthly accrual/profit date
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE *ON       *IN99
+     C                     ENDIF
+     C           ZFREQ     IFNE ' '
+     C           *IN99     ANDEQ*OFF
+     C                     Z-ADDBKAPDT    ZDAYNO
+     C                     ENDIF
+      *
+      ** Bypass if ZFREQ is 'A' or any other value
+      *
+     C                     GOTO ZFEND
+      *
+      ** Reformat date and ensure valid
+      *
+     C           ZFDATE    TAG
+      *
+      ** Validate month
+      *
+     C           ZMTH      COMP 12                   91
+     C           *IN91     IFEQ *ON
+     C           ZMTH      SUB  12        ZMTH
+     C           ZYEAR     ADD  1         ZYEAR
+     C                     ENDIF
+      *
+      ** Check for leap year
+      *
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     92
+      *
+      ** Validate day number
+      *
+     C                     MOVE ZFMD,ZMTH ZWRK2   20
+     C           ZMTH      COMP 2                        93
+     C           *IN92     IFEQ *ON
+     C           *IN93     ANDEQ*ON
+     C                     Z-ADD29        ZWRK2
+     C                     ENDIF
+      *
+     C           ZDAY      COMP ZWRK2                94
+     C           *IN94     IFEQ *ON
+     C                     Z-ADDZWRK2     ZDAY
+     C                     ENDIF
+      *
+      ** Check if code R, to subtract 6 days
+      *
+     C           ZFREQ     COMP 'R'                      91
+     C           *IN91     IFEQ *ON
+     C           ZDAY      SUB  6         ZDAY
+     C                     ENDIF
+      *
+      ** Reformat Date, DDMMYY OR MMDDYY, and convert to day number
+      *
+     C                     MOVELZDAY      ZWRK4   40
+     C                     MOVE ZMTH      ZWRK4
+     C           *IN98     IFEQ *ON
+     C                     MOVELZMTH      ZWRK4
+     C                     MOVE ZDAY      ZWRK4
+     C                     ENDIF
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C                     EXSR ZDATE1
+      *
+      ** Check if code B, to be checked for holiday
+      *
+     C           ZFREQ     COMP 'B'                      91
+      *
+      ** Codes P,K,H,G, also to be checked for holiday
+      *
+     C           *IN91     IFEQ *OFF
+     C           ZFREQ     COMP 'P'                      91
+     C                     ENDIF
+     C           *IN91     IFEQ *OFF
+     C           ZFREQ     COMP 'K'                      91
+     C                     ENDIF
+     C           *IN91     IFEQ *OFF
+     C           ZFREQ     COMP 'H'                      91
+     C                     ENDIF
+     C           *IN91     IFEQ *OFF
+     C           ZFREQ     COMP 'G'                      91
+     C                     ENDIF
+     C           *IN91     IFEQ *ON
+     C           *IN99     ANDEQ*OFF
+     C                     GOTO ZFHCK2
+     C                     ENDIF
+      *
+     C                     GOTO ZFEND
+      *
+      ** If frequency code is 'D',
+      ** Check if day number is a holiday
+      *
+     C           ZFHCHK    TAG
+      *
+     C                     Z-ADD0         ZNRDYS
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     GOTO ZFEND
+      *
+      ** If frequency code is 'B','P, 'K', 'H', 'G',
+      ** check if day number is a holiday
+      *
+     C           ZFHCK2    TAG
+      *
+     C           ZFREQ     IFEQ 'B'
+     C           ZFREQ     OREQ 'P'
+     C           ZFREQ     OREQ 'K'
+     C           ZFREQ     OREQ 'H'
+     C           ZFREQ     OREQ 'G'
+     C                     Z-ADD0         ZNRDYS
+     C                     EXSR ZBKDT
+     C                     Z-ADDZDYNBR    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     ENDIF
+      *
+      ** For codes requiring penultimate working day (P,K,H,G) subtract
+      ** one and check this for holiday
+      *
+     C           ZFREQ     COMP 'P'                      92
+     C           *IN92     IFEQ *OFF
+     C           ZFREQ     COMP 'K'                      92
+     C                     ENDIF
+     C           *IN92     IFEQ *OFF
+     C           ZFREQ     COMP 'H'                      92
+     C                     ENDIF
+     C           *IN92     IFEQ *OFF
+     C           ZFREQ     COMP 'G'                      92
+     C                     ENDIF
+     C           *IN92     IFEQ *OFF
+     C                     GOTO ZFEND
+     C                     ENDIF
+     C           ZDAYNO    SUB  1         ZDAYNO
+     C                     Z-ADD0         ZNRDYS
+     C                     EXSR ZBKDT
+     C                     Z-ADDZDYNBR    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+     C           ZFEND     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program exception error routine                     *
+      *           Called automatically if a program error occurs,     *
+      *           or directly by the program code using EXSR.         *
+      *           This subroutine DUMPs the program just once.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /COPY ZSRSRC,ZDATE2Z4
+      /COPY ZSRSRC,ZDATE1Z2
+      /COPY ZSRSRC,GLINTCZ1
+      /COPY ZSRSRC,ZSAVEZ1
+      /COPY ZSRSRC,ZRSTORZ1
+      /COPY ZSRSRC,ZFLACZ2
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZFWDT
+      /COPY ZSRSRC,ZBKDT
+      /COPY ZSRSRC,ZINTDYZ2
+      /COPY ZSRSRC,ZDATE9Z3
+      /COPY ZSRSRC,ZDAT10Z2
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2002
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

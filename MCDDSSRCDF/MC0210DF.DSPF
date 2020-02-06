@@ -1,0 +1,579 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas MC Management Accounts Review Enq.')
+      ***************************************************************
+      *
+      *  Midas - Management Accounting Module                         *
+      *
+      *  MC0210DF - Management Accounts Review Enquiry
+      *
+      *  (c) Finastra International Limited 2001                      *
+      *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CMC001             Date 18Mar96               *
+      *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CMC001 - Management Accounts Enhancement for PCA:            *
+      *           Disable F13 if Management Accounts enhancement is   *
+      *           on and enquiring on a closed period.                *
+      *
+      ***************************************************************
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      * 03   - F3 exit
+      * 10   - F10 Delete new balances from Initial selection subfile
+      * 11   - F11 Report from Initial selection subfile
+      * 12   - F12 return to previous screen
+      * 13   - F13 Recreate balances from Initial selection subfile
+      * 14   - Seton if system is multibranched
+      * 15   - Seton if system uses Profit Centres
+      * 29   - Enable F10, delete new balances
+      * 30   - subfile clear for Initial selection subfile
+      * 31   - subfile control display for Initial selection subfile
+      * 32   - subfile control dspctl for Initial selection subfile
+      * 33   - subfile control end for Initial selection subfile
+      * 34   - Select field on subfile is non display and protect
+      * 35   - Validation error on branch
+      * 36   - Validation error on currency
+      * 37   - Validation error on account code
+      * 38   - Validation error on client
+      * 39   - Validation error on profit centre
+      * 40   - Enable F8 on Further details format
+      * 43   - Term 1 not defined, do not display
+      * 44   - Term 2 not defined, do not display
+      * 47   - Validation error on book code
+      * 48   - Validation error on associated customer number
+      * 49   - Validation error on account sequence number
+      * 51   - Rollup entered on Initial selection subfile
+      * 60   - Message subfile sflend indicator (dummy - never set)
+      *
+      ***************************************************************
+      *
+     A                                      REF(MFRFL)
+     A                                      INDARA
+     A                                      PRINT(MPRINT)
+     A                                      MSGLOC(24)
+     A                                      CA03(03 'Exit program')
+     A                                      CA11(11 'Report')
+     A                                      CA12(12 'Initial screen')
+      *
+      *
+      ***************************************************************
+      *
+      **  Screen Header
+      *
+      ***************************************************************
+     A          R MC0210H1                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      PUTOVR
+      *
+     A            SUSER     R        O  1  2REFFLD(USER)
+     A                                  1 13'MC0210'
+     A            AGMRDT    R        O  1 72REFFLD(RUNA)
+     A            SWSID         10A  O  2  2
+     A                               O  2 30'MANAGEMENT ACCOUNTS +
+     A                                       REVIEW '
+     A                                      DSPATR(HI)
+     A            STIME          6  0O  2 71EDTWRD('  :  :  ')
+     A                                      OVRDTA
+     A                                  4 11'Group'
+     A            PGRCD          2A  O  4 18TEXT('Group')
+     A                                      OVRDTA
+     A                                  4 26'Period'
+     A            PPDYE          4A  O  4 34TEXT('Period year')
+     A                                      OVRDTA
+     A            PPDNY          2A  O  4 39TEXT('Period number')
+     A                                      OVRDTA
+      *
+      ***************************************************************
+      *
+      ** Subfile for main subfile selection screen
+      *
+      ***************************************************************
+     A          R MC0210S1                  SFL
+      * User selection option
+     A            SUSSN          1A  B 10  2TEXT('User selection')
+     A N34                                  DSPATR(HI)
+     A  34                                  DSPATR(ND PR)
+      * Branch code (only display if system is multibranched)
+     A**Start of change CGL029
+     A**********  SBRCD     R        O 10  5REFFLD(BRCDFM)                                    CGL029
+     A            SBRCD     R        O 10  4REFFLD(BRCDFM)
+     A**End of change CGL029
+      ** Currency code
+     A**Start of change CGL029
+     A**********  SCYCD     R        O 10 10REFFLD(CYCD)                                      CGL029
+     A            SCYCD     R        O 10  9REFFLD(CYCD)
+     A**End of change CGL029
+      ** Account code
+     A**Start of change CGL029
+     A**********  SACCD          4A  O 10 15TEXT('Account code')                              CGL029
+     A            SACCD         10A  O 10 14TEXT('Account code')
+     A**End of change CGL029
+      ** Customer number
+     A**Start of change CGL029
+     A**********  SCUST          6A  O 10 21TEXT('Customer number')                           CGL029
+     A            SCUST          6A  O 10 26TEXT('Customer number')
+     A**End of change CGL029
+      ** Account sequence
+     A**Start of change CGL029
+     A**********  SACSN          2A  O 10 29TEXT('A/C sequence number')                       CGL029
+     A            SACSN          2A  O 10 34TEXT('A/C sequence number')
+     A**End of change CGL029
+      ** Profit centre (only display if Profit Centres used)
+     A**Start of change CGL029
+     A**********  SPCCD          4A  O 10 33TEXT('Profit centre')                             CGL029
+     A            SPCCD          4A  O 10 38TEXT('Profit centre')
+     A**End of change CGL029
+      ** Book code
+     A**Start of change CGL029
+     A**********  SBKCD     R        O 10 39REFFLD(BKBO)                                      CGL029
+     A            SBKCD     R        O 10 44REFFLD(BKBO)
+     A**End of change CGL029
+      ** Transaction type
+     A**Start of change CGL029
+     A**********  SOTTP     R        O 10 43REFFLD(OTTP)                                      CGL029
+     A            SOTTP     R        O 10 48REFFLD(OTTP)
+     A**End of change CGL029
+      ** Transaction sub-type
+     A**Start of change CGL029
+     A**********  STSTY     R        O 10 55REFFLD(TSTY)                                      CGL029
+     A            STSTY     R        O 10 60REFFLD(TSTY)
+     A**End of change CGL029
+      ** Associated customer number
+     A**Start of change CGL029
+     A**********  SASCU          6A  O 10 67TEXT('Associated customer number')                CGL029
+     A            SASCU          6A  O 10 72TEXT('Associated customer number')
+     A**End of change CGL029
+      *
+      ** Subfile record number (hidden, may be useful for debugging)
+     A            SRRN1          4N 0H      TEXT('Subfile rrn')
+      *
+      ***************************************************************
+      *
+      ** Subfile control for main subfile selection screen
+      *
+      ***************************************************************
+     A          R MC0210C1                  SFLCTL(MC0210S1)
+     A                                      SFLSIZ(1000)
+     A                                      SFLPAG(12)
+     A  30                                  SFLCLR
+     A  31                                  SFLDSP
+     A  32                                  SFLDSPCTL
+     A  33                                  SFLEND
+     A N33                                  ROLLUP(51)
+     A  29                                  CA10(10 'Delete new balances')
+      *                                              Begin /CMC001/
+     A***********                           CA13(13 'Recreate Balances')
+     A N18                                  CA13(13 'Recreate Balances')
+      *                                              End   /CMC001/
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A            DSPREC         4S 0H      SFLRCDNBR(CURSOR)
+      *
+      ** Headings for fields on initial selection subfile
+     A**Start of change CGL029
+     A**********                        6 16'A/c'                                             CGL029
+     A**********                        6 29'Sq'                                              CGL029
+     A**15******                        6 33'Prft'                                            CGL029
+     A**********                        6 46'Transaction          Assoc'                      CGL029
+     A**14******                        7  5'Brch'                                            CGL029
+     A**********                        7 10'Ccy  Code  Client  No'                           CGL029
+     A**15******                        7 33'Cntr'                                            CGL029
+     A**********                        7 39'Bk'                                              CGL029
+     A**********                        7 43'Type        Sub-type    Cust'                    CGL029
+     A                                  6 15'A/c'
+     A                                  6 34'Sq'
+     A  15                              6 38'Prft'
+     A                                  6 51'Transaction          Assoc'
+     A  14                              7  4'Brch'
+     A                                  7  9'Ccy  Code        Client  No'
+     A  15                              7 38'Cntr'
+     A                                  7 44'Bk'
+     A                                  7 48'Type        Sub-type    Cust'
+     A**End of change CGL029
+      *
+      ** Selection fields
+      ** Branch code (only display if multibranched system)
+     A**Start of change CGL029
+     A**14******  SBRCDS    R        B  8  5REFFLD(BRCDFM)                                    CGL029
+     A  14        SBRCDS    R        B  8  4REFFLD(BRCDFM)
+     A**End of change CGL029
+     A N35                                  DSPATR(HI)
+     A  35
+     AO 34                                  DSPATR(PC)
+     A  35                                  DSPATR(RI)
+     A                                      OVRATR
+     A                                      OVRDTA
+      ** Currency code
+     A**Start of change CGL029
+     A**********  SCYCDS    R        B  8 10REFFLD(CYCD)                                      CGL029
+     A            SCYCDS    R        B  8  9REFFLD(CYCD)
+     A**End of change CGL029
+     A N36                                  DSPATR(HI)
+     A  36                                  DSPATR(RI PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+      ** Account code
+     A**Start of change CGL029
+     A**********  SACCDS         4A  B  8 15TEXT('Account code')                              CGL029
+     A            SACCDS        10A  B  8 14TEXT('Account code')
+     A**End of change CGL029
+     A N37                                  DSPATR(HI)
+     A  37                                  DSPATR(RI PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+      ** Customer number
+     A**Start of change CGL029
+     A**********  SCUSTS         6A  B  8 21TEXT('Customer number')                           CGL029
+     A            SCUSTS         6A  B  8 26TEXT('Customer number')
+     A**End of change CGL029
+     A N38                                  DSPATR(HI)
+     A  38                                  DSPATR(RI PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+      ** Account sequence
+     A**Start of change CGL029
+     A**********  SACSNS         2A  B  8 29TEXT('A/C sequence number')                       CGL029
+     A            SACSNS         2A  B  8 34TEXT('A/C sequence number')
+     A**End of change CGL029
+     A N49                                  DSPATR(HI)
+     A  49                                  DSPATR(RI PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+      ** Profit centre (only display if Profit Centres used)
+     A**Start of change CGL029
+     A**15******  SPCCDS         4A  B  8 33TEXT('Profit centre')                             CGL029
+     A  15        SPCCDS         4A  B  8 38TEXT('Profit centre')
+     A**End of change CGL029
+     A N39                                  DSPATR(HI)
+     A  39                                  DSPATR(RI PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+      ** Book code
+     A**Start of change CGL029
+     A**********  SBKCDS    R        B  8 39REFFLD(BKBO)                                      CGL029
+     A            SBKCDS    R        B  8 44REFFLD(BKBO)
+     A**End of change CGL029
+     A N47                                  DSPATR(HI)
+     A  47                                  DSPATR(RI PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+      ** Transaction type
+     A**Start of change CGL029
+     A**********  SOTTPS    R        B  8 43REFFLD(OTTP)                                      CGL029
+     A            SOTTPS    R        B  8 48REFFLD(OTTP)
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      ** Transaction sub-type
+     A**Start of change CGL029
+     A**********  STSTYS    R        B  8 55REFFLD(TSTY)                                      CGL029
+     A            STSTYS    R        B  8 60REFFLD(TSTY)
+     A**End of change CGL029
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      ** Associated customer number
+     A**Start of change CGL029
+     A**********  SASCUS         6A  B  8 67TEXT('Associated customer number')                CGL029
+     A            SASCUS         6A  B  8 72TEXT('Associated customer number')
+     A**End of change CGL029
+     A N48                                  DSPATR(HI)
+     A  48                                  DSPATR(RI PC)
+     A                                      OVRATR
+     A                                      OVRDTA
+      *
+      *************************************************************
+      *
+      ** Footer for initial selection subfile
+      *
+      ***************************************************************
+     A          R MC0210F1
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                 22  2'E=Enquire  F3=Main Menu'
+     A                                 22 27'F10=Delete New Balances'
+     A N29                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                 22 52'F11=Report'
+      *                                              Begin /CMC001/
+     A***********                      23  2'F12=Initial Screen-
+     A***********                              F13=Recreate Balances'
+     A                                 23  2'F12=Initial Screen'
+     A N18                             23 22'F13=Recreate Balances'
+      *                                              End   /CMC001/
+      *
+      ***************************************************************
+      *
+      ** Message subfile
+      *
+      ***************************************************************
+     A          R MC0210S2                  TEXT('Message subfile')
+     A                                      SFL
+     A                                      SFLMSGRCD(24)
+     A            SSFKY                     SFLMSGKEY
+     A            SPGMQ                     SFLPGMQ
+      *
+      ***************************************************************
+      *
+      **  Message subfile control
+      *
+      ***************************************************************
+     A          R MC0210C2                  TEXT('Message subfile control')
+     A                                      OVERLAY
+     A                                      SFLCTL(MC0210S2)
+     A                                      SFLDSP
+     A                                      SFLDSPCTL
+     A                                      SFLINZ
+     A  60
+     AON60                                  SFLEND
+     A                                      SFLSIZ(3)
+     A                                      SFLPAG(1)
+     A            SPGMQ                     SFLPGMQ
+      *
+      ***************************************************************
+      *
+      ** Headings for Further details and DR/CR average balances screens
+      *
+      ***************************************************************
+     A          R MC0210F2
+     A                                      OVERLAY
+      *
+      ** Headings for selected fields
+     A**Start of change CGL029
+     A**********                        6 16'A/c'                                             CGL029
+     A**********                        6 29'Sq'                                              CGL029
+     A**15******                        6 33'Prft'                                            CGL029
+     A**********                        6 46'Transaction          Assoc'                      CGL029
+     A**14******                        7  5'Brch'                                            CGL029
+     A**********                        7 10'Ccy  Code  Client  No'                           CGL029
+     A**15******                        7 33'Cntr'                                            CGL029
+     A**********                        7 39'Bk'                                              CGL029
+     A**********                        7 44'Type        Sub-type    Cust'                    CGL029
+     A                                  6 15'A/c'
+     A                                  6 34'Sq'
+     A  15                              6 38'Prft'
+     A                                  6 51'Transaction          Assoc'
+     A  14                              7  4'Brch'
+     A                                  7  9'Ccy  Code        Client  No'
+     A  15                              7 38'Cntr'
+     A                                  7 44'Bk'
+     A                                  7 48'Type        Sub-type    Cust'
+     A**End of change CGL029
+      *
+      ** Selected fields
+      ** Branch code (only display if multibranched system)
+     A**Start of change CGL029
+     A**14******  SBRCD2    R        O  8  5REFFLD(BRCDFM)                                    CGL029
+     A  14        SBRCD2    R        O  8  4REFFLD(BRCDFM)
+     A**End of change CGL029
+      ** Currency code
+     A**Start of change CGL029
+     A**********  SCYCD2    R        O  8 10REFFLD(CYCD)                                      CGL029
+     A            SCYCD2    R        O  8  9REFFLD(CYCD)
+     A**End of change CGL029
+      ** Account code
+     A**Start of change CGL029
+     A**********  SACCD2         4A  O  8 15TEXT('Account code')                              CGL029
+     A            SACCD2        10A  O  8 14TEXT('Account code')
+     A**End of change CGL029
+      ** Customer number
+     A**Start of change CGL029
+     A**********  SCUST2         6A  O  8 21TEXT('Customer number')                           CGL029
+     A            SCUST2         6A  O  8 26TEXT('Customer number')
+     A**End of change CGL029
+      ** Account sequence
+     A**Start of change CGL029
+     A**********  SACSN2         2A  O  8 29TEXT('A/C sequence number')                       CGL029
+     A            SACSN2         2A  O  8 34TEXT('A/C sequence number')
+     A**End of change CGL029
+      ** Profit centre (only display if Profit Centres used)
+     A**Start of change CGL029
+     A**15******  SPCCD2         4A  O  8 33TEXT('Profit centre')                             CGL029
+     A  15        SPCCD2         4A  O  8 38TEXT('Profit centre')
+     A**End of change CGL029
+      ** Book code
+     A**Start of change CGL029
+     A**********  SBKCD2    R        O  8 39REFFLD(BKBO)                                      CGL029
+     A            SBKCD2    R        O  8 44REFFLD(BKBO)
+     A**End of change CGL029
+      ** Transaction type
+     A**Start of change CGL029
+     A**********  SOTTP2    R        O  8 43REFFLD(OTTP)                                      CGL029
+     A            SOTTP2    R        O  8 48REFFLD(OTTP)
+     A**End of change CGL029
+      ** Transaction sub-type
+     A**Start of change CGL029
+     A**********  STSTY2    R        O  8 55REFFLD(TSTY)                                      CGL029
+     A            STSTY2    R        O  8 60REFFLD(TSTY)
+     A**End of change CGL029
+      ** Associated customer number
+     A**Start of change CGL029
+     A**********  SASCU2         6A  O  8 67TEXT('Associated customer number')                CGL029
+     A            SASCU2         6A  O  8 72TEXT('Associated customer number')
+     A**End of change CGL029
+      *
+      ***************************************************************
+      *
+      ** Further details screen
+      *
+      ***************************************************************
+     A          R MC0210F3
+     A                                      OVERLAY
+     A  40                                  CA08(08 'DR/CR Average balances')
+      *
+     A                                  9  2'Start of Year..:'
+     A            SSYDD3         7A     9 19TEXT('Start of year date')
+      *
+     A                                 10  2'Start of Term 1:'
+     A  43                                   DSPATR(ND)
+     A            SSTT13         7A    10 19TEXT('Start of Term 1 date')
+     A  43                                   DSPATR(ND)
+      *
+     A                                 10 29'Start of Term 2:'
+     A  44                                   DSPATR(ND)
+     A            SSTT23         7A    10 46TEXT('Start of Term 2 date')
+     A  44                                   DSPATR(ND)
+      *
+     A                                 10 56'Last Movement:'
+     A            SSLMD3         7A    10 71TEXT('Last Movement date')
+      *
+     A                                 11  2'Start of Period:'
+     A            SSPRD3         7A    11 19TEXT('Start of Period date')
+      *
+     A                                 11 29'End of Period..:'
+     A            SEPRD3         7A    11 46TEXT('End of Period date')
+      *
+     A                                 11 56'Account Section...:'
+     A            SACSC3         2A    11 76TEXT('Account Section')
+      *
+     A                                 12  2'Period Opening Balance..........:'
+     A            SPROB3        27A    12 36TEXT('Period Opening Balance')
+      *
+     A                                 13  2'Period Closing Balance..........:'
+     A            SPRCB3        27A    13 36TEXT('Period Closing Balance')
+      *
+     A                                 14  2'Yearly Movements to-date........:'
+     A            SYRMD3        27A    14 36TEXT('Yearly Movements to-date')
+      *
+     A                                 15  2'Term 1 Movements to-date........:'
+     A  43                                   DSPATR(ND)
+     A            ST1MD3        27A    15 36TEXT('Term 1 Movements to-date')
+     A  43                                   DSPATR(ND)
+      *
+     A                                 16  2'Term 2 Movements to-date........:'
+     A  44                                   DSPATR(ND)
+     A            ST2MD3        27A    16 36TEXT('Term 2 Movements to-date')
+     A  44                                   DSPATR(ND)
+      *
+     A                                 17  2'Period Movements to-date........:'
+     A            SPRMD3        27A    17 36TEXT('Period Movements to-date')
+      *
+     A                                 18  2'Average Balance Year to-date....:'
+     A            SAYRD3        27A    18 36TEXT('Average Balance Year to-date')
+      *
+     A                                 19  2'Average Balance Term 1 to-date..:'
+     A  43                                   DSPATR(ND)
+     A            SAT1D3        27A    19 36TEXT('Avrage Balance Term1 to-date')
+     A  43                                   DSPATR(ND)
+      *
+     A                                 20  2'Average Balance Term 2 to-date..:'
+     A  44                                   DSPATR(ND)
+     A            SAT2D3        27A    20 36TEXT('Avrage Balance Term2 to-date')
+     A  44                                   DSPATR(ND)
+      *
+     A                                 21  2'Average Balance Period to-date..:'
+     A            SAPRD3        27A    21 36TEXT('Avrge Balance Period to-date')
+      *
+     A                                 23  2'F3=Main Menu  F11=Print Record-
+     A                                        F12=Previous Screen'
+     A  40                             23 55'F8=DR/CR Average Balances'
+      *
+      ***************************************************************
+      *
+      ** DR/CR Average balances screen
+      *
+      ***************************************************************
+     A          R MC0210F4
+     A                                      OVERLAY
+      *
+     A                                  9  6'Days in Debit/Credit and Debit/Cre-
+     A                                      dit Movements to End of Period'
+     A                                 10 18'Debit'
+     A                                 10 53'Credit'
+      *
+     A                                 11  3'Yearly'
+     A            SYDDD4         3A    11 11TEXT('Yearly Days in DR')
+     A            SYDMT4        27A    11 16TEXT('Yearly DR Movements')
+     A            SYDDC4         3A    11 47TEXT('Yearly Days in CR')
+     A            SYCMT4        27A    11 51TEXT('Yearly CR Movements')
+      *
+     A                                 12  3'Term 1'
+     A  43                                  DSPATR(ND)
+     A            ST1DD4         3A    12 11TEXT('Term 1 Days in DR')
+     A  43                                  DSPATR(ND)
+     A            ST1DM4        27A    12 16TEXT('Term 1 DR Movements')
+     A  43                                  DSPATR(ND)
+     A            ST1DC4         3A    12 47TEXT('Term 1 Days in CR')
+     A  43                                  DSPATR(ND)
+     A            ST1CM4        27A    12 51TEXT('Term 1 CR Movements')
+     A  43                                  DSPATR(ND)
+      *
+     A                                 13  3'Term 2'
+     A  44                                  DSPATR(ND)
+     A            ST2DD4         3A    13 11TEXT('Term 2 Days in DR')
+     A  44                                  DSPATR(ND)
+     A            ST2DM4        27A    13 16TEXT('Term 2 DR Movements')
+     A  44                                  DSPATR(ND)
+     A            ST2DC4         3A    13 47TEXT('Term 2 Days in CR')
+     A  44                                  DSPATR(ND)
+     A            ST2CM4        27A    13 51TEXT('Term 2 CR Movements')
+     A  44                                  DSPATR(ND)
+      *
+     A                                 14  3'Period'
+     A            SPDDD4         3A    14 11TEXT('Period Days in DR')
+     A            SPDMT4        27A    14 16TEXT('Period DR Movements')
+     A            SPDDC4         3A    14 47TEXT('Period Days in CR')
+     A            SPCMT4        27A    14 51TEXT('Period CR Movements')
+      *
+     A                                 15 16'Debit/Credit Average Balances to -
+     A                                      End of Period'
+     A                                 16 18'Debit'
+     A                                 16 53'Credit'
+      *
+     A                                 17  3'Yearly'
+     A            SYRDA4        27A    17 16TEXT('Yearly DR Average Balance')
+     A            SYRCA4        27A    17 51TEXT('Yearly CR Average Balance')
+      *
+     A                                 18  3'Term 1'
+     A  43                                  DSPATR(ND)
+     A            ST1DA4        27A    18 16TEXT('Term 1 DR Average Balance')
+     A  43                                  DSPATR(ND)
+     A            ST1CA4        27A    18 51TEXT('Term 1 CR Average Balance')
+     A  43                                  DSPATR(ND)
+      *
+     A                                 19  3'Term 2'
+     A  44                                  DSPATR(ND)
+     A            ST2DA4        27A    19 16TEXT('Term 2 DR Average Balance')
+     A  44                                  DSPATR(ND)
+     A            ST2CA4        27A    19 51TEXT('Term 2 CR Average Balance')
+     A  44                                  DSPATR(ND)
+      *
+     A                                 20  3'Period'
+     A            SPRDA4        27A    20 16TEXT('Period DR Average Balance')
+     A            SPRCA4        27A    20 51TEXT('Period CR Average Balance')
+     A                                 23  2'F3=Main Menu  F11=Print Record-
+     A                                        F12=Previous Screen'

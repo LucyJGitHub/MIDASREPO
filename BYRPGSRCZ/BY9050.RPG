@@ -1,0 +1,1102 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Calculate forward FX value')                 *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY9050 - Calculate Forward FX Value                          *
+      *                                                               *
+      *  Called By: BY2020 - Dealing Extract/Validation               *
+      *                                                               *
+      *  (c) Finastra International Limited 1997                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LNL020             Date 15Jul02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LNL020 - Upgrade source to Midas Release 4.                  *
+      *                                                               *
+      * Note:  Due to fixes in core standard sub-routines             *
+      *        this program has been upgraded using the DBA 3         *
+      *        routines. This has been done because of fixes that     *
+      *        have been applied at release 4 to standard routines    *
+      *        SR/ZNPV and  SR/ZCBDYS  which use fields that are      *
+      *        not defined.                                           *
+      *                                                               *
+      *****************************************************************
+      *
+      * File description for files defined
+     FDLINTRL2IF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS INFDS1
+      *
+     FDLMMDFL1IF  E           K        DISK         KINFSR *PSSR
+      /EJECT
+      *
+     E*COPY ZSRSRC,ZDAYSZ1           *MBR INCLUDED BELOW*
+     E                    ZF29   14  32  5 0             29TH FEB ARRAY
+     E*COPY ZSRSRC,ZDATE2Z1          *MBR INCLUDED BELOW*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Currency codes
+     E                    CCY@      200  3
+      *
+      /SPACE 3
+      *
+      **  Rename field in format FDINTRP0
+     IFDINTRP0                                                            LLN020
+     I              HWTMESTMP                       HWTMST                LLN020
+      *
+      ** Data Structure using Currency file format
+     ISDCURR    E DSSDCURRPD                200
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ULPGM
+     I                                      244 253 ULWSID
+     I                                      254 263 ULUSER
+      *
+      * File information data structure (for database files only)
+     IINFDS1    E DSY2I1DSP
+      *
+      * First DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LDETL - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      ** Detail Processing
+     C                     EXSR #LDETL
+      *
+      ** Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDETL - Detail Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDETL    BEGSR                           ** SR/#LDETL**
+      *
+      ** Check currency and either retrive or set up details
+     C                     EXSR #LCCY
+      *
+      ** Format fields
+     C                     EXSR #LFORM
+      *
+      ** Calculate forward FX value
+     C                     EXSR ZNPV
+      *
+      ** Move forward FX value into field to pass back to calling pgm
+     C                     MOVE ZNPOUT    ULPAMT
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * #LCCY - Checks currency and retrieves/stores details          *
+      *                                                               *
+      * Called by: #LDETL                                             *
+      *                                                               *
+      * Calls:     None                                               *
+      *****************************************************************
+      *
+     C           #LCCY     BEGSR                           ** SR/#LCCY **
+      *
+      ** Check for currency details via array
+     C                     Z-ADD1         #
+     C           ULCCY     LOKUPCCY@,#                   90
+      *
+      ** Retrieve from data structure, if found
+     C           *IN90     IFEQ *ON
+     C           #         OCUR SDCURR
+     C                     ELSE
+      *
+      ** Initialise next available element in array
+     C           ULINDX    IFLT 200
+     C                     ADD  1         ULINDX
+     C                     Z-ADDULINDX    #
+     C                     MOVE ULCCY     CCY@,#
+     C                     ELSE
+     C                     Z-ADD200       #
+     C                     ENDIF
+      *
+      ** Set data structure ocurrence for currency details
+     C           #         OCUR SDCURR
+      *
+      ** Retrieve from master file, if not found
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM           ULCCY
+     C                     PARM           DSSDY
+     C           P@RTCD    IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGM     DBPGM            ************
+     C                     MOVELULCCY     DBKEY            * DBERR 02 *
+     C                     MOVEL'SDCURRL0'DBFILE           ************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVELDSSDY     SDCURR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * #LFORM - Format fields prior to FX value calculations         *
+      *                                                               *
+      * Called by: #LDETL                                             *
+      *                                                               *
+      * Calls:     None                                               *
+      *****************************************************************
+      *
+     C           #LFORM    BEGSR                           ** SR/#LFORM**
+      *
+     C                     MOVE ULSDAT    ZNPSDT           Spot date
+     C                     MOVE ULFDAT    ZNPFDT           Future date
+     C                     MOVE ULFAMT    ZNPAMT           Future amount
+     C                     MOVE ULCCY     ZNPCCY           Currency
+     C                     MOVE A6DICB    ZCBCBS           Default Int.
+      *                                                    Calc. Basis
+      *
+      ** Set flag, depending on positive or negative futures value
+     C           ZNPAMT    IFGE 0
+     C                     MOVE 'B'       ZNPBOF           Bid/Offer flag
+     C                     ELSE
+     C                     MOVE 'O'       ZNPBOF           Bid/Offer flag
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                           ** SR/#LTERM**
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                           ** SR/#LDEFN**
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANK    ULERRI  1        Pgm error indicator
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+     C                     MOVE *BLANK    ULSDAT  50       Spot date
+     C                     MOVE *BLANK    ULFDAT  50       Future date
+     C                     MOVE *BLANK    ULFAMT 150       Future amount
+     C                     MOVE *BLANK    ULCCY   3        Currency
+     C                     MOVE *BLANK    ULPAMT 150       Present amount
+     C                     MOVE *BLANK    ULRTCD  1        Return code
+     C                     MOVEACPY@      ULCPY@ 80        Copyright
+     C                     Z-ADD0         #       30       Array index
+     C                     Z-ADD0         ULINDX  30       Array index
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULSDAT           Spot date
+     C                     PARM           ULFDAT           Future date
+     C                     PARM           ULFAMT           Future amount
+     C                     PARM           ULCCY            Currency
+     C                     PARM           ULPAMT           Present amount
+     C                     PARM           ULRTCD           Return code
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * ZNPV:       Standard Subroutine to Calculate the Net Present  *
+      *             Value of a Future Amount using Money Market Rates *
+      *****************************************************************
+     C*COPY ZSRSRC,ZNPVZ1            *MBR INCLUDED BELOW*
+      *****************************************************************
+      *                                                               *
+      *  ZNPV   - Standard Subroutine to Calculate the Net Present    *
+      *           Value of a Future Amount using Money Market Rates.  *
+      *                                                               *
+      *  Input:  ZNPSDT ( 5,0) Spot Date                              *
+      *          ZNPFDT ( 5,0) Future Date                            *
+      *          ZNPAMT (13,0) Future Amount                          *
+      *          ZNPCCY ( 3A ) Currency                               *
+      *          ZCBCBS ( 1,0) Calculation Basis (for SR/ZCBDYS)      *
+      *          ZNPBOF ( 1A ) Bid/Offer Flag                         *
+      *                                                               *
+      *  Output: ZNPOUT (13,0) Net Present Value                      *
+      *          ZNPRAT (11,7) Discount Rate (if used)                *
+      *          ZNPDF  (11,9) Discount Factor (if used)              *
+      *          *IN93 is set on if no Rates for Currency on File     *
+      *                                                               *
+      *  Calls:  ZINTPL - Straight Line Interpolation of a Rate       *
+      *          ZCBDYS - Calculation Basis Number of Days            *
+      *                                                               *
+      *  Files:  DLINTRL2 - MM Interest Rates File (1 year and less)  *
+      *          DLMMDFL1 - MM Discount Factors Table                 *
+      *                                                               *
+      *  Indicators used in this Subroutine: 91, 92, 93.              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZNPV      BEGSR                           ***  ZNPV  ***
+      *
+      ***  Initialise fields.
+      *
+     C                     Z-ADDZNPSDT    ZNPSDT  50
+     C                     Z-ADDZNPFDT    ZNPFDT  50
+     C                     Z-ADDZNPAMT    ZNPAMT 130
+     C                     MOVE ZNPCCY    ZNPCCY  3
+     C                     MOVE ZNPBOF    ZNPBOF  1
+     C                     Z-ADD0         ZNPRAT 117
+     C                     Z-ADD1         ZNPDF  119
+     C                     Z-ADD0         ZNPOUT 130
+     C                     SETOF                     919293
+      *
+      ***  Key List for both the Money Market Interest Rates File and
+      ***  the Money Market Discount Factors Table.
+      *
+     C           ZNPMMK    KLIST
+     C                     KFLD           ZNPCCY  3
+     C                     KFLD           ZNPFDT  50
+      *
+      ***  NOTE: If the Future Date is Less Than one year from Spot,
+      ***  Discounting should be done using the Money Market Rate, else
+      ***  the Discount Factors should be used.
+      *
+     C           ZNPSDT    ADD  365       ZNPYDT  50
+      *
+      *---------------------------------------------------------------*
+      ***  CASE 1: The Future Date is one year or less from Spot Date.*
+      *---------------------------------------------------------------*
+      *
+     C           ZNPFDT    IFLE ZNPYDT
+      *
+      ***  First find the Money Market Rate to use for Discounting.
+      *
+     C           ZNPMMK    SETLLDLINTRL2             91
+      *
+      ***  If not EOF, Read Equal the next record of the Currency.
+      *
+     C           *IN91     IFEQ '0'
+     C           ZNPCCY    READEDLINTRL2                 92
+      *
+      ***  If a record was read and is the correct date, set up the
+      ***  Rate and GOTO Present Value Calculation.
+      *
+     C           *IN92     IFEQ '0'
+     C           HWPRDN    ANDEQZNPFDT
+     C           ZNPBOF    IFEQ 'B'
+     C                     Z-ADDHWBRRT    ZNPRAT
+     C                     ELSE
+     C                     Z-ADDHWLDRT    ZNPRAT
+     C                     END
+     C                     GOTO ZNP001
+     C                     END
+      *
+     C                     END
+      *
+      ***  If a record has not yet been retrieved, reposition the file
+      ***  and read the last record of the Currency.
+      *
+     C           *IN91     IFEQ '1'
+     C           *IN92     OREQ '1'
+     C           ZNPMMK    SETGTDLINTRL2
+      *
+      ***  If Record found then set up the Rate and GOTO Present Value
+      ***  Calculation, else Currency is not on File, (*IN93 returned).
+      *
+     C           ZNPCCY    REDPEDLINTRL2                 93
+     C           *IN93     IFEQ '0'
+     C           ZNPBOF    IFEQ 'B'
+     C                     Z-ADDHWBRRT    ZNPRAT
+     C                     ELSE
+     C                     Z-ADDHWLDRT    ZNPRAT
+     C                     END
+     C                     GOTO ZNP001
+     C                     END
+      *
+     C                     GOTO ZNPEND
+     C                     END
+      *
+      ***  If this point has been reached, a record has been found with
+      ***  a date greater than the one we want and it will probably be
+      ***  necessary to use interpolation, so set up Far Date and Far
+      ***  Rate fields (for SR/ZINTPL).
+      *
+     C                     Z-ADDHWPRDN    ZIFDAT
+     C           ZNPBOF    IFEQ 'B'
+     C                     Z-ADDHWBRRT    ZIFRAT
+     C                     ELSE
+     C                     Z-ADDHWLDRT    ZIFRAT
+     C                     END
+      *
+      ***  Read the Previous record to get the Near Rate. If not found,
+      ***  then the the record already retrieved is the first record of
+      ***  the Currency and that Rate should be used.
+      *
+     C           ZNPCCY    REDPEDLINTRL2                 91
+      *
+     C           *IN91     IFEQ '1'
+     C                     Z-ADDZIFRAT    ZNPRAT
+     C                     ELSE
+      *
+      ***  Else set up Near Date and Near Rate for interpolation.
+      *
+     C                     Z-ADDHWPRDN    ZINDAT
+     C           ZNPBOF    IFEQ 'B'
+     C                     Z-ADDHWBRRT    ZINRAT
+     C                     ELSE
+     C                     Z-ADDHWLDRT    ZINRAT
+     C                     END
+      *
+      ***  Set up Broken Date and interpolate the Rate.
+      *
+     C                     Z-ADDZNPFDT    ZIBDAT
+     C                     EXSR ZINTPL
+     C                     Z-ADDZIBRAT    ZNPRAT
+     C                     END
+      *
+     C           ZNP001    TAG                             *** ZNP001 ***
+      *
+      ***  Present Value is then calculated as:
+      ***
+      ***                   Future Amount
+      ***  Present Value = ---------------
+      ***                       1 + X
+      ***
+      ***             Discount Rate * Days in Period
+      ***  where X = --------------------------------
+      ***                   Days in Year * 100
+      ***
+      ***  Days in Period and Days in Year are dependent on the
+      ***  Calculation Basis and are calculated by SR/ZCBDYS.
+      *
+     C                     Z-ADDZNPSDT    ZCBSDT
+     C                     Z-ADDZNPFDT    ZCBEDT
+     C                     EXSR ZCBDYS
+     C           ZNPRAT    MULT ZCBDAY    ZNPXA  189
+     C           ZCBDIV    MULT 100       ZNPXB   50
+     C           ZNPXA     DIV  ZNPXB     ZNPXA     H
+     C                     ADD  1         ZNPXA
+     C           ZNPAMT    DIV  ZNPXA     ZNPOUT    H
+      *
+      *---------------------------------------------------------------*
+      ***  CASE 2: The Future Date is more than one year ahead.       *
+      *---------------------------------------------------------------*
+      *
+     C                     ELSE
+      *
+      ***  First find the Discount Factor to use for discounting.
+      *
+     C           ZNPMMK    SETLLDLMMDFL1             91
+      *
+      ***  If not EOF, Read Equal the next record of the Currency.
+      *
+     C           *IN91     IFEQ '0'
+     C           ZNPCCY    READEDLMMDFL1                 92
+      *
+      ***  If a record was read and is the correct date, set up the
+      ***  Factor and GOTO Present Value Calculation.
+      *
+     C           *IN92     IFEQ '0'
+     C           DFPRDN    ANDEQZNPFDT
+     C           ZNPBOF    IFEQ 'B'
+     C                     Z-ADDDFBDF     ZNPDF
+     C                     ELSE
+     C                     Z-ADDDFODF     ZNPDF
+     C                     END
+     C                     GOTO ZNP002
+     C                     END
+      *
+     C                     END
+      *
+      ***  If a record has not yet been retrieved, reposition the file
+      ***  and read the last record of the Currency.
+      *
+     C           *IN91     IFEQ '1'
+     C           *IN92     OREQ '1'
+     C           ZNPMMK    SETGTDLMMDFL1
+      *
+      ***  If Record found, set up the Factor and GOTO Present Value
+      ***  Calculation, else Currency is not on File, (*IN93 returned).
+      *
+     C           ZNPCCY    REDPEDLMMDFL1                 93
+     C           *IN93     IFEQ '0'
+     C           ZNPBOF    IFEQ 'B'
+     C                     Z-ADDDFBDF     ZNPDF
+     C                     ELSE
+     C                     Z-ADDDFODF     ZNPDF
+     C                     END
+     C                     GOTO ZNP002
+     C                     END
+      *
+     C                     GOTO ZNPEND
+     C                     END
+      *
+      ***  If this point has been reached, a record has been found with
+      ***  a date greater than the one we want and it will probably be
+      ***  necessary to use interpolation, so set up Far Date and Far
+      ***  Rate fields (for SR/ZINTPL).
+      *
+     C                     Z-ADDDFPRDN    ZIFDAT
+     C           ZNPBOF    IFEQ 'B'
+     C                     Z-ADDDFBDF     ZIFRAT
+     C                     ELSE
+     C                     Z-ADDDFODF     ZIFRAT
+     C                     END
+      *
+      ***  Read the Previous record to get the Near Discount Factor. If
+      ***  not found, then the the record already retrieved is the first
+      ***  record of the Currency and that Factor should be used.
+      *
+     C           ZNPCCY    REDPEDLMMDFL1                 91
+      *
+     C           *IN91     IFEQ '1'
+     C                     Z-ADDZIFRAT    ZNPDF
+     C                     ELSE
+      *
+      ***  Else set up Near Date and Near Factor for interpolation.
+      *
+     C                     Z-ADDDFPRDN    ZINDAT
+     C           ZNPBOF    IFEQ 'B'
+     C                     Z-ADDDFBDF     ZINRAT
+     C                     ELSE
+     C                     Z-ADDDFODF     ZINRAT
+     C                     END
+      *
+      ***  Set up Broken Date and interpolate the Factor
+      *
+     C                     Z-ADDZNPFDT    ZIBDAT
+     C                     EXSR ZINTPL
+     C                     Z-ADDZIBRAT    ZNPDF
+     C                     END
+      *
+     C           ZNP002    TAG                             *** ZNP002 ***
+      *
+      ***  Present Value is then calculated as:
+      ***
+      ***                    Future Amount
+      ***  Present Value = -----------------
+      ***                   Discount Factor
+      *
+     C           ZNPAMT    DIV  ZNPDF     ZNPOUT    H
+      *
+     C                     END
+      *
+      *---------------------------------------------------------------*
+      *
+     C           ZNPEND    TAG                             *** ZNPEND ***
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      * ZINTPL:     Standard subroutine to calculate the no. of days  *
+      *             between two days and the no. of days in a year.   *
+      *****************************************************************
+     C*COPY ZSRSRC,ZINTPLZ1          *MBR INCLUDED BELOW*
+      *****************************************************************
+      *                                                               *
+      *  ZINTPL - Standard Subroutine to Perform Straight Line        *
+      *           Interpolation of a Rate.                            *
+      *                                                               *
+      *  NOTE: Rate Input fields are defined as 13,9 to allow         *
+      *        Interpolation of Interest Rates, Exchange Rates or     *
+      *        Discount Factors.                                      *
+      *                                                               *
+      *  Input:  ZINDAT ( 5,0) Near Date                              *
+      *          ZIBDAT ( 5,0) Broken Date                            *
+      *          ZIFDAT ( 5,0) Far Date                               *
+      *          ZINRAT (13,9) Near Rate                              *
+      *          ZIFRAT (13,9) Far Rate                               *
+      *                                                               *
+      *  Output: ZIBRAT (13,9) Broken Rate                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZINTPL    BEGSR                           *** ZINTPL ***
+      *
+      ***  Initialise Fields.
+      *
+     C                     Z-ADDZINDAT    ZINDAT  50
+     C                     Z-ADDZIBDAT    ZIBDAT  50
+     C                     Z-ADDZIFDAT    ZIFDAT  50
+     C                     Z-ADDZINRAT    ZINRAT 139
+     C                     Z-ADDZIFRAT    ZIFRAT 139
+     C                     Z-ADD0         ZIBRAT 139
+      *
+      ***  To interpolate by straight line, all that is required is to
+      ***  add to the Near Rate a proportion of the difference between
+      ***  the Near Rate and the Far Rate.
+      ***
+      ***                    Broken Date - Near Date
+      ***  Increment Date = -------------------------
+      ***                     Far Date - Near Rate
+      ***
+      ***  Increment Rate = (Far Rate - Near Rate) * Increment Date
+      ***
+      ***  Broken Rate = Near Rate + Increment Rate
+      *
+      ***  First set up the Increment Rate with the difference between
+      ***  the Near Rate and the Far Rate.
+      *
+     C           ZIFRAT    SUB  ZINRAT    ZIIRAT 139
+      *
+      ***  Then calculate the proportion of the period from the Near
+      ***  Date to the Far Date that equates to the Broken Date.
+      *
+     C           ZIBDAT    SUB  ZINDAT    ZIXDAT  50
+     C           ZIFDAT    SUB  ZINDAT    ZIYDAT  50
+     C           ZIXDAT    DIV  ZIYDAT    ZIIDAT  99
+      *
+      ***  Now the Proportion of the period can be applied to the
+      ***  differential of the Rates to give the Increment Rate.
+      *
+     C                     MULT ZIIDAT    ZIIRAT
+      *
+      ***  And finally the Increment Rate can be added to the Near Rate
+      ***  to give the Broken Rate.
+      *
+     C           ZINRAT    ADD  ZIIRAT    ZIBRAT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      * ZCBDYS:     Standard subroutine to perform straight line      *
+      *             interpolation of a rate.                          *
+      *****************************************************************
+     C*COPY ZSRSRC,ZCBDYSZ1          *MBR INCLUDED BELOW*
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  ZCBDYSZ1- Standard Subroutine to Calculate the Number of Days*
+      *            between two Dates and the Number of Days in Year,  *
+      *            for a Calculation Basis, (Dealing version).        *
+      *                                                               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *  Last Amend No. CIR004             Date 20Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. nnnnnn  *CREATE    Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CIR004 - Dealing Calculation Method Change                   *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Input:  ZCBSDT ( 5,0) Start Date                             *
+      *          ZCBEDT ( 5,0) End Date                               *
+      *          ZCBCBS ( 1,0) Calculation Basis                      *
+      *                                                               *
+      *  Output: ZCBDAY ( 5,0) Number of Days in Period               *
+      *          ZCBDIV ( 3,0) Number of Days in Year                 *
+      *                                                               *
+      *  Calls:  ZDATE2 - Convert Midas Day No to Date Format         *
+      *                                                               *
+      *  Calculation Bases are:                                       *
+      *                                                               *
+      *  1 - Actual/365                                               *
+      *  2 - Actual/360                                               *
+      *  3 - 30/360                                                   *
+      *  4 - Actual/365 (Excluding 29FEB)                             *
+      *  5 - Actual/360 (Excluding 29FEB)                             *
+      *  6 - Actual/366                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZCBDYS    BEGSR                           *** ZCBDYS ***
+      *
+      ***  Initialise fields.
+      *
+     C                     Z-ADDZCBSDT    ZCBSDT  50
+     C                     Z-ADDZCBEDT    ZCBEDT  50
+     C                     Z-ADDZCBCBS    ZCBCBS  10
+     C                     Z-ADD0         ZCBDAY  50
+     C                     Z-ADD1         ZCBDIV  30
+      *                                                                   CIR004
+      ** Check if Dealing Calculation Method is installed                 CIR004
+      *                                                                   CIR004
+     C                     CALL 'AOSARDR0'                                CIR004
+     C                     PARM *BLANKS   @RTCD   7                       CIR004
+     C                     PARM '*VERIFY' @OPTN   7                       CIR004
+     C                     PARM 'CIR004'  @SARD   6                       CIR004
+     C           @RTCD     IFEQ *BLANKS                                   CIR004
+     C                     MOVE 'Y'       CIR004  1                       CIR004
+     C                     ELSE                                           CIR004
+     C                     MOVE 'N'       CIR004                          CIR004
+     C                     ENDIF                                          CIR004
+     C                     MOVE *BLANKS   @RTCD                           CIR004
+      *
+      *---------------------------------------------------------------*
+      ***   First define the Number of Days in the Year.              *
+      *---------------------------------------------------------------*
+      *
+      ***  365 Days - Calculation Basis = 1 or 4.
+      *
+     C           ZCBCBS    IFEQ 1
+     C           ZCBCBS    OREQ 4
+     C                     Z-ADD365       ZCBDIV
+     C                     END
+      *
+      ***  360 Days - Calculation Basis = 2, 3 or 5.
+      *
+     C           ZCBCBS    IFEQ 2
+     C           ZCBCBS    OREQ 3
+     C           ZCBCBS    OREQ 5
+     C           ZCBCBS    OREQ 7                                         CIR004
+     C           CIR004    ANDEQ'Y'                                       CIR004
+     C                     Z-ADD360       ZCBDIV
+     C                     END
+      *
+      ***  366 Days - Calculation Basis = 6.
+      *
+     C           ZCBCBS    IFEQ 6
+     C                     Z-ADD366       ZCBDIV
+     C                     END
+      *
+      *---------------------------------------------------------------*
+      ***   Then calculate the Number of Days in the Period.          *
+      *---------------------------------------------------------------*
+      *
+      ***  If the Start Date is Greater Than or Equal To the End Date,
+      ***  output the Number of Days in Period Equal to zero.
+      *
+     C           ZCBSDT    IFGE ZCBEDT
+     C                     Z-ADD0         ZCBDAY
+     C                     GOTO ZCBEND
+     C                     END
+      *
+      ***  The Actual Number of Days in the Period is the difference
+      ***  between the Start Date and the End Date (Midas Date Format).
+      *
+     C           ZCBEDT    SUB  ZCBSDT    ZCBDAY
+      *
+      ***  Calculation Bases 1, 2 and 6: Actual Number of Days.
+      ***  ----------------------------------------------------
+      ***  For these three, ZCBDAY already contains the final result,
+      ***  so no need for any further calculations.
+      *
+     C           ZCBCBS    IFEQ 1
+     C           ZCBCBS    OREQ 2
+     C           ZCBCBS    OREQ 6
+     C                     GOTO ZCBEND
+     C                     END
+      *
+      ***  Calculation Bases 4 and 5: Actual Days, excluding 29th Feb.
+      ***  -----------------------------------------------------------
+      ***  Take Actual Days and subtract all the 29th February Days:
+      ***  This is done by checking the ZF29 array, (Midas Dates for
+      ***  29th February), to get the indices of the first 29FEB after
+      ***  each of the Start Date and The End Date. The difference is
+      ***  the Number of 29FEBs in the Period.
+      *
+     C           ZCBCBS    IFEQ 4
+     C           ZCBCBS    OREQ 5
+     C                     Z-ADD1         ZS      20
+     C                     Z-ADD0         ZI1     20
+     C                     Z-ADD0         ZI2     20
+      *
+      ***  Find Index of first FEB29 after Start Date.
+      ***  (if Start Date is later than last FEB29 in array then set
+      ***  ZI1 to last index + 1 (= 33) ).
+      *
+     C           ZF29,32   IFLT ZCBSDT
+     C                     Z-ADD33        ZI1
+     C                     ELSE
+      *
+     C           ZI1       DOUNE0
+     C           ZF29,ZS   IFGT ZCBSDT
+     C                     Z-ADDZS        ZI1
+     C                     ELSE
+     C                     ADD  1         ZS
+     C                     END
+     C                     END
+     C                     END
+      *
+      ***  Continue, to find Index of first FEB29 after End Date. Note:
+      ***  leave ZS as is, so as to continue in array from that point.
+      ***  (if End Date is later than last FEB29 in array then set
+      ***  ZI2 to last index + 1 (= 33) ).
+      *
+     C           ZF29,32   IFLT ZCBEDT
+     C                     Z-ADD33        ZI2
+     C                     ELSE
+      *
+     C           ZI2       DOUNE0
+     C           ZF29,ZS   IFGT ZCBEDT
+     C                     Z-ADDZS        ZI2
+     C                     ELSE
+     C                     ADD  1         ZS
+     C                     END
+     C                     END
+     C                     END
+      *
+     C           ZI2       SUB  ZI1       ZS
+     C                     SUB  ZS        ZCBDAY
+     C                     GOTO ZCBEND
+     C                     END
+      *
+      ***  Calculation Basis 3: 30 Day months, (including '30th Feb.')
+      ***  -----------------------------------------------------------
+      *
+      ***  Convert Input Dates to DD/MM/YY or MM/DD/YY Format.
+      *
+     C                     Z-ADDZCBSDT    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+     C                     MOVE ZDATE     ZYR1    20
+     C           *IN98     IFEQ '0'
+     C                     MOVELZDATE     ZDY1    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C                     MOVELZWRK4     ZMT1    20
+     C                     ELSE
+     C                     MOVELZDATE     ZMT1
+     C                     MOVELZDATE     ZWRK4
+     C                     MOVE ZWRK4     ZDY1
+     C                     END
+      *
+     C                     Z-ADDZCBEDT    ZDAYNO
+     C                     EXSR ZDATE2
+      *
+     C                     MOVE ZDATE     ZYR2    20
+     C           *IN98     IFEQ '0'
+     C                     MOVELZDATE     ZDY2    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C                     MOVELZWRK4     ZMT2    20
+     C                     ELSE
+     C                     MOVELZDATE     ZMT2
+     C                     MOVELZDATE     ZWRK4
+     C                     MOVE ZWRK4     ZDY2
+     C                     END
+      *
+      ***  Change Days to 30 if 31.
+      *
+     C           ZDY1      IFEQ 31
+     C                     MOVE 30        ZDY1
+     C                     END
+     C           ZDY2      IFEQ 31
+     C                     MOVE 30        ZDY2
+     C                     END
+      *
+      ***  To keep the Day Difference positive, if Start Day is Greater
+      ***  Than End Day, add 30 to End Day and reduce End Month by 1,
+      ***  (i.e. add one month's worth of days to End Day).
+      *
+     C           ZDY1      IFGT ZDY2
+     C                     ADD  30        ZDY2
+     C                     SUB  1         ZMT2
+     C                     END
+      *
+      ***  Calculate Day Difference.
+      *
+     C           ZDY2      SUB  ZDY1      ZDYDF   50
+      *
+      ***  Similarly, if Start Month Greater Than End Month, add 12
+      ***  to End Month and reduce End Year by 1.
+      *
+     C           ZMT1      IFGT ZMT2
+     C                     ADD  12        ZMT2
+     C           ZYR2      IFEQ 00
+     C                     Z-ADD99        ZYR2
+     C                     ELSE
+     C                     SUB  1         ZYR2
+     C                     END
+     C                     END
+      *
+      ***  Calculate Month Difference in Days.
+      *
+     C           ZMT2      SUB  ZMT1      ZMTDF   50
+     C                     MULT 30        ZMTDF
+      *
+      ***  Subtract Start Year from End Year: If result Less Than zero
+      ***  then End Date must be in the following century, so add 100.
+      *
+     C           ZYR2      SUB  ZYR1      ZYRDF   50
+     C           ZYRDF     IFLT 0
+     C                     ADD  100       ZYRDF
+     C                     END
+      *
+      ***  Calculate Year Difference in Days.
+      *
+     C                     MULT 360       ZYRDF
+      *
+      ***  Total the three differences to get the Number of Days in
+      ***  the Period.
+      *
+     C           ZDYDF     ADD  ZMTDF     ZCBDAY
+     C                     ADD  ZYRDF     ZCBDAY
+      *
+      *---------------------------------------------------------------*
+      *
+     C           ZCBEND    TAG                             *** ZCBEND ***
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * End of /COPY ZCBDYSZ1                                         *
+      *****************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      * ZDATE2:     Standard subroutine to convert Midas run day      *
+      *             number to a date.                                 *
+      *****************************************************************
+     C*COPY ZSRSRC,ZDATE2Z2          *MBR INCLUDED BELOW*
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C********************************************************************
+      *
+      /EJECT
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 1997

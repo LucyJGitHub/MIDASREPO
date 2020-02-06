@@ -1,0 +1,167 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. BUG8514            Date 29Sep05               *
+      *  Prev Amend No. BUG3229            Date 23Aug04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 174972             Date 17Apr01               *
+      *                 159251             Date 17Apr01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*                 104270             DATE 17SEP97               *
+     C*                 CRT001  *CREATE    DATE 28FEB95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  BUG8514- Issue regarding teller overrides.                   *
+      *  BUG3229 - Process Cheque Books only, not GIRO.               *
+     C*  174972 - Database error was encountered when doing a cheque  *
+     C*  159251 - If collection date is zero check value date is not  *
+     C*           before issued date                                  *
+     C*  104270 - Initialise override (@O) array element(s).          *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTCHQR - Cheque out of range check                 *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @V     - Validation indicators array               *
+     C*            @OR    - Cheque out of range array position        *
+     C*            @ACNO  - Retail account number                     *
+     C*            @CQNF  - Cheque reference number                   *
+     C*            @VLDT  - Value date                                *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            *IN80  - Record not found                          *
+     C*            *IN81  - Retail account numbers not equal or       *
+     C*                     Cheque out of range
+     C*            @ECQN  - End cheque number                         *
+     C*            @WI    - Warning  error index                      *
+     C*            @TI    - Terminal error index                      *
+     C*            @O     - Override indicators array                 *
+     C*            @T     - Terminal message codes array              *
+     C*            @W     - Warning  message codes array              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RTCHQR    BEGSR                           ** RTCHQR **
+      *
+      ** Define key list
+      ** Cheque book details
+     C           KLCQBK    KLIST
+     C                     KFLD           KACNO  100
+     C                     KFLD           KSCQN   80
+      *
+      ** Define parameters
+     C                     SETOF                     8081
+     C                     Z-ADD@WI       @WI     20
+     C                     Z-ADD@TI       @TI     20
+     C                     Z-ADDACNO      @ACNO  100
+     C                     Z-ADD@CQNF     @SCQN   80
+     C                     Z-ADD@VLDT     @VLDT   50
+     C                     Z-ADD0         @ECQN   80
+      *                                                                   104270
+      ** Initialise override array element                                104270
+      *                                                                   104270
+     C           PFNCD     IFNE '***'                                                        BUG8514
+     C                     MOVE ' '       @O,@OR                          104270
+     C                     ENDIF                                                             BUG8514
+      *
+      ** Set up key
+     C                     Z-ADD@ACNO     KACNO
+     C                     Z-ADD@CQNF     KSCQN
+      *
+      ** Set limit greater than account no. & cheque no.
+     C           KLCQBK    SETGTCHQBKPD
+     C***********          READPCHQBKPD                  80               174972
+     C                     READPCHQBKPD                5680               174972
+     C           *IN56     IFEQ '1'                                       174972
+     C                     SETON                     3520                 174972
+     C                     MOVE 'USR0005' @MSGID  7                       174972
+     C                     MOVE 'USR0005' WUMSID  7                       174972
+     C                     EXSR SNDMSG                                    174972
+     C                     ENDIF                                          174972
+      *
+      ** If record found?  release record
+     C           *IN80     IFEQ '0'
+     C           *IN56     ANDEQ'0'                                       174972
+      *                                                                                      BUG3229
+      ** If record is a GIRO, flag cheque out of range since this                            BUG3229
+      ** validation is for cheques only.                                                     BUG3229
+      *                                                                                      BUG3229
+     C           GCQI      IFEQ 1                                                            BUG3229
+     C                     MOVE *ON       *IN81                                              BUG3229
+     C                     ELSE                                                              BUG3229
+      *
+     C                     EXCPT@RLCQB
+      *
+      ** If retail account number equal to account number?
+      ** Add (no. of cheques -1) to start cheque no. to give the
+      ** end cheque number
+     C           CQACNO    IFEQ ACNO
+     C           NOCQ      SUB  1         @ECQN
+     C                     ADD  SCQN      @ECQN
+      *
+      ** If cheque number less than  start cheque number
+      ** or cheque number greater than end cheque number
+     C           @CQNF     IFLT SCQN
+     C           @CQNF     ORGT @ECQN
+     C                     SETON                     81
+      *
+     C                     ELSE
+      *
+      ** If cheque book collected date is non-zero and
+      ** value date is less than cheque book collected date
+      ** or collected date is zero and value date less than issued date   159251
+     C           DCOL      IFNE 0
+     C           @VLDT     ANDLTDCOL
+     C           DCOL      OREQ 0                                         159251
+     C           @VLDT     ANDLTDISS                                      159251
+     C                     ADD  1         @TI
+     C                     MOVEL'CHQBKER' @T,@TI
+     C                     END
+      *
+     C                     END
+      *
+     C                     ELSE
+     C                     SETON                     81
+     C                     END
+      *                                                                                      BUG3229
+     C                     ENDIF                                                             BUG3229
+      *
+     C                     ELSE
+     C                     SETON                     81
+     C                     END
+      *
+      ** If record not found, or retail account numbers not equal
+      ** or cheque out of range
+     C           *IN81     IFEQ '1'
+      *
+      ** If override allowed?
+     C           @V,@OR    IFEQ 'Y'
+     C                     ADD  1         @WI
+     C                     MOVEL'CHQRNG'  @W,@WI
+     C                     MOVE 'Y'       @O,@OR
+     C                     END
+      *
+      ** If override not allowed?
+     C           @V,@OR    IFEQ 'N'
+     C                     ADD  1         @TI
+     C                     MOVEL'CHQRNG'  @T,@TI
+     C                     END
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDSCQN      KSCQN
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************

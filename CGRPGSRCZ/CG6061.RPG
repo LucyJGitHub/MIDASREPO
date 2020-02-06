@@ -1,0 +1,430 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Lending consolidated conf - driver')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG6061 - Lending Consolidated Confirmations - Driver         *
+     F*                                                               *
+     F*  Function:  Lending Consolidated Confirmations driver         *
+     F*  (COB)      will call CG6065 if the customer number is not    *
+     F*             blank, otherwise it will read through LELOANL4    *
+     F*             file and call CG6065 for each customer.           *
+     F*                                                               *
+     F*  Calls:     CG6065  - Lending Consolidated Confirmation Extr  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CLE004  *CREATE    Date 01May97               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+     F*  CLE004 - Syndications & Authorisations                       *
+     F*                                                               *
+     F*****************************************************************
+     FLELOANL4IF  E           K        DISK         KINFSR SRFILE
+     F*                                                               *
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N  C T I O N    O F    I N D I C A T O R S               *
+     F*                                                               *
+     F*  50   -    EOF indicator for LELOANL4                         *
+     F*  60   -    EOF indicator for LENXTAA, LENXTAC                 *
+     F*  90   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  SRINIT  -  Initial Processing                                *
+     F*  SRINZF  -  Initialise Fields on Program Invocation           *
+     F*  SRMAIN  -  Main Processing                                   *
+     F*  SRAUDT  -  Audit Report Processing                           *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E*
+     E**  Copyright array.
+     E                    CPY@    1   1 80
+     E/COPY CGCPYSRC,SRERRE
+     I/EJECT
+     I*
+     I*   DS to for parameter PRPAR
+     I            DS
+     I                                        1 100 WPARM
+     I                                        1   1 WRUN
+     I                                        2   7 WCUS
+     I**********                              8  130WFLN                                      CLE148
+     I                                        8  13 WFLN                                      CLE148
+     I**********                             14  190WTLN                                      CLE148
+     I                                       14  19 WTLN                                      CLE148
+     I*
+     IW0FMT     E DSCGUDTAPD
+     I**  Record format of PF/CGUDTAPD for use as a parameter
+     I*
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  MAINLINE                                      *
+     C*  Function    :  Mainline processing.                          *
+     C*                                                               *
+     C*  Called by   :  None                                          *
+     C*  Calls       :  SRINIT - Initial Processing - On First Call   *
+     C*                 SRINZF - Initialise Fields on Each Invocation *
+     C*                 SRMAIN - Main Processing                      *
+     C*                 SRAUDT - Audit Report Processing              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C**  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+     C                     PARM           PRENT   3
+     C                     PARM           PRPAR 100
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C**  Initial processing - Once Only
+     C*
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+     C*
+     C**  Initialisation processing
+     C                     EXSR SRINZF
+     C*
+     C**  Main processing
+     C                     EXSR SRMAIN
+     C*
+     C**  Audit Processing
+     C                     EXSR SRAUDT
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C**  Terminate program
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  SRMAIN                                         *
+     C*  Function    :  Main Processing                               *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  CG6065 - Lending Consolidated Confirmation    *
+     C*                 Extract                                       *
+     C*                                                               *
+     C*****************************************************************
+     C           SRMAIN    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+     C*
+     C                     MOVELPRPAR     WPARM
+     C*
+     C*  If this is Close of Business
+     C           WRUN      IFEQ 'B'
+     C                     MOVEL'ALL'     PRENT
+     C                     MOVE *BLANK    WCUS
+     C**********           Z-ADD0         WFLN                                                CLE148
+     C                     MOVEL*BLANKS   WFLN                                                CLE148
+     C**********           Z-ADD999999    WTLN                                                CLE148
+     C                     MOVEL'999999'  WTLN                                                CLE148
+     C                     ENDIF
+     C*
+     C*  If the customer code is not blank call CG6065, otherwise
+     C*  read through LELOANL4 and call CG6065 for each customer found.
+     C*
+     C           WCUS      IFNE *BLANK
+     C*
+     C                     CALL 'CG6065'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           PRENT
+     C                     PARM           WPARM
+     C*
+     C**  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C                     EXSR SRAUDT
+     C** Database error
+     C                     MOVEL'CG6065  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD01        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     COMIT
+     C*
+     C                     ELSE                            WCUS EQ 0   K
+     C*
+     C           PRENT     IFEQ 'ALL'
+     C           *LOVAL    SETLLLELOANL4
+     C                     READ LELOANL4                 50
+     C                     ELSE
+     C           PRENT     SETLLLELOANL4
+     C           PRENT     READELELOANL4                 50
+     C                     ENDIF
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+     C**  Increment the count of LELOANL4 records read.
+     C                     ADD  1         ##DREC  50
+     C*
+     C*  If the loans for current customer have already been processed
+     C*  go to another customer
+     C*
+     C           BRCA      IFEQ #PRENT
+     C           CNUM      ANDEQ##WCUS
+     C           PRENT     IFEQ 'ALL'
+     C                     READ LELOANL4                 50
+     C                     ELSE
+     C           PRENT     READELELOANL4                 50
+     C                     ENDIF
+     C                     ITER
+     C                     ELSE
+     C                     MOVE BRCA      #PRENT
+     C                     MOVE CNUM      WCUS
+     C                     MOVE CNUM      ##WCUS
+     C                     ENDIF
+     C*
+     C** Produce Confirmation
+     C*
+     C                     CALL 'CG6065'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           #PRENT
+     C                     PARM           WPARM
+     C*
+     C**  Error in called program.
+     C           ##RTCD    IFNE *BLANK
+     C*
+     C                     EXSR SRAUDT
+     C*
+     C** Database error
+     C                     MOVEL'CG6065  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD01        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ELSE
+     C                     COMIT
+     C                     ENDIF
+     C*
+     C** Read next record from LELOANL4
+     C*
+     C           PRENT     IFEQ 'ALL'
+     C                     READ LELOANL4                 50
+     C                     ELSE
+     C           PRENT     READELELOANL4                 50
+     C                     ENDIF
+     C*
+     C                     ENDDO
+     C*
+     C                     ENDIF                           WCUS
+     C*
+     C           EXMAIN    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  SRINZF                                        *
+     C*  Function    :  Initialise Fields on Program Invocation       *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  CGZAUDIT - Audit Processing                   *
+     C*                                                               *
+     C*****************************************************************
+     C           SRINZF    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZF'  @STK,Q
+     C*
+     C**  Open the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6061AU'I#SPLN
+     C                     MOVEL'CG6061  'I#REF
+     C                     MOVE 'CGD2527' I#TITL
+     C                     MOVE 'CGD2528' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C           EXINZF    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process     :  SRINIT                                        *
+     C*  Function    :  Initial Processing - First Call Only          *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  None                                          *
+     C*                                                               *
+     C*****************************************************************
+     C           SRINIT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C**  Initialise work fields
+     C                     Z-ADD*ZEROS    ##DREC
+     C**********           Z-ADD*ZEROS    ##WCUS  60                                          CSD027
+     C                     MOVE *BLANKS   ##WCUS  6                                           CSD027
+     C                     MOVE *BLANK    #PRENT  3
+     C*
+     C**  Copyright
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C           EXINIT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Process    :  SRAUDT                                         *
+     C*  Function   :  Audit Report Processing                        *
+     C*                                                               *
+     C*  Called by   :  Mainline                                      *
+     C*  Calls       :  CGZAUDIT - Audit Processing                   *
+     C*                 CG9020   - Write Data to UDC Data Files-Audit *
+     C*                                                               *
+     C*****************************************************************
+     C           SRAUDT    BEGSR
+     C*
+     C**  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+     C*
+     C**  Output the Count of records read
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6061  'I#REF
+     C                     MOVE 'CGD2527' I#TITL
+     C                     MOVE 'CGD2528' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'LELOANL4'I#SUB
+     C                     MOVEL'CAD1021' I#TEXT
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C**  Skip a line.
+     C                     MOVE '*SKIP   'W1ACT
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+     C*
+     C**  Produce the Audit Report.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD2527' W0TITL  7
+     C                     PARM 'CGD2528' W0ULIN  7
+     C                     PARM           W0CMT
+     C*
+     C**  Close the Audit Print File.
+     C                     CLEARI#DTA
+     C                     MOVEL'CG6061  'I#REF
+     C                     MOVE 'CGD2527' I#TITL
+     C                     MOVE 'CGD2528' I#TUL
+     C                     MOVEL'CGUSRMSG'I#FILE
+     C*
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+     C*
+     C           EXAUDT    TAG
+     C*
+     C**  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRC
+     C/EJECT
+** CPY@  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

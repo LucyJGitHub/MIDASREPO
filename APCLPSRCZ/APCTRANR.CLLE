@@ -1,0 +1,329 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas AP Transaction retrieve')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - APIs                                                */
+/*                                                                   */
+/*       APCTRANR - Transaction Retrieve                             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1079502          Date 03Feb13              */
+/*                      AR1076364          Date 09Jan13              */
+/*                      AR1075853          Date 08Jan13              */
+/*                      CLE134             Date 01Aug12              */
+/*                      CCB020             Date 06Aug12              */
+/*                      AR971184           Date 28May12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      248218             Date 01Jun07              */
+/*                      247277             Date 24May07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/*                      CSD079             Date 05Feb07              */
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      238091             Date 01Feb06              */
+/*                      BUG9345            Date 23Nov05              */
+/*                      CAP087             Date 22Aug05              */
+/*                      CGP010             Date 17Jan05              */
+/*                      BG6507             Date 05Apr05              */
+/*                      BUG4646            Date 04Nov04              */
+/*                      BUG4452            Date 05Oct04              */
+/*                      BG3913             Date 06Sep04              */
+/*                      BG1105             Date 15Dec03              */
+/*                      NAD009             Date 31Mar04              */
+/*                      CGP004             Date 16Feb04              */
+/*                      CSC021             Date 15Dec03              */
+/*                      CAP084 *CREATE     Date 24Mar03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1079502 - Be able to reverse a PDCL created on line       */
+/*       AR1076364 - COBSTAT always returns *NO even if in COB.      */
+/*       AR1075853 - APCTRANR does not allow transactions from being */
+/*                   processed during COB                            */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       AR971184 - For some JMS APIs (CUSD, AMAD, DPMV, OPAY), Front*/
+/*                  Office Id is no more updated in master database  */
+/*                  files which provokes some big problems in third  */
+/*                  party product such as TOF.(Child:AR971185)       */
+/*       248218 - Applied fix 238091.                                */
+/*       247277 - Cater for native JDBC driver as well as toolbox    */
+/*       CSD079 - Enhanced Customer Maintenance API                  */
+/*       238091 - Reclaim activation group to ensure that file is    */
+/*                closed after use.                                  */
+/*       BUG9345 - Notify if invalid depot movement type entered     */
+/*       CAP087 - Depot Movement - Java Wrapper in Midasplus.        */
+/*                Retain TransType='DPMV' for Repo / Depot Transfer. */
+/*                Also adjust substring position to retrieve DPMV    */
+/*                type from Buffer (this is due to new fields added  */
+/*                into DPMV API XML file).                           */
+/*       CGP010 - Global BSPL                                        */
+/*       BG6507 - Jobs are hanging at confirmation screen            */
+/*       BUG4646- Completion of SIRS api                             */
+/*       BUG4452- Property button displays blank fields for customer */
+/*                details                                            */
+/*       BG3913 - RCLRSC to reset programs that retreive volatile    */
+/*                data in the INZSR (Esp ZMUSER)                     */
+/*       BG1105 - Increase the message array length                  */
+/*       NAD009 - Midasplus error reporting                          */
+/*       CGP004 - Audit Reporting                                    */
+/*       CSC021 - Increase the transaction ID to 300                 */
+/*       CAP084 - Synchronous calling of APIs                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SYS &USER &LANG &TRANSTYPE &AUTHCOMP +
+                          &FWDBCK &TRANSID &BUFFER &BUFFER2 &BUFFER3 +
+                          &BUFFER4 &BUFFER5 &BUFFER6 &BUFFER7 +
+                          &BUFFER8 &BUFFER9  &MSGARR &APIRETC &APHEAD)                 /*AR1075853*/
+/**********               &BUFFER8 &BUFFER9  &MSGARR &APIRETC)       */        /*BUG4646 AR1075853*/
+/**********               &FWDBCK &TRANSID &BUFFER &MSGARR &APIRETC) */                  /*BUG4646*/
+ 
+             DCL        VAR(&SYS)       TYPE(*CHAR) LEN(2)
+             DCL        VAR(&USER)      TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LANG)      TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TRANSTYPE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&AUTHCOMP)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FWDBCK)    TYPE(*CHAR) LEN(1)
+/******      DCL        VAR(&TRANSID)   TYPE(*CHAR) LEN(100)             *******/  /*CSC021*/
+             DCL        VAR(&TRANSID)   TYPE(*CHAR) LEN(300)                       /*CSC021*/
+             DCL        VAR(&BUFFER)    TYPE(*CHAR) LEN(9999)
+             DCL        VAR(&BUFFER2)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER3)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER4)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER5)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER6)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER7)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER8)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+             DCL        VAR(&BUFFER9)   TYPE(*CHAR) LEN(9999)                            /*BUG4646*/
+ 
+/******      DCL        VAR(&MSGARR)    TYPE(*CHAR) LEN(2000)                      /*BG1105*/
+             DCL        VAR(&MSGARR)    TYPE(*CHAR) LEN(9999)                      /*BG1105*/
+             DCL        VAR(&APIRETC)   TYPE(*CHAR) LEN(1)
+ 
+/**********  DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)             */                     /*CCB020*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                 /*AR1076364*/
+             DCL        VAR(&SWS)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(200)                               /*AR971184*/
+ 
+/* Work variables                                                    */
+             DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)                                 /*247277*/
+             DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)                                 /*247277*/
+             DCL        VAR(&TYPE ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DMVTYPE) TYPE(*CHAR) LEN(2)                                  /*CAP087*/
+ 
+/* Parameters for call to MLC0030                                    */
+             DCL        VAR(&PARM)  TYPE(*CHAR) LEN(1000)
+                                                                                          /*CCB020*/
+/**Parameter*for*call*to*CBC001001**/                                           /*CCB020 AR1076364*/
+/**********  DCL        VAR(&COBST) TYPE(*CHAR) LEN(4)             */           /*CCB020 AR1076364*/
+             DCL        VAR(&COBFL)  TYPE(*CHAR) LEN(08)                               /*AR1075853*/
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&COBFL) VALUE(%SST(&APHEAD 73 08))                         /*AR1075853*/
+/**Check*for*Input*Cycle**********************************************/                   /*CCB020*/
+/**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                 */                   /*CCB020*/
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                                   /*AR1076364*/
+                                                                                          /*CCB020*/
+/**Call*program*CBC001001*to*check*if*program*is*in*COB*or*IC**/                /*CCB020 AR1076364*/
+/**If*the*return*value*is**YES,*system*is*in*COB**/                             /*CCB020 AR1076364*/
+                                                                                          /*CCB020*/
+/**********  CALL       PGM(CBC001001) PARM(&COBST)                */           /*CCB020 AR1076364*/
+ 
+/* If CoB query, return 'Y' for Cob, 'N' for Input Cycle              */
+             IF         COND(&TRANSTYPE = 'COB') THEN(DO)
+/**********     IF         COND(&MPHAS *NE 'A') THEN(DO)              */                  /*CCB020*/
+/**********     IF         COND(&COBST = '*YES') THEN(DO)          */           /*CCB020 AR1076364*/
+             IF         COND((&MPHAS *NE 'A') *AND +
+                          (&MPHAS *NE 'G')) THEN(DO)                                   /*AR1076364*/
+                   CHGVAR     VAR(&BUFFER) VALUE('Y')
+                   GOTO       CMDLBL(END)
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&BUFFER) VALUE('N')
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/* Any other transactions not allowed in CoB.                         */
+/**********  IF         COND(&MPHAS *NE 'A') THEN(DO)              */                     /*CCB020*/
+/**********  IF         COND(&COBST = '*YES') THEN(DO)          */              /*CCB020 AR1075853*/
+/**********  IF         COND((&COBST = '*YES') *AND (&COBFL *NE +
+                          'MIDASCOB')) THEN(DO)                    */        /*AR1075853 AR1076364*/
+             IF         COND((&MPHAS *NE 'A') *AND +
+                          (&MPHAS *NE 'G') *AND (&COBFL *NE +
+                          'MIDASCOB')) THEN(DO)                                        /*AR1076364*/
+                CHGVAR     VAR(&MSGARR) VALUE(' : : :Midas not in input +
+                             cycle. Entry prohibited:')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
+ 
+/* Reclaim resource                                                   */                  /*BG3169*/
+             RCLRSC                                                                       /*BG3169*/
+ /* MPLUS_ERR is created by DBERRCTL */                                                   /*NAD009*/
+             DLTDTAARA  DTAARA(QTEMP/MPLUS_ERR)                                           /*NAD009*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                    /*NAD009*/
+                                                                                          /*NAD009*/
+             OVRDBF     FILE(GPBSRIL0) OVRSCOPE(*JOB) SHARE(*NO)                          /*CGP010*/
+             OVRDBF     FILE(GPBSRQL0) OVRSCOPE(*JOB) SHARE(*NO)                          /*CGP010*/
+             OVRDBF     FILE(ACCNTLXX) TOFILE(ACCBR) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(REIACXX) TOFILE(REIAC) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(RECOMXX) TOFILE(RECOM) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(REAPWDL1) TOFILE(REAPWDL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDCUSTL0) TOFILE(SDCUSTL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDPBDSLR) TOFILE(SDPBDSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDCUSTLR) TOFILE(SDCUSTL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDCBRTLR) TOFILE(SDCBRTL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDTICSLR) TOFILE(SDTICSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                      /*BUG4452*/
+             OVRDBF     FILE(PTYHSTPR) TOFILE(PTYHSTPD) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(SDSECSLR) TOFILE(SDSECSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(GLCOLLX1) TOFILE(GLCOLLL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+             OVRDBF     FILE(FOPCC) TOFILE(FOPCC) OVRSCOPE(*JOB) +
+                          SHARE(*NO)
+             OVRDBF     FILE(DEALS) TOFILE(DEALS) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*BG6507*/
+             OVRDBF     FILE(SDCMRKLR) TOFILE(SDCMRKL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDACUSLR) TOFILE(SDACUSL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDCFCDLR) TOFILE(SDCFCDL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDCHEQLR) TOFILE(SDCHEQL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDCRWALR) TOFILE(SDCRWAL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDFOCSLR) TOFILE(SDFOCSL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDPLCSLR) TOFILE(SDPLCSL0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDFOX1LR) TOFILE(SDFOX1L0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDCUX2LR) TOFILE(SDCUX2L0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(SDCUX1LR) TOFILE(SDCUX1L0) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                       /*CSD079*/
+             OVRDBF     FILE(LEPDUELC) TOFILE(LEPDUELC) +
+                          OVRSCOPE(*JOB) SHARE(*NO)                                    /*AR1079502*/
+ 
+/* Get the depot movement type - walk-in/walk-out                     */
+             IF         COND(&TRANSTYPE = 'DPMV') THEN(DO)
+/***************CHGVAR     VAR(&TRANSTYPE) VALUE('DP' *CAT +
+                          %SUBSTRING(&TRANSID 7 2)) */                                    /*CAP087*/
+             CHGVAR     VAR(&DMVTYPE) VALUE(%SUBSTRING(&TRANSID 17 2))                    /*CAP087*/
+                IF   COND(&DMVTYPE *NE 'RR' *AND &DMVTYPE *NE 'RP'  +
+                        *AND &DMVTYPE *NE 'BL' *AND &DMVTYPE *NE 'BB'  +
+                        *AND &DMVTYPE *NE 'WI' *AND &DMVTYPE *NE 'WO'  +
+                        *AND &DMVTYPE *NE 'PL' *AND &DMVTYPE *NE 'PD'  +
+                        *AND &DMVTYPE *NE 'DT') THEN(DO)                                 /*BUG9345*/
+                   CHGVAR     VAR(&MSGARR) VALUE('DDDPMV::E:Invalid depot +
+                          movement type.:')                                              /*BUG9345*/
+                   GOTO       CMDLBL(END)                                                /*BUG9345*/
+                ENDDO                                                                    /*BUG9345*/
+             IF         COND((&DMVTYPE = 'RR') *OR (&DMVTYPE = 'RP') *OR +
+                             (&DMVTYPE = 'PL') *OR (&DMVTYPE = 'PD') *OR +
+                             (&DMVTYPE = 'BB') *OR (&DMVTYPE = 'BL') *OR +
+                             (&DMVTYPE = 'DT')) THEN(CHGVAR VAR(&DMVTYPE) +
+                             VALUE('MV'))                                                 /*CAP087*/
+             CHGVAR     VAR(&TRANSTYPE) VALUE('DP' *CAT &DMVTYPE)                         /*CAP087*/
+             ENDDO
+ 
+/* Log call to APCTRANVU */                                                              /*CGP004*/
+                                                                                         /*CGP004*/
+             CALL       PGM(GPAUUIUPD) PARM('R' &SYS &USER &LANG +
+                          &TRANSTYPE    'N'    &TRANSID &BUFFER)                         /*CGP004*/
+                                                                                         /*CGP004*/
+/* Call the multilanguage initiation program to put in ML overrides   */
+/* before calling APTRANR                                             */
+             CHGVAR     VAR(&PARM) VALUE(&AUTHCOMP *CAT &FWDBCK *CAT +
+                          &TRANSID)
+/**********  CALL       PGM(MLC0030) PARM('APTRANR' &LANG &SYS +
+                          &TRANSTYPE &PARM &USER &BUFFER &BUFFER2 +
+                          &BUFFER3 &BUFFER4 &BUFFER5 &BUFFER6 +
+                          &BUFFER7 &BUFFER8 &BUFFER9 +
+                          &MSGARR &APIRETC)                           */        /*BUG4646 AR971184*/
+/**********               &TRANSTYPE &PARM &USER &BUFFER &MSGARR +   */                  /*BUG4646*/
+/**********               &APIRETC)                                  */                  /*BUG4646*/
+             CALL       PGM(MLC0030) PARM('APTRANR' &LANG &SYS +
+                          &TRANSTYPE &PARM &USER &BUFFER &BUFFER2 +
+                          &BUFFER3 &BUFFER4 &BUFFER5 &BUFFER6 +
+                          &BUFFER7 &BUFFER8 &BUFFER9 +
+                          &MSGARR &APIRETC &APHEAD)                                     /*AR971184*/
+ 
+             RTVJOBA    SWS(&SWS)
+             IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ ABNOR:
+             CHGVAR     VAR(&MSGARR) VALUE(':::Database error has +
+                          occurred in Midas. Please inform a Midas +
+                          System operator:')
+/********    RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)                                             247277*/
+             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNO) +
+                          TYPE(&TYPE)                                                     /*247277*/
+             IF         COND(&TYPE = '0') THEN(DO)
+/********       SNDMSG     MSG('APCTRANR failed:' *CAT &SYS *BCAT &USER +                   247277*/
+/********                 *BCAT &TRANSTYPE *BCAT &TRANSID *TCAT '.  +                       247277*/
+/********                 Please check the job log for ' *CAT +                             247277*/
+/********                 &JOBNO *TCAT '/QUSER/QZDASOINIT') +                               247277*/
+/********                 TOMSGQ(MOPERQ MRUNQ)                                              247277*/
+             SNDMSG     MSG('APCTRANR failed:' *CAT &SYS *BCAT &USER +
+                          *BCAT &TRANSTYPE *BCAT &TRANSID *TCAT '.  +
+                          Please check the job log for ' *CAT +
+                          &JOBNO *TCAT '/' *CAT &JOBUSER *TCAT '/' +
+                          *CAT &JOBNAME) TOMSGQ(MOPERQ MRUNQ)                             /*247277*/
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+             IF         COND(&APIRETC = ' ') THEN(DO)
+                CHGVAR     VAR(&APIRETC) VALUE('0')
+             ENDDO
+ END:
+ /* Check whether DBERRCTL has been called */                                             /*NAD009*/
+             CHKOBJ     OBJ(QTEMP/MPLUS_ERR) OBJTYPE(*DTAARA)                             /*NAD009*/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(MP_OK))                           /*NAD009*/
+             CHGVAR     VAR(&APIRETC) VALUE('0')                                          /*NAD009*/
+MP_OK:                                                                                    /*NAD009*/
+ 
+ /* Check for any unhandled errors   */
+             IF         COND(&APIRETC = '0' *AND &MSGARR = *BLANK) +
+                          THEN(DO)
+                CHGVAR     VAR(&MSGARR) VALUE(':::Database error has +
+                          occurred in Midas. Please inform a Midas +
+                          System operator:')
+/********       RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)                                         *247277*/
+             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNO) +
+                          TYPE(&TYPE)                                                     /*247277*/
+/******         SNDMSG     MSG('APCTRANR failed:' *CAT &SYS *BCAT &USER +                  *247277*/
+/******                   *BCAT &TRANSTYPE *BCAT &TRANSID *TCAT '.  +                      *247277*/
+/******                   Please check the job log for ' *CAT +                            *247277*/
+/******                   &JOBNO *TCAT '/QUSER/QZDASOINIT') +                              *247277*/
+/******                   TOMSGQ(MOPERQ MRUNQ)                                             *247277*/
+             SNDMSG     MSG('APCTRANR failed:' *CAT &SYS *BCAT &USER +
+                          *BCAT &TRANSTYPE *BCAT &TRANSID *TCAT '.  +
+                          Please check the job log for ' *CAT +
+                          &JOBNO *TCAT '/' *CAT &JOBUSER *TCAT '/' +
+                          *CAT &JOBNAME) TOMSGQ(MOPERQ MRUNQ)                             /*247277*/
+                MONMSG     MSGID(CPF0000)
+             ENDDO
+             RCLACTGRP  ACTGRP(*ELIGIBLE)                                                 /*238091*/
+             ENDPGM

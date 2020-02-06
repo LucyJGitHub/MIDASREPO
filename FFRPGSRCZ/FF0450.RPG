@@ -1,0 +1,679 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF EOC shadow posting updates')
+      ********************************************************************
+      *                                                                  *
+      *   Midas - Futures and Options Module                             *
+      *                                                                  *
+      *   FF0450  -  UPDATE MEMOS/PRONO WITH DETAILS FROM FUTURES &      *
+      *              OPTIONS MEMOSME & PRONOME.                          *
+      *                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Prev Amend No. CAP205             Date 08Mar10               *
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CRE009             Date 04Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CED006             Date 13Aug97               *
+      *                  CCB002             DATE 03SEP96                 *
+      *                  080050             DATE 26JAN95                 *
+      *                  S01456             DATE 08NOV93                 *
+      *                  FO0111             DATE 09MAY91                 *
+      *                  FO0017             DATE 04JAN91                 *
+      *                  FO0014             DATE 03JAN91                 *
+      *                  E19987             DATE 03APR90                 *
+      *                  S01240             DATE 12APR89                 *
+      *                  S01117             DATE 19MAR90                 *
+      *                                                                  *
+      *------------------------------------------------------------------*
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAP205 - Teller Related APIs - Account Balance Check            *
+      *  CAP204 - Teller Related APIs - Account Transfer (Recompile)     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *   CRE009  -  Projected Account Movements for RE accounts         *
+      *   CED006  -  ED Enhancements                                     *
+      *              LF/MKCTL now under commitment control to enable     *
+      *              changes to this file to be detected by the ED       *
+      *              module.                                             *
+      *   CCB002  -  COB Performance Enhancements                        *
+      *              Access now via access object                        *
+      *              MEMOS now accessed via GL key rather than old       *
+      *              relative record number.                             *
+      *   080050  -  Narrative code on Shadow Postings file is now       *
+      *              alphabetic - amended program                        *
+      *   S01456  - 'FF' MONTHLY P&L ENHANCEMENTS.                       *
+      *              Recompiled due to change to PF/MKCTLD.              *
+      *   FO0111  -  DATA STRUCTURES NOT SPECIFIED WITH CORRECT LENGTH   *
+      *   FO0017  -  ADD BRCA ON UPDATE OF ACCOUNT MOVEMENT FILE         *
+      *   FO0014  -  ADD BRCA TO KEYFIELD TO REFLECT CHANGED FILE TABACMV*
+      *   E19987  -  ENSURE MEMOS IS NOT USED UNLESS RE IS PRESENT(U2 ON)*
+      *   S01240  -  ADDITION OF REAL TIME STATEMENT CHANGES             *
+      *   S01117  -  MULTIBRANCHING                                      *
+      *                                                                  *
+     F*****************************************************************
+     F/EJECT
+     F*
+     F*MKCTL***UF**E*****      K        DISK                              CED006
+     FMKCTL   UF  E           K        DISK         KCOMIT                CED006
+     F*ACCNT***IF**E*****     K        DISK                               CCB002
+     FACCNT   IF  E           K        DISK                               CRE009
+     FTABACMV IF  E           K        DISK                               S01240
+     FMEMOSME UF  E                    DISK                               CCB002
+     F                                              KCOMIT
+     FPRONOME UF  E                    DISK         KCOMIT
+     FFFACMV1 UF  E           K        DISK         KCOMIT                S01240
+     F*EMOS***UF**E******              DISK         KCOMIT                E19987
+     F*MEMOS**UF**E******              DISK         KCOMIT      U2  E19987CCB002
+     FPRONO   UF  E           K        DISK         KCOMIT
+     F/COPY WNCPYSRC,FF0450F001
+     FRSACMTPDO   E                    DISK         KCOMIT       A        S01240
+     F*
+     F/EJECT
+     F*FILE SPECIFICATIONS*********************************************
+     F*                  FUNCTION OF INDICATORS
+     F*                 ************************
+     F*
+     F*      10 - END OF FILE READ ON MEMOSME
+     F*      20 - CHAIN FAIL ON MKCTL
+     F*      30 - CHAIN FAIL ON ACCNT
+     F*      40 - CHAIN FAIL ON MEMOS
+     F*      50 - END OF FILE READ ON PRONOME
+     F*      60 - CHAIN FAIL ON PRONO
+     F*      70 - END OF FILE ON FFACMV1                                  S01240
+     F*      80 - CHAIN FAIL ON TABACMV                                   S01240
+     F*
+     F* ID F  C  H  L
+     F*     80-89     RESERVED FOR STANDARD FF SUBROUTINES
+     F*
+     F********99*********NON-LIVE*RECORD*ON*TABTB10***********************S01117
+     F*
+     F*       U2 - RETAIL MODULE PRESENT ON SYSTEM, RUN MEMOSME PROCESSING
+     F*
+     F*       U7 & U8    DATABASE ERROR
+     F*
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E                    PBAL        5 15 0
+     E/COPY WNCPYSRC,FF0450E001
+     I*INPUT SPECIFICATIONS *******************************************
+     I*
+     IPRONOMEF
+     I** Redefine fields
+     I              CCY                             CCYP
+     I*
+     I*ACCNTABF*********                                                  CCB002
+     I***Redefine fields                                                  CCB002
+     I**************LDBL                            LDBLAC                CCB002
+     I**************CLBL                            CLBLAC                CCB002
+     I*
+     IACCNTABF                                                            CRE009
+      ** Redefine fields                                                  CRE009
+     I              LDBL                            LDBLAC                CRE009
+     I              CLBL                            CLBLAC                CRE009
+     I*
+     IFFACMVDF                                                            S01240
+     I** Redefine fields                                                  S01240
+     I              BRCA                            @BRCA                 S01240
+     I              CUSN                            @CUSN                 S01240
+     I              CCYD                            @CCYD                 S01240
+     I              ACDE                            @ACDE                 S01240
+     I              ASNC                            @ASNC                 S01240
+     I              PTDT                            @PTDT                 S01240
+     I              VUDT                            @VUDT                 S01240
+     I              TRYP                            @TRYP                 S01240
+     I              NRTC                            @NRTC                 S01240
+     I              NRTD                            @NRTD                 S01240
+     I              TNMR                            @TNMR                 S01240
+     I              CQNR                            @CQNR                 S01240
+     I              MVAM                            @MVAM                 S01240
+     I              DORC                            @DORC                 S01240
+     I*                                                                   S01240
+     ITABLETLF                                                            S01240
+     I** Redefine fields                                                  S01240
+     I              NOSN                            @NOSN                 S01240
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*  LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I            DS                             40
+     I*  DATA STRUCTURE FOR UPDATING PRONO BALANCES
+     I                                    P   1  400PBAL
+     I                                        1  40 PNB
+     I*
+     I*RNKYD******DS                             40                       FO0111
+     IPRNKYD      DS                              5                       FO0111
+     I*  DATA STRUCTURE FOR OUTPUT OF PRONO KEY TO DBKEY
+     I                                        1   3 CCYP
+     I                                        4   50NOSN
+     I*
+     I*CCNKD******DS                             40                       FO0111
+     I*ACCNKD******DS                             18                FO0111CCB002
+     I***DATA STRUCTURE FOR OUTPUT OF ACCNT KEY TO DBKEY                  CCB002
+     I*************                           1   60CNUM                  CCB002
+     I*************                           7   9 CCY                   CCB002
+     I*************                          10  130ACOD                  CCB002
+     I*************                          14  150ACSQ                  CCB002
+     I*************                          16  18 BRCA            S01117CCB002
+     I*                                                                   S01240
+     I***@ACCN0*     DS                             18                                 S01240 CGL029
+     I@ACCN0      DS                             24                                           CGL029
+     I*  DATA STRUCTURE FOR ACCOUNT NUMBER ON FFACMV1                     S01240
+     I                                        1   3 @BRCA                 S01240
+     I**********                              4   90@CUSN                              S01240 CSD027
+     I                                        4   9 @CUSN                                     CSD027
+     I                                       10  12 @CCYD                 S01240
+     I**********                             13  160@ACDE                              S01240 CGL029
+     I**********                             17  180@ASNC                              S01240 CGL029
+     I                                       13  220@ACDE                                     CGL029
+     I                                       23  240@ASNC                                     CGL029
+      *                                                                   CCB002
+     IUMEMER      DS                                                      CCB002
+      ** Data structure for database error on call to AOMEMSR0/AOMEMSU0   CCB002
+     I**********                              1   60U0CNUM                             CCB002 CSD027
+     I                                        1   6 U0CNUM                                    CSD027
+     I                                        7   9 U0CUCD                CCB002
+     I**********                             10  130U0ACCD                             CCB002 CGL029
+     I**********                             14  150U0ACSQ                             CCB002 CGL029
+     I**********                             16  18 U0BRCA                             CCB002 CGL029
+     I                                       10  190U0ACCD                                    CGL029
+     I                                       20  210U0ACSQ                                    CGL029
+     I                                       22  24 U0BRCA                                    CGL029
+     I*                                                                   CCB002
+     ISDBANK    E DSSDBANKPD                                              CCB002
+     I** Bank Details                                                     CCB002
+     I*                                                                   CCB002
+     ISCSARD    E DSSCSARDPD                                              CRE009
+      ** Switcheable features details                                     CRE009
+      *                                                                   CRE009
+     IDSFDY     E DSDSFDY                                                 CCB002
+     I*                                                                   CCB002
+     I** First DS for access programs, Short data structure               CCB002
+     I*                                                                   CCB002
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I/COPY WNCPYSRC,FF0450I001
+     C********************************************************************
+     C**                                                                 *
+     C**      M  A  I  N     P  R  O  C  E  S  S  I  N  G                *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C**   Receive/Pass  Parameters
+     C           *LIKE     DEFN MRKT      MARKT
+     C           *ENTRY    PLIST
+     C                     PARM           MARKT
+     C*
+     C**   PUT PROGRAM-NAME INTO DATA-AREA FOR REPORTING D'BASE-ERRORS.
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBFILE                          S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     MOVE 'FF0450'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C***Key list for chain to ACCNT                                      CCB002
+     C***********ACCNKY    KLIST                                          CCB002
+     C***********          KFLD           CNUM                            CCB002
+     C***********          KFLD           CCY                             CCB002
+     C***********          KFLD           ACOD                            CCB002
+     C***********          KFLD           ACSQ                            CCB002
+     C***********          KFLD           BRCA                      S01117CCB002
+     C*
+      *
+      ** Key list for chain to ACCNT                                      CRE009
+     C           ACCNKY    KLIST                                          CRE009
+     C                     KFLD           CUSN                            CRE009
+     C                     KFLD           CCYD                            CRE009
+     C                     KFLD           ACDE                            CRE009
+     C                     KFLD           ASNC                            CRE009
+     C                     KFLD           BRCA                            CRE009
+      *
+     C** Key list for chain to PRONO
+     C           PRNKY     KLIST
+     C                     KFLD           CCYP
+     C                     KFLD           NOSN
+     C**
+     C**   Initial Processing
+     C**
+     C*
+     C** ACCESS MKCTL set EOC indicator to 'M'
+     C           MARKT     CHAINMKCTLDF              20
+     C           *IN20     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'MKCTL'   DBFILE
+     C                     MOVELMARKT     DBKEY            ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C                     MOVE 'M'       ECAI
+     C                     UPDATMKCTLDF
+     C                     COMIT                                          CED006
+      *                                                                   CCB002
+      ** Get today's rundate                                              CCB002
+     C                     CALL 'AOBANKR0'                                CCB002
+     C                     PARM '*BLANK ' @RTCD   7                       CCB002
+     C                     PARM '*FIRST ' @OPTN   7                       CCB002
+     C           SDBANK    PARM SDBANK    DSFDY                           CCB002
+     C*                                                                   CCB002
+     C           @RTCD     IFNE *BLANK                                    CCB002
+     C           *LOCK     IN   LDA                                       CCB002
+     C                     MOVEL'SDBANKPD'DBFILE           ***************CCB002
+     C                     MOVEL@OPTN     DBKEY            ** DB ERR 05 **CCB002
+     C                     Z-ADD5         DBASE            ***************CCB002
+     C                     EXSR DBERR                                     CCB002
+     C                     ENDIF                                          CCB002
+     C/COPY WNCPYSRC,FF0450C003
+      *                                                                                       CRE009
+      ** Access AOSARDR0 and check if CRE009 is installed                                     CRE009
+      *                                                                                       CRE009
+     C                     CALL 'AOSARDR0'                                                    CRE009
+     C                     PARM *BLANKS   PRTCD   7                                           CRE009
+     C                     PARM '*VERIFY' POPTN   7                                           CRE009
+     C                     PARM 'CRE009'  PSARD   6                                           CRE009
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRE009
+      *                                                                                       CRE009
+     C           PRTCD     IFEQ *BLANKS                                                       CRE009
+     C                     MOVE 'Y'       CRE009  1                                           CRE009
+     C                     ELSE                                                               CRE009
+     C                     MOVE 'N'       CRE009                                              CRE009
+     C                     ENDIF                                                              CRE009
+     C*
+      ** Determine if SAR CAP205 Teller Related APIs - Account Balance Check                  CAP205
+      ** is installed.                                                                        CAP205
+      *                                                                                       CAP205
+     C                     MOVEL'N'       CAP205  1                                           CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   PRTCD                                               CAP205
+     C                     PARM '*VERIFY 'POPTN                                               CAP205
+     C                     PARM 'CAP205'  PSARD                                               CAP205
+     C           SCSARD    PARM SCSARD    DSFDY                                               CAP205
+      *                                                                                       CAP205
+     C           PRTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVEL'Y'       CAP205                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C** IF U2 IS ON , DO MEMOSME PROCESSING
+     C           *INU2     IFEQ '1'
+     C                     EXSR MEMUPD
+     C                     END
+     C*
+     C**
+     C                     EXSR PRONUP
+     C*
+     C**                                                                  S01240
+     C                     EXSR FFACUP                                    S01240
+     C*                                                                   S01240
+     C                     EXSR END
+     C/EJECT
+     C*===================================================================
+      **
+      ** MEMUPD S/R  UPDATES MEMOS WITH DETAILS FROM MEMOSME
+      ** CALLED FROM MAIN PROCESSING
+      **
+     C*===================================================================
+     C*
+     C*
+     C           MEMUPD    BEGSR
+     C*
+     C                     READ MEMOSME                  10
+     C*
+     C           *IN10     DOWNE'1'
+     C*
+     C*
+     C***ACCESS*ACCNT TO OBTAIN RRN                                       CCB002
+     C************                                                        CCB002
+     C***********ACCNKY    CHAINACCNT                30                   CCB002
+     C************IN30     IFEQ '1'                                       CCB002
+     C************LOCK     IN   LDA                                 S01117CCB002
+     C***********          MOVE 'ACCNT'   DBFILE                          CCB002
+     C***********          MOVELACCNKD    DBKEY            ***************CCB002
+     C***********          Z-ADD2         DBASE            * DB ERROR 02 *CCB002
+     C***********          EXSR DBERR                      ***************CCB002
+     C***********          END                                            CCB002
+     C***********                                                         CCB002
+     C***ACCESS*MEMOS BY RRN                                              CCB002
+     C***********                                                         CCB002
+     C***********RRNM      CHAINMEMOS                40                   CCB002
+     C************IN40     IFEQ '1'                                       CCB002
+     C************LOCK     IN   LDA                                 S01117CCB002
+     C***********          MOVE 'MEMOS'   DBFILE                          CCB002
+     C***********          MOVELRRNM      DBKEY            ***************CCB002
+     C***********          Z-ADD3         DBASE            * DB ERROR 03 *CCB002
+     C***********          EXSR DBERR                      ***************CCB002
+     C***********          END                                            CCB002
+     C***********                                                         CCB002
+     C***UPDATE*MEMOS WITH DETAILS FROM MEMOSME                           CCB002
+     C***********                                                         CCB002
+     C***********          ADD  LDBL      LDBLN                           CCB002
+     C***********          ADD  CLBL      CLBLN                           CCB002
+     C***********          UPDATMEMOSMDF                                  CCB002
+     C***********                                                         CCB002
+      *                                                                   CCB002
+      ** Set Posting amount to Cleared Balance..                          CCB002
+     C                     Z-ADDCLBL      @PAAO  150                      CCB002
+      *                                                                   CCB002
+      ** Call Access Object AOMEMSU0...                                   CCB002
+     C**********           MOVE CNUM      @CNUMC  60                                   CCB002 CSD027
+     C                     MOVE CNUM      @CNUMC  6                                           CSD027
+     C                     MOVE CCY       @CCYC   3                       CCB002
+     C**********           MOVE ACOD      @ACODC  40                                   CCB002 CGL029
+     C                     MOVELACOD      @ACODC 100                                          CGL029
+     C                     MOVE ACSQ      @ACSQC  20                      CCB002
+     C                     MOVE BRCA      @BRCAC  3                       CCB002
+      *                                                                   CCB002
+     C                     CALL 'AOMEMSU0'                                CCB002
+     C                     PARM *BLANKS   W0RTCD  7        I:Return code  CCB002
+     C                     PARM 0         W0RETL 100       O:Retail A/C NoCCB002
+     C**********           PARM @CNUMC    W0CNUM  60       O:Customer No.              CCB002 CSD027
+     C                     PARM @CNUMC    W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM @CCYC     W0CUCD  3        O:Currency     CCB002
+     C**********           PARM @ACODC    W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM @ACODC    W0ACCD 100                                          CGL029
+     C                     PARM @ACSQC    W0ACSQ  20       O:Account Seq. CCB002
+     C                     PARM @BRCAC    W0BRCA  3        O:Branch       CCB002
+     C                     PARM BJRDNB    W0PSTD  50       O:Posting date CCB002
+     C                     PARM BJRDNB    W0VDAT  50       O:Value date   CCB002
+     C                     PARM @PAAO     W0AMT  150       O:Movement amt CCB002
+     C                     PARM 'N'       W0FTOV  1        O:FT override  CCB002
+      *                                                                   CCB002
+      ** If not accessed properly...                                      CCB002
+     C           W0RTCD    IFNE '       '                                 CCB002
+     C           *LOCK     IN   LDA                        ***************CCB002
+     C                     Z-ADD6         DBASE            ** DB ERR 06 **CCB002
+     C                     MOVE 'AOMEMSU0'DBFILE           ***************CCB002
+     C**********           Z-ADDW0CNUM    U0CNUM                                       CCB002 CSD027
+     C                     MOVE W0CNUM    U0CNUM                                              CSD027
+     C                     MOVE W0CUCD    U0CUCD                          CCB002
+     C                     Z-ADDW0ACCD    U0ACCD                          CCB002
+     C                     Z-ADDW0ACSQ    U0ACSQ                          CCB002
+     C                     MOVE W0BRCA    U0BRCA                          CCB002
+     C                     MOVELUMEMER    DBKEY                           CCB002
+     C                     EXSR DBERR                                     CCB002
+     C                     ENDIF                                          CCB002
+      *                                                                   CCB002
+      ** Set Posting Amount to remainder of Ledger Balance...             CCB002
+     C           LDBL      SUB  CLBL      @PAAO                           CCB002
+      *                                                                   CCB002
+      ** Proceed with update only if Posting Amount is non-zero           CCB002
+      ** and then set value date greater than rundate...                  CCB002
+     C           @PAAO     IFNE 0                                         CCB002
+     C           BJRDNB    ADD  1         @VDAO   50                      CCB002
+      *                                                                   CCB002
+      ** Call Access Object AOMEMSU0...                                   CCB002
+     C                     CALL 'AOMEMSU0'                                CCB002
+     C                     PARM *BLANKS   W0RTCD           I:Return code  CCB002
+     C                     PARM 0         W0RETL           O:Retail A/C NoCCB002
+     C                     PARM @CNUMC    W0CNUM           O:Customer No. CCB002
+     C                     PARM @CCYC     W0CUCD           O:Currency     CCB002
+     C                     PARM @ACODC    W0ACCD           O:Account Code CCB002
+     C                     PARM @ACSQC    W0ACSQ           O:Account Seq. CCB002
+     C                     PARM @BRCAC    W0BRCA           O:Branch       CCB002
+     C                     PARM BJRDNB    W0PSTD           O:Posting date CCB002
+     C                     PARM @VDAO     W0VDAT           O:Value date   CCB002
+     C                     PARM @PAAO     W0AMT            O:Movement amt CCB002
+     C                     PARM 'N'       W0FTOV           O:FT override  CCB002
+      *                                                                   CCB002
+      ** If not accessed properly...                                      CCB002
+     C           W0RTCD    IFNE '       '                                 CCB002
+     C           *LOCK     IN   LDA                        ***************CCB002
+     C                     Z-ADD7         DBASE            ** DB ERR 07 **CCB002
+     C                     MOVE 'AOMEMSU0'DBFILE           ***************CCB002
+     C**********           Z-ADDW0CNUM    U0CNUM                                       CCB002 CSD027
+     C                     MOVE W0CNUM    U0CNUM                                              CSD027
+     C                     MOVE W0CUCD    U0CUCD                          CCB002
+     C                     Z-ADDW0ACCD    U0ACCD                          CCB002
+     C                     Z-ADDW0ACSQ    U0ACSQ                          CCB002
+     C                     MOVE W0BRCA    U0BRCA                          CCB002
+     C                     MOVELUMEMER    DBKEY                           CCB002
+     C                     EXSR DBERR                                     CCB002
+     C                     ENDIF                                          CCB002
+     C                     ENDIF                                          CCB002
+      *                                                                   CCB002
+     C** DELETE RECORD FROM MEMOSME
+     C*
+     C                     DELETMEMOSMEF
+     C*
+     C** COMMIT UPDATE/DELETE
+     C*
+     C                     COMIT
+     C*
+     C                     READ MEMOSME                  10
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*===================================================================
+      **
+      ** PRONUP S/R  UPDATES PRONO WITH DETAILS FROM PRONOME
+      ** CALLED FROM MAIN PROCESSING
+      **
+     C*===================================================================
+     C*
+     C           PRONUP    BEGSR
+     C*
+     C                     READ PRONOME                  50
+     C           *IN50     DOWNE'1'
+     C*
+     C           PRNKY     CHAINPRONO                60
+     C*
+     C** IF CHAIN FAIL ADD BALANCE TO NEW/UNALLOCATED
+     C*
+     C           *IN60     IFEQ '1'
+     C                     SETOF                     60
+     C                     Z-ADD0         NOSN
+     C           PRNKY     CHAINPRONO                60
+     C*
+     C** IF CHAIN FAIL DATA BASE ERROR
+     C*
+     C           *IN60     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'PRONO'   DBFILE
+     C                     MOVELPRNKYD    DBKEY            ***************
+     C                     Z-ADD4         DBASE            * DB ERROR 04 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C                     END
+     C*
+     C** UPDATE PRONO BALANCES WITH DETAILS FROM PRONOME
+     C*
+     C                     ADD  PNBL      PBAL
+     C                     UPDATPRONOPNF
+     C/COPY WNCPYSRC,FF0450C004
+     C*
+     C** DELETE RECORD ON PRONOME AND COMMIT CHANGES
+     C*
+     C                     DELETPRONOMEF
+     C                     COMIT
+     C*
+     C                     READ PRONOME                  50
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*===================================================================S01240
+      **                                                                  S01240
+      ** FFACUP S/R  WRITES RECORDS TO RSACMTPD FROM DETAILS ON           S01240
+      **             FFACMV1                                              S01240
+      ** CALLED FROM MAIN PROCESSING                                      S01240
+      **                                                                  S01240
+     C*===================================================================S01240
+     C*                                                                   S01240
+     C           FFACUP    BEGSR                                          S01240
+     C/COPY WNCPYSRC,FF0450C001
+     C*                                                                   S01240
+     C**********           MOVE *BLANKS   @ACCN1 18                                    S01240 CGL029
+     C                     MOVE *BLANKS   @ACCN1 24                                           CGL029
+     C                     READ FFACMV1                  70               S01240
+     C           *IN70     DOWNE'1'                                       S01240
+     C*                                                                   S01240
+     C           @ACCN0    IFNE @ACCN1                                    S01240
+     C           @ACCN0    ANDNE*BLANKS                                   S01240
+     C                     MOVE @ACCN0    @ACCN1                          S01240
+     C**                                                                  S01240
+     C*                                                                   S01240
+     C           TABKEY    KLIST                                          S01240
+     C                     KFLD           @BRCA                           FO0014
+     C                     KFLD           @CUSN                           S01240
+     C                     KFLD           @CCYD                           S01240
+     C                     KFLD           @ACDE                           S01240
+     C                     KFLD           @ASNC                           S01240
+     C           TABKEY    CHAINTABACMV              80                   S01240
+     C*                                                                   S01240
+     C           *IN80     IFEQ '1'                                       S01240
+     C                     MOVE '0'       *IN60                           S01240
+     C                     ELSE                                           S01240
+     C                     MOVE @CCYD     CCYP                            S01240
+     C                     MOVE @NOSN     NOSN                            S01240
+     C           PRNKY     CHAINPRONO                60                   S01240
+     C                     END                                            S01240
+     C*                                                                   S01240
+     C** IF CHAIN FAIL ADD BALANCE TO NEW/UNALLOCATED                     S01240
+     C*                                                                   S01240
+     C           *IN60     IFEQ '1'                                       S01240
+     C                     MOVE *BLANKS   BRCA                            FO0017
+     C**********           MOVE *ZEROS    CUSN                                         S01240 CSD027
+     C                     MOVE *BLANKS   CUSN                                                CSD027
+     C                     MOVE @CCYD     CCYD                            S01240
+     C                     MOVE *ZEROS    ACDE                            S01240
+     C                     MOVE *ZEROS    ASNC                            S01240
+     C                     Z-ADD@PTDT     PTDT                            S01240
+     C                     Z-ADD@VUDT     VUDT                            S01240
+     C                     MOVE @TRYP     TRYP                            S01240
+     C                     MOVE @NRTC     NRTC                            080050
+     C************         Z-ADD@NRTC     NRTC                      S01240080050
+     C                     MOVE @NRTD     NRTD                            S01240
+     C                     MOVE @TNMR     TNMR                            S01240
+     C                     Z-ADD@CQNR     CQNR                            S01240
+     C                     Z-ADD@MVAM     MVAM                            S01240
+     C                     Z-ADD@DORC     DORC                            S01240
+     C*                                                                   S01240
+     C                     ELSE                                           S01240
+     C*                                                                   S01240
+     C                     MOVE @BRCA     BRCA                            FO0017
+     C**********           Z-ADD@CUSN     CUSN                                         S01240 CSD027
+     C                     MOVE @CUSN     CUSN                                                CSD027
+     C                     MOVE @CCYD     CCYD                            S01240
+     C                     Z-ADD@ACDE     ACDE                            S01240
+     C                     Z-ADD@ASNC     ASNC                            S01240
+     C                     Z-ADD@PTDT     PTDT                            S01240
+     C                     Z-ADD@VUDT     VUDT                            S01240
+     C                     MOVE @TRYP     TRYP                            S01240
+     C                     MOVE @NRTC     NRTC                            080050
+     C************         Z-ADD@NRTC     NRTC                      S01240080050
+     C                     MOVE @NRTD     NRTD                            S01240
+     C                     MOVE @TNMR     TNMR                            S01240
+     C                     Z-ADD@CQNR     CQNR                            S01240
+     C                     Z-ADD@MVAM     MVAM                            S01240
+     C                     Z-ADD@DORC     DORC                            S01240
+     C**                                                                  S01240
+     C                     END                                            S01240
+     C*                                                                   S01240
+     C                     END                                            S01240
+      *                                                                   CRE009
+      ** If CRE009 is ON and account is RE, set the posting date the same CRE009
+      ** as the value date when the latter is not less than the run date. CRE009
+      *                                                                   CRE009
+     C           CRE009    IFEQ 'Y'                                       CRE009
+      *                                                                   CRE009
+     C           ACCNKY    CHAINACCNT                30                   CRE009
+     C           *IN30     IFEQ *OFF                                      CRE009
+     C           ATYP      ANDEQ'R'                                       CRE009
+     C           VUDT      IFGE BJRDNB                                    CRE009
+     C                     Z-ADDVUDT      PTDT                            CRE009
+     C                     ENDIF                                          CRE009
+     C                     ENDIF                                          CRE009
+      *                                                                   CRE009
+     C                     ENDIF                                          CRE009
+      *                                                                   CRE009
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'FF'      CMOD                                                CAP205
+     C                     MOVEL'S'       MTYP                                                CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVEL*BLANKS   CMOD                                                CAP205
+     C                     MOVEL*BLANKS   MTYP                                                CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C*                                                                   S01240
+     C*                                                                   S01240
+     C** WRITE RSACMTPD RECORD                                            S01240
+     C/COPY WNCPYSRC,FF0450C002
+     C                     WRITERSACMTPO                                  S01240
+     C*                                                                   S01240
+     C** DELETE RECORD ON FFACMV1 AND COMMIT CHANGES                      S01240
+     C*                                                                   S01240
+     C                     DELETFFACMVDF                                  S01240
+     C                     COMIT                                          S01240
+     C*                                                                   S01240
+     C*                                                                   S01240
+     C                     READ FFACMV1                  70               S01240
+     C*                                                                   S01240
+     C                     END                                            S01240
+     C*                                                                   S01240
+     C                     ENDSR                                          S01240
+     C*                                                                   S01240
+     C/EJECT
+     C*================================================================
+      **
+      ** DBERR S/R TO HANDLE DATABASE ERRORS AND TERMINATE PROGRAM
+      ** CALLED IN ALL S/RS
+      ** CALLS NO OTHER SUBROUTINES.
+      **
+     C*================================================================
+     C*
+     C           DBERR     BEGSR
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8LR
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C/EJECT
+     C*================================================================
+      **
+      ** END S/R TO END PGM UNDER NORMAL CONDITIONS
+      ** CALLED BY MAIN PROCESSING
+      **
+     C*================================================================
+     C*
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C*================================================================
+**  CPY@
+(c) Finastra International Limited 2001

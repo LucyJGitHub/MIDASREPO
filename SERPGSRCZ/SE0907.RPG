@@ -1,0 +1,1430 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Interest Accruals Using N-T-R Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0907 - Midas SE Interest Accruals Using N-T-R Report       *
+      *                                                               *
+      *  Function: To print Interest Accrual data from Last Coupon    *
+      *   (COB)    Date for Book Positions in Interest-Bearing        *
+      *            Securities.                                        *
+      *                                                               *
+      *  Called By: SEC0906 - Interest Accruals Report                *
+      *                                                               *
+      *            Frequency:                                         *
+      *            - on request during COB                            *
+      *            - Automatically at End of Month                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS006  *CREATE    Date 21Jan03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS006 - Hedge Accounting Phase B                            *
+      *                                                               *
+      *****************************************************************
+     FINVTP   IF  E           K        DISK
+     FIACNX   IF  E           K        DISK
+     FSE0907P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FSE0907P2O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL2
+     FTABSE   IF  E           K        DISK
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     FTABTG30 IT  F       3           EDISK
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - CAC005 is Installed                                   *
+      *   10  - First time through the program                        *
+      *   20  - Accrued on last day ind is 'Y' - controls printing    *
+      *   21  - Only print 'Not Schuldscheins' if currency is dem.    *
+      *   29  - Difference between Calc and File totals of recods     *
+      *   37  - Multibranching is on                                  *
+      *   89  - End of file of IACNX                                  *
+      *                                                               *
+      * 90-99 - Used in Standard Subroutines.                         *
+      *                                                               *
+      * U7-U8 - Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRHEAD - Controls printing of headings and opening and       *
+      *           closing of file on change of branch                 *
+      *  SRPDET - Controls printing of detail lines                   *
+      *  SRBRCH - Access branch information                           *
+      *  SRCCY  - Access currency information (No. of dec. places)    *
+      *  SRINVT - Access investment types information                 *
+      *  SRCCYT - Print out totals for all currencies                 *
+      *  *PSSR  - Error handling                                      *
+      *  SRRCF1 - Subroutine to register P1 printer file via RCF      *
+      *  SRRCF2 - Subroutine to register P2 printer file via RCF      *
+      *                                                               *
+      *  ZDATE2 - Converts Midas day number to dates                  *
+      *  ZSEDIT - Edit numeric fields with decimal places and commas  *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E    TABTG30         CY      1 200  3
+     E                    AMTS      200 15 0
+     E                    AMTO      200 15 0
+     E                    NOMS      200 15 0
+     E                    NOMO      200 15 0
+     E                    DECP      200  1 0
+     E                    CCYA      200  3
+     E                    DECML   1   9  9 9
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80
+      /EJECT
+      *
+     I            DS
+      ** Data structure for table file key
+      *
+     I                                        1  12 TKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      ** Data structure for zsedit
+      *
+     I            DS
+      ** Data structure for input file key
+      *
+     I                                        1  11 IAKEY
+     I                                        1   3 IABA
+     I                                        4   5 IABK
+     I                                        6   8 IACY
+     I                                        9  11 IAIT
+     I            DS
+     I                                        1  11 WKKEY
+     I                                        1   3 WKBR
+     I                                        4   5 WKBK
+     I                                        6   8 WKCY
+     I                                        9  11 WKIT
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** GE-ICD Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short Data Structure
+      *
+     ICPYR@#      DS
+      ** Data structure for Copyright
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     ISPOOL1      DS
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOL2      DS
+     I                                       83  92 SFILE2
+     I                                    B 123 1240SFNUM2
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  Main Processing                                              *
+      *                                                               *
+      *****************************************************************
+     C                     EXSR SRINIT
+      *
+      ** Loop processing for each record read from IACNX
+      *
+     C           *IN89     DOUEQ*ON
+     C           *INU7     OREQ *ON
+      *
+     C                     READ IACEXDF                  89
+      *
+      ** If the system is in the MultiBranched mode and the branch
+      ** read is not the one requested, end processing
+      *
+     C           *IN89     IFEQ *OFF
+     C           ENT       ANDNE'ALL'
+     C           ENT       ANDNEIABA
+     C           AGMBIN    ANDEQ'Y'
+     C                     MOVE *ON       *IN89
+     C                     ENDIF
+      *
+      ** Exit loop upon end of file
+      *
+     C           *IN89     IFEQ *ON
+      *
+     C           WLCNT     IFNE 0
+     C                     EXSR SRHEAD
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     ADD  1         WIREC
+      *
+      ** Print headings if 1st time through, there is a change in key
+      ** fields, or overflow encountered
+      *
+     C           *IN10     IFEQ *OFF
+     C           IAKEY     ORNE WKKEY
+     C           WLCNT     ORGT 39
+     C                     EXSR SRHEAD
+     C                     ENDIF
+      *
+      ** Print detail lines if no errors on headings
+      *
+     C           *INU7     IFEQ *OFF
+     C                     EXSR SRPDET
+     C                     ENDIF
+      *
+      ** Save previous currency and nominal currency decimal places.
+      *
+     C                     Z-ADDCDP       WPCDP   10
+      *
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHEAD - Subroutine to Print Headings and Open and Close the *
+      *           Print File on Change of Branch.                     *
+      *                                                               *
+      *****************************************************************
+     C           SRHEAD    BEGSR
+      *
+      ** If end of file, write trailer and close printer files
+      *
+     C           *IN89     IFEQ '1'
+      *
+      ** Write CCY and INV type totals
+      *
+     C                     MOVE *BLANK    DT3CFT
+     C           WLCNT     IFGT 40
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITEDETAIL3
+     C                     WRITEDETAIL3
+     C                     ADD  2         WLCNT
+      *
+     C                     SELEC
+     C           LNMDP     WHEQ 1
+     C                     MULT 10        WINVMT
+     C           LNMDP     WHEQ 2
+     C                     MULT 100       WINVMT
+     C           LNMDP     WHEQ 3
+     C                     MULT 1000      WINVMT
+     C           LNMDP     WHEQ 4
+     C                     MULT 10000     WINVMT
+     C                     ENDSL
+      *
+     C                     Z-ADDWINVMT    ZFLD15
+     C                     Z-ADDLNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTNMI
+      *
+     C                     Z-ADDWINVPT    ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTPII
+      *
+     C                     Z-ADDWINVRT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIRI
+      *
+     C                     Z-ADDWINVDT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIDI
+      *
+     C           WLCNT     IFGT 41
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITEINVTOT
+     C                     ADD  1         WLCNT
+      *
+     C           WINVIA    IFNE 0
+     C                     Z-ADDWINVIA    ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTPIA
+      *
+     C                     Z-ADDWINVDA    ZFLD15
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIDA
+      *
+     C           WLCNT     IFGT 41
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITEINVADJ
+     C                     ADD  1         WLCNT
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    DT3CFT
+     C           WLCNT     IFGT 40
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITEDETAIL3
+     C                     WRITEDETAIL3
+     C                     ADD  2         WLCNT
+      *
+     C                     Z-ADDWCCYMT    ZFLD15
+     C                     Z-ADDWPCDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTNMC
+      *
+     C                     Z-ADDWCCYPT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTPIC
+      *
+     C                     Z-ADDWCCYRT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIRC
+      *
+     C                     Z-ADDWCCYDT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIDC
+      *
+     C           WLCNT     IFGT 41
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITECCYTOT
+     C                     ADD  1         WLCNT
+      *
+     C           WCCYIC    IFNE 0
+     C                     Z-ADDWCCYIC    ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTPIB
+      *
+     C                     Z-ADDWCCYDC    ZFLD15
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIDB
+      *
+     C           WLCNT     IFGT 41
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITECCYADJ
+     C                     ADD  1         WLCNT
+     C                     ENDIF
+      *
+      ** If last interest-due total for the last inv type processed
+      ** from IACNXD is schuldschein, add interest-due to running
+      ** total for currency of the security
+      *
+     C           PROT      IFEQ '6'
+     C                     ADD  WINVDT    AMTS,X
+     C                     ADD  WCCYMT    NOMS,X
+      *
+      ** Else, add it to other Secs running totals
+      *
+     C                     ELSE
+     C                     ADD  WINVDT    AMTO,X
+     C                     ADD  WCCYMT    NOMO,X
+     C                     ENDIF
+      *
+     C           WLCNT     IFGT 39
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITETRAIL
+     C                     CLOSESE0907P1
+      *
+      ** Write totals for all the currencies
+      *
+     C                     EXSR SRCCYT
+      *
+     C                     ELSE
+      *
+      ** If 1st time through, open file and obtain info for headings
+      *
+     C           *IN10     IFEQ *OFF
+     C                     MOVE *ON       *IN10
+     C                     OPEN SE0907P1
+      *
+      ** RCF Processing for Detail Printer File
+      *
+     C                     EXSR SRRCF1
+     C                     EXSR SRBRCH
+     C           *INU7     IFEQ *ON
+     C                     GOTO EPRTLS
+     C                     ENDIF
+     C                     EXSR SRCCY
+     C           *INU7     IFEQ *ON
+     C                     GOTO EPRTLS
+     C                     ENDIF
+      *
+      ** Look up CCY in CCY table to set array element no for CCY totals
+      ** and store dec places for that CCY in array DECP
+      *
+     C                     Z-ADD1         X       30
+     C           IACY      LOKUPCY,X                     40
+     C                     Z-ADDCDP       DECP,X
+     C                     MOVE IACY      CCYA,X
+      *
+     C                     EXSR SRINVT
+     C           *INU7     IFEQ *ON
+     C                     GOTO EPRTLS
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** If there is a change in branch, investment type, book type
+      ** or CCY, print INV totals and zeroise INV type totals
+      *
+     C           IAIT      IFNE WKIT
+     C           IABK      ORNE WKBK
+     C           IACY      ORNE WKCY
+     C           IABA      ORNE WKBR
+      *
+     C                     MOVE *BLANK    DT3CFT
+     C           WLCNT     IFGT 40
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITEDETAIL3
+     C                     WRITEDETAIL3
+     C                     ADD  2         WLCNT
+      *
+     C                     SELEC
+     C           LNMDP     WHEQ 1
+     C                     MULT 10        WINVMT
+     C           LNMDP     WHEQ 2
+     C                     MULT 100       WINVMT
+     C           LNMDP     WHEQ 3
+     C                     MULT 1000      WINVMT
+     C           LNMDP     WHEQ 4
+     C                     MULT 10000     WINVMT
+     C                     ENDSL
+      *
+     C                     Z-ADDWINVMT    ZFLD15
+     C                     Z-ADDLNMDP     ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTNMI
+      *
+     C                     Z-ADDWINVPT    ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTPII
+      *
+     C                     Z-ADDWINVRT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIRI
+      *
+     C                     Z-ADDWINVDT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIDI
+      *
+     C           WLCNT     IFGT 41
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITEINVTOT
+     C                     ADD  1         WLCNT
+      *
+     C           WINVIA    IFNE 0
+     C                     Z-ADDWINVIA    ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTPIA
+      *
+     C                     Z-ADDWINVDA    ZFLD15
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIDA
+      *
+     C           WLCNT     IFGT 41
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITEINVADJ
+     C                     ADD  1         WLCNT
+     C                     ENDIF
+      *
+      ** If a schuldschein, add interest due to running totals for
+      ** the currency of the sec.
+      *
+     C           PROT      IFEQ '6'
+     C                     ADD  WINVDT    AMTS,X
+      *
+      ** Else, add it to other Sec running totals
+      *
+     C                     ELSE
+     C                     ADD  WINVDT    AMTO,X
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WINVMT
+     C                     Z-ADD0         WINVPT
+     C                     Z-ADD0         WINVRT
+     C                     Z-ADD0         WINVDT
+     C                     Z-ADD0         WINVIA
+     C                     Z-ADD0         WINVDA
+     C                     Z-ADD0         LNMDP
+     C                     ENDIF
+      *
+      ** If there is a change in branch, currency or in book type,
+      ** write out currency totals and zeroise INV type totals
+      *
+     C           IACY      IFNE WKCY
+     C           IABK      ORNE WKBK
+     C           IABA      ORNE WKBR
+      *
+     C                     MOVE *BLANK    DT3CFT
+     C           WLCNT     IFGT 40
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITEDETAIL3
+     C                     WRITEDETAIL3
+     C                     ADD  2         WLCNT
+      *
+     C                     Z-ADDWCCYMT    ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTNMC
+      *
+     C                     Z-ADDWCCYPT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTPIC
+      *
+     C                     Z-ADDWCCYRT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIRC
+      *
+     C                     Z-ADDWCCYDT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIDC
+      *
+     C           WLCNT     IFGT 41
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITECCYTOT
+     C                     ADD  1         WLCNT
+      *
+     C           WCCYIC    IFNE 0
+     C                     Z-ADDWCCYIC    ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTPIB
+      *
+     C                     Z-ADDWCCYDC    ZFLD15
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TOTIDB
+      *
+     C           WLCNT     IFGT 41
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITECCYADJ
+     C                     ADD  1         WLCNT
+     C                     ENDIF
+      *
+      ** Add nominal currency to running total.
+      *
+     C           PROT      IFEQ '6'
+     C                     ADD  WCCYMT    NOMS,X
+     C                     ELSE
+     C                     ADD  WCCYMT    NOMO,X
+     C                     ENDIF
+      *
+     C                     Z-ADD0         WCCYMT
+     C                     Z-ADD0         WCCYPT
+     C                     Z-ADD0         WCCYRT
+     C                     Z-ADD0         WCCYDT
+     C                     Z-ADD0         WCCYIC
+     C                     Z-ADD0         WCCYDC
+     C                     ENDIF
+      *
+      ** If there is a change in branch, write trailer, close and re-open
+      ** print file, and obtain information for headings
+      *
+     C           IABA      IFNE WKBR
+     C                     EXSR SRCCYT
+     C           WLCNT     IFGT 39
+     C                     EXSR SROVRF
+     C                     ENDIF
+     C                     WRITETRAIL
+     C                     CLOSESE0907P1
+     C                     OPEN SE0907P1
+     C                     Z-ADD0         PAGE
+      *
+      ** RCF Processing for Detail Printer File
+      *
+     C                     EXSR SRRCF1
+     C                     EXSR SRBRCH
+     C           *INU7     IFEQ *ON
+     C                     GOTO EPRTLS
+     C                     ENDIF
+     C                     Z-ADD0         PAGE
+     C                     ENDIF
+      *
+      ** If there is a change in currency, access new currency
+      ** decimal places from TABTG10
+      *
+     C           IACY      IFNE WKCY
+     C           IABA      ORNE WKBR
+     C           IACY      ANDEQWKCY
+     C                     EXSR SRCCY
+     C           *INU7     IFEQ *ON
+     C                     GOTO EPRTLS
+     C                     ENDIF
+      *
+      ** Look up CCY in CCY table to set array element no for CCY tot
+      ** and store dec places for that CCY in array DECP
+      *
+     C                     Z-ADD1         X
+     C           IACY      LOKUPCY,X                     40
+     C                     Z-ADDCDP       DECP,X
+     C                     MOVE IACY      CCYA,X
+      *
+     C                     ENDIF
+      *
+      ** If there is a change in Investment Type or Investment currency,
+      ** access new Investment name for the heading
+      *
+     C           IAIT      IFNE WKIT
+     C           IACY      ORNE WKCY
+     C                     EXSR SRINVT
+     C           *INU7     IFEQ *ON
+     C                     GOTO EPRTLS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Write Headings
+      *
+     C                     Z-ADD0         WLCNT
+     C                     MOVE *BLANK    WKSS
+     C                     MOVE IABA      HDBR
+     C                     MOVE BRNM      HDBRNM
+     C                     MOVE IABK      HDBK
+     C                     MOVE IACY      HDCY
+     C                     MOVE INAM      HDIN
+      *
+      ** If CAC005 is installed, retrieve the corresponding user book
+      ** and profit centre.
+      *
+     C           CAC005    IFEQ 'Y'
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*USER  ' POPTN
+     C                     PARM           PBKCD   2
+     C                     PARM           PPRFC   4
+     C                     PARM IABK      PPSBK   2
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE PBKCD     HDBK
+     C                     MOVE PPRFC     PRFC    4
+     C                     ELSE
+     C                     MOVE *BLANKS   PRFC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR SROVRF
+      *
+      ** Store new key fields
+      *
+     C                     MOVE IAKEY     WKKEY
+     C                     ENDIF
+      *
+     C           EPRTLS    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SROVRF - Subroutine to handle overflows                      *
+      *                                                               *
+      *****************************************************************
+     C           SROVRF    BEGSR
+      *
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     WRITEHEAD3
+     C                     Z-ADD0         WLCNT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPDET - Subroutine to Print Detail Lines.                   *
+      *                                                               *
+      *****************************************************************
+     C           SRPDET    BEGSR
+      *
+      ** Set up detail lines, editing numeric fields and dates
+      *
+     C           IASS      IFNE WKSS
+      *
+      ** Output a blank line
+      *
+     C                     MOVE *BLANK    DT3CFT
+     C                     WRITEDETAIL3
+     C                     ADD  1         WLCNT
+      *
+      ** Output Security Report name line
+      *
+     C                     MOVE IARN      DT5RPN
+     C                     WRITEDETAIL6
+     C                     ADD  1         WLCNT
+      *
+     C                     MOVE IASS      DTSEC
+      *
+      ** Move previous security to temporary variable for comparison
+      *
+     C                     MOVE WKSS      @WKSS1
+     C                     MOVE WKSS      @WKSS2
+      *
+     C                     MOVE IASS      WKSS
+      *
+     C           IAMY      IFNE 99999
+     C                     MOVE *OFF      *IN70
+     C                     Z-ADDIAMY      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DTMAT
+     C                     ELSE
+     C                     MOVE *ON       *IN70
+     C                     ENDIF
+      *
+     C                     Z-ADDIANC      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DTNCD
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANK    DTSEC
+     C                     MOVE *BLANK    DTMAT
+     C                     MOVE *BLANK    DTNCD
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDIASP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DTSTP
+      *
+      ** If first-day accruals causes IAEP to exceed the accrue-to date
+      ** for the report, use the heading date (HDDATE) instead of IAEP.
+      *
+     C           IAEP      IFGT PDATE
+     C                     MOVE HDDATE    DTEDP
+     C                     ELSE
+     C                     Z-ADDIAEP      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    DTEDP
+     C                     ENDIF
+      *
+      ** If rec is a S'schein then only nominal on last S'schein rec must
+      ** be added to CCY and Investment type subtotals :
+      *
+     C           PROT      IFEQ '6'
+     C           IALR      ANDEQ'Y'
+      *
+      ** If the currency decimal places is not equal to nominal decimal
+      ** places, need to convert nominal amount correctly for display.
+      *
+     C           NMDP      IFNE CDP
+     C           NMDP      ANDEQ0
+     C                     MOVEADECML,CDP WDVSR
+     C           IANM      DIV  WDVSR     WNAMT
+     C                     ADD  WNAMT     WCCYMT
+     C                     ELSE
+     C                     ADD  IANM      WCCYMT
+     C                     ENDIF
+      *
+     C           NMDP      IFEQ 0
+     C                     ADD  IANM      WINVMT
+     C                     ELSE
+     C           NMDP      IFGT LNMDP
+     C                     Z-ADDNMDP      LNMDP
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           NMDP      WHEQ 1
+     C           IANM      DIV  10        WIANM
+     C           NMDP      WHEQ 2
+     C           IANM      DIV  100       WIANM
+     C           NMDP      WHEQ 3
+     C           IANM      DIV  1000      WIANM
+     C           NMDP      WHEQ 4
+     C           IANM      DIV  10000     WIANM
+     C                     ENDSL
+      *
+     C                     ADD  WIANM     WINVMT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If record is NOT a S'schein then add the nominal to the
+      ** CCY and Investment type subtotals :
+      *
+     C           PROT      IFNE '6'
+      *
+      ** If the currency decimal places is not equal to nominal decimal
+      ** places, need to convert nominal amount correctly for display.
+      *
+     C           NMDP      IFNE CDP
+     C           NMDP      ANDEQ0
+     C                     MOVEADECML,CDP WDVSR   99
+     C           IANM      DIV  WDVSR     WNAMT  150
+     C                     ADD  WNAMT     WCCYMT
+     C                     ELSE
+     C                     ADD  IANM      WCCYMT
+     C                     ENDIF
+      *
+     C           NMDP      IFEQ 0
+     C                     ADD  IANM      WINVMT
+     C                     ELSE
+     C           NMDP      IFGT LNMDP
+     C                     Z-ADDNMDP      LNMDP   10
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           NMDP      WHEQ 1
+     C           IANM      DIV  10        WIANM  194
+     C           NMDP      WHEQ 2
+     C           IANM      DIV  100       WIANM
+     C           NMDP      WHEQ 3
+     C           IANM      DIV  1000      WIANM
+     C           NMDP      WHEQ 4
+     C           IANM      DIV  10000     WIANM
+     C                     ENDSL
+      *
+     C                     ADD  WIANM     WINVMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Edit Number of Days in Period
+      *
+     C                     Z-ADDIAND      ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTNDYS
+      *
+      ** Edit Coupon Rate
+      *
+     C                     MOVE IACN      ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTCPR
+      *
+      ** If fields are zeros put out blanks
+      *
+     C           IANM      IFEQ 0
+     C           IAPI      ANDEQ0
+     C           IARC      ANDEQ0
+     C           IAID      ANDEQ0
+     C           PROT      ANDNE'6'
+     C                     MOVE *BLANKS   DTNOM
+     C                     MOVE *BLANKS   DTPIT
+     C                     MOVE *BLANKS   DTAIR
+     C                     MOVE *BLANKS   DTID
+     C                     ELSE
+      *
+     C                     Z-ADDIANM      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTNOM
+      *
+     C           IASS      IFNE @WKSS1
+     C                     ADD  IAPI      WCCYPT
+     C                     ADD  IAPI      WINVPT
+     C                     ENDIF
+      *
+     C                     MOVE IASS      @WKSS1
+     C                     Z-ADDIAPI      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTPIT
+      *
+     C                     ADD  IARC      WCCYRT
+     C                     ADD  IARC      WINVRT
+     C                     Z-ADDIARC      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTAIR
+      *
+     C                     ADD  IAID      WCCYDT
+     C                     ADD  IAID      WINVDT
+     C                     Z-ADDIAID      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DTID
+     C                     ENDIF
+      *
+      ** Write the main detail line
+      *
+     C                     WRITEDETAIL1
+      *
+     C                     ADD  1         WLCNT
+      *
+      ** If call %, current factor, value ccy or exchange rate fields
+      ** are present, setup more detail lines
+      *
+     C           IAPP      IFNE 0
+     C                     Z-ADDIAPP      ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DT2PPC
+     C                     WRITEDETAIL2
+     C                     ADD  1         WLCNT
+     C                     ENDIF
+     C                     MOVE *OFF      *IN70
+      *
+     C           IACF      IFNE 0
+     C                     MOVE *ZEROS    ZFLD15
+     C                     MOVE IACF      ZFLD15
+     C                     Z-ADD9         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DT3CFT
+     C                     WRITEDETAIL3
+     C                     ADD  1         WLCNT
+     C                     ENDIF
+      *
+     C           IAVC      IFNE IACY
+     C           IAER      ANDNE0
+     C                     MOVE IAVC      DT4VCY
+     C                     MOVE *ZEROS    ZFLD15
+     C                     MOVE IAER      ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DT4EXR
+     C                     WRITEDETAIL4
+     C                     ADD  1         WLCNT
+     C                     ENDIF
+      *
+      ** Prepare Interest Adjustments for report.
+      ** If there is a Purchased Interest Adjustment, Output DETAIL5.
+      ** Do not process Interest Discrepancy for Schuldscheins.
+      *
+     C           PROT      IFNE '6'
+      *
+     C           IASS      IFNE @WKSS2
+     C                     ADD  IPIA      WCCYIC
+     C                     ADD  IPIA      WINVIA
+     C                     ADD  IAID      WCCYDC
+     C                     ADD  IAID      WINVDA
+     C                     ADD  IPIA      WCCYDC
+     C                     ADD  IPIA      WINVDA
+     C                     ENDIF
+     C                     MOVE IASS      @WKSS2
+      *
+     C           IPIA      IFNE 0
+     C                     Z-ADDIPIA      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DT5PIA
+      *
+     C                     Z-ADDIIDA      ZFLD15
+     C                     MOVE '('       ZECHAR
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DT5IDA
+     C                     WRITEDETAIL5
+     C                     ADD  1         WLCNT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRBRCH - Subroutine to Chain to TABLETR (Branch Information).*
+      *                                                               *
+      *****************************************************************
+     C           SRBRCH    BEGSR
+      *
+     C                     MOVE *BLANK    TKEY
+     C                     MOVEL'10'      TKEY
+     C                     MOVE IABA      TKEY
+      *
+     C           TABKEY    CHAINTABLETRF             30
+     C           *IN30     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELTKEY      DBKEY
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *IN99
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  SRCCY  - Subroutine to Chain to TABTG10 (for CDP).           *
+      *                                                               *
+      *****************************************************************
+     C           SRCCY     BEGSR
+      *
+     C                     MOVEL'20      'TKEY
+     C                     MOVELIACY      KEY4    4
+     C                     MOVE '1'       KEY4
+     C                     MOVE KEY4      TKEY
+      *
+     C           TABKEY    CHAINTABTG10F             30
+     C           *IN30     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'TABLE'   DBFILE
+     C                     MOVELTKEY      DBKEY
+     C                     Z-ADD4         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *IN99
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  SRINVT - Subroutine to Chain to INVTP (Investment Type).     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINVT    BEGSR
+      *
+     C           INVKEY    CHAININVTPDF              30
+     C           *IN30     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INVTP'   DBFILE
+     C                     MOVELIACY      IKEY    6
+     C                     MOVE IAIT      IKEY
+     C                     MOVELIKEY      DBKEY
+     C                     Z-ADD5         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     MOVE *ON       *IN99
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ENDIF
+      *
+      ** Save nominal decimal places for use when printing totals
+      *
+     C                     Z-ADDNMDP      WKDP    10
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCCYT - Subroutine to Print running totals for all CCY      *
+      *                                                               *
+      *****************************************************************
+     C           SRCCYT    BEGSR
+      *
+     C                     OPEN SE0907P2
+     C                     Z-ADD0         PAGE1
+     C                     Z-ADD43        WLCNT1  30
+     C                     Z-ADD1         COUNT   30
+      *
+      ** RCF Processing for Detail Printer File
+      *
+     C                     EXSR SRRCF2
+      *
+     C           COUNT     DOUEQ201
+      *
+     C           WLCNT1    IFGT 41
+     C                     WRITEP2HD1
+     C                     MOVE *BLANK    DT1BL
+     C                     WRITEP2DET1
+     C                     WRITEP2DET1
+     C                     WRITEP2HD2
+     C                     MOVE *BLANK    DT1BL
+     C                     WRITEP2DET1
+     C                     Z-ADD0         WLCNT1
+     C                     ENDIF
+      *
+     C           CCYA,COUNTIFNE '   '
+      *
+     C                     MOVE CCYA,COUNTPRTCCY
+     C                     Z-ADDNOMO,COUNTZFLD15
+     C                     Z-ADDDECP,COUNTZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRTNMO
+      *
+     C                     Z-ADDAMTO,COUNTZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRTAMO
+      *
+     C                     MOVE *OFF      *IN21
+     C           AMTS,COUNTIFNE 0
+     C                     MOVE *ON       *IN21
+     C                     ENDIF
+      *
+     C                     WRITEP2DET2
+     C                     ADD  1         WLCNT1
+      *
+     C           AMTS,COUNTIFNE 0
+      *
+     C                     Z-ADDNOMS,COUNTZFLD15
+     C                     Z-ADDDECP,COUNTZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRTNMS
+      *
+     C                     Z-ADDAMTS,COUNTZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRTAMS
+      *
+     C                     WRITEP2DET3
+     C                     ADD  1         WLCNT1
+     C                     ENDIF
+      *
+     C                     MOVE *BLANK    DT1BL
+     C                     WRITEP2DET1
+     C                     WRITEP2DET1
+     C                     ADD  2         WLCNT1
+     C                     ENDIF
+      *
+     C                     ADD  1         COUNT   30
+     C                     ENDDO
+      *
+     C                     WRITEP2TRAIL
+     C                     CLOSESE0907P2
+      *
+      ** Initialise arrays again
+      *
+     C                     MOVEA*BLANKS   CCYA
+     C                     MOVEA*ZEROS    AMTS
+     C                     MOVEA*ZEROS    AMTO
+     C                     MOVEA*ZEROS    NOMS
+     C                     MOVEA*ZEROS    NOMO
+     C                     MOVEA*ZEROS    DECP
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCF1 - Subroutine to register P1 Printer File via RCF      *
+      *                                                               *
+      *****************************************************************
+     C           SRRCF1    BEGSR
+      *
+      ** Ensure Report Spool File is recorded by RCF
+      *
+     C                     Z-ADDSFNUM1    ZSNUM1  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM IABA      PSENTY  3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM1
+     C                     PARM *BLANKS   PZSERR  1
+      *
+      **  Return to calling program if error is encountered in ZSFILE
+      *
+     C           PZSERR    IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCF2 - Subroutine to register P2 Printer File via RCF      *
+      *                                                               *
+      *****************************************************************
+     C           SRRCF2    BEGSR
+      *
+      ** Ensure Report Spool File is recorded by RCF
+      *
+     C                     Z-ADDSFNUM2    ZSNUM2  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM IABA      PSENTY
+     C                     PARM           SFILE2
+     C                     PARM           ZSNUM2
+     C                     PARM *BLANKS   PZSERR
+      *
+      **  Return to calling program if error is encountered in ZSFILE
+      *
+     C           PZSERR    IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initiialization subroutine                          *
+      *                                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           ENT     3
+      *
+      ** Key List for chaining to files
+      *
+      ** Investment Type
+      *
+     C           INVKEY    KLIST
+     C                     KFLD           IACY
+     C                     KFLD           IAIT
+      *
+     C           TABKEY    KLIST
+     C                     KFLD           TKEY
+      *
+      ** Set up program information
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SE0907  'DBPGM
+     C                     MOVEL*BLANK    DBKEY
+     C                     MOVEL*BLANK    DBFILE
+     C                     OUT  LDA
+      *
+     C                     IN   RUNDAT
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check system date format, DDMMYY (*IN98 OFF)
+      **                           MMDDYY (*IN98 ON).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Access GE-ICD record
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANK    PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDGELRPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Obtain date for report title and whether to print 'Including'
+      ** or 'Excluding'
+      *
+     C           *LIKE     DEFN BKAPDT    PDATE
+     C           BKAPDT    IFLT BJDNWD
+     C                     Z-ADDBKAPDT    PDATE
+     C                     MOVE *OFF      *IN20
+     C                     ELSE
+      *
+      ** Report heading wrong.  Accrual never includes next working day.
+      *
+     C           BJDNWD    SUB  1         PDATE
+      *
+     C           BKALDI    IFEQ 'Y'
+     C                     MOVE *ON       *IN20
+     C                     ELSE
+     C                     MOVE *OFF      *IN20
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Convert processing date and move to heading
+      *
+     C                     Z-ADDPDATE     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    HDDATE
+      *
+      ** Determine if MultiBranching
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN37
+     C                     ENDIF
+      *
+      ** Access Switchable feature files for CAC005
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CAC005'  PSARD   6
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CAC005  1
+     C                     MOVE *ON       *IN01
+     C                     ELSE
+     C                     MOVE 'N'       CAC005
+     C                     MOVE *OFF      *IN01
+     C                     ENDIF
+      *
+      ** Clear work fields if no DB error in accessing ICD
+      *
+     C           *IN99     IFEQ *OFF
+     C           *LIKE     DEFN IASS      WKSS
+     C           *LIKE     DEFN IASS      @WKSS1
+     C           *LIKE     DEFN IASS      @WKSS2
+     C                     Z-ADD0         WIREC   50
+     C                     Z-ADD0         WLCNT   20
+     C                     MOVE *BLANKS   WKKEY
+      *
+     C                     MOVEA'00'      *IN,21
+     C                     MOVE *OFF      *IN10
+     C                     MOVE *OFF      *IN29
+     C                     Z-ADD0         WCCYPT 150
+     C                     Z-ADD0         WCCYRT 150
+     C                     Z-ADD0         WCCYDT 150
+     C                     Z-ADD0         WCCYMT 150
+     C                     Z-ADD0         WCCYIC 150
+     C                     Z-ADD0         WCCYDC 150
+     C                     Z-ADD0         WINVPT 150
+     C                     Z-ADD0         WINVRT 150
+     C                     Z-ADD0         WINVDT 150
+     C                     Z-ADD0         WINVMT 194
+     C                     Z-ADD0         WINVIA 150
+     C                     Z-ADD0         WINVDA 150
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ31
+      /EJECT
+      ***
+**  DECML - DECIMAL PLACES
+100000000
+010000000
+001000000
+000100000
+000010000
+000001000
+000000100
+000000010
+000000001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2003

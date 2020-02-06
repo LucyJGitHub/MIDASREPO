@@ -1,0 +1,49 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Migration utility for SDLENOPD')             */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00115 - Alpha Loan - Packed Fields Conversion           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1092128 *CREATE  Date 01Mar13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1092128B - Call SMU00113 to update SDLENOPD and add back  */
+/*                    logical file member SDLENOL2.                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                            2013')
+ 
+/** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Call SMU00113 to update SDLENOPD */
+             CALL       PGM(SMU00113)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/** Add back logical file member SDLENOL2 */
+             ADDLFM     FILE(SDLENOL2) MBR(SDLENOL2) SHARE(*YES)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

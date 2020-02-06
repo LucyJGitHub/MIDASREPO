@@ -1,0 +1,84 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial UDC')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000107 - Set up initial UDC                              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP004  *CREATE    Date 07Oct10              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if UDC is switched on - file SDMMODPD. */
+             CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOMMODR0')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(%SST(&FMT 101 1) *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Set up default label stationery details on data area CGDTA. */
+             CHGDTAARA  DTAARA(CGDTA (116 5)) VALUE('00132')
+             CHGDTAARA  DTAARA(CGDTA (121 5)) VALUE('00066')
+             CHGDTAARA  DTAARA(CGDTA (126 5)) VALUE('00003')
+             CHGDTAARA  DTAARA(CGDTA (131 5)) VALUE('00003')
+             CHGDTAARA  DTAARA(CGDTA (136 5)) VALUE('00010')
+             CHGDTAARA  DTAARA(CGDTA (141 5)) VALUE('00010')
+             CHGDTAARA  DTAARA(CGDTA (146 5)) VALUE('00020')
+             CHGDTAARA  DTAARA(CGDTA (151 5)) VALUE('00010')
+ 
+/* Initialise headers / trailers. */
+             CALL       PGM(CG0000)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('CG0000')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Create TOOL members. */
+             CALL       PGM(CGLAYOUT)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('CGLAYOUT')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000107')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

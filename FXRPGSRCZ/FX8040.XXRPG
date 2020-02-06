@@ -1,0 +1,358 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                       CCB023
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - FX Dealer Module
+     F*                                                              *
+     F*     FX8040    - FX DEALER CHECK STATUS OF DEALS              *
+     F*                                                              *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+     F*                                                              *
+      *  Last Amend No. CCB023 *REDUNDANT  Date 06Aug12              *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL049             Date 07Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May0502             *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                    S01453             DATE   14DEC93         *
+     F*                    E38012             DATE   03APR92         *
+     F*                    S01319             DATE   20JAN92         *
+     F*                    E27501             DATE   16AUG91         *
+     F*                    DT0181             DATE   22MAY91         *
+     F*                    DT0180             DATE   22MAY91         *
+     F*                    E16348             DATE   14/12/88        *
+     F*                    E14364             DATE   08/08/88        *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+      *  CCB023 - COB Restructure - Input Cycle Termination          *
+      *           Restructuring                                      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*     CDL038 - Extended Deal Sub Type (Recompile)
+     F*     CDL010 - Prevent last user that actioned the trade from  *
+     F*              authorising it.                                 *
+     F*              Recompile due to changes in FXDEALPP.           *
+     F*     S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY*
+     F*              POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED) *
+     F*     E38012 - This program was made redundant by the DL/DRS   *
+     F*              rationalisation in error and is being reinstated*
+     F*     S01319 - DL/DRS Rationalisation - program made redundant *
+     F*     E27501 - New DS/LDA added in DT0181 was not defined as   *
+     F*              256 long, causing crash when tried to lock in   *
+     F*     DT0181 - Release 10 changes to Header Box,Copyright & LDA*
+     F*     DT0180 - Recompiled for Release 10.                      *
+     F*     E16348 - NO CHECK FOR EOF IN FILE FXICCDLL. IT IS        *
+     F*              PLACED STRAIGHT AFTER THE READ.                 *
+     F*                                                              *
+     F*     E14364 - PERFORMANCE FIX TO READ INCOMPLETE,COMPLETE     *
+     F*              AND REQUIRE RE-AUTHORISATION DEALS FILE.        *
+     F*                                                              *
+     F****************************************************************
+     F*
+     F**  Indicator Function Summary
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     F*
+     F********60*********End of file reached in FXDEALLL.                 E14364
+     F*       60         End of file reached in FXICCDLL.                 E14364
+     F*
+     F*       U6         Program exception/error condition has occurred
+     F*       U7         Set on with U8 to signify file handling error.
+     F*       U8         Set on with U7 to signify file handling error.
+     F*
+     F*
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*XDEALLLIF  E                    DISK         KINFSR INFSR      UC  E13464
+     FFXICCDLLIF  E                    DISK         KINFSR INFSR      UC  E14364
+     E*****************************************************************   DT0181
+     E*                                                                   DT0181
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT                               DT0181
+     E                    CPY@    1   1 80                                DT0181
+     E*                                                                   DT0181
+     E*****************************************************************   DT0181
+     I/EJECT
+     I            DS                                                      DT0181
+     I*                                                                   DT0181
+     I**  DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION            DT0181
+     I                                        1  80 CPY@                  DT0181
+     I                                        1  20 CPY@##                DT0181
+     IPSDS       SDS
+     I*
+     I**  Program status data structure.
+     I**  Field containing workstaion  ID.
+     I                                      244 253 @JOB
+     I**  Field containing user ID.
+     I                                      254 263 @USER
+     I*
+     I***********UDS                                                      DT0181
+     I***LDA******   DS                                             DT0181E27501
+     ILDA         DS                            256                       E27501
+     I**  Local data area for data base errors.
+     I**  Field containing name of database file in error.
+     I                                      134 141 DBFILE
+     I**  Field containing key value causing database error.
+     I                                      142 170 DBKEY
+     I**  Field containing name of program causing database error.
+     I                                      171 180 DBPGM
+     I**  Field containing number of database error.
+     I                                      181 183 DBASE
+      /EJECT
+     C**VERSION**
+     C**FX DEALER CHECK STATUS OF DEALS
+     C                     MOVE '00.00.01'@VERS   8
+     C*
+     C**  Initial processing.
+     C                     EXSR #A
+     C*
+     C**  Main processing
+     C                     EXSR #B
+     C*
+     C**  Termination processing
+     C                     EXSR #C
+     C*
+     C           ENDPGM    TAG                             **ENDPGM**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  Index to subroutines - Order of listing due to frequency of  *
+     C*                         usage.                                *
+     C*                                                               *
+     C*   1. #B     - Main processing; handles screen processing.     *
+     C*   2. #A     - Initial processing.                             *
+     C*   3. #C     - Termination processing.                         *
+     C*   4. INFSR  - Error checking SR for file writes.              *
+     C*   5. *PSSR  - Error handling sub- routine.                    *
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #B     - Main Processing; Checks each record in  *
+     C*                       turn to see if all deals are complete.  *
+     C*                                                               *
+     C*  FIELDS USED:         @OKAH  - Field holding 'OK for After-   *
+     C*                                Hours' parameter.              *
+     C*                                                               *
+     C*  CALLED BY :          MAIN PROGRAM                            *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C*** Performance fix to read logical file until 'live' record is     E14364
+     C*** found.                                                          E14364
+     C*
+     C**  Read a record from the file until the end of the file or a
+     C**  valid record is read.
+     C           *IN60     DOUEQ'1'                        B1
+     C*****      FHDLTF    OREQ *BLANKS                    X1             E13364
+     C*                                                                   E13364
+     C*****                READ FXDEALLL                 60*1             E13364
+     C                     READ FXICCDLL                 60*1             E13364
+     C           *IN60     IFEQ '1'                        B*2            E16348
+     C                     GOTO #B9                        **2            E16348
+     C                     END                             E*2            E16348
+     C           FHDDLT    IFEQ *BLANKS                    B*2            E13364
+     C           FHDLTF    ANDEQ*BLANKS                    B*2            E13364
+     C                     MOVE 'N'       @OKAH            **2            E13364
+     C                     MOVE '1'       *IN60            **2            E13364
+     C                     GOTO #B9                        **2            E13364
+     C                     END                             E*2            E13364
+     C*
+     C                     END                             E1
+     C*
+     C****Process records until the end of the file is reached or the     E13364
+     C****'OK for Afterhours' indicator is 'N'.                           E13364
+     C****       *IN60     DOWEQ'0'                        B1             E13364
+     C****       @OKAH     ANDNE'N'                        X1             E13364
+     C****                                                                E13364
+     C****If the 'Deal Deleted' indicator is blank, check the 'Deal       E13364
+     C****Status' indicator.                                              E13364
+     C****       FHDDLT    IFEQ *BLANKS                    B*2            E13364
+     C****                                                                E13364
+     C****If the 'Deal Status' indicator is 'I' (Incomplete), 'C'         E13364
+     C****(Changed) or 'R' (Reauthorised), then it is not 'OK for         E13364
+     C****Afterhours'.  Set indicator to 'N'.                             E13364
+     C****       FHDSTS    IFEQ 'I'                        B**3           E13364
+     C****       FHDSTS    OREQ 'C'                        X**3           E13364
+     C****       FHDSTS    OREQ 'R'                        X**3           E13364
+     C****                                                                E13364
+     C****                 MOVE 'N'       @OKAH            ***3           E13364
+     C****                                                                E13364
+     C****                 END                             E**3           E13364
+     C****                                                                E13364
+     C****                 END                             E*2            E13364
+     C****                                                                E13364
+     C****Read a record from the file until the end of the file or a      E13364
+     C****valid record is read.(Provided that @OKAH is not 'N')           E13364
+     C****       @OKAH     CABEQ'N'       #B9                             E13364
+     C****       *IN60     DOUEQ'1'                        B*2            E13364
+     C****       FHDLTF    OREQ *BLANKS                    X*2            E13364
+     C****                                                                E13364
+     C****                 READ FXDEALLL                 60**2            E13364
+     C****                                                                E13364
+     C****                 END                             E*2            E13364
+     C****                                                                E13364
+     C****                 END                             E1             E13364
+     C*
+     C           #B9       ENDSR                           **#B9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE:  #A  - Initial processing; Carried out only once,*
+     C*                     at the start of processing.               *
+     C*                                                               *
+     C*  FIELDS USED:         @OKAH  - Field holding 'OK for After-   *
+     C*                                Hours' parameter.              *
+     C*                                                               *
+     C*  CALLED BY :          MAIN PROGRAM                            *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C**  Parameter list for returning the 'OK for Afterhours' field.
+     C           *ENTRY    PLIST
+     C                     PARM           @OKAH   1
+     C*                                                                   DT0181
+     C** Define data area LDA to Program                                  DT0181
+     C*                                                                   DT0181
+     C           *NAMVAR   DEFN           LDA                             DT0181
+     C           *LOCK     IN   LDA                                       DT0181
+     C*
+     C**  Move program name into *LDA field.
+     C                     MOVEL'FX8040'  DBPGM
+     C                     OUT  LDA                                       DT0181
+     C*
+     C**  Set 'OK for AfterHours' indicator to 'Y'.
+     C                     MOVE 'Y'       @OKAH
+     C*
+     C**  Open the file FXDEALLL.
+     C*****                OPEN FXDEALLL                                  E14364
+     C                     OPEN FXICCDLL                                  E14364
+     C*
+     C           #A9       ENDSR                           **#A9**
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: #C     - Terminates program.                     *
+     C*                                                               *
+     C*  FIELDS USED:         @OKAH  - Field holding 'OK for After-   *
+     C*                                Hours' parameter.              *
+     C*                                                               *
+     C*  CALLED BY :          Main processing                         *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C**  Close file FXDEALLL.
+     C*****                CLOSEFXDEALLL                                  E14364
+     C                     CLOSEFXICCDLL                                  E14364
+     C*
+     C**  Set on *INLR.
+     C                     MOVE '1'       *INLR
+     C*
+     C           #C9       ENDSR                           **#C9**
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: INFSR  - Handle error on file handling.          *
+     C*                                                               *
+     C*  FIELDS USED:        @ERR2  - Field to prevent looping.       *
+     C*                                                               *
+     C*  CALLED BY :                                                  *
+     C*  CALLS     :                                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR
+     C*
+     C**  SET @ERR2 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS OCCUR.
+     C           @ERR2     IFNE 'Y'                        B1
+     C*
+     C                     MOVE 'Y'       @ERR2   1        *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C*
+     C**  Set 'OK for AfterHours' indicator to 'N'.
+     C                     MOVE 'N'       @OKAH            *1
+     C*
+     C**  SET UP FIELDS IN LOCAL DATA AREA.
+     C****                 MOVEL'FXDEALLL'DBFILE           *1             E14364
+     C           *LOCK     IN   LDA                                       DT0181
+     C                     MOVEL'FXICCDLL'DBFILE           *1             E14364
+     C                     MOVEL'FX8040'  DBPGM            *1
+     C                     MOVEL'992'     DBASE            *1
+     C                     OUT  LDA                                       DT0181
+     C                     DUMP                            *1
+     C*
+     C                     END                             E1
+     C*
+     C**  TERMINATE PROCESSING IMMEDIATELY.
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C           INFSR9    ENDSR                           **INFSR9**
+     C*                                                               *
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE: *PSSR - Error handling subroutine.               *
+     C*                                                               *
+     C*  FIELDS USED:        @ERR1  - Field to prevent looping.       *
+     C*                                                               *
+     C*  CALLED BY : This routine is called if there are any program  *
+     C*                      errors.                                  *
+     C*  CALLS :                                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C**  SET @ERR1 TO 'Y' TO PREVENT LOOPING IF FURTHER ERRORS OCCUR.
+     C           @ERR1     IFNE 'Y'                        B1
+     C*
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     MOVE '1'       *INU6            *1
+     C*
+     C**  SET UP FIELDS IN LOCAL DATA AREA.
+     C           *LOCK     IN   LDA                                       DT0181
+     C                     MOVEL'FX8040'  DBPGM            *1
+     C                     MOVEL'991'     DBASE            *1
+     C                     OUT  LDA                                       DT0181
+     C                     DUMP                            *1
+     C*
+     C**  Set 'OK for AfterHours' indicator to 'N'.
+     C                     MOVE 'N'       @OKAH            *1
+     C*
+     C                     END                             E1
+     C*
+     C**  TERMINATE PROCESSING IMMEDIATELY.
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C           #PSSR9    ENDSR                            ***PSSR9**
+     C*
+**   CPY@ - COPYRIGHT STATEMENT
+(c) Misys International Banking Systems Ltd. 2001

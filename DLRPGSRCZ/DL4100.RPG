@@ -1,0 +1,659 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL IRS Date/Cash Flow/Princ Chg Sched. Upd')     *
+/*OVRF*: OVRDBF FILE(DEALSX) TOFILE(DEALS) SHARE(*NO)               : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - DEALING MODULE                                       *
+     F*                                                               *
+     F*  DL4100 - DATE/CASH FLOW/PRINCIPAL CHANGE SCHEDULE UPDATES    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  Function:  This program is principally designed to update    *
+     F*  (COB)      the 'PROCESSED' indicators on the files DLDTSCPD, *
+     F*             DLCFSCPD, DLPCSCPD.  It also checks for missing   *
+     F*             deals ie where the deal has been made historic    *
+     F*             (by DL1070) or has been deleted and will drop     *
+     F*             all records on the above mentioned files against  *
+     F*             such deals.                                       *
+     F*                                                               *
+     F*             As a precaution, the 'NEXT' dates on deals are    *
+     F*             brought into line with the details on the three   *
+     F*             files.  DL0280 will update these dates anyway.    *
+     F*                                                               *
+     F*  Called By: DLC0606C      - Generate Accounting Entries       *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG7411            Date 01Jun05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CDL020             Date 03Feb04               *
+      *                 CDL019             Date 03Feb04               *
+      *                 CDL018             Date 03Feb04               *
+      *                 CDL017             Date 03Feb04               *
+      *                 CDL016             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222727             Date 05Nov03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CDL010             Date 02Aug02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR005             Date 21Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CPL002             Date 01MAR99               *
+     F*                 CIR001  *CREATE    DATE 13JUN95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG7411- CDL028 fields missing from DLGHISPD (Recompile)     *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
+      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+      *           (Recompile)                                         *
+      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+      *           (Recompile)                                         *
+      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+      *           (Recompile)                                         *
+      *  CDL016 - Automatic rollover of Fixed Term Loans/Deposits     *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CDL010 - Prevent last user that actioned the trade from      *
+      *           authorising it.Recompile due to changes in FXDEALPP.*
+      *           , MMDELDPP .                                        *
+      *  CDL008 - Continuous Linked Settlement (Recompiled)           *
+      *  CIR005 - FRA/IRS Business Day Conventions to DEALSDG         *
+      *           (recompile)                                         *
+     F*  CPL002 - Midas-Plato Interface                               *
+     F*           Do not delete records from schedule files if there  *
+     F*           is still a record on PF/DLGHISPD.                   *
+     F*  CIR001 - Interest Rate Calendars.                            *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F*DEALS**IP AE           K        DISK                               CPL002
+     F**********  DEALSDAF                          KIGNORE               CPL002
+     F**********  DEALSDBF                          KIGNORE               CPL002
+     F**********  DEALSDCF                          KIGNORE               CPL002
+     F**********  DEALSDDF                          KIGNORE               CPL002
+     F**********  DEALSDEF                          KIGNORE               CPL002
+     F**********  DEALSDFF                          KIGNORE               CPL002
+     FDEALSALLIP AE           K        DISK                               CPL002
+     F            DEALSDBF                          KIGNORE               CPL002
+     F            DEALSDCF                          KIGNORE               CPL002
+     F            DEALSDDF                          KIGNORE               CPL002
+     F            DEALSDEF                          KIGNORE               CPL002
+     F            MMDELDP0                          KIGNORE               CPL002
+     F            MMDENBP0                          KIGNORE               CPL002
+     F            MMDENSP0                          KIGNORE               CPL002
+     F            FXDEALP0                          KIGNORE               CPL002
+     F            DLCHISD0                          KIGNORE               CPL002
+     F            DLDHISD0                          KIGNORE               CPL002
+     F            DLEHISD0                          KIGNORE               CPL002
+     FDLDCPSL0US AE           K        DISK
+     FDEALSX  UF  E           K        DISK
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDBF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     F            DEALSDGF                          KRENAMEDEALSDGX
+     FDL4100AUO   E                    PRINTER                        UC
+     F/COPY WNCPYSRC,DL4100F001
+     F*
+      /TITLE FUNCTION OF INDICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N  C T I O N    O F    I N D I C A T O R S               *
+     F*                                                               *
+     F*  01         DEALSDG record                                    *
+     F*  02         DLDTSCPD record                                   *
+     F*  03         DLCFSCPD record                                   *
+     F*  04         DLPCSCPD record                                   *
+     F*  10         First cycle, if 0                                 *
+     F*  U7         Database Error                                    *
+     F*  U8         Database Error                                    *
+     F*  L1         Change of deal number                             *
+     F*  LR         Exit program                                      *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E    I N D E X                             *
+     F*                                                               *
+     F*  Main routine                                                 *
+     F*  #LUPD   -  Update deal                                       *
+     F*  #LSET   -  Reset variables                                   *
+     F*  #LINIT  -  Initialisation subroutine                         *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     E                    CPY@    1   1 80
+     E** Copyright Statement
+     E*
+     I/EJECT
+     IDEALSDGF    01
+     I                                              DLNO  L1M1
+     IDLGHISD0    01                                                      CPL002
+     I                                              DLNO  L1M1            CPL002
+     IDLDTSCD0    02
+     I                                              DLNO  L1M1
+     IDLCFSCD0    03
+     I                                              DLNO  L1M1
+     IDLPCSCD0    04
+     I                                              DLNO  L1M1
+     I*
+     ILDA       E DSLDA                         256
+     I**  Data structure for database error
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DS FOR BANK DETAILS
+     I*
+     ISDGELR    E DSSDGELRPD
+     I** External DS for GENERAL LEDGER details
+     I*
+     IDSFDY     E DSDSFDY
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**  Copyright statement.
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C** Define the LDA for error handling
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C** First cycle, determine event control date
+     C*
+     C           *IN10     IFEQ '0'
+     C                     EXSR #LINIT
+     C   U7                GOTO END
+     C                     END
+     C*
+     C** Process deal
+     C*
+     C           *IN01     IFEQ '1'
+     C   MR                SETON                     11
+     C                     GOTO END
+     C                     END
+     C*
+     C** If cash flow/date schedule/principal change records
+     C** are read, but no matching deal exists, then delete them
+     C*
+     C           *INMR     IFEQ '0'
+     C   02                DELETDLDTSCD0
+     C   03                DELETDLCFSCD0
+     C   04                DELETDLPCSCD0
+     C/COPY WNCPYSRC,DL4100C001
+     C                     GOTO END
+     C                     END
+     C*
+     C** If cash flow/date schedule/principal change records
+     C** are read, and a matching deal exists,
+     C/COPY WNCPYSRC,DL4100C007
+     C*
+     C** Determine if event has been processed today.
+     C** If processed (today or otherwise) then finish with it
+     C*
+     C           DTPR      IFNE 'Y'
+     C           PRDT      ANDLEEVCD
+     C                     MOVEL'Y'       DTPR
+     C   02                EXCPTDLDTU
+     C   03                EXCPTDLCFU
+     C   04                EXCPTDLPCU
+     C                     END
+     C           DTPR      IFEQ 'Y'
+     C                     GOTO END
+     C                     END
+     C*
+     C** Determine if event is still required
+     C** (keep all interest payment events if interest is up-front)
+     C*
+     C** For date schedule check our/their rate change & payment
+     C** frequencies.
+     C*
+     C           *IN02     IFEQ '1'
+     C*
+     C           OTIN      IFEQ 'U'
+     C           RCIP      ANDEQ'R'
+     C           UICFR     ANDNE'Z'
+     C*
+     C           OTIN      OREQ 'U'
+     C           RCIP      ANDEQ'P'
+     C           UIPFR     ANDNE'Z'
+     C           UINPM     ANDNE'D'
+     C           UINPM     ANDNE'Y'
+     C*
+     C           OTIN      OREQ 'T'
+     C           RCIP      ANDEQ'R'
+     C           TICFR     ANDNE'Z'
+     C*
+     C           OTIN      OREQ 'T'
+     C           RCIP      ANDEQ'P'
+     C           TIPFR     ANDNE'Z'
+     C           TINPM     ANDNE'D'
+     C           TINPM     ANDNE'Y'
+     C*
+     C                     DELETDLDTSCD0
+     C                     GOTO END
+     C                     END
+     C                     END
+     C*
+     C** For cash flow schedule check our/their payment frequencies
+     C*
+     C           *IN03     IFEQ '1'
+     C*
+     C           OTIN      IFEQ 'U'
+     C           UIPFR     ANDNE'C'
+     C           UIPFR     ANDNE*BLANK
+     C*
+     C           OTIN      OREQ 'T'
+     C           TIPFR     ANDNE'C'
+     C           TIPFR     ANDNE*BLANK
+     C*
+     C                     DELETDLCFSCD0
+     C                     GOTO END
+     C                     END
+     C                     END
+     C*
+     C** For principal change schedule check next principal change date
+     C*
+     C           *IN04     IFEQ '1'
+     C*
+     C           OTIN      IFEQ *BLANK
+     C           OTIN      OREQ 'U'
+     C*
+     C           UNPCD     IFEQ *ZERO
+     C                     DELETDLPCSCD0
+     C/COPY WNCPYSRC,DL4100C002
+     C                     GOTO END
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           TNPCD     IFEQ *ZERO
+     C                     DELETDLPCSCD0
+     C/COPY WNCPYSRC,DL4100C003
+     C                     GOTO END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C/COPY WNCPYSRC,DL4100C008
+     C*
+     C** Determine 'next processed date'
+     C*
+     C** For date schedule
+     C*
+     C           *IN02     IFEQ '1'
+     C** our rate
+     C           OTIN      IFEQ 'U'
+     C           RCIP      IFEQ 'R'
+     C           LDTUR     IFEQ *ZERO
+     C                     Z-ADDPRDT      LDTUR   50
+     C                     END
+     C                     ELSE
+     C** our pay
+     C           LDTUP     IFEQ *ZERO
+     C                     Z-ADDPRDT      LDTUP   50
+     C*
+     C** If our interest is up-front and the deal has passed value
+     C** date, flag the next payment date record as processed = yes
+     C** (lower case). This setting means that this next date cannot
+     C** changed as interest has been calculated to it.
+     C*
+     C           UINPM     IFEQ 'D'
+     C           UINPM     OREQ 'Y'
+     C           VDAT      IFLE EVCD
+     C                     MOVEL'y'       DTPR
+     C                     EXCPTDLDTU
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ELSE
+     C** their rate
+     C           RCIP      IFEQ 'R'
+     C           LDTTR     IFEQ *ZERO
+     C                     Z-ADDPRDT      LDTTR   50
+     C                     END
+     C                     ELSE
+     C** their pay
+     C           LDTTP     IFEQ *ZERO
+     C                     Z-ADDPRDT      LDTTP   50
+     C*
+     C** If their interest is up-front and the deal has passed value
+     C** date, flag the next payment date record as processed = yes
+     C** (lower case). This setting means that this next date cannot
+     C** changed as interest has been calculated to it.
+     C*
+     C           TINPM     IFEQ 'D'
+     C           TINPM     OREQ 'Y'
+     C           VDAT      IFLE EVCD
+     C                     MOVEL'y'       DTPR
+     C                     EXCPTDLDTU
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  For cash flow schedule
+     C*
+     C           *IN03     IFEQ '1'
+     C** our
+     C           OTIN      IFEQ 'U'
+     C           LCFU      IFEQ *ZERO
+     C                     Z-ADDPRDT      LCFU    50
+     C                     END
+     C                     ELSE
+     C** their
+     C           LCFT      IFEQ *ZERO
+     C                     Z-ADDPRDT      LCFT    50
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** For principal change schedule
+     C*
+     C           *IN04     IFEQ '1'
+     C*
+     C           OTIN      IFEQ *BLANK
+     C           OTIN      OREQ 'U'
+     C*
+     C           LPC       IFEQ *ZERO
+     C                     Z-ADDPRDT      LPC     50
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           LTPC      IFEQ *ZERO
+     C                     Z-ADDPRDT      LTPC    50
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           END       TAG
+     C*
+     C** On change of deal number, reset totals
+     C*
+     CL1 11                EXSR #LUPD
+     CL1                   EXSR #LSET
+     CL1                   SETOF                     11
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #LUPD  - Update deal.                                        *
+     C*                                                               *
+     C*  Called by  : MAIN   - Main Processing Routine                *
+     C*                                                               *
+     C*  Calls      : none.                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           #LUPD     BEGSR
+     C*
+     C** Access deal
+     C*
+     C           DEALSK    CHAINDEALSDGX             90
+     C*
+     C** Our next rate change date
+     C*
+     C           LDTUR     IFNE *ZERO
+     C                     Z-ADDLDTUR     UNICD
+     C                     END
+     C*
+     C** Our next payment date
+     C*
+     C           LDTUP     IFNE *ZERO
+     C                     Z-ADDLDTUP     UNIPD
+     C                     END
+     C           LCFU      IFNE *ZERO
+     C                     Z-ADDLCFU      UNIPD
+     C                     END
+     C*
+     C** Their next rate change date
+     C*
+     C           LDTTR     IFNE *ZERO
+     C                     Z-ADDLDTTR     TNICD
+     C                     END
+     C*
+     C** Their next payment date
+     C*
+     C           LDTTP     IFNE *ZERO
+     C                     Z-ADDLDTTP     TNIPD
+     C                     END
+     C           LCFT      IFNE *ZERO
+     C                     Z-ADDLCFT      TNIPD
+     C                     END
+     C*
+     C** Next principal change date
+     C*
+     C           LPC       IFNE *ZERO
+     C                     Z-ADDLPC       UNPCD
+     C                     END
+     C*
+     C           LTPC      IFNE *ZERO
+     C                     Z-ADDLTPC      TNPCD
+     C                     END
+     C*
+     C  N90                EXCPTDEALGU
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #LSET  - Reset variables.                                    *
+     C*                                                               *
+     C*  Called by  : MAIN   - Main Processing Routine                *
+     C*                                                               *
+     C*  Calls      : none.                                           *
+     C*                                                               *
+     C*****************************************************************
+     C           #LSET     BEGSR
+     C*
+     C                     Z-ADD*ZERO     LCFU
+     C                     Z-ADD*ZERO     LCFT
+     C                     Z-ADD*ZERO     LDTUR
+     C                     Z-ADD*ZERO     LDTUP
+     C                     Z-ADD*ZERO     LDTTR
+     C                     Z-ADD*ZERO     LDTTP
+     C                     Z-ADD*ZERO     LPC
+     C                     Z-ADD*ZERO     LTPC
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #LINIT - Initialisation subroutine.                          *
+     C*                                                               *
+     C*  Called by  : MAIN   - Main Processing Routine                *
+     C*                                                               *
+     C*  Calls      : AOBANKR0 - Access SDBANKPD file                 *
+     C*               AOGELRR0 - Access SDGE:RPD file                 *
+     C*                                                               *
+     C*****************************************************************
+     C           #LINIT    BEGSR
+     C*
+     C           DEALSK    KLIST
+     C                     KFLD           DLNO
+     C*
+     C                     MOVE '1'       *IN10
+     C*
+     C** Call access program for bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL4110'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Check system date format, DDMMYY or MMDDYY.
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+     C*
+     C** Obtain GENERAL LEDGER details via ACCESS PROGRAM
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL4110'  DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'SDGELRPD'DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Event control date (lesser of next working day-1 and accraul
+     C** date
+     C*
+     C           BJDNWD    SUB  1         EVCD    50
+     C           BKAPDT    IFLT EVCD
+     C                     Z-ADDBKAPDT    EVCD
+     C                     END
+     C/COPY WNCPYSRC,DL4100C004
+     C*
+     C           ENDIN     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  - Error control subroutine                            *
+     C*                                                               *
+     C*  Called by  : #LINIT - Initialisation subroutine.             *
+     C*                                                               *
+     C*  Calls      : #LAUDR - Output audit report.                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C** Check to see that *PSSR has not already been called.
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     EXSR #LAUDR
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here.
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #LAUDR - Output Audit report and End Program                 *
+     C*                                                               *
+     C*  Called by  : *PSSR                                           *
+     C*                                                               *
+     C*  Calls      : none.                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LAUDR    BEGSR
+     C*
+     C                     OPEN DL4100AU
+     C*
+     C** Output report header and database error details.
+     C*
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C*
+     C** End program and return.
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     O/EJECT
+     ODEALSDGXE                DEALGU
+     O                         UNICD
+     O                         UNIPD
+     O                         TNICD
+     O                         TNIPD
+     O                         UNPCD
+     O                         TNPCD
+     ODLDTSCD0E                DLDTU
+     O                         DTPR
+     ODLCFSCD0E                DLCFU
+     O                         DTPR
+     ODLPCSCD0E                DLPCU
+     O                         DTPR
+     O*
+**  CPY@
+(c) Finastra International Limited 2001

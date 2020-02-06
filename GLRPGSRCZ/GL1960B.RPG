@@ -1,0 +1,1153 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Calculate fees on portfolios')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1960B - Customer Service Fees -                            *
+      *            Generate Settlements from Fees Accruals where Fee  *
+      *            Type is PP.                                        *
+      *                                                               *
+      *  Function: This new COB program reads through the Performance *
+      *            Incentive Fees to be Calculated file and processes *
+      *            only records with switch "Information Recieved     *
+      *            from TOF" equal to 'Y'.  This program then         *
+      *            calculates the fees for each of these entries and  *
+      *            if the calculated fee amount is greater than zero  *
+      *            it writes a record to the Fees Outstanding         *
+      *            Settlement file.  The Customer Fee Charge file     *
+      *            is then updated to state that fee have been        *
+      *            generated.                                         *
+      *                                                               *
+      *  Called by: GLC1960 - Generate Settlements from Fee Accruals  *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 205120             Date 22Apr02               *
+      *                 CSD011  *CREATE    Date 04Mar02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  205120 - Take fields from the appropriate records of the     *
+      *           Perf. Incentive Fees to be calculated file as some  *
+      *           vary between the master and charge group records.   *
+      *  CSD011 - Performance Incentive Fees                          *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     FSDCFTPL0IF  E           K        DISK         KINFSR *PSSR
+      ** Fee Definition table
+      *
+     FSDRTCDL0IF  E           K        DISK         KINFSR *PSSR
+      ** Fee Rate Codes
+      *
+     FSDCGFRL1IF  E           K        DISK         KINFSR *PSSR
+      ** Fee Charge Groups/Fee Rates details
+      *
+     FGLIFTCL1UF  E           K        DISK         KINFSR *PSSR
+      ** Performance Incentive Fees to be Calculated
+     F            GLIFTCD0                          KRENAMEGLIFTCD1
+      *
+     FGLIFTCL0IF  E           K        DISK         KINFSR *PSSR
+      ** Performance Incentive Fees to be Calculated
+      *
+     FGLCHRGL0UF  E           K        DISK         KINFSR *PSSR
+      ** Customer Fees Charges
+      *
+     FGLOTSTPDO   E           K        DISK         KINFSR *PSSR
+      ** Customer Fees Outstanding Settlements
+      *
+     FGL1960BAO   E                    PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOLU
+      ** Fees Settlements Generation - Audit report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   80  - READ  GLIFTCL1  Incentive Fees to be Calculated File  *
+      *   81  - CHAIN GLCHRGL0  Customer Fee Charge File              *
+      *   82  - CHAIN SDCFTPL0  Fee Type File                         *
+      *   83  - CHAIN SDCFTPL0  Fee Type File                         *
+      *   84  - CHAIN SDCGFRL1  Fee Charge Groups/Fee Rates File      *
+      *   85  - CHAIN SDRTCDL0  Fee Rate Codes File                   *
+      *   86  - CHAIN GLIFTCL0  Incentive Fees to be Calculated File  *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Terminate Program                                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SREXES - Fee Charge calculated on excess                     *
+      *  SRTIER - Fee Charge is Tiered                                *
+      *  SRTHRE - Fee Charge is Threshold                             *
+      *  SRPORT - Fee Chage is on Portfolio Value                     *
+      *  SRWRIT - Write record to Fees Outstanding Settlement File    *
+      *  SRAUDT - Produce Audit Report                                *
+      *  RFCAU  - Register Audit file via RCF                         *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  ZTNLU1 - Retrieve next transaction number                    *
+      *  ZDATE1 - Convert date to Midas day number                    *
+      *  ZDATE2 - Convert midas day number to DDMMYY                  *
+      *  ZFREQB - ZS Calculate Next Calculation Date.                 *
+      *  ZACCH  - ZS Access holiday file for particular currency.     *
+      *  ZCHKH  - Check if Holiday for Currency/Location              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+      ** Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      ** Arrays used for fees calculation
+      *
+     E                    ZRA        14 15 2             Upper Limit
+     E                    ZRB        15 15 2             Upper Limit
+     E                    ZPC        15  9 7             Percentage Charge
+     E                    ZCG        15 15 2             Flat Charge
+      *
+     E/COPY ZSRSRC,ZFREQBZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+      *
+     I***CHSEAC*     DS                             18                                        CGL029
+     ICHSEAC      DS                             24                                           CGL029
+     I                                        1   3 CHSTBR
+     I                                        4   9 CHSCUS
+     I                                       10  12 CHSTCY
+     I**********                             13  160CHACCN                                    CGL029
+     I**********                             17  18 CHACSQ                                    CGL029
+     I                                       13  220CHACCN                                    CGL029
+     I                                       23  24 CHACSQ                                    CGL029
+      *
+     ISPOOLU      DS
+      ** GL1960BA Spool details
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      /EJECT
+      *
+     I/COPY ZSRSRC,ZTNLU1Z1
+      ** DNATN Data Area For ZTNLU1 Standard routine
+      *
+     I/COPY ZSRSRC,ZAOZ2
+     I/COPY ZSRSRC,ZHOLI
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External Data Structure for Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** External Data Structure for Customer Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short DS for access programs
+      *
+     IDSSDY     E DSDSSDY
+      ** Long DS for access programs
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+      *                    EXSR *INZSR
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      ** Audit Processing and Program Termination
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/SRPROC
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SREXES   - Calculate Fees on Excess                          *
+      *  SRPORT   - Calculate Fees on Portfolio Value                 *
+      *  SRWRIT   - Writes a record to the GLOTSTPD file              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+     C                     Z-ADD0         WWRCNT  50
+      *
+      ** Read the Performance Incentive Fees to be Calculated file and
+      *  processes only records with switch "Information Recieved
+      *  from TOF" equal to 'Y'.
+      *
+     C           *LOVAL    SETLLGLIFTCL1
+     C                     READ GLIFTCL1                 80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Access Customer Fee Charge File.
+      *
+     C           IFCHRE    CHAINGLCHRGL0             81
+      *
+     C           *IN81     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'GLCHRGPD'DBFILE
+     C                     MOVELIFCHRE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access Fee Type File, firstly with Fee Type and Charge Group
+      ***and*if*not*found*then*only*with*Fee*Type.******************      205120
+      *  and then access master record with blank Charge Group.           205120
+      *
+     C                     MOVE CHFTYP    KWFETP
+     C                     MOVE CHGROU    KWCHGR
+      *
+     C           KWFEE     CHAINSDCFTPL0             82
+      *
+      ** Get Excess/Portfolio and Waive Minimum from the Group Record.    205120
+     C                     MOVE F1EXPO    WWEXPO                          205120
+     C                     MOVE F1WAIV    WWWAIV                          205120
+     C********** *IN82     IFEQ *ON                                       205120
+      *
+     C                     MOVE CHFTYP    KWFETP
+     C                     MOVE *BLANKS   KWCHGR
+      *
+     C           KWFEE     CHAINSDCFTPL0             83
+      *
+      ** Get Processing Type and Charging Currency from Master Record.    205120
+     C                     MOVE F1PRTP    WWPRTP  2                       205120
+     C                     MOVE F1CCCY    WWCCCY  3                       205120
+     C           *IN82     IFEQ *ON                                       205120
+      ** Get Excess/Portfolio and Waive Minimum from the Master Record    205120
+      ** if no record previously found on the charge Group Record.        205120
+     C                     MOVE F1EXPO    WWEXPO  1                       205120
+     C                     MOVE F1WAIV    WWWAIV  1                       205120
+     C                     END                                            205120
+      *                                                                   205120
+      ** No Master or Group Records found on file.                        205120
+     C           *IN83     IFEQ *ON
+     C           *IN82     ANDEQ*ON                                       205120
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE
+     C                     MOVEL'SDCFTPPD'DBFILE    P
+     C                     MOVE CHFTYP    DBKEY     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C**********           ENDIF                                          205120
+      *
+      *
+      ** Access Fee Charge Groups/Fee Rates file to get Rate Code.
+      *
+     C                     MOVE CHFTYP    KWFETP
+     C                     MOVE CHGROU    KWCHGR
+      *
+     C           KWFEE     CHAINSDCGFRL1             84
+      *
+     C           *IN84     IFEQ *ON
+     C                     MOVE *BLANKS   KWCHGR
+      *
+     C           KWFEE     CHAINSDCGFRL1             84
+      *
+     C           *IN84     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE
+     C                     MOVEL'SDCGFRPD'DBFILE    P
+     C                     MOVELKWFETP    WWKEY1  4
+     C                     MOVE KWCHGR    WWKEY1
+     C                     MOVELWWKEY1    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *
+      ** Access Fee Rate Code File with Rate Code and Portfolio ccy.
+      *
+     C                     MOVE F4RTCD    KWRTCD           Rate Code
+     C                     MOVE IFPCCY    KWPCCY           Portfolio Ccy
+      *
+     C           KWRATE    CHAINSDRTCDL0             85
+     C           *IN85     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE
+     C                     MOVEL'SDRTCDPD'DBFILE
+     C                     MOVELKWRTCD    WWKEY2  5
+     C                     MOVE KWPCCY    WWKEY2
+     C                     MOVELWWKEY2    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *
+      ** Populate the Upper Limit, Percentage Charge, Flat Charge
+      *  array.
+      *
+     C                     MOVE F3RG01    ZRA,1
+     C                     MOVE F3RG02    ZRA,2
+     C                     MOVE F3RG03    ZRA,3
+     C                     MOVE F3RG04    ZRA,4
+     C                     MOVE F3RG05    ZRA,5
+     C                     MOVE F3RG06    ZRA,6
+     C                     MOVE F3RG07    ZRA,7
+     C                     MOVE F3RG08    ZRA,8
+     C                     MOVE F3RG09    ZRA,9
+     C                     MOVE F3RG10    ZRA,10
+     C                     MOVE F3RG11    ZRA,11
+     C                     MOVE F3RG12    ZRA,12
+     C                     MOVE F3RG13    ZRA,13
+     C                     MOVE F3RG14    ZRA,14
+     C                     MOVE F3PC01    ZPC,1
+     C                     MOVE F3PC02    ZPC,2
+     C                     MOVE F3PC03    ZPC,3
+     C                     MOVE F3PC04    ZPC,4
+     C                     MOVE F3PC05    ZPC,5
+     C                     MOVE F3PC06    ZPC,6
+     C                     MOVE F3PC07    ZPC,7
+     C                     MOVE F3PC08    ZPC,8
+     C                     MOVE F3PC09    ZPC,9
+     C                     MOVE F3PC10    ZPC,10
+     C                     MOVE F3PC11    ZPC,11
+     C                     MOVE F3PC12    ZPC,12
+     C                     MOVE F3PC13    ZPC,13
+     C                     MOVE F3PC14    ZPC,14
+     C                     MOVE F3PC15    ZPC,15
+     C                     MOVE F3FL01    ZCG,1
+     C                     MOVE F3FL02    ZCG,2
+     C                     MOVE F3FL03    ZCG,3
+     C                     MOVE F3FL04    ZCG,4
+     C                     MOVE F3FL05    ZCG,5
+     C                     MOVE F3FL06    ZCG,6
+     C                     MOVE F3FL07    ZCG,7
+     C                     MOVE F3FL08    ZCG,8
+     C                     MOVE F3FL09    ZCG,9
+     C                     MOVE F3FL10    ZCG,10
+     C                     MOVE F3FL11    ZCG,11
+     C                     MOVE F3FL12    ZCG,12
+     C                     MOVE F3FL13    ZCG,13
+     C                     MOVE F3FL14    ZCG,14
+     C                     MOVE F3FL15    ZCG,15
+      *
+      ** Work out, if Percentage or Flat Charges.
+      *
+     C                     XFOOTZPC       WWPC   117       Sum of % Charge
+     C                     XFOOTZCG       WWFL   150       Sum of Flat Chg
+     C                     SELEC
+     C           WWPC      WHGT *ZERO
+     C                     MOVE 'P'       WWTCHG  1        Type of Charge
+     C           WWFL      WHGT *ZERO
+     C                     MOVE 'F'       WWTCHG
+     C                     ENDSL
+      *
+      ** Reset the working fields used to calculate the Fee Amount
+      *
+     C                     Z-ADD*ZEROS    FEEAMT 205       Calculate Fee
+     C                     Z-ADD*ZEROS    WWCHGA 205       Calc Charge
+     C                     Z-ADD*ZEROS    ZCGRT  117       % Charge Rate
+     C                     Z-ADD*ZEROS    ZUPLR  152       Upper Limit Rat
+     C                     Z-ADD*ZEROS    ZNUPLR 152       New U Limit Rat
+     C                     Z-ADD*ZEROS    ZOUPLR 152       Old U Limit Rat
+      *
+     C                     Z-ADD*ZEROS    ZZ      20       Array Index
+     C                     MOVEAZRA       ZRB
+     C                     Z-ADD*HIVAL    ZRB,15
+     C                     MOVE *BLANKS   ZFLAG   1
+      *
+     C                     Z-ADD*ZEROS    WWEXC  186       Excess
+      *
+     C                     Z-ADD*ZEROS    WWA    186
+     C                     Z-ADD*ZEROS    WWB    206
+     C                     Z-ADD*ZEROS    WWC    206
+      *
+      ** If Fee is on Excess.
+      *
+     C********** F1EXPO    IFEQ 'E'                                       205120
+     C           WWEXPO    IFEQ 'E'                                       205120
+     C                     EXSR SREXES
+     C                     ENDIF
+      *
+      ** If Fee is on Portfolio Value.
+      *
+     C********** F1EXPO    IFEQ 'P'                                       205120
+     C           WWEXPO    IFEQ 'P'                                       205120
+     C                     EXSR SRPORT
+     C                     ENDIF
+      *
+      ** If Fee Amount calculated is greater than the Maximum Fee
+      *  Amount then the Fee Amount should be the maximum.
+      *
+     C                     MOVE F3MAXA    WWMAXA 152
+     C                     MOVE F3MINA    WWMINA 152
+      *
+     C           FEEAMT    IFGT WWMAXA
+     C                     Z-ADDWWMAXA    FEEAMT
+     C                     ENDIF
+      *
+      ** If Fee Amount calculated is less than the Minimum Fee Amount
+      *  then the fee amount should be minimum if Waive Minimum is 'N'
+      *  otherwise Fee Amount should be 0.
+      *
+     C           FEEAMT    IFLT WWMINA
+      *
+     C********** F1WAIV    IFEQ 'Y'                                       205120
+     C           WWWAIV    IFEQ 'Y'                                       205120
+     C                     Z-ADD0         FEEAMT
+     C                     ELSE
+     C                     Z-ADDWWMINA    FEEAMT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           FEEAMT    IFNE *ZEROS
+      *
+      ** If the Fee Amount is greater than zero write a record to
+      *  the Fees Outstanding Settlement file (GLOTSTPD).
+      *
+     C                     EXSR SRWRIT
+      *
+      *
+      ** Update Customer Fee Charge File.
+      *
+      ** Change the Status to 'G' to state that fees have been Generated.
+      *
+     C                     MOVE 'G'       CHSTAT
+      *
+      ** Update the Fee/Start/Last Settlement date with the Next
+      *  Calculation date.
+      *
+     C                     Z-ADDCHNCDA    CHSLSD
+     C                     ADD  1         WWRCNT
+      *
+     C                     ENDIF
+      *
+      ** Calculate the Next Calculation Date.
+      *
+     C                     MOVE CHCFRE    ZFREQ
+     C                     Z-ADDCHCDMO    ZMDAY
+     C                     Z-ADDCHNCDA    ZDAYNO
+     C                     MOVE CHCCY     ZCCY
+     C                     MOVE *BLANKS   ZLOC
+     C                     EXSR ZFREQB
+     C                     Z-ADDZDAYNO    CHNCDA
+      *
+     C                     UPDATGLCHRGD0
+      *
+      *
+      ** Delete the record from Fees to be calculated file (GLIFTCPD).
+      *
+     C                     MOVE IFCNUM    KCUST
+     C                     MOVE IFPTFR    KPTFR
+     C           KFCAL     CHAINGLIFTCL0             86
+     C                     DELETGLIFTCD1
+      *
+     C                     READ GLIFTCL1                 80
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SREXES
+      *****************************************************************
+      *                                                               *
+      *  SREXES - Subroutine to calculate Fees excess.                *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  SRTIER - Calculates Fees on Excess using Tiered method.      *
+      *  SRTHRE - Calculates Fees on Excess using Threshold method.   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREXES    BEGSR
+      *
+      ** Charge Method can be Tiered or Threshold.
+      *
+     C           F3CHMT    IFEQ 'N'
+     C                     EXSR SRTIER
+     C                     ELSE
+     C                     EXSR SRTHRE
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTIER
+      *****************************************************************
+      *                                                               *
+      *  SRTIER - Subroutine to calculate Fees on Excess using        *
+      *           TIERED method.                                      *
+      *                                                               *
+      *  Called By: SREXES Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTIER    BEGSR
+      *
+      ** Calculate the Excess performance of the Portfolio from the
+      *  Benchmark to which it is referenced.
+      *
+      ** Excess = Portfolio Performance - Benchmark Performance.
+      *
+     C           IFPERF    SUB  IFBENC    WWEXC
+      *
+     C           WWEXC     IFGT *ZEROS
+      *
+      *
+      ** ------------------------------------------------------ **
+      ** Percentage Charge.                                     **
+      ** ------------------------------------------------------ **
+      *
+     C           WWTCHG    IFEQ 'P'
+      *
+     C           ZFLAG     DOUEQ'Y'
+      *
+     C                     ADD  1         ZZ
+      *
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Calculate fee for each range and add it in fee amount
+      *  until the Percentage Charge is zero or the upper limit of the
+      *  excess is reached.
+      *
+     C           ZPC,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ELSE
+      *
+     C           WWEXC     IFLE ZRB,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+     C                     Z-ADDZRB,ZZ    ZNUPLR
+     C                     Z-ADDZPC,ZZ    ZCGRT
+      *
+     C           ZNUPLR    SUB  ZOUPLR    ZUPLR            Upper Limit Rat
+      *
+     C           IFPVAL    DIV  100       WWA
+     C           WWA       MULT ZUPLR     WWB
+      *
+      ** Calculate Fee for the tier.
+      *
+     C           WWB       DIV  100       WWC
+     C           WWC       MULT ZCGRT     WWCHGA
+      *
+     C                     ADD  WWCHGA    FEEAMT
+      *
+     C                     Z-ADDZNUPLR    ZOUPLR
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      *
+      ** --------------------------------------------- **
+      ** Flat Rate Charge                              **
+      ** --------------------------------------------- **
+      *
+     C           WWTCHG    IFEQ 'F'
+      *
+     C           ZFLAG     DOUEQ'Y'
+      *
+     C                     ADD  1         ZZ
+      *
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Sum up the Flat Charge amount from each level and add it to
+      *  the the Fee amount.
+      *
+     C           ZCG,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ELSE
+      *
+     C           ZRB,ZZ    IFLT WWEXC
+     C                     ADD  ZCG,ZZ    WWCHGA
+     C                     ELSE
+     C                     ADD  ZCG,ZZ    WWCHGA
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ADD  WWCHGA    FEEAMT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTHRE
+      *****************************************************************
+      *                                                               *
+      *  SRTHRE - Subroutine to calculate Fees on Excess using        *
+      *           THRESHOLD method                                    *
+      *                                                               *
+      *  Called By: SREXES Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTHRE    BEGSR
+      *
+      ** Calculate the Excess performance of the Portfolio from the
+      *  Benchmark to which it is referenced.
+      *
+      ** Excess = Portfolio Performance - Benchmark Performance.
+      *
+     C           IFPERF    SUB  IFBENC    WWEXC
+      *
+     C           WWEXC     IFGT *ZEROS
+      *
+      ** ------------------------------------------------------ **
+      ** Percentage Charge.                                     **
+      ** ------------------------------------------------------ **
+      *
+     C           WWTCHG    IFEQ 'P'
+      *
+     C           ZFLAG     DOUEQ'Y'
+      *
+     C                     ADD  1         ZZ
+      *
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Check if Percentage Charge rate is equal to zero.
+      *
+     C           ZPC,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Scanning Excess value is less or Equal the range Upper
+      *  Limit.
+      *
+     C           ZRB,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ELSE
+     C           WWEXC     IFLE ZRB,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Take Percentage Charge Rate.
+      *
+     C                     Z-ADDZPC,ZZ    ZCGRT
+      *
+      ** Calculate the Excess Portfolio value.
+      *
+     C           IFPVAL    DIV  100       WWA
+     C           WWA       MULT WWEXC     WWB
+      *
+      ** Calculate the Charge on the Excess.
+      *
+     C           WWB       DIV  100       WWC
+     C           WWC       MULT ZCGRT     WWCHGA
+      *
+      ** Calculate the Fee Amount.
+      *
+     C                     ADD  WWCHGA    FEEAMT
+      *
+     C                     ENDIF
+      *
+      ** --------------------------------------------- **
+      ** Flat Rate Charge                              **
+      ** --------------------------------------------- **
+      *
+     C           WWTCHG    IFEQ 'F'
+      *
+     C           ZFLAG     DOUEQ'Y'
+      *
+     C                     ADD  1         ZZ
+      *
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Upper Limit range is zero
+      *
+     C           ZRB,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Scanning to locate the range of the Upper Limit.
+      *
+     C           WWEXC     IFLE ZRB,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Take Flat Charge amount.
+      *
+     C                     Z-ADDZCG,ZZ    WWCHGA
+      *
+     C                     ADD  WWCHGA    FEEAMT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRPORT
+      *****************************************************************
+      *                                                               *
+      *  SRPORT - Subroutine to calculate Fee amount on Portfolio o   *
+      *           value.                                              *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPORT    BEGSR
+      *
+      ** If fee is to be calculated on Portfolio Value the charge
+      *  method must be threshold.
+      *
+     C           F3CHMT    IFEQ 'Y'                        Threshold
+      *
+      ** ------------------------------------------------------ **
+      ** Percentage Charge.                                     **
+      ** ------------------------------------------------------ **
+      *
+     C           WWTCHG    IFEQ 'P'
+      *
+     C           ZFLAG     DOUEQ'Y'
+      *
+     C                     ADD  1         ZZ
+      *
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Scanning Porfolio Amount is less or Equal the range Upper
+      *  Limit.
+     C           IFPVAL    IFLE ZRB,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Range upper limit is zero.
+      *
+     C           ZRB,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Take Percentage Charge Rate.
+      *
+     C                     Z-ADDZPC,ZZ    ZCGRT
+      *
+      ** Calculate Fee Amount on the Portfolio value using the
+      *  Percentage Charge Rate.
+      *
+     C           IFPVAL    DIV  100       WWA
+     C           WWA       MULT ZCGRT     WWCHGA           Charge Amount
+      *
+     C                     ADD  WWCHGA    FEEAMT
+      *
+     C                     ENDIF
+      *
+      *
+      ** --------------------------------------------- **
+      ** Flat Rate Charge                              **
+      ** --------------------------------------------- **
+      *
+     C           WWTCHG    IFEQ 'F'
+      *
+     C           ZFLAG     DOUEQ'Y'
+      *
+     C                     ADD  1         ZZ
+      *
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Scanning Porfolio Amount is less or Equal the range Upper
+      *  Limit.
+      *
+     C           IFPVAL    IFLE ZRB,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Range upper limit is zero
+      *
+     C           ZRB,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Take Flat Charge amount.
+      *
+     C                     Z-ADDZCG,ZZ    WWCHGA
+      *
+     C                     ADD  WWCHGA    FEEAMT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRWRIT
+      *****************************************************************
+      *                                                               *
+      *  SRWRIT - SR to write record on Fees Outstanding Settlement   *
+      *           file.                                               *
+      *                                                               *
+      *  Called By: SRPROC Subroutine                                 *
+      *                                                               *
+      *  Calls:                                                       *
+      *  ZTNLU1 - Retrieve transaction number                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRWRIT    BEGSR
+      *
+      ** Reset all the character fields.
+      *
+     C                     MOVE *BLANKS   F7TNLU
+     C                     MOVE *BLANKS   F7BRCA
+     C                     MOVE *BLANKS   F7CNUM
+     C                     MOVE *BLANKS   F7PTFR
+     C                     MOVE *BLANKS   F7FETP
+     C                     MOVE *BLANKS   F7CHGR
+     C                     MOVE *BLANKS   F7PRTP
+     C                     MOVE *BLANKS   F7ACCY
+     C                     MOVE *BLANKS   F7PFTC
+     C                     MOVE *BLANKS   F7STCY
+     C                     MOVE *BLANKS   F7OTSG
+     C                     MOVE *BLANKS   F7STBR
+     C                     MOVE *BLANKS   F7SCUS
+     C                     MOVE *BLANKS   F7ACSQ
+     C                     MOVE *BLANKS   F7AUID
+     C                     MOVE *BLANKS   F7REFE
+      *
+      ** Retrieve transaction number
+      *
+     C                     EXSR ZTNLU1
+      *
+      ** Set up fields.
+     C                     MOVE 'D'       F7RECI
+     C                     Z-ADDBJRDNB    F7LCD            Last Change Dat
+     C                     TIME           F7LCTM           Last Chg Time
+     C                     MOVE 'I'       F7CHTP           Last Chg Type
+     C                     MOVELNATN      F7TNLU           Trn No-Last Upd
+     C                     MOVELCHBRCA    F7BRCA           Branch Code
+     C                     MOVELIFCNUM    F7CNUM           Customer No
+     C                     MOVELIFPTFR    F7PTFR           Portfolio Ref
+     C                     MOVELCHFTYP    F7FETP           Fee Type
+     C                     MOVELCHGROU    F7CHGR           Charge group
+     C**********           MOVELF1PRTP    F7PRTP           Fee Proces Type205120
+     C                     MOVELWWPRTP    F7PRTP           Fee Proces Type205120
+     C**********           MOVELF1CCCY    F7ACCY           Accruals Ccy   205120
+     C                     MOVELWWCCCY    F7ACCY           Accruals Ccy   205120
+     C                     Z-ADDFEEAMT    F7ACDT    H      Accrued to date
+     C                     Z-ADD*ZEROS    F7MACP           Manual Accruals
+     C                     Z-ADDF3CALC    F7CALC           Calc Basis
+     C                     MOVELCHPFTC    F7PFTC           Profit Centre
+     C                     MOVELCHSTCY    F7STCY           Settlement Ccy
+     C                     Z-ADDCHACCN    F7ACCN           Settlement Accn
+     C                     Z-ADD*ZEROS    F7OTAJ           Outstanding Adj
+     C                     MOVE *BLANKS   F7OTSG           Outstng Adj Sgn
+     C                     MOVELCHSTBR    F7STBR           Settlement Bran
+     C                     MOVELCHSCUS    F7SCUS           Settlement Cust
+     C                     MOVELCHACSQ    F7ACSQ           Sett Acc Sequen
+     C                     Z-ADDBJRDNB    F7STVD           Sett Value Date
+     C                     MOVE CHAPOS    F7AUID           Authorise Indic
+     C                     Z-ADDIFPCDA    F7FRPE           Fees Period Str
+     C                     Z-ADDIFTCDA    F7TOPE           Fees Period End
+     C                     MOVELCHREFE    F7REFE           Charge Referenc
+      *
+     C                     WRITEGLOTSTD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRAUDT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Print Audit report GL1960BA
+      *
+     C           WWRCNT    IFGT 0
+     C                     Z-ADDWWRCNT    RCOUNT
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+     C                     ELSE
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+      ** End Program and Return.
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   PSEQ    5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WWRUN     IFEQ *BLANK
+     C                     DUMP
+     C                     MOVE 'Y'       WWRUN   1
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *  AOBANKR0  - Access Program for Bank Details                  *
+      *  RCFAU     - Routine to register AU file file via RCF.        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBFILE
+     C                     MOVEL*BLANK    DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'GL1960B' DBPGM
+     C                     OUT  LDA
+      *
+      ** Reset WWERR field
+      *
+     C                     Z-ADD0         WWERR   30
+      *
+      ** RCF processing for Audit file.
+      *
+     C                     EXSR RCFAU
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      ** Keys definition
+      *
+     C           KWFEE     KLIST
+     C                     KFLD           KWFETP  2
+     C                     KFLD           KWCHGR  2
+      *
+      *
+     C           KWRATE    KLIST
+     C                     KFLD           KWRTCD  2
+     C                     KFLD           KWPCCY  3
+      *
+     C           KFCAL     KLIST
+     C                     KFLD           KCUST   6
+     C                     KFLD           KPTFR   4
+      *
+     C           KPORT     KLIST
+     C                     KFLD           KCNUM   60
+     C                     KFLD           KPTFR   4
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZFREQBZ2
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZCHKH
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2002
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

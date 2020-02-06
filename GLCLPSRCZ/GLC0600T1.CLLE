@@ -1,0 +1,277 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Account Posting - Start Task Split')         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC0600T1 - Midas GL Account Posting - Start Task Split     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD038510           Date 20Jun16              */
+/*                      MD031057           Date 24Feb15              */
+/*                      CGL049             Date 17Feb15              */
+/*                      AR1097467B         Date 18Apr13              */
+/*                      CGL120   *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD038510 -  Statement for system generatd accounts not      */
+/*                   produced. Rewrite processing of STMTAH.         */
+/*       MD031057 - REC002008 00001 failed due to FOOB               */
+/*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
+/*       AR1097467B - Expected 15% COB run optimization not met      */
+/*       CGL120 - GL COB Components Task Split                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&POSTNUM &CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLC0600   ')
+             DCL        VAR(&DRIVER) TYPE(*CHAR) LEN(10) +
+                          VALUE(GLACPOPD)
+             DCL        VAR(&INDEXFL) TYPE(*CHAR) LEN(10) +
+                          VALUE(GLACPIPD)
+             DCL        VAR(&NAME1) TYPE(*CHAR) LEN(5) VALUE('GLACP')
+             DCL        VAR(&RCVDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('GLACPSERVE')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NAME2_C) TYPE(*CHAR) LEN(5) VALUE('00001')
+             DCL        VAR(&NAME2_N) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&LOOP) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&CURRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&POSTNUM) TYPE(*CHAR) LEN(1)
+             DCLF       FILE(CBCMPNLC)
+ 
+/* Variables for the Subroutine */
+ 
+             DCL        VAR(&ACCR) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
+                          VALUE('*VERIFY')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CRE023) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&POSTNO) TYPE(*DEC) LEN(1)
+             DCL        VAR(&BGNXST) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&BGNYST) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ERROR) TYPE(*INT) LEN(4) VALUE(0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ. */
+ 
+             SNDPGMMSG  MSG('GLC0600T1 - Midas GL Account Posting +
+                          - Start Task Split') TOMSGQ(MRUNQ)
+ 
+             IF         COND(&POSTNUM = '3') THEN(DO)
+             RTVMBRD    FILE(GEXBPD) NBRCURRCD(&CURRCD)
+             IF         COND(&CURRCD = 0) THEN(GOTO END)
+             ENDDO
+ 
+/* Determine full DTAQLIB library name. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(&DTAQLIB) VALUE(&SYSID *CAT 'DPLIB')
+ 
+/* Clear index file. */
+ 
+             CLRPFM     FILE(&INDEXFL)
+ 
+/* Remove all members from driving file. */
+ 
+             RMVM       FILE(&DRIVER) MBR(*ALL)
+             MONMSG     MSGID(CPF7301 CPF7303)
+ 
+/* Clear main data queue. */
+ 
+             CALL       PGM(QCLRDTAQ) PARM(&RCVDTAQ  '*LIBL')
+ 
+/* Retrieve number of sub-tasks. */
+ 
+ CHAIN:
+             RCVF       RCDFMT(@CMPNLC)
+             CHGVAR     VAR(&NAME2_N) VALUE(&DHCSEQ)
+             IF         COND((&DHCOTT *NE &CNAME) *OR (&NAME2_N *NE +
+                          &CSEQ)) THEN(DO)
+                GOTO       CMDLBL(CHAIN)
+             ENDDO
+ 
+/* Add all members and create data queues. */
+ 
+             CHGVAR     VAR(&NAME2_C) VALUE(&DHCSEQ)
+ LOOP:
+             IF         COND(&LOOP *GT &DHTSNO) THEN(DO)
+                GOTO       CMDLBL(START)
+             ENDDO
+ 
+             CHGVAR     VAR(&MEMBER) VALUE(&NAME1 *CAT &NAME2_C)
+             ADDPFM     FILE(&DRIVER) MBR(&MEMBER)
+ 
+/* Create data queue if it doesn't already exist and set authorities. */
+ 
+             CHKOBJ     OBJ(&DTAQLIB/&MEMBER) OBJTYPE(*DTAQ)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CRTDTAQ    DTAQ(&DTAQLIB/&MEMBER) MAXLEN(50)
+             ENDDO
+             CALL       PGM(QCLRDTAQ) PARM(&MEMBER &DTAQLIB)
+ 
+             IF         COND(&LOOP *EQ 1) THEN(DO)
+                   CHGVAR     VAR(&NAME2_N) VALUE(01000)
+                   CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N * &CSEQ)
+             ENDDO
+ 
+             CHGVAR     VAR(&LOOP) VALUE(&LOOP + 1)
+             CHGVAR     VAR(&NAME2_N) VALUE(&NAME2_N + 1)
+             CHGVAR     VAR(&NAME2_C) VALUE(&NAME2_N)
+             GOTO       CMDLBL(LOOP)
+ 
+ START:
+ 
+             CHGVAR     VAR(&POSTNO) VALUE(&POSTNUM)
+/*           IF         COND(&POSTNO *GE 1 *AND &POSTNO *LE 5) THEN(DO)    */ /* CGL049 */
+             IF         COND(&POSTNO *GE 1 *AND &POSTNO *LE 6) THEN(DO) /* +
+                          CGL049 */
+             CALLSUBR   SUBR(SRCLR) RTNVAL(&ERROR)
+             IF         COND(&ERROR *EQ 1) THEN(GOTO ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program GLC0600T1 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+ 
+/*********************************************************************/
+/*                                                                   */
+/* Subroutine to Clear files                                         */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRCLR)
+ 
+             IF         COND(&POSTNO = 1 *OR &POSTNO = 5) THEN(DO)
+ 
+             CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &DSFDY)
+             CHGVAR     VAR(&BGNXST) VALUE(%SST(&DSFDY 97 1))
+             CHGVAR     VAR(&BGNYST) VALUE(%SST(&DSFDY 98 1))
+ 
+/** Check if Retail is ON or Interest on Accounts is ON */
+ 
+             IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ +
+                          'Y')) THEN(DO)
+ 
+                RTVDTAARA  DTAARA(CBSTAT (46 5)) RTNVAR(&ACCR)
+ 
+                IF         COND(&POSTNO = 1 *AND &ACCR = 'THREE') +
+                             THEN(DO)
+ 
+                      CLRPFM     FILE(CLEAR2HH)
+                      CLRPFM     FILE(CLEAR2PD)
+                      CLRPFM     FILE(CLEAR2ZZ)
+                      OVRDBF     FILE(CLEARHH) TOFILE(CLEAR2HH)
+                      OVRDBF     FILE(CLEARZZ) TOFILE(CLEAR2ZZ)
+                ENDDO
+                ELSE CMD(DO)
+ 
+                      CLRPFM     FILE(CLEAROHH)
+                      CLRPFM     FILE(CLEAROPD)
+                      CLRPFM     FILE(CLEAROZZ)
+                      OVRDBF     FILE(CLEARHH) TOFILE(CLEAROHH)
+                      OVRDBF     FILE(CLEARZZ) TOFILE(CLEAROZZ)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&POSTNO = 1) THEN(DO)
+ 
+/* Clear main output files */
+ 
+/********** CLRPFM     FILE(STMTHH)                                */                 /*AR1097467B*/
+/********** CLRPFM     FILE(STMTAH)                                */                 /*AR1097467B*/
+/********** CLRPFM     FILE(STMTZX)                                */                 /*AR1097467B*/
+            CLRPFM     FILE(SYSOPHH)
+            CLRPFM     FILE(SYSOPAJ)
+            CLRPFM     FILE(SYSOPZX)
+            CLRPFM     FILE(GLSTMTZX)                                                   /*MD038510*/
+ 
+/* If 2 O'clock Flag SAR switch is ON, */
+/* clear RE Outward Clearing File */
+ 
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CRE023')
+             CHGVAR     VAR(&CRE023) VALUE('N')
+             CALL PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
+             IF COND(&RTCD *EQ '       ') THEN(DO)
+                CLRPFM     FILE(REOUTLPA)
+                CLRPFM     FILE(REOUTLPD)
+                CLRPFM     FILE(REOUTLPT)
+                CHGVAR     VAR(&CRE023) VALUE('Y')
+             ENDDO
+             IF COND(&RTCD *NE '       ' *AND &RTCD *NE '*NRF   ') THEN(DO)
+                SNDPGMMSG MSG('AOSARDR0 - Program error') TOMSGQ(MOPERQ)
+                MONMSG MSGID(CPF0000 MCH0000)
+                CHGVAR     VAR(&ERROR) VALUE(1)
+             ENDDO
+ 
+             IF COND(&ERROR = 0) THEN(DO)
+ 
+/* Set Job Switch for U1 STMTZ processing */
+ 
+             CHGJOB     SWS('10000000')
+ 
+/* Create Header and Trailer for SYSOPHH, SYSOPZZ */
+ 
+             CALL       PGM(GL06001)
+ 
+/* Create Header and Trailer for STMTHHH, STMTHZZ */
+ 
+             CALL       PGM(GL06002)
+ 
+             ENDDO
+             ENDDO
+ 
+             IF COND(&ERROR = 0) THEN(DO)
+ 
+/* Create Header and Trailer for CLEAR** files */
+ 
+             CALL       PGM(GL06003)
+ 
+             ENDDO
+             ENDDO
+ 
+             IF COND(&ERROR = 0) THEN(DO)
+             CLRPFM     FILE(ACORDAA)
+             CLRPFM     FILE(ACORDAB)
+             CLRPFM     FILE(ACORDAC)
+ 
+/* Create Header and Trailer for ACCORAA, ACORDAC */
+ 
+             CALL       PGM(GL06004)
+ 
+             ENDDO
+                                                                                      /*AR1097467B*/
+/* Create Header and Trailer for REOUTLPA and REOUTLPT */                             /*AR1097467B*/
+                                                                                      /*AR1097467B*/
+            IF         COND(&CRE023 *EQ 'Y') THEN(DO)                                 /*AR1097467B*/
+               CHGJOB     SWS(XXX1XXXX)                                                 /*MD031057*/
+            CALL       PGM(GL06006)                                                   /*AR1097467B*/
+            ENDDO                                                                     /*AR1097467B*/
+ 
+             ENDSUBR
+ 
+ END:
+             ENDPGM

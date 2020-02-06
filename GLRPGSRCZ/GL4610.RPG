@@ -1,0 +1,2501 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Code Balance Enquiry')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas STANDING DATA
+     F*                                                               *
+     F*  GL4610 - ACCOUNT CODE BALANCE ENQUIRY                        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 247377             Date 30Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Last Amend No. 244554             Date 19Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11679           Date 05Jul06               *
+      *                 CRE024             Date 07Oct05               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG11262           Date 27Apr06               *
+      *                 BUG1855            Date 22Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 186385             Date 20Apr01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                 CTI002             Date 23Sep98               *
+     F*                 118272             DATE 21MAY97               *
+     F*                 071787             DATE 11OCT94               *
+     F*                 060063             DATE 04FEB94               *
+     F*                 063744             DATE 04FEB94               *
+     F*                 049735             DATE 20JAN93               *
+     F*                 048915             DATE 19JAN93               *
+     F*                 048565             DATE 07JAN93               *
+     F*                 046901             DATE 12NOV92               *
+     F*                 S01399             DATE 19OCT92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  247377 - Alpha characters are being accepted in account code.*
+      *           Enhanced coding done by CGL029 to ensure there is   *
+      *           correct account code validation.                    *
+      *  244554 - Replace the chain to TABLETR with a call to module  *
+      *           AOBRCHR1 instead for validation of branch codes, as *
+      *           it is no longer clear whether TABLETR is still cor- *
+      *           rectly maintained in Midas+.  See BUG6688 details.  *
+      *         - partially applied as rest of coding already catered *
+      *           for by CSD027                                       *
+      *  BUG11679 - Additional Conversion of Customer Number to Alpha *
+      *  CRE024 - Country Level Switchable Feature :                  *
+      *           Security Features for Restricted Accounts.          *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG11262 - No previous or back button from account code      *
+      *             balance enquiry; Webfacing. (Recompile)           *
+      *  BUG1855 - Webfacing Changes                                  *
+      *  186385 - The records were not displayed when the first 9     *
+      *           combinations of Account code, currency and branch   *
+      *           code are non-existing combination to prevent the    *
+      *           line counter from exceeding the limit.              *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  118272 - Some non-numeric Account Codes do not show as error.*
+     F*  071787 - PROGRAM HANGS WHEN NO CURRENCY ENTERED AND ACCOUNT  *
+     F*           CODE HAS NO ACCOUNTS ASSOCIATED WITH IT             *
+     F*  060063 - Start date can be the sdame as End date.            *
+     F*         - To increase ccy array to 99.                        *
+     F*  063744 - Prevent looping if no postings for account code.    *
+     F*  049735 - Correct the selection of A/C, Branch & Currency.    *
+     F*           If no selection made ensure it Highlights and       *
+     F*           leaves the '?' in the field                         *
+     F*  048915 - Prevent looping if Account Code File doesn't have   *
+     F*           selected account on it and currency field left blank*
+     F*           - Also correct two Message References               *
+     F*  048565 - No help for account codes balances enquiry.         *
+     F*           Recompiled over changed display file.               *
+     F*  046901 - Decimal point mislocated on Closing Balance Equiv.  *
+     F*           and Total for Acount Code Equiv. - Read file        *
+     F*           TABTB11  before executing #ABASE.                   *
+     F*  S01399 - ACCOUNT CODES BALANCES ENQUIRY ENHANCEMENT          *
+     F*           (SAR NO. MIS00020) UPGRADE TO REL 10                *
+     F*                                                               *
+     F*****************************************************************
+     FGL4610DFCF  E                    WORKSTN                            S01399
+     F                                        #RRN  KSFILE AU4610S2
+     FAUACNTV1IF  E           K        DISK
+     FAUAPOSV1IF  E           K        DISK
+     F*SDCUHSL1IF**E           K        DISK                              048915
+     FTABGL   IF  E           K        DISK         KINFSR #PSSR
+     F            TABLETAF                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F**********  TABTE20F                          KIGNORE                                   CGL029
+     F            TABTG20F                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01399
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETQF                          KIGNORE
+     F            TABLETVF                          KIGNORE
+     F**********  TABLETWF                          KIGNORE                                   CGL029
+     F            TABLETZF                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLETRF                          KIGNORE                                   CSD027
+     F/EJECT
+     F*****************************************************************
+     F*                     INDICATOR USAGE                           *
+     F*                     ---------------                           *
+     F*                                                               *
+     F*   03      Command 3 was pressed                               *
+     F*   12      Command 12 was pressed                              *
+     F*   20      Error in Account Code                               *
+     F*   21      Error in Branch                                     *
+     F*   22      Error in Currency                                   *
+     F*   23      Error in Start Date                                 *
+     F*   24      Error in End Date                                   *
+     F*   25      Process ALL Currencies                              *
+     F*   26      Process ALL Branches                                *
+     F*   27      A Posting record was displayed                      *
+     F*   28      Enable SFLDSP/SFLDSPCTL                             *
+     F*   29      Highlight Opening Balance line                      *
+     F*   30      Disable SFLDSPCTL of Message Subfile                *
+     F*   31      Enable SFLEND of Message Subfile                    *
+     F*   32      ROLLUP key was pressed                              *
+     F*   33      Opening Balance is to be processed                  *
+     F*   34      Total Account Balance is to be processed            *
+     F*   35      Enable SFLEND in Details Subfile                    *
+     F*   36      Enable ROLLUP key                                   *
+     F*   37      Closing Balance is to be processed                  *
+     F*   38      First currency was processed                        *
+     F*   39      Posting Detail is to be processed                   *
+     F*   40      An entry is invalid                                 *
+     F*   41      Base Currency Equiv. Line is to be written          *
+     F*   42      Currency already exists in array AU2                *
+     F*   51      Account Code is numeric                             *   118272
+     F*   81      CHAIN fails in LF/TABGL format TABTE10F             *
+     F*   82      CHAIN fails in LF/TABGL format TABLETRF             *
+     F*   83      CHAIN fails in LF/TABGL format TABTG10F             *
+     F*   86      CHAIN fails in LF/AUACNTV1                          *
+     F*   87      CHAIN fails in LF/AUAPOSV1                          *
+     F*   88      SETLL indicator for LF/SDCUHSL1                     *
+     F*   89      SETLL indicator for LF/SDUCHSL1                     *
+     F*   90      Error in external programs                          *
+     F*   98      Date Format Indicator                               *
+     F*   99      General Use Indicator                               *
+     F*   LR      Exit program                                        *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*
+     E**  Copyright Statement
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E**  Subfile Narratives Array
+     E*
+     E                    AU0     1   5 15
+     E*
+     E**  Subfield Details Array
+     E*
+     E                    AU1        80  1
+     E*
+     E**  Currency Array
+     E*
+     E***************     AU2        30  3                                060063
+     E                    AU2        99  3                                060063
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     I/EJECT
+     I*
+     I**  Data Structure for Compilation - Copyright Insertion
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  Error reporting data structure
+     I*
+     ILDA         DS                            256
+     I*                                                                   S01399
+     I                                      134 141 DBFILE                S01399
+     I                                      142 170 DBKEY                 S01399
+     I                                      171 180 DBPGM                 S01399
+     I                                      181 1830DBASE                 S01399
+     I*
+     I**  System Rundate
+     I*
+     IRUNDT       DS                                                      S01399
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND                  S01399
+     I                                       11  11 SSF                   S01399
+     I                                       12  12 DATF                  S01399
+     I                                       13  13 MBIN                  S01399
+      *                                                                   S01319
+     IZMUSER      DS                             17                       S01319
+      *                                                                   S01319
+      ** Menu user data area                                              S01399
+      *                                                                   S01399
+     I                                       11  13 DFTBRC                S01399
+     I                                       17  17 BANKAU                S01399
+     I*
+     I**  Program Status
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     I*
+     I**  Key Field for LF/TABGL Format TABTE10F
+     I*
+     I            DS
+     I**********                              1  12 #ATKY1                                    CGL029
+     I                                        1  18 #ATKY1                                    CGL029
+     I                                        1   20RECT1
+     I                                        3   7 ZZ005
+     I**********                              8  110RACOD                                     CGL029
+     I**********                             12  12 WRK1                                      CGL029
+     I                                        8  170RACOD                                     CGL029
+     I                                       18  18 WRK1                                      CGL029
+     I*
+     I**  Key Field for LF/TABGL Format TABTG10F
+     I*
+     I            DS
+     I                                        1  12 #ATKY2
+     I                                        1   20RECT
+     I                                        3   8 ZZ006
+     I                                        9  11 RCCY
+     I                                       12  12 ZZ001
+     I*
+     I**  Data Structure for Formatting Dates
+     I*
+     I            DS
+     I                                        1   2 #ADD
+     I                                        3   3 #ASLH1
+     I                                        4   5 #AMM
+     I                                        6   6 #ASLH2
+     I                                        7   8 #AYY
+     I                                        1   8 #ADAT
+     I*                                                                   046901
+     ISDBANK    E DSSDBANKPD                                              046901
+     I*                                                                   046901
+     I**   Bank Details                                                   046901
+     I*                                                                   046901
+     ISDBRCH    E DSSDBRCHPD                                              S01399
+      *                                                                   S01399
+      ** Branch Details                                                   S01399
+      *                                                                   S01399
+     ISDACOD    E DSSDACODPD                                              S01399
+      *                                                                   S01399
+      ** A/c Code Details                                                 S01399
+      *                                                                   S01399
+     ISDCURR    E DSSDCURRPD                                              S01399
+      *                                                                   S01399
+      ** Currency Details                                                 S01399
+     I/COPY WNCPYSRC,GL4610I001
+      *                                                                   S01399
+     IDSFDY     E DSDSFDY                                                 S01399
+      *                                                                   S01399
+      ** Short data structure for access programs (200 long)              S01399
+      *                                                                   S01399
+     IDSSDY     E DSDSSDY                                                 S01399
+      *                                                                   S01399
+      ** Long data structure for access programs (800 long)               S01399
+      *                                                                   S01399
+     I*
+     I/COPY ZSRSRC,ZSEDITZ2
+     I*
+     C/EJECT
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C**  Define key list used in chaining to AUACNTV1 for account
+     C**  code/currency/branch code combination
+     C*
+     C           #AKEY2    KLIST
+     C                     KFLD           #AACOD
+     C                     KFLD           #ACCY
+     C                     KFLD           #ABRA                           S01399
+     C*
+     C**  Define Key List used in chaining to AUACNTV1.
+     C*
+     C           #AAKEY    KLIST
+     C                     KFLD           #AACOD
+     C                     KFLD           #ACCY
+     C*
+     C**  Define Key List used in chaining to AUAPOSV1.
+     C*
+     C           #APKEY    KLIST
+     C                     KFLD           #AACOD
+     C                     KFLD           #ACCY
+     C                     KFLD           #ADTE
+     C                     KFLD           #ABRA                           S01399
+     C*
+     C****Define*Key*List*used*in*setting*lower*limit*to*SDCUSHL1.        048915
+     C***********                                                         048915
+     C***********#ASKEY    KLIST                                          048915
+     C***********          KFLD           #ADATE                          048915
+     C***********          KFLD           #ACCY                           048915
+      *                                                                   S01399
+      ** Read in RUNDAT data area                                         S01399
+      *                                                                   S01399
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01399
+     C                     IN   RUNDT                                     S01399
+      *                                                                   S01399
+      ** Check if system multibranched                                    S01399
+      *                                                                   S01399
+     C           MBIN      COMP 'Y'                      85               S01399
+     C*                                                                   046901
+     C** Get Bank Details                                                 046901
+     C*                                                                   046901
+     C                     CALL 'AOBANKR0'                                046901
+     C                     PARM '*MSG   ' @RTCD   7                       046901
+     C                     PARM '*FIRST ' @OPTN   7                       046901
+     C           SDBANK    PARM SDBANK    DSFDY                           046901
+     C*                                                                   046901
+     C           @RTCD     IFNE *BLANKS                                   046901
+     C*                                                                   046901
+     C**  Move values to LDA.                                             046901
+     C*                                                                   046901
+     C           *NAMVAR   DEFN           LDA                             046901
+     C           *LOCK     IN   LDA                                       046901
+     C                     MOVEL'SDBANKPD'DBFILE                          046901
+     C                     MOVEL@OPTN     DBOPTN  7                       046901
+     C                     MOVEL@OPTN     DBKEY            ***************046901
+     C                     Z-ADD1         DBASE            *  DB ERROR 01 046901
+     C                     MOVE '1'       *INU7            ***************046901
+     C                     MOVE '1'       *INU8                           046901
+     C                     OUT  LDA                                       046901
+     C                     ELSE                                           046901
+      *                                                                   S01399
+      ** Check system date format, DDMMYY or MMDDYY.                      S01399
+      *                                                                   S01399
+     C***********DATF      COMP 'M'                      98               046901
+     C           BJDFIN    COMP 'M'                      98               046901
+      *                                                                   S01399
+      ** Read in ZMUSER data area                                         S01399
+      *                                                                   S01399
+     C           *NAMVAR   DEFN           ZMUSER                          S01399
+     C                     IN   ZMUSER                                    S01399
+     C/COPY WNCPYSRC,GL4610C003
+     C***********                                                         046901
+     C***********                                                         046901
+     C****If*no*record*is*found*in*TABTB10,*database*error.**             046901
+     C***********                                                         046901
+     C************IN99     IFEQ '1'                                       046901
+     C***********          EXSR #ADBER                                    046901
+     C***********          ELSE                                           046901
+     C*
+     C**  Else, get the base currency decimal places.
+     C*
+     C                     EXSR #ABASE
+     C                     MOVE '/'       #ASLH1
+     C                     MOVE '/'       #ASLH2
+     C*
+     C/COPY WNCPYSRC,GL4610C007
+     C**  Display input screen and read entries.
+     C*
+     C                     EXSR #ADISP
+     C                     END
+     C*
+     C**  Terminate program .
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*                  SUB-ROUTINE DEFINITIONS                      *
+     C*                  -----------------------                      *
+     C*                                                               *
+     C*     #ADISP - DISPLAY INPUT SCREEN                             *
+     C*     #ASETP - SETUP SCREEN, FIELDS AND INDICATORS              *
+     C*     #ASLCT - SELECT ENTRIES                                   *
+     C*     #AVLDT - VALIDATE ENTRIES                                 *
+     C*     #ADETL - DISPLAY DETAILS                                  *
+     C*     #ACURR - MOVE ALL CURRENCIES TO ARRAY AU2                 *
+     C*     #APROC - PROCESS RECORDS                                  *
+     C*     #AEQUV - PROCESS CLOSING BALANCE EQUIV. LINE              *
+     C*     #ACLSE - PROCESS CLOSING BALANCE LINE                     *
+     C*     #ARECD - PROCESS POSTING DETAILS LINE                     *
+     C*     #AOPEN - PROCESS OPENING BALANCE LINE                     *
+     C*     #ACOPB - CALCULATE OPENING BALANCE                        *
+     C*     #APSTF - FORMAT POSTING DETAILS                           *
+     C*     #ACCLB - CALCULATE CLOSING BALANCE                        *
+     C*     #ABCEQ - CALCULATE BASE CURRENCY EQUIVALENT               *
+     C*     #ACLEL - WRITE CLOSING BALANCE EQUIVALENT LINE            *
+     C*     #ATOTL - WRITE TOTAL ACCOUNT CODE LINE                    *
+     C*     #APSFL - SUBFILE PROCESSING                               *
+     C*     #ABASE - GET BASE CURRENCY DETAILS                        *
+     C*     #ASPAC - WRITE A BLANK LINE TO SUBFILE                    *
+     C*     #AFILL - FILL EXCESS LINES WITH BLANKS                    *
+     C*     #ABLNK - BLANK OUT INPUT FIELDS                           *
+     C******#ADBER*-*PROCESS*DATABASE*ERROR*****                      *   046901
+     C*     #PSSR  - ERROR HANDLING ROUTINE                           *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ADISP - DISPLAY INPUT SCREEN                   *
+     C*                                                               *
+     C*  CALLED BY  : MAIN   - MAIN CONTROLLING ROUTINE               *
+     C*                                                               *
+     C*  CALLS      : #ASETP - SETUP SCREEN, FIELDS AND INDICATORS    *
+     C*               #ASLCT - SELECT ENTRIES                         *
+     C*               #AVLDT - VALIDATE ENTRIES                       *
+     C*               #ADETL - DISPLAY DETAILS                        *
+     C*                                                               *
+     C*  FIELDS USED: #ATIME - SYSTEM TIME                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ADISP    BEGSR
+     C*
+     C**  Initalise fileds and indicators, build subfile and set up
+     C**  screen.
+     C*
+     C                     EXSR #ASETP
+     C*
+     C**  Execute routine until the user presses F3 or F12 or all the
+     C**  the entries are valid.
+     C*
+     C           *IN40     DOUEQ'0'
+     C           *IN03     OREQ '1'
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN12
+     C*
+     C**  Display error message subfile.
+     C*
+     C                     WRITEAU4610C1
+     C                     CALL 'ZA0250'
+     C                     TIME           #ATIME
+     C*
+     C**  Display input screen.
+     C*
+     C                     WRITEAU4610X1
+     C                     WRITEAU4610X4
+     C                     EXFMTAU4610X2
+     C*
+     C**  Do processing if F3 was not pressed.
+     C*
+     C           *IN03     IFEQ '0'
+     C*
+     C**  If the account code field, branch field or currency field
+     C**  has an input of '?', display the corresponding select screen.
+     C*
+     C           #ACODE    IFEQ '?'
+     C           #ABRAN    OREQ '?'
+     C           #ACCY     OREQ '?'
+     C                     EXSR #ASLCT
+     C                     ELSE
+     C*
+     C**  If none of the fields have '?' as input, then validate the
+     C**  entries.
+     C*
+     C                     EXSR #AVLDT
+     C*
+     C**  If entries are valid, display account code balance.
+     C*
+     C           *IN40     IFEQ '0'
+     C                     EXSR #ADETL
+     C                     ELSE
+     C                     WRITEAU4610X2
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #ADIS9    ENDSR                           *** #ADIS9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ASETP - SETUP SCREEN, FIELDS AND INDICATORS    *
+     C*                                                               *
+     C*  CALLED BY  : #ADISP - DISPLAY INPUT SCREEN                   *
+     C*                                                               *
+     C*  CALLS      : ZA0250 - CLEAR PROGRAM SUBFILE MESSAGE QUEUE    *
+     C*                                                               *
+     C*  FIELDS USED: MSGFL  - MESSAGE FILE OF THE ERROR MESSAGE      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ASETP    BEGSR
+     C*
+     C**  Initialise indicators.
+     C*
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN31
+     C*
+     C**  Initialise fields.
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'GBGL'    MSGFL  10                       S01399
+     C                     MOVE 'USRMSG'  MSGFL
+     C*
+     C**  Clear message subfile.
+     C*
+     C                     CALL 'ZA0250'
+     C                     WRITEAU4610X1
+     C                     WRITEAU4610X2
+     C*
+     C           #ASET9    ENDSR                           *** #ASET9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ASLCT - SELECT ENTRIES                         *
+     C*                                                               *
+     C*  CALLED BY  : #ADISP - DISPLAY INPUT SCREEN                   *
+     C*                                                               *
+     C*  CALLS      : SD0031S- SELECT A/C CODES                       *
+     C*               SD0061S- SELECT BRANCH CODES                    *
+     C*               SD0020S- SELECT CURRENCY CODES                  *
+     C*                                                               *
+     C*  FIELDS USED: #ARETC - RETURN CODE                            *
+     C*               #ACODE - ACCOUNT CODE                           *
+     C*               #ABRAN - BRANCH CODE                            *
+     C*               #ACCY  - CURRENCY                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ASLCT    BEGSR
+     C*
+     C**  Initialise indicators.
+     C*
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN81
+     C*
+     C**  SELECT ACCOUNT CODE
+     C**  -------------------
+     C*
+     C**  If account code input is '?', call SD0031S to allow account
+     C**  code selection.
+     C*
+     C           #ACODE    IFEQ '?'
+     C                     CALL 'AOACODR0'               90               S01399
+     C                     PARM           #ARETC  7
+     C                     PARM '*KEY   ' #AOPTN  7                       S01399
+     C                     PARM           #ACODE
+     C********** SDACOD    PARM SDACOD    DSFDY                                        S01399 CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C*
+     C**  If no account code was chosen, place field in reverse image
+     C**  to indicate an error.
+     C*
+     C********** #ARETC    IFEQ 'NOSEL'                             S01399049735
+     C           #ARETC    IFEQ '*NOSEL'                                  049735
+     C                     MOVEL'GLM0002' MSGID  10                       049735
+     C                     CALL 'ZA0340'                                  049735
+     C                     PARM           MSGFL                           049735
+     C                     PARM           MSGID                           049735
+     C                     MOVE '1'       *IN40                           049735
+     C                     MOVE '?   '    #ACODE                          049735
+     C                     MOVE '1'       *IN20
+     C                     ELSE                                          S01399
+     C                     MOVE A5ACCD    #ACODE                         S01399
+     C                     END
+      * If no errors and feature not off, check user authority            CRE024
+      * to account code                                                   CRE024
+     C           CRE024    IFNE 'N'                                       CRE024
+     C           *IN20     ANDEQ'0'                                       CRE024
+     C                     MOVE #ACODE    UMACOD                          CRE024
+     C                     CALL 'SF0930'                                  CRE024
+     C                     PARM           CRE024  1                       CRE024
+     C                     PARM *BLANKS   UMAUTH  1                       CRE024
+     C                     PARM           UMACOD 100                      CRE024
+     C**********           PARM *ZEROS    UMCNUM  60                                 CRE024 BUG11679
+     C                     PARM *BLANKS   UMCNUM  6                       CRE024            BUG11679
+     C                     PARM *BLANKS   UMCCY   3                       CRE024
+     C                     PARM *ZEROS    UMACSQ  20                      CRE024
+     C                     PARM *BLANKS   UMBRCA  3                       CRE024
+     C                     PARM 'GL4610'  UMPGM  10                       CRE024
+     C                     PARM '*REPT'   UMOPTN  5                       CRE024
+     C                     PARM *BLANKS   UMEMSG 50                       CRE024
+      *                                                                   CRE024
+      * If user not authorised, set on error indicators                   CRE024
+     C           UMAUTH    IFEQ 'N'                                       CRE024
+     C                     MOVEL'SFM0022' MSGID                           CRE024
+     C                     MOVEL'GBSF'    MSGFL                           CRE024
+     C                     MOVE 'USRMSG'  MSGFL                           CRE024
+     C                     CALL 'ZA0340'                                  CRE024
+     C                     PARM           MSGFL                           CRE024
+     C                     PARM           MSGID                           CRE024
+     C                     MOVEL'GBGL'    MSGFL                           CRE024
+     C                     MOVE 'USRMSG'  MSGFL                           CRE024
+     C                     MOVE '1'       *IN40                           CRE024
+     C                     MOVE '1'       *IN20                           CRE024
+     C                     END                                            CRE024
+      *                                                                   CRE024
+     C                     END                                            CRE024
+     C/COPY WNCPYSRC,GL4610C001
+     C*
+     C                     END
+     C*
+     C**  SELECT BRANCH
+     C**  -------------
+     C*
+     C**  If the branch input is '?', call SD0061S to allow branch code
+     C**  selection.
+     C*
+     C           #ABRAN    IFEQ '?'                                       S01399
+     C**********           CALL 'AOBRCHR0'               90                                   CGL029
+     C                     CALL 'AOBRCHR1'               90                                   CGL029
+     C                     PARM           #ARETC
+     C                     PARM '*KEY   ' #AOPTN  7                       S01399
+     C                     PARM           #ABRAN
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01399              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C**  If no branch code was chosen, place field in reverse image
+     C**  to indicate an error.
+     C*
+     C********** #ARETC    IFEQ 'NOSEL'                             S01399049735
+     C           #ARETC    IFEQ '*NOSEL'                                  049735
+     C                     MOVEL'GLM0003' MSGID  10                       049735
+     C                     CALL 'ZA0340'                                  049735
+     C                     PARM           MSGFL                           049735
+     C                     PARM           MSGID                           049735
+     C                     MOVE '1'       *IN40                           049735
+     C                     MOVE '?  '     #ABRAN                          049735
+     C                     MOVE '1'       *IN21
+     C                     ELSE                                           S01399
+     C                     MOVE A8BRCD    #ABRAN                          S01399
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  SELECT CURRENCY
+     C**  ---------------
+     C*
+     C**  If the currency input is '?', call SD0020S to allow currency
+     C**  code selection.
+     C*
+     C           #ACCY     IFEQ '?'
+     C                     CALL 'AOCURRR0'               90               S01399
+     C                     PARM           #ARETC
+     C                     PARM '*KEY   ' @OPTN   7                       S01194
+     C                     PARM           #ACCY
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C*
+     C**  If no currency code was chosen, place field in reverse image
+     C**  to indicate an error.
+     C*
+     C********** #ARETC    IFEQ 'NOSEL'                             S01399049735
+     C           #ARETC    IFEQ '*NOSEL'                                  049735
+     C                     MOVEL'GLM0004' MSGID  10                       049735
+     C                     CALL 'ZA0340'                                  049735
+     C                     PARM           MSGFL                           049735
+     C                     PARM           MSGID                           049735
+     C                     MOVE '1'       *IN40                           049735
+     C                     MOVE '?  '     #ACCY                           049735
+     C                     MOVE '1'       *IN22
+     C                     ELSE                                           S01399
+     C                     MOVELA6CYCD    #ACCY                           S01399
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Set on indicator 40 so that program will go back to initial
+     C**  screen.
+     C*
+     C                     MOVE '1'       *IN40
+     C*
+     C           #ASLC9    ENDSR                           *** #ASLC9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #AVLDT - VALIDATE ENTRIES                       *
+     C*                                                               *
+     C*  CALLED BY  : #ADISP - DISPLAY INPUT SCREEN                   *
+     C*                                                               *
+     C*  CALLS      : ZA0340 - EXT.SUB.- SENDS ERROR MESSAGE TO SCREEN*
+     C*               ZDATE1 - CONVERT DATE TO MIDAS DAY NO.          *
+     C*                                                               *
+     C*  FIELDS USED: #ACODE - ACCOUNT CODE                           *
+     C*               #ATKY1 - KEY LIST FOR FORMAT TABTE10F           *
+     C*               #ABRAN - BRANCH CODE                            *
+     C*               #ATBKY - KEY LIST FOR FORMAT TABLETRF           *
+     C*               #ACCY  - CURRENCY                               *
+     C*               #ATKY2 - KEY LIST FOR FORMAT TABTG10F           *
+     C*               #ACDP  - CURRENCY DECIMAL PLACES                *
+     C*               #AAKEY - KEY LIST FOR LF/AUACNTV1               *
+     C*               #ASDAT - START DATE IN DDMMYY FORMAT            *
+     C*               #ADATS - START DATE IN MIDAS DAY NO. FORMAT     *
+     C*               #ADAYS - NO. OF DAYS BETWEEN DATES              *
+     C*               #AEDAT - END DATE IN DDMMYY FORMAT              *
+     C*               #ADATE - END DATE IN MIDAS DAY NO. FORMAT       *
+     C*               RUND   - RUN DATE IN MIDAS DAY NO. FORMAT       *
+     C*               ZDATE  - INPUT FIELD FOR ZDATE1                 *
+     C*               ZDAYNO - OUTPUT FIELD FOR ZDATE1                *
+     C*               MSGFL  - MESSAGE FILE OF THE ERROR MESSAGE      *
+     C*               MSGID  - MESSAGE ID OF THE ERROR MESSAGE        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AVLDT    BEGSR
+     C*
+     C**  Initialise indicators.
+     C*
+     C                     MOVE '0'       *IN20
+     C                     MOVE '0'       *IN21
+     C                     MOVE '0'       *IN22
+     C                     MOVE '0'       *IN23
+     C                     MOVE '0'       *IN24
+     C                     MOVE '0'       *IN25
+     C                     MOVE '0'       *IN26
+     C                     MOVE '0'       *IN81
+     C*
+     C**  VALIDATE ACCOUNT CODE
+     C**  ---------------------
+     C*
+     C**  If account code was entered, it should exist in the Account
+     C**  Codes Table.
+     C*
+     C           #ACODE    IFNE *BLANKS
+     C** If Account Code is not numeric it is an error.                   118272
+     C                     MOVEL#ACODE    TEST    5                       118272
+     C                     MOVE '0'       TEST                            118272
+     C                     TESTN          TEST       5151                 118272
+     C           *IN51     IFEQ '0'                                       118272
+     C                     SETON                     81                   118272
+     C                     ELSE                                           118272
+     C*                                                                   118272
+     C**********           MOVE #ACODE    #AACOD  40                                          CGL029
+     C                     MOVE #ACODE    #AACOD 100                                          CGL029
+     C                     MOVE *BLANKS   ZZ005
+     C                     MOVE '30'      RECT1
+     C                     MOVE 1         WRK1
+     C                     MOVE #AACOD    RACOD
+     C********** #ATKY1    CHAINTABTE10F             81                                       CGL029
+      *                                                                                       CGL029
+     C                     CALL 'AOACODR0'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7                                           CGL029
+     C                     PARM '*KEY   ' POPTN   7                                           CGL029
+     C                     PARM #ACODE    PACOD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C                     END                                            118272
+     C                     END
+     C*
+     C**  If no account code was entered or the account code does not
+     C**  exist, display an error message denoting an incorrect account
+     C**  code.
+     C*
+     C           #ACODE    IFEQ *BLANKS
+     C********** *IN81     OREQ '1'                                                           CGL029
+     C           *IN81     OREQ '1'                                                           247377
+     C           PRTCD     ORNE *BLANKS                                                       CGL029
+     C                     MOVEL'GLM0002' MSGID  10                       S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN20
+     C                     END
+      * If no errors and feature not off, check user authority            CRE024
+      * to account code                                                   CRE024
+     C           CRE024    IFNE 'N'                                       CRE024
+     C           *IN20     ANDEQ'0'                                       CRE024
+     C                     MOVE #ACODE    UMACOD                          CRE024
+     C                     CALL 'SF0930'                                  CRE024
+     C                     PARM           CRE024  1                       CRE024
+     C                     PARM *BLANKS   UMAUTH  1                       CRE024
+     C                     PARM           UMACOD 100                      CRE024
+     C**********           PARM *ZEROS    UMCNUM  60                                 CRE024 BUG11679
+     C                     PARM *BLANKS   UMCNUM  6                       CRE024            BUG11679
+     C                     PARM *BLANKS   UMCCY   3                       CRE024
+     C                     PARM *ZEROS    UMACSQ  20                      CRE024
+     C                     PARM *BLANKS   UMBRCA  3                       CRE024
+     C                     PARM 'GL4610'  UMPGM  10                       CRE024
+     C                     PARM '*REPT'   UMOPTN  5                       CRE024
+     C                     PARM *BLANKS   UMEMSG 50                       CRE024
+      *                                                                   CRE024
+      * If user not authorised, set on error indicators                   CRE024
+     C           UMAUTH    IFEQ 'N'                                       CRE024
+     C                     MOVEL'SFM0022' MSGID                           CRE024
+     C                     MOVEL'GBSF'    MSGFL                           CRE024
+     C                     MOVE 'USRMSG'  MSGFL                           CRE024
+     C                     CALL 'ZA0340'                                  CRE024
+     C                     PARM           MSGFL                           CRE024
+     C                     PARM           MSGID                           CRE024
+     C                     MOVEL'GBGL'    MSGFL                           CRE024
+     C                     MOVE 'USRMSG'  MSGFL                           CRE024
+     C                     MOVE '1'       *IN40                           CRE024
+     C                     MOVE '1'       *IN20                           CRE024
+     C                     END                                            CRE024
+      *                                                                   CRE024
+     C                     END                                            CRE024
+     C/COPY WNCPYSRC,GL4610C002
+     C*
+     C**  VALIDATE BRANCH
+     C**  ---------------
+     C*   This can only be done if operating in a multibranch mode        S01399
+     C           MBIN      IFEQ 'Y'                                       S01399
+      *                                                                   S01399
+      ** If branch is blank then use users default branch                 S01399
+      *                                                                   S01399
+     C           #ABRAN    IFEQ *BLANKS
+     C                     MOVE DFTBRC    #ABRAN                          S01399
+     C                     END
+     C**  If the branch was entered, check if it exists in the Branch
+     C**  Codes Table.
+     C*
+      *                                                                   S01399
+      ** May not enter branch = ALL if do not have Bank level Authority   S01399
+      *                                                                   S01399
+     C           #ABRAN    IFEQ 'ALL'                                     S01399
+     C                     MOVE '1'       *IN26                           S01399
+     C           BANKAU    IFNE 'Y'                                       S01399
+     C                     MOVE '1'       *IN40                           S01399
+     C                     MOVE '1'       *IN21                           S01399
+     C                     MOVEL'GLM0010' MSGID                           S01399
+     C                     CALL 'ZA0340'                                  S01399
+     C                     PARM           MSGFL                           S01399
+     C                     PARM           MSGID                           S01399
+     C                     END                                            S01399
+     C                     ELSE                                           S01399
+      *                                                                                       CSD027
+     C                     CALL 'AOBRCHR1'                                                    CSD027
+     C                     PARM *BLANKS   PRTCD   7                                           CSD027
+     C                     PARM '*KEY   ' POPTN   7                                           CSD027
+     C                     PARM #ABRAN    PBRCH   3                                           CSD027
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CSD027
+      *                                                                                       CSD027
+     C**********           MOVE *BLANKS   #ATBKY 12                                           CSD027
+     C**********           MOVEL'10      '#ATBKY                                              CSD027
+     C**********           MOVE #ABRAN    #ATBKY                                              CSD027
+     C********** #ATBKY    CHAINTABLETRF             82                                       CSD027
+     C**********                                                                              CSD027
+     C****If*it*does*not*exist,*set*on*corresponding*error*indicator.*                        CSD027
+     C**********                                                                              CSD027
+     C********** *IN82     IFEQ '1'                                                           CSD027
+      * If branch does not exist then set on error indicators.                                CSD027
+     C           PRTCD     IFNE *BLANKS                                                       CSD027
+     C                     MOVE '1'       *IN82                                               244554
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN21
+     C                     ELSE                                           S01399
+      *                                                                   S01399
+      ** Check user is authorised to valid branch                         S01399
+      *                                                                   S01399
+     C                     CALL 'ZVBBU'                                   S01399
+     C                     PARM #ABRAN    @ZBR    3                       S01399
+     C                     PARM           @ERR    10                      S01399
+     C           @ERR      IFNE 0                                         S01399
+     C                     MOVE '1'       *IN40                           S01399
+     C                     MOVE '1'       *IN21                           S01399
+     C**************       MOVEL'AUM0011' MSGID                     S01399048915
+     C                     MOVEL'GLM0011' MSGID                           048915
+     C                     CALL 'ZA0340'                                  S01399
+     C                     PARM           MSGFL                           S01399
+     C                     PARM           MSGID                           S01399
+     C                     END                                            S01399
+     C                     END
+     C*
+     C*
+     C                     END
+     C                     END                                            S01399
+     C*
+     C**  VALIDATE CURRENCY
+     C**  -----------------
+     C*
+     C**  If the currency was entered, chain to TABTG10 to see if the
+     C**  currency exists.
+     C*
+     C           #ACCY     IFNE *BLANKS
+     C                     MOVE *BLANKS   ZZ006
+     C                     MOVE '20'      RECT
+     C                     MOVE 1         ZZ001
+     C                     MOVE #ACCY     RCCY
+     C           #ATKY2    CHAINTABTG10F             83
+     C*
+     C**  If the currency was not found, display an error message to
+     C**  indicate that the currency is incorrect.
+     C*
+     C           *IN83     IFEQ '1'
+     C***********          MOVEL'GL00004' MSGID                     S01399048915
+     C                     MOVEL'GLM0004' MSGID                           048915
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN22
+     C                     ELSE
+     C/COPY WNCPYSRC,GL4610C004
+     C                     Z-ADDCDP       #ACDP   10
+     C                     END
+     C*
+     C**  If the Currency field was left blank, set on *IN25 for later
+     C**  use.
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN25
+     C*
+     C                     END
+     C*
+     C**  VALIDATE ACCOUNT CODE/CURRENCY COMBINATION
+     C**  ------------------------------------------
+     C*
+     C**  Check if the Account Code/Currency selection exists in the
+     C**  present Accounts File.
+     C*
+     C           #ACODE    IFNE *BLANKS
+     C           #ACCY     ANDNE*BLANKS
+     C           *IN20     ANDEQ'0'
+     C           *IN22     ANDEQ'0'
+     C           #AAKEY    CHAINAUACNTV1             86
+     C*
+     C**  If no record exists, display an error message.
+     C*
+     C           *IN86     IFEQ '1'
+     C                     MOVEL'GLM0009' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN22
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Display error message for invalid branch code.
+     C*
+     C           *IN21     IFEQ '1'
+     C                     MOVEL'GLM0003' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     END
+     C*
+     C**  VALIDATE START DATE
+     C**  -------------------
+     C*
+     C**  Check if the start date entered is in DDMMYY format.
+     C*
+     C                     MOVE #ASDAT    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C**  If it is not in DDMMYY format, display error message.
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'GLM0005' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN23
+     C                     ELSE
+     C*
+     C**  If it is in DDMMYY format, the start date should not be
+     C**  earlier than the run date.
+     C*
+     C                     Z-ADDZDAYNO    #ADATS  50
+     C           RUND      SUB  #ADATS    #ADAYS  50
+     C*
+     C**  If it is earlier than the run date, display an error message.
+     C*
+     C           #ADAYS    IFLE *ZERO
+     C                     MOVEL'GLM0006' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN23
+     C                     ELSE
+     C*
+     C**  If the start date is more than a year ealier than the run
+     C**  date, display an error message.
+     C*
+     C           #ADAYS    IFGT 366
+     C                     MOVEL'GLM0008' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN23
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  VALIDATE END DATE
+     C**  -----------------
+     C*
+     C**  Check if the End Date entered is in the DDMMYY format.
+     C*
+     C                     MOVE #AEDAT    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C**  If it is not in the DDMMYY format, display an error message
+     C**  to denote an incorrect End Date.
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'GLM0005' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN24
+     C                     ELSE
+     C*
+     C**  The End Date should not be earlier than the run date.
+     C*
+     C                     Z-ADDZDAYNO    #ADATE  50
+     C           RUND      SUB  #ADATE    #ADAYS
+     C*
+     C**  If it is, display an error message.
+     C*
+     C           #ADAYS    IFLE *ZERO
+     C                     MOVEL'GLM0006' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN24
+     C                     ELSE
+     C*
+     C**  The End Date should not also be earlier than the Start Date.
+     C*
+     C***********#ADATE    IFLE #ADATS                                    060063
+     C           #ADATE    IFLT #ADATS                                    060063
+     C                     MOVEL'GLM0007' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN24
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #AVLD9    ENDSR                           *** #AVLD9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ADETL - DISPLAY DETAILS                        *
+     C*                                                               *
+     C*  CALLED BY  : #ADISP - DISPLAY INPUT SCREEN                   *
+     C*                                                               *
+     C*  CALLS      : #ACURR - MOVE ALL CURRENCIES TO ARRAY AU2       *
+     C*               #APROC - PROCESS RECORDS                        *
+     C*               #APSFL - SUBFILE PROCESSING                     *
+     C*               #ABLNK - BLANK OUT INPUT FIELDS                 *
+     C*                                                               *
+     C*  FIELDS USED: #RRN   - RELATIVE RECORD NUMBER                 *
+     C*               #ABTOT - ACCOUNT CODE TOTAL                     *
+     C*               #ABRAN - BRANCH CODE                            *
+     C*               #ASDAT - START DATE IN DDMMYY FORMAT            *
+     C*               #ADD   - FIELD TO HOLD DD VALUE                 *
+     C*               #ATMP4 - TEMPORARY FIELD TO HOLD MMYY VALUES    *
+     C*               #AMM   - FIELD TO HOLD MM VALUE                 *
+     C*               #AYY   - FIELD TO HOLD YY VALUE                 *
+     C*               #ADATE - DATE IN DD/MM/YY FORMAT                *
+     C*               #ASDTE - START DATE IN DD/MM/YY FORMAT          *
+     C*               #AEDAT - END DATE IN DDMMYY FORMAT              *
+     C*               #AEDTE - END DATE IN DD/MM/YY FORMAT            *
+     C*               #ARRN  - RELATIVE RECORD NUMBER OF PAGE         *
+     C*               #ASFRN - SUBFILE RECORD NUMBER                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ADETL    BEGSR
+     C*
+     C**  Clear subfile.
+     C*
+     C                     MOVE '0'       *IN28
+     C                     WRITEAU4610C2
+     C                     MOVE '1'       *IN28
+     C*
+     C**  Initialise work fields and indicators.
+     C*
+     C                     MOVE '0'       *IN27
+     C                     MOVE '1'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '1'       *IN36
+     C                     MOVE '0'       *IN37
+     C                     MOVE '0'       *IN38
+     C                     MOVE '0'       *IN39
+     C                     MOVE '0'       *IN41
+     C                     Z-ADD1         #RRN    40
+     C                     Z-ADD1         #ARRN   40
+     C                     Z-ADD*ZEROS    #ABTOT 150
+     C*
+     C**  Format START DATE for output.
+     C*
+     C                     MOVEL#ASDAT    #ADD
+     C                     MOVE #ASDAT    #ATMP4  4
+     C                     MOVEL#ATMP4    #AMM
+     C                     MOVE #ATMP4    #AYY
+     C                     MOVE #ADAT     #ASDTE  8
+     C*
+     C**  Format END DATE for output.
+     C*
+     C                     MOVEL#AEDAT    #ADD
+     C                     MOVE #AEDAT    #ATMP4
+     C                     MOVEL#ATMP4    #AMM
+     C                     MOVE #ATMP4    #AYY
+     C                     MOVE #ADAT     #AEDTE  8
+     C*
+     C**  Display details screen.
+     C*
+     C                     WRITEAU4610C1                                                     BUG1855
+     C                     WRITEAU4610X1
+     C                     WRITEAU4610X3
+     C                     WRITEAU4610X5
+     C**********           WRITEAU4610C1                                                     BUG1855
+     C*
+     C**  If the processing is for ALL currencies, move all existing
+     C**  currencies to array AU2.
+     C*
+     C           *IN25     IFEQ '1'
+     C                     EXSR #ACURR
+     C                     END
+     C*
+     C                     MOVE '1'       *IN32
+     C*
+     C**  Do processing while the F3 or F12 keys are not pressed.
+     C*
+     C           *IN03     DOWEQ'0'
+     C           *IN12     ANDEQ'0'
+     C*
+     C**  If the ROLLUP key was pressed, display the next screen.
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '0'       *IN32
+     C                     Z-ADD#ARRN     #RRN
+     C                     Z-ADD#RRN      #ASFRN  40
+     C                     EXSR #APROC
+     C                     EXSR #APSFL
+     C                     ELSE
+     C*
+     C**  If the ROLLUP key was not pressed, the first page of details
+     C**  will be displayed.
+     C*
+     C                     Z-ADD1         #ASFRN
+     C                     EXSR #APSFL
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  If F12 was pressed, blank out input fields before displaying
+     C**  the input screen.
+     C*
+     C           *IN12     IFEQ '1'
+     C                     EXSR #ABLNK
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C           #ADET9    ENDSR                           *** #ADET9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ACURR - MOVE ALL CURRENCIES TO ARRAY AU2       *
+     C*                                                               *
+     C*  CALLED BY  : #ADETL - DISPLAY DETAILS                        *
+     C*                                                               *
+     C*  CALLS      :  -                                              *
+     C*                                                               *
+     C*  FIELDS USED: #ACCY  - CURRENCY                               *
+     C*               #AAKEY - KEY LIST FOR LF/AUACNTV1               *
+     C*               #AACOD - ACCOUNT CODE                           *
+     C*               AA     - ARRAY INDEX                            *
+     C*               AB     - ARRAY INDEX                            *
+     C*               ACOD   - ACCOUNT CODE IN LF/AUACNTV1            *
+     C*               CCY    - CURENCY IN LF/AUACNTV1                 *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ACURR    BEGSR
+     C*
+     C**  Initialise work fields.
+     C*
+     C                     MOVE *BLANKS   AU2
+     C                     Z-ADD1         AA      20
+     C                     MOVE 'AAA'     #ACCY
+     C*
+     C**  Read a record from the Account Codes file.
+     C*
+     C           #AAKEY    SETLLAUACNTV1
+     C                     READ AUACNTV1                 89
+     C*                                                                   071787
+     C**  If no accounts found on file, then we have no details           071787
+     C**  then don't continue                                             071787
+     C*                                                                   071787
+     C           *IN89     IFEQ *ON                                       071787
+     C           ACOD      ORNE #AACOD                                    071787
+     C                     MOVE *OFF      *IN25                           071787
+     C                     ELSE                                           071787
+     C*
+     C**  While the end of file has not yet been reached and the
+     C**  code has not changed, process the record.
+     C*
+     C           *IN89     DOWEQ'0'
+     C           ACOD      ANDEQ#AACOD
+     C                     MOVE '0'       *IN42
+     C                     Z-ADD1         AB      20
+     C*
+     C           AB        DOWLEAA
+     C*
+     C**  Check if the currency already exists in the array.
+     C*
+     C           CCY       IFEQ AU2,AB
+     C                     MOVE '1'       *IN42
+     C                     END
+     C*
+     C                     ADD  1         AB
+     C                     END
+     C*
+     C**  If it does not exist, move the currency to the array.
+     C*
+     C           *IN42     IFEQ '0'
+     C                     MOVE CCY       AU2,AA
+     C                     ADD  1         AA
+     C                     END
+     C*
+     C**  Read the next record.
+     C*
+     C                     READ AUACNTV1                 89
+     C                     END
+     C                     END                                            071787
+     C*
+     C           #ACUR9    ENDSR                           *** #ACUR9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #APROC - PROCESS RECORDS                        *
+     C*                                                               *
+     C*  CALLED BY  : #ADETL - DISPLAY DETAILS                        *
+     C*                                                               *
+     C*  CALLS      : #ATOTL - WRITE TOTAL ACCOUNT CODE LINE          *
+     C*               #AEQUV - PROCESS CLOSING BALANCE EQUIV. LINE    *
+     C*               #ACLSE - PROCESS CLOSING BALANCE LINE           *
+     C*               #ARECD - PROCESS POSTING DETAILS LINE           *
+     C*               #AOPEN - PROCESS OPENING BALANCE LINE           *
+     C*                                                               *
+     C*  FIELDS USED: #ALCTR - SUBFILE LINE COUNTER                   *
+     C*               #ADTE  - START DATE                             *
+     C*               #ADTE  - BRANCH CODE                            *
+     C*               #RRN   - RELATIVE RECORD NUMBER                 *
+     C*               #ARRN  - RELATIVE RECORD NUMBER OF PAGE         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #APROC    BEGSR
+     C*
+     C**  Initialise work fields.
+     C*
+     C                     Z-ADD1         #ALCTR  20
+     C                     MOVE #ADATS    #ADTE   50
+     C                     MOVE #ABRAN    #ABRA   3                       S01399
+     C*
+     C**  Do processing while the subfile line counter is not greater
+     C**  than 10 and while the SFLEND has not yet been activated.
+     C*
+     C           #ALCTR    DOWLE10
+     C           *IN35     ANDEQ'0'
+     C*
+     C**  Check if the Total Balance is to be printed.
+     C*
+     C           *IN34     IFEQ '1'
+     C*
+     C**  If it is and the subfile is not yet full, process the total
+     C**  account code line.
+     C*
+     C           #ALCTR    IFLT 11
+     C                     EXSR #ATOTL
+     C                     END
+     C                     ELSE
+     C*
+     C**  Check if the Closing Balance Equivalent line is to be
+     C**  processed.
+     C*
+     C           *IN41     IFEQ '1'
+     C                     EXSR #AEQUV
+     C                     ELSE
+     C*
+     C**  Check if the Closing Balance is to be processed.
+     C*
+     C           *IN37     IFEQ '1'
+     C                     EXSR #ACLSE
+     C                     ELSE
+     C*
+     C**  Check if the Posting Detail is to be processed.
+     C*
+     C           *IN39     IFEQ '1'
+     C                     EXSR #ARECD
+     C                     ELSE
+     C*
+     C**  Check if the Opening Balance is to be processed.
+     C*
+     C           *IN33     IFEQ '1'
+     C                     EXSR #AOPEN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     Z-ADD#RRN      #ARRN
+     C*
+     C           #APRO9    ENDSR                           *** #APRO9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #AEQUV - PROCESS CLOSING BALANCE EQUIV. LINE    *
+     C*                                                               *
+     C*  CALLED BY  : #APROC - PROCESS RECORDS                        *
+     C*                                                               *
+     C*  CALLS      : #ACLEL - WRITE CLOSING BALANCE EQUIVALENT LINE  *
+     C*               #AFILL - FILL EXCESS LINES WITH BLANKS          *
+     C*                                                               *
+     C*  FIELDS USED: #ALCTR - SUBFILE LINE COUNTER                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AEQUV    BEGSR
+     C*
+     C**  If the subfile line counter is less than 10, write the
+     C**  closing balance equivalent line. The next opening balance
+     C**  will be done for ALL currencies processing.
+     C*
+     C           #ALCTR    IFLT 10
+     C                     EXSR #ACLEL
+     C                     MOVE '0'       *IN41
+     C                     MOVE '1'       *IN33
+     C*
+     C**  If processing is for only one currency, the total account
+     C**  code line will have to be printed.
+     C*
+     C           *IN25     IFEQ '0'
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C**  If the remaining lines are not enough, fill the excess lines
+     C**  with blanks.
+     C*
+     C                     ELSE
+     C                     EXSR #AFILL
+     C                     END
+     C*
+     C           #AEQU9    ENDSR                           *** #AEQU9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ACLSE - PROCESS CLOSING BALANCE LINE           *
+     C*                                                               *
+     C*  CALLED BY  : #APROC - PROCESS RECORDS                        *
+     C*                                                               *
+     C*  CALLS      : #ASPAC - WRITE A BLANK LINE TO SUBFILE          *
+     C*               #ACCLB - CALCULATE CLOSING BALANCE              *
+     C*               #ABCEQ - CALCULATE BASE CURRENCY EQUIVALENT     *
+     C*               #AFILL - FILL EXCESS LINES WITH BLANKS          *
+     C*                                                               *
+     C*  FIELDS USED: #ALCTR - SUBFILE LINE COUNTER                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ACLSE    BEGSR
+     C*
+     C**  If the subfile line counter is less than or equal to 10,
+      **  and the Account code, currency and branch code                  186385
+      **  combination is found on the master file,                        186385
+     C**  write a blank line.
+     C*
+     C           #ALCTR    IFLE 10
+     C           #AERR     ANDEQ'0'                                       186385
+     C                     EXSR #ASPAC
+     C                     END
+     C*
+     C**  Check if the currency is equal to the base currency.
+     C*
+     C           #ACCY     IFEQ BCCY
+     C*
+     C**  If it is and the subfile line counter is less than 10, write
+     C**  the closing balance. Write a balnk line afterwards and
+     C**  calculate the add the amount to the account code total.
+     C**  The next opening balance will then have to processed.
+     C*
+     C           #ALCTR    IFLT 10
+     C                     EXSR #ACCLB
+     C                     EXSR #ASPAC
+     C                     EXSR #ABCEQ
+     C                     MOVE '0'       *IN37
+     C                     MOVE '1'       *IN33
+     C*
+     C**  If processing is for only one currency, the account code
+     C**  total will have to be written to the subfile.
+     C*
+     C           *IN25     IFEQ '0'
+     C                     MOVE '1'       *IN34
+     C                     ELSE
+     C                     MOVE '0'       *IN34
+     C                     END
+     C*
+     C**  If the remaining lines are not enough, fill the excess lines
+     C**  with blanks.
+     C*
+     C                     ELSE
+     C                     EXSR #AFILL
+     C                     END
+     C*
+     C**  If the currency is not base currency and the subfile line
+     C**  counter is less than or equal to 10, write the closing
+     C**  balance and calculate the base currency equivalent. The
+     C**  closing balance equivalent will then have to be processed.
+     C*
+     C                     ELSE
+     C           #ALCTR    IFLE 10
+     C                     EXSR #ACCLB
+     C                     EXSR #ABCEQ
+     C                     MOVE '0'       *IN37
+     C                     MOVE '1'       *IN41
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #ACLS9    ENDSR                           *** #ACLS9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ARECD - PROCESS POSTING DETAILS LINE           *
+     C*                                                               *
+     C*  CALLED BY  : #APROC - PROCESS RECORDS                        *
+     C*                                                               *
+     C*  CALLS      : #APSTF - FORMAT POSTING DETAILS                 *
+     C*                                                               *
+     C*  FIELDS USED: #ALCTR - SUBFILE LINE COUNTER                   *
+     C*               PSTD   - POSTING DATE IN LF/AUAPOSV1            *
+     C*               #ADATS - START DATE IN MIDAS DAY NO. FORMAT     *
+     C*               #ADATE - END DATE IN MIDAS DAY NO. FORMAT       *
+     C*               #ABRA  - BRANCH CODE                            *   S01399
+     C*               BRCA   - BRANCH CODE IN LF/AUAPOSV1             *   S01399
+     C*               #AAKEY - KEY LIST FOR LF/AUAPOSV1               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ARECD    BEGSR
+     C*
+     C**  Check if the subfile line counter is less than 11.
+     C*
+     C           #ALCTR    IFLT 11
+     C*
+     C**  Check if the posting date is within the start date and the
+     C**  end date (inclusive) and the end of file has not been
+     C**  reached.
+     C*
+     C           PSTD      IFGE #ADATS
+     C           PSTD      ANDLE#ADATE
+     C           *IN87     ANDEQ'0'
+     C/COPY WNCPYSRC,GL4610C014
+     C*
+     C**  Check if the processing is for only branch.
+     C*
+     C           *IN26     IFEQ '0'
+     C*
+     C**  If it is and the branch code in the record is equal to the
+     C**  branch entered, write the posting detail.
+     C*
+     C           #ABRA     IFEQ BRCA                                      S01399
+     C           #ABRA     OREQ 'ALL'                                     S01399
+     C                     EXSR #APSTF
+     C                     END
+     C*
+     C**  If the processing is for ALL branches, write the posting
+     C**  detail.
+     C*
+     C                     ELSE
+     C/COPY WNCPYSRC,GL4610C008
+     C                     EXSR #APSTF
+     C/COPY WNCPYSRC,GL4610C009
+     C                     END
+     C/COPY WNCPYSRC,GL4610C015
+     C*
+     C**  Read the next record.
+     C*
+     C           #AAKEY    READEAUAPOSV1                 87
+     C*
+     C**  If the posting date is not within the range or the end of
+     C**  file has been reached, the closing balance should then be
+     C**  processed.
+     C*
+     C                     ELSE
+     C                     MOVE '0'       *IN39
+     C                     MOVE '1'       *IN37
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #AREC9    ENDSR                           *** #AREC9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #AOPEN - PROCESS OPENING BALANCE LINE           *
+     C*                                                               *
+     C*  CALLED BY  : #APROC - PROCESS RECORDS                        *
+     C*                                                               *
+     C*  CALLS      : #ACOPB - CALCULATE OPENING BALANCE              *
+     C*               #AFILL - FILL EXCESS LINES WITH BLANKS          *
+     C*                                                               *
+     C*  FIELDS USED: #ACCY  - CURRENCY CODE                          *
+     C*               AA     - ARRAY INDEX                            *
+     C*               #ATKY2 - KEY LIST FOR FORMAT TABTG10F           *
+     C*               #ALCTR - SUBFILE LINE COUNTER                   *
+     C*               #APKEY - KEY LIST FOR LF/AUAPOSV1               *
+     C*               #AAKEY - KEY LIST FOR LF/AUAPOSV1               *
+     C*               #AKEY2 - KEY LIST FOR LF/AUACNTV1               *
+     C*                        FOR ACOD/CCY/BRCD COMBINATION          *
+     C*               #AERR  - FLAG FOR VALID ACOD/CCY/BRCD           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AOPEN    BEGSR
+     C*
+     C**  Check if processing is for ALL currencies.
+     C*
+     C           *IN25     IFEQ '1'
+     C*
+     C**  If processing is for ALL currencies, choose the first
+     C**  currency in the array.
+     C*
+     C           *IN38     IFEQ '0'
+     C                     MOVE AU2,1     #ACCY
+     C                     Z-ADD2         AA
+     C                     MOVE '1'       *IN38
+     C                     ELSE
+     C*
+     C**  If the first currency has already been processed, choose the
+     C**  next currency. If there are no more currencies to be
+     C**  processed, then the account code total should be written.
+     C*
+     C           AU2,AA    IFEQ *BLANKS
+     C                     MOVE '1'       *IN34
+     C                     ELSE
+     C                     MOVE AU2,AA    #ACCY
+     C                     ADD  1         AA
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Check if account code/currency/branch code combination
+     C**  exist in AUACNTV1 if a branch has been specified
+     C*
+     C                     MOVE '0'       #AERR   1
+     C           *IN26     IFEQ '0'
+     C           #AKEY2    CHAINAUACNTV1             86
+     C           *IN86     IFEQ '1'
+     C                     MOVE '1'       #AERR
+     C                     END
+     C                     MOVE '0'       *IN86
+     C           *IN25     IFEQ '0'
+     C           #AERR     ANDEQ'1'
+     C                     Z-ADD11        #ALCTR
+     C                     END
+     C                     END
+     C*
+     C**  If the account code total is not yet to be written, process
+     C**  the currency.
+     C*
+     C           *IN34     IFEQ '0'
+     C                     MOVE #ACCY     #AACCY  3
+     C*
+     C**  Get the number of decimal places for the currency.
+     C*
+     C                     MOVE *BLANKS   ZZ006
+     C                     MOVE '20'      RECT
+     C                     MOVE 1         ZZ001
+     C                     MOVE #ACCY     RCCY
+     C           #ATKY2    CHAINTABTG10F             83
+     C/COPY WNCPYSRC,GL4610C005
+     C                     Z-ADDCDP       #ACDP
+     C*
+     C**  If the subfile line counter is less than 10, calculate the
+     C**  opening balance and read the posting record using the account
+     C**  code, currency, start date and branch as keys for setting the
+     C**  lower limit to LF/AUAPOSV1.
+     C*
+     C           #ALCTR    IFLT 10
+     C                     EXSR #ACOPB
+     C                     MOVE '0'       *IN33
+     C           #APKEY    SETLLAUAPOSV1             87
+     C*
+     C           *IN87     IFEQ '0'
+     C           #AAKEY    READEAUAPOSV1                 87
+     C                     MOVE '1'       *IN39
+     C                     ELSE                                           063744
+     C                     MOVE '1'       *IN37                           063744
+     C                     END
+     C*
+     C**  If the remaining lines are not enough, fill the excess lines
+     C**  with blanks.
+     C*
+     C                     ELSE
+     C                     EXSR #AFILL
+     C*
+     C** For all currencies, process the last currency read
+     C*
+     C           *IN25     IFEQ '1'
+     C                     SUB  1         AA
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C           #AOPE9    ENDSR                           *** #AOPE9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ACOPB - CALCULATE OPENING BALANCE              *
+     C*                                                               *
+     C*  CALLED BY  : #AOPEN - PROCESS OPENING BALANCE LINE           *
+     C*                                                               *
+     C*  CALLS      : ZSEDIT - FORMAT AMOUNT TO CCY DECIMAL PLACES    *
+     C*               #ASPAC - WRITE A BLANK LINE TO SUBFILE          *
+     C*                                                               *
+     C*  FIELDS USED: #ALTOT - LEDGER BALANCE TOTAL                   *
+     C*               #APTOT - POSTING AMOUNT TOTAL                   *
+     C*               #AOTOT - OPENING BALANCE                        *
+     C*               #AAKEY - KEY LIST FOR LF/AUACNTV1               *
+     C*               #LDBL  - LEDGER BALANCE FROM LF/AUACNTV1        *
+     C*               #APKEY - KEY LIST FOR LF/AUAPOSV1               *
+     C*               PSTD   - POSTING DATE FROM LF/AUAPOSV1          *
+     C*               #ADATS - START DATE IN MIDAS DAY NO. FORMAT     *
+     C*               RUND   - RUN DATE IN MIDAS DAY NO. FORMAT       *
+     C*               DRCR   - DEBIT/CREDIT INDICATOR FROM LF/AUAPOSV1*
+     C*               PSTA   - POSTING AMOUNT FROM LF/AUAPOSV1        *
+     C*               ZFLD15 - INPUT FIELD FOR ZSEDIT                 *
+     C*               ZDECS  - INPUT FIELD FOR ZSEDIT                 *
+     C*               ZECODE - EDIT CODE FIELD FOR ZSEDIT             *
+     C*               ZOUT21 - OUTPUT FIELD FOR ZSEDIT                *
+     C*               #AOBAL - OPENING BALANCE (FORMATTED)            *
+     C*               #ADRCR - DEBIT/CREDIT INDICATOR                 *
+     C*               #ANARR - NARRATIVE                              *
+     C*               #AACCY - CURRENCY (FOR OUTPUT)                  *
+     C*               #AGENL - GENERAL LINE FOR SUBFILE               *
+     C*               #RRN   - RELATIVE RECORD NUMBER                 *
+     C*               #ALCTR - SUBFILE LINE COUNTER                   *
+     C*               #AERR  - FLAG FOR VALID ACOD/CCY/BRCD           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ACOPB    BEGSR
+     C*
+     C**  Initialise work fileds.
+     C*
+     C                     Z-ADD*ZEROS    #ALTOT 150
+     C                     Z-ADD*ZEROS    #APTOT 150
+     C                     Z-ADD*ZEROS    #AOTOT 150
+     C*
+     C**  Access ledger balances from LF/AUACNTV1 using the account
+     C**  code and currency as keys.
+     C*
+     C           #AAKEY    CHAINAUACNTV1             86
+     C*
+     C**  Do processing until end of LF/AUACNTV1.
+     C*
+     C           *IN86     DOWEQ'0'
+     C*
+     C**  If processing is for ONE branch and the Branch Code of Trade
+     C**  (BRCD) is not equal to the branch entered, read the next
+     C**  equal record.
+     C*
+     C           *IN26     IFEQ '0'
+     C           BRCA      ANDNE#ABRA                                     S01399
+     C           #AAKEY    READEAUACNTV1               8686
+     C                     ELSE
+     C*
+     C**  Else, add the Ledger Balance (LDBL) to the ledger total.
+     C*
+     C/COPY WNCPYSRC,GL4610C010
+     C                     ADD  LDBL      #ALTOT
+     C/COPY WNCPYSRC,GL4610C011
+     C           #AAKEY    READEAUACNTV1               8686
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Access posting records from LF/AUAPOSV1 by setting the lower
+     C**  limit according to the account code, currency, and the start
+     C**  date.
+     C*
+     C           #APKEY    SETLLAUAPOSV1             87
+     C*
+     C           *IN87     IFEQ '0'
+     C           #AAKEY    READEAUAPOSV1               8787
+     C*
+     C**  Process records while they are between the start date and the
+     C**  run date inclusive and while the end of file has not yet been
+     C**  reached.
+     C*
+     C           PSTD      DOWGE#ADATS
+     C           PSTD      ANDLERUND
+     C           *IN87     ANDEQ'0'
+     C*
+     C**  If processing is for ONE branch only and the Branch Code of
+     C**  Trade (BRCD) is not equal to the branch entered, read the
+     C**  next equal record.
+     C*
+     C           *IN26     IFEQ '0'
+     C           BRCA      ANDNE#ABRA                                     S01399
+     C           #AAKEY    READEAUAPOSV1               8787
+     C                     ELSE
+     C*
+     C**  If the Debit/Credit indicator is equal to zero, add the posting
+     C**  amount to the posting total. Else, subtract the posting amount
+     C**  from the posting total.
+     C*
+     C/COPY WNCPYSRC,GL4610C012
+     C           DRCR      IFEQ *ZERO
+     C                     ADD  PSTA      #APTOT
+     C                     ELSE
+     C                     SUB  PSTA      #APTOT
+     C                     END
+     C/COPY WNCPYSRC,GL4610C013
+     C*
+     C**  Read the next posting record.
+     C*
+     C           #AAKEY    READEAUAPOSV1               8787
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Calculate the opening balance.
+     C**  Opening Balance = Ledger Balance Total - Posting Total
+     C*
+     C           #ALTOT    SUB  #APTOT    #AOTOT
+     C*
+     C**  Format the OPENING BALANCE for output.
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE #AOTOT    ZFLD15
+     C                     MOVE #ACDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #AOBAL 21
+     C*
+     C**  Indicate 'DR' if the opening balance is a positive amount.
+     C**  Use 'CR' if it is a negative amount.
+     C*
+     C           #AOTOT    IFGE *ZERO
+     C                     MOVE 'DR'      #ADRCR
+     C                     ELSE
+     C                     MOVE 'CR'      #ADRCR
+     C                     MOVE ' '       #AOBAL
+     C                     MOVE #AOBAL    #AOBAL
+     C                     END
+     C*
+     C**  Move values to the subfield array AU1.
+     C*
+     C                     MOVE *BLANKS   AU1
+     C                     MOVE *BLANKS   #ANARR 15
+     C                     MOVEAAU0,1     #ANARR
+     C                     MOVEA#ANARR    AU1,1
+     C                     MOVEA#AACCY    AU1,10
+     C                     MOVE *BLANKS   #ANARR
+     C                     MOVEAAU0,2     #ANARR
+     C                     MOVEA#ANARR    AU1,21
+     C                     MOVEA#AOBAL    AU1,53
+     C                     MOVEA#ADRCR    AU1,74
+     C                     MOVEAAU1       #AGENL 78
+     C*
+     C**  Write the Opening Balance line to the subfile.
+     C*
+     C           #AERR     IFEQ '0'
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN29
+     C                     WRITEAU4610S2
+     C                     MOVE '0'       *IN29
+     C                     ADD  1         #RRN
+     C                     ADD  1         #ALCTR
+     C*
+     C**  Write a blank line after the opening balance line.
+     C*
+     C                     EXSR #ASPAC
+     C                     END
+     C*
+     C**  Zeroise the posting amount total.
+     C*
+     C                     Z-ADD*ZEROS    #APTOT
+     C*
+     C           #ACOP9    ENDSR                           *** #ACOP9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #APSTF - FORMAT POSTING DETAILS                 *
+     C*                                                               *
+     C*  CALLED BY  : #ARECD - PROCESS POSTING DETAILS LINE           *
+     C*                                                               *
+     C*  CALLS      : ZDATE2 - FORMAT MIDAS DAY NO. TO DATE           *
+     C*               ZSEDIT - FORMAT AMOUNT TO CCY DEIMAL PLACES     *
+     C*                                                               *
+     C*  FIELDS USED: PSTD   - POSTING DATE FROM LF/AUAPOSV1          *
+     C*               ZDAYNO - INPUT FIELD FOR ZDATE2                 *
+     C*               ZDATE  - OUTPUT FIELD FOR ZDATE2                *
+     C*               #APDAT - POSTING DATE IN DDMMYY FORMAT          *
+     C*               #ADD   - FIELD TO HOLD DD VALUE                 *
+     C*               #ATMP4 - TEMPORARY FIELD TO HOLD MMYY VALUES    *
+     C*               #AMM   - FIELD TO HOLD MM VALUE                 *
+     C*               #AYY   - FIELD TO HOLD YY VALUE                 *
+     C*               #ADAT  - DATE IN DD/MM/YY FORMAT                *
+     C*               #APDTE - POSTING DATE IN DD/MM/YY FORMAT        *
+     C*               BRCA   - BRANCH CODE FROM LF/AUAPOSV1           *   S01399
+     C*               #ABRCA - BRANCH CODE (OUTPUT)                   *   S01399
+     C*               CNUM   - CUSTOMER NO. FROM LF/AUAPOSV1          *
+     C*               #ACNUM - CUSTOMER NO. (OUTPUT)                  *
+     C*               ACSQ   - ACCOUNT SEQ. NO. FROM LF/AUAPOSV1      *
+     C*               #AACSQ - ACCOUNT SEQ. NO. (OUTPUT)              *
+     C*               ZFLD15 - INPUT FIELD FOR ZSEDIT                 *
+     C*               ZDECS  - INPUT FIELD FOR ZSEDIT                 *
+     C*               ZDECS  - EDIT CODE FIELD FOR ZSEDIT             *
+     C*               ZOUT21 - OUTPUT FIELD FOR ZSEDIT                *
+     C*               PSTA   - POSTING AMOUNT FROM LF/AUAPOSV1        *
+     C*               #ATRAN - TRANSACTION AMOUNT (OUPUT)             *
+     C*               DRCR   - DEBIT/CREDIT INDICATOR FROM LF/AUAPOSV1*
+     C*               #ADRCR - DEBIT/CREDIT INDICATOR (OUTPUT)        *
+     C*               #APTOT - POSTING AMOUN TOTAL                    *
+     C*               DLREF  - MODULE ID FROM LF/AUAPOSV1             *
+     C*               #AGENL - GENERAL LINE FOR SUBFILE               *
+     C*               #RRN   - RELATIVE RECORD NUMBER                 *
+     C*               #ALCTR - SUBFILE LINE COUNTER                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #APSTF    BEGSR
+     C*
+     C**  Format POSTING DATE for output.
+     C*
+     C                     Z-ADDPSTD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZDATE     #APDAT  6
+     C                     MOVEL#APDAT    #ADD
+     C                     MOVE #APDAT    #ATMP4
+     C                     MOVEL#ATMP4    #AMM
+     C                     MOVE #ATMP4    #AYY
+     C                     MOVE #ADAT     #APDTE  8
+     C*
+     C                     MOVE BRCA      #ABRCA  3                       S01399
+     C                     MOVE CNUM      #ACNUM  6
+     C                     MOVE ACSQ      #AACSQ  2
+     C*
+     C**  Format POSTING AMOUNT for output.
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE PSTA      ZFLD15
+     C                     MOVE #ACDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ATRAN 21
+     C*
+     C**  The corresponding amount narrative is based on the value of
+     C**  the Debit/Credit Indicator.
+     C*
+     C           DRCR      IFEQ *ZERO
+     C                     MOVE 'DR'      #ADRCR  2
+     C                     MOVE ' '       #ATRAN
+     C                     ADD  PSTA      #APTOT
+     C                     ELSE
+     C                     MOVE 'CR'      #ADRCR
+     C                     SUB  PSTA      #APTOT
+     C                     END
+     C*
+     C**  Move values to the subfield array AU1.
+     C*
+     C                     MOVE *BLANKS   AU1
+     C                     MOVEA#APDTE    AU1,1
+     C           *IN85     IFEQ '1'                                       S01399
+     C                     MOVEA#ABRCA    AU1,13                          S01399
+     C                     ELSE                                           S01399
+     C                     MOVEA'   '     AU1,13                          S01399
+     C                     END                                            S01399
+     C                     MOVEA#ACNUM    AU1,22
+     C                     MOVEA#AACSQ    AU1,35
+     C                     MOVEADLREF     AU1,43
+     C                     MOVEA#ATRAN    AU1,53
+     C                     MOVEA#ADRCR    AU1,74
+     C                     MOVEAAU1       #AGENL
+     C*
+     C**  Write the posting detail line to the subfile.
+     C*
+     C                     WRITEAU4610S2
+     C                     ADD  1         #RRN
+     C                     MOVE '1'       *IN27
+     C                     ADD  1         #ALCTR
+     C*
+     C           #APST9    ENDSR                           *** #APST9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ACCLB - CALCULATE CLOSING BALANCE              *
+     C*                                                               *
+     C*  CALLED BY  : #ACLSE - PROCESS CLOSING BALANCE LINE           *
+     C*                                                               *
+     C*  CALLS      : ZSEDIT - FORMAT AMOUNT TO CCY DECIMAL PLACES    *
+     C*                                                               *
+     C*  FIELDS USED: #ACTOT - CLOSING BALANCE                        *
+     C*               #AOTOT - OPENING BALANCE                        *
+     C*               #APTOT - POSTING AMOUNT TOTAL                   *
+     C*               ZFLD15 - INPUT FIRLD FOR ZSEDIT                 *
+     C*               ZDECS  - INPUT FIRLD FOR ZSEDIT                 *
+     C*               ZECODE - EDIT CODE FIELD FOR ZSEDIT             *
+     C*               ZOUT21 - OUTPUT FIELD FOR ZSEDIT                *
+     C*               #ACBAL - CLOSING BALANCE (FORMATTED)            *
+     C*               #ADRCR - DEBIT/CREDIT INDICATOR (OUTPUT)        *
+     C*               #ANARR - NARRATIVE                              *
+     C*               #AACCY - CURRENCY (OUTPUT)                      *
+     C*               #AGENL - GENERAL LINE FOR SUBFILE               *
+     C*               #RRN   - RELATIVE RECORD NUMBER                 *
+     C*               #ALCTR - SUBFILE LINE COUNTER                   *
+     C*               #AERR  - FLAG FOR VALID ACOD/CCY/BRCD           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ACCLB    BEGSR
+     C*
+     C                     Z-ADD*ZEROS    #ACTOT 150
+     C*
+     C**  Calculate the Closing Balance.
+     C*
+     C           #AOTOT    ADD  #APTOT    #ACTOT
+     C*
+     C**  Format the CLOSING BALANCE for output.
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE #ACTOT    ZFLD15
+     C                     MOVE #ACDP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ACBAL 21
+     C*
+     C**  If the closing balance is a positive amount, the amount
+     C**  narrative will be 'DR'. Else, it will be 'CR'.
+     C*
+     C           #ACTOT    IFGE *ZERO
+     C                     MOVE 'DR'      #ADRCR
+     C                     ELSE
+     C                     MOVE 'CR'      #ADRCR
+     C                     MOVE ' '       #ACBAL
+     C                     MOVE #ACBAL    #ACBAL
+     C                     END
+     C*
+     C**  Move values to the subfield array AU1.
+     C*
+     C                     MOVE *BLANKS   AU1
+     C                     MOVE *BLANKS   #ANARR
+     C                     MOVEAAU0,3     #ANARR
+     C                     MOVEA#ANARR    AU1,21
+     C                     MOVEA#AACCY    AU1,37
+     C                     MOVEA#ACBAL    AU1,53
+     C                     MOVEA#ADRCR    AU1,74
+     C                     MOVEAAU1       #AGENL
+     C*
+     C**  Write the Closing Balance line to the subfile.
+     C*
+     C           #AERR     IFEQ '0'
+     C                     WRITEAU4610S2
+     C                     ADD  1         #RRN
+     C                     ADD  1         #ALCTR
+     C                     END
+     C*
+     C           #ACCL9    ENDSR                           *** #ACCL9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ABCEQ - CALCULATE BASE CURRENCY EQUIVALENT     *
+     C*                                                               *
+     C*  CALLED BY  : #ACLSE - PROCESS CLOSING BALANCE LINE           *
+     C*                                                               *
+     C*  CALLS      : ZSEDIT - FORMAT AMOUNT TO CCY DECIMAL PLACES    *
+     C*                                                               *
+     C*  FIELDS USED: #AETOT - BASE CCY EQUIVALENT                    *
+     C*               #AEBAL - BASE CCY EQUIVALENT (FORMATTED)        *
+     C*               #ASKEY - KEY LIST FOR LF/SDCUHSL1               *
+     C*               G2MDIN - MULT/DIV INDICATOR FROM LF/SDCUHSL1    *
+     C*               #ACTOT - CLOSING BALANCE                        *
+     C*               G2SPRT - SPOT RATE FROM LF/SDCUHSL1             *
+     C*               ZFLD15 - INPUT FIELD FOR ZSEDIT                 *
+     C*               ZDECS  - INPUT FIELD FOR ZSEDIT                 *
+     C*               ZECODE - EDIT CODE FIELD FOR ZSEDIT             *
+     C*               ZOUT21 - OUTPUT FILED FOR ZSEDIT                *
+     C*               #ADRCR - DEBIT/CREDIT INDICATOR (OUTPUT)        *
+     C*               #ABRCR - ACCOUNT CODE TOTAL                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ABCEQ    BEGSR
+     C*
+     C**  Initialise work fields.
+     C*
+     C                     Z-ADD*ZEROS    #AETOT 150
+     C                     MOVE *BLANKS   #AEBAL 21
+     C*
+     C* Convert Account Total to Base Currency Equivalent                 048915
+     C*                                                                   048915
+     C           #ACCY     IFNE BCCY                                      048915
+     C                     CALL 'GL0765'                                  048915
+     C                     PARM *BLANKS   #ARETC                          048915
+     C                     PARM           #ACCY                           048915
+     C                     PARM           BCCY                            048915
+     C                     PARM           #ADATE                          048915
+     C           #AETOT    PARM #ACTOT    CVAMT  190                      048915
+     C           #ARETC    IFNE *BLANKS                                   048915
+     C                     Z-ADD0         #AETOT                          048915
+     C                     END                                            048915
+     C                     ELSE                                           048915
+     C                     Z-ADD#ACTOT    #AETOT                          048915
+     C                     END                                            048915
+     C*                                                                   048915
+     C****Set*lower*limit*to*LF/SDCUHSL1*using*the*end*date*and*the       048915
+     C****currency*as*keys.****************************************       048915
+     C***********                                                         048915
+     C***********#ASKEY    SETLLSDCUHSL1             88  89               048915
+     C***********                                                         048915
+     C****If*an*equal*record*was*found,*read*the*record.***********       048915
+     C***********                                                         048915
+     C************IN89     IFEQ '1'                                       048915
+     C***********          READ SDCUHSL1                 89               048915
+     C***********          END                                            048915
+     C***********                                                         048915
+     C****If*no*equal*record*was*found,*read*the*prior*record*until       048915
+     C****the*currencies*are*equal.********************************       048915
+     C***********                                                         048915
+     C************IN88     IFEQ '1'                                       048915
+     C***********                                                         048915
+     C***********#ACCY     DOUEQG2CYCD                                    048915
+     C***********          READPSDCUHSL1                 88               048915
+     C***********          END                                            048915
+     C***********                                                         048915
+     C***********          END                                            048915
+     C***********                                                         048915
+     C****Divide/Multiply*the*closing*balance*by*the*spot*rate*****       048915
+     C****depending*on*the*value*of*the*Mult/Div*Indicator.********       048915
+     C***********                                                         048915
+     C***********G2MDIN    IFEQ 'D'                                       048915
+     C***********#ACTOT    DIV  G2SPRT    #AETOT    H                     048915
+     C***********          ELSE                                           048915
+     C***********#ACTOT    MULT G2SPRT    #AETOT    H                     048915
+     C***********          END                                            048915
+     C*
+     C**  Format CLOSING BALANCE BASE EQUIVALENT for output.
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE #AETOT    ZFLD15
+     C                     MOVE #ABCDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #AEBAL
+     C*
+     C**  If the base currency equivalent is a positive amount, use
+     C**  'DR' as the amount's narrative. Else, use 'CR'.
+     C*
+     C           #AETOT    IFGE *ZERO
+     C                     MOVE 'DR'      #ADRCR
+     C                     ELSE
+     C                     MOVE 'CR'      #ADRCR
+     C                     MOVE ' '       #AEBAL
+     C                     MOVE #AEBAL    #AEBAL
+     C                     END
+     C*
+     C**  Add the base currency equivalent to the Account Code Total.
+     C*
+     C                     ADD  #AETOT    #ABTOT
+     C*
+     C           #ABCE9    ENDSR                           *** #ABCE9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ACLEL - WRITE CLOSING BALANCE EQUIVALENT LINE  *
+     C*                                                               *
+     C*  CALLED BY  : #AEQUV - PROCESS CLOSING BALANCE EQUIV. LINE    *
+     C*                                                               *
+     C*  CALLS      : #ASPAC - WRITE A BLANK LINE TO SUBFILE          *
+     C*                                                               *
+     C*  FIELDS USED: #ANARR - NARRATIVE                              *
+     C*               BCCY   - BASE CURRENCY                          *
+     C*               #AEBAL - BASE CCY EQUIVALENT (FORMATTED)        *
+     C*               #ADRCR - DEBIT/CREDIT INDICATOR (OUTPUT)        *
+     C*               #AGENL - GENERAL LINE FOR SUBFILE               *
+     C*               #RRN   - RELATIVE RECORD NUMBER                 *
+     C*               #ALCTR - SUBFILE LINE COUNTER                   *
+     C*               #AERR  - FLAG FOR VALID ACOD/CCY/BRCD           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ACLEL    BEGSR
+     C*
+     C**  Move values to to the subfield array AU1.
+     C*
+     C                     MOVE *BLANKS   AU1
+     C                     MOVE *BLANKS   #ANARR
+     C                     MOVEAAU0,3     #ANARR
+     C                     MOVEA#ANARR    AU1,21
+     C                     MOVEABCCY      AU1,37
+     C                     MOVE *BLANKS   #ANARR
+     C                     MOVEAAU0,4     #ANARR
+     C                     MOVEA#ANARR    AU1,41
+     C                     MOVEA#AEBAL    AU1,53
+     C                     MOVEA#ADRCR    AU1,74
+     C                     MOVEAAU1       #AGENL
+     C*
+     C**  Write the Closing Balance Equivalent line to the subfile.
+     C*
+     C           #AERR     IFEQ '0'
+     C                     WRITEAU4610S2
+     C                     ADD  1         #RRN
+     C                     ADD  1         #ALCTR
+     C*
+     C**  Write a blank line after the closing balance equivalent line.
+     C*
+     C                     EXSR #ASPAC
+     C                     END
+     C*
+     C           #ACLE9    ENDSR                           *** #ACLE9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ATOTL - WRITE TOTAL ACCOUNT CODE LINE          *
+     C*                                                               *
+     C*  CALLED BY  : #APROC - PROCESS RECORDS                        *
+     C*                                                               *
+     C*  CALLS      : ZSEDIT - FORMAT AMOUNT TO CCY DECIMAL PLACES    *
+     C*                                                               *
+     C*  FIELDS USED: #ABTOT - ACCOUNT CODE TOTAL                     *
+     C*               ZFLD15 - INPUT FIELD FOR ZSEDIT                 *
+     C*               ZDECS  - INPUT FIELD FOR ZSEDIT                 *
+     C*               ZECODE - EDIT CODE FIELD FOR ZSEDIT             *
+     C*               ZOUT21 - OUTPUT FIELD FOR ZSEDIT                *
+     C*               #ABBAL - ACCOUNT CODE TOTAL (FORMATTED)         *
+     C*               #ADRCR - DEBIT/CREDIT INDICATOR (OUTPUT)        *
+     C*               #ANARR - NARRATIVE                              *
+     C*               #ACODE - ACCOUNT CODE                           *
+     C*               BCCY   - BASE CURRENCY                          *
+     C*               #AGENL - GENERAL LINE FOR SUBFILE               *
+     C*               #RRN   - RELATIVE RECORD NUMBER                 *
+     C*               #ALCTR - SUBFILE LINE COUNTER                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ATOTL    BEGSR
+     C*
+     C**  Format ACCOUNT CODE TOTAL for output.
+     C*
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE #ABTOT    ZFLD15
+     C                     MOVE #ABCDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    #ABBAL 21
+     C*
+     C**  If the account code total is a positive amount, use 'DR' as
+     C**  the amount's narrative. Else, use 'CR'.
+     C*
+     C           #ABTOT    IFGE *ZERO
+     C                     MOVE 'DR'      #ADRCR
+     C                     ELSE
+     C                     MOVE 'CR'      #ADRCR
+     C                     MOVE ' '       #ABBAL
+     C                     MOVE #ABBAL    #ABBAL
+     C                     END
+     C*
+     C**  Move values to the subfield array AU1.
+     C*
+     C                     MOVE *BLANKS   AU1
+     C                     MOVE *BLANKS   #ANARR
+     C                     MOVEAAU0,5     #ANARR
+     C                     MOVEA#ANARR    AU1,1
+     C                     MOVEA#ACODE    AU1,11
+     C                     MOVEABCCY      AU1,37
+     C                     MOVE *BLANKS   #ANARR
+     C                     MOVEAAU0,4     #ANARR
+     C                     MOVEA#ANARR    AU1,41
+     C                     MOVEA#ABBAL    AU1,53
+     C                     MOVEA#ADRCR    AU1,74
+     C                     MOVEAAU1       #AGENL
+     C*
+     C**  Write the Account Code Total line to the subfile.
+     C*
+     C           *IN27     IFEQ '1'
+     C                     WRITEAU4610S2
+     C                     ADD  1         #RRN
+     C                     ADD  1         #ALCTR
+     C***********          MOVE '1'       *IN35                           048915
+     C                     MOVE '0'       *IN36
+     C                     END
+     C*                                                                   048915
+     C                     MOVE '1'       *IN35                           048915
+     C*
+     C           #ATOT9    ENDSR                           *** #ATOT9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #APSFL - SUBFILE PROCESSING                     *
+     C*                                                               *
+     C*  CALLED BY  : #ADETL - DISPLAY DETAILS                        *
+     C*                                                               *
+     C*  CALLS      : ZA0340 - EXT.SUB.- SENDS ERROR MESSAGE TO SCREEN*
+     C*               ZA0250 - CLEAR PROGRAM SUBFILE MESSAGE QUEUE    *
+     C*                                                               *
+     C*  FIELDS USED: MSGFL  - MESSAGE FILE OF THE ERROR MESSAGE      *
+     C*               MSGID  - MESSAGE ID OF THE ERROR MESSAGE        *
+     C*               #ATIME - SYSTEM TIME                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #APSFL    BEGSR
+     C*
+     C**  If a posting record was chosen, display the subfile. Else,
+     C**  display message 'NO RECORD TO DISPLAY'.
+     C*
+     C           *IN27     IFEQ '1'
+     C                     EXFMTAU4610C2
+     C                     ELSE
+     C                     MOVEL'GLM0001' MSGID                           S01399
+     C                     CALL 'ZA0340'
+     C                     PARM           MSGFL
+     C                     PARM           MSGID
+     C                     EXFMTAU4610C1
+     C                     CALL 'ZA0250'
+     C                     TIME           #ATIME
+     C                     END
+     C*
+     C           #APSF9    ENDSR                           *** #APSF9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ABASE - GETS BASE CURRENCY DETAILS             *
+     C*                                                               *
+     C*  CALLED BY  : MAIN   - MAIN CONTROLLING ROUTINE               *
+     C*                                                               *
+     C*  CALLS      : -                                               *
+     C*                                                               *
+     C*  FIELDS USED: #ATKY2 - KEY LIST FOR FORMAT TABTG10F           *
+     C*               CDP    - CCY DECIMAL PLACES FROM TABTG10F       *
+     C*               #ABCDP - BASE CURRENCY DECIMAL PLACES           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ABASE    BEGSR
+     C*
+     C**  Chain to LF/TABGL to get the number of decimal places for
+     C**  the base currency.
+     C*
+     C                     MOVE *BLANKS   ZZ006
+     C                     MOVE '20'      RECT
+     C                     MOVE 1         ZZ001
+     C                     MOVE BJCYCD    BCCY                            046901
+     C                     MOVE BCCY      RCCY
+     C           #ATKY2    CHAINTABTG10F             83
+     C*
+     C           *IN83     IFEQ '0'
+     C                     Z-ADDCDP       #ABCDP  10
+     C                     END
+     C*
+     C           #ABAS9    ENDSR                           *** #ABAS9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ASPAC - WRITE A BLANK LINE TO SUBFILE          *
+     C*                                                               *
+     C*  CALLED BY  : #ACLSE - PROCESS CLOSING BALANCE LINE           *
+     C*               #ACOPB - CALCULATE CLOSING BALANCE              *
+     C*               #ACLEL - WRITE CLOSING BALANCE EQUIVALENT LINE  *
+     C*                                                               *
+     C*  CALLS      :  -                                              *
+     C*                                                               *
+     C*  FIELDS USED: #AGENL - GENERAL LINE FOR SUBFILE               *
+     C*               #RRN   - RELATIVE RECORD NUMBER                 *
+     C*               #ALCTR - SUBFILE LINE COUNTER                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ASPAC    BEGSR
+     C*
+     C**  Write a blank line to the subfile.
+     C*
+     C                     MOVE *BLANKS   #AGENL
+     C                     WRITEAU4610S2
+     C                     ADD  1         #RRN
+     C                     ADD  1         #ALCTR
+     C*
+     C           #ASPA9    ENDSR                           *** #ASPA9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #AFILL - FILL EXCESS LINES WITH BLANKS          *
+     C*                                                               *
+     C*  CALLED BY  : #AEQUV - PROCESS CLOSING BALANCE EQUIV. LINE    *
+     C*               #ACLSE - PROCESS CLOSING BALANCE LINE           *
+     C*               #AOPEN - PROCESS OPENING BALANCE LINE           *
+     C*                                                               *
+     C*  CALLS      : #ASPAC - WRITE A BLANK LINE TO SUBFILE          *
+     C*                                                               *
+     C*  FIELDS USED: #ALCTR - SUBFILE LINE COUNTER                   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #AFILL    BEGSR
+     C*
+     C**  While the subfile line counter is less than or equal to 10,
+     C**  write a blank line to the subfile.
+     C*
+     C           #ALCTR    DOWLE10
+     C                     EXSR #ASPAC
+     C                     END
+     C*
+     C           #AFIL9    ENDSR                           *** #AFIL9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #ABLNK - BLANK OUT INPUT FIELDS                 *
+     C*                                                               *
+     C*  CALLED BY  : #ADETL - DISPLAY DETAILS                        *
+     C*                                                               *
+     C*  CALLS      : -                                               *
+     C*                                                               *
+     C*  FIELDS USED: #ACODE - ACCOUNT CODE                           *
+     C*               #ABRAN - BRANCH CODE                            *
+     C*               #ACCY  - CURRENCY                               *
+     C*               #ASDAT - START DATE IN DDMMYY FORMAT            *
+     C*               #AEDAT - END DATE IN DDMMYY FORMAT              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #ABLNK    BEGSR
+     C*
+     C                     MOVE *BLANKS   #ACODE
+     C                     MOVE *BLANKS   #ABRAN
+     C                     MOVE *BLANKS   #ACCY
+     C                     MOVE *BLANKS   #ASDAT
+     C                     MOVE *BLANKS   #AEDAT
+     C/COPY WNCPYSRC,GL4610C016
+     C*
+     C           #ABLN9    ENDSR                           *** #ABLN9 ***
+     C/COPY WNCPYSRC,GL4610C006
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************   046901
+     C***********                                                     *   046901
+     C***SUBROUTINE*:*#ADBER*-*PROCESS*DATABASE*ERROR******************   046901
+     C***********                                                     *   046901
+     C***CALLED*BY**:*MAIN***-*MAIN*CONTROLLING*ROUTINE****************   046901
+     C***********                                                     *   046901
+     C***CALLS***   : -                                               *   046901
+     C***********                                                     *   046901
+     C***FIELDS*USED:*DBPGM**-*PROGRAM*NAME*IN*ERROR*******************   046901
+     C****************DBASE**-*DATABASE*SEQUENCE*IN*ERROR**************   046901
+     C****************DBFILE*-*DATABASE*FILE*IN*ERROR******************   046901
+     C****************DBKEY**-*KEY*OF*THE*DATABASE*IN*ERROR************   046901
+     C***********                                                     *   046901
+     C*****************************************************************   046901
+     C***********                                                         046901
+     C***********#ADBER    BEGSR                                          046901
+     C***********                                                         046901
+     C****Set*on*indicators*U7*&*U8.***********************************   046901
+     C***********                                                         046901
+     C***********          MOVE '1'       *INU7                           046901
+     C***********          MOVE '1'       *INU8                           046901
+     C***********                                                         046901
+     C****Move*values*to*LDA.******************************************   046901
+     C***********                                                         046901
+     C************NAMVAR   DEFN           LDA                             046901
+     C************LOCK     IN   LDA                                       046901
+     C***********          MOVEL'GL4610'  DBPGM                    S01399 046901
+     C***********          Z-ADD01        DBASE            ***************046901
+     C***********          MOVEL'TABGL'   DBFILE           * DB ERROR 01 *046901
+     C***********          MOVEL*BLANK    DBKEY            ***************046901
+     C***********          OUT  LDA                                       046901
+     C***********                                                         046901
+     C***********#ADBE9****ENDSR*******************************#ADBE9**** 046901
+     C***********                                                         046901
+     C*****************************************************************   046901
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE : #PSSR  - ERROR HANDLING SUBROUTINE              *
+     C*                                                               *
+     C*  CALLED BY  : This routine is called if there are any program *
+     C*               or file errors.                                 *
+     C*                                                               *
+     C*  CALLS      : -                                               *
+     C*                                                               *
+     C*  FIELDS USED: -                                               *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #PSSR     BEGSR
+     C*
+     C**  Dump program.
+     C*
+     C                     DUMP
+     C*
+     C**  Call Error Handler program.
+     C*
+     C                     CALL 'DBERRCTL'
+     C*
+     C           #PSSR9    ENDSR                           *** #PSSR9 ***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/EJECT
+** CPY@ - COPYRIGHT STATEMENT
+(c) Finastra International Limited 2001
+**   AU0 - SUBFILE NARRATIVES
+Currency
+Opening Balance
+Closing Balance
+Equiv.
+Total A/c
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

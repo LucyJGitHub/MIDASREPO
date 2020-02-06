@@ -1,0 +1,355 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Create x-language format option codes')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7990   - Create Multi-Language Format Options              *
+      *                                                               *
+      *  Function:                                                    *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 096647             Date 30Nov95               *
+      *                 CCG009             Date 01Jun95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  096647 - Add parameters to select format option, if entered  *
+      *           then only this is dupliacted. Also add over-write   *
+      *           option to allow user to keep existing translations  *
+      *  CCG009 - Private Banking UDC                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *                                                               *
+      *  40   -    Chain fail                                         *
+      *  50   -    End of File                                        *
+      *  60   -    No format option group                             *
+      *  90   -    General Purpose Error Indicator                    *
+      *                                                               *
+      *****************************************************************
+      *................................................................
+      *
+     FSDLANGL0IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGFGRPL0IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGFOPTL0IF  E           K        DISK
+     F                                              KINFSR SRFILE
+     FCGFLNGL0UF  E           K        DISK                      A
+     F                                              KINFSR SRFILE
+      /EJECT
+      *
+      **  Copyright array.
+     E                    ##CPY   1   1 80
+      /COPY CGCPYSRC,SRERRE
+      /EJECT
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+      /COPY CGCPYSRC,SRERRI
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   SRMAIN - Main processing                                    *
+      *   SRINZ  - Initialise Fields on Each Invocation               *
+      *   SRINIT - Initial processing - On First Call                 *
+      *   *PSSR  - Exception/Error Handling                           *
+      *   SRFILE - File Exception/Error Handling                      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7                       096647
+     C                     PARM           W0FOPT 10                       096647
+     C                     PARM           W0LANG  2
+     C                     PARM           W0OWRT  1                       096647
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      **  Initialisation processing
+     C                     EXSR SRINZ
+      *
+      **  Detail process
+     C                     EXSR SRMAIN
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  SRFOPT -  Format Option extraction             *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Validate the input language code
+      *
+     C           W0LANG    CHAINSDLANGL0             40    *
+      *
+     C           *IN40     IFEQ '0'
+     C           RECI      ANDEQ'D'
+      *
+      **  If valid, read the format options
+      *
+     C                     EXSR SRFOPT
+     C                     ELSE
+      *
+      **  If invalid
+      *
+     C                     SETON                     U6
+     C                     MOVEL'CGD2526' W0RTN                           096647
+     C                     END
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRFOPT                                         *
+      * Function    :  Format Option extraction                       *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :  SRFLNG -  Write Multi-Language Format Option   *
+      *****************************************************************
+     C           SRFOPT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRFOPT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Access the Format Options
+      *
+     C           W0FOPT    IFEQ *BLANKS                                   096647
+     C           *LOVAL    SETLLCGFOPTL0
+     C                     READ CGFOPTL0                 50*
+     C                     ELSE                                           096647
+     C           W0FOPT    SETLLCGFOPTL0                                  096647
+     C           W0FOPT    READECGFOPTL0                 50*              096647
+     C                     ENDIF                                          096647
+     C           *IN50     DOWEQ'0'
+      *
+      **  Check that the format option group is valid/live
+      *
+     C           FOFOPT    IFNE FGFOPT
+     C           FOFOPT    CHAINCGFGRPL0             60    *
+     C  N60      FGRECI    COMP 'D'                  6060  *
+     C                     MOVELFOFOPT    FGFOPT
+     C                     END
+      *
+      **  Write the multi-language format option
+      *
+     C           *IN60     IFEQ '0'
+     C           FORECI    ANDEQ'D'
+     C           FOFPGM    ANDEQ'*NONE'
+     C                     EXSR SRFLNG
+     C                     END
+      *
+      **  Access the Format Options
+      *
+     C           W0FOPT    IFEQ *BLANKS                                   096647
+     C                     READ CGFOPTL0                 50*
+     C                     ELSE                                           096647
+     C           W0FOPT    READECGFOPTL0                 50*              096647
+     C                     ENDIF                                          096647
+     C                     END
+      *
+      *................................................................
+      *
+     C           EXFOPT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRFLNG                                         *
+      * Function    :  Write a multi-language format option           *
+      *                                                               *
+      * Called by   :  various                                        *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRFLNG    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRFLNG'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Check whether multi-language format option exists
+      *
+     C                     MOVELFOFOPT    BYFOPT
+     C                     MOVELFOFRMT    BYFRMT
+     C                     MOVELW0LANG    BYLGID
+     C           FLNGK     CHAINCGFLNGL0             40    *
+     C           *LIKE     DEFN BYRECI    ##RECI                          096647
+     C                     MOVELBYRECI    ##RECI                          096647
+      *
+      ** Pass details
+     C                     MOVELFORECI    BYRECI
+     C                     MOVELFOFPGM    BYFPGM
+     C                     MOVELFODESC    BYDESC
+     C   40                MOVELFONAR1    BYNAR1
+     C   40                MOVELFONAR2    BYNAR2
+     C   40                MOVELFONAR3    BYNAR3
+     C   40                MOVELFONAR4    BYNAR4
+     C                     MOVELFOAJOB    BYAJOB
+     C                     MOVELFOAUSR    BYAUSR
+     C                     MOVELFOATIM    BYATIM
+     C                     MOVELFOARDT    BYARDT
+     C                     MOVELFOAACT    BYAACT
+     C                     MOVELFORDNB    BYRDNB
+      *
+     C           *IN40     IFEQ '1'
+     C                     WRITE@FLNGL0
+     C                     ELSE
+     C           W0OWRT    IFEQ 'Y'                                       096647
+     C           ##RECI    ORNE 'D'                                       096647
+     C                     UPDAT@FLNGL0
+     C                     ENDIF                                          096647
+     C                     END
+      *................................................................
+      *
+     C           EXFLNG    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      *................................................................
+      *
+     C           EXINZ     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Key lists
+     C           FLNGK     KLIST
+     C                     KFLD           BYFOPT
+     C                     KFLD           BYFRMT
+     C                     KFLD           BYLGID
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##ACT  80
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      /COPY CGCPYSRC,SRERRPSSR
+      /EJECT
+      /COPY CGCPYSRC,SRERRC
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

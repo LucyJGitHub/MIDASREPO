@@ -1,0 +1,862 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Book prf centre combination determination')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Module                                      *
+      *                                                               *
+      *  AA0016 - SE Book - Profit centre Combination Determination   *
+      *                                                               *
+      *  Function:  This utility program will determine the book -    *
+      *  (I/C)      profit centre combination already being used by   *
+      *             the system.                                       *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 234300             Date 27Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005  *CREATE    Date 23Nov98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CSE015 - Forward Valued Depot Movements (Recompiled)         *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements.                *
+      *  CAC005 - Profit Centre Accounting - SE Enhancement           *
+      *                                                               *
+      *****************************************************************
+     FTRADS   IF  E           K        DISK         KINFSR *PSSR
+     FBULKR   IF  E           K        DISK         KINFSR *PSSR
+     FHSTTTR  IF  E           K        DISK         KINFSR *PSSR
+     FDPTMVR  IF  E           K        DISK         KINFSR *PSSR
+     FPRICED  IF  E           K        DISK         KINFSR *PSSR
+     FBKMTH   IF  E           K        DISK         KINFSR *PSSR
+     FBKPHD   IF  E           K        DISK         KINFSR *PSSR
+     FBKPHH   IF  E           K        DISK         KINFSR *PSSR
+     F            BKPHDDF                           KRENAMEBKPHHDF
+     FBKRVL   IF  E           K        DISK         KINFSR *PSSR
+     FMATEX   IF  E           K        DISK         KINFSR *PSSR
+     FBKPOS   IF  E           K        DISK         KINFSR *PSSR
+     FBPACH   IF  E           K        DISK         KINFSR *PSSR
+     FUPLEX   IF  E           K        DISK         KINFSR *PSSR
+     FUDEPH   IF  E           K        DISK         KINFSR *PSSR
+     FTREVED  IF  E                    DISK         KINFSR *PSSR
+     FSEERALL0IF  E           K        DISK         KINFSR *PSSR
+     FSECOALL0IF  E           K        DISK         KINFSR *PSSR
+     FSECOAPL0IF  E           K        DISK         KINFSR *PSSR
+     FSECOREL0IF  E           K        DISK         KINFSR *PSSR
+     FSECORHL0IF  E           K        DISK         KINFSR *PSSR
+     FSECOSIL0IF  E           K        DISK         KINFSR *PSSR
+     FPMPLTRL0IF  E           K        DISK         KINFSR *PSSR
+     FSEPCBD  IF  E           K        DISK         KINFSR *PSSR
+     FSDBKP1PDUF  E           K        DISK         KINFSR *PSSR A
+     FAA0016P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FAA0016AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /EJECT
+      *                                                                   CSE017
+     IDPTMVDF                                                             CSE017
+     I              DPAP                            DDPAP                 CSE017
+      *
+     IKSEPCD      DS
+     I                                        1   2 KBKCD
+     I                                        3   5 KBRCA
+     I                                        6  15 KSESN
+     I                                       16  16 KMKTI
+      *
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IAADTA     E DSAADTA
+      ** Analytical Accounting Data Area
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for AA0016P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for AA0016AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680PRTLNU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs (200 long)
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Process Files                            *
+      *             SRP004 - Print Report                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     EXSR SRP002
+     C                     EXSR SRP003
+     C                     EXSR SRP004
+      *
+     C                     MOVE *ON       *INLR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Bank ICD Access Object                 *
+      *             *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP002    BEGSR
+      *
+     C           KBKP1     KLIST
+     C                     KFLD           KBOOK   2
+     C                     KFLD           KPRFC   4
+     C*
+     C           KSEPCB    KLIST
+     C                     KFLD           KBKCD
+     C                     KFLD           KBRCA
+     C                     KFLD           KSESN
+     C                     KFLD           KMKTI
+     C*
+     C           KSEPC1    KLIST
+     C                     KFLD           KBKCD
+     C                     KFLD           KBRCA
+     C                     KFLD           KSESN
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AA0016'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access dtaara AADTA to get the profit centre
+      *
+     C           *NAMVAR   DEFN           AADTA
+     C                     IN   AADTA
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Process Files                                       *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     SRP005 - Get Book Position Profit Centre          *
+      *             SRP006 - Get Book Position Profit Centre (Partial)*
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP003    BEGSR
+      *
+      ** Process PF/TRADSD.
+      *
+     C           *LOVAL    SETLLTRADS
+     C                     READ TRADS                    20
+     C           *IN20     DOWEQ*OFF
+     C                     MOVE TDBK      KBOOK
+     C                     MOVE BPRC      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ TRADS                    20
+     C                     ENDDO
+      *
+      ** Process PF/BULKTD.
+      *
+     C           *LOVAL    SETLLBULKR
+     C                     READ BULKR                    20
+     C           *IN20     DOWEQ*OFF
+     C                     MOVE TDBK      KBOOK
+     C                     MOVE BPRC      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ BULKR                    20
+     C                     ENDDO
+      *
+      ** Process PF/HSTTRD.
+      *
+     C           *LOVAL    SETLLHSTTTR
+     C                     READ HSTTTR                   20
+     C           *IN20     DOWEQ*OFF
+     C                     MOVE TDBK      KBOOK
+     C                     MOVE BPRC      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ HSTTTR                   20
+     C                     ENDDO
+      *
+      ** Process PF/DPTMVD.
+      *
+     C           *LOVAL    SETLLDPTMVR
+     C                     READ DPTMVR                   20
+     C           *IN20     DOWEQ*OFF
+     C                     MOVE DPBK      KBOOK
+     C                     MOVE DPPC      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ DPTMVR                   20
+     C                     ENDDO
+      *
+      ** Process PF/PRICED.
+      *
+     C           *LOVAL    SETLLPRICED
+     C                     READ PRICED                   20
+     C           *IN20     DOWEQ*OFF
+     C           PBOK      IFNE *BLANKS
+     C                     MOVE PBOK      KBKCD
+     C                     MOVE PBRA      KBRCA
+     C                     MOVE PSSN      KSESN
+     C                     MOVE PMKT      KMKTI
+     C                     MOVE 'Y'       WVAL    1
+     C                     EXSR SRP005
+     C                     ENDIF
+     C                     MOVE PBOK      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ PRICED                   20
+     C                     ENDDO
+      *
+      ** Process PF/BKMTHD.
+      *
+     C           *LOVAL    SETLLBKMTH
+     C                     READ BKMTH                    20
+     C           *IN20     DOWEQ*OFF
+     C           BKBO      IFNE *BLANKS
+     C                     MOVE BKBO      KBKCD
+     C                     MOVE BKBA      KBRCA
+     C                     MOVE BKSS      KSESN
+     C                     MOVE BKMK      KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP005
+     C                     ENDIF
+     C                     MOVE BKBO      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ BKMTH                    20
+     C                     ENDDO
+      *
+      ** Process PF/BKPHDD.
+      *
+     C           *LOVAL    SETLLBKPHD
+     C                     READ BKPHD                    20
+     C           *IN20     DOWEQ*OFF
+     C           BHBK      IFNE *BLANKS
+     C                     MOVE BHBK      KBKCD
+     C                     MOVE BHBA      KBRCA
+     C                     MOVE BHSC      KSESN
+     C                     MOVE BHMK      KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP005
+     C                     ENDIF
+     C                     MOVE BHBK      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ BKPHD                    20
+     C                     ENDDO
+      *
+      ** Process PF/BKPHHD.
+      *
+     C           *LOVAL    SETLLBKPHH
+     C                     READ BKPHH                    20
+     C           *IN20     DOWEQ*OFF
+     C           BHBK      IFNE *BLANKS
+     C                     MOVE BHBK      KBKCD
+     C                     MOVE BHBA      KBRCA
+     C                     MOVE BHSC      KSESN
+     C                     MOVE BHMK      KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP005
+     C                     ENDIF
+     C                     MOVE BHBK      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ BKPHH                    20
+     C                     ENDDO
+      *
+      ** Process PF/BKRVLD.
+      *
+     C           *LOVAL    SETLLBKRVL
+     C                     READ BKRVL                    20
+     C           *IN20     DOWEQ*OFF
+     C           BHBK      IFNE *BLANKS
+     C                     MOVE BHBK      KBKCD
+     C                     MOVE BHBA      KBRCA
+     C                     MOVE BHSC      KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP006
+     C                     ENDIF
+     C                     MOVE BHBK      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ BKRVL                    20
+     C                     ENDDO
+      *
+      ** Process PF/MATEXD.
+      *
+     C           *LOVAL    SETLLMATEX
+     C                     READ MATEX                    20
+     C           *IN20     DOWEQ*OFF
+     C           BHBK      IFNE *BLANKS
+     C                     MOVE BHBK      KBKCD
+     C                     MOVE BHBA      KBRCA
+     C                     MOVE BHSC      KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP006
+     C                     ENDIF
+     C                     MOVE BHBK      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ MATEX                    20
+     C                     ENDDO
+      *
+      ** Process PF/BKPOSD.
+      *
+     C           *LOVAL    SETLLBKPOS
+     C                     READ BKPOS                    20
+     C           *IN20     DOWEQ*OFF
+     C           BPBK      IFNE *BLANKS
+     C                     MOVE BPBK      KBKCD
+     C                     MOVE BPBA      KBRCA
+     C                     MOVE BPSC      KSESN
+     C                     MOVE BPMK      KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP005
+     C                     ENDIF
+     C                     MOVE BPBK      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ BKPOS                    20
+     C                     ENDDO
+      *
+      ** Process PF/BPACHD.
+      *
+     C           *LOVAL    SETLLBPACH
+     C                     READ BPACH                    20
+     C           *IN20     DOWEQ*OFF
+     C           BCBO      IFNE *BLANKS
+     C                     MOVE BCBO      KBKCD
+     C                     MOVE BCBA      KBRCA
+     C                     MOVE BCSS      KSESN
+     C                     MOVE BCMK      KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP005
+     C                     ENDIF
+     C                     MOVE BCBO      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ BPACH                    20
+     C                     ENDDO
+      *
+      ** Process PF/UPLEXD.
+      *
+     C           *LOVAL    SETLLUPLEX
+     C                     READ UPLEX                    20
+     C           *IN20     DOWEQ*OFF
+     C           URBK      IFNE *BLANKS
+     C                     MOVE URBK      KBKCD
+     C                     MOVE URBA      KBRCA
+     C                     MOVE URSS      KSESN
+     C                     MOVE URMK      KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP005
+     C                     ENDIF
+     C                     MOVE URBK      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ UPLEX                    20
+     C                     ENDDO
+      *
+      ** Process PF/UDEPPD.
+      *
+     C           *LOVAL    SETLLUDEPH
+     C                     READ UDEPH                    20
+     C           *IN20     DOWEQ*OFF
+     C           UDBK      IFNE *BLANKS
+     C                     MOVE UDBK      KBKCD
+     C                     MOVE UDBA      KBRCA
+     C                     MOVE UDSN      KSESN
+     C                     MOVE UDMK      KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP005
+     C                     ENDIF
+     C                     MOVE UDBK      KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ UDEPH                    20
+     C                     ENDDO
+      *
+      ** Process PF/TREVED.
+      *
+     C           1         SETLLTREVED
+     C                     READ TREVED                   20
+     C           *IN20     DOWEQ*OFF
+     C                     MOVE TRBK      KBOOK
+     C                     MOVE PRFC      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ TREVED                   20
+     C                     ENDDO
+      *
+      ** Process PF/SEERALPD
+      *
+     C           *LOVAL    SETLLSEERALL0
+     C                     READ SEERALL0                 20
+     C           *IN20     DOWEQ*OFF
+     C           VCBOOK    IFNE *BLANKS
+     C                     MOVE VCBOOK    KBKCD
+     C                     MOVE VCBRCD    KBRCA
+     C                     MOVE VCSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP006
+     C                     ENDIF
+     C                     MOVE VCBOOK    KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ SEERALL0                 20
+     C                     ENDDO
+      *
+      ** Process PF/SECOALPD
+      *
+     C           *LOVAL    SETLLSECOALL0
+     C                     READ SECOALL0                 20
+     C           *IN20     DOWEQ*OFF
+     C           MCBOOK    IFNE *BLANKS
+     C                     MOVE MCBOOK    KBKCD
+     C                     MOVE MCBRCD    KBRCA
+     C                     MOVE MCSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'N'       WVAL
+     C                     EXSR SRP006
+     C                     ENDIF
+     C                     MOVE MCBOOK    KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ SECOALL0                 20
+     C                     ENDDO
+      *
+      ** Process PF/SECOAPPD
+      *
+     C           *LOVAL    SETLLSECOAPL0
+     C                     READ SECOAPL0                 20
+     C           *IN20     DOWEQ*OFF
+     C           MXBOOK    IFNE *BLANKS
+     C                     MOVE MXBOOK    KBKCD
+     C                     MOVE MXBRCD    KBRCA
+     C                     MOVE MXSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP006
+     C                     ENDIF
+     C                     MOVE MXBOOK    KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ SECOAPL0                 20
+     C                     ENDDO
+      *
+      ** Process PF/SECOREPD
+      *
+     C           *LOVAL    SETLLSECOREL0
+     C                     READ SECOREL0                 20
+     C           *IN20     DOWEQ*OFF
+     C           MQBOOK    IFNE *BLANKS
+     C                     MOVE MQBOOK    KBKCD
+     C                     MOVE MQBRCD    KBRCA
+     C                     MOVE MQSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP006
+     C                     ENDIF
+     C                     MOVE MQBOOK    KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ SECOREL0                 20
+     C                     ENDDO
+      *
+      ** Process PF/SECORHPD
+      *
+     C           *LOVAL    SETLLSECORHL0
+     C                     READ SECORHL0                 20
+     C           *IN20     DOWEQ*OFF
+     C                     MOVE MPBOOK    KBOOK
+     C                     MOVE AABKPC    KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ SECORHL0                 20
+     C                     ENDDO
+      *
+      ** Process PF/SECOSIPD
+      *
+     C           *LOVAL    SETLLSECOSIL0
+     C                     READ SECOSIL0                 20
+     C           *IN20     DOWEQ*OFF
+     C           MOBOOK    IFNE *BLANKS
+     C                     MOVE MOBOOK    KBKCD
+     C                     MOVE MOBRCD    KBRCA
+     C                     MOVE MOSESN    KSESN
+     C                     MOVE *BLANKS   KMKTI
+     C                     MOVE 'Y'       WVAL
+     C                     EXSR SRP006
+     C                     ENDIF
+     C                     MOVE MOBOOK    KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ SECOSIL0                 20
+     C                     ENDDO
+      *
+      ** Process PF/PMPLTRPD
+      *
+     C           *LOVAL    SETLLPMPLTRL0
+     C                     READ PMPLTRL0                 20
+     C           *IN20     DOWEQ*OFF
+     C                     MOVE OUTDBK    KBKCD
+     C                     MOVE OUTDBR    KBRCA
+     C                     MOVE OUTDSS    KSESN
+     C                     MOVE OUTDMI    KMKTI
+     C                     EXSR SRP005
+     C                     MOVE OUTDBK    KBOOK
+     C                     MOVE PCBK      KPRFC
+     C           KBKP1     CHAINSDBKP1PD             21
+     C           *IN21     IFEQ '1'
+     C           KBOOK     ANDNE*BLANKS
+     C                     MOVE KBOOK     PSBKCD
+     C                     MOVE KPRFC     PSPRFC
+     C                     WRITESDBKP1D0
+     C                     ENDIF
+     C                     READ PMPLTRL0                 20
+     C                     ENDDO
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP004 - Print Report                                        *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     -                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP004    BEGSR
+      *
+     C           *LOVAL    SETLLSDBKP1PD
+     C                     READ SDBKP1PD                 20
+      *
+     C           *IN20     IFEQ '1'
+     C                     OPEN AA0016AU
+     C                     WRITEAA0016A0
+     C                     WRITEAA0016A1
+     C                     ELSE
+      *
+     C                     OPEN AA0016P1
+     C                     WRITEAA0016D0
+     C                     WRITEAA0016D1
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITEAA0016D0
+     C                     WRITEAA0016D1
+     C                     ENDIF
+      *
+     C                     MOVE PSBKCD    PBOOK
+     C                     MOVE PSPRFC    PPRFC
+     C                     WRITEAA0016D2
+     C                     READ SDBKP1PD                 20
+      *
+     C                     ENDDO
+      *
+     C                     WRITEAA0016D3
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP005 - Get Book Position Profit Centre                     *
+      *                                                               *
+      *  Called by: SRP003 - Process Files                            *
+      *                                                               *
+      *  Calls:     *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP005    BEGSR
+     C*
+     C           KSEPCB    CHAINSEPCBDF              80
+     C           *IN80     IFEQ '1'
+     C           WVAL      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SEPCBD'  DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     MOVELKSEPCD    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE AABKPC    PCBK
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PCBK      IFEQ *BLANKS
+     C                     MOVE AABKPC    PCBK
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP026 - Get Book Position Profit Centre (Partial)           *
+      *                                                               *
+      *  Called by: SRP003 - Process Files                            *
+      *                                                               *
+      *  Calls:     *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP006    BEGSR
+     C*
+     C           KSEPC1    CHAINSEPCBDF              80
+     C           *IN80     IFEQ '1'
+     C           WVAL      IFEQ 'Y'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SEPCBD'  DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     MOVELKSEPCD    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVE AABKPC    PCBK
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PCBK      IFEQ *BLANKS
+     C                     MOVE AABKPC    PCBK
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Database error subroutine.                           *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

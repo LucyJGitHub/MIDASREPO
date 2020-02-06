@@ -1,0 +1,157 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Initial Margin Setup TRANSDXL')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  IL0645MXL - IBLC 2002 INITIAL MARGIN SETUP                   *
+      *                                                               *
+      *  Function:  This program is running during I/C to setup       *
+      *             TRANSDXL File for FF Module                       *
+      *                                                               *
+      *  Called By: ILC0645MXL - IBLC 2002 - FF Initial Margin Setup  *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX043             Date 01Oct01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A - Conversion Of Customer Number to Alpha.            *
+      *            (recompile due to change to TRANSD)                *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FTRANSD  IF  E                    DISK         KINFSR *PSSR
+      ***  Transaction details
+      *
+     FTRSET   IF  E           K        DISK         KINFSR *PSSR
+      ***  Transaction settlement details
+      *
+     F***TRANSDXLUF  E           K        DISK         KINFSR *PSSR A                         CER001
+     FFFTRX1PDUF  E           K        DISK         KINFSR *PSSR A                            CER001
+      ***  Transaction details
+      /EJECT
+      *-------------------------------------------------------------------------
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      *-------------------------------------------------------------------------
+     IWLDA        DS                            256
+      ***  Local data area for database errors
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IPGMDS     ESDSY2PGDSP
+      ***  Program data structure.
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  Copyrights statement
+      *
+     C                     MOVEACPY@      CPY@2  80
+      *
+     C           1         SETLLTRANSD
+     C                     READ TRANSDF                  89
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      ***  if settlement exist
+      *
+     C           TNBR      CHAINTRSET                70
+      *
+     C                     Z-ADD*ZEROS    WWAMT1 130       Reset
+     C                     Z-ADD*ZEROS    WWAMT2 130
+      *
+     C           *IN70     IFEQ '0'
+      *
+      *** if Customer margin not Empty
+      *
+     C           CMAR      IFNE *ZEROS
+      *
+      ***  Amount for Number of Customer Contracts
+      *
+     C           CMAR      MULT NOCO      WWAMT1
+     C           WWAMT1    DIV  NUCO      WWAMT1    H
+     C                     ENDIF
+      *
+     C           BMAR      IFNE *ZEROS
+      *
+      ***  Amount for Number of Broker Contracts
+      *
+     C           BMAR      MULT NOBO      WWAMT2
+     C           WWAMT2    DIV  NUCO      WWAMT2    H
+     C                     ENDIF
+      *
+     C                     ENDIF                           Settl details
+      *
+     C********** TNBR      CHAINTRANSDXL             99                                       CER001
+     C           TNBR      CHAINFFTRX1PD             99                                       CER001
+     C           *IN99     IFEQ *ON                        Not Found
+      *
+      ** Add Initial Margin details in FFTRX1PD
+      *
+     C                     Z-ADDTNBR      FFTNBR
+     C                     Z-ADDWWAMT1    FFMACU
+     C                     Z-ADDWWAMT2    FFMABK
+     C                     WRITETRANSDFL
+     C                     ENDIF
+      *
+      ***  Read Next
+      *
+     C                     READ TRANSDF                  89
+     C                     ENDDO
+      *
+      *****************************************************************
+      *               E N D     O F     M A I N L I N E S             *
+      *****************************************************************
+      *
+     C                     SETON                         LR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  *PSSR   - Error subroutine                                   *
+      *  ------                                                       *
+      *  Called by :                                                  *
+      *  Calls     :                                                  *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Update data area LDA
+      *
+     C           *NAMVAR   DEFN LDA       WLDA
+     C           *LOCK     IN   WLDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVE ##ERFL    DBFILE
+     C                     MOVE *BLANK    DBKEY
+     C                     Z-ADD999       DBASE
+     C                     OUT  WLDA
+      *
+     C                     DUMP
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2005

@@ -1,0 +1,975 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Extract Maturing Instruments')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module                              *
+     F*                                                                  *
+     F*   FF0340  -  EXTRACT MATURING INSTRUMENTS                        *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 112135             Date 12Sep97               *
+     F*                 CFF003             Date 04APR97               *
+     F*                  CFF004             DATE 16SEP96                 *
+     F*                  S71062             DATE 19DEC95                 *
+     F*                  S01408             DATE 21SEP95                 *
+     F*                  073714             DATE 01MAR95                 *
+     F*                  046303             DATE 13JAN94                 *
+     F*                  S01456             DATE 08NOV93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE 19SEP92                 *
+     F*                  E38323             DATE 30JUL92                 *
+     F*                  E27269             DATE 18SEP92                 *
+     F*                  AUS022             DATE 07AUG92                 *
+     F*                  E20526             DATE 03MAY90                 *
+     F*                  S01195             DATE 01MAR90                 *
+     F*                  S01117             DATE 01MAR90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  112135 - When SETD is greater than DNWD, the SETGT key must     *
+     F*           contain the YRNO and MTHN fields because in year 2000  *
+     F*           YRNO is 00 and the years 19nn are never matured.       *
+     F*  CFF003 - ENHANCED OTC PROCESSING - PHASE II                     *
+     F*           UPGRADE FROM BLI LBL001                                *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)     *
+     F*  S71062 - FF/PM Interface (Just recompiled)                      *
+     F*   S01408  -  Addition of Core Hooks - FF0340IIP1                 *
+     F*           -  Core Hooks FF0340CCP1 added                         *
+     F*           -  Core Hooks FF0340CCP2 added                         *
+     F*           -  Core Hooks FF0340CCP3 added                         *
+     F*           -  Core Hooks FF0340CCP4 added                         *
+     F*           -  Core Hooks FF0340CCP5 added                         *
+     F*           -  Core Hooks FF0340CCP6 added                         *
+     F*   073714  -  OTC ENHANCEMENTS                                    *
+     F*  046303 - /COPY source subr. ZFWDT amended to prevent array      *
+     F*           error if no holiday record found - fixed by S01434.    *
+     F*           Program recompiled.                                    *
+     F*   S01456  -  'FF' MONTHLY P&L ENHANCEMENTS.                      *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   E38323  -  Recompilation of the program done due to a change   *
+     F*              in copy source ZFWDT subroutine                     *
+     F*     E27269 - LOSS OF RECORDS TO MATIND DUE TO PROGRAM ERROR      *
+     F*              (DUPLICATE OF NY CCF E50365)                        *
+     F*              Incorporate pre rel-10  error fix
+     F*   AUS022  -  AUSTRALIAN CHANGE : Introduction of Processing      *
+     F*              Types 7 and 8.                                      *
+     F*   E20526  -  RECOMPILED OVER CHANGED FILE PRISP                  *
+     F*   S01195  -  HOLIDAY AMENDMENT                                   *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F******IGNDECERR(*NO)                                               *073714
+     F*     IGNDECERR(*YES)                                              *073714
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABTB10*IF* E           K        DISK                               S01117
+     F*ABTB11*IF* E           K        DISK                           UC  S01195
+     F*ABLETJ*IF* E           K        DISK                               S01195
+     FMARKT   IF  E           K        DISK                           UC
+     FBOOKD   IF  E           K        DISK
+     FMKCTL   IF  E           K        DISK                           UC
+     FINTYP   IF  E           K        DISK
+     FMATIND  O   E                    DISK
+     FPRISP   IF  E           K        DISK                           UC
+     FPOSTN4  IF  E           K        DISK
+     FPOSTNK4 IF  E           K        DISK
+     F            POSTNKDF                          KRENAMEAPOKDF
+     F/SPACE 2
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F********40********ERROR*TABTB10*************************************S01117
+     F********41********ERROR*TABTB11*************************************S01195
+     F*       41        ERROR SDBANKPD                                    S01117
+     F*       42        ERROR MKCTL
+     F*       43        ERROR MARKT
+     F*       44        EOF POSTN4
+     F*       45        ERROR INTYP
+     F*       46        ERROR PRISP
+     F*       47        END OF FILE POSTNK4
+     F*       48        BOOK NOT FOUND
+     F*       49        CHANGE OF BOOK
+     F*       50        CHANGE OF INSTRUMENT
+     F*     81-99       RESERVED FOR STANDARD SUBROUTINES
+     F*     U7 U8       DATA BASE ERRORS
+     F/SPACE 2
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,FFDATEZ1
+     E*COPY*ZSRSRC,ZDATE5Z1                                               S01195
+     E*COPY*ZSRSRC,ZDATE3Z1                                               S01195
+     E/COPY ZSRSRC,ZDATE1Z1
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E/EJECT
+     I*
+     I*COPY*ZSRSRC,ZDATE3Z2                                               S01195
+     I*COPY*ZSRSRC,ZDATE3Z3                                               S01195
+     I***********                                                         S01195
+     I***DATA*STRUCTURE*FOR*SR.*ZDATE3************************************S01195
+     I/EJECT                                                              S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I/EJECT                                                              S01195
+     I*                                                                   S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     I/EJECT                                                              S01195
+     I*                                                                   S01195
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I*
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I** BANK DETAILS                                                     S01117
+     I              BJDNWD                          DNWD                  S01117
+     I*                                                                   S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01117
+     I*                                                                   S01117
+     I/COPY ZSRSRC,FFDATEZ2
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                   CFF003
+     IPSDS       SDS                                                      CFF003
+      *                                                                   CFF003
+      ** Program Status Data Structure                                    CFF003
+      *                                                                   CFF003
+     I                                     *PROGRAM PGM                   CFF003
+     I                                      244 253 WSID                  CFF003
+     I                                      254 263 USER                  CFF003
+      *                                                                   CFF003
+     I*                                                                   S01117
+     I/COPY WNCPYSRC,FF0340IIP1                                           S01408
+     I*                                                                   S01117
+     ISDFODA    E DSSDFODAPD                                              CFF003
+     I** Enhanced OTC details                                             CFF003
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     I N I T I A L I S A T I O N
+      *================================================================
+      *                                                                   CFF003
+      ** Set up copyright parameter                                       CFF003
+      *                                                                   CFF003
+     C                     MOVEACPY@      CPY2@  80                       CFF003
+      *
+      ** Prepare LDA
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL*BLANK    DBFILE                          S01117
+     C                     MOVEL*BLANK    DBKEY                           S01117
+     C                     MOVEL'FF0340'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+      *
+      ** Define KLIST for POSTN4
+      *
+     C           POSTKY    KLIST
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+      *                                                                   112135
+      ** Define KLIST for POSTN4                                          112135
+      *                                                                   112135
+     C           POSTK1    KLIST                                          112135
+     C                     KFLD           ISTT                            112135
+     C                     KFLD           YRNO                            112135
+     C                     KFLD           MTHN                            112135
+      *
+      ** Accept input-parameter   (blank for OTC's)
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMRKT
+      *
+     C           *LIKE     DEFN MRKT      PMRKT
+      *
+      ***Access*TABTB10*for*Run*Date**************************************S01117
+      ***********                                                         S01117
+     C***********          READ TABTB10F                 40               S01117
+     C**N40******RECI      COMP 'D'                  4040                 S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C           DATF      COMP 'M'                      98
+      *
+      ***If*Record*not*found,Database*Error*01****************************S01117
+      ***********                                                         S01117
+     C************IN40     IFEQ '1'                                       S01117
+     C***********          SETON                     U7U8  ***************S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C***********          MOVEL'TABTB10' DBKEY                           S01117
+     C***********          SETON                     LR                   S01117
+     C***********          RETRN                                          S01117
+     C***********          END                                            S01117
+      *
+      ***If*processing*for*OTC*,*open*and*access*TABTB11******************S01195
+      ** If processing for OTC , access SDBANKPD                          S01195
+      *
+     C           PMRKT     IFEQ *BLANKS
+     C***********          OPEN TABTB11                                   S01195
+     C***********          READ TABTB11                  41               S01195
+     C                     CALL 'AOBANKR0'                                S01195
+     C                     PARM '*MSG   ' @RTCD   7                       S01195
+     C                     PARM '*FIRST ' @OPTN   7                       S01195
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01195
+      *
+      ** Check if record found is live
+      *
+     C**N41******RECI      COMP 'D'                  4141                 S01195
+     C           @RTCD     IFNE *BLANKS                                   S01195
+      *
+      ** If Record not found,Database Error 02
+      *
+     C************IN41     IFEQ '1'                                       S01195
+     C           *LOCK     IN   LDA                                       S01195
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'02'      DBASE            **DB ERROR 02**S01195
+     C                     Z-ADD02        DBASE            **DB ERROR 02**S01195
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01195
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01195
+     C***********          MOVEL'TABTB11' DBKEY                           S01195
+     C                     MOVEL@OPTN     DBKEY                           S01195
+     C                     MOVEL@OPTN     DBOPTN  7                       S01195
+     C                     OUT  LDA                                       S01195
+     C**********           SETON                     LR                   CFF003
+     C                     EXSR *PSSR                                     S01195
+     C**********           RETRN                                          CFF003
+     C                     END
+      *                                                                   S01117
+     C/COPY WNCPYSRC,FF0340CCP1                                           S01408
+      *                                                                   S01117
+     C** Access AOSARDPD & check if OTC enhancement is installed          CFF003
+     C*                                                                   CFF003
+     C                     CALL 'AOSARDR0'                                CFF003
+     C                     PARM *BLANKS   @RTCD                           CFF003
+     C                     PARM '*VERIFY' @OPTN                           CFF003
+     C                     PARM 'CFF003'  @SAR    6                       CFF003
+     C*                                                                   CFF003
+     C           @RTCD     IFNE *BLANKS                                   CFF003
+     C                     MOVE 'N'       CFF003  1                       CFF003
+     C*                                                                   CFF003
+     C                     ELSE                                           CFF003
+     C*                                                                   CFF003
+     C** Enhanced OTC installed                                           CFF003
+     C*                                                                   CFF003
+     C                     MOVE 'Y'       CFF003                          CFF003
+     C*                                                                   CFF003
+     C** Access SDFODAPD                                                  CFF003
+     C*                                                                   CFF003
+     C                     CALL 'AOFODAR0'                                CFF003
+     C                     PARM *BLANKS   @RTCD                           CFF003
+     C                     PARM '*FIRST ' @OPTN                           CFF003
+     C           SDFODA    PARM SDFODA    @DSFDY                          CFF003
+     C*                                                                   CFF003
+     C** If error occurs...                                               CFF003
+     C*                                                                   CFF003
+     C           @RTCD     IFNE *BLANKS                                   CFF003
+     C           *LOCK     IN   LDA                                       CFF003
+     C                     SETON                     U7U8  *************  CFF003
+     C                     Z-ADD09        DBASE            *DB ERROR 09*  CFF003
+     C                     MOVEL'SDFODAPD'DBFILE           *************  CFF003
+     C                     MOVEL@OPTN     DBKEY                           CFF003
+     C                     MOVEL@OPTN     DBOPTN                          CFF003
+     C                     OUT  LDA                                       CFF003
+     C**********           SETON                     LR                   CFF003
+     C                     EXSR *PSSR                                     CFF003
+     C**********           RETRN                                          CFF003
+     C                     ENDIF                                          CFF003
+     C                     ENDIF                                          CFF003
+      *
+      ** End of OTC loop
+      *
+     C                     END
+      *
+      ** If processing for a market , open files and access MKCTL
+      *
+     C           PMRKT     IFNE *BLANKS
+     C                     OPEN MARKT
+     C                     OPEN MKCTL
+      *
+     C           PMRKT     CHAINMKCTL                42
+      *
+      ** Check if record found is live
+      *
+     C  N42      RECI      COMP 'D'                  4242
+      *
+      ** If Record not found,Database Error 03
+      *
+     C           *IN42     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C                     Z-ADD03        DBASE            **DB ERROR 03**S01117
+     C                     MOVEL'MKTCL'   DBFILE           ***************
+     C                     MOVELPMRKT     DBKEY
+     C                     OUT  LDA                                       S01117
+     C***********          SETON                     LR                   CFF003
+     C                     EXSR *PSSR                                     S01117
+     C***********          RETRN                                          CFF003
+     C                     END
+      *
+      ** Access MARKT
+      *
+     C           PMRKT     CHAINMARKT                43
+      *
+      ** Check if record found is live
+      *
+     C  N43      RECI      COMP 'D'                  4343
+      *
+      ** If Record not found,Database Error 04
+      *
+     C           *IN43     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
+     C                     Z-ADD04        DBASE            **DB ERROR 04**S01117
+     C                     MOVEL'MARKT'   DBFILE           ***************
+     C                     MOVELPMRKT     DBKEY
+     C                     OUT  LDA                                       S01117
+     C***********          SETON                     LR                   CFF003
+     C                     EXSR *PSSR                                     S01117
+     C***********          RETRN                                          CFF003
+     C                     ELSE
+      *
+      ***Calculate*date*of*next*working*day*using*SR.ZDATE5***************S01195
+      ** Calculate date of next working day using SR.ZFWDT                S01195
+      *
+     C           BUSD      ADD  1         ZDAYNO
+     C                     MOVE MKLC      ZCCY
+     C                     MOVE MLOC      ZLOC                            S01195
+     C                     Z-ADD0         ZNRDYS                          S01195
+     C***********          MOVE 'Y'       ZOPT                            S01195
+     C***********          EXSR ZDATE5                                    S01195
+     C                     EXSR ZFWDT                                     S01195
+     C                     Z-ADDZDYNBR    DNWD
+     C                     END
+      *
+      ** End of market initial processing
+      *
+     C                     END
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     M A I N
+      *================================================================
+      *
+      ** Process MAIN - determine whether OTC or market centre
+      **                processing
+      *
+     C           PMRKT     IFEQ *BLANKS
+     C                     EXSR PROTC
+     C                     ELSE
+     C                     EXSR PRMKT
+     C                     END
+      *
+      **
+      ** PROCESS EXTRACT FOR HEDGING BOOK
+      **
+      *
+     C                     EXSR HEDGE
+      *
+      *================================================================
+      *  P R O G R A M     C L O S E
+      *================================================================
+      *
+     C                     SETON                     LR
+      *
+     C/EJECT
+      *
+      *================================================================***
+      **                                                                 *
+      **             S  U  B  R  O  U  T  I  N  E  S                     *
+      **                                                                 *
+      *================================================================***
+      *
+      *================================================================
+      **
+      **        PROTC - PERFORM OTC PROCESSING
+      **        PRMKT - PERFORM MARKET PROCESSING
+      **        OPMKT - CONDITION OUTPUT FOR MARKET INST'S-FUT/OPT
+      **        HEDGE - EXTRACT HEDGING BOOK WITH 0 POSITION
+      **        WRMAT - WRITE RECORDS TO MATIND
+      **********ZDATE5-*DETERMINES*NEXT*WORKING*DAY***********************S01195
+      **        ZFWDT - DETERMINES NEXT WORKING DAY                       S01195
+      **        FFDATE- CONVERTS DAY FORMULA TO MIDAS DAY NO.
+      **********ZDATE3-*CALCULATES*WORKING*DAYS*BY*CURRENCY***************S01195
+      **        ZBKDT - CALCULATES WORKING DAYS BY CURRENCY & LOCATION    S01195
+      **        ZCHKH - DETERMINE WHETHER THE DATE IS WORKING DAY         S01195
+      **        ZACCH - RETRIEVE HOLIDAY RECORD                           S01195
+      **        ZDATE1- DATE VALIDATION
+      **
+      *================================================================
+      *================================================================
+      *
+      *  S.R. PROTC - SUB-ROUTINE PERFORM PROCESSING FOR OTC
+      *
+      *  CALLED BY PROGRAM MAIN
+      *  CALLS SR. NONE
+      *
+      *================================================================
+      *
+     C           PROTC     BEGSR
+      *
+      ** Initial read of POSTN4
+      *
+     C                     READ POSTN4                   44
+      *
+      ** DO WHILE records on POSTN4
+      *
+     C           *IN44     DOWNE'1'
+      *
+      ** Access INTYP for settlement date and processing type
+      *
+     C           ISTT      CHAININTYP                45
+      *
+     C  N45      RECI      COMP 'D'                  4545
+      *
+      ** If Record not found,Database Error 05
+      *
+     C           *IN45     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'05'      DBASE            **DB ERROR 05**S01117
+     C                     Z-ADD05        DBASE            **DB ERROR 05**S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C**********           SETON                     LR                   CFF003
+     C                     EXSR *PSSR                                     S01117
+     C**********           RETRN                                          CFF003
+     C                     END
+      *                                                                   S01117
+     C/COPY WNCPYSRC,FF0340CCP2                                           S01408
+      *                                                                   S01117
+      ** Extended Final Transaction Date                                  CFF003
+      *                                                                   CFF003
+     C           *LIKE     DEFN FTDT      FTDTX                           CFF003
+      *                                                                   CFF003
+     C           CFF003    IFEQ 'Y'                                       CFF003
+     C                     Z-ADDFTDT      ZDAYNO                          CFF003
+     C                     MOVE BJLCCY    ZCCY                            CFF003
+     C                     MOVE BJSLCD    ZLOC                            CFF003
+     C********             Z-ADDOTODUE    ZNRDYS                          CFF003
+     C                     Z-ADDBXOTDU    ZNRDYS                          CFF003
+     C                     EXSR ZFWDT                                     CFF003
+     C                     Z-ADDZDYNBR    FTDTX                           CFF003
+      *                                                                   CFF003
+     C                     ELSE                                           CFF003
+      *                                                                   CFF003
+     C                     Z-ADDFTDT      FTDTX                           CFF003
+     C                     ENDIF                                          CFF003
+      *
+      ** SAVE current instrument-type
+      *
+     C           *LIKE     DEFN ISTT      PVISTT
+     C                     MOVE ISTT      PVISTT
+      *
+      ** DOWHILE Instrument same & not EOF
+      *
+     C           ISTT      DOWEQPVISTT
+     C           *IN44     ANDEQ'0'
+      *
+      ***If*settlement date *GE DNWD                                      073714
+      ** If expiry date *GE DNWD                                          073714
+      ** SETGT current instrument and read POSTN4
+      *
+     C***********SETD      IFGE DNWD                                      073714
+      *                                                                   S01117
+     C/COPY WNCPYSRC,FF0340CCP3                                           S01408
+      *                                                                   S01117
+     C********   FTDT      IFGE DNWD                                073714CFF003
+     C           FTDTX     IFGE DNWD                                      CFF003
+      *                                                                   S01117
+     C/COPY WNCPYSRC,FF0340CCP4
+      *                                                                   S01117
+     C           ISTT      SETGTPOSTN4
+     C                     READ POSTN4                   44
+     C                     END
+      *
+      ***If*settlement date *LT DNWD                                      073714
+      ** If expiry date *LT DNWD                                          073714
+      ** Move 'C' TO close-exer and write MATIND
+      *
+     C***********SETD      IFLT DNWD                                      073714
+      *                                                                   S01117
+     C/COPY WNCPYSRC,FF0340CCP5
+      *                                                                   S01117
+     C*******    FTDT      IFLT DNWD                                073714CFF003
+     C           FTDTX     IFLT DNWD                                      CFF003
+      *                                                                   S01117
+     C/COPY WNCPYSRC,FF0340CCP6
+      *                                                                   S01117
+     C                     MOVE 'C'       CLEX
+     C                     EXSR WRMAT
+      *
+      ** SETGT current instrument/put-call/strike and read POSTN4       price
+      *
+     C                     Z-ADD0         YRNO
+     C                     Z-ADD0         MTHN
+     C           POSTKY    SETGTPOSTN4
+     C                     READ POSTN4                   44
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *================================================================
+      *
+      *  S.R. PRMKT - SUB-ROUTINE PERFORM PROCESSING FOR MARKETS
+      *
+      *  CALLED BY PROGRAM MAIN
+      *  CALLS SR. FFDATE
+      *            OPMKT
+      *
+      *================================================================
+      *
+     C           PRMKT     BEGSR
+      *
+      ** Open spot prices file
+      *
+     C                     OPEN PRISP
+      *
+      ** Initial read of POSTN4 file
+      *
+     C                     READ POSTN4                   44
+      *
+      ** DO WHILE records on POSTN4
+      *
+     C           *IN44     DOWNE'1'
+      *
+      ** Access INTYP for set.date formula,proc.type & currency details
+      *
+     C           ISTT      CHAININTYP                45
+      *
+     C  N45      RECI      COMP 'D'                  4545
+      *
+      ** If Record not found,Database Error 06
+      *
+     C           *IN45     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'06'      DBASE            **DB ERROR 06**S01117
+     C                     Z-ADD06        DBASE            **DB ERROR 06**S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C**********           SETON                     LR                   CFF003
+     C                     EXSR *PSSR                                     S01117
+     C**********           RETRN                                          CFF003
+     C                     END
+      *
+      ** Save current instrument-type/year/month
+      *
+     C           *LIKE     DEFN YRNO      PVYEAR
+     C           *LIKE     DEFN MTHN      PVMTHN
+     C                     MOVE ISTT      PVISTT
+     C                     Z-ADDYRNO      PVYEAR
+     C                     Z-ADDMTHN      PVMTHN
+      *
+      ** DOWHILE Instrument/year/month same & not EOF
+      *
+     C           ISTT      DOWEQPVISTT
+     C           YRNO      ANDEQPVYEAR
+     C           MTHN      ANDEQPVMTHN
+     C           *IN44     ANDEQ'0'
+      *
+      ** Calculate settlement date using SR.FFDATE
+      *
+     C                     MOVE SEDF      FFDATC
+     C                     MOVE MKLC      FFCCY1
+     C                     MOVE MLOC      FFLOC                           S01195
+     C                     MOVE ISCY      FFCCY2
+     C                     MOVE OTHC      FFCCY3
+     C                     Z-ADDYRNO      FFYR
+     C                     Z-ADDMTHN      FFMTH
+     C                     EXSR FFDATE
+     C                     MOVE FFDAY     SETD
+      *
+      ** If settlement date *GE DNWD
+      ** SETGT current instrument and read POSTN4
+      *
+     C           SETD      IFGE DNWD
+     C***********ISTT      SETGTPOSTN4                                    112135
+     C           POSTK1    SETGTPOSTN4                                    112135
+     C                     READ POSTN4                   44
+     C                     END
+      *
+      ** If settlement date *LT DNWD
+      ** Call SR.OPMKT to format output
+      *
+     C           FFDAY     IFLT DNWD
+     C                     EXSR OPMKT
+      *
+      ** SETGT current instrument/year/month/put-call/strike            price
+      **
+     C           POSTKY    SETGTPOSTN4
+     C                     READ POSTN4                   44
+     C                     END
+      *
+      ** End of dowhile inst/year/month unchanged loop
+      *
+     C                     END
+      *
+      ** End of dowhile records loop
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *================================================================
+      *
+      *  S.R. OPMKT - DETERMINES IF A MARKET RECORD IS A FUTURE OR
+      *               AN OPTION AND CONDITIONS OUTPUT ACCORDINGLY
+      *
+      *  CALLED BY SR.PRMKT
+      *  CALLS SR. WRMAT
+      *
+      *================================================================
+      *
+     C           OPMKT     BEGSR
+      *
+      ** If instrument-processing type *LE 3 (future)
+      **    Move 'C' to close-exer
+      *
+     C           ISPT      IFLE 3
+     C           ISPT      OREQ 7                                         AUS022
+     C                     MOVE 'C'       CLEX
+     C                     EXSR WRMAT
+     C                     END
+      *
+      ** If instrument-processing type *GT 3 (option)
+      ** Access PRISP for spot-price details
+      *
+     C           ISPT      IFGT 3
+     C           ISPT      ANDNE7                                         AUS022
+     C           ISTT      CHAINPRISP                46
+      *
+     C  N46      RECI      COMP 'D'                  4646
+      *
+      ** If record is a PUT
+      *
+     C           PCAL      IFEQ 'P'
+      *
+      ** If live record on PRISP and
+      ** If spot-price *LT strike-price
+      ** MOVE 'E' to close-exer
+      *
+     C           NSPR      IFLE STRP
+     C           *IN46     ANDEQ'0'
+     C                     MOVE 'E'       CLEX
+     C                     ELSE
+      *
+      ** If no live record on PRISP and
+      ** If spot-price *GE strike-price
+      ** MOVE 'C' to close-exer
+      *
+     C                     MOVE 'C'       CLEX
+     C                     END
+      *
+     C                     EXSR WRMAT
+     C                     END
+      *
+      ** IF record is a CALL
+      *
+     C           PCAL      IFEQ 'C'
+      *
+      ** If no live record on PRISP or
+      ** If spot-price *LT strike-price
+      ** MOVE 'C' to close-exer
+      *
+     C           NSPR      IFLE STRP
+     C           *IN46     OREQ '1'
+     C                     MOVE 'C'       CLEX
+     C                     ELSE
+      *
+      ** If live record on PRISP and
+      ** If spot-price *GT strike-price
+      ** MOVE 'E' to close-exer
+      *
+     C                     MOVE 'E'       CLEX
+     C                     END
+      *
+     C                     EXSR WRMAT
+      ** End option
+     C                     END
+      *
+     C                     END
+     C                     ENDSR
+      *
+     C/EJECT
+      *================================================================
+      *
+      *  S.R. HEDGE - EXTRACTS POSITION RECORDS WITH 0 OPEN CONTRACTS
+      *               IF THE BOOK IS A HEDGING BOOK
+      *
+      *  CALLED BY MAIN
+      *
+      *  CALLS SR. WRMAT
+      *
+      *================================================================
+      *
+     C           HEDGE     BEGSR
+      *
+      ** Define KLIST for POSTNK4
+      *
+     C           APOKY     KLIST
+     C                     KFLD           BOKC
+     C                     KFLD           ISTT
+     C                     KFLD           YRNO
+     C                     KFLD           MTHN
+     C                     KFLD           PCAL
+     C                     KFLD           STRP
+      *
+      **  Define save fields.
+      *
+     C           *LIKE     DEFN BOKC      SBOKC
+     C           *LIKE     DEFN ISTT      SISTT
+     C           *LIKE     DEFN YRNO      SYRNO
+     C           *LIKE     DEFN MTHN      SMTHN
+     C           *LIKE     DEFN PCAL      SPCAL
+     C           *LIKE     DEFN STRP      SSTRP
+      *
+      ** Reset file pointer
+      *
+     C           '  '      SETLLPOSTNK4
+     C                     READ POSTNK4                  47
+     C           *IN47     DOWEQ'0'
+     C           BOKC      CHAINBOOKD                48
+     C                     MOVELBOKC      SBOKC
+      *
+      ** If Record not found,Database Error 07
+      *
+     C           *IN48     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'07'      DBASE            **DB ERROR 07**S01117
+     C                     Z-ADD07        DBASE            **DB ERROR 07**S01117
+     C                     MOVEL'BOOKD'   DBFILE           ***************
+     C                     MOVELBOKC      DBKEY
+     C                     OUT  LDA                                       S01117
+     C**********           SETON                     LR                   CFF003
+     C                     EXSR *PSSR                                     S01117
+     C**********           RETRN                                          CFF003
+     C                     END
+      *
+      ** If this is not a Hedging book , move to the next one.
+      *
+     C           HDGI      IFNE 'Y'
+     C           BOKC      SETGTPOSTNK4
+     C                     READ POSTNK4                  47
+     C                     ELSE
+      *
+      ** Otherwise read all records for the book
+      *
+     C           *IN47     DOWEQ'0'
+     C           BOKC      ANDEQSBOKC
+      *
+      ** If there is a change in Instrument.
+      ** Access INTYP for set.date formula,proc.type & currency details
+      *
+     C           ISTT      IFNE SISTT
+     C           YRNO      ORNE SYRNO
+     C           MTHN      ORNE SMTHN
+     C           PCAL      ORNE SPCAL
+     C           STRP      ORNE SSTRP
+      *
+     C           ISTT      CHAININTYP                45
+      *
+     C  N45      RECI      COMP 'D'                  4545
+      *
+      ** If Record not found,Database Error 08
+      *
+     C           *IN45     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     SETON                     U7U8  ***************
+     C***********          MOVEL'08'      DBASE            **DB ERROR 08**S01117
+     C                     Z-ADD08        DBASE            **DB ERROR 08**S01117
+     C                     MOVEL'INTYP'   DBFILE           ***************
+     C                     MOVELISTT      DBKEY
+     C                     OUT  LDA                                       S01117
+     C**********           SETON                     LR                   CFF003
+     C                     EXSR *PSSR                                     S01117
+     C**********           RETRN                                          CFF003
+     C                     END
+      *                                                                   E27269
+      **  UPDATE SAVED VALUES                                             E27269
+      *                                                                   E27269
+     C                     MOVE ISTT      SISTT                           E27269
+     C                     MOVE YRNO      SYRNO                           E27269
+     C                     MOVE MTHN      SMTHN                           E27269
+     C                     MOVE PCAL      SPCAL                           E27269
+     C                     MOVE STRP      SSTRP                           E27269
+      *
+     C                     END
+      *
+     C           PMRKT     IFNE *BLANKS
+      *
+      ** Calculate settlement date using SR.FFDATE
+      *
+     C                     MOVE SEDF      FFDATC
+     C                     MOVE MKLC      FFCCY1
+     C                     MOVE ISCY      FFCCY2
+     C                     MOVE OTHC      FFCCY3
+     C                     Z-ADDYRNO      FFYR
+     C                     Z-ADDMTHN      FFMTH
+     C                     EXSR FFDATE
+     C                     MOVE FFDAY     SETD
+      *
+     C                     END
+      *
+      ** If settlement date *LT DNWD
+      ** Move A into CLEX and output records.
+      *
+     C           SETD      IFLT DNWD
+     C                     MOVEL'A'       CLEX
+      *
+      ** Write records to PF/MATIND for all records of this Instrument.
+      *
+     C************IN50     DOWEQ'0'                                       E27269
+     C                     EXSR WRMAT
+     C***********APOKY     READEPOSTNK4                  50               E27269
+     C***********          END                                            E27269
+      *
+     C                     END
+      *
+     C                     READ POSTNK4                  47
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *================================================================
+      *
+      *  S.R. WRMAT - OUTPUTS RECORDS TO MATIN
+      *
+      *  CALLED BY SR.PROTC
+      *            SR.OPMKT
+      *  CALLS SR. NONE
+      *
+      *================================================================
+      *
+     C           WRMAT     BEGSR
+      *
+     C                     MOVE 'D'       RECI
+     C           ISTI      IFEQ 'Y'                                       073714
+     C                     MOVE FTDT      MDAT                            073714
+     C                     ELSE                                           073714
+     C                     MOVE SETD      MDAT
+     C                     END                                            073714
+     C                     MOVE RUND      LCD
+      *
+      ** If closed ,or record written for amortization, zeroise spot price
+      *
+     C           CLEX      IFEQ 'C'
+     C           CLEX      OREQ 'A'
+     C                     Z-ADD0         NSPR
+     C                     END
+      *
+      ** If exercised set to current spot price
+      *
+     C           CLEX      IFEQ 'E'
+     C                     Z-ADDNSPR      NSPR
+     C                     END
+      *
+      **Output record to MATIND
+      *
+     C                     WRITEMATINDF
+      *
+     C                     ENDSR
+      *================================================================
+     C/EJECT
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*  S.R. *PSSR - ERROR HANDLING SUBROUTINE                           S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C           *PSSR     BEGSR                                          S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     SETON                     U7U8LR               CFF003
+     C                     RETRN                                          CFF003
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT                                                              S01117
+     C*COPY*ZSRSRC,ZDATE5Z2                                               S01195
+     C/COPY ZSRSRC,ZFWDT                                                  S01195
+     C/EJECT
+     C/COPY ZSRSRC,FFDATEZ3
+     C/EJECT
+     C*COPY*ZSRSRC,ZDATE3Z4                                               S01195
+     C/COPY ZSRSRC,ZBKDT                                                  S01195
+     C/EJECT
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZDATE1Z2
+**  CPY@
+(c) Finastra International Limited 2001
+**   TABDY/TABNO - SHORTNAMES & DAY NUMBERS
+F0S1X2M3U4W5T6
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

@@ -1,0 +1,228 @@
+     C*****************************************************************
+     C*                                                               *
+      *  Last Amend No. 218995             Date 26Aug15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+     C*  Prev Amend No. 159194             Date 18May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*                 140802             Date 16Aug98               *
+     C*                 117112             Date 22Apr97               *
+     C*                 CRT002             Date 01Dec95               *
+     C*                 CRT001  *CREATE    DATE 28Feb95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  218995 - 'XRTWARN' being shown for rates within range.       *
+     C*           Applied fix 218877.                                 *
+     C*         - Applied for MD-28376.                               *
+     C*  159194 - Change to GETSPT to cope with no B de C currency    *
+     C*           on file.                                            *
+     C*  140802 - Re-initialise @RTCD after calling AOSARDR0.  This   *
+     C*           causes incorrect DB error in programs when CRT104   *
+     C*           is not installed, though currency is correct.       *
+     C*  117112 - Cashier Interface.  Several problems corrected.     *
+     C*  CRT002 - Retail Branch Access.                               *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTCCYS - Currencies Setup and retrieval            *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @I     - Array index                               *
+     C*            @CCY   - Currency code                             *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            TCY    - Currency code array           ( 3A ) x 50 *
+     C*            TDP    - Currency decimal places       ( 1,0) x 50 *
+     C*            TMD    - Currency multiply/divide ind. ( 1,0) x 50 *
+     C*            TRT    - Currency spot rate            (13,8) x 50 *
+     C*                                                               *
+     C*****************************************************************
+     C           RTCCYS    BEGSR                           ** RTCCYS **
+     C*
+     C** Define parameters
+     C*
+     C                     Z-ADD1         @I      20
+     C                     MOVE @CCY      @CCY    3
+     C                     SETOF                     808289
+     C*                                                                   CRT002
+     C                     CALL 'AOSARDR0'                                CRT002
+     C                     PARM *BLANKS   @RTCD   7                       CRT002
+     C                     PARM '*VERIFY' @OPTN   7                       CRT002
+     C                     PARM 'CRT104'  @SARD   6                       CRT002
+     C           SCSARD    PARM SCSARD    DSFDY                           CRT002
+     C*                                                                   CRT002
+     C           @RTCD     IFEQ *BLANKS                                   CRT002
+     C                     MOVE 'Y'       CRT104  1                       CRT002
+     C                     ELSE                                           CRT002
+     C                     MOVE 'N'       CRT104                          CRT002
+     C                     END                                            CRT002
+     C                     MOVE *BLANKS   @RTCD                           140802
+     C*
+     C** Look up array if currency has already been used in this pgm.
+     C*
+     C           @CCY      LOKUPTCY,@I                   82
+     C*
+     C** If element is found, corresponding elements in other arrays
+     C** are output (accessed via index @I)
+     C**
+     C** If element is not found
+     C*
+     C           *IN82     IFEQ '0'
+     C           @CCY      OREQ '?'
+     C*
+     C** Get currency details
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @CCY      @CURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** If record found
+     C*
+     C           @RTCD     IFEQ *BLANK
+     C*
+     C                     MOVEL@CURR     @CCY
+     C*
+     C           '   '     LOKUPTCY,@I                   82
+     C*
+     C** If an empty space exist in array to be setup
+     C*
+     C           *IN82     IFEQ '1'
+     C                     MOVEL@CCY      TCY,@I
+     C                     Z-ADDA6NBDP    TDP,@I
+     C                     MOVELA6MDIN    TMD,@I
+     C                     Z-ADDA6SPRT    TRT,@I
+     C           CRT104    IFEQ 'Y'                                       CRT002
+     C           PFNCD     IFEQ '0JI'                                     CRT002
+     C           PFNCD     OREQ '0JS'                                     CRT002
+     C           PFNCD     OREQ '0JX'                                     CRT002
+     C                     EXSR GETSPT                                    CRT002
+     C                     ENDIF                                          CRT002
+     C                     ENDIF                                          CRT002
+     C*
+     C** Else indicate an error since array is full
+     C*
+     C                     ELSE
+     C                     SETON                         89
+     C                     END
+     C                     END
+      *                                                                                       218995
+     C                     ELSE                                                               218995
+     C           CRT104    IFEQ 'Y'                                                           218995
+     C           PFNCD     IFEQ '0JI'                                                         218995
+     C           PFNCD     OREQ '0JS'                                                         218995
+     C           PFNCD     OREQ '0JX'                                                         218995
+     C                     EXSR GETSPT                                                        218995
+     C                     ENDIF                                                              218995
+     C                     ENDIF                                                              218995
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT                                                              CRT002
+      *****************************************************************   CRT002
+      *                                                               *   CRT002
+      *            GETSPT - Get Spot Rate                             *   CRT002
+      *                                                               *   CRT002
+      * CALLS             -                                           *   CRT002
+      *                                                               *   CRT002
+      * CALLED BY  RTCCYS - Currencies Setup and retrieval            *   CRT002
+      *                                                               *   CRT002
+      * FLDS USED         -                                           *   CRT002
+      *                                                               *   CRT002
+      *****************************************************************   CRT002
+     C           GETSPT    BEGSR                           ** GETSPT **   CRT002
+      *                                                                   CRT002
+     C                     OPEN REBDCCPD                                  CRT002
+     C                     OPEN REBDCRPD                                  CRT002
+      *                                                                   117112
+     C                     SELEC                                          117112
+      *                                                                   117112
+     C           PFNCD     WHEQ '0JR'                                     117112
+     C                     MOVEL'0JK'     WKEY                            117112
+      *                                                                   117112
+     C           PFNCD     WHEQ '0JW'                                     117112
+     C                     MOVEL'0JL'     WKEY                            117112
+      *                                                                   117112
+     C           PFNCD     WHEQ '0JS'                                     117112
+     C           PFNCD     OREQ '0JX'                                     117112
+     C                     MOVEL'0JI'     WKEY                            117112
+      *                                                                   117112
+     C                     OTHER                                          117112
+      *                                                                   117112
+     C                     MOVELPFNCD     WKEY    3                       117112
+      *                                                                   117112
+     C                     ENDSL                                          117112
+      *                                                                   CRT002
+      ** Find function code in Exchange Rate Control Table                CRT002
+      *                                                                   CRT002
+     C***********PFNCD     CHAINREBDCCD0             70                   117112
+     C           WKEY      CHAINREBDCCD0             70                   117112
+      *                                                                   CRT002
+      ** If record not found?                                             CRT002
+      *                                                                   CRT002
+     C           *IN70     IFEQ *ON                                       CRT002
+     C           *LOCK     IN   LDA                        ***************CRT002
+     C************         Z-ADD22        DBASE            ** DB ERR 22 **117112
+     C                     Z-ADD44        DBASE            ** DB ERR 44 **117112
+     C                     MOVEL'REBDCCPD'DBFILE           ***************CRT002
+     C                     MOVELPFNCD     DBKEY                           CRT002
+     C                     EXSR DBERR                                     CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C           @CCY      CHAINREBDCRD0             70                   CRT002
+      *                                                                   CRT002
+      ** Move exchange rate in accordance with function and currency code CRT002
+      *                                                                   CRT002
+      ** Only if found on file, otherwise tries to divide by zero.        159194
+      *                                                                   159194
+     C           *IN70     IFEQ *OFF                                      159194
+     C                     Z-ADD0         TRT,@I                          CRT002
+     C                     MOVEL@CCY2     @CCY2   3                                           218995
+     C           @CCY      IFEQ @CCY2                                                         218995
+     C                     SELEC                                                              218995
+     C           ACC       WHEQ 'DN'                                                          218995
+     C           FEDNRT    DIV  FEAMNT    TRT,@I    H                                         218995
+     C           ACC       WHEQ 'DP'                                                          218995
+     C           FEDPRT    DIV  FEAMNT    TRT,@I    H                                         218995
+     C           ACC       WHEQ 'DS'                                                          218995
+     C           FEDSRT    DIV  FEAMNT    TRT,@I    H                                         218995
+     C           ACC       WHEQ 'VN'                                                          218995
+     C           FEVNRT    DIV  FEAMNT    TRT,@I    H                                         218995
+     C           ACC       WHEQ 'VP'                                                          218995
+     C           FEVPRT    DIV  FEAMNT    TRT,@I    H                                         218995
+     C           ACC       WHEQ 'VS'                                                          218995
+     C           FEVSRT    DIV  FEAMNT    TRT,@I    H                                         218995
+     C                     ENDSL                                                              218995
+     C                     ELSE                                                               218995
+     C                     SELEC                                          CRT002
+     C           NAC       WHEQ 'DN'                                      CRT002
+     C           FEDNRT    DIV  FEAMNT    TRT,@I    H                     CRT002
+     C           NAC       WHEQ 'DP'                                      CRT002
+     C           FEDPRT    DIV  FEAMNT    TRT,@I    H                     CRT002
+     C           NAC       WHEQ 'DS'                                      CRT002
+     C           FEDSRT    DIV  FEAMNT    TRT,@I    H                     CRT002
+     C           NAC       WHEQ 'VN'                                      CRT002
+     C           FEVNRT    DIV  FEAMNT    TRT,@I    H                     CRT002
+     C           NAC       WHEQ 'VP'                                      CRT002
+     C           FEVPRT    DIV  FEAMNT    TRT,@I    H                     CRT002
+     C           NAC       WHEQ 'VS'                                      CRT002
+     C           FEVSRT    DIV  FEAMNT    TRT,@I    H                     CRT002
+     C                     ENDSL                                          CRT002
+      *                                                                   159194
+     C                     ENDIF                                          159194
+     C                     ENDIF                                                              218995
+      *                                                                   CRT002
+     C                     CLOSEREBDCCPD                                  CRT002
+     C                     CLOSEREBDCRPD                                  CRT002
+      *                                                                   CRT002
+     C                     ENDSR                                          CRT002
+      *****************************************************************   CRT002

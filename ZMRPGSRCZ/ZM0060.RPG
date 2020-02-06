@@ -1,0 +1,222 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Convert Midas Day no.to SWIFT date frmt')
+     F****************************************************************
+     F*                                                              *
+     F*  Midas - MESSAGE MAINTENANCE UTILITIES.
+     F*                                                              *
+     F*  ZM0060 - DATE CONVERSION.                                   *
+     F*                                                              *
+     F* (c) Finastra International Limited 2001                      *
+     F*        COMPANY CONFIDENTIAL.                                 *
+     F*                                                              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  PREV AMEND NO.000000         DATE.00/00/00                  *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+     F*  MD046248 - Finastra Rebranding                              *
+     F****************************************************************
+     F*  C R E A T I O N  P A R A M E T E R S.                       *
+     F*                                                              *
+     F*                                                              *
+     F****************************************************************
+     F* PURPOSE.                                                     *
+     F*                                                              *
+     F*  To convert a MIDAS day number (ZMDAY) (5N) to SWIFT         *
+     F*  date format (6A).                                           *
+     F*                                                              *
+     F*  1.ZMDAY  is a five figure number which is a number of days  *
+     F*    from 31DEC71.                                             *
+     F*  2.The format produced is YYMMDD.                            *
+     F*  3.The following arrays are used in program:-                *
+     F*   a).ZYDY - compile time array of four four-digit elements.  *
+     F*      Contains the cumulative no. of days in a four year      *
+     F*      period.(Year 1 =leap year).                             *
+     F*   b).ZMDY - compile time array of 13 3-digit elements.       *
+     F*      Contains the cumulative no. of days in a year.          *
+     F*      N.B. The first entry is a zero entry.                   *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+     F* FUNCTION OF INDICATORS.                                      *
+     F*                                                              *
+     F* 90  GENERAL WORK - Used in calculating the month number.     *
+     F*                                                              *
+     F****************************************************************
+     E*
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAYS USED IN CONVERSION
+     E*
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+      /EJECT
+     E****************************************************************
+     I*
+     I** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** Data structure for date formatting.
+     I*
+     IZDATE       DS                              6
+     I                                        1   20ZYEAR
+     I                                        3   40ZMNTH
+     I                                        5   60ZDAY
+     I****************************************************************
+     C*
+     C**  Entry of date.
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ZMDAY   50
+     C                     PARM           ZSDATE  6
+     C*
+     C                     MOVE *BLANKS   ZSDATE
+     C*
+     C** Clear leap year field and date field.
+     C*
+     C                     MOVE 'N'       ZLEAP   1
+     C                     MOVE *BLANKS   ZDATE   6
+     C*
+     C** Determine the year number (zyear).
+     C*
+     C** Adjust the day no. in case it is the last day of the year.
+     C*
+     C           ZMDAY     SUB  1         ZMDAY1  50
+     C           ZMDAY1    IFEQ 0
+     C           ZMDAY1    ORGT 0
+     C*
+     C** Calculate the number of 4 year spans since 31/12/1971 , and
+     C** save the remaining days.
+     C** 1461 is the number of days in 4 years (365 multiplied by 4
+     C** +1 leap year day).This leaves as a remainder the number of
+     C** days through the next 4 year period up to 'today'.
+     C*
+     C           ZMDAY1    DIV  1461      ZLYR    20
+     C                     MVR            ZMDAY1
+     C*
+     C** Calculate the number of remaining years.
+     C** ZYDY is an array field containing the number of days through
+     C** the next 4 year period. ZWRK2 is a work field.
+     C*
+     C                     Z-ADD1         ZWRK2   20
+     C           ZMDAY1    DOWGTZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C*
+     C** Decrement day no. by days in remaining years.
+     C*
+     C           ZWRK2     IFNE 0
+     C           ZMDAY1    SUB  ZYDY,ZWRK2ZMDAY1
+     C                     END
+     C*
+     C** Calculate actual year number (zyear).
+     C** ZLYR contains the number of 4 year spans since 1972;hence
+     C** multiplying by 4 gives the actual number of years since 1972.
+     C** 72 is added as 1972 is the base year. The whole numbers of
+     C** years in the next 4 year period is then added (from zwrk2)
+     C** giving the year number.
+     C*
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR
+     C*
+     C** Calculate the month number (zmnth).
+     C*
+     C** 1.)Adjust the day no.in case it is the last day of a leap year Feb
+     C**    If it is the 1st year of a four year span (i.e. zwrk2 is 0)
+     C**    and it is the last day of the 2nd month (i.e. cummulative
+     C**    day number is 59).
+     C*
+     C           ZWRK2     IFEQ 0
+     C           ZMDAY1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C*
+     C**    If it is a leap year and the date is past the end of Feb
+     C**    the dayno. must be reduced by one as the calculations will
+     C**    be one day ahead.
+     C*
+     C           ZMDAY1    IFGE 59
+     C           ZMDAY1    SUB  1         ZMDAY1
+     C                     END
+     C                     END
+     C*
+     C** 2.)Month no.
+     C**    Starting from the second month in the array ( the 1st being 0)
+     C**    find which month we are in by comparing the number of days
+     C**    we are through the year with th cummulative days through the
+     C**    months. ZWRK2 then contains the month number.
+     C*
+     C                     Z-ADD2         ZWRK2
+     C           *IN90     DOWEQ'0'
+     C           ZWRK2     IFLT 14
+     C           ZMDAY1    ANDGEZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     ELSE
+     C                     MOVE '1'       *IN90
+     C                     END
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C*
+     C** Processing for 01/01/xx date only.
+     C*
+     C           ZMDAY1    IFEQ 365
+     C                     MOVE '01'      ZWRK2
+     C                     MOVE '00'      ZMDAY1
+     C                     ADD  1         ZYEAR
+     C                     END
+     C*
+     C** Move the month number to the month field.
+     C*
+     C                     Z-ADDZWRK2     ZMNTH   20
+     C*
+     C** Determine the day of the month.
+     C*
+     C** Add back last day of year adjustment.
+     C*
+     C           ZMDAY1    ADD  1         ZMDAY1
+     C*
+     C** Calculate day of month.
+     C** Subtract the cummulative days up to the present month
+     C** from the number of days through the year leaving the number
+     C** of days into the present month.
+     C*
+     C           ZMDAY1    SUB  ZMDY,ZWRK2ZDAY    20
+     C*
+     C** Add back leap year 29th Feb adjustment , if required.
+     C*
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C*
+     C** Format Date to SWIFT format - YYMMDD (ZSDATE).
+     C*
+     C                     MOVE ZDATE     ZSDATE  6
+     C*
+     C                     END
+     C                     SETOF                     9091
+     C                     SETON                     LR
+     C**********************************************************************
+** CPY@
+(c) Finastra International Limited 2001
+** ZYDY - YEARS IN DAYS CUMULATIVE , 4 YEAR SPAN.
+0366073110961461
+** ZMDY - MONTHS IN DAYS CUNULATIVE , THROUGH YEAR.
+000031059090120151181212243273304334365

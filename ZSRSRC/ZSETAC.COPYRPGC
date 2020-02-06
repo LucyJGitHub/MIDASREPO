@@ -1,0 +1,296 @@
+     C**************************************************************************
+     C/EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZSETAC SR. TO DETERMINE SETTLEMENT ACCOUNT                            *
+     C*                                                                        *
+     C*""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""   S01496
+     C*  NOTE:                                                            S01496
+     C*        TO ACCESFULL INCORPORATION THIS SUBROUTINE                 S01496
+     C*        TO YOUR PROGRAM YOU MAY ADD NEXT I-SPECIFICATIONS:         S01496
+     C*                                                                   S01496
+     C*   'I** Security Client Details'                                   S01496
+     C*   'ISDSECS    E DSSDSECSPD'                                       S01496
+     C*                                                                   S01496
+     C*   'I** DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE'               S01496
+     C*   'IDSSDY     E DSDSSDY'                                          S01496
+     C*                                                                   CPM004
+     C*   'I** Nostro Details'                                            CPM004
+     C*   'ISDNOST    E DSSDNOSTPD'                                       CPM004
+     C*                                                                   CPM004
+     C*   'I** DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE'              CPM004
+     C*   'IDSFDY     E DSDSFDY'                                          CPM004
+     C*                                                                   S01496
+     C*        YOUR PROGRAM MAY NOT CONTENT F-SPECIFICATION               S01496
+     C*        FOR FILE SDSECSL1 ALSO - IN CAUSE YOU USED THIS FILE       S01496
+     C*        OUT OF THIS SUBROUTINE, YOU MAY USE ACCES PROGRAM          S01496
+     C*        AOSECSR0 TO ALL ACCES TO IT, OR RESIGNATE TO USE           S01496
+     C*        SUBROUTINE ZSETAC WITHOUT CHANGES.                         S01496
+     C*                                                                   S01496
+     C*""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""   S01496
+     C*
+     C*  INPUT  FIELDS                                                         *
+     C*       ZMETH  2,0     SETTLEMENT METHOD                                 *
+     C********ZSETI**12A*****SETTLEMENT ACCOUNT************************        *              CGL029
+      **      ZSETI  18A     SETTLEMENT ACCOUNT                       *                       CGL029
+     C********ZCNUM**6,0*****TRANSACTION*CUSTOMER*NUMBER************************              CSD027
+     C*       ZCNUM   6A     TRANSACTION CUSTOMER NUMBER                       *              CSD027
+     C*       ZCCY    3A     TRANSACTION CURRENCY                              *
+     C*       ZBRCA   3A     SETTLEMENT BRANCH                        *   085862
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C********ZSETO**15A*****SETTLEMENT*ACCOUNT************************        *              CGL029
+      **      ZSETO  24A     SETTLEMENT ACCOUNT                       *                       CGL029
+     C*       ZPTFR   4A     PORTFOLIO OF SETTLEMENT ACCOUNT                   *
+     C*                                                                        *
+     C**************************************************************************
+     C*                                                                  *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 10Mar06               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM004             Date 27Feb96               *
+      *                 085862             Date 15Mar95               *
+     C*                 081386             Date 29Dec94               *
+     C*                 S01486             Date 11Aug94                  *
+     C*                 S01496             Date 26Jul94                  *
+     C*                                                                  *
+     C*------------------------------------------------------------------*
+     C*                                                                  *
+      *  CSD027 - Change Customer Number to alpha.                    *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     C*  CPM004 - Bank Portfolios                                     *
+     C*  085862 - CORRECT CALCULATION OF SETTLEMENT BRANCH CODE       *
+     C*  081386 - Return code not checked
+     C*  S01486 - Portfolio Management Upgrade to Release 10.
+     C*  S01496 - Created for Private Banking (JYSKE Enhancement)        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ZSETAC    BEGSR                           *** ZSETAC ***
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDZMETH     ZMETH   20
+     C**********           MOVE ZSETI     ZSETI  12                                    S01496 CGL029
+     C                     MOVE ZSETI     ZSETI  18                                           CGL029
+     C**********           Z-ADDZCNUM     ZCNUM   60                                          CSD027
+     C                     MOVELZCNUM     ZCNUM   6                                           CSD027
+     C                     MOVE ZCCY      ZCCY    3
+     C                     MOVE ZBRCA     ZBRCA   3                       085862
+     C                     MOVE ZPTFR     ZPTFR   4
+     C**********           MOVE ZSETO     ZSETO  15                       S01496
+     C**********           MOVE ZSETO     ZSETO  18                                    S01496 CGL029
+     C                     MOVE ZSETO     ZSETO  24                                           CGL029
+     C*                                                                   CPM004
+     C** IF SETTLEMENT ACROSS NOSTRO                                      CPM004
+     C*                                                                   CPM004
+     C           ZMETH     IFEQ 01                         B1             CPM004
+     C           ZMETH     OREQ 02                                        CPM004
+     C           ZMETH     OREQ 07                                        CPM004
+     C           ZMETH     OREQ 08                                        CPM004
+     C           ZMETH     OREQ 12                                        CPM004
+     C*                                                                   CPM004
+     C** GET NOSTRO DETAILS                                               CPM004
+     C*                                                                   CPM004
+     C                     MOVELZSETI     ZNOST   2                       CPM004
+     C           ZNOST     IFNE *BLANK                                    CPM004
+     C           ZNOST     ANDNE'00'                                      CPM004
+     C                     CALL 'AONOSTR0'                 *              CPM004
+     C                     PARM *BLANKS   @RTCD   7                       CPM004
+     C                     PARM '*KEY   ' @OPTN   7                       CPM004
+     C                     PARM *BLANKS   ZWKEYA  6                       CPM004
+     C                     PARM ZCCY      ZWKEYB  3                       CPM004
+     C**********           PARM *BLANKS   ZWKEYC  4                                    CPM004 CGL029
+     C                     PARM *BLANKS   ZWKEYC 10                                           CGL029
+     C                     PARM *BLANKS   ZWKEYD  2                       CPM004
+     C                     PARM ZNOST     ZWKEYE  2                       CPM004
+     C                     PARM *BLANKS   ZWKEYF  3                       CPM004
+     C                     PARM *BLANKS   ZWKEYG 10                       CPM004
+     C                     PARM *BLANKS   ZWKEYH  1                       CPM004
+     C           SDNOST    PARM SDNOST    DSFDY                           CPM004
+     C           @RTCD     IFEQ *BLANKS                                   CPM004
+     C                     MOVE A7CUST    ZWCNUM                          CPM004
+     C                     MOVE ZCCY      ZWCCY                           CPM004
+     C                     MOVE A7ACCD    ZWACOD                          CPM004
+     C                     MOVE A7BRCD    ZWBRCA                          CPM004
+     C                     MOVE A7ACSN    ZWACSQ                          CPM004
+     C                     END                                            CPM004
+     C                     END                                            CPM004
+     C                     END                             E1             CPM004
+     C*
+     C** IF SETTLEMENT METHOD '04' SET UP ACCOUNT CODE IN FORM
+     C***AAAAAA-BBB-CCCC-DD*WHERE:*************************************                       CGL029
+      ** AAAAAA-BBB-CCCCCCCCCC-DD where:                                                      CGL029
+     C**   AAAAAA = CUSTOMER NUMBER
+     C**   BBB    = TRANSACTION CURRENCY
+     C*****CCCC***=*PRIME*CURRENT*ACCOUNT******************************                       CGL029
+      **   CCCCCCCCCC   = PRIME CURRENT ACCOUNT                                               CGL029
+     C**** DD     = STARTING ACCOUNT SEQUENCE FOR BRANCH (MULTI BRANCH    S01496
+     C****          BRANCH SYSTEM)                                        S01496
+     C****          OR '01' (FOR SINGLE BRANCH SYSTEM)                    S01496
+     C**   DD     = '01'                                                  S01496
+     C           ZMETH     IFEQ 04                         B1
+     C                     MOVE ZCNUM     ZWCNUM
+     C                     MOVE ZCCY      ZWCCY
+     C                     MOVE BMACCD    ZWACOD
+     C                     MOVE ZBRCA     ZWBRCA                          085862
+     C*
+     C** IF SYSTEM IS SINGLE BRANCH SET ACCOUNT SEQUENCE TO '01'          S01496
+     C********** BJMBDI    IFEQ 'N'                        B2             S01496
+     C                     MOVE '01'      ZWACSQ                          S01496
+     C**********           ELSE                            X2             S01496
+     C**********                                                          S01496
+     C** .... OTHERWISE IF CHANGE OF CUSTOMER NUMBER ACCESS CUSTOMER      S01496
+     C** DETAILS                                                          S01496
+     C********** ZCNUM     IFNE ZSCNUM                     B3             S01496
+     C**********           MOVE ZCNUM     ZWCNUA  6                       S01496
+     C********** ZWCNUA    CHAINSDCUSTL0             99                   S01496
+     C**********                                                          S01496
+     C********** *IN99     IFEQ '1'                        B4             S01496
+     C**********           Z-ADD100       DBASE            ***************S01496
+     C**********           MOVEL'SDCUSTL0'DBFILE           * DBERROR 100 *S01496
+     C**********           MOVELZWCNUA    DBKEY            ***************S01496
+     C**********           EXSR *PSSR                                     S01496
+     C**********           END                             E4             S01496
+     C**********                                                          S01496
+     C**********           Z-ADDZCNUM     ZSCNUM  60                      S01496
+     C**********           END                             E3             S01496
+     C**********                                                          S01496
+     C** IF CHANGE OF BRANCH CODE ACCESS BRANCH DETAILS                   S01496
+     C********** BBBRCD    IFNE ZSBRCD                     B3             S01496
+     C********** BBBRCD    CHAINSDBRCHL0             99                   S01496
+     C**********                                                          S01496
+     C********** *IN99     IFEQ '1'                        B4             S01496
+     C**********           Z-ADD101       DBASE            ***************S01496
+     C**********           MOVEL'SDBRCHL0'DBFILE           * DBERROR 101 *S01496
+     C**********           MOVELBBBRCD    DBKEY            ***************S01496
+     C**********           EXSR *PSSR                                     S01496
+     C**********           END                             E4             S01496
+     C**********                                                          S01496
+     C**********           MOVE BBBRCD    ZSBRCD  3                       S01496
+     C**********           END                             E3             S01496
+     C**********                                                          S01496
+     C**********           MOVE A8SACS    ZWACSQ                          S01496
+     C**********           END                             E2             S01496
+     C*
+     C                     END                             E1
+     C*
+     C** IF SETTLEMENT METHOD '05' SET UP ACCOUNT CODE IN FORM
+      ** AAAAAA-BBB-CCCCCCCCCC-DD WHERE:                                                      CGL029
+      **   AAAAAA       = CUSTOMER NUMBER                                                     CGL029
+      **   BBB          = TRANSACTION CURRENCY                                                CGL029
+      **   CCCCCCCCCC   = ACCOUNT CODE                                                        CGL029
+      **   DD           = ACCOUNT SEQUENCE                                                    CGL029
+     C***AAAAAA-BBB-CCCC-DD WHERE:*************************************                       CGL029
+     C*****AAAAAA*=*BYTES*1*-*6*OF*PARAMETER*ZSETI*********************                       CGL029
+     C*****BBB****=*TRANSACTION*CURRENCY*******************************                       CGL029
+     C*****CCCC***=*BYTES*7*-*10*OF*PARAMETER*ZSETI********************                       CGL029
+     C*****DD*****=*BYTES*7*-*11*UNT*SEQUENCE*FOR*BRANCH*(MULTI*BRANCH    S01496
+     C**   DD     = BYTES 11 - 12 UNT SEQUENCE FOR BRANCH (MULTI BRANCH   S01496
+     C**            BRANCH SYSTEM)
+     C**            OR '01' (FOR SINGLE BRANCH SYSTEM)
+     C           ZMETH     IFEQ 05                         B1
+     C                     MOVELZSETI     ZWCNUM
+     C                     MOVE ZCCY      ZWCCY
+     C**********           MOVELZSETI     ZWWORK 10                                           CGL029
+     C                     MOVELZSETI     ZWWORK 16                                           CGL029
+     C                     MOVE ZWWORK    ZWACOD
+     C                     MOVE ZSETI     ZWACSQ
+     C                     MOVE ZBRCA     ZWBRCA                          085862
+     C                     END
+     C*
+     C** IF SETTLEMENT METHOD '15' SET UP ACCOUNT CODE IN FORM
+     C***AAAAAA-BBB-CCCC-DD*WHERE:*************************************                       CGL029
+      ** AAAAAA-BBB-CCCCCCCCCC-DD where:                                                      CGL029
+     C**   AAAAAA = CUSTOMER NUMBER PARAMETER
+     C**   BBB    = TRANSACTION CURRENCY
+     C*****CCCC***=*CUSTOMER*SE*SETTLEMENT*ACCOUNT*CODE*FROM*SDSECSL0**                       CGL029
+      **   CCCCCCCCCC   = Customer SE Sett. A/C from SDSECSPD                                 CGL029
+     C**   DD     = CUSTOMER SE SETTLEMENT ACCOUNT SEQUENCE FROM SDSECSL0
+     C           ZMETH     IFEQ 15                         B1
+     C                     MOVE ZCNUM     ZWCNUM
+     C                     MOVE ZCCY      ZWCCY
+     C                     MOVE ZBRCA     ZWBRCA                          085862
+     C*
+     C** ON CHANGE OF CUSTOMER NUMBER ACCESS SE CUSTOMER DETAILS
+     C           ZCNUM     IFNE ZSECNU                     B2
+     C                     MOVE ZCNUM     ZWCNUA  6
+     C********** ZWCNUA    CHAINSDSECSL0             99                   S01496
+     C*
+     C                     CALL 'AOSECSR0'                                S01496
+     C                     PARM '*DBERR'  @RTCD   7                       S01496
+     C                     PARM '*KEY   ' @OPTN   7                       S01496
+     C*********************PARM ZWCNUA    CUST    6                S01496 CPM004
+     C                     PARM ZWCNUA    ZWCSTR  6                       CPM004
+     C           SDSECS    PARM SDSECS    DSSDY                           S01496
+     C*                                                                   S01496
+     C************IN99     IFEQ '1'                        B3             081386
+     C           @RTCD     IFNE *BLANKS                    B3             081386
+     C                     Z-ADD102       DBASE            ***************
+     C                     MOVEL'SDSECSL0'DBFILE           * DBERROR 102 *
+     C                     MOVELZWCNUA    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END                             E3
+     C*
+     C**********           Z-ADDZCNUM     ZSECNU  60                                          CSD027
+     C                     MOVELZCNUM     ZSECNU  6                                           CSD027
+     C                     END                             E2
+     C*
+     C                     MOVE BFACCD    ZWACOD
+     C                     MOVE BFACSN    ZWACSQ
+     C                     END                             E1
+     C*
+     C** IF SETTLEMENT METHOD 14 USE ACCOUNT NUMBER PASSED TO ACCESS
+     C** LF/ACNUM
+     C           ZMETH     IFEQ 14                         B1
+     C                     MOVELZSETI     ZWACNO 100
+     C           ZWACNO    CHAINACNUM                99
+     C**********           Z-ADDZRCNUM    ZWCNUM                          S01496
+     C**********           MOVE ZRCCY     ZWCCY                           S01496
+     C**********           Z-ADDZRACOD    ZWACOD                          S01496
+     C**********           Z-ADDZRACSQ    ZWACSQ                          S01496
+     C***********          Z-ADDCNUM      ZWCNUM                   S01496 S01486
+     C***********          MOVE CCY       ZWCCY                    S01496 S01486
+     C***********          Z-ADDACOD      ZWACOD                   S01496 S01486
+     C***********          Z-ADDACSQ      ZWACSQ                   S01496 S01486
+     C**********           Z-ADDZRCNUM    ZWCNUM                                       S01486 CPK027
+     C                     MOVELZRCNUM    ZWCNUM                                              CPK027
+     C                     MOVE ZRCCY     ZWCCY                           S01486
+     C                     Z-ADDZRACOD    ZWACOD                          S01486
+     C                     Z-ADDZRACSQ    ZWACSQ                          S01486
+     C                     MOVE ZRBRCA    ZWBRCA                          S01496
+     C                     END                             E1
+     C*
+     C** IF SETTLEMENT METHOD 04, 05 OR 15 USE ACCOUNT SET UP ABOVE
+     C           ZMETH     IFEQ 04                         B1
+     C           ZMETH     OREQ 05
+     C           ZMETH     OREQ 15
+     C           ZMETH     OREQ 01                         B1             CPM004
+     C           ZMETH     OREQ 02                                        CPM004
+     C           ZMETH     OREQ 07                                        CPM004
+     C           ZMETH     OREQ 08                                        CPM004
+     C           ZMETH     OREQ 12                                        CPM004
+     C           ZWACCN    CHAINACCNT                99
+     C                     END                             E1
+     C*
+     C** IF ACCOUNT FOUND SET PORTFOLIO REFERENCE TO REFERENCE FROM
+     C** ACCOUNT
+     C           *IN99     IFEQ '0'
+     C**********           MOVE ZRPTFR    ZPTFR                           S01496
+     C***********          MOVE PTFR      ZPTFR                     S01496S01496
+     C                     MOVE ZRPTFR    ZPTFR                           S01496
+     C***********          MOVE ZWACCN    ZSETO                           S01486
+     C                     MOVE ZKACCN    ZSETO                           S01486
+     C*
+     C** .... OTHERWISE BLANK
+     C                     ELSE
+     C                     MOVE *BLANKS   ZPTFR
+     C                     MOVE *BLANKS   ZSETO
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************

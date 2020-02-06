@@ -1,0 +1,1366 @@
+     A*****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas MM Loans/deposits display')                      *
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - MM Dealer Module                                     *
+     A*                                                               *
+     A*  MMLDNIDDF - LOANS/DEPOSITS & NAS ISSUED DISPLAY              *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23926           Date 06May09               *
+      *                 CER020             Date 19May08               *
+      *                 CER043             Date 19May05               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL038             Date 10May05               *
+      *                 225618             Date 30Mar04               *
+      *                 203502             Date 24Sep02               *
+      *                 CDL016             Date 03Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 208051             Date 22Aug02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS001             Date 23Nov01               *
+      *                 CAP067             Date 24Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176457             Date 15Mar00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE006             Date 11May99               *
+     A*                 CDL007             Date 06Oct99               *
+     A*                 CPB001             Date 02Sep99               *
+      *                 CGL011             Date 20Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 CAP002  *CREATE    Date 01Nov97               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23926 - Implementation Issues                             *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *  CDL038 - Extended Deal Sub Type                              *
+      *  225618 - Remove the slash in 'Liquidity/Premium' field.      *
+      *  203502 - Interest settlement account is not available        *
+      *  CDL016 - Autumatic Rollover of Fixed Term Loan/Deposit       *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *  208051 - Make Negative Interest Indicator display only.      *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  CAP067 - Repurchase Agreements API.                          *
+     A*  176457 - Renumber help tag that was being used in MMDEAMDDF. *
+      *  CGL011 - Collateral Processing for Midas DBA                 *
+     A*  CSE006 - Repurchase Agreement Enhancements                   *
+     A*  CDL007 - Deposit Breakdown Penalty                           *
+     A*  CPB001 - 'Private Banking' Module                            *
+     A*  CAP002 - Conversion of MM inputs into modular structure to   *
+     A*           use as APIs.                                        *
+     A*                                                               *
+     A*****************************************************************
+      ** Start of change CER020
+     A                                      DSPSIZ(27 132)
+      ** End of change CER020
+     A                                      PRINT(MPRINT)
+     A                                      CHGINPDFT
+      ** Start of change CER020
+     A**********                            MSGLOC(22)                                        CER020
+     A                                      MSGLOC(23)
+      ** End of change CER020
+     A                                      REF(MFRFL)
+     A                                      INDARA
+     A*
+     A* -------------------------------------------------------------------*
+     A* * MESSAGE SUBFILE FORMAT                                           *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R MMLDNIS1                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      SFL
+      ** Start of change CER020
+     A**********                            SFLMSGRCD(22)                                     CER020
+     A**********                            SFLMSGRCD(23)                                   BUG23926
+     A                                      SFLMSGRCD(26)                                   BUG23926
+      ** End of change CER020
+     A            DDSFKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A* -------------------------------------------------------------------*
+     A*   MESSAGE SUBFILE CONTROL                                          *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R MMLDNIS0                  TEXT('MSG SUBFILE CONTRL')
+     A                                      CF03
+     A                                      CF12
+     A  71                                  CF07
+     A  72                                  CF08
+     A  73                                  CF10
+     A  74                                  CF14
+     A  75                                  CF15
+     A  76                                  CF19
+     A*                                                           /*Start CSE006*/
+     A  76                                  CF06
+     A*                                                           /* End  CSE006*/
+     A                                      SFLCTL(MMLDNIS1)
+     A N96                                  SFLDSPCTL
+     A                                      SFLINZ
+     A                                      SFLDSP
+     A  97                                  SFLEND
+     A                                      SFLSIZ(5)
+     A                                      SFLPAG(1)
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A* -------------------------------------------------------------------*
+     A*   MAIN DISPLAY SCREEN                                              *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R MMLDNID1
+     A                                      CF03
+     A                                      CF12
+     A*/COPY WNCPYSRC,MMLDNIDD03
+     A  71                                  CF07
+     A  72                                  CF08
+     A  73                                  CF10
+     A  74                                  CF14
+     A  75                                  CF15
+     A*/COPY WNCPYSRC,MMLDNIDD04
+     A  76                                  CF19
+     A                                      FRCDTA
+     A                                      OVERLAY
+     A                                      BLINK
+     A                                      PUTOVR
+     A*/COPY WNCPYSRC,MMLDNIDD09
+     A*/COPY WNCPYSRC,MMLDNIDD10
+     A*/COPY WNCPYSRC,MMLDNIDD11
+     A*/COPY WNCPYSRC,MMLDNIDD12
+     A*                                              Begin /CDL007/
+     A*                                              End   /CDL007/
+     A** Start of change CAS001
+     A** End of change CAS001
+     A*/COPY WNCPYSRC,MMLDNIDD16
+     A*/COPY WNCPYSRC,MMLDNIDD17
+     A*                                                           /*Begin CPB001*/
+     A*                                                           /* End  CPB001*/
+     A*                                                           /*Start CSE006*/
+     A**********************************1  2'MMLDNID'
+     A N78                              1  2'MMLDNID'
+     A  78                              1  2'MIDAS'
+      **Start of change CAP067
+     A**78******                        2 31'REPO MAINTENANCE'                                CAP067
+     AA 78N90                           2 31'REPO MAINTENANCE'
+     AA 78 90                           2 34'REPOS REPAIR'
+      **End of change CAP067
+     A  78                                  DSPATR(UL)
+     A  78                                  DSPATR(HI)
+     A*                                                           /* End  CSE006*/
+     A                                  1 26'            Midas            '
+     A                                      DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+     A  77                              2  2'MMRPDLD'
+     A  77                              2 28'Cash Deposit/Loan'
+     A  77                                  DSPATR(UL)
+     A  77                                  DSPATR(HI)
+     A*                                                           /* End  CSE006*/
+     A            DDTIME         6  0   1 63EDTWRD('  :  :  ')
+     A                                      OVRDTA
+     A                                      TEXT('CURRENT TIME')
+     A                                  1 72'WID:'
+     A            DDWID          3      1 77TEXT('WORKSTATION ID')
+     A                                  3  2'Action:'
+     A            DDACTN         1   B  3 10TEXT('ACTION CODE')
+     A  10                                  DSPATR(RI)
+     A N10                                  DSPATR(HI)
+     A**Start of change CAS005
+     A**68******                                                                              CAS005
+     A  94
+     A**End of change CAS005
+      *                                              Begin /CDL038/
+     A*O*10N69******************************DSPATR(PC)
+     A**69**********************************DSPATR(PR)
+     A*N69**********************************DSPATR(UL)
+     AO 10N09                               DSPATR(PC)
+     A  09                                  DSPATR(PR)
+     A N09                                  DSPATR(UL)
+      *                                              End   /CDL038/
+     A                                      OVRDTA
+     A            DDLIST        11      3 12TEXT('VALID OPTIONS')
+     A                                      OVRDTA
+     A*                                                           /*Start CSE006*/
+     A**********************************3 24'MM DEALER - LOAN/DEPOSIT INPUT & A+
+     A**********************************    UTHORISATION'
+      *
+      ** Start of change CDL016
+     A*N78******************************
+     A*AN77*****************************3 24'MM DEALER - LOAN/DEPOSIT INPUT & A+
+     A**********************************    UTHORISATION'
+     A N78
+     AAN77                              2 24'MM DEALER - LOAN/DEPOSIT INPUT & A+
+     A                                      UTHORISATION'
+     A*                                                           /* End  CSE006*/
+     A                                  3 66'Blocked Ind:'
+     A  98                                  DSPATR(ND)
+     A            DDBLKA         1A  O  3 79
+     A                                      DSPATR(HI)
+     A  98                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** End of change CDL016
+     A                                  4  2'Deal No:'
+     A                                      DSPATR(HI)
+     A            DDDLNO    R     A  B  4 11
+     A                                      REFFLD(DEAL)
+     A  11                                  DSPATR(RI)
+     A N11                                  DSPATR(HI)
+      *                                              Begin /CDL038/
+     A**11N69*******************************DSPATR(PC)
+     A**69**********************************DSPATR(PR)
+     A*N69**********************************DSPATR(UL)
+     A  11N09                               DSPATR(PC)
+     A  09                                  DSPATR(PR)
+     A N09                                  DSPATR(UL)
+      *                                              End   /CDL038/
+     A                                      OVRDTA
+     A                                  4 19'Type:'
+     A            DDTYPE    R        B  4 25REFFLD(DTPE)
+     A  12                                  DSPATR(RI PC)
+     A N12                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  4 29'Sub-Type:'
+     A            DDSTYP    R        B  4 39REFFLD(DLST)
+     A  13                                  DSPATR(RI PC)
+     A N13                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  4 43'Fed Funds:'
+     A            DDFEDF         1   B  4 54TEXT('fed funds indicator')
+     A  14                                  DSPATR(RI PC)
+     A N14                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  4 56'Rollover Deal No:'
+     A            DDDADN    R     A  B  4 74
+     A                                      REFFLD(DEAL)
+     A                                      TEXT('ROLLOVER DEAL NO')
+     A  15                                  DSPATR(RI PC)
+     A N15                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  5  6'Deal Date:'
+     A            DDDLDT    R     A  B  5 17
+     A                                      REFFLD(CHGD)
+     A                                      TEXT('DEAL DATE')
+     A  16                                  DSPATR(RI PC)
+     A N16                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  5 25'Branch:'
+     A  80                                  DSPATR(ND)
+     A            DDBRCA    R     A  B  5 33REFFLD(BRCA)
+     A  17                                  DSPATR(RI PC)
+     A N17                                  DSPATR(HI)
+     A  70
+     AO 80                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  80                                  DSPATR(ND)
+     A                                      OVRDTA
+     A                                  5 38'Book Code:'
+     A            DDBOKC    R     A  B  5 49REFFLD(BOKC)
+     A  18                                  DSPATR(RI PC)
+     A N18                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  5 53'Linked Ref. No.:'
+     A            DDLNKN    R     A  B  5 70REFFLD(LNKDN)
+     A                                      TEXT('LINKED REF. NO.')
+     A  19                                  DSPATR(RI PC)
+     A N19                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  6  6'Broker:'
+     A            DDBKCD    R     A  B  6 14REFFLD(BKCD)
+     A  20                                  DSPATR(RI PC)
+     A N20                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*                                              Begin /CDL007/
+     A***********                       6 21'Brokerage:'
+     A*********** DDBRKG        14A  B  6 32TEXT('BROKERAGE')
+     A                                  6 19'Brokerage:'
+     A            DDBRKG        14A  B  6 30TEXT('BROKERAGE')
+     A*                                              End   /CDL007/
+     A  21                                  DSPATR(RI PC)
+     A N21                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*                                              Begin /CDL007/
+     A***********                       6 49'Rate/Amt:'
+     A**84*******                           DSPATR(ND)
+     A*********** DDRACD         1A  B  6 59TEXT('RATE/AMOUNT')
+     A                                  6 45'Rate/Amt:'
+     A  84                                  DSPATR(ND)
+     A            DDRACD         1A  B  6 55TEXT('RATE/AMOUNT')
+     A*                                              End   /CDL007/
+     A  22                                  DSPATR(RI PC)
+     A N22                                  DSPATR(HI)
+     A  70
+     AO 84                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  84                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*                                              Begin /CDL007/
+     A                                  6 57'Penalty'
+     A** Start of change CAS001
+     A**66******                            DSPATR(ND)                                        CAS001
+     A  92                                  DSPATR(ND)
+     A** End of change CAS001
+     A            DDPENA        14A  B  6 65TEXT('PENALTY AMOUNT')
+     A  64                                  DSPATR(RI PC)
+     A N64                                  DSPATR(HI)
+     A  70
+     AON89
+     AO 99                                                                                    CDL017
+     A** Start of change CAS001
+     A*O*66*****                            DSPATR(PR)                                        CAS001
+     AO 92                                  DSPATR(PR)
+     A*N70*89N66                            DSPATR(UL)                                        CAS001
+     A N70 89N92                            DSPATR(UL)
+     A**66******                            DSPATR(ND)                                        CAS001
+     A  92                                  DSPATR(ND)
+     A** End of change CAS001
+     A                                      OVRDTA
+     A*                                              End   /CDL007/
+     A                                  7  6'Customer:'
+     A            DDCUST    R        B  7 16REFFLD(CSNM)
+     A  23                                  DSPATR(RI PC)
+     A N23                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  7 31'Value Date:'
+     A            DDVDAT    R     A  B  7 43
+     A                                      REFFLD(CHGD)
+     A                                      TEXT('VALUE DATE')
+     A  24                                  DSPATR(RI PC)
+     A N24                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A                                  7 54'Maturity Date:'
+     A            DDMDAT    R     A  B  7 70
+     A                                      REFFLD(CHGD)
+     A                                      TEXT('MATURITY DATE')
+     A  25                                  DSPATR(RI PC)
+     A N25                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                        8  6'Notice Days:'                                    CER020
+     A**********  DDNTCE    R     A  B  8 19                                                  CER020
+      *
+     A                                  8  6'Init Start Date:'
+     A N04                                  DSPATR(ND)
+      *
+     A            DDISDT         6A  B  8 26
+     A N04                                  DSPATR(ND)
+     A  05                                  DSPATR(RI PC)
+     A N05                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A                                  8 33'Final Maturity Date:'
+     A N04                                  DSPATR(ND)
+      *
+     A            DDFMDT         6A  B  8 54
+     A N04                                  DSPATR(ND)
+     A  06                                  DSPATR(RI PC)
+     A N06                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      *
+     A                                  8 61'Orig Deal No:'
+     A N04                                  DSPATR(ND)
+      *
+     A            DDORDN         6A  O  8 83
+     A N04                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      *
+     A                                  9  6'Notice Days:'
+     A            DDNTCE    R     A  B  9 19
+      ** End of change CER020
+     A                                      REFFLD(NTCE)
+     A  26                                  DSPATR(RI PC)
+     A N26                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,MMLDNIDD18
+     A** Start of change CAS001
+      ** Start of change CER020
+     A**********                        8 27'Yield Curve:'                                    CER020
+     A                                  9 27'Yield Curve:'
+      ** End of change CER020
+     A N91                                  DSPATR(ND)
+      ** Start of change CER020
+     A*********   DDOYLC         5A  B  8 41TEXT('Yield Curve')                               CER020
+     A            DDOYLC         5A  B  9 41TEXT('Yield Curve')
+      ** End of change CER020
+     A  66                                  DSPATR(RI PC)
+     A N66                                  DSPATR(HI)
+     A  70
+     AON91                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A N91                                  DSPATR(ND)
+     A                                      OVRATR
+     A                                      OVRDTA
+     A** End of change CAS001
+      *                                              Begin /CDL038/
+      ** Start of change CER020
+     A**********                        8 47'Class:'                                          CER020
+     A                                  9 47'Class:'
+      ** End of change CER020
+     A  08                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDCLAS         4A  B  8 54                                                  CER020
+     A            DDCLAS         4A  B  9 54
+      ** End of change CER020
+     A  69                                  DSPATR(RI PC)
+     A N69                                  DSPATR(HI)
+     A  70
+     AO 08                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  08                                  DSPATR(ND)
+     A                                      OVRDTA
+      *                                              End   /CDL038/
+      ** Start of change CER020
+     A**********                        8 60'A-C Seq No:'                                     CER020
+     A**********  DDACSQ    R     A  B  8 72REFFLD(ACSQ)                                      CER020
+     A                                  9 60'A-C Seq No:'
+     A            DDACSQ    R     A  B  9 72REFFLD(ACSQ)
+      ** End of change CER020
+     A  27                                  DSPATR(RI PC)
+     A N27                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,MMLDNIDD19
+      ** Start of change CER020
+     A**********                        9  6'Currency:'                                       CER020
+     A**********  DDCCY     R        B  9 16REFFLD(CCY)                                       CER020
+     A                                 10  6'Currency:'
+     A            DDCCY     R        B 10 16REFFLD(CCY)
+      ** End of change CER020
+     A  28                                  DSPATR(RI PC)
+     A N28                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                        9 22'Amount:'                                         CER020
+     A                                 10 22'Amount:'
+      ** End of change CER020
+     A*/COPY WNCPYSRC,MMLDNIDD13
+      ** Start of change CER020
+     A**********  DDAMNP        14A  B  9 30                                                  CER020
+     A            DDAMNP        14A  B 10 30
+      ** End of change CER020
+     A*/COPY WNCPYSRC,MMLDNIDD14
+     A  29                                  DSPATR(RI PC)
+     A N29                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,MMLDNIDD15
+      ** Start of change CER020
+     A**********                        9 47'Base Ccy Rate:'                                  CER020
+     A                                 10 47'Base Ccy Rate:'
+      ** End of change CER020
+     A*/COPY WNCPYSRC,MMLDNIDD01
+      ** Start of change CER020
+     A**********  DDBRAT    R   13A  B  9 62REFFLD(BCYR)                                      CER020
+     A            DDBRAT    R   13A  B 10 62REFFLD(BCYR)
+      ** End of change CER020
+     A*/COPY WNCPYSRC,MMLDNIDD02
+     A  30                                  DSPATR(RI PC)
+     A N30                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       10  2'Interest'                                        CER020
+     A                                 11  2'Interest'
+      ** End of change CER020
+     A                                      DSPATR(UL HI)
+      ** Start of change CER020
+     A**********                       10 42'Repo/Pledge'                                     CER020
+     A                                 11 42'Repo/Pledge'
+      ** End of change CER020
+     A*                                                           /*Start CSE006*/
+     A**85**********************************DSPATR(ND)
+      **Start of change CAP067
+     A**78******                                                                              CAP067
+     A N78
+      **End of change CAP067
+     AO 77
+     AO 85                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDDRID         1A  B 10 54                                                  CER020
+     A            DDDRID         1A  B 11 54
+      ** End of change CER020
+     A  31                                  DSPATR(RI PC)
+     A N31                                  DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+      **Start of change CAP067
+     A**78******                                                                              CAP067
+     A N78
+      **End of change CAP067
+     AO 77
+     A**70********************************************
+     AO 70
+     A*                                                           /* End  CSE006*/
+     AO 85                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A*                                                           /*Start CSE006*/
+     A**85**********************************DSPATR(ND)
+      **Start of change CAP067
+     A**78******                                                                              CAP067
+     A N78
+      **End of change CAP067
+     AO 77
+     AO 85                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       10 56'Repo/Pledge No.'                                 CER020
+     A                                 11 56'Repo/Pledge No.'
+      ** End of change CER020
+     A*                                                           /*Start CSE006*/
+     A**85**********************************DSPATR(ND)
+      **Start of change CAP067
+     A**78******
+     A N78
+      **End of change CAP067
+     AO 77                                                                                    CAP067
+     AO 85                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDDDMR         6A  B 10 72                                                  CER020
+     A            DDDDMR         6A  B 11 72
+      ** End of change CER020
+     A  32                                  DSPATR(RI PC)
+     A N32                                  DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+      **Start of change CAP067
+     A**78******                                                                              CAP067
+     A N78
+      **End of change CAP067
+     AO 77
+     A**70**********************************
+     AO 70
+     A*                                                           /* End  CSE006*/
+     AO 85                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A*                                                           /*Start CSE006*/
+     A**85**********************************DSPATR(ND)
+      **Start of change CAP067
+     A**78******                                                                              CAP067
+     A N78
+      **End of change CAP067
+     AO 77
+     AO 85                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+     A                                      OVRDTA
+     A*                                                           /*Start CSE006*/
+     A*********************************11**6'Base Rate:'
+      ** Start of change CER020
+     A*N78******                       11  6'Base Rate:'                                      CER020
+     A**78******                       11 15'Repo/Interest Rate:'                             CER020
+     A N78                             12  6'Base Rate:'
+     A  78                             12 15'Repo/Interest Rate:'
+      ** End of change CER020
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDBSRC    R     A  B 11 17REFFLD(MRBC)                                      CER020
+     A            DDBSRC    R     A  B 12 17REFFLD(MRBC)
+      ** End of change CER020
+     A  33                                  DSPATR(RI PC)
+     A N33                                  DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+     A**70**********************************DSPATR(PR)
+     A  78
+     AO 70                                  DSPATR(PR)
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*                                                           /*Start CSE006*/
+     A*********************************11 22'Spread/Rate:'
+      ** Start of change CER020
+     A*N78******                       11 22'Spread/Rate:'                                    CER020
+     A N78                             12 22'Spread/Rate:'
+      ** End of change CER020
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDSPRT        12A  B 11 35TEXT('SPREAD RATE')                               CER020
+     A            DDSPRT        12A  B 12 35TEXT('SPREAD RATE')
+      ** End of change CER020
+     A  34                                  DSPATR(RI PC)
+     A N34                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       11 50'Calc Meth:'                                      CER020
+     A**********  DDICMT    R     A  B 11 61REFFLD(ICMT)                                      CER020
+     A                                 12 50'Calc Meth:'
+     A            DDICMT    R     A  B 12 61REFFLD(ICMT)
+      ** End of change CER020
+     A  35                                  DSPATR(RI PC)
+     A N35                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       11 66'Negative Int:'                                   CER020
+     A                                 12 66'Negative Int:'
+      ** End of change CER020
+     A* Start of change 208051
+     A**********  DDNGVI    R        B 11 80REFFLD(NGVI)
+      ** Start of change CER020
+     A**********  DDNGVI    R        O 11 80REFFLD(NGVI)                                      CER020
+     A            DDNGVI    R        O 12 80REFFLD(NGVI)
+      ** End of change CER020
+     A**36******                            DSPATR(RI PC)
+     A*N36******                            DSPATR(HI)
+     A**70******                            DSPATR(PR)
+     A*N70******                            DSPATR(UL)
+     A* End of change 208051
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       12  6'Frequency:'                                      CER020
+     A                                 13  6'Frequency:'
+      ** End of change CER020
+     A*                                                           /*Start CSE006*/
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDIPFQ    R        B 12 17REFFLD(IPFQ)                                      CER020
+     A            DDIPFQ    R        B 13 17REFFLD(IPFQ)
+      ** End of change CER020
+     A  37                                  DSPATR(RI PC)
+     A N37                                  DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+     A**70**********************************DSPATR(PR)
+     A  78
+     AO 70                                  DSPATR(PR)
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       12 22'Next Int Date:'                                  CER020
+     A                                 13 22'Next Int Date:'
+      ** End of change CER020
+     A*                                                           /*Start CSE006*/
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDNDAT         6   B 12 37TEXT('NEXT INTEREST DATE')                        CER020
+     A            DDNDAT         6   B 13 37TEXT('NEXT INTEREST DATE')
+      ** End of change CER020
+     A  38                                  DSPATR(RI PC)
+     A N38                                  DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+     A**70**********************************DSPATR(PR)
+     A  78
+     AO 70                                  DSPATR(PR)
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       12 50'Tot. Interest:'                                  CER020
+     A**********  DDTOTI        14A  B 12 65TEXT('TOTAL INTEREST')                            CER020
+     A                                 13 50'Tot. Interest:'
+     A            DDTOTI        14A  B 13 65TEXT('TOTAL INTEREST')
+      ** End of change CER020
+     A  39                                  DSPATR(RI PC)
+     A N39                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*                                                           /*Start CSE006*/
+     A*********************************13  6'Int Freq Day in Month:'
+      ** Start of change CER020
+     A*N78******                       13  6'Int Freq Day in Month:'                          CER020
+     A N78                             14  6'Int Freq Day in Month:'
+      ** End of change CER020
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDIPDM    R     A  B 13 29REFFLD(IPDM)                                      CER020
+     A            DDIPDM    R     A  B 14 29REFFLD(IPDM)
+      ** End of change CER020
+     A  40                                  DSPATR(RI PC)
+     A N40                                  DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+     A**70**********************************DSPATR(PR)
+     A  78
+     AO 70                                  DSPATR(PR)
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       13 36'Int Capitalisation Ind:'                         CER020
+     A**********  DDCPTI    R        B 13 60REFFLD(CPTI)                                      CER020
+     A                                 14 36'Int Capitalisation Ind:'
+     A            DDCPTI    R        B 14 60REFFLD(CPTI)
+      ** End of change CER020
+     A  41                                  DSPATR(RI PC)
+     A N41                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       13 66'Taxable Ind:'                                    CER020
+     A**********  DDMTAX    R        B 13 79REFFLD(MTAX)                                      CER020
+     A                                 14 66'Taxable Ind:'
+     A            DDMTAX    R        B 14 79REFFLD(MTAX)
+      ** End of change CER020
+     A  42                                  DSPATR(RI PC)
+     A N42                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       14  6'Front Up Interest:'                              CER020
+     A**********  DDFUID    R        B 14 25REFFLD(FUID)                                      CER020
+     A                                 15  6'Front Up Interest:'
+     A            DDFUID    R        B 15 25REFFLD(FUID)
+      ** End of change CER020
+     A  43                                  DSPATR(RI PC)
+     A N43                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       14 27'First & Last Day Interest:'                      CER020
+     A**********  DDFLID    R        B 14 54REFFLD(JFLID)                                     CER020
+     A                                 15 27'First & Last Day Interest:'
+     A            DDFLID    R        B 15 54REFFLD(JFLID)
+      ** End of change CER020
+     A  44                                  DSPATR(RI PC)
+     A N44                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       14 56'Round Down Interest:'                            CER020
+     A**********  DDRDFC    R        B 14 77REFFLD(JRDFC)                                     CER020
+     A                                 15 56'Round Down Interest:'
+     A            DDRDFC    R        B 15 77REFFLD(JRDFC)
+      ** End of change CER020
+     A  45                                  DSPATR(RI PC)
+     A N45                                  DSPATR(HI)
+     A  70                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       15  6'C D Reference No:'                               CER020
+     A                                 16  6'C D Reference No:'
+      ** End of change CER020
+     A*                                                           /*Start CSE006*/
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDCDRF    R        B 15 24REFFLD(CDRF)                                      CER020
+     A            DDCDRF    R        B 16 24REFFLD(CDRF)
+      ** End of change CER020
+     A  46                                  DSPATR(RI PC)
+     A N46                                  DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+     A**70**********************************DSPATR(PR)
+     A  78
+     AO 70                                  DSPATR(PR)
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       15 51'C D Held By:'                                    CER020
+     A                                 16 51'C D Held By:'
+      ** End of change CER020
+     A*                                                           /*Start CSE006*/
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+      ** Start of change CER020
+     A**********  DDCDCH    R        B 15 64TEXT('CURRENT HOLDER OF CD')                      CER020
+     A            DDCDCH    R        B 16 64TEXT('CURRENT HOLDER OF CD')
+      ** End of change CER020
+     A                                      REFFLD(CSNM)
+     A  47                                  DSPATR(RI PC)
+     A N47                                  DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+     A**70**********************************DSPATR(PR)
+     A  78
+     AO 70                                  DSPATR(PR)
+     A  78                                  DSPATR(ND)
+     A*                                                           /* End  CSE006*/
+     A N70                                  DSPATR(UL)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       16  6'Profit centre:'                                  CER020
+     A                                 17  6'Profit centre:'
+      ** End of change CER020
+     A  82                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDPRFC    R    4A  B 16 21REFFLD(PRFC)                                      CER020
+     A            DDPRFC    R    4A  B 17 21REFFLD(PRFC)
+      ** End of change CER020
+     A  48                                  DSPATR(RI PC)
+     A N48                                  DSPATR(HI)
+     A  70
+     AO 82                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  82                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       16 26'Orig. Branch:'                                   CER020
+     A                                 17 26'Orig. Branch:'
+      ** End of change CER020
+     A  81                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDORBR    R    3A  B 16 40REFFLD(ORBR)                                      CER020
+     A            DDORBR    R    3A  B 17 40REFFLD(ORBR)
+      ** End of change CER020
+     A  49                                  DSPATR(RI PC)
+     A N49                                  DSPATR(HI)
+     A  70
+     AO 81                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  81                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       16 44'Portf Ref:'                                      CER020
+     A                                 17 44'Portf Ref:'
+      ** End of change CER020
+     A*                                              Begin /CPB001/
+     A**83********                           DSPATR(ND)
+     A  83 89                                DSPATR(ND)
+     A*                                              End   /CPB001/
+      ** Start of change CER020
+     A**********  DDPTFR    R        B 16 55REFFLD(PTFR)                                      CER020
+     A            DDPTFR    R        B 17 55REFFLD(PTFR)
+      ** End of change CER020
+     A  50                                  DSPATR(RI PC)
+     A N50                                  DSPATR(HI)
+     A*                                              Begin /CPB001/
+     A**70********
+     A*O*83*******                          DSPATR(PR)
+     A  70
+     AO 83 89                               DSPATR(PR)
+     A*                                              End   /CPB001/
+     A N70                                  DSPATR(UL)
+     A*                                              Begin /CPB001/
+     A**83********                          DSPATR(ND)
+     A  83 89                               DSPATR(ND)
+     A*                                              End   /CPB001/
+     A                                      OVRDTA
+      ** Start of change CDL016
+      ** Start of change CER020
+     A***********                      16 60'Rollover Ind:'                                   CER020
+     A                                 17 60'Rollover Ind:'
+      ** End of change CER020
+     A  86
+     AO 98                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDROLI         1A  B 16 74                                                  CER020
+     A            DDROLI         1A  B 17 74
+      ** End of change CER020
+     A  36                                  DSPATR(RI PC)
+     A N36                                  DSPATR(HI)
+     A  70
+     AO 86
+     AO 98                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86
+     AO 98                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** End of change CDL016
+      ** Start of change CER020
+     A**********                       17  6'Automatic Rollover:'                             CER020
+     A                                 18  6'Automatic Rollover:'
+      ** End of change CER020
+     A  86                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDAURO         1A  B 17 26                                                  CER020
+     A            DDAURO         1A  B 18 26
+      ** End of change CER020
+     A  51                                  DSPATR(RI PC)
+     A N51                                  DSPATR(HI)
+     A  70
+     AO 86                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       17 29'Conf. Narr:'                                     CER020
+     A                                 18 29'Conf. Narr:'
+      ** End of change CER020
+     A  86                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDCNNA        35A  B 17 41                                                  CER020
+     A            DDCNNA        35A  B 18 41
+      ** End of change CER020
+     A  52                                  DSPATR(RI PC)
+     A N52                                  DSPATR(HI)
+     A  70
+     AO 86                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       18  6'Rollover Freq:'                                  CER020
+     A                                 19  6'Rollover Freq:'
+      ** End of change CER020
+     A  86                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDROFQ         1A  B 18 21                                                  CER020
+     A            DDROFQ         1A  B 19 21
+      ** End of change CER020
+     A  53                                  DSPATR(RI PC)
+     A N53                                  DSPATR(HI)
+     A  70
+     AO 86                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       18 24'Rollover Day No:'                                CER020
+     A                                 19 24'Rollover Day No:'
+      ** End of change CER020
+     A  86                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDRLDN         2A  B 18 41                                                  CER020
+     A            DDRLDN         2A  B 19 41
+      ** End of change CER020
+     A  54                                  DSPATR(RI PC)
+     A N54                                  DSPATR(HI)
+     A  70
+     AO 86                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**Start of change CAS005
+     A**Start of change 225618
+     A**********                       18 44'Liquidity/Premium:'                              225618
+      ** Start of change CER020
+     A**********                       18 44'Liquidity Premium:'                              CER020
+     A                                 19 44'Liquidity Premium:'
+      ** End of change CER020
+     A**End of change 225618
+     A  95                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDLQPR        12A  B 18 63                                                  CER020
+     A            DDLQPR        12A  B 19 63
+      ** End of change CER020
+     A  67                                  DSPATR(RI PC)
+     A N67                                  DSPATR(HI)
+     A  70
+     AO 95                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  95                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********  DDLQPS         1A  B 18 76                                                  CER020
+     A            DDLQPS         1A  B 19 76
+      ** End of change CER020
+     A  68                                  DSPATR(RI PC)
+     A N68                                  DSPATR(HI)
+     A  70
+     AO 95                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  95                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,MMH00065
+     A**End of change CAS005
+     A*/COPY WNCPYSRC,MMH00066
+      ** Start of change CER020
+     A*/COPY WNCPYSRC,MMH00067
+     A**********                       19  6'Int Paid Separately:'                            CER020
+     A*/COPY WNCPYSRC,MMH00068
+     A                                 20  6'Int Paid Separately:'
+      ** End of change CER020
+     A  86                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDIPDS         1A  B 19 27                                                  CER020
+     A            DDIPDS         1A  B 20 27
+      ** End of change CER020
+     A  55                                  DSPATR(RI PC)
+     A N55                                  DSPATR(HI)
+     A  70
+     AO 86                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       19 30'Int Setl Meth:'                                  CER020
+     A                                 20 30'Int Setl Meth:'
+      ** End of change CER020
+     A  86                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDIMET         2A  B 19 45                                                  CER020
+     A            DDIMET         2A  B 20 45
+      ** End of change CER020
+     A  56                                  DSPATR(RI PC)
+     A N56                                  DSPATR(HI)
+     A  70
+     AO 86                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       19 49'Int Setl Ccy:'                                   CER020
+     A                                 20 49'Int Setl Ccy:'
+      ** End of change CER020
+     A  88                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDISCY         3A  B 19 63TEXT('In Setl Ccy')                               CER020
+     A            DDISCY         3A  B 20 63TEXT('In Setl Ccy')
+      ** End of change CER020
+     A  57                                  DSPATR(RI PC)
+     A N57                                  DSPATR(HI)
+     A  70
+     AO 88                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  88                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**Start of change CGL029
+     A**********                       20  6'Int Setl A/c:'                                   CGL029
+      ** Start of change CER020
+     A**********                       20  2'Int Setl A/c:'                                   CER020
+     A                                 21  2'Int Setl A/c:'
+      ** End of change CER020
+     A**End of change CGL029
+     A  86                                  DSPATR(ND)
+     A**Start of change CGL029
+     A*N80******  DDINSA        15A  B 20 20                                                  CGL029
+     A**Start of change 203502
+     A*N80******  DDINSA        21A  B 20 16
+      ** Start of change CER020
+     A**********  DDINSA        21A  B 20 16                                                  CER020
+     A            DDINSA        21A  B 21 16
+      ** End of change CER020
+     A**End of change 203502
+     A**End of change CGL029
+     A  58                                  DSPATR(RI PC)
+     A N58                                  DSPATR(HI)
+     A  70
+     AO 86                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**Start of change CGL029              Nostro:'
+     A*N80******  DDINSN        12A  B 20 20                                                  CGL029
+     A**Start of change 203502
+     A*N80******  DDINSN        18A  B 20 16
+     A**End of change 203502
+     A**End of change CGL029
+     A**Start of change 203502
+     A**58******                            DSPATR(RI PC)
+     A*N58******                            DSPATR(HI)
+     A**70******
+     A*O*86*****                            DSPATR(PR)
+     A*N70******                            DSPATR(UL)
+     A**86******                            DSPATR(ND)
+     A**********                            OVRDTA
+     A**End of change 203502
+     A**Start of change CGL029
+     A**********                       20 36'Int C''party Nostro:'                            CGL029
+      ** Start of change CER020
+     A**********                       20 38'Int C''party Nostro:'                            CER020
+     A                                 21 38'Int C''party Nostro:'
+      ** End of change CER020
+     A**End of change CGL029
+     A  86                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  DDINOS        10A  B 20 56                                                  CGL029
+      ** Start of change CER020
+     A**********  DDINOS        10A  B 20 58                                                  CER020
+     A            DDINOS        10A  B 21 58
+      ** End of change CER020
+     A**End of change CGL029
+     A  59                                  DSPATR(RI PC)
+     A N59                                  DSPATR(HI)
+     A  70
+     AO 86                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  86                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**Start of change CGL029
+     A**********                       20 67'In Ccy:'                                         CGL029
+      ** Start of change CER020
+     A**********                       20 69'In Ccy:'                                         CER020
+     A                                 21 69'In Ccy:'
+      ** End of change CER020
+     A**End of change CGL029
+     A  88                                  DSPATR(ND)
+     A**Start of change CGL029
+     A**********  DDII72         3A  B 20 75TEXT('In Ccy')                                    CGL029
+      ** Start of change CER020
+     A**********  DDII72         3A  B 20 77TEXT('In Ccy')                                    CER020
+     A            DDII72         3A  B 21 77TEXT('In Ccy')
+      ** End of change CER020
+     A**End of change CGL029
+     A  60                                  DSPATR(RI PC)
+     A N60                                  DSPATR(HI)
+     A  70
+     AO 88                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  88                                  DSPATR(ND)
+     A                                      OVRDTA
+ 
+      ** Start of change CER020
+     A**********                       21  2'Funding'                                         CER020
+     A                                 22  2'Funding'
+      ** End of change CER020
+     A N87                                  DSPATR(UL HI)
+     A  87                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********                       21 11'Spread/Rate:'                                    CER020
+     A                                 22 11'Spread/Rate:'
+      ** End of change CER020
+     A  87                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDFSRP        12A  B 21 24                                                  CER020
+     A            DDFSRP        12A  B 22 24
+      ** End of change CER020
+     A  61                                  DSPATR(RI PC)
+     A N61                                  DSPATR(HI)
+     A  70
+     AO 87                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  87                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       21 37'Sign:'                                           CER020
+     A                                 22 37'Sign:'
+      ** End of change CER020
+     A  87                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDFSGN         1A  B 21 43                                                  CER020
+     A            DDFSGN         1A  B 22 43
+      ** End of change CER020
+     A  62                                  DSPATR(RI PC)
+     A N62                                  DSPATR(HI)
+     A  70
+     AO 87                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  87                                  DSPATR(ND)
+     A                                      OVRDTA
+      ** Start of change CER020
+     A**********                       21 45'Profit Centre:'                                  CER020
+     A                                 22 45'Profit Centre:'
+      ** End of change CER020
+     A  87                                  DSPATR(ND)
+      ** Start of change CER020
+     A**********  DDFPRC         4A  B 21 60                                                  CER020
+     A            DDFPRC         4A  B 22 60
+      ** End of change CER020
+     A  63                                  DSPATR(RI PC)
+     A N63                                  DSPATR(HI)
+     A  70
+     AO 87                                  DSPATR(PR)
+     A N70                                  DSPATR(UL)
+     A  87                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*                                                           /*Start CSE006*/
+     A  78                              3 28'Transaction Type:'
+     A  78        DDTRTP    R        B  3 46TEXT('TRANSACTION TYPE')
+     A                                      REFFLD(DTPE)
+     A  65                                  DSPATR(RI PC)
+     A N65                                  DSPATR(HI)
+     A  70
+     AON78                                  DSPATR(PR)
+     A N70
+     AON78                                  DSPATR(UL)
+     A                                      OVRDTA
+     A*                                                           /* End  CSE006*/
+     A**Start of change CER043
+      **Start of change BUG23926
+     A**********                       22 02'Cust.Ssn:'                                     BUG23926
+     A                                 23 02'Cust.Ssn:'
+      **End of change BUG23926
+     A  87                                  DSPATR(ND)
+      **Start of change BUG23926
+     A**********  DDCSSN        10A  B 22 12TEXT('Customer Shortname')                      BUG23926
+     A            DDCSSN        10A  B 23 12TEXT('Customer Shortname')
+      **End of change BUG23926
+     A N66                                  DSPATR(HI)
+     A  70
+     A N70                                  DSPATR(UL)
+     A  87                                  DSPATR(ND)
+     A                                      OVRDTA
+      **Start of change BUG23926
+     A**********                       22 24'Rep.Twn:'                                      BUG23926
+     A                                 23 24'Rep.Twn:'
+      **End of change BUG23926
+     A  87                                  DSPATR(ND)
+      **Start of change BUG23926
+     A**********  DDCRTN        10A  B 22 33TEXT('Customer Report Town')                    BUG23926
+     A            DDCRTN        10A  B 23 33TEXT('Customer Report Town')
+      **End of change BUG23926
+     A N66                                  DSPATR(HI)
+     A  70
+     A N70                                  DSPATR(UL)
+     A  87                                  DSPATR(ND)
+     A                                      OVRDTA
+      **Start of change BUG23926
+     A**********                       22 45'Rep.Nm:'                                       BUG23926
+     A                                 23 45'Rep.Nm:'
+      **End of change BUG23926
+     A  87                                  DSPATR(ND)
+      **Start of change BUG23926
+     A**********  DDCRNM        20A  B 22 53TEXT('Customer Report Name')                    BUG23926
+     A            DDCRNM        20A  B 23 53TEXT('Customer Report Name')
+      **End of change BUG23926
+     A N66                                  DSPATR(HI)
+     A  70
+     A N70                                  DSPATR(UL)
+     A  87                                  DSPATR(ND)
+     A                                      OVRDTA
+     A**End of change CER043
+     A*/COPY WNCPYSRC,MMH00069
+     A*
+     A* -------------------------------------------------------------------*
+     A* * MAIN SCREEN FOOTER                                               *
+     A* -------------------------------------------------------------------*
+     A*
+     A          R MMLDNIF1                  TEXT('SCREEN FOOTER')
+     A                                      CF03
+     A                                      CF12
+     A*/COPY WNCPYSRC,MMLDNIDD05
+     A  71                                  CF07
+     A  72                                  CF08
+     A  73                                  CF10
+     A  74                                  CF14
+     A  75                                  CF15
+     A*/COPY WNCPYSRC,MMLDNIDD06
+     A  76                                  CF19
+     A                                      OVERLAY
+     A                                      BLINK
+     A*                                                           /*Start CSE006*/
+     A************                          PUTOVR
+     A*                                                           /*End CSE006*/
+     A*
+     A*                                                           /*Start CSE006*/
+     A************DDFOTX        40A    23  2OVRDTA
+      ** Start of change CER020
+     A**********  DDFOTX        40A    23  2                                                  CER020
+     A            DDFOTX        40A    24  2
+      ** End of change CER020
+     A*                                                           /*End CSE006*/
+     A                                      DSPATR(HI)
+     A*                                                           /*Start CSE006*/
+     A************DDSTS         24     23 45OVRDTA
+      ** Start of change CER020
+     A**********  DDSTS         24     23 45                                                  CER020
+     A            DDSTS         24     24 45
+      ** End of change CER020
+     A*                                                           /*End CSE006*/
+     A  79                                  DSPATR(RI)
+     A N79                                  DSPATR(ND)
+     A*                                                           /*Start CSE006*/
+     A************                          OVRATR
+     A*                                                           /*End CSE006*/
+      *                                              Begin /CGL011/
+     A*                                                           /*Start CSE006*/
+     A************DDCSTS        10     23 70OVRDTA
+      ** Start of change CER020
+     A**********  DDCSTS        10     23 70                                                  CER020
+     A            DDCSTS        10     24 70
+      ** End of Change CER020
+     A*                                                           /*End CSE006*/
+     A**Start of change CAS005
+     A**67******                            DSPATR(HI)                                        CAS005
+     A*N67******                            DSPATR(ND)                                        CAS005
+     A  93                                  DSPATR(HI)
+     A N93                                  DSPATR(ND)
+     A**End of change CAS005
+     A*                                                           /*Start CSE006*/
+     A************                          OVRATR
+     A*                                                           /*End CSE006*/
+      *                                              End   /CGL011/
+     A*
+      ** Start of change CER020
+     A**********                       24  2'F3=Exit F12=Cancel'                              CER020
+     A                                 25  2'F3=Exit F12=Cancel'
+      ** End of change CER020
+     A*/COPY WNCPYSRC,MMLDNIDD07
+      ** Start of change CER020
+     A**********                       24 22'F8=Next'                                         CER020
+     A                                 25 22'F8=Next'
+      ** End of Change CER020
+     A N72                                  DSPATR(ND)
+     A*                                                           /*Start CSE006*/
+     A************                          OVRATR
+     A*                                                           /*End CSE006*/
+      ** Start of change CER020
+     A**********                       24 31'F7=Prev'                                         CER020
+     A                                 25 31'F7=Prev'
+      ** End of change CER020
+     A N71                                  DSPATR(ND)
+     A*                                                           /*Start CSE006*/
+     A************                          OVRATR
+     A*                                                           /*End CSE006*/
+      ** Start of change CER020
+     A**********                       24 40'F14=Settlements'                                 CER020
+     A                                 25 40'F14=Settlements'
+      ** End of change CER020
+     A N74                                  DSPATR(ND)
+     A*                                                           /*Start CSE006*/
+     A************                          OVRATR
+     A*                                                           /*End CSE006*/
+      ** Start of change CER020
+     A**********                       24 57'F15=Select'                                      CER020
+     A                                 25 57'F15=Select'
+      ** End of change CER020
+     A N75                                  DSPATR(ND)
+     A*                                                           /*Start CSE006*/
+     A************                          OVRATR
+     A*                                                           /*End CSE006*/
+     A*/COPY WNCPYSRC,MMLDNIDD08
+      ** Start of change CER020
+     A**********                       24 69'F19=Funding'                                     CER020
+     A                                 25 69'F19=Funding'
+      ** End of change CER020
+     A N76                                  DSPATR(ND)
+     A*                                                           /*Start CSE006*/
+     A************                          OVRATR
+     A*                                                           /*End CSE006*/

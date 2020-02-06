@@ -1,0 +1,297 @@
+     H            Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU BackGnd Upd of FOCLTD')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     FOCLT - BACKGROUND UPDATE OF FOCLTD FILE                     *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 102570             Date 10Jul01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01117             Date 23May90               *                       S01117
+     F*                    S01230             DATE 07/11/89              *S01230
+     F*                                                                  *
+     F********************************************************************
+      *                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  102570 - Update field TNLU to avoid a FOOB                      *
+      *           when 2 amends without changes at the same date.        *
+     F*     S01117 - Release 10 Changes  -  Add Settlement Branch
+     F*     S01230 - STANDARDISE PROGRAMS                                *S01230
+     F********************************************************************S01230
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN FOCLT FAILED/ERROR                           *
+     F*       31      ERROR ON FOCLT FILE                                *
+     F*       32      CHAIN FOCLT FAILED/ERROR                           *
+     F*                                                                  *
+     F********************************************************************
+     FFOCLT   UF  E           K        DISK                      A
+     F                                              KCOMIT
+     FFOCLTA  UF  E                    DISK
+     F                                              KCOMIT
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all programs  S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright        S01230
+     E********************************************************************S01230
+      /EJECT                                                              S01230
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT                                                              S01230
+     C*
+     C/COPY ZSRSRC,ZTNLU1Z1                                               102570
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        RETURN CODE
+     C                     PARM           WCBCD   6        CUSTOMER NO.
+     C                     PARM           WCLCC   3        COL. CURRENCY
+     C                     PARM           WSTFQ   1        STATEMENT FREQ.
+     C                     PARM           WSTDY   20       DAY IN MONTH ST
+     C                     PARM           WNSTD   50       NEXT STAT. DATE
+     C                     PARM           WFACO  10        FOR ACCOUNT OF
+     C                     PARM           WBRKI   1        BROKER INDIC.
+     C                     PARM           WSETP   2        SETTLEMENT TYPE
+     C**********           PARM           WSETA  12        SETTLEMENT A/C                     CGL029
+     C                     PARM           WSETA  18                                           CGL029
+     C                     PARM           WCNOS   8        C/P NOSTRO
+     C                     PARM           WCORA   1        CORR. ADDRESS
+     C                     PARM           WFTAO  20        FOR ATTENTION O
+     C                     PARM           WTLCI   1        TELEX CONF.IND.
+     C                     PARM           WCNTL   50       CONTRACT LIMIT
+     C                     PARM           WREFQ   1        REV. FREQUENCY
+     C                     PARM           WREDY   20       REV. BASE DAY
+     C                     PARM           WNRED   50       NEXT REV. DATE
+     C                     PARM           WPSCI   1        POS. COMB. IND.
+     C                     PARM           WAUCI   1        AUTOCLOSURE IND
+     C                     PARM           WCLDS  20        COLL. DESCRIPT.
+     C                     PARM           WCLAM  130       COLL. AMOUNT
+     C                     PARM           WSEBR   3        SETTLEMENT BRCHS01117
+     C                     PARM           WCHTP   1        TYPE OF LST CHG
+     C                     PARM           WLCD    50       LAST CHG DATE
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN INSERTED, CHAIN TO FOCLT   TO CHECK THAT
+     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
+     C*
+     C           WCHTP     IFEQ 'I'
+     C                     MOVE WCBCD     CBCD
+     C           CBCD      CHAINFOCLT                30    CHAIN FAILED
+     C*
+     C* IF RECORD DOES NOT EXIST
+     C* THEN MOVE PARAMETERS RECEIVED INTO FILE FIELDS AND WRITE
+     C* A NEW RECORD
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C* IF IT DOES EXIST AS DELETED(RECI *)
+     C* THEN MOVE PARAMETERS RECEIVED INTO FILE FIELDS AND UPDATE
+     C* OLD RECORD
+     C*
+     C           *IN30     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C                     MOVE 'D'       RECI
+     C                     MOVE WCBCD     CBCD
+     C                     MOVE WCLCC     CLCC                         Y
+     C                     MOVE WSTFQ     STFQ                         EQ.
+     C                     Z-ADDWSTDY     STDY                          ST
+     C                     Z-ADDWNSTD     NSTD                         ATE
+     C                     MOVE WFACO     FACO                         OF
+     C                     MOVE WBRKI     BRKI                         .
+     C                     MOVE WSETP     SETP                         YPE
+     C                     MOVE WSETA     SETA                         /C
+     C                     MOVE WSEBR     SEBR                            S01117
+     C                     MOVE WCNOS     CNOS
+     C                     MOVE WCORA     CORA                         S
+     C                     MOVE WFTAO     FTAO                         N O
+     C                     MOVE WTLCI     TLCI                         ND.
+     C                     Z-ADDWCNTL     CNTL                         IT
+     C                     MOVE WREFQ     REFQ                         CY
+     C                     Z-ADDWREDY     REDY                         Y
+     C                     Z-ADDWNRED     NRED                         TE
+     C                     MOVE WPSCI     PSCI                         ND.
+     C                     MOVE WAUCI     AUCI                         IND
+     C                     MOVE WCLDS     CLDS                         PT.
+     C                     Z-ADDWCLAM     CLAM
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C                     Z-ADD0         TNLU                            102570
+     C*
+     C* IF RECORD FOUND ON FILE AND IS NOT A DELETED RECORD SET ERROR
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     31
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITEFOCLTDF                31   ERROR
+     C                     END
+     C*
+     C           *IN30     IFEQ '0'
+     C           *IN31     ANDEQ'0'
+     C** ACCESS / UPDATE NEXT AVAILABLE TRANS. NUMBER.                    102570
+     C                     EXSR ZTNLU1                                    102570
+     C                     Z-ADDNATN      TNLU                            102570
+     C                     UPDATFOCLTDF                31   ERROR
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT AN INSERT
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C           WCHTP     IFEQ 'A'
+     C                     MOVE WCBCD     CBCD
+     C           CBCD      CHAINFOCLT                30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE WCBCD     CBCD
+     C                     MOVE WCLCC     CLCC                         Y
+     C                     MOVE WSTFQ     STFQ                         EQ.
+     C                     Z-ADDWSTDY     STDY                          ST
+     C                     Z-ADDWNSTD     NSTD                         ATE
+     C                     MOVE WFACO     FACO                         OF
+     C                     MOVE WBRKI     BRKI                         .
+     C                     MOVE WSETP     SETP                         YPE
+     C                     MOVE WSETA     SETA                         /C
+     C                     MOVE WSEBR     SEBR                            S01117
+     C                     MOVE WCNOS     CNOS
+     C                     MOVE WCORA     CORA                         S
+     C                     MOVE WFTAO     FTAO                         N O
+     C                     MOVE WTLCI     TLCI                         ND.
+     C                     Z-ADDWCNTL     CNTL                         IT
+     C                     MOVE WREFQ     REFQ                         CY
+     C                     Z-ADDWREDY     REDY                         Y
+     C                     Z-ADDWNRED     NRED                         TE
+     C                     MOVE WPSCI     PSCI                         ND.
+     C                     MOVE WAUCI     AUCI                         IND
+     C                     MOVE WCLDS     CLDS                         PT.
+     C                     Z-ADDWCLAM     CLAM
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C                     EXSR ZTNLU1                                    102570
+     C                     Z-ADDNATN      TNLU                            102570
+     C                     UPDATFOCLTDF                30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM FOCLT
+     C*
+     C           WCHTP     IFEQ 'D'
+     C                     MOVE WCBCD     CBCD
+     C           CBCD      CHAINFOCLT                30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C                     EXSR ZTNLU1                                    102570
+     C                     Z-ADDNATN      TNLU                            102570
+     C                     UPDATFOCLTDF                30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON FOCLTD UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C                     READ FOCLTA                   32CHAIN FAILED
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C           WCHTP     IFEQ 'I'
+     C                     ADD  1         NORE
+     C                     ADD  1         NINS
+     C                     END
+     C*
+     C           WCHTP     IFEQ 'A'
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C           WCHTP     IFEQ 'D'
+     C                     ADD  1         NDEL
+     C                     SUB  1         NORE
+     C                     END
+     C*
+     C                     UPDATFOCLTAF                32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C/COPY ZSRSRC,ZTNLU1Z2                                               102570
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Finastra International Limited 2001

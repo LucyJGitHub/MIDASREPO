@@ -1,0 +1,503 @@
+     H DEBUG
+     H COPYRIGHT('(c) Finastra International Limited 2002')
+      *****************************************************************
+/*STD *  RPGBASEMOD                                                   *
+/*EXI *  TEXT('Midas SE Clients subj to backup w/holding - Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE7600 - Midas SE Clients subject to backup withholding      *
+      *                                                               *
+      *  Function:  This module will report all the clients who are   *
+      *             subject to backup withholding.                    *
+      *                                                               *
+      *  Component of: SEC0302 - Midas SE Full List (On Request)      *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. CSD079             Date 05Feb07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023   *CREATE   Date 12Jul00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSE023 - Treaty Withholding Tax                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    35         Error in reading file SDWTCSL2                  *
+      *    45         End of file for SDWTCSL2                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E  I N D E X                               *
+      *                                                               *
+      * SRPrint - Print details                                       *
+      * SREnd   - Write trailer in report                             *
+      * SRAudit - Write audit report                                  *
+      * *PSSR   - Error processing                                    *
+      * *INZSR  - Initialise                                          *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+      ** SD Customer backup withholding tax
+     FSDWTCSL2  IF   E           K DISK    INFSR(*PSSR)
+      *
+      ** Customer backup withholding tax printer file - Detail
+     FSE7600P1  O    E             PRINTER INFDS(SPOOL1)
+     F                                     USROPN
+     F                                     INFSR(*PSSR)
+      *
+      ** Customer backup withholding tax printer file - Audit
+     FSE7600AU  O    E             PRINTER INFDS(SPOOLU)
+     F                                     USROPN
+     F                                     INFSR(*PSSR)
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--------------------------------------+
+      ** ¦ D-specs: Arrays and Data Structures  ¦
+      ** ¦ =======  ==========================  ¦
+      ** +--------------------------------------+
+      *
+      ** Array containing Copyright statement
+     D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
+      *
+      ** Local data area for database error details
+     D LDA           E DS           256    EXTNAME(LDA)
+      ** The following fields are defined in the external file:
+      **                                    134 141 DBFile
+      **                                    142 170 DBKey
+      **                                    171 180 DBPgm
+      **                                    181 1830DBase
+      **                                    184 193 DBMod
+      **                                    194 203 DBProc
+ 
+      ** The following /COPY line includes all the defined fields in the
+      ** PSDS.  They have meaningful names, prefixed by 'PS'.
+ 
+      ** Program Status Data Structure
+     D/COPY ZACPYSRC,PSDS
+      *
+      ** Externally described DS for bank details
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      *
+      ** Externally described DS for customer details
+     D SDCUST        E DS                  EXTNAME(SDCUSTPD)
+      *
+      ** DS for access objects - short data structure
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      *
+      ** DS for access objects - long data structure
+     D DSSDY         E DS                  EXTNAME(DSSDY)
+      *
+      ** File Information Data Structure for SE7600P1.
+     D SPOOL1          DS
+     D   SFILE1               83     92
+     D   SFNUM1              123    124B 0
+     D   OFLLN1              188    189B 0
+     D   PRTLN1              367    368B 0
+      *
+      ** File Information Data Structure for SE7600AU.
+     D SPOOLU          DS
+     D   SFILEU               83     92
+     D   SFNUMU              123    124B 0
+      *
+      ** Indicator Array
+     D Indicators      DS                  BASED(IndicatorP)
+     D  ErrorOnFl             35     35
+     D  EndOfFile             45     45
+      *
+      ** +--------------------------------------+
+      ** ¦ D-specs: Named constants             ¦
+      ** ¦ =======  ===============             ¦
+      ** +--------------------------------------+
+      *
+      ** True and False can be used for indicators being on or off.
+     D True            C                   *On
+     D False           C                   *Off
+      *
+      ** +--------------------------------------+
+      ** ¦ D-specs: Declared variables          ¦
+      ** ¦ =======  ==================          ¦
+      ** +--------------------------------------+
+      *
+      ** Parameters for ZDATE2
+     D ZDayNo          S              5P 0
+     D ZDate           S              6P 0
+     D ZADate          S              7A
+      *
+      ** Parameters for ZSFILE
+     D PSeq            S              5
+     D SEnty           S              3
+     D ZSnum           S              6  0
+     D ZSnumU          S              6  0
+     D ZSerr           S              1
+      *
+      ** Parameters for access object programs
+     D PRtcd           S              7
+     D POptn           S              7
+     D PCust           S             10
+     D PKySt           S              7
+      *
+      ** Other fields used
+     D WRun            S              1
+     D WCnt            S              1
+     D WCrttx          S              2    INZ(' ')
+     D WOpen           S              1    INZ('N')
+     D RqdLn1          S              3  0
+     D DifLn1          S              3  0
+      *
+      ** Pointer for the indicator Array
+     D IndicatorP      S               *   INZ(%Addr(*IN))
+      *
+      ** +--------------------------------------+
+      ** ¦ End of D-specs                       ¦
+      ** ¦ ==============                       ¦
+      ** +--------------------------------------+
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--- Start of Main processing -------------------------------+
+      ** ¦                                                            ¦
+      ** ¦ *INZSR is executed at program activation.                  ¦
+      ** ¦                                                            ¦
+      ** +------------------------------------------------------------+
+      *
+      *****************************************************************
+      * MAIN PROCEDURE                                                *
+      *****************************************************************
+      *
+     C     *LOVAL        SETLL     SDWTCSL2
+     C                   READ      SDWTCSL2                             3545
+      *
+      ** Database error
+      *
+     C                   IF        ErrorOnFl = True
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBKey = '*FIRST'
+     C                   EVAL      DBFile = 'SDWTCSL2'
+     C                   EVAL      DBase = 001
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   EVAL      WCnt = 'N'
+      *
+     C                   IF        EndOfFile = True
+     C                   EXSR      SRAudit
+     C                   ELSE
+     C                   EVAL      WCnt = 'Y'
+     C                   ENDIF
+      *
+     C                   DOU       EndOfFile = True
+      *
+      ** Process Report Lines.
+      *
+     C                   EXSR      SRPrint
+      *
+      ** Read next record.
+      *
+     C                   READ      SDWTCSL2                             3545
+      *
+     C                   IF        ErrorOnFl = True
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBKey = '*NEXT'
+     C                   EVAL      DBFile = 'SDWTCSL2'
+     C                   EVAL      DBase = 002
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   ENDDO
+ 
+     C                   EXSR      SREnd
+      *
+      *****************************************************************
+      *  P R O G R A M   E N D                                        *
+      *****************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPrnt - Print details                                       *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SRPrint       BEGSR
+ 
+     C                   IF        WOpen <> 'Y'
+     C                   EVAL      WOpen = 'Y'
+     C                   OPEN      SE7600P1
+      *
+      ** Ensure Detail Spool File recorded by RCF.
+      *
+     C                   EVAL      ZSnum = SFNUM1
+      *
+     C                   CALL      'ZSFILE'
+     C                   PARM                    PSeq
+     C                   PARM      *Blanks       SEnty
+     C                   PARM                    SFILE1
+     C                   PARM                    ZSnum
+     C                   PARM      *Blank        ZSerr
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C     ZSERR         IFEQ      'Y'
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   EVAL      RqdLn1 = 1
+     C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
+     C                   IF        DifLn1 <= RqdLn1 OR
+     C                             WHCRTT <> WCrttx
+     C                   WRITE     HEADER1
+     C                   EVAL      RCRTT = WHCRTT
+     C                   WRITE     HEADER2
+     C                   ENDIF
+      *
+      ** Access customer details file
+      *
+     C                   CALLB     'AOCUSTR0'
+     C                   PARM      *Blanks       PRtcd
+     C                   PARM      '*KEY   '     POptn
+     C                   PARM      WHCSNO        PCust
+     C                   PARM                    PKySt
+     C     SDCUST        PARM      SDCUST        DSSDY
+      *
+      ** Database error.
+      *
+     C                   IF        PRtcd <> *Blanks
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBKey = PCust
+     C                   EVAL      DBFile = 'SDCUSTPD'
+     C                   EVAL      DBase = 003
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+     C                   EVAL      ZDayNo = WHDCEX
+     C                   CALL      'ZDATE2'
+     C                   PARM                    ZDayNo
+     C                   PARM                    BJDFIN
+     C                   PARM      *Zero         ZDate
+     C                   PARM      *BLanks       ZADate
+      *
+     C                   EVAL      RCSNO = WHCSNO
+     C                   EVAL      RCSSN = BBCSSN
+     C                   EVAL      RCOLC = BBCOLC
+     C                   EVAL      RINTS = WHINTS
+     C                   EVAL      RDCRC = WHDCRC
+      *
+     C                   IF        ZDate <> *Zero
+     C                   MOVE      ZDate         RDCEX
+     C                   ELSE
+     C                   EVAL      RDCEX = *Blanks
+     C                   ENDIF
+      *
+     C                   EVAL      REXCD = WHEXCD
+     C                   EVAL      RRPCD = WHRPCD
+      *
+     C                   EVAL      WCrttx = WHCRTT
+      *
+      ** Write Detail
+      *
+     C                   WRITE     DETAIL
+ 
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREnd - Write trailer in report                              *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SREnd         BEGSR
+      *
+     C                   EVAL      RqdLn1 = 4
+     C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
+     C                   IF        DifLn1 <= RqdLn1
+     C                   WRITE     HEADER1
+     C                   ENDIF
+      *
+      ** Write out report trailer.
+      *
+     C                   WRITE     TRAILER
+     C                   EVAL      *INLR = '1'
+     C                   RETURN
+ 
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAudit - Write audit report                                 *
+      *                                                               *
+      *****************************************************************
+ 
+     C     SRAudit       BEGSR
+      *
+     C                   OPEN      SE7600AU
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                   EVAL      ZSnumU = SFNUMU
+      *
+     C                   CALL      'ZSFILE'
+     C                   PARM                    PSeq
+     C                   PARM      *Blanks       SEnty
+     C                   PARM                    SFILEU
+     C                   PARM                    ZSnumU
+     C                   PARM      *Blank        ZSerr
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C     ZSERR         IFEQ      'Y'
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+     C                   ENDIF
+      *
+     C                   WRITE     HEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C                   IF        *INU7 = *On
+     C                   WRITE     DBERROR
+     C                   ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C                   IF        WCnt ='N'
+     C                   WRITE     NODTLS
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   EVAL      *INLR ='1'
+     C                   RETURN
+ 
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation routine                       *
+      *                                                               *
+      * Called by: Implicitly on program activation                   *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    PSeq
+      *
+     C     *DTAARA       DEFINE                  LDA
+      *
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBPGM  =  PSProcPgm
+     C                   OUT       LDA
+      *
+     C                   CALLB     'AOBANKR0'
+     C                   PARM      *Blanks       PRtcd
+     C                   PARM      '*FIRST '     POptn
+     C     SDBANK        PARM      SDBANK        DSFDY
+      *
+      ** Database error.
+      *
+     C                   IF        PRtcd <> *Blanks
+     C     *LOCK         IN        LDA
+     C                   EVAL      DBKey = POptn
+     C                   EVAL      DBFile = 'SDBANKPD'
+     C                   EVAL      DBase = 004
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** Report Work fields.
+      *
+     C                   EVAL      RqdLn1 = 0
+     C                   EVAL      DifLn1 = 0
+     C                   EVAL      PrtLn1 = 0
+ 
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+ 
+     C     *PSSR         BEGSR
+ 
+     C                   IF        WRun = *Blank
+     C                   EVAL      WRun = 'Y'
+     C                   EVAL      *INU7 = *On
+     C                   EVAL      *INU8 = *On
+     C                   EVAL      *INLR = *On
+     C                   DUMP
+     C                   EXSR      SRAudit
+     C                   ENDIF
+      *
+     C                   EVAL      *INU7 = *On
+     C                   EVAL      *INU8 = *On
+     C                   EVAL      *INLR = *On
+     C                   RETURN
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

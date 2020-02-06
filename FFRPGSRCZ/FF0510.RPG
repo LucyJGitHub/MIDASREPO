@@ -1,0 +1,646 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Client Close of Business Updates')            *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF0510  -  CLIENT CLOSE OF BUSINESS UPDATES                    *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 06Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01455             Date 05Nov93               *
+      *                 S01117             Date 17Mar90               *
+     F*                  S01195             DATE 17MAR90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*   S01455  - 'FF' ACCOUNT KEY ENHANCEMENTS.                       *
+     F*              Recompiled due to changes in PF/TABTB80.            *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   S01195  -  HOLIDAY PROCESSING                                  *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FTABFF   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB10F                          KIGNORE               S01117
+     F* ICD 2     TABTB11F                          KIGNORE
+     F            TABTB11F                          KIGNORE               S01117
+     F            TABTB20F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F* ICD FF&O  TABTB80F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     FCUSSTD  O   E           K        DISK
+     FWCOLTD  O   E           K        DISK
+     F*ABLETJ*IF* E           K        DISK                               S01195
+     FDLSDD1  IF  E           K        DISK
+     FFOCLT   UF  E           K        DISK
+     FSDFOCSL0UF  E           K        DISK                               S01117
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*
+     F*                       FUNCTION OF INDICATORS
+     F********40***********END*OF*TABTB10*REACHED*ON*READ*****************S01117
+     F********41***********END*OF*TABTB11*REACHED*ON*READ*****************S01117
+     F*       42           END OF TABTB80 REACHED ON READ
+     F*       44           END OF FOCLTD  REACHED ON READ
+     F*       45           END OF DEALSDD REACHED ON READ
+     F*       50           UPDATE FOCLTD INDICATOR
+     F*       51           CUSTOMER DETAILS SDFOCSL0 INDICATOR            S01117
+     F*       52           NEXT REVALUATION DATE RECALCULATED             S01117
+     F*       53           NEXT STATEMENT DATE RECALCULATED               S01117
+     F*       98           IF ON  - DATE FORMAT MMDDYY
+     F*                       OFF - DATE FORMAT DDMMYY
+     F*       90-99        USED IN Z-SUBROUTINES
+     F*       U7-U8        DATABASE ERROR
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E/COPY ZSRSRC,ZFRQAZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE                                                  S01195
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     I*DA********UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*                                                                   S01117
+     I**      LOCAL DATA AREA CONTAINING DB ERROR INFORMATION             S01117
+     I*                                                                   S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     IRUNDT       DS                                                      S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJDNWD                          DNWD                  S01117
+     I              BJLCCY                          LOCY                  S01117
+     I              BJSLCD                          SLCD                  S01195
+      *                                                                   S01117
+     ISDCUST    E DSSDCUSTPD                                              S01117
+      **  EXTERNAL DS FOR CUSTOMER DETAILS                                S01117
+     I              BBBRCD                          BRCB                  S01117
+     I*                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I*                                                                   S01117
+     I** 200 BYTE DS FOR INCOMING DATA FROM ACCESS PROGRAM                S01117
+     I*                                                                   S01117
+     I/COPY ZSRSRC,ZAOZ2                                                  S01195
+     I/COPY ZSRSRC,ZHOLI                                                  S01195
+     I/COPY ZSRSRC,ZHOLDS                                                 S01195
+     I*****************************************************************
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT                                                              S01117
+     C*****************************************************************
+     C*
+     C*    MAIN PROGRAM
+     C*
+     C                     EXSR INIT
+     C                     EXSR MAIN
+     C                     EXSR END
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*                    INDEX TO SUBROUTINES                       *
+     C*                                                               *
+     C*                                                               *
+     C*          1. INIT   - INITIALISATION                           *
+     C*          2. MAIN   - MAIN PROCESSING                          *
+     C*          3. FOCRED - HANDLING OF FOCLTD RECORD PROCESSING     *
+     C*          4. DLSRED - HANDLING OF DLSDD1 RECORD PROCESSING     *
+     C*          5. END    - TERMINATION                              *
+     C*          6. ZFRQA  - STANDARD PERIOD CALCULATOR               *
+     C*          7. ZDATE1 - STANDARD DATE VALIDATION/CALCULATION     *
+     C*          8. ZDATE2 - STANDARD DATE ROUTINE                    *
+     C*          9. ZCHKH  - DETERMINE IF A MIDAS DAY IS A HOLIDAY    *   S01195
+     C*                      OR WORKING DAY                           *   S01195
+     C*         10. ZACCH  - STANDARD HOLIDAY AO ROUTINE              *   S01195
+     C***********9.*DBERR**-*HANDLES*DATABASE*ERRORS*******************   S01117
+     C*         11. DBERR  - HANDLES DATABASE ERRORS                  *   S01117
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*    BEGINNING OF SUBROUTINE 'INIT'
+     C*    INIT  SR  - ACCESSES ICD 1,ICD 2 & ICD FF&O
+     C*
+     C*    CALLED FROM SUBROUTINES :
+     C*    CALLS SUBROUTINES : DBERR
+     C*
+     C*****************************************************************
+     C           INIT      BEGSR                           ** INIT SR **
+     C*
+     C*    INITIALISE DATA AREA FIELDS IN CASE OF DATA BASE ERROR
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBFILE                          S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'FF0510  'DBPGM
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C*
+     C**   DEFINE WORK FIELDS
+     C*                                                                   S01117
+     C************LIKE     DEFN BRCD      BRCDT                           S01117
+     C************LIKE     DEFN BRCD      BRCDT2                          S01117
+     C           *LIKE     DEFN BRCA      BRCDT                           S01117
+     C           *LIKE     DEFN BRCA      BRCDT2                          S01117
+     C           *LIKE     DEFN BDID      BDIDT
+     C           *LIKE     DEFN BDID      BDIDT2
+     C           *LIKE     DEFN CCY       CCYT
+     C           *LIKE     DEFN CCY       CCYT2
+     C           *LIKE     DEFN COLA      COLAT                           S01117
+     C***********                                                         S01117
+     C*****CHECK*THAT*INSTALLATION*CONTROL*DATA*1*PRESENT**************   S01117
+     C*****IF*NOT*THEN*DATABASE*ERROR**********************************   S01117
+     C***********                                                         S01117
+     C***********          READ TABTB10F                 40               S01117
+     C************IN40     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+     C***********                                                         S01117
+     C*****UPDATE*THE*LOCAL*DATA*AREA**********************************   S01117
+     C***********                                                         S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C***********          MOVEL'TABTB10' DBKEY            **DB ERROR 01**S01117
+     C***********          Z-ADD1         DBASE            ***************S01117
+     C***********                                                         S01117
+     C*****EXECUTE*SUBROUTINE*DBERR*&*LEAVE*PROGRAM********************   S01117
+     C***********                                                         S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+     C*                                                                   S01117
+     C** IN THE DATAAREA RUNDAT                                           S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C*****CHECK*THAT*INSTALLATION*CONTROL*DATA*2*PRESENT*****DB*ERROR2***S01117
+     C*    ACCESS SDBANKPD FILE FOR REQUIRED INFORMATION                  S01117
+     C*    IF NOT THEN DATABASE ERROR
+     C*
+     C***********          READ TABTB11F                 41               S01117
+     C************IN41     IFEQ '1'                                       S01117
+     C***********RECI      ORNE 'D'                                       S01117
+      *                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+      *                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C*
+     C*    UPDATE THE LOCAL DATA AREA
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C                     MOVEL'SDBANKPD'DBFILE           ***************S01117
+     C***********          MOVEL'TABTB11' DBKEY            **DB ERROR 02**S01117
+     C                     MOVEL@OPTN     DBKEY            **DB ERROR 02**S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     Z-ADD2         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C*
+     C*    EXECUTE SUBROUTINE DBERR & LEAVE PROGRAM
+     C*
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C*    CHECK THAT I.C.D. FOR FINANCIAL FUTURES PRESENT ** DB ERROR3 **
+     C*    IF NOT THEN DATABASE ERROR
+     C*
+     C                     READ TABTB80F                 42
+     C           *IN42     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C*
+     C*    UPDATE THE LOCAL DATA AREA
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TABLE'   DBFILE           ***************
+     C                     MOVEL'TABTB80' DBKEY            **DB ERROR 03**
+     C                     Z-ADD3         DBASE            ***************
+     C                     OUT  LDA                                       S01117
+     C*
+     C*    EXECUTE SUBROUTINE DBERR & LEAVE PROGRAM
+     C*
+     C                     EXSR DBERR
+     C                     END
+     C*
+     C*    SELECT TYPE OF DATE FORMAT TO BE USED
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C                     ENDSR
+     C******************************************************************
+     C/EJECT
+     C******************************************************************
+     C*    BEGINNING OF SUBROUTINE 'MAIN'
+     C*    MAIN SR  - HANDLES MAIN PROCESSING
+     C*
+     C*    CALLED FROM SUBROUTINES :
+     C*    CALLS SUBROUTINES : FOCRED
+     C*                        DLSRED
+     C******************************************************************
+     C*
+     C           MAIN      BEGSR                           ** MAIN SR **
+     C*
+     C                     EXSR FOCRED
+     C                     EXSR DLSRED
+     C*
+     C                     ENDSR
+     C******************************************************************
+     C/EJECT
+     C******************************************************************
+     C*    BEGINNING OF SUBROUTINE 'FOCRED'
+     C*    FOCRED SR  - HANDLING OF FOCLTD RECORD PROCESSING
+     C*
+     C*    CALLED FROM SUBROUTINES :MAIN
+     C*    CALLS SUBROUTINES : ZFRQA
+     C*
+     C******************************************************************
+     C           FOCRED    BEGSR                            ** FOCRED **
+     C*
+     C*    READ FIRST VALID RECORD FROM FOCLTD
+     C*
+     C                     READ FOCLTDF                  44
+     C           RECI      DOWNE'D'
+     C           *IN44     ANDNE'1'
+     C                     READ FOCLTDF                  44
+     C                     END
+     C*
+     C*    DO WHILST NOT END OF FILE FOCLTD
+     C*
+     C           *IN44     DOWNE'1'
+     C*
+     C           CLAM      IFNE 0
+      *                                                                   S01117
+      *    OBTAIN CUSTOMER BRANCH FROM CUSTOMER DETAILS FILE SDCUSTPD     S01117
+      *                                                                   S01117
+     C                     MOVELCBCD      WCBCD   6                       S01117
+     C*                                                                   S01117
+     C                     CALL 'AOCUSTR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM WCBCD     @KEY1  10                       S01117
+     C                     PARM           @KYST   7                       S01117
+     C           SDCUST    PARM SDCUST    DSSDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C*                                                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDCUSTPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBOPTN                          S01117
+     C                     MOVELCBCD      DBKEY            *************  S01117
+     C                     Z-ADD5         DBASE            **DB ERROR 05  S01117
+     C                     OUT  LDA                        *************  S01117
+     C*                                                                   S01117
+     C*    EXCUTE SUBROUTINE DBERR & LEAVE PROGRAM                        S01117
+     C*                                                                   S01117
+     C                     EXSR DBERR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C***********          Z-ADD0         BRCD                            S01117
+     C                     MOVELBRCB      BRCA                            S01117
+     C                     MOVELCLCC      CCY
+     C                     Z-ADDCLAM      COLA
+     C                     MOVEL*BLANK    TBCID                           S01117
+     C                     WRITEWCOLTDF
+     C                     END
+     C*
+     C*    IF NEXT REVALUATION DATE BEFORE NEXT WORKING DAY:-
+     C*
+     C           NRED      IFLT DNWD
+     C*
+     C*    CALCULATE NEW NEXT REVALUATION DATE.
+     C*
+     C                     Z-ADDNRED      ZDAYNO
+     C                     MOVE REFQ      ZFREQ
+     C                     MOVE REDY      ZMDAY
+     C                     MOVELLOCY      ZCCY
+     C                     MOVELSLCD      ZLOC                            S01195
+     C                     EXSR ZFRQA
+     C                     Z-ADDZDAYNO    NRED
+     C*
+     C*    SET ON FOCLTD UPDATE INDICATOR
+     C*    SET ON NEXT REVALUATION DATE RECALCULATED                      S01117
+     C*
+     C                     SETON                     50
+     C                     SETON                     52                   S01117
+     C                     END
+     C*
+     C*    IF NEXT STATEMENT DATE BEFORE DATE OF NEXT WORKING DAY:-
+     C*
+     C           NSTD      IFLT DNWD
+     C                     WRITECUSSTDF
+     C*
+     C*    CALCULATE NEXT NEW STATEMENT DATE
+     C*
+     C                     Z-ADDNSTD      ZDAYNO
+     C                     MOVE STFQ      ZFREQ
+     C                     MOVE STDY      ZMDAY
+     C                     MOVELLOCY      ZCCY
+     C                     MOVELSLCD      ZLOC                            S01195
+     C                     EXSR ZFRQA
+     C                     Z-ADDZDAYNO    NSTD
+     C*
+     C*    SETON FOCLTD UPDATE INDICATOR
+     C*    SETON NEXT STATEMENT DATE RECALCULATED                         S01117
+     C*
+     C                     SETON                     50
+     C                     SETON                     53                   S01117
+     C                     END
+     C*
+     C*    UPDATE FOCLTD IF STATEMENT DATE/REVALUATION DATE CHANGED
+     C*
+     C           *IN50     IFEQ '1'
+     C                     EXCPTUFOCLT
+     C                     SETOF                     50
+     C*                                                                   S01117
+     C*    UPDATE FO CUSTOMER DETAILS RECORD                              S01117
+     C*                                                                   S01117
+     C                     MOVELCBCD      WCBCD   6                       S01117
+     C           WCBCD     CHAIN@BHRED0              51                   S01117
+     C           *IN51     IFEQ '1'                                       S01117
+     C*                                                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDFOCSL0'DBFILE                          S01117
+     C                     MOVELCBCD      DBKEY            *************  S01117
+     C                     Z-ADD4         DBASE            **DB ERROR 04  S01117
+     C                     OUT  LDA                        *************  S01117
+     C*                                                                   S01117
+     C*    EXECUTE SUBROUTINE DBERR & LEAVE PROGRAM                       S01117
+     C*                                                                   S01117
+     C                     EXSR DBERR                                     S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C*    UPDATE CUSTOMER NEXT STMT DATE & NEXT REVALUATION DATE         S01117
+     C*                                                                   S01117
+     C   52                Z-ADDNRED      BHNRDT                          S01117
+     C   53                Z-ADDNSTD      BHNSDT                          S01117
+     C                     UPDAT@BHRED0                                   S01117
+     C                     SETOF                     5253                 S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END
+     C*
+     C*    READ NEXT VALID FOCLTD RECORD
+     C*
+     C                     READ FOCLTDF                  44
+     C           RECI      DOWNE'D'
+     C           *IN44     ANDNE'1'
+     C                     READ FOCLTDF                  44
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*    BEGINNING OF SUBROUTINE 'DLSRED'
+     C*    DLSRED SR  - HANDLING OF DLSDD1 RECORD PROCESSING
+     C*
+     C*    CALLED FROM SUBROUTINES :MAIN
+     C*    CALLS SUBROUTINES : ZFRQA
+     C*
+     C******************************************************************
+     C*
+     C           DLSRED    BEGSR                           ** DLSRED SR **
+     C*
+     C*    READ FIRST VALID RECORD ON DLSDD1(FORMAT DEALSDDF)
+     C*
+     C           *LOVAL    SETLLDEALSDDF
+     C                     READ DEALSDDF                 45
+     C*
+     C*    INITIALISE BRANCH CODE AND CURRENCY CODE STORAGE FIELDS
+     C*
+     C***********          Z-ADDBRCD      BRCDT                           S01117
+     C                     MOVELBRCA      BRCDT                           S01117
+     C**********           Z-ADDBDID      BDIDT                                               CSD027
+     C                     MOVE BDID      BDIDT                                               CSD027
+     C                     MOVE CCY       CCYT
+     C*
+     C*    DO WHILST NOT END OF FILE DLSDD1
+     C*
+     C           *IN45     DOWNE'1'
+     C*
+     C*    IF BRANCH CODE AND CURRENCY CODE UNCHANGED, ADD DEAL AMOUNT
+     C*    TO TREASURY BILLS COLLATERAL RUNNING TOTAL.
+     C*
+     C***********BRCD      IFEQ BRCDT                                     S01117
+     C           BRCA      IFEQ BRCDT                                     S01117
+     C           BDID      ANDEQBDIDT
+     C           CCY       ANDEQCCYT
+     C                     ADD  FVAL      TOTVAL 150
+     C*
+     C*    OTHERWISE,CALCULATE PERCENTAGE COLLATERAL PRESENT AND OUTPUT
+     C*    RECORD TO WCOLTD.
+     C*
+     C                     ELSE
+     C           TOTVAL    IFNE 0
+     C           TOTVAL    DIV  100       TOTVAL
+     C           TOTVAL    MULT TBCP      COLA
+     C                     Z-ADDFVAL      TOTVAL
+     C**********           Z-ADDBDIDT     CBCD                                                CSD027
+     C                     MOVE BDIDT     CBCD                                                CSD027
+     C*
+     C*    TRANSFER PRESENT RECORD BRANCH,BILL DEPOT IDENTIFICATION AND
+     C*    CURRENCY CODES TO TEMPORARY STORAGE
+     C*
+     C***********          Z-ADDBRCD      BRCDT2                          S01117
+     C                     MOVELBRCA      BRCDT2                          S01117
+     C**********           Z-ADDBDID      BDIDT2                                              CSD027
+     C                     MOVE BDID      BDIDT2                                              CSD027
+     C                     MOVE CCY       CCYT2
+     C*
+     C*    TRANSFER PREVIOUS BRANCH, BILL ID & CURRENCY CODES TO ALLOW
+     C*    CORRECT OUTPUT TO WCOLTD.
+     C*
+     C***********          Z-ADDBRCDT     BRCD                            S01117
+     C                     MOVELBRCDT     BRCA                            S01117
+     C**********           Z-ADDBDIDT     BDID                                                CSD027
+     C                     MOVE BDIDT     BDID                                                CSD027
+     C                     MOVE CCYT      CCY
+     C                     MOVEL'TB'      TBCID                           S01117
+     C                     WRITEWCOLTDF
+     C*
+     C*    RESTORE FIELDS TO INITIAL PRE-WRITE VALUES.
+     C*
+     C***********          Z-ADDBRCDT2    BRCD                            S01117
+     C                     MOVELBRCDT2    BRCA                            S01117
+     C**********           Z-ADDBDIDT2    BDID                                                CSD027
+     C                     MOVE BDIDT2    BDID                                                CSD027
+     C                     MOVE CCYT2     CCY
+     C                     END
+     C                     END
+     C*
+     C*    RETAIN EXISTING BRANCH CODE & CURRENCY IN STORE BEFORE READ.
+     C*
+     C***********          Z-ADDBRCD      BRCDT                           S01117
+     C                     MOVELBRCA      BRCDT                           S01117
+     C**********           Z-ADDBDID      BDIDT                                               CSD027
+     C                     MOVE BDID      BDIDT                                               CSD027
+     C                     MOVE CCY       CCYT
+     C*
+     C*    READ NEXT VALID RECORD ON DLSDD1(FORMAT DEALSDDF)
+     C*
+     C                     READ DEALSDDF                 45
+     C*
+     C*    IF LAST RECORD PROCESSED THEN OUTPUT FINAL COLLATERAL %
+     C*
+     C           *IN45     IFEQ '1'
+     C***********          Z-ADDBRCDT     BRCD                            S01117
+     C                     MOVELBRCDT     BRCA                            S01117
+     C**********           Z-ADDBDIDT     CBCD                                                CSD027
+     C                     MOVE BDIDT     CBCD                                                CSD027
+     C                     MOVE CCYT      CCY
+     C           TOTVAL    IFNE 0
+     C           TOTVAL    DIV  100       TOTVAL
+     C           TOTVAL    MULT TBCP      COLA
+     C                     END
+     C                     MOVEL'TB'      TBCID                           S01117
+     C                     WRITEWCOLTDF
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE :'END'
+     C*    END SR: TERMINATES PROGRAM
+     C*
+     C*    CALLED FROM SUBROUTINES :
+     C*    CALLS SUBROUTINES :
+     C*
+     C*****************************************************************
+     C*
+     C           END       BEGSR                           ** END SR **
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZFRQAZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZCHKH                                                  S01195
+     C/EJECT                                                              S01195
+     C/COPY ZSRSRC,ZACCH                                                  S01195
+     C/EJECT                                                              S01195
+     C*****************************************************************
+     C*
+     C*    SUBROUTINE :'DBERR'
+     C*    DBERR SR : SETS ON INDICATORS U7,U8 & LR. THEN RETURNS TO
+     C*    CALLING PROGRAM.
+     C*
+     C*    CALLED FROM SUBROUTINES : INIT
+     C*    CALLS SUBROUTINES :
+     C*
+     C*****************************************************************
+     C           DBERR     BEGSR                           ** DBERR SR
+     C*
+     C*
+     C*    SET ON SWITCHES & LR INDICATOR.
+     C                     SETON                     U7U8LR
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*
+     C*    LEAVE PROGRAM.
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     O*
+     O** Output when updating FOCLT
+     O*
+     OFOCLTDF E                UFOCLT
+     O*
+     O                         NSTD
+     O                         NRED
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

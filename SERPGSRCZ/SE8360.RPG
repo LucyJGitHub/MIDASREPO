@@ -1,0 +1,787 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Pos. Settl. Default Charges Report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE8360 - POSITION SETTLEMENT DEFAULT CHARGES REPORT          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  Function:  This program shows details of the Position        *
+     F*  (I/C)      Settlement Default Charges table. This list is    *
+     F*  (COB)      available as a complete list, or as a list        *
+     F*             showing all default charges which have been       *
+     F*             inserted, amended, or deleted today.              *
+     F*                                                               *
+     F*  Called by: SEC8360 - Position Settlement Default Charges     *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE026             Date 17Jan01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01519  *CREATE    Date 10Aug94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE026 - Position Settlement Default Charges by Customer     *
+      *           Group.                                              *
+     F*  S01519 - Position Settlement Automatic Charges               *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**   DEFAULT CHARGES TABLE FILE               - PREFIX DC
+     FSEDFTCL0IF  E           K        DISK         KINFSR *PSSR      UC
+     F            SEDFTCD0                          KRENAMESEDFTCDA
+     F*
+     F**   DEFAULT CHARGES TABLE FILE               - PREFIX DC
+     F*                       (LAST CHANGE SEQUENCE)
+     FSEDFTCL1IF  E           K        DISK         KINFSR *PSSR      UC
+     F*
+     FSEDFGRL2IF  E           K        DISK         KINFSR *PSSR      UC  CSE026
+     F            SEDFTCD0                          KRENAMESEDFTCDB       CSE026
+      *                                                                   CSE026
+     FSEDFGRL1IF  E           K        DISK         KINFSR *PSSR      UC  CSE026
+     F            SEDFTCD0                          KRENAMESEDFTCDC       CSE026
+     F**   SWISS TAXES TRAILER                      - PREFIX TR
+     FSEDFTCPAUF  E                    DISK         KINFSR *PSSR
+     F*
+     F**   DEFAULT CHARGES TABLE LIST - RUN TOTALS REPORT
+     FSE8360AUO   E             21     PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+     F*
+     F**   POSITION SETTLEMENT DEFAULT CHARGES TABLE LIST
+     FSE8360P1O   E             22     PRINTER      KINFDS SPOOL      UC
+     F                                              KINFSR *PSSR
+     F*
+     F/COPY WNCPYSRC,SE8360F001
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*   FUNCTION OF INDICATORS                                      *
+     F*   ----------------------                                      *
+     F*                                                               *
+     F*  21  -  Overflow on SE8360AU                                  *
+     F*  22  -  Overflow on SE8360P1                                  *
+     F*  10  -  Print *** DIFFERENCE ***                              *
+     F*  11  -  Print *** DIFFERENCE ***                              *
+     F*  12  -  Print *** DIFFERENCE ***                              *
+     F*  70  -  End of file indicator                                 *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E*****************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*
+     ICPYR@$      DS
+     I*  Data structure for compilation - copyright insertion
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     IPSDS       SDS
+      *  Program status data structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     IRUNDT       DS
+     I** Data area RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     IERF1DS      DS
+     I** File information data structure
+     I*
+     I*
+     ISPOOL       DS
+     I**  DS FOR P1 SPOOL FILE NAME
+     I*
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 367 3680LINE1
+     I*
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680LINE
+     I*
+     I*
+     ILDA         DS                            256
+      ** Local data area for database error details
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IUPDATE      DS
+     I**   DATE FORMATTING DATA STRUCTURE
+     I                                        1   2 DCDAY
+     I                                        3   5 DCMON
+     I                                        6   7 DCYER
+     I*
+     IDSFDY     E DSDSFDY
+     I*  First DS for access programs, short data structure
+     I*
+     IDSSDY     E DSDSSDY
+     I*  Second DS for access programs, long data structure
+     I*
+     ISDBANK    E DSSDBANKPD
+     I**  Bank Details
+     ISDSTRD    E DSSDSTRDPD                                              CSE026
+      ** Data structure for securities trading details                    CSE026
+      *                                                                   CSE026
+     ISCSARD    E DSSCSARDPD                                              CSE026
+      ** Data structure for switchable features file                      CSE026
+      *                                                                   CSE026
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INPUT PARAMETER LIST
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           SEQ     5
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR #B
+     C*
+     C**   END PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    INDEX TO SUBROUTINES                                      *
+     C**   ----------------------                                     *
+     C**                                                              *
+     C**                                                              *
+     C**   #A      - INITIAL PROCESSING                               *
+     C**   #B      - MAIN PROCESSING                                  *
+     C**   #BA     - FULL POSITION SETT. DEFAULT CHARGES TABLE LIST   *
+     C**   #BB     - FULL LIST RUN CONTROLS                           *
+     C**   #BC     - AUDIT POSITION SETT. DEFAULT CHARGES TABLE LIST  *
+     C**   #BD     - AUDIT LIST RUN CONTROLS                          *
+     C**   #ZA     - DATABASE ERRORS                                  *
+     C**   #ZB     - SETUP OUTPUT FIELDS FOR DEF. CHGS. TABLE REPORT  *
+     C**   *PSSR   - PROGRAM ERROR HANDLING SUBROUINE                 *
+     C**                                                              *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - This subroutine performs Main processing       *
+     C**                                                              *
+     C**   CALLS     - #BA #BB #BC #BD #ZA                            *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** CHECK INPUT PARAMETER
+     C*
+     C           MODE      IFEQ '2'
+     C*
+     C** FULL LIST
+     C*
+     C                     EXSR #BA
+     C*
+     C** FULL LIST RUN CONTROLS PROCESSING
+     C*
+     C                     EXSR #BB
+     C                     ELSE
+     C           MODE      IFEQ '1'
+     C*
+     C** AUDIT LIST
+     C*
+     C                     EXSR #BC
+     C*
+     C** AUDIT LIST RUN CONTROLS PROCESSING
+     C*
+     C                     EXSR #BD
+     C                     ELSE
+     C*
+     C** STANDARD DATABASE ERROR HANDLING
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVEL'MODE'    DBFILE           ************
+     C                     MOVELMODE      DBKEY            DB ERROR 002
+     C                     OUT  LDA                        ************
+     C                     EXSR #ZA
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - This subroutine performs initiaL PROCESSING    *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*
+     C                     SETOF                     101112
+     C                     Z-ADD*ZEROS    LINE
+     C                     Z-ADD*ZEROS    LINE1
+     C*
+     C** Initialise DB error fields annd store program name for DB
+     C** error field
+     C*
+     C** IN THE DATAAREA RUNDAT
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C* Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'SE8360'  DBPGM
+     C                     OUT  LDA
+     C*
+     C**  Access Bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If record not found or last change type = 'D' (DELETED)
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           DB ERROR 001
+     C                     MOVE *BLANKS   DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR #ZA
+     C                     END
+      *                                                                   CSE026
+      ** Get Securities Trading details using access object               CSE026
+      *                                                                   CSE026
+     C                     CALL 'AOSTRDR0'                                CSE026
+     C                     PARM *BLANKS   WLRTCD  7                       CSE026
+     C                     PARM '*FIRST ' WLOPTN  7                       CSE026
+     C           SDSTRD    PARM SDSTRD    DSSDY                           CSE026
+      *                                                                   CSE026
+      ** Check if error occurred                                          CSE026
+      *                                                                   CSE026
+     C           WLRTCD    IFNE *BLANKS                                   CSE026
+     C           *LOCK     IN   LDA                                       CSE026
+     C                     Z-ADD5         DBASE                           CSE026
+     C                     MOVE 'SDSTRDPD'DBFILE                          CSE026
+     C                     MOVEL'*FIRST'  DBKEY                           CSE026
+     C                     OUT  LDA                                       CSE026
+     C                     EXSR #ZA                                       CSE026
+     C                     ENDIF                                          CSE026
+      *                                                                   CSE026
+      ** Check if S01496 feature is installed using access object         CSE026
+      *                                                                   CSE026
+     C                     CALL 'AOSARDR0'                                CSE026
+     C                     PARM *BLANKS   WLRTCD                          CSE026
+     C                     PARM '*VERIFY' WLOPTN                          CSE026
+     C                     PARM 'S01496'  WLSARD  6                       CSE026
+     C           SCSARD    PARM SCSARD    DSSDY                           CSE026
+     C                     MOVE 'N'       S01496  1                       CSE026
+      *                                                                   CSE026
+     C           WLRTCD    IFEQ *BLANKS                                   CSE026
+     C                     MOVE 'Y'       S01496                          CSE026
+     C                     ELSE                                           CSE026
+      *                                                                   CSE026
+      ** Error if return code other than '*NRF'                           CSE026
+      *                                                                   CSE026
+     C           WLRTCD    IFNE '*NRF'                                    CSE026
+     C           *LOCK     IN   LDA                                       CSE026
+     C                     Z-ADD6         DBASE                           CSE026
+     C                     MOVE 'SCSARDPD'DBFILE                          CSE026
+     C                     MOVEL'*VERIFY' DBKEY                           CSE026
+     C                     OUT  LDA                                       CSE026
+     C                     EXSR #ZA                                       CSE026
+     C                     ENDIF                                          CSE026
+      *                                                                   CSE026
+     C                     ENDIF                                          CSE026
+      *                                                                   CSE026
+      ** If S01496 is on and autocharge option is 'Y', seton ind. 40      CSE026
+      *                                                                   CSE026
+     C           S01496    IFEQ 'Y'                                       CSE026
+     C           BVACOP    ANDEQ'Y'                                       CSE026
+     C                     MOVE *ON       *IN40                           CSE026
+     C                     ELSE                                           CSE026
+     C                     MOVE *OFF      *IN40                           CSE026
+     C                     ENDIF                                          CSE026
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     MOVE '1'       WWFTT   1
+     C*
+     C** Initialise run controls work fields
+     C                     Z-ADD*ZEROS    RRPROG
+     C                     Z-ADD*ZEROS    RRFILE
+     C                     Z-ADD*ZEROS    RRPROI
+     C                     Z-ADD*ZEROS    RRFILI
+     C                     Z-ADD*ZEROS    RRPROA
+     C                     Z-ADD*ZEROS    RRFILA
+     C                     Z-ADD*ZEROS    RRPROD
+     C                     Z-ADD*ZEROS    RRFILD
+     C                     Z-ADD*ZEROS    RRTOTL
+     C*
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+     C/COPY WNCPYSRC,SE8360C001
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BA       - FULL POSITION SETTLEMENT DEFAULT CHARGES       *
+     C**               TABLE LIST                                     *
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+      ** If S01496 is installed and autocharge flag is 'Y', use           CSE026
+      ** file SEDFGRL2 instead.                                           CSE026
+      *                                                                   CSE026
+     C           *IN40     IFEQ *ON                                       CSE026
+     C                     OPEN SEDFGRL2                                  CSE026
+     C                     READ SEDFGRL2                 70               CSE026
+     C                     ELSE                                           CSE026
+     C                     OPEN SEDFTCL0
+     C                     READ SEDFTCL0                 70
+     C                     ENDIF                                          CSE026
+      *                                                                   CSE026
+     C           *IN70     DOWEQ'0'
+     C           DCRECI    IFEQ 'D'
+     C*
+     C           FILOPN    IFEQ ' '
+     C                     OPEN SE8360P1
+     C                     MOVE 'Y'       FILOPN  1
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+     C                     END
+     C*
+     C** ADD 1 TO NUMBER OF RECORDS READ
+     C*
+     C                     ADD  1         RRPROG
+     C*
+     C** SET UP OUTPUT FIELDS FOR POS. SETT. DEFAULT CHARGES TABLE
+     C** LIST
+     C                     EXSR #ZB
+     C                     END
+      *                                                                   CSE026
+     C           *IN40     IFEQ *ON                                       CSE026
+     C                     READ SEDFGRL2                 70               CSE026
+     C                     ELSE                                           CSE026
+     C                     READ SEDFTCL0                 70
+     C                     ENDIF                                          CSE026
+      *                                                                   CSE026
+     C                     END
+     C*
+     C** NO LIVE RECORDS FOUND ON LF SEDFTCL0
+     C*
+     C*
+     C           FILOPN    IFEQ 'Y'
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C                     WRITEFOOTING1
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BC       - AUDIT POSITION SETT. DEFAULT CHARGES TABLE LIST*
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BC       BEGSR
+     C*
+      ** If S01496 is installed and autocharge flag is 'Y', use           CSE026
+      ** file SEDFGRL1 instead.                                           CSE026
+      *                                                                   CSE026
+     C           *IN40     IFEQ *ON                                       CSE026
+     C                     OPEN SEDFGRL1                                  CSE026
+     C           BJRDNB    SETLLSEDFGRL1                                  CSE026
+     C                     READ SEDFGRL1                 70               CSE026
+     C                     ELSE                                           CSE026
+     C                     OPEN SEDFTCL1
+     C           BJRDNB    SETLLSEDFTCL1
+     C                     READ SEDFTCL1                 70
+     C                     ENDIF                                          CSE026
+      *                                                                   CSE026
+     C           *IN70     DOWEQ'0'
+     C           BJRDNB    ANDEQDCLCD
+     C*
+     C           FILOPN    IFEQ ' '
+     C                     OPEN SE8360P1
+     C                     MOVE 'Y'       FILOPN
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C*
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C                     RETRN
+     C                     END
+     C                     END
+     C*
+     C** ADD 1 TO NUMBER OF INSERT RECORDS READ
+     C*
+     C           DCCHTP    IFEQ 'I'
+     C                     ADD  1         RRPROI
+     C                     END
+     C*
+     C** ADD 1 TO NUMBER OF AMENDMENT RECORDS READ
+     C*
+     C           DCCHTP    IFEQ 'A'
+     C                     ADD  1         RRPROA
+     C                     END
+     C*
+     C** ADD 1 TO NUMBER OF DELETE RECORDS READ
+     C*
+     C           DCCHTP    IFEQ 'D'
+     C                     ADD  1         RRPROD
+     C                     END
+     C*
+     C** SET UP OUTPUT FIELDS FOR POS. SETT. DEFAULT CHARGES TABLE LIST
+     C*
+     C                     EXSR #ZB
+      *                                                                   CSE026
+     C           *IN40     IFEQ *ON                                       CSE026
+     C                     READ SEDFGRL1                 70               CSE026
+     C                     ELSE                                           CSE026
+     C                     READ SEDFTCL1                 70
+     C                     ENDIF                                          CSE026
+      *                                                                   CSE026
+     C                     END
+     C*
+     C           FILOPN    IFEQ 'Y'
+     C           LINE1     IFGT 55
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     END
+     C                     WRITEFOOTING1
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZA       - Process Database Errors                        *
+     C**                                                              *
+     C**   CALLS     - None                                           *
+     C**                                                              *
+     C**   CALLED BY - #A #B #BB #BD                                  *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZA       BEGSR
+     C*
+     C                     WRITEHEADER
+     C                     WRITEDBERROR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #ZB       - SETUP OUTPUT FIELDS FOR TABLE LIST             *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - #BA #BC                                        *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+      ** If S01496 is installed and autocharge flag is 'Y', setup         CSE026
+      ** key field for SEDGFRL1/SEDGFRL2 instead                          CSE026
+      *                                                                   CSE026
+     C           *IN40     IFEQ *ON                                       CSE026
+     C                     MOVE DCCLGR    RRGROU                          CSE026
+     C                     ELSE                                           CSE026
+     C                     MOVE DCCLAS    RRCLAS
+     C                     ENDIF                                          CSE026
+      *                                                                   CSE026
+     C                     MOVE DCINVT    RRITYP
+     C                     MOVE DCCUST    RRCUST
+     C                     MOVE DCCPCM    RRCCNC
+     C                     MOVE DCCPCC    RRCCHC
+     C                     MOVE DCDVCM    RRDCNC
+     C                     MOVE DCDVCC    RRDCHC
+     C                     MOVE DCMTCM    RRMCNC
+     C                     MOVE DCMTCC    RRMCHC
+     C*
+     C           DCCHTP    IFEQ 'I'
+     C                     MOVE 'INSERT'  RRACTN
+     C                     END
+     C*
+     C           DCCHTP    IFEQ 'A'
+     C                     MOVE 'AMEND '  RRACTN
+     C                     END
+     C*
+     C           DCCHTP    IFEQ 'D'
+     C                     MOVE 'DELETE'  RRACTN
+     C                     END
+     C*
+     C** SET UP LAST ACTIVITY DATE FOR OUTPUT
+     C*
+     C                     MOVE DCDLUP    DCDAY
+     C                     MOVE DCMLUP    DCMON
+     C                     MOVE DCYLUP    DCYER
+     C                     MOVE UPDATE    RRDATE
+     C*
+     C** SET UP LAST ACTIVITY TIME FOR OUTPUT
+     C*
+     C                     MOVE DCTLUP    RRTIME
+     C/COPY WNCPYSRC,SE8360C002
+     C*
+     C           LINE1     IFGT 55
+     C           WWFTT     OREQ '1'
+     C                     WRITEHEADER1
+     C                     WRITEHEADER2
+     C                     MOVE '0'       WWFTT
+     C                     END
+     C                     WRITEDETAIL1
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BB       - PROCESS FULL LIST RUN CONTROLS                 *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C           1         CHAINSEDFTCPA             70
+     C           *IN70     IFEQ '1'
+     C           DTRECI    ORNE 'T'
+     C*
+     C** TRAILER RECORD NOT FOUND - DATABASE ERROR
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'SEDFTCPA'DBFILE           DB ERROR 003
+     C                     OUT  LDA                        ************
+     C                     EXSR #ZA
+     C                     ELSE
+     C           RRPROG    IFNE DTLIVE
+     C*
+     C** RECORDS READ <> RECORDS ON FILE
+     C*
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     Z-ADDDTLIVE    RRFILE
+     C*
+     C** OUTPUT RUN CONTROLS REPORT
+     C*
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITEDETAILA
+     C           FILOPN    IFNE 'Y'
+     C                     WRITENULL
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BD       - PROCESS AUDIT LIST RUN CONTROLS                *
+     C**                                                              *
+     C**   CALLS     - #ZA                                            *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BD       BEGSR
+     C*
+     C           1         CHAINSEDFTCPA             70
+     C           *IN70     IFEQ '1'
+     C           DTRECI    ORNE 'T'
+     C*
+     C** TRAILER RECORD NOT FOUND - DATABASE ERROR
+     C*
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVEL'SEDFTCPA'DBFILE           DB ERROR 004
+     C                     OUT  LDA                        ************
+     C                     EXSR #ZA
+     C                     ELSE
+     C           RRPROI    IFNE DTINS
+     C*
+     C** INSERTIONS READ <> INSERTIONS ON FILE
+     C*
+     C                     MOVE '1'       *IN10
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     Z-ADDDTINS     RRFILI
+     C           RRPROA    IFNE DTAMD
+     C*
+     C** AMENDMENTS READ <> AMENDMENTS ON FILE
+     C*
+     C                     MOVE '1'       *IN11
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     Z-ADDDTAMD     RRFILA
+     C           RRPROD    IFNE DTDEL
+     C*
+     C** DELETIONS READ <> DELETIONS ON FILE
+     C*
+     C                     MOVE '1'       *IN12
+     C                     MOVE '1'       *INU8
+     C                     END
+     C                     Z-ADDDTDEL     RRFILD
+     C                     Z-ADDDTLIVE    RRTOTL
+     C*
+     C** OUTPUT RUN CONTROLS REPORT
+     C*
+     C                     WRITEHEADER
+     C                     WRITEHEAD2
+     C                     WRITEDETAILB
+     C           FILOPN    IFNE 'Y'
+     C                     WRITENULL
+     C                     END
+     C*
+     C**  UPDATE TRAILER IF NO FILE OUT OF BALANCE
+     C*
+     C           *INU8     IFEQ '0'
+     C                     Z-ADD*ZERO     DTINS
+     C                     Z-ADD*ZERO     DTAMD
+     C                     Z-ADD*ZERO     DTDEL
+     C                     Z-ADDBJRDNB    DTLCD
+     C                     MOVE 'A'       DTCHTP
+     C                     UPDATSEDFTCA0
+     C                     END
+     C*
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001

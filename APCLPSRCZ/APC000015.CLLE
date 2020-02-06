@@ -1,0 +1,119 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas AP Repair Queue Housekeeping')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       APC000015 - Midas AP Repair Queue Housekeeping              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR671731           Date 11Nov10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BUG27336           Date 29Mar10              */
+/*                      CAP204  *CREATE    Date 15Mar10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR671731 - Error in reorganizing T_MSRPRQZ                  */
+/*                  (Child: AR671732)                                */
+/*       BUG27336 - Error in starting COB(database error occured)    */
+/*       CAP204 - Teller Related APIs - Account Transfer             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&CSTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&EMSG) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             SNDPGMMSG  MSG('APC000015 - Repair Queue Housekeeping') +
+                        TOMSGQ(MRUNQ MOPERQ)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Determine full DPLIB library name */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &CSTS)
+ 
+/* If it is NOT a restart. */
+ 
+/**********  IF         COND(&CSTS = 'N') THEN(DO)                   */                 /*BUG27336*/
+             IF         COND(&CSTS *NE 'Y') THEN(DO)                                    /*BUG27336*/
+             DLTF       FILE(&DPLIB/XT_MSRPRQZ)
+             MONMSG     MSGID(CPF2105 CPF0000)
+ 
+             CPYF       FROMFILE(T_MSRPRQZ) +
+                          TOFILE(&DPLIB/XT_MSRPRQZ) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+/* If it is a restart. */
+ 
+             ELSE       CMD(DO)
+             CPYF       FROMFILE(&DPLIB/XT_MSRPRQZ) +
+                          TOFILE(T_MSRPRQZ) MBROPT(*REPLACE)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+/* Call Housekeeping Program */
+ 
+             CALL       PGM(AP000015)
+ 
+/* Database error processing. */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&EMSG)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&EMSG) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             DLTF       FILE(&DPLIB/XT_MSRPRQZ)
+ 
+/**********  RGZPFM     FILE(T_MSRPRQZ) */                                              /*AR671731*/
+             CALL       PGM(SCC000060) PARM('T_MSRPRQZ' '*FIRST')                       /*AR671731*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                /*AR671731*/
+                                                                                        /*AR671731*/
+ 
+             CHGVAR     VAR(&CSTS) VALUE('N')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &CSTS)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+/* Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program APC000015 -
+                            ended abnormally - see joblog')  +
+                            TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

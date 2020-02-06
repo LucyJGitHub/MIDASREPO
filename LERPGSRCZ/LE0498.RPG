@@ -1,0 +1,696 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Transaction Income Splits Housekeeping')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0498 - Transaction Income Splits Housekeeping              *
+      *                                                               *
+      *  Function:  This program checks whether a transaction income  *
+      *             split detail exist for any fee or loan reversed   *
+      *             today. In this case the corresponding transaction *
+      *             income split details for that fee or loan will be *
+      *             dropped                                           *
+      *                                                               *
+      *  Called By: LEC0498 - Transaction Income Splits Housekeeping  *
+      *                       Control                                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 10May06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CLE035  *CREATE    Date 22Sep03               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndications Manager.                               *
+      *  CLE035 - Lending Enhancement for Nordea Phase 1 Priority 2   *
+      *           Income Splits                                       *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas LE Loans File
+      *
+     FCLOAN   IF  E           K        DISK
+      *
+      ** Midas Lending Fees Master Details Input
+      *
+     FLEFEEDL1IF  E           K        DISK
+      *
+      ** Midas LE Trans Income Splits by Branch
+      *
+     FLETISPL2UF  E           K        DISK
+      *
+      ** Income Splits Report Printer File
+      *
+     FLE0498AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      *
+      ** Income Splits Report Audit File
+      *
+     FLE0498P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *                                                               *
+      *   88  - Chain Operation                                       *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  SRRCFP - RCF Processing for P1 Report                        *
+      *  SRRCFA - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZEDIT  - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      /SPACE 3
+      *
+      ** Rename LETISPL2 Fields
+      *
+     ILETISPD0
+     I              RECI                            ISRECI
+     I              LNRF                            ISLNRF
+     I              CNUM                            ISCNUM
+     I              FACL                            ISFACL
+     I              FESQ                            ISFESQ
+     I              ISCN                            ISISCN
+     I              IPAL                            ISIPAL
+     I              BRCA                            ISBRCA
+     I              LCD                             ISLCD
+     I              CHTP                            ISCHTP
+     I              PCRF                            ISPCRF
+     I              PPCR                            ISPPCR
+      *
+      ** Rename CLOAN Trailer Fields
+      *
+     ICLOANZ1F
+     I              NLRA                            ZZNLRA
+      *
+     ILDA       E DSLDA                         256
+     I                                      134 183 DBERR
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      *
+      **  File Information Data Structure for LE0498P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      *
+      **  File Information Data Structure for LE0498AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Dummy Data Structures used by Access Programs.
+      ** First DS for access programs, short data structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access programs, long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** External data structures for Bank Details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External data structures for Branch Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** External data structures for Customer Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFAX                                    CLE106
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ** Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform Detail Processing.
+      *
+     C                     EXSR SRDETL
+      *
+      ** Output Audit Report and End Program.
+      *
+     C                     EXSR SRAUDT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Declare work variables
+      *
+     C           *LIKE     DEFN ISLNRF    WLNRF
+     C           *LIKE     DEFN ISCNUM    WCNUM
+     C           *LIKE     DEFN ISFACL    WFACL
+     C           *LIKE     DEFN ISFESQ    WFESQ
+     C           *LIKE     DEFN ISBRCA    WBRCA
+      *
+      ** Initialise LDA field.
+      *
+     C                     MOVEL'LE0498'  DBPGM
+      *
+      ** Call Access Program for Bank Details - Title, Run Date and
+      ** Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     Z-ADD001       DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ** Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     SETON                     37
+     C                     END
+      *
+      ** RCF Processing for Audit File.
+      *
+     C                     EXSR SRRCFA
+      *
+      ** Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+     C           KFEE      KLIST
+     C                     KFLD           WCNUM
+     C                     KFLD           WFACL
+     C                     KFLD           WLNRF
+     C                     KFLD           WFESQ
+      *
+     C                     Z-ADD0         RCOUNT
+      *
+     C                     MOVE ' '       WDRFLG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDETL    BEGSR
+      *
+      ** Read first record from File.
+      *
+     C                     READ LETISPL2                 89
+      *
+      ** If End of Records, (*IN89), Perform: Audit Reporting (No
+      ** Records).
+      *
+     C           *IN89     IFEQ *ON
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** Do Until End of File.
+      *
+     C           *IN89     DOUEQ*ON
+      *
+      ** Check if Loan
+      *
+     C           ISRECI    IFEQ 'D'
+     C           ISFESQ    ANDEQ*ZEROS
+      *
+      ** Check if Loan is a new loan
+      *
+     C           ISLNRF    IFNE WLNRF
+     C                     EXSR SRLOAN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check if Fee
+      *
+     C           ISRECI    IFEQ 'D'
+     C           ISFESQ    ANDNE*ZEROS
+      *
+      ** Check if Fee is a new fee
+      *
+     C           ISCNUM    IFNE WCNUM
+     C           ISFACL    ORNE WFACL
+     C           ISLNRF    ORNE WLNRF
+     C           ISFESQ    ORNE WFESQ
+     C                     EXSR SRFEES
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check if record is to be deleted
+      *
+     C           ISRECI    IFEQ 'R'
+     C           WDRFLG    OREQ 'Y'
+      *
+     C                     EXSR SRDROP
+      *
+     C                     ENDIF
+      *
+      ** Read next record.
+      *
+     C                     READ LETISPL2                 89
+      *
+      ** End of Do Until End of Valid Records.
+      *
+     C                     ENDDO
+      *
+     C           RCOUNT    IFGT *ZERO
+     C                     EXSR SRENDP
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLOAN - Subroutine to do the Loan Processing.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLOAN    BEGSR
+      *
+      ** Check if file from Loans File
+      *
+     C                     MOVE *BLANKS   WDRFLG  1
+     C                     MOVE 'L'       WTYPE   1
+      *
+     C                     MOVE ISLNRF    WLNRF
+      *
+     C           WLNRF     CHAINCLOAN                88
+      *
+     C           *IN88     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C                     MOVE 'Y'       WDRFLG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFEES - Subroutine to do the Fees Processing.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRFEES    BEGSR
+      *
+      ** Check from Fees File
+      *
+     C                     MOVE *BLANKS   WDRFLG
+     C                     MOVE 'F'       WTYPE
+      *
+      ** Move KFIELD values for LEFEEDL1
+      *
+     C                     MOVE ISCNUM    WCNUM
+     C                     MOVE ISFACL    WFACL
+     C                     MOVE ISLNRF    WLNRF
+     C                     MOVE ISFESQ    WFESQ
+      *
+     C           KFEE      CHAINLEFEEDL1             88
+      *
+     C           *IN88     IFEQ *ON
+     C           FERECI    ORNE 'D'
+     C                     MOVE 'Y'       WDRFLG
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDROP - Subroutine to process records to be dropped         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDROP    BEGSR
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ** Check if branch changed
+      *
+     C                     MOVE 'N'       WBCHG   1
+     C           ISBRCA    IFNE WBRCA
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM ISBRCA    WKEY    3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ** Handle Database Error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBRCHPD'DBFILE
+     C                     Z-ADD002       DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A8BRCD    WBRCA
+     C                     MOVE 'Y'       WBCHG
+      *
+     C                     ENDIF
+      *
+      ** Check If First record, if it is, enroll printer file to RCF
+      *
+     C           RCOUNT    IFEQ 1
+     C                     OPEN LE0498P1
+     C                     EXSR SRRCFP
+     C                     ENDIF
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C           RCOUNT    OREQ 1
+     C           WBCHG     OREQ 'Y'
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Move values to report fields
+      *
+     C                     MOVE *BLANKS   RCNUM
+     C                     MOVE *BLANKS   RFACL
+     C                     MOVE *BLANKS   RFESQ
+     C                     MOVE *BLANKS   RLNRF
+     C                     MOVE *BLANKS   RISCN
+      *
+     C********** ISLNRF    IFNE *ZERO                                                         CLE148
+     C           ISLNRF    IFNE *BLANKS                                                       CLE148
+     C           WTYPE     ANDNE'F'
+     C                     MOVE ISLNRF    RLNRF
+     C                     ENDIF
+      *
+     C********** ISCNUM    IFNE *ZERO                                                        CSD027A
+     C           ISCNUM    IFNE *BLANKS                                                      CSD027A
+     C           WTYPE     ANDNE'L'
+     C                     MOVE ISCNUM    RCNUM
+     C                     ENDIF
+      *
+     C           ISFACL    IFNE *ZERO
+     C           WTYPE     ANDNE'L'
+     C                     MOVELISFACL    RFACL
+     C                     ENDIF
+      *
+     C********** ISLNRF    IFNE *ZERO                                                         CLE148
+     C           ISLNRF    IFNE *BLANKS                                                       CLE148
+     C           WTYPE     ANDNE'L'
+     C                     MOVE ISLNRF    RFACL
+     C                     ENDIF
+      *
+     C           ISFESQ    IFNE *ZERO
+     C           WTYPE     ANDNE'L'
+     C                     MOVE ISFESQ    RFESQ
+     C                     ENDIF
+      *
+     C                     MOVE ISISCN    RISCN
+      *
+      ** Format Income Percent Allocation
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE ISIPAL    ZFIELD
+     C                     Z-ADD9         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RIPAL
+      *
+      *
+      ** Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+      *
+      ** Delete Record
+      *
+     C                     DELETLETISPD0
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRENDP - Subroutine to Write Trailer for LE0498P1            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRENDP    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ** Write out Total Format.
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT  - Subroutine to Output Audit report and End Program. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+      ** Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+      *
+      ** If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCFP - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFP    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRCFA - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZEDIT
+     C/COPY ZSRSRC,ZEDITZ2
+**  CPY@
+(c) Finastra International Limited 2003

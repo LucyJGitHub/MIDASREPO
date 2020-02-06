@@ -1,0 +1,219 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*     Midas - CONFIRMATION MATCHING                         */
+/*                                                                   */
+/******CFC00*-*CF*INITIAL*SET*UP*(CALLED*BY*L1BGIN)                  */
+/*     CFC00 - CF INITIAL SET UP (CALLED BY SCBEGIN)                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP004  *REDUNDANT Date 13Oct10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CPK018             Date 14Jan04              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      E36755             Date 06Mar92              */
+/*                      S01310  *CREATE    Date 06Dec90              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP004 - Replacement for SCBEGIN.                          */
+/*       CPK018 - MidasPlus packaging.  Make data queue CFDTQZ a     */
+/*                permanent object.                                  */
+/*     E36755 - THE SETTING UP OF JOB QUEUES AND JOB QUEUE ENTERIES  */
+/*              SHOULD BE DONE IN SMC1030 NOT HERE.                  */
+/*     S01310 - RE WRITTEN FOR SWIFT RATIONALISATION                 */
+/*                                                                   */
+/*     Includes the following fixes:                                 */
+/*                                                                   */
+/*     S01259 - Initialise incoming start & end RRN, create CFDTQC   */
+/*              for SWIFT II                                         */
+/*     S01304 - CHANGES MADE DURING INCORPORATION PROCESS            */
+/*            - MULTILANGUAGE AMENDMENTS                             */
+/*            - MISLEADING CODING UPDATED                            */
+/*            - CHANGE FOLDER FROM CFFLR.XXX TO CFFLR.YYX            */
+/*            - WHERE YY IS SYSTEM PREFIX                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)                                 */ /*CPK018*/
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SBS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(78)
+/**********  DCL        VAR(&ERR) TYPE(*CHAR) LEN(1)                  E36755*/
+ 
+             DCL        VAR(&MIDASLG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MIDAS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MULT) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GROUP) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SLEVEL) TYPE(*DEC) LEN(4)
+             DCL        VAR(&TIMEO) TYPE(*DEC) LEN(5)
+             DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1) VALUE(0)
+             DCL        VAR(&FOLDER) TYPE(*CHAR) LEN(9)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+             DCLF       FILE(SDLANGL0)
+ 
+/* Global monitor messages */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES)
+ 
+             CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
+                          &ERRORC &MULT)
+             IF         COND(&MULT *EQ '  ') THEN(DO)
+             CHGVAR     VAR(&MULT) VALUE('GB')
+             ENDDO
+             CHGVAR     VAR(&MIDASLG) VALUE(&MULT *CAT 'MIDAS     ')
+             OVRMSGF    MSGF(MIDAS) TOMSGF(&MIDASLG)
+ 
+/* Create LDA */
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          TEXT('Midas SD Local Data Area') +
+                          AUT(*ALL)
+             MONMSG     MSGID(CPF1023)
+ 
+             CRTMSGQ    MSGQ(QTEMP/INSTAL)
+             MONMSG     MSGID(CPF2112)
+ 
+/* Get module prefix */
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
+             CHGVAR     VAR(&DLIB)  VALUE(&PREFIX *CAT 'DLIB')
+             CHGVAR     VAR(&DMLIB) VALUE(&PREFIX *CAT 'DMLIB')
+/**********  CHGVAR     VAR(&XLIB)  VALUE(&PREFIX *CAT 'XLIB')                         */ /*CPK018*/
+             CHGVAR     VAR(&DTALIB) VALUE(&PREFIX *CAT 'DTALIB')
+             CHGVAR     VAR(&SBS)   VALUE('M' *CAT &PREFIX *CAT 'SBS')
+ 
+/**Set*up*confirmation*matching*data*queue**/ /*                                       */ /*CPK018*/
+/**********  CRTDTAQ    DTAQ(&XLIB/CFDTQZ) MAXLEN(1) TEXT('End +                       */ /*CPK018*/
+/**********               CFCONTROL')                                                  */ /*CPK018*/
+/**********  MONMSG     MSGID(CPF9870)                                                 */ /*CPK018*/
+ 
+/**Set*up*confirmation*matching*job*queues**/                     /*E36755*/
+/**********  CRTJOBQ    JOBQ(&XLIB/CFJOBQA) TEXT('Confirmation +    E36755*/
+/**********               Matching Control Job Queue')              E36755*/
+/**********  MONMSG     MSGID(CPF3323)                              E36755*/
+/**********  CRTJOBQ    JOBQ(&XLIB/CFJOBQB) TEXT('Confirmation +    E36755*/
+/**********               Matching Submitted Jobs Queue')           E36755*/
+/**********  MONMSG     MSGID(CPF3323)                              E36755*/
+/**********                                                         E36755*/
+/**Check*if*subsystem*active**/                                   /*E36755*/
+/**********  CHGRTGE    SBSD(&XLIB/&SBS) SEQNBR(1) CMPVAL(*SAME)    E36755*/
+/**********  MONMSG     MSGID(CPD1416 CPF1697) EXEC(DO)             E36755*/
+/**********                                                         E36755*/
+/* End test subsystem if we have authority to command */          /*E36755*/
+/**********  CHKOBJ     OBJ(ENDSBS) OBJTYPE(*CMD) AUT(*USE)         E36755*/
+/**********  MONMSG     MSGID(CPD0032) EXEC(DO)                     E36755*/
+/**********  CHGVAR     VAR(&MSG) VALUE('Not authorised to command+ E36755*/
+/**********           ENDSBS required to end sybsystem ' *CAT &SBS) E36755*/
+/**********  SNDPGMMSG  MSG(&MSG) TOMSGQ(INSTAL)                    E36755*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)              E36755*/
+/**********  CHGVAR &ERR Y                                          E36755*/
+/**********  GOTO       CMDLBL(TAG)                                 E36755*/
+/**********  ENDDO                                                  E36755*/
+/**********                                                         E36755*/
+/**********  ENDSBS &SBS *IMMED                                     E36755*/
+/**********  DLYJOB     DLY(180)                                    E36755*/
+/**********  ENDDO                                                  E36755*/
+/**********                                                         E36755*/
+/* Sequence number can be adapted to each subsystem */            /*E36755*/
+/**********  ADDJOBQE   SBSD(&XLIB/&SBS) JOBQ(&XLIB/CFJOBQA) +      E36755*/
+/**********               MAXACT(1) SEQNBR(140)                     E36755*/
+/**********  MONMSG     MSGID(CPD1535 CPD1538 CPF1697) exec(do)     E36755*/
+/**********  CHGVAR  VAR(&MSG) VALUE('CFJOBQA or routing entry 140 +E36755*/
+/**********               number already exists in subsystem +      E36755*/
+/**********               description ' *CAT &SBS)                  E36755*/
+/**********  SNDPGMMSG  MSG(&MSG) TOMSGQ(INSTAL)                    E36755*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)              E36755*/
+/**********  ENDDO                                                  E36755*/
+/**********  ADDJOBQE   SBSD(&XLIB/&SBS) JOBQ(&XLIB/CFJOBQB) +      E36755*/
+/**********               MAXACT(1) SEQNBR(150)                     E36755*/
+/**********  MONMSG     MSGID(CPD1535 CPD1538 CPF1697)  exec(do)    E36755*/
+/**********  CHGVAR  VAR(&MSG) VALUE('CFJOBQB or routing entry 150 +E36755*/
+/**********               number already exists in subsystem +      E36755*/
+/**********               description ' *CAT &SBS)                  E36755*/
+/**********  SNDPGMMSG  MSG(&MSG) TOMSGQ(INSTAL)                    E36755*/
+/**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)              E36755*/
+/**********  ENDDO                                                  E36755*/
+/**********                                                         E36755*/
+/**********  CHGRTGE    SBSD(&SBS) SEQNBR(2) PGM(MAUTOS)            E36755*/
+/**********                                                         E36755*/
+/* Create the default Confirmation Matching Folder.      */
+/* User must have a directory entry which is created     */
+/* using ADDDIRE command by user with *SECADM authority. */
+ 
+/* Folder should only be accessed by one Midas system */
+TAG:         CHGVAR     VAR(&FOLDER) VALUE('CFFLR.' *CAT &PREFIX +
+                          *CAT 'X')
+             CRTFLR     FLR(&FOLDER) TEXT('Midas Confirmation +
+                          Matching Folder') AUT(*CHANGE)
+             MONMSG     MSGID(CPF8A85 CPF8A18)
+ 
+/* Add in new DATABASE ERROR message */
+RCVF:        RCVF DEV(*FILE) RCDFMT(SDLANGDF)
+             MONMSG MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
+             CHGVAR     VAR(&MIDAS) VALUE(&SCUNT *CAT 'MIDAS')
+             ADDMSGD    MSGID(MEM0011) MSGF(&DTALIB/&MIDAS) +
+                          MSG('DATABASE ERROR in file &1, key &2, in +
+                          &3, at &4') SEV(20) FMT((*CHAR 8) (*CHAR +
+                          29) (*CHAR 10) (*CHAR 3))
+             MONMSG CPF2412
+             GOTO CMDLBL(RCVF)
+ 
+/* Call the Branch Groupings Program to set up PF/CFBRCHPD */
+ EOF:        CALL       PGM(*LIBL/CF0010)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MSG)
+             SNDPGMMSG  MSGID(MEM0011) MSGF(MIDAS) MSGDTA(&MSG) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ +
+                          QTEMP/INSTAL)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Call Client Details download to update TRAM counterparty directory */
+             CALL       PGM(*LIBL/CFC0080) PARM('ZZZ')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MSG)
+             SNDPGMMSG  MSGID(MEM0011) MSGF(&DTALIB/MIDAS) +
+                          MSGDTA(&MSG) TOPGMQ(*EXT) TOMSGQ(MOPERQ +
+                          MRUNQ QTEMP/INSTAL)
+             GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* If the ENDSBS command failed */
+/**********  IF         COND(&ERR *EQ Y) THEN(GOTO CMDLBL(ERROR))   E36755*/
+ 
+             CHGVAR     VAR(&MSG) VALUE('Program CFC00 completed +
+                          sucessfully - see job log and spool file')
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(INSTAL)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             GOTO       CMDLBL(END)
+ERROR:       CHGVAR     VAR(&MSG) VALUE('Program CFC00 ended in +
+                          error - check job log and spool file')
+             SNDPGMMSG  MSG(&MSG) TOMSGQ(INSTAL)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/* Print report of problems to spool */
+END:         DSPMSG     MSGQ(QTEMP/INSTAL) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DLTMSGQ    MSGQ(QTEMP/INSTAL)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

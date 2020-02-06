@@ -1,0 +1,249 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU Comp Cde BackGnd Upd')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas     STANDING DATA MODULE
+     F*                                                                  *
+     F*     TABLET3 - BACKGROUND UPDATE OF TABLET3 FILE                  *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01230             Date 07/11/89              *
+      *                 S01168             Date 31/03/89              *
+     F*                                                                  *
+     F*****************************************************************  *
+      *  MD046248 - Finastra Rebranding                               *
+     F*     S01230 - STANDARDISE ACCESS PROGRAMS                         *S01230
+     F*     S01168 - SYNON FIELD NAME CHANGES                            *
+     F********************************************************************
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN TABLET3 FAILED/ERROR                         *
+     F*       31      ERROR ON TABLET3 FILE                              *
+     F*       32      CHAIN TABLETX FAILED/ERROR                         *
+     F*                                                                  *
+     F********************************************************************
+     FTABLET3 UF  E           K        DISK                      A
+     F                                              KCOMIT
+     FTABLETA UF  E           K        DISK
+     F                                              KCOMIT
+     FTABLETXLUF  E           K        DISK
+     F                                              KCOMIT
+      /EJECT                                                              S01230
+     E* Description     : Copyright notice for inclusion in all progra    S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright     arrS01230
+     E********************************************************************S01230
+      /EJECT                                                              S01230
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ITABLETAF
+     I              RECT                            RECTA
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        RETURN CODE
+     C*********************PARM           WCMPY   2        COMPANY CODE   S01168
+     C                     PARM           WCMPYM  3        COMPANY CODE   S01168
+     C                     PARM           WCMNM  30        COMPANY NAME
+     C                     PARM           WCHTP   1        LAST CHANGE TYPE
+     C                     PARM           WLCD    50       LAST CHANGE DATE
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN INSERTED, CHAIN TO TABLET3 TO CHECK THAT
+     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
+     C*
+     C           WCHTP     IFEQ 'I'
+     C***********WCMPY*****CHAINTABLET3              30    CHAIN FAILED   S01168
+     C           WCMPYM    CHAINTABLET3              30    CHAIN FAILED   S01168
+     C*
+     C* IF RECORD DOES NOT EXIST
+     C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND WRITE
+     C* A NEW RECORD
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C* IF IT DOES EXIST AS DELETED(RECI *)
+     C* THEN MOVE PARAMETERS RECIEVED INTO FILE FIELDS AND UPDATE
+     C* OLD RECORD
+     C*
+     C           *IN30     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C                     MOVE 'D'       RECI
+     C                     Z-ADD11        RECT
+     C*********************MOVE WCMPY     CMPY                            S01168
+     C                     MOVE WCMPYM    CMPYM                           S01168
+     C                     MOVE WCMNM     CMNM
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C*
+     C* IF RECORD FOUND ON FILE AND IS NOT A DELETED RECORD SET ERROR
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     31
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITETABLET3F               31   ERROR
+     C                     END
+     C*
+     C           *IN30     IFEQ '0'
+     C           *IN31     ANDEQ'0'
+     C                     UPDATTABLET3F               31   ERROR
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT AN INSERT
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C           WCHTP     IFEQ 'A'
+     C***********WCMPY*****CHAINTABLET3F             30    CHAIN FAILED   S01168
+     C           WCMPYM    CHAINTABLET3F             30    CHAIN FAILED   S01168
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C*********************MOVE WCMPY     CMPY                            S01168
+     C                     MOVE WCMPYM    CMPYM                           S01168
+     C                     MOVE WCMNM     CMNM
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABLET3F               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM TABLET3
+     C*
+     C           WCHTP     IFEQ 'D'
+     C***********WCMPY*****CHAINTABLET3F             30    CHAIN FAILED   S01168
+     C           WCMPYM    CHAINTABLET3F             30    CHAIN FAILED   S01168
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C                     MOVE WCHTP     CHTP
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATTABLET3F               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON TABLET3 UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C           '11'      CHAINTABLETXF             32    CHAIN FAILED
+     C*
+     C* IF CHAIN TO FILE SUCCESSFUL
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* IF FIRST ACCESS TO THE FILE THEN GET HEADER RECORD
+     C*
+     C           NINS      ANDEQ0
+     C           NAMD      ANDEQ0
+     C           NDEL      ANDEQ0
+     C*
+     C                     READ TABLETAF                 32  EOF
+     C*
+     C* IF HEADER RECORD FOUND THEN SET PRINT INDICATOR AND UPDATE
+     C*
+     C           *IN32     IFEQ '0'
+     C                     ADD  1         ICMC
+     C                     UPDATTABLETAF               32    ERROR
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS
+     C*
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C           WCHTP     IFEQ 'I'
+     C                     ADD  1         NINS
+     C                     END
+     C*
+     C           WCHTP     IFEQ 'A'
+     C                     ADD  1         NAMD
+     C                     END
+     C*
+     C           WCHTP     IFEQ 'D'
+     C                     ADD  1         NDEL
+     C                     END
+     C*
+     C                     UPDATTABLETXF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Finastra International Limited 2001

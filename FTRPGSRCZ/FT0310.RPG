@@ -1,0 +1,427 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FT Frequency processing')                        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Funds Transfer Module
+     F*                                                               *
+     F*  FT0310 - FT Frequency Processing                             *
+     F*                                                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD050139           Date 23Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 078189             DATE 22NOV94               *
+     F*                 069250             DATE 03MAY94               *
+     F*                 062394             DATE 24OCT93               *
+     F*                 S01435             DATE 05OCT93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  078189 - Reinstate the creation parameters inadvertently     *
+     F*           removed by 069250                                   *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  062394 - Add new frequency processing (Fixed number of days) *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+/******:*OVRDBF*(File*in*program)*(file*on*system)******************:**   069250
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  50    First cycle                                            *
+     F*  90    General work indicator                                 *
+     F*  91    General work indicator                                 *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,FT0310DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+     E                    PYFQ   13  13  1  A            Payment Frequency
+      *
+      *  Copyright table
+      *
+     E/COPY WNCPYSRC,FT0310DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E/COPY ZSRSRC,ZHOLE
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFREQBZ1
+     E/COPY FTCPYSRC,SRERRE
+      *
+      *  end of Copysource for error processing
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     E/EJECT
+     I/COPY WNCPYSRC,FT0310DIPG
+      *
+      *  /Copy point for Input specifications
+      *
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY FTCPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+      *  Define General Ledger Details
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     ISCSARD    E DSSCSARDPD                                              062394
+      *                                                                   062394
+      * Sar Text details *                                                062394
+      *                                                                   062394
+     IDSFDY     E DSDSFDY
+      *
+      * Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      * Data Structures used by Access Programs
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM ZZERR@    W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           W0FREQ  1
+     C                     PARM ZDAYNO    W0RDNB  50
+     C                     PARM           W0MDAY  20
+     C                     PARM           W0CCY   3
+     C                     PARM           W0LOC   3
+      *
+      *  Set up primary reference
+      *
+     C           W0CCY     CAT  W0LOC     W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Execute Frequency check processing
+      *
+     C           W0ACT     CASEQ'*NEWDATE'SRFREQ
+     C           W0ACT     CASEQ'*VERIFY 'SRVRFY
+     C                     CAS            SRACT
+     C                     ENDCS
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFREQ   : Calculate next date                               *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFREQ    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRFREQ'  @STK,Q
+      *
+      *  /Copy point for Calculate next date
+      *
+     C/COPY WNCPYSRC,FT0310FREQ
+      *                                                                   062394
+      *  If fixed number of days frequency then add MDAY                  062394
+      *                                                                   062394
+     C           W0FREQ    IFEQ '+'                                       062394
+     C           W0FREQ    OREQ '-'                                       062394
+     C           W0FREQ    OREQ 'E'                                       062394
+     C           W0RDNB    ADD  W0MDAY    ZDAYNO
+     C                     GOTO EXFREQ                                    062394
+     C                     END                                            062394
+      *
+      *  Set up variables
+      *
+     C                     MOVELW0FREQ    ZFREQ
+     C                     Z-ADDW0RDNB    ZDAYNO
+     C                     MOVELW0CCY     ZCCY
+     C                     MOVELW0LOC     ZLOC
+     C                     Z-ADDW0MDAY    ZMDAY
+      *
+      *  Call standard subroutine
+      *
+     C                     EXSR ZFREQB
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFREQ    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRVRFY   : Verify Frequency is recognised                    *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRVRFY    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRVRY '  @STK,Q
+      *
+      *  /Copy point for Verify frequency
+      *
+     C/COPY WNCPYSRC,FT0310VRY
+      *                                                                   062394
+      *  Check if fixed frequency                                         062394
+      *                                                                   062394
+     C           S01481    IFEQ 'S01481'                                  062394
+     C           W0FREQ    IFEQ '+'                                       062394
+     C           W0FREQ    OREQ '-'                                       062394
+     C           W0FREQ    OREQ 'E'                                       062394
+     C                     MOVEL*BLANKS   ZZERR@                          062394
+     C                     GOTO EXVRFY                                    062394
+     C                     END                                            062394
+     C                     END                                            062394
+      *
+      *  Check frequency
+      *
+     C           W0FREQ    LOKUPPYFQ                     90
+     C           *IN90     IFEQ '0'
+     C                     MOVEL'FTM2002' ZZERR@
+     C                     ELSE
+     C                     MOVEL*BLANKS   ZZERR@
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXVRFY    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 04 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY ZSRSRC,ZCHKH
+     C/EJECT
+     C/COPY ZSRSRC,ZACCH
+     C/EJECT
+     C/COPY ZSRSRC,ZFREQBZ2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      *
+      *  Set *IN98 depending on Date Format
+      *
+     C           WUDFF     IFEQ 'D'                        DDMMYY
+     C                     MOVEL'0'       *IN98
+     C                     ELSE
+     C                     MOVEL'1'       *IN98
+     C                     END
+      *                                                                   062394
+      *  Access SAR details file to see if S01481 is installed.           062394
+      *                                                                   062394
+     C                     CALL 'AOSARDR0'                                062394
+     C                     PARM *BLANKS   P@RTCD  7                       062394
+     C                     PARM '*VERIFY' P@OPTN  7                       062394
+     C                     PARM 'S01481'  @SARD   6                       062394
+     C           SCSARD    PARM *BLANKS   DSFDY                           062394
+      *                                                                   062394
+      *  Allow frequencies "+" "-" and "E"                                062394
+      *                                                                   062394
+     C           P@RTCD    IFEQ *BLANKS                                   062394
+     C                     MOVEL'S01481'  S01481  6                       062394
+     C                     END                                            062394
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,FT0310DCPG
+      *
+      *  /Copy point for Calculations
+      *
+     C/EJECT
+      *
+      *  File and Program Error Processing
+      *
+     C/COPY FTCPYSRC,SRERRC
+     C/EJECT
+     O/COPY WNCPYSRC,FT0310DOPG
+      *
+      *  /Copy point for Outputs
+      *
+     O/EJECT
+**  CPY@ table
+(c) Finastra International Limited 2001
+**   PYFQ - PAYMENT FREQUENCY VALUES
+ABDFLMQRSTWXY
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH
+312831303130313130313031

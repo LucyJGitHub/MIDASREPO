@@ -1,0 +1,1065 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Cust/Broker Instrument Defaults')             *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Futures and Options Module
+     F*                                                                  *
+     F*   FF1160  -  CUSTOMER/BROKER INSTRUMENT DEFAULTS LIST            *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP208             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG1046            Date 10Feb06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 135985             Date 23Mar00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 105054             Date 26Jun96               *
+     F*                  CFF004             DATE 02OCT96                 *
+     F*                  S01408             DATE 12AUG96                 *
+     F*                  S71062             DATE 19DEC95                 *
+     F*                  041146             DATE 19DEC95                 *
+     F*                  093979             DATE 09OCT95                 *
+     F*                  S04662             DATE 12JUL93                 *
+     F*                  S01393             DATE 30OCT92                 *
+     F*                  FUJI-FF0011        DATE 10AUG92                 *
+     F*                  AUS022             DATE 11AUG92                 *
+     F*                  S01117             DATE 08FEB90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAP208 - F&O Market Instrument API (Recompile)               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10462 - Apply fix 192609 as preventive measure.              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  135985 - I/O Error in FF1160P1 when S04662 is switched on.      *
+     F*           Limit should have been 6 instead of 7.                 *
+     F*         - Applied this to fix 105054.                            *
+     F*   105054  -  Overflow problem on 'End of Report' line            *
+     F*   CFF004  -  Increase in size of Price Fields,(Recompiled Only)  *
+     F*   S01408  -  Core Hook FF1160CCP2 Added                          *
+     F*           -  Core Hook FF1160CCP1 Added                          *
+     F*   S71062  -  FF/PM Interface (Just recompiled)                   *
+     F*   041146  -  Must not process deleted instruments                *
+     F*   093979  -  Overflow problem if S04662 switched on.             *
+     F*   S04662  -  Switchable Feature for Init Margins for Futures;    *
+     F*              Deposit and Spread Margin Rate added to DEFLTD.     *
+     F*   S01393  -  RECOMPILED FOR STRATEGIC RISK MANAGEMENT            *
+     F* FUJI-FF0011 - The system does not differentiate between          *
+     F*               american and european option on exercise           *
+     F*               validation and OTC confirmation wording.           *
+     F*               *** RECOMPILE ONLY ***                             *
+     F*   AUS022  -  AUSTRALIAN CHANGE : Contract Type (CNTT) added to   *
+     F*              PF/INTYPD.  Recompile program only.                 *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*ABFF***IF* E           K        DISK                               S01117
+     F**ICD*1**** TABTB10F                          KIGNORE               S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB20F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTB80F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F**CCY*1**** TABTG10F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     FCLINT   IF  E           K        DISK
+     F*           CLINTCBF                          KIGNORE
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FMARKT   IF  E           K        DISK
+     FINTYP   IF  E           K        DISK
+     FDEFLT   IF  E           K        DISK                           UC
+     FJRNCGD  IF  E           K        DISK                           U3
+     FJRNIM   IF  E           K        DISK                                                 BUG10462
+     FFF1160P1O   E                    PRINTER
+     F                                              KINFDS SPOOL          S01117
+     FFF1160AUO   E                    PRINTER                            S01117
+     F                                              KINFDS SPOOLU         S01117
+     F*
+     F************        FUNCTIONS OF INDICATORS        *************
+     F******************40************NO*RECORD*FOUND*ON*TABFF*FILE*******S01117
+     F*                 41            NO MORE RECORDS FOUND ON DEFLT
+     F*                 44            NO VALID RECORDS FOUND ON FILE
+     F*                 45            NO DETAIL TO REPORT                 S01117
+     F*
+     F*                 53            SWITCHABLE FEATURE - S04662         S04662
+     F*                                 INITIAL MARGINS FOR FUTURES       S04662
+     F*                                                                   S04662
+     F*                 60            INDICATES INTERIM REPORT -
+     F*                                    DURING INPUT CYCLE
+     F*                 61            INDICATES COB AUDIT REPORT (U3 ON)  S01117
+     F*
+     F*                 80-89         USED IN MODULE STANDARD SUBROUTIN
+     F*                 90-95         USED IN Z-SUBROUTINES
+     F*                 98            DATE FORMAT IS MMMDDYY
+     F*
+     F*                     NU3 U1    PROCESS DEFLT INTERIM  LIST (LCD=RUND)
+     F*                     NU3NU1    PROCESS DEFLT COMPLETE LIST
+     F*                      U3       PROCESS JRNCGD (AUDIT)
+     F*                      U7 U8    DATABASE ERROR
+     F*
+     F*                      LR       SETON IN PROGRAM END
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*****************************************************************
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E**   FOR CONVERTING A DAY NUMBER TO A DATE FORMAT
+     E*                                                                   S04662
+     E/COPY ZSRSRC,ZFRPEDZ1                                               S04662
+     E**   FOR CONVERTING A RATE FOR DISPLAY                              S04662
+     E*
+     E                    SWS         8  1
+     E**   FOR CONVERTING SWITCH PARAMETER
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     IDEFLTDF
+     I*
+     I*    RENAME LCD AND CHTP FROM DEFLT
+     I*
+     I              RECI                            RECIX                 041146
+     I              LCD                             LCDX
+     I              CHTP                            CHTPX
+      *                                                                                     BUG10462
+      **  Rename JOESD from JRNIMD to avoid conflict to JOESD of JRNCGD                     BUG10462
+      *                                                                                     BUG10462
+     IQJORDJE                                                                               BUG10462
+     I              JOESD                           WJOESD                                  BUG10462
+     I*
+     IJOESD     E DSDEFLTD
+     I              LCD                             LCDX
+     I              CHTP                            CHTPX
+      *                                                                                     BUG10462
+      **  Define data structure like fields in INTYPD.                                      BUG10462
+      *                                                                                     BUG10462
+     IWJOESD    E DSINTYPD                                                                  BUG10462
+     I              RECI                            WRECI                                   BUG10462
+     I              ISTT                            WISTT                                   BUG10462
+     I              LCD                             WLCD                                    BUG10462
+     I              CHTP                            WCHTP                                   BUG10462
+     I              TNLU                            WTNLU                                   BUG10462
+     I*
+     I** DATA STRUCTURE FOR RECORD LAYOUT
+     I*
+     I*
+     IINSTKY      DS
+     I*
+     I*       SETUP  KEY TO CHAIN TO LF/INTYP
+     I*
+     I                                        1   2 MRKTX
+     I                                        3   5 ISTCX
+     I*
+     ISETACC      DS
+     I*
+     I**      DATA STRUCTURE TO EDIT SETA FOR PRINTER FILE
+     I*
+     I                                        1   6 CUSN
+     I**********                              7  10 ACCC                                      CGL029
+     I**********                             11  12 SEQN                                      CGL029
+     I                                        7  16 ACCC                                      CGL029
+     I                                       17  18 SEQN                                      CGL029
+     I*
+     ISETOUT      DS
+     I*
+     I**   DATA STRUCTURES FOR OUTPUT SETTLEMENT ACCOUNT
+     I***********                             1   6 CUSO                  S01117
+     I***********                             7   7 DSH1                  S01117
+     I***********                             8  11 ACCO                  S01117
+     I***********                            12  12 DSH2                  S01117
+     I***********                            13  14 SEQO                  S01117
+     I                                        1   3 SBRO                  S01117
+     I                                        4   4 DSH3                  S01117
+     I                                        5  10 CUSO                  S01117
+     I                                       11  11 DSH1                  S01117
+     I**********                             12  15 ACCO                               S01117 CGL029
+     I**********                             16  16 DSH2                               S01117 CGL029
+     I**********                             17  18 SEQO                               S01117 CGL029
+     I                                       12  21 ACCO                                      CGL029
+     I                                       22  22 DSH2                                      CGL029
+     I                                       23  24 SEQO                                      CGL029
+     I*                                                                   S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I*                                                                   S01117
+     ISPOOL       DS                                                      S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     ISPOOLU      DS                                                      S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I*
+     ILDA         DS                            256
+     I*
+     I**      LOCAL DATA AREA CONTAINING DB ERROR INFORMATION
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+      *                                                                   S04662
+     I/COPY ZSRSRC,ZFRPEDZ2                                               S04662
+      *                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+      **  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I              BJURPT                          TITL                  S01117
+      *                                                                   S04662
+     ISDCURR    E DSSDCURRPD                                              S04662
+      **  EXTERNAL DS FOR CURRENCY DETAILS                                S04662
+      *                                                                   S01117
+     I@DSFDY    E DSDSFDY                                                 S01117
+      **  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE              S01117
+      *                                                                   S04662
+     IDSSDY     E DSDSSDY                                                 S04662
+      **  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE              S04662
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C**
+     C**   Receive Parameters
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           SWS
+     C                     PARM           SEQ     5        SEQUENCE NO    S01117
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    MAIN BODY OF PROGRAM
+     C*
+     C*****************************************************************
+     C                     EXSR START
+     C                     EXSR REPORT
+     C                     EXSR END
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*                   INDEX FOR SUB-ROUTINE
+     C*
+     C*****************************************************************
+     C*
+     C*                1.  START  -   INITIALISATION
+     C*                2.  REPORT -   REPORT INITIALISATION
+     C*                3.  CUST   -   NOT END OF FILE PROCESSING
+     C*                4.  MAKT   -   SAME CUSTOMER PROCESSING
+     C*                5.  INSTR  -   SAME MARKET PROCESSING
+     C*                6.  ACCESS -   ACCESS NEXT VALID RECORD
+     C*                7.  WRITE  -   PRINT DETAILS + NEW HEADINGS
+     C*                8.  ZDATE2 -   CONVERT DAY NUMBER TO DATE
+     C*                    ZFRPED -   Edit an Amount                      S04662
+     C*                9.  ERR    -   DATABASE ERROR HANDLING
+     C*               10.  END    -   END PROGRAM
+     C*               10.  SWTS   -   RESET SWITCHES
+     C*               11.  RCFSPL -   SPOOL REPORTS PRINTER FILE          S01117
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE START - INITIALISATION. CALLED FROM MAIN BODY
+     C*                        CALLS S/R'S - ERR.
+     C*
+     C*****************************************************************
+     C           START     BEGSR
+     C*
+     C*****BLANK*OUT*DBKEY*IN*CASE*OF*DATABASE*ERROR**********************S01117
+     C**   RESET LDA                                                      S01117
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANKS   DBPGM                           S01117
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBFILE                          S01117
+     C                     MOVEL*ZEROS    DBASE                           S01117
+     C                     OUT  LDA                                       S01117
+     C***************************************************************
+     C*                                                                   S01117
+     C**   IN THE DATAAREA RUNDAT                                         S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C**   ZEROISE HASH COUNT                                             S01117
+     C*                                                                   S01117
+     C                     Z-ADD*ZERO     RECCN   50                      S01117
+     C*
+     C**   INITIALISE VARIABLES FOR REPORT USE
+     C                     MOVE '-'       DSH1
+     C                     MOVE '-'       DSH2
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     MOVE '-'       DSH3                            S01117
+     C                     ELSE                                           S01117
+     C                     MOVE *BLANKS   DSH3                            S01117
+     C                     END                                            S01117
+     C*
+     C* INITIALISING THE SWITCHES
+     C                     MOVE SWS,1     *INU1
+     C                     MOVE SWS,2     *INU2
+     C                     MOVE SWS,3     *INU3
+     C                     MOVE SWS,4     *INU4
+     C                     MOVE SWS,5     *INU5
+     C                     MOVE SWS,6     *INU6
+     C                     MOVE SWS,7     *INU7
+     C                     MOVE SWS,8     *INU8
+     C*
+     C**   CHECK SWITCH U1 - ON:INTERIM REPORT (INPUT CYCLE)
+     C*                    - OFF:FULL REPORT (CLOSE OF BUISNESS)
+     C*
+     C           *INU1     IFEQ '1'
+     C                     SETON                     60
+     C                     END
+     C           *INU3     IFEQ '1'                                       S01117
+     C                     SETON                     61                   S01117
+     C                     END                                            S01117
+     C***********          READ TABTB10F                 40               S01117
+     C*                                                                   S01117
+     C**   ACCESS BANK DETAILS                                            S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    @DSFDY                          S01117
+     C*
+     C*       OUTPUT HEADER WITH OR WITH OUT INSTALLATION CONTROL DATA
+     C*
+     C                     WRITEFMT9003
+     C                     WRITEFMTAU01                                   S01117
+     C*
+     C*    CHECK THAT INSTALLATION CONTROL DATA PRESENT
+     C*    IF NOT THEN DATABASE ERROR
+     C**N40******RECI      COMP 'D'                  4040                 S01117
+     C************IN40     IFEQ '1'                                       S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C*
+     C*       SET UP DATABASE ERROR
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C***********          MOVE 'TABFF'   DBFILE                          S01117
+     C***********          MOVE '     01' DBKEY1  8                       S01117
+     C***********          MOVEL'01     ' DBKEY1                          S01117
+     C***********          MOVELDBKEY1    DBKEY                           S01117
+     C***********          MOVE '01'      DBASE            *** DBERR 01 **S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBKEY                           S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     Z-ADD1         DBASE            *** DBERR 01 **S01117
+     C                     MOVE ' FF1160 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR ERR
+     C                     END
+     C*
+     C** OPEN DEFAULTS FILE IF U3 IS NOT ON
+     C*
+     C  NU3                OPEN DEFLT
+     C*
+     C*    COMPARE DATE FORMAT REQUIRED
+     C*
+     C           DATF      COMP 'M'                      98
+      *                                                                   S04662
+      **  Access Switchable Features file for Initial Margin for          S04662
+      **  Fututres processing - S04662.                                   S04662
+     C                     MOVE 'N'       S04662                          S04662
+     C                     SETOF                     53                   S04662
+     C                     CALL 'AOSARDR0'                                S04662
+     C                     PARM *BLANKS   @RTCD                           S04662
+     C                     PARM '*VERIFY' @OPTN                           S04662
+     C                     PARM 'S04662'  @SARD   6                       S04662
+      *                                                                   S04662
+     C           @RTCD     IFEQ *BLANK                                    S04662
+     C                     MOVE 'Y'       S04662  1                       S04662
+     C                     SETON                     53                   S04662
+     C                     END                                            S04662
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF1160CCP2                                           S01408
+     C*                                                                   S01408
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE REPORT - REPORT INITIALISATION
+     C*                         CALLED FROM - MAIN BODY
+     C*                         CALLS S/R - ACCESS, CUST.
+     C*
+     C*****************************************************************
+     C           REPORT    BEGSR
+     C*
+     C*    EXECUTE SUBROUTINE TO FIND VALID CUSTOMER RECORDS (DEFLT)
+     C*
+     C                     EXSR ACCESS
+     C*
+     C*    IF NO VALID RECORD PRINTOUT NO DEFAULT MESSAGE
+     C*
+     C           *IN41     IFEQ '1'
+     C                     WRITEFMTNODEF
+     C                     WRITEFMTAU02                                   S01117
+     C                     WRITEFMTAU03                                   S01117
+     C                     SETON                     45                   S01117
+     C                     ELSE
+     C*
+     C*    EXECUTE SUBROUTINE CUST
+     C*
+     C                     EXSR CUST
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE CUST - PROCESSING FOR NOT END OF FILE
+     C*                       CALLED FROM - REPORT
+     C*                       CALLS S/R - ERR, MAKT
+     C*
+     C*****************************************************************
+     C           CUST      BEGSR
+     C*
+     C*    SET COUNT TO ZERO FOR FIRST PAGE
+     C*
+     C                     Z-ADD0         COUNT   10
+     C*
+     C*    DOW NOT END OF FILE
+     C*
+     C           *IN41     DOWNE'1'
+     C*
+     C           *LIKE     DEFN CBCD      CUSCDE
+     C                     MOVE CBCD      CUSCDE
+     C*
+     C*    OBTAIN CUSTOMER LONG NAME FROM LF/CLINT
+     C*
+     C           CBCD      CHAINCLINT                44
+     C*
+     C*    CHECK FOR VALID RECORD
+     C*
+     C           *IN44     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C*
+     C*    SET UP DATABASE ERROR
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CLINT'   DBFILE
+     C                     MOVELCBCD      DBKEY
+     C***********          MOVE '02'      DBASE            *** DBERR 02 **S01117
+     C                     Z-ADD2         DBASE            *** DBERR 02 **S01117
+     C                     MOVE ' FF1160 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR ERR
+     C                     END
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,FF1160CCP1                                           S01408
+     C*                                                                   S01408
+     C*
+     C*    EXECUTE SUBROUTINE MRKT
+     C*
+     C                     EXSR MAKT
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE MAKT - PROCESSING FOR SAME CUSTOMER
+     C*                       CALLED FROM - CUST
+     C*                       CALLS S/R - ERR, INSTR.
+     C*
+     C*****************************************************************
+     C           MAKT      BEGSR
+     C*
+     C*    DOW NOT END OF FILE & SAME CUSTOMER
+     C*
+     C           *IN41     DOWNE'1'
+     C           CBCD      ANDEQCUSCDE
+     C*
+     C*    MOVE MARKET CODE TO VARIABLE MRKTCDE
+     C*
+     C           *LIKE     DEFN MRKT      MRKTCD
+     C                     MOVE MRKT      MRKTCD
+     C*
+     C*    OBTAIN MARKET LONG NAME FROM LF/MRKT
+     C*
+     C           MRKT      CHAINMARKT                44
+     C*
+     C*    CHECK FOR RECORD
+     C*
+     C           *IN44     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C*
+     C*       SET UP DATABASE ERROR
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MARKT'   DBFILE
+     C                     MOVELMRKT      DBKEY
+     C***********          MOVE '03'      DBASE            *** DBERR 03 **S01117
+     C                     Z-ADD3         DBASE            *** DBERR 03 **S01117
+     C                     MOVE ' FF1160 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR ERR
+     C                     END
+     C*
+     C*    EXECUTE SUBROUTINE INSTR
+     C*
+     C                     EXSR INSTR
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE INSTR - PROCESSING FOR SAME MARKET
+     C*                        CALLED FROM - MAKT
+     C*                        CALLS S/R - ERR, ACCESS, ZDATE2, WRITE.
+     C*
+     C*****************************************************************
+     C           INSTR     BEGSR
+     C*
+     C*    DOW NOT END OF FILE & SAME CUSTOMER & SAME MARKET
+     C*
+     C           *IN41     DOWNE'1'
+     C           CBCD      ANDEQCUSCDE
+     C           MRKT      ANDEQMRKTCD
+     C*
+     C*    SET UP INSTRUMENT KEY (MRKT-ISTC)
+     C*
+     C                     MOVE MRKT      MRKTX
+     C                     MOVE ISTC      ISTCX
+      *                                                                                     BUG10462
+      **  Perform CHKJRN subroutine only if *INU3 is on.                                    BUG10462
+      *                                                                                     BUG10462
+     C           *INU3     IFEQ '1'                                                         BUG10462
+     C                     EXSR CHKJRN                                                      BUG10462
+      *                                                                                     BUG10462
+      **  Else, always make WLCD1 and WLCD2 unequal.                                        BUG10462
+      *                                                                                     BUG10462
+     C                     ELSE                                                             BUG10462
+     C                     Z-ADD0         WLCD1                                             BUG10462
+     C                     Z-ADD1         WLCD2                                             BUG10462
+     C                     ENDIF                                                            BUG10462
+     C*
+     C*    OBTAIN INSTRUMENT LONG NAME & CURRENCY FROM LF/INTYP
+     C*
+     C           INSTKY    CHAININTYP                44
+     C*
+     C*    CHECK FOR RECORD
+     C*
+     C           *IN44     IFEQ '1'
+     C           RECI      ORNE 'D'
+      *                                                                                     BUG10462
+      **  If instrument was inserted and deleted the same day, do not                       BUG10462
+      **  issue the DBerr.                                                                  BUG10462
+      *                                                                                     BUG10462
+     C           WLCD1     IFNE WLCD2                                                       BUG10462
+     C*
+     C*       SET UP DATABASE ERROR
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE 'INTYP'   DBFILE
+     C                     MOVELINSTKY    DBKEY
+     C***********          MOVE '04'      DBASE            *** DBERR 04 **S01117
+     C                     Z-ADD4         DBASE            *** DBERR 04 **S01117
+     C                     MOVE ' FF1160 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR ERR
+      *                                                                                     BUG10462
+     C                     END                                                              BUG10462
+     C                     END
+     C*
+     C**   SETTLEMENT TYPE - ZERO MEANS NO DEFAULT
+     C*
+     C           SETP      IFEQ *ZERO
+     C                     MOVEL*BLANK    RSETP
+     C                     ELSE
+     C                     MOVELSETP      RSETP
+     C                     END
+     C*
+     C**   IF SETTLEMENT TYPE IS 05, '-'S NEED TO BE INSERTED
+     C**   INTO THE REPORT FIELD.
+     C*
+     C           SETP      IFEQ 5
+     C                     MOVE SETA      SETACC
+     C                     MOVE CUSN      CUSO
+     C                     MOVE ACCC      ACCO
+     C                     MOVE SEQN      SEQO
+     C*                                                                   S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     MOVE SEBR      SBRO                            S01117
+     C                     ELSE                                           S01117
+     C                     MOVE *BLANKS   SBRO                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     MOVE SETOUT    RSETA
+     C                     ELSE
+     C                     MOVE *BLANKS   RSETA
+     C                     MOVELSETA      RSETA
+     C                     END
+     C*
+     C**   IF COMMISSION PATTERN IS BLANK THEN OUTPUT NOTHING
+     C**   OTHERWISE PUT OUT THE COMMISSION CODES (STANDARD/SAME DAY)
+     C           CPAT      IFEQ *BLANK
+     C                     MOVE *BLANKS   RCMCD
+     C                     MOVE ' '       RFLGC
+     C                     MOVE *BLANKS   RCMSD
+     C                     ELSE
+     C                     MOVE CMCD      RCMCD
+     C                     MOVE '-'       RFLGC
+     C                     MOVE CMSD      RCMSD
+     C                     END
+     C*
+     C**   IF BOTH CHARGE CODES ARE ZERO OUTPUT NOTHING
+     C**   OTHERWISE PUT OUT THE CHARGE CODES (PURCHASES/SALES)
+     C           CGEP      IFEQ *ZERO
+     C           CGES      ANDEQ*ZERO
+     C                     MOVE *BLANKS   RCGEP
+     C                     MOVE ' '       RFLGX
+     C                     MOVE *BLANKS   RCGES
+     C                     ELSE
+     C                     MOVE CGEP      RCGEP
+     C                     MOVE '-'       RFLGX
+     C                     MOVE CGES      RCGES
+     C                     END
+     C*
+     C*    IF REVIEW BASE DAY ZERO THEN OUTPUT BLANK
+     C           RVDY      IFEQ *ZERO
+     C                     MOVE *BLANKS   RRVDY
+     C                     ELSE
+     C                     MOVE RVDY      RRVDY
+     C                     END
+     C*
+     C*    EXECUTE SUBROUTINE DATE FORMAT FOR REVEIW DATE
+     C*
+     C                     MOVE RVDT      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRVDT   7
+     C*
+     C*    EXECUTE SUBROUTINE DATE FORMAT FOR EXPIRY DATE
+     C*
+     C                     MOVE EXPD      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    REXPD   7
+     C*                                                                   S04662
+     C** Only translate Deposit & Spread Margin Rates if Switchable       S04662
+     C** Feature, Initial Margin for Futures, S04662, is present;         S04662
+     C** (determine Instrument Currency decimal places for display).      S04662
+     C           S04662    IFEQ 'Y'                                       S04662
+     C*                                                                   S04662
+     C                     CALL 'AOCURRR0'                                S04662
+     C                     PARM '*DBERR ' @RTCD                           S04662
+     C                     PARM '*KEY   ' @OPTN                           S04662
+     C                     PARM ISCY      WCUCY   3                       S04662
+     C           SDCURR    PARM SDCURR    DSSDY                           S04662
+     C*                                                                   S04662
+     C** DEPOSIT MARGIN RATE                                              S04662
+     C                     Z-ADDINMC      ZFLD15                          S04662
+     C                     Z-ADDA6NBDP    ZDECS                           S04662
+     C                     EXSR ZFRPED                                    S04662
+     C                     MOVE ZOUT25    RINMC                           S04662
+     C*                                                                   S04662
+     C** SPREAD MARGIN RATE                                               S04662
+     C                     Z-ADDSPMC      ZFLD15                          S04662
+     C                     Z-ADDA6NBDP    ZDECS                           S04662
+     C                     EXSR ZFRPED                                    S04662
+     C                     MOVE ZOUT25    RSPMC                           S04662
+     C*                                                                   S04662
+     C                     END                                            S04662
+     C*
+     C*    MOVE APPROIATE ACTION CODE TO OUTPUT FIELD
+     C*
+     C           CHTPX     IFEQ 'A'
+     C                     MOVE 'AMD'     RCHTP   3
+     C                     END
+     C           CHTPX     IFEQ 'I'
+     C                     MOVE 'INS'     RCHTP
+     C                     END
+     C           CHTPX     IFEQ 'D'
+     C                     MOVE 'DEL'     RCHTP
+     C                     END
+     C*
+     C**  CHECK FOR ENTRY TYPE
+     C*
+     C                     MOVEL*BLANK    ENTT
+     C           CHTPX     IFEQ 'A'
+     C           JOENTT    IFEQ 'UB'
+     C                     MOVE 'OLD'     ENTT
+     C                     END
+     C           JOENTT    IFEQ 'UP'
+     C                     MOVE 'NEW'     ENTT
+     C                     END
+     C                     END
+     C*
+     C*    EXECUTE SUBROUTINE DATE FORMAT FOR LAST CHANGE DATE
+     C*
+     C                     MOVE LCDX      ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RLCD    7
+     C*
+     C*    OUTPUT DETAIL FORMAT
+     C*
+     C                     EXSR WRITE
+     C*
+     C*    EXECUTE SUBROUTINE ACCESS (READ NEXT VALID RECORD)
+     C*
+     C                     EXSR ACCESS
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE ACCESS - READ NEXT VALID RECORD
+     C*                         CALLED FROM - REPORT, INSTR.
+     C*
+     C*****************************************************************
+     C           ACCESS    BEGSR
+     C*
+     C*    READ LF/DEFLT
+     C*
+     C  NU3                READ DEFLT                    41
+     C   U3                READ JRNCGD                   41
+     C*                                                                   S01117
+     C**   IF RECORD READ, ADD 1 TO COUNTER OF RECORD READ                S01117
+     C*                                                                   S01117
+     C           *IN41     IFEQ '0'                                       S01117
+     C                     ADD  1         RECCN                           S01117
+     C                     END                                            S01117
+     C*
+     C*    IF INTERIM REPORT DETERMINE WHETHER VALID RECORD
+     C*
+     C           *IN60     IFEQ '1'
+     C*
+     C*    DOW NOT END OF FILE & LCDX NOT MIDAS DAY NUMBER
+     C*
+     C                     EXSR CHKLCD                                                      BUG10462
+      *                                                                                     BUG10462
+     C           *IN41     DOWNE'1'
+     C           LCDX      ANDNERUND
+     C           RECIX     ANDNE'D'                                       041146
+     C                     READ DEFLT                    41
+     C*                                                                   S01117
+     C**   IF RECORD READ, ADD 1 TO COUNTER OF RECORD READ                S01117
+     C*                                                                   S01117
+     C           *IN41     IFEQ '0'                                       S01117
+     C                     ADD  1         RECCN                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     EXSR CHKLCD                                                      BUG10462
+      *                                                                                     BUG10462
+     C                     END
+     C*
+     C*    ELSE IF NOT INTERIM REPORT. IE U1 IS OFF
+     C*
+     C                     ELSE
+     C*
+     C           *IN41     DOWNE'1'
+     C           RECI      ANDNE'D'
+     C  NU3                READ DEFLT                    41
+     C   U3                READ JRNCGD                   41
+     C*                                                                   S01117
+     C**   IF RECORD READ, ADD 1 TO COUNTER OF RECORD READ                S01117
+     C*                                                                   S01117
+     C           *IN41     IFEQ '0'                                       S01117
+     C                     ADD  1         RECCN                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE WRITE - WRITES OUT DETAILS AND NEW HEADINGS
+     C*                        CALLED FROM - INSTR
+     C*
+     C*****************************************************************
+     C           WRITE     BEGSR
+     C*
+     C*    IF COUNT GREATER THAN OR EQUAL TO 9 THEN NEW PAGE / TITLES
+     C*    (OR GREATER THAN OR EQUAL TO 7 AND S04662 IS SWITCHED ON)     093979
+     C*       SET COUNT TO ZERO
+     C*
+     C           COUNT     IFGE 9
+     C           S04662    ANDEQ'N'                                       093979
+     C***********COUNT     ORGE 7                                  093979 135985
+     C           COUNT     ORGE 6                                         135985
+     C           S04662    ANDEQ'Y'                                       093979
+     C                     WRITEFMT9003
+     C                     Z-ADD0         COUNT
+     C                     END
+     C*
+     C*    PRINT OUT DETAIL FORMAT
+     C*
+     C                     WRITEFMT4012
+     C                     ADD  1         COUNT
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** ZDATE2 TO CONVERT DAY NUMBER TO DATE FORMAT
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+      /COPY ZSRSRC,ZFRPEDZ3                                               S04662
+     C********************************************************************S04662
+      /EJECT                                                              S04662
+     C********************************************************************S04662
+     C*
+     C**   SUB-ROUTINE ERR - DATABASE ERROR SUBROUTINE
+     C*                         CALLED FROM - START, CUST, INSTR.
+     C*
+     C*****************************************************************
+     C*
+     C           ERR       BEGSR
+     C                     SETON                     U7U8LR
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           COUNT     IFGE 9                                         105054
+     C           S04662    ANDEQ'N'                                       105054
+     C***********COUNT     ORGE 7                                  105054 135985
+     C           COUNT     ORGE 6                                         135985
+     C           S04662    ANDEQ'Y'                                       105054
+     C                     WRITEFMT9003                                   105054
+     C                     Z-ADD0         COUNT                           105054
+     C                     END                                            105054
+     C                     WRITEFMT9001
+     C                     WRITEFMTEND
+     C*                                                                   S01117
+     C                     WRITEFMTAU02                                   S01117
+     C                     WRITEFMTAU04                                   S01117
+     C                     EXSR RCFSPL                                    S01117
+     C*                                                                   S01117
+     C                     EXSR SWTS
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*    SUB-ROUTINE END - ENDS PROGRAM
+     C*                         CALLED FROM - MAIN BODY
+     C*
+     C*****************************************************************
+     C           END       BEGSR
+     C           COUNT     IFGE 9                                         105054
+     C           S04662    ANDEQ'N'                                       105054
+     C***********COUNT     ORGE 7                                  105054 135985
+     C           COUNT     ORGE 6                                         135985
+     C           S04662    ANDEQ'Y'                                       105054
+     C                     WRITEFMT9003                                   105054
+     C                     Z-ADD0         COUNT                           105054
+     C                     END                                            105054
+     C                     WRITEFMTEND
+     C*                                                                   S01117
+     C** IF NOT 'NO DEFAULT FOUND', OUTPUT CONTROL TOTAL TO AU REPORT     S01117
+     C*                                                                   S01117
+     C           *IN45     IFEQ '0'                                       S01117
+     C                     WRITEFMTAU02                                   S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C** CALL RCF TO RECORD REPORT SPOOL FILE                             S01117
+     C*                                                                   S01117
+     C                     EXSR RCFSPL                                    S01117
+     C*                                                                   S01117
+     C                     SETON                     LR
+     C                     EXSR SWTS
+     C                     RETRN
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C****************************************************************
+     C*
+     C*   SWTS-SUBROUTINE TO RESET SWITCHES PARAMETER
+     C*
+     C*  CALLED  FROM  END, ERR
+     C*
+     C********************************************************************
+     C*
+     C           SWTS      BEGSR
+     C                     MOVE *INU1     SWS,1
+     C                     MOVE *INU2     SWS,2
+     C                     MOVE *INU3     SWS,3
+     C                     MOVE *INU4     SWS,4
+     C                     MOVE *INU5     SWS,5
+     C                     MOVE *INU6     SWS,6
+     C                     MOVE *INU7     SWS,7
+     C                     MOVE *INU8     SWS,8
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT                                                              S01117
+     C********************************************************************S01117
+      **                                                                  S01117
+      ** RCFSPL -- SUBROUTINE TO SPOOL BOTH P1 AND AU THROUGH RCF         S01117
+      ** CALLED FROM: BEFORE END OF PROGRAM                               S01117
+      ** CALLS: NOTHING                                                   S01117
+      **                                                                  S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           RCFSPL    BEGSR                           ** RCFSPL **   S01117
+     C*                                                                   S01117
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILE                           S01117
+     C                     PARM           ZSNUM                           S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C**      ENSURE TOTAL SPOOL FILE RECORDED BY RCF                     S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT                                                                                BUG10462
+      ********************************************************************                  BUG10462
+      *                                                                                     BUG10462
+      *  CHKJRN - Subroutine to ensure that an instrument was inserted                      BUG10462
+      *           and deleted the same day.                                                 BUG10462
+      *                                                                                     BUG10462
+      *  Called From INSTR                                                                  BUG10462
+      *                                                                                     BUG10462
+      ********************************************************************                  BUG10462
+      *                                                                                     BUG10462
+     C           CHKJRN    BEGSR                                                            BUG10462
+      *                                                                                     BUG10462
+      **  Initialise work fields to contain an unequal value.                               BUG10462
+      *                                                                                     BUG10462
+     C                     Z-ADD0         WLCD1   50                                        BUG10462
+     C                     Z-ADD1         WLCD2   50                                        BUG10462
+      *                                                                                     BUG10462
+      **  Set-up key field so that only records that incolves file                          BUG10462
+      **  INTYPD will be read from JRNIMD.                                                  BUG10462
+      *                                                                                     BUG10462
+     C                     MOVEL'INTYPD'  WOBJ   10                                         BUG10462
+     C           WOBJ      SETLLJRNIM                                                       BUG10462
+     C           WOBJ      READEJRNIM                    62                                 BUG10462
+     C           *IN62     DOWEQ'0'                                                         BUG10462
+      *                                                                                     BUG10462
+     C           INSTKY    IFEQ WISTT                                                       BUG10462
+     C           WCHTP     ANDEQ'I'                                                         BUG10462
+     C                     Z-ADDWLCD      WLCD1                                             BUG10462
+     C                     ENDIF                                                            BUG10462
+      *                                                                                     BUG10462
+     C           INSTKY    IFEQ WISTT                                                       BUG10462
+     C           WCHTP     ANDEQ'D'                                                         BUG10462
+     C                     Z-ADDWLCD      WLCD2                                             BUG10462
+     C                     ENDIF                                                            BUG10462
+      *                                                                                     BUG10462
+     C           WOBJ      READEJRNIM                    62                                 BUG10462
+     C                     END                                                              BUG10462
+      *                                                                                     BUG10462
+     C                     ENDSR                                                            BUG10462
+      *                                                                                     BUG10462
+      ********************************************************************                  BUG10462
+      /EJECT                                                                                BUG10462
+      ********************************************************************                  BUG10462
+      *                                                                                     BUG10462
+      *   CHKLCD - Subroutine to ensure that deleted records in DEFLT                       BUG10462
+      *            are not processed even if LCDX = RUND.                                   BUG10462
+      *                                                                                     BUG10462
+      *   Called from ACCESS                                                                BUG10462
+      *                                                                                     BUG10462
+      ********************************************************************                  BUG10462
+      *                                                                                     BUG10462
+     C           CHKLCD    BEGSR                                                            BUG10462
+      *                                                                                     BUG10462
+      **  If record is already deleted in DEFLT and LCDX = RUND,                            BUG10462
+      **  make LCDX appear as zero so that it will not be processed                         BUG10462
+      **  even in input cycle.                                                              BUG10462
+      *                                                                                     BUG10462
+     C           RECIX     IFEQ '*'                                                         BUG10462
+     C           LCDX      ANDLERUND                                                        BUG10462
+     C                     Z-ADD0         LCDX                                              BUG10462
+     C                     END                                                              BUG10462
+      *                                                                                     BUG10462
+     C                     ENDSR                                                            BUG10462
+      *                                                                                     BUG10462
+      ********************************************************************                  BUG10462
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

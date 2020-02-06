@@ -1,0 +1,262 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas ME SWIFTRef IBAN Plus Check Rel. Date/Files')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Message Management                                  */
+/*                                                                   */
+/*       MEC001436 - SWIFTRef IBAN Plus Check Release Date and Files */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD035100           Date 20Jun15              */
+/*                      CFT051             Date 02Jun15              */
+/*                      CFT050  *CREATE    Date 03Jun13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD035100 - Exclusion List file should not be mandatory      */
+/*       CFT051 - SWIFTRef Directories 2014                          */
+/*       CFT050 - SWIFTRef Directories upload                        */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&ERRTYP &INHDR)
+ 
+ 
+/**********  DCL        VAR(&ERRTYP) TYPE(*CHAR) LEN(1)              */                   /*CFT051*/
+             DCL        VAR(&ERRTYP) TYPE(*CHAR) LEN(2)                                   /*CFT051*/
+             DCL        VAR(&INHDR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&IB) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&IS) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&EL) TYPE(*CHAR) LEN(1) VALUE(' ')                            /*CFT051*/
+             DCL        VAR(&YY) TYPE(*DEC) LEN(2 0) VALUE(00)
+             DCL        VAR(&MM) TYPE(*DEC) LEN(2 0) VALUE(00)
+             DCL        VAR(&DD) TYPE(*DEC) LEN(2 0) VALUE(00)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')                         /*CFT051*/
+             DCL        VAR(&CFT051) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CFT051*/
+ 
+             DCLF       FILE(METX2FL0)
+             DCLF       FILE(METX2FL1) OPNID(ME)                                          /*CFT051*/
+ 
+ 
+/* Copyright statement                                               */
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+/* Global Monitor Message                                            */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(XXXXXX00)
+             CHGVAR     VAR(&ERRTYP) VALUE('0')
+             CHGVAR     VAR(&INHDR) VALUE('      ')
+ 
+             CALL       PGM(AOSARDR0) PARM(&PRTCD '*VERIFY' 'CFT051')                     /*CFT051*/
+             IF         COND(&PRTCD *EQ ' ') THEN(DO)                                     /*CFT051*/
+             CHGVAR     VAR(&CFT051) VALUE('Y')                                           /*CFT051*/
+             ENDDO                                                                        /*CFT051*/
+ 
+             CLRPFM     METICVPD
+             CLRPFM     METXT2PD
+ 
+             CRTDTAARA  DTAARA(QTEMP/INHDR) TYPE(*CHAR) LEN(8)
+             MONMSG     MSGID(CPF1023)
+             CHGDTAARA  DTAARA(INHDR) VALUE('        ')
+ 
+/* List all files of QGPL library                                    */
+             DSPFD      FILE(QGPL/*ALL) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(METXT2PD)
+ 
+/* Read METX2FL0 file                                                */
+ LOOP1:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+ 
+             IF         COND((&IB *EQ 'Y') *AND (&IS *EQ 'Y')) +
+                        THEN(GOTO CMDLBL(ENDCLPGM))
+             GOTO       CMDLBL(ERROR9)
+             ENDDO
+ 
+/* Filenames starting with IB_                                       */
+             IF         COND((&PREF3 *EQ 'IB_') *AND (&DATE6 +
+                        *GT &INHDR)) THEN(DO)
+ 
+               IF       COND(%SST(&ATFILE  9 1) *EQ ' ') THEN(DO)
+                  GOTO       CMDLBL(LOOP1)
+               ENDDO
+ 
+               IF       COND(%SST(&ATFILE 10 1) *EQ ' ') THEN(DO)
+ 
+                 IF     COND((&INHDR *EQ *BLANK) *OR (&DATE6 *GT +
+                          &INHDR)) THEN(DO)
+                        CHGVAR     VAR(&IB) VALUE(' ')
+                        CHGVAR     VAR(&YY) VALUE(%SST(&DATE6 1 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+                        CHGVAR     VAR(&MM) VALUE(%SST(&DATE6 3 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+                        CHGVAR     VAR(&DD) VALUE(%SST(&DATE6 5 2))
+                          MONMSG     MSGID(CPF0818) EXEC(DO)
+                            GOTO LOOP1
+                          ENDDO
+ 
+                        IF         ((&MM *GT 12) *OR (&MM *EQ 00)) +
+                          THEN(GOTO ERROR1)
+ 
+                        IF         ((&DD *GT 31) *OR (&DD *EQ 00)) +
+                        THEN(GOTO ERROR1)
+                        CHGVAR     VAR(&INHDR) VALUE(&DATE6)
+                        CHGDTAARA  DTAARA(INHDR) VALUE('20' *CAT &INHDR)
+                 ENDDO
+ 
+                 CPYF       FROMFILE(QGPL/&ATFILE) TOFILE(MEDWIBPD) +
+                            MBROPT(*REPLACE) FMTOPT(*NOCHK)
+                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO ERROR2)
+ 
+                 CHGVAR     VAR(&IB) VALUE('Y')
+               ENDDO
+             ENDDO
+ 
+/* Filenames starting with IS_                                       */
+             IF         COND((&PREF3 *EQ 'IS_') *AND (&DATE6 *EQ &INHDR)) +
+                          THEN(DO)
+ 
+               IF       COND(%SST(&ATFILE  9 1) *EQ ' ') THEN(DO)
+                  GOTO       CMDLBL(LOOP1)
+               ENDDO
+ 
+               IF       COND(%SST(&ATFILE 10 1) *EQ ' ') THEN(DO)
+ 
+                 CPYF       FROMFILE(QGPL/&ATFILE) TOFILE(MEDWISPD) +
+                            MBROPT(*REPLACE) FMTOPT(*NOCHK)
+                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO ERROR3)
+ 
+                 CHGVAR     VAR(&IS) VALUE('Y')
+               ENDDO
+             ENDDO
+ 
+ 
+/* End Loop when All possible entries has been read */
+ 
+             IF         COND(&CFT051 *EQ 'Y') THEN(DO)                                    /*CFT051*/
+             IF         COND((&IB *NE 'Y') *OR (&IS *NE 'Y')) +
+                          THEN(GOTO CMDLBL(LOOP1))                                        /*CFT051*/
+                                                                                          /*CFT051*/
+             ENDDO                                                                        /*CFT051*/
+             ELSE       CMD(DO)                                                           /*CFT051*/
+                                                                                          /*CFT051*/
+             IF         COND((&IB *EQ 'Y') *AND (&IS *EQ 'Y')) +
+                          THEN(GOTO CMDLBL(ENDCLPGM))
+             GOTO       CMDLBL(LOOP1)
+             ENDDO                                                                        /*CFT051*/
+                                                                                          /*CFT051*/
+/* Read METX2FL1 file                                                */                   /*CFT051*/
+                                                                                          /*CFT051*/
+ LOOP2:                                                                                   /*CFT051*/
+                                                                                          /*CFT051*/
+             IF         COND(&CFT051 *EQ 'Y') THEN(DO)                                    /*CFT051*/
+             RCVF       OPNID(ME)                                                         /*CFT051*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CFT051*/
+                                                                                          /*CFT051*/
+/**********  IF         COND(&EL *EQ 'Y') +                                             /*MD035100*/
+/**********           THEN(GOTO CMDLBL(ENDCLPGM))                    */      /*CFT051*/ /*MD035100*/
+/**********  GOTO       CMDLBL(ERROR12)                              */      /*CFT051*/ /*MD035100*/
+             GOTO       CMDLBL(ENDCLPGM)                                                /*MD035100*/
+             ENDDO                                                                        /*CFT051*/
+                                                                                          /*CFT051*/
+                                                                                          /*CFT051*/
+/* Filenames starting with EL_                                       */                   /*CFT051*/
+                                                                                          /*CFT051*/
+             IF         COND((&ME_PREF3 *EQ 'EL_') *AND (&ME_DATE6 *EQ +
+                          &INHDR)) THEN(DO)                                               /*CFT051*/
+                                                                                          /*CFT051*/
+               IF       COND(%SST(&ME_ATFILE  9 1) *EQ ' ') THEN(DO)                      /*CFT051*/
+                  GOTO       CMDLBL(LOOP2)                                                /*CFT051*/
+               ENDDO                                                                      /*CFT051*/
+                                                                                          /*CFT051*/
+               IF       COND(%SST(&ME_ATFILE 10 1) *EQ ' ') THEN(DO)                      /*CFT051*/
+                                                                                          /*CFT051*/
+                 CPYF       FROMFILE(QGPL/&ME_ATFILE) TOFILE(MEDWELPD) +
+                            MBROPT(*REPLACE) FMTOPT(*NOCHK)                               /*CFT051*/
+                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(GOTO ERROR12)             /*CFT051*/
+                                                                                          /*CFT051*/
+                 CHGVAR     VAR(&EL) VALUE('Y')                                           /*CFT051*/
+               ENDDO                                                                      /*CFT051*/
+             ENDDO                                                                        /*CFT051*/
+                                                                                          /*CFT051*/
+                                                                                          /*CFT051*/
+             IF         COND(&EL *EQ 'Y') THEN(GOTO +
+                          CMDLBL(ENDCLPGM))                                               /*CFT051*/
+             GOTO       CMDLBL(LOOP2)                                                     /*CFT051*/
+                                                                                          /*CFT051*/
+             ENDDO                                                                        /*CFT051*/
+ 
+ ERROR1:
+             SNDPGMMSG  MSG('Incorrect date format, it must be in YYMMDD.') +
+                          TOMSGQ(MOPERQ)
+ 
+             CHGVAR     VAR(&ERRTYP) VALUE('1')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR2:
+             SNDPGMMSG  MSG('IBAN Plus Directory File IB_' *CAT +
+                          &INHDR *CAT ' is empty. Nothing can be +
+                          processed.') TOMSGQ(MOPERQ)
+ 
+             CHGDTAARA  DTAARA(INHDR) VALUE('        ')
+             CHGVAR     VAR(&ERRTYP) VALUE('2')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR3:
+             SNDPGMMSG  MSG('IBAN Plus Directory File IS_' *CAT +
+                          &INHDR *CAT ' is empty. Nothing can be +
+                          processed.') TOMSGQ(MOPERQ)
+ 
+             CHGVAR     VAR(&ERRTYP) VALUE('3')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR9:
+             SNDPGMMSG  MSG('The file being processed is empty. This +
+                          may be due to the following reasons  1.) +
+                          File sent is not complete. 2.) IB_ and IS_ +
+                          files must exist altogether 3.) Error in +
+                          filename used during FTP of transfer +
+                          process, filenames should begin with IB_ +
+                          or IS_') TOMSGQ(MOPERQ)
+ 
+             IF         COND(&INHDR *EQ ' ') THEN(DO)
+                CHGVAR     VAR(&INHDR) VALUE('YYMMDD')
+             ENDDO
+             CHGVAR     VAR(&ERRTYP) VALUE('9')
+             GOTO       CMDLBL(ENDCLPGM)
+ 
+ ERROR12:                                                                                 /*CFT051*/
+             IF         COND(&CFT051 *EQ 'Y') THEN(DO)                                    /*CFT051*/
+             SNDPGMMSG  MSG('IBAN Plus Directory File EL_' *CAT +
+                          &INHDR *CAT ' is empty. Nothing can be +
+                          processed.') TOMSGQ(MOPERQ)                                     /*CFT051*/
+                                                                                          /*CFT051*/
+             CHGVAR     VAR(&ERRTYP) VALUE('12')                                          /*CFT051*/
+             GOTO       CMDLBL(ENDCLPGM)                                                  /*CFT051*/
+             ENDDO                                                                        /*CFT051*/
+ 
+/* Abnormal termination */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Error during Check of Incoming Data. +
+                          Abnormal termination. Ensure that at +
+                          Least IB_YYMMDD and IS_YYMMDD files exist +
+                          in QGPL with data of File Transfer +
+                          (FTP).') TOMSGQ(MOPERQ)
+             CHGVAR     VAR(&ERRTYP) VALUE('8')
+ 
+/* End program */
+ ENDCLPGM:
+ 
+             ENDPGM

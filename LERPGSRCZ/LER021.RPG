@@ -1,0 +1,1876 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Part fclty reductions due to repayments')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LER021 - Participant Facility Reductions Due to Repayments   *
+      *                                                               *
+      *  Function:  This program will updates non-revolving credit    *
+      *  (COB)      participant facilities due to repayments done     *
+      *             on the loans linked to the facility - adjusting   *
+      *             the facility amount to take account of the new    *
+      *             amount outstanding                                *
+      *                                                               *
+      *  Called By: LERC20 - Automatic Facility Update                *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1021983          Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR787620           Date 10Jun11               *
+      *                 CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CPK026             Date 02Jan07               *
+      *                 241311             Date 22Aug06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE029             Date 04Sep02               *
+      *                 CAP073             Date 08Aug02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 202124             Date 12Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP068             Date 25JUN02               *
+      *                 CLE023             Date 19Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 193603             Date 31Aug01               *
+      *                 191093             Date 11Jun01               *
+      *                 179594             Date 06Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 161452             Date 16Jun99               *
+      *                 154092             Date 18Mar99               *
+      *                 153600             Date 11Feb99               *
+      *                 154529             Date 09Feb99               *
+      *                 CLE005             Date 22May97               *
+      *                 CLE004 *Create     Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR1021983 - Option C - Technical Enhancements Stated in POC  *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00119                                 *
+      *             WNCPYSRC,LEH00120                                 *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CPK026 - Change numeric customer number.                     *
+      *  241311 - Process only those PETEMPL1 records with            *
+      *           participant facility.                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE029 - Addition of Severity code and Limit ID to FCLTYFM   *
+      *  CAP073 - Conversion of MN inputs into modular structure to   *
+      *           use as APIs. Facility input Transaction Details     *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  202124 - Program failed with Database Error 006 in SDCURRPD. *
+      *           Ensure that WCURR is correctly initialized.         *
+      *  CAP068 - Recompiled for changes to FCLTYFM and FCLTYFN.      *
+      *  CLE023 - Lending Facility History Improvements. (Recompiled) *
+      *  193603 - File control out of balance in LE0700 when reversed *
+      *           a loan including a manual repayment and closed the  *
+      *           facility at the same day.                           *
+      *  191093 - Reversed facilities have been moved from FCLTYFM to *
+      *           PEFCLFM - chain to PEFCLFL1 if not on FCLTY.        *
+      *  179594 - Remove fix 161452 as it causes problem with revol-  *
+      *           ving facilities.  Apply fix 168305.                 *
+      *  161452 - Correct the processing which determines whether the *
+      *           facility was revolving (or not) on the action date. *
+      *           Add processing for reversal action.                 *
+      *           Credit Agreement processing not applicable for      *
+      *           participant facilities.                             *
+      *  154092 - Suppress the update where the amendment is           *
+      *           generated by assignment.                             *
+      *  153600 - Principal Transfer incorrectly processed            *
+      *  154529 - LE0700 File out of Balance                          *
+      *  CLE005 - Customer Lending Enhancements - Others              *
+      *  CLE004 - Customer Lending Enhancements - Syndications        *
+      *                                                               *
+      *****************************************************************
+     FPETEMPL1IF  E           K        DISK         KINFSR *PSSR
+     FACTN6   IF  E           K        DISK         KINFSR *PSSR
+     F            LOAMSDHF                          KIGNORE
+     F            ACTN1DNF                          KIGNORE
+     F            LOAMSZ1F                          KIGNORE
+     FFCLTY   UF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     FHISUPD  IF  E           K        DISK         KINFSR *PSSR
+     F*********** HISACTF                           KIGNORE               161452
+     F            HISACTF                           KIGNORE               179594
+      *                                                                   191093
+     FPEFCLFL1IF  E           K        DISK                               191093
+     F            FCLTYFMF                          KRENAMEPEFCLFMF       191093
+      * Closed/Reversed Facilities 'A' record                             191093
+      *                                                                   191093
+     FEMXT4F1LUF  E           K        DISK         KINFSR *PSSR      UC
+      ****                                                          CLE005161452
+     F****LECARDPDO   E                DISK   KINFSR *PSSR      UC  CLE005161452
+      ***Credit*Agreement*Reduction*Extract*File******************* CLE005161452
+      ****                                                          CLE005161452
+      *                                                                   179594
+     FLECARDPDO   E                    DISK         KINFSR *PSSR      UC  179594
+     FLELOMKL1IF  E           K        DISK                                                   CLE134
+     F            LOAMSDHF                          KIGNORE                                   CLE134
+     F            LOAMSDKF                          KRENAMELELOMKKF                           CLE134
+     F            LOAMSZ1F                          KIGNORE                                   CLE134
+     FLENEWLL1IF  E           K        DISK                                                   CLE134
+     F            CLOANCLF                          KRENAMELENEWLDF                           CLE134
+      ** Credit Agreement Reduction Extract File                          179594
+      *                                                                   179594
+     FLER021P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FLER021AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    20           End of file on PETEMPL1                       *
+      *    21           End of file on ACNT6                          *
+      *    23           Chain fail in FCLTY                           *
+      *    24           Beginning of file on HISUPD                   *
+      *    25           End of file FCLTY                             *
+      *    26           Chain fail in EMXT4F1L                        *
+      *    27           End of file on FCLTYZZ                        *
+      *                                                               *
+      *    30           LER021P1 is open                              *
+      *    31           Historic reporting indicator                  *
+      *    37           Multibranching is on                          *
+      *                                                               *
+      *    98           Date Format: DDMMYY (off); MMDDYY (on)        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+     E                    POWER   1   7  7 3
+     E/COPY ZSRSRC,ZFRPEDZ1
+      *
+     ICLOANCLF                                                            CLE005
+      ** Rename RAMT to avoid overriding of value                         CLE005
+      *                                                                   CLE005
+     I              RAMT                            LRAMT                 CLE005
+      *                                                                                       CLE134
+     ILENEWLDF                                                                                CLE134
+      ** Rename FIELDS                                                                        CLE134
+      *                                                                                       CLE134
+     I              RECI                            RECIX                                     CLE134
+     I              LNRF                            LNRFX                                     CLE134
+     I              RCDT                            RCDTX                                     CLE134
+     I              MRIN                            MRINX                                     CLE134
+     I              PTYP                            PTYPX                                     CLE134
+     I              CNUM                            CNUMX                                     CLE134
+     I              BRCA                            BRCAX                                     CLE134
+     I              LTYP                            LTYPX                                     CLE134
+     I              SUTP                            SUTPX                                     CLE134
+     I              DDAT                            DDATX                                     CLE134
+     I              VDAT                            VDATX                                     CLE134
+     I              MDAT                            MDATX                                     CLE134
+     I              LASQ                            LASQX                                     CLE134
+     I              FCUS                            FCUSX                                     CLE134
+     I              FTYP                            FTYPX                                     CLE134
+     I              FSEQ                            FSEQX                                     CLE134
+     I              CCY                             CCYX                                      CLE134
+     I              CPAM                            CPAMX                                     CLE134
+     I              INTC                            INTCX                                     CLE134
+     I              INTR                            INTRX                                     CLE134
+     I              BRTT                            BRTTX                                     CLE134
+     I              BRTE                            BRTEX                                     CLE134
+     I              RTSP                            RTSPX                                     CLE134
+     I              MARG                            MARGX                                     CLE134
+     I              SPIN                            SPINX                                     CLE134
+     I              CHIN                            CHINX                                     CLE134
+     I              WTRT                            WTRTX                                     CLE134
+     I              WTIN                            WTINX                                     CLE134
+     I              REPT                            REPTX                                     CLE134
+     I              RAMT                            RAMTX                                     CLE134
+     I              NRPD                            NRPDX                                     CLE134
+     I              RFRQ                            RFRQX                                     CLE134
+     I              RDYN                            RDYNX                                     CLE134
+     I              FCCY                            FCCYX                                     CLE134
+     I              LIND                            LINDX                                     CLE134
+     I              CRSK                            CRSKX                                     CLE134
+     I              ACOF                            ACOFX                                     CLE134
+     I              NACD                            NACDX                                     CLE134
+     I              RELI                            RELIX                                     CLE134
+     I              AUTO                            AUTOX                                     CLE134
+     I              PSAM                            PSAMX                                     CLE134
+     I              BCXR                            BCXRX                                     CLE134
+     I              FCXR                            FCXRX                                     CLE134
+     I              SDST                            SDSTX                                     CLE134
+     I              OSDAQQ                          OSDAQX                                    CLE134
+     I              TSTN                            TSTNX                                     CLE134
+     I              MDST                            MDSTX                                     CLE134
+     I              OMDAQQ                          OMDAQW                                    CLE134
+     I              TMAN                            TMANX                                     CLE134
+     I              FACO                            FACOX                                     CLE134
+     I              RLDT                            RLDTX                                     CLE134
+     I              NROD                            NRODX                                     CLE134
+     I              RLFQ                            RLFQX                                     CLE134
+     I              RLDY                            RLDYX                                     CLE134
+     I              RDFC                            RDFCX                                     CLE134
+     I              NBRA                            NBRAX                                     CLE134
+     I              NRTS                            NRTSX                                     CLE134
+     I              NSIN                            NSINX                                     CLE134
+     I              NCAS                            NCASX                                     CLE134
+     I              AWTP                            AWTPX                                     CLE134
+     I              WTRD                            WTRDX                                     CLE134
+     I              WTWD                            WTWDX                                     CLE134
+     I              IWOD                            IWODX                                     CLE134
+     I              PWOD                            PWODX                                     CLE134
+     I              BMDI                            BMDIX                                     CLE134
+     I              FMDI                            FMDIX                                     CLE134
+     I              PDIN                            PDINX                                     CLE134
+     I              LSWC                            LSWCX                                     CLE134
+     I              LSWS                            LSWSX                                     CLE134
+     I              OSDB                            OSDBX                                     CLE134
+     I              OMDB                            OMDBX                                     CLE134
+     I              ORBR                            ORBRX                                     CLE134
+     I              PRFC                            PRFCX                                     CLE134
+     I              FCLB                            FCLBX                                     CLE134
+     I              MLNR                            MLNRX                                     CLE134
+     I              BTIN                            BTINX                                     CLE134
+     I              BLDY                            BLDYX                                     CLE134
+     I              OLNO                            OLNOX                                     CLE134
+     I              RCSI                            RCSIX                                     CLE134
+     I              ICBS                            ICBSX                                     CLE134
+     I              IPFR                            IPFRX                                     CLE134
+     I              TOTI                            TOTIX                                     CLE134
+     I              NIDT                            NIDTX                                     CLE134
+     I              IBDT                            IBDTX                                     CLE134
+     I              SLID                            SLIDX                                     CLE134
+     I              AIPD                            AIPDX                                     CLE134
+     I              DLRC                            DLRCX                                     CLE134
+     I              IACD                            IACDX                                     CLE134
+     I              AITC                            AITCX                                     CLE134
+     I              TFEP                            TFEPX                                     CLE134
+     I              AIAP                            AIAPX                                     CLE134
+     I              IPRD                            IPRDX                                     CLE134
+     I              IPRM                            IPRMX                                     CLE134
+     I              ICTD                            ICTDX                                     CLE134
+     I              AIMN                            AIMNX                                     CLE134
+     I              RBDT                            RBDTX                                     CLE134
+     I              NOPS                            NOPSX                                     CLE134
+     I              NCHI                            NCHIX                                     CLE134
+     I              ZZ001A                          ZZ001X                                    CLE134
+     I              IFDY                            IFDYX                                     CLE134
+     I              LONI                            LONIX                                     CLE134
+     I              CNFI                            CNFIX                                     CLE134
+     I              ACEI                            ACEIX                                     CLE134
+     I              TLXI                            TLXIX                                     CLE134
+     I              CBLI                            CBLIX                                     CLE134
+     I              ORED                            OREDX                                     CLE134
+     I              LCD                             LCDX                                      CLE134
+     I              CHTP                            CHTPX                                     CLE134
+     I              TNLU                            TNLUX                                     CLE134
+     I              ADDI                            ADDIX                                     CLE134
+     I              ORMD                            ORMDX                                     CLE134
+     I              ORTI                            ORTIX                                     CLE134
+     I              ZZ023A                          ZZ023X                                    CLE134
+     I              BOKC                            BOKCX                                     CLE134
+     I              COCU                            COCUX                                     CLE134
+     I              RECE                            RECEX                                     CLE134
+     I              OMDT                            OMDTX                                     CLE134
+     I              NIPD                            NIPDX                                     CLE134
+     I              NMDT                            NMDTX                                     CLE134
+     I              APMI                            APMIX                                     CLE134
+     I              RSTM                            RSTMX                                     CLE134
+     I              RONSQQ                          RONSXX                                    CLE134
+     I              RIBN                            RIBNX                                     CLE134
+     I              RIBA                            RIBAX                                     CLE134
+     I              ROBN                            ROBNX                                     CLE134
+     I              ROCN                            ROCNX                                     CLE134
+     I              PSTM                            PSTMX                                     CLE134
+     I              PONSQQ                          PONSXX                                    CLE134
+     I              PIBN                            PIBNX                                     CLE134
+     I              PIBA                            PIBAX                                     CLE134
+     I              POBN                            POBNX                                     CLE134
+     I              POCN                            POCNX                                     CLE134
+     I              RCRN                            RCRNX                                     CLE134
+     I              RCRA                            RCRAX                                     CLE134
+     I              RVNO                            RVNOX                                     CLE134
+     I              AWBN                            AWBNX                                     CLE134
+     I              AWBA                            AWBAX                                     CLE134
+     I              BENN                            BENNX                                     CLE134
+     I              BENA                            BENAX                                     CLE134
+     I              DTP1                            DTP1X                                     CLE134
+     I              DTP2                            DTP2X                                     CLE134
+     I              DTP3                            DTP3X                                     CLE134
+     I              DTP4                            DTP4X                                     CLE134
+     I              DCHG                            DCHGX                                     CLE134
+     I              BTB1                            BTB1X                                     CLE134
+     I              BTB2                            BTB2X                                     CLE134
+     I              BTB3                            BTB3X                                     CLE134
+     I              BTB4                            BTB4X                                     CLE134
+     I              BTB5                            BTB5X                                     CLE134
+     I              BTB6                            BTB6X                                     CLE134
+     I              CVMR                            CVMRX                                     CLE134
+     I              PTFR                            PTFRX                                     CLE134
+     I              HLEX                            HLEXX                                     CLE134
+     I              FSRP                            FSRPX                                     CLE134
+     I              FSGN                            FSGNX                                     CLE134
+     I              FPRC                            FPRCX                                     CLE134
+     I              TCOF                            TCOFX                                     CLE134
+     I              ACPD                            ACPDX                                     CLE134
+     I              ACDA                            ACDAX                                     CLE134
+     I              ACAJ                            ACAJX                                     CLE134
+     I              ACAP                            ACAPX                                     CLE134
+     I              COFD                            COFDX                                     CLE134
+     I              COFM                            COFMX                                     CLE134
+     I              CFCD                            CFCDX                                     CLE134
+     I              NFRS                            NFRSX                                     CLE134
+     I              NFSN                            NFSNX                                     CLE134
+     I              NFPC                            NFPCX                                     CLE134
+     I              PDCF                            PDCFX                                     CLE134
+     I              FCTD                            FCTDX                                     CLE134
+     I              FWOD                            FWODX                                     CLE134
+     I              DFTP                            DFTPX                                     CLE134
+     I              DFST                            DFSTX                                     CLE134
+     I              MCRA                            MCRAX                                     CLE134
+     I              FCRA                            FCRAX                                     CLE134
+     I              PDDI                            PDDIX                                     CLE134
+     I              PTDI                            PTDIX                                     CLE134
+     I              GDPR                            GDPRX                                     CLE134
+     I              GDIN                            GDINX                                     CLE134
+     I              LNKS                            LNKSX                                     CLE134
+     I              MNSG                            MNSGX                                     CLE134
+     I              GASS                            GASSX                                     CLE134
+     I              GPRT                            GPRTX                                     CLE134
+     I              TOLN                            TOLNX                                     CLE134
+     I              LSTS                            LSTSX                                     CLE134
+     I              IUSR                            IUSRX                                     CLE134
+     I              AUSR                            AUSRX                                     CLE134
+     I              XUSR                            XUSRX                                     CLE134
+     I              RATF                            RATFX                                     CLE134
+     I              CNCF                            CNCFX                                     CLE134
+     I              PCRF                            PCRFX                                     CLE134
+     I              LPFI                            LPFIX                                     CLE134
+     I              PTFC                            PTFCX                                     CLE134
+     I              PTFT                            PTFTX                                     CLE134
+     I              PTFN                            PTFNX                                     CLE134
+     I              PCOB                            PCOBX                                     CLE134
+     I              LRLD                            LRLDX                                     CLE134
+     I              LMCD                            LMCDX                                     CLE134
+     I              SCCY                            SCCYX                                     CLE134
+     I              ICCY                            ICCYX                                     CLE134
+     I              OINR                            OINRX                                     CLE134
+     I              OIDT                            OIDTX                                     CLE134
+     I              REPI                            REPIX                                     CLE134
+     I              RFDY                            RFDYX                                     CLE134
+     I              RFRI                            RFRIX                                     CLE134
+     I              RFRT                            RFRTX                                     CLE134
+     I              RFAR                            RFARX                                     CLE134
+     I              FSYLDC                          FSYLDX                                    CLE134
+     I              FSFYLD                          FSFYLX                                    CLE134
+     I              FSURPL                          FSURPX                                    CLE134
+     I              FSPLAM                          FSPLAX                                    CLE134
+     I              FSPLDT                          FSPLDX                                    CLE134
+     I              FSYUPL                          FSYUPX                                    CLE134
+     I              ADIF                            ADIFX                                     CLE134
+     I              ADCF                            ADCFX                                     CLE134
+     I              CHGA                            CHGAX                                     CLE134
+     I              ICIF                            ICIFX                                     CLE134
+     I              FLTI                            FLTIX                                     CLE134
+     I              FRPD                            FRPDX                                     CLE134
+     I              ACCH                            ACCHX                                     CLE134
+     I              FSEFUP                          FSEFUX                                    CLE134
+     I              FSECUP                          FSECUX                                    CLE134
+     I              AIPN                            AIPNX                                     CLE134
+     I              AITN                            AITNX                                     CLE134
+     I              AIAN                            AIANX                                     CLE134
+     I              IPRN                            IPRNX                                     CLE134
+     I              AINN                            AINNX                                     CLE134
+     I              TOTN                            TOTNX                                     CLE134
+     I              ICTN                            ICTNX                                     CLE134
+     I              IWON                            IWONX                                     CLE134
+     I              IPNM                            IPNMX                                     CLE134
+     I              PDNN                            PDNNX                                     CLE134
+     I              FSCPAM                          FSCPAX                                    CLE134
+     I              FPAM                            FPAMX                                     CLE134
+     I              REXR                            REXRX                                     CLE134
+     I              REXI                            REXIX                                     CLE134
+     I              PSCY                            PSCYX                                     CLE134
+     I              PEXR                            PEXRX                                     CLE134
+     I              PEXI                            PEXIX                                     CLE134
+     I              STAL                            STALX                                     CLE134
+     I              FRNT                            FRNTX                                     CLE134
+     I              AFRT                            AFRTX                                     CLE134
+     I              REPA                            REPAX                                     CLE134
+     I              TMST                            TMSTX                                     CLE134
+     I              OSDA                            OSDAX                                     CLE134
+     I              OMDA                            OMDAX                                     CLE134
+     I              RONS                            RONSX                                     CLE134
+     I              PONS                            PONSX                                     CLE134
+     I              AUTH                            AUTHX                                     CLE134
+     I              TFDP                            TFDPX                                     CLE134
+     I              TFDPA                           TFDPAX                                    CLE134
+     I              TFAM                            TFAMX                                     CLE134
+     I              TFAC                            TFACX                                     CLE134
+     I              TFOF                            TFOFX                                     CLE134
+     I              AFDP                            AFDPX                                     CLE134
+     I              CFDP                            CFDPX                                     CLE134
+     I              AMDS                            AMDSX                                     CLE134
+     I              AMADJ                           AMADJX                                    CLE134
+     I              ANADJ                           ANADJX                                    CLE134
+     I              DSAM                            DSAMX                                     CLE134
+     I              AMCOST                          AMCOSX                                    CLE134
+     I              YMCOST                          YMCOSX                                    CLE134
+     I              YAINT                           YAINTX                                    CLE134
+     I              BASR                            BASRX                                     CLE134
+     I              NBSR                            NBSRX                                     CLE134
+     I              SLTP                            SLTPX                                     CLE134
+     I              SLST                            SLSTX                                     CLE134
+     I              CLAS                            CLASX                                     CLE134
+     I              DFCL                            DFCLX                                     CLE134
+     I              SLCL                            SLCLX                                     CLE134
+     I              FAMU                            FAMUX                                     CLE134
+     I              RIDT                            RIDTX                                     CLE134
+     I              RCAT                            RCATX                                     CLE134
+     I              RCAC                            RCACX                                     CLE134
+     I              BIDT                            BIDTX                                     CLE134
+     I              BIDC                            BIDCX                                     CLE134
+     I              BCAT                            BCATX                                     CLE134
+     I              BCAC                            BCACX                                     CLE134
+     ILELOMKKF                                                                                CLE134
+     I              RECI                            RECIW                                     CLE134
+     I              LNRF                            LNRFW                                     CLE134
+     I              VDAT                            VDATW                                     CLE134
+     I              LASN                            LASNW                                     CLE134
+     I              MRIN                            MRINW                                     CLE134
+     I              LTYP                            LTYPW                                     CLE134
+     I              SUTP                            SUTPW                                     CLE134
+     I              PTYP                            PTYPW                                     CLE134
+     I              AMTP                            AMTPW                                     CLE134
+     I              PRSQ                            PRSQW                                     CLE134
+     I              BRTT                            BRTTW                                     CLE134
+     I              RTSP                            RTSPW                                     CLE134
+     I              CCY                             CCYW                                      CLE134
+     I              PRAM                            PRAMW                                     CLE134
+     I              INTA                            INTAW                                     CLE134
+     I              WTXA                            WTXAW                                     CLE134
+     I              FEAM                            FEAMW                                     CLE134
+     I              TAMT                            TAMTW                                     CLE134
+     I              BRCA                            BRCAW                                     CLE134
+     I              CNUM                            CNUMW                                     CLE134
+     I              REPT                            REPTW                                     CLE134
+     I              AUTO                            AUTOW                                     CLE134
+     I              STAI                            STAIW                                     CLE134
+     I              SETP                            SETPW                                     CLE134
+     I              OSACQQ                          OSACQW                                    CLE134
+     I              TSEN                            TSENW                                     CLE134
+     I              FACO                            FACOW                                     CLE134
+     I              SPI1                            SPI1W                                     CLE134
+     I              SPI2                            SPI2W                                     CLE134
+     I              SPI3                            SPI3W                                     CLE134
+     I              LAIN                            LAINW                                     CLE134
+     I              BRTE                            BRTEW                                     CLE134
+     I              SPIN                            SPINW                                     CLE134
+     I              CALC                            CALCW                                     CLE134
+     I              WTIN                            WTINW                                     CLE134
+     I              LLAG                            LLAGW                                     CLE134
+     I              LWOI                            LWOIW                                     CLE134
+     I              XAVD                            XAVDW                                     CLE134
+     I              XASQ                            XASQW                                     CLE134
+     I              FCUS                            FCUSW                                     CLE134
+     I              FTYP                            FTYPW                                     CLE134
+     I              FSEQ                            FSEQW                                     CLE134
+     I              RLON                            RLONW                                     CLE134
+     I              FECD                            FECDW                                     CLE134
+     I              PONI                            PONIW                                     CLE134
+     I              ACTI                            ACTIW                                     CLE134
+     I              CNFY                            CNFYW                                     CLE134
+     I              TLXY                            TLXYW                                     CLE134
+     I              CBLY                            CBLYW                                     CLE134
+     I              INTC                            INTCW                                     CLE134
+     I              NACD                            NACDW                                     CLE134
+     I              ACBI                            ACBIW                                     CLE134
+     I              ZZ001                           ZZ001W                                    CLE134
+     I              LSWCC                           LSWCCW                                    CLE134
+     I              LSWSC                           LSWSCW                                    CLE134
+     I              OSBR                            OSBRW                                     CLE134
+     I              FCLB                            FCLBW                                     CLE134
+     I              LSMD                            LSMDW                                     CLE134
+     I              REBT                            REBTW                                     CLE134
+     I              ZZ034                           ZZ034W                                    CLE134
+     I              ORED                            OREDW                                     CLE134
+     I              LCD                             LCDW                                      CLE134
+     I              CHTP                            CHTPW                                     CLE134
+     I              TNLU                            TNLUW                                     CLE134
+     I              RSTM                            RSTMW                                     CLE134
+     I              RONSQQ                          RONSQW                                    CLE134
+     I              RIBN                            RIBNW                                     CLE134
+     I              RIBA                            RIBAW                                     CLE134
+     I              ROBN                            ROBNW                                     CLE134
+     I              ROCN                            ROCNW                                     CLE134
+     I              PSTM                            PSTMW                                     CLE134
+     I              PONSQQ                          PONSQW                                    CLE134
+     I              PIBN                            PIBNW                                     CLE134
+     I              PIBA                            PIBAW                                     CLE134
+     I              POBN                            POBNW                                     CLE134
+     I              POCN                            POCNW                                     CLE134
+     I              RCRN                            RCRNW                                     CLE134
+     I              RCRA                            RCRAW                                     CLE134
+     I              RVNO                            RVNOW                                     CLE134
+     I              AWBN                            AWBNW                                     CLE134
+     I              AWBA                            AWBAW                                     CLE134
+     I              BENN                            BENNW                                     CLE134
+     I              BENA                            BENAW                                     CLE134
+     I              DTP1                            DTP1W                                     CLE134
+     I              DTP2                            DTP2W                                     CLE134
+     I              DTP3                            DTP3W                                     CLE134
+     I              DTP4                            DTP4W                                     CLE134
+     I              DCHG                            DCHGW                                     CLE134
+     I              BTB1                            BTB1W                                     CLE134
+     I              BTB2                            BTB2W                                     CLE134
+     I              BTB3                            BTB3W                                     CLE134
+     I              BTB4                            BTB4W                                     CLE134
+     I              BTB5                            BTB5W                                     CLE134
+     I              BTB6                            BTB6W                                     CLE134
+     I              CVMR                            CVMRW                                     CLE134
+     I              FSRP                            FSRPW                                     CLE134
+     I              FSGN                            FSGNW                                     CLE134
+     I              FPRC                            FPRCW                                     CLE134
+     I              COFA                            COFAW                                     CLE134
+     I              IRCF                            IRCFW                                     CLE134
+     I              FRCF                            FRCFW                                     CLE134
+     I              DFTP                            DFTPW                                     CLE134
+     I              DFST                            DFSTW                                     CLE134
+     I              MNSG                            MNSGW                                     CLE134
+     I              GASS                            GASSW                                     CLE134
+     I              GPRT                            GPRTW                                     CLE134
+     I              NRLI                            NRLIW                                     CLE134
+     I              ROLN                            ROLNW                                     CLE134
+     I              ROSN                            ROSNW                                     CLE134
+     I              ROBR                            ROBRW                                     CLE134
+     I              RORC                            RORCW                                     CLE134
+     I              PDGN                            PDGNW                                     CLE134
+     I              GRIN                            GRINW                                     CLE134
+     I              RLCY                            RLCYW                                     CLE134
+     I              PNAM                            PNAMW                                     CLE134
+     I              PAST                            PASTW                                     CLE134
+     I              ASTS                            ASTSW                                     CLE134
+     I              IUSR                            IUSRW                                     CLE134
+     I              AUSR                            AUSRW                                     CLE134
+     I              XUSR                            XUSRW                                     CLE134
+     I              PCRF                            PCRFW                                     CLE134
+     I              PCOB                            PCOBW                                     CLE134
+     I              MTPD                            MTPDW                                     CLE134
+     I              PDDI                            PDDIW                                     CLE134
+     I              PTDI                            PTDIW                                     CLE134
+     I              SCCY                            SCCYW                                     CLE134
+     I              ICCY                            ICCYW                                     CLE134
+     I              ECIN                            ECINW                                     CLE134
+     I              REPI                            REPIW                                     CLE134
+     I              CHDU                            CHDUW                                     CLE134
+     I              INTN                            INTNW                                     CLE134
+     I              FSPRAM                          FSPRAW                                    CLE134
+     I              REXR                            REXRW                                     CLE134
+     I              REXI                            REXIW                                     CLE134
+     I              PSCY                            PSCYW                                     CLE134
+     I              PEXR                            PEXRW                                     CLE134
+     I              PEXI                            PEXIW                                     CLE134
+     I              STAL                            STALW                                     CLE134
+     I              FRNT                            FRNTW                                     CLE134
+     I              AFRT                            AFRTW                                     CLE134
+     I              REPA                            REPAW                                     CLE134
+     I              TMST                            TMSTW                                     CLE134
+     I              OSAC                            OSACW                                     CLE134
+     I              RONS                            RONSW                                     CLE134
+     I              PONS                            PONSW                                     CLE134
+     I              AUTH                            AUTHW                                     CLE134
+     I              FRCY                            FRCYW                                     CLE134
+     I              FRAM                            FRAMW                                     CLE134
+     I              FINT                            FINTW                                     CLE134
+     I              FTXA                            FTXAW                                     CLE134
+     I              FTOT                            FTOTW                                     CLE134
+     I              FPEN                            FPENW                                     CLE134
+     I              BASR                            BASRW                                     CLE134
+     I              SLTP                            SLTPW                                     CLE134
+     I              SLST                            SLSTW                                     CLE134
+     I              CLAS                            CLASW                                     CLE134
+     I              DFCL                            DFCLW                                     CLE134
+     I              SLCL                            SLCLW                                     CLE134
+      *                                                                                       CLE134
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DS
+      ** Rundat data area for system information
+      *
+     IMMOD       UDS                            256
+      ** MMOD data area
+     I                                        7   7 EMFLG
+      *
+     ILERSTS    E DSLERSTS
+     I              FACHISD                         HISDAY
+     I              LERC2030                        RENAM1
+     I              LERC135                         RENAM2
+     I              LERC315                         RENAM3
+     I              LERC425                         RENAM4
+     I              EOYFLAG                         RENAM5
+      *
+     INEWKEY      DS
+      ** Facility Reference Data Structure.
+     I**********                              1   60PTFC                                      CSD027
+     I                                        1   6 PTFC                                      CSD027
+     I                                        7   90PTFT
+     I                                       10  110PTFN
+      *
+     IPRVKEY      DS
+      ** Previous Facility Reference Data Structure.
+     I**********                              1   60WPTFC                                     CSD027
+     I                                        1   6 WPTFC                                     CSD027
+     I                                        7   90WPTFT
+     I                                       10  110WPTFN
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for LER021P1
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for LER021AU
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     I            DS
+      ** Format amount returned by standard subroutine
+     I                                        1  22 ZOUT22
+     I                                        4  21 ZOUT18
+     I                                        4  20 ZOUT17
+     I                                       21  21 ZNEG
+      *
+     I            DS
+      ** Facility Reference Data Structure.
+     I**********                              1   60WFCUS                                     CSD027
+     I                                        1   6 WFCUS                                     CSD027
+     I                                        7   90WFTYP
+     I                                       10  110WFSEQ
+     I                                        7  110WFACT
+      *
+     ISDBANK    E DSSDBANKPD
+      ** External data structures for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** External data structures for Branch Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** External data structures for Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+     ISCSARD    E DSSCSARDPD                                              CLE005
+      ** External data structures for SAR Details                         CLE005
+      *                                                                   CLE005
+     I****CRDBFR    E DSLECARDPD                                    CLE005161452
+      ***DS*to*hold*exisiting*field*values*before*updating*LECARDPD CLE005161452
+      ****                                                          CLE005161452
+     ICRDBFR    E DSLECARDPD                                              179594
+      ** DS to hold exisiting field values before updating LECARDPD       179594
+      *                                                                   179594
+     I/COPY ZSRSRC,ZFRPEDZ2
+      /EJECT
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                                                               *
+      *  Main routine                                                 *
+      *  SRINIT - Initial Processing                                  *
+      *  SRPROC - Detail Processing                                   *
+      *  SRACTN - Loan Action Processing                              *
+      *  SRUPDF - Update Facility Processing                          *
+      *  SRBRCH - Change of Branch Processing                         *
+      *  SRTRLR - Facility trailer update and end of program          *
+      *  SRFMTD - Format output details                               *
+      *  SRCURR - Access currency details                             *
+      *  SRAUDT - Print audit report                                  *
+      *  SRP1RC - Write a detail record to LER021P1                   *
+      *  SRP1EN - Write end of report in LER021P1                     *
+      *  SRRCFP - Register the printer file via RCF                   *
+      *  SRRCFA - Register the AU Printer File via RCF                *
+      *  *PSSR  - Error handling subroutine                           *
+      ***SRMOVE**-**Subroutine*to*move*fields*to*PF/LECARDPD******* CLE005161452
+      *  SRMOVE  -  Subroutine to move fields to PF/LECARDPD              179594
+      *                                                               *
+      *****************************************************************
+      *
+      ** Perform initial processing
+      *
+     C                     EXSR SRINIT
+      *
+      ** Perform detail processing
+      *
+     C                     EXSR SRPROC
+      *
+      ** Perform trailer update and end of program processing
+      *
+     C                     EXSR SRTRLR
+      /EJECT
+      *****************************************************************
+      * SRINIT  -  Initial Processing                                 *
+      * Called by: Main routine                                       *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      *                                                                                       CLE134
+     C           *ENTRY    PLIST                                                              CLE134
+     C                     PARM           WPNAM  10                                           CLE134
+      *                                                                                       CLE134
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'LER021'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      ** Define LERSTS
+      *
+     C           *NAMVAR   DEFN           LERSTS
+     C                     IN   LERSTS
+      *
+      ** Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE '1'       *IN37
+     C                     ENDIF
+      *                                                                   161452
+     C************LIKE     DEFN FARCIN    W#RCIN                   161452 179594
+     C************LIKE     DEFN FADATE    W#DATE                   161452 179594
+      *
+      ** Key list for FCLTY
+      *
+     C           KEY001    KLIST
+     C                     KFLD           WFCUS
+     C                     KFLD           WFTYP
+     C                     KFLD           WFSEQ
+     C                     KFLD           WRCDT
+      *                                                                                       CLE134
+     C           KEYPD     KLIST                                                              CLE134
+     C                     KFLD           BRCA                                                CLE134
+     C                     KFLD           LNRF                                                CLE134
+      *
+      ** Key list for HISUPD
+      *
+     C           KEY002    KLIST
+     C                     KFLD           WFCLB
+     C                     KFLD           WFCUS
+     C                     KFLD           WFACT
+     C***********          KFLD           VDAT                            161452
+     C                     KFLD           VDAT                            179594
+      *************************************************************161452 179594
+     C***********HISKEY    KLIST                                   161452 179594
+     C***********          KFLD           WFCLB                    161452 179594
+     C***********          KFLD           WFCUS                    161452 179594
+     C***********          KFLD           WFACT                    161452 179594
+     C***********          KFLD           VDAT                     161452 179594
+      *************************************************************161452 179594
+     C***********HISKY1    KLIST                                   161452 179594
+     C***********          KFLD           WFCLB                    161452 179594
+     C***********          KFLD           WFCUS                    161452 179594
+     C***********          KFLD           WFACT                    161452 179594
+     C***********          KFLD           W#DATE                   161452 179594
+      *
+      ** Key list for EMXT4F1L
+      *
+     C           KEY003    KLIST
+     C                     KFLD           MCUN
+     C                     KFLD           MFTP
+     C                     KFLD           MFN
+      *
+     C           KEY004    KLIST                            Key to        191093
+     C                     KFLD           WFCLB             PEFCLFM       191093
+     C                     KFLD           WFCUS                           191093
+     C                     KFLD           WFTYP                           191093
+     C                     KFLD           WFSEQ                           191093
+      *                                                                   191093
+      ** Initialise work fields
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     Z-ADD0         WFAMT  150
+     C                     MOVE *BLANKS   WRECI   1
+     C                     Z-ADD0         RCNTR
+      *
+      ** Call access program for bank details - Title, Run Date and
+      ** Run Day Number
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Handle database error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *                                                                   CLE005
+      ** Check if SAR CLE005 is switched *ON.                             CLE005
+      *                                                                   CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   @RTCD   7                       CLE005
+     C                     PARM '*KEY   ' @OPTN   7                       CLE005
+     C                     PARM 'CLE005 ' @SARD   6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+     C           @RTCD     IFEQ *BLANK                                    CLE005
+     C                     MOVE 'Y'       CLE005  1                       CLE005
+     C                     ELSE                                           CLE005
+     C                     MOVE 'N'       CLE005                          CLE005
+     C           @RTCD     IFNE '*NRF    '                                CLE005
+     C           *LOCK     IN   LDA                                       CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE005
+     C                     Z-ADD8         DBASE            * DBERR 08 *   CLE005
+     C                     MOVEL'CLE005  'DBKEY            ************   CLE005
+     C                     OUT  LDA                                       CLE005
+     C                     EXSR *PSSR                                     CLE005
+     C                     ENDIF                                          CLE005
+     C                     ENDIF                                          CLE005
+     C/COPY WNCPYSRC,LEH00119
+      *                                                                   CLE005
+      ** Past Due Call Loan                                                                   CLE134
+      *                                                                                       CLE134
+     C                     CALL 'AOSARDR0'                                                    CLE134
+     C                     PARM *BLANKS   @RTCD   7                                           CLE134
+     C                     PARM '*KEY   ' @OPTN   7                                           CLE134
+     C                     PARM 'CLE134 ' @SARD   6                                           CLE134
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE134
+     C           @RTCD     IFEQ *BLANK                                                        CLE134
+     C                     MOVE 'Y'       CLE134  1                                           CLE134
+     C                     ELSE                                                               CLE134
+     C                     MOVE 'N'       CLE134                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ** Set NEWCOB flag                                                                      CLE134
+      *                                                                                       CLE134
+     C                     MOVE 'N'       WFLAG   1                                           CLE134
+     C                     MOVE 'N'       NEWCOB  1                                           CLE134
+     C           CLE134    IFEQ 'Y'                                                           CLE134
+     C           WPNAM     ANDEQ'NEWCOB'                                                      CLE134
+     C                     MOVE 'Y'       NEWCOB  1                                           CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C/COPY WNCPYSRC,LEH01411
+      ***If*CLE005*is*switched*on,*open*LECARDPD.****************** CLE005161452
+      ***********                                                   CLE005161452
+     C***********CLE005    IFEQ 'Y'                                 CLE005161452
+     C***********          OPEN LECARDPD                            CLE005161452
+     C***********          ENDIF                                    CLE005161452
+      ** If CLE005 is switched on, open LECARDPD.                         179594
+      *                                                                   179594
+     C           CLE005    IFEQ 'Y'                                       179594
+     C                     OPEN LECARDPD                                  179594
+     C                     ENDIF                                          179594
+      *
+      ** Check system date format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      ** Open EM Facility Details File if EM module present.
+      *
+     C           EMFLG     IFEQ 'Y'
+     C                     OPEN EMXT4F1L
+     C                     END
+      *
+      ** Set up event control date
+      *
+     C           BJDNWD    SUB  1         WECDT   50
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRPROC  -  Detail Processing                                  *
+      * Called by: Main routine                                       *
+      * Calls    : SRACTN - Loan Action Processing                    *
+      *            SRUPDF - Update Facility Processing                *
+      *****************************************************************
+     C           SRPROC    BEGSR
+      *
+      ** Read loan details linked to participant facility
+      *
+     C                     READ PETEMPL1                 20
+      *
+     C           *IN20     DOWEQ'0'
+      *                                                                                       241311
+     C********** PTFC      IFGT 0                                                      241311 CPK026
+     C           PTFC      IFNE *BLANK                                                        CPK026
+     C           PTFT      ANDGT0                                                             241311
+     C           PTFN      ANDGT0                                                             241311
+      *
+      ** Save loan details
+      *
+     C**********           MOVELLNRF      WLNRF   60                                          CLE148
+     C                     MOVELLNRF      WLNRF   6                                           CLE148
+     C**********           MOVELPTFC      WFCUS   60                                          CSD027
+     C                     MOVELPTFC      WFCUS   6                                           CSD027
+     C                     MOVELPTFT      WFTYP   30
+     C                     MOVELPTFN      WFSEQ   20
+     C                     MOVELFCLB      WFCLB   3
+      *
+      ** Read loan actions
+      *
+     C           WLNRF     SETLLLOAMSDKF
+     C                     READ LOAMSDKF                 21
+      *
+     C           WLNRF     DOWEQLNRF
+     C           *IN21     ANDEQ'0'
+     C                     EXSR SRACTN
+     C                     READ LOAMSDKF                 21
+     C                     ENDDO
+      *
+     C                     ENDIF                                                              241311
+      *                                                                                       241311
+     C                     READ PETEMPL1                 20
+      *
+      ** For change of participant facility, update facility details
+      *
+     C           PRVKEY    IFNE NEWKEY
+     C           *IN20     OREQ '1'
+     C                     EXSR SRUPDF
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRACTN  -  Loan Action Processing                             *
+      * Called by: SRPROC - Detail Processing                         *
+      * Calls    : SRCURR - Access currency details                   *
+      *            SRMOVE - Move fields to PF/LECARDPD                *   CLE005
+      *****************************************************************
+     C           SRACTN    BEGSR
+      *
+      ** NEWCOB = Y when LER021 runs under new component                                      CLE134
+      *                                                                                       CLE134
+     C           NEWCOB    IFEQ 'N'                                                           CLE134
+     C                     MOVE 'Y'       WFLAG   1                                           CLE134
+     C                     ELSE                                                               CLE134
+     C                     MOVE 'N'       WFLAG   1                                           CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ** AUTO = 'C' when loan is subject to funds pre-check                                   CLE134
+      *                                                                                       CLE134
+     C           AUTO      IFEQ 'C'                                                           CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+     C           NEWCOB    ANDEQ'N'                                                           CLE134
+     C           AMTP      IFEQ 'MR'                                                          CLE134
+     C           AMTP      OREQ 'RE'                                                          CLE134
+     C                     MOVE 'N'       WFLAG   1                                           CLE134
+     C                     ENDIF                                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ** if function runs after PDCL generation                                               CLE134
+      *                                                                                       CLE134
+     C           NEWCOB    IFEQ 'Y'                                                           CLE134
+      *                                                                                       CLE134
+     C           AMTP      IFEQ 'MR'                                                          CLE134
+     C           AMTP      OREQ 'RE'                                                          CLE134
+     C           KEYPD     CHAINLENEWLL1             23                                       CLE134
+      *                                                                                       CLE134
+      ** set WFLAG = 'Y' if loan has been created today                                       CLE134
+      *                                                                                       CLE134
+     C           *IN23     IFEQ *OFF                                                          CLE134
+     C                     MOVE 'Y'       WFLAG   1                                           CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ** set WFLAG = 'Y' if loan amendment has been created by cob                            CLE134
+      *                                                                                       CLE134
+     C           WFLAG     IFEQ 'N'                                                           CLE134
+     C           KEYPD     SETLLLELOMKKF                                                      CLE134
+     C           KEYPD     READELELOMKKF                 23                                   CLE134
+     C           *IN23     IFEQ *OFF                                                          CLE134
+     C********** IUSR      IFEQ 'LE0457'                                            CLE134 AR1021983
+     C********** IUSR      OREQ 'LE0473'                                            CLE134 AR1021983
+     C           FRNT      IFEQ 'LE000457'                                                 AR1021983
+     C           FRNT      OREQ 'LE000473'                                                 AR1021983
+     C                     MOVE 'Y'       WFLAG   1                                           CLE134
+     C                     ENDIF                                                              CLE134
+     C                     ENDIF                                                              CLE134
+     C                     ENDIF                                                              CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+     C                     ENDIF                                                              CLE134
+      *                                                                                       CLE134
+      ** Select loan actions to be process
+      *
+     C           AMTP      IFEQ 'MR'
+     C           WFLAG     ANDEQ'Y'                                                           CLE134
+     C           GASS      ANDNE'A'                                       154092
+     C           AMTP      OREQ 'RE'
+     C           WFLAG     ANDEQ'Y'                                                           CLE134
+     C***********AMTP      OREQ 'PF'                                      153600
+     C           AMTP      OREQ 'MA'
+     C           AUTO      ANDEQ'Y'
+      *                                                                                       CLE134
+     C           AMTP      OREQ 'MA'                                                          CLE134
+     C           AUTO      ANDEQ'C'                                                           CLE134
+     C           CLE134    ANDEQ'Y'                                                           CLE134
+     C***********AMTP      OREQ 'RV'                               161452 179594
+     C/COPY WNCPYSRC,LEH01412
+      *
+      ** Retrieve Facility details if there is a change in facility
+      ** reference
+      *
+     C           PRVKEY    IFNE NEWKEY
+     C                     MOVELNEWKEY    PRVKEY
+     C                     MOVE 'A'       WRCDT   1
+      * Check for live facility                                           191093
+     C           KEY001    CHAINFCLTY                23
+      *
+      * else check for closed/reversed facility                           191093
+     C           *IN23     IFEQ '1'                                       191093
+     C           KEY004    CHAINPEFCLFL1             23                   191093
+      *                                                                   191093
+      ** Handle database error
+      *
+     C           *IN23     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FCLTY   'DBFILE           ************
+     C                     Z-ADD3         DBASE            * DBERR 03 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF                                          191093
+      *
+     C                     MOVELFCCY      WFCCY   3
+     C                     ENDIF
+      *
+      ** Only process action if facility is a non-revolving credit.
+      ** If action is back-valued, check whether facility was revolving
+      ** or non-revolving on the value date of the transaction in order
+      ** to determine wheteher the facility needs to be reduced.
+      *
+     C***********AMTP      IFNE 'RV'                               161452 179594
+     C***********          MOVE 'Y'       WUPDF   1                       161452
+     C***********VDAT      IFLT BJRDNB                                    161452
+     C***********VDAT      IFLE BJRDNB                             161452 179594
+     C                     MOVE 'Y'       WUPDF   1                       179594
+     C           VDAT      IFLT BJRDNB                                    179594
+      *
+      ** Back-valuation is only allowed up to take-on date.
+      *
+     C           VDAT      IFLT HISDAY
+     C                     MOVE HISDAY    VDAT
+     C                     ENDIF
+      ***********                                                         161452
+      ***Access*last*facility*history*record*on*value*date*************** 161452
+      ***********                                                         161452
+     C***********KEY002    SETGTHISUPD                                    161452
+     C***********          READPHISUPD                   24               161452
+      ***********                                                         161452
+      ***If*BOF*or*different*facility*reference,*check*facility*file***** 161452
+      ***********                                                         161452
+     C************IN24     IFEQ '1'                                       161452
+     C***********WFCUS     ORNE FACNUM                                    161452
+     C***********WFACT     ORNE FAFCTY                                    161452
+     C***********RVCR      IFEQ 'Y'                                       161452
+     C***********          MOVE 'N'       WUPDF                           161452
+     C***********          ENDIF                                          161452
+     C***********          ELSE                                           161452
+      ***********                                                         161452
+      ***Seton*reporting*indicator*and*check*facility*history*file******* 161452
+      ***********                                                         161452
+     C************IN31     IFEQ '0'                                       161452
+     C***********FARCIN    ANDNERVCR                                      161452
+     C***********          MOVE '1'       *IN31                           161452
+     C***********          ENDIF                                          161452
+      ***********                                                         161452
+     C***********FARCIN    IFEQ 'Y'                                       161452
+     C***********          MOVE 'N'       WUPDF                           161452
+     C***********          ENDIF                                          161452
+     C***********          ENDIF                                          161452
+      ***********                                                         161452
+     C***********          ELSE                                           161452
+      ***********                                                         161452
+      ***If*Action is value dated on run date, check facility file        161452
+      ***********                                                         161452
+     C***********RVCR      IFEQ 'Y'                                       161452
+     C***********          MOVE 'N'       WUPDF   1                       161452
+     C***********          ENDIF                                          161452
+      *                                                                   179594
+      ** Access last facility history record on value date                179594
+      *                                                                   179594
+     C           KEY002    SETGTHISUPD                                    179594
+     C                     READPHISUPD                   24               179594
+      *                                                                   179594
+      ** If BOF or different facility reference, check facility file      179594
+      *                                                                   179594
+     C           *IN24     IFEQ '1'                                       179594
+     C           WFCUS     ORNE FACNUM                                    179594
+     C           WFACT     ORNE FAFCTY                                    179594
+     C           RVCR      IFEQ 'Y'                                       179594
+     C                     MOVE 'N'       WUPDF                           179594
+     C                     ENDIF                                          179594
+     C                     ELSE                                           179594
+      *                                                                   179594
+      ** Seton reporting indicator and check facility history file        179594
+      *                                                                   179594
+     C           *IN31     IFEQ '0'                                       179594
+     C           FARCIN    ANDNERVCR                                      179594
+     C                     MOVE '1'       *IN31                           179594
+     C                     ENDIF                                          179594
+      *                                                                   179594
+     C           FARCIN    IFEQ 'Y'                                       179594
+     C                     MOVE 'N'       WUPDF                           179594
+     C                     ENDIF                                          179594
+     C                     ENDIF                                          179594
+      *                                                                   179594
+     C                     ELSE                                           179594
+      *                                                                   179594
+      ** If Action is value dated on run date, check facility file        179594
+      *                                                                   179594
+     C           RVCR      IFEQ 'Y'                                       179594
+     C                     MOVE 'N'       WUPDF   1                       179594
+     C                     ENDIF                                          179594
+      *************************************************************161452 179594
+     C***********          MOVE RVCR      W#RCIN                   161452 179594
+     C***********          MOVE *ZEROS    W#DATE                   161452 179594
+      *************************************************************161452 179594
+      **Get*the*last*Revolving*Credit*Change*(on history action)***161452 179594
+      **reading*backwards*from*the*value*date*of*the*current*action161452 179594
+     C***********HISKEY    SETGTHISUPD                             161452 179594
+     C***********KEY002    REDPEHISACTF                  24        161452 179594
+      *************************************************************161452 179594
+     C************IN24     DOWEQ*OFF                               161452 179594
+     C***********HAACTN    IFEQ 'RC'                               161452 179594
+     C***********          MOVE HARCIN    W#RCIN                   161452 179594
+     C***********          MOVE HADATE    W#DATE                   161452 179594
+     C***********          LEAVE                                   161452 179594
+     C***********          ENDIF                                   161452 179594
+     C***********KEY002    REDPEHISACTF                  24        161452 179594
+     C***********          ENDDO                                   161452 179594
+      *************************************************************161452 179594
+      **If*no*RC*found*access*the*last*record*on*the*existing*histo161452 179594
+      **prior*to*(and*including)*the*action*date.******************161452 179594
+     C***********W#DATE    IFEQ *ZEROS                             161452 179594
+     C***********HISKEY    SETGTHISUPD                             161452 179594
+     C***********KEY002    REDPEFACHISAF                 24        161452 179594
+     C************IN24     IFEQ *OFF                               161452 179594
+     C***********          MOVE FARCIN    W#RCIN                   161452 179594
+     C***********          ENDIF                                   161452 179594
+      *************************************************************161452 179594
+      **Otherwise,*read*through*existing*history*from*after*this*da161452 179594
+      **and*check*for*a*subsequent*RC.*****************************161452 179594
+     C***********          ELSE                                    161452 179594
+     C***********HISKY1    SETGTHISUPD                             161452 179594
+     C***********KEY002    READEFACHISAF                 24        161452 179594
+      *************************************************************161452 179594
+     C************IN24     DOWEQ*OFF                               161452 179594
+     C***********FADATE    IFGT VDAT                               161452 179594
+     C***********          LEAVE                                   161452 179594
+     C***********          ENDIF                                   161452 179594
+     C***********FAACTN    IFEQ 'RC'                               161452 179594
+     C***********          MOVE FARCIN    W#RCIN                   161452 179594
+     C***********          ENDIF                                   161452 179594
+     C***********KEY002    READEFACHISAF                 24        161452 179594
+     C***********          ENDDO                                   161452 179594
+     C***********          ENDIF                                   161452 179594
+     C                     ENDIF
+      *************************************************************161452 179594
+     C***********          ELSE                                    161452 179594
+      *************************************************************161452 179594
+      **For*a*loan*reversal*read*through*the*facility*history*and*s161452 179594
+      **the*repayments*where*the*facility*was*non-revolving.*******161452 179594
+     C***********KEY002    SETLLHISUPD                             161452 179594
+     C***********KEY002    READEFACHISAF                 24        161452 179594
+     C***********          Z-ADD0         WAMTA                    161452 179594
+     C************IN24     DOWEQ'0'                                161452 179594
+     C***********LNRF      IFEQ FALOAN                             161452 179594
+     C***********FAGASS    ANDNE'A'                                161452 179594
+     C***********FARCIN    ANDEQ'N'                                161452 179594
+     C***********FAACTN    IFEQ 'MR'                               161452 179594
+     C***********FAACTN    OREQ 'RE'                               161452 179594
+     C***********          SUB  FAAAMT    WAMTA                    161452 179594
+     C***********          ENDIF                                   161452 179594
+     C***********          ENDIF                                   161452 179594
+     C***********KEY002    READEFACHISAF                 24        161452 179594
+     C***********          ENDDO                                   161452 179594
+      *************************************************************161452 179594
+     C***********          ENDIF                                   161452 179594
+      *
+     C***********WUPDF     IFEQ 'Y'                                       161452
+     C***********CLE005    ANDEQ'N'                                 CLE005161452
+      ***********                                                   CLE005161452
+      ***If*CLE005*is**ON*ignore*the*condition*for*WUPDF.********** CLE005161452
+      ***********                                                   CLE005161452
+     C***********CLE005    OREQ 'Y'                                 CLE005161452
+     C           WUPDF     IFEQ 'Y'                                       179594
+     C           CLE005    ANDEQ'N'                                       179594
+      *                                                                   179594
+      ** If CLE005 is *ON ignore the condition for WUPDF.                 179594
+      *                                                                   179594
+     C           CLE005    OREQ 'Y'                                       179594
+      *
+      **Update*is*performed*for*reversal*unconditionally;**********161452 179594
+      **for*non-reversal*update*is*performed*where*it*was*determine161452 179594
+      **that*the*facility*was*non-revolving.***********************161452 179594
+     C***********AMTP      IFEQ 'RV'                               161452 179594
+     C***********AMTP      ORNE 'RV'                               161452 179594
+     C***********W#RCIN    ANDEQ'N'                                161452 179594
+      *************************************************************161452 179594
+      **For*a*reversal*the*amount*is*taken*from*the*facility*histor161452 179594
+      **and*does*not*need*converting.******************************161452 179594
+     C***********AMTP      IFNE 'RV'                               161452 179594
+     C           CCY       IFNE FCCY
+      *
+      ** Get loan currency decimal places
+      *
+     C                     MOVELCCY       WCURR   3
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WNDP1   10
+      *
+      ** Get facility currency decimal places
+      *
+     C                     MOVELFCCY      WCURR
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WNDP2   10
+      *
+      ** Convert event amount to facility currency
+      *
+     C                     Z-ADDFCXR      ZEXCH  138
+     C                     MOVE FMDI      ZMD     1
+     C                     Z-ADDPRAM      ZAMTCI 150
+     C                     MOVE CCY       ZCCYI   3
+     C                     MOVE FCCY      ZCCYO   3
+     C                     Z-ADDWNDP1     ZCDPI   10
+     C                     Z-ADDWNDP2     ZCDPO   10
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    WAMTA  150
+     C                     ELSE
+     C                     Z-ADDPRAM      WAMTA
+     C                     ENDIF
+     C/COPY WNCPYSRC,LEH01413
+     C***********          ENDIF                                   161452 179594
+      *
+      ***If*CLE005*is**ON,*update*WFAMT*only*if*WUPDF*is*'Y'******* CLE005161452
+      ***********                                                   CLE005161452
+     C***********CLE005    IFEQ 'N'                                 CLE005161452
+     C***********WUPDF     OREQ 'Y'                                 CLE005161452
+     C***********CLE005    ANDEQ'Y'                                 CLE005161452
+      ** If CLE005 is *ON, update WFAMT only if WUPDF is 'Y'              179594
+      *                                                                   179594
+     C           CLE005    IFEQ 'N'                                       179594
+     C           WUPDF     OREQ 'Y'                                       179594
+     C           CLE005    ANDEQ'Y'                                       179594
+     C                     ADD  WAMTA     WFAMT
+     C***********          ENDIF                                    CLE005161452
+     C                     ENDIF                                          179594
+      *                                                                   CLE005
+     C                     ENDIF
+      *                                                                   CLE005
+      ***If*CLE005*is*switched*on*and*Tranche/Credit*Agreement***** CLE005161452
+      ***indicator*=*'TR',*save*existing*field*values*then*move**** CLE005161452
+      ***fields*to*LECARDPD.*Restore*the*previous*values*after***** CLE005161452
+      ***writing*to*LECARDPD.************************************** CLE005161452
+      ***********                                                   CLE005161452
+     C***********TRCA      IFEQ 'TR'                                CLE005161452
+     C***********CLE005    ANDEQ'Y'                                 CLE005161452
+      ***********                                                   CLE005161452
+     C***********          MOVE CRDBFR    WBEFR  48                 CLE005161452
+     C***********          EXSR SRMOVE                              CLE005161452
+     C***********          WRITELECARDPF                            CLE005161452
+     C***********          MOVE WBEFR     CRDBFR                    CLE005161452
+      ***********                                                   CLE005161452
+     C***********          ENDIF                                    CLE005161452
+      *                                                                   CLE005
+      ** If CLE005 is switched on and Tranche/Credit Agreement            179594
+      ** indicator = 'TR', save existing field values then move           179594
+      ** fields to LECARDPD. Restore the previous values after            179594
+      ** writing to LECARDPD.                                             179594
+      *                                                                   179594
+     C           TRCA      IFEQ 'TR'                                      179594
+     C           CLE005    ANDEQ'Y'                                       179594
+      *                                                                   179594
+     C                     MOVE CRDBFR    WBEFR  48                       179594
+     C                     EXSR SRMOVE                                    179594
+     C                     WRITELECARDPF                                  179594
+     C                     MOVE WBEFR     CRDBFR                          179594
+      *                                                                   179594
+     C                     ENDIF                                          179594
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRUPDF  -  Update Facility Processing                         *
+      * Called by: SRPROC - Detail Processing                         *
+      * Calls    : SRFMTD - Format output details                     *
+      *            SRBRCH - Change of Branch Processing               *
+      *            SRP1RC - Write a detail record to LER021P1         *
+      *****************************************************************
+     C           SRUPDF    BEGSR
+      *
+      ** Do not process facility it there is no change on amount
+      *
+     C           WFAMT     IFNE 0
+      *
+      ** Retrieve facility details
+      *
+     C           KEY001    CHAINFCLTY                23
+      *
+      ** Handle database error
+      *
+     C           *IN23     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FCLTY   'DBFILE           ************
+     C                     Z-ADD7         DBASE            * DBERR 07 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Reduce facility amount and accumulate total facility
+      ** amount before reduction
+      *
+     C                     Z-ADDFAMT      WSAMT  130
+     C                     ADD  FAMT      RVALB
+     C           RECI      IFNE 'C'                                                           193603
+     C                     SUB  WFAMT     FAMT
+     C                     END                                                                193603
+     C                     ADD  1         RCNTR
+      *
+     C           FAMT      IFLT 0
+     C                     ADD  FAMT      WFAMT                           154529
+     C                     Z-ADD0         FAMT
+     C                     ENDIF
+      *
+      ** Accumulate total facility amounts after reduction
+      *
+     C                     ADD  FAMT      RVALA
+     C                     Z-ADDFAMT      WTAMT  130
+     C                     MOVE FCCY      CURSAV  3                                           202124
+      *
+      ** Update facility amount
+      *
+     C                     UPDATFCLTYFMF
+      *
+     C                     READ FCLTY                    25
+      *
+     C           *IN25     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FCLTY   'DBFILE           ************
+     C                     Z-ADD4         DBASE            * DBERR 04 *
+     C                     OUT  LDA                        ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update total drawn amount and accumulate total facility
+      ** amounts reduced
+      *
+     C                     SUB  WFAMT     TOTD
+     C                     ADD  WFAMT     RVALR
+     C                     Z-ADDWFAMT     WUAMT  130
+     C                     UPDATFCLTYFNF
+      *
+      ** Format details for output
+      *
+     C                     EXSR SRFMTD
+      *
+      ** Process change of branch
+      *
+     C           WFCLB     IFNE WSFCB
+     C                     MOVELWFCLB     WSFCB   3
+     C                     EXSR SRBRCH
+     C                     ENDIF
+      *
+      ** Print detail record
+      *
+     C                     EXSR SRP1RC
+      *
+     C                     Z-ADD0         WFAMT
+     C                     MOVE '0'       *IN31
+      *
+      ** Update exposure file if necessary
+      *
+     C           EMFLG     IFEQ 'Y'
+     C           RECI      ANDEQ'D'
+     C           DTAP      ANDLEWECDT
+     C           WECDT     ANDLTDTEX
+     C**********           Z-ADDWFCUS     MCUN                                                CSD027
+     C                     MOVE WFCUS     MCUN                                                CSD027
+     C                     Z-ADDWFTYP     MFTP
+     C                     Z-ADDWFSEQ     MFN
+     C           KEY003    CHAINEMXT4F1F             26
+     C           *IN26     IFEQ '0'
+     C                     Z-ADDFAMT      MCYA
+     C                     EXCPTEMCHG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRBRCH  -  Change of Branch Processing                        *
+      * Called by: SRUPDF - Update Facility Processing                *
+      * Calls    : SRP1EN - Write end of report in LER021P1           *
+      *            SRRCFP - Register the printer file via RCF         *
+      *****************************************************************
+     C           SRBRCH    BEGSR
+      *
+      ** Print 'End of Report' of LER021P1 if necessary
+      *
+     C           *IN30     IFEQ '1'
+     C                     EXSR SRP1EN
+     C                     MOVE '0'       *IN30
+     C                     ENDIF
+      *
+      ** Close and Open printer LER021P1
+      *
+     C                     CLOSELER021P1
+     C                     OPEN LER021P1
+     C                     MOVE '1'       *IN30
+      *
+      ** Register printer file to RCF
+      *
+     C                     MOVELFCLB      SENTY
+     C                     MOVELSFILE1    SFILE
+     C                     EXSR SRRCFP
+      *
+      ** Get branch details using access object
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY    'POPTN   7
+     C                     PARM FCLB      PBRCD   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      ** Handle database error
+      *
+     C           WRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE           ************
+     C                     MOVELFCLB      DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Print header details
+      *
+     C                     WRITELER021H1
+     C                     MOVE FCLB      RBRCH
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRTRLR  -  Facility trailer update and end of program         *
+      * Called by: Main routine                                       *
+      * Calls    : SRAUDT - Print audit report                        *
+      *****************************************************************
+     C           SRTRLR    BEGSR
+      *
+      ** Update trailer file if there are facilities reduced
+      *
+     C           RCNTR     IFNE 0
+     C                     READ FCLTYZZF                 27
+      *
+     C           *IN27     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'*READ   'DBKEY            ************
+     C                     MOVEL'FCLTYZZ 'DBFILE           * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Adjust both the value before and the values after for the
+      ** total amount reduced
+      *
+     C           VLBF      MULT 1000      WKTOT  180
+     C                     ADD  VLBL      WKTOT
+     C           WKTOT     SUB  RVALR     WKTOT
+     C           WKTOT     DIV  1000      VLBF
+     C                     MVR            VLBL
+     C           VLAF      MULT 1000      WKTOT
+     C                     ADD  VLAL      WKTOT
+     C           WKTOT     SUB  RVALR     WKTOT
+     C           WKTOT     DIV  1000      VLAF
+     C                     MVR            VLAL
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'A'       CHTP
+     C                     UPDATFCLTYZZF
+      *
+     C                     ENDIF
+      *
+      ** Close printer file LER021P1
+      *
+     C                     CLOSELER021P1
+      *
+      ** Print audit report
+      *
+     C                     EXSR SRAUDT
+      *
+      ** End of program
+      *
+     C                     MOVE '1'       *INLR
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRFMTD  -  Format output details                              *
+      * Called by: SRUPDF - Update Facility Processing                *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRFMTD    BEGSR
+      *
+     C                     MOVELWFCUS     RCNUM
+     C                     MOVELWFTYP     RFACT
+     C                     MOVELWFSEQ     RFCNO
+     C                     MOVELWFCCY     RFCCY
+      *
+      ** Get currency decimal places
+      *
+     C                     MOVELWFCCY     WCURR   3
+     C           WCURR     IFEQ *BLANKS                                                       202124
+     C                     MOVELCURSAV    WCURR                                               202124
+     C                     ENDIF                                                              202124
+      *                                                                                       202124
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    ZDECS
+      *
+      ** Format old facility amount
+      *
+     C                     MOVEL*BLANKS   RSAMT
+     C                     Z-ADDWSAMT     ZFLD15
+     C                     EXSR ZFRPED
+     C           ZNEG      IFEQ '-'
+     C                     MOVELZOUT18    RSAMT
+     C                     ELSE
+     C                     MOVELZOUT17    RSAMT
+     C                     ENDIF
+      *
+      ** Format reduced facility amount
+      *
+     C                     MOVEL*BLANKS   RTAMT
+     C                     Z-ADDWTAMT     ZFLD15
+     C                     EXSR ZFRPED
+     C           ZNEG      IFEQ '-'
+     C                     MOVELZOUT18    RTAMT
+     C                     ELSE
+     C                     MOVELZOUT17    RTAMT
+     C                     ENDIF
+      *
+      ** Format difference amount
+      *
+     C                     MOVEL*BLANKS   RUAMT
+     C                     Z-ADDWUAMT     ZFLD15
+     C                     EXSR ZFRPED
+     C           ZNEG      IFEQ '-'
+     C                     MOVELZOUT18    RUAMT
+     C                     ELSE
+     C                     MOVELZOUT17    RUAMT
+     C                     ENDIF
+     C/COPY WNCPYSRC,LEH00120
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRCURR  - Access currency details                             *
+      * Called by: SRACTN - Loan Action Processing                    *
+      *            SRFMTD - Format output details                     *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRCURR    BEGSR
+      *
+      **  Access SDCURRPD with access object
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK  'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM WCURR     PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Handle database error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELWCURR     DBKEY            * DBERR 06 *
+     C                     Z-ADD6         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRAUDT  -  Print audit report                                 *
+      * Called by: SRTRLR - Facility trailer update & end of program  *
+      * Calls    : SRRCFA - Register the AU printer file via RCF      *
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      ** Register Audit report to RCF
+      *
+     C                     EXSR SRRCFA
+      *
+      ** Output Report Header
+      *
+     C                     WRITELER021AH
+      *
+      ** If there is a db error, output the db error information
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERRAU
+     C                     ELSE
+      *
+      ** Or, if no records updated, Output "No Details" message.
+      *
+     C           RCNTR     IFEQ 0
+     C                     WRITELER021A2
+     C                     ELSE
+     C                     WRITELER021A1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Close Audit printer file
+      *
+     C                     CLOSELER021AU
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRP1RC  -  Write a detail record to LER021P1                  *
+      * Called by: SRUPDF - Update Facility Processing                *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRP1RC    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITELER021H1
+     C                     ENDIF
+      *
+      ** Write out Detail Record
+      *
+     C                     WRITELER021D1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRP1EN  -  Write end of report in LER021P1                    *
+      * Called by: SRBRCH - Change of Branch Processing               *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRP1EN    BEGSR
+      *
+      ** Check that sufficient lines remain for the Format. If not,
+      ** write out the Main Headings on a new page
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITELER021H1
+     C                     ENDIF
+      *
+      ** Write out Total Format
+      *
+     C                     WRITELER021T1
+      *
+     C                     ENDSR
+      /EJECT                                                              CLE005
+      ************************************************************* CLE005161452
+      **SRMOVE**-**Move*fields*to*LECARDPD*fields****************** CLE005161452
+      **Called*by:*SRACTN****************************************** CLE005161452
+      **Calls****:*None******************************************** CLE005161452
+      ************************************************************* CLE005161452
+     C***********SRMOVE    BEGSR                                    CLE005161452
+      ***********                                                   CLE005161452
+     C***********          MOVE WFCUS     TRNM                      CLE005161452
+     C***********          MOVE WFTYP     TRFT                      CLE005161452
+     C***********          MOVE WFSEQ     TRFN                      CLE005161452
+     C***********          MOVE FCCY      TRCY                      CLE005161452
+     C***********          MOVE 'D'       RECI                      CLE005161452
+      ***********                                                   CLE005161452
+     C***********          MOVE CANM      FCUS                      CLE005161452
+     C***********          MOVE CAFT      FACT                      CLE005161452
+     C***********          MOVE CAFN      FCNO                      CLE005161452
+     C***********          Z-ADDWAMTA     RAMT                      CLE005161452
+      ***********                                                   CLE005161452
+     C***********          ENDSR                                    CLE005161452
+      *****************************************************************   179594
+      * SRMOVE  -  Move fields to LECARDPD field                      *   179594
+      * Called by: SRACTN                                             *   179594
+      * Calls    : None                                               *   179594
+      *****************************************************************   179594
+     C           SRMOVE    BEGSR                                          179594
+      *                                                                   179594
+     C                     MOVE WFCUS     TRNM                            179594
+     C                     MOVE WFTYP     TRFT                            179594
+     C                     MOVE WFSEQ     TRFN                            179594
+     C                     MOVE FCCY      TRCY                            179594
+     C                     MOVE 'D'       RECI                            179594
+      *                                                                   179594
+     C                     MOVE CANM      FCUS                            179594
+     C                     MOVE CAFT      FACT                            179594
+     C                     MOVE CAFN      FCNO                            179594
+     C                     Z-ADDWAMTA     RAMT                            179594
+      *                                                                   179594
+     C                     ENDSR                                          179594
+      /EJECT
+      *****************************************************************
+      * SRRCFP  -  Register the printer file via RCF                  *
+      * Called by: SRBRCH - Change of Branch Processing               *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRRCFP    BEGSR
+      *
+      ** Ensure Report Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRRCFA  -  Register the AU Printer File via RCF               *
+      * Called by: SRAUDT - Print audit report                        *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRRCFA    BEGSR
+      *
+      ** Ensure Audit Spool File recorded by RCF
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** If Error occurs during ZSFILE processing, then return to the
+      ** Calling Program
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** Check to see that *PSSR has not already been called
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     END
+      *
+      ** If *PSSR already run, then just end the program here
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+      ** Print audit report
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZCONVZ1
+      /EJECT
+     C/COPY ZSRSRC,ZFRPEDZ3
+      /EJECT
+     OEMXT4F1FE                EMCHG
+     O                         MCYA
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER - Array of powers for currency conversion
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

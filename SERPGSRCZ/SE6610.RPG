@@ -1,0 +1,351 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER Early Redemptions Summary List')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6610 - SE Early Redemption Summary List Selection          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01496             Date 18Oct94               *
+      *                 S10978             Date 26Mar93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F*****BJ*-*Bank*Details*-*Rtv*Idx*********************************   S01496
+     F***SDBANKL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   Display file
+     FSE6610DFCF  E                    WORKSTN
+     F                                              KINFSR *PSSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     F** INDICATORS
+     *********************************************************************
+     F*       KC         F3 =EXIT INDICATOR
+     F*
+     F*       50         VALID SELECTION                                  S01496
+     F*       51         INVALID STATUS                                   S01496
+     F*       52         INVALID FINAL ALLOCATION INDICATOR               S01496
+     F*                                                                   S01496
+     F*       89         RECORD NOT FOUND
+     F*       99         ERROR CALLING PROGRAM SEC6810
+     F*
+     F*       U7,U8      DATABASE ERROR
+     F*       LR         LAST RECORD
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E*                                                                   S01496
+     E** Array for Copyright                                              S01496
+     E                    CPY@    1   1 80                                S01496
+     E** EXTERNALS
+     E*
+     E***TEXT*MESSAGES*FOR*COMMAND*KEYS********************************   S01496
+     E***********         TXT     1   2 78                                S01496
+     E***********                                                         S01496
+     E***TEXT*MESSAGE**FOR*NARRATIVE***********************************   S01496
+     E***********         NARR    1   1 27                                S01496
+     *********************************************************************
+     I** INPUT
+     *********************************************************************
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPGMDS     ESDSY2PGDSP
+     I                                      244 253 WSID
+     I                                      254 263 USIDXX
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     IINFDS1    E DSY2I1DSP
+     I*
+     IFIELD     E DSSEERRFPD
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I*                                                                   S01496
+     I**  RCF parameter data structure                                    S01496
+     I@RPARM      DS                            100                       S01496
+     I                                        1   1 WLSTAT                S01496
+     I                                        2   2 WLFINA                S01496
+     ISDBANK    E DSSDBANKPD                                              S01496
+     I**  Data structure for bank details                                 S01496
+     I*                                                                   S01496
+     IDSFDY     E DSDSFDY                                                 S01496
+     I**  Short data structure for access objects                         S01496
+     I*                                                                   S01496
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**
+     C** PROCESSES
+     C**
+     C**  P001 - MAIN PROCESSING
+     C**  P002 - STATUS PROCESSING
+     C**
+     C**  *PSSR - STANDARD DATA BASE ERROR PROCESSING
+     C**
+     C*
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  MAIN - MAIN PROGRAM
+     *********************************************************************
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*                                                                   S01496
+     C**  Parameter List Declaration                                      S01496
+     C*                                                                   S01496
+     C           *ENTRY    PLIST                                          S01496
+     C                     PARM           @SEQ    5                       S01496
+     C                     PARM           @LVL    1                       S01496
+     C                     PARM           @RENT   3                       S01496
+     C                     PARM           @RPARM100                       S01496
+     C                     PARM           RACT    1                       S01496
+     C                     PARM           RCMD    1                       S01496
+     C*
+     C                     MOVE *BLANKS   WWLOT
+     C***********          MOVEL'SE6610'  DDPGMR                          S01496
+     C***********          MOVELDDPGMR    DBPGM  10                       S01496
+     C                     MOVEL'SE6610'  DBPGM  10                       S01496
+     C                     MOVELWSID      DDDEVC
+     C                     MOVEL'*'       DDSTAT
+     C                     MOVEL'*'       DDLSTI
+     C*
+     C**   ACCESS TO BANK DETAILS LF/BANKL1 TO RETRIEVE THE MIDAS
+     C**   RUN DATE, BANK REPORT NAME AND DATE FORMAT INDICATOR
+     C************LOVAL    SETLLSDBANKL1                                  S01496
+     C***********          READ SDBANKL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOBANKR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*FIRST'  WLOPTN  7                       S01496
+     C           SDBANK    PARM SDBANK    DSFDY                           S01496
+     C*
+     C**   IF NO REPORT ID FOUND, PRODUCE A STANDARD DATABASE ERROR
+     C************IN89     IFEQ *ON                                       S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'001'     DBASE   3        *****************
+     C***********          MOVEL'SDBANKL1'DBFILE 10        ** DB ERROR 01 S01496
+     C                     MOVE 'SDBANKPD'DBFILE 10        * DB ERROR 01 *S01496
+     C                     MOVEL*BLANKS   DBKEY  29        *****************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+     C*
+     C***OUTPUT*TITLE*TO*REPORT****************************************   S01496
+     C                     MOVE BJMRDT    DDDATE
+     C*                                                                   S01496
+     C**   Initialise fields for subroutine ZASNMS                        S01496
+     C*                                                                   S01496
+     C                     MOVEL'SE6610'  ZAPGM  10                       S01496
+     C                     MOVEL'SEUSRMSG'ZAMSGF 10                       S01496
+     C                     MOVEL*BLANK    ZAPGRL  5                       S01496
+     C                     MOVEL*BLANK    ZAMSID  7                       S01496
+     C                     MOVEL*BLANK    ZAMSDA132                       S01496
+     C                     MOVEL*BLANK    ZAMSTP  7                       S01496
+     C*                                                                   S01496
+     C**  Clear messages from program message queue                       S01496
+     C*                                                                   S01496
+     C                     CALL 'Y2CLMSC'                                 S01496
+     C                     PARM ##PGM     ZAPGM  10                       S01496
+     C                     PARM '*SAME'   ZAPGRL  5                       S01496
+     C*                                                                   S01496
+     C                     EXSR P001
+     C*
+     C           ENDPGM    TAG
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  P001 - MAIN PROCESSING
+     *********************************************************************
+     C           P001      BEGSR
+     C*
+     C           *INKC     DOWNE*ON
+     C           *IN50     ANDNE*ON                                       S01496
+     C*                                                                   S01496
+     C                     WRITE#MSGCTL                                   S01496
+     C                     EXFMTSE6610F1
+     C*                                                                   S01496
+     C**  Clear messages from program message queue                       S01496
+     C*                                                                   S01496
+     C                     CALL 'Y2CLMSC'                                 S01496
+     C                     PARM ##PGM     ZAPGM  10                       S01496
+     C                     PARM '*SAME'   ZAPGRL  5                       S01496
+     C*                                                                   S01496
+     C           *INKC     IFEQ *OFF                                      S01496
+     C                     EXSR P002
+     C                     ELSE                                           S01496
+     C*                                                                   S01496
+     C**  If F3 was pressed send termination code of 'E' back to RCF      S01496
+     C*                                                                   S01496
+     C                     MOVE *BLANKS   @RPARM                          S01496
+     C                     MOVE 'E'       RCMD                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     ENDDO
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  P002 - STATUS PROCESSING
+     *********************************************************************
+     C           P002      BEGSR
+     C*
+     C***********          MOVEATXT,1     DDRQST                          S01496
+     C***********                                                         S01496
+     C************INKC     IFNE *ON                                       S01496
+     C***********          WRITESE6610F1                                  S01496
+     C***********          MOVE *BLANKS   DDRTCD                          S01496
+     C***********          CALL 'SEC6810'              99                 S01496
+     C***********          PARM           DDSTAT                          S01496
+     C***********          PARM           DDLSTI                          S01496
+     C***********          PARM           DDRTCD  1        Return Code    S01496
+     C***********          ENDIF                                          S01496
+     C***********                                                         S01496
+     C***********DDRTCD    IFNE 'E'                                       S01496
+     C************IN99     ANDNE'1'                                       S01496
+     C***********          MOVEATXT,2     DDRQST                          S01496
+     C***********          ELSE                                           S01496
+     C***********          MOVEL'002'     DBASE            ***************S01496
+     C***********          MOVEL*BLANKS   DBFILE           ** DB ERROR 02 S01496
+     C***********          MOVELNARR,1    DBKEY            ***************S01496
+     C***********          EXSR *PSSR                                     S01496
+     C***********          ENDIF                                          S01496
+     C*                                                                   S01496
+     C**  Reset error indicators                                          S01496
+     C*                                                                   S01496
+     C                     MOVE '0'       *IN51                           S01496
+     C                     MOVE '0'       *IN52                           S01496
+     C*                                                                   S01496
+     C**  Validate status                                                 S01496
+     C*                                                                   S01496
+     C           DDSTAT    IFNE 'I'                                       S01496
+     C           DDSTAT    ANDNE'L'                                       S01496
+     C           DDSTAT    ANDNE'X'                                       S01496
+     C           DDSTAT    ANDNE'C'                                       S01496
+     C           DDSTAT    ANDNE'R'                                       S01496
+     C           DDSTAT    ANDNE'*'                                       S01496
+     C                     MOVE '1'       *IN51                           S01496
+     C                     MOVEL'ER66009' ZAMSID                          S01496
+     C                     EXSR ZASNMS                                    S01496
+     C                     ELSE                                           S01496
+     C                     MOVE DDSTAT    WLSTAT                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  Validate final allocation indicator                             S01496
+     C*                                                                   S01496
+     C           DDLSTI    IFNE 'Y'                                       S01496
+     C           DDLSTI    ANDNE'N'                                       S01496
+     C           DDLSTI    ANDNE'*'                                       S01496
+     C                     MOVE '1'       *IN52                           S01496
+     C                     MOVEL'ER66010' ZAMSID                          S01496
+     C                     EXSR ZASNMS                                    S01496
+     C                     ELSE                                           S01496
+     C                     MOVE DDLSTI    WLFINA                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  If both fields are valid, seton valid selection indicator       S01496
+     C*                                                                   S01496
+     C           *IN51     IFEQ '0'                                       S01496
+     C           *IN52     ANDEQ'0'                                       S01496
+     C                     MOVE '1'       *IN50                           S01496
+     C                     END                                            S01496
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     C****************************************************************    S01496
+     C*  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE            *    S01496
+     C****************************************************************    S01496
+     C*                                                                   S01496
+     C           ZASNMS    BEGSR                                          S01496
+     C*                                                                   S01496
+     C                     CALL 'Y2SNMGC'                                 S01496
+     C                     PARM           ZAPGM  10                       S01496
+     C                     PARM           ZAPGRL  5                       S01496
+     C                     PARM           ZAMSID  7                       S01496
+     C                     PARM           ZAMSGF 10                       S01496
+     C                     PARM           ZAMSDA132                       S01496
+     C                     PARM           ZAMSTP  7                       S01496
+     C*                                                                   S01496
+     C**   Clear all fields for default mechanism next time               S01496
+     C*                                                                   S01496
+     C                     MOVEL*BLANK    ZAPGM            Program queue  S01496
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue      S01496
+     C                     MOVEL*BLANK    ZAMSDA           Message data.  S01496
+     C                     MOVEL*BLANK    ZAMSTP           Message type.  S01496
+     C                     MOVEL'SEUSRMSG'ZAMSGF           Message file   S01496
+     C                     MOVEL*BLANK    ZAMSID           Message id.    S01496
+     C*                                                                   S01496
+     C                     ENDSR                                          S01496
+     C*****************************************************************   S01496
+     C/EJECT
+     *********************************************************************
+     C**  *PSSR  - STANDARD DATA BASE ERROR PROCESSING
+     *********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*
+     C**   PRINT DUMP AND CANCEL PROGRAM
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     *********************************************************************
+     C*                                                                   S01496
+     C**  Compile time arrays TXT and NARR were physically deleted        S01496
+     C*                                                                   S01496
+** CPY@
+(c) Finastra International Limited 2001

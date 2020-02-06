@@ -1,0 +1,1740 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER Generate Forward Events Cust/Depot')       *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE6790 - Generate Forward Events Cust/Depot Allocation       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241795             Date 27Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE034             Date 24Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE028             Date 06Jun01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU011             Date 11Mar98               *
+      *                 CPK008             Date 06Jun97               *
+     F*                 092961             Date 03Oct95               *
+     F*                 085862             DATE 16MAR95               *
+     F*                 081441             DATE 17JAN95               *
+     F*                 S01496             DATE 26OCT94               *
+     F*                 S10978             DATE 30APR93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  241795 - Populate ECSS whether CEU011 is switched on or off. *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE034 - Standard Settlement Instruction improvements        *
+      *  CSE028 - Standing Settlement Instructions Enhancement.       *
+      *  CEU011 - EMU Position/Risk Reporting                         *
+     F*  CPK008 - DBA R2 packaging:                                   *
+     F*           - Define SDNOSTPD fields used in ZSETAC.            *
+     F*           - Define DSFDY fields used in ZSETAC.               *
+     F*  092961 - Recompile over ZSETAC which was amended by 085862   *
+     F*           (Wrong Settlement Branch Code Calculation)          *
+     F*  085862 - ZSETAC SHOULD INCLUDE BRANCH                        *
+     F*  081441 - ZSETO is returned blank from subroutine ZSETAC      *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F*****BJ*-*Bank*Details*-*Rtv*Idx*********************************   S01496
+     F***SDBANKL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   Account Details by 15A Account Code. No Prefix
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F                                              KINFSR *PSSR
+     F*
+     F** Account Details by 15N Account Number. No Prefix
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNUMF
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE Standard Settlement Instructions
+     FSTDSED  IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE Customer Position Events
+     FCPEVED  O   E                    DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE Customer Position Events - Audit
+     FCPEVEA  UF  E                    DISK                      A
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE Depot Position Events
+     FDPEVED  O   E                    DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE Depot Position Events - Audit
+     FDPEVEA  UF  E                    DISK                      A
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE Early Redemptions - References
+     FSEERRFL2IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE Early Redemptions - Allocations
+     FSEERALL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   SE Early Redemptions - Depots
+     FSEERDPL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F*****Currency*Codes**********************************************   S01496
+     F***SDCURRL0IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****Client*Details**********************************************   S01496
+     F***SDCUSTL0IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****SE*Customer*Details*-**Prefix*BF****************************   S01496
+     F***SDSECSL0IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****Retail*ICD*-**Prefix*BM*************************************   S01496
+     F***SDRETLL0IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****Branch*Codes************************************************   S01496
+     F***SDBRCHL0IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F*****Securities*Trading*ICD**************************************   S01496
+     F***SDSTRDPDIF**E                    DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   Securities
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F*****Customer*Details********************************************   S01496
+     F***CLINT***IF  E           K        DISK                            S01496
+     F*********** CLINTCAF                          KIGNORE               S01496
+     F*********** CLINTCBF                          KIGNORE               S01496
+     F*********** CLINTCCF                          KIGNORE               S01496
+     F*********** CLINTC1F                          KIGNORE               S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   SE ER Generate Forward Events Cust/Book References - Audit
+     FSE6790AUO   E                    PRINTER
+     F                                              KINFSR *PSSR
+     F**************************************************************************
+      /EJECT
+     E**************************************************************************
+     E*
+     E**   FOR COMPILATION - COPYRIGHT INSERTION
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E                    POWER8  1   8  8 4             POWER8 ARRAY
+     E**************************************************************************
+      /EJECT
+     I**************************************************************************
+     IACCNTABF
+     I              CNUM                            ZRCNUM
+     I              CCY                             ZRCCY
+     I              ACOD                            ZRACOD
+     I              ACSQ                            ZRACSQ
+     I              PTFR                            ZRPTFR
+     I              BRCA                            ZRBRCA                S01496
+     I*
+     IACNUMF
+     I              CNUM                            ZRCNUM
+     I              CCY                             ZRCCY
+     I              ACOD                            ZRACOD
+     I              ACSQ                            ZRACSQ
+     I              PTFR                            ZRPTFR
+     I              BRCA                            ZRBRCA                S01496
+     I*
+     I****15*A*SETTLEMENT*ACCOUNT*RETURNED*****************************   S01496
+     I**  18 A SETTLEMENT ACCOUNT RETURNED                                S01496
+     I*
+     I            DS
+     I**********                              1   60ZWCNUM                                    CSD027
+     I                                        1   6 ZWCNUM                                    CSD027
+     I                                        7   9 ZWCCY
+     I**********                             10  130ZWACOD                                    CGL029
+     I**********                             14  150ZWACSQ                                    CGL029
+     I**********                             10  150ZFLD6                                     CGL029
+     I                                       10  190ZWACOD                                    CGL029
+     I                                       20  210ZWACSQ                                    CGL029
+     I                                       22  24 ZWBRCA                                    CGL029
+     I                                       10  210ZFLD6                                     CGL029
+     I                                        1  24 ZKACCN                                    CGL029
+     I****************************************1  15 ZKACCN                S01496
+     I**********                             16  18 ZWBRCA                             S01496 CGL029
+     I**********                              1  18 ZKACCN                             S01496 CGL029
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR
+     I*
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I*                                                                   S01496
+     IRUNDAT    E DS                                                      S01496
+     I**  Standard data area for system flags and rundate                 S01496
+     I*                                                                   S01496
+     ISDBANK    E DSSDBANKPD                                              S01496
+     I**  Data structure for bank details                                 S01496
+     I*                                                                   S01496
+     ISDSTRD    E DSSDSTRDPD                                              S01496
+     I**  Data structure for securities trading details                   S01496
+     I*                                                                   S01496
+     ISDRETL    E DSSDRETLPD                                              S01496
+     I**  Data structure for retail details                               S01496
+     I*                                                                   S01496
+     ISDSECS    E DSSDSECSPD                                              S01496
+     I              QQACCD                          QQACC1                                    CGL029
+     I**  Data structure for securities customer details                  S01496
+     I*                                                                   S01496
+     ISDBRCH    E DSSDBRCHPD                                              S01496
+     I**  Data structure for branch details                               S01496
+     I*                                                                   S01496
+     ISDCURR    E DSSDCURRPD                                              S01496
+     I**  Data structure for currency details                             S01496
+     I*                                                                   S01496
+     ISDCUST    E DSSDCUSTPD                                              S01496
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I**  Data structure for customer details                             S01496
+     I*                                                                   S01496
+     IDSSDY     E DSDSSDY                                                 S01496
+     I**  Long data structure for access objects                          S01496
+     I*                                                                   S01496
+     ISDNOST    E DSSDNOSTPD                                              CPK008
+     I              QQACCD                          QQACC2                                    CGL029
+     I**  Data structure for nostro details                               CPK008
+     I*                                                                   CPK008
+     ISCSARD    E DSSCSARDPD                                              CEU011
+     I              LCD                             LCD1                  CEU011
+      **  Switchable Features File                                        CEU011
+      *                                                                   CEU011
+     IDSFDY     E DSDSFDY                                                 CPK008
+     I**  Short data structure for access objects                         CPK008
+     I*                                                                   CPK008
+      *                                                                                       CSE028
+      ** DS for customer/book standard settlement instruction                                 CSE028
+      **  to be passed to SESSIR0                                                             CSE028
+      *                                                                                       CSE028
+     IPCBSTD    E DSSTDSED                    2                                               CSE028
+      *                                                                                       CSE028
+      ** Data structure for standard additional settlement details                            CSE028
+      ** for customer/book to be passed to SESSIR0                                            CSE028
+      *                                                                                       CSE028
+     IPCBSAD    E DSSTDADSED                  8                                               CSE028
+      *                                                                                       CSE028
+     I/COPY WNCPYSRC,SE6790I001
+     *********************************************************************
+      /EJECT
+     C********************************************************************
+     C**    P R O G R A M   S T A R T
+     C********************************************************************
+     C*
+     C**   INITIAL PROCESSING
+     C*
+     C                     EXSR P001
+     C*
+     C**   MAIN PROCESSING
+     C*
+     C                     EXSR P002
+     C*
+     C**   TERMINATION PROCESSING
+     C*
+     C                     EXSR P003
+     C*
+     C********************************************************************
+     C**    P R O G R A M     E N D
+     C********************************************************************
+      /EJECT
+     ******************************************************************
+     C* P001   : INITIAL PROCESSING                                   *
+     ******************************************************************
+     C*
+     C           P001      BEGSR
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*                                                                   S01496
+     C**  Read in data area RUNDAT                                        S01496
+     C*                                                                   S01496
+     C           *NAMVAR   DEFN           RUNDAT                          S01496
+     C                     IN   RUNDAT                                    S01496
+     C*
+     C**  INITIALISE KEY AND WORKING FIELDS
+     C*
+     C                     MOVE *BLANKS   WKSESN 10
+     C                     Z-ADD*ZEROS    OUTRCP  50
+     C                     Z-ADD*ZEROS    OUTRDP  50
+     C*
+     C                     Z-ADD0         WTOTCP 150
+     C                     Z-ADD0         WTOTDP 150
+     C*
+     C                     Z-ADD0         CPHRWN 150       Hash Total (Integer)
+     C                     Z-ADD0         CPHRDC  50       Hash Total (Decimal)
+     C                     Z-ADD0         DPHRWN 150       Hash Total (Integer)
+     C                     Z-ADD0         DPHRDC  50       Hash Total (Decimal)
+     C*
+     C**   KEY FIELDS
+     C*
+     C           KEY1      KLIST
+     C***********          KFLD           KSBRH   30                      S01496
+     C                     KFLD           KSBRH   3                       S01496
+     C**********           KFLD           KCSTM   60                                          CSD027
+     C                     KFLD           KCSTM   6                                           CSD027
+     C                     KFLD           KBKCD   2                                           CSE028
+     C                     KFLD           KCYSI   3
+     C                     KFLD           KITSI   3
+     C                     KFLD           KPTFR   4                                           CSE028
+     C*
+     C           KEY2      KLIST
+     C                     KFLD           KSBRH
+     C                     KFLD           KCSTM
+     C                     KFLD           KBKCD                                               CSE028
+     C                     KFLD           KCYSI
+     C*
+     C***DEPOT*NAME*INFORMATION*-*LF/CLINT*(PF/CLINTSE)****************   S01496
+     C*
+     C***********CLIKEY    KLIST                                          S01496
+     C***********          KFLD           KCSTM                           S01496
+     C***********          KFLD           WRECT   1                       S01496
+     C*
+     C           ZWACCN    KLIST
+     C                     KFLD           ZWCNUM
+     C                     KFLD           ZWCCY
+     C                     KFLD           ZWACOD
+     C                     KFLD           ZWACSQ
+     C                     KFLD           ZWBRCA                          S01496
+     C*
+     C**  PREPARE LDA FOR THE DATABASE ERROR OUTPUT
+     C*
+     C                     MOVE *BLANKS   WWLOT
+     C                     MOVEL'SE6790'  DBPGM  10
+     C*
+     C**   ACCESS TO BANK DETAILS TO RETRIEVE THE MIDAS RUN DATE
+     C*
+     C************LOVAL    SETLLSDBANKL1                                  S01496
+     C***********          READ SDBANKL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOBANKR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*FIRST'  WLOPTN  7                       S01496
+     C           SDBANK    PARM SDBANK    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                                       S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'001'     DBASE   30       *****************
+     C***********          MOVEL'SDBANKL1'DBFILE 10        ** DB ERROR 01 S01496
+     C                     MOVE 'SDBANKPD'DBFILE 10        * DB ERROR 01 *S01496
+     C                     MOVEL*BLANKS   DBKEY  29        *****************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**  WRITE CONTROL REPORT HEADINGS
+     C*
+     C                     WRITEHEADER
+     C*
+     C*****ACCESS*TO*BANK*DETAILS*TO*RETRIEVE*THE*MIDAS*RUN*DATE*******   S01496
+     C*
+     C***********          READ SDSTRDPD                 89               S01496
+     C*                                                                   S01496
+     C**  Access securities trading details using access object           S01496
+     C*                                                                   S01496
+     C                     CALL 'AOSTRDR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                                       S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'002'     DBASE            *****************
+     C***********          MOVEL'SDSTRDPD'DBFILE           ** DB ERROR 02 S01496
+     C                     MOVE 'SDSTRDPD'DBFILE           * DB ERROR 02 *S01496
+     C                     MOVEL*BLANKS   DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**   ACCESS TO RETAIL ICD
+     C*
+     C************LOVAL    SETLLSDRETLL0                                  S01496
+     C***********          READ SDRETLL0                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AORETLR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*FIRST'  WLOPTN                          S01496
+     C           SDRETL    PARM SDRETL    DSSDY                           S01496
+     C*
+     C**   IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                                       S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'003'     DBASE            *****************
+     C***********          MOVEL'SDRETLL0'DBFILE           ** DB ERROR 03 S01496
+     C                     MOVE 'SDRETLPD'DBFILE           * DB ERROR 03 *S01496
+     C                     MOVEL*BLANKS   DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CEU011
+     C/COPY WNCPYSRC,SE6790C001
+      ** Check if EMU Position/Risk Reporting is switch on.               CEU011
+      *                                                                   CEU011
+     C                     CALL 'AOSARDR0'                                CEU011
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*VERIFY' @OPTN                           CEU011
+     C                     PARM 'CEU011'  @SARD   6                       CEU011
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFEQ *BLANKS                                   CEU011
+     C                     MOVE 'Y'       CEU011  1                       CEU011
+     C                     ELSE                                           CEU011
+     C                     MOVE 'N'       CEU011                          CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFNE '*NRF   '                                 CEU011
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CEU011
+     C                     MOVEL'CEU011'  DBKEY            *DBERROR 12*   CEU011
+     C                     Z-ADD12        DBASE            ************   CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                                       CSE028
+      ** Check if CSE028 feature is installed                                                 CSE028
+      *                                                                                       CSE028
+     C                     MOVE 'N'       CSE028  1                                           CSE028
+     C                     CALL 'AOSARDR0'                                                    CSE028
+     C                     PARM '       ' @RTCD                                               CSE028
+     C                     PARM '*VERIFY' @OPTN                                               CSE028
+     C                     PARM 'CSE028'  @SARD                                               CSE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSE028
+      *                                                                                       CSE028
+     C           @RTCD     IFNE *BLANKS                                                       CSE028
+     C           @RTCD     ANDNE'*NRF   '                                                     CSE028
+     C                     Z-ADD13        DBASE                                               CSE028
+     C                     MOVEL'SE6790'  DBPGM                                               CSE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSE028
+     C                     MOVEL@SARD     DBKEY                                               CSE028
+     C                     EXSR *PSSR                                                         CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C           @RTCD     IFEQ *BLANK                                                        CSE028
+     C                     MOVE 'Y'       CSE028                                              CSE028
+     C                     ENDIF                                                              CSE028
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     ******************************************************************
+     C* P002   : MAIN PROCESSING                                      *
+     ******************************************************************
+     C*
+     C           P002      BEGSR
+     C*
+     C**  ACCESS FIRST RECORD IN ER REFERENCE FILE
+     C*
+     C           *LOVAL    SETLLSEERRFL2
+     C                     READ SEERRFL2                 88
+     C*
+     C**  DO WHILE END OF FILE IS NOT REACHED
+     C*
+     C           *IN88     DOWEQ'0'                        B*1
+     C*
+     C**  BYPASS REVERSED RECORDS
+     C           VAERST    IFNE 'R'                        B*2
+     C*
+     C**  IF SECURITY SHORTNAME IS NOT EQUAL TO SAVED SECURITY
+     C**  EXECUTE SUBROUTINE SECTIN TO RETRIEVE SECURITY RECORD
+     C*
+     C           VASESN    IFNE WKSESN                     B*3
+     C                     EXSR SECTIN
+     C                     MOVE VASESN    WKSESN
+     C                     END                             E*3
+     C*
+     C**  PROCESS ALL DEPOT RECORDS
+     C*
+     C                     EXSR P004
+     C*
+     C**  PROCESS ALL CUSTOMER RECORDS
+     C*
+     C                     EXSR P005
+     C*
+     C                     END                             E*2
+     C*
+     C**  ACCESS NEXT RECORD IN ER REFERENCE FILE
+     C*
+     C                     READ SEERRFL2                 88
+     C*
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     ******************************************************************
+     C* P003   : TERMINATION PROCESSING                               *
+     ******************************************************************
+     C*
+     C           P003      BEGSR
+     C*
+     C**   PROCESS AUDIT PROCESSING
+     C*
+     C                     EXSR SRLR
+     C*
+     C**   END OF PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P004   : PROCESS ALL DEPOT RECORDS                            *
+     ******************************************************************
+     C*
+     C           P004      BEGSR
+     C*
+     C**  ACCESS FIRST DEPOT RECORD
+     C*
+     C           VAERRF    SETLLSEERDPL1
+     C                     READ SEERDPL1                 87
+     C*
+     C**  DO WHILE END OF FILE IS NOT REACHED AND SAME ER REFERENCE
+     C*
+     C           *IN87     DOWEQ'0'                        B*1
+     C           VAERRF    ANDEQVBERRF
+     C*
+     C**  IF RECORD IDENTIFIER IS 'D' AND NOMINAL TO BE REDEEMDED GT THAN ZERO
+     C*
+     C           VBRECI    IFEQ 'D'                        B*2
+     C           VBNRDM    ANDGT*ZEROS
+     C*
+     C**  GENERATE RECORD ON PF/DPEVED
+     C*
+     C                     EXSR W01
+     C                     END                             E*2
+     C*
+     C**  ACCESS NEXT DEPOT RECORD
+     C*
+     C                     READ SEERDPL1                 87
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* P005   : PROCESS ALL ALLOCATION RECORDS                       *
+     ******************************************************************
+     C*
+     C           P005      BEGSR
+     C*
+     C**  ACCESS FIRST ALLOCATION RECORD
+     C*
+     C           VAERRF    SETLLSEERALL1
+     C                     READ SEERALL1                 87
+     C*
+     C**  DO WHILE END OF FILE IS NOT REACHED AND SAME ER REFERENCE
+     C*
+     C           *IN87     DOWEQ'0'                        B*1
+     C           VAERRF    ANDEQVCERRF
+     C*
+     C**  IF RECORD IDENTIFIER IS 'D', ER TYPE 'P' AND NOMINAL ALLOCATED NE 0
+     C*
+     C           VCRECI    IFEQ 'D'                        B*2
+     C           VCERTP    ANDEQ'P'
+     C           VCNOMA    ANDNE*ZEROS
+     C*
+     C**  GENERATE RECORD ON PF/CPEVED
+     C*
+     C                     EXSR W02
+     C                     END                             E*2
+     C*
+     C**  ACCESS NEXT ALLOCATION RECORD
+     C*
+     C                     READ SEERALL1                 87
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* W01   - GENERATE RECORD ON PF/DPEVED                          *
+     ******************************************************************
+     C           W01       BEGSR
+     C*
+     C***********          Z-ADDVBBRCD    CCBR             BRANCH CODE    S01496
+     C                     MOVE VBBRCD    CCBA             BRANCH CODE    S01496
+     C**********           Z-ADDVBDDPT    CCDP             DEPOT                              CSD027
+     C                     MOVE VBDDPT    CCDP             DEPOT                              CSD027
+     C                     MOVE VASESN    CCSS             SECURITY
+     C                     MOVE 'RC'      CCET             EVENT TYPE
+     C                     Z-ADDVAERRD    CCDT             EVENT DATE
+     C                     MOVE NMCY      CCEC             EVENT CURRENCY
+     C*
+     C                     Z-ADDVBNALL    ZNOML
+     C                     Z-ADDVAREDP    ZAVPR
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     MOVE SPBS      ZPRCB
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     CCEA             EVENT AMOUNT
+     C                     Z-ADDZVALU     CCNA             NOM CCY EQUIV
+     C*
+     C                     MOVE NMCY      CCNC             NOMINAL CCY
+     C                     Z-ADDVBNALL    CCNP             NOMINAL POSITION
+     C                     Z-ADDVBNALL    CCEP             EX-COUPON NOM POSIT
+     C                     Z-ADD*ZEROS    CCSM             SETTLEMENT METHOD
+     C                     MOVE *BLANKS   CCSA             SETTLEMENT ACCOUNT
+     C***********          Z-ADD*ZEROS    CCBN             SETTLEMENT BRANS01496
+     C                     MOVE *BLANKS   CCTA             SETTLEMENT BR. S01496
+     C                     MOVE *BLANKS   CCTC             CLEARANCE TYPE
+      *                                                                                       CSE028
+      ** If CSE028 is on, call SESSIR0 for default of MT5xx information                       CSE028
+      *                                                                                       CSE028
+     C           CSE028    IFEQ 'Y'                                                           CSE028
+      *                                                                                       CSE028
+     C                     MOVE '0'       *IN89                                               CSE028
+      *                                                                                       CSE028
+     C                     CALL 'SESSIR0'                                                     CSE028
+     C                     PARM 'D'       POTYP   1                                           CSE028
+     C                     PARM           VBBRCD                                              CSE028
+     C                     PARM           VBDDPT                                              CSE028
+     C                     PARM *BLANKS   KBKCD                                               CSE028
+     C                     PARM           NMCY                                                CSE028
+     C                     PARM           SMCC                                                CSE034
+     C                     PARM           SITP                                                CSE028
+     C                     PARM *BLANKS   KPTFR                                               CSE028
+     C                     PARM           PCBSTD                                              CSE028
+     C                     PARM           PCBSAD                                              CSE028
+     C                     PARM *BLANKS   PRTCD   5                                           CSE028
+      *                                                                                       CSE028
+     C           PRTCD     IFNE '*NCRF'                                                       CSE028
+     C           PRTCD     ANDNE'*NRF '                                                       CSE028
+     C           2         OCUR PCBSTD                                                        CSE028
+     C                     ELSE                                                               CSE028
+     C                     MOVE '1'       *IN89                                               CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ELSE                                                               CSE028
+     C*
+     C**  SET UP KEY FIELDS
+     C*
+     C***********          Z-ADDVBBRCD    KSBRH            BRANCH         S01496
+     C                     MOVE VBBRCD    KSBRH            BRANCH         S01496
+     C**********           Z-ADDVBDDPT    KCSTM            DEPOT                              CSD027
+     C                     MOVE VBDDPT    KCSTM            DEPOT                              CSD027
+     C                     MOVE NMCY      KCYSI            NOMINAL CCY
+     C                     MOVE SITP      KITSI            INVESTMENT TYPE
+      *                                                                                       CSE028
+     C                     MOVE *BLANKS   KBKCD                                               CSE028
+     C                     MOVE *BLANKS   KPTFR                                               CSE028
+     C*
+     C**  SET UP DEFAULT DEPOT SETTLEMENT INSTRUCTIONS
+     C**  (FIRST TRY CHAINING TO STDSED WITH APPROPRIATE INVESTMENT TYPE)
+     C*
+     C           KEY1      CHAINSTDSED               89
+     C*
+     C**  IF RECORD IS NOT FOUND
+     C**  (IF FIRST CHAIN TO STDSED FAILED, RETRY WITH BLANK INVESTMENT TYPE)
+     C*
+     C           *IN89     IFEQ '1'                        B*1
+     C***********          MOVE '1'       WRECT                           S01496
+     C***********CLIKEY    CHAINCLINT                60                   S01496
+     C*                                                                   S01496
+     C                     MOVE KCSTM     WLCSTM  6                       S01496
+     C                     CALL 'AOSECSR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C***********          PARM WLCSTM    WLCUSN                    S01496081441
+     C                     PARM WLCSTM    WLCUSN  6                       081441
+     C           SDSECS    PARM SDSECS    DSSDY                           S01496
+     C*
+     C************IN60     IFEQ '0'                        B*2            S01496
+     C***********C1DI      ANDNE'M'                                       S01496
+     C           WLRTCD    IFEQ *BLANK                     B*2            S01496
+     C           BFCLAS    ANDNE'M'                                       S01496
+     C                     MOVE *BLANKS   KITSI            INVESTMENT TYPE
+     C           KEY1      CHAINSTDSED               89
+     C                     END                             E*2
+     C                     END                             E*1
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+     C*
+     C**  IF RECORD IS FOUND
+     C*
+     C           *IN89     IFEQ '0'                        B*1
+     C                     MOVE SCLP      CCTC             CLEARANCE TYPE
+     C                     Z-ADDSPSM      CCSM             SETTLEMENT METHOD
+     C                     MOVE SPAT      CCSA             SETTLEMENT ACCOUNT
+     C***********          Z-ADDSPBR      CCBN             SETTLEMENT BRANS01496
+     C                     MOVE SPBA      CCTA             SETTLEMENT BR. S01496
+     C*
+     C**  IF SETTLEMENT METHOD '04' AND SETTLEMENT ACCOUNT BLANK
+     C*
+     C           SPSM      IFEQ 04                         B*2
+     C           SPAT      ANDEQ*BLANKS
+     C                     Z-ADDSPSM      ZMETH            SETTLEMENT METHOD
+     C                     MOVE SPAT      ZSETI            SETTLEMENT ACCOUNT
+     C**********           Z-ADDVBDDPT    ZCNUM            TRANSACTION CUST NUM               CSD027
+     C                     MOVE VBDDPT    ZCNUM            TRANSACTION CUST NUM               CSD027
+     C                     MOVE NMCY      ZCCY             TRANSACTION CURRENCY
+     C                     MOVE SPBA      ZBRCA                           085862
+     C                     EXSR ZSETAC
+     C                     MOVELZWCNUM    CCSA             SETTLEMENT ACCOUNT
+     C                     MOVE ZFLD6     CCSA             (=CNUM, ACOD, ACSQ)
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C                     MOVE 'F'       CCFD             DUE TO OR FROM DEPOT
+     C                     MOVE 'I'       CCIO             I/O INDICATOR
+     C                     MOVE '31D5'    CCCE             EVENT CODE
+     C                     Z-ADD*ZEROS    CCAS             COUPON AMOUNT - SETLL
+     C                     Z-ADD*ZEROS    CCAN             COUPON AMOUNT - NOMIN
+     C                     Z-ADDVAERPD    CCPD             PAYMENT DATE
+     C*
+     C                     MOVE VBDDPT    KDDPT   6
+     C***********KDDPT     CHAINSDCUSTL0             89                   S01496
+     C*                                                                   S01496
+     C                     CALL 'AOCUSTR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM KDDPT     WLCUST 10                       S01496
+     C                     PARM *BLANKS   WLKYST  7                       S01496
+     C           SDCUST    PARM SDCUST    DSSDY                           S01496
+     C*
+     C**  IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'004'     DBASE            *****************
+     C***********          MOVEL'SDCUSTL0'DBFILE           ** DB ERROR 04 S01496
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 04 *S01496
+     C                     MOVELKDDPT     DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C                     MOVE BBCRNM    CCDN             DEPOT REPORT NAME
+     C                     MOVE BBCRTN    CCTW             DEPOT REPORT TOWN
+     C*
+     C                     MOVE *BLANKS   MDTI             MATURITY DATE INDICAT
+     C                     MOVE 'Y'       EARL             DUE TO EARLY REDEMPT
+     C                     MOVE 'D'       RECI             RECORD ID
+     C*                                                                   S01496
+     C**  Set up interbranch fields                                       S01496
+     C*                                                                   S01496
+     C                     MOVE *BLANKS   EXEI                            S01496
+     C                     MOVE 'B'       ELVB                            S01496
+     C                     MOVE 'C'       ELVC                            S01496
+     C                     MOVE 'S'       ELVS                            S01496
+     C                     MOVE 'N'       IBRE                            S01496
+     C                     MOVE 'Y'       ICYE                            S01496
+     C*                                                                   S01496
+     C**  Set up Company of Booking Branch                                S01496
+     C*                                                                   S01496
+     C**********           CALL 'AOBRCHR0'                                S01496              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY   ' WLOPTN                          S01496
+     C                     PARM CCBA      WLBRCH  3                       S01496
+     C           SDBRCH    PARM SDBRCH    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     Z-ADD8         DBASE            ***************S01496
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 08 *S01496
+     C                     MOVELCCBA      DBKEY            ***************S01496
+     C                     EXSR *PSSR                                     S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     MOVE A8CMCD    COBB                            S01496
+     C                     MOVE A8CMCD    COOB                            S01496
+     C*                                                                   S01496
+     C**  Set up Company of Settlement Branch                             S01496
+     C*                                                                   S01496
+     C           CCTA      IFNE *BLANKS                                   S01496
+     C**********           CALL 'AOBRCHR0'                                S01496              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY   ' WLOPTN                          S01496
+     C                     PARM CCTA      WLBRCH  3                       S01496
+     C           SDBRCH    PARM SDBRCH    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     Z-ADD9         DBASE            ***************S01496
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 09 *S01496
+     C                     MOVELCCTA      DBKEY            ***************S01496
+     C                     EXSR *PSSR                                     S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     MOVE A8CMCD    WLCOSB  3                       S01496
+     C                     MOVE A8BICN    WLBICN  6                       S01496
+     C*                                                                   S01496
+     C**  Else, default settlement branch/company to booking brch/comp.   S01496
+     C*                                                                   S01496
+     C                     ELSE                                           S01496
+     C                     MOVE CCBA      CCTA                            S01496
+     C                     MOVE COBB      WLCOSB                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  The Event Branch and Company are the Booking Branch and         S01496
+     C**  Company on the first Event.                                     S01496
+     C*                                                                   S01496
+     C                     MOVE CCBA      EBRC                            S01496
+     C                     MOVE COBB      ECPY                            S01496
+     C*                                                                   S01496
+     C**  If an interbranch event then settlement account will be blank   S01496
+     C**  and settlement method 00.                                       S01496
+     C*                                                                   S01496
+     C           AGMBIN    IFEQ 'Y'                                       S01496
+     C           CCBA      ANDNECCTA                                      S01496
+     C                     MOVE *BLANKS   CCSA                            S01496
+     C                     MOVE '00'      CCSM                            S01496
+     C                     END                                            S01496
+      *                                                                   CEU011
+      ** Move Ccy sort seq. no. to the Events Sort Seq. no. if            CEU011
+      ** EMU Position/Risk Reporting enhancement is switch on.            CEU011
+      *                                                                   CEU011
+     C********** CEU011    IFEQ 'Y'                                                    CEU011 241795
+     C                     Z-ADDA6SSNB    ECSS                            CEU011
+     C**********           ENDIF                                                       CEU011 241795
+     C*                                                                   S01496
+     C**  Write a record to the events file                               S01496
+     C*
+     C                     ADD  1         OUTRDP
+     C***********          ADD  CCNP      WTOTDP                          S01496
+     C                     ADD  CCEA      WTOTDP                          S01496
+     C                     WRITEDPEVEDF
+     C*                                                                   S01496
+     C** Generate second and third event records if a multibranch event   S01496
+     C**  There are the two Events for the Settlement Branch.             S01496
+     C*                                                                   S01496
+     C           AGMBIN    IFEQ 'Y'                                       S01496
+     C           CCBA      ANDNECCTA                                      S01496
+     C*                                                                   S01496
+     C**  Second record                                                   S01496
+     C**   Between Settlement Branch and Depot.                           S01496
+     C*                                                                   S01496
+     C                     MOVE CCTA      EBRC                            S01496
+     C                     MOVE WLCOSB    ECPY                            S01496
+     C                     MOVE 'S'       ELVS                            S01496
+     C                     MOVE 'Y'       IBRE                            S01496
+     C*                                                                   S01496
+     C           COBB      IFNE WLCOSB                                    S01496
+     C                     MOVE 'Y'       ICYE                            S01496
+     C                     ELSE                                           S01496
+     C                     MOVE 'N'       ICYE                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C           CCFD      IFEQ 'T'                                       S01496
+     C                     MOVE SRSM      CCSM                            S01496
+     C                     MOVE SRAC      CCSA                            S01496
+     C                     END                                            S01496
+     C           CCFD      IFEQ 'F'                                       S01496
+     C                     MOVE SPSM      CCSM                            S01496
+     C                     MOVE SPAT      CCSA                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  Write a record to the events file                               S01496
+     C*                                                                   S01496
+     C                     ADD  1         OUTRDP                          S01496
+     C                     ADD  CCEA      WTOTDP                          S01496
+     C                     WRITEDPEVEDF                                   S01496
+     C*                                                                   S01496
+     C**  Third record                                                    S01496
+     C**   Between Settlement Branch and Booking Branch.                  S01496
+     C*                                                                   S01496
+     C*                                                                   S01496
+     C**  Switch the incoming/outgoing indicator                          S01496
+     C*                                                                   S01496
+     C           CCIO      IFEQ 'I'                                       S01496
+     C                     MOVE 'O'       CCIO                            S01496
+     C                     ELSE                                           S01496
+     C                     MOVE 'I'       CCIO                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  Blank the settlement account and method                         S01496
+     C*                                                                   S01496
+     C                     MOVE '00'      CCSM                            S01496
+     C                     MOVE *BLANKS   CCSA                            S01496
+     C*                                                                   S01496
+     C**  Depot is now the settlement branch internal customer number     S01496
+     C*                                                                   S01496
+     C                     MOVE WLBICN    CCDP                            S01496
+     C*                                                                   S01496
+     C**  Write a record to the event's file                              S01496
+     C*                                                                   S01496
+     C                     ADD  1         OUTRDP                          S01496
+     C                     ADD  CCEA      WTOTDP                          S01496
+     C                     WRITEDPEVEDF                                   S01496
+     C*                                                                   S01496
+     C                     END                                            S01496
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C* W02   - GENERATE RECORD ON PF/CPEVED                          *
+     ******************************************************************
+     C           W02       BEGSR
+     C*
+     C***********          Z-ADDVCBRCD    CCBR             BRANCH CODE    S01496
+     C                     MOVE VCBRCD    CCBA             BRANCH CODE    S01496
+     C**********           Z-ADDVCCNUM    CCCN             CUSTOMER                           CSD027
+     C                     MOVE VCCNUM    CCCN             CUSTOMER                           CSD027
+     C                     MOVE VASESN    CCSS             SECURITY
+     C                     MOVE 'RC'      CCET             EVENT TYPE
+     C                     Z-ADDVAERRD    CCDT             EVENT DATE
+     C                     MOVE NMCY      CCEC             EVENT CURRENCY
+     C*
+     C           VCNOMA    IFLT *ZEROS
+     C                     Z-SUBVCNOMA    VCNOMA
+     C                     MOVE 'F'       CCFC             DUE TO OR FROM CUST
+     C                     MOVE 'I'       CCIO             I/O INDICATOR
+     C                     ELSE
+     C                     MOVE 'T'       CCFC
+     C                     MOVE 'O'       CCIO
+     C                     END
+     C*
+     C                     Z-ADDVCNOMA    ZNOML
+     C                     Z-ADDVAREDP    ZAVPR
+     C                     Z-ADDNMDP      ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     MOVE SPBS      ZPRCB
+     C                     EXSR ZAPNUM
+     C                     Z-ADDZVALU     CCEA             EVENT AMOUNT
+     C                     Z-ADDZVALU     CCNA             NOM CCY EQUIV
+     C*
+     C                     MOVE NMCY      CCNC             NOMINAL CCY
+     C                     Z-ADDVCNOMA    CCNP             NOMINAL POSITION
+     C                     Z-ADDVCNOMA    CCEP             EX-COUPON NOM POSIT
+     C                     Z-ADD*ZEROS    CCSM             SETTLEMENT METHOD
+     C                     MOVE *BLANKS   CCSA             SETTLEMENT ACCOUNT
+     C***********          Z-ADD*ZEROS    CCBN             SETTLEMENT BRANS01496
+     C                     MOVE *BLANKS   CCTA             SETTLEMENT BR. S01496
+     C                     MOVE *BLANKS   CCTC             CLEARANCE TYPE
+      *                                                                                       CSE028
+      ** If CSE028 is on, call SESSIR0 for default of MT5xx information                       CSE028
+      *                                                                                       CSE028
+     C           CSE028    IFEQ 'Y'                                                           CSE028
+      *                                                                                       CSE028
+     C                     MOVE '0'       *IN89                                               CSE028
+      *                                                                                       CSE028
+     C                     CALL 'SESSIR0'                                                     CSE028
+     C                     PARM 'D'       POTYP                                               CSE028
+     C                     PARM           VCBRCD                                              CSE028
+     C                     PARM           VCCNUM                                              CSE028
+     C                     PARM           VCBOOK                                              CSE028
+     C                     PARM           NMCY                                                CSE028
+     C                     PARM           SMCC                                                CSE034
+     C                     PARM           SITP                                                CSE028
+     C                     PARM           VCPTFR                                              CSE028
+     C                     PARM           PCBSTD                                              CSE028
+     C                     PARM           PCBSAD                                              CSE028
+     C                     PARM *BLANKS   PRTCD                                               CSE028
+      *                                                                                       CSE028
+     C           PRTCD     IFNE '*NCRF'                                                       CSE028
+     C           PRTCD     ANDNE'*NRF '                                                       CSE028
+      *                                                                                       CSE028
+     C           2         OCUR PCBSTD                                                        CSE028
+      *                                                                                       CSE028
+     C                     ELSE                                                               CSE028
+      *                                                                                       CSE028
+     C           PRTCD     IFNE '*NBRF'                                                       CSE028
+     C           PRTCD     ANDNE'*NRF '                                                       CSE028
+      *                                                                                       CSE028
+     C           1         OCUR PCBSTD                                                        CSE028
+      *                                                                                       CSE028
+     C                     ELSE                                                               CSE028
+     C                     MOVE '1'       *IN89                                               CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+      *                                                                                       CSE028
+     C                     ELSE                                                               CSE028
+     C*
+     C**  SET UP KEY FIELDS
+     C*
+     C***********          Z-ADDVCBRCD    KSBRH            BRANCH         S01496
+     C                     MOVE VCBRCD    KSBRH            BRANCH         S01496
+     C**********           Z-ADDVCCNUM    KCSTM            CUSTOMER                           CSD027
+     C                     MOVE VCCNUM    KCSTM            CUSTOMER                           CSD027
+     C                     MOVE NMCY      KCYSI            NOMINAL CCY
+     C                     MOVE *BLANKS   KBKCD                                               CSE028
+     C*
+     C**  SET UP DEFAULT DEPOT SETTLEMENT INSTRUCTIONS
+     C*
+     C/COPY WNCPYSRC,SE6790C002
+     C           KEY2      CHAINSTDSED               89
+     C/COPY WNCPYSRC,SE6790C003
+      *                                                                                       CSE028
+     C                     ENDIF                                                              CSE028
+     C*
+     C**  IF RECORD IS FOUND
+     C*
+     C           *IN89     IFEQ '0'                        B*1
+     C*
+     C           VCNOMA    IFGT *ZEROS                     B*2
+     C                     MOVE SCLS      CCTC             CLEARANCE TYPE
+     C                     Z-ADDSRSM      CCSM             SETTLEMENT METHOD
+     C                     MOVE SRAC      CCSA             SETTLEMENT ACCOUNT
+     C***********          Z-ADDSRBR      CCBN             SETTLEMENT BRANS01496
+     C                     MOVE SRAB      CCTA             SETTLEMENT BR. S01496
+     C                     ELSE                            X*2
+     C                     MOVE SCLP      CCTC             CLEARANCE TYPE
+     C                     Z-ADDSPSM      CCSM             SETTLEMENT METHOD
+     C                     MOVE SPAT      CCSA             SETTLEMENT ACCOUNT
+     C***********          Z-ADDSPBR      CCBN             SETTLEMENT BRANS01496
+     C                     MOVE SPBA      CCTA             SETTLEMENT BR. S01496
+     C                     END                             E*2
+     C*
+     C**  IF SETTLEMENT METHOD '04' AND SETTLEMENT ACCOUNT BLANK
+     C*
+     C           CCSM      IFEQ 04                         B*2
+     C           CCSA      ANDEQ*BLANKS
+     C                     Z-ADDCCSM      ZMETH            SETTLEMENT METHOD
+     C                     MOVE CCSA      ZSETI            SETTLEMENT ACCOUNT
+     C**********           Z-ADDVCCNUM    ZCNUM            TRANSACTION CUST NUM               CSD027
+     C                     MOVE VCCNUM    ZCNUM            TRANSACTION CUST NUM               CSD027
+     C                     MOVE NMCY      ZCCY             TRANSACTION CURRENCY
+     C                     MOVE CCTA      ZBRCA                           085862
+     C                     EXSR ZSETAC
+     C*
+     C           *IN99     IFEQ '0'                        B*3
+     C                     MOVELZWCNUM    CCSA             SETTLEMENT ACCOUNT
+     C                     MOVE ZFLD6     CCSA             (=CNUM, ACOD, ACSQ)
+     C                     ELSE
+     C                     MOVE *BLANKS   CCSA             (=CNUM, ACOD, ACSQ)
+     C                     END                             E*3
+     C*
+     C                     END                             E*2
+     C                     END                             E*1
+     C*
+     C                     MOVE '31C5'    CCCE             EVENT CODE
+     C                     Z-ADD*ZEROS    CCAS             COUPON AMOUNT - SETLL
+     C                     Z-ADD*ZEROS    CCAN             COUPON AMOUNT - NOMIN
+     C                     Z-ADDVAERPD    CPYD             PAYMENT DATE
+     C*
+     C                     MOVE VCCNUM    KCNUM   6
+     C***********KCNUM     CHAINSDCUSTL0             89                   S01496
+     C*                                                                   S01496
+     C                     CALL 'AOCUSTR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM KCNUM     WLCUST                          S01496
+     C                     PARM *BLANKS   WLKYST                          S01496
+     C           SDCUST    PARM SDCUST    DSSDY                           S01496
+     C*
+     C**  IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'005'     DBASE            *****************
+     C***********          MOVEL'SDCUSTL0'DBFILE           ** DB ERROR 05 S01496
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 05 *S01496
+     C                     MOVELKCNUM     DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C                     MOVE BBCRNM    CCRN             DEPOT REPORT NAME
+     C                     MOVE BBCRTN    CCTR             DEPOT REPORT TOWN
+     C*
+     C                     MOVE *BLANKS   MDTI             MATURITY DATE INDICAT
+     C                     MOVE 'Y'       EARL             DUE TO EARLY REDEMPT
+     C                     MOVE 'D'       RECI             RECORD ID
+     C*                                                                   S01496
+     C**  Set up interbranch fields                                       S01496
+     C*                                                                   S01496
+     C                     MOVE *BLANKS   EXEI                            S01496
+     C                     MOVE 'B'       ELVB                            S01496
+     C                     MOVE 'C'       ELVC                            S01496
+     C                     MOVE 'S'       ELVS                            S01496
+     C                     MOVE 'N'       IBRE                            S01496
+     C                     MOVE 'Y'       ICYE                            S01496
+     C*                                                                   S01496
+     C**  Set up Company of Booking Branch                                S01496
+     C*                                                                   S01496
+     C**********           CALL 'AOBRCHR0'                                S01496              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY   ' WLOPTN                          S01496
+     C                     PARM CCBA      WLBRCH                          S01496
+     C           SDBRCH    PARM SDBRCH    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     Z-ADD10        DBASE            ***************S01496
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 10 *S01496
+     C                     MOVELCCBA      DBKEY            ***************S01496
+     C                     EXSR *PSSR                                     S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     MOVE A8CMCD    COBB                            S01496
+     C                     MOVE A8CMCD    COOB                            S01496
+     C*                                                                   S01496
+     C**  Set up Company of Settlement Branch                             S01496
+     C*                                                                   S01496
+     C           CCTA      IFNE *BLANKS                                   S01496
+     C**********           CALL 'AOBRCHR0'                                S01496              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY   ' WLOPTN                          S01496
+     C                     PARM CCTA      WLBRCH                          S01496
+     C           SDBRCH    PARM SDBRCH    DSSDY                           S01496
+     C*                                                                   S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     Z-ADD11        DBASE            ***************S01496
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 11 *S01496
+     C                     MOVELCCTA      DBKEY            ***************S01496
+     C                     EXSR *PSSR                                     S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     MOVE A8CMCD    WLCOSB                          S01496
+     C                     MOVE A8BICN    WLBICN                          S01496
+     C*                                                                   S01496
+     C**  Else, default settlement branch/company to booking brch/comp.   S01496
+     C*                                                                   S01496
+     C                     ELSE                                           S01496
+     C                     MOVE CCBA      CCTA                            S01496
+     C                     MOVE COBB      WLCOSB                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  The Event Branch and Company are the Booking Branch and         S01496
+     C**  Company on the first Event.                                     S01496
+     C*                                                                   S01496
+     C                     MOVE CCBA      EBRC                            S01496
+     C                     MOVE COBB      ECPY                            S01496
+     C*                                                                   S01496
+     C** If an interbranch event then settlement account will be blank    S01496
+     C** and settlement method 00.                                        S01496
+     C*                                                                   S01496
+     C           AGMBIN    IFEQ 'Y'                                       S01496
+     C           CCBA      ANDNECCTA                                      S01496
+     C                     MOVE *BLANKS   CCSA                            S01496
+     C                     MOVE '00'      CCSM                            S01496
+     C                     END                                            S01496
+      *                                                                   CEU011
+      ** Move Ccy sort seq. no. to the Events Sort Seq. no. if            CEU011
+      ** EMU Position/Risk Reporting enhancement is switch on.            CEU011
+      *                                                                   CEU011
+     C********** CEU011    IFEQ 'Y'                                                    CEU011 241795
+     C                     Z-ADDA6SSNB    ECSS                            CEU011
+     C**********           ENDIF                                                       CEU011 241795
+     C*                                                                   S01496
+     C**  Write a record to the events file                               S01496
+     C*
+     C                     ADD  1         OUTRCP
+     C***********          ADD  CCNP      WTOTCP                          S01496
+     C                     ADD  CCEA      WTOTCP                          S01496
+     C                     WRITECPEVEDF
+     C*                                                                   S01496
+     C** Generate second and third event records if a multibranch event   S01496
+     C**  There are the two Events for the Settlement Branch.             S01496
+     C*                                                                   S01496
+     C           AGMBIN    IFEQ 'Y'                                       S01496
+     C           CCBA      ANDNECCTA                                      S01496
+     C*                                                                   S01496
+     C**  Second record                                                   S01496
+     C**   Between Settlement Branch and Depot.                           S01496
+     C*                                                                   S01496
+     C                     MOVE CCTA      EBRC                            S01496
+     C                     MOVE WLCOSB    ECPY                            S01496
+     C                     MOVE 'Y'       IBRE                            S01496
+     C*                                                                   S01496
+     C           COBB      IFNE WLCOSB                                    S01496
+     C                     MOVE 'Y'       ICYE                            S01496
+     C                     ELSE                                           S01496
+     C                     MOVE 'N'       ICYE                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C           CCFC      IFEQ 'T'                                       S01496
+     C                     MOVE SRSM      CCSM                            S01496
+     C                     MOVE SRAC      CCSA                            S01496
+     C                     END                                            S01496
+     C           CCFC      IFEQ 'F'                                       S01496
+     C                     MOVE SPSM      CCSM                            S01496
+     C                     MOVE SPAT      CCSA                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  Write a record to the events file                               S01496
+     C*                                                                   S01496
+     C                     ADD  1         OUTRCP                          S01496
+     C                     ADD  CCEA      WTOTCP                          S01496
+     C                     WRITECPEVEDF                                   S01496
+     C*                                                                   S01496
+     C**  Third record                                                    S01496
+     C**   Between Settlement Branch and Booking Branch.                  S01496
+     C*                                                                   S01496
+     C*                                                                   S01496
+     C**  Switch the incoming/outgoing indicator                          S01496
+     C*                                                                   S01496
+     C           CCIO      IFEQ 'I'                                       S01496
+     C                     MOVE 'O'       CCIO                            S01496
+     C                     ELSE                                           S01496
+     C                     MOVE 'I'       CCIO                            S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C**  Blank the settlement account and method                         S01496
+     C*                                                                   S01496
+     C                     MOVE '00'      CCSM                            S01496
+     C                     MOVE *BLANKS   CCSA                            S01496
+     C*                                                                   S01496
+     C**  Depot is now the settlement branch internal customer number     S01496
+     C*                                                                   S01496
+     C                     MOVE WLBICN    CCCN                            S01496
+     C*                                                                   S01496
+     C**  Write a record to the event's file                              S01496
+     C*                                                                   S01496
+     C                     ADD  1         OUTRCP                          S01496
+     C                     ADD  CCEA      WTOTCP                          S01496
+     C                     WRITECPEVEDF                                   S01496
+     C*                                                                   S01496
+     C                     END                                            S01496
+     C*
+     C                     ENDSR
+     ***************************************************************************
+      /EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZAPNUM - CALCULATE AP NUMERATOR                                       *
+     C*                                                                        *
+     C*  PURPOSE : TO MULTIPLY A NOMINAL POSITION BY THE PRICE OF THE          *
+     C*  POSITION TO GIVE A VALUE OF THE POSITION WITH THE CORRECT NUMBER      *
+     C*  OF DECIMAL PLACES FOR THE NOMINAL CURRENCY                            *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZNOML  11 0     NOMINAL                                          *
+     C*       ZAVPR  15 8     AVERAGE PRICE                                    *
+     C*       ZNMDP   1 0     NOMINAL DECIMAL PLACES (0-4)                     *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3)            *
+     C*       ZPRCB   1 A     PRICE BASIS (P/U)                                *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZVALU  15 0     VALUE                                            *
+     C*                                                                        *
+     C*  ALSO REQUIRED                                                         *
+     C*       POWER8 ARRAY OF MULTIPLYING FACTORS FOR NOMINAL DECIMAL PLACES   *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*       ZVAL0  15 0 - AVERAGE PRICE WITH 0 DECIMAL PLACES                *
+     C*       ZVAL1  15 1 - --------------- '' ----------------                *
+     C*       ZVAL2  15 2 - --------------- '' ----------------                *
+     C*       ZVAL3  15 3 - --------------- '' ----------------                *
+     C*       ZI      1 0 - POWER ARRAY                                        *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C*************************************************************************
+     C           ZAPNUM    BEGSR                           *** ZAPNUM ***
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDZNOML     ZNOML  110
+     C                     Z-ADDZAVPR     ZAVPR  158
+     C                     Z-ADDZNMDP     ZNMDP   10
+     C                     Z-ADDZNMCD     ZNMCD   10
+     C                     MOVE ZPRCB     ZPRCB   1
+     C                     Z-ADDZVALU     ZVALU  150
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 0
+     C           ZNMCD     IFEQ 0
+     C           ZNOML     MULT ZAVPR     ZVAL0  150H
+     C                     MOVE ZVAL0     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 1
+     C           ZNMCD     IFEQ 1
+     C           ZNOML     MULT ZAVPR     ZVAL1  151H
+     C                     MOVE ZVAL1     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 2
+     C           ZNMCD     IFEQ 2
+     C           ZNOML     MULT ZAVPR     ZVAL2  152H
+     C                     MOVE ZVAL2     ZVALU
+     C                     END
+     C*
+     C** IF NUMBER OF CURRENCY DECIMAL PLACES I = 3
+     C           ZNMCD     IFEQ 3
+     C           ZNOML     MULT ZAVPR     ZVAL3  153H
+     C                     MOVE ZVAL3     ZVALU
+     C                     END
+     C*
+     C** SET INDEX ZI EQUAL TO 5 -. NOMINAL DECIMAL PLACES )
+     C           5         SUB  ZNMDP     ZI      10
+     C*
+     C** MULTIPLY ZVALU BY  POWER8,ZI TO GET AMOUNT WITH NOMINAL DECIMAL PLACES
+     C           ZVALU     MULT POWER8,ZI ZVALU
+     C*
+     C** PRICE BASIS IF = PERCENTAGE
+     C           ZPRCB     IFEQ 'P'
+     C           ZVALU     DIV  100       ZVALU     H
+     C                     END
+     C*
+     C                     ENDSR
+     C*************************************************************************
+      /EJECT
+     ******************************************************************
+     C* SECTIN   - GET SECURITY RECORD                                *
+     ******************************************************************
+     C*
+     C           SECTIN    BEGSR                           ** SECTIN **
+     C*
+     C**  CHAIN FOR SECURITY RECORD AND DATA BASE ERROR
+     C*
+     C           VASESN    CHAINSECTY                89
+     C*
+     C**  IF RECORD NOT FOUND
+     C*
+     C           *IN89     IFEQ '1'                        B*1
+     C           RECI      OREQ '*'
+     C                     MOVEL'006'     DBASE            *****************
+     C***********          MOVEL'SECTY   'DBFILE           ** DB ERROR 06 S01496
+     C                     MOVE 'SECTY   'DBFILE           * DB ERROR 06 *S01496
+     C                     MOVELVASESN    DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C***********NMCY      CHAINSDCURRL0             89                   S01496
+     C*                                                                   S01496
+     C                     CALL 'AOCURRR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD                          S01496
+     C                     PARM '*KEY  '  WLOPTN                          S01496
+     C                     PARM NMCY      WLCYCD  3                       S01496
+     C           SDCURR    PARM SDCURR    DSSDY                           S01496
+     C*
+     C**  IF RECORD NOT FOUND
+     C*
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'007'     DBASE            *****************
+     C***********          MOVEL'SDCURRL0'DBFILE           ** DB ERROR 07 S01496
+     C                     MOVE 'SDCURRPD'DBFILE           * DB ERROR 07 *S01496
+     C                     MOVELNMCY      DBKEY            *****************
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C                     ENDSR
+     C**********************************************************************
+      /EJECT
+     ******************************************************************
+     C* *PSSR - TO PROCESS ABNORMAL END OF PROGRAM                    *
+     ******************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*
+     C                     WRITEERROR
+     C***********          WRITEENDRP                                     S01496
+     C*
+     C**   PRINT DUMP AND CANCEL PROGRAM
+     C*
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     ******************************************************************
+      /EJECT
+     ******************************************************************
+     C*  SRLR - E.O.J. - C O N T R O L   P R O C E S S I N G          *
+     ******************************************************************
+     C*
+     C           SRLR      BEGSR
+     C*
+     C**  IF NO RECORD OUTPUT
+     C*
+     C           OUTRDP    IFEQ *ZEROS                     B*1
+     C           OUTRCP    ANDEQ*ZEROS
+     C                     WRITENODATA
+     C                     ELSE                            X*1
+     C*
+     C**  WRITE TRADE EVENTS AUDIT RECORD
+     C*
+     C           1         SETLLCPEVEA
+     C                     READ CPEVEA                   89
+     C*
+     C           WTOTCP    DIV  1000      CPHRWN
+     C                     MVR            CPHRDC
+     C*
+     C**  IF RECORD FOUND
+     C*
+     C           *IN89     IFEQ '0'                        B*2
+     C*
+     C**  TRAILER BEFORE RUNNING OF THE PROGRAM
+     C*
+     C                     Z-ADDNORE      CPBEFO
+     C                     Z-ADDHRWN      CPBEF1
+     C                     Z-ADDHRDC      CPBEF2
+     C*
+     C**  TRAILER ADDED
+     C*
+     C                     Z-ADDOUTRCP    CPCALC
+     C                     Z-ADDCPHRWN    CPCAL1
+     C                     Z-ADDCPHRDC    CPCAL2
+     C*
+     C                     ADD  OUTRCP    NORE
+     C                     ADD  CPHRWN    HRWN
+     C           HRDC      ADD  CPHRDC    CPHRDC
+     C*
+     C           CPHRDC    IFGE 1000                       B*3
+     C           CPHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE                            X*3
+     C                     Z-ADDCPHRDC    HRDC
+     C                     END                             E*3
+     C*
+     C**  OLD TRAILER + CALCULATED TRAILER = NEW TRAILER FOR CPEVED
+     C*
+     C                     Z-ADDNORE      CPAFTR
+     C                     Z-ADDHRWN      CPAFT1
+     C                     Z-ADDHRDC      CPAFT2
+     C*
+     C                     UPDATCPEVEAF
+     C*
+     C**  IF TRAILER DOES NOT EXIST |||
+     C*
+     C                     ELSE                            X*2
+     C*
+     C**  TRAILER BEFORE RUNNING OF THE PROGRAM
+     C*
+     C                     Z-ADD*ZEROS    CPBEFO
+     C                     Z-ADD*ZEROS    CPBEF1
+     C                     Z-ADD*ZEROS    CPBEF2
+     C*
+     C**  TRAILER ADDED
+     C*
+     C                     Z-ADDOUTRCP    CPCALC
+     C                     Z-ADDCPHRWN    CPCAL1
+     C                     Z-ADDCPHRDC    CPCAL2
+     C*
+     C**  NEW TRAILER FOR CPEVED (SAME AS ADDED)
+     C*
+     C                     Z-ADDOUTRCP    CPAFTR
+     C                     Z-ADDCPHRWN    CPAFT1
+     C                     Z-ADDCPHRDC    CPAFT2
+     C*
+     C                     Z-ADDOUTRCP    NORE
+     C                     Z-ADDCPHRWN    HRWN
+     C                     Z-ADDCPHRDC    HRDC
+     C                     WRITECPEVEAF
+     C                     END                             E*2
+     C*
+     C**  WRITE PORTFOLIO CUSTOMER TRADE EVENTS AUDIT RECORD
+     C*
+     C           1         SETLLDPEVEA
+     C                     READ DPEVEA                   89
+     C*
+     C           WTOTDP    DIV  1000      DPHRWN
+     C                     MVR            DPHRDC
+     C*
+     C           *IN89     IFEQ '0'                        B*2
+     C*
+     C**  TRAILER BEFORE RUNNING OF THE PROGRAM
+     C*
+     C                     Z-ADDNORE      DPBEFO
+     C                     Z-ADDHRWN      DPBEF1
+     C                     Z-ADDHRDC      DPBEF2
+     C*
+     C**  TRAILER ADDED
+     C*
+     C                     Z-ADDOUTRDP    DPCALC
+     C                     Z-ADDDPHRWN    DPCAL1
+     C                     Z-ADDDPHRDC    DPCAL2
+     C*
+     C                     ADD  OUTRDP    NORE
+     C                     ADD  DPHRWN    HRWN
+     C           HRDC      ADD  DPHRDC    DPHRDC
+     C*
+     C           DPHRDC    IFGE 1000                       B*3
+     C           DPHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE                            X*3
+     C                     Z-ADDDPHRDC    HRDC
+     C                     END                             E*3
+     C*
+     C**  OLD TRAILER + CALCULATED TRAILER = NEW TRAILER OF DPEVED
+     C*
+     C                     Z-ADDNORE      DPAFTR
+     C                     Z-ADDHRWN      DPAFT1
+     C                     Z-ADDHRDC      DPAFT2
+     C*
+     C                     UPDATDPEVEAF
+     C*
+     C**  IF TRAILER DOES NOT EXIST |||
+     C*
+     C                     ELSE                            X*2
+     C*
+     C**  TRAILER BEFORE RUNNING OF THE PROGRAM
+     C*
+     C                     Z-ADD*ZEROS    DPBEFO
+     C                     Z-ADD*ZEROS    DPBEF1
+     C                     Z-ADD*ZEROS    DPBEF2
+     C*
+     C**  TRAILER ADDED
+     C*
+     C                     Z-ADDOUTRDP    DPCALC
+     C                     Z-ADDDPHRWN    DPCAL1
+     C                     Z-ADDDPHRDC    DPCAL2
+     C*
+     C**  NEW TRAILER FOR DPEVED (SAME AS ADDED)
+     C*
+     C                     Z-ADDOUTRDP    DPAFTR
+     C                     Z-ADDDPHRWN    DPAFT1
+     C                     Z-ADDDPHRDC    DPAFT2
+     C*
+     C                     Z-ADDOUTRDP    NORE
+     C                     Z-ADDDPHRWN    HRWN
+     C                     Z-ADDDPHRDC    HRDC
+     C                     WRITEDPEVEAF
+     C                     END                             E*2
+     C*
+     C                     WRITECONTROL
+     C                     END                             E*1
+     C*
+     C**  END OF PROGRAM
+     C*
+     C***********          WRITEENDRP                                     S01496
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZSETAC                                                 081441
+     C********************************************************************081441
+     C***********                                                         081441
+     C***ZSETAC*SR.*TO*DETERMINE*SETTLEMENT*ACCOUNT***********************081441
+     C***********                                                         081441
+     C***INPUT**FIELDS****************************************************081441
+     C********ZMETH**2,0*****SETTLEMENT*METHOD****************************081441
+     C********ZSETI**12A*****SETTLEMENT*ACCOUNT***************************081441
+     C********ZCNUM**6,0*****TRANSACTION*CUSTOMER*NUMBER******************081441
+     C********ZCCY****3A*****TRANSACTION*CURRENCY*************************081441
+     C***********                                                         081441
+     C***OUTPUT**FIELDS***************************************************081441
+     C********ZSETO**15A*****SETTLEMENT*ACCOUNT************************   S01496
+     C********ZSETO**18A*****SETTLEMENT*ACCOUNT*********************S01496081441
+     C********ZPTFR***4A*****PORTFOLIO*OF*SETTLEMENT*ACCOUNT**************081441
+     C***********                                                         081441
+     C********************************************************************081441
+     C***********                                                         081441
+     C***********ZSETAC****BEGSR*******************************ZSETAC*****081441
+     C***********                                                         081441
+     C***DEFINE*ALL*FIELDS************************************************081441
+     C***********          Z-ADDZMETH     ZMETH   20                      081441
+     C***********          MOVE ZSETI     ZSETI  12                       081441
+     C***********          Z-ADDZCNUM     ZCNUM   60                      081441
+     C***********          MOVE ZCCY      ZCCY    3                       081441
+     C***********          MOVE ZPTFR     ZPTFR   4                       081441
+     C***********          MOVE ZSETO     ZSETO  15                       S01496
+     C***********          MOVE ZSETO     ZSETO  18                 S01496081441
+     C***********                                                         081441
+     C***IF*SETTLEMENT*METHOD*'04'*SET*UP*ACCOUNT*CODE*IN*FORM************081441
+     C***AAAAAA-BBB-CCCC-DD*WHERE:****************************************081441
+     C*****AAAAAA*=*CUSTOMER*NUMBER***************************************081441
+     C*****BBB****=*TRANSACTION*CURRENCY**********************************081441
+     C*****CCCC***=*PRIME*CURRENT*ACCOUNT*********************************081441
+     C*****DD*****=*STARTING*ACCOUNT*SEQUENCE*FOR*BRANCH*(MULTI*BRANCH****081441
+     C**************BRANCH*SYSTEM)****************************************081441
+     C**************OR*'01'*(FOR*SINGLE*BRANCH*SYSTEM)********************081441
+     C***********ZMETH     IFEQ 04                         B1             081441
+     C***********          MOVE ZCNUM     ZWCNUM                          081441
+     C***********          MOVE ZCCY      ZWCCY                           081441
+     C***********          MOVE BMACCD    ZWACOD                          081441
+     C***********                                                         081441
+     C***IF*SYSTEM*IS*SINGLE*BRANCH*SET*ACCOUNT*SEQUENCE*TO*'01'*******   S01496
+     C***********                                                   S01496081441
+     C****Set*account*sequence*to*'01'******************************S01496081441
+     C***********                                                   S01496081441
+     C***********BJMBDI    IFEQ 'N'                        B2             S01496
+     C***********          MOVE '01'      ZWACSQ                          081441
+     C***********          ELSE                            X2             S01496
+     C***********                                                         S01496
+     C***....*OTHERWISE*IF*CHANGE*OF*CUSTOMER*NUMBER*ACCESS*CUSTOMER***   S01496
+     C***DETAILS*******************************************************   S01496
+     C***********ZCNUM     IFNE ZSCNUM                     B3             S01496
+     C***********          MOVE ZCNUM     ZWCNUA  6                       S01496
+     C***********ZWCNUA    CHAINSDCUSTL0             99                   S01496
+     C***********                                                         S01496
+     C************IN99     IFEQ '1'                        B4             S01496
+     C***********          Z-ADD0100      DBASE            ***************S01496
+     C***********          MOVEL'SDCUSTL0'DBFILE           * DBERROR 100 *S01496
+     C***********          MOVELZWCNUA    DBKEY            ***************S01496
+     C***********          EXSR *PSSR                                     S01496
+     C***********          END                             E4             S01496
+     C***********                                                         S01496
+     C***********          Z-ADDZCNUM     ZSCNUM  60                      S01496
+     C***********          END                             E3             S01496
+     C***********                                                         S01496
+     C***IF*CHANGE*OF*BRANCH*CODE*ACCESS*BRANCH*DETAILS****************   S01496
+     C***********BBBRCD    IFNE ZSBRCD                     B3             S01496
+     C***********BBBRCD    CHAINSDBRCHL0             99                   S01496
+     C***********                                                         S01496
+     C************IN99     IFEQ '1'                        B4             S01496
+     C***********          Z-ADD101       DBASE            ***************S01496
+     C***********          MOVEL'SDBRCHL0'DBFILE           * DBERROR 101 *S01496
+     C***********          MOVELBBBRCD    DBKEY            ***************S01496
+     C***********          EXSR *PSSR                                     S01496
+     C***********          END                             E4             S01496
+     C***********                                                         S01496
+     C***********          MOVE BBBRCD    ZSBRCD  3                       S01496
+     C***********          END                             E3             S01496
+     C***********                                                         S01496
+     C***********          MOVE A8SACS    ZWACSQ                          S01496
+     C***********          END                             E2             S01496
+     C***********                                                         081441
+     C***********          END                             E1             081441
+     C***********                                                         081441
+     C***IF*SETTLEMENT*METHOD*'05'*SET*UP*ACCOUNT*CODE*IN*FORM************081441
+     C***AAAAAA-BBB-CCCC-DD*WHERE:****************************************081441
+     C*****AAAAAA*=*BYTES*1*-*6*OF*PARAMETER*ZSETI************************081441
+     C*****BBB****=*TRANSACTION*CURRENCY**********************************081441
+     C*****CCCC***=*BYTES*7*-*10*OF*PARAMETER*ZSETI***********************081441
+     C*****DD*****=*BYTES*7*-*11*UNT*SEQUENCE*FOR*BRANCH*(MULTI*BRANCH****081441
+     C**************BRANCH*SYSTEM)****************************************081441
+     C**************OR*'01'*(FOR*SINGLE*BRANCH*SYSTEM)********************081441
+     C***********ZMETH     IFEQ 05                         B1             081441
+     C***********          MOVELZSETI     ZWCNUM                          081441
+     C***********          MOVE ZCCY      ZWCCY                           081441
+     C***********          MOVELZSETI     ZWWORK 10                       081441
+     C***********          MOVE ZWWORK    ZWACOD                          081441
+     C***********          MOVE ZSETI     ZWACSQ                          081441
+     C***********          END                                            081441
+     C***********                                                         081441
+     C***IF*SETTLEMENT*METHOD*'15'*SET*UP*ACCOUNT*CODE*IN*FORM************081441
+     C***AAAAAA-BBB-CCCC-DD*WHERE:****************************************081441
+     C*****AAAAAA*=*CUSTOMER*NUMBER*PARAMETER*****************************081441
+     C*****BBB****=*TRANSACTION*CURRENCY**********************************081441
+     C*****CCCC***=*CUSTOMER*SE*SETTLEMENT*ACCOUNT*CODE*FROM*SDSECSL0*****081441
+     C*****DD*****=*CUSTOMER*SE*SETTLEMENT*ACCOUNT*SEQUENCE*FROM*SDSECSL0*081441
+     C***********ZMETH     IFEQ 15                         B1             081441
+     C***********          MOVE ZCNUM     ZWCNUM                          081441
+     C***********          MOVE ZCCY      ZWCCY                           081441
+     C***********                                                         081441
+     C***ON*CHANGE*OF*CUSTOMER*NUMBER*ACCESS*SE*CUSTOMER*DETAILS**********081441
+     C***********ZCNUM     IFNE ZSECNU                     B2             081441
+     C***********          MOVE ZCNUM     ZWCNUA  6                       081441
+     C***********ZWCNUA    CHAINSDSECSL0             99                   S01496
+     C***********                                                   S01496081441
+     C***********          CALL 'AOSECSR0'                          S01496081441
+     C***********          PARM *BLANKS   WLRTCD                    S01496081441
+     C***********          PARM '*KEY  '  WLOPTN                    S01496081441
+     C***********          PARM ZWCNUA    WLCUSN  6                 S01496081441
+     C***********SDSECS    PARM SDSECS    DSSDY                     S01496081441
+     C***********                                                         081441
+     C************IN99     IFEQ '1'                        B3             S01496
+     C***********WLRTCD    IFNE *BLANKS                             S01496081441
+     C***********          Z-ADD102       DBASE            ***************081441
+     C***********          MOVEL'SDSECSL0'DBFILE           * DBERROR 102 *S01496
+     C***********          MOVE 'SDSECSPD'DBFILE         * DBERR102*S01496081441
+     C***********          MOVELZWCNUA    DBKEY            ***************081441
+     C***********          EXSR *PSSR                                     081441
+     C***********          END                             E3             081441
+     C***********                                                         081441
+     C***********          Z-ADDZCNUM     ZSECNU  60                      081441
+     C***********          END                             E2             081441
+     C***********                                                         081441
+     C***********          MOVE BFACCD    ZWACOD                          081441
+     C***********          MOVE BFACSN    ZWACSQ                          081441
+     C***********          END                             E1             081441
+     C***********                                                         081441
+     C***IF*SETTLEMENT*METHOD*14*USE*ACCOUNT*NUMBER*PASSED*TO*ACCESS******081441
+     C***LF/ACNUM*********************************************************081441
+     C***********ZMETH     IFEQ 14                         B1             081441
+     C***********          MOVELZSETI     ZWACNO 100                      081441
+     C***********ZWACNO    CHAINACNUM                99                   081441
+     C***********          Z-ADDZRCNUM    ZWCNUM                          081441
+     C***********          MOVE ZRCCY     ZWCCY                           081441
+     C***********          Z-ADDZRACOD    ZWACOD                          081441
+     C***********          Z-ADDZRACSQ    ZWACSQ                          081441
+     C***********          MOVE ZRBRCA    ZWBRCA                    S01496081441
+     C***********          END                             E1             081441
+     C***********                                                         081441
+     C***IF*SETTLEMENT*METHOD*04,*05*OR*15*USE*ACCOUNT*SET*UP*ABOVE*******081441
+     C***********ZMETH     IFEQ 04                         B1             081441
+     C***********ZMETH     OREQ 05                                        081441
+     C***********ZMETH     OREQ 15                                        081441
+     C***********ZWACCN    CHAINACCNTABF             99                   S01496
+     C***********ZWACCN    CHAINACCNT                99             S01496081441
+     C***********          END                             E1             081441
+     C***********                                                         081441
+     C***IF*ACCOUNT*FOUND*SET*PORTFOLIO*REFERENCE*TO*REFERENCE*FROM*******081441
+     C***ACCOUNT**********************************************************081441
+     C************IN99     IFEQ '0'                                       081441
+     C***********          MOVE ZRPTFR    ZPTFR                           081441
+     C***********          MOVE ZKACCN    ZSETO                           081441
+     C***********                                                         081441
+     C***....*OTHERWISE*BLANK*********************************************081441
+     C***********          ELSE                                           081441
+     C***********          MOVE *BLANKS   ZPTFR                           081441
+     C***********          MOVE *BLANKS   ZSETO                           081441
+     C***********          END                                            081441
+     C***********                                                         081441
+     C***********          ENDSR                                          081441
+     C********************************************************************081441
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

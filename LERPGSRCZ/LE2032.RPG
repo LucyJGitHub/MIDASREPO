@@ -1,0 +1,156 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE On-line update of LE position files')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE2032 - Reversal/Reposting of future valued                 *
+      *           Loan Amendments after/before maturity date          *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023787           Date 29Apr14               *
+      *                 AR868380           Date 11Jun13               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CAP207             Date 11Apr11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE034             Date 03Jul03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201672  *CREATE    Date 29Apr02               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD023787 - Add parameter on AOOULAU0.                        *
+      *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
+      *             calling program if file locking occurred on       *
+      *             online position files. (Child: AR868381)          *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CAP207 - LERI maintenance is not creating shadow posts.      *
+      *           Applied fix 261894.                                 *
+      *  261894 - Inclusion of Return Code entry parameter(##RTCD)    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE034 - Recompiled for Settlement Allocations               *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  201672 - Calculate projected interest and principal on       *
+      *           maturity.                                           *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Indicator usage                                              *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *    99           READE TO LOAMSOM3                             *   CLE009
+      *                                                               *
+      *****************************************************************
+     FLOAMSOM3IF  E           K        DISK
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+     I*
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     IZ#WSTS    E DSZ#WST
+     IOMLOAM    E DSLOAMSOM3
+     I              CHTP                            OMCHTP
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Parameter list for current program invocation.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ##RTCD                                              261894
+     C**********           PARM           ##LNRF  60                                          CLE148
+     C                     PARM           ##LNRF  6                                           CLE148
+     C                     PARM           ##MDAT  50
+     C                     PARM           ##OMDT  50
+     C                     PARM           @@RTCD  7                                         AR868380
+      *
+     C           NWMDAT    KLIST
+     C                     KFLD           ##LNRF
+     C                     KFLD           ##MDAT
+      *
+     C           OLMDAT    KLIST
+     C                     KFLD           ##LNRF
+     C                     KFLD           ##OMDT
+      *
+      ** If maturity date was amended to earlier date (early mature),
+      ** check if there are future valued loan amendments (after new
+      ** maturity date) that needs to be reversed.
+      *
+     C           ##MDAT    IFLT ##OMDT
+     C           NWMDAT    SETGTLOAMSOM3
+     C           ##LNRF    READELOAMSOM3                 99
+     C           *IN99     DOWEQ'0'
+     C           RECI      IFEQ 'D'
+     C                     MOVEL'R'       OMCHTP
+     C                     MOVELOMLOAM    Z#BSTS
+     C                     MOVELOMLOAM    Z#ASTS
+     C                     MOVEL*BLANKS   Z#WSTS
+     C                     CALL 'AOOULAU0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM *BLANKS   PDCLI   1                                         MD023787
+      *                                                                                     AR868380
+     C           ##RTCD    IFEQ '*RECLCK'                                                   AR868380
+     C                     MOVEL##RTCD    @@RTCD                                            AR868380
+     C                     SETON                     LR                                     AR868380
+     C                     RETRN                                                            AR868380
+     C                     ENDIF                                                            AR868380
+      *                                                                                     AR868380
+     C                     ENDIF
+      *
+     C           ##LNRF    READELOAMSOM3                 99
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** If maturity date was amended to a later date, check if there are
+      ** reversed loan amendments (due to early mature) that needs to be
+      ** re-post.
+      *
+     C           ##OMDT    IFLT ##MDAT
+     C           OLMDAT    SETGTLOAMSOM3
+     C           ##LNRF    READELOAMSOM3                 99
+     C           *IN99     DOWEQ'0'
+     C           RECI      IFEQ 'D'
+     C           VDAT      ANDLE##MDAT
+     C                     MOVEL*BLANKS   Z#BSTS
+     C                     MOVELOMLOAM    Z#ASTS
+     C                     MOVEL*BLANKS   Z#WSTS
+     C                     CALL 'AOOULAU0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+     C                     PARM           Z#WSTS
+     C                     PARM *BLANKS   PDCLI                                             MD023787
+      *                                                                                     AR868380
+     C           ##RTCD    IFEQ '*RECLCK'                                                   AR868380
+     C                     MOVEL##RTCD    @@RTCD                                            AR868380
+     C                     SETON                     LR                                     AR868380
+     C                     RETRN                                                            AR868380
+     C                     ENDIF                                                            AR868380
+      *                                                                                     AR868380
+     C                     ENDIF
+      *
+     C           ##LNRF    READELOAMSOM3                 99
+     C                     ENDDO
+     C                     ENDIF
+     C                     RETRN
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2002

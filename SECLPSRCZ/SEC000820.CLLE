@@ -1,0 +1,251 @@
+/********************************************************************/
+/*STD    CLPBASEBND                                                 */
+/*EXI    TEXT('Midas SE Stamp Tax A/C Keys - Securities Charges')    */
+/********************************************************************/
+/*                                                                  */
+/*       Midas - Securities Trading                                 */
+/*                                                                  */
+/*       SEC000820 - Stamp Tax - Generate Tax Account Keys on SE    */
+/*                   Charges                                        */
+/*                                                                  */
+/*       After GL008130 has run, SEKEYD file is saved               */
+/*       STTSEnnnnn for check purposes (where nnnnn                 */
+/*       is the cob component sequence)                             */
+/*                                                                  */
+/*       If the Update Flag is 'N', Stamp Tax                       */
+/*       a/c k records will only be in STTSEnnnnn                   */
+/*                                                                  */
+/*       (c) Finastra International Limited 2010                    */
+/*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR824335           Date 05Sep11              */
+/*                      AR820955           Date 26Aug11              */
+/*                      CER049  *CREATE    Date 06Dec10             */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR824335 - Various error on Flat stamp tax computation     */
+/*       AR820955 - Component SEC000820 00001 failed                */
+/*       CER049 - Stamp Tax                                         */
+/*                                                                  */
+/********************************************************************/
+             PGM        PARM(&UPDF &CNAM &CSEQ)
+ 
+             DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                      Copyright Finastra International Limited 2010')
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&UPDF) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SEQU) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DILIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&WORKFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILEN) TYPE(*CHAR) LEN(10) +
+                          VALUE('STSEIN    ')
+             DCL        VAR(&PGMC) TYPE(*CHAR) LEN(10) +
+                          VALUE('SEC000820 ')
+ 
+/** DB error defintion */
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/** Declare parameters for access object AOSARDR0 */
+ 
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(60)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Retrieve the system prefix xx   */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DILIB) VALUE(&PRE *TCAT 'DILIB')
+             CHGVAR     VAR(&SEQU) VALUE(&CSEQ)
+             CHGVAR     VAR(&WORKFILE) VALUE('STTSE' *TCAT &SEQU)
+ 
+/** Check if CCB009 is active  */
+ 
+             CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY'   +
+                          'CCB009' &DSFDY)
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CCB009) VALUE('Y'))
+ 
+/** Allocate object and check for restart */
+ 
+             ALCOBJ     OBJ((SEKEYD *FILE *EXCL)) WAIT(120)
+             CALL       CB0160 PARM(&CNAM &CSEQ &BUSY)
+ 
+/** No restart - save object */
+ 
+/**********  IF         COND(&BUSY *EQ 'N') THEN(DO)                */                  /*AR820955*/
+             IF         COND(&BUSY *NE 'Y') THEN(DO)                                    /*AR820955*/
+ 
+/** If no save file create */
+ 
+             CHKOBJ     OBJ(&DILIB/SAVFSEKEYD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTSAVF    FILE(&DILIB/SAVFSEKEYD) TEXT('Save of SEKEY*  +
+                          before update')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVFSEKEYD)
+ 
+             CHKOBJ     OBJ(&DILIB/SAVSEC0820) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+             CRTSAVF    FILE(&DILIB/SAVSEC0820) TEXT('Save of SDSTM*  +
+                          before update')
+             ENDDO
+             CLRSAVF    FILE(&DILIB/SAVSEC0820)
+ 
+/** Save data */
+ 
+             SAVOBJ     OBJ(SEKEYD SEKEYA)  +
+                          LIB(&DPLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/SAVFSEKEYD)
+ 
+             SAVOBJ     OBJ(TRADSDQD POSETDX3 SDSTMDPD) +
+                          LIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&DILIB/SAVSEC0820)
+ 
+/** Set active flag */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+             ENDDO
+             ELSE       CMD(DO)
+ 
+/** Restore copy of SEKEY*and SDSTM* files */
+ 
+             RSTOBJ     OBJ(SEKEYD SEKEYA) +
+                        SAVLIB(&DPLIB) +
+                          DEV(*SAVF) SAVF(&DILIB/SAVFSEKEYD)
+ 
+             RSTOBJ     OBJ(TRADSDQD POSETDX3 SDSTMDPD) +
+                        SAVLIB(&DMLIB) +
+                          DEV(*SAVF) SAVF(&DILIB/SAVSEC0820)
+             ENDDO
+ 
+/** Override Report File */
+ 
+             OVRPRTF    FILE(GL008130P1) USRDTA('GL8130-SE')
+             OVRDBF     FILE(SEKEY) TOFILE(SEKEYD) MBR(TRADE)
+             OVRDBF     FILE(SEKEYA) MBR(TRADE)
+ 
+/** Start journalling extension files PF/SDSTM* & PF/SEKEY* to        */
+/** journal ICJRN.                                                    */
+/** If file is already journalled continue processing.                */
+ 
+             STRJRNPF   FILE(*LIBL/TRADSDQD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/POSETDX3) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/SDSTMDPD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/SEKEYD) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+             STRJRNPF   FILE(*LIBL/SEKEYA) JRN(*LIBL/ICJRN) +
+                          IMAGES(*BOTH) OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+ 
+/** &WORKFILE = 'STTSE+Cob Component Sequece*/
+ 
+             DLTF       FILE(&WORKFILE)
+             MONMSG     MSGID(CPF0000)
+ 
+/** GL008130 - generate Stamp Tax A/C Keys on Securities Charges A/C key*/
+ 
+             CALL       PGM(GL008130) PARM(&FILEN &PGMC &UPDF)
+ 
+             OVRDBF     FILE(SEKEY) TOFILE(SEKEYD) MBR(PSETTLE)                         /*AR824335*/
+             OVRDBF     FILE(SEKEYA) MBR(PSETTLE)                                       /*AR824335*/
+             CALL       PGM(GL008130) PARM(&FILEN &PGMC &UPDF)                          /*AR824335*/
+                                                                                        /*AR824335*/
+             DLTOVR     FILE(*ALL)
+ 
+/** Save account keys file to STTSEnnnnn */
+ 
+             CPYF       FROMFILE(SEKEYD) TOFILE(&DPLIB/&WORKFILE) +
+                          FROMMBR(*ALL) TOMBR(*FIRST) MBROPT(*ADD) +
+                          CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) EXEC(CHGJOB SWS(XXXXXX11))
+ 
+/** If Update Flag is N, then account keys are not to be updated    */
+/** therefore restore account keys file from save file              */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+             IF         COND(&UPDF *NE 'Y') THEN(DO)
+             RSTOBJ     OBJ(SEKEYD SEKEYA) +
+                        SAVLIB(&DPLIB) +
+                          DEV(*SAVF) SAVF(&DILIB/SAVFSEKEYD)
+             MONMSG     MSGID(CPF3801) EXEC(CHGJOB SWS(XXXXXX11))
+             ENDDO
+             ENDDO
+ 
+/** DB error  */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             CHGVAR     VAR(&MEM) VALUE('SEC000820 - Job Terminated, +
+                        Database in Error')
+             SNDPGMMSG  MSG(&MEM) TOPGMQ(*EXT) TOMSGQ(MRUNQ MOPERQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Set OK flag  */
+ 
+             CHGVAR     VAR(&BUSY) VALUE('N')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &BUSY)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+ 
+/** If CCB009 (COB Journalling) off, end journalling   */
+ 
+             IF         COND(&CCB009 *NE 'Y') THEN(DO)
+ 
+             ENDJRNPF   FILE(TRADSDQD)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDJRNPF   FILE(POSETDX3)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDJRNPF   FILE(SDSTMDPD)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDJRNPF   FILE(SEKEYD)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDJRNPF   FILE(SEKEYA)
+             MONMSG     MSGID(CPF7032)
+ 
+             ENDDO
+ 
+             CHGVAR     VAR(&MKICPY) VALUE('Copyright Finastra International +
+                          Limited 2010')
+             ENDPGM

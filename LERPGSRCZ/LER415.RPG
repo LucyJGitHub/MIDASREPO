@@ -1,0 +1,181 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Create Profitability Format Cross-ref')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER415 - Create Profitability Format Cross-Reference File    *
+     F*                                                               *
+     F*  Function:  This program creates the Profitability            *
+     F*             Cross-Reference File during Input Cycle.          *
+     F*                                                               *
+     F*  Called By: LERC41  - Profitability Format File Maintenance   *
+     F*
+     F*  (I/C)
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CLE042             Date 06Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 MOF60              DATE 16MAR92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE042 - Extended Loan Sub Type                              *
+     F*  MOF60  - CUSTOMER PROFITABILITY & FEES PROCESSING            *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     FPEFMTD  IF  E                    DISK
+      * Profitability Format Detail
+      *
+     FSDLOANL1IF  E           K        DISK
+      * Loan types/Sub-types
+      *
+     FPEXREF  O   E                    DISK
+      * Profitability Cross Reference File
+      *
+      /EJECT
+     F*******************************************************************
+     F*                                                                 *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                    *
+     F*                                                                 *
+     F*   10  - Record found on SDLOANL1                                *
+     F*   11  - End of File SDLOANL1                                    *
+     F*   14  - End of File PEFMTD                                      *
+     F*                                                                 *
+     F*****************************************************************¦*
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    AR1    36  36  1               A - Z & 0 - 9
+     E                    AR4        15  8                                                    CLE042
+     E                    AR8         8  1                                                    CLE042
+     E********************AR4        15  4                                                    CLE042
+     E********************AR8         4  1                                                    CLE042
+      /EJECT
+      *
+     I            DS
+      **  File loan Type/Sub-Types
+     I                                        1 120 AR4                                       CLE042
+     I                                        1   8 PDLS01                                    CLE042
+     I                                        9  16 PDLS02                                    CLE042
+     I                                       17  24 PDLS03                                    CLE042
+     I                                       25  32 PDLS04                                    CLE042
+     I                                       33  40 PDLS05                                    CLE042
+     I                                       41  48 PDLS06                                    CLE042
+     I                                       49  56 PDLS07                                    CLE042
+     I                                       57  64 PDLS08                                    CLE042
+     I                                       65  72 PDLS09                                    CLE042
+     I                                       73  80 PDLS10                                    CLE042
+     I                                       81  88 PDLS11                                    CLE042
+     I                                       89  96 PDLS12                                    CLE042
+     I                                       97 104 PDLS13                                    CLE042
+     I                                      105 112 PDLS14                                    CLE042
+     I                                      113 120 PDLS15                                    CLE042
+     I*************************************** 1  60 AR4                                       CLE042
+     I*************************************** 1   4 PDLS01                                    CLE042
+     I*************************************** 5   8 PDLS02                                    CLE042
+     I*************************************** 9  12 PDLS03                                    CLE042
+     I***************************************13  16 PDLS04                                    CLE042
+     I***************************************17  20 PDLS05                                    CLE042
+     I***************************************21  24 PDLS06                                    CLE042
+     I***************************************25  28 PDLS07                                    CLE042
+     I***************************************29  32 PDLS08                                    CLE042
+     I***************************************33  36 PDLS09                                    CLE042
+     I***************************************37  40 PDLS10                                    CLE042
+     I***************************************41  44 PDLS11                                    CLE042
+     I***************************************45  48 PDLS12                                    CLE042
+     I***************************************49  52 PDLS13                                    CLE042
+     I***************************************53  56 PDLS14                                    CLE042
+     I***************************************57  60 PDLS15                                    CLE042
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     C/EJECT
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     READ PEFMTD                   14
+     C*
+     C           *IN14     DOWEQ'0'
+     C*
+     C                     MOVE PDGPID    PXGPID
+     C                     MOVE PDGPNA    PXGPNA
+      *
+     C                     DO   15        X       20
+     C                     MOVEAAR4,X     AR8
+      *
+     C           AR8,2     IFEQ '*'
+      *
+      **  Format L*nn
+     C                     DO   36        Y       20
+     C                     MOVE AR1,Y     AR8,2
+     C                     MOVEAAR8       PXLNST
+     C                     WRITEPEXREFF
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           AR8,3     IFEQ '*'
+      *
+      **  Format LL**
+     C                     MOVEAAR8,1     AYLNTY
+     C           AYLNTY    SETLLSDLOANL1                 10
+      *
+     C           *IN10     IFEQ '1'
+     C           AYLNTY    READESDLOANL1                 11
+      *
+     C           *IN11     DOWEQ'0'
+     C                     MOVEAAR8,1     PXLNST
+     C                     MOVELAYLNST    WKSTCL  6                                           CLE042
+     C                     MOVE AYLNCL    WKSTCL                                              CLE042
+     C                     MOVE WKSTCL    PXLNST                                              CLE042
+     C*********************MOVE AYLNST    PXLNST                                              CLE042
+     C                     WRITEPEXREFF
+     C           AYLNTY    READESDLOANL1                 11
+     C                     END
+      *
+     C                     END
+      *
+     C                     ELSE
+      *
+     C           AR4,X     IFNE '    '
+      *
+      ** Format LLSS
+     C                     MOVE AR4,X     PXLNST
+     C                     WRITEPEXREFF
+     C                     END
+      *
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     READ PEFMTD                   14
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C                     RETRN
+     C*
+     C********************************************************************
+     C/EJECT
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**
+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789

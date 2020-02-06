@@ -1,0 +1,639 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU EMU RTS BdC rates init. program')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Teller Support Module                         *
+      *                                                               *
+      *  EU0600 - EMU RTS BdC Rates Initialisation                    *
+      *                                                               *
+      *  Function:  This program will re-initialise Bureaus de Charge *
+      *             default Rates file if CRT104 is installed.        *
+      *                                                               *
+      *  Called By: EUC0600 - EMU RTS BdC Rates Initialisation        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 196778             Date 28Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU024  *CREATE    Date 14Jul98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  196778 - Do not condition on the End of Transition date.     *
+      *  CEU024 - EMU Retail Teller Support Enhancement               *
+      *                                                               *
+      *****************************************************************
+     FREBDCRPDUF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      ** RTS Bureau de Change Default Rates File
+      *
+     FEU0600AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Audit Trail
+      *
+     FEU0600P1O   E                    PRINTER      KINFDS SPOOL1     UC
+      ** BdC Rate Change Audit Trail
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *   89  - End of File                                           *
+      *   98  - Date Format                                           *
+      * 90-99 - Used by Standard Subroutines                          *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initial Routine                                     *
+      *  SRPROC - Main Routine                                        *
+      *  SRLAST - Last Routine                                        *
+      *                                                               *
+      *  SRAUDT - Audit Report and End Program                        *
+      *  SRRATE - Process the new value of the rates                  *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for Printer File                     *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZEDIT  - Edit an Amount                                      *
+      *  ZXRATE - Compute for the Exchange Rate                       *
+      *                                                               *
+      *****************************************************************
+      /COPY ZSRSRC,ZALIGNZ1
+      ** Array for both SR.ZALIGN, SR.ZEDIT
+      *
+     E/EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISPOOL1      DS
+      **   File Information Data Structure for EU0600P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for EU0600AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External data structures for Bank Details
+      *
+     ISDGELR    E DSSDGELRPD
+      **  External data structures for General Ledger Details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  External data structures for Currencies Details
+      *
+     IDSSDY     E DSDSSDY
+      **  First DS for access programs, long data structure
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      **  Perform Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+      **  Perform Detail Processing
+      *
+     C                     EXSR SRPROC
+      *
+      **  Perform the last routine
+      *
+     C                     EXSR SRLAST
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /COPY ZSRSRC,ZEDITZ2
+      ** SR.ZEDIT subroutine
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  AOBANKR0 Bank Detail Access Program                          *
+      *  AOGELRR0 General Ledger ICD Access Program                   *
+      *  AOCURRR0 Currencies Detail Access Program                    *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      **  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVE 'N'       WSTART  1
+      *
+      **  Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Handle Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0600'  DBPGM
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     OUT  LDA                        ************
+     C                     MOVE 'Y'       WSTART
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Check System Date Format,  DDMMYY (*IN98 off)
+      **                             MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ENDIF
+      *
+      **  Call Access Program for General Ledger
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      **  Handle Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0600'  DBPGM
+     C                     MOVEL'SDGELRPD'DBFILE           ************
+     C                     Z-ADD2         DBASE            * DBERR 02 *
+     C                     OUT  LDA                        ************
+     C                     MOVE 'Y'       WSTART
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Call Access Program for Currencies
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BJCYCD    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  Handle Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0600'  DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELBJCYCD    DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     OUT  LDA
+     C                     MOVE 'Y'       WSTART
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A6EUMD    WBMDI   1
+     C                     MOVE A6EUER    WBEUR  138
+     C                     MOVE 'N'       WFLAG   1
+      *
+     C           BJCYCD    IFEQ BKEURO
+     C           A6INCY    OREQ 'Y'
+     C           BJRDNB    ANDGEA6TPSD
+     C********** BJRDNB    ANDLEA6TPED                                    196778
+     C                     MOVE 'Y'       WFLAG
+     C                     ENDIF
+      *
+     C           WFLAG     IFEQ 'N'
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Set flag switch
+      *
+     C                     MOVE 'Y'       WFLAGP  1
+     C                     MOVE 'N'       WFLAG1  1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  SRAUDT - Produce Audit Report and End Program                *
+      *  SRRATE - Process the new value of the rates                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR                                       **
+      *
+      **  Read first record from file
+      *
+     C                     READ REBDCRPD                 89
+      *
+      **  If end of file, process audit report
+      *
+     C           *IN89     IFEQ *ON
+     C                     MOVE 'Y'       WSTART
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      ** Initialise work field
+      *
+     C                     Z-ADD0         RRCALC  50
+     C                     Z-ADD0         RRUPDT  50
+     C                     Z-ADD0         WTRECP  50
+      *
+      ** Process records while not end of file
+      *
+     C           *IN89     DOWEQ*OFF
+      *
+      **  Call Access Program for Currencies
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM FECYCD    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0600'  DBPGM
+     C                     MOVEL'SDCURRPD'DBFILE           ************
+     C                     MOVELFECYCD    DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     OUT  LDA
+     C           RRUPDT    IFEQ 0
+     C                     MOVE 'Y'       WSTART
+     C                     ENDIF
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** If currency is 'in' currency and is within the
+      ** transition period
+      *
+     C           A6INCY    IFEQ 'Y'
+     C           BJRDNB    ANDGEA6TPSD
+     C********** BJRDNB    ANDLEA6TPED                                    196778
+      *
+      ** Move the original value of rates
+      *
+     C                     MOVE FECYCD    ROCYCD
+     C                     Z-ADDFEDNRT    RODNRT
+     C                     Z-ADDFEDPRT    RODPRT
+     C                     Z-ADDFEDSRT    RODSRT
+     C                     Z-ADDFEVNRT    ROVNRT
+     C                     Z-ADDFEVPRT    ROVPRT
+     C                     Z-ADDFEVSRT    ROVSRT
+      *
+      ** If base currency is EUR use euro rate to initialise
+      ** all rates
+      *
+     C           BJCYCD    IFEQ BKEURO
+     C                     Z-ADDA6EUER    WTRATE  83
+     C                     MOVE A6EUMD    WTEUMD  1
+     C                     EXSR SRRATE
+      *
+      ** If base currency is not EUR then use ZXRATE to initialise
+      ** all rates
+      *
+     C                     ELSE
+     C                     MOVE A6EUMD    ZMDI1   1
+     C                     Z-ADDA6EUER    ZRATE1 138
+     C                     MOVE WBMDI     ZMDI2   1
+     C                     Z-ADDWBEUR     ZRATE2 138
+     C                     EXSR ZXRATE
+     C                     Z-ADDZRATEX    WTRATE
+     C                     MOVE ZMDIX     WTEUMD
+     C                     EXSR SRRATE
+     C                     ENDIF
+      *
+      ** Print details if there are changes in the rates
+      *
+     C           RRUPDT    IFGT 0
+     C           RODNRT    ANDNERNDNRT
+     C           RODPRT    ORNE RNDPRT
+     C           RODSRT    ORNE RNDSRT
+     C           ROVNRT    ORNE RNVNRT
+     C           ROVPRT    ORNE RNVPRT
+     C           ROVSRT    ORNE RNVSRT
+      *
+      ** Print header
+      *
+     C           WFLAGP    IFEQ 'Y'
+     C           PRTLN1    ORGE 55
+     C           WFLAGP    IFEQ 'Y'
+     C                     OPEN EU0600P1
+     C                     Z-ADDSFNUM1    ZSNUM
+     C                     EXSR RCFP1
+     C                     ENDIF
+     C                     WRITEEU0600H1
+     C                     MOVE 'N'       WFLAGP
+     C                     Z-ADD0         WTRECP
+     C                     ENDIF
+      *
+      ** Print sub-headings
+      *
+     C           WTRECP    IFEQ 0
+     C                     WRITEEU0600H2
+     C                     ENDIF
+      *
+     C                     ADD  1         RRUPDT
+     C                     ADD  1         WTRECP
+      *
+      ** Print details
+      *
+     C                     WRITEEU0600D1
+      *
+      ** Update file (REBDCRPD)
+      *
+     C                     Z-ADDRNDNRT    FEDNRT
+     C                     Z-ADDRNDPRT    FEDPRT
+     C                     Z-ADDRNDSRT    FEDSRT
+     C                     Z-ADDRNVNRT    FEVNRT
+     C                     Z-ADDRNVPRT    FEVPRT
+     C                     Z-ADDRNVSRT    FEVSRT
+     C                     UPDATREBDCRD0
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Compute for the no. of records in file
+      *
+     C                     ADD  1         RRCALC
+      *
+      ** Read file (REBDCRPD)
+      *
+     C                     READ REBDCRPD                 89
+     C                     ENDDO
+      *
+      ** Print audit report
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLAST - Last Routine                                        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLAST    BEGSR
+      *
+     C                     COMIT
+      *
+      ** Print audit report
+      *
+     C                     EXSR SRAUDT
+      *
+     C                     MOVE *ON       *INLR
+     C                     CLOSEEU0600P1
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRATE -  Process new values of rates                        *
+      *                                                               *
+      *  Called By: SRPROC - Main Routine                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRRATE    BEGSR
+      *
+     C           WTEUMD    IFEQ 'M'
+     C                     Z-ADDWTRATE    RNDNRT
+     C                     Z-ADDWTRATE    RNDPRT
+     C                     Z-ADDWTRATE    RNDSRT
+     C                     Z-ADDWTRATE    RNVNRT
+     C                     Z-ADDWTRATE    RNVPRT
+     C                     Z-ADDWTRATE    RNVSRT
+     C                     ELSE
+     C           1         DIV  WTRATE    WTRATE
+     C                     Z-ADDWTRATE    RNDNRT
+     C                     Z-ADDWTRATE    RNDPRT
+     C                     Z-ADDWTRATE    RNDSRT
+     C                     Z-ADDWTRATE    RNVNRT
+     C                     Z-ADDWTRATE    RNVPRT
+     C                     Z-ADDWTRATE    RNVSRT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: SRPROC - Main Routine                             *
+      *             *PSSR  - Program Error Processing Subroutine      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR                                       **
+      *
+     C           *INU7     IFEQ *ON
+     C           *INLR     ANDEQ*ON
+      *
+      **  If there is a DB Error
+      *
+     C           WSTART    IFEQ 'N'
+     C                     WRITEEU0600F1
+     C                     ENDIF
+     C                     WRITEEU0600A1
+     C                     WRITEEU0600A4
+     C                     MOVE 'Y'       WFLAG1
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     ELSE
+      *
+      ** If no details to report
+      *
+     C           RRUPDT    IFEQ 0
+     C                     WRITEEU0600A1
+     C                     WRITEEU0600A3
+     C                     MOVE 'Y'       WFLAG1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If there is no error in the process
+      *
+     C           *IN89     IFEQ *ON
+     C           WFLAG1    ANDEQ'N'
+     C           RRUPDT    IFGT 0
+     C                     WRITEEU0600F2
+     C                     ENDIF
+     C                     WRITEEU0600A1
+     C                     WRITEEU0600A2
+     C                     WRITEEU0600A5
+     C                     MOVELSFILEU    ZFILEU
+     C                     Z-ADDSFNUMU    ZSNUMU
+     C                     EXSR RCFAU
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     EXSR SRAUDT
+     C                     ENDIF
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                                       ***
+      *
+      **  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      **  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           ZFILEU 10
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZXRATEZ1                                               CEU024
+**  CPY@
+(c) Finastra International Limited 2001

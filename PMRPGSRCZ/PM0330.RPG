@@ -1,0 +1,966 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Charge Types List')
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM0330  - CHARGE TYPES LIST                                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 080263             Date 16Dec94               *
+     F*                 S01486             Date 31AUG94               *
+     F*                 47154              DATE 16NOV92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  080263 - Amount fields edited incorrectly                    *
+     F*  S01486 - Portfolio Management Upgrade to R10                 *
+     F*  47154  - OUTPUT MINIMUM CHARGES ON REPORT                    *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F****PREFIX OF PMCGCDPP IS 'P5'                                      S01486
+     F**PMCGCDPPIF  E           K        DISK                             S01486
+     F**  PREFIX OF PMCGCDPD IS 'P5'                                      S01486
+     FPMCGCDPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**  PREFIX OF PMCGCDLC IS 'P5'
+     FPMCGCDLCIF  E           K        DISK
+     F            PMCGCDP0                          KRENAMEPMCGCDPL
+     F                                              KINFSR *PSSR
+     F****PREFIX OF SDBANKL1 IS 'BJ'                                      S01486
+     F**SDBANKL1IF  E           K        DISK                             S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F****PREFIX OF SDCURRL0 IS 'A6'                                      S01486
+     F**SDCURRL0IF  E           K        DISK                             S01486
+     F*********                                     KINFSR *PSSR          S01486
+     F****PREFIX OF PMCGCDZZ IS 'P5'                                      S01486
+     F**PMCGCDZZIF  E           K        DISK                             S01486
+     F**  PREFIX OF PMCGCDPA IS 'P5'                                      S01486
+     FPMCGCDPAIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***PM0330AUO***E                    PRINTER                         S01486
+     F***PM0330P1O***E                    PRINTER                         S01486
+     FPM0330AUO   E                    PRINTER      KINFDS SPOOLU         S01486
+     FPM0330P1O   E                    PRINTER      KINFDS SPOOL      UC  S01486
+     E*
+     E*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F**      22: IF MODE IS '2' AND COUNT OF LIVE RECORDS READ
+     F************NOT EQUAL TO NUMBER OF RECORDS ON PF/PMCGCDZZ           S01486
+     F**          NOT EQUAL TO NUMBER OF RECORDS ON PF/PMCGCDPA           S01486
+     F**      25: LOKUP IN ARRAY INDICATOR
+     F**      26: CONDITIONING INDICATOR FOR OUTPUT TO REPORT
+     F**      71: READ INDICATOR
+     F**
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   ..   23   24   ..   ..   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * ..   72   73   74   75   76   77   78   79   80 *
+     F**      * 81   82   83   84   85   86   87   ..   89   90 *         S01486
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAYS FOR SR/ZSEDIT
+      /COPY ZSRSRC,ZSEDITZ1
+     E*
+     E** ARRAY FOR CHARGE RANGE UPPER LIMIT
+     E                    A          14 15 0
+     E*
+     E** ARRAY FOR PERCENTAGE CHARGE RATE
+     E                    B          15 11 7
+     E*
+     E** ARRAY FOR FLAT CHARGE RATE
+     E                    C          15 15 0
+     E*
+     I*****************************************************************
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DS FOR SR/ZSEDIT
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I**   DS FOR LAST ACTION DATE
+     I            DS
+     I                                        1   20P5DLUP
+     I                                        3   5 P5MLUP
+     I                                        6   70P5YLUP
+     I                                        1   7 PPLUP
+     I*
+     I**   OUTPUT LAYOUT CHARGE RANGE UPPER LIMIT
+     I            DS
+     I                                        1  150P5CRU1
+     I                                       16  300P5CRU2
+     I                                       31  450P5CRU3
+     I                                       46  600P5CRU4
+     I                                       61  750P5CRU5
+     I                                       76  900P5CRU6
+     I                                       91 1050P5CRU7
+     I                                      106 1200P5CRU8
+     I                                      121 1350P5CRU9
+     I                                      136 1500P5CR10
+     I                                      151 1650P5CR11
+     I                                      166 1800P5CR12
+     I                                      181 1950P5CR13
+     I                                      196 2100P5CR14
+     I                                        1 210 A
+     I*
+     I**  OUTPUT LAYOUT FOR  PERCENTAGE LEVELS
+     I            DS
+     I                                        1  117P5PCL1
+     I                                       12  227P5PCL2
+     I                                       23  337P5PCL3
+     I                                       34  447P5PCL4
+     I                                       45  557P5PCL5
+     I                                       56  667P5PCL6
+     I                                       67  777P5PCL7
+     I                                       78  887P5PCL8
+     I                                       89  997P5PCL9
+     I                                      100 1107P5PC10
+     I                                      111 1217P5PC11
+     I                                      122 1327P5PC12
+     I                                      133 1437P5PC13
+     I                                      144 1547P5PC14
+     I                                      155 1657P5PC15
+     I                                        1 165 B
+     I*
+     I**   OUTPUT LAYOUT FOR FLAT CHARGES
+     I            DS
+     I                                        1  150P5FLC1
+     I                                       16  300P5FLC2
+     I                                       31  450P5FLC3
+     I                                       46  600P5FLC4
+     I                                       61  750P5FLC5
+     I                                       76  900P5FLC6
+     I                                       91 1050P5FLC7
+     I                                      106 1200P5FLC8
+     I                                      121 1350P5FLC9
+     I                                      136 1500P5FL10
+     I                                      151 1650P5FL11
+     I                                      166 1800P5FL12
+     I                                      181 1950P5FL13
+     I                                      196 2100P5FL14
+     I                                      211 2250P5FL15
+     I                                        1 225 C
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I**LDA        UDS                            256                     S01486
+     I************                          132 183 DBLOT                 S01486
+     I************                          132 141 DBFILE                S01486
+     ILDA         DS                            256                       S01486
+     I                                      134 183 DBLOT                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE                S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * INIT     - INITIAL PROCESSING                                    *
+      * #PR01    - CHARGE TYPES AUDIT LIST (MODE 1)                      *
+      * #PR02    - CHARGE TYPES FULL LIST (MODE 2)                       *
+      * #AU01    - AUDIT PROCESSING                                      *
+      * #W01     - PRINT 1ST DETAIL LINE                                 *
+      * #W02     - PRINT 2ND AND SUBSEQUENT DETAIL LINES                 *
+      * #W03     - PRINT FINAL DETAIL LINE                               *
+      * #W04     - PRINT AUDIT REPORT                                    *
+      * ZSEDIT   - INSERT A DECIMAL POINT & SIGN INTO A NUMERIC FIELD    *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C*****************************************************************
+     C** MAIN PROCESSING
+     C*****************************************************************
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           RSEQ    5                       S01486
+     C*
+      ***  Copyright Statement.                                           S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C                     EXSR INIT
+     C*
+     C** IF MODE IS '1'
+     C** EXECUTE #P01 - PROCESS AUDIT REPORT
+     C           MODE      IFEQ '1'
+     C                     EXSR #PR01
+     C                     ELSE
+     C*
+     C** IF MODE IS '2'
+     C** EXECUTE #P02 - PROCESS FULL CHARGE TYPES LIST
+     C           MODE      IFEQ '2'
+     C                     EXSR #PR02
+     C                     ELSE
+     C** ERROR
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C***********          MOVEL'MODE    'DBFILE           ***************S01486
+     C                     MOVE 'MODE    'DBFILE           ***************S01486
+     C                     MOVELMODE      DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C*
+     C** EXECURE AUDIT PROCESSING AS PER #AU01
+     C                     EXSR #AU01
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT     - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           INIT      BEGSR                           ** INIT  BSR **
+     C*
+     C** PREPARE LDA
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM0330'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C**                                                                  S01486
+     C                     MOVE *BLANK    WWFLAG  1                       S01486
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C***********          READ SDBANKL1                 71               S01486
+     C************IN71     IFEQ '1'                                       S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*MSG   ' WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C** ERROR
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                        ***************S01486
+     C                     Z-ADD1         DBASE            **DB ERROR 01**
+     C***********          MOVEL'SDBANKL1'DBFILE           ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           ***************S01486
+     C                     MOVEL' NONE   'DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** MOVE 'J' IN FIELD ZECODE TO EDIT FIELDS WITH ','
+     C                     MOVE 'J'       ZECODE
+     C*
+     C** INITIALIZE LINE COUNT TO ZERO
+     C                     Z-ADD0         LCOUNT  20
+     C                     MOVE RSEQ      SEQ                             S01486
+     C*                                                                   S01486
+     C**  ENSURE AUDIT SPOOL FILE RECORDED BY RCF                         S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM *BLANKS   SENTY                           S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANK    ZSERR                           S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*
+     C           EINIT     ENDSR                           ** END INIT  **
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #PR01    - CHARGE TYPES AUDIT LIST (MODE 1)                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W01     - PRINT 1ST DETAIL LINE                                 *
+      * #W02     - PRINT 2ND AND SUBSEQUENT DETAIL LINES                 *
+      * #W03     - PRINT FINAL DETAIL LINE                               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #PR01     BEGSR                           ** #PR01 BSR **
+     C*
+     C***PRINT*LIST*HEADER                                                S01486
+     C***********          WRITEPM0330H1                                  S01486
+     C                     ADD  10        LCOUNT
+     C*
+     C** READ LF/PMCGCDLC
+     C** DO WHILE LAST CHANGE DATE = RUN DATE FROM LF/SDBANKL1
+     C           BJRDNB    SETLLPMCGCDLC
+     C           BJRDNB    READEPMCGCDLC                 71
+     C           *IN71     IFEQ '0'                                       S01486
+     C                     OPEN PM0330P1                                  S01486
+     C*                                                                   S01486
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C                     WRITEPM0330H1                                  S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '1'       *IN88                           S01486
+     C                     GOTO END01                                     S01486
+     C                     END                                            S01486
+     C*
+     C           *IN71     DOWEQ'0'
+     C*
+     C** IF THE LAST CHANGE TYPE IS 'I', ADD 1 TO NUMBER OF INSERTS
+     C           P5CHTP    IFEQ 'I'
+     C                     ADD  1         PPINS   50
+     C                     END
+     C*
+     C** IF THE LAST CHANGE TYPE IS 'A', ADD 1 TO NUMBER OF AMENDS
+     C           P5CHTP    IFEQ 'A'
+     C                     ADD  1         PPAME   50
+     C                     END
+     C*
+     C** IF THE LAST CHANGE TYPE IS 'D', ADD 1 TO NUMBER OF DELETES
+     C           P5CHTP    IFEQ 'D'
+     C                     ADD  1         PPDEL   50
+     C                     END
+     C*
+     C** DETERMINE HOW MANY NON-ZERO ELEMENTS IN CHARGE RANGE UPPER
+     C** LIMIT ARRAY
+     C                     Z-ADD1         I       20
+     C           *ZERO     LOKUPA,I                      25
+     C*
+     C** DETERMINE NUMBER OF DETAIL LINES TO BE OUTPUT FOR THIS CHARGE
+     C** CODE
+     C           *IN25     IFEQ '1'
+     C           I         ADD  4         NODTL   20
+     C                     ELSE
+     C                     Z-ADD19        NODTL
+     C                     END
+     C*
+     C** DETERMINE IF OUTPUT OF THIS CHARGE CODE'S DETAILS WILL GO OVER
+     C** THE END OF PAGE AND OUTPUT NEW HEADINGS IF NECESSARY
+     C           NODTL     ADD  LCOUNT    TEMPLC  20
+     C*
+     C           TEMPLC    IFGE 60
+     C                     WRITEPM0330H1
+     C                     Z-ADD10        LCOUNT
+     C                     END
+     C*
+     C** OUTPUT 1ST DETAIL LINE TO REPORT AS PER #W01
+     C                     EXSR #W01
+     C*
+     C** OUTPUT 2ND AND SUBSEQUENT DETAIL LINES AS PER #W02
+     C                     Z-ADD2         I
+     C           I         DOWLT15
+     C           A,I       ANDNE0
+     C                     EXSR #W02
+     C                     END
+     C*
+     C** OUTPUT FINAL DETAIL LINE AS PER #W03
+     C                     EXSR #W03
+     C*
+     C** READ LF/PMCGCDLC
+     C           BJRDNB    READEPMCGCDLC                 71
+     C                     END
+     C*
+     C** PRINT LIST END
+     C           LCOUNT    IFGE 65
+     C                     WRITEPM0330H1
+     C                     END
+     C*
+     C                     WRITEPM0330E1
+     C                     CLOSEPM0330P1                                  S01486
+     C***********          ENDSR                                          S01486
+     C           END01     ENDSR                                          S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #PR02    - CHARGE TYPES FULL LIST (MODE 2)                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W01     - PRINT 1ST DETAIL LINE                                 *
+      * #W02     - PRINT 2ND AND SUBSEQUENT DETAIL LINES                 *
+      * #W03     - PRINT FINAL DETAIL LINE                               *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #PR02     BEGSR                           ** #PR02 BSR **
+     C*
+     C***PRINT*LIST*HEADER                                                S01486
+     C***********          WRITEPM0330H1                                  S01486
+     C                     ADD  10        LCOUNT
+     C*
+     C***READ*PF/PMCGCDPP**********************************************   S01486
+     C** Read PF/PMCGCDPD                                                 S01486
+     C***********          READ PMCGCDPP                 71               S01486
+     C                     READ PMCGCDPD                 71               S01486
+     C           *IN71     IFEQ '1'                                       S01486
+     C                     MOVE '1'       *IN88                           S01486
+     C                     GOTO END02                                     S01486
+     C                     END                                            S01486
+     C** DO WHILE NOT END OF FILE
+     C*
+     C           *IN71     DOWEQ'0'
+     C*
+     C** FOR EACH LIVE RECORD (RECI = 'D')
+     C           P5RECI    IFEQ 'D'
+     C           WWFLAG    IFEQ *BLANK                                    S01486
+     C**                                                                  S01486
+     C                     MOVE 'Y'       WWFLAG                          S01486
+     C                     OPEN PM0330P1                                  S01486
+     C*                                                                   S01486
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C                     WRITEPM0330H1                                  S01486
+     C                     END                                            S01486
+     C*
+     C** ADD 1 TO NUMBER OF RECORDS READ
+     C                     ADD  1         PPREC   50
+     C*
+     C** DETERMINE HOW MANY NON-ZERO ELEMENTS IN CHARGE RANGE UPPER
+     C** LIMIT ARRAY
+     C                     Z-ADD1         I
+     C           *ZERO     LOKUPA,I                      25
+     C*
+     C** DETERMINE NUMBER OF DETAIL LINES TO BE OUTPUT FOR THIS CHARGE
+     C** CODE
+     C           *IN25     IFEQ '1'
+     C           I         ADD  4         NODTL
+     C                     ELSE
+     C                     Z-ADD18        NODTL
+     C                     END
+     C*
+     C** DETERMINE IF OUTPUT OF THIS CHARGE CODE'S DETAILS WILL GO OVER
+     C** THE END OF PAGE AND OUTPUT NEW HEADINGS IF NECESSARY
+     C           NODTL     ADD  LCOUNT    TEMPLC
+     C*
+     C           TEMPLC    IFGE 60
+     C                     WRITEPM0330H1
+     C                     Z-ADD10        LCOUNT
+     C                     END
+     C*
+     C** OUTPUT 1ST DETAIL LINE TO THE REPORT AS PER #W01
+     C                     EXSR #W01
+     C*
+     C** OUTPUT 2ND AND SUBSEQUENT DETAIL LINES AS PER #W02
+     C                     Z-ADD2         I
+     C           I         DOWLT15
+     C           A,I       ANDNE0
+     C                     EXSR #W02
+     C                     END
+     C*
+     C** OUTPUT FINAL DETAIL LINE AS PER #W03
+     C                     EXSR #W03
+     C                     END
+     C*
+     C***READ*PF/PMCGCDPP**********************************************   S01486
+     C** Read PF/PMCGCDPD                                                 S01486
+     C***********          READ PMCGCDPP                 71               S01486
+     C                     READ PMCGCDPD                 71               S01486
+     C                     END
+     C*
+     C** WRITE END LIST
+     C           LCOUNT    IFGE 65
+     C                     WRITEPM0330H1
+     C                     END
+     C*
+     C           WWFLAG    IFNE *BLANK                                    S01486
+     C                     WRITEPM0330E1                                  S01486
+     C                     CLOSEPM0330P1                                  S01486
+     C                     END                                            S01486
+     C***********          ENDSR                                          S01486
+     C           END02     ENDSR                                          S01486
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #AU01    - AUDIT PROCESSING                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      * #W04     - PRINT AUDIT REPORT                                    *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #AU01     BEGSR                           ** #AU01 BSR **
+     C*
+     C** ACCESS PF/PMCGCDZZ
+     C***********          READ PMCGCDZZ                 71               S01486
+     C                     READ PMCGCDPA                 71               S01486
+     C*
+     C** IF RECORD NOT FOUND, DATABASE ERROR
+     C           *IN71     IFEQ '1'
+     C** ERROR
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C***********          MOVEL'PMCGCDZZ'DBFILE           ***************S01486
+     C                     MOVE 'PMCGCDPA'DBFILE           ***************S01486
+     C                     MOVEL'AUDIT   'DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** IF MODE = '2' AND IF COUNT OF LIVE RECORDS READ NOT EQUAL TO
+     C** THE NUMBER OF RECORDS ON PF/PMCGCDZZ => SET ON U8
+     C           MODE      IFEQ '2'
+     C           PPREC     IFNE P5NORE
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *IN22
+     C                     END
+     C                     END
+     C*
+     C** OUTPUT DETAILS TO THE AUDIT REPORT AS PER #W04
+     C                     EXSR #W04
+     C*
+     C** WRITE END LIST
+     C***********          WRITEPM0330UE                                  S01486
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W01     - PRINT 1ST DETAIL LINE                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      * ZSEDIT   - INSERT A DECIMAL POINT AND SIGN INTO A NUMERIC FIELD  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #PR01    - CHARGE TYPES AUDIT LIST (MODE 1)                      *
+      * #PR02    - CHARGE TYPES FULL LIST (MODE 2)                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR                           ** #W01  BSR **
+     C*
+     C** PREPARE FIRST DETAIL LINE
+     C*
+     C** CHARGE CURRENCY
+     C                     MOVELP5CCY     PPCCY
+     C*
+     C** CHARGE CODE
+     C                     MOVELP5CGCO    PPCGCO
+     C*
+     C** CHARGE BASIS
+     C                     MOVELP5CGBS    PPCGBS
+     C*
+     C** CHARGING METHOD
+     C                     MOVELP5CGMT    PPCGMT
+     C*
+     C** ACCESS LF/SDCURRL0 FOR CURRENCY DECIMAL PLACES
+     C***********P5CCY     CHAINSDCURRL0             71                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C***********          PARM '*VERIFY 'WWOPTN  7                S01486 080263
+     C                     PARM '*KEY   ' WWOPTN  7                       080263
+     C                     PARM P5CCY     WWKEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*
+     C** IF RECORD NOT FOUND, DATABASE ERROR
+     C************IN71     IFEQ '1'                                       S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C** ERROR
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD4         DBASE            **DB ERROR 04**
+     C***********          MOVEL'SDCURRL0'DBFILE           ***************S01486
+     C                     MOVE 'SDCURRPD'DBFILE           ***************S01486
+     C                     MOVELP5CCY     DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** CHARGE RANGE UPPER LIMIT
+     C           A,1       IFNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE A,1       ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    PPCRU
+     C                     ELSE
+     C                     MOVE *BLANK    PPCRU
+     C                     END
+     C*
+     C** PERCENTAGE CHARGE RATE
+     C           B,1       IFNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE B,1       ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPPLC
+     C                     ELSE
+     C                     MOVE *BLANK    PPPLC
+     C                     END
+     C*
+     C** FLAT CHARGE RATE
+     C           C,1       IFNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE C,1       ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    PPFLC
+     C                     ELSE
+     C                     MOVE *BLANK    PPFLC
+     C                     END
+     C*
+     C** LAST ACTION TYPE
+     C** IF LAST CHANGE TYPE IS 'I', => "INSERT"
+     C** IF LAST CHANGE TYPE IS 'A', => "AMEND "
+     C** IF LAST CHANGE TYPE IS 'D', => "DELETE"
+     C           P5CHTP    IFEQ 'I'
+     C                     MOVEL'INSERT'  PPLAT
+     C                     END
+     C*
+     C           P5CHTP    IFEQ 'A'
+     C                     MOVEL'AMEND '  PPLAT
+     C                     END
+     C*
+     C           P5CHTP    IFEQ 'D'
+     C                     MOVEL'DELETE'  PPLAT
+     C                     END
+     C*
+     C** LAST ACTION DATE  (CF. DS DEFINED ABOVE)
+     C*
+     C** LAST ACTION TIME
+     C                     Z-ADDP5TLUP    PPTLUP
+     C*
+     C** SET ON INDICATOR CONDITIONING OUTPUT OF FIELDS ON FIRST DETAIL
+     C** LINE, IE. CHARGE CURRENCY, CHARGE CODE, CHARGE BASIS, CHARGING
+     C** METHOD, LAST ACTIVITY ACTION, DATE AND TIME
+     C                     MOVE '1'       *IN26
+     C*
+     C** OUTPUT FIRST DETAIL LINE
+     C                     WRITEPM0330D1
+     C                     ADD  1         LCOUNT
+     C*
+     C** SET OFF INDICATOR CONDITIONING OUTPUT OF FIELDS ON FIRST
+     C** DETAIL LINE
+     C                     MOVE '0'       *IN26
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W02     - PRINT 2ND AND SUBSEQUENT DETAIL LINES                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - INSERT A DECIMAL POINT AND SIGN INTO A NUMERIC FIELD  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #PR01    - CHARGE TYPES AUDIT LIST (MODE 1)                      *
+      * #PR02    - CHARGE TYPES FULL LIST (MODE 2)                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W02      BEGSR                           ** #W02  BSR **
+     C*
+     C** CHARGE RANGE UPPER LIMIT
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE A,I       ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    PPCRU
+     C*
+     C** PERCENTAGE CHARGE RATE
+     C           B,I       IFNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE B,I       ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPPLC
+     C                     ELSE
+     C                     MOVE *BLANK    PPPLC
+     C                     END
+     C*
+     C** FLAT CHARGE RATE
+     C           C,I       IFNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE C,I       ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    PPFLC
+     C                     ELSE
+     C                     MOVE *BLANK    PPFLC
+     C                     END
+     C*
+     C** OUTPUT DETAIL LINE
+     C                     WRITEPM0330D1
+     C                     ADD  1         LCOUNT
+     C                     ADD  1         I
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W03     - PRINT FINAL DETAIL LINE                               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - INSERT A DECIMAL POINT AND SIGN INTO A NUMERIC FIELD  *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #PR01    - CHARGE TYPES AUDIT LIST (MODE 1)                      *
+      * #PR02    - CHARGE TYPES FULL LIST (MODE 2)                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W03      BEGSR                           ** #W03  BSR **
+     C*
+     C** PREPARE FINAL PERCENTAGE CHARGE RATE AND FLAT CHARGE RATE FOR
+     C** OUTPUT
+     C                     MOVE *BLANK    PPCRU
+     C*
+     C           B,I       IFNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE B,I       ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPPLC
+     C                     ELSE
+     C                     MOVE *BLANK    PPPLC
+     C                     END
+     C*
+     C           C,I       IFNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE C,I       ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVELZOUT21    PPFLC
+     C                     ELSE
+     C                     MOVE *BLANK    PPFLC
+     C                     END
+     C*
+     C** OUTPUT FINAL PERCENTAGE CHARGE RATE AND FLAT CHARGE RATE
+     C                     WRITEPM0330D1
+     C                     ADD  1         LCOUNT
+     C*
+     C** PREPARE FINAL DETAIL LINE
+     C*
+     C** INCOME ACCOUNT CODE
+     C                     Z-ADDP5INCA    PPINCA
+     C*
+     C** ACCRUAL ACCOUNT CODE
+     C                     Z-ADDP5ACAC    PPACAC
+     C*
+     C** CHARGE NARRATIVE
+     C                     MOVELP5CNAR    PPCNAR
+     C*                                                                   47154
+     C** OUTPUT DETAILS OF MINIMUM CHARGES                                47154
+     C           P5MINC    IFNE 0                                         47154
+     C                     Z-ADD0         ZFLD15                          47154
+     C                     MOVE P5MINC    ZFLD15                          47154
+     C                     Z-ADDA6NBDP    ZDECS                           47154
+     C                     EXSR ZSEDIT                                    47154
+     C                     MOVE ZOUT21    PPMINC                          47154
+     C                     ELSE                                           47154
+     C                     MOVE *BLANK    PPMINC                          47154
+     C                     END                                            47154
+     C*
+     C** OUTPUT FINAL DETAIL LINE
+     C                     WRITEPM0330D2
+     C****                 ADD  4         LCOUNT                          47154
+     C                     ADD  5         LCOUNT                          47154
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W04     - PRINT AUDIT REPORT                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #AU01    - AUDIT PROCESSING                                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W04      BEGSR                           ** #W04  BSR **
+     C*
+     C** IF MODE IS '1'
+     C           MODE      IFEQ '1'
+     C*
+     C** NUMBER OF INSERTS (CALCULATED IN #PR01)
+     C*
+     C** NUMBER OF AMENDMENTS (CALCULATED IN #PR01)
+     C*
+     C** NUMBER OF DELETIONS (CALCULATED IN #PR01)
+     C*
+     C***NUMBER*OF RECORDS ON FILE PF/PMCGCDZZ                            S01486
+     C** NUMBER OF RECORDS ON FILE PF/PMCGCDPA                            S01486
+     C                     Z-ADDP5NORE    PPNORE
+     C*
+     C                     WRITEPM0330U1
+     C                     END
+     C*
+     C** IF MODE IS '2'
+     C           MODE      IFEQ '2'
+     C*
+     C***NUMBER*OF*RECORDS ON FILE PF/PMCGCDZZ                            S01486
+     C** NUMBER OF RECORDS ON FILE PF/PMCGCDPA                            S01486
+     C                     Z-ADDP5NORE    PPNORE
+     C*
+     C** NUMBER OF RECORDS CALCULATED AS PER #PR02 (PPREC)
+     C*
+     C***********          WRITEPM0330UE                                  S01486
+     C                     WRITEPM0330U2                                  S01486
+     C   88                WRITENODETAIL                                  S01486
+     C                     END
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR SUBROUTINE                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      * INIT     - INITIAL PROCESSING                                    *
+      * #AU01    - AUDIT PROCESSING                                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWERRO   - ERROR FIELD                                           *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C           WWERRO    IFEQ ' '
+     C                     MOVE 'Y'       WWERRO  1
+     C*
+     C           DBASE     IFNE 0
+     C*
+     C**  PRINT ERROR MESSAGE:
+     C                     WRITEERRORAU
+     C                     ELSE
+     C                     Z-ADD999       DBASE
+     C                     END
+     C*
+     C                     DUMP
+     C                     END
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C*
+**  CPY@
+(c) Finastra International Limited 2001

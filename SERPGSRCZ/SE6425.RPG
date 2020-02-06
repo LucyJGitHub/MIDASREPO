@@ -1,0 +1,797 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Create Custody Fee Settlement Events')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                    *
+     F*                                                               *
+     F*  RPG/SE6425 - Create Safe Custody Fees Settlement Events      *
+     F*                                                               *
+     F*  Function:  This Program creates events records for           *
+     F*  (COB)      outstanding Safe Custody Fee Settlements so they  *
+     F*             can be shown on events reports                    *
+     F*                                                               *
+     F*  Called by: SEC6425 - Create Custody Fee Settlement Events    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 241795             Date 04Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU011             Date 11Mar98               *
+      *                 092750             Date 06Sep95               *
+     F*                 S01464     *CREATE Date 04Apr94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  241795 - Populate ECSS whether CEU011 is switched on or off. *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CEU011 - EMU Position/Risk Reporting                         *
+     F*  092750 - Retail account causes db error                      *
+     F*  S01464 - Safe Custody Fees                                   *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*
+     FSEOCFSPDIF  E           K        DISK         KINFSR *PSSR
+     F** Outstanding SC Fee Settlements
+     F*
+     FSDCURRL1IF  E           K        DISK                               CEU011
+     F** Currency codes file                                              CEU011
+     F*                                                                   CEU011
+     FCPEVED  O   E           K        DISK         KINFSR *PSSR A
+     F** Customer position events
+     F*
+     FCPEVEA  UF  E           K        DISK         KINFSR *PSSR
+     F** Customer position events (Update)
+     F*
+     FSE6425AUO   E                    PRINTER      KINFSR *PSSR
+     F** Audit report
+     F*
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  FUNCTION OF INDICATORS                                       *
+     F*  ------------------------                                     *
+     F*                                                               *
+     F*  40 - for READ of PF/SEOCFSPD                                 *
+     F*  41 - for READ of PF/CPEVEA                                   *
+      *  70 - End of file indicator -LF/SDCURRL1                      *   CEU011
+      *  71 - Currency lokup indicator                                *   CEU011
+     F*  U7 - Database error                                          *
+     F*  U8 - Database error                                          *
+     F*  LR - Last record indicator                                   *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E*****************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E** Array for copyright
+     E*
+     E                    CUR       200  3   SRT     2 0                  CEU011
+      ** Array to store the sort sequence no. for each currency           CEU011
+      *                                                                   CEU011
+     E*****************************************************************
+     E/EJECT
+     I*****************************************************************
+     I*
+     ILDA         DS                            256
+     I** Local Data Area for database errors
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     ISDBANK    E DSSDBANKPD
+     I** Bank details
+     I*
+     ISDSCFE    E DSSDSCFEPD
+     I** Safe custody fees details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I** Customer details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I** Branch details
+     I*
+     ISDACCT    E DSACCNTAB
+     I** Account details
+     I*
+     ISCSARD    E DSSCSARDPD                                              CEU011
+     I              LCD                             LCD1                  CEU011
+      **  Switchable Features File                                        CEU011
+      *                                                                   CEU011
+     IDSFDY     E DSDSFDY
+     I** Short DS for access programs
+     I*
+     IDSSDY     E DSDSSDY
+     I** Long DS for access programs
+     I*
+     I*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C** Initialisation
+     C*
+     C                     EXSR #A
+     C*
+     C** Main processing
+     C*
+     C                     EXSR #B
+     C*
+     C** End of program - Audit processing
+     C*
+     C                     MOVE '1'       *INLR
+     C                     EXSR #C
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*           INDEX TO SUBROUTINES                                *
+     C*          ----------------------                               *
+     C*                                                               *
+     C*    1.  #A     - Initialisation                                *
+     C*    2.  #B     - Main processing                               *
+     C*    3.  #BA    - Write record to PF/CPEVED                     *
+     C*    4.  #BAA   - Write record to PF/CPEVED                     *
+     C*    5.  #BAB   - Write record to PF/CPEVED                     *
+     C*    6.  #BABA  - Write record to PF/CPEVED                     *
+     C*    7.  #C     - Audit report processing                       *
+     C*    8.  #PSSR  - Error handling subroutine                     *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #B        - MAIN PROCESSING                                  *
+     C*                                                               *
+     C*  CALLS     - #BA                                              *
+     C*                                                               *
+     C*  CALLED BY - MAINLINE                                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #B        BEGSR
+     C*
+     C** Read file
+     C*
+     C                     READ SEOCFSPD                 40
+     C           *IN40     DOWEQ'0'
+     C*
+     C           SERECI    IFEQ 'D'
+     C*
+     C** For each record on file with SERECI = 'D' ---
+     C*
+     C*
+     C** Increment count of records in PF/SEOCFSPD
+     C*
+     C                     ADD  1         @OCCNT
+     C*
+     C** Write record to physical file CPEVED
+     C*
+     C                     EXSR #BA
+     C*
+     C** Read next record
+     C*
+     C                     END
+     C                     READ SEOCFSPD                 40
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BA       - Give values to fields of PF/CPEVED               *
+     C*                                                               *
+     C*  CALLS     - #BAA, #BAB                                       *
+     C*                                                               *
+     C*  CALLED BY - #B                                               *
+     C*                                                               *
+     C*****************************************************************
+     C           #BA       BEGSR
+     C*
+     C** Move PF/SEOCFSPD field values into PF/CPEVED fields
+     C*
+     C                     MOVE 'D'       RECI    1
+     C                     MOVE SEBRCA    CCBA    3
+     C**********           MOVE SECNUM    CCCN    60                                          CSD027
+     C                     MOVE SECNUM    CCCN    6                                           CSD027
+     C                     MOVE *BLANKS   CCSS   10
+     C                     MOVE 'FS'      CCET    2
+     C                     Z-ADDSESEVD    CCDT    50
+     C                     MOVE SECSCY    CCEC    3
+     C                     MOVE SEAFTS    CCEA   130
+     C                     MOVE SEAFTS    CCNA   130
+     C                     MOVE SECSCY    CCNC    3
+     C                     Z-ADD0         CCNP   150
+     C                     Z-ADD0         CCEP   150
+     C                     MOVE SECUSB    CCTA    3
+     C                     MOVE *BLANKS   CCTC    1
+     C                     MOVE 'F'       CCFC    1
+     C                     MOVE 'I'       CCIO    1
+     C                     MOVE '31C6'    CCCE    4
+     C                     Z-ADD0         CCAS   130
+     C                     Z-ADD0         CCAN   130
+     C                     Z-ADDFBNSGD    CPYD    50
+     C*
+     C** Access customer details
+     C*
+     C                     MOVELSECNUM    @CUKEY
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @CUKEY    @CUKEY 10
+     C                     PARM '       ' @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           @KYST     OREQ '*ERROR '
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCUSTPD'DBFILE           ************
+     C                     MOVEL@CUKEY    DBKEY            * DBERR 01 *
+     C                     Z-ADD1         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE BBCRNM    CCRN   20
+     C                     MOVE BBCRTN    CCTR   10
+     C                     MOVE *BLANKS   MDTI    1
+     C                     MOVE SEBRCA    EBRC    3
+     C*
+     C** Access branch details
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SEBRCA    @BRKEY  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           A8TYLC    OREQ 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ************
+     C                     MOVEL@BRKEY    DBKEY            * DBERR 02 *
+     C                     Z-ADD2         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE A8CMCD    ECPY    3
+     C                     MOVE A8CMCD    @ECPY   3
+     C                     MOVE 'N'       IBRE    1
+     C                     MOVE 'N'       ICYE    1
+     C                     MOVE *BLANKS   ORBR    3
+     C                     MOVE A8CMCD    COBB    3
+     C                     MOVE *BLANKS   EXEI    1
+     C                     MOVE 'B'       ELVB    1
+     C                     MOVE 'C'       ELVC    1
+     C                     MOVE 'S'       ELVS    1
+     C                     MOVE *BLANKS   OSBR    3
+      *                                                                   CEU011
+      ** Move the Sort Sequence No. of the the event currency             CEU011
+      ** to the field ECSS.                                               CEU011
+      *                                                                   CEU011
+     C********** CEU011    IFEQ 'Y'                                                    CEU011 241795
+     C                     Z-ADD1         X       30                      CEU011
+      *                                                                   CEU011
+     C           CCEC      LOKUPCUR,X                    71               CEU011
+      *                                                                   CEU011
+     C           *IN71     IFEQ '1'                                       CEU011
+     C                     Z-ADDSRT,X     ECSS                            CEU011
+     C                     ELSE                                           CEU011
+     C           *LOCK     IN   LDA                                       CEU011
+     C                     MOVEL'SDCURRL1'DBFILE           ************   CEU011
+     C                     MOVELCCEC      DBKEY            *DBERROR 10*   CEU011
+     C                     Z-ADD10        DBASE            ************   CEU011
+     C                     OUT  LDA                                       CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C**********           ENDIF                                                       CEU011 241795
+      *                                                                   CEU011
+     C*
+     C** If Customer Branch = Settlement Branch ---
+     C*
+     C           CCBA      IFEQ CCTA
+     C                     EXSR #BAA
+     C*
+     C** If Customer Branch <> Settlement Branch ---
+     C*
+     C                     ELSE
+     C                     EXSR #BAB
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BAA      - Write a record to PF/CPEVED                      *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - #BA                                              *
+     C*                                                               *
+     C*****************************************************************
+     C           #BAA      BEGSR
+     C*
+     C** Access account details
+     C*
+     C           SECUSA    IFNE *BLANKS
+     C                     MOVELSECUSA    @AKEY1
+     C**********           MOVE SECUSA    @ACTMP  6                                           CGL029
+     C**********           MOVEL@ACTMP    @ACCD   4                                           CGL029
+     C                     MOVE SECUSA    @ACTMP 12                                           CGL029
+     C                     MOVEL@ACTMP    @ACCD  10                                           CGL029
+     C                     MOVE SECUSA    @ACSQ   2
+     C*
+     C           @ACSQ     IFEQ '00'
+     C           @ACSQ     OREQ *BLANKS                                   092750
+     C                     MOVELSECUSA    @RETL
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @RETL     @RETL  10
+     C                     PARM *BLANK    @AKEY1  6
+     C                     PARM *BLANK    @AKEY2  3
+     C**********           PARM *BLANK    @AKEY3  4                                           CGL029
+     C                     PARM *BLANK    @AKEY3                                              CGL029
+     C                     PARM *BLANK    @AKEY4  2
+     C                     PARM *BLANK    @AKEY5  3
+     C           SDACCT    PARM SDACCT    DSSDY
+     C*
+     C                     MOVE *BLANK    @AKEY
+     C                     MOVEL@RETL     @AKEY
+     C*
+     C                     ELSE
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANK    @RETL  10
+     C                     PARM @AKEY1    @AKEY1  6
+     C                     PARM SECSCY    @AKEY2  3
+     C**********           PARM @ACCD     @AKEY3  4                                           CGL029
+     C                     PARM @ACCD     @AKEY3 10                                           CGL029
+     C                     PARM @ACSQ     @AKEY4  2
+     C                     PARM SEBRCA    @AKEY5  3
+     C           SDACCT    PARM SDACCT    DSSDY
+     C*
+     C                     MOVEL@AKEY1    @AKEY6  9
+     C                     MOVE @AKEY2    @AKEY6
+     C**********           MOVEL@AKEY3    @AKEY7  6                                           CGL029
+     C                     MOVEL@AKEY3    @AKEY7 12                                           CGL029
+     C                     MOVE @AKEY4    @AKEY7
+     C**********           MOVEL@AKEY6    @AKEY8 15                                           CGL029
+     C                     MOVEL@AKEY6    @AKEY8 21                                           CGL029
+     C                     MOVE @AKEY7    @AKEY8
+     C**********           MOVEL@AKEY8    @AKEY  18                                           CGL029
+     C                     MOVEL@AKEY8    @AKEY  24                                           CGL029
+     C                     MOVE @AKEY5    @AKEY
+     C*
+     C                     END
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ACCNTAB 'DBFILE           ************
+     C                     MOVEL@AKEY     DBKEY            * DBERR 03 *
+     C                     Z-ADD3         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If the settlement account is a retail account ---
+     C*
+     C           ATYP      IFEQ 'R'
+     C                     MOVE '14'      CCSM    20
+     C                     ELSE
+     C                     MOVE '05'      CCSM
+     C                     END
+     C**********           MOVE SECUSA    CCSA   12                                           CGL029
+     C                     MOVE SECUSA    CCSA   18                                           CGL029
+     C*
+     C                     WRITECPEVEDF
+     C*
+     C** Increment count of records added
+     C*
+     C                     ADD  1         @CPADD
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BAB      - Write records to file PF/CPEVED                  *
+     C*                                                               *
+     C*  CALLS     - #BABA                                            *
+     C*                                                               *
+     C*  CALLED BY - #BA                                              *
+     C*                                                               *
+     C*****************************************************************
+     C           #BAB      BEGSR
+     C*
+     C                     MOVE '00'      CCSM
+     C                     MOVE *BLANKS   CCSA
+     C*
+     C                     WRITECPEVEDF
+     C*
+     C** Increment count of records added
+     C*
+     C                     ADD  1         @CPADD
+     C*
+     C** If Customer Branch <> Settlement Branch ---
+     C*
+     C                     EXSR #BABA
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #BABA     - Write records to PF/CPEVED                       *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - #BAB                                             *
+     C*                                                               *
+     C*****************************************************************
+     C           #BABA     BEGSR
+     C*
+     C           SECUSB    IFNE *BLANKS
+     C                     MOVE SECUSB    EBRC
+     C                     MOVE 'Y'       IBRE
+     C*
+     C** Access branch details
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SECUSB    @BRKEY  3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           A8TYLC    OREQ 'D'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ************
+     C                     MOVEL@BRKEY    DBKEY            * DBERR 04 *
+     C                     Z-ADD4         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE A8CMCD    ECPY
+     C           @ECPY     IFEQ ECPY
+     C                     MOVE 'N'       ICYE
+     C                     ELSE
+     C                     MOVE 'Y'       ICYE
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Access account details
+     C*
+     C           SECUSA    IFNE *BLANKS
+     C                     MOVELSECUSA    @AKEY1
+     C**********           MOVE SECUSA    @ACTMP  6                                           CGL029
+     C**********           MOVEL@ACTMP    @ACCD   4                                           CGL029
+     C                     MOVE SECUSA    @ACTMP                                              CGL029
+     C                     MOVEL@ACTMP    @ACCD                                               CGL029
+     C                     MOVE SECUSA    @ACSQ   2
+     C*
+     C           @ACSQ     IFEQ '00'
+     C                     MOVELSECUSA    @RETL
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM @RETL     @RETL  10
+     C                     PARM *BLANK    @AKEY1  6
+     C                     PARM *BLANK    @AKEY2  3
+     C**********           PARM *BLANK    @AKEY3  4                                           CGL029
+     C                     PARM *BLANK    @AKEY3                                              CGL029
+     C                     PARM *BLANK    @AKEY4  2
+     C                     PARM *BLANK    @AKEY5  3
+     C           SDACCT    PARM SDACCT    DSSDY
+     C*
+     C                     MOVE *BLANK    @AKEY
+     C                     MOVEL@RETL     @AKEY
+     C*
+     C                     ELSE
+     C*
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM *BLANK    @RETL  10
+     C                     PARM @AKEY1    @AKEY1  6
+     C                     PARM SECSCY    @AKEY2  3
+     C**********           PARM @ACCD     @AKEY3  4                                           CGL029
+     C                     PARM @ACCD     @AKEY3                                              CGL029
+     C                     PARM @ACSQ     @AKEY4  2
+     C                     PARM SECUSB    @AKEY5  3
+     C           SDACCT    PARM SDACCT    DSSDY
+     C*
+     C                     MOVEL@AKEY1    @AKEY6  9
+     C                     MOVE @AKEY2    @AKEY6
+     C**********           MOVEL@AKEY3    @AKEY7  6                                           CGL029
+     C                     MOVEL@AKEY3    @AKEY7                                              CGL029
+     C                     MOVE @AKEY4    @AKEY7
+     C**********           MOVEL@AKEY6    @AKEY8 15                                           CGL029
+     C                     MOVEL@AKEY6    @AKEY8                                              CGL029
+     C                     MOVE @AKEY7    @AKEY8
+     C**********           MOVEL@AKEY8    @AKEY  18                                           CGL029
+     C                     MOVEL@AKEY8    @AKEY                                               CGL029
+     C                     MOVE @AKEY5    @AKEY
+     C*
+     C                     END
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ACCNTAB 'DBFILE           ************
+     C                     MOVEL@AKEY     DBKEY            * DBERR 05 *
+     C                     Z-ADD5         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C** If the settlement account is a retail account ---
+     C*
+     C           ATYP      IFEQ 'R'
+     C                     MOVE '14'      CCSM
+     C                     ELSE
+     C                     MOVE '05'      CCSM
+     C                     END
+     C                     MOVE SECUSA    CCSA
+     C*
+     C                     WRITECPEVEDF
+     C*
+     C** Increment count of records added
+     C*
+     C                     ADD  1         @CPADD
+     C*
+     C                     MOVE '00'      CCSM
+     C                     MOVE *BLANKS   CCSA
+     C                     MOVE 'O'       CCIO
+     C                     MOVE A8BICN    CCCN
+     C*
+     C                     WRITECPEVEDF
+     C*
+     C** Increment count of records added
+     C*
+     C                     ADD  1         @CPADD
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #C         - Audit processing                                *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - MAINLINE                                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C                     READ CPEVEA                   41
+     C*
+     C           *IN41     IFEQ '0'
+     C                     Z-ADDNORE      @CPCNT
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVE 'CPEVEA  'DBFILE           ************
+     C                     MOVE *BLANKS   DBKEY            * DBERR 06 *
+     C                     Z-ADD6         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           @CPADD    ADD  @CPCNT    @CPNEW
+     C*
+     C** If count of records written to file > 0
+     C*
+     C           @CPADD    IFGT 0
+     C                     Z-ADD@CPNEW    NORE
+     C                     UPDATCPEVEAF
+     C                     END
+     C*
+     C                     WRITEDETAIL
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  #A         - THIS SUBROUTINE PERFORMS INITIALISATION         *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - MAINLINE                                         *
+     C*                                                               *
+     C*****************************************************************
+     C           #A        BEGSR
+     C*
+     C** Copyright statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Prepare LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'SE6425'  DBPGM
+     C                     OUT  LDA
+     C*
+     C** Access bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 07 *
+     C                     Z-ADD7         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Access safe custody fees details
+     C*
+     C                     CALL 'AOSCFER0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDSCFE    PARM SDSCFE    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDSCFEPD'DBFILE           ************
+     C                     MOVEL@OPTN     DBKEY            * DBERR 08 *
+     C                     Z-ADD8         DBASE            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CEU011
+      ** Check if EMU Position/Risk Reporting is switch on.               CEU011
+      *                                                                   CEU011
+     C                     CALL 'AOSARDR0'                                CEU011
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*VERIFY' @OPTN                           CEU011
+     C                     PARM 'CEU011'  @SARD   6                       CEU011
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFEQ *BLANKS                                   CEU011
+     C                     MOVE 'Y'       CEU011  1                       CEU011
+     C                     ELSE                                           CEU011
+     C                     MOVE 'N'       CEU011                          CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFNE '*NRF   '                                 CEU011
+     C           *LOCK     IN   LDA                                       CEU011
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CEU011
+     C                     MOVEL'CEU011'  DBKEY            *DBERROR 09*   CEU011
+     C                     Z-ADD9         DBASE            ************   CEU011
+     C                     OUT  LDA                                       CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+      ** Read first 200 records form LF/SDCURRL1 and for each ccy         CEU011
+      ** get the sort sequence no.                                        CEU011
+      *                                                                   CEU011
+     C********** CEU011    IFEQ 'Y'                                                    CEU011 241795
+     C                     Z-ADD1         J       30                      CEU011
+     C           *LOVAL    SETLLSDCURRL1                                  CEU011
+     C                     READ SDCURRL1                 70               CEU011
+      *                                                                   CEU011
+     C           J         DOWLE200                                       CEU011
+     C           *IN70     ANDEQ'0'                                       CEU011
+      *                                                                   CEU011
+     C                     MOVELA6CYCD    CUR,J                           CEU011
+     C                     MOVELA6SSNB    SRT,J                           CEU011
+      *                                                                   CEU011
+     C                     READ SDCURRL1                 70               CEU011
+     C                     ADD  1         J       30                      CEU011
+     C                     ENDDO                                          CEU011
+      *                                                                   CEU011
+     C**********           ENDIF                                                       CEU011 241795
+     C*
+     C** Write headings for audit report
+     C*
+     C                     WRITEHEADER
+     C*
+     C** Define fields
+     C*
+     C                     Z-ADD0         @OCCNT  50
+     C                     Z-ADD0         @CPCNT  50
+     C                     Z-ADD0         @CPADD  50
+     C                     Z-ADD0         @CPNEW  50
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR     - PROGRAM ERROR HANDLING ROUTINE                   *
+     C*                                                               *
+     C*  CALLS     - NONE                                             *
+     C*                                                               *
+     C*  CALLED BY - NONE                                             *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     WRITEDBERROR
+     C*
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+** CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

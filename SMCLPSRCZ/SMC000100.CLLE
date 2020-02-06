@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial Confirmation Matching')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000100 - Set up initial Confirmation Matching            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP004  *CREATE    Date 07Oct10              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&CF) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&FOLDER) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if Confirmation Matching is switched on - data area MMOD and  */
+/*  file SDMMODPD.                                                     */
+             RTVDTAARA  DTAARA(MMOD (60 1)) RTNVAR(&CF)
+             CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOMMODR0')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&CF *NE 'Y' *OR %SST(&FMT 70 1) *NE +
+                          'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Create the default Confirmation Matching Folder. */
+             CHGVAR     VAR(&FOLDER) VALUE('CFFLR.' *CAT &PFX *CAT 'X')
+             CRTFLR     FLR(&FOLDER) TEXT('Midas Confirmation +
+                          Matching Folder') AUT(*CHANGE)
+             MONMSG     MSGID(CPF8A18) EXEC(DO)
+                RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)
+                IF         COND(&MSGID *NE 'CPF8A85') THEN(DO)
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+/* Update data area CFSTAT. */
+             CHGDTAARA  DTAARA(CFSTAT (1 2)) VALUE(&PFX)
+             CHGDTAARA  DTAARA(CFSTAT (3 1)) VALUE('X')
+ 
+/* Call the Branch Groupings Program to set up CFBRCHPD. */
+             CALL       PGM(CF0010)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('CF0010')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Call Client Details download to update TRAM counterparty directory. */
+             CALL       PGM(CFC0080) PARM('ZZZ')
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('CFC0080')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000100')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

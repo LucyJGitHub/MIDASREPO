@@ -1,0 +1,191 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas GL Rollover of DLNO Update on Collaterals')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       GLC009051 - Rollover of Deal Number Update on Collaterals   */
+/*                   File                                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1091308          Date 25Feb13              */
+/*                      CCB023             Date 06Aug12              */
+/*                      CLE134             Date 01Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CGL014  *CREATE    Date 20Oct03              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1091308 - GLC009051 looping error                         */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       CGL014 - Collaterals Processing                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)                 */                /*AR1091308*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                                 /*AR1091308*/
+/**********  DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')   */                     /*CCB023*/
+/**********  DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)             */                     /*CCB023*/
+/**********  DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')*/                 /*CCB023*/
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                    /*CCB023*/
+             DCL        VAR(&STEXT) TYPE(*CHAR) LEN(26)                                   /*CCB023*/
+             DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)                                  /*CCB023*/
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)                                     /*CCB023*/
+             DCL        VAR(&USR) TYPE(*CHAR) LEN(10)                                     /*CCB023*/
+             DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)                                      /*CCB023*/
+             DCL        VAR(&START) TYPE(*DEC) LEN(10 0)                                  /*CCB023*/
+             DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)                                 /*CCB023*/
+             DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                                /*CCB023*/
+             DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                                /*CCB023*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GLC009051 - Rollover of Deal Number +
+                            Update on Collaterals File') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Write current journal sequence number to file SCJSEQPD, using   */                     /*CCB023*/
+/* command SCWRTJREG                                               */                     /*CCB023*/
+                                                                                          /*CCB023*/
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)                                          /*CCB023*/
+             CHGVAR     VAR(&STEXT) VALUE('Start of ' *CAT &CNAM +
+                          *CAT &CSEQA)                                                    /*CCB023*/
+/**********  CHGVAR     VAR(&SEVENT) VALUE(&CNAM *CAT &CSEQA)        */         /*CCB023 AR1091308*/
+             CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)                         /*AR1091308*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('S') TEXT(&STEXT)                                          /*CCB023*/
+                                                                                          /*CCB023*/
+/**Setup*system*prefix*variable*from*SDSTAT*data*area.**/                                 /*CCB023*/
+ 
+/**********  RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)        */                     /*CCB023*/
+/**********  CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)  */                     /*CCB023*/
+ 
+/**Call*program*CB0160*to*get*value*of*restart*indicator.**/                              /*CCB023*/
+ 
+/**********  CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)        */                     /*CCB023*/
+ 
+/**If*it*is*NOT*a*restart.**/                                                             /*CCB023*/
+ 
+/**********  IF         COND(&STAT *NE 'Y') THEN(DO)               */                     /*CCB023*/
+/**********     DLTF       FILE(XGLCOLLPD)                         */                     /*CCB023*/
+/**********     MONMSG     MSGID(CPF2105)                          */                     /*CCB023*/
+/**********     CPYF       FROMFILE(GLCOLLPD) +
+                             TOFILE(&DPLIB/XGLCOLLPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)        */                     /*CCB023*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)          */                     /*CCB023*/
+/**********  ENDDO                                                 */                     /*CCB023*/
+ 
+/**If*it*is*a*restart.**/                                                                 /*CCB023*/
+ 
+/**********  IF         COND(&STAT *EQ 'Y') THEN(DO)               */                     /*CCB023*/
+/**********     CPYF       FROMFILE(XGLCOLLPD) TOFILE(GLCOLLPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)        */                     /*CCB023*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                             EXEC(CLRPFM FILE(GLCOLLPD))           */                     /*CCB023*/
+/**********  ENDDO                                                 */                     /*CCB023*/
+ 
+/**********  CHGVAR     VAR(&STAT) VALUE('Y')                      */                     /*CCB023*/
+ 
+/**Call*CB0150*to*update*restart*indicator**/                                             /*CCB023*/
+ 
+/**********  CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)        */                     /*CCB023*/
+ 
+/* Call Rollover of Deal Number Update on Collaterals File Program */
+ 
+             CALL       PGM(GL009051)
+ 
+/**If*no*error*occured*in*the*program**/                                                  /*CCB023*/
+ 
+/**********  IF         COND(%SWITCH(XXXXXX00)) THEN(DO)           */                     /*CCB023*/
+ 
+/**Call*CB0150*to*update*restart*indicator.**/                                            /*CCB023*/
+ 
+/**********     CHGVAR     VAR(&STAT) VALUE('N')                   */                     /*CCB023*/
+/**********     CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)     */                     /*CCB023*/
+/**********     DLTF       FILE(XGLCOLLPD)                         */                     /*CCB023*/
+/**********     MONMSG     MSGID(CPF2105)                          */                     /*CCB023*/
+/**********  ENDDO                                                 */                     /*CCB023*/
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('GLC009051 Rollover of Deal Number +
+                          Update on Collaterals File Ended +
+                          Abnormally') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+                                                                                          /*CCB023*/
+/* Retrieve attributes of current job */                                                  /*CCB023*/
+                                                                                          /*CCB023*/
+             RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                                    /*CCB023*/
+                                                                                          /*CCB023*/
+/* Retrieve the most recent journal entry sequence number for      */                     /*CCB023*/
+/* the specific job                                                */                     /*CCB023*/
+                                                                                          /*CCB023*/
+             RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                          TOENT(*FIRST) SEARCH(*DESCEND) +
+                          JOB(&NBR/&USR/&JOB) RTNSEQNBR(&START) +
+                          RTNRCV(&SJRNRCVR)                                               /*CCB023*/
+             MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)                                   /*CCB023*/
+             CHGVAR     VAR(&START) VALUE(0)                                              /*CCB023*/
+             ENDDO                                                                        /*CCB023*/
+                                                                                          /*CCB023*/
+/* Determine starting journal sequence number of current job       */                     /*CCB023*/
+                                                                                          /*CCB023*/
+             SCRTVJEVT  EVENT(&SEVENT) FLAG('S') RECEIVER(&FJRNRCVR) +
+                           SEQ(&FINISH)                                                   /*CCB023*/
+                                                                                          /*CCB023*/
+/* Remove journal changes                                          */                     /*CCB023*/
+                                                                                          /*CCB023*/
+             IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                          THEN(DO)                                                        /*CCB023*/
+             RMVJRNCHG  JRN(ICJRN) FILE((GLCOLLPD)) +
+                          FROMENT(&START) TOENT(&FINISH) +
+                          RCVRNG(&SJRNRCVR &FJRNRCVR)                                     /*CCB023*/
+             MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041)                            /*CCB023*/
+             ENDDO                                                                        /*CCB023*/
+ 
+END:
+                                                                                          /*CCB023*/
+/* Write current journal sequence number to file SCJSEQPD, using   */                     /*CCB023*/
+/* command SCWRTJREG                                               */                     /*CCB023*/
+                                                                                          /*CCB023*/
+             CHGVAR     VAR(&STEXT) VALUE(' ')                                            /*CCB023*/
+             CHGVAR     VAR(&STEXT) VALUE('End of ' *CAT &CNAM *CAT +
+                          &CSEQA)                                                         /*CCB023*/
+             SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
+                          FLAG('E') TEXT(&STEXT)                                          /*CCB023*/
+             ENDPGM

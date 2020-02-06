@@ -1,0 +1,677 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE Bureau De Change Control Table Maint')
+      ********************************************************************
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Retail Module                                    *
+     F*                                                               *
+     F*  RE4250 - Bureau De Change Control Table Maintenance          *
+     F*                                                               *
+     F*  Function:  This program writes a record or amends the        *
+     F*  (I/C)      existing records on the control table file        *
+     F*             PF/REBDCCPD.                                      *
+     F*                                                               *
+     F*  Called By: Retail Teller System Maintenance Menu             *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  PREV AMEND NO. CRT001 *CREATE     DATE 28FEB95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  MD046248 - Finastra Rebranding                               *
+     F*  CRT001 - Retail Teller System                                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N   P A R A M E T E R S                        *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FRE4250DFCF  E                    WORKSTN      KINFSR *PSSR
+     F** Bureau de Change Control Table - Display
+     F*
+     FREBDCCPDUF  E           K        DISK         KINFSR *PSSR A
+     F** Bureau de Change Control Table File
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   03  - LOKUP indicator                                       *
+     F*                                                               *
+     F*   20  - SFLEND indicator                                      *
+     F*                                                               *
+     F*   21  - Chain to REBDCCPD fails                               *
+     F*                                                               *
+     F*   30  - General error indicator                               *
+     F*   31  - D#0JIN invalid                                        *
+     F*   32  - D#0JIA invalid                                        *
+     F*   33  - D#0JKN invalid                                        *
+     F*   34  - D#0JKA invalid                                        *
+     F*   35  - D#0JLN invalid                                        *
+     F*   36  - D#0JLA invalid                                        *
+     F*   37  - D#0JON invalid                                        *
+     F*   38  - D#0JOA invalid                                        *
+     F*   39  - D#0JNN invalid                                        *
+     F*   40  - D#0JNA invalid                                        *
+     F*   41  - D#0JQN invalid                                        *
+     F*   42  - D#0JQA invalid                                        *
+     F*                                                               *
+     F*   71  - F3 pressed                                            *
+     F*                                                               *
+     F*   81  - General error indicator                               *
+     F*                                                               *
+     F*   KC  - Exit requested                                        *
+     F*   KE  - Refresh requested                                     *
+     F*                                                               *
+     F*   LR  - Last record indicator                                 *
+     F*                                                               *
+     F* U7+U8 - Database error                                        *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  Control Subroutines                                          *
+     F*                                                               *
+     F*  #INIT  - Initial processing                                  *
+     F*  PLNTAB - Load file details                                   *
+     F*  NAPLN  - Write records to the control table file             *
+     F*  #RFRSH - Refresh screen details                              *
+     F*  TESTC  - Validate details                                    *
+     F*  #LAST  - Final processing                                    *
+     F*                                                               *
+     F*  *PSSR  - Database Error Handling                             *
+     F*                                                               *
+     F*  SNDMSG - Send program message parameters                     *
+     F*                                                               *
+     F*  External Routines                                            *
+     F*                                                               *
+     F*  SCC0250 - Clear Message Queue                                *
+     F*  SCC0240 - Send Message                                       *
+     F*                                                               *
+     F*  DBERRCTL Program error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E** Copyright array
+     E*
+     E                    CODE    6   6  2
+     E** Valid control codes
+     E*
+      *----------------------------------------------------------------
+     I*
+     IPSDS       SDS
+     I**  Program Status Data Structure
+     I*
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+     I*
+     ILDA         DS                            256
+     I** Local data area for database error details
+     I*
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** External data structure for Bank Details
+     I*
+     IDSFDY     E DSDSFDY
+     I**  Short data structure for access objects
+     I*
+      *----------------------------------------------------------------
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M   S T A R T                                    *
+     C*================================================================
+     C*
+     C** Perform initial processing
+     C*
+     C                     EXSR #INIT
+     C*
+     C** Load contents of control table file
+     C*
+     C                     EXSR PLNTAB
+     C*
+     C** DO while F3 not pressed
+     C*
+     C           *IN71     DOWEQ*OFF
+     C*
+     C** Display program message subfile for any messages
+     C*
+     C                     WRITERE4250C0
+     C*
+     C** Display and accept screen
+     C*
+     C                     EXFMTRE4250F0
+     C*
+     C** Clear program message queue
+     C*
+     C                     CALL 'SCC0250'
+     C*
+     C** Exit if F3 pressed
+     C*
+     C           *IN71     CASEQ'1'       #LAST
+     C*
+     C** If Cmd/5 is pressed, refresh initial screen
+     C*
+     C           *INKE     CASEQ'1'       #RFRSH
+     C*
+     C** Validate details if enter key pressed
+     C*
+     C                     CAS            TESTC
+     C*
+     C                     END
+     C*
+     C** End of DO processing
+     C*
+     C                     ENDDO
+     C*
+     C** End program
+     C*
+     C                     EXSR #LAST
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #INIT  -  Initial processing                                  *
+     C*                                                               *
+     C* Calls:  *PSSR                                                 *
+     C*                                                               *
+     C* Called from: Main processing                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #INIT     BEGSR                           *** #INIT ***
+     C*
+     C** Copyright statement
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C** Initialise LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'RE4250'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     OUT  LDA
+     C*
+     C** Initialise screen message queue
+     C*
+     C                     MOVEL'*'       SPGMQ
+     C*
+     C** Seton message subfile end indicator
+     C*
+     C                     MOVE '1'       *IN20
+     C*
+     C** Initialise message file
+     C*
+     C                     MOVE *BLANKS   @MSGID  7
+     C                     MOVEL'RTSMSGF' @MSGF  10
+     C*
+     C** Get bank details using access object
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** Check if an error occurred
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     Z-ADD01        DBASE            * DBERROR 01 *
+     C                     OUT  LDA                        **************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Rundate in DDMMMYY format
+     C*
+     C                     MOVE BJMRDT    SRUNA
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* PLNTAB -  Load file details                                   *
+     C*                                                               *
+     C* Calls:  NAPLN, *PSSR                                          *
+     C*                                                               *
+     C* Called from: Main processing                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PLNTAB    BEGSR                           *** PLNTAB ***
+     C*
+     C** Check if a record already exists
+     C*
+     C           '0JI'     CHAINREBDCCD0             21
+     C*
+     C** If file has no record, write records to the control table file
+     C** with account and non-account currencies set to blanks
+     C*
+     C           *IN21     IFEQ *ON
+     C                     EXSR NAPLN
+     C                     GOTO PLEXIT
+     C                     ENDIF
+     C                     MOVELNAC       D#0JIN
+     C                     MOVELACC       D#0JIA
+      *
+     C           '0JK'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'0JK'     DBKEY            **************
+     C                     MOVEL'REBDCCPD'DBFILE           * DBERROR 02 *
+     C                     Z-ADD2         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JKN
+     C                     MOVELACC       D#0JKA
+      *
+     C           '0JL'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'0JL'     DBKEY            **************
+     C                     MOVEL'REBDCCPD'DBFILE           * DBERROR 03 *
+     C                     Z-ADD3         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JLN
+     C                     MOVELACC       D#0JLA
+      *
+     C           '0JN'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'0JN'     DBKEY            **************
+     C                     MOVEL'REBDCCPD'DBFILE           * DBERROR 04 *
+     C                     Z-ADD4         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JNN
+     C                     MOVELACC       D#0JNA
+      *
+     C           '0JO'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'0JO'     DBKEY            **************
+     C                     MOVEL'REBDCCPD'DBFILE           * DBERROR 05 *
+     C                     Z-ADD5         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JON
+     C                     MOVELACC       D#0JOA
+      *
+     C           '0JQ'     CHAINREBDCCD0             21
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'0JQ'     DBKEY            **************
+     C                     MOVEL'REBDCCPD'DBFILE           * DBERROR 06 *
+     C                     Z-ADD6         DBASE            **************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     MOVELNAC       D#0JQN
+     C                     MOVELACC       D#0JQA
+      *
+     C           PLEXIT    ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* NAPLN  -  Write records to the control table file with        *
+     C*           account and non-account currency fields equal to    *
+     C*           blank                                               *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: PLNTAB                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           NAPLN     BEGSR                           *** NAPLN ***
+     C*
+     C                     MOVEL*BLANKS   D#0JIN
+     C                     MOVEL*BLANKS   D#0JIA
+      *
+     C                     MOVEL*BLANKS   D#0JKN
+     C                     MOVEL*BLANKS   D#0JKA
+      *
+     C                     MOVEL*BLANKS   D#0JLN
+     C                     MOVEL*BLANKS   D#0JLA
+      *
+     C                     MOVEL*BLANKS   D#0JNN
+     C                     MOVEL*BLANKS   D#0JNA
+      *
+     C                     MOVEL*BLANKS   D#0JON
+     C                     MOVEL*BLANKS   D#0JOA
+      *
+     C                     MOVEL*BLANKS   D#0JQN
+     C                     MOVEL*BLANKS   D#0JQA
+      *
+     C                     MOVEL*BLANKS   NAC
+     C                     MOVEL*BLANKS   ACC
+     C                     MOVE '0JI'     FCODE
+     C                     WRITEREBDCCD0
+     C                     MOVE '0JK'     FCODE
+     C                     WRITEREBDCCD0
+     C                     MOVE '0JL'     FCODE
+     C                     WRITEREBDCCD0
+     C                     MOVE '0JN'     FCODE
+     C                     WRITEREBDCCD0
+     C                     MOVE '0JO'     FCODE
+     C                     WRITEREBDCCD0
+     C                     MOVE '0JQ'     FCODE
+     C                     WRITEREBDCCD0
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #RFRSH -  Refresh screen                                      *
+     C*                                                               *
+     C* Calls:  PLNTAB                                                *
+     C*                                                               *
+     C* Called from: Main processing                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #RFRSH    BEGSR                           *** #RFRSH ***
+     C*
+     C** Initialise indicators and screen fields
+     C*
+     C                     MOVEA'00000000'*IN,30
+     C                     MOVEA'00000'   *IN,38
+     C                     MOVE '0'       *IN81
+     C*
+     C                     EXSR PLNTAB
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* TESTC  -  Validate details                                    *
+     C*                                                               *
+     C* Calls:  SNDMSG                                                *
+     C*                                                               *
+     C* Called from: Main processing                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TESTC     BEGSR                           *** TESTC ***
+     C*
+     C** Set of error indicators
+     C*
+     C                     MOVEA'00000000'*IN,30
+     C                     MOVEA'00000'   *IN,38
+     C                     MOVE '0'       *IN81
+     C*
+     C** Validate entered value
+     C** Control code must be entered and it must either be
+     C** 'VP', 'VN', 'VS', 'DP', 'DN' or 'DS'
+     C*
+     C           D#0JIN    IFEQ *BLANKS
+     C                     SETON                     3031
+     C                     ELSE
+     C           D#0JIN    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3181
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JIA    IFEQ *BLANKS
+     C                     SETON                     3032
+     C                     ELSE
+     C           D#0JIA    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3281
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JKN    IFEQ *BLANKS
+     C                     SETON                     3033
+     C                     ELSE
+     C           D#0JKN    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3381
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JKA    IFEQ *BLANKS
+     C                     SETON                     3034
+     C                     ELSE
+     C           D#0JKA    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3481
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JLN    IFEQ *BLANKS
+     C                     SETON                     3035
+     C                     ELSE
+     C           D#0JLN    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3581
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JLA    IFEQ *BLANKS
+     C                     SETON                     3036
+     C                     ELSE
+     C           D#0JLA    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3681
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JON    IFEQ *BLANKS
+     C                     SETON                     3037
+     C                     ELSE
+     C           D#0JON    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3781
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JOA    IFEQ *BLANKS
+     C                     SETON                     3038
+     C                     ELSE
+     C           D#0JOA    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3881
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JNN    IFEQ *BLANKS
+     C                     SETON                     3039
+     C                     ELSE
+     C           D#0JNN    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     3981
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JNA    IFEQ *BLANKS
+     C                     SETON                     3040
+     C                     ELSE
+     C           D#0JNA    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     4081
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JQN    IFEQ *BLANKS
+     C                     SETON                     3041
+     C                     ELSE
+     C           D#0JQN    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     4181
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C           D#0JQA    IFEQ *BLANKS
+     C                     SETON                     3042
+     C                     ELSE
+     C           D#0JQA    LOKUPCODE,1                   03
+     C           *IN03     IFEQ '0'
+     C                     SETON                     4281
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** Update file if there's no error
+     C*
+     C           *IN81     IFEQ *OFF
+     C           *IN30     ANDEQ*OFF
+     C           '0JI'     CHAINREBDCCD0             21
+     C                     MOVE '0JI'     FCODE
+     C                     MOVELD#0JIN    NAC
+     C                     MOVELD#0JIA    ACC
+     C                     UPDATREBDCCD0
+      *
+     C           '0JK'     CHAINREBDCCD0             21
+     C                     MOVE '0JK'     FCODE
+     C                     MOVELD#0JKN    NAC
+     C                     MOVELD#0JKA    ACC
+     C                     UPDATREBDCCD0
+      *
+     C           '0JL'     CHAINREBDCCD0             21
+     C                     MOVE '0JL'     FCODE
+     C                     MOVELD#0JLN    NAC
+     C                     MOVELD#0JLA    ACC
+     C                     UPDATREBDCCD0
+      *
+     C           '0JN'     CHAINREBDCCD0             21
+     C                     MOVE '0JN'     FCODE
+     C                     MOVELD#0JNN    NAC
+     C                     MOVELD#0JNA    ACC
+     C                     UPDATREBDCCD0
+      *
+     C           '0JO'     CHAINREBDCCD0             21
+     C                     MOVELD#0JON    NAC
+     C                     MOVELD#0JOA    ACC
+     C                     MOVELACC       D#0JOA
+     C                     UPDATREBDCCD0
+      *
+     C           '0JQ'     CHAINREBDCCD0             21
+     C                     MOVE '0JQ'     FCODE
+     C                     MOVELD#0JQN    NAC
+     C                     MOVELD#0JQA    ACC
+     C                     UPDATREBDCCD0
+      *
+     C                     ENDIF
+     C*
+     C** If there's an error
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE 'USR1218' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+     C*
+     C           *IN81     IFEQ '1'
+     C                     MOVE 'USR1219' @MSGID
+     C                     EXSR SNDMSG
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SNDMSG -  Send program message                                *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: TESTC                                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SNDMSG    BEGSR                           *** SNDMSG ***
+     C*
+     C                     CALL 'SCC0240'
+     C                     PARM           @MSGID
+     C                     PARM           @MSGF
+     C*
+     C                     ENDSR
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #LAST  -  Final processing                                    *
+     C*                                                               *
+     C* Calls:  None                                                  *
+     C*                                                               *
+     C* Called from: Main processing                                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           #LAST     BEGSR                           *** #LAST  ***
+     C*
+     C                     CLOSE*ALL
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  *PSSR  -  Error control subroutine                           *
+     C*                                                               *
+     C*  Calls:  None                                                 *
+     C*                                                               *
+     C*  Called from:  #INIT, PLNTAB, any file error                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           *** *PSSR ***
+     C*
+     C** Check to see that *PSSR has not been called yet
+     C*
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C*
+     C** Call standard database error program
+     C*
+     C                     CALL 'DBERRCTL'
+     C                     END
+     C*
+     C** If *PSSR already run, then just end the program here
+     C*
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*****************************************************************
+**  CPY@ - OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**  Codes - Valid control codes
+VPVNVSDPDNDS

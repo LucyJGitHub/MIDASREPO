@@ -1,0 +1,355 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG FRA/IRS Deletion/Cancellation Control')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  MG9220 - FRA/IRS Deletion/Cancellation Control               *
+      *                                                               *
+      *  Function:  This program will handle the deletion/cancellation*
+      *             of MT340, MT360, MT361 and MT341                  *
+      *                                                               *
+      *  Called By: DL6305  - IC Confirmation Message Extract         *
+      *             DL6330  - MT341, MT362 Extract                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029017           Date 25Nov14               *
+      *                 MD022051           Date 04Sep13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242587             Date 27Sep06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCF003             Date 01Aug96               *
+      *                 CSW005  *CREATE    Date 01Aug96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD029017 - Tag 22A value is AMND instead of NEWT             *
+      *  MD022051 - Action canceL_MT360 for counterparty_field tag 21 *
+      *             is incorrect                                      *
+      *  242587 - Include MGST = 'RSND' in cancelling message         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CCF003 - Include MT360 and MT362 Confirmation Matching       *
+      *  CSW005 - MG34n and MG36n Message Generation                  *
+      *                                                               *
+      *****************************************************************
+     FMGOREFL0IF  E           K        DISK
+      *****************************************************************
+      * Function of indicators                                        *
+      *    75    EOF MGOREFL0                                         *
+      *    76    Message found                                        *
+      *    77    MG9205 not found                                     *
+      *    78    MG9210 not found                                     *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Subroutine Index                                              *
+      *   SRINIT - Initial Process                                    *
+      *   SRCALL - Call Cancellation or Deletion program              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     I            DS
+     I                                        1  16 K#TRNO
+     I                                        1   2 K#MODI
+     I                                        3   8 K#MTRN
+     I                                        9  110K#SEQN
+     I            DS
+     I                                        1  16 TRNO
+     I                                        3   80TRNO#N
+      *
+      **  Data structure to redefine TRNO as 6 long numeric field
+      *
+     ISDMMOD    E DSSDMMODPD
+      *
+      ** Data Structure for Module details
+      *
+     ISCSARD    E DSSCSARDPD                                              CCF003
+      *                                                                   CCF003
+      **  Data structure for Switchable Features file                     CCF003
+      *                                                                   CCF003
+     IDSFDY     E DSDSFDY
+      *
+      ** Data Structure for access programs
+      *
+     C/EJECT
+      *****************************************************************
+      *   Main process                                                *
+      *   Calls:  SRINIT - Initial Process                            *
+      *           SRCALL - Call Deletion or Cancellation program      *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Accept values from calling program(s)
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P#TRNO  60
+     C                     PARM           P#MODI  2
+     C                     PARM           P#MTYP  3
+     C                     PARM           P#TREF 16
+     C                     PARM           P#RTCD  1
+      *
+      ** Perform Initial Process
+      *
+     C                     EXSR SRINIT
+      *
+      **  Access last generated message for transaction number
+      *
+     C           K#TRNO    SETGTMGOREFD0               75
+     C                     READPMGOREFD0                 75
+      *                                                                                     MD029017
+      ** Processing should only be done for the counterparty transaction                    MD029017
+      *                                                                                     MD029017
+     C                     MOVEL*BLANKS   WMTRN                                             MD029017
+     C                     MOVELMTRN      WMTRN  15                                         MD029017
+      *
+      ** Do while not beginning of file and transaction number of
+      ** LF/MGOREFL0 = Transaction Number of calling program and
+      ** message found indicator is off
+      *
+     C           *IN75     DOWEQ'0'
+     C           *IN76     ANDEQ'0'
+     C           P#TRNO    ANDEQTRNO#N
+     C           MTRN      ANDEQWMTRN                                                       MD029017
+      *
+     C           MTPY      IFEQ P#MTYP
+      *
+     C                     EXSR SRCALL
+     C           P#RTCD    IFEQ 'C'
+     C                     MOVE TRNO      P#TREF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READPMGOREFD0                 75
+      *
+     C                     ENDDO
+      *
+      ** End Program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+      *   SRCALL - Call Deletion or Cancellation program              *
+      *   Called by: Main Process                                     *
+      *   Calls    : AOMMODR0 - Access Object for SDMMODPD            *
+      *              MG9205   - Message Deletion Process              *
+      *              MG9210   - Message Cancellation Process          *
+      *****************************************************************
+      *
+     C           SRCALL    BEGSR
+      *
+     C           MGST      IFEQ 'CRTD'
+     C           MGST      OREQ 'AMND'
+     C           MGST      OREQ 'RSND'                                                        242587
+      *
+     C                     CALL 'MG9205'               77
+     C                     PARM           TRNO
+     C                     PARM           MODI
+     C                     PARM *BLANKS   P#RTCD
+      *
+      ** If MG9205 not found , set up LDA and return to calling program
+      *
+     C           *IN77     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE
+     C                     MOVEL'MG9205 N'KEY16
+     C                     MOVE 'OT FOUND'KEY16  16        * * * * * * * *
+     C                     MOVELKEY16     DBKEY            *  DBERR 001  *
+     C                     MOVEL*BLANKS   DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** If database error in MG9205 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C           BGCFMT    IFEQ 'Y'
+     C           MTPY      ANDEQ'340'
+     C           BGCFMT    OREQ 'Y'
+     C           MTPY      ANDEQ'341'
+      *                                                                   CCF003
+      ** Also, generate cancellation message for message types            CCF003
+      ** '360' and '361 if CCF003 switchable feature is on                CCF003
+      *                                                                   CCF003
+     C           CCF003    OREQ 'Y'                                       CCF003
+     C           MTPY      ANDEQ'360'                                     CCF003
+     C           CCF003    OREQ 'Y'                                       CCF003
+     C           MTPY      ANDEQ'361'                                     CCF003
+      *
+     C                     CALL 'MG9210'               78
+     C                     PARM           TRNO
+     C                     PARM           MODI
+     C                     PARM *BLANKS   P#RTCD
+      *
+      ** If MG9210 not found, set up LDA and return to calling program
+      *
+     C           *IN78     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '003'     DBASE
+     C                     MOVEL'MG9210 N'KEY16
+     C                     MOVE 'OT FOUND'KEY16  16        * * * * * * * *
+     C                     MOVELKEY16     DBKEY            *  DBERR 003  *
+     C                     MOVEL*BLANKS   DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** If database error in MG9210 return control to calling program
+      *
+     C           P#RTCD    IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           MGSG      IFEQ '2'
+     C           MGSG      OREQ '3'
+     C                     MOVE 'C'       P#RTCD
+     C                     MOVE '1'       *IN76
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *   SRINIT - Initial Process                                    *
+      *   Called by: Main Process                                     *
+      *   Calls    : NONE                                             *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Set up Local Data Area (LDA)
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MG9220'  DBPGM     P
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Set up key field for access of MGOREFL0 with values from
+      **  calling program.
+      *
+     C                     MOVE P#MODI    K#MODI
+     C                     MOVE P#TRNO    K#MTRN
+     C                     MOVE *HIVAL    K#SEQN
+      *
+     C                     MOVE '0'       *IN76
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+      ** If a DB error , set up LDA and return to calling program
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE            * * * * * * * *
+     C                     MOVEL@OPTN     DBKEY            *  DBERR 002  *
+     C                     MOVEL'SDMMODPD'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   CCF003
+      ** Access Switchable features file to see if CCF003 is switched     CCF003
+      ** ON.                                                              CCF003
+      *                                                                   CCF003
+     C                     CALL 'AOSARDR0'                                CCF003
+     C                     PARM '       ' RTCDA   7                       CCF003
+     C                     PARM '*VERIFY' RTCDB   7                       CCF003
+     C                     PARM 'CCF003'  RTCDC   6                       CCF003
+      *                                                                   CCF003
+     C           RTCDA     IFEQ *BLANK                                    CCF003
+     C                     MOVE 'Y'       CCF003  1                       CCF003
+     C                     ELSE                                           CCF003
+     C                     MOVE 'N'       CCF003                          CCF003
+     C                     ENDIF                                          CCF003
+      *                                                                                     MD022051
+      ** Check if SWIFT 2013 changes is installed                                           MD022051
+      *                                                                                     MD022051
+     C                     CALL 'SWIF2013'                                                  MD022051
+     C                     PARM *BLANKS   PRTCD   7                                         MD022051
+      *                                                                                     MD022051
+     C           PRTCD     IFEQ 'CSW2013'                                                   MD022051
+     C                     MOVE 'Y'       CSW213  1                                         MD022051
+     C                     ENDIF                                                            MD022051
+      *                                                                                     MD022051
+     C           CSW213    IFEQ 'Y'                                                         MD022051
+     C                     MOVELK#MTRN    PTRAN                                             MD022051
+      *                                                                                     MD022051
+     C                     CALL 'MG5000'                                                    MD022051
+     C                     PARM P#MODI    PMODI   2                                         MD022051
+     C                     PARM           PTRAN  15                                         MD022051
+     C                     PARM 'CE'      PPROG   2                                         MD022051
+     C                     PARM *BLANKS   PMODE   1                                         MD022051
+     C                     PARM *ZEROS    PLSWC   30                                        MD022051
+     C                     PARM *ZEROS    PLSWS   30                                        MD022051
+     C                     PARM *BLANKS   PERCD   1                                         MD022051
+      *                                                                                     MD022051
+     C           PERCD     IFEQ 'Y'                                                         MD022051
+     C           *LOCK     IN   LDA                                                         MD022051
+     C                     MOVE '004'     DBASE                                             MD022051
+     C                     MOVELPTRAN     DBKEY                                             MD022051
+     C                     MOVE 'MG5000'  DBFILE                                            MD022051
+     C                     OUT  LDA                                                         MD022051
+     C                     EXSR *PSSR                                                       MD022051
+     C                     ENDIF                                                            MD022051
+      *                                                                                     MD022051
+     C                     Z-ADDPLSWS     K#SEQN                                            MD022051
+     C                     ENDIF                                                            MD022051
+      *
+     C                     ENDSR
+      *****************************************************************
+      *   *PSSR - Error Handling                                      *
+      *   Called by:  SRCALL - Call Deletion or Cancellation program  *
+      *   Calles   :  NONE                                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE 'E'       P#RTCD
+     C                     SETON                         LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

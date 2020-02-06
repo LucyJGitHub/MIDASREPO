@@ -1,0 +1,592 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trade Number Ranges List')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas        Securities Trading Module
+     F*                                                               *
+     F*  SE0375 -  TRADE NUMBER RANGES AUDIT LIST                     *
+     F*                                                               *
+     F*  Function:  This program produces a report, for audit         *
+     F*   (I/C)     purposes, of all live trade number ranges         *
+     F*   (COB)     defined to the system (ie. deleted ranges are     *
+     F*             not included).  The sequence of the report is     *
+     F*             range number.                                     *
+     F*                                                               *
+     F*  Called By: 1) SEC0301 - Audit Reports - Input Cycle          *
+     F*             2) SEC0601 - Audit Reports - Close of Business    *
+     F*             3) SEC0302 - Full Lists - On Request              *
+     F*                                                               *
+     F*             Frequency:                                        *
+     F*             The report is available in 3 modes (I,A,L):       *
+     F*             1) On request during I/C; an interim report       *
+     F*                showing the latest status of trade number      *
+     F*                ranges                                         *
+     F*             2) During COB; a report of all trade number       *
+     F*                ranges                                         *
+     F*             3) On request; a full report of all trade         *
+     F*                number ranges                                  *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  PREV AMEND NO. 052254             DATE 10JAN94               *
+     F*                 E29170             DATE 31OCT91               *
+     F*                 S01117             DATE 05MAR91               *
+     F*                 E15677             DATE 21/10/88              *
+     F*                 S01158             DATE 06/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+     F*  MD046248 - Finastra Rebranding                               *
+     F*  052254  -  RECOMPILED as CURRENT FACTOR amended from 9,8     *
+     F*             to 10,9                                           *
+     F*  E29170  -  Report Control Facility changes                   *
+     F*  S01117  -  MULTIBRANCHING                                    *
+     F*  E15677  -  ENSURE 'END OF REPORT' IS PRINTED LAST.           *   E15677
+     F*  S01158  -  POST INCORPORATION DEVELOPMENT FIX                *   S01158
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FTNRAN   IP  E           K        DISK
+     F*TABSE***IF**E****      K        DISK                               S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     F*SE0375P1O***F****132     OF     PRINTER                     S01124 S01117
+     F***SE0375P1O***F**   132     OF     PRINTER      KINFDS SPOOL S01117E29170
+     FSE0375P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  E29170
+     FSE0375AUO   F     132            PRINTER      KINFDS SPOOLU         S01117
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N  O F   I N D I C A T O R S                   *
+     F*                                                               *
+     F*   01         READ TNRANAAF                                    *
+     F*   02         READ TNRANABF                                    *
+     F****03*********READ*TABTB10F*************************************   S01117
+     F*                                                               *
+     F*   40         FIRST CYCLE INDICATOR                            *
+     F*   41         NO. OF RECORDS FILE CTRLS OUT OF BALANCE         *
+     F*   42         INSERTED RECORDS FILE CTRLS OUT OF BALANCE       *
+     F*   43         AMENDED RECORDS FILE CTRLS OUT OF BALANCE        *
+     F*   44         DELETED RECORDS FILE CTRLS OUT OF BALANCE        *
+     F*   45         LIVE DETAIL RECORD                               *
+     F*   46         VALID DETAIL RECORD HAS BEEN READ                *
+     F*   47         FOLLOWING RECS AFTER FIRST VALID REC             *
+     F*   48         NEXT AVAILABLE NO. NOT = 999999                  *
+     F*   49         DETAIL PRINTER FILE IS OPEN                      *   E29170
+     F*   50         LAST CHANGE TYPE, AMEND                          *
+     F*   51         LAST CHANGE TYPE, INSERT                         *
+     F*   52         LAST CHANGE TYPE, DELETE                         *
+     F*                                                               *
+     F*   90-99      STANDARD SUBROUTINES                             *
+     F*   91         WORK IND FOR ZZADD/ZZSUB                         *
+     F*   99         DATABASE ERROR                                   *
+     F*                                                               *
+     F*   U1         REPORT ALL RECORDS                               *
+     F*   U7 U8      DATABASE ERROR                                   *
+     F*   U8         FILE CONTROLS OUT OF BALANCE                     *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E*
+     I/SPACE 3
+     I*
+     ITNRANAAF    01
+     I*   TRADE NUMBER RANGE - HEADER
+     I              RECI                            RECITN
+     I*
+     ITNRANABF    02
+     I*   TRADE NUMBER RANGE - DETAILS
+     I              RECI                            RECITN
+     I*
+     I*
+     I/EJECT
+     I*
+     I*****************************************************************   S01117
+     I***TABTB10F***03*****                                               S01117
+     I****INSTALLATION*CONTROL*TABLE*FILE*-*ICDR1**********************   S01117
+     I***********   CHTP                            CHTPTB                S01117
+     I***********                                                         S01117
+     I*********** DS                                                      S01117
+     I***********                                                         S01117
+     I**TABLE*FILE*CHAINING*KEY****************************************   S01117
+     I***********                                                         S01117
+     I***********                             1  12 TABKEY                S01117
+     I***********                             8  10 CCYKN                 S01117
+     I***********                             9  11 CCYK                  S01117
+     I***********                                                         S01117
+     I*LDA*******UDS                            256                       S01117
+     ILDA         DS                            256                       S01117
+     I*   LOCAL DATA AREA
+     I*
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     ISPOOL       DS                                                      S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     ISPOOLU      DS                                                      S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+     I*                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01117
+     I*                                                                   S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I*                                                                   S01117
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01117
+     I*                                                                   S01117
+     I*                                                                   S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C*  M A I N   P R O C E S S I N G
+     C*  CALLS SRS ZDATE2
+     C*            ICDRSR
+     C*************ZSYSTM**********************************************   S01117
+     C*            EMPTYF
+     C*            LSTDET
+     C*
+     C********************************************************************
+     C**
+     C**   F I R S T   C Y C L E   P R O C E S S I N G
+     C**
+     C   40                GOTO ENDFC
+     C*                                                                   S01117
+     C* INPUT PARAMETER :                                                 S01117
+     C*                                                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ     5                       S01117
+     C*                                                                   S01117
+     C                     SETON                     40
+     C                     EXSR ICDRSR
+     C*
+     C** 99 ON - DATABASE ERROR: ICDR1 NOT FOUND
+     C*
+     C**N99                ADD  1         PNORE1
+     C   U7                GOTO END
+     C*
+     C           ENDFC     TAG                             ** ENDFC TAG **
+     C*
+     C********************************************************************
+     C**
+     C**  D E T A I L   T I M E   P R O C E S S I N G
+     C**
+     C**
+     C**   DELETED TRADE NUMBER RANGE DETAILS
+     C                     SETOF                         53
+     C           RECITN    COMP 'D'                      45
+     C  N45      RECITN    COMP 'H'                      53
+     C   53                GOTO END
+     C*
+     C           NTRN      COMP 999999               4848
+     C   46                SETON                         47
+     C                     SETON                         46
+     C*                                                                   E29170
+     C** If details are read and the detail printer file is not open      E29170
+     C** then open it                                                     E29170
+     C*                                                                   E29170
+     C           *IN46     IFEQ '1'                                       E29170
+     C           *IN49     ANDEQ'0'                                       E29170
+     C                     SETON                     49                   E29170
+     C                     OPEN SE0375P1                                  E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANK    SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     GOTO END                                       E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C*
+     C*  AMEND LAST CHANGE DATE FORMAT
+     C*
+     C                     MOVE LCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    LCDAT   7
+     C*
+     C*  TEST CHANGE TYPE
+     C*
+     C           CHTP      COMP 'A'                      50
+     C           CHTP      COMP 'I'                      51
+     C           CHTP      COMP 'D'                      52
+     C*
+     C*  KEEP TOTALS OF ALL DETAIL RECORDS
+     C*
+     C**N52**              ADD  1         PNORE1  50                      S01158
+     C                     ADD  1         PNORE1  50                      S01158
+     C   50                ADD  1         PNAMD   50
+     C   51                ADD  1         PNOIN   50
+     C   52                ADD  1         PNODE   50
+     C*
+     C           END       TAG                             **  END TAG  **
+     C*
+     C*  EMPTY FILE PROCESSING
+     C*
+     CLRN40                EXSR EMPTYF
+     C*
+     C*  LAST DETAIL RECORD PROCESSING
+     C*
+     CLRNU7                EXSR LSTDET
+     C*
+      *================================================================
+      *  E N D   O F   P R O G R A M
+      *================================================================
+     C********************************************************************
+     C/EJECT
+     C***************************************************************  ***
+     C*
+     C*  ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C*
+     C/COPY ZSRSRC,ZDATE2Z4
+     C*
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  ICDRSR  - SR. TO READ ICD AND INITIALIZE DATA AREAS
+     C*
+     C*  CALLED FROM: MAIN PROCESSING AND EMPTYF
+     C***CALLS:*******ZSYSTM**********************************************S01117
+     C*  CALLS:       *PSSR                                               S01117
+     C*
+     C********************************************************************
+     C*
+     C           ICDRSR    BEGSR                           *** ICDRSR  ***
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE0375  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C**N99******          GOTO ICDZZ                                     S01117
+     C***********                                          ***************S01117
+     C***********          SETON                     U7U8LR**DB*ERROR*01**S01117
+     C***********          MOVE 'ICDR1'   DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          Z-ADD01        DBASE                           S01117
+     C*                                                                   S01117
+     C** READ BANK DETAILS VIA ACCESS PROGRAM                             S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE           ************   S01117
+     C                     Z-ADD01        DBASE            * DBERR 01 *   S01117
+     C                     MOVEL@OPTN     DBKEY            ************   S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ICDZZ                                     S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           BJDFIN    COMP 'M'                      98               S01117
+     C***********                                                   S01117E29170
+     C********ENSURE*REPORT*SPOOL*FILE*RECORDED*BY*RCF**************S01117E29170
+     C***********                                                   S01117E29170
+     C***********          Z-ADDSFNUM     ZSNUM   60                S01117E29170
+     C***********                                                   S01117E29170
+     C***********          CALL 'ZSFILE'                            S01117E29170
+     C***********          PARM           SEQ     5                 S01117E29170
+     C***********          PARM *BLANK    SENTY   3                 S01117E29170
+     C***********          PARM           SFILE                     S01117E29170
+     C***********          PARM           ZSNUM                     S01117E29170
+     C***********          PARM           ZSERR   1                 S01117E29170
+     C***********                                                   S01117E29170
+     C***********ZSERR     IFEQ 'Y'                                 S01117E29170
+     C***********          SETON                     U7U8LR         S01117E29170
+     C***********          GOTO ICDZZ                               S01117E29170
+     C***********          END                                      S01117E29170
+     C*                                                                   S01117
+     C**  ENSURE AUDIT SPOOL FILE RECORDED BY RCF                         S01117
+     C*                                                                   S01117
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     C**                                                                  S01117
+     C                     CALL 'ZSFILE'                                  S01117
+     C                     PARM           SEQ     5                       S01117
+     C                     PARM *BLANK    SENTY   3                       S01117
+     C                     PARM           SFILEU                          S01117
+     C                     PARM           ZSNUMU                          S01117
+     C                     PARM           ZSERR   1                       S01117
+     C*                                                                   S01117
+     C           ZSERR     IFEQ 'Y'                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     END                                            S01117
+     C*
+     C           ICDZZ     ENDSR                           * ICDZZ ENDSR *
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  EMPTYF  - SR. NO DETAIL RECORDS LR PROCESSING
+     C*  CALLED FROM: MAIN PROCESSING
+     C*  CALLS:       ICDRSR
+     C*
+     C********************************************************************
+     C*
+     C           EMPTYF    BEGSR                           *** EMPTYF  ***
+     C                     EXSR ICDRSR
+     C   U7                GOTO EMPZZ
+     C                     SETON                       U7U8
+     C                     MOVE 'TNRAN'   DBFILE
+     C                     MOVEL'HEADER ' EMPTY1 11
+     C                     MOVE 'NOT '    EMPTY1           ***************
+     C                     MOVE 'FOUND'   EMPTY  16        * DB ERROR 02 *
+     C                     MOVELEMPTY1    EMPTY            ***************
+     C                     MOVELEMPTY     DBKEY
+     C                     Z-ADD02        DBASE
+     C*
+     C           EMPZZ     ENDSR                           * EMPZZ ENDSR *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C*  LSTDET  - SR. LR TOTAL TIME PROCESSING
+     C*  CALLED FROM:  MAIN PROCESSING
+     C*
+     C********************************************************************
+     C*
+     C           LSTDET    BEGSR                           *** LSTDET  ***
+     C*
+     C** CHECK PROGRAM TOTALS AGAINST FILE CONTROLS
+     C*
+     C           PNORE1    COMP NORE1                4141
+     C           PNOIN     COMP NOIN                 4242
+     C           PNAMD     COMP NAMD                 4343
+     C           PNODE     COMP NODE                 4444
+     C   41
+     COR 42
+     COR 43
+     COR 44                SETON                     U8
+     C*
+     C           LSTZZ     ENDSR                           * LSTZZ ENDSR *
+     C*
+     C********************************************************************
+      /EJECT
+     C*****************************************************************   S01117
+     C*                                                               *   S01117
+     C* *PSSR - SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS        *   S01117
+     C*                                                               *   S01117
+     C* CALLED FROM : AFTER ABNORMAL OPERATION OCCURS                 *   S01117
+     C*                                                               *   S01117
+     C*****************************************************************   S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C***/COPY*ZSRSRC,ZSYSTMZ1*******                                     S01117
+     O/EJECT
+     O********************************************************************
+     O*
+     O*    OUTPUT REPORT - SE0375
+     O*
+     OSE0375P1H  203   46N47NU7                                           S01124
+     O       OR        OF
+     O                                   15 'REFERENCE'
+     O***********                        22 'SE0375'                      S01117
+     O                                   24 'SE0375P1'                    S01117
+     O***********              TITL      89                               S01117
+     O                         BJURPT    89                               S01117
+     O                                  104 'DATE'
+     O***********              RUNA     112                               S01117
+     O                         BJMRDT   112                               S01117
+     O                                  122 'PAGE'
+     O                         PAGE     127
+     O        H  1     46N47NU7
+     O       OR        OF
+     O                       U1          15 'AUDIT LIST'
+     O                                   72 'TRADE NUMBER RANGES LIST'
+     O        H  2     46N47NU7
+     O       OR        OF
+     O                                   72 '------------------------'
+     O        H  1     46N47NU7
+     O       OR        OF
+     O                                    8 'RANGE'
+     O                                   23 'FIRST TRADE'
+     O                                   35 'LAST TRADE'
+     O                                   64 'DESCRIPTION OF RANGES'
+     O                                   90 'NEXT AVAILABLE'
+     O                                  104 'LAST CHANGE'
+     O                                  118 'CHANGE TYPE'
+     O        H  2     46N47NU7
+     O       OR        OF
+     O                                    7 'NO.'
+     O                                   18 'NO.'
+     O                                   31 'NO.'
+     O                                   84 'NO.'
+     O        D  2     45NU7
+     O                         RANG       6
+     O                         FTIR      19
+     O                         LTIR      33
+     O                         DESC      74
+     O                 48      NTRN      85
+     O                         LCDAT    102
+     O                 50               114 'AMD'
+     O                 51               114 'INS'
+     O                 52               114 'DEL'
+     O*
+     O********T 11     LR                                                 E15677
+     O        T 11     LR 46                                              E15677
+     O                                   68 '*** END OF REPORT ***'
+     O*
+     O********************************************************************
+     O********T**203   LRNU7N46                                           S01117
+     O***********                        15 'REFERENCE'                   S01117
+     O***********                        22 'SE0375'                      S01117
+     O***********              TITL      89                               S01117
+     O***********                       104 'DATE'                        S01117
+     O***********              RUNA     112                               S01117
+     O***********                       122 'PAGE'                        S01117
+     O***********              PAGE     127                               S01117
+     O********T**1     LRNU7N46                                           S01117
+     O***********                        72 'TRADE NUMBER RANGES LIST'    S01117
+     O********T**2     LRNU7N46                                           S01117
+     O***********                        72 '------------------------'    S01117
+     O********T** 31   LRNU7N46                                           S01117
+     O***********                        68 '*** NO DETAILS TO REPORT'    S01117
+     O***********                        72 '***'                         S01117
+     O********T*31     LRNU7N46                                    E15677 S01117
+     O***********                        68 '*** END OF REPORT ***'E15677 S01117
+     O********************************************************************
+     O***********                                                         S01117
+     O********T**203   LR                                                 S01117
+     OSE0375AUT  203   LR                                                 S01117
+     O                                   15 'REFERENCE'
+     O***********                        22 'SE0375'                      S01117
+     O                                   24 'SE0375AU'                    S01117
+     O***********              TITL      89                               S01117
+     O                         BJURPT    89                               S01117
+     O                                  104 'DATE'
+     O***********              RUNA     112                               S01117
+     O                         BJMRDT   112                               S01117
+     O                                  122 'PAGE'
+     O***********              PAGE     127                               S01117
+     O                         PAGE2    127                               S01117
+     O        T  1     LR
+     O                                   62 'TRADE NUMBER RANGES LIST'
+     O                                   82 'FILE CONTROL REPORT'
+     O        T  0     LR
+     O                                   62 '------------------------'
+     O                                   82 '--------------------'
+     O        T  213   LR
+     O                                   45 '-------- RECORDS'
+     O                                   54 '--------'
+     O        T  3     LR
+     O                                   41 'FILE CONTROL'
+     O                                   54 'CALCULATED'
+     O        T  2     LR
+     O                                   14 'S/TNRAN'
+     O                         NORE1 3   41
+     O                         PNORE13   54
+     O                 41                60 '***'
+     O        T  2     LR
+     O                                   28 'RECORDS INSERTED'
+     O                         NOIN  3   41
+     O                         PNOIN 3   54
+     O                 42                60 '***'
+     O        T  2     LR
+     O                                   28 'AMENDED'
+     O                         NAMD  3   41
+     O                         PNAMD 3   54
+     O                 43                60 '***'
+     O        T  2     LR
+     O                                   28 'DELETED'
+     O                         NODE  3   41
+     O                         PNODE 3   54
+     O                 44                60 '***'
+     O        T   31   LRNU7N46                                           S01117
+     O                                   68 '*** NO DETAILS TO REPORT'    S01117
+     O                                   72 '***'                         S01117
+     O**
+     O        T   30   LR U7 U8
+     O***********                        56 'DATA BASE ERROR AT'          S01117
+     O                                   55 'DATABASE ERROR AT'           S01117
+     O                         DBASE     59
+     O                                   64 ', KEY'
+     O                         DBKEY     94
+     O        T   32   LR U7 U8
+     O                                   64 'FILE NAME'
+     O***********              DBFILE    70                               S01117
+     O                         DBFILE    73                               S01117
+     O**
+     O        T   49   LRNU7 U8
+     O                                   64 '*** FILE CONTROLS OUT OF'
+     O                                   76 'BALANCE ***'
+     O********T** 53   LR                                                 E29170
+     O***********                        68 '*** END OF REPORT ***'       E29170
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

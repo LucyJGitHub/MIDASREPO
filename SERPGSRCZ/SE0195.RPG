@@ -1,0 +1,3009 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Position Profit Centre Review')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0195 - POSITION PROFIT CENTRE REVIEW                       *
+     F*                                                               *
+     F*  FUNCTION: This program accepts input from a workstation to   *
+     F*   (I/C)    maintain a customer or book position profit centre.*
+     F*            A profit centre may be ameded or, as the result of *
+     F*            an enquiry on the positions and trades associated  *
+     F*            with a particular position profit centre,          *
+     F*            associated positions or trades and their individual*
+     F*            profit centres may be displayed.                   *
+     F*                                                               *
+     F*  Called By: SEC02 - Input Cycle Processing                    *
+     F*  Calls    : SE0050- Trades Maintenance                        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 148849             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 122313             Date 09Aug01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD007             Date 28Aug00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             DATE 18Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC003             Date 25Feb97               *
+     F*                 066831             Date 24JUL96               *
+     F*                 S01496             DATE 23AUG94               *
+     F*                 052254             DATE 07JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  148849 - Fix 066831 did not remove the database error        *
+     F*           processing for when no trade date positions are     *
+     F*           found.                                              *
+     F*  122313 - Use 'T' not 'E' as default Action Code for ZVACTBU  *
+     F*           and ZVACTU processing.                              *
+      *  CSD007 - Customer Closing                                    *
+     F*  CPB001 - 'Private Banking' Module                            *
+     F*  CAC003 - Profit Centre Accounting Development Phase 3.       *
+     F*  066831 - Database error occurs incorrectly when no value     *
+     F*           date positions found.                               *
+     F*           Should not be able to amend a record for a security *
+     F*           which has matured.                                  *
+     F*           Also, because there is no dropping of book position *
+     F*           profit centre file, it is possible to have no BKPHDD*
+     F*           at all. This is because they are being dropped.     *
+     F*  S01496 - Jyske Enhancements - Change format parameter        *  *
+     F*           from DSFDY to DSSDY for AOSTRDR0                    *  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE0195DFCF  E                    WORKSTN
+     F                                        RR1   KSFILE SE0195S0
+     F                                        RR2   KSFILE SE0195S1
+     FSEPCBD  UF  E           K        DISK
+     F                                              KCOMIT
+     FSEPCCD  UF  E           K        DISK
+     F                                              KCOMIT
+     FSEPCA   UF  E                    DISK
+     F                                              KCOMIT
+     FSECTY   IF  E           K        DISK
+     FTRADBO  IF  E           K        DISK
+     F            TRADSDF                           KRENAMETRADSDBO
+     FTRADCS  IF  E           K        DISK
+     F            TRADSDF                           KRENAMETRADSDCS
+     FSEPPC   IF  E           K        DISK
+     F            SEPCBDF                           KRENAMESEPCBDFS
+     F            SEPCCDF                           KRENAMESEPCCDFS
+     FBKPHD   IF  E           K        DISK
+     FBKPOS   IF  E           K        DISK
+     FCPOSN   IF  E           K        DISK
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  01 -  S/SE0195C0  SFLDSP                                     *
+     F*  02 -  S/SE0195C0  SFLDSPCTL                                  *
+     F*  03 -  S/SE0195C0  SFLEND                                     *
+     F*  04 -  S/SE0195C0  SFLCLR                                     *
+     F*  06 -  S/SE0195C1  SFLDSP                                     *
+     F*  07 -  S/SE0195C1  SFLDSPCTL                                  *
+     F*  08 -  S/SE0195C1  SFLEND                                     *
+     F*  09 -  S/SE0195C1  SFLCLR                                     *
+     F*                                                               *
+     F*  10 -  S/SE0195EF  Display of empty subfile                   *
+     F*  11 -  S/SE0195S0  Rollup on Subfile                          *
+     F*  13 -  S/SE0195C0  SLNXTCHG activated                         *
+     F*  14 -  S/SE0195C0  ROLLUP activated                           *
+     F*  15 -  S/SE0195S1  Rollup on Subfile                          *
+     F*  17 -  S/SE0195C1  ROLLUP activated                           *
+     F*  19 -  S/SE0195F2  Errors to be reported                      *
+     F*                                                               *
+     F*  20 -  S/SE0195F1  ERROR-Action Code                          *
+     F*  21 -  S/SE0195F1  ERROR-Security Shortname                   *
+     F*  22 -  S/SE0195F1  ERROR-Book Code                            *
+     F*  23 -  S/SE0195F1  ERROR-Branch Code                          *
+     F*  24 -  S/SE0195F1  ERROR-Market                               *
+     F*  25 -  S/SE0195F1  ERROR-Customer Number/Shortname            *
+     F*                                                               *
+     F*  30 -  S/SE0195S0  ERROR Action Code                          *
+     F*                                                               *
+     F*  40 -  S/SE0195S1  ERROR Profit Centre                        *
+     F*                                                               *
+     F*  65 -  EOF LF/SEPCC  PF/SEPCBD  PF/SEPCCD                     *
+     F*  66 -  Chain fial PF/SEPCBD  PF/SEPCCD                        *
+     F*  67 -  EOF LF/TRADBO  LF/TRADCS  or keys different            *
+     F*  68 -  Chain fial LF/SECTY                                    *
+     F*  69 -  CHAIN FAIL LF/BKPHD  LF/BKPOS  LF/CPOSN                *
+     F*                                                               *
+     F*  71 -  Error on Read of Disply File                           *
+     F*  72 -  Read changed records on subfile SE0195S0               *
+     F*                                                               *
+     F*  75 -  Record Id for PF/SEPCBD                                *
+     F*  76 -  Record Id for PF/SEPCCD                                *
+     F*                                                               *
+     F*  87 -  Book position profit centre selected                   *
+     F*  88 -  Customer position profit centres selected              *
+     F*  89 -  System is Multibranched (MBIN = Y)                     *
+     F*                                                               *
+     F*  U7 -  DATABASE ERROR                                         *
+     F*  U8 -  PROGRAM  ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*  INIT   - Initialise static fields and access standing data   *
+     F*  INITSC - Initialise screen fields after Cmd/12 selected      *
+     F*  START  - Process key fields screen                           *
+     F*  REVIEW - Process position profit review screen               *
+     F*  DETAIL - Load subfile with position profit centre details    *
+     F*  READFL - Read Position Profit Centre details as per prompts  *
+     F*  CHANGE - Process changed Position Profit Centre subfile rcds *
+     F*  BKPOSN - Obtain related book position nominals               *
+     F*  CSPOSN - Obtain related customer position nominals           *
+     F*  TRADES - Display Trades related to Position Profit Centre    *
+     F*  TRDDTL - Display Trades related to Position Profit Centre    *
+     F*  RETRAD - Read Trades related to Position Profit Centre       *
+     F*  AMINIT - Display position profit centre for amend via Review *
+     F*  AMEND  - Display position profit centre for amendment        *
+     F*  UPDAT  - Update profit centres on PF/SEPCBD and PF/SEPCCD    *
+     F*  CHKSEL - Check if selection list ('?' entered) in Start Scrn *
+     F*  CHKPRF - Check if selection list ('?' entered) in Amend Scrn *
+     F*  VALIDK - Validate key fields on initial screen               *
+     F*  VALIDC - Validate Action Code on Profit Centre Review Screen *
+     F*  VALIDA - Validate amended Profit Centre                      *
+     F*                                                               *
+     F*  ZTNLU1 - Obtain next available transaction number            *
+     F*  ZSEDIT - Edit numeric field for output                       *
+     F*  *PSSR  - Subroutine to handle abnormal error conditions      *
+     F*  TERM   - Subroutine to end processing                        *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    DET       256  1
+     E** Array for commit text
+     E*
+     E                    ERR        19  4
+     E** Array for error messages
+     E*
+     E                    CPY@    1   1 80
+     E** Copyright statement
+     E*
+     E                    INF     1   5 76
+     E** Array for info messages
+     E*
+     E                    NAU     1   1 21
+     E** Array for not authorised messages
+     E*
+     E/COPY ZSRSRC,ZSEDITZ1
+     E** ZSEDIT ARRAY
+     E*
+     I/EJECT
+     I*
+     I** Identify individual SEPPC formats
+     I** Book Position:
+     I*
+     ISEPCBDFS    75
+     I*
+     I*  Customer Position:
+     I*
+     ISEPCCDFS    76
+     I*
+     I*  Data structure for compilation - copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I            DS
+     I*
+     I** Book Position Profit Centre File Database Error Keys
+     I*
+     I                                        1  16 RSEPCB
+     I                                        1   2 BBOKC
+     I                                        3   5 BBRCA
+     I                                        6  15 BSESN
+     I                                       16  16 BMKTI
+     I*
+     I            DS
+     I*
+     I** Customer Position Profit Centre File Database Error Keys
+     I*
+     I                                        1  19 RSEPCC
+     I**********                              1   60CCNUM                                     CSD027
+     I                                        1   6 CCNUM                                     CSD027
+     I                                        7   9 CBRCA
+     I                                       10  19 CSESN
+     I*
+     I            DS
+     I*
+     I** Book Position File Database Error Keys
+     I*
+     I                                        1  17 RBKPHD
+     I                                        1  20 RBKPOS
+     I                                        1  10 BPSC
+     I                                       11  13 BPBA
+     I                                       14  15 BPBK
+     I                                       16  16 BPMK
+     I                                       17  17 BPTV
+     I                                    P  18  200BPPD
+     I*
+     I            DS
+     I*
+     I** Customer Position File Database Error Keys
+     I*
+     I                                        1  19 RCPOSN
+     I                                        1   3 CSBA
+     I                                        4  13 CSSC
+     I**********                             14  190CSCN                                      CSD027
+     I                                       14  19 CSCN                                      CSD027
+     I*                                                                   CAC003
+     I            DS                                                      CAC003
+     I*                                                                   CAC003
+     I                                        1  10 XCBPR                 CAC003
+     I                                        1   6 XCBCD                 CAC003
+     I                                        7  10 XPTFR                 CAC003
+     I*
+     ISCRMSG      DS                          1 152
+     I*
+     I** Data structure for error messages to screen
+     I*
+     I                                        1  76 ERR
+     I                                        1  76 ERRMSG
+     I                                       77 152 INFMSG
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     IRUNDT       DS
+     I** Data area RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I**
+     IZMUSER      DS                             17
+     I** Data area of menu user
+     I                                       11  13 USRBCH
+     I                                       17  17 BANKAU
+     I**
+     I*    DTAARA/MNATN
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I*
+     I/COPY ZSRSRC,ZSEDITZ2
+     ICMTTXT      DS
+     I*
+     I** Data structure for setup of commitment text
+     I*
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+     I                                       51 306 DET
+     I*
+     I** Program status data structure for WS/user id's
+     I*
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*                                                                   CAC003
+     ISDMMOD    E DSSDMMODPD                                              CAC003
+     I** External DS for Modules File                                     CAC003
+     I*                                                                   CAC003
+     ISDPORT    E DSSDPORTPD                                              CAC003
+     I** External DS for Portfolio ICD                                    CAC003
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* Bank Details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I** General Ledger Details
+     I*
+     ISDSTRD    E DSSDSTRDPD
+     I** Securities Trading Details
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I** Branch Details
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I** Customer Details
+     I*
+     ISDSECS    E DSSDSECSPD
+     I              QQACCD                          QQACD1                                    CGL029
+     I** Securities Customer Details
+     I*
+     ISDBOOK    E DSSDBOOKPD
+     I** Book Details
+     I*
+     ISDPRFC    E DSSDPRFCPD
+     I** Profit Centre Details
+     I*
+     ISCSARD    E DSSCSARDPD                                              CSD007
+      ** SAR file details accessed via access program AOSARDR0            CSD007
+      *                                                                   CSD007
+     IDSFDY     E DSDSFDY
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I*  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     IDSLDY     E DSDSLDY                                                 CSD007
+      ** Third DS for access programs, very long data structure           CSD007
+      *                                                                   CSD007
+     C/EJECT
+     C*================================================================
+     C* P R O G R A M   S T A R T
+     C*================================================================
+     C*
+     C** Define key lists
+     C*
+     C**  Key list for TRADBO file
+     C*
+     C           KTRDBO    KLIST
+     C                     KFLD           TDBK
+     C                     KFLD           TDBA
+     C                     KFLD           TDSS
+     C                     KFLD           TDMI
+     C                     KFLD           TDVD
+     C*
+     C**  Key list for TRADCS file
+     C*
+     C           KTRDCS    KLIST
+     C                     KFLD           TCNR
+     C                     KFLD           TDBA
+     C                     KFLD           TDSS
+     C                     KFLD           TDVD
+     C*
+     C**  PARTIAL Key list for TRADBO file
+     C*
+     C           KTRDB2    KLIST
+     C                     KFLD           TDBK
+     C                     KFLD           TDBA
+     C                     KFLD           TDSS
+     C                     KFLD           TDMI
+     C*
+     C**  Key list for TRADCS file
+     C*
+     C           KTRDC2    KLIST
+     C                     KFLD           TCNR
+     C                     KFLD           TDBA
+     C                     KFLD           TDSS
+     C*
+     C**  Key list for BKPHD file
+     C*
+     C           KBKPHD    KLIST
+     C                     KFLD           BPSC
+     C                     KFLD           BPBA
+     C                     KFLD           BPBK
+     C                     KFLD           BPMK
+     C                     KFLD           BPTV
+     C*
+     C**  Key list for BKPOS file
+     C*
+     C           KBKPOS    KLIST
+     C                     KFLD           BPSC
+     C                     KFLD           BPBA
+     C                     KFLD           BPBK
+     C                     KFLD           BPMK
+     C                     KFLD           BPTV
+     C                     KFLD           BPPD
+     C*
+     C**  Key list for CPOSN file
+     C*
+     C           KCPOSN    KLIST
+     C                     KFLD           CSBA
+     C                     KFLD           CSSC
+     C                     KFLD           CSCN
+     C*
+     C**  Key list for SEPCBD file
+     C*
+     C           KSEPCB    KLIST
+     C                     KFLD           BBOKC
+     C                     KFLD           BBRCA
+     C                     KFLD           BSESN
+     C                     KFLD           BMKTI
+     C*
+     C**  Key list for SEPCCD file
+     C*
+     C           KSEPCC    KLIST
+     C                     KFLD           CCNUM
+     C                     KFLD           CBRCA
+     C                     KFLD           CSESN
+     C*
+     C*================================================================
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR INIT
+     C*
+     C** D O   U NT I L   F 3   O R   E R R O R   -      S T A R T
+     C*
+     C           *INKC     DOUEQ'1'
+     C           *INU7     OREQ '1'
+     C*
+     C           @SCR01    CASEQ'Y'       START
+     C           @SCR02    CASEQ'Y'       REVIEW
+     C           @SCR03    CASEQ'Y'       AMEND
+     C                     END
+     C*
+     C                     END
+     C*
+     C** D O    U N T I L   F 3   O R   E R R O R        -  E N D
+     C*
+     C*================================================================
+     C* P R O G R A M   E N D
+     C*================================================================
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     EXSR TERM
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INIT   - Subroutine to initialise static fields and access   *
+     C*           Standing Data.                                      *
+     C*                                                               *
+     C*  Called By: Main Processing.                                  *
+     C*  Calls:     PGM AOBANKR0                                      *
+     C*             PGM AOGELRR0                                      *
+     C*             PGM AOSTRDR0                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR                           *** INIT   ***
+     C*
+     C** Define fields used within program
+     C*
+     C           *LIKE     DEFN BRCA      @@BRCA
+     C           *LIKE     DEFN CNUM      @@CBCD
+     C           *LIKE     DEFN TNLU      @@TNLU
+     C           *LIKE     DEFN BRCA      SVBRCA
+     C           *LIKE     DEFN CNUM      SVCBCD
+     C           *LIKE     DEFN BOKC      SVBOKC
+     C           *LIKE     DEFN MKTI      SVMRKT
+     C           *LIKE     DEFN SESN      SVSECS
+     C                     MOVE 'N'       @@USE   1
+     C                     MOVE 'N'       @FPAS   1
+     C                     MOVE 'N'       @FPAS2  1
+     C                     MOVE ' '       @SFL    1
+     C                     MOVE ' '       @NPAGE  1
+     C                     MOVE 'N'       @VBRCA  1
+     C                     MOVE 'N'       @SCR01  1
+     C                     MOVE 'N'       @SCR02  1
+     C                     MOVE 'N'       @SCR03  1
+     C                     MOVE 'N'       @SCRT   1
+     C**********           MOVE 'E'       @@ACTN  1                                           122313
+     C                     MOVE 'T'       @@ACTN  1                                           122313
+     C*
+     C** Prepare the LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANKS   DBFILE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'SE0195'  DBPGM
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+     C*
+     C** Read in the DTAARA RUNDAT - system run data
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C*
+     C** Read in the DTAARA ZMUSER - user run data
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C*
+     C**  If the system is multi-branched
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     89
+     C                     ELSE
+     C*
+     C**  If the system is single branch obtain the Bank's branch code
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C                     MOVELBJSBRC    SBRCA
+     C                     END
+     C*
+     C**  Access General Ledger details for 'PROFIT CENTRE AMENDABLE'
+     C**  and 'ORIGINATING BRANCH VALIDATION REQUIRED' flags
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C**  Access Securities Trading details to for the
+     C**  'TRADE/BOOK POSITION PROFIT CENTRE TO RECONCILE' flag
+     C*
+     C                     CALL 'AOSTRDR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C***********SDSTRD    PARM SDSTRD    DSFDY                           S01496
+     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+     C*
+     C*                                                                   CAC003
+     C** Access the Module Details File using AOMMODR0                    CAC003
+     C*                                                                   CAC003
+     C                     CALL 'AOMMODR0'                                CAC003
+     C                     PARM '*DBERR ' @RTCD   7                       CAC003
+     C                     PARM '*FIRST ' @OPTN   7                       CAC003
+     C           SDMMOD    PARM SDMMOD    DSSDY                           CAC003
+     C*                                                                   CAC003
+     C** Set on *IN50 if Analytical Accounting Module and                 CAC003
+     C** Portfolio Management are installed.                              CAC003
+     C*                                                                   CAC003
+     C           BGN0ST    IFEQ 'Y'                                       CAC003
+     C           BGPFMG    ANDEQ'Y'                                       CAC003
+     C           BGN0ST    OREQ 'Y'                                       CPB001
+     C           BGN4ST    ANDEQ'Y'                                       CPB001
+     C                     MOVE '1'       *IN50                           CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C** Access the Portfolio Management ICD using AOPORTR0               CAC003
+     C*                                                                   CAC003
+     C           BGPFMG    IFEQ 'Y'                                       CAC003
+     C                     CALL 'AOPORTR0'                                CAC003
+     C                     PARM '*DBERR ' @RTCD   7                       CAC003
+     C                     PARM '*FIRST ' @OPTN   7                       CAC003
+     C           SDPORT    PARM SDPORT    DSSDY                           CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+      *                                                                   CSD007
+      ** Access SAR details file to see if 'Customer closing' is          CSD007
+      ** installed.                                                       CSD007
+      *                                                                   CSD007
+     C                     CALL 'AOSARDR0'                                CSD007
+     C                     PARM *BLANKS   @RTCD                           CSD007
+     C                     PARM '*VERIFY' @OPTN                           CSD007
+     C                     PARM 'CSD007'  @SARD   6                       CSD007
+     C           SCSARD    PARM SCSARD    DSFDY                           CSD007
+      *                                                                   CSD007
+     C           @RTCD     IFNE *BLANKS                                   CSD007
+     C           @RTCD     ANDNE'*NRF   '                                 CSD007
+     C                     MOVEL'SCSARDPD'DBFILE                          CSD007
+     C                     MOVEL'CSD007'  DBKEY                           CSD007
+     C                     Z-ADD11        DBASE                           CSD007
+     C                     EXSR *PSSR                                     CSD007
+     C                     ENDIF                                          CSD007
+      *                                                                   CSD007
+     C           @RTCD     IFEQ *BLANKS                                   CSD007
+     C                     MOVE 'Y'       CSD007  1                       CSD007
+     C                     ELSE                                           CSD007
+     C                     MOVE 'N'       CSD007                          CSD007
+     C                     ENDIF                                          CSD007
+     C*
+     C                     EXSR INITSC
+     C*
+     C** Proceed to Start Screen
+     C*
+     C                     MOVE 'Y'       @SCR01
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  INITSC - Subroutine to initialise SCREEN                     *
+     C*                                                               *
+     C*  Called By: SR INIT                                           *
+     C*             SR START                                          *
+     C*             SR REVIEW                                         *
+     C*             SR CHANGE                                         *
+     C*             SR AMEND                                          *
+     C*  Calls:     *NONE                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INITSC    BEGSR                           *** INITSC ***
+     C*
+     C** Clear Key fields of previous value
+     C*
+     C                     MOVE *BLANKS   SBRCA
+     C                     MOVE *BLANKS   SCBCD
+     C                     MOVE *BLANKS   SBOKC
+     C                     MOVE *BLANKS   SMRKT
+     C                     MOVE *BLANKS   SSECS
+     C*
+     C** Set up required processing indicators
+     C*
+     C                     SETON                     14
+     C*
+     C** Set up required processing flags
+     C*
+     C                     MOVE 'N'       @@USE
+     C                     MOVE 'N'       @FPAS
+     C                     MOVE 'N'       @FPAS2
+     C                     MOVE ' '       @SFL
+     C                     MOVE ' '       @NPAGE
+     C                     MOVE 'N'       @VBRCA
+     C                     MOVE 'Y'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C*
+     C** Initialise required subfiles
+     C*
+     C                     MOVEA'0001'    *IN,01
+     C                     WRITESE0195C0
+     C                     MOVEA'0000'    *IN,01
+     C                     MOVEA'0001'    *IN,06
+     C                     WRITESE0195C1
+     C                     MOVEA'0000'    *IN,06
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  START  -   Subroutine to output and process the key fields   *
+     C*             screen                                            *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*  Calls:     SR INITSC                                         *
+     C*             SR CHKSEL                                         *
+     C*             SR VALIDK                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           START     BEGSR                           *** START  ***
+     C*
+     C** Initialise screen data
+     C*
+     C                     MOVE '0'       *INKL
+     C                     SETOF                     202122
+     C                     SETOF                     232425
+     C                     MOVEL*BLANKS   SCRMSG
+     C                     MOVEAINF,1     INFMSG
+     C*
+     C** Clear whole screen
+     C*
+     C                     WRITESE0195F3
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  S T A R T
+     C*
+     C           @SCR01    DOWEQ'Y'
+     C*
+     C** S T A R T   S C R E E N     O U T P U T           -  S T A R T
+     C*
+     C           ERRMSG    IFNE *BLANKS
+     C                     SETON                     19
+     C                     END
+     C*
+     C                     WRITESE0195F2
+     C                     WRITESE0195F1
+     C                     READ SE0195F1                 71
+     C                     SETOF                     19
+     C                     MOVEL*BLANKS   ERR
+     C*
+     C** S T A R T   S C R E E N     O U T P U T           -  E N D
+     C*
+     C** CK3,CK12,H E L P  O R  E N T E R   P R E S S E D  -  S T A R T
+     C*
+     C*
+     C** CK3 OR CK12 - terminate
+     C*
+     C           *INKL     IFEQ '1'
+     C                     EXSR INITSC
+     C                     MOVEL'1'       *INKC
+     C                     END
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'N'       @SCR01
+     C                     ELSE
+     C*
+     C** Enter taken - validate key input
+     C*
+     C** Check if selection list requested ('?' entered)
+     C*
+     C                     EXSR CHKSEL
+     C*
+     C** If no more '?' then validate details input
+     C*
+     C           @SEL      IFEQ 'N'
+     C                     EXSR VALIDK
+     C*
+     C** S C R E E N   C H A N G E                        -  S T A R T
+     C*
+     C** If no error, display Review Screen
+     C*
+     C           ERRMSG    IFEQ *BLANKS
+     C*
+     C** Determine if Book or Customer position
+     C*
+     C           SCBCD     IFEQ *BLANKS
+     C                     SETOF                     88
+     C                     ELSE
+     C                     SETON                     88
+     C                     END
+     C*
+     C           SBOKC     IFEQ *BLANKS
+     C                     SETOF                     87
+     C                     ELSE
+     C                     SETON                     87
+     C                     END
+     C*
+     C** Process Review screen
+     C*
+     C                     MOVE 'N'       @SCR01
+     C                     MOVE 'Y'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C*
+     C                     END
+     C*
+     C**  L I S T  R E Q U E S T E D  B Y  E N T E R I N G '?' - E N D
+     C*
+     C                     END
+     C*
+     C** D E T E R M I N E    S C R E E N   C H A N G E    -  E N D
+     C*
+     C                     END
+     C*
+     C** C K 3 , H E L P , O R  E N T E R   P R E S S E D  -  E N D
+     C*
+     C                     END
+     C*
+     C** D O    U N T I L   C H A N G E  O F  S C R E E N  -  E N D
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  REVIEW -   Subroutine to process position profit review      *
+     C*             screen                                            *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*  Calls:     SR DETAIL (*2)                                    *
+     C*             SR INITSC                                         *
+     C*             SR CHANGE                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           REVIEW    BEGSR                           *** REVIEW ***
+     C*
+     C** Initialise indicators and fields
+     C*
+     C** Reset indicators when review screen first called
+     C*
+     C                     SETOF                     304065
+     C                     MOVE 'N'       @FPAS
+     C*
+     C** Initialise Subfile RR1 and set off indicators for
+     C** Subfile Display, Subfile Control and Subfile End
+     C** Also initialse count of subfile records written
+     C*
+     C                     Z-ADD0         @CNTPR  40
+     C                     Z-ADD0         RR1     40
+     C                     MOVEA'0001'    *IN,01
+     C*
+     C** Clear subfile
+     C*
+     C                     WRITESE0195C0
+     C                     MOVEA'0'       *IN,04
+     C*
+     C** Load Position Profit Centre details
+     C*
+     C                     EXSR DETAIL
+     C*
+     C** Output first subfile page and further pages until EoF, Cmd/3,
+     C** Cmd/12 or Enter selected
+     C*
+     C           @SCR02    DOWEQ'Y'
+     C*
+     C** Review screen output
+     C*
+     C                     SETOF                     11
+     C                     MOVELINF,2     INFMSG
+     C*
+     C** Display the subfile, or empty subfile message
+     C*
+     C           *IN10     IFEQ '1'
+     C                     WRITESE0195EF
+     C                     SETOF                     10
+     C                     END
+     C           ERRMSG    IFNE *BLANKS
+     C                     SETON                     19
+     C                     END
+     C*
+     C                     WRITESE0195F2
+     C                     WRITESE0195C0
+     C*
+     C*
+     C                     READ SE0195C0                 71
+     C                     SETOF                     19
+     C                     MOVEL*BLANKS   ERR
+     C*
+     C** Cmd/3 - terminate the program
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'N'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C** Cmd/12 - return to initial screen
+     C*
+     C           *INKL     IFEQ '1'
+     C                     EXSR INITSC
+     C                     MOVE 'Y'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C** Rollup selected fill a new page of subfile
+     C*
+     C           *IN11     IFEQ '1'
+     C                     EXSR DETAIL
+     C                     END
+     C*
+     C** Neither CMD/3, nor CMD/12 nor ROLLUP selected.
+     C** Continue processing
+     C*
+     C** Validate entered Action Code and process all changed records
+     C*
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C           *IN11     ANDEQ'0'
+     C                     EXSR CHANGE
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  DETAIL -   Subroutine to load subfile with position profit   *
+     C*             centre details                                    *
+     C*                                                               *
+     C*  Called By: SR REVIEW                                         *
+     C*  Calls:     SR READFL (*2)                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           DETAIL    BEGSR                           *** DETAIL ***
+     C*
+     C** Initialise subfile page control
+     C*
+     C                     Z-ADD@CNTPR    RR1
+     C           @CNTPR    ADD  1         DSPREC
+     C                     MOVE ' '       @SFL
+     C                     MOVE 'Y'       @NPAGE
+     C*
+     C** Read appropriate file
+     C*
+     C                     EXSR READFL
+     C*
+     C** If record found, write to subfile and continue filling
+     C** subfile until no more records
+     C*
+     C           *IN65     DOWNE'1'
+     C           @SFL      ANDEQ' '
+     C*
+     C           @@USE     IFEQ 'Y'
+     C*
+     C** Clear subfile fields
+     C*
+     C                     MOVEL*BLANKS   XACTN
+     C                     MOVEL*BLANKS   XBRCA
+     C                     MOVEL*BLANKS   XCBCD
+     C                     MOVEL*BLANKS   XBOKC
+     C                     MOVEL*BLANKS   XMATI                           066831
+     C                     MOVEL*BLANKS   XMRKT
+     C                     MOVEL*BLANKS   XSECS
+     C                     MOVEL*BLANKS   XPCTR
+     C                     MOVEL*BLANKS   XPTFR                           CAC003
+     C                     Z-ADD*ZEROS    XTNLU
+     C*
+     C** Move Position Profit Centre details into subfile fields
+     C*
+     C                     MOVELBRCA      XBRCA
+     C********** CNUM      IFNE *ZEROS                                                        CSD027
+     C           CNUM      IFNE *BLANKS                                                       CSD027
+     C                     MOVELCNUM      XCBCD
+     C                     ELSE
+     C                     MOVELBOKC      XBOKC
+     C                     MOVELMKTI      XMRKT
+     C                     END
+     C                     MOVE MATI      XMATI                           066831
+     C                     MOVE SESN      XSECS
+     C*                                                                   CAC003
+     C** Move PTFR to XPTFR if *IN50 is on                                CAC003
+     C*                                                                   CAC003
+     C           *IN50     IFEQ '1'                                       CAC003
+     C********** CNUM      ANDNE*ZEROS                                                 CAC003 CSD027
+     C           CNUM      ANDNE*BLANKS                                                       CSD027
+     C           PTFR      IFEQ '9997'                                    CAC003
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C                     MOVE FCR997    XPTFR                           CAC003
+     C                     ELSE                                           CAC003
+     C                     MOVELPTFR      XPTFR                           CAC003
+     C                     ENDIF                                          CAC003
+     C                     ENDIF                                          CAC003
+     C*
+     C** Move appropriate Profit Centre into subfile field
+     C           PCBK      IFNE *BLANKS
+     C                     MOVELPCBK      XPCTR
+     C                     ELSE
+     C                     MOVELPCCU      XPCTR
+     C                     END
+     C*
+     C                     MOVEL@@TNLU    XTNLU
+     C*
+     C** Increment relative record number of subfile
+     C*
+     C                     ADD  1         @CNTPR
+     C                     ADD  1         RR1
+     C*
+     C** Write subfile record
+     C*
+     C                     WRITESE0195S0
+     C                     END
+     C*
+     C** Check for filled subfile
+     C*
+     C           RR1       DIV  15        @@NUM   20
+     C                     MVR            @@REM   20
+     C*
+     C** If remainder is 0 then a pseudo subfile page of 15 records has
+     C** been filled. Continue filling only if ROLLUP selected.
+     C** This is when there is at least one record to display.
+     C**
+     C*
+     C           @@REM     IFEQ 0
+     C           RR1       ANDGT0
+     C           @@USE     ANDEQ'Y'                        *** CAR001 ***
+     C                     MOVE XBRCA     SVBRCA
+     C                     MOVE XBOKC     SVBOKC
+     C                     MOVE XMRKT     SVMRKT
+     C                     MOVE XCBCD     SVCBCD
+     C                     MOVE XSECS     SVSECS
+     C                     MOVE 'Y'       @SFL
+     C                     ELSE
+     C*
+     C**  Now no longer a new subfile page so set off New Page flag
+     C**  and read next record.
+     C*
+     C                     MOVE ' '       @NPAGE
+     C                     EXSR READFL
+     C                     END
+     C*
+     C                     END
+     C*  D O   W H I L E                                        -E N D
+     C*
+     C**  End of File detected, therefore seton Subfile End and
+     C**  deactivate ROLLUP
+     C*
+     C           *IN65     IFEQ '1'
+     C                     MOVE 'Y'       @SFL
+     C                     SETOF                     14
+     C                     SETON                     03
+     C*
+     C**  If DSPREC > RR1 then reset DSPREC to RR1
+     C*
+     C           DSPREC    IFGT RR1
+     C                     Z-ADDRR1       DSPREC
+     C                     END
+     C                     END
+     C**  Do not write subfile to screen if subfile is empty
+     C*
+     C           RR1       IFEQ 0
+     C                     SETON                     02
+     C                     SETOF                     01
+     C                     SETON                     10
+     C                     ELSE
+     C*
+     C** Otherwise seton indicators for subfile Display, Control and
+     C** End
+     C*
+     C                     SETON                     0102
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  READFL - Subroutine to read Position Profit Centre Details   *
+     C*           as defined by the prompts entered                   *
+     C*                                                               *
+     C*  Called By: SR DETAIL                                         *
+     C*  Calls:     SR BKPOSN (*2)                                    *
+     C*             SR CSPOSN (*2)                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           READFL    BEGSR                           *** READFL ***
+     C*
+     C** Reset record format identifying indicators
+     C*
+     C                     SETOF                     7576
+     C*
+     C** Clear fields before reading record
+     C*
+     C                     MOVEL*BLANKS   BRCA
+     C**********           Z-ADD*ZEROS    CNUM                                                CSD027
+     C                     MOVE *BLANKS   CNUM                                                CSD027
+     C                     MOVEL*BLANKS   BOKC
+     C                     MOVEL*BLANKS   SESN
+     C                     MOVEL*BLANKS   MKTI
+     C                     MOVEL*BLANKS   PCBK
+     C                     MOVEL*BLANKS   PCCU
+     C                     Z-ADD*ZEROS    TNLU
+     C                     MOVE 'Y'       @@USE
+     C*
+     C**  If ALL branches requested then read all records and select
+     C**  versus any entered prompts
+     C*
+     C           SBRCA     IFEQ 'ALL'
+     C*
+     C** Set lower limits if first time through
+     C*
+     C           @FPAS     IFEQ 'N'
+     C           *LOVAL    SETLLSEPPC
+     C                     MOVE 'Y'       @FPAS
+     C                     END
+     C                     READ SEPPC                    65
+     C*
+     C           *IN65     IFEQ '0'
+     C*
+     C*
+     C** Determine if customer or book position
+     C*
+     C** Book Position:
+     C*
+     C           *IN75     IFEQ '1'
+     C*
+     C** Determine if record is to be used
+     C*
+     C           SBOKC     IFNE *BLANKS
+     C           SBOKC     IFNE BOKC
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C                     END
+     C           SMRKT     IFNE ' '
+     C           SMRKT     IFNE MKTI
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C                     END
+     C           SMRKT     IFEQ ' '
+     C           MKTI      ANDNE'S'
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C           SSECS     IFNE ' '
+     C           SSECS     IFNE SESN
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C                     END
+     C*
+     C**  If Book Position record but Customer prompted, DO NOT USE
+     C*
+     C           SCBCD     IFNE *BLANKS
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C                     END
+     C*
+     C** Customer Position:
+     C*
+     C           *IN76     IFEQ '1'
+     C*
+     C** Determine if record is to be used
+     C*
+     C           SCBCD     IFNE *BLANKS
+     C           @@CBCD    IFNE CNUM
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C                     END
+     C           SSECS     IFNE ' '
+     C           SSECS     IFNE SESN
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C                     END
+     C*
+     C**  If Customer Position record but Book prompted, DO NOT USE
+     C*
+     C           SBOKC     IFNE *BLANKS
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C                     END
+     C*
+     C** If record has been found that may be used
+     C*
+     C           @@USE     IFEQ 'Y'
+     C*
+     C** Save last transaction number and related positions
+     C** nominal value
+     C*
+     C                     Z-ADDTNLU      @@TNLU
+     C*
+     C** Book Position:
+     C*
+     C           *IN75     IFEQ '1'
+     C                     EXSR BKPOSN
+     C                     END
+     C*
+     C** Customer Position:
+     C*
+     C           *IN76     IFEQ '1'
+     C                     EXSR CSPOSN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C                     END
+     C*
+     C**  If specific branch entered (or single branch) select
+     C**  versus any entered prompts
+     C*
+     C           SBRCA     IFNE 'ALL'
+     C*
+     C**  Obtain specified book position
+     C*
+     C           SBOKC     IFNE *BLANKS
+     C*
+     C** Set lower limits of entered prompt fields first time through
+     C*
+     C           @FPAS     IFEQ 'N'
+     C                     MOVE SBRCA     BBRCA
+     C                     MOVE SBOKC     BBOKC
+     C                     MOVE SSECS     BSESN
+     C           SMRKT     IFNE ' '
+     C                     MOVE SMRKT     BMKTI
+     C                     ELSE
+     C                     MOVE 'S'       BMKTI
+     C                     END
+     C           KSEPCB    SETLLSEPCBD
+     C                     MOVE 'Y'       @FPAS
+     C                     ELSE
+     C*
+     C** Set GREATER limits of saved fields for new subfile 'page'
+     C*
+     C           @NPAGE    IFEQ 'Y'
+     C                     MOVE SVBRCA    BBRCA
+     C                     MOVE SVSECS    BSESN
+     C                     MOVE SVBOKC    BBOKC
+     C                     MOVE SVMRKT    BMKTI
+     C*
+     C           KSEPCB    SETGTSEPCBD
+     C                     END
+     C                     END
+     C                     READ SEPCBD                   65
+     C*
+     C** If position profit centre is for another branch
+     C** then do not use record
+     C*
+     C           BRCA      IFNE SBRCA
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C*
+     C** Obtain related Book Position's nominal value
+     C*
+     C           *IN65     IFEQ '0'
+     C           @@USE     ANDEQ'Y'
+     C*
+     C** Save last transaction number
+     C*
+     C                     Z-ADDTNLU      @@TNLU
+     C*
+     C                     EXSR BKPOSN
+     C                     ELSE
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  Obtain specified customer position
+     C*
+     C           SCBCD     IFNE *BLANKS
+     C*
+     C** Set lower limits of prompt fields first time through
+     C*
+     C           @FPAS     IFEQ 'N'
+     C                     MOVE SBRCA     CBRCA
+     C*
+     C** Use work field as it will always be a Customer Number
+     C*
+     C**********           Z-ADD@@CBCD    CCNUM                                               CSD027
+     C                     MOVE @@CBCD    CCNUM                                               CSD027
+     C                     MOVE SSECS     CSESN
+     C           KSEPCC    SETLLSEPCCD
+     C                     MOVE 'Y'       @FPAS
+     C                     ELSE
+     C*
+     C** Set GREATER limits of saved fields for new subfile 'page'
+     C*
+     C           @NPAGE    IFEQ 'Y'
+     C                     MOVE SVBRCA    CBRCA
+     C                     MOVE SVSECS    CSESN
+     C                     MOVE SVCBCD    CCNUM
+     C*
+     C           KSEPCC    SETGTSEPCCD
+     C                     END
+     C                     END
+     C                     READ SEPCCD                   65
+     C*
+     C** If position profit centre is for another branch
+     C** then do not use
+     C*
+     C           BRCA      IFNE SBRCA
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C*
+     C** Obtain related Customer Position's nominal value
+     C*
+     C           *IN65     IFEQ '0'
+     C           @@USE     ANDEQ'Y'
+     C*
+     C** Save last transaction number
+     C*
+     C                     Z-ADDTNLU      @@TNLU
+     C*
+     C                     EXSR CSPOSN
+     C                     ELSE
+     C                     MOVE 'N'       @@USE
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  BKPOSN - Subroutine to obtain related Book Position          *
+     C*           trade and value dated nominals                      *
+     C*                                                               *
+     C*  Called By: SR READFL                                         *
+     C*  Calls:     *NONE                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           BKPOSN    BEGSR                           *** BKPOSN ***
+     C*
+     C*
+     C** Setup key fields for position header
+     C*
+     C                     MOVE SESN      BPSC
+     C                     MOVE BRCA      BPBA
+     C                     MOVE BOKC      BPBK
+     C                     MOVE MKTI      BPMK
+     C                     MOVE 'T'       BPTV
+     C*
+     C**  Access Book Position Header
+     C*
+     C           KBKPHD    CHAINBKPHD                69
+     C*
+     C***If*no*record*found*database*error*****************************   066831
+     C** If no record found, it is not database error as it may have      066831
+     C** been dropped. So do not chain to BKPOSD.                         066831
+     C**********                                                                              148849
+     C********** *IN69     IFEQ '1'                                                           148849
+     C********** RECI      ORNE 'D'                                                           148849
+     C********** *LOCK     IN   LDA                        *************                      148849
+     C**********           Z-ADD01        DBASE            *DB ERROR 01*                      148849
+     C**********           MOVEL'BKPHD'   DBFILE           *************                      148849
+     C**********           MOVELRBKPHD    DBKEY                                               148849
+     C**********           OUT  LDA                                                           148849
+     C**********           EXSR *PSSR                                                         148849
+     C**********           END                                                                148849
+     C*
+     C           *IN69     IFEQ '0'                                       066831
+     C           RECI      ANDNE'M'                                       066831
+     C*
+     C** Setup addtional key fields for trade dated position
+     C*
+     C                     Z-ADDLPSD      BPPD
+     C*
+     C**  Access Book Positions details
+     C*
+     C           KBKPOS    CHAINBKPOS                69
+     C*
+     C** If no record found database error
+     C*
+     C           *IN69     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD02        DBASE            *DB ERROR 02*
+     C                     MOVEL'BKPOS'   DBFILE           *************
+     C                     MOVELRBKPOS    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C                     Z-ADDNPSN      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XTDPS
+     C                     END
+     C*                                                                   066831
+     C                     ELSE                                           066831
+     C                     Z-ADD0         ZFLD15                          066831
+     C                     EXSR ZSEDIT                                    066831
+     C                     MOVE ZOUT21    XTDPS                           066831
+     C                     END                                            066831
+     C*
+     C** Repeat for value date position
+     C*
+     C** Setup key fields for position header
+     C*
+     C                     MOVE 'V'       BPTV
+     C*
+     C**  Access Book Position Header
+     C*
+     C           KBKPHD    CHAINBKPHD                69
+     C*
+     C***If*no*record*found*database*error*****************************   066831
+     C***********                                                         066831
+     C************IN69     IFEQ '1'                                       066831
+     C***********RECI      ORNE 'D'                                       066831
+     C************LOCK     IN   LDA                        *************  066831
+     C***********          Z-ADD03        DBASE            *DB ERROR 03*  066831
+     C***********          MOVEL'BKPHD'   DBFILE           *************  066831
+     C***********          MOVELRBKPHD    DBKEY                           066831
+     C***********          OUT  LDA                                       066831
+     C***********          EXSR *PSSR                                     066831
+     C***********          END                                            066831
+     C*
+     C** Setup additional key fields for value dated position
+     C*
+     C           *IN69     IFEQ '0'                                       066831
+     C           RECI      ANDNE'M'                                       066831
+     C                     Z-ADDLPSD      BPPD
+     C*
+     C**  Access Book Position Details
+     C*
+     C           KBKPOS    CHAINBKPOS                69
+     C*
+     C** If no record found database error
+     C*
+     C           *IN69     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD04        DBASE            *DB ERROR 04*
+     C                     MOVEL'BKPOS'   DBFILE           *************
+     C                     MOVELRBKPOS    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C                     Z-ADDNPSN      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XVDPS
+     C                     END
+     C*
+     C                     ELSE                                           066831
+     C                     Z-ADD0         ZFLD15                          066831
+     C                     EXSR ZSEDIT                                    066831
+     C                     MOVE ZOUT21    XVDPS                           066831
+     C*                                                                   066831
+     C                     END                                            066831
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  CSPOSN - Subroutine to obtain related Customer Position      *
+     C*           trade and value dated nominals                      *
+     C*                                                               *
+     C*  Called By: SR READFL                                         *
+     C*  Calls:     *NONE                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CSPOSN    BEGSR                           *** CSPOSN ***
+     C*
+     C*
+     C** Setup key fields for position
+     C*
+     C                     MOVE SESN      CSSC
+     C                     MOVE BRCA      CSBA
+     C**********           Z-ADDCNUM      CSCN                                                CSD027
+     C                     MOVE CNUM      CSCN                                                CSD027
+     C*
+     C**  Access Customer Position Details
+     C*
+     C           KCPOSN    CHAINCPOSN                69
+     C*
+     C** If no record found database error
+     C*
+     C           *IN69     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD05        DBASE            *DB ERROR 05*
+     C                     MOVEL'CPOSN'   DBFILE           *************
+     C                     MOVELRCPOSN    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE
+     C*
+     C                     Z-ADDCSNT      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XTDPS
+     C*
+     C                     Z-ADDCSNV      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    XVDPS
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  CHANGE - Subroutine to process all changed cubfile records   *
+     C*           showing position profit centre details              *
+     C*                                                               *
+     C*  Called By: SR REVIEW                                         *
+     C*  Calls:     SR VALIDC                                         *
+     C*             SR TRADES                                         *
+     C*             SR AMINIT                                         *
+     C*             SR INITSC                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CHANGE    BEGSR                           *** CHANGE ***
+     C*
+     C** Reset end of file indicator
+     C*
+     C                     MOVEA'0'       *IN,72
+     C*
+     C** Read all changed records until end of file
+     C*
+     C                     READCSE0195S0               7272
+     C*
+     C           *IN72     DOWEQ'0'
+     C           *INKC     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C* If a changed record exists, ensure that the user still wishes
+     C* to action the record.
+     C*
+     C           XACTN     IFEQ *BLANK
+     C*
+     C** Do not process if action code is blankk
+     C*
+     C                     SETOF                     30
+     C                     UPDATSE0195S0
+     C*
+     C                     ELSE
+     C*
+     C** Always return to position profit centre subfile at page of
+     C** changed record!
+     C*
+     C                     Z-ADDRR1       DSPREC
+     C*
+     C** Validate changed record
+     C*
+     C                     EXSR VALIDC
+     C*
+     C** If error in validation, redisplay subfile with action code
+     C** highlighted, otherwise display details user is enquiring upon
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C** Seton SFLNXTCHG indicator and update position profit centre
+     C** Subfile record (SE0195S0)
+     C*
+     C                     SETON                     13
+     C                     UPDATSE0195S0
+     C                     SETOF                     13
+     C                     MOVELINF,2     INFMSG
+     C           ERRMSG    IFNE *BLANKS
+     C                     SETON                     19
+     C                     END
+     C*
+     C                     WRITESE0195F2
+     C                     EXFMTSE0195C0
+     C                     SETOF                     19
+     C                     MOVEL*BLANKS   ERR
+     C*
+     C                     ELSE
+     C*
+     C** Clear subfile fields
+     C*
+     C** Initialise SE0195AM
+     C*
+     C                     MOVEL*BLANKS   ABRCA
+     C                     MOVEL*BLANKS   ACBCD
+     C                     MOVEL*BLANKS   ABOKC
+     C                     MOVEL*BLANKS   AMRKT
+     C                     MOVEL*BLANKS   APCTR
+     C*
+     C** Initialise subfile RR2 and set off indicators for Subfile
+     C** Display, Control, and End
+     C*
+     C                     Z-ADD0         RR2     40
+     C                     MOVEA'000'     *IN,06
+     C*
+     C** Clear related trades subfile
+     C*
+     C                     SETON                     09
+     C                     WRITESE0195C1
+     C                     SETOF                     09
+     C*
+     C** Clear whole screen
+     C*
+     C                     WRITESE0195F3
+     C*
+     C** Reset end of file indicator
+     C*
+     C                     SETOF                     67
+     C*
+     C** Action Code = 'A'- Display Position Profit Centre Amend Scrn
+     C*
+     C** Action Code = '1'- Display related trades screen
+     C*
+     C           XACTN     CASEQ'T'       TRADES
+     C           XACTN     CASEQ'A'       AMINIT
+     C                     END
+     C*
+     C** Blank out Action Code field
+     C*
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     MOVEL*BLANK    XACTN
+     C                     UPDATSE0195S0
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Read next changed record unless Cmd/3 or Cmd/12 selected
+     C*
+     C** Cmd/3 - Terminate program
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'N'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C** Cmd/12 - return to initial screen
+     C*
+     C           *INKL     IFEQ '1'
+     C                     EXSR INITSC
+     C                     MOVE 'Y'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C** Read next changed record
+     C*
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C                     READCSE0195S0               7272
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  TRADES - Subroutine to display related positions             *
+     C*                                                               *
+     C*  Called By: SR CHANGE                                         *
+     C*  Calls:     SR TRDDTL (*2)                                    *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TRADES    BEGSR                           *** TRADES ***
+     C*
+     C** Initialise indicators and fields
+     C*
+     C                     SETOF                     67
+     C                     MOVE 'N'       @FPAS2
+     C                     MOVE 'Y'       @SCRT
+     C*
+     C** Initialise subfile RR2 and set off indicators for subfile
+     C** display, subfile control and subfile end
+     C*
+     C                     Z-ADD0         @CNTTR  40
+     C                     Z-ADD0         RR2     40
+     C                     MOVEA'0001'    *IN,06
+     C*
+     C** Clear subfile
+     C*
+     C                     WRITESE0195C1
+     C                     SETOF                     09
+     C*
+     C** Load related trade details into subfile
+     C*
+     C                     EXSR TRDDTL
+     C*
+     C** Output first subfile page and further pages until all trades
+     C** for position have been displayed, or Cmd/3 or Cmd/12
+     C*
+     C           @SCRT     IFEQ 'Y'
+     C*
+     C** Clear whole screen
+     C*
+     C                     WRITESE0195F3
+     C                     SETOF                     15
+     C                     MOVELINF,3     INFMSG
+     C           *IN10     IFEQ '1'
+     C                     WRITESE0195EF
+     C                     SETOF                     10
+     C                     END
+     C           ERRMSG    IFNE *BLANKS
+     C                     SETON                     19
+     C                     END
+     C*
+     C                     WRITESE0195F2
+     C                     EXFMTSE0195C1
+     C                     SETOF                     19
+     C                     MOVEL*BLANKS   ERR
+     C*
+     C** Cmd/3 - terminate the program
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'N'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     MOVE 'N'       @SCRT
+     C                     END
+     C*
+     C** Cmd/12 - return to initial screen
+     C*
+     C           *INKL     IFEQ '1'
+     C                     EXSR INITSC
+     C                     MOVE 'Y'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     MOVE 'N'       @SCRT
+     C                     END
+     C*
+     C** Rollup selected fill a new page of subfile
+     C*
+     C           *IN15     IFEQ '1'
+     C                     EXSR TRDDTL
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  TRDDTL - Subroutine to display related positions             *
+     C*                                                               *
+     C*  Called By: SR TRADES                                         *
+     C*  Calls:     SR RETRAD (*2)                                    *
+     C*             PGM ZVOBU                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TRDDTL    BEGSR                           *** TRDDTL ***
+     C*
+     C** Initialise subfile page control
+     C*
+     C                     Z-ADD@CNTTR    RR2
+     C           @CNTTR    ADD  1         DSPREK
+     C*
+     C** Read related trades
+     C*
+     C                     EXSR RETRAD
+     C*
+     C** If record found, write to subfile and continue filling
+     C** subfile until no more records to process
+     C*
+     C           *IN67     DOWEQ'0'
+     C*
+     C** Write to subfile if record matches Book Code or Customer Code
+     C** entered, else read next record
+     C*
+     C** Check user's authority to originating branch before
+     C** formatting subfile fields
+     C*
+     C                     Z-ADD0         @ERR
+     C           BKOBUV    IFEQ 'Y'
+     C                     CALL 'ZVOBU'
+     C                     PARM ORBR      @ZBR    3
+     C                     PARM           @ERR    10
+     C                     END
+     C*
+     C           @ERR      IFEQ 0
+     C           BKOBUV    OREQ 'N'
+     C*
+     C** If user has authority to originating branch, or no
+     C** originating branch validation required, then move trade
+     C** details into subfile fields
+     C*
+     C                     MOVE TDBA      ZBRCA
+     C                     MOVELTDRF      ZTRDN
+     C                     MOVE TDTP      ZTTYP
+     C                     MOVELTCNR      ZCUST
+     C                     Z-ADDNOML      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    ZTNOM
+     C*
+     C                     ELSE
+     C*
+     C** User is not authorised to originating branch, show trade
+     C** and asterisked data
+     C*
+     C                     MOVELTDRF      ZTRDN
+     C                     MOVE XBRCA     ZBRCA
+     C                     MOVELNAU,1     ZTTYP
+     C                     MOVELNAU,1     ZCUST
+     C                     MOVELNAU,1     ZTNOM
+     C*
+     C                     END
+     C*
+     C** Write profit centre field
+     C                     MOVE PRFC      ZPCTR
+     C** Increment count of records written to subfile
+     C*
+     C                     ADD  1         RR2
+     C                     ADD  1         @CNTTR
+     C*
+     C** Write subfile record
+     C*
+     C                     WRITESE0195S1
+     C*
+     C** Read next record
+     C*
+     C                     EXSR RETRAD
+     C*
+     C                     END
+     C*  D O   W H I L E                                        -E N D
+     C*
+     C**  End of File detected, therefore seton Subfile End and
+     C**  deactivate ROLLUP
+     C*
+     C           *IN67     IFEQ '1'
+     C                     SETOF                     17
+     C                     SETON                     08
+     C                     END
+     C*
+     C** Do not write subfile to screen if subfile is empty
+     C*
+     C           RR2       IFEQ 0
+     C                     SETON                     07
+     C                     SETOF                     06
+     C                     SETON                     10
+     C                     ELSE
+     C*
+     C** Otherwise seton indicators for subfile Display, Control and
+     C** End
+     C*
+     C                     SETON                     0607
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  RETRAD - Subroutine to read trades related to a position     *
+     C*           profit centre                                       *
+     C*                                                               *
+     C*  Called By: SR TRADES                                         *
+     C*  Calls:     *none                                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           RETRAD    BEGSR                           *** RETRAD ***
+     C*
+     C** Clear fields before reading record
+     C*
+     C                     MOVEL*BLANKS   ZBRCA
+     C                     MOVEL*BLANKS   ZTRDN
+     C                     MOVEL*BLANKS   ZCUST
+     C                     MOVEL*BLANKS   ZTTYP
+     C                     MOVEL*ZEROS    ZTNOM
+     C                     MOVEL*BLANKS   ZPCTR
+     C*
+     C**  Select all trades for position selected
+     C*
+     C*
+     C**  Book Position:
+     C*
+     C** Set lower limits if first time through
+     C*
+     C           XBOKC     IFNE *BLANKS
+     C                     MOVE XBOKC     TDBK
+     C                     MOVE XBRCA     TDBA
+     C                     MOVE XSECS     TDSS
+     C                     MOVE XMRKT     TDMI
+     C           @FPAS2    IFEQ 'N'
+     C           KTRDB2    SETLLTRADBO
+     C                     MOVE 'Y'       @FPAS2
+     C                     END
+     C           KTRDB2    READETRADBO                   67
+     C*
+     C                     END
+     C*
+     C**  Customer Position:
+     C*
+     C** Set lower limits if first time through
+     C*
+     C           XCBCD     IFNE *BLANKS
+     C                     MOVE XCBCD     TCNR
+     C                     MOVE XBRCA     TDBA
+     C                     MOVE XSECS     TDSS
+     C           @FPAS2    IFEQ 'N'
+     C           KTRDC2    SETLLTRADCS
+     C                     MOVE 'Y'       @FPAS2
+     C                     END
+     C           KTRDC2    READETRADCS                   67
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  AMINIT - Subroutine to display position for profit centre    *
+     C*           amendment, from the Review Screen                   *
+     C*                                                               *
+     C*  Called By: SR CHANGE                                         *
+     C*  Calls:     SR CHKPRF - Selection list for Profit Centres     *
+     C*             SR VALIDA                                         *
+     C*             SR UPDAT                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AMINIT    BEGSR                           *** AMINIT ***
+     C*
+     C** Set screen fields and retain last transaction number
+     C*
+     C                     Z-ADDXTNLU     @@TNLU
+     C                     MOVE XBRCA     ABRCA
+     C                     MOVE XSECS     ASECS
+     C*
+     C           XCBCD     IFNE *BLANKS
+     C***********          MOVE XCBCD     ACBCD                           CAC003
+     C                     MOVELXCBCD     ACBCD                           CAC003
+     C                     SETON                     88
+     C                     SETOF                     87
+     C                     ELSE
+     C                     MOVE XBOKC     ABOKC
+     C                     MOVE XMRKT     AMRKT
+     C                     SETOF                     88
+     C                     SETON                     87
+     C                     END
+     C*
+     C                     MOVE XPCTR     APCTR
+     C*
+     C** SET SCREEN 3 FLAG
+     C*
+     C                     MOVE 'Y'       @SCR03
+     C                     MOVELINF,4     INFMSG
+     C                     MOVEL*BLANKS   ERR
+     C*
+     C           @SCR03    DOWEQ'Y'
+     C*
+     C           ERRMSG    IFNE *BLANKS
+     C                     SETON                     19
+     C                     END
+     C*
+     C                     WRITESE0195F2
+     C                     EXFMTSE0195AM
+     C                     SETOF                     19
+     C                     MOVEL*BLANKS   ERR
+     C*
+     C**  Reset of screen flags
+     C*
+     C** Cmd/3 - Terminate program
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'N'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C** Cmd/12 - return to initial screen
+     C*
+     C           *INKL     IFEQ '1'
+     C                     EXSR INITSC
+     C                     MOVE 'Y'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C** Check if selection list requested ('?' entered)
+     C*
+     C                     EXSR CHKPRF
+     C*
+     C** If no more '?' have been entered, validate changed profit
+     C** centre
+     C*
+     C           @SEL      IFEQ 'N'
+     C                     EXSR VALIDA
+     C*
+     C** If error in validation, re-display subfile with profit centre
+     C** highlighted. Otherwise if the profit centre has been amended
+     C** update the file
+     C*
+     C           *IN40     IFNE '1'
+     C           XPCTR     ANDNEAPCTR
+     C*
+     C** Update position profit centre and exit loop
+     C*
+     C                     EXSR UPDAT
+     C*
+     C                     ELSE
+     C*
+     C** Exit loop to allow read of next changed subfile record
+     C** ie profit centre has not been amended
+     C*
+     C           XPCTR     IFEQ APCTR
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  AMEND - Subroutine to display a position profit centre for   *
+     C*          amendment                                            *
+     C*                                                               *
+     C*  Called By: Main Processing                                   *
+     C*  Calls:     SR INITSC - Initialise key field screen           *
+     C*             SR CHKPRF - Selection list for Profit Centres     *
+     C*             SR VALIDA                                         *
+     C*             SR UPDAT                                          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           AMEND     BEGSR                           *** AMEND  ***
+     C*
+     C** Set screen fields
+     C*
+     C                     MOVE SBRCA     ABRCA
+     C                     MOVE SSECS     ASECS
+     C*
+     C           SCBCD     IFNE *BLANKS
+     C                     MOVE SCBCD     ACBCD
+     C                     MOVE PCCU      APCTR
+     C                     ELSE
+     C                     MOVE SBOKC     ABOKC
+     C           SMRKT     IFNE ' '
+     C                     MOVE SMRKT     AMRKT
+     C                     ELSE
+     C                     MOVE 'S'       AMRKT
+     C                     END
+     C                     MOVE PCBK      APCTR
+     C                     END
+     C*
+     C** SET SCREEN 3 FLAG
+     C*
+     C                     MOVE 'Y'       @SCR03
+     C                     MOVELINF,4     INFMSG
+     C                     MOVEL*BLANKS   ERR
+     C*
+     C           @SCR03    DOWEQ'Y'
+     C*
+     C           ERRMSG    IFNE *BLANKS
+     C                     SETON                     19
+     C                     END
+     C*
+     C                     WRITESE0195F2
+     C                     EXFMTSE0195AM
+     C                     SETOF                     19
+     C                     MOVEL*BLANKS   ERR
+     C*
+     C**  Reset screen flags for command keys
+     C*
+     C**  Cmd/3 - end program
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'N'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C**  Cmd/12 - return to initial screen
+     C*
+     C           *INKL     IFEQ '1'
+     C                     EXSR INITSC
+     C                     MOVE 'Y'       @SCR01
+     C                     MOVE 'N'       @SCR02
+     C                     MOVE 'N'       @SCR03
+     C                     END
+     C*
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C** Check if selection list requested ('?' entered)
+     C*
+     C                     EXSR CHKPRF
+     C*
+     C** If no more '?' have been entered, validate changed profit
+     C** centre
+     C*
+     C           @SEL      IFEQ 'N'
+     C                     EXSR VALIDA
+     C*
+     C** If error in validation, re-display subfile with profit centre
+     C** highlighted. Otherwise if the profit centre has been amended
+     C** update the file
+     C*
+     C           *IN40     IFNE '1'
+     C           XPCTR     ANDNEAPCTR
+     C*
+     C** Update position profit centre and exit loop
+     C*
+     C                     EXSR UPDAT
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  Return to initial screen
+     C*
+     C                     EXSR INITSC
+     C                     MOVE 'Y'       @SCR01
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* UPDAT - Subroutine to update the position profit centre on    *
+     C*         PF/SEPCBD (Book Posn) and PF/SEPCCD (Customer Posn    *
+     C*                                                               *
+     C*  Called By: SR AMEND                                          *
+     C*             SR AMINIT                                         *
+     C*  Calls:     SR ZTNLU1                                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           UPDAT     BEGSR                           *** UPDAT  ***
+     C*
+     C*
+     C** Retrieve next available transaction number
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C** If Customer Position access PF/SEPCCD
+     C*
+     C           ACBCD     IFNE *BLANK
+     C                     MOVELABRCA     CBRCA
+     C                     MOVELACBCD     CCNUM
+     C                     MOVE ASECS     CSESN
+     C*
+     C           KSEPCC    CHAINSEPCCD               66
+     C*
+     C           *IN66     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD06        DBASE            *DB ERROR 06*
+     C                     MOVEL'SEPCCD'  DBFILE           *************
+     C                     MOVELRSEPCC    DBKEY
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** If Book Position access PF/SEPCBD
+     C*
+     C                     MOVELABRCA     BBRCA
+     C                     MOVELABOKC     BBOKC
+     C                     MOVELASECS     BSESN
+     C                     MOVELAMRKT     BMKTI
+     C           KSEPCB    CHAINSEPCBD               66
+     C*
+     C           *IN66     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD07        DBASE            *DB ERROR 07*
+     C                     MOVEL'SEPCBD'  DBFILE           *************
+     C                     MOVELRSEPCB    DBKEY
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+     C*
+     C** Check transaction number of last update for Update by Another
+     C** Workstation
+     C*
+     C           TNLU      IFEQ @@TNLU
+     C*
+     C** Not updated by another workstation, therefore continue to
+     C** update
+     C*
+     C** Acquire position profit centre file control record PF/SEPCA
+     C** and update amend total (if not amended today)
+     C*
+     C           1         CHAINSEPCA                66
+     C*
+     C           *IN66     IFEQ '1'
+     C           *LOCK     IN   LDA                        *************
+     C                     Z-ADD08        DBASE            *DB ERROR 08*
+     C                     MOVEL'SEPCA'   DBFILE           *************
+     C                     MOVEL'1'       DBKEY
+     C                     OUT  LDA
+     C                     SETON                     U7U8
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** Update number of amends if this is first amendment to record
+     C** today
+     C*
+     C           CHTP      IFEQ 'A'
+     C           LCD       ANDNERUND
+     C           CHTP      ORNE 'A'
+     C                     ADD  1         SAMD
+     C                     END
+     C                     UPDATSEPCAF
+     C*
+     C** Translate record details from screen layout to file layout
+     C** depending on which record is to be updated
+     C*
+     C                     Z-ADDRUND      LCD
+     C                     MOVEL'A'       CHTP
+     C                     MOVELNATN      TNLU
+     C           XCBCD     IFNE *BLANKS
+     C                     MOVE APCTR     PCCU
+     C                     UPDATSEPCCDF
+     C                     ELSE
+     C                     MOVE APCTR     PCBK
+     C                     UPDATSEPCBDF
+     C                     END
+     C*
+     C** Update successful, update screen with amended profit centre
+     C** and transaction number
+     C*
+     C                     MOVE APCTR     XPCTR
+     C                     MOVE TNLU      XTNLU
+     C*
+     C** Commit the updated amendments
+     C*
+     C** Format the COMIT text
+     C*
+     C                     Z-ADDTNLU      NATN
+     C                     MOVEL'SE'      MDID
+     C                     MOVEL'SE0195'  PGMN
+     C                     MOVELWSID      WSIDX
+     C                     TIME           MTIME
+     C                     MOVEL'A'       ACTNX
+     C                     MOVELUSID      USIDX
+     C           ACBCD     IFEQ ' '
+     C                     MOVEAABRCA     DET,1
+     C                     MOVEAABOKC     DET,4
+     C                     MOVEAASECS     DET,6
+     C                     MOVEAAPCTR     DET,16
+     C                     ELSE
+     C                     MOVELABRCA     DET,1
+     C                     MOVELACBCD     DET,4
+     C                     MOVE ASECS     CSESN
+     C                     MOVELAMRKT     DET,10
+     C                     MOVEAAPCTR     DET,11
+     C                     END
+     C           CMTTXT    COMIT
+     C*
+     C** Reset screen flag to return to initial screen if Amend
+     C** processing selected otherwise to Review screen
+     C*
+     C                     MOVE 'N'       @SCR03
+     C*
+     C                     ELSE
+     C*
+     C**  If update by another workstation, redisplay screen with
+     C**  message
+     C*
+     C           ACBCD     IFNE *BLANK
+     C                     EXCPTSEPCCR
+     C                     ELSE
+     C                     EXCPTSEPCBR
+     C                     END
+     C                     MOVELINF,5     INFMSG
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  CHKSEL - SR to check if selection list ('?' entered) in      *
+     C*           start screen                                        *
+     C*                                                               *
+     C*  Called By: SR START                                          *
+     C*  Calls:     PGM AOBRCHR0                                      *
+     C*             PGM AOSECSR0                                      *
+     C*             PGM AOBOOKR0                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CHKSEL    BEGSR                           *** CHKSEL ***
+     C*
+     C                     MOVE 'N'       @SEL    1
+     C                     MOVEA'000'     *IN,21
+     C                     Z-ADD*ZERO     EC      40
+     C*
+     C** ? entered in Branch Code
+     C*
+     C                     MOVELSBRCA     @STP    1
+     C           @STP      IFEQ '?'
+     C                     MOVE 'Y'       @SEL
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SBRCA     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   SBRCA
+     C                     ELSE
+     C                     MOVELA8BRCD    SBRCA
+     C                     END
+     C                     END
+     C*
+     C** ? entered in Customer Code
+     C*
+     C                     MOVELSCBCD     @STP    1
+     C           @STP      IFEQ '?'
+     C                     MOVE 'Y'       @SEL
+     C*
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SCBCD     @CNUM   6
+     C           SDSECS    PARM SDSECS    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   SCBCD
+     C                     ELSE
+     C                     MOVELBFCUST    SCBCD
+     C                     END
+     C                     END
+     C*
+     C** ? entered in Book Code
+     C*
+     C                     MOVELSBOKC     @STP    1
+     C           @STP      IFEQ '?'
+     C                     MOVE 'Y'       @SEL
+     C*
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SBOKC     @BKCD   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   SBOKC
+     C                     ELSE
+     C                     MOVELBDBKCD    SBOKC
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  CHKPRF - Subroutine to check if selection list ('? entered)  *
+     C*           in Amend Screen                                     *
+     C*                                                               *
+     C*  Called By: SR AMEND                                          *
+     C*             SR AMINIT                                         *
+     C*  Calls:     PGM AOPRFCR0                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CHKPRF    BEGSR                           *** CHKPRF ***
+     C*
+     C** Reset error indicators
+     C** Set error array counter to zero
+     C*
+     C                     MOVE 'N'       @SEL
+     C                     MOVEA'0'       *IN,40
+     C                     Z-ADD*ZERO     EC      40
+     C*
+     C** '?' entered in Profit Centre field
+     C*
+     C                     MOVELAPCTR     @STP    1
+     C           @STP      IFEQ '?'
+     C                     MOVE 'Y'       @SEL
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM APCTR     @PCCD   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   APCTR
+     C                     ELSE
+     C                     MOVELDSPCCD    APCTR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*  VALIDK - SR to validate key fields                           *
+     C*                                                               *
+     C*  Called By: SR START                                          *
+     C*  Calls:     PGM AOBRCHR0                                      *
+     C*             PGM ZVACTBU                                       *
+     C*             PGM ZVACTU                                        *
+     C*             PGM AOCUSTR0                                      *
+     C*             PGM AOSECSR0                                      *
+     C*             PGM AOBOOKR0                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALIDK    BEGSR                           *** VALIDK ***
+     C*
+     C** Reset error indicators and set error array counter to zero
+     C*
+     C                     SETOF                     202122
+     C                     SETOF                     232425
+     C                     Z-ADD*ZERO     EC      40
+     C*
+     C** If Profit Centres not used, enquiry is not available
+     C*
+     C           BKPRCU    IFEQ 'N'
+     C                     ADD  1         EC
+     C                     MOVEL' 991'    ERR,EC
+     C                     ELSE
+     C*
+     C** Set default action
+     C*
+     C** Branch validations:
+     C*
+     C** Multi-branched system
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C**  When system is multi branched, default branch is User's
+     C**  branch code
+     C*
+     C           SBRCA     IFEQ *BLANKS
+     C                     MOVELUSRBCH    SBRCA
+     C                     SETON                     89
+     C                     END
+     C*
+     C** Specified branch must exist
+     C*
+     C           SBRCA     IFNE 'ALL'
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SBRCA     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     ADD  1         EC         23
+     C                     MOVEL' 102'    ERR,EC
+     C                     ELSE
+     C*
+     C** SPF - User must have authority to branch code and action
+     C** code combination
+     C*
+     C                     CALL 'ZVACTBU'
+     C                     PARM @@ACTN    @ZACTN  1
+     C                     PARM SBRCA     @ZBR    3
+     C                     PARM           @ERR    10
+     C*
+     C           @ERR      IFEQ 2
+     C                     ADD  1         EC
+     C                     MOVEL' 304'    ERR,EC
+     C                     SETON                     23
+     C                     END
+     C*
+     C           @ERR      IFEQ 1
+     C                     ADD  1         EC
+     C                     MOVEL' 303'    ERR,EC
+     C                     SETON                     23
+     C                     END
+     C                     END
+     C                     ELSE
+     C*
+     C** Unspecified Branch Code - user must have Bank Level Authority
+     C*
+     C           BANKAU    IFNE 'Y'
+     C                     ADD  1         EC         23
+     C                     MOVEL' 311'    ERR,EC
+     C                     END
+     C*
+     C** A L L    E N T E R E D                              - E N D
+     C                     END
+     C*
+     C** S Y S T E M   IS   M U L T I B R A N C H E D        - E N D
+     C                     END
+     C*
+     C** Single branched system
+     C*
+     C           MBIN      IFEQ 'N'
+     C*
+     C**  When system is single branched, default branch is Bank's
+     C**  branch code
+     C*
+     C           SBRCA     IFEQ *BLANKS
+     C                     MOVELBJSBRC    SBRCA
+     C                     END
+     C*
+     C** SPF - User must have authority to action code
+     C*
+     C                     CALL 'ZVACTU'
+     C                     PARM @@ACTN    @ZACTN  1
+     C                     PARM           @ERR    10
+     C           @ERR      IFNE *ZERO
+     C                     ADD  1         EC
+     C                     MOVEL' 302'    ERR,EC
+     C                     SETON                     23
+     C                     END
+     C*
+     C** S Y S T E M   N O T   M U L T I B R A N C H E D      - E N D
+     C                     END
+     C*
+     C** Customer Code:
+     C*
+     C** Book Code must be blank if Customer Code entered
+     C*
+     C           SCBCD     IFNE *BLANKS
+     C           SBOKC     IFNE *BLANKS
+     C                     ADD  1         EC
+     C                     MOVEL' 107'    ERR,EC
+     C                     SETON                     2225
+     C                     END
+     C                     END
+     C*
+     C** Customer Code must exist on file
+     C*
+     C           SCBCD     IFNE *BLANKS
+     C*
+     C***********          CALL 'AOCUSTR0'                                CSD007
+     C                     CALL 'AOCUSTR2'                                CSD007
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SCBCD     @KEY1  10
+     C                     PARM           @KYST   7
+     C***********SDCUST    PARM SDCUST    DSSDY                           CSD007
+     C           SDCUST    PARM SDCUST    DSLDY                           CSD007
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           CSD007    ANDNE'Y'                                       CSD007
+      *                                                                   CSD007
+     C           @RTCD     ORNE *BLANKS                                   CSD007
+     C           @RTCD     ANDEQ'*NRF   '                                 CSD007
+     C           BBDTDL    ANDNE*ZEROS                                    CSD007
+     C           CSD007    ANDEQ'Y'                                       CSD007
+      *                                                                   CSD007
+     C           @RTCD     ORNE *BLANKS                                   CSD007
+     C           @RTCD     ANDNE'*NRF   '                                 CSD007
+     C           CSD007    ANDEQ'Y'                                       CSD007
+      *                                                                   CSD007
+     C                     ADD  1         EC         25
+     C                     MOVEL' 105'    ERR,EC
+     C                     ELSE
+     C*
+     C** Customer must be a defined Securities Customer (ensure
+     C** customer number not shortname used in key)
+     C*
+     C                     CALL 'AOSECSR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BBCUST    @CNUM   6
+     C           SDSECS    PARM SDSECS    DSSDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     ADD  1         EC         25
+     C                     MOVEL' 106'    ERR,EC
+     C                     ELSE
+     C*
+     C** Save customer number
+     C*
+     C                     MOVELBFCUST    @@CBCD
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** Book Code:
+     C*
+     C** Book Code must exist on file
+     C*
+     C           SBOKC     IFNE *BLANKS
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SBOKC     @BKCD   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     ADD  1         EC         22
+     C                     MOVEL' 103'    ERR,EC
+     C                     END
+     C                     END
+     C*
+     C** Book Code and Customer Code can both be blank if Branch = ALL
+     C*
+     C           SCBCD     IFEQ *BLANKS
+     C           SBOKC     ANDEQ*BLANKS
+     C           SBRCA     ANDNE'ALL'
+     C                     ADD  1         EC         2225
+     C                     MOVEL' 108'    ERR,EC
+     C*
+     C                     END
+     C*
+     C** Market Code:
+     C*
+     C** Market Code requires Book Code to be entered
+     C** (only if a specific branch entered)
+     C*
+     C           SBRCA     IFNE 'ALL'
+     C           SMRKT     IFNE *BLANKS
+     C           SBOKC     ANDEQ*BLANKS
+     C                     ADD  1         EC         2224
+     C                     MOVEL' 109'    ERR,EC
+     C*
+     C                     END
+     C                     END
+     C*
+     C** If entered Market Code can only be G, P, or S
+     C*
+     C           SMRKT     IFNE ' '
+     C           SMRKT     ANDNE'G'
+     C           SMRKT     ANDNE'P'
+     C           SMRKT     ANDNE'S'
+     C                     ADD  1         EC         24
+     C                     MOVEL' 104'    ERR,EC
+     C                     END
+     C*
+     C** Security Shortname:
+     C*
+     C** Mandatory unless Branch Code = ALL
+     C*
+     C           SSECS     IFEQ *BLANKS
+     C           SBRCA     ANDNE'ALL'
+     C                     ADD  1         EC         21
+     C                     MOVEL' 110'    ERR,EC
+     C*
+     C                     END
+     C*
+     C** Security Shortname if entered must exist on file
+     C*
+     C           SSECS     IFNE *BLANKS
+     C           SSECS     CHAINSECTY                68
+     C           *IN68     IFEQ '1'
+     C                     ADD  1         EC         21
+     C                     MOVEL' 101'    ERR,EC
+     C                     END
+     C           RECI      IFEQ 'M'                                       066831
+     C                     MOVE 'M'       MATI    1                       066831
+     C                     ELSE                                           066831
+     C                     MOVE *BLANKS   MATI                            066831
+     C                     END                                            066831
+     C                     END
+     C*
+     C*
+     C** P R O F I T   C E N T R E S   U S E D                - E N D
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  VALIDC - Subroutine to validate the Action Code on the       *
+     C*           Position Profit Centre Review Screen                *
+     C*                                                               *
+     C*  Called By: SR CHANGE                                         *
+     C*  Calls:     PGM ZVACTBU                                       *
+     C*             PGM ZVACTU                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALIDC    BEGSR                           *** VALIDC ***
+     C*
+     C** Reset error indicators
+     C** Set error array counter to zero
+     C*
+     C                     MOVEA'0'       *IN,30
+     C                     Z-ADD*ZERO     EC      40
+     C                     MOVEA'0'       *IN,67
+     C*
+     C** Action code can be A or 1
+     C*
+     C           XACTN     IFNE 'A'
+     C           XACTN     ANDNE'T'
+     C                     ADD  1         EC         30
+     C                     MOVEL' 200'    ERR,EC
+     C                     ELSE
+     C*
+     C** Validate authority to Action Code
+     C*
+     C** If system is multi-branched, check users authority to Branch
+     C** Code and Action Code
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C                     CALL 'ZVACTBU'
+     C                     PARM XACTN     @ZACTN  1
+     C                     PARM XBRCA     @ZBR    3
+     C                     PARM           @ERR    10
+     C*
+     C** User is not authorised to the Action Code entered with the
+     C** Branch of the Profit Centre being Actioned
+     C*
+     C           @ERR      IFEQ 2
+     C                     ADD  1         EC         30
+     C                     MOVEL' 304'    ERR,EC
+     C                     END
+     C*
+     C** User is not authorised to the Action Code entered with any
+     C** Branch Code
+     C*
+     C           @ERR      IFEQ 1
+     C                     ADD  1         EC         30
+     C                     MOVEL' 303'    ERR,EC
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** System is not Multibranched
+     C*
+     C** SPF - check user's authority to Action Code
+     C*
+     C                     CALL 'ZVACTU'
+     C                     PARM XACTN     @ZACTN  1
+     C                     PARM           @ERR    10
+     C           @ERR      IFNE *ZERO
+     C                     ADD  1         EC         30
+     C                     MOVEL' 302'    ERR,EC
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Action Code 'A' validations
+     C*
+     C           XACTN     IFEQ 'A'
+     C*
+     C** If Security has matured cannot amend details                     066831
+     C*                                                                   066831
+     C           MATI      IFEQ 'M'                                       066831
+     C                     ADD  1         EC         30                   066831
+     C                     MOVEL' 111'    ERR,EC                          066831
+     C                     END                                            066831
+     C*                                                                   066831
+     C** If Profit Centre is not amendable, Error
+     C*
+     C           BKPRCA    IFEQ 'N'
+     C                     ADD  1         EC         30
+     C                     MOVEL' 601'    ERR,EC
+     C*
+     C                     ELSE
+     C*
+     C** Amend is only allowed if the 'Reconcile Trade and Book
+     C** Position' flag is 'Y' and there are no outstanding Trades on
+     C** the position
+     C*
+     C           BVTBRC    IFEQ 'Y'
+     C*
+     C**  Book Position:
+     C*
+     C           XBOKC     IFNE *BLANKS
+     C*
+     C**  Nominal trade and value date positions should be 0
+     C*
+     C                     MOVE XTDPS     @@TDPS 150
+     C                     MOVE XVDPS     @@VDPS 150
+     C           @@TDPS    IFNE 0
+     C           @@VDPS    ANDNE0
+     C                     ADD  1         EC         30
+     C                     MOVEL' 603'    ERR,EC
+     C                     SETON                     67
+     C                     ELSE
+     C*
+     C**  Check if there are any outstanding Trades for the Position
+     C*
+     C                     MOVE BRCA      TDBA
+     C                     MOVE SESN      TDSS
+     C                     MOVE BOKC      TDBK
+     C                     MOVE MKTI      TDMI
+     C                     Z-ADDRUND      TDVD
+     C           KTRDBO    SETGTTRADBO
+     C*
+     C**  If record found then at least one outstanding trade exists
+     C*
+     C           *IN67     DOWEQ'0'
+     C                     READ TRADBO                   67
+     C*
+     C           *IN67     IFEQ '0'
+     C*
+     C**  Check that record is for same position, live and complete
+     C*
+     C           TDBA      IFEQ BRCA
+     C           TDSS      ANDEQSESN
+     C           TDBK      ANDEQBOKC
+     C           TDMI      ANDEQMKTI
+     C           RECI      IFEQ 'D'
+     C           TINC      ANDEQ'C'
+     C                     ADD  1         EC         30
+     C                     MOVEL' 603'    ERR,EC
+     C                     SETON                     67
+     C                     END
+     C                     ELSE
+     C*
+     C**  Check that record is for different position
+     C*
+     C                     SETON                     67
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**  Customer Position:
+     C*
+     C           XCBCD     IFNE *BLANKS
+     C*
+     C**  Nominal trade and value date positions should be 0
+     C*
+     C                     MOVE XTDPS     @@TDPS
+     C                     MOVE XVDPS     @@VDPS
+     C           @@TDPS    IFNE 0
+     C           @@VDPS    ANDNE0
+     C                     ADD  1         EC         30
+     C                     MOVEL' 605'    ERR,EC
+     C                     SETON                     67
+     C                     ELSE
+     C*
+     C**  Check if any outstanding trades for customer position
+     C*
+     C                     MOVE BRCA      TDBA
+     C                     MOVE SESN      TDSS
+     C                     MOVE CNUM      TCNR
+     C                     MOVE MKTI      TDMI
+     C                     Z-ADDRUND      TDVD
+     C           KTRDCS    SETGTTRADCS
+     C*
+     C**  If record found then at least one outstanding trade exists
+     C*
+     C           *IN67     DOWEQ'0'
+     C                     READ TRADCS                   67
+     C*
+     C           *IN67     IFEQ '0'
+     C*
+     C**  Check that record is for same position, live and complete
+     C*
+     C           TDBA      IFEQ BRCA
+     C           TDSS      ANDEQSESN
+     C           TCNR      ANDEQCNUM
+     C           RECI      IFEQ 'D'
+     C           TINC      ANDEQ'C'
+     C                     ADD  1         EC         30
+     C                     MOVEL' 605'    ERR,EC
+     C                     SETON                     67
+     C                     END
+     C                     ELSE
+     C*
+     C**  Check that record is for different position
+     C*
+     C                     SETON                     67
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  VALIDA - Subroutine to validate Profit Centre entered        *
+     C*                                                               *
+     C*  Called By: SR AMEND                                          *
+     C*             SR AMINIT                                         *
+     C*  Calls:     PGM AOPRFCR0                                      *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALIDA    BEGSR                           *** VALIDA ***
+     C*
+     C** Reset error indicators
+     C** Set error array counter to zero
+     C*
+     C                     MOVEA'0'       *IN,40
+     C                     Z-ADD*ZERO     EC      40
+     C*
+     C** Validate the profit centre entered or selected from list
+     C*
+     C** Cannot be blanks
+     C*
+     C           APCTR     IFEQ *BLANKS
+     C                     ADD  1         EC         40
+     C                     MOVEL' 301'    ERR,EC
+     C                     END
+     C*
+     C** Must exist on profit centres file
+     C*
+     C           APCTR     IFNE *BLANKS
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM APCTR     @PCCD   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     ADD  1         EC         40
+     C                     MOVEL' 300'    ERR,EC
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR - SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS        *
+     C*                                                               *
+     C* Called By: Any Exception Error                                *
+     C* Calls:     *none                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* TERM - Subroutine to end processing either for requested      *
+     C*        end of program and because abnormal end of program     *
+     C*                                                               *
+     C* Called By: Main Processing                                    *
+     C* Calls:     *none                                              *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           TERM      BEGSR                           *** TERM   ***
+     C*
+     C** Terminate Program
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C/EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/EJECT
+     O*
+     OSEPCBDF E                SEPCBR
+     O*
+     OSEPCCDF E                SEPCCR
+     O*
+     O/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+** INF
+ Enter:F3:F12:Help
+ Enter:Action Code A,T:F3:F12:Rollup:Rolldown:Help
+ Enter:F3:F12:Rollup:Rolldown:Help
+ AMENDMENT Enter:F3:F12:Help
+ Record has been updated by another workstation
+**  NAU
+*********************

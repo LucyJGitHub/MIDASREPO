@@ -1,0 +1,146 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE Past Due Call Loan creation/update')         */
+/*******************************************************************/
+/*                                                                 */
+/*     Midas    - Customer Lending Module                          */
+/*                                                                 */
+/*     LEC000473 - Past Due Call Loan creation/update              */
+/*                                                                 */
+/*       (c) Finastra International Limited 2012                   */
+/*                                                                 */
+/*       Last Amend No. MD049745A          Date 16Mar18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021423E          Date 12Sep13              */
+/*                      AR1085742          Date 06Feb13              */
+/*                      AR796443           Date 15Jan13            */
+/*                      CLE134 *CREATE     Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD049745A - Corruption of Original currency of Loans and    */
+/*                  PDCLs incorrect postings                         */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD021423E - Deal date should be the deal date of the OL   */
+/*                   Pay instruction should be defaulted from rec. */
+/*                   instruction of the OL                         */
+/*       AR1085742 - Recovery handling when PDP components loop    */
+/*                   due to database connection issues             */
+/*       AR796443 - Database error 007 occurred when checking for    */
+/*                  newly matured fees. Use LEFEEDL1 instead of      */
+/*                  LEFEEDL0. (Child: AR796444)                      */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+/**********  PGM        PARM(&WRETCD &W@TYPE &W@LOAN &W@FSEQ +
+                           &W@FCOD &W@FACL &W@FBRC +
+                           &W@CNU2 &W@EDATYP +
+                           &W@PDAMT &W@INT &W@AV &W@ORIGP &W@ORIGI +
+                           &W@LASN &W@AVDAT &WPDCLTYP &W@OPDAM +
+                           &W@OPDINT &WYPLNR &PGNM &WBCR) */                 /*MD021423E MD049745A*/
+/**********                &W@OPDINT &WYPLNR &PGNM)                */        /*AR1085742 MD021423E*/
+/**********                &W@OPDINT &WYPLNR)    */                                    /*AR1085742*/
+             PGM        PARM(&WRETCD &W@TYPE &W@LOAN &W@FSEQ &W@FCOD &W@FACL +
+                          &W@FBRC &W@CNU2 &W@EDATYP &W@PDAMT &W@INT &W@AV &W@ORIGP +
+                          &W@ORIGI &W@LASN &W@AVDAT &WPDCLTYP &WSCCY &WSIND +
+                          &WSRATE &W@OPDAM &W@OPDINT &WYPLNR &PGNM &WBCR) +
+                          /*MD049745A*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2012')
+ 
+             DCL        VAR(&WRETCD)   TYPE(*CHAR) LEN(  7)
+             DCL        VAR(&W@TYPE)   TYPE(*CHAR) LEN(  1)
+             DCL        VAR(&W@LOAN)   TYPE(*CHAR) LEN(  6)
+             DCL        VAR(&W@FSEQ)   TYPE(*DEC ) LEN(  2)
+             DCL        VAR(&W@FCOD)   TYPE(*DEC ) LEN(  2)
+             DCL        VAR(&W@FACL)   TYPE(*DEC ) LEN(  5)
+             DCL        VAR(&W@FBRC)   TYPE(*CHAR) LEN(  3)
+             DCL        VAR(&W@CNU2)   TYPE(*CHAR) LEN(  6)
+             DCL        VAR(&W@EDATYP) TYPE(*DEC ) LEN(  5)
+             DCL        VAR(&W@PDAMT)  TYPE(*DEC ) LEN( 15)
+             DCL        VAR(&W@INT)    TYPE(*DEC ) LEN( 15)
+             DCL        VAR(&W@AV)     TYPE(*DEC ) LEN( 15)
+             DCL        VAR(&W@ORIGP)  TYPE(*DEC ) LEN( 15)
+             DCL        VAR(&W@ORIGI)  TYPE(*DEC ) LEN( 15)
+             DCL        VAR(&W@LASN)   TYPE(*DEC ) LEN(  3)
+             DCL        VAR(&W@AVDAT)  TYPE(*DEC ) LEN(  5)
+             DCL        VAR(&WPDCLTYP) TYPE(*CHAR) LEN(  1)
+             DCL        VAR(&W@OPDAM)  TYPE(*DEC ) LEN( 15)
+             DCL        VAR(&W@OPDINT) TYPE(*DEC ) LEN( 15)
+             DCL        VAR(&WYPLNR)   TYPE(*CHAR) LEN(  6)
+             DCL        VAR(&PGNM)     TYPE(*CHAR) LEN( 10)                            /*AR1085742*/
+             DCL        VAR(&WBCR)     TYPE(*CHAR) LEN(  1)                            /*MD021423E*/
+             DCL        VAR(&WSCCY)    TYPE(*CHAR) LEN(  3)                            /*MD049745A*/
+             DCL        VAR(&WSIND)    TYPE(*CHAR) LEN(  1)                            /*MD049745A*/
+             DCL        VAR(&WSRATE)   TYPE(*DEC ) LEN( 15)                            /*MD049745A*/
+ 
+             DCL        VAR(&JOBTYPE)  TYPE(*CHAR) LEN(  1)
+             DCL        VAR(&MEM)      TYPE(*CHAR) LEN( 50)
+             DCL        VAR(&LDA)      TYPE(*CHAR) LEN(256)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+ 
+/** Isolate ODPs to allow calls in the stack */
+             OVRDBF     FILE(CLOAN) SHARE(*NO)
+             OVRDBF     FILE(LOAMS) SHARE(*NO)
+             OVRDBF     FILE(LEFEEDL1) SHARE(*NO)                                       /*AR796443*/
+ 
+/** Call PDCL creation/update */
+ 
+/**********  CALL       PGM(LE000473) PARM(&WRETCD &W@TYPE &W@LOAN +
+                           &W@FSEQ &W@FCOD &W@FACL &W@FBRC &W@CNU2 +
+                           &W@EDATYP &W@PDAMT &W@INT &W@AV &W@ORIGP +
+                           &W@ORIGI &W@LASN &W@AVDAT &WPDCLTYP +
+                           &W@OPDAM &W@OPDINT &WYPLNR &PGNM &WBCR) */        /*MD021423E MD049745A*/
+/**********                &W@OPDAM &W@OPDINT &WYPLNR &PGNM)       */        /*AR1085742 MD021423E*/
+/**********                &W@OPDAM &W@OPDINT &WYPLNR)     */                          /*AR1085742*/
+             CALL       PGM(LE000473) PARM(&WRETCD &W@TYPE &W@LOAN &W@FSEQ &W@FCOD +
+                          &W@FACL &W@FBRC &W@CNU2 &W@EDATYP &W@PDAMT &W@INT &W@AV +
+                          &W@ORIGP &W@ORIGI &W@LASN &W@AVDAT &WPDCLTYP &WSCCY +
+                          &WSIND &WSRATE &W@OPDAM &W@OPDINT &WYPLNR &PGNM &WBCR)       /*MD049745A*/
+ 
+/** For Database Errors Recover Data from LDA  */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+               CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+               SNDPGMMSG  MSGID(MEM0001) MSGF(GBMIDAS) +
+                             MSGDTA(&MEM) TOPGMQ(*EXT) +
+                             TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Go to End - Successful Processing  */
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+ 
+             CHGVAR     VAR(&WRETCD) VALUE('*ERROR')                                   /*AR1085742*/
+             CHGJOB     SWS(XXXXXX11)
+ 
+/** Abnormal termination - Batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                  MSGDTA('Program LEC0000473 ended abnormally +
+                  - see job log') TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited')
+ 
+ ENDPGM:     ENDPGM

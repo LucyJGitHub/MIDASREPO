@@ -1,0 +1,368 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas European Reporting I.C.D. - print')              *
+     F********************************************************************
+     F*                                                                  *
+     F*    MIDAS/ABS - European Reporting                                *
+     F*                                                                  *
+     F*    ER9105 - European Reporting I.C.D. print                      *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2005                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER045             Date 20Jul09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CER001             Date 25Apr05               *
+      *                 132893             Date 15Apr98               *
+     F*                                                                  *
+     F********************************************************************
+      *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  132893 - SPF/RCF for IBLC/BNB on DBA2.3                         *
+      *
+      **************************************************************************
+      *
+      *  Use of indicators:
+      *
+      *  *IN01  -  Overflow on ER9105
+      *  *IN81  -  EOF on SDBANKPD
+      *  *IN95  -  DATABASE error
+      *  *INLR  -  End processing
+     F*****************************************************************
+     F*ER9105AUO   E                    PRINTER                           132893
+      *                                Audit report
+     F*ER9105P1O   E             01     PRINTER                        UC 132893
+     F*                                             KINFDS INFDS          132893
+     FER9105P1O   E             01     PRINTER      KINFDS SPOOL1     UC  132893
+     FER9105AUO   E                    PRINTER      KINFDS SPOOLU         132893
+      *                                Statements
+     FERICDRL1IF  E           K        DISK
+      *                                European reporting I.C.D
+     FSDCTRYL1IF  E           K        DISK
+     FSDBANKL1IF  E                    DISK
+      *-------------------------------------------------------------------------
+      *
+     E                    MES     1   2 80               DB error msg.
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+      *-------------------------------------------------------------------------
+     I*INFDS       DS                                                     132893
+      *
+      * Get current line number from printer INFDS
+      *
+     I*****                               B 367 3680WWLINE                132893
+      *-------------------------------------------------------------------------
+     I           SDS
+      *
+      * Get program name and exception data from PSDS.
+      *
+     I                                     *PROGRAM #PGM
+     I                                       91 170 WWEXCP
+      *-------------------------------------------------------------------------
+     I            DS
+      *
+      * Use a DS to access file/program fields via the PRTF field names,
+      * thus avoiding MOVE operations
+      *
+      *                                                                   132893
+     ISPOOLU      DS                                                      132893
+      *                                                                   132893
+      **  File Information Data Structure - AU report                     132893
+     I                                       83  92 SFILEU                132893
+     I                                    B 123 1240SFNUMU                132893
+     ISPOOL1      DS                                                      132893
+      *                                                                   132893
+      **  File Information Data Structure - P1 report                     132893
+     I                                       83  92 SFIL1                 132893
+     I                                    B 123 1240SFNUM1                132893
+     I                                    B 367 3680WWLINE                132893
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Initial processing
+      *-------------------------------------------------------------------------
+      /EJECT
+      *-------------------------------------------------------------------------
+     C*
+     C           *ENTRY    PLIST                                          132893
+     C                     PARM           @RSEQ   5                       132893
+     C                     PARM           @RLEV   1                       132893
+      *                                                                   132893
+     C                     READ SDBANKL1                 88
+     C           *IN88     IFEQ '1'
+     C                     MOVEL'01'      P2ERR            *********************
+     C                     Z-ADD1         X       20       * DB ERROR 01       *
+     C                     MOVE *BLANKS   P2EDTA           *********************
+     C                     MOVE '1'       *IN95
+     C                     EXSR SAUDIT
+     C                     END
+      *
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+      *
+     C*
+      * Main processing - Loop on I.C.D.
+      *
+     C                     OPEN ER9105P1
+      *                                                                   132893
+      * Record Printer file ER9105P1 on RCF                               132893
+     C                     Z-ADDSFNUM1    ZSNUM                           132893
+     C                     MOVELSFIL1     SFILE                           132893
+      *                                                                   132893
+     C                     EXSR SRZSFL                                    132893
+      *                                                                   132893
+      * Record Printer file ER9105AU on RCF                               132893
+     C                     Z-ADDSFNUMU    ZSNUM                           132893
+     C                     MOVELSFILEU    SFILE                           132893
+      *                                                                   132893
+     C                     EXSR SRZSFL                                    132893
+      *
+     C                     MOVE *OFF      *IN50                           132893
+      *                                                                   132893
+     C           *LOVAL    SETLLERICDRL1
+     C                     READ ERICDRL1                 86
+     C           *IN86     IFEQ '1'
+     C                     MOVEL'02'      P2ERR            *********************
+     C                     Z-ADD2         X                * DB ERROR 02       *
+     C                     MOVE *BLANKS   P2EDTA           *********************
+     C                     MOVE '1'       *IN95
+     C                     EXSR SAUDIT
+     C                     END
+      *
+     C           *IN86     IFEQ *ON                                       132893
+     C                     MOVE *ON       *IN50                           132893
+     C                     ENDIF                                          132893
+      *                                                                   132893
+     C                     WRITEER9105F1
+      *
+     C           *IN86     DOWEQ'0'
+      *
+     C           VDUCCD    IFNE *BLANKS
+      *
+     C           VDUCCD    CHAINSDCTRYL1             87
+     C*
+     C           *IN87     IFEQ '0'
+     C                     MOVE A4CNNM    P1ICNA
+     C                     ELSE
+     C                     MOVE *BLANKS   P1ICNA
+     C                     END
+     C*
+     C                     MOVE VDUCCD    P1UCCD
+     C                     MOVE VDICCD    P1ICCD                                              CER001
+     C                     MOVE VDBRCD    P1BRCD
+     C                     MOVE VDCCYC    P1CCYC
+     C*
+     C                     Z-ADDVDLCD     ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    P1LCD
+     C*
+     C                     MOVE VDTYLC    P1TYLC
+      *
+      * Execute print subroutine for detail line (if page full)
+      *
+     C           VDUCCD    IFNE *BLANK
+     C                     WRITEER9105F2
+     C                     END
+     C*
+     C           *IN01     IFEQ '1'
+     C                     WRITEER9105F1
+     C                     END
+      *
+     C                     END
+      *
+     C                     READ ERICDRL1                 86
+     C                     END
+     C*
+     C           *IN86     IFEQ '1'
+     C                     WRITEER9105F3
+     C                     END
+      *
+     C                     CLOSEER9105P1
+      *
+     C           *IN50     IFEQ *ON                                       132893
+     C                     WRITENODLI                                     132893
+     C                     ENDIF                                          132893
+      *                                                                   132893
+      *  Program exit
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *
+     C*****************************************************************   132893
+     C* SRZSFL - Subroutine to call ZSFILE                                132893
+     C*****************************************************************   132893
+     C*                                                                   132893
+     C           SRZSFL    BEGSR                                          132893
+     C*                                                                   132893
+     C                     CALL 'ZSFILE'                                  132893
+     C                     PARM           @RSEQ   5                       132893
+     C                     PARM           @RENT   3                       132893
+     C                     PARM           SFILE  10                       132893
+     C                     PARM           ZSNUM   60                      132893
+     C                     PARM           ZSERR   1                       132893
+     C*                                                                   132893
+     C** If an error occurred during ZSFILE processing,                   132893
+     C** return to the calling program.                                   132893
+     C*                                                                   132893
+     C           ZSERR     IFEQ 'Y'                                       132893
+     C                     SETON                     U7U8LR               132893
+     C                     RETRN                                          132893
+     C                     END                                            132893
+     C*                                                                   132893
+     C                     ENDSR                                          132893
+      ****************************************************************    132893
+      /EJECT                                                              132893
+      /EJECT
+      *-------------------------------------------------------------------------
+      * *PSSR - Subroutine to handle any file/program errors
+      *-------------------------------------------------------------------------
+      *
+     C           *PSSR     BEGSR
+      *
+      * Ensure that routine is not already handling an error...
+      *
+     C           WWSWS     IFNE '1'
+     C                     MOVE '1'       WWSWS   1
+      *
+      * Dump program and get exception data
+      *
+     C                     DUMP
+      *
+     C                     ELSE
+      *
+      * If program is already handling an error, avoid loop and exit
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SAUDIT - Subroutine for audit report
+      *-------------------------------------------------------------------------
+      *
+     C           SAUDIT    BEGSR
+      *
+      * If DB error, setup message and switches
+      *
+     C           *IN95     IFEQ '1'
+     C                     MOVEAMES,X     P2MSG
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+     C                     WRITEAUDIT
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C********************************************************************
+     C*
+     C*
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+      /EJECT
+** MES -  Array to contain error messages for audit report
+ICD1 record not found in SDBANKPD
+ICD1 record not found in ERICDRPD
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

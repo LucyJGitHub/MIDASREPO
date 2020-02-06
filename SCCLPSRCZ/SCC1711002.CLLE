@@ -1,0 +1,152 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SC COB Database Save - End')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SCC1711002 - Midas SC COB Database Save - End               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1096482          Date 18Mar13              */
+/*                      CCB023A *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1096482 - Catch error if dtaq already exists.             */
+/*       CCB023A - COB Restructure - Input Cycle Termination         */
+/*                 Restructuring                                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CRT003) TYPE(*LGL) VALUE('0')
+             DCL        VAR(&A8BRCD) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&A8BRST) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(8) +
+                          VALUE('COBUNLCK')
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&SMSG) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&JNSTAT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LEN) TYPE(*DEC) LEN(5 0) VALUE(8)
+             DCL        VAR(&LIBL) TYPE(*CHAR) LEN(10) VALUE('*LIBL')
+             DCL        VAR(&SAVD) TYPE(*CHAR) LEN(4)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
+ 
+             SNDPGMMSG  MSG('Midas SC COB Database Save - End') +
+                        TOMSGQ(MOPERQ)
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&ZONEID) VALUE(%SUBSTRING(&SDSTAT 6 2))
+             CHGVAR     VAR(&XLIB) VALUE(&ZONEID *CAT 'XLIB  ')
+ 
+/* Check for switchable feature CRT003 - The Cashier Interface */
+ 
+             CHGVAR     VAR(&RTN) VALUE('       ')
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CRT003')
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+             IF         COND(&RTN *EQ '       ') THEN(CHGVAR +
+                          VAR(&CRT003) VALUE('1'))
+ 
+             IF         COND(&CRT003 *EQ '1') THEN(DO)
+ 
+/* Send message to all branches that COB file lock is over */
+ 
+               CHGVAR     VAR(&OPN) VALUE('*FIRST')
+NEXT:
+ 
+/* Use the access object to read through the branch file */
+ 
+               CHGVAR     VAR(&RTN) VALUE('       ')
+               CHGVAR     VAR(&SARD) VALUE('      ')
+               CALL       PGM(AOBRCHR0) PARM(&RTN &OPN &SARD &SFMT)
+               CHGVAR     VAR(&OPN) VALUE('*NEXT')
+               CHGVAR     VAR(&A8BRST) VALUE(%SST(&SFMT 177 1))
+               CHGVAR     VAR(&A8BRCD) VALUE(%SST(&SFMT 1 3))
+ 
+/* On error/EOF, leave loop */
+ 
+               IF         COND(&RTN *NE '       ') THEN(GOTO OUT)
+ 
+/* Check if retail branch is a cashier branch */
+ 
+               IF         COND(&A8BRST *NE 'N') THEN(DO)
+                 CHGVAR     VAR(&DTAQ) VALUE('CASHTF_' *CAT &A8BRCD)
+                 CRTDTAQ    DTAQ(&XLIB/&DTAQ) MAXLEN(29) TEXT('CI +
+                           Branch Monitor Trickle Feed Data Queue')
+                 MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                             /*AR1096482*/
+                 CALL       QSNDDTAQ PARM(&DTAQ &LIBL &LEN &DATA)
+               ENDDO
+ 
+/* Read next record */
+ 
+               GOTO       NEXT
+ 
+             ENDDO
+OUT:
+             ALCOBJ     OBJ((JNSTAT *DTAARA *SHRRD)) WAIT(1)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(OUT))
+             RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)
+             CHGVAR     VAR(&SAVD) VALUE(%SUBSTRING(&JNSTAT 49 4))
+ 
+/* Update JNSTAT after successful saves from SCC1711 components */
+ 
+             CHGVAR     VAR(%SUBSTRING(&JNSTAT 81 1)) VALUE('Y')
+             CHGDTAARA  DTAARA(JNSTAT) VALUE(&JNSTAT)
+             DLCOBJ     OBJ((JNSTAT *DTAARA *SHRRD))
+ 
+             IF         COND(&SAVD *EQ 'TAPE' *OR &SAVD *EQ 'DKTE') +
+                          THEN(DO)
+ 
+/* Check that the SAVEJOBD exists */
+ 
+             CHKOBJ     OBJ(&XLIB/SAVEJOBD) OBJTYPE(*JOBD)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+               CHGVAR     VAR(&SMSG) VALUE('TRMSAV not submitted +
+                          - SAVEJOBD job description not found ')
+               SNDMSG  MSG(&SMSG) TOMSGQ(MOPERQ)
+               CHGJOB     SWS(XXXXXX11)
+               GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Check if TRMSAV to be submitted from SCC0403 or here            */
+ 
+             CHGVAR     VAR(&RTN) VALUE('       ')
+             CHGVAR     VAR(&OPN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CSC002')
+             CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)
+             IF         COND(&RTN *NE '       ') THEN(DO)
+ 
+             SBMJOB     JOB(TRMSAV) JOBD(&XLIB/SAVEJOBD) USER(*JOBD) +
+                          RTGDTA(*JOBD) RQSDTA('CALL SDC1797') +
+                          INLLIBL(*JOBD) MSGQ(MOPERQ) OUTQ(*JOBD)
+ 
+             ENDDO
+ 
+             ENDDO
+ 
+             GOTO       ENDPGM
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX1X)
+             SNDPGMMSG  MSG('Midas SC COB Database Save - End +
+                          - Ended Abnormally') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ENDPGM:
+             CHGDTAARA  DTAARA(CBPROMPT (256 1)) VALUE('Y')
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

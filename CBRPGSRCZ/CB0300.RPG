@@ -1,0 +1,949 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB COB audit report')                            *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Close of Business Processing                     *
+     F*                                                               *
+     F*  CB0300 - Close of Business Audit Report                      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD042846           Date 13Jan17               *
+      *                 MD034991           Date 09Nov15               *
+      *                 MD024294           Date 07May14               *
+      *                 CCB023             Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CCB015             Date 09Mar06               *
+      *                 BUG5552            Date 20Apr05               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197767             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 102910             Date 01May96               *
+      *                 057781             Date 16Mar94               *
+     F*                 BHF474             DATE 21AUG90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD042846 - COB Start Time and Date not generated in CB0300P1 *
+      *             and CB0300P2 reports                              *
+      *  MD034991 - Cob report CB0300P1 and CB0030P2 are not archived *
+      *             in StorQM                                         *
+      *  MD024294 - Added information on time taken by Main CoB       *
+      *  CCB023 - COB Restructure - Input Cycle Termination           *
+      *  CCB015 - CoB Audit Report Enhancement.                       *
+      *  BUG5552 - Prevent alphanumeric characters in total time.     *
+      *            Fix patterned after 222293.                        *
+      *  197767 - Due to feature "CCB009", all component runs         *
+      *           are being written to CBAUDTPD (done by CB0050 and   *
+      *           CB0055) whether the component failed or not.        *
+      *           This causes component to be reported as "FAILED"    *
+      *           even if it completed normally.  Fix is to report    *
+      *           component as completed if it did not fail.          *
+     F*  102910 - End time is not available for final CoB component   *
+     F*           CBC0540 00001 because this report is printed        *
+     F*           within that component.  Retrieve current time for   *
+     F*           an approximation.  This prevents garbage being      *
+     F*           printed for the run time of this component.         *
+     F*  057781 - Enroll CB0300 to RCF.                               *
+     F*  BHF474 - Should output CSEQP and DHCOTT as this is what is   *
+     F*           used to chain to the file CBAUDTL1.                 *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     FCBCOMSL5IF  E           K        DISK                           UC
+     FCBHALTL1IF  E           K        DISK
+     FCBAUDTL1IF  E           K        DISK                           UC
+     F/COPY WNCPYSRC,CB0300F001
+     F***CB0300P1O***E                    PRINTER                         057781
+     F***************                               KINFDS PRINT          057781
+     FCB0300P1O   E                    PRINTER      KINFDS SPOOL      UC  057781
+     F*
+      /SPACE 2
+     F********************************************************************
+     F*
+     F*     C  L   FUNCTION OF INDICATORS
+     F*
+     F*    30      READ FAIL ON TABTB10
+     F*    40      NO RECORDS FOUND ON CBHALTL1 - NOT AN ERROR
+     F*    50      READ FAIL/NO RECORDS FOUND ON CBCOMSL5
+     F*    55      NO FURTHER RECORDS FOUND ON CBHALTL1 - NOT AN ERROR
+     F*    60      FAIL ON CHAIN TO/NO FURTHER RECORDS ON CBAUDTL1
+     F*    71      OUTPUT 'FAILED' STATUS FIELD ON REPORT
+     F*    72      OUTPUT 'FCOOB' STATUS FIELD ON REPORT
+     F*    79      OUTPUT HALTED DETAILS SUB HEADING
+     F*    90-99   INDICATORS USED BY STANDARD SUBROUTINE ZDATE2
+     F*
+     F*       LR   LAST RECORD INDICATOR
+     F*
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+     E** COPYRIGHT ARRAY
+     E*
+     E/COPY ZSRSRC,ZDATE2Z1
+     E** SR.ARRAY FOR ZDATE2
+     E*
+     E*****************************************************************
+     E/EJECT
+     I*
+     ICBAUDTP0
+     I              CSTI                            DHCSTI
+     I              CSDE                            DHCSDE
+     I              CETI                            DHCETI
+     I              CEDE                            DHCEDE
+     I** RENAME FIELDS FROM CBAUDTL1 TO MATCH FIELDS FROM CBCOMSL5
+     I** USED TO CALCULATE FAILURE TIME.
+     ICETIX       DS
+     I                                        1   60DHCETI
+     I                                        1   20ENH
+     I                                        3   40ENM
+     I                                        5   60ENS
+     I**  DATA STRUCTURE TO SPLIT FIELD DHMYNB
+     I**  INTO HOURS, MINUTES AND SECONDS
+     I*
+     ICSTIX       DS
+     I                                        1   60DHCSTI
+     I                                        1   20SNH
+     I                                        3   40SNM
+     I                                        5   60SNS
+     I**  DATA STRUCTURE TO SPLIT FIELD DHMWNB
+     I**  INTO HOURS, MINUTES AND SECONDS
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**     LOCAL DATA AREA
+     I*
+     I***PRINT*******DS***********************                            057781
+     ISPOOL       DS                                                      057781
+     I                                       83  92 SFILE                 057781
+     I                                    B 123 1240SFNUM                 057781
+     I                                    B 367 3680LINE
+     I** DATA STRUCTURE FOR LINE VARIABLE
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *                                                                                       CCB015
+      ** Data Structure for AOSVALR0 string                                                   CCB015
+      *                                                                                       CCB015
+     ISVAL1       DS                            200                                           CCB015
+     I                                        1   1 SVAL11                                    CCB015
+      *                                                                                       CCB015
+     I              'COBReportBypass'     C         COBRBP                                    CCB015
+      *                                                                                       CCB015
+     I              'MCOBSTART'           C         MCOBS                                   MD024294
+     I              'MCOBFINISH'          C         MCOBF                                   MD024294
+      *                                                                                     MD024294
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** EXTERNAL DATA STRUCTURE FOR ACCESS OBJECT FORMAT
+     I*
+     IDSFDY     E DSDSFDY
+     I** FIRST DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     I*
+     I*****************************************************************
+     I/EJECT
+     C           *ENTRY    PLIST
+     C                     PARM           TYPE    1
+     C*                                                                   057781
+     C** Define LDA.                                                      057781
+     C*                                                                   057781
+     C           *NAMVAR   DEFN           LDA                             057781
+     C           *LOCK     IN   LDA                                       057781
+     C*
+     C** KEY TO CHAIN TO CBAUDTL1
+     C*
+     C           FLKY      KLIST
+     C                     KFLD           DHCOTT
+     C                     KFLD           CSEQP   50
+      *                                                                                       CCB015
+      ** Ascertain if feature CCB015 is On, call AOSARDR0                                     CCB015
+      *                                                                                       CCB015
+     C                     CALL 'AOSARDR0'                                                    CCB015
+     C                     PARM '       ' @RTCD   7                                           CCB015
+     C                     PARM '*VERIFY' @OPTN   7                                           CCB015
+     C                     PARM 'CCB015'  @SARD   6                                           CCB015
+      *                                                                                       CCB015
+     C           @RTCD     IFEQ *BLANKS                                                       CCB015
+     C                     MOVEL'Y'       CCB015  1                                           CCB015
+     C                     ELSE                                                               CCB015
+     C                     MOVEL'N'       CCB015                                              CCB015
+     C                     ENDIF                                                              CCB015
+      *                                                                                       CCB015
+      ** Ascertain if system value 'COBReportBypass' is On, call AOSVALR0                     CCB015
+      *                                                                                       CCB015
+     C                     CALL 'AOSVALR0'                                                    CCB015
+     C                     PARM           @RTCD                                               CCB015
+     C                     PARM COBRBP    SVALK1 20                                           CCB015
+     C                     PARM           SVAL1 200                                           CCB015
+     C                     PARM           SVALK2 20                                           CCB015
+     C                     PARM           SVAL2 200                                           CCB015
+     C                     PARM           SVALK3 20                                           CCB015
+     C                     PARM           SVAL3 200                                           CCB015
+     C                     PARM           SVALK4 20                                           CCB015
+     C                     PARM           SVAL4 200                                           CCB015
+     C                     PARM           SVALK5 20                                           CCB015
+     C                     PARM           SVAL5 200                                           CCB015
+     C                     PARM           SVALK6 20                                           CCB015
+     C                     PARM           SVAL6 200                                           CCB015
+     C                     PARM           SVALK7 20                                           CCB015
+     C                     PARM           SVAL7 200                                           CCB015
+     C                     PARM           SVALK8 20                                           CCB015
+     C                     PARM           SVAL8 200                                           CCB015
+     C                     PARM           SVALK9 20                                           CCB015
+     C                     PARM           SVAL9 200                                           CCB015
+     C                     PARM           SVALK0 20                                           CCB015
+     C                     PARM           SVAL10200                                           CCB015
+      *                                                                                       CCB015
+     C           @RTCD     IFNE *BLANKS                                                       CCB015
+      *                                                                                       CCB015
+     C           SVAL10    IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK0    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL9     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK9    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL8     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK8    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL7     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK7    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL6     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK6    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL5     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK5    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL4     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK4    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL3     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK3    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL2     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK2    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+     C           SVAL1     IFEQ '*NRF'                                                        CCB015
+     C                     MOVE SVALK1    DBKEY                                               CCB015
+     C                     ENDIF                                                              CCB015
+      *                                                                                       CCB015
+     C           *LOCK     IN   LDA                                                           CCB015
+     C                     Z-ADD4         DBASE                                               CCB015
+     C                     MOVE 'SDSVALPD'DBFILE                                              CCB015
+     C                     MOVE 'CB0300'  DBPGM                                               CCB015
+     C                     OUT  LDA                                                           CCB015
+     C                     EXSR DBERR                                                         CCB015
+     C                     ENDIF                                                              CCB015
+     C*                                                                   057781
+     C                     OPEN CB0300P1                                  057781
+     C*                                                                   057781
+     C** Ensure Report spool file recorded by RCF.                        057781
+     C*                                                                   057781
+     C                     Z-ADDSFNUM     ZSNUM   60                      057781
+     C*                                                                   057781
+     C                     CALL 'ZSFILE'                                  057781
+     C                     PARM           SEQ     5                       057781
+     C                     PARM *BLANKS   @PARM   3                       057781
+     C                     PARM           SFILE                           057781
+     C                     PARM           ZSNUM                           057781
+     C                     PARM           ZSERR   1                       057781
+     C*                                                                   057781
+     C           ZSERR     IFEQ 'Y'                                       057781
+     C*                                                                   057781
+     C**  Error during ZSFILE processing, return to calling program.      057781
+     C*                                                                   057781
+     C                     MOVE '1'       *INU7                           057781
+     C                     MOVE '1'       *INU8                           057781
+     C                     MOVE '1'       *INLR                           057781
+     C                     RETRN                                          057781
+     C                     END                                            057781
+     C*
+     C** SET UP PROGRAM NAME FOR DATABASE ERRORS
+     C*
+     C                     MOVEL'CB0300  'DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C*
+     C** USE ACCESS OBJECT AOBANKR0 TO
+     C** RETRIEVE HEADER INFORMATION FOR REPORT
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** IF ERROR FOUND BY ACCESS OBJECT EXIT
+     C** PROGRAM VIA DATABASE ERROR SUBROUTINE
+     C*
+     C           P@RTCD    IFNE *BLANKS
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     MOVEL'AOBNK'   DBFILE           ***************
+     C                     Z-ADD1         DBASE            * DB ERROR 01 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** VALIDATION OF DATE FORMAT ON TABTB10
+     C** AS REQUIRED BY SUBROUTINE ZDATE2
+     C*
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+     C** IF REPORT BY MODULE REQUIRED (TYPE = M)
+     C** SET UP START DATE WORK FIELD (SDWF) AND START TIME
+     C** WORK FIELD (STWF) TO THEIR HIGHEST POSSIBLE VALUES
+     C*
+     C           TYPE      IFEQ 'M'
+     C*
+     C                     Z-ADD99999     SDWF    50
+     C                     Z-ADD999999    STWF    60
+     C*
+     C                     ELSE
+     C*
+     C** ELSE REPORT BY TIME REQUIRED (TYPE = T)
+     C** READ HALT DETAILS FILE
+     C*
+     C                     READ CBHALTL1                 40
+     C*
+     C** IF NO RECORDS FOUND ON FILE SET UP HALT START
+     C** TIME (HSTI) AND HALT START DATE (HSDE) FIELDS TO
+     C** THEIR HIGHEST POSSIBLE VALUES
+     C*
+     C           *IN40     IFEQ '1'
+     C*
+     C                     Z-ADD99999     HSTI
+     C                     Z-ADD999999    HSDE
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** WRITE HEADING AND SUB-HEADING LINES
+     C*
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C*
+     C** SET UP END DATE WORK FIELD (EDWF) AND
+     C** END TIME WORK FIELD (ETWF) AS ZERO
+     C*
+     C                     Z-ADD0         EDWF    50
+     C                     Z-ADD0         ETWF    60
+      *                                                                                     MD034991
+      ** Initialize print flag for SCC0420 20001                                            MD034991
+      *                                                                                     MD034991
+     C                     MOVE *BLANK    PRTFLG  1                                         MD034991
+     C*
+     C** OPEN COMPONENT DETAILS FILE (CBCOMSL5)
+     C*
+     C                     OPEN CBCOMSL5
+     C*
+     C** READ COMPONENT DETAILS FILE
+     C*
+     C                     READ CBCOMSL5                 50
+     C*
+     C** IF NO RECORD FOUND ON CBCOMSL5 CLOSE FILE
+     C** AND EXIT USING DATABASE ERROR SUBROUTINE
+     C*
+     C           *IN50     IFEQ '1'
+     C                     CLOSECBCOMSL5
+     C                     MOVEL'CMPL5'   DBFILE           ***************
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** IF REPORT BY TIME REQUIRED
+     C*
+     C           TYPE      IFEQ 'T'
+     C*
+     C** STORE FIELDS DHMVNB & DHMWNB FROM RECORD IN
+     C** COMPONENTS FILE IN WORK FIELDS SDWF & STWF
+     C*
+     C                     Z-ADDDHCSDE    SDWF
+     C                     Z-ADDDHCSTI    STWF
+     C*
+     C                     END
+     C*
+     C** DO WHILE RECORDS FOUND ON CBCOMSL5
+     C*
+     C           *IN50     DOWEQ'0'
+      *                                                                                     MD034991
+      ** If SCC0420 20001 was read, save some details                                       MD034991
+      *                                                                                     MD034991
+     C           DHCOTT    IFEQ 'SCC0420'                                                   MD034991
+     C           DHCSEQ    ANDEQ'20001'                                                     MD034991
+     C                     MOVELDHCOTT    SVCOTT                                            MD034991
+     C                     MOVELDHCSEQ    SVCSEQ                                            MD034991
+     C                     MOVELDHCTXT    SVCTXT                                            MD034991
+     C                     ELSE                                                             MD034991
+      *                                                                                     MD034991
+      ** Tag to print SCC0420 20001 when EOF                                                MD034991
+      *                                                                                     MD034991
+     C           PRTTAG    TAG                                                              MD034991
+      *                                                                   102910
+      *  If this is component CBC0540 00001, then retrieve current        102910
+      *  date and time as an approximation of the ending time             102910
+      *  of this component.                                               102910
+      *                                                                   102910
+     C           DHCOTT    IFEQ 'CBC0540'                                 102910
+     C********** DHCSEQ    ANDEQ'00001'                                                102910 CCB023
+     C           DHCSEQ    ANDEQ'20001'                                                       CCB023
+      *                                                                   102910
+     C                     CALL 'CBTIME'                                  102910
+     C                     PARM           DAYNOA  5                       102910
+     C                     PARM           STIME   6                       102910
+     C                     PARM           DFMT    1                       102910
+     C                     MOVE DAYNOA    DHCEDE                          102910
+     C                     MOVE STIME     DHCETI                          102910
+      *                                                                                     MD034991
+      ** Save the Start Date and Time of SCC0420 20001                                      MD034991
+      *                                                                                     MD034991
+     C                     MOVE DHCEDE    SVCSDE                                            MD034991
+     C                     MOVE DHCETI    SVCSTI                                            MD034991
+      *                                                                   102910
+     C                     ENDIF                                          102910
+      *                                                                                     MD024294
+      ** Store date and time of MCOBSTART/FINISH                                            MD024294
+      *                                                                                     MD024294
+     C           DHCOTT    IFEQ MCOBS                                                       MD024294
+     C                     Z-ADDDHCSDE    SDMCOB                                            MD024294
+     C                     Z-ADDDHCSTI    STMCOB                                            MD024294
+     C                     ENDIF                                                            MD024294
+      *                                                                                     MD024294
+     C           DHCOTT    IFEQ MCOBF                                                       MD024294
+     C                     Z-ADDDHCEDE    EDMCOB                                            MD024294
+     C                     Z-ADDDHCETI    ETMCOB                                            MD024294
+     C                     ENDIF                                                            MD024294
+     C*
+     C** IF REPORT BY TIME REQUIRED OUTPUT HALT
+     C** MESSAGE IF COMPONENT WAS HALTED
+     C*
+     C           TYPE      IFEQ 'T'
+     C*
+     C** WRITE HALTED DETAILS LINE FOR EACH COMPONENT
+     C** WHILE HALT START DATE IS BEFORE COMPONENT
+     C** START DATE OR WHILE DATES EQUAL AND HALT
+     C** START TIME IS BEFORE COMPONENT START TIME
+     C*
+     C           HSDE      DOWLTDHCSDE
+     C           *IN55     ANDEQ'0'
+     C           HSDE      OREQ DHCSDE
+     C           HSTI      ANDLTDHCSTI
+     C           *IN55     ANDEQ'0'
+     C*
+     C** IF PRINTER IS ON LINE 56 OR BELOW START NEW PAGE
+     C*
+     C           LINE      IFGE 56
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     END
+     C*
+     C                     WRITEHLTLIN
+     C*
+     C** READ HALTED DETAILS FILE FOR
+     C** FURTHER HALTS FOR SAME COMPONENT
+     C*
+     C                     READ CBHALTL1                 55
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF COMPONENT FAILED FLAG = 'Y' (TERMINATED ABNORMALLY)
+     C** OR COMPONENT FAILED FLAG = 'F' (FILE CONTROLS OUT OF BALANCE
+     C** BUT IGNORED DUE TO FIELD FCOB = 'Y')
+     C*
+     C           DHCFAL    IFEQ 'Y'
+     C           DHCFAL    OREQ 'F'
+     C/COPY WNCPYSRC,CB0300C001
+     C           DHCFAL    OREQ 'B'                                                           CCB015
+     C*
+     C** STORE VALUES OF FIELDS DHMWNB DHMVNB DHMYNB DHMXNB
+     C** WHILE WRITING FAIL DETAILS TO REPORT
+     C*
+     C                     Z-ADDDHCSTI    STRSTI  60
+     C                     Z-ADDDHCSDE    STRSDE  50
+     C                     Z-ADDDHCETI    STRETI  60
+     C                     Z-ADDDHCEDE    STREDE  50
+     C*
+     C** OPEN FAILED COMPONENT INFORMATION FILE
+     C*
+     C                     OPEN CBAUDTL1
+     C*
+     C** CHAIN TO FAILED COMPONENT FILE FOR INFORMATION
+     C*
+     C                     MOVE DHCSEQ    CSEQP
+     C           FLKY      CHAINCBAUDTP0             60
+     C*
+     C** IF NO RECORD FOUND ON CBAUDTL1 AND COMPONENT FAILED FLAG = 'Y'
+     C** THEN CLOSE FILE AND EXIT USING DATABASE ERROR SUBROUTINE
+     C*
+     C           *IN60     IFEQ '1'
+     C           DHCFAL    ANDEQ'Y'
+     C                     CLOSECBAUDTL1
+     C***********          MOVELCCOT      KEY    13                       BHF474
+     C***********          MOVE CSEQ      KEY                             BHF474
+     C                     MOVELDHCOTT    KEY    13                       BHF474
+     C                     MOVE CSEQP     KEY                             BHF474
+     C                     MOVEL'AUDL1'   DBFILE
+     C                     MOVE KEY       DBKEY            ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     EXSR DBERR                      ***************
+     C                     END
+     C*
+     C** DO WHILE RECORDS FOUND ON CBAUDTL1
+     C*
+     C           *IN60     DOWEQ'0'
+     C*
+     C** CALCULATE RUN TIME FOR COMPONENT
+     C** USING SUBROUTINE TIMCAL
+     C*
+     C                     EXSR TIMCAL
+     C*
+     C** SET ON INDICATOR TO WRITE 'FAILED'
+     C** IN STATUS FIELD ON REPORT DETAIL LINE
+     C*
+     C                     SETON                     71
+     C*
+     C** IF WRITING ON OR BELOW LINE 56 START NEW PAGE
+     C*
+     C           LINE      IFGE 56
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     END
+     C*
+      ** If End time and date are zero, this is the record written by                         197767
+      ** CB0050/CB0055 in CBAUDTPD even if component did not failed.                          197767
+      ** Do not report this record as "FAILED".                                               197767
+      *                                                                                       197767
+     C           DHCETI    IFNE 0                                                             197767
+     C           DHCEDE    ANDNE0                                                             197767
+     C                     WRITEDETLIN
+     C                     ENDIF                                                              197767
+      *                                                                                       197767
+     C           FLKY      READECBAUDTP0                 60
+     C                     END
+     C*
+     C** CLOSE FAILED COMPONENT INFORMATION FILE AND
+     C** SET OFF INDICATOR WHICH WRITES STATUS 'FAILED'
+     C*
+     C                     CLOSECBAUDTL1
+     C                     SETOF                     71
+     C*
+     C** REINSTATE STORED VALUES OF
+     C** FIELDS DHMWNB DHMVNB DHMYNB DHMXNB
+     C*
+     C                     Z-ADDSTRSTI    DHCSTI
+     C                     Z-ADDSTRSDE    DHCSDE
+     C                     Z-ADDSTRETI    DHCETI
+     C                     Z-ADDSTREDE    DHCEDE
+     C*
+     C                     END
+     C*
+     C** CALCULATE RUN TIME FOR COMPONENT
+     C** USING SUBROUTINE TIMCAL
+     C*
+     C                     EXSR TIMCAL
+     C*
+     C** IF WRITING ON OR BELOW LINE 56 START NEW PAGE
+     C*
+     C           LINE      IFGE 56
+     C                     WRITERPTHDG
+     C                     WRITESUBHDG
+     C                     END
+     C*
+     C** IF FILE CONTROLS OUT OF BALANCE - DISPLAY 'FCOOB' ON
+     C** DETAIL LINE OF REPORT
+     C*
+     C           DHCFAL    IFEQ 'F'
+     C                     SETON                     72
+     C                     END
+     C/COPY WNCPYSRC,CB0300C002
+      *                                                                                       CCB015
+      ** If file controls out of balance - Display 'FCOOB' on                                 CCB015
+      ** detail line of report                                                                CCB015
+      *                                                                                       CCB015
+     C           DHCFAL    IFEQ 'B'                                                           CCB015
+      *                                                                                       CCB015
+     C           CCB015    IFEQ 'Y'                                                           CCB015
+     C           SVAL11    ANDEQ'Y'                                                           CCB015
+     C                     SETON                     73                                       CCB015
+     C                     ENDIF                                                              CCB015
+      *                                                                                       CCB015
+     C                     ENDIF                                                              CCB015
+     C*
+     C** WRITE DETAIL LINE
+     C*
+      ** If the component has been reported as failed and the comp                            197767
+      ** was bypassed, this means that comp never completed normally.                         197767
+      ** Do not print anymore unless "FCOOB" to avoid failed comp                             197767
+      ** being printed without any message.                                                   197767
+      *                                                                                       197767
+     C           DHCSTS    IFNE 'A'                                                           197767
+     C                     WRITEDETLIN
+     C                     ENDIF                                                              197767
+     C*
+     C                     SETOF                     72
+     C/COPY WNCPYSRC,CB0300C003
+     C                     SETOF                     73                                       CCB015
+     C*
+     C** IF REPORT BY MODULE REQUIRED AND COMPONENT START DATE(DHMVNB)
+     C** IS LESS THAN START DATE WORK FIELD(SDWF) OR COMPONENT
+     C** START DATE IS EQUAL TO START DATE WORK FIELD(SDWF) AND
+     C** COMPONENT START TIME IS LESS THAN START TIME WORK FIELD
+     C** THEN SET UP WORK FIELDS AS THE EARLIER TIME AND DATE
+     C*
+     C           TYPE      IFEQ 'M'
+     C*
+     C           DHCSDE    IFLT SDWF
+     C           DHCSDE    OREQ SDWF
+     C           DHCSTI    ANDLTSTWF
+     C*
+     C                     Z-ADDDHCSDE    SDWF
+     C                     Z-ADDDHCSTI    STWF
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF COMPONENT END DATE(DHMXNB) IS GREATER THAN END DATE
+     C** WORK FIELD(EDWF) OR COMPONENT END DATE IS EQUAL TO
+     C** END DATE WORK FIELD(EDWF) AND COMPONENT END TIME(DHMYNB)
+     C** IS GREATER THAN END TIME WORK FIELD (ETWF) THEN SET UP
+     C** WORK FIELDS AS THE LATER TIME AND DATE
+     C*
+     C           DHCEDE    IFGT EDWF
+     C           DHCEDE    OREQ EDWF
+     C           DHCETI    ANDGTETWF
+     C*
+     C                     Z-ADDDHCEDE    EDWF
+     C                     Z-ADDDHCETI    ETWF
+     C*
+     C                     END
+     C*
+     C** READ COMPONENTS FILE CBCOMSL5
+     C*
+     C                     ENDIF                                                            MD034991
+     C                     READ CBCOMSL5                 50
+     C*
+     C                     END
+      *                                                                                     MD034991
+      ** Get the End Date and Time for SCC0420 20001                                        MD034991
+      *                                                                                     MD034991
+     C           PRTFLG    IFNE 'Y'                                                         MD034991
+     C                     CALL 'CBTIME'                                                    MD034991
+     C                     PARM           DAYNOA                                            MD034991
+     C                     PARM           STIME                                             MD034991
+     C                     PARM           DFMT                                              MD034991
+     C                     MOVE DAYNOA    DHCEDE                                            MD034991
+     C                     MOVE STIME     DHCETI                                            MD034991
+     C                     MOVE SVCSDE    DHCSDE                                            MD034991
+     C                     MOVE SVCSTI    DHCSTI                                            MD034991
+     C                     MOVELSVCOTT    DHCOTT                                            MD034991
+     C                     MOVELSVCSEQ    DHCSEQ                                            MD034991
+     C                     MOVELSVCTXT    DHCTXT                                            MD034991
+     C                     MOVEL'Y'       PRTFLG                                            MD034991
+     C                     GOTO PRTTAG                                                      MD034991
+     C                     ENDIF
+     C*
+     C** CLOSE COMPONENT DETAIL FILE
+     C*
+     C                     CLOSECBCOMSL5
+     C*
+     C** IF REPORT BY MODULE REQUIRED
+     C*
+     C           TYPE      IFEQ 'M'
+     C*
+     C** READ HALTED DETAILS FILE
+     C*
+     C                     READ CBHALTL1                 55
+     C*
+     C** IF RECORD FOUND ON HALTED FILE
+     C*
+     C           *IN55     IFEQ '0'
+     C*
+     C*
+     C** IF WRITING ON OR BELOW LINE 53 START
+     C** NEW PAGE AND WRITE HALT SUB HEADING
+     C*
+     C           LINE      IFGE 53
+     C                     SETON                     79
+     C                     WRITERPTHDG
+     C                     SETOF                     79
+     C                     WRITEHLTHDG
+     C*
+     C** ELSE WRITE HALT SUB HEADING
+     C*
+     C                     ELSE
+     C*
+     C                     WRITEHLTHDG
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** SET ON INDICATOR TO WRITE HALT SUB HEADING IF REQUIRED
+     C*
+     C                     SETON                     79
+     C*
+     C** DO WHILE RECORDS FOUND ON CBHALTL1
+     C*
+     C           *IN55     DOWEQ'0'
+     C*
+     C** IF WRITING ON OR BELOW LINE 56 START NEW PAGE
+     C*
+     C           LINE      IFGE 56
+     C                     WRITERPTHDG
+     C                     WRITEHLTHDG
+     C                     END
+     C*
+     C** WRITE HALT LINE
+     C*
+     C                     WRITEHLTLIN
+     C*
+     C** READ NEXT RECORD ON CBHALTL1
+     C*
+     C                     READ CBHALTL1                 55
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** CONVERT START AND END DATES OF FIRST AND LAST
+     C** COMPONENT RUN TO FORMAT REQUIRED FOR REPORT
+     C*
+     C**********           MOVE SDWF      ZDAYNO                                            MD042846
+     C                     MOVE SDMCOB    ZDAYNO                                            MD042846
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    STDT    7
+     C*
+     C                     MOVE EDWF      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ENDT    7
+      *                                                                                     MD024294
+      ** Get time taken by Main CoB                                                         MD024294
+      *                                                                                     MD024294
+     C                     Z-ADDSTMCOB    DHCSTI                                            MD024294
+     C                     Z-ADDSDMCOB    DHCSDE                                            MD024294
+     C                     Z-ADDETMCOB    DHCETI                                            MD024294
+     C                     Z-ADDEDMCOB    DHCEDE                                            MD024294
+      *                                                                                     MD024294
+     C                     EXSR TIMCAL                                                      MD024294
+      *                                                                                     MD024294
+     C                     Z-ADDHRS       RMHRS                                             MD024294
+     C                     Z-ADDMIN       RMMIN                                             MD024294
+     C                     Z-ADDSEC       RMSEC                                             MD024294
+     C*
+     C* MOVE START DATE AND TIME OF FIRST AND LAST COMPONENTS
+     C* RUN INTO FIELDS FOR CALCULATION OF TOTAL TIME TAKEN
+     C* BY THE CLOSE OF BUSINESS RUN
+     C*
+     C**********           Z-ADDSTWF      DHCSTI                                            MD042846
+     C**********           Z-ADDSDWF      DHCSDE                                            MD042846
+     C                     Z-ADDETWF      DHCETI
+     C                     Z-ADDEDWF      DHCEDE
+     C*
+     C                     EXSR TIMCAL
+     C*
+     C** IF WRITING TOTALS ON OR BELOW LINE 49 START NEW PAGE
+     C*
+     C           LINE      IFGE 49
+     C                     WRITERPTHDG
+     C                     END
+     C*
+     C** WRITE TOTAL LINE
+     C*
+     C                     WRITETOTLIN
+     C/COPY WNCPYSRC,CB0300C004
+     C*
+     C** WRITE END OF REPORT LINE
+     C*
+     C                     WRITERPTEND
+     C*
+     C                     SETON                     LR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** INDEX OF SUBROUTINES
+     C**
+     C**
+     C** TIMCAL - CALCULATION OF RUN TIMES
+     C**
+     C** DBERR  - DATABASE ERROR HANDLING
+     C**
+     C********************************************************************
+     C/EJECT
+      *****************************************************************                     MD024294
+      *                                                               *                     MD024294
+      * *INZSR - Initial Subroutine                                   *                     MD024294
+      *                                                               *                     MD024294
+      *****************************************************************                     MD024294
+     C           *INZSR    BEGSR                                                            MD024294
+      *                                                                                     MD024294
+      ** Declare and initialize Main CoB variables                                          MD024294
+      *                                                                                     MD024294
+     C           *LIKE     DEFN DHCSDE    SDMCOB                                            MD024294
+     C           *LIKE     DEFN DHCSTI    STMCOB                                            MD024294
+     C           *LIKE     DEFN DHCEDE    EDMCOB                                            MD024294
+     C           *LIKE     DEFN DHCETI    ETMCOB                                            MD024294
+     C           *LIKE     DEFN DHCOTT    SVCOTT                                            MD034991
+     C           *LIKE     DEFN DHCSEQ    SVCSEQ                                            MD034991
+     C           *LIKE     DEFN DHCSDE    SVCSDE                                            MD034991
+     C           *LIKE     DEFN DHCEDE    SVCEDE                                            MD034991
+     C           *LIKE     DEFN DHCSTI    SVCSTI                                            MD034991
+     C           *LIKE     DEFN DHCTXT    SVCTXT                                            MD034991
+     C           *LIKE     DEFN DHCETI    SVCETI                                            MD034991
+      *                                                                                     MD024294
+     C                     Z-ADD0         SDMCOB                                            MD024294
+     C                     Z-ADD0         STMCOB                                            MD024294
+     C                     Z-ADD0         EDMCOB                                            MD024294
+     C                     Z-ADD0         ETMCOB                                            MD024294
+      *                                                                                     MD024294
+     C                     ENDSR                                                            MD024294
+      *****************************************************************                     MD024294
+      /EJECT                                                                                MD024294
+     C********************************************************************
+     C*
+     C** SUBROUTINE TO PERFORM CALCULATION OF TIME TAKEN
+     C** TO RUN COMPONENT AND TOTAL CLOSE OF BUSINESS RUN
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           TIMCAL    BEGSR
+     C*
+     C** SUBTRACT COMPONENT START DATE FROM COMPONENT END DATE
+     C** TO GIVE NUMBER OF DAYS TAKEN BY COMPONENT
+     C*
+     C           DHCEDE    SUB  DHCSDE    DAYS    20
+     C*
+     C** CONVERT DAYS TAKEN INTO HOURS TAKEN
+     C*
+     C           DAYS      MULT 24        HOURS   30
+     C*
+     C** ADD HOURS TAKEN TO COMPONENT END HOUR
+     C** TO GIVE TOTAL END HOURS FIELD
+     C*
+     C********** HOURS     ADD  ENH       TOTHRS  20                                         BUG5552
+     C           HOURS     ADD  ENH       TOTHRS  30                                         BUG5552
+     C*
+     C** MOVE START NUMBER OF SECONDS INTO TOTAL SECONDS FIELD
+     C*
+     C                     Z-ADDSNS       TOTSEC  60
+     C*
+     C** CONVERT START NUMBER OF MINUTES INTO SECONDS
+     C** AND ADD TO TOTAL SECONDS FIELD
+     C*
+     C           SNM       MULT 60        SECS    60
+     C*
+     C                     ADD  SECS      TOTSEC
+     C*
+     C** CONVERT START NUMBER OF HOURS INTO SECONDS
+     C** AND ADD TO TOTAL SECONDS FIELD
+     C*
+     C           SNH       MULT 3600      SECS
+     C*
+     C                     ADD  SECS      TOTSEC
+     C*
+     C** MOVE END NUMBER OF SECONDS INTO TOTAL END SECONDS WORK FIELD
+     C*
+     C                     Z-ADDENS       ENDSEC  60
+     C*
+     C** CONVERT END NUMBER OF MINUTES INTO SECONDS
+     C** AND ADD TO TOTAL END SECONDS FIELD
+     C*
+     C           ENM       MULT 60        ESECS   60
+     C*
+     C                     ADD  ESECS     ENDSEC
+     C*
+     C** CONVERT TOTAL NUMBER OF HOURS INTO SECONDS
+     C** AND ADD TO TOTAL END SECONDS FIELD
+     C*
+     C           TOTHRS    MULT 3600      ESECS   60
+     C*
+     C                     ADD  ESECS     ENDSEC
+     C*
+     C** SUBTRACT TOTAL START SECONDS FROM TOTAL
+     C** END SECONDS TO OBTAIN RUN TIME IN SECONDS
+     C*
+     C           ENDSEC    SUB  TOTSEC    DIFSEC  60
+     C*
+     C** CONVERT RUN TIME INTO HOURS, MINUTES
+     C** AND SECONDS FIELDS FOR REPORT
+     C*
+     C           DIFSEC    DIV  3600      HRS     20
+     C*
+     C                     MVR            MINREM  40
+     C*
+     C           MINREM    DIV  60        MIN     20
+     C*
+     C                     MVR            SEC     20
+     C*
+     C                     ENDSR
+     C*
+     C/EJECT
+     C********************************************************************
+     C** ZDATE2 SUBROUTINE
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*
+     C/EJECT
+     C********************************************************************
+     C*
+     C** DATABASE ERROR SUBROUTINE TO PERFORM DATABASE ERROR
+     C** EXIT FROM PROGRAM
+     C*
+     C** CALLED FROM MAIN CYCLE
+     C*
+     C** CALLS NO OTHER SUBROUTINES
+     C*
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR
+     C*
+     C** WRITE DATABASE ERROR ON NEW PAGE
+     C*
+     C                     WRITERPTHDG
+     C*
+     C** OUTPUT DATA BASE ERROR MESSAGE TO PRINTER FILE.
+     C*
+     C                     WRITEDBELIN
+     C*
+     C** OUTPUT 'END OF REPORT' MESSAGE TO PRINTER FILE.
+     C*
+     C                     WRITERPTEND
+     C*
+     C** SETON INDICATORS U7 U8 LR AND RETURN TO CALLING PROGRAM
+     C*
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

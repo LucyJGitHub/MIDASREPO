@@ -1,0 +1,295 @@
+/*S*D****CLPBASE******************************************************/                   /*CCB023*/
+/********************************************************************/
+/*                                                                  */
+/*  Midas   - Customer Lending Module                               */
+/*                                                                  */
+/*  LEC2011 - End Lending PC Interface Background Job               */
+/*                                                                  */
+/*  Function: This program will be called during the Input Cycle    */
+/*            Termination.                                          */
+/*                                                                  */
+/*  Calls:    None                                                  */
+/*                                                                  */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                  */
+/*  Last Amend No. CCB023  *REDUNDANT Date 01Aug12                   */
+/*  Prev Amend No. CLE134             Date 01Aug12                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                 225286            Date  17Mar04                  */
+/* Midas Release 4.01.02 --------------------------------------------*/
+/*                 203561            Date  04Mar02                  */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/*                 193083            Date  22JUN01                  */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                 124045            Date  08OCT97                  */
+/*                 122658            DATE  10SEP97                  */
+/*                 CLE004  *CREATE   DATE  15MAY97                  */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*  CCB023 - COB Restructure - Input Cycle Termination              */
+/*           Restructuring                                          */
+/*  CLE134 - Past Due Call Loan Processing (Recompile)               */
+/*  225286 - Ensure REST message is not sent if current status of   */
+/*           Loan manager is CLOSED or RESTRICTED                   */
+/*  203561 - Send status update messages via new program LEC2017 to */
+/*           control changes of status within Loan Manager.         */
+/*  193083 - Make component do more checking to ensure jobs are     */
+/*           shut down successfully or DBIC backup will fail        */
+/*           Also amend component to allow for running in I/C      */
+/*  124045 - LEC2016 still not ending.                              */
+/*  122658 - LEC2016 is not ending.                                 */
+/*  CLE004 - Customer Lending Enhancements - Syndications.          */
+/*                                                                  */
+/********************************************************************/
+             PGM
+ 
+             DCL        VAR(&LMSTS) TYPE(*CHAR) LEN(1) VALUE(' ')                         /*203561*/
+             DCL        VAR(&SERV) TYPE(*CHAR) LEN(3) VALUE(' ')
+             DCL        VAR(&DTAARA) TYPE(*CHAR) LEN(10) VALUE(' ')
+             DCL        VAR(&LMDTAARA) TYPE(*CHAR) LEN(5) VALUE(' ')                      /*203561*/
+/************DCL********VAR(&PHASE) TYPE(*CHAR) LEN(1)***********122658*124045*/
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1) VALUE('L')                          /*193083*/
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)                                    /*193083*/
+             DCL        VAR(&DBER) TYPE(*CHAR) LEN(50)                                    /*193083*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*193083*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST')                     /*193083*/
+             DCL        VAR(&BRCD) TYPE(*CHAR) LEN(3)                                     /*193083*/
+             DCL        VAR(&FMT)  TYPE(*CHAR) LEN(200)                                   /*193083*/
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)                                  /*193083*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                                 /*193083*/
+             DCL        VAR(&P#RTCD) TYPE(*CHAR) LEN(7) +
+                          VALUE('       ')                                                /*203561*/
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)                                    /*203561*/
+             DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)                                   /*203561*/
+             DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)                                   /*203561*/
+             DCL        VAR(&DISABLED) TYPE(*CHAR) LEN(1)                                 /*203561*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+/************DCLF       FILE(SDBRCHPD) */                                                 /*193083*/
+ 
+/**  Global Monitor Message                                         */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('LEC2011 - End Lending PC Interface +
+                          Background jobs') TOMSGQ(MRUNQ)
+ 
+             RTVJOBA    TYPE(&JOBTYPE)                                                    /*193083*/
+             CHGJOB     SWS(00000000)                                                     /*193083*/
+                                                                                          /*203561*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)                              /*203561*/
+                                                                                          /*203561*/
+             CHGVAR     VAR(&DMLIB) VALUE(&PREFIX *CAT 'DMLIB')                           /*203561*/
+                                                                                          /*203561*/
+ /*LOOP:*****RCVF                                                                      */ /*193083*/
+ 
+            /* MONITOR FOR EOF */
+ 
+/************MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))*******/ /*122658*/
+/************MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(DRIP)                  /*122658*/ /*193083*/
+                                                                                          /*193083*/
+ LOOP:                                                                                    /*193083*/
+                                                                                          /*193083*/
+/*  Loop round reading PF/SDBRCHPD and setting the branch job data */                     /*193083*/
+/*  areas to 'Y' so that the branch jobs will shut themselves down */                     /*193083*/
+                                                                                          /*193083*/
+             CALL       PGM(AOBRCHR0) PARM(&RTCD &OPTN &BRCD &FMT)                        /*193083*/
+/**/                                                                                      /*193083*/
+/*  Database error handling. */                                                           /*193083*/
+/**/                                                                                      /*193083*/
+             IF         COND(&RTCD *NE '       ') THEN(DO)                                /*193083*/
+/**********     IF         COND(&RTCD *EQ '*EOF') THEN(GOTO + */               /*193083*/ /*203561*/
+/**********                  CMDLBL(DRIP))                    */               /*193083*/ /*203561*/
+                IF         COND(&RTCD *EQ '*EOF') THEN(GOTO +
+                          CMDLBL(END))                                                    /*203561*/
+                SNDPGMMSG  MSG('Error on access to Branch Details +
+                    file SDBRCHPD') TOMSGQ(MOPERQ MRUNQ)                                  /*193083*/
+                GOTO       CMDLBL(ABNOR)                                                  /*193083*/
+             ENDDO                                                                        /*193083*/
+ 
+             CHGVAR     VAR(&OPTN) VALUE('*NEXT')                                         /*193083*/
+/************CHGVAR     VAR(&SERV) VALUE(%SST(&A8MQSM  1 3))                           */ /*193083*/
+             CHGVAR     VAR(&SERV) VALUE(%SST(&FMT 184 3))                                /*193083*/
+             CHGVAR     VAR(&BRCD) VALUE(%SST(&FMT 1 3))                                  /*193083*/
+             CHGVAR     VAR(&DTAARA) VALUE('LEC2010' *CAT +
+                          &SERV)
+             CHGVAR     VAR(&LMDTAARA) VALUE('LM' *CAT +
+                          &SERV)
+                                                                                          /*193083*/
+/* Only process Loan Manager branches */                                                  /*193083*/
+                                                                                          /*193083*/
+/************IF         COND(&SERV *NE ' ') THEN(DO)                           /*193083*/ /*203561*/
+             IF         COND(&SERV *EQ '   ') THEN(GOTO +
+                          CMDLBL(LOOP))                                                   /*203561*/
+                                                                                          /*203561*/
+/* Check the LMxxx data area to see if a the branch has been disabled    */               /*203561*/
+                                                                                          /*203561*/
+             CHGVAR     VAR(&DISABLED) VALUE('N')                                         /*203561*/
+             CALL       PGM(LEC2019) PARM(&SERV &DISABLED)                                /*203561*/
+                                                                                          /*203561*/
+             IF         COND(&DISABLED *EQ 'Y') THEN(GOTO +
+                          CMDLBL(LOOP))                                                   /*203561*/
+                                                                                          /*193083*/
+/**If*data*area*not*found,*then*loop*round*and*process*next*branch             /*193083*/ /*203561*/
+                                                                               /*193083*/ /*203561*/
+/************CHKOBJ     OBJ(&DTAARA) OBJTYPE(*DTAARA)                */        /*193083*/ /*203561*/
+/************MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(LOOP))       */                   /*203561*/
+                                                                                          /*193083*/
+/* Check if job is running */                                                             /*193083*/
+                                                                                          /*193083*/
+             ALCOBJ     OBJ((&DTAARA *DTAARA *EXCL)) WAIT(0)                              /*193083*/
+                                                                                          /*203561*/
+/* Ignore if not found     */                                                             /*203561*/
+                                                                                          /*203561*/
+             MONMSG     MSGID(CPF0939)                                                    /*203561*/
+                                                                                          /*193083*/
+/* If data area found but locked by job, then shut down branch job */                     /*193083*/
+                                                                                          /*193083*/
+             MONMSG     MSGID(CPF1002) EXEC(DO)                                           /*193083*/
+                CHGDTAARA  DTAARA(&DTAARA (1 1)) VALUE('Y')
+                DLYJOB     DLY(10)                                                        /*203561*/
+/***************Monitor*for*the*Dataarea*not*being*found**/                               /*193083*/
+ 
+/************MONMSG     MSGID(CPF1015) */
+/***************GOTO       CMDLBL(LOOP)                             */         /*193083*/ /*203561*/
+             ENDDO                                                                        /*193083*/
+                                                                                          /*193083*/
+/**Else*if*data*area*found*but*not*locked*by*job,*then*delete*it   */          /*193083*/ /*203561*/
+                                                                                          /*193083*/
+             DLCOBJ     OBJ((&DTAARA *DTAARA *EXCL))                                      /*193083*/
+             MONMSG     MSGID(CPF0939)                                                    /*203561*/
+/************DLTDTAARA  DTAARA(&DTAARA)                             */                    /*203561*/
+/************MONMSG     MSGID(CPF2105 CPF2189)                      */                    /*203561*/
+/************ENDDO                                                  */         /*193083*/ /*203561*/
+/**/                                                                                      /*203561*/
+/** End the drip feed job if it is still running                    */                    /*203561*/
+/**/                                                                                      /*203561*/
+             CALL LEC2013                                             /*122658*/          /*203561*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
+                          CMDLBL(ABNOR))                                                  /*203561*/
+                                                                                          /*203561*/
+/* Check the LMxxx data area to see if a message has already been sent   */               /*203561*/
+/* to Loan Manager to change it to 'Restricted' status for this branch   */               /*203561*/
+                                                                                          /*203561*/
+             RTVDTAARA  DTAARA(&LMDTAARA (5 1)) RTNVAR(&LMSTS)                            /*203561*/
+                                                                                          /*203561*/
+/* If a message has not been sent then call LEC2017 to switch to download mode */         /*203561*/
+                                                                                          /*203561*/
+/**********  IF         COND(&LMSTS *NE 'R') THEN(DO)               */             /*203561 225286*/
+             IF         COND((&LMSTS *NE 'R') *AND (&LMSTS *NE 'C')) THEN(DO)             /*225286*/
+                                                                                          /*203561*/
+             CALL       PGM(LEC2017) PARM(&P#RTCD 'REST' &SERV &BRCD)                     /*203561*/
+             IF         COND(%SWITCH(XXXXXX11) *OR (&P#RTCD *NE +
+                          '*SENT')) THEN(GOTO CMDLBL(ABNOR))                              /*203561*/
+                                                                                          /*203561*/
+/**/                                                                                      /*203561*/
+/** Update LM Branch data area with last message sent               */                    /*203561*/
+/**/                                                                                      /*203561*/
+             CHGDTAARA  DTAARA(&LMDTAARA (1 4)) VALUE('REST')
+/**/                                                                                      /*203561*/
+/** Update LM Branch data area with new Loan Manager status         */                    /*203561*/
+/**/                                                                                      /*203561*/
+             CHGDTAARA  DTAARA(&LMDTAARA (5 1)) VALUE('R')
+/**/                                                                                      /*203561*/
+/** Update LM Branch data area with new Loan Manager I/F Job status */                    /*203561*/
+/**/                                                                                      /*203561*/
+             CHGDTAARA  DTAARA(&LMDTAARA (6 1)) VALUE('N')
+             ENDDO                                                                        /*203561*/
+ 
+             GOTO       CMDLBL(LOOP)
+                                                                                          /*193083*/
+/*                                                                                        /*122658*/
+/**Try*and*allocate*LEDRIP*-*if*it*fails*Lending*Drip*Feed*Transfer                    */ /*193083*/
+/**job*is*in*action,*check*the*phase*and*send*appropriate*Journal                         /*193083*/
+/**entry************************************************************                      /*193083*/
+/*                                                                    /*122658*/
+                                                                      /*122658*/
+/*DRIP:*****/                                                                  /*122658*/ /*203561*/
+                                                                                          /*193083*/
+/***Try*and*allocate*LEDRIP*data*area.*If*fails*then*LEC2016*drip***/          /*193083*/ /*203561*/
+/***feed*job*is*still*running.*Attempt*to*shut*it*down*and*check****/          /*193083*/ /*203561*/
+/***again.*If*still*fails,*then*fail*the*component******************/          /*193083*/ /*203561*/
+/************ALCOBJ     OBJ((LEDRIP *DTAARA *EXCLRD)) WAIT(0)                  /*122658*/ /*203561*/
+/***********MONMSG     MSGID(CPF0000) EXEC(DO)                                 /*122658*/ /*193083*/
+/***************RTVDTAARA  DTAARA(MPHAS) RTNVAR(&PHASE)**********122658*124045*/
+/***************IF         COND(&PHASE *EQ 'A') THEN(DO)*********122658*124045*/
+/******************SNDJRNE    JRN(ICJRN) TYPE('YJ') ENTDTA('PAUSE LE +
+/*************************UPDATE') FILE(SDCLNDPD)****************122658*124045*/
+/***************ENDDO********************************************122658*124045*/
+/***************IF         COND(&PHASE *EQ 'B') THEN(DO)*********122658*124045*/
+/************      SNDJRNE    JRN(ICJRN) TYPE('YE') ENTDTA('STOP LE +                     /*193083*/
+/************             UPDATE') FILE(SDCLNDPD)                              /*122658*/ /*193083*/
+/***************ENDDO********************************************122658*124045*/
+/************MONMSG     MSGID(CPF1002) EXEC(DO)                                /*193083*/ /*203561*/
+/***************SNDJRNE    JRN(ICJRN) TYPE('YE') ENTDTA('STOP LE +                        /*203561*/
+/***************          UPDATE') FILE(SDCLNDPD)                              /*193083*/ /*203561*/
+/***************ALCOBJ     OBJ((LEDRIP *DTAARA *EXCLRD)) WAIT(30)              /*193083*/ /*203561*/
+/***************MONMSG     MSGID(CPF1002) EXEC(DO)                             /*193083*/ /*203561*/
+/******************SNDPGMMSG  MSG('LEC2011 - Unable to terminate +                        /*203561*/
+/******************       LEC2016 Drip Feed Process') +                                   /*203561*/
+/******************       TOMSGQ(MOPERQ MRUNQ)                                 /*193083*/ /*203561*/
+/*********************Abnormal*termination*-*batch*job**/                      /*193083*/ /*203561*/
+/******************IF         COND(&JOBTYPE = '0') THEN(GOTO ABNOR)            /*193083*/ /*203561*/
+/*********************Abnormal*termination*-*interactive*job**/                /*193083*/ /*203561*/
+/******************IF         COND(&JOBTYPE = '1') THEN(DO)                    /*193083*/ /*203561*/
+/******************RTVMSG     MSGID(LEM0001) MSGF(GBMIDASMSG) MSG(&MESSAGE)    /*193083*/ /*203561*/
+/******************CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)        /*193083*/ /*203561*/
+/******************RTVMSG     MSGID(LEM0002) MSGF(GBMIDASMSG) MSG(&MESSAGE)    /*193083*/ /*203561*/
+/******************CHGDTAARA  DTAARA(MIDASMSG (351 50)) VALUE(&MESSAGE)        /*193083*/ /*203561*/
+/******************CALL       PGM(SCC0010) PARM('LEC2011' 'ENTER' ' ')         /*193083*/ /*203561*/
+/******************ENDDO                                              /*122658*/          /*203561*/
+/******************GOTO CMDLBL(END)                                            /*193083*/ /*203561*/
+/***************ENDDO                                                          /*193083*/ /*203561*/
+                                                                      /*122658*/          /*203561*/
+/************ENDDO                                                    /*122658*/          /*203561*/
+                                                                      /*122658*/          /*203561*/
+/***************DLCOBJ     OBJ((LEDRIP *DTAARA *EXCLRD))              /*122658*/          /*203561*/
+/***************MONMSG     MSGID(CPF0000)                             /*122658*/          /*203561*/
+/************GOTO       CMDLBL(END)                          */       /*122658*/          /*203561*/
+/**/                                                                  /*122658*/
+ 
+/*     Abnormal termination                                          */
+ ABNOR:
+                                                                                          /*193083*/
+/* Abnormal termination - batch job */                                                    /*193083*/
+                                                                                          /*193083*/
+             IF         COND(&JOBTYPE = '0') THEN(DO)                                     /*193083*/
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('LEC2011 - End Lending PC Interface +
+                          Background Job ENDED ABNORMALLY') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*193083*/
+             ENDDO                                                                        /*193083*/
+ 
+                                                                                          /*193083*/
+/* Abnormal termination - interactive job */                                              /*193083*/
+                                                                                          /*193083*/
+             IF         COND(&JOBTYPE = '1') THEN(DO)                                     /*193083*/
+             SNDPGMMSG  MSG('LEC2011 - End Lending PC Interface +
+                          Background Job ENDED ABNORMALLY') +
+                          TOMSGQ(MOPERQ MRUNQ)                                            /*193083*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*193083*/
+                                                                                          /*193083*/
+/* Call SCC0010 to inform the user that an error has occurred */                          /*193083*/
+                                                                                          /*193083*/
+             RTVMSG     MSGID(SCM0087) MSGF(GBMIDASMSG) MSG(&MESSAGE)                     /*193083*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*193083*/
+                                                                                          /*193083*/
+             CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE)                         /*193083*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*193083*/
+                                                                                          /*193083*/
+             CALL       PGM(SCC0010) PARM('LEC2011' 'ENTER' ' ')                          /*193083*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*193083*/
+             ENDDO                                                                        /*193083*/
+ 
+/*     Normal termination                                            */
+ END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

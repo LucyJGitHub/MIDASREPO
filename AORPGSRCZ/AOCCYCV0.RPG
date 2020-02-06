@@ -1,0 +1,813 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Convert currency')                            *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Access Objects Module
+     F*                                                                  *
+     F*     AOCCYCV0 - Convert Currency amount                           *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01433             Date 30Sep93               *
+     F*                  041693             DATE  05JAN93                *
+     F*                  045014             DATE  01DEC92                *
+     F*                  031876             DATE  03NOV92                *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+     F*  CER043 - German Features LF041-00 New Fields and Defaulting     *
+     F*           (Recompiled)                                           *
+     F*     S01433 - Recompiled for new field A6PMRT, precious metal.    *
+     F*     041693 - Delivered as part of fix.                           *
+     F*     045014 - Add call to AOCNTLR0 for access control             *
+     F*     031876 - New program convert an amount in one currency       *
+     F*              to another using the spot rate.                     *
+     F*                                                                  *
+     F********************************************************************
+     FSDCURRL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @A6REA3                           KRENAME@CURRL1
+      *
+      * Define Currencies file
+      *
+     FSDBANKL1IF  E           K        DISK         KINFSR SRFILE     UC
+     F            @BJREEF                           KRENAME@BANKL1
+      *
+      * Define I.C.D. details
+      *
+     F/EJECT
+      *
+      *  Copyright table
+      *
+     E                    CPY@    1   1 80
+      *
+      *  List of valid calling programs
+      *
+     E                    PGM@    1   5 10
+      *
+      *  Error texts
+      *
+     E**********          ERR@    1   5 80                                045014
+     E                    ERR@    1   6 80                                045014
+      *
+      *  Powers array used for conversion
+      *
+     E                    POWER   1   7  7 3             Power7 Array
+      *
+      *  Subroutine stack
+      *
+     E                    @STK       20 10
+     E/EJECT
+      *
+      *  Renames for fields used
+      *
+     I@CURRL1
+     I              A6CYCD                          CCY
+     I              A6SPRT                          SPT
+     I              A6NBDP                          CDP
+     I              A6MDIN                          MDIN
+     I              A6BYSR                          BRT
+     I              A6BYSS                          BSPR
+     I              A6SLSR                          SRT
+     I              A6SLSS                          SSPR
+     I@BANKL1
+     I              BJCYCD                          BCCY
+     I/EJECT
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      *  Program data structure
+      *
+     IDSPGM     ESDSY2PGDSP
+      *
+      *  Send message data structure
+      *
+     IDBDTA       DS
+     I                                        1  10 DBPGM
+     I                                       11  20 DBFILE
+     I                                       21  50 DBKEY
+     I                                       51  550DBERNB
+     I                                       56 135 DBNARR
+     I                                      136 145 DBSTK
+     I                                      146 175 DBPREF                045014
+      *
+      *  Input parameters data structure
+      *
+     II#DTA       DS                            256
+      *                                       From Currency & amount
+     I                                        1   3 I#FCCY
+     I                                    P   4  110I#FAMT
+      *                                       To Currency & amount
+     I                                       12  14 I#TCCY
+     I                                    P  15  220I#TAMT
+      *                                       Rate and multi/div ind.
+     I                                       23  23 I#MDIN
+     I                                    P  24  368I#RATE
+      *                            Output     Rate and multi/div ind.
+      *                                       If no in rate
+     I                                       37  37 O#MDIN
+     I                                    P  38  508O#RATE
+      *                                                                   045014
+      *  Input parameters data structure for AOCNTLR0                     045014
+      *                                                                   045014
+     IP#CNTL      DS                            256                       045014
+      *                                       Access Check                045014
+     I                                        1   1 P#ACCK                045014
+     I/EJECT
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C           I#DTA     PARM I#DTA     P0DTA 256
+      *
+      *  Initialise work variables of common routines
+      *
+     C                     MOVEL*BLANKS   @@FCCY  1
+     C                     MOVEL*BLANKS   @@TCCY  1
+      *
+      *  Call subroutine depending on calculation type
+      *
+     C           W0ACT     CASEQ'*F*T*SPT'SRFTSP
+     C           W0ACT     CASEQ'*F*T*RAT'SRFTRT
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFTSP   : Convert an amount from the from currency to the   *
+      *             to currency using the current spot rate           *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFTSP    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFTSP'  @STK,Q
+      *
+      *  If currencies are the same then move from amount to to amount
+      *
+     C           I#FCCY    IFEQ I#TCCY
+     C                     Z-ADDI#FAMT    I#TAMT
+     C                     GOTO EXFTSP
+     C                     END
+      *
+      *  Decide on the exchange rate and the multiply divide indicator
+      *
+     C                     MOVELI#FCCY    W#CCY   3
+     C           @CURK     CHAIN@CURRL1              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDCURRL1'W0FILE
+     C                     MOVELW#CCY     W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,5    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     Z-ADDSPT       ZEXCH
+     C                     MOVE MDIN      ZMD
+     C                     MOVE CDP       ZCDPST
+      *
+      *  Indicate from currency decimal places set
+      *
+     C                     MOVEL'F'       @@FCCY
+      *
+     C                     MOVELI#TCCY    W#CCY   3
+     C           @CURK     CHAIN@CURRL1              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDCURRL1'W0FILE
+     C                     MOVELW#CCY     W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,5    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Indicate to currency decimal places set
+      *
+     C                     MOVEL'T'       @@TCCY
+      *
+      *  Compare multiply/divide indicators and rates and calculate
+      *  exchange rate
+      *
+      *  If from currency is base use To currency rate
+      *
+      *  Note from currency already set above if to is base
+      *
+     C           I#TCCY    IFEQ BCCY
+      *
+      *  No action as rates are quoted as rates from foreign Ccy
+      *  to Base, hence IEP - USD is 1.695 D.
+      *
+     C                     END
+      *
+     C           I#FCCY    IFEQ BCCY
+     C                     Z-ADDSPT       ZEXCH
+     C           MDIN      IFEQ 'M'
+     C                     MOVEL'D'       ZMD
+     C                     ELSE
+     C                     MOVEL'M'       ZMD
+     C                     END
+     C                     END
+      *
+     C           I#FCCY    IFNE BCCY
+     C           I#TCCY    ANDNEBCCY
+      *
+      *  If Multiply/Divide are not the same just multiply the rates
+      *  together
+      *
+     C           ZMD       IFNE MDIN
+     C           ZEXCH     MULT SPT       ZEXCH     H
+     C                     ELSE
+      *
+      *  If Multiply/Divide are the same divide the greater by the
+      *  lesser to avoid greater inaccuracy
+      *
+     C           ZEXCH     IFGT SPT
+     C           ZEXCH     DIV  SPT       ZEXCH     H
+     C                     ELSE
+     C           SPT       DIV  ZEXCH     ZEXCH     H
+     C           ZMD       IFEQ 'M'
+     C                     MOVEL'D'       ZMD
+     C                     ELSE
+     C                     MOVEL'M'       ZMD
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      *  Set up output rate as not entered for this action
+      *
+     C                     MOVELZMD       O#MDIN
+     C                     Z-ADDZEXCH     O#RATE
+      *
+      *  Set up parameters to call ZCONV
+      *
+     C                     MOVELI#FCCY    ZCCYI
+     C                     MOVELI#TCCY    ZCCYO
+     C                     Z-ADDI#FAMT    ZAMTCI
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    I#TAMT
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFTSP    TAG
+     C                     MOVEL*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFTRT   : Convert an amount from the from currency to the   *
+      *             to currency using the rate passed                 *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFTRT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFTRT'  @STK,Q
+      *
+      *  Indicate from currency decimal places are not set
+      *
+     C                     MOVEL' '       @@FCCY
+     C                     MOVEL' '       @@TCCY
+      *
+      *  Set up parameters to call ZCONV
+      *
+     C                     MOVELI#FCCY    ZCCYI
+     C                     MOVELI#TCCY    ZCCYO
+     C                     Z-ADDI#FAMT    ZAMTCI
+     C                     Z-ADDI#RATE    ZEXCH
+     C                     MOVELI#MDIN    ZMD
+     C                     EXSR ZCONV
+     C                     Z-ADDZAMTCO    I#TAMT
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFTRT    TAG
+     C                     MOVEL*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      **********************************************************************
+      *                                                                    *
+      *    ZCONV - Subroutine to convert an amount from one currency       *
+      *                to another                                          *
+      *                                                                    *
+      *    INPUT  - ZAMTCI (15,0) Amount input                             *
+      *             ZEXCH  (13,8) Exchange rate                            *
+      *             ZMD    (1)    Multiply/Divide indicator                *
+      *             ZCCYI  (3)    Currency input                           *
+      *             ZCCYO  (3)    Currency to be converted to              *
+      *                                                                    *
+      *   OUTPUT -  ZAMTCO (15,0) Amount output                            *
+      *                                                                    *
+      *   CALLS  -  NONE                                                   *
+      *                                                                    *
+      *   Chains to SDCURRL1 with input currencies to obtain decimal places*
+      *             (CDP (1,0))                                            *
+      *                                                                    *
+      *   Uses *IN90                                                       *
+      *                                                                    *
+      **********************************************************************
+      *
+     C           ZCONV     BEGSR                           ** ZCONV **
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'ZCONV '  @STK,Q
+      *
+      * Define key list to SDCURRL1
+      *
+     C           @CURK     KLIST
+     C                     KFLD           W#CCY
+      *
+      * Define input and output fields
+      *
+     C                     MOVE ZCCYI     ZCCYI   3
+     C                     MOVE ZCCYO     ZCCYO   3
+     C                     Z-ADDZAMTCI    ZAMTCI 150
+     C                     Z-ADD0         ZAMTCO 150
+     C                     Z-ADDZEXCH     ZEXCH  138
+     C                     MOVE ZMD       ZMD     1
+      *
+      * Obtain decimal places for currency input
+      *
+     C           @@FCCY    IFNE 'F'
+     C                     MOVELZCCYI     W#CCY   3
+     C           @CURK     CHAIN@CURRL1              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDCURRL1'W0FILE
+     C                     MOVELW#CCY     W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,5    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      * Store decimal places for input currency
+      *
+     C                     MOVE CDP       ZCDPST  20
+     C                     END
+      *
+      * Obtain decimal places for output currency
+      *
+     C           @@TCCY    IFNE 'T'
+     C                     MOVELZCCYO     W#CCY   3
+     C           @CURK     CHAIN@CURRL1              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDCURRL1'W0FILE
+     C                     MOVELW#CCY     W0KEY
+     C                     Z-ADD2         W0ERNB
+     C                     MOVELERR@,5    W0NARR
+     C                     EXSR SRERR
+     C                     END
+     C                     END
+      *
+      * If exchange rate is 0 - output currency amount as zero
+      *
+     C           ZEXCH     IFEQ 0
+     C                     Z-ADD0         ZAMTCO
+     C                     GOTO EZCONV
+     C                     END
+      *
+      * If decimal places are the same for both currencies
+      *
+     C           ZCDPST    IFEQ CDP
+      *
+      * Calculate output currency amount by dividing exchange rate into
+      * or multiplying exchange rate by currency amount input depending
+      * on indicator
+      *
+     C           ZMD       IFEQ 'D'
+     C           ZAMTCI    DIV  ZEXCH     ZAMTCO    H
+     C                     ELSE
+     C           ZAMTCI    MULT ZEXCH     ZAMTCO    H
+     C                     END
+      *
+     C                     ELSE
+      *
+      * If decimal places differ -
+      *    Calculate difference in decimal places to use as power index
+      *
+     C           CDP       SUB  ZCDPST    ZPX     10
+     C                     ADD  4         ZPX
+      *
+      * Calculate currency amount output by multiplying input amount by
+      * power array entry and then multiplying result by exchange rate
+      * depending on indicator
+      *
+     C           POWER,ZPX IFLT 1                          from d.p *LT
+     C           ZAMTCI    MULT POWER,ZPX Z15#3  153        to d.p.
+      *
+     C           ZMD       IFEQ 'D'
+     C           Z15#3     DIV  ZEXCH     ZAMTCO    H
+     C                     ELSE
+     C           Z15#3     MULT ZEXCH     ZAMTCO    H
+     C                     END
+      *
+     C                     ELSE                            from d.p. *GT
+     C           ZAMTCI    MULT POWER,ZPX ZAMTCI             to d.p.
+      *
+     C           ZMD       IFEQ 'D'
+     C           ZAMTCI    DIV  ZEXCH     ZAMTCO    H
+     C                     ELSE
+     C           ZAMTCI    MULT ZEXCH     ZAMTCO    H
+     C                     END
+      *
+     C                     END
+      *
+     C*
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EZCONV    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE
+     C                     MOVELW0ACT     W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVELERR@,3    W0NARR
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFILE   : *PSSR routine for all files                       *
+      *                                                               *
+      *  CALLED BY: IBM controlled - invalid access to file           *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFILE    BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  If called again seton LR and return
+      *
+     C           @@FILE    IFNE *BLANKS
+     C                     MOVEL'1'       *INLR
+     C                     RETRN
+     C                     END
+     C                     MOVEL'Y'       @@FILE  1
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'AOCCYCV0'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVEL##ERST    DBKEY
+     C                     Z-ADD1         DBERNB
+     C                     MOVEL##ERFL    DBFILE
+     C                     MOVELERR@,4    DBNARR
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID  7
+     C                     PARM 'MIDAS  ' #MSGF  10
+     C                     PARM *BLANKS   #MSGFL 10
+     C                     PARM DBDTA     #MSGDT256
+     C                     PARM '*PRV'    #MSGR   5
+     C                     PARM '*'       #PRGM  10
+     C                     PARM 'MOPERQ ' #MSGQ  10
+     C                     PARM '*INFO  ' #MSGT   7
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXFILE    ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACCS   : Check for valid access                            *
+      *                                                               *
+      *  CALLED BY: SRINIT  - Initialise and define fields            *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACCS    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACCS'  @STK,Q
+      *                                                                   045014
+      *  Call AOCNTLR0 to see if access should be checked                 045014
+      *                                                                   045014
+     C                     CALL 'AOCNTLR0'             9090               045014
+     C           R#RTN     PARM *BLANKS   O#RTN   7                       045014
+     C                     PARM           P#CNTL                          045014
+      *                                                                   045014
+     C           *IN90     IFEQ '1'                                       045014
+     C           R#RTN     ORNE *BLANKS                                   045014
+     C                     MOVEL'AOCNTLR0'W0FILE                          045014
+     C                     MOVEL'*CALL'   W0KEY                           045014
+     C                     Z-ADD1         W0ERNB                          045014
+     C                     MOVELERR@,6    DBNARR                          045014
+     C                     EXSR SRERR                                     045014
+     C                     MOVEL*BLANKS   R#RTN   7                       045014
+     C                     END                                            045014
+      *                                                                   045014
+      * No access validation required                                     045014
+      *                                                                   045014
+     C           P#ACCK    CABEQ'N'       EXACCS                          045014
+      *
+      *  Check for valid access
+      *
+     C                     MOVEL*BLANKS   @PGMF  10
+     C                     MOVEL*BLANKS   @PGMFA 10
+      *
+      *  If already found only test for change
+      *
+     C           @T        IFGE 1
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'CPF9898' #MSGID
+     C                     PARM 'QCPFMSG' #MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM 'Check'   #MSGDT
+     C                     PARM '*PRV'    #MSGR
+     C                     PARM PGM@,@T   #PRGM
+     C                     PARM *BLANKS   #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+      *
+      *  If found set flag to stop checking of all valid programs
+      *
+     C           *IN90     IFEQ '0'
+     C           PGM@,1    ANDNEPGM@,X
+     C                     MOVEL'PG_FND'  @PGMF
+     C                     ELSE
+     C                     Z-ADD0         @T      50
+     C                     END
+     C                     END
+      *
+     C                     DO   5         X       50
+      *
+      *  Check for program in stack
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'CPF9898' #MSGID
+     C                     PARM 'QCPFMSG' #MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM 'Check'   #MSGDT
+     C                     PARM '*PRV'    #MSGR
+     C                     PARM PGM@,X    #PRGM
+     C                     PARM *BLANKS   #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+      *
+      *  Set flag if program found
+      *
+     C           *IN90     IFEQ '0'
+     C           PGM@,1    ANDNEPGM@,X
+     C                     MOVEL'PG_FND'  @PGMF
+     C                     Z-ADDX         @T      50
+     C           @PGMFA    IFEQ 'PG_FND'
+     C                     GOTO ENDLOP
+     C                     END
+     C                     END
+     C           *IN90     IFEQ '0'
+     C           PGM@,1    ANDEQPGM@,X
+     C                     MOVEL'PG_FND'  @PGMFA
+     C           @PGMF     IFEQ 'PG_FND'
+     C                     GOTO ENDLOP
+     C                     END
+     C                     END
+     C                     END
+     C           ENDLOP    TAG
+      *
+      *  Set flag if program found
+      *
+     C           @PGMF     IFNE 'PG_FND'
+     C           @PGMFA    ORNE 'PG_FND'
+     C                     MOVEL'*PROGRAM'W0FILE
+     C                     MOVEL'*ONLY'   W0KEY
+     C                     Z-ADD4         W0ERNB
+     C                     MOVELERR@,2    W0NARR
+     C                     EXSR SRERR
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACCS    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: SRACCS - Valid access                             *
+      *             SRINIT - Initialise and define fields             *
+      *                                                               *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRERR     BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+      *
+      *  Send message to MOPERQ
+      *
+     C                     MOVEL*BLANKS   DBDTA
+     C                     MOVEL'AOCCYCV0'DBPGM
+     C                     MOVEL@STK,Q    DBSTK
+     C                     MOVELW0KEY     DBKEY
+     C                     MOVELW0ERNB    DBERNB
+     C                     MOVELW0FILE    DBFILE
+     C           W0NARR    IFEQ *BLANKS
+     C                     MOVELERR@,1    DBNARR
+     C                     ELSE
+     C                     MOVELW0NARR    DBNARR
+     C                     END
+      *
+     C                     CALL 'AOCREPT'              9090
+     C                     PARM 'MEM5000' #MSGID
+     C                     PARM 'MIDAS  ' #MSGF
+     C                     PARM *BLANKS   #MSGFL
+     C                     PARM DBDTA     #MSGDT
+     C                     PARM '*PRV'    #MSGR
+     C                     PARM '*'       #PRGM
+     C                     PARM 'MOPERQ ' #MSGQ
+     C                     PARM '*INFO  ' #MSGT
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' W0RTN
+     C                     RETRN
+      *
+     CSR         EXERR     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : SRACCS - valid access                             *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define W0 database error variables
+      *
+     C           *LIKE     DEFN DBFILE    W0FILE
+     C           *LIKE     DEFN DBKEY     W0KEY
+     C           *LIKE     DEFN DBERNB    W0ERNB
+     C           *LIKE     DEFN DBNARR    W0NARR
+     C           *LIKE     DEFN DBPREF    W0PREF
+      *
+      *  Check for programs in stack if none found error
+      *
+     C                     EXSR SRACCS
+      *
+      *  Open Currencies file for read
+      *
+     C                     OPEN SDCURRL1
+      *
+      *  Open SDBANKL1 file for base currency code
+      *
+     C                     OPEN SDBANKL1
+      *
+     C                     MOVEL'BANK'    BJBANK
+     C           BJBANK    CHAIN@BANKL1              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDBANKL1'W0FILE
+     C                     MOVEL'*ONLY'   W0KEY
+     C                     MOVELERR@,5    W0NARR
+     C                     Z-ADD1         W0ERNB
+     C                     EXSR SRERR
+     C                     END
+     C                     CLOSESDBANKL1
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+**  CPY@ table
+(c) Finastra International Limited 2001
+**  List of valid access programs
+AOCCYCV0      Convert currency amount
+FT0070        Cheques for Collection
+FT0080        Cheques to be Paid
+FT0261        FT Shadow post process - Input Cycle Initiation
+QCL           Command Entry
+**  Error text
+See dump for further information
+Invalid Access to update object
+Undefined action code not *F*T*SPT or *F*T*RAT
+File access error occurred - see dump for full details - see key for opcode
+Record not found or marked as deleted
+Error occurred on call to program - see dumps for further details
+**  Power7 - Array of powers for currency conversion
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

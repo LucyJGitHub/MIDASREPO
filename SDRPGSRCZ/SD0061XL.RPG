@@ -1,0 +1,109 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Set Up Branch Extension File')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/SD0061XL  - SET UP IBLC BRANCH EXTENTION FILE            *
+      *                                                               *
+      *  Function:  This program set up IBLC Branch Extension file    *
+      *             with default values.                              *
+      *                                                               *
+      *  (phase(s)) Installation                                      *
+      *                                                               *
+      *  Called By: ILC0000 - IBLC MODULE INSTALLATION                *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 03May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 ULX043             Date 24Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A - Conversion of customer number to alpha (post       *
+      *            build 103). Recompiled.                            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDBRCHPDIF  E                    DISK
+      ***  Branch codes                Master file         Prefix A8
+      *
+     F***SDBRCHXLUF  E           K        DISK                      A                         CER001
+     FSDBRX1PDUF  E           K        DISK                      A                            CER001
+      ***  Extended Branch codes                           Prefix BR
+      *
+     F***SDCUSTXLIF  E           K        DISK                                                CER001
+     FSDCUX1PDIF  E           K        DISK                                                   CER001
+      ***  Extended Customer                               Prefix CU
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  First read
+      *
+     C                     READ SDBRCHD0                 LR
+      *
+      ***  Process until LR indicator not on
+      *
+     C           *INLR     DOWEQ*OFF                       - B1
+      *
+      ***  Check if record exists in the extension file
+      *
+     C           A8BRCD    CHAINSDBRCHDL             89
+      *
+      ***  If record not in the extension file : FIELDS SET UP & WRITE
+      *
+     C           *IN89     IFEQ '1'                        - B2
+     C                     MOVE A8BRCD    BRBRCH           KEY
+     C                     MOVE 'Y'       BRREPT           To Report
+     C                     MOVE 'Y'       BRBRCO           Flag for Consolidation
+     C                     MOVE BRBRCH    BRCONS           Consolidation Branch
+     C                     Z-ADD23        BRBKCO           Lux BCL number
+     C                     Z-ADD*ZEROS    BRBKNB
+      *
+      ***  Default it with BICN Identification
+      *
+     C********** A8BICN    CHAINSDCUSTXL             99                                       CER001
+     C           A8BICN    CHAINSDCUX1PD             99                                       CER001
+     C           *IN99     IFEQ *OFF
+     C                     MOVE CUIDEN    ALPH3   3
+     C           CUIDCO    IFEQ '23'
+     C                     MOVE ALPH3     BRBKNB
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITESDBRCHDL
+     C                     ENDIF                           - E2
+      *
+      ***  Main file read
+      *
+     C                     READ SDBRCHD0                 LR
+      *
+     C                     ENDDO                           - E1
+      *-------------------------------------------------------------------------
+      * End of processing
+      *-------------------------------------------------------------------------
+     C                     RETRN
+      /EJECT
+** CPY@  COPYRIGHT
+(c) Finastra International Limited 2005

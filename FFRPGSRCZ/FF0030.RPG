@@ -1,0 +1,626 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FF Exercise an Option        Initial')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  -  Futures and Options Module
+     F*                                                                  *
+     F*   FF0030  -  EXERCISE AN OPTION INPUT (INITIAL PROGRAM CONTROL)  *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CAAA03             Date 28Apr04               *
+      *                 CAAA02             Date 16Jul03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S71062             Date 08Dec95               *
+     F*                  S01456             DATE 08NOV93                 *
+     F*                  S01195             DATE 20APR90                 *
+     F*                  S01199             DATE 27FEB90                 *
+     F*                  S01117             DATE 22FEB90                 *
+     F*                  E21147             DATE 20FEB90                 *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CAAA03 - Webfacing Changes. (recompile)                      *
+      *  CAAA02 - Remove use of INVITE keyword to enable WebFacing    *
+      *           to process screens. Recompile only.                 *
+     F*  S71062 - FF/PM Interface - Recompile over display file       *
+     F*   S01456  - 'FF' MONTHLY P&L ENHANCEMENTS.                       *
+     F*              Recompiled due to change to PF/MKCTLD.              *
+     F*   S01195  -  HOLIDAY PROCESSING AMENDMENT                        *
+     F*   S01199  -  HELP SYSTEM                                     *
+     F*   S01117  -  MULTIBRANCHING                                      *
+     F*   E21147  -  REPLACE QCAEXEC CALL WITH QCMDEXC FOR AS400         *
+     F*------------------------------------------------------------------*
+     F*     CREATION REQUIREMENTS                                        *
+     F*                                                                  *
+     F*     IGNDECERR(*NO)                                               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FMKCTL   IF  E           K        DISK
+     FMARKT   IF  E           K        DISK
+     F*ABTB10*IF* E           K        DISK                           UC  S01117
+     FFF0030DFCF  E                    WORKSTN
+     F            FF0030F4                          KIGNORE
+     F            FF0030F5                          KIGNORE
+     F            FF0030F6                          KIGNORE
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F*
+     F*                  FUNCTION OF INDICATORS
+     F*                 ************************
+     F* ID F  C  H  L
+     F*
+     F*      01        'HELP' key
+     F*      02        Insert
+     F*      03        Amend
+     F*      04        Delete
+     F*      05        Enquire
+     F*      06        DSPF/FF0030DF - Read fail
+     F*      07        INVITE enabled
+     F*      10        Valid exit Indicator
+     F*
+     F*      11        )
+     F*      12        )
+     F*      13        )   used in FF0040
+     F*      14        )
+     F*      15        )
+     F*
+     F*      18        General Error Indicator
+     F*      19        SPF Checking Error Indicator                       S01117
+     F*
+     F*    Field Error Indicators
+     F*   ~~~~~~~~~~~~~~~~~~~~~~~~
+     F*      20        Action Code
+     F*      21        Market Centre
+     F*
+     F*    22-59       )
+     F*      65        )   used in FF0040
+     F*      66        )
+     F*
+     F*******70********PF/TABTB10*-*Read/Chain*fail***********************S01117
+     F*      71        Other files - Read/Chain fail
+     F*
+     F*    80-89       Reserved for Standard FF Subroutines
+     F*
+     F*    90-99       Reserved for Standard MIDAS Subroutines
+     F*
+     F*      KC        F3 - exit program
+     F*      KL        )
+     F*      KJ        )   used in FF0040
+     F*
+     F*    U7+U8       Database Errors
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     E                    CPY@    1   1 80
+     E*
+     E                    ERR        40  4
+     E*    Error codes array, index 'E'
+     E**********          CMD     1   1 39               QCAEXEC Cmd      E21147
+     E                    CMD     1   1 39               QCMDEXC Cmd      E21147
+     E********************************************************************
+     E/SPACE 3
+     E********************************************************************
+     IERRDS       DS
+     I*
+     I**   Display Screen Error Codes
+     I*
+     I                                        1 160 ERR
+     I                                        1  77 SERCD1
+     IMNAME       DS
+     I*
+     I**   Split up Screen Market Name (for OTC)
+     I*
+     I                                        1  20 SMKTN
+     I                                        1   8 SOTC1
+     I                                        9  16 SOTC2
+     I*
+     I*****QCAEXEC*Command********************************************
+     I**   QCMDEXC Command                                                E21147
+     I*
+     ICOMMD       DS
+     I                                        1  39 WCMD
+     I                                        1   1 WAORD
+     I                                       13  14 WMRKT
+     I                                       32  39 WWAIT
+     IPSDS       SDS
+     I*
+     I**   Holds Workstn id
+     I*
+     I                                      244 246 WSID
+     I*
+     I**   Save Market
+     I*
+     IFFMRKT     UDS
+     I                                        1   2 MRKTFF
+     I*
+     I**   Local Data Area for Database Error Details
+     I*
+     ILDA         DS                            256
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I********************************************************************
+     I/EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C********************************************************************
+     C**                                                                 *
+     C**      M  A  I  N     P  R  O  C  E  S  S  I  N  G                *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C**   Receive/Pass  Parameters
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           PACTN   1
+     C                     PARM           PMRKT   2
+     C                     PARM           PMKTN  20
+     C                     PARM           PRUNA   7
+     C                     PARM           PRUND   50
+     C                     PARM           PDATF   1
+     C                     PARM           PMBIN   1                       S01117
+     C                     PARM           PBUSD   50
+     C                     PARM           PMKLC   3
+     C                     PARM           PMLOC   3                       S01195
+     C*
+     C**   Reset Processing
+     C*
+     C                     SETOF                     10
+     C                     MOVE ' '       SACTN
+     C                     MOVE '  '      SMRKT
+     C                     MOVE *BLANK    SMKTN
+     C*
+     C**   Reset LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C***********          MOVE *BLANKS   DBLOT                           S01117
+     C                     MOVE *BLANKS   DBFILE                          S01117
+     C                     MOVE *BLANKS   DBKEY                           S01117
+     C                     MOVE *BLANKS   DBPGM                           S01117
+     C                     Z-ADD*ZEROS    DBASE                           S01117
+     C                     MOVE 'FF0030  'DBPGM
+     C                     OUT  LDA
+     C*
+     C*****Access*TABTB10*if*first*run*through*program********************S01117
+     C**   Access RUNDAT if first run through program                     S01117
+     C*
+     C           PDATF     IFEQ ' '
+     C                     EXSR ICDR
+     C                     END
+     C*
+     C**   Process initial screen
+     C*
+     C                     EXSR INTSCN
+     C*
+     C**   Set up parameters unless F3 taken
+     C*
+     C           *INKC     IFEQ '0'
+     C                     MOVE SACTN     PACTN
+     C                     MOVE SMRKT     PMRKT
+     C                     MOVE SMKTN     PMKTN
+     C                     ELSE
+     C                     SETON                     LR
+     C                     END
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*       S   U   B   R   O   U   T   I   N   E   S                  *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C*                  SUMMARY  OF  SUBROUTINES
+     C*                 **************************
+     C*
+     C*     ICDR        Access 'Installation Control Data' Record
+     C*
+     C*     INTSCN      Initial Screen Processing
+     C*
+     C*     VALSR       Validate initial screen input.
+     C*
+     C*     OPEN        Test if Market entered is open
+     C*
+     C*     QCAEX       Allocate/Deallocate Data Area
+     C*
+     C*     NXTSCN      Display Next Screen
+     C*
+     C*     DBERR       Database Error Handling : Terminates program
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   ICDR SR. -  Access 'Installation Control Data' Record         *
+     C**   ~~~~~~~~                                                      *
+     C**      Called From                  Calls                         *
+     C**       Main Processing              SR. DBERR                    *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           ICDR      BEGSR                           *** ICDR SR ***
+     C*
+     C*****Access*ICD*Record*1.*******************************************S01117
+     C***********                                                         S01117
+     C***********          OPEN TABTB10                                   S01117
+     C***********          READ TABTB10F                 70               S01117
+     C**N70******RECI      COMP 'D'                  7070                 S01117
+     C*                                                                   S01117
+     C**   IN DATA AREA RUNDAT                                            S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*
+     C**   Save relevant fields
+     C*
+     C************IN70     IFEQ '0'                                       S01117
+     C                     MOVE RUNA      PRUNA
+     C                     Z-ADDRUND      PRUND
+     C                     MOVE DATF      PDATF
+     C                     MOVE MBIN      PMBIN                           S01117
+     C*
+     C*****Database*error*if*record*not*found*****************************S01117
+     C***********                                                         S01117
+     C***********          ELSE                                           S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVE '01'      DBASE            ***************S01117
+     C***********          MOVE 'TABFF'   DBFILE           * DB ERROR 01 *S01117
+     C***********          MOVEL'01    '  TABKEY 12        ***************S01117
+     C***********          MOVE '    10'  TABKEY                          S01117
+     C***********          MOVELTABKEY    DBKEY                           S01117
+     C***********          EXSR DBERR                                     S01117
+     C***********          END                                            S01117
+     C***********          CLOSETABTB10                                   S01117
+     C*
+     C**   Display screen
+     C*
+     C                     MOVE RUNA      SRUNA
+     C                     MOVE WSID      SWSID
+     C                     WRITEFF0030F1
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   INTSCN SR. -  Initial Screen Processing                       *
+     C**   ~~~~~~~~~~                                                    *
+     C**      Called From                  Calls                         *
+     C**       Main Processing              SR. VALSR                    *
+     C**                                    SR. NXTSCN                   *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           INTSCN    BEGSR                           ** INTSCN SR **
+     C*
+     C**   Loop until valid entry or F3 taken
+     C*
+     C           *INKC     DOWNE'1'
+     C           *IN10     ANDNE'1'
+     C*
+     C**   Read screen
+     C*
+     C                     READ FF0030F1                 06
+     C*
+     C**   Allow 'HELP'
+     C*
+     C********** *IN01     DOWEQ'1'                                       S01199
+     C*
+     C**********           MOVE 'FF0040  'HBPGM   8                       S01199
+     C**********           MOVEAERR       HERCD 160                       S01199
+     C**********           CALL 'MHELP'                                   S01199
+     C**********           PARM           HBPGM                           S01199
+     C**********           PARM           HERCD                           S01199
+     C*
+     C**********           READ FF0030F1                 06               S01199
+     C**********           END                                            S01199
+     C*
+     C**   Reset Processing
+     C*
+     C                     SETOF                     182021
+     C                     SETOF                     19                   S01117
+     C                     Z-ADD0         E       20
+     C                     MOVE *BLANK    ERR
+     C*
+     C**   Validate Input
+     C*
+     C                     EXSR VALSR
+     C*
+     C**   Blank action code parameter if F3 taken
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE ' '       PACTN
+     C                     ELSE
+     C*
+     C**   If error - redisplay screen
+     C*
+     C           *IN18     IFEQ '1'
+     C                     WRITEFF0030F1
+     C*
+     C**   Otherwise, save market in FFMRKT data area, select next
+     C**   screen and end program
+     C*
+     C                     ELSE
+     C           *NAMVAR   DEFN           FFMRKT
+     C           *LOCK     IN   FFMRKT
+     C                     MOVE SMRKT     MRKTFF
+     C                     OUT  FFMRKT
+     C                     EXSR NXTSCN
+     C                     SETON                     10
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   VALSR SR. -  Validate initial screen input.                   *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From                  Calls                         *
+     C**       SR. INTSCN                   SR. OPEN                     *
+     C**                                                                 *
+     C********************************************************************
+     C**
+     C           VALSR     BEGSR                           *** VALSR SR **
+     C*
+     C**   Validate Action Code
+     C**   ~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           SACTN     IFNE 'I'
+     C           SACTN     ANDNE'A'
+     C           SACTN     ANDNE'D'
+     C           SACTN     ANDNE'E'
+     C           E         ADD  1         E
+     C                     MOVE ' 001'    ERR,E
+     C                     SETON                     1820
+     C*                                                                   S01117
+     C                     ELSE                                           S01117
+     C*                                                                   S01117
+     C**   SPF Checking on action code when MBIN=N                        S01117
+     C*                                                                   S01117
+     C           MBIN      IFNE 'Y'                                       S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM SACTN     @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     ADD  1         E                               S01117
+     C                     MOVE ' 303'    ERR,E                           S01117
+     C                     SETON                     181920               S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END
+     C*
+     C**   Validate Market Centre (if entered)
+     C**   ~~~~~~~~~~~~~~~~~~~~~~
+     C*
+     C           SMRKT     IFNE '  '
+     C           *IN19     ANDEQ'0'                                       S01117
+     C*
+     C           SMRKT     CHAINMARKT                71
+     C  N71      RECI      COMP 'D'                  7171
+     C*
+     C**   A live Market record must exist
+     C*
+     C           *IN71     IFEQ '1'
+     C           E         ADD  1         E
+     C                     MOVE ' 011'    ERR,E
+     C                     SETON                     1821
+     C                     END
+     C*
+     C           *IN18     IFEQ '0'
+     C                     MOVE MKLC      PMKLC
+     C                     MOVE MLOC      PMLOC                           S01195
+     C                     EXSR OPEN
+     C                     Z-ADDBUSD      PBUSD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   OPEN SR. -  Display Next Screen                               *
+     C**   ~~~~~~~~                                                      *
+     C**      Called From                  Calls                         *
+     C**       SR. VALSR                    SR. DBERR                    *
+     C**                                    SR. QCAEX                    *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           OPEN      BEGSR                           ** OPEN SR   **
+     C*
+     C**   Attempt to allocate Market data area
+     C*
+     C                     MOVE CMD,1     WCMD
+     C                     MOVE 'A'       WAORD
+     C                     EXSR QCAEX
+     C*
+     C**   - Market not available for input
+     C*
+     C           *IN71     IFEQ '1'
+     C           E         ADD  1         E
+     C                     MOVE ' 012'    ERR,E
+     C                     SETON                     1821
+     C*
+     C                     ELSE
+     C*
+     C**   Chain Market centre control record to see if Market is open
+     C*
+     C           SMRKT     CHAINMKCTL                71
+     C  N71      RECI      COMP 'D'                  7171
+     C*
+     C**   A live Market Control record must exist
+     C*
+     C           *IN71     IFEQ '1'
+     C                     MOVE 'D'       WAORD
+     C                     MOVE *BLANK    WWAIT
+     C                     EXSR QCAEX
+     C*
+     C           *LOCK     IN   LDA
+     C***********          MOVE '02'      DBASE            ***************S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     MOVE 'MKCTL'   DBFILE           * DB ERROR 02 *
+     C                     MOVELSMRKT     DBKEY            ***************
+     C                     EXSR DBERR
+     C*
+     C                     ELSE
+     C*
+     C**   Mkt Centre ind. must be 'I'
+     C*
+     C           MKCI      IFNE 'I'
+     C                     MOVE 'D'       WAORD
+     C                     MOVE *BLANK    WWAIT
+     C                     EXSR QCAEX
+     C*
+     C           E         ADD  1         E
+     C                     MOVE ' 012'    ERR,E
+     C                     SETON                     1821
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   QCAEX SR. - To call/execute CL commands                       *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From                                                *
+     C**       SR. VALSR                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           QCAEX     BEGSR                           ** QCAEX SR **
+     C*
+     C                     MOVE SMRKT     WMRKT
+     C***********          CALL 'QCAEXEC'              71                 E21147
+     C                     CALL 'QCMDEXC'              71                 E21147
+     C                     PARM           WCMD   39
+     C                     PARM 39        WLEN   155
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   NXTSCN SR. -  Display Next Screen                             *
+     C**   ~~~~~~~~~~                                                    *
+     C**      Called From                  Calls                         *
+     C**       SR. INTSCN                                                *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           NXTSCN    BEGSR                           ** NXTSCN SR **
+     C*
+     C**   Reset Processing
+     C*
+     C                     SETOF                     182021
+     C                     SETOF                     19                   S01117
+     C                     Z-ADD0         E       20
+     C                     MOVE *BLANK    ERR
+     C*
+     C**   Output Market Name or O.T.C.
+     C*
+     C           SMRKT     IFNE '  '
+     C                     MOVE MKTN      SMKTN
+     C*
+     C                     ELSE
+     C                     MOVE 'OVER THE'SOTC1
+     C                     MOVE ' COUNTER'SOTC2
+     C                     END
+     C*
+     C**   Trans Ref prompt
+     C*
+     C                     SETON                     07
+     C                     SETOF                     13
+     C           SACTN     IFEQ 'I'
+     C                     WRITEFF0030F2
+     C                     ELSE
+     C                     WRITEFF0030F3
+     C                     END
+     C                     SETOF                     07
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**   DBERR SR. - Database Error Handling : Terminates program      *
+     C**   ~~~~~~~~~                                                     *
+     C**      Called From      DB Err No.    File                        *
+     C*********SR.*ICDR*************01*******TABTB10**********************S01117
+     C**       SR. OPEN             02       MKCTL                       *
+     C**                                                                 *
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR                           ** DBERR SR **
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C***********          CLOSETABTB10                                   S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     RETRN
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+** CMD - QCMDEXC COMMAND                                                  E21147
+XLCOBJ OBJ((XX *DTAARA *SHRRD)) WAIT(5)

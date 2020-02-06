@@ -1,0 +1,380 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BoE Facilities Extract Criteria Report')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY3040 - Loans Extract Criteria Report                       *
+      *                                                               *
+      *  Function:  This program prints a report of Loan Extract      *
+      *             Criteria                                          *
+      *                                                               *
+      *  Called By: mmCnnnn - (program name)                          *
+      *                                                               *
+      *  (c) Finastra International Limited 1997                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN021             Date 19Nov03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *  Amendment Details:                                           *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN021 - BoE Profit and Loss return                          *
+      *                                                               *
+      *****************************************************************
+      *
+      * File description for files defined
+     FBYFCEXPPUF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS INFDS1
+     FBYPRODPPIF  E           K        DISK         KINFSR *PSSR
+     FBY3040P1O   E             50     PRINTER      KINFSR *PSSR
+     F                                              KINFDS SPOOL
+      /EJECT
+      **************************************************************************
+      *                                                               *
+      *  Indicators Used:                                             *
+      *  ~~~~~~~~~~~~~~~                                              *
+      *  40 - Print 'Status' heading in report                        *
+      *  50 - Page Overflow                                           *
+      *  89 - READ BYFCEXPP                                           *
+      *  90 - General error indicator                                 *
+      *                                                               *
+      **************************************************************************
+      *  Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Data Structure using Bank file format
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ULPGM
+     I                                      244 253 ULWSID
+     I                                      254 263 ULUSER
+      *
+      ** File information data structure (for database files only)
+     IINFDS1    E DSY2I1DSP
+      *
+      ** File information data structure (for printer files only)
+     ISPOOL       DS
+     I                                       83  92 ULSPFL
+     I                                    B 123 1240ULSNUM
+      *
+      ** First DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      *
+      /EJECT
+      *****************************************************************
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LMAIN - Report Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *****************************************************************
+      *
+      *
+      *  Report Processing
+     C                     EXSR #LMAIN
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      * #LMAIN - Report Processing                                    *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *****************************************************************
+      *
+     C           #LMAIN    BEGSR                           ** SR/#LMAIN**
+      *
+      **  Set indicators, based on run mode
+     C                     READ BYFCEXPP                 89
+     C           *IN89     DOWEQ*OFF
+      *
+      *   Process record according to run mode
+     C           ULMODE    IFEQ 'LIST'
+     C           ULMODE    OREQ 'AUDIT'
+     C           L4LCD     ANDEQBJRDNB
+     C           ULMODE    OREQ 'INTERIM'
+     C           L4LCD     ANDEQBJRDNB
+      *
+      *   Format report fields and print details
+     C                     EXSR #LREPT
+      *
+      *   If run mode is AUDIT and record deleted
+     C           ULMODE    IFEQ 'AUDIT'
+     C           L4CHTP    ANDEQ'D'
+     C           K1FCEX    DELETBYFCEXPP             90
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ BYFCEXPP                 89
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * #LREPT - Formats report fields and prints report              *
+      *                                                               *
+      * Called by: #LMAIN                                             *
+      *                                                               *
+      * Calls:                                                        *
+      *****************************************************************
+      *
+     C           #LREPT    BEGSR                           ** SR/#LREPT**
+      *
+      **  Retrieve product code narrative
+     C                     MOVE L4PCOD    LDPCOD
+     C           LDPCOD    CHAINBYPRODPP             90
+      *
+      ** Check for error
+     C           *IN90     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 02 *
+     C                     MOVEL'BYPRODPP'DBFILE           ************
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Move physical file fields into print file fields
+     C                     MOVE L4FCTP    L#FCTP
+     C                     MOVE L4LINS    L#LINS
+     C                     MOVE L4PCOD    L#PCOD
+     C                     MOVE LDDESC    L#DESC
+      *                                                                   LLN021
+     C           LLN021    IFEQ 'Y'                                       LLN021
+      *                                                                   LLN021
+     C                     MOVE L4PLCG    L#PLCG                          LLN021
+     C                     MOVE *BLANKS   L#DES2                          LLN021
+     C           L4PLCG    IFNE 0                                         LLN021
+      *   Retrieve product code narrative                                 LLN021
+     C                     MOVE L4PLCG    LDPCOD                          LLN021
+     C           LDPCOD    CHAINBYPRODPP             90                   LLN021
+     C           *IN90     IFEQ *ON                                       LLN021
+     C           *LOCK     IN   LDA                                       LLN021
+     C                     MOVELULPGM     DBPGM            ************   LLN021
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 11 *   LLN021
+     C                     MOVEL'BYPRODPP'DBFILE           ************   LLN021
+     C                     Z-ADD11        DBASE                           LLN021
+     C                     OUT  LDA                                       LLN021
+     C                     EXSR *PSSR                                     LLN021
+     C                     ENDIF                                          LLN021
+     C                     MOVE LDDESC    L#DES2                          LLN021
+     C                     ENDIF                                          LLN021
+      *                                                                   LLN021
+     C                     ENDIF                                          LLN021
+      *
+      ** Report Action Code for AUDIT and INTERIM
+     C           ULMODE    IFEQ 'AUDIT  '
+     C           ULMODE    OREQ 'INTERIM'
+      *
+     C                     SELEC
+     C           L4CHTP    WHEQ 'I'
+     C                     MOVE 'Inserted'L#CHTP
+     C           L4CHTP    WHEQ 'A'
+     C                     MOVE 'Amended 'L#CHTP
+     C           L4CHTP    WHEQ 'D'
+     C                     MOVE 'Deleted 'L#CHTP
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C                     WRITEBY3040D1                   Detail
+      *
+      ** New header when page overflow indicator is on
+     C           *IN50     IFEQ *ON
+     C                     WRITEBY3040H1
+     C                     MOVE *OFF      *IN50
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       ULWRIT
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                           ** SR/#LTERM**
+      *
+      ** If no records printed, report this on print file
+     C           ULWRIT    IFNE 'Y'
+     C                     WRITEBY3040D2                   No details
+     C                     ENDIF
+      *
+     C                     WRITEBY3040F1                   Footer
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                           ** SR/#LDEFN**
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+      ** Define and initialise work fields
+     C                     Z-ADD0         ULSFNO  60       Spool file no.
+     C                     MOVE *BLANKS   ULRTCD  1        Return code
+     C                     MOVE *BLANKS   ULERRI  1        Pgm error indicator
+     C                     MOVE *BLANKS   P@RTCD  7        Return code
+     C                     MOVE *BLANKS   P@OPTN  7
+     C                     MOVE *BLANKS   ULTIME  60       System time
+     C                     MOVE *BLANKS   ULSF1   60
+     C                     MOVE *BLANKS   ULPARM  3
+     C                     MOVE *BLANKS   ULZERR  1        Error flag
+     C                     MOVE *BLANKS   ULWRIT  1        Flag: record written?
+     C                     MOVE *BLANKS   ULENTY  3
+     C                     MOVEACPY@      ULCPY@ 80        Copyright
+      *
+     C           K1FCEX    KLIST
+     C                     KFLD           L4FCTP
+     C                     KFLD           L4LINS
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULMODE  7        Run mode
+     C                     PARM           ULRSEQ  5        Report sequence
+     C                     PARM           ULRTCD           Return code
+      *
+      *  Get Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANK    P@RTCD
+     C                     PARM '*FIRST ' P@OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Check Return Code
+     C           P@RTCD    IFNE *BLANKS
+     C           BJTYLC    OREQ 'D'                        ON-DELETED
+     C           *LOCK     IN   LDA
+     C                     MOVELULPGM     DBPGM            ************
+     C                     MOVEL'*NONE'   DBKEY            * DBERR 01 *
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Ensure Report Spool File is recorded by RCF
+     C                     Z-ADDULSNUM    ULSFNO
+     C**********           CALL 'ZSFILE'                                                      LLN021
+     C**********           PARM           ULRSEQ                                              LLN021
+     C**********           PARM *BLANK    ULENTY                                              LLN021
+     C**********           PARM           ULSPFL                                              LLN021
+     C**********           PARM           ULSFNO                                              LLN021
+     C**********           PARM           ULZERR                                              LLN021
+      *
+      ** If error occured in SFILE, call error handling routine
+     C           ULZERR    IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Switch on 'ACTION' field in display file
+     C           ULMODE    IFEQ 'AUDIT  '
+     C           ULMODE    OREQ 'INTERIM'
+     C                     MOVE *ON       *IN40
+     C                     ENDIF
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE *ON       *IN98
+     C                     ELSE
+     C                     MOVE *OFF      *IN98
+     C                     END
+      *
+      *  Write report headings
+     C                     MOVELULMODE    L#MODE
+     C                     WRITEBY3040H1
+      *
+      **  LLN021 check                                                    LLN021
+     C                     CALL 'AOSARDR0'                                LLN021
+     C                     PARM *BLANK    P@RTCD                          LLN021
+     C                     PARM '*VERIFY' P@OPTN                          LLN021
+     C                     PARM 'LLN021'  @SARD   6                       LLN021
+      *                                                                   LLN021
+     C           P@RTCD    IFEQ *BLANK                                    LLN021
+     C                     MOVE 'Y'       LLN021  1                       LLN021
+     C                     MOVE *ON       *IN87                           LLN021
+     C                     ELSE                                           LLN021
+     C                     MOVE 'N'       LLN021                          LLN021
+     C                     MOVE *OFF      *IN87                           LLN021
+     C                     ENDIF                                          LLN021
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 1997

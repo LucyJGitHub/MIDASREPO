@@ -1,0 +1,266 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SF PF/MUSERDD initialisation')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility Module                     *
+      *                                                               *
+      *  SF0033 - SF PF/MUSERDD Initialisation                        *
+      *                                                               *
+      *  Function:  This utility program will setup the new fields    *
+      *  (I/C)      in PF/MUSERDD .                                   *
+      *                                                               *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 239898             Date 29May06               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008  *Create    Date 15Mar99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  239898 - Applied core fix BUG11032.                          *
+      *  BUG11032 - Reporting About Users (Recompile)                 *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CGL008 - Security on Journal Entry.                          *
+      *                                                               *
+      *****************************************************************
+     FMUSER   UF  E           K        DISK         KINFSR *PSSR
+     FSF0033P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FSF0033AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /EJECT
+     ILDA       E DSLDA                         256
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM SPGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     ISPOOL1      DS
+      ** File Information Data Structure for SF0033P1
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ** File Information Data Structure for SF0033AU
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 367 3680PRTLNU
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access programs (200 long)
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P001 - Main Processing                                       *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Process PF/MUSERDD                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PRTCD   7
+      *
+     C                     EXSR SRP002
+     C                     EXSR SRP003
+      *
+     C                     MOVE *ON       *INLR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Bank ICD Access Object                 *
+      *             *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP002    BEGSR
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SF0033'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Initialise WP1OPN
+      *
+     C                     MOVE 'N'       WP1OPN  1
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Process PF/MUSERDD                                  *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP003    BEGSR
+      *
+     C                     MOVE 'N'       WMUSER  1
+     C                     Z-ADD0         WNREC   50
+      *
+     C           *LOVAL    SETLLMUSER
+     C                     READ MUSER                    20
+      *
+     C           *IN20     DOWEQ*OFF
+      *
+     C           WP1OPN    IFEQ 'N'
+     C                     MOVE 'Y'       WP1OPN
+     C                     OPEN SF0033P1
+     C                     WRITESF0033H0
+     C                     ENDIF
+      *
+     C           WMUSER    IFEQ 'N'
+     C                     MOVE 'Y'       WMUSER
+     C           PRTLN1    IFGT 50
+     C                     WRITESF0033H0
+     C                     ENDIF
+     C                     WRITESF0033H1
+     C                     WRITESF0033H2
+     C                     WRITESF0033HA
+     C                     ENDIF
+      *
+     C           PRTLN1    IFGT 55
+     C                     WRITESF0033H0
+     C                     WRITESF0033HA
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       ALACOD
+     C                     MOVE USRP      REFUSR
+     C                     MOVE 'N'       REFFLG
+     C                     MOVE 'Z'       USRLVL
+      *
+     C                     UPDATMUSERDDF
+      *
+     C                     WRITESF0033DA
+     C                     ADD  1         WNREC   50
+      *
+     C                     READ MUSER                    20
+      *
+     C                     ENDDO
+      *
+     C                     MOVE WNREC     NREC
+      *
+     C                     EXSR SRAUDT
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Database error subroutine.                           *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE '*ERROR'  PRTCD
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      ****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAUDT - Process AUDIT REPORT                                *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRAUDT    BEGSR
+      *
+     C                     OPEN SF0033AU
+     C                     WRITESF0033A0
+     C                     WRITESF0033AA
+     C                     WRITESF0033A1
+     C                     WRITESF0033A2
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001

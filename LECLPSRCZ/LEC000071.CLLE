@@ -1,0 +1,71 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Loans Amendments Extension File Take-On')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Midas Customer Lending Module                       */
+/*                                                                   */
+/*       LEC000071 - Midas LE Loans Amendments Extension File        */
+/*                   Take-On Program                                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE073  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE073 - Interest Rate Rounding                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2010')
+ 
+/** Create LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+ /** Call the take-on program */
+ 
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+             CALL       PGM(LE000071)
+             ENDDO
+ 
+ /** If error occur */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+             GOTO       CMDLBL(ABNOR)
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGVAR     VAR(&PRTCD) VALUE('*ERROR')
+ 
+ /** Send error message */
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          LEC000071 ended abnormally - see job +
+                          log') TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
+             ENDPGM

@@ -1,0 +1,765 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Performance Event Details Mnt Audit Rpt')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM4220 - Performance Events Details Maintenance Audit Report *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 15Jul96               *
+      *                 093911             Date 28Sep95               *
+     F*                 085862             Date 16Mar95               *
+     F*                 S01486             Date 09Nov94               *
+     F*                 72605              Date 23Jun94               *
+     F*                 53103              Date 10Nov93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*  093911 - CORRECT CALL TO ACCESS OBJECTS                      *
+     F*  085862 - RECOMPILED DUE TO CHANGE TO PF/PMPCAAPD             *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  72605  - OUTPUT MARKET PRICE                                 *
+     F*  53103  - CREATED FOR PERFORMANCE RECONCILIATION              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F* Performance events changed today (prefix QS,QU)
+     FPMPCPTLLIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**Bank*details*(prefix*BJ)***************************************   S01486
+     F***SDBANKPDIF**E           K        DISK         KINFSR *PSSR   UC  S01486
+     F*****************************************************************   S01486
+     F***SD*Customer*details*-*(prefix*BB)*****************************   S01486
+     F***SDCUSTL0IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F** Security details - (No prefix)
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F***SD*Currencies*details*-*(prefix*BB)***************************   S01486
+     F***SDCURRL0IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F* Performance event details maintenance audit report
+     F***PM4220P1O***E                    PRINTER      KINFSR *PSSR       S01486
+     F************                                  KINFDS DSPRT          S01486
+     FPM4220P1O   E                    PRINTER      KINFSR *PSSR      UC  S01486
+     F                                              KINFDS SPOOL          S01486
+     FPM4220AUO   E                    PRINTER      KINFSR *PSSR          S01486
+     F                                              KINFDS SPOOLU         S01486
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F*                                                                  *
+     F*  ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F*                  ------------------------                        *
+     F*        01 -  Record format PMPCAAP0 in file PMPCPTLL             *
+     F*        02 -  Record format PMPTRAP0 in file PMPCPTLL             *
+     F*                                                                  *
+     F*        30 -  Error on file       for OPEN/CLOSE                  *
+     F*        31 -  Error/EOF on file   for READ                        *
+     F*        32 -  Error/NR on file    for CHAIN (SDCUSTL0)            *
+     F*        33 -  Error/NR on file    for CHAIN (SDCURRL0)            *
+     F*        38 -  Found array element for LOKUP                       *
+     F*                                                                  *
+     F*        U7 -  Database error                                      *
+     F*        U8 -  File control error                                  *
+     F*        LR -  End of program                                      *
+     F*                                                                  *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E*    Array for COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E*    Table for Last change type
+     E                    TABCHT  1   3  1   TABCHX  6
+     E*
+     E*    Array ZSEDIT
+      /COPY ZSRSRC,ZSEDITZ1
+     E********************************************************************
+     E*
+     E/EJECT
+     I********************************************************************
+     I*
+     I*  Record-identification indicators for LF/PMPCPTLL
+     IPMPCAAP0    01
+     I*
+     IPMPTRAP0    02
+     I*
+     I*  Data structure for ZSEDIT
+      /COPY ZSRSRC,ZSEDITZ2
+     I************                                                        S01486
+     I***Information*area*for*PRTF*(overflow*+*last*line)**************   S01486
+     I***DSPRT*******DS                                                   S01486
+     I************                        B 188 1890SSOFL                 S01486
+     I************                        B 367 3680SSLSL                 S01486
+     I*                                                                   S01486
+     I** Information Data Area for PM4220P1                               S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     I                                    B 188 1890SSOFL                 S01486
+     I                                    B 367 3680SSLSL                 S01486
+     I*                                                                   S01486
+     I** Information Data Area for PM4220AU                               S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I                                    B 367 3680LINE1                 S01486
+     I*
+     I* Data structure for compilation - COPYRIGHT insertion
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I* LOCAL DATA AREA for data base errors
+     I*
+     I**LDA********UDS                            256                     S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBFLD
+     I**************************************134 141 DBFILE                S01486
+     I                                      132 141 DBFILE                S01486
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I**************************************181 183 DBASE                 S01486
+     I                                      181 1830DBASE                 S01486
+      *
+      **  Program status Data structure
+     IDSPGM     ESDSY2PGDSP
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** External DS for Bank Details                                     S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** External DS for Customer Details                                 S01486
+     I*                                                                   S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** External DS for Currency Details                                 S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              CPM005
+      *                                                                   CPM005
+      ** External DS for Portfolio Management Details                     CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 S01486
+     I** First DS for Access Programs, short data structure               S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I** Second DS for Access Programs, long data structure               S01486
+     I*                                                                   S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - Main processing routine                               *
+      * #INIT    - Initial processing                                    *
+      * #REPP    - Report processing                                     *
+      * #ASGN1   - Assign fields from record PMPCAAP0 (prefix QS)        *
+      * #ASGN2   - Assign fields from record PMPTRAP0 (prefix QU)        *
+      * ZSEDIT   - Inserting decimal point and sign into numeric field   *
+      **#DBERR***-*Database*error**************************************   S01486
+      * *PSSR    - File/program exeption handler                         *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      * MAIN     - Main processing routine                             ***
+      ********************************************************************
+      *
+      ** Initial processing
+     C                     EXSR #INIT
+      *
+      ** Report processing
+     C                     EXSR #REPP
+      *
+      ** Check Overflow print line
+     C           SSOFL     SUB  SSLSL     WWREST  40
+     C           WWREST    IFLE 3
+     C                     WRITEPM4220H
+     C                     ENDIF
+      *
+      ** Write END OF REPORT
+     C                     WRITEPM4220E
+     C                     CLOSEPM4220P1                                  S01486
+      *
+      ** END PROGRAM **
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - Initial processing                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **#DBERR***-*Database*error**************************************   S01486
+      * #REPP    - Report processing                                     *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - Main processing routine                               *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+      *
+      ***Assign*fields*from*SDS****************************************   S01486
+     C***********          CLEARDBFLD                                     S01486
+     C*                                                                   S01486
+     C**  Prepare LDA.                                                    S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD0         DBASE                           S01486
+     C                     MOVE *BLANKS   DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     MOVEL##PGM     DBPGM
+     C                     OUT  LDA                                       S01486
+      *
+      * Access ICD file SDBANKPD
+     C***********          OPEN SDBANKPD               30                 S01486
+     C***********          READ SDBANKPD               3131               S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C************IN31     IFEQ *ON                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDBANKPD'DBFILE                          S01486
+     C                     MOVE 'SDBANKPD'DBFILE                          S01486
+     C                     MOVEL'READ'    DBKEY            *************
+     C                     MOVE '001'     DBASE            * DBERR 001 *
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR #WRHAU                                    S01486
+     C                     EXSR #WRTAU                                    S01486
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ELSE                                           S01486
+     C                     EXSR #WRHAU                                    S01486
+     C                     ENDIF
+      *
+      *  Assign fields and close file
+     C                     MOVE BJURPT    RRURPT
+     C                     MOVE BJMRDT    RRMRDT
+     C***********          CLOSESDBANKPD               30                 S01486
+      *                                                                   CPM005
+      ** Access the Portfolio Management Details                          CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOPORTR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST ' WOPTN   7                       CPM005
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM005
+      *                                                                   CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD006       DBASE            ***************CPM005
+     C                     MOVE 'SDPORTPD'DBFILE           * DB ERROR 06 *CPM005
+     C                     MOVEL'*FIRST'  DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR #WRHAU                                    CPM005
+     C                     EXSR #WRTAU                                    CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     ENDIF                                          CPM005
+      *
+      * Key list for file PMPCPTLL (full key)
+     C           KEYFUL    KLIST
+     C                     KFLD           WWLCD
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFR
+     C                     KFLD           WWEVRF
+      *
+      * Key list for file PMPCPTLL (only Last change date)
+     C           KEYONE    KLIST
+     C                     KFLD           WWLCD
+      *
+      * Set KEYFUL to  Run day no. (SDBANKPD)
+     C                     Z-ADDBJRDNB    WWLCD   50
+     C**********           Z-ADD*LOVAL    WWCNUM  60                                          CSD027
+     C                     MOVE *LOVAL    WWCNUM  6                                           CSD027
+     C                     MOVE *LOVAL    WWPTFR  4
+     C                     Z-ADD*LOVAL    WWEVRF  70
+      *
+      * Set lower limit PMPCPTLL using KEYFUL
+     C           KEYFUL    SETLLPMPCPTLL
+      *
+      *  Read first record in PMPCPTLL
+     C           KEYONE    READEPMPCPTLL               3131
+      *
+      *  No record found - Print End of report, terminate pgm
+     C           *IN31     IFEQ *ON
+     C***********          WRITEPM4220H                                   S01486
+     C***********          WRITEPM4220N                                   S01486
+     C***********          WRITEPM4220E                                   S01486
+     C                     WRITEPM4220ND                                  S01486
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ELSE                                           S01486
+     C                     OPEN PM4220P1                                  S01486
+     C                     MOVE '1'       *IN40                           S01486
+     C                     Z-ADD0         PAGE                            S01486
+     C*                                                                   S01486
+     C**  Ensure that detail spooled file is recorded by RCF.             S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           RSEQ                            S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM *BLANK    ZSERR   1                       S01486
+     C*                                                                   S01486
+     C**  If error during ZSFILE processing, return to calling program.   S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #REPP    - Report processing                                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #ASGN1   - Assign fields from record PMPCAAP0 (prefix QS)        *
+      * #ASGN2   - Assign fields from record PMPTRAP0 (prefix QU)        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - Main processing routine                               *
+      *                                                                  *
+      ********************************************************************
+     C           #REPP     BEGSR
+      *
+      * Cycle while records read from PMPCPTLL
+      *  and Last change date *EQ Run day no. (SDBANKPD)
+     C           *IN31     DOWEQ*OFF
+      *
+      *  Read format PMPCAAP0
+     C           *IN01     IFEQ *ON
+     C                     EXSR #ASGN1
+     C                     ENDIF
+      *
+      *  Read format PMPTRAP0
+     C           *IN02     IFEQ *ON
+     C                     EXSR #ASGN2
+     C                     ENDIF
+      *
+      *  Assign last change date
+     C                     MOVELBJMRDT    RRLCD
+      *
+      ** Check Overflow print line
+     C           SSOFL     SUB  SSLSL     WWREST  40
+     C           WWREST    IFLE 1
+     C                     WRITEPM4220H
+     C                     ENDIF
+      *
+      *  Write details
+     C                     WRITEPM4220D
+      *
+      *  Set indicators *IN01, *IN02 to *OFF
+     C                     MOVE *OFF      *IN01
+     C                     MOVE *OFF      *IN02
+      *
+      *  Read next record in PMPCPTLL
+     C           KEYONE    READEPMPCPTLL               3131
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #ASGN1   - Assign fields from record PMPCAAP0 (prefix QS)        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **#DBERR***-*Database*error**************************************   S01486
+      * ZSEDIT   - Inserting decimal point and sign into numeric field   *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #REPP    - Report processing                                     *
+      *                                                                  *
+      ********************************************************************
+     C           #ASGN1    BEGSR
+      *
+      *  Assign fields to output
+     C                     MOVELQSCNUM    RRCNUM
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           QSPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C           QSPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C           QSPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVELQSPTFR    RRPTFR
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVELQSEVRF    RREVRF
+     C                     MOVELQSPFMC    RRPFMC
+     C                     MOVELQSCPTC    RRCPTC
+     C                     MOVELQSAPRA    RRAPRA
+     C                     MOVELQSUSER    RRUSER
+     C                     MOVE *BLANKS   RRMKTP                          72605
+      *
+      *  Find Customer Shortname from LF/SDCUSTL0
+     C***********          MOVELQSCNUM    WWCUST  6                       093911
+     C                     MOVELQSCNUM    WWCUST 10                       093911
+     C***********WWCUST    CHAINSDCUSTL0             3232                 S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C***********          PARM WWCUST    P@KEY6  6                 S01486093911
+     C                     PARM WWCUST    P@KY10 10                       093911
+     C                     PARM *BLANKS   P@KYST  7                       093911
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+      *   No record found - DB error + terminate pgm
+     C************IN32     IFEQ *ON                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDCUSTL0'DBFILE                          S01486
+     C                     MOVE 'SDCUSTPD'DBFILE                          S01486
+     C                     MOVEL'CHAIN'   DBKEY            *************
+     C                     MOVE '002'     DBASE            * DBERR 002 *
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR #WRTAU                                    S01486
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+     C                     MOVELBBCSSN    RRCSSN
+      *
+      *  Find Currency decimal places from LF/SDCURRL0
+     C***********QSCCY     CHAINSDCURRL0             3333                 S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM QSCCY     P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+      *   No record found - DB error + terminate pgm
+     C************IN33     IFEQ *ON                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDCURRL0'DBFILE                          S01486
+     C                     MOVE 'SDCURRPD'DBFILE                          S01486
+     C                     MOVEL'CHAIN'   DBKEY            *************
+     C                     MOVE '003'     DBASE            * DBERR 003 *
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR #WRTAU                                    S01486
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+      *
+      *  Edit Event amount curr.decimal places
+     C                     Z-ADDQSCSHA    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RREVAM
+      *
+      *  Assign type of last change
+     C           QSCHTP    LOKUPTABCHT    TABCHX         38
+     C           *IN38     IFEQ *ON
+     C                     MOVELTABCHX    RRCHTX
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRCHTX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #ASGN2   - Assign fields from record PMPTRAP0 (prefix QU)        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **#DBERR***-*Database*error**************************************   S01486
+      * ZSEDIT   - Inserting decimal point and sign into numeric field   *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #REPP    - Report processing                                     *
+      *                                                                  *
+      ********************************************************************
+     C           #ASGN2    BEGSR
+      *
+      *  Assign fields to output
+     C                     MOVELQUCNUM    RRCNUM
+      *                                                                   CPM005
+     C                     SELEC                                          CPM005
+     C           QSPTFR    WHEQ '9997'                                    CPM005
+     C                     MOVE FCR997    RRPTFR                          CPM005
+     C           QSPTFR    WHEQ '9998'                                    CPM005
+     C                     MOVE FCR998    RRPTFR                          CPM005
+     C           QSPTFR    WHEQ '9999'                                    CPM005
+     C                     MOVE FCR999    RRPTFR                          CPM005
+     C                     OTHER                                          CPM005
+     C                     MOVELQUPTFR    RRPTFR
+     C                     ENDSL                                          CPM005
+      *                                                                   CPM005
+     C                     MOVELQUEVRF    RREVRF
+     C                     MOVELQUPFMC    RRPFMC
+     C                     MOVELQUCPTC    RRCPTC
+     C                     MOVEL*BLANKS   RRAPRA
+     C                     MOVELQUUSER    RRUSER
+      *
+      *  Find Customer Shortname from LF/SDCUSTL0
+     C***********          MOVELQUCNUM    WWCUST  6                       093911
+     C                     MOVELQUCNUM    WWCUST 10                       093911
+     C***********WWCUST    CHAINSDCUSTL0             3232                 S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C***********          PARM WWCUST    P@KEY6  6                 S01486093911
+     C                     PARM WWCUST    P@KY10 10                       093911
+     C                     PARM *BLANKS   P@KYST  7                       093911
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C*                                                                   S01486
+      *   No record found - DB error + terminate pgm
+     C************IN32     IFEQ *ON                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDCUSTL0'DBFILE                          S01486
+     C                     MOVE 'SDCUSTPD'DBFILE                          S01486
+     C                     MOVEL'CHAIN'   DBKEY            *************
+     C                     MOVE '004'     DBASE            * DBERR 004 *
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR #WRTAU                                    S01486
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+     C                     MOVELBBCSSN    RRCSSN
+      *
+      *  For changes to security nominal obtain security nominal
+      *  decimal places from LF/SECTY
+     C           QUMODI    IFEQ 'SE'
+     C           QUPFMC    ANDEQ' N'
+      *
+     C           QUTDSS    CHAINSECTY                3333
+      *   No record found - DB error + terminate pgm
+     C           *IN33     IFEQ *ON
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SECTY   'DBFILE                          S01486
+     C                     MOVE 'SECTY   'DBFILE                          S01486
+     C                     MOVELQUTDSS    DBKEY            *************
+     C                     MOVE '015'     DBASE            * DBERR 005 *
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR #WRTAU                                    S01486
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+      *
+     C                     Z-ADDQUTAMT    ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE *BLANKS   ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RREVAM
+      *
+     C                     ELSE
+      *
+      *  Find Currency decimal places from LF/SDCURRL0
+     C***********QUCCY     CHAINSDCURRL0             3333                 S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM QUCCY     P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+      *   No record found - DB error + terminate pgm
+     C************IN33     IFEQ *ON                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C***********          MOVEL'SDCURRL0'DBFILE                          S01486
+     C                     MOVE 'SDCURRPD'DBFILE                          S01486
+     C                     MOVEL'CHAIN'   DBKEY            *************
+     C                     MOVE '005'     DBASE            * DBERR 005 *
+     C                     OUT  LDA                        *************  S01486
+     C                     EXSR #WRTAU                                    S01486
+     C***********          EXSR #DBERR                     *************  S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF
+      *
+     C                     Z-ADDQUTAMT    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE *BLANKS   ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RREVAM
+     C                     ENDIF
+      *                                                                   72605
+      **  FORMAT MARKET PRICE                                             72605
+     C                     MOVE QUMPRC    ZFLD15                          72605
+     C                     Z-ADD8         ZDECS                           72605
+     C                     MOVE *BLANKS   ZECODE                          72605
+     C                     EXSR ZSEDIT                                    72605
+     C                     MOVE ZOUT21    RRMKTP                          72605
+      *
+      *  Assign type of last change
+     C           QUCHTP    LOKUPTABCHT    TABCHX         38
+     C           *IN38     IFEQ *ON
+     C                     MOVELTABCHX    RRCHTX
+     C                     ELSE
+     C                     MOVEL*BLANKS   RRCHTX
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************   S01486
+      *****************************************************************   S01486
+      **#DBERR***-*Database*error**************************************   S01486
+      *****************************************************************   S01486
+      **SUBROUTINE*CALLS:**********************************************   S01486
+      *****************************************************************   S01486
+      **SUBROUTINE*CALLED*FROM:****************************************   S01486
+      **#INIT****-*Initial*processing**********************************   S01486
+      **#REPP****-*Report*processing***********************************   S01486
+      **#ASGN1***-*Assign*fields*from*record*PMPCAAP0*(prefix*QS)******   S01486
+      **#ASGN2***-*Assign*fields*from*record*PMPTRAP0*(prefix*QU)******   S01486
+      *****************************************************************   S01486
+      *****************************************************************   S01486
+     C***********#DBERR    BEGSR                                          S01486
+      *****************************************************************   S01486
+     C***********          MOVE *ON       *INU7                           S01486
+     C***********          MOVE *ON       *INU8                           S01486
+     C***********          MOVE *ON       *INLR                           S01486
+     C***********          RETRN                                          S01486
+      *****************************************************************   S01486
+     C***********          ENDSR                                          S01486
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - File/program exeption handler                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * Anytime is file or program in exception
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C                     DUMP
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT                                                              S01486
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C*  #WRHAU - Print Audit Header.                                 *   S01486
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C*                                                                   S01486
+     C           #WRHAU    BEGSR                                          S01486
+     C*                                                                   S01486
+     C**  Write audit file header.                                        S01486
+     C*                                                                   S01486
+     C                     Z-ADD0         PAGE1                           S01486
+     C                     WRITEPM4220Z1                                  S01486
+     C*                                                                   S01486
+     C**  Ensure audit spooled file recorded by RCF.                      S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           RSEQ                            S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANK    ZSERR   1                       S01486
+     C*                                                                   S01486
+     C**  Error during ZSFILE processing, return to calling program.      S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+     C*****************************************************************   S01486
+      /EJECT                                                              S01486
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C*  #WRTAU - Print Audit Database Error.                         *   S01486
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C*                                                                   S01486
+     C           #WRTAU    BEGSR                                          S01486
+     C*                                                                   S01486
+     C                     MOVELDBFILE    RRFILE                          S01486
+     C                     MOVELDBKEY     RRKEY                           S01486
+     C                     MOVELDBPGM     RRPGM                           S01486
+     C                     MOVELDBASE     RRBASE                          S01486
+     C*                                                                   S01486
+     C                     WRITEPM4220ER                                  S01486
+     C*                                                                   S01486
+     C           *IN40     IFEQ '1'                                       S01486
+     C                     WRITEDBERROR                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+     C*****************************************************************   S01486
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+** CPY@ ---------------------------------------------------------------
+(c) Finastra International Limited 2001
+** TABCHT/TABCHX  for Type of last change  ----------------------------
+IINSERT
+AAMEND
+DDELETE

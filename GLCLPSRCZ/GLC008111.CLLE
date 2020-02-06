@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Stamp Tax Posting Summary')                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC008111 - Stamp Tax Posting Summary                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER049  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FROMFILE &TOFILE)
+/* */
+             DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited 2010')
+/* */
+/* DB error defintion */
+/**/
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&FROMFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOFILE) TYPE(*CHAR) LEN(10)
+/**/
+/** Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+             CHGJOB     SWS(XXXXXX00)
+/**/
+             OVRDBF     FILE(GLPSUMPD) TOFILE(&FROMFILE)
+             OVRDBF     FILE(GLVCPSPD) TOFILE(&TOFILE)
+/**/
+/** Open query with account as key */
+/**/
+             OPNQRYF    FILE((GLPSUMPD *FIRST)) FORMAT(*FILE) +
+                          KEYFLD((BRCA) (CNUM) (CCY) (ACOD) (ACSQ) +
+                          (DRCR))
+/**/
+/** Call summary program */
+/**/
+             CALL       PGM(GL008111)
+/**/
+             CLOF       OPNID(GLPSUMPD)
+             DLTOVR     FILE(GLPSUMPD)
+             DLTOVR     FILE(GLVCPSPD)
+/**/
+/** DB error  */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+             GOTO       CMDLBL(END)
+/**/
+ ABNOR:
+/**/
+             CHGJOB     SWS(XXXXXX11)
+/**/
+ END:
+             CHGVAR     VAR(&MKICPY) VALUE('(c) Finastra International +
+                          Banking Systems Ltd. 2010')
+             ENDPGM

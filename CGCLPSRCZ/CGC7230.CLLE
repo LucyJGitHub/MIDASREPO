@@ -1,0 +1,91 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas Extract Lending capitalised accounts (daily)')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       CGC7230 - Interest Scale Lending extract (Daily)            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER042  *CREATE    Date 11May11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER042 - Interest Scale Report Correspondence               */
+/*                (Upgrade of FGE178/179)                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&RUN_DATE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&NEXT_DAY) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&QRYSEL)   TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CNAM)     TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)     TYPE(*DEC)  LEN(5)
+             DCL        VAR(&STAT)     TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&MEM)      TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYFLD)   TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2011')
+ 
+             DCLF       FILE(SDBANKPD)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Set-off Database Error Switches */
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Send a message to say the component is running */
+ 
+             SNDPGMMSG  MSG('CGC7230 - Interest Scale Lending extract') +
+                          TOMSGQ(MRUNQ)
+ 
+/* Read the SDBANKPD file for the rundate and next day */
+             RCVF
+ 
+             OVRDBF     FILE(HISTSHP) SHARE(*YES)
+ 
+/*  Set the date as alpha and prepare selection string for QRYF */
+             CHGVAR     VAR(&RUN_DATE) VALUE(&BJRDNB)
+             CHGVAR     VAR(&NEXT_DAY) VALUE(&BJDNWD)
+             CHGVAR     VAR(&QRYSEL) VALUE('(VDAT *GE ' *CAT +
+                          &RUN_DATE *CAT ') *AND (VDAT *LT ' *CAT +
+                          &NEXT_DAY *CAT ') *AND (AMTP = "IN")')
+ 
+/* Open the query file with a selection */
+             OPNQRYF    FILE((HISTSHP)) QRYSLT(&QRYSEL)
+ 
+/* Call the extract program */
+             CALL       PGM(CG7230)
+ 
+/* Close the query file */
+ 
+             CLOF       OPNID(HISTSHP)
+ 
+/* Database error handling */
+ 
+             IF   COND(%SWITCH(XXXXXX11))   THEN(DO)
+                RTVDTAARA   DTAARA(LDA (134 50))   RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                    TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC7230 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ 
+/*  Logical end of the program */
+ END:        ENDPGM
+ 

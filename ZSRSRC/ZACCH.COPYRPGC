@@ -1,0 +1,133 @@
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CDE005             Date 15Oct02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 154799             Date 24Feb99               *
+      *                 115603                Date 23APR97
+      *---------------------------------------------------------------*
+      *  CDE005 - Reservation ID                                      *
+      *  154799 - Array index error                                   *
+      *           Restore DGJDNB and DGDDNB from ZSJAN and ZSDCM as   *
+      *           they may have been changed by other SR(ZF2C).       *
+      *           Applied fix 115603.                                 *
+      *   115603  - ARRAY INDEX ERROR
+      *             RESTORE DGJDNB AND DGDDNB FROM ZSJAN AND ZSDCM AS THEY MAY
+      *             HAVE BEEN CHANGED BY OTHER SR(ZF2C)
+      *****************************************************************
+     C           ZACCH     BEGSR
+      *
+      * This standard sub-routine is to be used in conjunction with
+      * the holiday standard sub-routines. Its function is to
+      * determine if the access program AOHOLS0 needs to be called and
+      * sets up the holiday record appropriately. It is common to all
+      * the new holiday sub-routines, but should only be included in
+      * a program once, using /COPY.
+      *
+      *
+      * If stored parameters from last call are not within the same
+      * bounds - ie. same ccy/location and date is within 1st. Jan &
+      * 31st. Dec of current holiday record - continue processing.
+      *
+      **
+      *Define input parameters
+      **
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C                     MOVE ZCCY      ZCCY    3
+     C                     MOVE ZLOC      ZLOC    3
+     C                     MOVE ZOPTN     ZOPTN   7
+     C*
+     C           ZOPTN     IFEQ '*FREE  '                    IF 2
+     C*
+     C                     CALL 'AOHOLS0'
+     C                     PARM *BLANK    RTNCD
+     C                     PARM           ZOPTN
+     C                     PARM ZCCY      ZZCCY
+     C                     PARM ZLOC      ZZLOC
+     C                     PARM ZDAYNO    ZZDYNO
+     C           ZHOLDS    PARM ZHOLDS    DSSDY                        B
+     C*
+     C                     ELSE                                           S01194
+     C*
+     C           ZCCY      IFNE ZSCCY                      IF 1
+     C           ZLOC      ORNE ZSLOC                       OR
+     C           ZDAYNO    ORLT ZSJAN                       OR
+     C           ZDAYNO    ORGT ZSDCM                       OR
+      *
+      * Get appropriate holiday record
+      *
+     C                     CALL 'AOHOLS0'
+     C                     PARM *BLANK    RTNCD
+     C                     PARM           ZOPTN
+     C                     PARM ZCCY      ZZCCY
+     C                     PARM ZLOC      ZZLOC
+     C                     PARM ZDAYNO    ZZDYNO  50
+     C           ZHOLDS    PARM ZHOLDS    DSSDY                        B
+      *
+      * If no record was found, assume all days in year are working
+      * days.
+      *
+     C           RTNCD     IFEQ '*NRF   '                    IF 2
+      *
+     C                     MOVE *ALL' '   ZHL
+      *
+      * Save 1st. Jan/31st. Dec dates as input date as we cannot say
+      * anything about this year in future calls.
+      *
+     C                     Z-ADDZDAYNO    ZSJAN
+     C                     Z-ADDZDAYNO    ZSDCM
+      *
+     C                     ELSE                              ELSE 2
+      *
+      * Save 1st. Jan/31st. Dec for future calls
+      *
+     C                     Z-ADDDGJDNB    ZSJAN
+     C                     Z-ADDDGDDNB    ZSDCM
+      *
+      * Left adjust the holiday array over FEB 29th if the
+      * holiday record is not for a leap year.
+      *
+     C**********           MOVE DGYRNB    Z@YR    40                      CDE005
+     C                     Z-ADDDGYRNB    Z@YR    40                      CDE005
+     C           Z@YR      DIV  4         Z@WK1   40
+     C                     MVR            Z@WK2   40
+     C*
+     C           Z@WK2     IFNE 0
+     C*
+     C                     MOVEAZHL       ZHL1
+     C                     MOVEAZHL1,61   ZHL,60
+     C*
+     C                     END
+     C*
+     C                     END                               FI 2
+      *
+      * Save currency and location for future calls. Need to save
+      * return code as well.
+      *
+     C                     MOVE ZCCY      ZSCCY
+     C                     MOVE ZLOC      ZSLOC
+     C                     MOVE RTNCD     ZSRTN
+      *
+     C                     ELSE                            ELSE 1
+      *
+      * Move saved return code back again as there may have been no
+      * record found last time.
+      *
+     C**********           Z-ADDZSJAN     DGJDNB                          115603
+     C**********           Z-ADDZSDCM     DGDDNB                          115603
+     C                     Z-ADDZSJAN     DGJDNB                          154799
+     C                     Z-ADDZSDCM     DGDDNB                          154799
+     C                     MOVE ZSRTN     RTNCD
+      *
+     C                     END                             FI 1
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT

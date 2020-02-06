@@ -1,0 +1,157 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Program for %CALL - currency conversion')
+0002 F*****************************************************************
+0004 F*                                                               *
+0003 F*    Midas - Midas/Q Module                                     *
+0004 F*                                                               *
+0005 F*    MQCVT - CONVERT AMOUNT FROM ONE CCY TO ANOTHER. TO BE USED *
+0006 F*            WITH %CALL BUILT-IN FUNCTION.                      *
+0006 F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+0008 F*                                                               *
+0010 F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CMQ001             Date 03Nov97               *
+      *                                    Date DDMmmYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CMQ001 - MidasQ rationalisation.                             *
+     F*                                                               *
+0011 F*****************************************************************
+     F*
+     F* PARAMETERS PASSED: FRA - 'FROM' AMOUNT
+     F*                    FRC - 'FROM' CCY
+     F*                    TOC - 'TO' CCY
+     F*                    TOA - 'TO' AMOUNT
+     F*
+     F* NOTE: BOTH AMOUNT FIELDS ARE 'EDITED' AMOUNTS. I.E. ALL CCYS
+     F* HAVE 2 D.P.
+     F*
+     FTABTG10 IF  E           K        DISK                           UC
+      *
+     E                    CMD     1   1 50
+      *
+      * Data structure used to store up to 30 file TABTG10  records in core
+      *
+     ICCYDS       DS                       0030
+     I                                        1   3 DSCCY
+     I                                        4  168DSSPOT
+     I                                       17  170DSMDIN
+     C           *ENTRY    PLIST
+     C                     PARM           FRA    152
+     C                     PARM           FRC     3
+     C                     PARM           TOC     3
+     C                     PARM           TOA    152
+     C* FIRST TIME ONLY, OVERRIDE & OPEN FILE
+     C           FIRST     IFEQ *BLANK
+     C                     MOVEL'N'       FIRST   1
+     C                     Z-ADD50        LEN    155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD,1
+     C                     PARM           LEN
+     C                     OPEN TABTG10
+     C                     END
+      * INITIALISE TO AMOUNT
+     C                     Z-ADD0         TOA
+      * LOOK FOR FROM CCY DETAILS IN DATA STRUCTURE IF NOT EMPTY
+     C           F$IC      IFGT 0
+     C           1         DO   F$IC      F$WK    70
+     C           F$WK      OCUR CCYDS
+      *
+     C           FRC       IFEQ DSCCY
+     C                     Z-ADDDSSPOT    SPOT
+     C                     Z-ADDDSMDIN    MDIN
+     C                     MOVE '0'       *IN99
+     C                     GOTO ENDGFR
+     C                     END
+      *
+     C                     END
+     C                     END
+      * ELSE GET DETAILS FROM FILE AND SAVE IN DATA STRUCTURE
+     C           FRC       CHAINTABTG10F             99
+      *
+     C           *IN99     IFEQ '0'
+     C                     ADD  1         F$NP    70
+     C           F$NP      IFGT 30
+     C                     Z-ADD1         F$NP
+     C                     END
+     C           F$NP      IFGT F$IC
+     C                     Z-ADDF$NP      F$IC    70
+     C                     END
+     C           F$NP      OCUR CCYDS
+     C                     MOVE CCY       DSCCY
+     C                     Z-ADDSPOT      DSSPOT
+     C                     Z-ADDMDIN      DSMDIN
+     C                     ELSE
+     C* NO FURTHER PROCESSING IF RECORD NOT FOUND
+     C                     RETRN
+     C                     END
+      *
+     C           ENDGFR    TAG
+     C*
+     C           SPOT      IFNE 1
+     C           MDIN      IFEQ 0
+     C           FRA       DIV  SPOT      WK154  154H
+     C                     ELSE
+     C           FRA       MULT SPOT      WK154     H
+     C                     END
+     C                     ELSE
+     C                     Z-ADDFRA       WK154
+     C                     END
+      * LOOK FOR TOM CCY DETAILS IN DATA STRUCTURE IF NOT EMPTY
+     C           F$IC      IFGT 0
+     C           1         DO   F$IC      F$WK    70
+     C           F$WK      OCUR CCYDS
+      *
+     C           TOC       IFEQ DSCCY
+     C                     Z-ADDDSSPOT    SPOT
+     C                     Z-ADDDSMDIN    MDIN
+     C                     MOVE '0'       *IN99
+     C                     GOTO ENDGTO
+     C                     END
+      *
+     C                     END
+     C                     END
+      * ELSE GET DETAILS FROM FILE AND SAVE IN DATA STRUCTURE
+     C           TOC       CHAINTABTG10F             99
+      *
+     C           *IN99     IFEQ '0'
+     C                     ADD  1         F$NP    70
+     C           F$NP      IFGT 30
+     C                     Z-ADD1         F$NP
+     C                     END
+     C           F$NP      IFGT F$IC
+     C                     Z-ADDF$NP      F$IC    70
+     C                     END
+     C           F$NP      OCUR CCYDS
+     C                     MOVE CCY       DSCCY
+     C                     Z-ADDSPOT      DSSPOT
+     C                     Z-ADDMDIN      DSMDIN
+     C                     ELSE
+     C* NO FURTHER PROCESSING IF RECORD NOT FOUND
+     C                     RETRN
+     C                     END
+      *
+     C           ENDGTO    TAG
+     C*
+     C           SPOT      IFNE 1
+     C           MDIN      IFEQ 0
+     C           WK154     MULT SPOT      TOA       H
+     C                     ELSE
+     C           WK154     DIV  SPOT      TOA       H
+     C                     END
+     C                     ELSE
+     C                     Z-ADDWK154     TOA
+     C                     END
+     C                     RETRN
+**   CMD - OVRDBF COMMAND
+OVRDBF FILE(TABTG10) SHARE(*NO)

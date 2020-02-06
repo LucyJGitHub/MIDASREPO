@@ -1,0 +1,59 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Monthly Hist Proc/Rprtg - End Sub-Task')     */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC1001T3  - LE Monthly History Processing and Reporting    */
+/*                  - Task Split End Sub-task                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE137 *CREATE     Date 26Oct10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE137 - LE Monthly History processing                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+/* Declare variables */
+ 
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('LEHISSERVE')
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50) +
+                          VALUE('FINISH')
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('LEC1001T3 - LE Monthly Hist Proc - End +
+                          Sub-Task') TOMSGQ(MRUNQ)
+ 
+/* Send FINISH message to main data queue */
+ 
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program LEC1001T3 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:         ENDPGM

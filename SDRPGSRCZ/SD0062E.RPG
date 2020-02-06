@@ -1,0 +1,1077 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD CI branch codes enquiry')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0062E - Branch Codes BAI record Enquiry                    *
+      *                                                               *
+      *  Function:  This program displays Branch Code BAI deatails    *
+      *                                                               *
+      *  Called By: SD0061E - Branch Codes Enquiry                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL013             Date 20Feb02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04MAY00               *
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD003             Date 27OCT97               *
+      *                 CRT003             Date 13JUN96               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL013 - MT94x Message Generation.                           *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *  CDL008 - Continuous Linked Settlement                        *
+      *           (Recompiled over changed SDBRCHPD)                  *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CRT003 - Branch Automation Interface: new screen.            *
+      *                                                               *
+      *****************************************************************
+     F*Branch Codes BAI Enquiry Initialise Program F-Spec
+     F/COPY WNCPYSRC,SD0062EFPG
+     FSD0062E#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD BAI branch codes enquiry
+      *
+     FSDBRCHL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Branch codes retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright
+     E*Branch Codes BAI Enquiry Initialise Program E-Spec
+     E/COPY WNCPYSRC,SD0062EEPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I*
+     I****/COPY QWINDSRC,GOE1DTA                                          S01229
+     I/COPY QWINDSRC,SD0060GDTA                                           S01229
+     I*Branch Codes BAI Enquiry Initialise Program I-Spec
+     I/COPY WNCPYSRC,SD0062EIPG
+      /EJECT
+     I*                                                                   CRT004
+     IDSFDY     E DSDSFDY                                                 CRT004
+     I* First DS for Access Programs, Short Data Structure                CRT004
+     I*                                                                   CRT004
+     ISCSARD    E DSSCSARDPD                                              CRT004
+     I* Data Structure for CRT004 Switch On file                          CRT004
+     I*                                                                   CRT004
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IID0001      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                              3
+      * KEY: Midas SD Branch codes retrieval
+      * I : MAP Branch code
+     I                                        1   3 P1BRCD
+     IP2PARM      DS
+      * O : MAP Work Return code
+     I                                        1   5 P2WRTC
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'STD FTR:DTLSCR New Rec/1'
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           KEY: Branch Cod
+     C           P2WRTC    PARM P2WRTC    WP0001  5        Work Return cod
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+      *
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1BRCD    IFEQ *BLANK                     Branch code
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           A8BRCD           Branch code
+      * Setup key
+     C                     MOVEL#1BRCD    A8BRCD           Branch code
+     C           KRTV      CHAIN@A8REB0              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     9932  *
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * If record does not exist, then signal error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     9932  *
+      * Send message 'Branch code            NF'
+     C                     MOVEL'USR0075' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * 00/Copy Member SD0062ESFF - Branch Codes  *
+     C*Branch Codes BAI Enquiry Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD0062ESFF
+      * USER: Load detail screen from DBF record
+      * 00/Copy Member SD0062ELDS - Branch Codes  *
+     C*Branch Codes BAI Enquiry Load Detail Screen
+     C/COPY WNCPYSRC,SD0062ELDS
+     C                     END
+      *
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+      * Select existing record
+     C                     EXSR VACKRL
+      * USER: Validate key screen
+      * 00/Copy Member SD0062EVKS - Branch Codes  *
+     C*Branch Codes BAI Enquiry Validate Key Screen
+     C/COPY WNCPYSRC,SD0062EVKS
+      * Branch code required
+     C           #1BRCD    IFEQ *BLANK                     IF
+     C                     SETON                     9932  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+     C   03                CAS            ZXEXPG
+      * HOME: Reset screen fields
+      * Process detail screen input
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process key screen input
+     C                     CAS            CFPRSC
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Enable PUTOVR
+     C                     SETON                     86
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1      99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      * 00/Copy Member SD0062EPKR - Branch Codes  *
+     C*Branch Codes BAI Enquiry Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD0062EPKR
+     C   05                MOVEL'Y'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+     C                     MOVEL'Y'       W0TRN
+      * Validate details
+     C                     EXSR DCVLDL
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * Process record:
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * CALC: Detail screen function fields
+      * 00/Copy Member SD0062ESFF - Branch Codes  *
+     C*Branch Codes BAI Enquiry Calculate Detail Func Fld
+     C/COPY WNCPYSRC,SD0062ESFF
+      * USER: Validate detail screen
+     C                     MOVEL*BLANK    P2WRTC           Work Return cod
+     C                     MOVEL'PEND'    P2WRTC           Work Return cod
+     C                     MOVEL*BLANK    P0RTN            *Return code
+     C                     EXSR ZYEXPG
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'E'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy Member SD0062EVSW - Branch Codes  *
+     C*Branch Codes BAI Enquiry Validate Detail Scrn Wdw
+     C/COPY WNCPYSRC,SD0062EVSW
+     C                     END                             *FI
+      * 00/Copy Member SD0062EVDS - Branch Codes  *
+     C*Branch Codes BAI Enquiry Validate Detail Screen
+     C/COPY WNCPYSRC,SD0062EVDS
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * USER: Perform confirmed action
+      * 00/Copy Member SD0062EPCA - Branch Codes  *
+     C*Branch Codes BAI Enquiry Perform Confrimed Action
+     C/COPY WNCPYSRC,SD0062EPCA
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * USER: Process command keys
+      * 00/Copy Member SD0062EPCK - Branch Codes  *
+     C*Branch Codes BAI Enquiry Process Command Keys
+     C/COPY WNCPYSRC,SD0062EPCK
+      * Quit if error signalled
+     C   99                GOTO EBEXIT
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P1BRCD    IFEQ *BLANK                     Branch code
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     MOVEL*BLANK    #PWRTC           Work Return cod
+     C**********           Z-ADD*ZERO     #1SYCU           Synd Agent-Cust                    CSD027
+     C                     MOVE *BLANKS   #1SYCU           Synd Agent-Cust                    CSD027
+     C                     MOVEL*BLANK    #1MQSM           MQ for Sent Mes
+     C                     MOVEL*BLANK    #1MQRT           MQ for Returned
+     C                     MOVEL*BLANK    #1MQBU           MQ for Bulk Tra
+     C                     MOVEL*BLANK    #1MQDF           MQ for Drip Fee
+     C                     MOVEL*BLANK    #1TIBR           TI Branch Numbe
+     C                     MOVEL*BLANK    #1TIDS           TI Departmental
+     C                     MOVEL*BLANK    #1BRA1           TI Brch Name an
+     C                     MOVEL*BLANK    #1BRA2           TI Brch Name an
+     C                     MOVEL*BLANK    #1BRA3           TI Brch Name an
+     C                     MOVEL*BLANK    #1BRA4           TI Brch Name an
+     C                     MOVEL*BLANK    #1BRA5           TI Brch Name an
+     C                     MOVEL*BLANK    #1BRNB           TI Branch Telep
+     C                     MOVEL*BLANK    #1CMCD           Company Code
+     C                     MOVEL*BLANK    #1LCCD           Location Code
+     C                     MOVEL*BLANK    #1DFAC           Due From A/c
+     C                     MOVEL*BLANK    #1DTAC           Due To A/c
+     C                     MOVEL*BLANK    #1BICN           Branch Internal
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     MOVEL*BLANK    #1GBCD           Global Branch C
+     C                     MOVEL*BLANK    #1BRSN           Branch Shortnam
+     C                     MOVEL*BLANK    #1RECI           Record Id
+     C                     MOVEL*BLANK    #1BTID           Branch TID Addr
+     C                     Z-ADD*ZERO     #1STCD           Sort Code
+     C                     MOVEL*BLANK    #1RDFC           Round Down Inte
+     C                     MOVEL*BLANK    #1OGID           Midas Export Va
+     C                     MOVEL*BLANK    #1PCSS           PC Subsystem
+     C                     MOVEL*BLANK    #1BTWN           Branch Town
+     C                     MOVEL*BLANK    #1BRNM           Branch Name
+     C                     MOVEL*BLANK    #1BRST           Branch Status
+     C                     Z-ADD*ZERO     #1SUOP           Sunday Opening
+     C                     Z-ADD*ZERO     #1SUCL           Sunday Closing
+     C                     MOVEL*BLANK    #1SUOV           Sunday Times Ov
+     C                     Z-ADD*ZERO     #1MOOP           Monday Opening
+     C                     Z-ADD*ZERO     #1MOCL           Monday Closing
+     C                     MOVEL*BLANK    #1MOOV           Monday Times Ov
+     C                     Z-ADD*ZERO     #1TUOP           Tuesday Opening
+     C                     Z-ADD*ZERO     #1TUCL           Tuesday Closing
+     C                     MOVEL*BLANK    #1TUOV           Tuesday Times O
+     C                     Z-ADD*ZERO     #1WEOP           Wednesday Openi
+     C                     Z-ADD*ZERO     #1WECL           Wednesday Closi
+     C                     MOVEL*BLANK    #1WEOV           Wednesday Times
+     C                     Z-ADD*ZERO     #1THOP           Thursday Openin
+     C                     Z-ADD*ZERO     #1THCL           Thursday Closin
+     C                     MOVEL*BLANK    #1THOV           Thursday Times
+     C                     Z-ADD*ZERO     #1FYOP           Friday Opening
+     C                     Z-ADD*ZERO     #1FYCL           Friday Closing
+     C                     MOVEL*BLANK    #1FYOV           Friday Times Ov
+     C                     Z-ADD*ZERO     #1SAOP           Saturday Openin
+     C                     Z-ADD*ZERO     #1SACL           Saturday Closin
+     C                     MOVEL*BLANK    #1SAOV           Saturday Times
+     C           CRT004    IFEQ 'Y'                                       CRT004
+     C                     MOVEL*BLANK    #1LLIS           TCP/IP ListenerCRT004
+     C                     Z-ADD*ZERO     #1TCPP           TCP/IP Port NumCRT004
+     C                     ENDIF                                          CRT004
+     C                     Z-ADD*ZEROS    #1TMOF           Time Offset    CGL013
+     C                     MOVEL*BLANK    #1SIGN           Time Offset SigCGL013
+     C                     Z-ADD*ZEROS    #1STOF           Syst Time OffseCGL013
+     C                     MOVEL*BLANK    #1SSIN           Syst Time Of SiCGL013
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @A8REB0 fields to screen
+      *================================================================
+     C**********           Z-ADDA8SYCU    #1SYCU           Synd Agent-Cust                    CSD027
+     C                     MOVE A8SYCU    #1SYCU           Synd Agent-Cust                    CSD027
+     C                     MOVELA8MQSM    #1MQSM           MQ for Sent Mes
+     C                     MOVELA8MQRT    #1MQRT           MQ for Returned
+     C                     MOVELA8MQBU    #1MQBU           MQ for Bulk Tra
+     C                     MOVELA8MQDF    #1MQDF           MQ for Drip Fee
+     C                     MOVELA8TIBR    #1TIBR           TI Branch Numbe
+     C                     MOVELA8TIDS    #1TIDS           TI Departmental
+     C                     MOVELA8BRA1    #1BRA1           TI Brch Name an
+     C                     MOVELA8BRA2    #1BRA2           TI Brch Name an
+     C                     MOVELA8BRA3    #1BRA3           TI Brch Name an
+     C                     MOVELA8BRA4    #1BRA4           TI Brch Name an
+     C                     MOVELA8BRA5    #1BRA5           TI Brch Name an
+     C                     MOVELA8BRNB    #1BRNB           TI Branch Telep
+     C                     MOVELA8CMCD    #1CMCD           Company Code
+     C                     MOVELA8LCCD    #1LCCD           Location Code
+     C                     MOVELA8DFAC    #1DFAC           Due From A/c
+     C                     MOVELA8DTAC    #1DTAC           Due To A/c
+     C                     MOVELA8BICN    #1BICN           Branch Internal
+     C                     Z-ADDA8LCD     #1LCD            Last Change Dat
+     C                     MOVELA8TYLC    #1TYLC           Type of Last Ch
+     C                     MOVELA8GBCD    #1GBCD           Global Branch C
+     C                     MOVELA8BRSN    #1BRSN           Branch Shortnam
+     C                     MOVELA8RECI    #1RECI           Record Id
+     C                     MOVELA8BTID    #1BTID           Branch TID Addr
+     C                     Z-ADDA8STCD    #1STCD           Sort Code
+     C                     MOVELA8RDFC    #1RDFC           Round Down Inte
+     C                     MOVELA8OGID    #1OGID           Midas Export Va
+     C                     MOVELA8PCSS    #1PCSS           PC Subsystem
+     C                     MOVELA8BTWN    #1BTWN           Branch Town
+     C                     MOVELA8BRCD    #1BRCD           Branch code
+     C                     MOVELA8BRNM    #1BRNM           Branch Name
+     C                     MOVELA8BRST    #1BRST           Branch Status
+     C                     Z-ADDA8SUOP    #1SUOP           Sunday Opening
+     C                     Z-ADDA8SUCL    #1SUCL           Sunday Closing
+     C                     MOVELA8SUOV    #1SUOV           Sunday Times Ov
+     C                     Z-ADDA8MOOP    #1MOOP           Monday Opening
+     C                     Z-ADDA8MOCL    #1MOCL           Monday Closing
+     C                     MOVELA8MOOV    #1MOOV           Monday Times Ov
+     C                     Z-ADDA8TUOP    #1TUOP           Tuesday Opening
+     C                     Z-ADDA8TUCL    #1TUCL           Tuesday Closing
+     C                     MOVELA8TUOV    #1TUOV           Tuesday Times O
+     C                     Z-ADDA8WEOP    #1WEOP           Wednesday Openi
+     C                     Z-ADDA8WECL    #1WECL           Wednesday Closi
+     C                     MOVELA8WEOV    #1WEOV           Wednesday Times
+     C                     Z-ADDA8THOP    #1THOP           Thursday Openin
+     C                     Z-ADDA8THCL    #1THCL           Thursday Closin
+     C                     MOVELA8THOV    #1THOV           Thursday Times
+     C                     Z-ADDA8FYOP    #1FYOP           Friday Opening
+     C                     Z-ADDA8FYCL    #1FYCL           Friday Closing
+     C                     MOVELA8FYOV    #1FYOV           Friday Times Ov
+     C                     Z-ADDA8SAOP    #1SAOP           Saturday Openin
+     C                     Z-ADDA8SACL    #1SACL           Saturday Closin
+     C                     MOVELA8SAOV    #1SAOV           Saturday Times
+     C           CRT004    IFEQ 'Y'                                       CRT004
+     C                     MOVELA8LLIS    #1LLIS           TCP/IP ListenerCRT004
+     C                     Z-ADDA8TCPP    #1TCPP           TCP/IP Port NumCRT004
+     C                     ENDIF                                          CRT004
+     C                     Z-ADDA8TMOF    #1TMOF           Time Offset    CGL013
+     C                     MOVELA8SIGN    #1SIGN           Time Offset SigCGL013
+     C                     Z-ADDA8STOF    #1STOF           Syst Time OffseCGL013
+     C                     MOVELA8SSIN    #1SSIN           Syst Time Of SiCGL013
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVEL*BLANK    #PWRTC           Work Return cod
+     C                     MOVELP1BRCD    #1BRCD           Branch code
+      * USER: Load key screen
+      * 00/Copy Member SD0062ELKS - Branch Codes  *
+     C*Branch Codes BAI Enquiry Load Key Screen
+     C/COPY WNCPYSRC,SD0062ELKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Get 'Window required' ind - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSA     CHAIN@BGREC8              90    *
+      * Data record not found
+     C   90                MOVEL'USR0096' W0RTN   7
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+      * CASE: DB1.Window processing requir. is Yes
+     C           BGWDPR    IFEQ 'Y'                        *IF
+     C                     MOVEL'Y'       WUWDPR           Window processi
+     C                     END                             *FI
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         UASUBR    BEGSR
+      *================================================================
+      * Set up Detail Screen Footer
+      *================================================================
+      * Setup message data for message
+      * Retrieve message STD FTR:DTLSCR New Rec/1
+     C                     MOVELZADFMF    ZAMSGF
+     C                     CALL 'Y2RVMGC'              90  *
+     C                     PARM *BLANK    W0RTN   7        Return code
+     C                     PARM 'USR2919' ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C           WUSFT1    PARM           W0MTX 132        Returned messag
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSGF
+      * Move to Single Footer - Standard Functions  *
+     C                     MOVELWUSFT1    ##CTX1                          S01229
+      *================================================================
+     CSR         UAEXIT    ENDSR
+      /EJECT
+     CSR         VACKRL    BEGSR
+      *================================================================
+      * Select existing record
+      *================================================================
+      * Name search required?
+     C                     MOVEL#1BRCD    WK1X01  1
+     C           WK1X01    IFEQ '?'                        Branch code
+     W* Y2W0053 - One or more arguments defaulted to available contexts
+      * Field '(DTL) #1BRCD' defaulted for 'Branch code'.
+     C                     CALL 'SD0061S'              90  Select Branch C
+     C                     PARM *BLANK    W0RTN   7
+     C           #1BRCD    PARM #1BRCD    WQ0001  3        Branch code
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0061S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'Y2U0016'
+     C                     SETON                     99    *
+     C                     END
+      * Defer confirm
+     C                     MOVEL'Y'       W0DCF   1
+     C                     END
+      *================================================================
+     CSR         VAEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+      * 00/Copy Member SD0062EEPP - Branch Codes  *
+     C*Branch Codes BAI Enquiry Exit Program Processing
+     C/COPY WNCPYSRC,SD0062EEPP
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field STD FTR 1
+     C                     MOVEL*BLANK    WUSFT1 78
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+     C*                                                                   CRT004
+     C** Check if switchable feature CRT004 is switched on                CRT004
+     C*                                                                   CRT004
+     C                     CALL 'AOSARDR0'                                CRT004
+     C                     PARM *BLANKS   @RTCD   7                       CRT004
+     C                     PARM '*VERIFY' @OPTN   7                       CRT004
+     C                     PARM 'CRT004'  @SARD   6                       CRT004
+     C           SCSARD    PARM SCSARD    DSFDY                           CRT004
+     C*                                                                   CRT004
+     C           @RTCD     IFNE *BLANK                                    CRT004
+     C           @RTCD     ANDNE'*NRF   '                                 CRT004
+     C                     MOVEL'Y2U0032' W0RTN                           CRT004
+     C                     MOVEL*BLANKS   W0CLPG 10                       CRT004
+     C                     MOVEL'AOSARDR0'W0CLPG                          CRT004
+      * Send message '*Error occured on CALL...'                          CRT004
+     C                     MOVEL'Y2U0032' ZAMSID                          CRT004
+     C                     MOVEL'Y2USRMSG'ZAMSGF                          CRT004
+     C                     MOVELW0CLPG    ZAMSDA           Message data   CRT004
+     C                     EXSR ZASNMS                                    CRT004
+     C                     END                                            CRT004
+     C*                                                                   CRT004
+     C           @RTCD     IFEQ *BLANKS                                   CRT004
+     C                     MOVE 'Y'       CRT004  1                       CRT004
+     C                     MOVE *ON       *IN80                           CRT004
+     C                     ELSE                                           CRT004
+     C                     MOVE 'N'       CRT004                          CRT004
+     C                     MOVE *OFF      *IN80                           CRT004
+     C                     END                                            CRT004
+      * Define *Synon program work fields
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+      * Open files
+     C                     OPEN SD0062E#
+     C                     OPEN SDBRCHL1
+     C                     OPEN SDMMODL1
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0062E Precompiler - Branch Codes  *
+      * Copyright Statement - Standard Functions  * copyright
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Set up Detail Screen Footer
+     C                     EXSR UASUBR                     Set up Detail S
+      * Get 'Window required' ind - MIDAS Modules  *
+     C                     EXSR SARVGN
+      * Data Structure Branches - Branch Codes  *
+      * 00/Copy Member SD0062EFPG - Branch Codes  *
+      * 00/Copy Member SD0062EEPG - Branch Codes  *
+      * 00/Copy Member SD0062EIPG - Branch Codes  *
+      * 00/Copy Member SD0062ECPG - Branch Codes  *
+     C*Branch Codes BAI Enquiry Initialise Program C-Spec
+     C/COPY WNCPYSRC,SD0062ECPG
+      * 00/Copy Member SD0062EOPG - Branch Codes  *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0062EPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0062EPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0062EPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*Branch Codes BAI Enquiry Initialise Program O-Spec
+     O/COPY WNCPYSRC,SD0062EOPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

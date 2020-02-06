@@ -1,0 +1,817 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Customer Selection')                          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM5018 - CUSTOMER SELECTION SCREEN                           *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 29Jul96               *
+      *                 085817             Date 13Mar95               *
+     F*                 085797             Date 06Mar95               *
+     F*                 083547             DATE 20FEB95               *
+     F*                 S01486             DATE 05AUG94               *
+     F*                 056986             DATE 12JUN93               *
+     F*                 S01313             DATE 19MAY92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           Just Recompiled because of PM File(s) changes       *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  085797 - Move branch code in LDA                             *
+     F*  083547 - Correcting Account Officer name on MUSERDD          *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  056986 - FIELDS REMOVED FROM FILE                            *
+     F*  S01313 - RECOMPILED FOR PORTFOLIO PERFORMANCE                *
+     F*  WRITTEN FOR SAR 91/08 - POOL SECURITIES TRANSACTIONS         *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PREFIX*'BJ'******************************************************S01486
+     F***********                                                         S01486
+     F***SDLANGL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***********                                                         S01486
+     F***SDACOFL1IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PREFIX*'AZ'******************************************************S01486
+     F***********                                                         S01486
+     F***SDPLCSL2IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PREFIX*'QB'******************************************************S01486
+     F**
+     FMUSER   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F***********                                                         S01486
+     F***SDPORTL1IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***PREFIX 'P9'******************************************************S01486
+     F**                                                                  S01486
+     F***PMPORTPPIF**E           K        DISK                            S01486
+     FPMPORTPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F** PREFIX 'PN' **
+     F**
+     FPMSBPDPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F** PREFIX 'OR' **
+     F**
+     F*
+     F***PM5018DDCF**E                    WORKSTN                         S01486
+     FPM5018DFCF  E                    WORKSTN                            S01486
+     F                                              KINFDS FIDS01
+     F******************************************************************
+     F**
+     F** FUNCTION OF INDICATORS
+     F**
+     F******************************************************************
+     F**
+     F** LR      : END OF PROGRAM
+     F**
+     F** U7      : DATA BASE ERROR
+     F** U8      : DATA BASE ERROR
+     F** KC      : EXIT OF PROGRAM
+     F**
+     F***70******:*READ*FILE*LF/SDBANKL1**********************************S01486
+     F***71******:*CHAIN*ON*FILE*LF/SDBANKL1******************************S01486
+     F***72******:*CHAIN*ON*FILE*LF/SDPLCSL2******************************S01486
+     F***73******:*READ*FILE*LF/SDPORTTL1*********************************S01486
+     F***74******:*CHAIN*ON*FILE*LF/SDLANGL0******************************S01486
+     F***75******:*CHAIN*ON*FILE*LF/SDACOFL1******************************S01486
+     F**
+     F** 80      : WORK INDICATOR
+     F**
+     F******************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+     E**
+     E                    CPY@    1   1 80
+     I******************************************************************
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+     I***EXTERNAL*FORMAT*FOR*GROUP*DATA*AREA******************************S01486
+     I** EXTERNAL FORMAT FOR LOCAL DATA AREA                              S01486
+     I**
+     I***WWGDA*****E*DSPMGRDAPP                                           S01486
+     I**
+     I***WWLDA*****E*DSPMLDAPP                                            S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     I**
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I*                                                                   S01486
+     IRUNDAT      DS                                                      S01486
+     I** DATA STRUCTURE FOR MULTIBRANCH INDICATOR USING RUNDAT.           S01486
+     I                                       13  13 MBIN                  S01486
+     I*
+     I** FILE INFORMATION DATA STRUCTURE
+     I*
+     IFIDS01      DS
+     I                                    B 378 3790DSLRR2
+     I*                                                                   S01486
+     ISDACOF    E DSSDACOFPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR ACCOUNT OFFICER DETAILS                  S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR BANK DETAILS                             S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR CUSTOMER DETAILS                         S01486
+     I*                                                                   S01486
+     ISDLANG    E DSSDLANGPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR LANGUAGE DETAILS                         S01486
+     I*                                                                   S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR PORTFOLIO MANAGEMENT CUSTOMER DETAILS    S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR PORTFOLIO MANAGEMENT ICD DETAILS         S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01486
+     I*                                                                   S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      *                                                                  *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #P1001   - TO ACCESS STANDING DATA AND INITIALIZE WORK FIELDS    *
+      * #P1002   - TO PROCESS SCREEN                                     *
+      * #V1001   - TO VALIDATE CUSTOMER SELECTION SCREEN                 *
+      **#W1002***-*TO*FORMAT*DETAILS*FOR*OUTPUT*TO*DTAARA**GDA************S01486
+      * #W1002   - TO FORMAT DETAILS FOR OUTPUT TO DTAARA *LDA           *S01486
+      * ZDATE2   - TO CONVERT A MIDAS DATE IN ALPHA DATE                 *
+      * ZASNMS   - TO SEND MESSAGE TO PROGRAM MESSAGE QUEUE              *
+      * *PSSR    - TO PROCESS DATA BASE ERRORS                           *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * PMC1001  - TO OUTPUT DETAILS TO DTAARA *LDA                      *
+      **PMC1002**-*TO*OUTPUT*DETAILS*TO*DTAARA**GDA***********************S01486
+      **PMC0621**-*TO*START*GROUP*JOB*************************************S01486
+      **PMC1004**-*TO*RETRIEVE*CONTENTS*OF*DTAARA**GDA********************S01486
+      * PMC5021  - TO CALL PM POOL CUSTOMER PORTFOLIO ENQUIRY            *S01486
+      * PMC1003  - TO RETRIEVE CONTENTS OF DTAARA *LDA                   *S01486
+      * Y2SNMGC  - TO SEND ERROR MESSAGE TO PROGRAM MESSAGE QUEUE        *
+      * Y2CLMSC  - TO CLEAR PROGRAM MESSAGE QUEUE                        *
+      *                                                                  *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     C**
+     C** MAIN PROCESSING
+     C**
+     C           *ENTRY    PLIST
+     C                     PARM           WWNAME 10
+     C**
+     C** PROCESS INITIALIZATION
+     C**
+     C                     EXSR #P1001
+     C**
+     C** PROCESS UNTIL F3 TAKEN OR F12 TAKEN OR END ENQUIRIES REQUESTED
+     C**
+     C           *INKC     DOUEQ'1'
+     C           QMENQT    OREQ 'Y'
+     C**
+     C                     EXSR #P1002
+     C**
+     C                     END
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1002   - TO PROCESS SCREEN                                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #V1001   - TO VALIDATE CUSTOMER SELECTION SCREEN                 *
+      **#W1002***-*TO*FORMAT*DETAILS*FOR*OUTPUT*TO*DTAARA**GDA************S01486
+      * #W1002   - TO FORMAT DETAILS FOR OUTPUT TO DTAARA *LDA           *S01486
+      * PMC1001  - TO OUTPUT DETAILS TO DTAARA *LDA                      *
+      **PMC1002**-*TO*OUTPUT*DETAILS*TO*DTAARA**GDA***********************S01486
+      **PMC0621**-*TO*START*GROUP*JOB*************************************S01486
+      **PMC1004**-*TO*RETRIEVE*CONTENTS*OF*DTAARA**GDA********************S01486
+      * PMC5021  - TO CALL PM POOL CUSTOMER PORTFOLIO ENQUIRY            *S01486
+      * PMC1003  - TO RETRIEVE CONTENTS OF DTAARA *LDA                   *S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      **WWPARM***-*PARAMETER*FOR*CALLED*PROGRAMS*-*DATAS*OF**GDA**********S01486
+      * WWPARM   - PARAMETER FOR CALLED PROGRAMS - DATAS OF *LDA         *S01486
+      *                                                                  *
+      ********************************************************************
+     C           #P1002    BEGSR
+     C**
+     C** OBTAIN MIDAS RUN DATE
+     C**
+     C                     MOVELBJMRDT    DDRUNA
+     C**
+     C                     WRITEPM5018F0
+     C                     EXFMTPM5018F1
+     C**
+     C                     MOVE '0'       *IN60
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN62
+     C                     MOVE '0'       *IN80
+     C**
+     C**  CLEAR PROGRAM MESSAGE QUEUE
+     C**
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C**
+     C** IF F3 NOT TAKEN, ENTER PRESSED
+     C**
+     C           *INKC     IFEQ '0'                        B1
+     C**
+     C** CHECK VALIDITY OF USER LANGUAGE CODE
+     C**
+     C***********DDMULT    CHAINSDLANGL0             74                   S01486
+     C                     CALL 'AOLANGR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM DDMULT    KEYL    2                       S01486
+     C           SDLANG    PARM SDLANG    DSSDY                           S01486
+     C**
+     C************IN74     IFEQ '1'                        B2             S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C                     MOVEL'PM52100' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN61
+     C                     MOVE '1'       *IN80
+     C**
+     C                     ELSE                            X2
+     C**
+     C                     EXSR #V1001
+     C**
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C**
+     C** IF F3 OR F12 NOT TAKEN
+     C**
+     C           *INKC     IFEQ '0'                        B1
+     C           *INKL     ANDEQ'0'
+     C**
+     C** IF INPUT IS VALID  FORMAT DETAILS FOR OUTPUT TO
+     C** DTAARA/*LDA AND CALL PROGRAMS TO UPDATE DTAARA
+     C***AND*TO*START*GROUP*JOB*******************************************S01486
+     C**
+     C           *IN80     IFEQ '0'                        B2
+     C**
+     C                     EXSR #W1002
+     C**
+     C                     CALL 'PMC1001'
+     C                     PARM           WWLDA
+     C**
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C***********                                                         S01486
+     C***********          CALL 'PMC5019'                                 S01486
+     C                     CALL 'PMC5021'                                 S01486
+     C**
+     C                     MOVEL*BLANKS   DDPOCU
+     C                     MOVEL*BLANKS   DDPOFO
+     C**
+     C***RETRIEVE*CONTENTS*OF*DTAARA**GDA*********************************S01486
+     C** RETRIEVE CONTENTS OF DTAARA *LDA                                 S01486
+     C**
+     C***********          CALL 'PMC1004'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C                     CALL 'PMC1003'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C           QMDBER    IFEQ 'Y'                        ****************
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADDQMERRN    DBASE            **DB ERROR 03 **
+     C                     MOVELQMPGM     DBPGM            ****************
+     C                     MOVELQMFILE    DBFILE
+     C                     MOVELQMKEY     DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     END
+     C**
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #V1001   - TO VALIDATE CUSTOMER SELECTION SCREEN                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZASNMS   - TO SEND MESSAGE TO MESSAGE QUEUE                      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   - TO PROCESS SCREEN                                     *
+      *                                                                  *
+      ********************************************************************
+     C**
+     C           #V1001    BEGSR
+     C**
+     C**
+     C** IF POOL CUSTOMER NUMBER NOT ENTERED
+     C**
+     C           DDPOCU    IFEQ *BLANKS                    B1
+     C                     MOVEL'PM52101' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN80
+     C                     END                             E1
+     C**
+     C** IF PORTFOLIO NOT ENTERED
+     C**
+     C           DDPOFO    IFEQ *BLANKS                    B1
+     C                     MOVEL'PM52102' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN80
+     C                     END                             E1
+     C**
+     C** VALIDATE POOL CUSTOMER NUMBER OR PORTFOLIO IF THEY ARE ENTERED
+     C**
+     C           DDPOCU    IFNE *BLANKS                    B1
+     C           DDPOFO    ANDNE*BLANKS
+     C**
+     C** POOL CUSTOMER NUMBER
+     C**
+     C***********DDPOCU    CHAINSDPLCSL2             72                   S01486
+     C                     MOVELDDPOCU    KEYCN                           S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM           KEYCN  10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C           RTCD      IFEQ *BLANKS                                   S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM           KEYCN                           S01486
+     C                     PARM           KEYDT  10                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C                     END                                            S01486
+     C**
+     C************IN72     IFEQ '1'                        B2             S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C                     MOVEL'PM52103' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN80
+     C                     END                             E2
+     C***********                                                         S01486
+     C***CHECK*PORTFOLIO*INDICATOR****************************************S01486
+     C***********                                                         S01486
+     C***********QBPCUS    IFNE 'Y'                        B2             S01486
+     C***********          MOVEL'PM52103' ZAMSID                          S01486
+     C***********          EXSR ZASNMS                                    S01486
+     C***********          MOVE '1'       *IN60                           S01486
+     C***********          MOVE '1'       *IN80                           S01486
+     C***********          END                             E2             S01486
+     C**
+     C**
+     C**
+     C                     MOVE DDPOCU    WWPOCU
+     C**
+     C           KEYPMP    CHAINPMSBPDPD             77
+     C**
+     C           *IN77     IFEQ '1'                        B2
+     C                     MOVEL'PM52104' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN60
+     C                     MOVE '1'       *IN62
+     C                     MOVE '1'       *IN80
+     C                     END                             B2
+     C*
+     C                     END                             E1
+     C*
+     C** IF THE 'HIGH LEVEL SECURITY' FIELD ON LF/SDPORTL1
+     C** IS EQUAL TO 'Y'. ACCESS LF/MUSER WITH THE USER PROFILE
+     C** TO OBTAIN THE ACCOUNT OFFICER OR DEPARTMENT ASSIGNED
+     C** TO THAT PROFILE.
+     C**
+     C***********P9HLVS    IFEQ 'Y'                        B1             S01486
+     C           FCHLVS    IFEQ 'Y'                                       S01486
+     C**
+     C           WWNAME    CHAINMUSER                71
+     C**
+     C** IF ACCOUNT OFFICER CODE NOT BLANK
+     C** TEST IF ACCOUNT OFFICER CODE NOT EQUAL *A
+     C** AND NOT EQUAL TO CUSTOMER ACCOUNT OFFICER
+     C**
+     C***********ACOC      IFNE *BLANKS                    B2             S01486
+     C***********ACOF      IFNE *BLANKS                             S01486083547
+     C           ACFA      IFNE *BLANKS                                   083547
+     C**
+     C***********ACOC      IFNE '*A'                       B3             S01486
+     C***********ACOC      ANDNEBBACOC                                    S01486
+     C***********ACOF      IFNE 'ALL'                               S01486083547
+     C***********ACOF      ANDNEBBACOC                              S01486083547
+     C           ACFA      IFNE 'ALL'                                     083547
+     C           ACFA      ANDNEBBACOC                                    083547
+     C                     MOVEL'PM52105' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN80
+     C                     END                             E3
+     C**
+     C** IF ACCOUNT OFFICER CODE BLANK
+     C** ACCESS SDACOFL1 TO OBTAIN DEPARTMENT OF ACCOUNT
+     C** OFFICER ASSIGNED TO CUSTOMER
+     C**
+     C                     ELSE                            X2
+     C**
+     C***********BBACOC    CHAINSDACOFL1             75                   S01486
+     C                     CALL 'AOACOFR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM BBACOC    KEYA    3                       S01486
+     C           SDACOF    PARM SDACOF    DSFDY                           S01486
+     C**
+     C***********AZDPCD    IFNE DEPC                       B3             S01486
+     C           AZDPCD    IFNE DPPT                                      S01486
+     C                     MOVEL'PM52105' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN80
+     C                     END                             E3
+     C**
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C*                                                                   S01486
+     C** Check user is authorised to the customer's branch                S01486
+     C*                                                                   S01486
+     C           DDPOCU    IFNE *BLANKS                                   S01486
+     C           DDPOFO    ANDNE*BLANKS                                   S01486
+     C           MBIN      ANDEQ'Y'                                       S01486
+     C                     CALL 'ZVBBU'                                   S01486
+     C                     PARM BBBRCD    ZBRCDX  3                       S01486
+     C                     PARM           ERR     10                      S01486
+     C           ERR       IFNE 0                                         S01486
+     C                     MOVEL'PM52106' ZAMSID                          S01486
+     C                     EXSR ZASNMS                                    S01486
+     C                     SETON                     8060                 S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C**
+     C           *IN80     IFEQ '0'                        B1
+     C***********KEYPMP    CHAINPMPORTPP             77                   S01486
+     C           KEYPMP    CHAINPMPORTPD             77                   S01486
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      **#W1002***-*TO*FORMAT*DETAILS*FOR*OUTPUT*TO*DTAARA**GDA************S01486
+      * #W1002   - TO FORMAT DETAILS FOR OUTPUT TO DTAARA *LDA           *S01486
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   - TO CONVERT A MIDAS DATE IN ALPHA DATE                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1002   - TO PROCESS SCREEN                                     *
+      *                                                                  *
+      ********************************************************************
+     C           #W1002    BEGSR
+     C**
+     C** RUN DATE
+     C**
+     C                     MOVELBJMRDT    QMRUNA
+     C                     Z-ADDBJRDNB    QMRDNB
+     C                     MOVELBJCYCD    QMCYCD
+     C**
+     C** CUSTOMER NUMBER
+     C**
+     C                     MOVELBBCRNM    QMCRNM
+     C                     MOVE ORPCNU    QMCNUM
+     C**
+     C** PORTFOLIO REFERENCE
+     C**
+     C                     MOVE ORPPTF    QMPTF2
+     C**
+     C** TRADE / VALUE DATE POSITION
+     C**
+     C***********          MOVELP9TVPS    QMTVPS                          S01486
+     C                     MOVELFCTVPS    QMTVPS                          S01486
+     C**
+     C** CUSTOMER BASE CURRENCY
+     C**
+     C                     MOVELQBCSBY    QMCSBY
+     C**
+     C                     MOVELPNPTCY    QMPTCY
+     C                     MOVELPNPCDP    QMPCDP
+     C**
+     C** CUSTOMER CURRENCY DECIMAL PLACES
+     C**
+     C                     Z-ADDQBBYDP    QMBYDP
+     C**
+     C** LANGUAGE SPOKEN
+     C**
+     C                     MOVELQBLANG    QMLANG
+     C**
+     C** ACCOUNT OFFICER
+     C**
+     C                     MOVELBBACOC    QMACOC
+     C**
+     C** ACCOUNT OFFICER NAME
+     C**
+     C***********BBACOC    CHAINSDACOFL1             75                   S01486
+     C                     CALL 'AOACOFR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM BBACOC    KEYA                            S01486
+     C           SDACOF    PARM SDACOF    DSFDY                           S01486
+     C**
+     C************IN75     IFEQ '0'                                       S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C                     MOVELAZACON    QMACON
+     C                     END
+     C**
+     C** ATTENTION KEY ALLOWED
+     C**
+     C                     MOVEL'N'       QMATTN
+     C**
+     C** USER LANGUAGE CODE
+     C**
+     C                     MOVE DDMULT    QMMULT
+     C*                                                                   085797
+     C** Customer Branch Code                                             085797
+     C*                                                                   085797
+     C                     MOVELBBBRCD    QMBRCA                          085797
+     C**
+     C** ALL OTHER FIELDS BLANK OR ZERO
+     C**
+     C                     MOVEL*BLANKS   QMRECI
+     C                     MOVEL*BLANKS   QMNCTX
+     C                     MOVEL*BLANKS   QMDCTX
+     C                     MOVEL*BLANKS   QMBDA1
+     C*******************  MOVEL*BLANKS   QMDTA1                          056986
+     C                     MOVEL*BLANKS   QMSAFI
+     C                     MOVEL*BLANKS   QMDCMS
+     C*******************  MOVEL*BLANKS   QMFPVC                          056986
+     C                     MOVEL*BLANKS   QMPTF1
+     C                     MOVEL*BLANKS   QMPTFN
+     C                     MOVEL*BLANKS   QMTPMV
+     C                     MOVEL*BLANKS   QMVPMV
+     C                     MOVEL*BLANKS   QMPTAI
+     C                     MOVEL*BLANKS   QMPVAI
+     C                     MOVEL*BLANKS   QMPTCY
+     C                     MOVEL*BLANKS   QMPTFT
+     C                     MOVEL*BLANKS   QMDPO1
+     C                     MOVEL*BLANKS   QMPPDG
+     C                     MOVEL*BLANKS   QMDSPG
+     C                     MOVEL*BLANKS   QMNDSP
+     C                     MOVEL*BLANKS   QMDSPT
+     C                     MOVEL*BLANKS   QMDGMV
+     C                     MOVEL*BLANKS   QMDGAI
+     C                     MOVEL*BLANKS   QMINNR
+     C                     MOVEL*BLANKS   QMISTN
+     C                     MOVEL*BLANKS   QMTIMV
+     C                     MOVEL*BLANKS   QMVIMV
+     C                     MOVEL*BLANKS   QMITAI
+     C                     MOVEL*BLANKS   QMIVAI
+     C                     MOVEL*BLANKS   QMMODI
+     C                     MOVEL*BLANKS   QMSESN
+     C                     MOVEL*BLANKS   QMENQT
+     C                     MOVEL*BLANKS   QMDBER
+     C                     MOVEL*BLANKS   QMFILE
+     C                     MOVEL*BLANKS   QMPGM
+     C                     MOVEL*BLANKS   QMKEY
+     C                     Z-ADD0         QMPCDP
+     C                     Z-ADD0         QMDSPS
+     C                     Z-ADD0         QMITDS
+     C**********           Z-ADD0         QMTRNB                                              CLE148
+     C                     MOVEL*BLANKS   QMTRNB                                              CLE148
+     C                     Z-ADD0         QMERRN
+     C**
+     C                     ENDSR
+     C**
+     C**
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1001   - TO MAINTAIN CUSTOMER SELECTION SCREEN                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - TO PROCESS DATA BASE ERRORS                           *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P1001    BEGSR
+     C**
+     C**  SET UP KLIST FOR 'PMSBPDPD'
+     C**
+     C           KEYPMP    KLIST
+     C**********           KFLD           WWPOCU  60                                          CSD027
+     C                     KFLD           WWPOCU  6                                           CSD027
+     C                     KFLD           DDPOFO
+     C**
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVE '0'       *IN98
+     C**
+     C**   Select the program MSGQ for error msg.
+     C**
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C**
+     C**   Fill in fields for subroutine ZASNMS
+     C**
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue
+     C                     MOVEL'PMUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'PM5018'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*                                                                   S01486
+     C** READ DATA AREA - RUNDAT                                          S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           RUNDAT                          S01486
+     C                     IN   RUNDAT                                    S01486
+     C**
+     C***ACCESS*ICD1*FROM*LF/SDBANKL1*************************************S01486
+     C** ACCESS BANK ICD DETAILS                                          S01486
+     C**
+     C***********          READ SDBANKL1                 70               S01486
+     C**
+     C** IF RECORD NOT FOUND DATA BASE ERROR
+     C**
+     C************IN70     IFEQ '1'                                       S01486
+     C*                                                    ***************
+     C***********          Z-ADD1         DBASE            **DB ERROR 01**S01486
+     C***********          MOVE 'SDBANKL1'DBFILE           ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                                            S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*DBERR'  RTCD    7                       S01486
+     C                     PARM '*FIRST'  OPTN    7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C**
+     C** ACCESS PM INSTALLATION CONTROL DATA LF/SDPORTL1
+     C**
+     C***********          READ SDPORTL1                 73               S01486
+     C**
+     C** IF RECORD NOT FOUND DATA BASE ERROR
+     C**
+     C************IN73     IFEQ '1'                                       S01486
+     C*                                                    ***************
+     C***********          Z-ADD2         DBASE            **DB ERROR 02**S01486
+     C***********          MOVE 'SDPORTL1'DBFILE           ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                                            S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '*DBERR'  RTCD    7                       S01486
+     C                     PARM '*FIRST'  OPTN    7                       S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C**
+     C** OBTAIN REFERENCE ATTACHED TO '9997' PORTFOLIO
+     C**
+     C***********          MOVE P9R997    QMR997                          S01486
+     C                     MOVE FCR997    QMR997                          S01486
+     C**
+     C** ACCESS LF/MUSER WITH THE USER PROFILE
+     C** TO OBTAIN THE DEFAULT USER LANGUAGE CODE
+     C**
+     C           WWNAME    CHAINMUSER                71
+     C                     MOVE MULT      DDMULT
+     C**
+     C                     ENDSR
+     C**
+      /EJECT
+      ********************************************************************
+     C*                                                               *
+     C* ZASNMS   - Send message to program message queue              *
+     C*                                                               *
+     C* CALLS    Y2SNMSGC                                             *
+     C*                                                               *
+     C* CALLED BY  #V1001 - Validate customer selection screen.       *
+     C*                                                               *
+     C*****************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM            Program queue
+     C                     PARM           ZAPGRL           Rel queue
+     C                     PARM           ZAMSID           Message Id.
+     C                     PARM           ZAMSGF           Message file.
+     C                     PARM           ZAMSDA           Message data.
+     C                     PARM           ZAMSTP           Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Message queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C           ZASNM9    ENDSR                           ZASNM9 TAG
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - TO PROCESS DATA BASE ERRORS                           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P1001   - TO MAINTAIN CUSTOMER SELECTION SCREEN                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     DUMP
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+     C                     CALL 'DBERRCTL'                                S01486
+     C                     ENDSR
+     C********************************************************************
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

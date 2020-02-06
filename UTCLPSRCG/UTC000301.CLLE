@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT Submit jobs to create entire source file')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000301 - Submit compilation for each source file         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. CUT011             Date 12Nov07              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT011 - Rewrite of command.  Make it more flexible and     */
+/*                easier to maintain.                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SRCLIB &MSGFLIB &JOBQ &JOBQLIB &MEMBER +
+                          &RTNCODE)
+ 
+             DCL        VAR(&SRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBQLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(UTSRCCPD)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             OVRDBF     FILE(UTSRCCPD) MBR(&MEMBER) OVRSCOPE(*JOB)
+READFILE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             SBMJOB     CMD(CALL PGM(UTC000302) PARM(&SCSRCF &SRCLIB +
+                          &SCTGTL &MSGFLIB &SCOWN &SCPUB &SCOBJT)) +
+                          JOB(&SCSRCF) JOBQ(&JOBQLIB/&JOBQ) LOG(4 0 +
+                          *SECLVL) LOGCLPGM(*YES) INQMSGRPY(*DFT)
+/* If source is for service programs then submit a second time. */
+             IF         COND(%SST(&SCSRCF 3 6) *EQ 'SVPSRC') THEN(DO)
+                SBMJOB     CMD(CALL PGM(UTC000302) PARM(&SCSRCF &SRCLIB +
+                             &SCTGTL &MSGFLIB &SCOWN &SCPUB &SCOBJT)) +
+                             JOB(&SCSRCF) JOBQ(&JOBQLIB/&JOBQ) LOG(4 0 +
+                             *SECLVL) LOGCLPGM(*YES) INQMSGRPY(*DFT)
+             ENDDO
+ 
+             GOTO       CMDLBL(READFILE)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&RTNCODE) VALUE('Y')
+ENDPGM:
+             DLTOVR     FILE(UTSRCCPD) LVL(*JOB)
+             MONMSG     MSGID(CPF0000)
+             RMVM       FILE(UTSRCCPD) MBR(&MEMBER)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

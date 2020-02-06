@@ -1,0 +1,78 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Suggested Transfers Audit Report')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000901P - Midas OF Suggested Transfers Audit Report      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL176             Date 28Jul15              */
+/*       Last Amend No. CGL158   *CREATE   Date 20Aug14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL176 - Optimisation of Nostro Balances by Company         */
+/*       CGL158 - Nostro Sweeping Rules Maintenance                  */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&CNAM &CSEQ)                                            */ /*CGL176*/
+             PGM        PARM(&CNAM &CSEQ &CHNEXSEQ &LEVEL &ENTITY)                      /*CGL176*/
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+ 
+ 
+             DCL        VAR(&CHNEXSEQ) TYPE(*CHAR) LEN(5)                               /*CGL176*/
+             DCL        VAR(&LEVEL) TYPE(*CHAR) LEN(1)                                  /*CGL176*/
+             DCL        VAR(&ENTITY) TYPE(*CHAR) LEN(3)                                 /*CGL176*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ')
+             MONMSG     MSGID(CPF0000)
+             CHGJOB SWS(00000000)
+ 
+/* Call the program */
+ 
+/**********  CALL       PGM(GL000901P)                                               */ /*CGL176*/
+             CALL       PGM(GL000901P) PARM(&LEVEL &ENTITY)                             /*CGL176*/
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+             IF         COND(&CSEQ *EQ 20001) THEN(DO)
+             CLRPFM     FILE(GLSUTATD)
+             ENDDO
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000901P ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:         RCLRSC
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLRSC     LVL(*CALLER)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             ENDPGM

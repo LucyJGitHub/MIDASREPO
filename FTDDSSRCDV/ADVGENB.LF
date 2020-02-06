@@ -1,0 +1,743 @@
+      *****************************************************************
+/*STD *  LFBASE                                                       *
+/*EXS *  LF_IM                                                        *
+/*EXI *  TEXT('Midas FT Dr/Cr advices generation by BRCA')            *
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - FUNDS TRANSFER MODULE                                *
+     A*                                                               *
+     A*  LF/ADVGENB - DR/CR ADVICES GENERATION BY BOOKING BRANCH      *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *                 MD020107           Date 23Apr13               *
+      *                 CFT120             Date 28Sep12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CSW207             Date 08Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 06Jul06               *
+      *                 CSD027             Date 05Dec05               *
+      *                 221761             Date 01Apr04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CFT009             Date 05Jun00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 185107             Date 17Oct00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             DATE 07FEB00               *
+      *                 CFT008             Date 04Jan00               *
+      *                 CFT006             Date 06Sep99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     A*                 CPB001             Date 01Jun99               *
+     A*                 CAP031             DATE 16APR99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     A*                 CEU006             DATE 25MAR98               *
+     A*                 CAC001             DATE 01FEB96               *
+     A*                 S01494             DATE 25MAY94               *
+     A*                 S01435             DATE 13AUG93               *
+     A*                 S01414             DATE 29MAR93               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CFT157 - Stop FT Transaction after Authorisation.            *
+      *  MD020107 - FTC0560 seq 00001 in DBASE error during Day 5 SG  *
+      *             COB                                               *
+      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+      *           (Recompile)                                         *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+      *  CSW207 - SWIFT 2007 Changes (Recompile)                      *
+      *  CFT032 - Account line in field 50X in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  221761 - Recompiled over changes in FT101HPD.                *
+      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+      *  CFT009 - New fields added for CQCOCPD                        *
+      *  185107 - Mapping of details from swift message - recompile   *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Included additional fields in INPAYDD.              *
+     A*  175479 - Incorporate Fontis : dealer's reference             *
+      *  CFT008 - Funds Transfer/Swift Messages MT102                 *
+      *  CFT006 - Funds Transfer/Swift Messages MT101                 *
+     A*  CPB001 - Meridian DBA Middleware Replication Customization.  *
+     A*           Recompiled due to changes in INPAYDD and OTPAYDD.   *
+     A*  CAP031 - Conversion of Midas inputs to modular API structure *
+     A*           Recompiled due to changes in file OTPAYDD.          *
+     A*           Include new fields in file.                         *
+     A*  CEU006 - EMU Funds Transfer Payments and Settlements:        *
+     A*           Include new fields in file.                         *
+     A*  CAC001 - Profit Centre Accounting Development:               *
+     A*           Include new fields in file.                         *
+     A*  S01494 - BLI Funds Transfer Enhancement.                     *
+     A*  S01435 - Incoming Message Management.                        *
+     A*  S01414 - Book Code and Profit Centre Incorporation.          *
+     A*****************************************************************
+     A          R CQCOCDDF                  PFILE(CQCOCDD)
+     A                                      TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A            RECI      R
+     A            PREF      R
+     A            SUBP               I      SST(PREF 12 2)
+     A            CQSQ      R
+     A            CRPT      R
+     A            CRPY      R
+     A            CQAM      R
+     A            CQAMD     R
+     A            CRCY      R
+     A            RATE      R
+     A            OVRD      R
+     A            CRVD      R
+     A            CRVDD1    R
+     A            CRVDD2    R
+     A            CRVDD3    R
+     A            NAR1      R
+     A            NAR2      R
+     A            NAR3      R
+     A            NAR4      R
+     A            NAR5      R
+     A            NAR6      R
+     A            DNBC1     R
+     A            DNBC2     R
+     A            DNBC3     R
+     A            DNBC4     R
+     A            DNBC5     R
+     A            TRCT      R
+     A            TRCM      R
+     A            TRCMD     R
+     A            COLL      R
+     A            COLLD     R
+     A            CSTA      R
+     A            CSTAD     R
+     A            TXCH      R
+     A            TXCHD     R
+     A            CDRT      R
+     A            CDRO      R
+     A            LCHT      R
+     A            LCD       R
+     A            CHTP      R
+     A            OEDT      R
+     A            OEDTD1    R
+     A            OEDTD2    R
+     A            OEDTD3    R
+     A            IACG      R
+     A            CRAG      R
+     A            SACG      R
+     A            CRMG      R
+     A            ADIN      R
+     A            MDIN      R
+     A            PBCQ      R
+     A            INUSR1    R
+     A            INUSR2    R
+     A            DUMA1     R
+     A            DUMA2     R
+     A            DUMA3     R
+     A            DUMA4     R
+     A            BRCA      R
+     A            ORBR      R
+     A            CRBR      R
+     A            CDBR      R
+     A            CCYAM     R
+     A* S01414 Starts
+     A            BOKC      R
+     A            PRFC      R
+     A* S01414 ends
+     A*********              Start of Change               /S01494/
+     A            CCVAT1    R
+     A            CCVAT2    R
+     A            CCVAT3    R
+     A            CCVAT4    R
+     A            CCVAT5    R
+     A            CCCHCM    R
+     A            CCVATT    R
+     A            CCDUM5    R
+     A            CCDUM6    R
+     A            CCVATR    R
+     A*                      End of Change                 /S01494/
+      *                                              Begin  /CAC001/
+     A            FXMP      R
+     A            FXMD      R
+     A            MBSI      R
+     A            MSIG      R
+     A            MAMT      R
+      *                                              End    /CAC001/
+      *                                              Begin  /CEU006/
+     A            PDCY      R
+     A            PDAM      R
+      *                                              End    /CEU006/
+      *
+      *                                              Start  /CFT009/
+     A            FXSPDS    R
+     A            TRCMCC    R
+     A            FXCCCC    R
+     A            COCHCD    R
+     A            CABCCD    R
+     A            TLXCHD    R
+      *                                              End    /CFT009/
+     A          K BRCA
+     A          K SUBP
+     A          K PREF
+     A          S ADIN                      COMP( NE 'Y' )
+     A            RECI                      COMP( NE 'C' )
+     A*
+     A          R CQPADDDF                  PFILE(CQPADDD)
+     A            RECI      R
+     A            PREF      R
+     A            SUBP               I      SST(PREF 12 2)
+     A            CQSQ      R
+     A            DRPT      R
+     A            DRPY      R
+     A            CQAM      R
+     A            CQAMD     R
+     A            DRCY      R
+     A            RATE      R
+     A            OVRD      R
+     A            DRVD      R
+     A            DRVDD1    R
+     A            DRVDD2    R
+     A            DRVDD3    R
+     A            DNBC      R
+     A            TRCT      R
+     A            TRCM      R
+     A            TRCMD     R
+     A            CSTA      R
+     A            CSTAD     R
+     A            COLL      R
+     A            COLLD     R
+     A            CDRT      R
+     A            CDRO      R
+     A            LCHT      R
+     A            LCD       R
+     A            CHTP      R
+     A            OEDT      R
+     A            OEDTD1    R
+     A            OEDTD2    R
+     A            OEDTD3    R
+     A            IACG      R
+     A            PACG      R
+     A            DRAG      R
+     A            DMSG      R
+     A            ADIN      R
+     A            MDIN      R
+     A            SBCQ      R
+     A            TRCH      R
+     A            COLH      R
+     A            CSTH      R
+     A            INUSR1    R
+     A            INUSR2    R
+     A            BRCA      R
+     A            ORBR      R
+     A            DRBR      R
+     A            CDBR      R
+     A* S01414 Starts
+     A            BOKC      R
+     A            PRFC      R
+     A* S01414 ends
+     A*********              Start of Change               /S01494/
+     A            PDVAT1    R
+     A            PDVAT2    R
+     A            PDVAT3    R
+     A            PDVAT4    R
+     A            PDCHCM    R
+     A            PDVATT    R
+     A            PDCHCH    R
+     A            PDVATH    R
+     A            PDVATR    R
+     A*                      End of Change                 /S01494/
+      *                                              Begin  /CAC001/
+     A            FXMP      R
+     A            FXMD      R
+     A            MBSI      R
+     A            MSIG      R
+     A            MAMT      R
+      *                                              End    /CAC001/
+      *                                              Begin  /CEU006/
+     A            NDCY      R
+     A            NDAM      R
+      *                                              End    /CEU006/
+      *
+      *                                              Begin  /CFT009/
+     A            TFCMCC    R
+     A            FCHCCC    R
+     A            CSTACD    R
+     A            COLCGC    R
+     A            APVTCC    R
+      *                                              End    /CFT009/
+      *
+     A          K BRCA
+     A          K SUBP
+     A          K PREF
+     A          S ADIN                      COMP(NE 'Y')
+     A            RECI                      COMP( NE 'C' )
+     A*
+     A          R INPAYDDF                  PFILE(INPAYDD)
+     A            RECI      R
+     A            PREF      R
+     A            SUBP               I      SST(PREF 12 2)
+     A            PYTP      R
+     A            PYST      R
+     A            SNTP      R
+     A            SND1      R
+     A            SND2      R
+     A            SND3      R
+     A            SND4      R
+     A            RCRT      R
+     A            RCCO      R
+     A            ACBT      R
+     A            ACBK      R
+     A            BNCT      R
+     A            BNC1      R
+     A            BNC2      R
+     A            BNC3      R
+     A            BNC4      R
+     A            BNC5      R
+     A            SMAM      R
+     A            SMAMD     R
+     A            SMCY      R
+     A            MDIN      R
+     A            RATE      R
+     A            RATED     R
+     A            OVRD      R
+     A            PYAM      R
+     A            PYAMD     R
+     A            PCCY      R
+     A            SLDT      R
+     A            SLDTD1    R
+     A            SLDTD2    R
+     A            SLDTD3    R
+     A            PVDT      R
+     A            PVDTD1    R
+     A            PVDTD2    R
+     A            PVDTD3    R
+     A            ADDC      R
+     A            SWPC      R
+     A            RLPR      R
+     A            ORBT      R
+     A            ORB1      R
+     A            ORB2      R
+     A            ORB3      R
+     A            ORB4      R
+     A            ORB5      R
+     A            SNCT      R
+     A            SNC1      R
+     A            SNC2      R
+     A            SNC3      R
+     A            SNC4      R
+     A            SNC5      R
+     A            ORCT      R
+     A            ORC1      R
+     A            ORC2      R
+     A            ORC3      R
+     A            ORC4      R
+     A            DTP1      R
+     A            DTP2      R
+     A            DTP3      R
+     A            DTP4      R
+     A            DTCH      R
+     A            BBI1      R
+     A            BBI2      R
+     A            BBI3      R
+     A            BBI4      R
+     A            BBI5      R
+     A            BBI6      R
+     A            DNBC      R
+     A            INBT      R
+     A            INB1      R
+     A            INB2      R
+     A            INB3      R
+     A            INB4      R
+     A            INB5      R
+     A            TRCT      R
+     A            TRCM      R
+     A            TRCMD     R
+     A            TXCH      R
+     A            TXCHD     R
+     A            CQCH      R
+     A            CQCHD     R
+     A            ADCH      R
+     A            ADCHD     R
+     A            TLCH      R
+     A            TLCHD     R
+     A            MSCH      R
+     A            MSCHD     R
+     A            CDRT      R
+     A            CDRO      R
+     A            LCHT      R
+     A            LCD       R
+     A            CHTP      R
+     A            AUP1      R
+     A            AUP2      R
+     A            AUIN      R
+     A            IACG      R
+     A            SACG      R
+     A            PACG      R
+     A            SMSG      R
+     A            PMSG      R
+     A            OEDT      R
+     A            OEDTD1    R
+     A            OEDTD2    R
+     A            OEDTD3    R
+     A            ADIN      R
+     A            SRNM      R
+     A            SBCQ      R
+     A            PBCQ      R
+     A            INUSR1    R
+     A            INUSR2    R
+     A            OPIN      R
+     A            SRTE      R
+     A            PRTE      R
+      *  STORE OF DUMMY AMOUNTS
+     A            DUMA1     R
+     A            DUMA2     R
+     A            DUMA3     R
+     A            DUMA4     R
+     A            DUMA5     R
+     A            DUMA6     R
+     A            BRCA      R
+     A            ORBR      R
+     A            ACBB      R
+     A            CDBR      R
+     A            MIR       R
+     A            ISEQ      R
+     A* S01414 Starts
+     A            BOKC      R
+     A            PRFC      R
+     A            INRCRT    R
+     A            INRCO1    R
+     A            INRCO2    R
+     A            INRCO3    R
+     A            INRCO4    R
+     A            INRCO5    R
+     A            INACBT    R
+     A            INACB1    R
+     A            INACB2    R
+     A            INACB3    R
+     A            INACB4    R
+     A            INACB5    R
+     A            INTRNO    R
+     A* S01414 ends
+     A* S01435 Starts
+     A            INMSGR         8S 0       TEXT('Msg Unique Reference')
+     A                                      COLHDG('Msg Unique' +
+     A                                             'Reference')
+     A            INKPRT         3S 0       TEXT('Part Number (Key)')
+     A                                      COLHDG('Part Number' +
+     A                                             '(Key)')
+     A* S01435 Ends
+     A*********              Start of Change               /S01494/
+     A            INVAT1    R
+     A            INVAT2    R
+     A            INVAT3    R
+     A            INVAT4    R
+     A            INVAT5    R
+     A            INVAT6    R
+     A            INVAT7    R
+     A            INCHCM    R
+     A            INVATT    R
+     A            INDUM7    R
+     A            INDUM8    R
+     A            INOPRF    R
+     A            INVATR    R
+     A*                      End of Change                 /S01494/
+      *                                              Begin  /CAC001/
+     A            FXMP      R
+     A            FXMD      R
+     A            MBSI      R
+     A            MSIG      R
+     A            MAMT      R
+      *                                              End    /CAC001/
+      *                                              Begin  /CEU006/
+     A            NDCY      R
+     A            NDAM      R
+      *                                              End    /CEU006/
+      *                                              Begin /CAP136/
+     A            FRNT      R
+     A            REPA      R
+     A            TMST      R
+      *                                              End   /CAP136/
+      *                                              Beg    /175479/
+     A            FDLR      R
+      *                                              End    /175479/
+      ** Start of change CFT032
+     A            ORC5      R
+      ** End of change CFT032
+      **Start of change MD020107
+     A            INCDRC    R
+      **End of change MD020107
+      **Start of change CFT157
+     A            DATE      R
+     A            SUSR      R
+     A            SAUS      R
+      **End of change CFT157
+     A          K BRCA
+     A          K SUBP
+     A          K PREF
+     A          S ADIN                      COMP(NE 'Y')
+     A            AUIN                      COMP(EQ 'Y')
+      **Start of change CFT157
+     A            RECI                      COMP(NE 'C')
+      **End of change CFT157
+     A*
+     A          R OTPAYDDF                  PFILE(OTPAYDD)
+     A            RECI      R
+     A            PREF      R
+     A            SUBP               I      SST(PREF 12 2)
+     A            PYTP      R
+     A            PYST      R
+     A            DSTT      R
+     A            DST1      R
+     A            DST2      R
+     A            DST3      R
+     A            DST4      R
+     A            SNCT      R
+     A            SNCO      R
+     A            ORBT      R
+     A            ORBK      R
+     A            ORCT      R
+     A            ORC1      R
+     A            ORC2      R
+     A            ORC3      R
+     A            ORC4      R
+     A            SMAM      R
+     A            SMAMD     R
+     A            SMCY      R
+     A            MDIN      R
+     A            RATE      R
+     A            RATED     R
+     A            OVRD      R
+     A            PYAM      R
+     A            PYAMD     R
+     A            PCCY      R
+     A            SLDT      R
+     A            SLDTD1    R
+     A            SLDTD2    R
+     A            SLDTD3    R
+     A            PVDT      R
+     A            PVDTD1    R
+     A            PVDTD2    R
+     A            PVDTD3    R
+     A            ADDC      R
+     A            RPAY      R
+     A            PAYF      R
+     A            DYIM      R
+     A            FDAT      R
+     A            FDATD1    R
+     A            FDATD2    R
+     A            FDATD3    R
+     A            SWPC      R
+     A            STMT      R
+     A            SNMT      R
+     A            RCRT      R
+     A            RCO1      R
+     A            RCO2      R
+     A            RCO3      R
+     A            RCO4      R
+     A            RCO5      R
+     A            ACBT      R
+     A            ACB1      R
+     A            ACB2      R
+     A            ACB3      R
+     A            ACB4      R
+     A            ACB5      R
+     A            BNCT      R
+     A            BNC1      R
+     A            BNC2      R
+     A            BNC3      R
+     A            BNC4      R
+     A            BNC5      R
+     A            DTP1      R
+     A            DTP2      R
+     A            DTP3      R
+     A            DTP4      R
+     A            DTCH      R
+     A            BBI1      R
+     A            BBI2      R
+     A            BBI3      R
+     A            BBI4      R
+     A            BBI5      R
+     A            BBI6      R
+     A            DNBC      R
+     A            TRCT      R
+     A            TRCM      R
+     A            TRCMD     R
+     A            TXCH      R
+     A            TXCHD     R
+     A            CQCH      R
+     A            CQCHD     R
+     A            CSTA      R
+     A            CSTAD     R
+     A            SPCH      R
+     A            SPCHD     R
+     A            MSCH      R
+     A            MSCHD     R
+     A            CDRT      R
+     A            CDRO      R
+     A            LCHT      R
+     A            LCD       R
+     A            CHTP      R
+     A            AUP1      R
+     A            AUP2      R
+     A            AUIN      R
+     A            IACG      R
+     A            SACG      R
+     A            PACG      R
+     A            SMSG      R
+     A            PMSG      R
+     A            OEDT      R
+     A            OEDTD1    R
+     A            OEDTD2    R
+     A            OEDTD3    R
+     A            NPDT      R
+     A            NPDTD1    R
+     A            NPDTD2    R
+     A            NPDTD3    R
+     A            PRBD      R
+     A            FAIN      R
+     A            ADIN      R
+     A            CQIN      R
+     A            PRIN      R
+     A            MT100     R
+     A            MT202     R
+     A            TXIN      R
+     A            BAIN      R
+     A            ISIN      R
+     A            MPYI      R
+     A            RLPR      R
+     A            INBT      R
+     A            INB1      R
+     A            INB2      R
+     A            INB3      R
+     A            INB4      R
+     A            INB5      R
+     A            CHAP      R
+     A            LVL1      R
+     A            LVL2      R
+     A            SBCQ      R
+     A            PBCQ      R
+      ** Start of change CFT032
+     A**********  ODMT      R                                                                 CFT032
+     A            ODMTO     R
+      ** End of change CFT032
+     A            OPIN      R
+     A            OXPREF    R
+     A            ZZ011     R
+     A            AMTS      R
+     A            SVDT      R
+     A            NSTR      R
+     A            TSKS      R
+     A            INUSR1    R
+     A            INUSR2    R
+      *  STORE OF DUMMY AMOUNTS
+     A            DUMA1     R
+     A            DUMA2     R
+     A            DUMA3     R
+     A            DUMA4     R
+     A            DUMA5     R
+     A            DUMA6     R
+     A            BRCA      R
+     A            ORBR      R
+     A            ORBB      R
+     A            CDBR      R
+     A            MT202C    R
+     A* S01414 Starts
+     A            BOKC      R
+     A            PRFC      R
+     A            OPORBT    R
+     A            OPORB1    R
+     A            OPORB2    R
+     A            OPORB3    R
+     A            OPORB4    R
+     A            OPORB5    R
+     A* S01414 ends
+     A* S01435 Starts
+     A            OPMSGR         8S 0       TEXT('Msg Unique Reference')
+     A                                      COLHDG('Msg Unique' +
+     A                                             'Reference')
+     A            OPKPRT         3S 0       TEXT('Part Number (Key)')
+     A                                      COLHDG('Part Number' +
+     A                                             '(Key)')
+     A* S01435 Ends
+     A*********              Start of Change               /S01494/
+     A            OPVAT1    R
+     A            OPVAT2    R
+     A            OPVAT3    R
+     A            OPVAT4    R
+     A            OPVAT5    R
+     A            OPVAT6    R
+     A            OPVAT7    R
+     A            OPCHCM    R
+     A            OPVATT    R
+     A            OPDUM7    R
+     A            OPDUM8    R
+     A            OPRPRF    R
+     A            OPVATR    R
+     A*                      End of Change                 /S01494/
+      *                                              Begin  /CAC001/
+     A            FXMP      R
+     A            FXMD      R
+     A            MBSI      R
+     A            MSIG      R
+     A            MAMT      R
+      *                                              End    /CAC001/
+      *                                              Begin  /CEU006/
+     A            NDCY      R
+     A            NDAM      R
+     A            PDCY      R
+     A            PDAM      R
+      *                                              End    /CEU006/
+      *                                              Beg    /175479/
+     A            FDLR      R
+      *                                              End    /175479/
+      ** Start of change CFT032
+     A            ORC5      R
+     A            ODMTT     R
+     A            ODMT      R
+      ** End of change CFT032
+      **Start of change MD020107
+     A            OPCDRC    R
+      **End of change MD020107
+      **Start of change CFT157
+     A            DATE      R
+     A            SUSR      R
+     A            SAUS      R
+      **End of change CFT157
+     A          K BRCA
+     A          K SUBP
+     A          K PREF
+     A          S ADIN                      COMP(NE 'Y')
+     A            PYTP                      COMP(NE 'RP')
+     A            AUIN                      COMP(EQ 'Y')
+      **Start of change CFT157
+     A            RECI                      COMP(NE 'C')
+      **End of change CFT157
+     A*
+      *                                              Begin /CFT006/
+     A          R FT101HD0                  PFILE(FT101HPD)
+      *
+     A          K BRCA
+     A          K *NONE
+     A          S ADVCRT                    COMP(NE 'Y')
+     A            AUIN                      COMP(EQ 'Y')
+      *                                              End   /CFT006/
+      *
+      *                                              Begin /CFT008/
+     A          R FT102HD0                  PFILE(FT102HPD)
+      *
+     A          K BRCA
+     A          K *NONE
+     A          S ADVCRT                    COMP(NE 'Y')
+     A            AUIN                      COMP(EQ 'Y')
+      *                                              End   /CFT008/

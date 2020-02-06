@@ -1,0 +1,165 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#DEPOTMV - Depot Movements                                          */
+/*                                                                             */
+/*       (c) Finastra International Limited 2003                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CSF011             Date 12Sep11                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CAP087             Date 25Aug05                        */
+/*                      CGL035             Date 01Mar05                        */
+/*                      CSE075             Date 17Nov05                        */
+/*                      CSE074             Date 30Aug05                        */
+/*                      CSE071             Date 19Jul05                        */
+/*                      BUG5793            Date 07Feb05                        */
+/*                      BUG5404            Date 17Jan05                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      BUG2391            Date 10May04                        */
+/*                      BUG2401            Date 10May04                        */
+/*                      BUG2371            Date 06May04                        */
+/*                      CGP001  *CREATE    Date 20Aug03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CAP087 - Depot Movement API - Java Wrapper in Midasplus               */
+/*                Format Associated Deal Number (DPAD).                        */
+/*       CGL035 - EUSD Upgrade to Midasplus (Recompile)                        */
+/*       CSE075 - US Enhanced Treasury Upgrade to MidasPlus (Recompile)        */
+/*       CSE074 - Const. Yield Amort. on Mortgage backed assets (Recompile)    */
+/*       CSE071 - Multiple Holidays Re Securities (recompile)                  */
+/*       BUG5793- Performance Enhancement                                      */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       BUG2391- Chanrge amount not being scaled correctly                    */
+/*       BUG2401- Addition detail needed for list view                         */
+/*       BUG2371- Addition of field CHTP                                       */
+/*       CGP001 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+   F1.RECI, F1.DPSS, F1.DPRN, F1.DPMV, F1.DPID, F1.DPMD, F1.DPOD,               :
+   F1.DPDO, F1.DPBA, F1.ORBR, F1.DPBK, F1.DPMK, F1.DPBN, F1.DPNA,               :
+   F1.DPNR, F1.MKTP, F1.DPAD, F1.SWRF, F1.SIOI, F1.DPMS, F1.DCFR,               :
+   F1.TACI, F1.DPR1, F1.DPR2, F1.ORED, F1.LCD, F1.RPIN, F1.DPPC,                :
+   F1.DCHC, F1.DCCE, F1.DCHA, F1.DCSE, F1.DCAB, F1.DCAT, F1.DPVD,               :
+   F1.SPXR, F1.SPMD, F1.PTFR, F1.CYLD, F1.CWDI, F1.COAF, F1.DMFRNT,             :
+   F1.DMAFRT, F1.DMREPA, F1.DMTMST, F1.MSTP, F1.ACIN, F1.PINT, F1.REPI,         :
+   F1.DVIN, F1.DMIN, F1.DEXRT, F1.DFROM, F1.DPNR2, F1.DPNR3, F1.DPNR4,          :
+   F1.DPNR5, F1.DPIN, F1.DPAP, F1.DMTD, F1.CPTY, F1.MRKT, F2.SPBS,              :
+   F2.STBS, F3.PROT,                                                            :
+   F1.CHTP,                                                                     :            BUG2371
+   F2.SRPN, F2.SFN1, F2.SFN2,  F2.SREF, F2.T2RF, F2.CSPN,                       :            BUG2401
+   F2.ISIN, F2.CPNR,                                                            :            BUG2401
+   CASE WHEN F2.MATY=0 THEN NULL ELSE DATE(F2.MATY+719892) END AS FMATY,        :            BUG2401
+***Case*When*F1.DPID*>*0*then*Digits(F1.DPID)*else*''*End*as*PADDPID,***********:             CSD027
+***Case*When*F1.DPOD*>*0*then*Digits(F1.DPOD)*else*''*End*as*PADDPOD,***********:             CSD027
+***Case*When*F1.DPBN*>*0*then*Digits(F1.DPBN)*else*''*End*as*PADDPBN,***********:             CSD027
+***Case*When*F1.CPTY*>*0*then*Digits(F1.CPTY)*else*''*End*as*PADCPTY,***********:             CSD027
+   Case When F1.DPID <> '' then        F1.DPID  else '' End as PADDPID,         :             CSD027
+   Case When F1.DPOD <> '' then        F1.DPOD  else '' End as PADDPOD,         :             CSD027
+   Case When F1.DPBN <> '' then        F1.DPBN  else '' End as PADDPBN,         :             CSD027
+   Case When F1.CPTY <> '' then        F1.CPTY  else '' End as PADCPTY,         :             CSD027
+   DIGITS(F1.DCSE) AS PADDCSE,                                                  :
+   DIGITS(F1.DPAD) AS PADDPAD,                                                  :             CAP087
+   F1.DPNA/POWER(10,F2.NMDP) as SCALEDNOML,                                     :
+   CASE WHEN F1.DPMD=0 THEN NULL ELSE DATE(F1.DPMD+719892) END                  :
+                                                          AS FDPMD,             :
+   CASE WHEN F1.DPDO=0 THEN NULL ELSE DATE(F1.DPDO+719892) END                  :
+                                                          AS FDPDO,             :
+   CASE WHEN F1.ORED=0 THEN NULL ELSE DATE(F1.ORED+719892) END                  :
+                                                          AS FORED,             :
+   CASE WHEN F1.LCD=0 THEN NULL ELSE DATE(F1.LCD+719892) END                    :
+                                                          AS FLCD,              :
+   CASE WHEN F1.DPVD=0 THEN NULL ELSE DATE(F1.DPVD+719892) END                  :
+                                                          AS FDPVD,             :
+   CASE WHEN F1.DMTD=0 THEN NULL ELSE DATE(F1.DMTD+719892) END                  :
+                                                          AS FDMTD,             :
+***DEC(F1.PINT*C1.SCALING,31,4) AS "SPINT",*************************************:BUG5793
+***DEC(F1.DVIN*C1.SCALING,31,4) AS "SDVIN",*************************************:BUG5793
+***DEC(F1.DMIN*C1.SCALING,31,4) AS "SDMIN",*************************************:BUG5793
+***DEC(F1.DCHA*C1.SCALING,31,4)*AS*"SDCHA",*                                    :            BUG2391
+***DEC(F1.DCHA*C2.SCALING,31,4) AS "SDCHA",*************************************:BUG2391/BUG5793
+   F1.PINT AS SPINT,                                                            :BUG5793
+   F1.DVIN AS SDVIN,                                                            :BUG5793
+   F1.DMIN AS SDMIN,                                                            :BUG5793
+   F1.DCHA AS SDCHA,                                                            :BUG5793
+   A8ZONE AS CUSTZONE,                                                          :
+   F2.NMCY,                                                                     :
+   CASE WHEN DPMV = 'WI' THEN DATE(F1.DPMD+719892) WHEN DPMV= 'WO'              :
+***THEN DATE(F1.DPDO+719892) END AS "FDPDIO",***********************************:BUG5793
+   THEN DATE(F1.DPDO+719892) END AS FDPDIO,                                     :BUG5793
+***V_GPGLCUSL.* ****************************************************************:BUG5793
+   CGGLOB,CGCSSN,CGRNM,CGRTN,CGICD,CGACO,CGCNCZ,CGCOLC,CGBRCD,CGCUST,CGZONE     :BUG5793
+  FROM GZDPTMVD AS F1                                                           :
+  LEFT JOIN GZSDBRCHPD ON F1.DPBA = A8BRCD                                      :
+  LEFT JOIN GZSECTYD AS F2 ON F2.SESN = F1.DPSS                                 :
+                                AND F2.SEZONE = A8ZONE                          :
+  LEFT JOIN GZINVTPD AS F3 ON F3.CCYI = F2.NMCY AND F3.INVT = F2.SITP           :
+                                      AND F3.INZONE = A8ZONE                    :
+**LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(F1.DPBN)**********:BUG1912
+**LEFT*JOIN*GPGLCUSL*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*F1.DPBN*********:BUG1912/BUG5793
+  LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = F1.DPBN ;                  :BUG5793
+**LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=F2.NMCY*************************************:BUG5793
+**LEFT*JOIN*V_GLOBRATE*C2*ON*C2.CCY=F1.DCCE;************************************:BUG5793
+                                                                                :
+  LABEL ON COLUMN **********/**********                                         :
+  (SCALEDNOML IS 'Nominal');                                                    :
+                                                                                :
+  LABEL ON COLUMN **********/**********                                         :
+  (SCALEDNOML TEXT IS 'Nominal');                                               :
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADDPID    AS DPID       USING GZDPTMVD                        :
+ * DESCRIBEFIELD PADDPOD    AS DPOD       USING GZDPTMVD                        :
+ * DESCRIBEFIELD PADDPBN    AS DPBN       USING GZDPTMVD                        :
+ * DESCRIBEFIELD PADCPTY    AS CPTY       USING GZDPTMVD                        :
+ * DESCRIBEFIELD PADDCSE    AS DCSE       USING GZDPTMVD                        :
+ * DESCRIBEFIELD FDPMD      AS DPMD       USING GZDPTMVD                        :
+ * DESCRIBEFIELD FDPDO      AS DPDO       USING GZDPTMVD                        :
+ * DESCRIBEFIELD FORED      AS ORED       USING GZDPTMVD                        :
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZDPTMVD                        :
+ * DESCRIBEFIELD FDPVD      AS DPVD       USING GZDPTMVD                        :
+ * DESCRIBEFIELD FDMTD      AS DMTD       USING GZDPTMVD                        :
+ * DESCRIBEFIELD SPINT      AS PINT       USING GZDPTMVD                        :
+ * DESCRIBEFIELD SDVIN      AS DVIN       USING GZDPTMVD                        :
+ * DESCRIBEFIELD SDMIN      AS DMIN       USING GZDPTMVD                        :
+ * DESCRIBEFIELD SDCHA      AS DCHA       USING GZDPTMVD                        :
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEFIELD FMATY      AS MATY       USING GZSECTYD                        :            BUG2401
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Depot movements - GZDPTMVD               ';                     :
+                                                                                :

@@ -1,0 +1,133 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Discount/Premium Amortisation')
+     H********************************************************************
+     H*                                                                  *
+     H* MIDAS/ABS  EUROPEAN REPORTING                                    *
+     H*                                                                  *
+     H* RPG/ZAMORT - DISCOUNT/PREMIUM AMORTISATION                       *
+     H*                                                                  *
+      *  (c) Finastra International Limited 2005                      *
+     H*                                                                  *
+      *+++LUX++++++BEGIN+++++++++++++++++++++++++++++++++++++++++++++++++++++++*
+      *                                                                        *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas DBA 3.01 ---------------- Luxemburg -----------------------------*
+      *  Prev Amend No. CER001             Date 25Aug05               *
+      *                 ER0203 AF          Date 13Jan93               *
+      *                                                               *
+      *                                                                        *
+      *------------------------------------------------------------------------*
+      *                                                                        *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
+     H*  ER0203 - Change lenght of amounts fields from 15,8 to 21,8            *
+      *                                                                        *
+      *+++LUX++++++END+++++++++++++++++++++++++++++++++++++++++++++++++++++++++*
+      *                                                                        *
+     H* PARAMETERS : RETURN I   1A   - RETURN CODE                       *
+     H*              PARM1  I   3,0  - YEAR NUMBER                       *
+     H***************PARM2  I  15,8  - DISCOUNT/PREMIUM                  *ER0203
+     H*              PARM2  I  21,8  - DISCOUNT/PREMIUM                  *ER0203
+     H*              PARM3  I   3,0  - YEARS TO MATURITY                 *
+     H*              PARM4  I  15,8  - YIELD TO MATURITY                 *
+     H*              PARM5  O  15,8  - AMORTIZATION PERCENTAGE           *
+     H*                                                                  *
+     H********************************************************************
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+      **  Data Structure for compilation  - Copyright Insertion:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /EJECT
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           RETURN  1
+     C                     PARM           PARM1   3
+     C******               PARM           PARM2  15                       ER0203
+     C                     PARM           PARM2  21                       ER0203
+     C                     PARM           PARM3   3
+     C                     PARM           PARM4  15
+     C                     PARM           PARM5  15
+      *===================================================================
+      * MAIN PROCESSING                                                  *
+      *===================================================================
+      *
+      ** RESET RETURN CODE, AMORTIZATION PERCENTAGE, AND TWO WORK FIELDS
+      ** SETUP RECEIVED PARAMETERS
+     C                     MOVE PARM1     YNUM    30
+     C******               MOVE PARM2     DISPRE 158                      ER0203
+     C                     MOVE PARM2     DISPRE 218                      ER0203
+     C                     MOVE PARM3     YYMAT   30
+     C                     MOVE PARM4     YIELD  158
+     C                     DIV  100       YIELD
+      *
+     C                     MOVE ' '       RETURN
+     C******               Z-ADD0         AMORT  158                      ER0203
+     C                     Z-ADD0         AMORT  218                      ER0203
+     C                     Z-ADD0         @A     259
+     C                     Z-ADD0         @B     259
+      *
+      ** CALCULATE @A
+     C           YIELD     ADD  1         RATE   158
+     C                     Z-ADDRATE      @@AMNT 158
+     C           YNUM      SUB  1         @@POWE  30
+     C                     EXSR SREXPO
+     C                     Z-ADD@@RESU    @A
+      *
+      ** CALCULATE @B
+     C                     Z-ADDYYMAT     COUNT   30
+     C                     SUB  1         COUNT
+     C           COUNT     DOWGE0                          - B1
+     C                     Z-ADDRATE      @@AMNT
+     C                     Z-ADDCOUNT     @@POWE
+     C                     EXSR SREXPO
+     C                     ADD  @@RESU    @B
+     C                     SUB  1         COUNT
+     C                     ENDDO                           - E1
+      *
+      ** SETUP RESULT
+     C           @A        DIV  @B        WWAB   259H
+     C           WWAB      MULT DISPRE    AMORT     H
+     C                     MOVE AMORT     PARM5
+      *
+      ** TERMINATION PROCESSING
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *===================================================================
+      * SREXPO - EXPONENT CALCULATION                                    *
+      *===================================================================
+     C           SREXPO    BEGSR
+      *
+     C                     Z-ADD0         @@RESU 259
+      *
+     C           @@POWE    IFEQ 0                          - B1
+      *
+     C           @@AMNT    IFEQ 0                          - B2
+     C                     MOVEL'E'       RETURN
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDIF                           - E2
+      *
+     C                     Z-ADD1         @@RESU
+     C                     ELSE                            - X1
+      *
+     C                     Z-ADD@@AMNT    @@RESU
+      *
+     C           @@POWE    DOWGT1                          - B2
+     C                     MULT @@AMNT    @@RESU
+     C                     SUB  1         @@POWE
+     C                     ENDDO                           - E2
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      *===================================================================
+**  CPY@
+(c) Finastra International Limited 2005

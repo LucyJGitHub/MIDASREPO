@@ -1,0 +1,130 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SC Monitor control program')                    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000050 - Midas SC Monitor Control Program                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CSC011  *CREATE    Date 18Sep01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC011 - 24x7 Midas Availability                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&DASTOP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DAERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&S3STRT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&S4STRT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&REPLY) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SCREEN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GROUP) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(25)
+             DCL        VAR(&SLEVEL) TYPE(*DEC) LEN(4)
+             DCL        VAR(&TIMEO) TYPE(*DEC) LEN(5)
+             DCL        VAR(&ERRORC) TYPE(*DEC) LEN(1) VALUE(0)
+             DCL        VAR(&MIDASLG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MULT) TYPE(*CHAR) LEN(2)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* If data area LDA doesn't exist, create LDA. */
+ 
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+/* Multiple language support */
+ 
+             CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO +
+                          &ERRORC &MULT)
+ 
+             IF         COND(&MULT = '  ') THEN(DO)
+                CHGVAR     VAR(&MULT) VALUE('GB')
+             ENDDO
+ 
+             CHGVAR     VAR(&MIDASLG) VALUE(&MULT *CAT 'MIDAS     ')
+             OVRMSGF    MSGF(MIDAS) TOMSGF(&MIDASLG)
+ 
+/* Retrieve data area SCDRSTAT */
+ 
+             RTVDTAARA  DTAARA(SCDRSTAT (1 1)) RTNVAR(&DASTOP)
+             RTVDTAARA  DTAARA(SCDRSTAT (2 1)) RTNVAR(&DAERR)
+             RTVDTAARA  DTAARA(SCSUPP (1 1)) RTNVAR(&S3STRT)
+             RTVDTAARA  DTAARA(SCREOP (1 1)) RTNVAR(&S4STRT)
+ 
+             CHGVAR     VAR(&PGM) VALUE('SCC000050')
+             CHGVAR     VAR(&REPLY) VALUE(' ')
+ 
+/* 'Support' to 'Main' System Transition is not yet completed */
+ 
+             IF         COND((&S3STRT *EQ 'Y') *OR (&S4STRT *EQ +
+                          'Y')) THEN(DO)
+                CHGVAR     VAR(&SCREEN) VALUE('SDC0700F8')
+                CALL       PGM(SDC0700) PARM(&PGM &SCREEN &REPLY)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Stop Data Replication from running */
+ 
+             IF         COND(&DASTOP *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&SCREEN) VALUE('SDC0700F0')
+                CALL       PGM(SDC0700) PARM(&PGM &SCREEN &REPLY)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Data Replication Configurator is in error */
+ 
+             IF         COND(&DAERR *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&SCREEN) VALUE('SDC0700F1')
+                CALL       PGM(SDC0700) PARM(&PGM &SCREEN &REPLY)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* If none of the conditions were satisfied */
+ 
+             CALL       PGM(SC000050)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000050 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+ END:        ENDPGM

@@ -1,0 +1,166 @@
+     C*****************************************************************
+     C*                                                               *
+     C*  SR:ZFFOLN   - FORMAT INSTRUMENT DETAILS  ( 20 A )            *
+     C*                                                               *
+     C*  CALL :      - SR/FFPRCS                                      *
+     C*                                                               *
+     C*  INPUTS      - FFISTT   (5A)  INSTRUMENT NAME                 *
+     C*                FFMTHN   (2N)  MONTH NUMBER                    *
+     C*                FFYRNO   (2N)  YEAR NUMBER                     *
+     C*                FFPCAL   (1A)  PUT/CALL INDICATOR              *
+     C*****************FFSTRP*(11,7P)*STRIKE*PRICE*********************   CFF004
+     C*****************FFMNPF*(11,7P)*MINIMUM*PRICE*FLUCTUATION********   CFF004
+     C*                FFSTRP (15,8P) STRIKE PRICE                    *   CFF004
+     C*                FFMNPF (15,8P) MINIMUM PRICE FLUCTUATION       *   CFF004
+     C*                FFTKDM  (3,0P) TICKS DENOMINATOR               *
+     C*                FFISTI   (1A)  INSTRUMENT INDICATOR            *
+     C*                FFISPT   (1N)  INSTRUMENT PROCESSING TYPE      *
+     C*                                                               *
+     C*  OUTPUTS     - FFISDT  (20A)  FF INSTRUMENT DETAILS           *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  LAST AMEND NO. CFF004             DATE 11SEP96               *
+     C*  PREV AMEND NO. CPM003             DATE 15DEC95               *
+     C*                 078956             DATE 19DEC94               *
+     C*                 075998             DATE 19DEC94               *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*  CFF004 - INCREASE SIZE OF PRICE FIELD.                       *
+     C*  CPM003 - FF PM Interface Upgrade to R10.                     *
+     C*  078956 - OUTPUT PUT/CALL IND & PRICE IN REFERENCE/SHORTNAME  *
+     C*  075998 - NEW SUBROUTINE WRITTEN FOR ALLOW PERFORMANCE IN FF  *
+     C*                                                               *
+     C*****************************************************************
+     C**
+     C           ZFFOLN    BEGSR                           ** FFPRVL SR **
+     C**
+     C**    DEFINE INPUT FIELDS
+     C**
+     C                     MOVE FFISTT    FFISTT  5
+     C                     Z-ADDFFMTHN    FFMTHN  20
+     C                     Z-ADDFFYRNO    FFYRNO  20
+     C                     MOVE FFPCAL    FFPCAL  1
+     C***********          Z-ADDFFSTRP    FFSTRP 117                      CFF004
+     C***********          Z-ADDFFMNPF    FFMNPF 117                      CFF004
+     C                     Z-ADDFFSTRP    FFSTRP 158                      CFF004
+     C                     Z-ADDFFMNPF    FFMNPF 158                      CFF004
+     C                     Z-ADDFFTKDM    FFTKDM  30
+     C                     MOVE FFISTI    FFISTI  1
+     C                     Z-ADDFFISPT    FFISPT  10
+     C*
+     C** RESET OUTPUT FIELD
+     C                     MOVE *BLANKS   FFISDT
+     C                     MOVEA*BLANKS   O1,1
+     C*
+     C**    O.T.C SETUP
+     C*
+     C           FFISTI    IFEQ 'Y'                        - B1
+     C                     MOVELFFISTT    ZZISTT
+     C                     MOVE *BLANKS   ZZMTHN                          078956
+     C                     MOVE *BLANKS   ZZYRNO                          078956
+     C                     ELSE                            - X1
+     C*
+     C**    COMMON VALUE FOR MARKET
+     C*
+     C                     MOVELFFISTT    ZZISTT
+     C                     MOVELFFMTHN    ZZMTHN
+     C                     MOVELFFYRNO    ZZYRNO
+     C                     END                             - E1           078956
+     C*
+     C**    OPTION MARKET SETUP
+     C*
+     C           FFISPT    IFEQ 4                          - B1
+     C           FFISPT    OREQ 5
+     C           FFISPT    OREQ 6
+     C           FFISPT    OREQ 8                                         CPM003
+     C*
+     C**    FORMAT PUT/CALL INDICATOR
+     C                     MOVE FFPCAL    ZZPCAL
+     C*
+     C**    FORMAT STRIKE PRICE
+     C*
+     C                     Z-ADDFFSTRP    FFPRIC
+     C                     EXSR FFPRCS
+     C***********          MOVE FFSPRC    SSTRP  12                       CFF004
+     C                     MOVE FFSPRC    SSTRP  16                       CFF004
+     C*
+     C**    MOVE OUTPUT VALUE IN AN ARRAY
+     C                     MOVEASSTRP     T1
+     C*
+     C**    RETRIEVE NUMBER OF BLANKS
+     C                     Z-ADD1         I       20
+     C***********          Z-ADD12        X       20                      CFF004
+     C                     Z-ADD16        X       20                      CFF004
+     C                     Z-ADD0         CPT     20
+     C*
+     C***********I         DO   12                         - B2           CFF004
+     C                     DO   16                         - B2           CFF004
+     C*
+     C           T1,X      IFEQ ' '                        - B3
+     C                     ADD  1         CPT
+     C                     END                             - E3
+     C*
+     C                     SUB  1         X
+     C*
+     C                     END                             - E2
+     C*
+     C**    SETUP DETAILS FIELD
+     C*
+     C                     Z-ADD1         I
+     C***********          Z-ADD12        X                               CFF004
+     C                     Z-ADD16        X                               CFF004
+     C                     Z-ADD8         J       20
+     C*
+     C***********I         DO   12                         - B2           CFF004
+     C                     DO   16                         - B2           CFF004
+     C*
+     C           J         IFNE 0                          - B3
+     C*
+     C           T1,X      IFEQ '.'                        - B4
+     C***********CPT       ANDLT4                                         CFF004
+     C           CPT       ANDLT8                                         CFF004
+     C           T1,X      OREQ '-'
+     C***********CPT       ANDLT4                                         CFF004
+     C           CPT       ANDLT8                                         CFF004
+     C*
+     C** MOVE ONLY IF FIRST NUMBER OF INTEGER IS 0
+     C           X         SUB  1         Y       20
+     C           T1,Y      IFEQ '0'                        - B5
+     C***********CPT       ANDEQ3                                         CFF004
+     C           CPT       ANDEQ7                                         CFF004
+     C                     MOVE T1,X      O1,J
+     C                     SUB  1         J
+     C                     END                             - E5
+     C*
+     C                     ELSE                            - X4
+     C*
+     C           T1,X      IFNE ' '                        - B5
+     C                     MOVE T1,X      O1,J
+     C                     SUB  1         J
+     C                     END                             - E5
+     C*
+     C                     END                             - E4
+     C*
+     C                     SUB  1         X
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C** STORE FINAL RESULT
+     C                     MOVEAO1        ZZSTRP
+     C*
+     C                     END                             - E1
+     C*
+     C****                 END                             - E1           078956
+     C*
+     C                     ENDSR
+     C**

@@ -1,0 +1,354 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Retrieve IBLC settlement type')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0420    - RETRIEVE IBLC SETTLEMENT TYPE                *
+      *                                                               *
+      *  Function:  This program retrieve the iblc settlement type    *
+      *             depending of currency code, account types         *
+      *             account value passed. it returns IBLC SETT        *
+      *                                                               *
+      *  (phase(s)) *all                                              *
+      *                                                               *
+      *  Called By: FT0045WL -                                        *
+      *             FT0055WL -                                        *
+      *             FT0070WL -                                        *
+      *             FT0080WL -                                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 11May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX043             Date 13Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A - Conversion Of Customer Number to Alpha.            *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     F***SDCUSTXLIF  E           K        DISK                                                CER001
+     FSDCUX1PDIF  E           K        DISK                                                   CER001
+      ***  Customer detail extended                        Prefix CU
+      **** For now, don't Set up Bank Own Account Flag
+     FACCNT   IF  E           K        DISK
+      ***  Account number                                  Prefix none
+      *
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTABF                          KRENAMEACCNTF
+     F            ACCNTACF                          KIGNORE
+     FACNUMA  IF  E           K        DISK
+      ***  Retails account number                          Prefix none
+      *
+     F            ACCNTABF                          KRENAMEACNUMF
+      *
+     FSDNOSTL0IF  E           K        DISK
+      ***  nostro                                          Prefix A7
+      *
+     FSDNOSTL2IF  E           K        DISK
+      ***  nostro details                                  Prefix A7
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+     IENTRY       DS                             55
+      ***  entry parameters
+     I                                        1   3 XXCCY
+     I                                        4   4 XXRT1T
+     I                                        5  19 XXRT1
+     I                                       20  20 XXRT2T
+     I                                       21  55 XXRT2
+     I            DS
+      ***  divide customer account depending of type PARTS (15 char)
+      *
+     I                                        1  18 PARTS
+      *1)                                           Retail account     (10)
+     I                                        1  100DSACNO
+      *2)                                           Nostro short        (2)
+     I                                        1   2 DSNOSS
+      *3)                                           Nostro Full         (5)
+     I                                        1   3 DSNOCY
+     I                                        4   5 DSNONB
+      *4)*******                                    General account    (18)                   CER001
+      *4)                                           General account    (24)                   CER001
+     I**********                              1   60DSCNUM                                   CSD027A
+     I                                        1   6 DSCNUM                                   CSD027A
+     I                                        7   9 DSCCY
+     I**********                             10  130DSACOD                                    CER001
+     I**********                             14  150DSACSQ                                    CER001
+     I**********                             16  18 DSBRCA                                    CER001
+     I                                       10  190DSACOD                                    CER001
+     I                                       20  210DSACSQ                                    CER001
+     I                                       22  24 DSBRCA                                    CER001
+      *5)*******                                    Partial account    (15)                   CER001
+      *5)                                           Partial account    (21)                   CER001
+     I**********                              7  100DSPACO                                    CER001
+     I**********                             11  120DSPASQ                                    CER001
+     I**********                             13  15 DSBRCB                                    CER001
+     I                                        7  160DSPACO                                    CER001
+     I                                       17  180DSPASQ                                    CER001
+     I                                       19  21 DSBRCB                                    CER001
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+      *
+      ***  Prepare working fields
+      *
+     C                     MOVE XXCCY     WWCCY   3        Working fields
+     C                     MOVE *BLANKS   WWTYPE  1
+     C                     MOVE *BLANKS   PARTS
+      *
+      ***  If first data type entered and not swift, address or client number
+      *
+     C           XXRT1T    IFNE *BLANKS                    First
+     C           XXRT1T    ANDNE'A'
+     C           XXRT1T    ANDNE'S'
+     C           XXRT1T    ANDNE'C'
+     C                     MOVE XXRT1T    WWTYPE  1
+     C                     MOVELXXRT1     PARTS
+     C                     ELSE
+     C           XXRT2T    IFNE *BLANKS                    Second
+     C           XXRT2T    ANDNE'A'
+     C           XXRT2T    ANDNE'S'
+     C           XXRT2T    ANDNE'C'
+     C                     MOVE XXRT2T    WWTYPE  1
+     C                     MOVELXXRT2     PARTS
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Evaluate the IBLC Settlement type (default is 5)
+      *
+     C                     MOVE '5'       WWSETT  1        Default
+     C           WWTYPE    IFNE *BLANK
+     C                     EXSR #WORKS
+     C                     ENDIF
+      *
+      ***  Return to caller program
+      *
+     C                     MOVE WWSETT    PSETTY
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      * #WORKS : find Account number
+      *-------------------------------------------------------------------------
+      *
+     C           #WORKS    BEGSR
+      *
+      ***  Reset Key for Account (test fields)
+      *
+     C**********           Z-ADD*ZEROS    KCNUM                                              CSD027A
+     C                     MOVE *BLANKS   KCNUM                                              CSD027A
+     C                     MOVE *BLANKS   KCCY
+     C                     Z-ADD*ZEROS    KACOD
+     C                     Z-ADD*ZEROS    KACSQ
+     C                     MOVE *BLANKS   KBRCA
+      *
+      ***  First part : retrieve the account code
+      ***  ------------
+      *
+     C                     SELEC
+      *
+      ***  Retail Account
+      *
+     C           WWTYPE    WHEQ 'R'
+     C                     MOVELDSACNO    KRTAIL 100       Retail account
+     C           KRTAIL    CHAINACNUMA               66
+     C           *IN66     IFEQ *OFF                       Found
+     C           RECI      IFEQ 'D'                        and valid
+     C                     MOVE CNUM      KCNUM
+     C                     MOVE CCY       KCCY
+     C                     MOVE ACOD      KACOD
+     C                     MOVE ACSQ      KACSQ
+     C                     MOVE BRCA      KBRCA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Nostro
+      *
+     C           WWTYPE    WHEQ 'F'                        Full Nostro
+     C           WWTYPE    OREQ 'N'                        short nostro
+      *
+     C           WWTYPE    IFEQ 'F'
+     C                     MOVE DSNOCY    KNOSCY
+     C                     MOVE DSNONB    KNOSNB
+     C                     ELSE
+     C                     MOVE WWCCY     KNOSCY
+     C                     MOVE DSNOSS    KNOSNB
+     C                     ENDIF
+      *
+      ***  Retrieve the nostro account number
+      *
+     C           KNOS      CHAINSDNOSTL0             67
+     C           *IN67     IFEQ *OFF                       Found
+     C                     MOVE A7CUST    KCNUM
+     C                     MOVE A7CYCD    KCCY
+     C                     MOVE A7ACCD    KACOD
+     C                     Z-ADDA7ACSN    KACSQ
+     C                     MOVE A7BRCD    KBRCA
+     C                     ENDIF
+      *
+      ***  Partial account
+      *
+     C           WWTYPE    WHEQ 'P'                        Partial account
+     C**********           Z-ADDDSCNUM    KCNUM                                              CSD027A
+     C                     MOVE DSCNUM    KCNUM                                              CSD027A
+     C                     MOVE WWCCY     KCCY
+     C                     Z-ADDDSPACO    KACOD
+     C                     Z-ADDDSPASQ    KACSQ
+     C                     MOVE DSBRCB    KBRCA
+      *
+      ***  General account
+      *
+     C           WWTYPE    WHEQ 'G'                        General account ?
+     C**********           Z-ADDDSCNUM    KCNUM                                              CSD027A
+     C                     MOVE DSCNUM    KCNUM                                              CSD027A
+     C                     MOVE WWCCY     KCCY
+     C                     Z-ADDDSACOD    KACOD
+     C                     Z-ADDDSACSQ    KACSQ
+     C                     MOVE DSBRCA    KBRCA
+      *
+     C                     ENDSL
+      *
+      ***  Verify the account status
+      *
+     C           WWTYPE    IFEQ 'P'                        Chk Partial Acc
+     C           WWTYPE    OREQ 'G'                            General Acc
+     C           WWTYPE    OREQ 'F'                            Nostro Full Acc
+     C           WWTYPE    OREQ 'N'                            Nostro short Acc
+     C           KACCNT    CHAINACCNT                64
+     C           *IN64     IFEQ *ON                        not found
+     C           RECI      ORNE 'D'                        no more valid
+     C                     GOTO END
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **** As Synoptic program will removed unnecessary items, BOAX Flag will not be set-up
+      ****
+     C****                 MOVE KCNUM     WWCUST  6
+     C****       KBRCA     CHAINSDBRCHL0             64
+     C****       *IN64     IFEQ *OFF
+     C****       WWCUST    ANDEQA8BICN
+     C****                 MOVE 'Y'       PBOAF            Bank own Account Flag
+     C****                 ENDIF
+      *
+      ***  Other
+      ***  NOSTRO ?
+      *
+     C                     MOVE KCNUM     KNCNUM
+     C                     MOVE KCCY      KNCCY
+     C                     MOVE KACOD     KNACOD
+     C                     Z-ADDKACSQ     KNACSQ
+     C                     MOVELKBRCA     KNBRCA    P
+      *
+     C           KNOST2    SETLLSDNOSTL2                 60
+     C           *IN60     IFEQ *ON
+     C********** KNCNUM    CHAINSDCUSTXL             63                                       CER001
+     C           KNCNUM    CHAINSDCUX1PD             63                                       CER001
+     C           *IN63     IFEQ *OFF
+      *
+      ***  Settlement type depends of customer type
+      *
+     C                     SELEC
+     C           CUTYPE    WHEQ 'BR'
+     C                     MOVE '2'       WWSETT
+     C           CUTYPE    WHEQ 'BO'
+     C                     MOVE '4'       WWSETT
+     C                     ENDSL
+      *
+      ***  Bank nostro==> for its own
+      **** As Synoptic program will removed unnecessary items, BOAC Flag will not be set-up
+      ****
+     C****                 MOVE 'Y'       PBOAF
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ***  Retail ?
+      *
+     C           ATYP      IFEQ 'R'
+     C                     MOVE '1'       WWSETT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           END       ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Initial subroutine
+      *-------------------------------------------------------------------------
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Define parameters list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PCCY    3        Currency
+     C                     PARM           PRT1T   1        Account type 1
+     C                     PARM           PRT1   15        account 1
+     C                     PARM           PRT2T   1        Account type 2
+     C                     PARM           PRT2   35        Account 2
+      *
+      ***  OUTPUT
+      *
+     C                     PARM           PSETTY  1        BCL settlement Type
+     C                     PARM           PBOAF   1        Bank own Account Flag
+      *
+      *** Store entry parameter in DS ENTRY
+      *
+     C                     MOVELPCCY      XXCCY
+     C                     MOVELPRT1T     XXRT1T
+     C                     MOVELPRT1      XXRT1
+     C                     MOVELPRT2T     XXRT2T
+     C                     MOVELPRT2      XXRT2
+      *
+      ***  Key lists
+      *
+     C           KACCNT    KLIST                           ACCOUNT
+     C**********           KFLD           KCNUM   60                                         CSD027A
+     C                     KFLD           KCNUM   6                                          CSD027A
+     C                     KFLD           KCCY    3
+     C**********           KFLD           KACOD   40                                          CER001
+     C                     KFLD           KACOD  100                                          CER001
+     C                     KFLD           KACSQ   20
+     C                     KFLD           KBRCA   3
+      *
+     C           KNOS      KLIST                           Nostro SDNOSTL0
+     C                     KFLD           KNOSCY  3
+     C                     KFLD           KNOSNB  2
+      *
+     C           KNOST2    KLIST                           NOSTRO SDNOSTL2
+     C                     KFLD           KNCNUM  6
+     C                     KFLD           KNCCY   3
+     C**********           KFLD           KNACOD  4                                           CER001
+     C                     KFLD           KNACOD 10                                           CER001
+     C                     KFLD           KNACSQ  20
+     C                     KFLD           KNBRCA  3
+      *
+     C                     ENDSR
+      /EJECT
+      *-------------------------------------------------------------------------
+**  CPY@
+(c) Finastra International Limited 2005

@@ -1,0 +1,1914 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Participants Enquiry')                        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE2026 - Participant Details Maintenance                     *
+      *                                                               *
+      *  Function: This program is used to enquire on different types *
+      *            of Participant facilities within a syndicate. It   *
+      *            is run from the Facility Details Enquiry, and can  *
+      *            be called in several different modes, depending on *
+      *            the parameter passed to it.                        *
+      *                                                               *
+      *              1. Enquiry (P#TYPE = 'R'); Risk Participants     *
+      *             Called from LE0170 (Facility Details Enquiry).    *
+      *                                                               *
+      *              2. Enquiry (P#TYPE = 'S'); Sub Participants      *
+      *             Called from LE0170 (Facility Details Enquiry).    *
+      *                                                               *
+      *              3. Enquiry (P#TYPE = 'P'); Internal Participants *
+      *                 & Funding Participants (PRTR = 'I' or 'P').   *
+      *             Called from LE0170 (Facility Details Enquiry).    *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246090             Date 01Mar07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 11May06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106 *CREATE     Date 08Mar05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  246090 - Value date zeros on participant screen              *
+      *  CSD027A - Conversion Of Customer Number to Alpha             *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager.                                *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *    03      F3 PRESSED EXIT PROGRAM
+      *    05      F5 PRESSED Refresh screen
+      *    12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *    14      F14 Pressed go to settlement screen
+      *    25      Message subfile
+      *    26      Funding Participants
+      *    27      Sub Participants
+      *    28      Risk Participants
+      *    29      READC and CHAIN Subfile record
+      *    30      Subfile display (SFLDSP)
+      *    35      SFLNXTCHG
+      *    40      Invalid subfile selection
+      *    55      Protect Fields
+      *    56      Enable F10
+      *    60      No Records Found in Subfile
+      *    61      Enquiry Mode
+      *    70      READ and/or CHAIN Files
+      *    71      READE FCLTY
+      *    72      CHAIN Facility Extension File
+      *    90-99   Used by standard subroutine
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *                   ~~~~~~~~~~~~~~~~~~~~                        *
+      *  INITPR  -  Initial processing                                *
+      *  BLDSFL  -  Build Subfile                                     *
+      *  REVIEW  -  Interactive processing                            *
+      *  VLDSFL  -  Validate subfile selection                        *
+      *  VLDENQ  -  Validate subfile selection for enquiry            *
+      *  PROSEL  -  Process Enter from subfile screen                 *
+      *  ENQRYS  -  Process enquiry screen                            *
+      *  POPSCR  -  Move fields to screen                             *
+      *  SRWNDW  -  Window processing subroutine                      *
+      *  FEXSET  -  Setup details for settlement screen               *
+      *  MFSSCR  -  Move field to settlement screen (SETLIAB)         *
+      *  SHRTNM  -  Setup SETLIAZ (used in SD2410)                    *
+      *  CF03    -  Terminate program                                 *
+      *  CF05    -  Refresh screen                                    *
+      *  CF12    -  Previous screen                                   *
+      *  CF14    -  Settlement screen                                 *
+      *  CLEARM  -  Clears message from the program message queue     *
+      *  ZASNMS  -  Sends message to the program message queue        *
+      *  *PSSR   -  Error handling subroutine                         *
+      *****************************************************************
+      *
+      ** Funding Participant Details file
+     FLEFCLTLBIF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTL2
+      *
+      ** Risk Participant Details file
+     FLEFCLTLPIF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTL3
+      *
+      ** Sub Participant Details file
+     FLEFCLTLMIF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTL4
+      *
+      ** Facilities Details file
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Facility Extension file
+     FLEFCLTLGIF  E           K        DISK         KINFSR *PSSR
+      *
+     F/COPY WNCPYSRC,LE2026F001
+      *
+      **
+     FLE2026DFCF  E                    WORKSTN      KINFSR *PSSR      UC
+     F                                        RRN1  KSFILE LE2026S1
+      *
+      *****************************************************************
+      /EJECT
+      *
+      ** Compile Time Arrays
+      *  ~~~~~~~~~~~~~~~~~~~
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+      *
+      ** Run Time Arrays
+      *  ~~~~~~~~~~~~~~~
+     E/COPY ZSRSRC,ZALIGNZ1
+      *
+      /SPACE 3
+     E/COPY WNCPYSRC,LEH00498
+      **
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+      *
+     ILDA       E DSLDA                         256
+     I              SPARE                           SPARF
+      *
+      ** Data area to read previous run date
+     IJNSTAT      DS                            200
+     I                                    P 103 1050PRUN
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      *                                     134 141 DBFILE
+      *                                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      **  Job date/time
+     IJBDTTM      DS
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+      *
+      **  Extension file Key
+     IKEYDS       DS
+     I                                        1  14 KEYEXT
+     I                                        1   3 KEBRCH
+     I                                        4   9 KEFCUS
+     I                                       10  12 KEFTYP
+     I                                       13  14 KEFCNO
+      *
+      ** First DS for access programs, short data structure
+     IDSFDY     E DSDSFDY
+      *
+      ** Second DS for access programs, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      ** Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Branch Code Details
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Customer Details
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          Q1DFAC
+      *
+      ** Facility Type Details, read by access program.
+     ISDFACT    E DSSDFACTPD
+      *
+      ** Alternate Name and Addresses
+     ISDALTN    E DSSDALTNPD
+      *
+      ** data structure for passing a parameter to synon screen
+      ** handling program.
+     ISETLIB    EIDSSETLIAB
+      *
+      ** data structure for passing a parameter to synon screen
+      ** handling program.
+     ISETLIZ    E DSSETLIAZ
+     I@PARM3    E DSSDSETLPD
+      *
+      *
+      ** IN Message Format
+     IP#INMF    E DSLEF1MFPD
+     I              QQPONS                          Q1PONS
+     I              QQRONS                          Q1RONS
+      *
+      ** OUT Message Format
+     IP#OUMF    E DSLEF2MFPD
+      *
+      * DS for calculating PC reference
+     ILEALLO    E DSLEALLO
+      *
+     IDATA        DS                           1024
+      *
+     I            DS
+      ** Separate date values
+     I                                        1   6 WDATE
+     I                                        1   2 WDAT1
+     I                                        3   4 WDAT2
+     I                                        5   6 WDAT3
+      *
+     I            DS
+      ** Date format for test harness file
+     I                                        1   8 WTDAT
+     I                                        1   2 WTDT1
+     I I            '/'                       3   3 WFIL1
+     I                                        4   5 WTDT2
+     I I            '/'                       6   6 WFIL2
+     I                                        7   8 WTDT3
+      *
+     I            DS
+      ** Separate time values
+     I                                        1   60WTIME
+     I                                        1   2 WTIM1
+     I                                        3   4 WTIM2
+     I                                        5   6 WTIM3
+      *
+     I            DS
+      ** Time format for test harness file
+     I                                        1   8 WTTIM
+     I                                        1   2 WTTM1
+     I I            ':'                       3   3 WFIL3
+     I                                        4   5 WTTM2
+     I I            ':'                       6   6 WFIL4
+     I                                        7   8 WTTM3
+      *
+     IFCTMSG      DS
+     I                                        1   6 D#CNUM
+     I                                        7   9 D#FACT
+     I                                       10  11 D#FCNO
+      *
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I/COPY ZSRSRC,ZHOLI
+      *
+      ** Data to be passed to window program
+     I/COPY QWINDSRC,LE2026GDTA
+      *
+      /EJECT
+      * ===============================================================
+      **                  D E F I N I T I O N S
+      * ===============================================================
+      *
+      ** PARAMETER Lists
+      ** ~~~~~~~~~~~~~~~
+     C           *ENTRY    PLIST
+     C                     PARM           P#TYPE  1        Participant Type
+     C                     PARM           P#INMF           IN Message format
+     C                     PARM           P#OUMF           OUT Message format
+      *
+      ** Define Fields
+      *  ~~~~~~~~~~~~~
+     C           *LIKE     DEFN FACT      K#FACT
+     C           *LIKE     DEFN FCNO      K#FCNO
+      *
+      ** Key Lists
+      ** ~~~~~~~~~
+      *
+      ** Key list to access Prime Facility
+     C           K#LTL0    KLIST
+     C                     KFLD           K#CNUM
+     C                     KFLD           K#FACT
+     C                     KFLD           K#FCNO
+      *
+      ** Key list to access Funding Participant Details For a prime
+      ** Facility
+     C           K#LTL2    KLIST
+     C                     KFLD           K#BRCA
+     C                     KFLD           K#PMFC
+     C                     KFLD           K#PMFT
+     C                     KFLD           K#PMFN
+      *
+      ** Key list to check if a member is already exists
+     C           K#LTL3    KLIST
+     C                     KFLD           K#BRCA
+     C                     KFLD           K#PMFC
+     C                     KFLD           K#PMFT
+     C                     KFLD           K#PMFN
+     C                     KFLD           K#CNUM
+      *
+      ** Key list to access Facility Extension file
+     C           K#EXT     KLIST
+     C                     KFLD           KEBRCH
+     C                     KFLD           KEFCUS
+     C                     KFLD           KEFTYP
+     C                     KFLD           KEFCNO
+      *
+      * ===============================================================
+      *
+      *                M A I N        P R O C E S S I N G
+      *
+      * ===============================================================
+      *
+      ** Initialisation
+     C                     EXSR INITPR
+      *
+      *
+      ** Build Subfile
+     C                     EXSR BLDSFL
+      *
+      ** Display Screen
+     C                     EXSR REVIEW
+      *
+      **  Terminate program
+     C                     EXSR CF03
+      *
+      /EJECT
+      *****************************************************************
+      * REVIEW   : Process Intractive processing                      *
+      * Called by: Main routine                                       *
+      * Calls    : CF03, CF05,       PROSEL                           *
+      *****************************************************************
+     C           REVIEW    BEGSR
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     WRITELE2026F2                   Header
+     C                     WRITELE2026F5                   Function Keys
+     C                     WRITE#MSGCTL                    Messages
+     C   60                WRITELE2026F4                   No Records  s
+     C                     EXFMTLE2026C1                   Subfile Control
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      **  this is used in CF05 (refresh)
+     C                     MOVE 'SFL'     W#F5MD  3
+      *
+      **  F3  - Exit
+     C           *IN03     CASEQ'1'       CF03
+      *                                   ****
+      **  F5 - Refresh
+     C           *IN05     CASEQ'1'       CF05
+      *
+      **  F12 - Previuos
+     C           *IN12     CASEQ'1'       CF03
+      *                                   ****
+      **  Enter Key Processing
+     C                     CAS            PROSEL
+      *                                   ******
+      *
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * BLDSFL   : Build subfile                                      *
+      * Called by: Main routine, CF05                                 *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           BLDSFL    BEGSR
+      *
+     C                     Z-ADD*ZEROS    RRN1    40
+     C                     Z-ADD*ZEROS    W#TFAM 150
+     C                     Z-ADD*ZEROS    W#TSHP 150
+     C                     MOVE 'N'       W#FLAG  1
+      *
+      *
+     C                     Z-ADD*ZEROS    W#EXPS
+      **  Clear subfile
+     C                     MOVEA'0001'    *IN,30
+     C                     WRITELE2026C1
+      *
+      **  Read all syndicate members
+      *
+      ** If Parameter P#TYPE = 'P', then Funding Participants only:
+     C           P#TYPE    IFEQ 'P'
+     C           K#LTL2    SETLLLEFCLTLB
+     C           K#LTL2    READELEFCLTLB                 70
+     C                     ENDIF
+      *
+      ** Syndication Manager stores Risk Participants on Facility file
+     C           P#TYPE    IFEQ 'R'
+     C           K#LTL2    SETLLLEFCLTLP
+     C           K#LTL2    READELEFCLTLP                 70
+     C                     ENDIF
+      *
+      ** Syndication Manager stores Sub Participants on Facility file
+     C           P#TYPE    IFEQ 'S'
+     C           K#LTL2    SETLLLEFCLTLM
+     C           K#LTL2    READELEFCLTLM                 70
+     C                     ENDIF
+      *
+     C           *IN70     DOWEQ*OFF
+      *
+     C                     MOVE *BLANKS   S#SEL
+     C                     MOVE *OFF      *IN40
+      *
+     C                     MOVELCNUM      S#CNUM           Member Number
+      *
+      ** Share Amount/Percentage
+      *  ~~~~~~~~~~~~~~~~~~~~~~~
+     C           SHTP      IFEQ 'A'
+      *
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE FAMT      ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#SHAR
+      * SHTP = 'P'
+     C                     ELSE
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE SHPC      ZFIELD
+     C                     Z-ADD12        ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#SHAR
+     C                     ENDIF
+      *
+      **  Add to total amounts
+     C                     ADD  FAMT      W#TFAM
+     C                     ADD  SHPC      W#TSHP
+      *
+      ** Share Type
+      *  ~~~~~~~~~~
+     C                     MOVE SHTP      S#SHTP
+      *
+      ** Customer Shortname
+      ** ~~~~~~~~~~~~~~~~~~
+      *  Access the Customer Details file
+      *
+     C                     MOVE CNUM      P#MNUM  6
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM P#MNUM    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVELP#MNUM    DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVE BBCSSN    S#CSSN           Short Name
+     C                     ENDIF
+      *
+      ** Facility
+      ** ~~~~~~~~
+     C                     MOVE FACT      S#FACT
+     C                     MOVE FCNO      S#FCNO
+     C/COPY WNCPYSRC,LEH00499
+      *
+      ** Joining Date
+      ** ~~~~~~~~~~~~
+     C                     MOVE JDTE      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     S#JDTE
+      *
+      ** Value Date
+      ** ~~~~~~~~~~
+     C**********           MOVE VDTC      ZDAYNO                                              246090
+     C**********           EXSR ZDATE2                                                        246090
+     C**********           MOVE ZDATE     S#VDTC                                              246090
+      *
+      *  Populate Hidden Fields
+      ** ~~~~~~~~~~~~~~~~~~~~~~
+     C                     MOVE TNLU      H#TNLU
+     C                     MOVE INUM      H#INUM
+     C                     MOVE RCSI      H#RCSI
+     C                     MOVE PASI      H#PASI
+     C                     MOVE SKIR      H#SKIR
+     C                     MOVE SKIS      H#SKIS
+     C                     MOVE SKFR      H#SKFR
+     C                     MOVE SKFS      H#SKFS
+     C                     MOVE SHPC      H#SHPC
+     C                     MOVE FAMT      H#FAMT
+      *
+      ** Save value of participations sold externally
+      *
+     C           PRTR      IFEQ 'P'
+     C                     ADD  FAMT      W#EXPS 130
+     C                     ENDIF
+      *
+     C                     MOVE RSTM      H#RSTM
+     C                     MOVE RONS      H#RONS
+     C                     MOVE RIBN      H#RIBN
+     C                     MOVE RIBA      H#RIBA
+     C                     MOVE ROBN      H#ROBN
+     C                     MOVE ROCN      H#ROCN
+     C                     MOVE PSTM      H#PSTM
+     C                     MOVE PONS      H#PONS
+     C                     MOVE PIBN      H#PIBN
+     C                     MOVE PIBA      H#PIBA
+     C                     MOVE POBN      H#POBN
+     C                     MOVE POCN      H#POCN
+     C                     MOVE CVMR      H#CVMR
+     C                     MOVE RCRN      H#RCRN
+     C                     MOVE RCRA      H#RCRA
+     C                     MOVE RVNO      H#RVNO
+     C                     MOVE AWBN      H#AWBN
+     C                     MOVE AWBA      H#AWBA
+     C                     MOVE BENN      H#BENN
+     C                     MOVE BENA      H#BENA
+     C                     MOVE DTP1      H#DTP1
+     C                     MOVE DTP2      H#DTP2
+     C                     MOVE DTP3      H#DTP3
+     C                     MOVE DTP4      H#DTP4
+     C                     MOVE DCHG      H#DCHG
+     C                     MOVE BTB1      H#BTB1
+     C                     MOVE BTB2      H#BTB2
+     C                     MOVE BTB3      H#BTB3
+     C                     MOVE BTB4      H#BTB4
+     C                     MOVE BTB5      H#BTB5
+     C                     MOVE BTB6      H#BTB6
+     C                     MOVE OMDB      H#POBR
+     C                     MOVE OSDB      H#ROBR
+     C                     MOVE NACD      H#NACD
+      *
+      ** If CEU004 is on Move Settlement Currency and 'In' Currency
+      *
+     C           CEU004    IFEQ 'Y'
+     C           CLE031    OREQ 'Y'
+     C                     MOVE SCCY      H#SCCY
+     C                     MOVE ICCY      H#ICCY
+     C                     ENDIF
+      *
+     C           CLE031    IFEQ 'Y'
+     C                     MOVE COAG      H#COAG
+     C                     MOVE FCAG      H#FCAG
+     C                     MOVE PHAG      H#PHAG
+     C                     MOVE SCAG      H#SCAG
+      *
+     C           REXR      IFEQ 0
+     C                     MOVE *BLANKS   H#REXR
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE REXR      ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    H#REXR
+     C                     ENDIF
+      *
+     C                     MOVE REXI      H#REXI
+     C                     MOVE PSCY      H#PSCY
+      *
+     C           PEXR      IFEQ 0
+     C                     MOVE *BLANKS   H#PEXR
+     C                     ELSE
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE PEXR      ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    H#PEXR
+     C                     ENDIF
+      *
+     C                     MOVE PEXI      H#PEXI
+     C                     ENDIF
+      *
+      ** Risk Participants have additional fields:
+     C           P#TYPE    IFEQ 'R'
+      *
+      ** Set up Key fields for Facility Extension File
+      *
+     C                     MOVELBRCA      KEBRCH  3
+     C                     MOVELCNUM      KEFCUS  6
+     C                     MOVELFACT      KEFTYP  3
+     C                     MOVELFCNO      KEFCNO  2
+      *
+     C           K#EXT     CHAINLEFCLTD0             72
+     C           *IN72     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LEFCLTQD'DBFILE
+     C                     Z-ADD7         DBASE
+     C                     MOVE KEYEXT    DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+      *
+      ** Move values from file into hidden fields:
+      *
+      ** Risk Participation Loan Type / Subtype:
+     C                     MOVE ' - '     WRK3    3
+     C                     MOVELFCXRLT    WRK3
+     C                     MOVELWRK3      H#LTST
+     C                     MOVE FCXRLS    H#LTST
+      *
+      ** Fee Rates:
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         RRN1
+      *
+     C                     WRITELE2026S1
+      *
+     C           P#TYPE    IFEQ 'P'
+     C           K#LTL2    READELEFCLTLB                 70
+     C                     ENDIF
+      *
+     C           P#TYPE    IFEQ 'R'
+     C           K#LTL2    READELEFCLTLP                 70
+     C                     ENDIF
+      *
+     C           P#TYPE    IFEQ 'S'
+     C           K#LTL2    READELEFCLTLM                 70
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Set on subfile display indicators.
+     C           RRN1      IFGT 0
+     C                     MOVEA'1110'    *IN,30
+      *
+      ** Format  total % Sold
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE W#TSHP    ZFIELD
+     C                     Z-ADD12        ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#SOLD
+      *  Records found
+     C                     MOVE *OFF      *IN60
+      *  Position subfile
+     C                     Z-ADD1         ##SFRC           Position page
+      *
+     C                     ELSE
+      *  Records not found
+      *
+     C                     MOVEA'0100'    *IN,30
+     C                     MOVE *ON       *IN60
+     C                     Z-ADD0         ##SFRC           Position page
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF03     : Exit program                                       *
+      * Called by: PROSEL, REVIEW, CF05,       ENQRYS,                *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           CF03      BEGSR
+      *
+      ** Close SD2400 program and end this program's processing
+     C                     MOVE 'T'       PMTERM
+     C                     CALL 'SD2400'
+     C                     PARM           @RTCD
+     C                     PARM           SETLIB
+     C                     PARM           SETLIZ
+     C                     PARM           @DLNUM  6
+     C                     PARM           @PARM3
+      *
+     C           *IN12     IFEQ *OFF
+     C                     MOVE 'T'       F2MSGS
+     C                     ELSE
+     C           WENTR     IFEQ 'N'
+     C                     MOVE 'P'       F2MSGS
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF05     : Refresh Screen                                     *
+      * Called by: REVIEW,                                            *
+      * Calls    : BLDSFL,        POPSCR.                             *
+      *****************************************************************
+     C           CF05      BEGSR
+      *
+      ** Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      ** If it is in Subfile Mode
+     C           W#F5MD    IFEQ 'SFL'
+      *
+      ** Clear Selection field
+     C           *IN60     IFEQ *OFF
+     C           1         CHAINLE2026S1             29
+     C           *IN29     DOWEQ*OFF
+     C                     MOVE ' '       S#SEL
+     C                     MOVE *OFF      *IN40            RI & PC
+     C                     MOVE *OFF      *IN35            SFLNXTCHG
+     C                     UPDATLE2026S1
+     C                     READCLE2026S1                 29
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Position to first page
+     C                     Z-ADD1         ##SFRC           SFLRCDNBR
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF12     : Previous screen                                    *
+      * Called by: ENQRYS,                                            *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           CF12      BEGSR
+      *
+      ** Clear Message subfile
+     C                     EXSR CLEARM
+      *
+     C                     MOVE *OFF      *IN19
+     C                     MOVE 'N'       W#FLAG
+      *
+     C           *IN60     IFEQ *OFF
+     C           W#RRN1    CHAINLE2026S1             29
+     C                     MOVE *ON       *IN35
+     C                     MOVE *ON       *IN40
+     C                     UPDATLE2026S1
+     C                     ENDIF
+      *
+     C           CLE031    IFEQ 'Y'
+     C                     MOVE *OFF      *IN62
+     C                     MOVE *OFF      *IN63
+     C                     MOVE *OFF      *IN64
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CF14     : Extended Settlement Details                        *
+      * Called by: ENQRYS,                                            *
+      * Calls    : FEXSET                                             *
+      *****************************************************************
+     C           CF14      BEGSR
+      *
+     C                     MOVE 'Y'       W#CF14  1
+      *
+      ** Setup parameters for call to SETLIB
+     C           W#FLAG    IFEQ 'N'
+     C                     EXSR FEXSET
+     C                     ENDIF
+     C                     MOVE *BLANKS   PMTERM
+      *
+     C                     CALL 'SD2400'
+     C                     PARM           @RTCD
+     C                     PARM           SETLIB
+     C                     PARM           SETLIZ
+     C                     PARM           @DLNUM  6
+     C                     PARM           @PARM3
+      *
+      ** Terminate program if database error returned
+     C           PMDBSE    IFNE *ZERO
+     C           *LOCK     IN   LDA
+     C                     MOVELPMDBFL    DBFILE
+     C                     MOVE PMDBSE    DBASE
+     C                     MOVELPMDBKY    DBKEY
+     C                     MOVELPMDPGM    DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PMCMDP    IFEQ '03'
+     C                     MOVE '1'       *IN03
+     C                     MOVE '0'       *IN14
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       PMFRST
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * FEXSET   : Setup details for settlement screen                *
+      * Called by: CF14                                               *
+      * Calls    : MFSSCR,                                            *
+      *****************************************************************
+     C           FEXSET    BEGSR
+      *
+      ** SETUP DETAILS FOR SETTLEMENT SCREEN IF FIRST TIME PASS THROUGH
+      ** EXTENDED SETTLEMENT SCREEN.
+      *
+     C                     MOVE W#ACTN    PMACTC
+     C                     MOVE 'LEND'    PMCPGM
+     C                     Z-ADD0         PMDBSE
+     C                     MOVE *BLANKS   PMERCD
+     C                     MOVE 'Y'       PMFRST
+     C                     Z-ADDBJRDNB    PMRUND
+      *
+      ** DETERMINE IF PAY & RECEIVE SETTLEMENT SCREEN WILL BE
+      ** PROTECTED.
+      *
+     C           W#ACTN    IFEQ 'E'
+     C                     MOVE 'Y'       PMPRCV
+     C                     MOVE 'Y'       PMPPAY
+     C                     ELSE
+     C                     MOVE 'N'       PMPRCV
+     C                     MOVE 'N'       PMPPAY
+     C                     ENDIF
+      *
+      ** MOVE FILE VALUES TO SD2400 PARAMETERS TO BE
+      ** DISPLAYED ON SETTLEMENT SCREEN.
+      *
+     C           W#ACTN    IFEQ 'E'
+     C                     EXSR MFSSCR
+     C                     ENDIF
+      *
+     C                     MOVE S#CNUM    PMCSNM
+     C                     MOVE S#BRCA    PMBRCA
+     C                     MOVE S#FCCY    PMRCCY
+     C                     MOVE S#FCCY    PMPCCY
+     C                     MOVE *BLANK    PMFFND
+     C                     MOVE *BLANK    PMCMDP
+      *
+      *
+      ** VALIDATION ONLY FLAG
+      *
+     C           PMFRST    IFEQ 'N'
+     C                     MOVE 'Y'       PMVALO
+     C                     ELSE
+     C                     MOVE 'N'       PMVALO
+     C                     ENDIF
+      *
+      ** SETTLEMENT DETAIL VALID FLAG, DATE OF RECEIPT AND PAYMENT.
+      *
+     C           W#ACTN    IFEQ 'E'
+     C                     MOVE 'Y'       PMSDTV
+     C                     Z-ADD0         PMDTRC
+     C                     Z-ADD0         PMDTPY
+     C                     ENDIF
+      *
+      ** SET UP DATE OF RECEIPT
+     C                     Z-ADDBJRDNB    PMDTRC
+      *
+      ** SET UP DATE OF PAYMENT
+     C                     Z-ADDBJRDNB    PMDTPY
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * MFSSCR   : Move field to settlement screnn (SETLIAB)          *
+      * Called by: FEXSET                                             *
+      * Calls    : SHRTNM                                             *
+      *****************************************************************
+     C           MFSSCR    BEGSR
+      *
+     C                     Z-ADDH#RSTM    PMRSTM
+     C                     MOVE H#RONS    PMRONS
+     C                     MOVE H#RIBN    PARIBN
+     C                     MOVE H#RIBA    PMRIBA
+      *
+     C           H#ROBN    IFNE 0
+     C                     MOVE H#ROBN    PAROBN
+     C                     ELSE
+     C                     MOVE *BLANKS   PAROBN
+     C                     ENDIF
+      *
+     C           H#ROCN    IFNE 0
+     C                     MOVE H#ROCN    PAROCN
+     C                     ELSE
+     C                     MOVE *BLANKS   PAROCN
+     C                     ENDIF
+      *
+     C                     Z-ADDH#PSTM    PMPSTM
+     C                     MOVE H#PONS    PMPONS
+     C                     MOVE H#PIBN    PAPIBN
+     C                     MOVE H#PIBA    PMPIBA
+      *
+     C           H#POBN    IFNE 0
+     C                     MOVE H#POBN    PAPOBN
+     C                     ELSE
+     C                     MOVE *BLANKS   PAPOBN
+     C                     ENDIF
+      *
+     C           H#POCN    IFNE 0
+     C                     MOVE H#POCN    PAPOCN
+     C                     ELSE
+     C                     MOVE *BLANKS   PAPOCN
+     C                     END
+      *
+     C                     MOVE H#CVMR    PMCVMR
+     C                     MOVE H#RCRN    PARCRN
+     C                     MOVE H#RCRA    PMRCRA
+     C                     MOVE H#RVNO    PARVNO
+     C                     MOVE H#AWBN    PAAWBN
+     C                     MOVE H#AWBA    PMAWBA
+     C                     MOVE H#BENN    PABENN
+     C                     MOVE H#BENA    PMBENA
+     C                     MOVE H#DTP1    PMDTP1
+     C                     MOVE H#DTP2    PMDTP2
+     C                     MOVE H#DTP3    PMDTP3
+     C                     MOVE H#DTP4    PMDTP4
+     C                     MOVE H#DCHG    PMDCHG
+     C                     MOVE H#BTB1    PMBTB1
+     C                     MOVE H#BTB2    PMBTB2
+     C                     MOVE H#BTB3    PMBTB3
+     C                     MOVE H#BTB4    PMBTB4
+     C                     MOVE H#BTB5    PMBTB5
+     C                     MOVE H#BTB6    PMBTB6
+      *
+     C           H#PSTM    IFEQ 05
+     C                     MOVE H#POBR    PMPOBR
+     C                     ELSE
+     C                     MOVE *BLANKS   PMPOBR
+     C                     ENDIF
+      *
+     C           H#RSTM    IFEQ 05
+     C                     MOVE H#ROBR    PMROBR
+     C                     ELSE
+     C                     MOVE *BLANKS   PMROBR
+     C                     ENDIF
+      *
+      ** If CEU004 is on, PMRSCY not BLANKS move H#SCCY to PMRSCY
+      ** If PMRSCY is BLANKS move PMPSCY to H#SCCY.
+      *
+     C           CEU004    IFEQ 'Y'
+     C           CLE031    OREQ 'Y'
+     C                     MOVE H#SCCY    PMRSCY
+     C                     MOVE H#SCCY    PMPSCY
+     C                     MOVE H#ICCY    PMIC72
+     C                     ENDIF
+      *
+     C           CLE031    IFEQ 'Y'
+     C                     MOVE H#SCCY    PMRSCY
+     C                     MOVE H#REXR    PMREXR
+     C                     MOVE H#REXI    PMREXI
+     C                     MOVE H#PSCY    PMPSCY
+     C                     MOVE H#PEXR    PMPEXR
+     C                     MOVE H#PEXI    PMPEXI
+     C                     ENDIF
+      *
+      ** Setup SETLIAZ fields
+     C                     EXSR SHRTNM
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SHRTNM   : Setup SETLIAZ (used in SD2410)                     *
+      * Called by: MFSSCR                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           SHRTNM    BEGSR
+      *
+      ** COUNTERPARTY PAY INSTRUCTIONS.
+     C                     MOVE *BLANKS   PMRIBN
+     C                     MOVELPARIBN    PMRIBN
+      *
+      ** RCPT - RCPT - ORDERING BANK NO.
+     C                     MOVE *BLANKS   PMROBN
+     C                     MOVELPAROBN    PMROBN
+      *
+      ** RCPT - ORDERING CUSTOMER NO.
+     C                     MOVE *BLANKS   PMROCN
+     C                     MOVELPAROCN    PMROCN
+      *
+      ** PAY - INTERMEDIARY BANK NO.
+     C                     MOVE *BLANKS   PMPIBN
+     C                     MOVELPAPIBN    PMPIBN
+      *
+      ** PAY - ORDERING BANK NO.
+      *
+     C                     MOVE *BLANKS   PMPOBN
+     C                     MOVELPAPOBN    PMPOBN
+      *
+      ** PAY - ORDERING CUSTOMER NO.
+      *
+     C                     MOVE *BLANKS   PMPOCN
+     C                     MOVELPAPOCN    PMPOCN
+      *
+      ** RECEIVER CORRESPONDENT NO.
+      *
+     C                     MOVE *BLANKS   PMRCRN
+     C                     MOVELPARCRN    PMRCRN
+      *
+      ** RECEIVER NUMBER
+      *
+     C                     MOVE *BLANKS   PMRVNO
+     C                     MOVELPARVNO    PMRVNO
+      *
+      ** COUNTERPARTY RECEIVE INSTRUCTIONS.
+      *
+     C                     MOVE *BLANKS   PMAWBN
+     C                     MOVELPAAWBN    PMAWBN
+      *
+      ** FOR ACCOUNT OF INSTRUCTIONS.
+      *
+     C                     MOVE *BLANKS   PMBENN
+     C                     MOVELPABENN    PMBENN
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * PROSEL   : Process Enter from subfile screen                  *
+      * Called by: REVIEW                                             *
+      * Calls    : VLDSFL, ENQRYS,                                    *
+      *****************************************************************
+     C           PROSEL    BEGSR
+      *
+      **  Process selction only if records exist on subfile
+     C           *IN60     IFEQ *OFF
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      **  Validate all changes in subfile
+     C                     EXSR VLDSFL
+      *
+      **  If no errors execute valid option subroutine
+     C           W#ERR1    IFEQ 'N'
+      *
+     C                     SELEC
+     C           W#ACTN    WHEQ 'E'
+     C                     EXSR ENQRYS
+     C                     ENDSL
+      *
+     C                     MOVE *OFF      *IN12
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           F1ACTN    IFEQ 'X'
+     C           *IN60     IFEQ *ON
+     C           W#CNT1    OREQ *ZEROS
+     C                     MOVE *ON       *IN12
+     C                     MOVE 'Y'       WENTR
+     C                     EXSR CF03
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDSFL   : Validate subfile selection                         *
+      * Called by: PROSEL                                             *
+      * Calls    : VLDENQ,                                            *
+      *****************************************************************
+     C           VLDSFL    BEGSR
+      *
+     C                     MOVE 'N'       W#ERR1  1
+     C                     Z-ADD*ZEROS    W#CNT1  30
+      *
+      **  Read all changed records
+     C                     READCLE2026S1                 70
+     C           *IN70     DOWEQ*OFF
+      *
+     C                     EXSR VLDENQ
+      *
+     C           S#SEL     IFEQ ' '
+     C                     MOVE *OFF      *IN40            RI & PC
+     C                     MOVE *OFF      *IN35            SFLNXTCHG
+     C                     ELSE
+     C                     MOVE *ON       *IN35            SFLNXTCHG
+     C                     MOVE *ON       *IN40            RI & PC
+     C                     ADD  1         W#CNT1
+     C                     ENDIF
+      *
+     C           S#SEL     IFNE ' '
+     C                     Z-ADDRRN1      W#RRN1  40       Save it
+     C                     Z-ADDRRN1      ##SFRC           Position page
+     C                     MOVE S#SEL     W#ACTN  1        Save it
+     C                     ENDIF
+      *
+     C                     UPDATLE2026S1
+      *
+      **  Read next changed record
+     C                     READCLE2026S1                 70
+      *
+     C                     ENDDO
+      *
+      **  More than one selection
+     C           W#CNT1    IFGT 1
+      *
+     C                     MOVE 'Y'       W#ERR1  1
+      *
+      **  Display Message
+     C                     MOVEL'LEP0027' ZAMSID
+     C                     EXSR ZASNMS
+      *
+     C                     ELSE
+      *
+      **  No selection made therefore do nothing
+     C           W#CNT1    IFEQ 0
+     C                     MOVEL'Y'       W#ERR1           Error
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDENQ   : Validate subfile selection for Enquiry             *
+      * Called by: VLDSFL                                             *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           VLDENQ    BEGSR
+      *
+      **  Only 'E' can be used to make a valid selection
+     C           S#SEL     IFNE 'E'
+     C           S#SEL     ANDNE' '
+      *
+     C                     MOVE *ON       *IN40            RI & PC
+      *
+      **  Display Message if not already displayed
+     C           W#ERR1    IFEQ 'N'
+     C                     MOVEL'LEP0002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'Y'       W#ERR1           Error
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * ENQRYS   : Process enquiry screen                             *
+      * Called by: PROSEL                                             *
+      * Calls    : POPSCR, CF03, CF12, CF14                           *
+      *****************************************************************
+     C           ENQRYS    BEGSR
+      *
+      **  Move File fields to screen
+     C                     EXSR POPSCR
+      *
+     C                     MOVE *OFF      *IN12
+     C                     MOVE *ON       *IN55            Protect Fields
+     C                     MOVE *OFF      *IN56            Disable F10
+      *
+      **  Display screen until F12 or F3 pressed
+     C           *IN03     DOWEQ*OFF
+     C           *IN12     ANDEQ*OFF
+      *
+     C                     WRITELE2026F1                   Function Keys
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTLE2026F3                   Screen
+      *
+      **  Clear Message subfile
+     C                     EXSR CLEARM
+      *
+      **  F3  - Exit
+     C           *IN03     CASEQ'1'       CF03
+      *                                   ****
+      **  F12- Previous
+     C           *IN12     CASEQ'1'       CF12
+      *                                   ****
+      **  F14 - Settlements
+     C           *IN14     CASEQ'1'       CF14
+      *                                   ****
+      **  Procsee Window
+     C                     CAS            SRWNDW
+      *                                   ******
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * POPSCR   : Move fields to screen                              *
+      * Called by:          ENQRYS, CF05                       *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           POPSCR    BEGSR
+      *
+      **  Chain to subfile
+     C           W#RRN1    CHAINLE2026S1             70
+      *
+     C                     MOVELS#CNUM    S#CSSN    P
+      *
+      **  Access the Customer Details file
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM S#CNUM    @CNUM
+     C                     PARM           @CNST
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCRNM    S#SRNM
+     C                     MOVELBBCRTN    S#SRTN
+      *
+      **  Introduced by
+      *
+      **  Access the Customer Details file
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM H#INUM    @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C                     MOVELBBCUST    S#INUM    P
+     C                     MOVELBBCRNM    S#IRNM
+     C                     MOVELBBCRTN    S#IRTN
+      *
+      **  Recourse Indicator
+     C                     MOVE H#RCSI    S#RCSI
+      *
+      **  Assignment/Participation indicator
+     C                     MOVE H#PASI    S#PASI
+      *
+      **  Interest Skim
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE H#SKIR    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#SKIR
+     C                     MOVE H#SKIS    S#SKIS
+      *
+      **  Fees Skim
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE H#SKFR    ZFIELD
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#SKFR
+     C                     MOVE H#SKFS    S#SKFS
+      *
+      **  Alternate Name & Address Code
+     C                     MOVE H#NACD    S#NACD
+      *
+     C           CLE031    IFEQ 'Y'
+     C                     MOVE H#COAG    S#COAG
+     C                     MOVE H#FCAG    S#FCAG
+     C                     MOVE H#PHAG    S#PHAG
+     C                     MOVE H#SCAG    S#SCAG
+     C                     ENDIF
+      *
+     C           P#TYPE    IFEQ 'R'
+     C                     MOVELH#LTST    S#LTST
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLDALT   : Validate Alternate Name and Address Code           *
+      * Called by: VLDDET                                             *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           VLDALT    BEGSR
+      *
+      **  Must be valid name & address record on SDALTNPD
+     C           S#NACD    IFEQ *BLANKS
+     C           S#NACD    OREQ 'B'
+     C                     MOVE 'B'       S#NACD
+      *
+     C                     ELSE
+      *
+     C                     MOVELS#CNUM    WCUST   6
+     C                     MOVELS#NACD    WADCD   1
+     C                     CALL 'AOALTNR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM           WCUST
+     C                     PARM           WADCD
+     C           SDALTN    PARM SDALTN    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'LEP0204' ZAMSID
+     C                     MOVE 'Y'       W#ERR2  1
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN19
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLCOAG   : Validate Co-Agent                                  *
+      * Called by: VLDDET                                             *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           VLCOAG    BEGSR
+      *
+     C                     SELEC
+      *
+     C           S#COAG    WHEQ *BLANK
+     C           S#COAG    OREQ 'N'
+     C                     MOVE 'N'       WCOAG
+      *
+     C           S#COAG    WHNE 'Y'
+     C           S#COAG    ANDNE'N'
+     C                     MOVEL'LEP0300' ZAMSID
+     C                     MOVE 'Y'       W#ERR2
+     C                     MOVE *ON       *IN62
+     C                     EXSR ZASNMS
+      *
+     C           S#COAG    WHEQ 'Y'
+     C**********           MOVELS#ANUM    WCANUM  60                                         CSD027A
+     C                     MOVELS#ANUM    WCANUM  6                                          CSD027A
+     C           A8SYCU    IFNE WCANUM
+     C                     MOVEL'LEP0301' ZAMSID
+     C                     MOVE 'Y'       W#ERR2
+     C                     MOVE *ON       *IN62
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE 'Y'       WCOAG   1
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLFCAG   : Validate Facility Agent                            *
+      * Called by: VLDDET                                             *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           VLFCAG    BEGSR
+      *
+     C                     SELEC
+      *
+     C           S#FCAG    WHEQ *BLANKS
+     C           S#FCAG    OREQ 'N'
+     C                     MOVE 'N'       WFCAG
+      *
+     C           S#FCAG    WHNE 'Y'
+     C           S#FCAG    ANDNE'N'
+     C                     MOVEL'LEP0302' ZAMSID
+     C                     MOVE 'Y'       W#ERR2
+     C                     MOVE *ON       *IN63
+     C                     EXSR ZASNMS
+      *
+     C           S#FCAG    WHEQ 'Y'
+     C                     MOVELS#ANUM    WCANUM
+     C           A8SYCU    IFNE WCANUM
+     C                     MOVEL'LEP0303' ZAMSID
+     C                     MOVE 'Y'       W#ERR2
+     C                     MOVE *ON       *IN63
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE 'Y'       WFCAG   1
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLPHAG   : Validate Paying/Handling Agent                     *
+      * Called by: VLDDET                                             *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           VLPHAG    BEGSR
+      *
+     C                     SELEC
+      *
+     C           S#PHAG    WHEQ *BLANKS
+     C           S#PHAG    OREQ 'N'
+     C                     MOVE 'N'       WPHAG
+      *
+     C           S#PHAG    WHNE 'Y'
+     C           S#PHAG    ANDNE'N'
+     C                     MOVEL'LEP0304' ZAMSID
+     C                     MOVE 'Y'       W#ERR2
+     C                     MOVE *ON       *IN64
+     C                     EXSR ZASNMS
+      *
+     C           S#PHAG    WHEQ 'Y'
+     C                     MOVELS#ANUM    WCANUM
+     C           A8SYCU    IFNE WCANUM
+     C                     MOVEL'LEP0305' ZAMSID
+     C                     MOVE 'Y'       W#ERR2
+     C                     MOVE *ON       *IN64
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE 'Y'       WPHAG   1
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * VLSCAG   : Validate Security Agent                            *
+      * Called by: VLDDET                                             *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           VLSCAG    BEGSR
+      *
+     C                     SELEC
+      *
+     C           S#SCAG    WHEQ *BLANKS
+     C           S#SCAG    OREQ 'N'
+     C                     MOVE 'N'       WSCAG
+      *
+     C           S#SCAG    WHNE 'Y'
+     C           S#SCAG    ANDNE'N'
+     C                     MOVEL'LEP0306' ZAMSID
+     C                     MOVE 'Y'       W#ERR2
+     C                     MOVE *ON       *IN65
+     C                     EXSR ZASNMS
+      *
+     C           S#SCAG    WHEQ 'Y'
+     C                     MOVELS#ANUM    WCANUM
+     C           A8SYCU    IFNE WCANUM
+     C                     MOVEL'LEP0307' ZAMSID
+     C                     MOVE 'Y'       W#ERR2
+     C                     MOVE *ON       *IN65
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     MOVE 'Y'       WSCAG   1
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SRWNDW   : Window processing subroutine                       *
+      * Called by: ENQRYS,                                            *
+      * Calls    : None                                               *
+      *****************************************************************
+     C           SRWNDW    BEGSR
+      *
+     C/COPY WNCPYSRC,LE2026MOV1
+      *
+      **  Call window manager WN0010
+     C                     CALL 'WN0010'
+     C                     PARM 'LE2026'  #PGM   10
+     C                     PARM           KEY     2
+     C                     PARM W#ACTN    ACTION  1
+     C                     PARM           DATA
+     C                     PARM *BLANK    #RTRN   7
+     C******               PARM           SPARF 256
+     C                     PARM           SPARE 256
+      *
+      ** Process return code
+     C           #RTRN     IFNE *BLANK
+     C                     MOVEL#RTRN     ZAMSID
+     C                     MOVEL'WNMSGF  'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVEL'LERMSGF' ZAMSGF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * INITPR   : Initial Processing                                 *
+      * Called by: Main routine                                       *
+      * Calls    : None.                                              *
+      *****************************************************************
+     C           INITPR    BEGSR
+      *
+      **   Define the LDA for error handling
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           JNSTAT
+      **   Define fields:
+     C           *LIKE     DEFN CNUM      K#CNUM
+     C           *LIKE     DEFN FAMT      W#SAVF
+      *
+      ** Funding Participants - *IN26 ON
+     C           P#TYPE    IFEQ 'P'
+     C                     MOVE *ON       *IN26
+     C                     ELSE
+     C                     MOVE *OFF      *IN26
+      ** Sub Participants  - *IN27 ON
+     C           P#TYPE    IFEQ 'S'
+     C                     MOVE *ON       *IN27
+     C                     ELSE
+     C                     MOVE *OFF      *IN27
+      ** Risk Participants - *IN28 ON
+     C           P#TYPE    IFEQ 'R'
+     C                     MOVE *ON       *IN28
+     C                     ELSE
+     C                     MOVE *OFF      *IN28
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **   Subfile indicators
+     C                     MOVE *ON       *IN25
+     C                     Z-ADD1         ##SFRC           SFLRCDNBR
+      *
+      **   SETLIAZ Parameters
+     C                     MOVE 'Y'       PMRETP
+     C                     MOVE 'Y'       PMRETS
+      *
+      ** Access Bank Details
+      *  ~~~~~~~~~~~~~~~~~~~
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7        B:Return Code
+     C                     PARM '*FIRST ' @OPTN   7        I:Option
+     C           SDBANK    PARM SDBANK    DSFDY            O:Format
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     MOVEL@OPTN     DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+     C                     MOVE BJMRDT    S#RUNA           Midas run date
+      *
+      ** Access the Facility in FCLTY (Prime facility)
+      *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C                     MOVE F1PMFC    K#CNUM
+     C                     MOVE F1PMFT    K#FACT
+     C                     MOVE F1PMFN    K#FCNO
+     C           K#LTL0    CHAINFCLTYFMF            N70
+      *
+     C           *IN70     IFEQ *ON
+     C           FSTS      ORNE 'C'
+     C           FSTS      ANDNE'A'
+     C           FSTS      ANDNE'R'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'FCLTYFM 'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     MOVE K#CNUM    DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *  Save prime facility amount
+     C           *LIKE     DEFN FAMT      W#FAMT
+     C                     Z-ADDFAMT      W#FAMT           Prim facility
+      *
+     C           *LIKE     DEFN BRCA      K#BRCA
+     C           *LIKE     DEFN PMFC      K#PMFC
+     C           *LIKE     DEFN PMFT      K#PMFT
+     C           *LIKE     DEFN PMFN      K#PMFN
+      *
+      ** Set up LEFCLTLP Key (K#LTL2)
+     C                     MOVE BRCA      K#BRCA           Branch
+     C                     MOVE F1PMFC    K#PMFC           Facility Type
+     C                     MOVE F1PMFT    K#PMFT
+     C                     MOVE F1PMFN    K#PMFN
+     C                     MOVELACOF      WACOF   2
+     C                     MOVELPRTR      WPRTR   1
+      *
+     C                     ENDIF
+      *
+      **  Access Switchable SAR details for the existence of CLE005
+      **  (Tranche 3)
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CLE005'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CLE005  1
+     C                     ELSE
+     C                     MOVE 'N'       CLE005
+     C                     ENDIF
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    WRTCD   7
+     C                     PARM '*VERIFY' WOPTN   7
+     C                     PARM 'CLE006'  WSARD   6
+      *
+     C           WRTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CLE006  1
+     C                     ELSE
+     C                     MOVE 'N'       CLE006
+     C                     ENDIF
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    WRTCD
+     C                     PARM '*VERIFY' WOPTN
+     C                     PARM 'CLE008'  WSARD
+      *
+     C           WRTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CLE008  1
+     C                     ELSE
+     C                     MOVE 'N'       CLE008
+     C                     ENDIF
+     C/COPY WNCPYSRC,LE2026C003
+      *
+     C                     MOVE F1BRCA    K#BRCA
+     C                     MOVE F1PMFC    K#PMFC
+     C                     MOVE F1PMFT    K#PMFT
+     C                     MOVE F1PMFN    K#PMFN
+     C**********           Z-ADDF1ANUM    ANUM                                               CSD027A
+     C                     MOVE F1ANUM    ANUM                                               CSD027A
+     C                     MOVE F1BRCA    BRCA
+      *
+      **  Access Switchable SAR details for the existence of CEU004
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CEU004'  @SARD
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CEU004  1
+     C                     ELSE
+     C                     MOVE 'N'       CEU004
+     C           @RTCD     IFNE '*NRF    '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SCSARDPD'DBFILE           ************
+     C                     Z-ADD42        DBASE            * DBERR 42 *
+     C                     MOVEL'CEU004'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check if Flat Rate Personal Loans (Rule of 78s) is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CLE028'  @SARD
+      *
+      ** Handle Database Error
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     Z-ADD43        DBASE
+     C                     MOVEL'CLE028'  DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** CLE028 is installed
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CLE028  1
+     C                     ELSE
+     C                     MOVE 'N'       CLE028
+     C                     ENDIF
+      *
+      **  Access Switchable SAR details for the existence of CLE031
+      *
+     C                     MOVE 'Y'       CLE031  1
+     C                     MOVE *OFF      *IN66
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CLE031'  @SARD
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CLE031
+     C                     MOVE *ON       *IN66
+     C                     ELSE
+     C           @RTCD     IFNE '*NRF    '
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     Z-ADD43        DBASE
+     C                     MOVEL'CLE031'  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Check if CLE106 (Syndication Manager) is switched on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CLE106'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CLE106  1
+     C                     ELSE
+     C                     MOVE 'N'       CLE106
+      *
+      **  Data base error in file SCSARDPD
+      *
+     C           @RTCD     IFNE '*NRF    '
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD13        DBASE            ***************
+     C                     MOVEL'SCSARDPD'DBFILE           *DB ERROR 013 *
+     C                     MOVEL'CLE106'  DBKEY            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Access the branch codes Record
+      *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C                     CALL 'AOBRCHR1'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM BRCA      @BRCA   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     Z-ADD3         DBASE
+     C                     MOVELBRCA      DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access the currency details, using AOCURRR0 for the currency
+      ** defined on the Facility record to pick up the currency decimal
+      ** places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM FCCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADD4         DBASE
+     C                     MOVELFCCY      DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access the Customer Details file
+      *
+     C                     MOVE F1PMFC    @CNUM
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CNUM  10
+     C                     PARM           @CNST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVELF1PMFC    DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELBBCRNM    S#PRNM           Report Name
+     C                     MOVELBBCRTN    S#PRTN           Report Town
+     C                     ENDIF
+      *
+      **  Populate screen header
+     C                     MOVE ANUM      S#ANUM           Agent Name
+     C                     MOVE BRCA      S#BRCA           Branch
+     C                     MOVE FCCY      S#FCCY           Currency
+     C                     MOVE F1PMFC    S#PMFC           Facility Custom
+     C                     MOVE F1PMFT    S#PMFT           Facility No
+     C                     MOVE F1PMFN    S#PMFN           Facility No
+     C                     MOVE *BLANK    ZFIELD
+     C                     MOVE W#FAMT    ZFIELD
+     C                     Z-ADDA6NBDP    ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    S#FAMT
+     C/COPY WNCPYSRC,LEH00500
+      *
+      ** Open Display file LE2026DF
+      *  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C                     OPEN LE2026DF
+      *
+      ** Access the Customer Details file
+      *
+     C                     MOVE *BLANKS   @CNUM
+     C                     MOVE ANUM      @CNUM
+     C                     CALL 'AOCUSTR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CNUM
+     C                     PARM           @CNST
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE
+     C                     MOVEL'SDCUSTPD'DBFILE
+     C                     MOVELANUM      DBKEY
+     C                     MOVEL'LE2026'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     MOVELBBCRNM    S#CRNM           Report Name
+     C                     ENDIF
+      *
+     C                     MOVEL'LERMSGF 'ZAMSGF
+     C                     MOVE USER      S#USER
+     C                     MOVE WSID      S#WSID
+     C                     MOVE BJMRDT    S#RUNA
+      *
+     C                     MOVE *ON       *IN61
+      *
+     C                     MOVE 'N'       WENTR   1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     MOVE 'D'       F2MSGS
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  ZASNMS - Sends messages to the program's message queue       *
+      *  Called by: Almost all screens with validation                *
+      *  Calls    : None                                              *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CLEARM  -  Clears the message queue                           *
+      * Called by: All validation subroutines                         *
+      * Calls    : Y2CLMSC                                            *
+      *****************************************************************
+     C           CLEARM    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2L
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2L
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+** CPY@
+(c) Finastra International Limited 2005
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

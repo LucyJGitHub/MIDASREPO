@@ -1,0 +1,123 @@
+/*********************************************************************/
+/*XBI    OVRDBF FILE(UPC000039F) TOFILE(UPDBRLTPD)                   */
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Generic move to new dlv. data methodology')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000039 - Upgrade program to move deliverable data from   */
+/*                   old to new methodology.                         */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. CUP040   *CREATE   Date 05Mar13              */
+/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       CUP040 - New deliverable data methodology.                  */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&OLDF &NEWF &LAYER)
+ 
+             DCL        VAR(&OLDF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)
+ 
+             DCL        VAR(&MODEFIELD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BESPFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EXTFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MOVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&AOPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)
+ 
+             DCLF       FILE(UPC000039F)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2013')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Call the right access object for the layer. */
+             IF         COND(&LAYER *EQ '*ZONE') THEN(DO)
+                CHGVAR     VAR(&AOPGM) VALUE('AOSVALR0')
+             ENDDO
+             IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
+                CHGVAR     VAR(&AOPGM) VALUE('GPAOSVALR0')
+             ENDDO
+ 
+/* Retrieve System Value for Bridge delivered data library. */
+             CALL       PGM(&AOPGM) PARM(&RTNCDE +
+                          'BrgDeliveredDtaLib  ' &SVAL1 ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' +
+                          ' ' ' ' ' ' ' ' ')
+ 
+             CHGVAR     VAR(&BRGDTALIB) VALUE(%SST(&SVAL1 1 10))
+             RMVLIBLE   LIB(&BRGDTALIB)
+             MONMSG     MSGID(CPF0000)
+             ADDLIBLE   LIB(&BRGDTALIB)
+ 
+/* Call program to update UPACTFPD and UPAFFDPD; first copy the 'CP' Action */
+/*  File to the 'DV' version.                                               */
+             CPYF       FROMFILE(&BRGDTALIB/UPAFCPPD) +
+                          TOFILE(UPAFDVPD) MBROPT(*REPLACE) +
+                          INCREL((*IF ATFILE *EQ 'UPACTFPD') (*AND +
+                          ATACT *EQ 'I') (*OR ATFILE *EQ +
+                          'UPAFFDPD') (*AND ATACT *EQ 'I'))
+             CALL       PGM(UP000002) PARM(&LAYER)
+             RMVLIBLE   LIB(&BRGDTALIB)
+ 
+/* Retrieve where the new file is to get system prefix and build the name of */
+/*  the library where the old files were moved to.                           */
+             RTVOBJD    OBJ(&NEWF) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
+             CHGVAR     VAR(&MOVLIB) VALUE('#.' *TCAT %SST(&RTNLIB 1 +
+                          3) *TCAT 'MLIB')
+/* Copy data from old file to new; the new file is a acting as a temporary */
+/*  storage for the moment.                                                */
+             CPYF       FROMFILE(&MOVLIB/&OLDF) TOFILE(&NEWF) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+/* Copy records to extension table. */
+             CHGVAR     VAR(&EXTFILE) VALUE(%SST(&NEWF 1 5) *TCAT +
+                          'XTD')
+             CPYF       FROMFILE(&NEWF) TOFILE(&EXTFILE) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+ 
+/* Call program to update the mode (core or bespoke) fields on the new file. */
+/*  This also updates the ppDEL field and returns the ppMODE field name.     */
+             CALL       PGM(UP000010) PARM(&NEWF &RTNLIB &BRGDTALIB +
+                          &MODEFIELD)
+ 
+/* Perform compare to check if customer has amended any core records. */
+             ACTIONFILE MODE(*BLD) FILE(&NEWF) OLDLIB(&RTNLIB) +
+                          NEWLIB(&BRGDTALIB)
+ 
+/* Copy bespoke records to bespoke file. */
+             CHGVAR     VAR(&BESPFILE) VALUE(%SST(&NEWF 1 5) *TCAT +
+                          'BTD')
+             CPYF       FROMFILE(&NEWF) TOFILE(&BESPFILE) +
+                          MBROPT(*REPLACE) INCCHAR(&MODEFIELD 1 *EQ +
+                          'B')
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                CLRPFM     FILE(&BESPFILE)
+             ENDDO
+ 
+/* Copy core delivery to system file; core should now be correct and bespoke */
+/*  should be close but will need review.                                    */
+             CPYF       FROMFILE(&BRGDTALIB/&NEWF) TOFILE(&NEWF) +
+                          MBROPT(*REPLACE)
+ 
+/* Call program to perform final synch. on 'X' table. */
+             CALL       PGM(UP009016) PARM(&NEWF)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             ENDPGM

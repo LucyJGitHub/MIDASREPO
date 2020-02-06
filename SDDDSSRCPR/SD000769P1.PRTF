@@ -1,0 +1,351 @@
+      *****************************************************************
+/*STD *  PRTFBASE                                                     *
+/*EXS *  PR_STD60                                                     *
+/*EXI *  TEXT('Midas SD Annual Tax Deducted Statement - Detail')      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  PRTF/SD000769P1 - Annual Tax Deducted Statement              *
+      *                                                               *
+      *  (c) Finastra International Limited 2004                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG26728B          Date 26Jan10               *
+      *                 BUG26728A          Date 21Jan10               *
+      *                 BUG25542           Date 19Aug09               *
+      *                 BUG24789           Date 10Jul09               *
+      *                 CER054             Date 07Apr09               *
+      *                 BUG23518           Date 30Mar09               *
+      *                 BUG23514           Date 27Mar09               *
+      *                 BUG23408           Date 16Mar09               *
+      *                 CER048             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGL031  *CREATE    Date 05Jul04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26728B - last customer process is repeated in member list *
+      *  BUG26728A - In the Annual Tax Deducted Statement Report the  *
+      *              threshold of one member is listed / included in  *
+      *              the other member's details; duplicate information*
+      *              in another member s details are shown            *
+      *  BUG25542 - Joint Members should be identified                *
+      *  BUG24789 - Church Tax Change Request 008.                    *
+      *             Remove extraction of Interest Rate from           *
+      *             Annual Tax Deducted Stmt. Reason as follows:      *
+      *             For Retail, the problem is that for tiered or     *
+      *             threshold, a single rate may not reflect the      *
+      *             interest amount.                                  *
+      *             NOTE : In the event that this removal become      *
+      *             a concern for clients, do the following:          *
+      *             (1) RPG/CG006110 - reinstate line "EXSR           *
+      *                 SrIntRate"                                    *
+      *             (2) RPG/SD000769P - reinstate line "EXSR          *
+      *                 SrIntRate" and populate RINRT with WINRT.     *
+      *             (3) PRTF/SD000769P1 - reinstate label "Interest   *
+      *                 Rate" and associated print field RINRT.       *
+      *  CER054 - German Features - Church Tax                        *
+      *  BUG23518 - Produce Annual Tax Deducted Statement upon        *
+      *             Customer Closure                                  *
+      *  BUG23514 - Some fields did not follow the requirement in FS  *
+      *  BUG23408 - Annual tax deducted statement needs adjustment    *
+      *  CER048 - German Features - Taxes                             *
+      *  CGL031 - Taxation of Savings Income                          *
+      *                                                               *
+      *****************************************************************
+     A                                      REF(MFRFL)
+      *
+      *--------------------------------*
+      ***  Report Header Record Format *
+      *--------------------------------*
+      *
+     A          R HEADP1
+     A                                      TEXT('(c) Finastra International -
+     A                                      Limited 2004')
+      *
+     A                                      SKIPB(003)
+     A                                     2'REFERENCE SD000769P1'
+      *
+     A            BJURPT    R             45REFFLD(URPT)
+      *
+     A                                   108'Date'
+     A            BJMRDT    R            113REFFLD(MRDT)
+      *
+     A                                   121'Page'
+     A                                   127PAGNBR
+     A                                      EDTCDE(Z)
+     A                                      SPACEA(002)
+      *
+     A                                    54'ANNUAL TAX DEDUCTED STATEMENT'
+     A                                      SPACEA(001)
+      *
+     A                                    54'-----------------------------'
+      **Start of change BUG23518
+     A  37                                  SPACEA(001)
+     A  37                                58'FOR CLOSED CUSTOMERS'
+     A  37                                  SPACEA(001)
+     A  37                                58'--------------------'
+      **End of change BUG23518
+     A                                      SPACEA(002)
+      *
+     A                                     2'Tax Year:'
+     A            RTAXY          4  0     12
+      **Start of change BUG23514
+     A            RXO            2A       17
+     A  52        RTAXY2         4  0     20
+     A                                      SPACEA(001)
+      **End of change BUG23514
+     A                                     2'Beneficiary Number:'
+     A                                      SPACEB(001)
+     A            RBENN         10        22
+      *
+     A            RCRNM         20        34TEXT('Customer Report Name')
+     A            RCRTN         10        56TEXT('Customer Report Town')
+      **Start of change CER048
+     A**********                            SPACEA(002)                                       CER048
+     A                                      SPACEA(001)
+     A  36                                 2'Customer Bankleitzahl:'
+     A  36        RBLCD          8        24
+      **Start of change BUG23518
+     A N37
+     A  36                                34'Customer Deleted Date:'
+     A  36 37                             34'Customer Closure Date:'
+      **End of change BUG23518
+     A  36        RDTDL          7        56
+     A                                      SPACEA(001)
+     A  36                                 2'Threshold Value Date:'
+     A  36        RTRVD          7        23
+     A**Start of change BUG26728A
+     A**36******                          32'Threshold Maturity Date:'                     BUG26728A
+     A  36                                34'Threshold Maturity Date:'
+     A**36******  RTRMD          7        56                                               BUG26728A
+     A  36        RTRMD          7        59
+     A**End of change BUG26728A
+      **Start of change BUG25542
+     A**36******                          65'Threshold Amount:'                             BUG25542
+     A**36******  RCUTH         15        82                                                BUG25542
+      **End of change BUG25542
+     A**36******                          99'Utilisation Upto:'                             BUG23408
+      **Start of change BUG25542                                                            BUG25542
+     A**36******                          98'Utilisation Up to:'                   BUG23408 BUG25542
+     A**36******  RUTTH         15       116                                                BUG25542
+      **End of change BUG25542
+      *
+     A                                      SPACEA(001)
+     A  36                                 2'Tax Office Name:'
+     A  36        ROFNM         45        19
+      *
+     A  36                                68'Tax Office Number:'
+     A  36        ROFNO         20        86
+     A                                      SPACEA(002)
+      **End of change CER048
+      *
+      **Start of change BUG25542
+     A          R HEADP2
+     A                                      SPACEA(001)
+     A  38                                 2
+     A                                      'Joint Account Members (1st entry i-
+     A                                      s the Main Joint Customer)'
+     A N38                                 2
+     A                                      'Account Customer'
+     A                                      SPACEB(001)
+     A                                    24
+     A                                      'Customer'
+     A                                      SPACEB(001)
+     A                                    56
+     A                                      'Utilisation Up To'
+     A                                    80
+     A                                      'Threshold Amount'
+     A                                    60
+     A                                      'Threshold'
+     A                                      SPACEB(001)
+     A          R DTLMBR
+     A                                      SPACEA(001)
+     A            RCRTNM        42A  O     7
+     A            RUTTH         17A  O    56
+     A            RCUTH         17A  O    80
+     A          R HEADP3
+     A                                      SPACEA(001)
+      **End of change BUG25542
+     A                                     2'Interest'
+     A                                    17'Mod'
+     A                                    22'Transaction'
+     A                                    60'Gross'
+     A                                    78'Tax Withheld'
+     A                                   113'Tax Withheld'
+     A                                      SPACEA(001)
+      *
+     A                                     2'Payment Date'
+     A                                    17'Id.'
+     A                                    22'Type'
+     A                                    41'Principal Amount'
+     A                                    60'Interest Amount'
+     A                                    78'in Original Ccy'
+     A                                    97'Exchange Rate'
+     A                                   113'in Tax Currency'
+     A                                      SPACEA(002)
+      **Start of change BUG23408
+      **Start*of*change*CER048*****************************************                     BUG23408
+     A**36******                           2'Period'                                        BUG23408
+     A**36******                          15'Interest'                                      BUG23408
+     A**36******                          30'Interest'                                      BUG23408
+     A**36******                          78'Secondary Tax'                                 BUG23408
+      **********                                                                            BUG23408
+     A**36******                         113'Secondary Tax'                                 BUG23408
+     A**********                            SPACEA(001)                                     BUG23408
+      **********                                                                            BUG23408
+     A**36******                          15'Rate'                                          BUG23408
+     A**36******                          30'Period'                                        BUG23408
+     A**36******                          78'in Original Currency'                          BUG23408
+     A**36******                         113'in Tax Currency'                               BUG23408
+     A**********                            SPACEA(002)                                     BUG23408
+      **End*of*change*CER048*******************************************                     BUG23408
+      **End of change BUG23408
+      *
+      *--------------------------------*
+      ***  Currency code               *
+      *--------------------------------*
+      *
+     A          R CCYDET
+     A                                     2'Currency Code:'
+     A            RSCCY          3        22TEXT('Currency Code')
+     A            RCYNM         14        26TEXT('Currency Name')
+      **Start of change CER054
+     A**********                            SPACEA(002)                                       CER054
+      **End of change CER054
+     A                                      SPACEA(002)
+      *
+      *--------------------------------*
+      ***  Report Detail Record Format *
+      *--------------------------------*
+      *
+     A          R DETAIL
+      **Start of change CER054
+     A                                      SPACEB(002)
+      **End of change CER054
+     A            RIPDT          6         5TEXT('Interest Payment Date')
+     A            RMODI          1        18TEXT('Mod Id.')
+     A            RTTYP         13        22TEXT('Transaction Type')
+     A            RPAMS         21        36TEXT('Principal Amount')
+     A            RGINS         17        58TEXT('Gross Interest Amt')
+     A            RTXSR         17        76TEXT('Tax Withheld in Orig Ccy')
+     A            RXRST         13  8     95TEXT('Exchange Rate')
+     A                                      EDTCDE(2)
+     A            RTXSC         17       111TEXT('Tax Withheld in Tax Ccy')
+      **Start of change BUG23408
+      **Start*of*change*CER048
+     A**********                            SPACEA(001)                                       CER048
+     A**********                            SPACEA(002)                                     BUG23408
+     A**36******  RPERIOD        6         2TEXT('Period')                                  BUG23408
+     A**36******  RINRT         11  7     15TEXT('Interest Rate')                           BUG23408
+     A**36******  RINPE          6        30TEXT('Interest Period')                         BUG23408
+     A**36******  RSTDO         21        76TEXT('Secondary Tax     +                       BUG23408
+     A**********                            in Original Currency')                          BUG23408
+     A**36******  RSTDT         21       107TEXT('Secondary Tax     +                       BUG23408
+     A**********                            in Tax Currency')                               BUG23408
+      *                                                                                     BUG23408
+     A**********                            SPACEA(002)                                     BUG23408
+      **End*of*change*CER048                                                                BUG23408
+     A                                      SPACEA(002)
+      **Start of change BUG23514
+     A**36******                           2'Period:'                                       BUG23514
+     A  36                                 2'Tax Period:'
+     A**36******  RPERIOD        6        10                                                BUG23514
+     A  36        RPERIOD        4        15
+     A**********                            SPACEA(001)                                     BUG23514
+     A**36******                           2'Interest Period:'                              BUG23514
+     A  36                                49'Interest Period:'
+     A**36******  RINPE          6        19                                                BUG23514
+     A  36        RINPE          6S       66EDTWRD('0 /  /  ')
+     A  36        RTO            2A       75
+     A  36        RINP2          6S       78EDTWRD('0 /  /  ')
+     A                                      SPACEA(001)
+     A**36******                          27'Rate:'                                         BUG23514
+      **Start of change BUG24789
+     A**36******                           2'Interest Rate:'                                BUG24789
+     A**36******  RINRT         11  7     36                                                BUG23514
+     A**36******  RINRT         11  7     18                                                BUG24789
+      **End of change BUG24789
+      **End of change BUG23514
+      **Start of change BUG24789
+     A**********                            EDTCDE(3)                                       BUG24789
+      **End of change BUG24789
+      *
+     A  36                                49'Secondary Tax in +
+     A                                      Orig Ccy:'
+     A  36        RSTDO         17        76
+     A  36                                99'In Tax Ccy:'
+     A  36        RSTDT         17       111
+      **Start of change BUG26728B
+      **********                                                                           BUG26728B
+      **Start of change CER054
+     A**37******                          49'Third Tax in Orig -                           BUG26728B
+     A**********                            Ccy    :'                                      BUG26728B
+     A**********                            SPACEB(001)                                    BUG26728B
+     A**37******  RSTTDO        17A       76                                               BUG26728B
+     A**37******                          99'In Tax Ccy:'                                  BUG26728B
+     A**37******  RSTTDT        17A      111                                               BUG26728B
+      *                                                                                    BUG26728B
+     A  39                                49'Third Tax in Orig -                           BUG26728B
+     A                                      Ccy    :'                                      BUG26728B
+     A                                      SPACEB(001)                                    BUG26728B
+     A  39        RSTTDO        17A       76                                               BUG26728B
+     A  39                                99'In Tax Ccy:'                                  BUG26728B
+     A  39        RSTTDT        17A      111                                               BUG26728B
+      **End of change CER054
+      **End of change BUG26728B
+      *
+      **Start of change CER054
+     A**********                            SPACEA(002)                                       CER054
+      **End of change CER054
+      **End of change BUG23408
+      *
+      *--------------------------------*
+      ***  Total for Currency          *
+      *--------------------------------*
+      *
+     A          R TOTCCY
+      *
+      **Start of change CER054
+     A**********                            SPACEB(001)                                       CER054
+     A                                      SPACEB(002)
+      **End of change CER054
+     A                                     2'Total for Currency'
+     A            RTCCY          3        24
+      *
+     A            RTPAM         21        36TEXT('Principal Amount')
+     A            RTGIN         17        58TEXT('Gross Interest Amt')
+     A            RTTXS         17        76TEXT('Tax Withheld in Orig Ccy')
+     A            RTTXC         17       111TEXT('Tax Withheld in Tax Ccy')
+     A                                      SPACEA(002)
+      *
+      *--------------------------------*
+      ***  Total for Customer          *
+      *--------------------------------*
+      *
+     A          R TOTCUS
+      *
+     A                                     2'Total for Customer'
+     A            RCTCS         10        24
+      *
+     A            RCPAM         21        36TEXT('Principal Amount')
+     A            RCGIN         17        58TEXT('Gross Interest Amt')
+     A            RCTXS         17        76TEXT('Tax Withheld in Orig Ccy')
+     A                                      SPACEA(002)
+      *
+      *-------------------*
+      ***  Report Trailer *
+      *-------------------*
+      *
+     A          R TRAILP1
+     A                                    51
+     A                                      '***  END OF REPORT  ***'
+     A                                      SPACEB(003)
+      *

@@ -1,0 +1,678 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL OIS Deals Bulk Rate Fix - Prompt Program')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL1667 - OIS Deals Bulk Rate Fix - Prompt Program            *
+      *                                                               *
+      *  Function:  This program controls prompt screen DL1667DF to   *
+      *             provide a bulk retrospective base rate            *
+      *             correction function.                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 245692             Date 09Dec13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 226723             Date 12May04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CIR007  *CREATE    Date 11May01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  245692 - Incorrect validation of rates when the decimal se-  *
+      *           parator in the Dealing ICD was defined as "," ins-  *
+      *           tead of ".".                                        *
+      *         - Applied for MD23981.                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  226723 - Allow the insertion of negative base rate for OIS   *
+      *           deals.  Applied fix 219286.                         *
+      *  CIR007 - Overnight Index Swaps                               *
+      *                                                               *
+      *****************************************************************
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Initialisation subroutine                           *
+      *  SRCONF - Controls 'Confirmation' display                     *
+      *  SRVCCY - Validates Base Rate Currency Code                   *
+      *  SRVDAT - Validates Base Rate Date                            *
+      *  SRVCOD - Validates Base Rate Code                            *
+      *  SRSIGN - Validate the sign field                             *                       226723
+      *  SRVNEW - Termination of Program                              *
+      *                                                               *
+      *  ZASNMS - Writes error messages to message subfile            *
+      *   *PSSR - Error Handling                                      *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   13  - If all fields are valid                               *
+      *   42  - If currency is valid                                  *
+      *   43  - If date is valid                                      *
+      *   44  - If rate is valid                                      *
+      *   45  - If base rate code is valid                            *
+      *   46  - If sign field is valid                                *                       226723
+      *   50  - Test if base rate is numeric                          *
+      * 90-99 - Used by Standard Subroutines                          *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      *   99  - Date Format not valid.                                *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     FDL1667DFCF  E                    WORKSTN
+      *
+      *****************************************************************
+      *
+     E                    CPY     1   1 80
+      *
+     E/COPY ZSRSRC,ZDATE1Z1
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      *
+      *****************************************************************
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+     ILDA       E DSLDA                         256
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM #0PGM
+     I                                      244 253 #0WSID
+     I                                      254 263 #0USER
+      *
+      ** First data structure (short) for access programs
+     IDSFDY     E DSDSFDY
+      *
+      ** Second data structure (long) for access programs
+     IDSSDY     E DSDSSDY
+      *
+      ** Data Structure to receive Bank details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data Structure to receive Base Rate details
+     ISDBSRT    E DSSDBSRTPD
+      *
+      ** Data Structure to receive Currency details
+     ISDCURR    E DSSDCURRPD
+      *                                                                                       245692
+      ** Data Structure to retrieve DEALING ICD details                                       245692
+     ISDDEAL    E DSSDDEALPD                                                                  245692
+     I              QQACCD                          @@ACCD                                    245692
+      *
+      ** Data Area giving Installation Control Details
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Set up Return Parameters.
+     IPRTRN       DS                            100
+     I                                        1   3 PBRCCY
+     I                                        4   9 PBDATE
+     I                                       10  11 PBRCOD
+     I                                       12  21 PNBRAT
+     I                                       22  22 PBSIGN                                    226723
+      *
+      *****************************************************************
+      *                                                               *
+      *    M A I N     P R O C E S S I N G                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR SRINIT
+      *
+      ** Display initial screen
+      *
+     C           *IN13     DOWEQ'0'
+      *
+     C                     MOVE '0'       *INKL
+      *
+      ** Do while not F3, not F12, and not in 'Confirm Update' mode.
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *IN13     ANDEQ'0'
+      *
+     C                     WRITEDL1667C0
+     C                     EXFMTDL1667F0
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM #0PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+      *
+      ** If F3 is pressed at this point, return to FCC0201 with PCMD
+      ** set to 'E' to end the transaction.
+      *
+     C                     SELEC
+     C           *INKC     WHEQ '1'
+     C                     MOVE 'E'       PCMD
+      *
+      ** If F12 is pressed at this point, return to FCC0201 with PCMD
+      ** set to 'F', so that the previous screen is displayed.
+      *
+     C           *INKL     WHEQ '1'
+     C                     MOVE 'F'       PCMD
+      *
+      ** If F5 is pressed at this point, clear all the fields
+      ** on the screen, and start again.
+      *
+     C           *INKE     WHEQ '1'
+     C**********           MOVEA'0000'    *IN,42                                              226723
+     C                     MOVEA'00000'   *IN,42                                              226723
+     C                     MOVE *BLANKS   #0BRTC
+     C                     MOVE *BLANKS   #0BRTD
+     C                     MOVE *BLANKS   #0NBRT
+     C                     MOVE *BLANKS   #0BRCO
+     C                     MOVE *BLANK    #0SIGN                                              226723
+      *
+      ** Clear Message Subfile.
+      *
+     C                     OTHER
+      *
+      ** Validate the Base Rate Currency.
+      *
+     C                     EXSR SRVCCY
+      *
+      ** Validate the Base Rate Date.
+      *
+     C                     EXSR SRVDAT
+      *
+      ** Validate the Base Rate Code if Base Rate Currency is valid
+      *
+     C           *IN42     IFEQ '0'
+     C                     EXSR SRVCOD
+     C                     ENDIF
+      *
+      ** Validate the Base Rate.
+      *
+     C                     EXSR SRVNEW
+      *                                                                                       226723
+      ** Validate the sign of the new base rate                                               226723
+      *                                                                                       226723
+     C                     EXSR SRVSGN                                                        226723
+      *
+      ** Switch on indicator 13 if all fields are valid.
+      *
+     C           *IN42     IFEQ '0'
+     C           *IN43     ANDEQ'0'
+     C           *IN44     ANDEQ'0'
+     C           *IN45     ANDEQ'0'
+     C           *IN46     ANDEQ'0'                                                           226723
+     C                     MOVE '1'       *IN13
+     C                     ENDIF
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C           *IN13     IFEQ '1'
+     C                     EXSR SRCONF
+     C                     ELSE
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Return Control to FCC0201.
+      *
+     C                     SETON                     LR
+      *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  SRINIT - Initialisation subroutine                         *
+      *                                                             *
+      *  Called by: Main processing                                 *
+      *                                                             *
+      *  Calls    : AOBANKR0                                        *
+      *                                                             *
+      ***************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Entry Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+     C                     PARM           PRTRN 100
+     C                     PARM           PACT    1
+     C                     PARM           PCMD    1
+      *
+      ** Load Copyright statement.
+      *
+     C                     MOVEACPY       CPY2   80
+      *
+      ** Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define message file to use
+      *
+     C                     MOVEL'DL1667  'DBPGM
+     C                     MOVEL'DRSMM   'ZAMSGF
+      *
+      ** Call Access Program to obtain Banks details from PF/SDBANKPD
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database Error
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'*FIRST  'DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Obtain Midas Run Date
+      *
+     C                     MOVELBJMRDT    #0RUND
+      *
+      ** Check System Date Format, DDMMYY (*IN98 off)
+      **                           MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *                                                                                       245692
+      ** Call Access Program for DEALING ICD Details                                          245692
+      *                                                                                       245692
+     C                     CALL 'AODEALR1'                                                    245692
+     C                     PARM '*DBERR ' PRTCD   7                                           245692
+     C                     PARM '*FIRST ' POPTN   7                                           245692
+     C           SDDEAL    PARM SDDEAL    DSFDY                                               245692
+      *                                                                                       245692
+     C           PRTCD     IFNE *BLANKS                                                       245692
+     C                     MOVEL'SDDEALPD'DBFILE                                              245692
+     C                     Z-ADD2         DBASE                                               245692
+     C                     MOVEL'*FIRST  'DBKEY                                               245692
+     C                     OUT  LDA                                                           245692
+     C                     EXSR *PSSR                                                         245692
+     C                     END                                                                245692
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  SRCONF - Controls 'Confirmation' display                   *
+      *                                                             *
+      *  Called by: Main processing                                 *
+      *                                                             *
+      *  Calls    : None                                            *
+      *                                                             *
+      ***************************************************************
+      *
+     C           SRCONF    BEGSR
+      *
+      ** If validation is successful, then *IN13 will be set on,
+      ** protecting all the fields,  and enabling F6. The screen is
+      ** displayed again at this point.
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKF     ANDEQ'0'
+     C           *INKL     ANDEQ'0'
+      *
+     C                     WRITEDL1667C0
+     C                     EXFMTDL1667F0
+      *
+      ** If F3 is pressed at this point, return to FCC0201 with PCMD
+      ** set to 'E' to end the transaction.
+      *
+     C                     SELEC
+     C           *INKC     WHEQ '1'
+     C                     MOVE 'E'       PCMD
+      *
+      ** If F12 is pressed at this point, we come out of
+      ** 'Confirm Update' mode, and start again.
+      *
+     C           *INKL     WHEQ '1'
+     C                     MOVE '0'       *IN13
+     C**********           MOVEA'0000'    *IN,42                                              226723
+     C                     MOVEA'00000'   *IN,42                                              226723
+      *
+      ** If F6 is pressed then load up the return parameter PRTRN with
+      ** all the fields value and return to FCC0201.
+      *
+     C           *INKF     WHEQ '1'
+     C                     MOVE #0BRTC    PBRCCY
+     C                     MOVE #0BRTD    PBDATE
+     C                     MOVE #0BRCO    PBRCOD
+     C                     MOVE WBRAT     PNBRAT
+     C                     MOVE #0SIGN    PBSIGN                                              226723
+      *
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  SRVCCY - Validates Base Rate Currency Code                 *
+      *                                                             *
+      *  Called by: Main processing                                 *
+      *                                                             *
+      *  Calls    : ZASNMS, AOCURRR0                                *
+      *                                                             *
+      ***************************************************************
+      *
+     C           SRVCCY    BEGSR
+      *
+      ** Clear Error Indicator.
+      *
+     C                     MOVE '0'       *IN42
+      *
+      ** Base Rate Currency Code must not be blank.
+      *
+     C           #0BRTC    IFEQ *BLANKS
+     C                     MOVEL'MMA1195' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'1'       *IN42
+     C                     ENDIF
+      *
+      ** The Base Rate Currency Code must be valid.
+      *
+     C           #0BRTC    IFNE *BLANKS
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM #0BRTC    PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'MMA1196' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN42
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  SRVDAT - Validates Base Rate Date                          *
+      *                                                             *
+      *  Called by: Main processing                                 *
+      *                                                             *
+      *  Calls    : ZASNMS                                          *
+      *                                                             *
+      ***************************************************************
+      *
+     C           SRVDAT    BEGSR
+      *
+      ** Clear Error Indicator.
+      *
+     C                     MOVE '0'       *IN43
+      *
+      ** Base Rate Date must not be blank.
+      *
+     C           #0BRTD    IFEQ *BLANKS
+     C                     MOVEL'MMA1197' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'1'       *IN43
+     C                     ENDIF
+      *
+      ** The Base Rate Date must be valid.
+      *
+     C           #0BRTD    IFNE *BLANKS
+      *
+      ** Test if the Base Rate Date entered is numeric.
+      *
+     C                     MOVEL#0BRTD    ULTEST  7
+     C                     MOVE 'F'       ULTEST
+     C                     TESTN          ULTEST     50
+      *
+     C           *IN50     IFEQ '1'
+     C                     MOVE #0BRTD    ZDATE
+     C                     EXSR ZDATE1
+     C                     ENDIF
+      *
+     C           *IN99     IFEQ '1'
+     C           *IN50     OREQ '0'
+      *
+      ** Send message 'Invalid Date. Enter Date in DDMMYY format.
+      *
+     C                     MOVEL'MMA1198' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN43
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  SRVCOD - Validates Base Rate Code                          *
+      *                                                             *
+      *  Called by: Main processing                                 *
+      *                                                             *
+      *  Calls    : ZASNMS, AOBSRTR0                                *
+      *                                                             *
+      ***************************************************************
+      *
+     C           SRVCOD    BEGSR
+      *
+      ** Clear Error Indicator.
+      *
+     C                     MOVE '0'       *IN45
+      *
+      ** The Base Rate Code must be valid.
+      *
+     C           #0BRCO    IFNE *BLANKS
+      *
+     C                     CALL 'AOBSRTR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM #0BRTC    PCURR   3
+     C                     PARM #0BRCO    PBRCO   2
+     C           SDBSRT    PARM SDBSRT    DSSDY
+      *
+      ** Send error message if invalid
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'MMA1201' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN45
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /EJECT
+      ***************************************************************
+      *                                                             *
+      *  SRVNEW - Validates New Base Rate                           *
+      *                                                             *
+      *  Called by: Main processing                                 *
+      *                                                             *
+      *  Calls    : ZASNMS, ZALIGN                                  *
+      *                                                             *
+      ***************************************************************
+      *
+     C           SRVNEW    BEGSR
+      *
+      ** Clear Error Indicator.
+      *
+     C                     MOVE '0'       *IN44
+      *
+      ** Initialise the Base Rate field.
+      *
+     C                     MOVE *BLANKS   WBRAT  10
+      *
+      ** Base Rate Date must not be blank.
+      *
+     C           #0NBRT    IFEQ *BLANKS
+     C                     MOVEL'MMA1199' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVEL'1'       *IN44
+     C                     ENDIF
+      *
+      ** The New Base Rate must be valid.
+      *
+     C           #0NBRT    IFNE *BLANKS
+      *
+     C                     MOVE #0NBRT    ZFIELD    P
+     C                     Z-ADD3         ZADIG
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZALIGN
+      *
+      ** If Error Send Message 'Invalid Base Rate'.
+      *
+     C           *IN99     IFEQ *ON
+     C                     MOVEL'MMA1200' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN44
+      *
+     C                     ELSE
+      *
+     C                     MOVE ZFIELD    WBRAT
+      *
+     C                     Z-ADD7         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    #0NBRT
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /EJECT
+     ****************************************************************                         226723
+      *                                                             *                         226723
+      *  SR/SRVSGN - Validate the sign field for the new base rate  *                         226723
+      *                                                             *                         226723
+      *  Called by: Main Processing                                 *                         226723
+      *                                                             *                         226723
+      *  Calls    : ZASNMS                                          *                         226723
+      *                                                             *                         226723
+      ***************************************************************                         226723
+      *                                                                                       226723
+     C           SRVSGN    BEGSR                                                              226723
+      *                                                                                       226723
+      ** Clear error indicator                                                                226723
+      *                                                                                       226723
+     C                     MOVE '0'       *IN48                                               226723
+      *                                                                                       226723
+      ** If the sign field is blank, default '+'                                              226723
+      *                                                                                       226723
+     C           #0SIGN    IFEQ ' '                                                           226723
+     C                     MOVE '+'       #0SIGN                                              226723
+     C                     ENDIF                                                              226723
+      *                                                                                       226723
+      ** Error if the sign field is neither '-' or '+'                                        226723
+      *                                                                                       226723
+     C           #0SIGN    IFNE '+'                                                           226723
+     C           #0SIGN    ANDNE'-'                                                           226723
+     C                     MOVEL'MMA0035' ZAMSID                                              226723
+     C                     EXSR ZASNMS                                                        226723
+     C                     MOVE '1'       *IN48                                               226723
+     C                     ENDIF                                                              226723
+      *                                                                                       226723
+     C                     ENDSR                                                              226723
+      *                                                                                       226723
+      ***************************************************************                         226723
+      /EJECT                                                                                  226723
+      ***************************************************************
+      *                                                             *
+      *  ZASNMS - Writes error messages to message subfile          *
+      *                                                             *
+      *  Called by: SRVCCY, SRVDAT, SRVNEW                          *
+      *                                                             *
+      *  Calls    : Y2SNMGC                                         *
+      *                                                             *
+      ***************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     MOVEL#0PGM     ZAPGMQ
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WERROR    IFEQ *BLANK
+     C                     MOVE 'Y'       WERROR  1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ***************************************************************
+      /EJECT
+      /TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C*COPY*ZSRSRC,ZEDITZ2***                                                                 245692
+     C/COPY ZSRSRC,ZEDITZ3                                                                    245692
+      /EJECT
+     C*COPY*ZSRSRC,ZALIGNZ2***                                                                245692
+     C/COPY ZSRSRC,ZALIGNZ4                                                                   245692
+      *
+**  CPY
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

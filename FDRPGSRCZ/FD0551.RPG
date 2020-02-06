@@ -1,0 +1,1388 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas FD Money market rates maintainance')
+      *****************************************************************
+      *                                                               *
+      *     Midas - STANDING DATA                                     *
+      *                                                               *
+      *     FD0551    - MONEY MARKET INTEREST RATES VALIDATION        *
+      *                 FROM CITYDEALER                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 04Oct01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             DATE 15May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCM001  *CREATED*  DATE 01MAR95               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CPK014 - Release 4 packaging.  Rename of field which is too  *
+      *           long for OPM program.                               *
+      *     CSD006 - Recompiled over changed FDINTRPP.               *
+      *     CCM001 - Validate money market interest rates            *
+      *              downloaded from Citydealer and update money     *
+      *              market interest rates file in Midas.            *
+      *                                                              *
+      ****************************************************************
+      *   Indicator Function Summary                                 *
+      *                                                              *
+      *                                                              *
+      *       U7         DATA BASE ERROR                             *
+      *       U8         DATA BASE ERROR                             *
+      *                                                              *
+      *****************************************************************
+     F/EJECT
+     FFDINTRLLIF  E           K        DISK         KINFSR *PSSR
+     FFDTTOTLLUF  E           K        DISK         KINFSR *PSSR
+     F                                              KINFDS INFDST
+     F                                              KCOMIT
+     FFDINTULLUF  E           K        DISK         KINFSR *PSSR A
+     F                                              KINFDS INFDSU
+     F                                              KCOMIT
+     F            FDINTRP0                          KRENAMEFDINTUP0
+     F/COPY WNCPYSRC,FD0551F001
+     F*
+     E                    @MTH   12  12  3               MONTH S/NAMES
+     E                    @LR        21 11 7             LEND RATES
+     E                    @BR        21 11 7             BORROW RATES
+     E                    @PTP   24  24  1               PERIOD TYPES
+     E                    @PRD   24  24  2 0             PERIODS
+     E                    @PER   24  24  2 0             PERIOD
+      *
+      ** ARRAY TO HOLD ERROR RETURN CODES
+      *
+     E                    @RT        19  4               RETURN CODES
+      *
+      ** ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PER IOD
+      *
+     E                    @YD     4   4  5 0A
+      *
+      ** ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH
+      *
+     E                    @MD    13  13  5 0A
+      *
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E/COPY WNCPYSRC,FD0551E001
+     E*
+     E/COPY ZSRSRC,ZHOLE
+     E*
+     I/EJECT
+      *
+      ** FILE RENAMES
+      *                                                                                       CPK014
+     IFDINTRP0                                                                                CPK014
+     I              HWTMESTMP                       HWTMST                                    CPK014
+     IFDINTUP0                                                                                CPK014
+     I              HWTMESTMP                       HXTMST                                    CPK014
+      *
+     ITABLETXF
+     I              RECI                            HRECI
+     I              KEY                             HKEY
+      *
+      ** DATA STRUCTURE TO HOLD BORROW RATES
+      *
+     IBRATE       DS
+     I                                        1  117BRAT1
+     I                                       12  227BRAT2
+     I                                       23  337BRAT3
+     I                                       34  447BRAT4
+     I                                       45  557BRAT5
+     I                                       56  667BRAT6
+     I                                       67  777BRAT7
+     I                                       78  887BRAT8
+     I                                       89  997BRAT9
+     I                                      100 1107BRAT10
+     I                                      111 1217BRAT11
+     I                                      122 1327BRAT12
+     I                                      133 1437BRAT13
+     I                                      144 1547BRAT14
+     I                                      155 1657BRAT15
+     I                                      166 1767BRAT16
+     I                                      177 1877BRAT17
+     I                                      188 1987BRAT18
+     I                                      199 2097BRAT19
+     I                                      210 2207BRAT20
+     I                                      221 2317BRAT21
+      *
+      ** DATA STRUCTURE TO HOLD LEND RATES
+      *
+     ILRATE       DS
+     I                                        1  117LRAT1
+     I                                       12  227LRAT2
+     I                                       23  337LRAT3
+     I                                       34  447LRAT4
+     I                                       45  557LRAT5
+     I                                       56  667LRAT6
+     I                                       67  777LRAT7
+     I                                       78  887LRAT8
+     I                                       89  997LRAT9
+     I                                      100 1107LRAT10
+     I                                      111 1217LRAT11
+     I                                      122 1327LRAT12
+     I                                      133 1437LRAT13
+     I                                      144 1547LRAT14
+     I                                      155 1657LRAT15
+     I                                      166 1767LRAT16
+     I                                      177 1877LRAT17
+     I                                      188 1987LRAT18
+     I                                      199 2097LRAT19
+     I                                      210 2207LRAT20
+     I                                      221 2317LRAT21
+      *
+      ** DATA AREA TO HOLD MIDAS RUN DATE IN DDMMMYY FORMAT
+      *
+     I            DS
+     I                                        1   7 UUMRDT
+     I                                        1   20@DD
+     I                                        3   5 @MMM
+     I                                        6   70@YY
+      *
+      ** DATA AREA TO HOLD LAST CHANGE DATE
+      *
+     I            DS
+     I                                        1   60@CHGD
+     I                                        1   20@CHGDY
+     I                                        3   40@CHGMN
+     I                                        5   60@CHGYR
+      *
+      ** DATA STRUCTURE FOR ACCESS TO BANK DETAILS
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** DATA STRUCTURE FOR ACCESS TO CURRENCY DETAILS
+      *
+     ISDCURR    E DSSDCURRPD
+     I*
+     IDSFDY     E DSDSFDY
+     I*** Short Data Structure for access programs
+     I*
+     IDSSDY     E DSDSSDY
+     I*** Long Data Structure for access programs
+      *
+      ** DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+      *
+     I            DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+      *
+     I                                        3   40@@YY
+     I                                        5   60@@MM
+     I                                        7   80@@DD
+      *
+      ** DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@Z71Y
+      *
+     I            DS
+     I                                        1   40@@Z71Y
+     I                                        2   20@@SSY2
+      *
+      ** DATA STRUCTURE FOR SR. ZA0710 - FIELD IS @@VDT
+      *
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+      *
+     I            DS                              6
+     I                                        1   60@@DTOU
+     I                                        1   20@@DAT1
+     I                                        3   40@@DAT2
+     I                                        5   60@@YYY
+      *
+      ** DATASTRUCTURE TO CHANGE FORMAT TO MMDDYY / DDMMYY
+      *
+      ** DATA STRUCTURES FOR FILE STATUS
+      *
+     IINFDST      DS
+     I                                     *STATUS  STATST
+      *
+     IINFDSU      DS
+     I                                     *STATUS  STATSU
+      *
+      ** PROGRAM STATUS DATA STRUCTURE
+      *
+     IPSDS       SDS
+     I                                      244 253 @JOB
+     I                                      254 263 @USER
+      *
+      ** DATA STRUCTURE LDA IS USED BY THE ERROR-HANDLING ROUTINE
+      *
+     ILDA        UDS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      *
+      ** DATA STRUCTURE TO UPDATE TRANSACTION NUMBER DATA AREA
+      *
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+      *
+      ** DATA STRUCTURE HOLDING STARTING POINT DATE
+      *
+     I            DS
+     I                                        1   80@@STRT
+     I                                        1   40@@STYR
+     I                                        5   60@@STMT
+     I                                        7   80@@STDY
+      *
+      ** DATA STRUCTURE HOLDING SPOT DATE
+      *
+     I            DS
+     I                                        1   80@@SPDD
+     I                                        5   60@@SPMT
+      *
+      ** DATA STRUCTURE DAYS FOR DATE FORMAT DDMMYY
+      *
+     I            DS
+     I                                        1   60@@DATE
+     I                                        1   20@@DAY2
+     I/COPY WNCPYSRC,FD0551I001
+     I*
+     I/COPY ZSRSRC,ZHOLI
+     I*
+     I/EJECT
+      *****************************************************************
+      *                                                               *
+      * MAIN PROCESSING - THIS ROUTINE CONTROLS THE WHOLE PROGRAM     *
+      *                                                               *
+      * CALLED BY :                                                   *
+      *                                                               *
+      * CALLS :      INIT                                             *
+      *              VALID                                            *
+      *              UPDTE                                            *
+      *                                                               *
+      * USES :                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C*** Check for program termination
+     C           PPCCY     IFNE 'END'
+     C*
+     C*
+      ** Program initialisation
+     C                     EXSR INIT
+      ** Program validation
+     C                     EXSR VALID
+     C           PPRTCD    CABNE*BLANKS   ENDPGM
+      ** File updates
+     C                     EXSR UPDTE
+     C/COPY WNCPYSRC,FD0551C001
+      ** End of program
+     C           ENDPGM    TAG
+     C                     RETRN
+      *
+      *
+     C                     ELSE
+     C*** If the currency is 'END' then we terminate completely
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT - INITIALISES WORK FIELDS AND OBTAINS BANK DETAILS.      *
+      *        DEFINES KLISTS.                                        *
+      *                                                               *
+      * CALLED BY : MAIN                                              *
+      *                                                               *
+      * CALLS : AOBANKR0                                              *
+      *                                                               *
+      * USES :                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Retrieve entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PPCCY   3
+     C                     PARM           PPBRAT231
+     C                     PARM           PPLRAT231
+     C                     PARM           PPRTCD 76
+      *
+      ** Define all work fields used in program
+      *
+     C           *LIKE     DEFN HWPRD     KPRD
+     C           *LIKE     DEFN HWTLUP    UUTIME
+     C                     Z-ADD0         ZZWK05  50
+      *
+      ** Define key to FDINTRLL
+      *
+     C           KYFINT    KLIST
+     C                     KFLD           KCCY    3
+     C                     KFLD           KTPRD   1
+     C                     KFLD           KPRD
+      *
+      ** Call access program for bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR  '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Error if record not found
+      *
+     C           @RTCD     IFNE *BLANK
+     C                     MOVE *BLANKS   DBLOT            **************
+     C                     MOVEL'SDBANKPD'DBFILE           *  DATABASE  *
+     C                     MOVEL'FD0551'  DBPGM            *  ERROR 01  *
+     C                     MOVE '001'     DBASE            **************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Convert month to numeric form
+      *
+     C                     MOVE BJMRDT    UUMRDT
+     C                     Z-ADD1         #X      20
+     C           @MMM      LOKUP@MTH,#X                  40
+     C                     MOVE '0'       *IN40
+     C                     MOVE @DD       @CHGDY
+     C                     Z-ADD#X        @CHGMN
+     C                     MOVE @YY       @CHGYR
+      *
+     C                     Z-ADD0         STATST
+     C                     Z-ADD0         STATSU
+     C                     MOVE *BLANKS   @RT
+     C                     Z-ADD0         #R      20
+     C/COPY WNCPYSRC,FD0551C002
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * VALID - VALIDATES THE CURRENCY AND RATES INPUT.               *
+      *                                                               *
+      *                                                               *
+      * CALLED BY : MAIN                                              *
+      *                                                               *
+      * CALLS : AOCURRR0                                              *
+      *                                                               *
+      * USES :                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      ** Call access program for currency validation
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '        '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM PPCCY     @CRKEY  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Error if record not found or not a dealing currency
+      *
+     C           @RTCD     IFNE *BLANK
+     C           @RTCD     OREQ *BLANK
+     C           A6DLCI    ANDNE'Y'
+     C                     ADD  1         #R
+     C                     MOVE '0168'    @RT,#R
+     C                     MOVEA@RT       PPRTCD
+     C           PPRTCD    CABNE*BLANKS   VALID9
+     C                     ENDIF
+      *
+      ** Load rate arrays
+      *
+     C                     MOVE PPBRAT    BRATE
+     C                     MOVE PPLRAT    LRATE
+     C                     Z-ADDBRAT1     @BR,1
+     C                     Z-ADDBRAT2     @BR,2
+     C                     Z-ADDBRAT3     @BR,3
+     C                     Z-ADDBRAT4     @BR,4
+     C                     Z-ADDBRAT5     @BR,5
+     C                     Z-ADDBRAT6     @BR,6
+     C                     Z-ADDBRAT7     @BR,7
+     C                     Z-ADDBRAT8     @BR,8
+     C                     Z-ADDBRAT9     @BR,9
+     C                     Z-ADDBRAT10    @BR,10
+     C                     Z-ADDBRAT11    @BR,11
+     C                     Z-ADDBRAT12    @BR,12
+     C                     Z-ADDBRAT13    @BR,13
+     C                     Z-ADDBRAT14    @BR,14
+     C                     Z-ADDBRAT15    @BR,15
+     C                     Z-ADDBRAT16    @BR,16
+     C                     Z-ADDBRAT17    @BR,17
+     C                     Z-ADDBRAT18    @BR,18
+     C                     Z-ADDBRAT19    @BR,19
+     C                     Z-ADDBRAT20    @BR,20
+     C                     Z-ADDBRAT21    @BR,21
+     C                     Z-ADDLRAT1     @LR,1
+     C                     Z-ADDLRAT2     @LR,2
+     C                     Z-ADDLRAT3     @LR,3
+     C                     Z-ADDLRAT4     @LR,4
+     C                     Z-ADDLRAT5     @LR,5
+     C                     Z-ADDLRAT6     @LR,6
+     C                     Z-ADDLRAT7     @LR,7
+     C                     Z-ADDLRAT8     @LR,8
+     C                     Z-ADDLRAT9     @LR,9
+     C                     Z-ADDLRAT10    @LR,10
+     C                     Z-ADDLRAT11    @LR,11
+     C                     Z-ADDLRAT12    @LR,12
+     C                     Z-ADDLRAT13    @LR,13
+     C                     Z-ADDLRAT14    @LR,14
+     C                     Z-ADDLRAT15    @LR,15
+     C                     Z-ADDLRAT16    @LR,16
+     C                     Z-ADDLRAT17    @LR,17
+     C                     Z-ADDLRAT18    @LR,18
+     C                     Z-ADDLRAT19    @LR,19
+     C                     Z-ADDLRAT20    @LR,20
+     C                     Z-ADDLRAT21    @LR,21
+      *
+      ** Validate rates
+      *
+     C                     Z-ADD1         #X
+     C           #X        DOWLT22
+      *
+      ** The lend rate must be greater or equal to the borrow rate
+      *
+     C           @LR,#X    IFLT @BR,#X
+     C                     ADD  1         #R
+     C                     MOVE '0492'    @RT,#R
+     C                     MOVEA@RT       PPRTCD
+     C           PPRTCD    CABNE*BLANKS   VALIDS
+     C                     ENDIF
+      *
+     C                     ADD  1         #X
+     C                     ENDDO
+      *
+     C           VALIDS    TAG
+      *
+      ** When spot days are 1, the spot/next must be the same as
+      ** tomorrow/next.
+      *
+     C           A6SPDY    IFEQ 1
+     C           @LR,2     IFNE @LR,3
+     C           @BR,2     ORNE @BR,3
+     C                     ADD  1         #R
+     C                     MOVE '0494'    @RT,#R
+     C                     MOVEA@RT       PPRTCD
+     C           PPRTCD    CABNE*BLANKS   VALID9
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           VALID9    ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * UPDTE - THIS SUBROUTINE PERFORMS ANY UPDATES OR OUTPUTS TO    *
+      *         FDINTULL.                                             *
+      *                                                               *
+      * CALLED BY : MAINLINE                                          *
+      *                                                               *
+      * CALLS :                                                       *
+      *                                                               *
+      * USES :                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDTE     BEGSR
+      *
+      ** Access FDINTRLL to see if details already exist for currency
+      *
+     C                     MOVE PPCCY     KCCY
+     C                     MOVE 'D'       KTPRD
+     C                     Z-ADD1         KPRD
+      *
+     C           KYFINT    SETLLFDINTRLL                 31
+      *
+      ** If details exist update with new rates
+      *
+     C           *IN31     IFEQ *ON
+      *
+      ** Obtain header record for update
+      *
+     C                     MOVE *BLANKS   KYFTOT 12
+     C                     MOVEL'HW'      KYFTOT
+     C           KYFTOT    CHAINFDTTOTLL             32
+      *
+      ** Error if record not found
+      *
+     C           *IN32     IFEQ *ON
+     C                     MOVE *BLANKS   DBLOT            **************
+     C                     MOVE 'FDTTOTLL'DBFILE           ** DATABASE **
+     C                     MOVELKYFTOT    DBKEY            ** ERROR 02 **
+     C                     MOVEL'FD0551'  DBPGM            **************
+     C                     MOVE '002'     DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update interest rates file
+      *
+     C           KYFINT    SETLLFDINTULL
+     C           KCCY      READEFDINTULL                 33
+      *
+     C                     TIME           UUTIME
+     C                     Z-ADD1         #X
+     C           #X        DOWLT22
+      *
+      ** Error if record not found
+      *
+     C           *IN33     IFEQ *ON
+     C                     MOVE *BLANKS   DBLOT            **************
+     C                     MOVE 'FDINTULL'DBFILE           ** DATABASE **
+     C                     MOVELKCCY      DBKEY            ** ERROR 03 **
+     C                     MOVEL'FD0551'  DBPGM            **************
+     C                     MOVE '003'     DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set up common fields
+      *
+     C                     MOVE 'HW'      HWRCID
+     C                     MOVE *BLANK    HWDLTF
+     C                     Z-ADD@DD       HWDLUP
+     C                     MOVE @MMM      HWMLUP
+     C                     Z-ADD@YY       HWYLUP
+     C                     Z-ADDUUTIME    HWTLUP
+     C                     MOVE 'A'       HWCHTP
+     C                     Z-ADDBJRDNB    HWLCD
+     C                     MOVEL@USER     HWLUSI
+     C                     Z-ADD@LR,#X    HWLDRT
+     C                     Z-ADD@BR,#X    HWBRRT
+     C                     Z-ADD@CHGD     HWCHGD
+     C                     MOVE PPCCY     HWCCY
+      *
+      ** Load fields required by MM1003 for period date calculation
+      *
+     C                     MOVELHWCCY     ZCCY
+     C                     Z-ADDA6MMSD    @@SPOT
+     C           #X        IFEQ 1
+     C                     Z-SUB@PRD,#X   @@PNUM  20
+     C                     ELSE
+     C                     Z-ADD@PRD,#X   @@PNUM
+     C                     ENDIF
+     C                     MOVE HWTPRD    @@PTYP  1
+      *
+     C                     EXSR MM1003
+     C                     Z-ADD@@PDAT    HWPRDD
+      *
+     C                     UPDATFDINTUP0
+     C           KCCY      READEFDINTULL                 33
+     C                     ADD  1         #X
+     C                     ENDDO
+      *
+     C                     ADD  21        NAMD
+     C                     UPDATTABLETXF
+      *
+      ** Access header record to update last transaction number
+      *
+     C                     MOVE *BLANKS   KYFTOT
+     C                     MOVEL'20'      KYFTOT
+     C           KYFTOT    CHAINFDTTOTLL             32
+      *
+      ** Error if record not found
+      *
+     C           *IN32     IFEQ *ON
+     C                     MOVE *BLANKS   DBLOT            **************
+     C                     MOVE 'FDTTOTLL'DBFILE           ** DATABASE **
+     C                     MOVELKYFTOT    DBKEY            ** ERROR 04 **
+     C                     MOVEL'FD0551'  DBPGM            **************
+     C                     MOVE '004'     DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update last transaction number and header
+      *
+     C                     EXSR ZTNLU1
+     C                     ADD  1         NAMD
+     C                     UPDATTABLETXF
+      *
+      ** If details do not exist write records with new rates
+      *
+     C                     ELSE
+      *
+      ** Obtain header record for update
+      *
+     C                     MOVE *BLANKS   KYFTOT
+     C                     MOVEL'HW'      KYFTOT
+     C           KYFTOT    CHAINFDTTOTLL             32
+      *
+      ** Error if record not found
+      *
+     C           *IN32     IFEQ *ON
+     C                     MOVE *BLANKS   DBLOT            **************
+     C                     MOVE 'FDTTOTLL'DBFILE           ** DATABASE **
+     C                     MOVELKYFTOT    DBKEY            ** ERROR 05 **
+     C                     MOVEL'FD0551'  DBPGM            **************
+     C                     MOVE '005'     DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Output to interest rates file
+      *
+     C                     TIME           UUTIME
+     C                     Z-ADD1         #X
+     C           #X        DOWLT22
+      *
+      ** Set up common fields
+      *
+     C                     MOVE 'HW'      HWRCID
+     C                     MOVE *BLANK    HWDLTF
+     C                     Z-ADD@DD       HWDLUP
+     C                     MOVE @MMM      HWMLUP
+     C                     Z-ADD@YY       HWYLUP
+     C                     Z-ADDUUTIME    HWTLUP
+     C                     MOVE 'A'       HWCHTP
+     C                     Z-ADDBJRDNB    HWLCD
+     C                     MOVEL@USER     HWLUSI
+     C                     MOVE @PER,#X   HWPRD
+     C                     Z-ADD@LR,#X    HWLDRT
+     C                     Z-ADD@BR,#X    HWBRRT
+     C                     Z-ADD@CHGD     HWCHGD
+     C                     MOVE @PTP,#X   HWTPRD
+     C                     MOVE *BLANKS   HWPRDX
+     C                     MOVE PPCCY     HWCCY
+      *
+      ** Load fields required by MM1003 for period date calculation
+      *
+     C                     MOVELHWCCY     ZCCY
+     C                     Z-ADDA6MMSD    @@SPOT
+     C           #X        IFEQ 1
+     C                     Z-SUB@PRD,#X   @@PNUM
+     C                     ELSE
+     C                     Z-ADD@PRD,#X   @@PNUM
+     C                     ENDIF
+     C                     MOVE HWTPRD    @@PTYP
+      *
+     C                     EXSR MM1003
+     C                     Z-ADD@@PDAT    HWPRDD
+      *
+     C                     MOVEASTAMP,1   HXTMST           Default Timestamp                  CPK015
+     C                     MOVEASTAMP,1   HWBOTM           Default Timestamp                  CPK015
+     C                     MOVEASTAMP,1   HWLETM           Default Timestamp                  CPK015
+     C                     WRITEFDINTUP0
+     C                     ADD  1         #X
+     C                     ENDDO
+      *
+     C                     ADD  21        NINS
+     C                     UPDATTABLETXF
+      *
+      ** Access header record to update last transaction number
+      *
+     C                     MOVE *BLANKS   KYFTOT
+     C                     MOVEL'20'      KYFTOT
+     C           KYFTOT    CHAINFDTTOTLL             32
+      *
+      ** Error if record not found
+      *
+     C           *IN32     IFEQ *ON
+     C                     MOVE *BLANKS   DBLOT            **************
+     C                     MOVE 'FDTTOTLL'DBFILE           ** DATABASE **
+     C                     MOVELKYFTOT    DBKEY            ** ERROR 06 **
+     C                     MOVEL'FD0551'  DBPGM            **************
+     C                     MOVE '006'     DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Update last transaction number and header
+      *
+     C                     EXSR ZTNLU1
+     C                     ADD  1         NAMD
+     C                     UPDATTABLETXF
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,FD0551C003
+     C                     COMIT
+     C/COPY WNCPYSRC,FD0551C004
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+     C/COPY WNCPYSRC,FD0551C005
+      *****************************************************************
+      *   MM1003 - CALCULATE A PERIOD DATE                            *
+      *                                                               *
+      *   PERIOD DATES ARE CALCULATED FOR THE FOLLOWING PERIODS       *
+      *      PERIOD TYPE       PERIOD NUMBER     PERIOD SHORTNAME     *
+      *           D                 -1             OVERNIGHT          *
+      *           D                  0             TOMORROW / NEXT    *
+      *           D                  1             SPOT / NEXT        *
+      *           W                  1             1 WEEK             *
+      *           W                  2             2 WEEK             *
+      *           W                  3             3 WEEK             *
+      *           M                  1             1 MONTH            *
+      *           M                  2             2 MONTH            *
+      *           M                  3             3 MONTH            *
+      *           M                  6             6 MONTH            *
+      *           M                  9             9 MONTH            *
+      *           Y                  1             1 YEAR             *
+      *           Y                  2             2 YEARS            *
+      *           Y                  3             3 YEARS            *
+      *           Y                  4             4 YEARS            *
+      *           Y                  5             5 YEARS            *
+      *           Y                  6             6 YEARS            *
+      *           Y                  7             7 YEARS            *
+      *           Y                  8             8 YEARS            *
+      *           Y                  9             9 YEARS            *
+      *           Y                 10            10 YEARS            *
+      *                                                               *
+      *  CALLED BY    -                                               *
+      *                                                               *
+      *  CALLS        -                                               *
+      *                                                               *
+      *  ZA0770       - CONVERT DATE YYYYMMDD TO DDMMYY               *
+     C*  ZA073C       - FIND NEXT WORKING DAY                         *
+     C*  ZCKHK        - CHECK IF DAY IS A WORKING DAY                 *
+      *  ZA0710       - CONVERT MIDAS DAY NO TO YYYYMMDD              *
+      *  ZA0680       - CONVERT DATE TO MIDAS DAY NUMBER              *
+      *                                                               *
+      *  CALLS PROGRAM ZA0270 CONVERT DATE TO MIDAS DAY NUMBER WITH   *
+      *                VALIDATION CHECK                               *
+      *                                                               *
+      *  FIELDS INPUT -                                               *
+      *                                                               *
+      *  @@CCY   3    - CURRENCY                                      *
+      *  @@SPOT  8,0  - MONEY MARKET SPOT DATE                        *
+      *  @@PNUM  2,0  - PERIOD NUMBER                                 *
+      *  @@PTYP  1    - PERIOD TYPE                                   *
+      *                                                               *
+      *  FIELDS OUTPUT                                                *
+      *                                                               *
+      *  @@PDAT  8,0  - PERIOD DATE                                   *
+      *                                                               *
+      *  WORK FIELDS                                                  *
+      *                                                               *
+      *  @@DTIN  8,0  - DATE INPUT TO ZA0770 IN YYYYMMDD FORMAT       *
+      *  @@DFMT  1    - DATE FORMAT                                   *
+      *  @@RTNC  1    - RETURN INDICATOR FROM ZA0270                  *
+      *  @@DAYN  5,0  - MIDAS DAY NUMBER                              *
+      *  @@ADD   3,0  - CALCULATION WORK FIELD                        *
+      *  @@VDT   8,0  - DATE OUTPUT FROM ZA0710                       *
+      *  @@RUND  8    - RUN DATE IN YYYYMMDD FORMAT                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           MM1003    BEGSR
+      *
+     C                     Z-ADD*ZERO     @@STRT
+     C                     Z-ADD*ZERO     @@DTIN
+     C                     Z-ADD*ZERO     @@SPDD
+     C                     Z-ADD*ZERO     @@DATE
+     C                     Z-ADD*ZERO     @@DTOU
+     C                     Z-ADD*ZERO     @@Z71Y
+     C                     Z-ADD*ZERO     @@VDT
+      *
+     C                     ADD  @@SPOT    @@SPDD
+      *
+      ** SET UP STARTING POINT DATE AS SPOT DATE
+      *
+     C                     Z-ADD@@SPDD    @@STRT
+      *
+      ** ADD PERIOD NUMBERS TO DATE
+      *
+     C           @@PTYP    IFEQ 'M'
+     C                     ADD  @@PNUM    @@STMT
+     C           @@STMT    IFGT 12
+     C                     SUB  12        @@STMT
+     C                     ADD  1         @@STYR
+     C                     END
+     C                     END
+      *
+     C           @@PTYP    IFEQ 'Y'
+     C                     ADD  @@PNUM    @@STYR
+     C                     END
+      *
+      ** CONVERT DATE FORMAT FROM YYYYMMDD TO DDMMYY
+      *
+     C                     Z-ADD@@STRT    @@DTIN
+     C                     EXSR ZA0770
+     C                     Z-ADD@@DTOU    @@DATE
+      *
+     C                     MOVEL'D'       @@DFMT  1
+     C                     MOVE @@DATE    @@DATC  60
+      *
+      ** CONVERT STARTING DATE TO MIDAS DAY NUMBER FORMAT
+      *
+     C           @@RTNC    DOUEQ'0'
+     C                     CALL 'ZA0270'
+     C                     PARM           @@DATC
+     C                     PARM           BJDFIN
+     C           @@RTNC    PARM           @@RTNC  1
+     C           @@DAYN    PARM           @@DAYN  50
+      *
+     C                     SUB  1         @@DAY2
+     C                     MOVE @@DATE    @@DATC
+      *
+     C                     END
+      *
+     C                     Z-ADD@@DAYN    ZDAYNO
+     C                     MOVEL@@RTNC    @@RTN
+      *
+      ** RESET STARTING POINT
+      *
+     C                     EXSR ZA0710
+     C                     Z-ADD@@VDT     @@STRT
+      *
+      ** PROCESS PERIOD TYPE 'D'
+      *
+     C           @@PTYP    IFEQ 'D'
+      *
+      ** IF PERIOD NUMBER = 1 FIND NEXT WORKING DAY
+      *
+     C           @@PNUM    IFEQ 1
+     C           ZIND      DOUEQ'W'
+     C                     ADD  1         ZDAYNO
+     C                     EXSR ZCHKH
+     C                     END
+     C                     END
+      *
+      ** IF PERIOD NUMBER NE 1 FIND TOMORROW/NEXT DAY (AND OVERNIGHT)
+      ** IE FIND NEXT WORKING DAY BEYOND RUND
+      *
+     C           @@PNUM    IFLT 1
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C           ZIND      DOUEQ'W'
+     C                     ADD  1         ZDAYNO
+     C                     EXSR ZCHKH
+     C                     END
+     C                     END
+      *
+      ** IF PERIOD NUMBER IS -1 FIND NEXT WORKING DAY TOMM/NEXT.
+      ** IE FIND NEXT WORKING DAY BEYOND RUND
+      *
+     C           @@PNUM    IFEQ 0
+     C           ZIND      DOUEQ'W'
+     C                     ADD  1         ZDAYNO
+     C                     EXSR ZCHKH
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** PROCESS PERIOD TYPE 'W'
+      *
+     C           @@PTYP    IFEQ 'W'
+      *
+      ** INCREMENT DAY NUMBER
+      *
+     C           @@PNUM    MULT 7         @@ADD   30
+     C                     ADD  @@ADD     ZDAYNO
+      *
+      ** FIND NEXT WORKING DAY
+      *
+     C                     EXSR ZCHKH
+     C           ZIND      DOWEQ'H'
+     C                     ADD  1         ZDAYNO
+     C                     EXSR ZCHKH
+     C                     END
+     C                     END
+      *
+      ** PROCESS PERIOD TYPE 'M' OR 'Y'
+      *
+     C           @@PTYP    IFEQ 'M'
+     C           @@PTYP    OREQ 'Y'
+      *
+      ** IS SPOT LAST WORKING DAY IN MONTH
+      *
+     C                     Z-ADD@@SPDD    @@DTIN
+     C                     EXSR ZA073C
+     C           @@SPMT    IFNE @@Z71M
+     C                     Z-ADD1         @@STDY
+     C           @@STMT    IFEQ 12
+     C                     Z-ADD1         @@STMT
+     C                     ADD  1         @@STYR
+     C                     ELSE
+     C                     ADD  1         @@STMT
+     C                     END
+      *
+      ** CONVERT STARTING DATE TO MIDAS DAY NUMBER FORMAT
+      *
+     C                     Z-ADD@@STRT    @@DTIN
+     C                     EXSR ZA0680
+     C                     Z-ADD@@MDNO    ZDAYNO
+     C           ZIND      DOUEQ'W'
+     C                     SUB  1         ZDAYNO
+     C                     EXSR ZCHKH
+     C                     END
+     C                     GOTO M10038
+     C                     END
+      *
+      ** IF THE STARTING POINT DAY IS A NON WORKING DAY AND THE NEXT
+      ** WORKING DAY FALLS IN THE NEXT MONTH  FIND LAST WORKING DAY
+      ** IN STARTING MONTH.
+      *
+     C                     Z-ADD@@STRT    @@DTIN
+     C                     EXSR ZA0680
+     C                     Z-ADD@@MDNO    ZDAYNO
+     C                     EXSR ZCHKH
+     C           ZIND      IFEQ 'H'
+     C                     Z-ADD@@STRT    @@DTIN
+     C                     EXSR ZA073C
+      *
+     C           @@STMT    IFNE @@Z71M
+     C           ZIND      DOUEQ'W'
+     C                     SUB  1         ZDAYNO
+     C                     EXSR ZCHKH
+     C                     END
+     C                     END
+     C                     GOTO M10038
+     C                     END
+      *
+      ** IF STARTING DATE IS A WORKING DAY IN CURRENCY & SPOT DATE
+      ** IS NOT LAST WORKING DAY IN MONTH PERIOD DATE IS STARTING DAY
+      *
+     C                     Z-ADD@@STRT    @@PDAT
+     C                     GOTO M10039
+      *
+     C                     END
+      *
+     C           M10038    TAG
+      *
+      ** CONVERT DATE TO YYYYMMDD FORMAT
+      *
+     C                     Z-ADDZDAYNO    @@DAYN
+     C                     EXSR ZA0710
+     C                     Z-ADD@@VDT     @@PDAT  80
+      *
+     C                     GOTO M10039
+     C                     ADD  0         @@SPOT  80
+     C                     MOVE *BLANKS   @@CCY   3
+     C                     ADD  0         @@PNUM  20
+     C                     MOVE *BLANKS   @@PTYP  1
+      *
+     C           M10039    ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *******************************************************************
+      *
+      * ZA0680 - THIS SUBROUTINE CONVERTS YYYYMMDD FORMAT DATE TO
+      *          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)
+      *
+      * CALLED BY :
+      *
+      * CALLS :
+      *
+      * INPUT  : @@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)
+      *
+      * OUTPUT : @@MDNO MIDAS DAY NUMBER  (SIZE : 5N)
+      *
+      * USES :   @@CC   NUMBER OF CENTURIES IN DATE
+      *          @@DAY  DAY NUMBER
+      *          @@REM  REMAINDER FROM DIVIDE
+      *          @@MTH  MONTH NUMBER
+      *          @MD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+      *                 MONTH
+      *          @@WK2  WORK FIELD (2,0)
+      *          @@WK5  WORK FIELD (5,0)
+      *          @@YYYY YEAR (4 CHARACTER)
+      *          @@YY   YEAR (2 CHARACTER)
+      *          @YD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+      *                 A FOUR YEAR PERIOD
+      *
+      *     LAST AMEND NO. ME1257              DATE 02/04/87                *
+      *     When date input is zero set output date to zeroes               *
+      *
+      *******************************************************************
+      *
+     C           ZA0680    BEGSR
+      *
+      **  CLEAR OUT ANY 'OLD' DATA IN FIELD
+      *
+     C                     Z-ADD0         @@MDNO  50
+      *
+     C           @@DTIN    CABEQ0         ZA0689                          ME1257
+      *
+      ** IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+      ** WORK OUT THE NUMBER OF CENTURIES PASSED SINCE 1971,
+      ** BY SUBTRACTING 1972 FROM THE YEAR FIELD.
+      *
+     C           @@YYYY    IFGE 2072
+     C           @@YYYY    SUB  1972      @@YYYY
+      *
+      ** MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+      ** THEN RESTORE THE YEAR WHICH WAS INPUT BACK TO THE
+      ** ORIGINAL VALUE BEFORE CONTINUING WITH NORMAL CALCULATIONS.
+      *
+     C           @@CC      MULT 36524     @@MDNO
+     C           @@YYYY    ADD  1972      @@YYYY
+     C                     END
+      *
+     C           @@YYYY    ADD  28        @@WK2   20
+      *
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+      *
+      ** MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+      *
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+      *
+      ** CHECK REMAINDER AND MONTH NUMBER
+      *
+     C           @@REM     IFEQ 0
+     C           @@MTH     ANDGT2
+     C                     ADD  1         @@MDNO
+     C                     END
+      *
+      ** YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+      *
+     C           @@REM     IFNE 0
+     C                     ADD  @YD,@@REM @@MDNO
+     C                     END
+      *
+      ** ADD MONTHS THIS YEAR
+      *
+     C                     ADD  @MD,@@MTH @@MDNO
+      *
+      ** ADD DAYS THIS MONTH
+      *
+     C                     ADD  @@DAY     @@MDNO
+      *
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *       TITLE:CALCULATE MIDAS DAY NO. TO DRS (YYYYMMDD) FORMAT. *
+      *                                                               *
+      *       SUBROUTINE ZA0710 EXPECTS FIELD '@@DAYN' TO BE          *
+      *       PASSED TO IT IN 5,0 FORMAT.IF THE ABOVE FIELD IS LESS   *
+      *       THAN 1 IT RETURNS 1 IN FIELD '@@RTN'.THE MAIN PROGRAM   *
+      *       SHOULD CHECK FOR THIS CONDITION AND DO THE NECESSARY.   *
+      *       IF '@@RTN' IS NOT EQUAL TO 1 IT RETURNS THE FIELD       *
+      *       '@@VDT'  IN 'YYYYMMDD' FORMAT.                          *
+      *                                                               *
+      * NOTE: FIELD TO BE DEFINED BY EXTERNAL ROUTINE IS              *
+      *                                                               *
+      *       1) @@DAYN   LENGTH 5,0.                                 *
+      *                                                               *
+      *       FIELDS USED AND ALREADY DEFINED IN THE ROUTINE ARE:     *
+      *                                                               *
+      *       1) @@VDT    LENGTH 8,0 DEFINED BY A DS.                 *
+      *       2) @@RTN    LENGTH 1,0.                                 *
+      *       3) @@I      LENGTH 2,0 USED TO ACCESS ARRAY @YD         *
+      *       4) @@J      LENGTH 2,0 USED TO ACCESS ARRAY @MD         *
+      *       5) @@Z71Y   LENGTH 4,0 DEFINED BY A DS.                 *
+      *       6) @@RDAY   LENGTH 5,0.                                 *
+      *       7) @@LEAP   LENGTH 1,0.                                 *
+      *                                                               *
+      *       INDICATORS USED ARE:                                    *
+      *                                                               *
+      *       1) 80       CHECK FOR LOW AND EQUAL ON ARRAY @YD        *
+      *       2) 81       CHECK FOR LOW ON ARRAY @MD.                 *
+      *                                                               *
+      * INPUT FIELD:       @@DAYN                                     *
+      *                                                               *
+      * OUTPUT FIELD:      @@VDT                                      *
+      *                                                               *
+      * WORK FIELDS:       @@RTN                                      *
+      *                    @@Z71Y                                     *
+      *                    @@RDAY                                     *
+      *                    @@LEAP                                     *
+      *                    @@I                                        *
+      *                    @@J                                        *
+      *                                                               *
+      * ARRAYS USED:       @YD COMPILE TIME ARRAY.                    *
+      *                    @MD COMPILE TIME ARRAY.                    *
+      *                                                               *
+      *     LAST AMEND NO. ME1257              DATE 02/04/87          *
+      *     When date input is zero set output date to zeroes         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZA0710    BEGSR
+      *
+     C                     SETOF                     8081
+     C                     Z-ADD0         @@RTN   10
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+      *
+     C           @@DAYN    CABEQ0         ZA0719                          ME1257
+      *
+     C           @@DAYN    IFLT 1
+     C                     Z-ADD1         @@RTN
+     C                     GOTO ZA0719
+     C                     END
+      *
+      ** DIVISION TO DETERMINE WETHER LEAP YEAR.
+      *
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+      *
+      ** CALCULATING YEAR.
+      *
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+      *
+      ** CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+      *
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+      *
+      ** LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+      ** HAVE PASSED.
+      *
+     C           @@RDAY    LOKUP@YD,@@I                8080
+      *
+      ** IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+      *
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+      *
+      ** ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+      *
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+      *
+      ** PROCESSING FOR A LEAP YEAR.
+      *
+     C           @@LEAP    IFEQ 0
+      *
+      ** IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+      *
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+      *
+      ** IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+      ** PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+      ** YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+      *
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+      *
+     C                     END
+      *
+      ** IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+      ** IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+      ** GROUP.
+      *
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+      *
+      ** LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+      ** OCCURS IN
+      *
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+      *
+      ** DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+      *
+     C           ZA0711    TAG
+      *
+     C                     MOVE @@Z71Y    @@YR
+      *
+     C           ZA0719    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+     C*
+     C/COPY ZSRSRC,ZCHKH
+      *****************************************************************
+      *                                                               *
+      *       TITLE:DETERMINE NEXT WORKING DAY.                       *
+      *                                                               *
+      *       SUBROUTINE ZA073C EXPECTS FIELD '@@DTIN' TO BE          *
+      *       PASSED TO IT IN 'YYYYMMDD' FORMAT.IT THEN DETERMINES    *
+      *       THE NEXT WORKING DAY AND RETURNS.                       *
+      *                                                               *
+      * INPUT  :@@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)*
+     C*         ZCCY   CURRENCY CODE   - IN FORMAT(3A)                *
+      *                                                               *
+      * OUTPUT :@@VDT  DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)*
+      *                                                               *
+      * USES :   @@MDNO MIDAS DAY NO USED BY SR ZA0680                *
+      *          @@DAYN MIDAS DAY NO USED BY SR ZA0710                *
+      *                                                               *
+      *****************************************************************
+     C           ZA073C    BEGSR
+      *
+      ** CONVERT YYYYMMDD FORMAT TO MIDAS DAY NO.
+      *
+     C                     EXSR ZA0680
+      *
+     C           ZA0731    TAG
+      *
+     C                     ADD  1         @@MDNO  50
+      *
+      ** CHECK IF DAY NO. IS A HOLIDAY          .
+      *
+     C                     Z-ADD@@MDNO    ZDAYNO  50
+      *
+     C                     EXSR ZCHKH
+      *
+     C           ZIND      IFEQ 'H'
+     C                     GOTO ZA0731
+     C                     END
+      *
+      ** CONVERT MIDAS DAY NO. TO YYYYMMDD FORMAT.
+      *
+     C                     Z-ADD@@MDNO    @@DAYN  50
+      *
+     C                     EXSR ZA0710
+      *
+     C           ZA0739    ENDSR                                       **
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBROUTINE ZA0770 - THIS SUBROUTINE RECEIVES A 8/0 INPUT     *
+      *                      DATE - FORMAT YYYYMMDD AND OUTPUTS A     *
+      *                      6/0 DATE. IF FIELD BJDFIN ON SDBANKPD =  *
+      *                      'M' OUTPUT FORMAT MMDDYY. IF FIELD       *
+      *                      BJDFIN = 'D' OUTPUT FORMAT DDMMYY.       *
+      *                                                               *
+      *  CALLED BY   :                                                *
+      *                                                               *
+      *  INPUT       : @@DTIN  - DATE INPUT (8,0)                     *
+      *  OUTPUT      : @@DTOU  - DATE OUTPUT (6,0)                    *
+      *                                                               *
+      *  WORK FIELDS : @@YYY   - YEAR IN (2,0)                        *
+      *              : @@MM    - MONTH IN (2,0)                       *
+      *              : @@DD    - DAY IN (2,0)                         *
+      *                                                               *
+      *              : @@DAT1  - IF DATE DD/MM/YY DAY ELSE MONTH (2,0)*
+      *              : @@DAT2  - IF DATE DD/MM/YY MONTH ELSE DAY (2,0)*
+      *                                                               *
+      *****************************************************************
+     C           ZA0770    BEGSR
+      *
+     C                     Z-ADD@@YY      @@YYY
+      *
+      ** BJDFIN = 'D' CONVERT TO MMDDYY FORMAT
+      *
+     C           BJDFIN    IFEQ 'D'
+     C                     Z-ADD@@DD      @@DAT1
+     C                     Z-ADD@@MM      @@DAT2
+     C                     END
+      *
+      ** BJDFIN = 'M' CONVERT TO MMDDYY FORMAT
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     Z-ADD@@DD      @@DAT2
+     C                     Z-ADD@@MM      @@DAT1
+     C                     END
+      *
+      ** MOVE YEAR PART OF DATA STRUCTURE
+      *
+     C                     MOVE @@YYY     @@YY
+      *
+     C           ZA0779    ENDSR                           ***ZA0779***
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * ZTNLU - TO LOCK AND UPDATE THE TRANSACTION NUMBER DATA AREA   *
+      *                                                               *
+      * CALLED BY :                                                   *
+      *                                                               *
+      * CALLS :                                                       *
+      *                                                               *
+      * USES :                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZTNLU1    BEGSR
+      *
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     ZZWK05
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     Z-ADDFNATN     TNLU
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR - THIS SUBROUTINE IS CALLED FOR ANY PROGRAM OR FILE     *
+      *         ERRORS                                                *
+      *                                                               *
+      * CALLED BY :                                                   *
+      *                                                               *
+      * CALLS :                                                       *
+      *                                                               *
+      * USES :                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ** If record is locked return error code
+      *
+     C           STATST    IFEQ 01021
+     C           STATSU    OREQ 01021
+     C                     ADD  1         #R
+     C                     MOVE '0169'    @RT,#R
+     C                     MOVEA@RT       PPRTCD
+     C                     ROLBK
+     C                     ENDIF
+      *
+     C                     MOVEL'DBERR'   PPRTCD
+      *
+     C                     DUMP
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/EJECT
+** @MTH ARRAY TO HOLD MONTHS NAMES FOR THE UPDATES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** @PTP ARRAY FOR PERIOD TYPES
+DDDWWWMMMMMYYYYYYYYYY
+** @PRD ARRAY FOR PERIOD LENGTH
+010001010203010203060901020304050607080910000000
+** @PER ARRAY FOR PERIODS
+010203010203010203060901020304050607080910000000
+** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0680 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015

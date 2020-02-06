@@ -1,0 +1,662 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Posn Settlments Ext Settles Audit')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1865 - POSITION SETTLEMENTS EXTENDED SETTLEMENTS AUDIT     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CSE035             Date 22Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01447             Date 04Nov93               *
+     F*                 066915             DATE 14FEB94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+     F*  S01447 - WITHHOLDING TAX (SE) ENHANCEMENT.                   *
+     F*           Recompiled due to changes in PF/POSETD.             *
+     F*  066915 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9 by GEMS 052254.                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature: New program           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FPOSETDJ3IF  E           K        DISK         KINFSR *PSSR
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+     FSE1867P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     FSE1867AUO   E                    PRINTER      KINFDS SPOOLU
+     F                                              KINFSR *PSSR
+      /TITLE FUNCTION OF INCICATORS
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*    11  - MULTIBRANCHING INDICATOR                             *
+     F*    15  - Print file, SE1867P1, has been opened at least once  *
+     F*    40  - MODE I          : AUDIT EXCEPTION                    *
+     F*    41  - MODE A          : AUDIT                              *
+     F*    42  - ALL OTHER MODES : FULL LIST                          *
+     F*    74  - READ OF POSETDJ3                                     *
+     F*    79  - READ OF SECTY                                        *
+     F*                                                               *
+     F*    98  - Date Format: DDMMYY (off); MMDDYY (on)               *
+     F*  90-99 - Used by Standard Subroutines                         *
+     F*                                                               *
+     F*  U7+U8 - Database Error                                       *
+     F*                                                               *
+     F*****************************************************************
+      /TITLE SUBROUTINE INDEX
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - Initial Processing                                  *
+     F*  PROCES - Perform Detail Processing                           *
+     F*  FORMAT - Format Output fields                                *
+     F*  AUDIT  - Run Control Process                                 *
+     F*                                                               *
+     F*  *PSSR  - Program error handling routine                      *
+     F*                                                               *
+     F*  ZDATE2 - Dayno to date conversion                            *
+     F*                                                               *
+     F*****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     I/TITLE I-SPECIFICATIONS
+     IRUNDAT      DS
+      ***  Data Structure to obtain Multibranching Indicator.
+     I                                       13  13 WMBIN
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE1867P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE1867AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Second Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Branch Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I*
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** PROGRAM STATUS DATA STRUCTURE
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Accept Parameters.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PMODE   1
+     C                     PARM           PSEQ    5
+     C                     PARM           PBRCA   3
+      *
+      ** SET INDICATORS FOR REPORT HEADING & OPEN INPUT FILE
+      **          MODE I          : AUDIT EXCEPTION
+      **          MODE A          : AUDIT
+      **          ALL OTHER MODES : FULL LIST
+      *
+     C           PMODE     IFEQ 'I'
+     C                     SETON                     40
+     C                     ELSE
+     C           PMODE     IFEQ 'A'
+     C                     SETON                     41
+     C                     ELSE
+     C                     SETON                     42
+     C                     END
+     C                     END
+      *
+      ** Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     MOVE BJMRDT    RRDATE
+     C                     MOVE BJURPT    RRTITL
+      *
+      ***  Access RUNDAT Data Area for Multi-Branching Indicator.
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           WMBIN     IFEQ 'Y'
+     C                     SETON                     11
+     C                     END
+      *
+      ** DEFINE WORK FIELDS
+      *
+     C           *LIKE     DEFN A8BRCD    WWLAST
+     C           *LIKE     DEFN A8BRCD    WWPBCA
+      *
+     C                     MOVE *BLANKS   WWLAST
+      *
+      ** INITIALISE 'NO. OF LIVE RECORDS' COUNTER
+     C                     Z-ADD0         WWLIVE 150
+      *
+      ** INITIALISE 'TOTAL NO. OF TRADE TRANSACTIONS' COUNTER
+     C                     Z-ADD0         WWTRAD 150
+      *                                                                   CSE035
+      *  Access SAR details file to see if CSE035 is installed            CSE035
+      *                                                                   CSE035
+     C                     CALL 'AOSARDR0'                                CSE035
+     C                     PARM *BLANKS   @RTCD   7                       CSE035
+     C                     PARM '*VERIFY' @OPTN   7                       CSE035
+     C                     PARM 'CSE035'  @SARD   6                       CSE035
+      *                                                                   CSE035
+     C           @RTCD     IFEQ *BLANK                                    CSE035
+     C                     MOVE 'Y'       CSE035  1                       CSE035
+     C                     ELSE                                           CSE035
+     C                     MOVE 'N'       CSE035                          CSE035
+     C                     END                                            CSE035
+      *                                                                   CSE035
+      *
+     C/COPY WNCPYSRC,SE1867C001
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls: FORMAT, AUDIT                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+      ***  If Multibranching and Branch selected, Set Start Position.
+      *
+     C           WMBIN     IFEQ 'Y'
+     C           PBRCA     ANDNE'ALL'
+     C                     MOVE PBRCA     PBCA
+     C           PBCA      SETLLPOSETDJ3
+     C                     ENDIF
+      *
+     C                     READ POSETDJ3                 74
+     C                     MOVE PBCA      WWPBCA
+      *
+      ***  If Multibranching and Branch selected, check same Branch.
+      *
+     C           *IN74     IFEQ '0'
+     C           WMBIN     ANDEQ'Y'
+     C           PBRCA     ANDNE'ALL'
+     C           PBCA      ANDNEPBRCA
+     C                     SETON                     74
+     C                     ENDIF
+      *
+      ***  Process until End of valid records.
+      *
+     C           *IN74     DOWEQ'0'
+      *
+      ** FORMAT DETAIL LINE & OUTPUT
+     C                     EXSR FORMAT
+      *
+      ** READ NEXT RECORD
+     C                     READ POSETDJ3                 74
+     C                     MOVE PBCA      WWPBCA
+      *
+      ***  If Multibranching and Branch selected, check same Branch.
+      *
+     C           *IN74     IFEQ '0'
+     C           WMBIN     ANDEQ'Y'
+     C           PBRCA     ANDNE'ALL'
+     C           PBCA      ANDNEPBRCA
+     C                     SETON                     74
+     C                     ENDIF
+      *
+     C                     END
+      *
+      ** If print file open then right 'End of Report' and close file
+     C           *IN15     IFEQ '1'
+     C                     WRITETRAILP1
+     C                     CLOSESE1867P1
+     C                     END
+      *
+      ** OUTPUT RUN CONTROL REPORT
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/FORMAT
+      *****************************************************************
+      *                                                               *
+      *  FORMAT - Subroutine to Set Up and Write fields to Report.    *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: ZDATE2                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FORMAT    BEGSR
+      *
+      ** MAINTAIN 'LIVE' COUNT ONLY IF RECORD NOT DELETED
+     C           RECI      IFNE '*'
+     C                     ADD  1         WWLIVE
+     C                     END
+      *
+      ** 'A' MODE - ** AUDIT ** OR 'I' MODE - ** AUDIT EXCEPTION **
+     C           PMODE     IFEQ 'A'
+     C           PMODE     OREQ 'I'
+      *
+     C           LCD       IFNE BJRDNB
+     C                     GOTO FOREND
+     C                     END
+      *
+      ** 'L' MODE - ** FULL LIST **
+     C                     ELSE
+     C           RECI      IFEQ '*'
+     C                     GOTO FOREND
+     C                     END
+     C                     END
+      *
+      ** MAINTAIN 'TOTAL NO. OF TRADE TRANSACTIONS' COUNTER
+     C                     ADD  1         WWTRAD
+      *
+      ** LAST CHANGE DATE AND ACTION
+     C                     Z-ADDLCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRZLCD
+      *
+     C                     SETOF                     515253
+     C                     SETOF                     54
+      *
+     C           CHTP      IFEQ 'A'
+     C                     SETON                     51
+     C                     ELSE
+     C           CHTP      IFEQ 'I'
+     C                     SETON                     52
+     C                     ELSE
+     C           CHTP      IFEQ 'D'
+     C                     SETON                     53
+     C                     ELSE
+     C           CHTP      IFEQ 'C'
+     C                     SETON                     54
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** FORMAT FIELDS
+      *
+     C                     MOVE P2PSSH    RRPSSH
+     C           P2PSSH    CHAINSECTYDF              79
+     C           *IN79     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SECTY'   DBFILE           * DB ERROR 02 *
+     C                     MOVELP2PSSH    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVELSRPN      RRSRPN
+      *
+     C                     MOVE PCPY      RRPCPY
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM RRPCPY    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVELBBCSSN    RRCSSN
+     C                     MOVELBBCRNM    RRCRNM
+     C                     MOVELBBCRTN    RRCRTN
+     C                     ELSE
+     C                     MOVE *BLANKS   RRCSSN
+     C                     MOVE *BLANKS   RRCRNM
+     C                     MOVE *BLANKS   RRCRTN
+     C                     END
+      *
+     C                     MOVE *BLANKS   RRPDUD
+     C           P2PDUD    IFNE 0
+     C                     Z-ADDP2PDUD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RRPDUD
+     C                     END
+      *
+     C                     MOVE P2PEVT    RRPEVT
+     C                     MOVE *BLANKS   RRPEVD
+     C           P2PEVT    IFEQ 'CP'
+     C                     MOVEL'COUPON ' RRPEVD
+     C                     MOVE 'DATE   ' RRPEVD
+     C                     ELSE
+     C           P2PEVT    IFEQ 'DV'
+     C                     MOVE 'DIVIDEND'RRPEVD
+     C                     END
+     C                     END
+      *
+      ** EXTENDED SETTLEMENT DETAILS
+     C           P2AFPN    IFNE *BLANKS
+     C                     MOVELP2AFPN    WKAFPN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKAFPN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRAFPN
+     C                     ELSE
+     C                     MOVE P2AFPN    RRAFPN
+     C                     END
+     C                     END
+      *
+     C           P2SKAN    IFNE *BLANKS
+     C                     MOVELP2SKAN    WKSKAN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKSKAN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRSKAN
+     C                     ELSE
+     C                     MOVE P2SKAN    RRSKAN
+     C                     END
+     C                     END
+      *
+     C           P2DSSN    IFNE *BLANKS
+     C                     MOVELP2DSSN    WKDSSN  6
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WKDSSN    WCUST  10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFEQ *BLANKS
+     C                     MOVE BBCSSN    RRDSSN
+     C                     ELSE
+     C                     MOVE P2DSSN    RRDSSN
+     C                     END
+     C                     END
+      *
+     C                     MOVE P2AFPL    RRAFPL
+     C                     MOVE P2SRL1    RRSRL1
+     C                     MOVE P2SRL2    RRSRL2
+     C                     MOVE P2SRL3    RRSRL3
+     C                     MOVE P2SKAL    RRSKAL
+     C                     MOVE P2DSS1    RRDSS1
+      *
+      ***  If change of Branch open new print file;
+      ***  (if previous print file opened write 'End of Report' and
+      ***  close print file before opening new one).
+     C           WWPBCA    IFNE WWLAST
+      *
+     C           *IN15     IFEQ '1'
+     C                     WRITETRAILP1
+     C                     CLOSESE1867P1
+     C                     END
+      *
+     C                     OPEN SE1867P1
+     C                     MOVE '1'       *IN15
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM WWPBCA    WPARM   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      **  Store old Branch and access new Branch Details.
+     C                     MOVE WWPBCA    WWLAST
+     C                     MOVE WWPBCA    RRPBCA
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM WWPBCA    WBRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 03 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVE A8BRNM    RRBRNM
+      *
+      ***  save current branch and name to restore next time if needed
+     C                     MOVE RRPBCA    WRPBCA  3
+     C                     MOVE RRBRNM    WRBRNM 30
+      *
+      ***  else not a different branch so restore previous branch/name
+     C                     ELSE
+     C                     MOVE WRPBCA    RRPBCA  3
+     C                     MOVE WRBRNM    RRBRNM 30
+     C                     END
+      *
+      ** PRINT PAGE HEADINGS
+     C                     WRITEHEADP1
+      *
+      ** OUPUT DETAIL LINE
+     C                     WRITEDETAIL
+     C                     CLEARDETAIL
+      *
+     C           FOREND    TAG
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Ouput Run Control Report.             *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR
+      *
+     C                     Z-ADDSFNUMU    ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   WPARM
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ** WRITE HEADINGS
+     C                     WRITEHEADAU
+      *
+      ** OUTPUT NO. OF LIVE RECORDS
+     C                     Z-ADDWWLIVE    RRLIVE
+     C                     WRITECONTROLR
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no valid records read, Output "No Details" message.
+     C           WWLAST    IFEQ *BLANKS
+     C                     WRITENONE
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'SE1867'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+     C                     SETON                     U7U8LR
+      *
+     C                     EXSR AUDIT
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z4
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,857 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Produce Dealing Profitability File')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Customer Lending Module
+     F*                                                               *
+     F*  LER460 - Produce Profitability Report/Enquiry File: Dealing  *
+     F*                                                               *
+     F*  Function:  This program produces the file LENQDFD by         *
+     F*             Customer, Account Officer and Department. It      *
+     F*             also calculates Yield and Margin figures.         *
+     F*                                                               *
+     F*  Called By: LERC460 - Produce profitability report/enquiry    *
+     F*                       file: Dealing.                          *
+     F*                                                               *
+     F*  (COB)                                                        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+     F*                 BUG7831            Date 13Jul05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 117596             Date 03Feb98               *
+     F*                 BHSTEV             Date 11Aug92               *
+     F*  PREV AMEND NO. BHXXXX             DATE 07AUG92               *
+     F*                 EXXXXX             DATE DDMMMYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                 .*
+      *  BUG7831 - PYEAR obtains zero leading to divide by zero error.*
+     F*  117596 - Avoid divide by zero error if working days have     *
+     F*           been skipped.                                       *
+     F*  BHSTEV - LASTDN was never initialised with anything          *
+     F*           Also ensure no. of days for calcs is correct        *
+     F*  BHXXXX - CHANGE TO CALCULATE CORRECT NUMBER OF DAYS          *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     FPEDFL0  IP  E           K        DISK
+     F*
+     FLENQDFD O   E                    DISK
+     F*
+      /EJECT
+     F*******************************************************************
+     F*                                                                 *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                    *
+     F*                                                                 *
+     F*   01  - Read of LEPEDFDF format.                                *
+     F*                                                                 *
+     F*   10  - Initial Processing indicator                            *
+     F*                                                                 *
+     F*   L1  - Change of Customer                                      *
+     F*   L2  - Change of Account Officer                               *
+     F*   L3  - Change of Department                                    *
+     F*                                                                 *
+     F*  90-99 - Used by Standard Subroutines                           *
+     F*                                                                 *
+     F*  U7+U8 - Database Error                                         *
+     F*                                                                 *
+     F*******************************************************************
+      /SPACE 3
+     F*******************************************************************
+     F*                                                                 *
+     F*  S U B R O U T I N E   I N D E X                                *
+     F*                                                                 *
+     F*  INIT   - Initialization subroutine                             *
+     F*  DETAIL - Process General Ledger detail records.                *
+     F*  CUSTSR - Outputs Customer totals to LENQDFD                    *
+     F*  ACOFSR - Outputs Account Officer totals to LENQDFD             *
+     F*  DEPTSR - Outputs Department totals to LENQDFD                  *
+     F*  LASTSR - Outputs last record totals to LENQDFD.                *
+     F*  ZDATE2 - To convert a five-figure day number into date format. *
+     F*  LERDATEF -  To convert a date to a day number for first day    *
+     F*              of month (flexible start of month)                 *
+     F*  *PSSR  - Standard error processing subroutine                  *
+     F*                                                                 *
+     F*******************************************************************
+      /EJECT
+     E                    CPY@    1   1 80               COPYRIGHT
+     E                    AGG        12 15 0             GL BALANCES
+     E                    GMNM   12  12  3               MONTH NAMES
+     E/COPY ZSRSRC,ZDATE2Z1
+      /EJECT
+      *
+      ** DEFINE CONTROL GROUPS
+     ILEPEDFDF    01
+     I                                              DDDEPTL3
+     I                                              DDACOFL2
+     I                                              DDCNUML1
+      *
+     I            DS
+      ** SPLIT UP DATE FOR CONVERSION.
+     I                                        1   6 DATE
+     I                                        1   2 DD
+     I                                        3   6 MY
+      *
+     I            DS
+      ** DEALING BALANCES DATA STRUCTURE
+     I                                    P   1  960AGG
+     I                                    P   1   80DDJANA
+     I                                    P   9  160DDFEBA
+     I                                    P  17  240DDMARA
+     I                                    P  25  320DDAPRA
+     I                                    P  33  400DDMAYA
+     I                                    P  41  480DDJUNA
+     I                                    P  49  560DDJULA
+     I                                    P  57  640DDAUGA
+     I                                    P  65  720DDSEPA
+     I                                    P  73  800DDOCTA
+     I                                    P  81  880DDNOVA
+     I                                    P  89  960DDDECA
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ILDA       E DSLDA
+      * DATABASE ERROR DS
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Standard data area layout for system flags & run date.
+      *
+     ILERSTS    E DSLERSTS                                                BHXXXX
+      ** Fees/Profitability enhancement status data area                  BHXXXX
+     I              FACHISD                         WHISST                BHXXXX
+     I              LERC2030                        LERC20                BHXXXX
+     I              LERC135                         LERC13                BHXXXX
+     I              LERC315                         LERC35                BHXXXX
+     I              LERC425                         LERC42                BHXXXX
+     I              EOYFLAG                         EOYFLG                BHXXXX
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     C/EJECT
+      *
+      ** PERFORM INITIAL PROCESSING.
+      *
+     C           *IN10     CASEQ'0'       INIT
+     C                     END
+      *
+      ** PROCESS DETAIL RECORDS
+      *
+     C                     EXSR DETAIL
+      *
+      ** TOTAL TIME PROCESSING:
+      *
+      ** PROCESS LEVEL BREAK ON CUSTOMER:
+      *
+     CL1                   EXSR CUSTSR
+      *
+      ** PROCESS LEVEL BREAK ON A/C OFFICER:
+      *
+     CL2                   EXSR ACOFSR
+      *
+      ** PROCESS LEVEL BREAK ON DEPARTMENT:
+      *
+     CL3                   EXSR DEPTSR
+      *
+      ** PROCESS LEVEL BREAK ON LAST RECORD
+      *
+     CLR                   EXSR LASTSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DETAIL - Process General Ledger detail records.               *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing.                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETAIL    BEGSR
+      *
+      *
+      ** SET UP MONTH-TO-DATE  & YTD DATA:
+      *
+     C                     XFOOTAGG       PYTD
+      *
+     C           DDRTYP    IFEQ 'A'
+     C           PYEAR     IFNE 0                                                            BUG7831
+     C           PYTD      DIV  PYEAR     PCYABA
+     C                     ELSE                                                              BUG7831
+     C                     Z-ADD0         PCYABA                                             BUG7831
+     C                     ENDIF                                                             BUG7831
+     C           PMNTH     IFNE 0                                         117596
+     C           AGG,MN    DIV  PMNTH     PCMABA
+     C                     ELSE                                           117596
+     C                     Z-ADD0         PCMABA                          117596
+     C                     END                                            117596
+     C                     END
+      *
+     C           DDRTYP    IFEQ 'B'
+     C           PYEAR     IFNE 0                                                            BUG7831
+     C           PYTD      DIV  PYEAR     PCYABB
+     C                     ELSE                                                              BUG7831
+     C                     Z-ADD0         PCYABB                                             BUG7831
+     C                     ENDIF                                                             BUG7831
+     C           PMNTH     IFNE 0                                         117596
+     C           AGG,MN    DIV  PMNTH     PCMABB
+     C                     ELSE                                           117596
+     C                     Z-ADD0         PCMABB                          117596
+     C                     END                                            117596
+     C                     END
+      *
+     C           DDRTYP    IFEQ 'C'
+     C           PYEAR     IFNE 0                                                            BUG7831
+     C           PYTD      DIV  PYEAR     PCYABC
+     C                     ELSE                                                              BUG7831
+     C                     Z-ADD0         PCYABC                                             BUG7831
+     C                     ENDIF                                                             BUG7831
+     C           PMNTH     IFNE 0                                         117596
+     C           AGG,MN    DIV  PMNTH     PCMABC
+     C                     ELSE                                           117596
+     C                     Z-ADD0         PCMABC                          117596
+     C                     END                                            117596
+     C                     END
+      *
+     C           DDRTYP    IFEQ 'D'
+     C           PYEAR     IFNE 0                                                            BUG7831
+     C           PYTD      DIV  PYEAR     PCYABD
+     C                     ELSE                                                              BUG7831
+     C                     Z-ADD0         PCYABD                                             BUG7831
+     C                     ENDIF                                                             BUG7831
+     C           PMNTH     IFNE 0                                         117596
+     C           AGG,MN    DIV  PMNTH     PCMABD
+     C                     ELSE                                           117596
+     C                     Z-ADD0         PCMABD                          117596
+     C                     END                                            117596
+     C                     END
+      *
+     C           DDRTYP    IFEQ 'E'
+     C                     ADD  PYTD      PCYABE
+     C                     ADD  AGG,MN    PCMABE
+     C                     END
+      *
+     C           DDRTYP    IFEQ 'F'
+     C           PYEAR     IFNE 0                                                            BUG7831
+     C           PYTD      DIV  PYEAR     PCYABF
+     C                     ELSE                                                              BUG7831
+     C                     Z-ADD0         PCYABF                                             BUG7831
+     C                     ENDIF                                                             BUG7831
+     C           PMNTH     IFNE 0                                         117596
+     C           AGG,MN    DIV  PMNTH     PCMABF
+     C                     ELSE                                           117596
+     C                     Z-ADD0         PCMABF                          117596
+     C                     END                                            117596
+     C                     END
+      *
+     C           DDRTYP    IFEQ 'G'
+     C           PYEAR     IFNE 0                                                            BUG7831
+     C           PYTD      DIV  PYEAR     PCYABG
+     C                     ELSE                                                              BUG7831
+     C                     Z-ADD0         PCYABG                                             BUG7831
+     C                     ENDIF                                                             BUG7831
+     C           PMNTH     IFNE 0                                         117596
+     C           AGG,MN    DIV  PMNTH     PCMABG
+     C                     ELSE                                           117596
+     C                     Z-ADD0         PCMABG                          117596
+     C                     END                                            117596
+     C                     END
+      *
+     C           DDRTYP    IFEQ 'H'
+     C                     ADD  PYTD      PCYABH
+     C                     ADD  AGG,MN    PCMABH
+     C                     END
+      *
+     C           DDRTYP    IFEQ 'I'
+     C                     ADD  PYTD      PCYABI
+     C                     ADD  AGG,MN    PCMABI
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * CUSTSR - Outputs Customer Totals to LENQDFD.                  *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CUSTSR    BEGSR
+      *
+      ** SET UP FIELDS FOR DEALING RECORD
+      *
+     C                     MOVE 'C'       QDRTYP
+     C                     Z-ADD7         QDRSEQ
+     C**********           Z-ADDDDCNUM    QDCNUM                                              CSD027
+     C                     MOVE DDCNUM    QDCNUM                                              CSD027
+     C                     MOVE DDDEPT    QDDEPT
+     C                     MOVE DDACOF    QDACOF
+     C                     Z-ADDPCMABA    QDMAVA
+     C                     Z-ADDPCMABB    QDMAVB
+     C                     Z-ADDPCMABC    QDMAVC
+     C                     Z-ADDPCMABD    QDMAVD
+     C                     Z-ADDPCMABE    QDMAVE
+     C                     Z-ADDPCMABF    QDMAVF
+     C                     Z-ADDPCMABG    QDMAVG
+     C                     Z-ADDPCMABH    QDMAVH
+     C                     Z-ADDPCMABI    QDMAVI
+     C                     Z-ADDPCYABA    QDYAVA
+     C                     Z-ADDPCYABB    QDYAVB
+     C                     Z-ADDPCYABC    QDYAVC
+     C                     Z-ADDPCYABD    QDYAVD
+     C                     Z-ADDPCYABE    QDYAVE
+     C                     Z-ADDPCYABF    QDYAVF
+     C                     Z-ADDPCYABG    QDYAVG
+     C                     Z-ADDPCYABH    QDYAVH
+     C                     Z-ADDPCYABI    QDYAVI
+      *
+      ** SET UP ACCOUNT OFFICER FIELDS
+      *
+     C                     ADD  PCMABA    PAMABA
+     C                     ADD  PCMABB    PAMABB
+     C                     ADD  PCMABC    PAMABC
+     C                     ADD  PCMABD    PAMABD
+     C                     ADD  PCMABE    PAMABE
+     C                     ADD  PCMABF    PAMABF
+     C                     ADD  PCMABG    PAMABG
+     C                     ADD  PCMABH    PAMABH
+     C                     ADD  PCMABI    PAMABI
+     C                     ADD  PCYABA    PAYABA
+     C                     ADD  PCYABB    PAYABB
+     C                     ADD  PCYABC    PAYABC
+     C                     ADD  PCYABD    PAYABD
+     C                     ADD  PCYABE    PAYABE
+     C                     ADD  PCYABF    PAYABF
+     C                     ADD  PCYABG    PAYABG
+     C                     ADD  PCYABH    PAYABH
+     C                     ADD  PCYABI    PAYABI
+     C                     Z-ADD0         PCMABA
+     C                     Z-ADD0         PCMABB
+     C                     Z-ADD0         PCMABC
+     C                     Z-ADD0         PCMABD
+     C                     Z-ADD0         PCMABE
+     C                     Z-ADD0         PCMABF
+     C                     Z-ADD0         PCMABG
+     C                     Z-ADD0         PCMABH
+     C                     Z-ADD0         PCMABI
+     C                     Z-ADD0         PCYABA
+     C                     Z-ADD0         PCYABB
+     C                     Z-ADD0         PCYABC
+     C                     Z-ADD0         PCYABD
+     C                     Z-ADD0         PCYABE
+     C                     Z-ADD0         PCYABF
+     C                     Z-ADD0         PCYABG
+     C                     Z-ADD0         PCYABH
+     C                     Z-ADD0         PCYABI
+      *
+     C                     WRITELENQDFDF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * ACOFSR - Outputs A/C Officer totals to LENQDFD                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACOFSR    BEGSR
+      *
+      ** SET UP FIELDS FOR DEALING RECORD
+      *
+     C                     MOVE 'A'       QDRTYP
+     C                     Z-ADD7         QDRSEQ
+     C**********           Z-ADD0         QDCNUM                                              CSD027
+     C                     MOVE *BLANKS   QDCNUM                                              CSD027
+     C                     MOVE DDDEPT    QDDEPT
+     C                     MOVE DDACOF    QDACOF
+     C                     Z-ADDPAMABA    QDMAVA
+     C                     Z-ADDPAMABB    QDMAVB
+     C                     Z-ADDPAMABC    QDMAVC
+     C                     Z-ADDPAMABD    QDMAVD
+     C                     Z-ADDPAMABE    QDMAVE
+     C                     Z-ADDPAMABF    QDMAVF
+     C                     Z-ADDPAMABG    QDMAVG
+     C                     Z-ADDPAMABH    QDMAVH
+     C                     Z-ADDPAMABI    QDMAVI
+     C                     Z-ADDPAYABA    QDYAVA
+     C                     Z-ADDPAYABB    QDYAVB
+     C                     Z-ADDPAYABC    QDYAVC
+     C                     Z-ADDPAYABD    QDYAVD
+     C                     Z-ADDPAYABE    QDYAVE
+     C                     Z-ADDPAYABF    QDYAVF
+     C                     Z-ADDPAYABG    QDYAVG
+     C                     Z-ADDPAYABH    QDYAVH
+     C                     Z-ADDPAYABI    QDYAVI
+      *
+      ** SET UP DEPARTMENT FIELDS
+      *
+     C                     ADD  PAMABA    PDMABA
+     C                     ADD  PAMABB    PDMABB
+     C                     ADD  PAMABC    PDMABC
+     C                     ADD  PAMABD    PDMABD
+     C                     ADD  PAMABE    PDMABE
+     C                     ADD  PAMABF    PDMABF
+     C                     ADD  PAMABG    PDMABG
+     C                     ADD  PAMABH    PDMABH
+     C                     ADD  PAMABI    PDMABI
+     C                     ADD  PAYABA    PDYABA
+     C                     ADD  PAYABB    PDYABB
+     C                     ADD  PAYABC    PDYABC
+     C                     ADD  PAYABD    PDYABD
+     C                     ADD  PAYABE    PDYABE
+     C                     ADD  PAYABF    PDYABF
+     C                     ADD  PAYABG    PDYABG
+     C                     ADD  PAYABH    PDYABH
+     C                     ADD  PAYABI    PDYABI
+     C                     Z-ADD0         PAMABA
+     C                     Z-ADD0         PAMABB
+     C                     Z-ADD0         PAMABC
+     C                     Z-ADD0         PAMABD
+     C                     Z-ADD0         PAMABE
+     C                     Z-ADD0         PAMABF
+     C                     Z-ADD0         PAMABG
+     C                     Z-ADD0         PAMABH
+     C                     Z-ADD0         PAMABI
+     C                     Z-ADD0         PAYABA
+     C                     Z-ADD0         PAYABB
+     C                     Z-ADD0         PAYABC
+     C                     Z-ADD0         PAYABD
+     C                     Z-ADD0         PAYABE
+     C                     Z-ADD0         PAYABF
+     C                     Z-ADD0         PAYABG
+     C                     Z-ADD0         PAYABH
+     C                     Z-ADD0         PAYABI
+      *
+     C                     WRITELENQDFDF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DEPTSR - Outputs Department  totals to LENQDFD                *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DEPTSR    BEGSR
+      *
+      ** SET UP FIELDS FOR DEALING RECORD
+      *
+     C                     MOVE 'D'       QDRTYP
+     C                     Z-ADD7         QDRSEQ
+     C**********           Z-ADD0         QDCNUM                                              CSD027
+     C                     MOVE *BLANKS   QDCNUM                                              CSD027
+     C                     MOVE DDDEPT    QDDEPT
+     C                     MOVE *BLANKS   QDACOF
+     C                     Z-ADDPDMABA    QDMAVA
+     C                     Z-ADDPDMABB    QDMAVB
+     C                     Z-ADDPDMABC    QDMAVC
+     C                     Z-ADDPDMABD    QDMAVD
+     C                     Z-ADDPDMABE    QDMAVE
+     C                     Z-ADDPDMABF    QDMAVF
+     C                     Z-ADDPDMABG    QDMAVG
+     C                     Z-ADDPDMABH    QDMAVH
+     C                     Z-ADDPDMABI    QDMAVI
+     C                     Z-ADDPDYABA    QDYAVA
+     C                     Z-ADDPDYABB    QDYAVB
+     C                     Z-ADDPDYABC    QDYAVC
+     C                     Z-ADDPDYABD    QDYAVD
+     C                     Z-ADDPDYABE    QDYAVE
+     C                     Z-ADDPDYABF    QDYAVF
+     C                     Z-ADDPDYABG    QDYAVG
+     C                     Z-ADDPDYABH    QDYAVH
+     C                     Z-ADDPDYABI    QDYAVI
+      *
+      ** SET UP TOTAL FIELDS
+      *
+     C                     ADD  PDMABA    PTMABA
+     C                     ADD  PDMABB    PTMABB
+     C                     ADD  PDMABC    PTMABC
+     C                     ADD  PDMABD    PTMABD
+     C                     ADD  PDMABE    PTMABE
+     C                     ADD  PDMABF    PTMABF
+     C                     ADD  PDMABG    PTMABG
+     C                     ADD  PDMABH    PTMABH
+     C                     ADD  PDMABI    PTMABI
+     C                     ADD  PDYABA    PTYABA
+     C                     ADD  PDYABB    PTYABB
+     C                     ADD  PDYABC    PTYABC
+     C                     ADD  PDYABD    PTYABD
+     C                     ADD  PDYABE    PTYABE
+     C                     ADD  PDYABF    PTYABF
+     C                     ADD  PDYABG    PTYABG
+     C                     ADD  PDYABH    PTYABH
+     C                     ADD  PDYABI    PTYABI
+     C                     Z-ADD0         PDMABA
+     C                     Z-ADD0         PDMABB
+     C                     Z-ADD0         PDMABC
+     C                     Z-ADD0         PDMABD
+     C                     Z-ADD0         PDMABE
+     C                     Z-ADD0         PDMABF
+     C                     Z-ADD0         PDMABG
+     C                     Z-ADD0         PDMABH
+     C                     Z-ADD0         PDMABI
+     C                     Z-ADD0         PDYABA
+     C                     Z-ADD0         PDYABB
+     C                     Z-ADD0         PDYABC
+     C                     Z-ADD0         PDYABD
+     C                     Z-ADD0         PDYABE
+     C                     Z-ADD0         PDYABF
+     C                     Z-ADD0         PDYABG
+     C                     Z-ADD0         PDYABH
+     C                     Z-ADD0         PDYABI
+      *
+     C                     WRITELENQDFDF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * LASTSR - Outputs last record totals to LENQDFD.               *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: Nothing                                                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LASTSR    BEGSR
+      *
+      ** SET UP FIELDS FOR DEALING RECORD
+      *
+     C                     MOVE 'T'       QDRTYP
+     C                     Z-ADD7         QDRSEQ
+     C**********           Z-ADD0         QDCNUM                                              CSD027
+     C                     MOVE *BLANKS   QDCNUM                                              CSD027
+     C                     MOVE *BLANKS   QDDEPT
+     C                     MOVE *BLANKS   QDACOF
+     C                     Z-ADDPTMABA    QDMAVA
+     C                     Z-ADDPTMABB    QDMAVB
+     C                     Z-ADDPTMABC    QDMAVC
+     C                     Z-ADDPTMABD    QDMAVD
+     C                     Z-ADDPTMABE    QDMAVE
+     C                     Z-ADDPTMABF    QDMAVF
+     C                     Z-ADDPTMABG    QDMAVG
+     C                     Z-ADDPTMABH    QDMAVH
+     C                     Z-ADDPTMABI    QDMAVI
+     C                     Z-ADDPTYABA    QDYAVA
+     C                     Z-ADDPTYABB    QDYAVB
+     C                     Z-ADDPTYABC    QDYAVC
+     C                     Z-ADDPTYABD    QDYAVD
+     C                     Z-ADDPTYABE    QDYAVE
+     C                     Z-ADDPTYABF    QDYAVF
+     C                     Z-ADDPTYABG    QDYAVG
+     C                     Z-ADDPTYABH    QDYAVH
+     C                     Z-ADDPTYABI    QDYAVI
+      *
+     C                     WRITELENQDFDF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INIT   - Performs First Cycle calculations.                   *
+      *                                                               *
+      * Called by: Main Processing                                    *
+      *                                                               *
+      * Calls: *PSSR, ZDATE2.                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ** Define LDA
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Define & read external data areas used in program.
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+     C           *NAMVAR   DEFN           LERSTS                          BHSTEV
+     C                     IN   LERSTS                                    BHSTEV
+      *                                                                   BHSTEV
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     MOVE '1'       *IN10
+      *
+      ** Access bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *                                                    **************
+     C           PRTCD     IFNE *BLANKS                    * DBERROR 01 *
+     C           *LOCK     IN   LDA                        **************
+     C                     Z-ADD1         DBASE
+     C                     MOVEL'*READ   'DBKEY
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL'LER460'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     MOVE BJMRDT    WRK5A   5
+     C                     MOVELWRK5A     MMM     3
+     C                     MOVE WRK5A     YY      2
+      *
+      ** GET CURRENT MONTH NUMBER FOR ACCESSING ARRAYS.
+      *
+     C                     Z-ADD1         MN      20
+     C           MMM       LOKUPGMNM,MN                  10
+     C                     MOVE YY        MY
+      *
+      ** CALCULATE FIRST CALENDAR DAY OF YEAR
+      *
+     C           BJPEYD    ADD  1         ZDAYNO
+     C***********BJDNWD    SUB  ZDAYNO    PYEAR   50                      BHXXXX
+     C********** LASTDN    SUB  ZDAYNO    PYEAR   50               BHXXXX BHSTEV
+     C           LASTDN    SUB  BJPEYD    PYEAR   50                      BHSTEV
+      *
+      **  CONVERT THE START OF YEAR DAY NUMBER TO DATE (DDMMYY) FORMAT
+      **  AND THEN STORE THE START OF YEAR DAY (DD) FOR USE LATER
+      *
+      **   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                         98MMDDYY, 98 ON
+     C                     END
+      *
+      ** CALCULATE FIRST CALENDAR DAY OF MONTH
+      *
+     C                     EXSR ZDATE2
+      *
+     C           ZADATE    IFEQ *BLANKS
+     C           ZDATE     OREQ 0
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVEL'ZDATE2  'DBKEY            *  DBERR 02   *
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL' LER460 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     MOVELZADATE    DSTORE  2
+     C*
+     C** START OF MONTH DATE NEEDS TO BE ADJUSTED IF THE DAY
+     C** NUMBER OF THE DATE OF NEXT WORKING DAY IS LESS THAN OR EQUAL
+     C** TO START OF MONTH DAY
+     C*
+     C                     Z-ADDBJDNWD    ZDAYNO
+      *
+     C                     EXSR ZDATE2
+      *
+     C           ZADATE    IFEQ *BLANKS
+     C           ZDATE     OREQ 0
+     C           *LOCK     IN   LDA                        ***************
+     C                     MOVEL'ZDATE2  'DBKEY            *  DBERR 03   *
+     C                     Z-ADD3         DBASE            ***************
+     C                     MOVEL' LER460 'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** The check should be made on the day of rundate not on            0113
+     C** the day of next working day                                      0113
+     C*                                                                   0113
+     C                     MOVELBJMRDT    DD1     2                       0113
+     C*********************MOVELZADATE    DD1     2                       0113
+     C*
+     C**  IF THE DD FIELD OF THE PROCESSING DATE IS LESS THAN THE
+     C**  DD FIELD OF THE START OF MONTH DATE THEN ALLOW FOR
+     C**  THE USE OF THE PREVIOUS MONTHS CALCULATIONS BY
+     C**  SUBTRACTING '1' FROM THE MONTH NUMBER
+     C*
+     C***********DD1       IFLE DSTORE                                    0113
+     C           DD1       IFLT DSTORE                                    0113
+     C                     SUB  1         MN
+     C*
+     C**  SUBSEQUENTLY IF THE RESULTING MONTH NUMBER IS ZERO THEN
+     C**  MOVE 12 INTO THE MN FIELD AND SUBTRACT ONE FROM THE YY
+     C**  FIELD TO RETURN TO THE PREVIOUS YEAR
+     C*
+     C           MN        IFEQ 0
+     C                     Z-ADD12        MN
+     C                     MOVE YY        YYN     20
+     C                     SUB  1         YYN
+     C                     MOVE YYN       YY
+     C                     END
+     C*
+     C                     END
+     C*
+     C** NOW MOVE THE APPROPRIATE VALUES INTO THE MONTH AND YEAR FIELDS
+     C** FOR THE DATE DATASTRUCTURE
+     C*
+     C                     MOVE DSTORE    DD
+     C                     MOVELMN        MY
+     C*
+     C                     MOVE DATE      ZDATE
+     C                     MOVE '0'       ZRTCD
+      *
+     C                     CALL 'LERDATEF'
+     C                     PARM           ZDATE   60
+     C                     PARM           ZDAYNO  50
+     C                     PARM           ZRTCD   1
+      *
+     C***********BJDNWD    SUB  ZDAYNO    PMNTH   50                      BHXXXX
+     C           LASTDN    SUB  ZDAYNO    PMNTH   50                      BHXXXX
+     C                     ADD  1         PMNTH                           BHSTEV
+      *
+      ** DEFINE WORK FIELDS
+      *
+     C                     Z-ADD0         P15    150
+     C           *LIKE     DEFN P15       PYTD
+     C           *LIKE     DEFN P15       PCMABA
+     C           *LIKE     DEFN P15       PCMABB
+     C           *LIKE     DEFN P15       PCMABC
+     C           *LIKE     DEFN P15       PCMABD
+     C           *LIKE     DEFN P15       PCMABE
+     C           *LIKE     DEFN P15       PCMABF
+     C           *LIKE     DEFN P15       PCMABG
+     C           *LIKE     DEFN P15       PCMABH
+     C           *LIKE     DEFN P15       PCMABI
+     C           *LIKE     DEFN P15       PAMABA
+     C           *LIKE     DEFN P15       PAMABB
+     C           *LIKE     DEFN P15       PAMABC
+     C           *LIKE     DEFN P15       PAMABD
+     C           *LIKE     DEFN P15       PAMABE
+     C           *LIKE     DEFN P15       PAMABF
+     C           *LIKE     DEFN P15       PAMABG
+     C           *LIKE     DEFN P15       PAMABH
+     C           *LIKE     DEFN P15       PAMABI
+     C           *LIKE     DEFN P15       PDMABA
+     C           *LIKE     DEFN P15       PDMABB
+     C           *LIKE     DEFN P15       PDMABC
+     C           *LIKE     DEFN P15       PDMABD
+     C           *LIKE     DEFN P15       PDMABE
+     C           *LIKE     DEFN P15       PDMABF
+     C           *LIKE     DEFN P15       PDMABG
+     C           *LIKE     DEFN P15       PDMABH
+     C           *LIKE     DEFN P15       PDMABI
+     C           *LIKE     DEFN P15       PTMABA
+     C           *LIKE     DEFN P15       PTMABB
+     C           *LIKE     DEFN P15       PTMABC
+     C           *LIKE     DEFN P15       PTMABD
+     C           *LIKE     DEFN P15       PTMABE
+     C           *LIKE     DEFN P15       PTMABF
+     C           *LIKE     DEFN P15       PTMABG
+     C           *LIKE     DEFN P15       PTMABH
+     C           *LIKE     DEFN P15       PTMABI
+     C           *LIKE     DEFN P15       PCYABA
+     C           *LIKE     DEFN P15       PCYABB
+     C           *LIKE     DEFN P15       PCYABC
+     C           *LIKE     DEFN P15       PCYABD
+     C           *LIKE     DEFN P15       PCYABE
+     C           *LIKE     DEFN P15       PCYABF
+     C           *LIKE     DEFN P15       PCYABG
+     C           *LIKE     DEFN P15       PCYABH
+     C           *LIKE     DEFN P15       PCYABI
+     C           *LIKE     DEFN P15       PAYABA
+     C           *LIKE     DEFN P15       PAYABB
+     C           *LIKE     DEFN P15       PAYABC
+     C           *LIKE     DEFN P15       PAYABD
+     C           *LIKE     DEFN P15       PAYABE
+     C           *LIKE     DEFN P15       PAYABF
+     C           *LIKE     DEFN P15       PAYABG
+     C           *LIKE     DEFN P15       PAYABH
+     C           *LIKE     DEFN P15       PAYABI
+     C           *LIKE     DEFN P15       PDYABA
+     C           *LIKE     DEFN P15       PDYABB
+     C           *LIKE     DEFN P15       PDYABC
+     C           *LIKE     DEFN P15       PDYABD
+     C           *LIKE     DEFN P15       PDYABE
+     C           *LIKE     DEFN P15       PDYABF
+     C           *LIKE     DEFN P15       PDYABG
+     C           *LIKE     DEFN P15       PDYABH
+     C           *LIKE     DEFN P15       PDYABI
+     C           *LIKE     DEFN P15       PTYABA
+     C           *LIKE     DEFN P15       PTYABB
+     C           *LIKE     DEFN P15       PTYABC
+     C           *LIKE     DEFN P15       PTYABD
+     C           *LIKE     DEFN P15       PTYABE
+     C           *LIKE     DEFN P15       PTYABF
+     C           *LIKE     DEFN P15       PTYABG
+     C           *LIKE     DEFN P15       PTYABH
+     C           *LIKE     DEFN P15       PTYABI
+      *
+     C                     ENDSR
+      *
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*    * P S S R -  T O   H A N D L E   A B N O R M A L I T I E S *
+     C*    ~~~~~~~~~    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ *
+     C*    CALLED FROM     :   ALL ABNORMAL CONDITIONS / ERRORS       *
+     C*    CALLS           :   Nothing                                *
+     C*                                                               *
+     C*    THIS PROGRAM HANDLES ABNORMAL CONDITIONS SUCH AS READ FAIL *
+     C*    CHAIN FAIL ETC, AND PRODUCES A FORMATTED RPG DUMP          *
+     C*                                                               *
+     C*****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+     C/EJECT
+     C/TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C*****************************************************************
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   GMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

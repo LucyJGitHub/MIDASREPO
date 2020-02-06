@@ -1,0 +1,187 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas LE EIR Period Split Control')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC004601 - Midas LE EIR Period Split Control               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*                      251573             Date 31Mar08              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CAS016  *CREATE    Date 28Feb06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)          */
+/*       251573 - Amend program such that COB would not fail when    */
+/*                LEERAPPD has already been created. Also applied    */
+/*                249615 fix for this component.                     */
+/*       249615 - No need to delete files if not a restart as the    */
+/*                member will be repopulated any way                 */
+/*       CAS016 - IAS18 EIR Recalculation (Fee Amortisation Over     */
+/*                Whole Period)                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+/* Parameter for AOHEDGR0 */
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST')
+             DCL        VAR(&RFMT) TYPE(*CHAR) LEN(200)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2006')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('LEC004601 - Midas LE Customer Lending +
+                          Effective Interest Rate Period Split') +
+                          TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CALL       PGM(AOHEDGR0) PARM(&RTCD &OPTN &RFMT)
+ 
+/* Do the process when amortisation method is not linear, else end this program */
+               IF         COND(&RTCD *EQ '       ') THEN(DO)
+ 
+                  IF         COND(%SST(&RFMT 32 1) *EQ 'L') THEN(GOTO +
+                          CMDLBL(END))
+               ENDDO
+ 
+/* Setup system prefix variable from SDSTAT data area. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Call program CB0160 to get value of restart indicator. */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* If it is NOT a restart. */
+ 
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+ 
+ /**********   DLTF       FILE(XCLOANCL)                                */                /*249615*/
+ /**********   MONMSG     MSGID(CPF0000)                                */                /*249615*/
+ /**********   DLTF       FILE(XLEERAPPD)                               */                /*249615*/
+ /**********   MONMSG     MSGID(CPF0000)                                */                /*249615*/
+ 
+               CPYF       FROMFILE(CLOANCL) TOFILE(&DPLIB/XCLOANCL) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ /**********   CPYF       FROMFILE(LEERAPPD) TOFILE(&DPLIB/XLEERAPPD) +
+                          CRTFILE(*YES)                                 */                /*251573*/
+               CPYF       FROMFILE(LEERAPPD) TOFILE(&DPLIB/XLEERAPPD) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*251573*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(LEFEED) TOFILE(&DPLIB/XLEFEED) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ENDDO
+ 
+/* If it is a restart. */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+               CPYF       FROMFILE(XCLOANCL) TOFILE(CLOANCL) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(XLEERAPPD) TOFILE(LEERAPPD) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                          FILE(LEERAPPD))
+               CPYF       FROMFILE(XLEFEED) TOFILE(LEFEED) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Clear LENEIRPD & LENERAPD */
+             CLRPFM     FILE(LENEIRPD)
+             MONMSG     MSGID(CPF0000)
+             CLRPFM     FILE(LENERAPD)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Call Lending EIR Period Split Program */
+ 
+             CALL       PGM(LE004601)
+ 
+/* If no error occured in the program */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* Call CB0150 to update restart indicator. */
+ 
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+               CPYF       FROMFILE(LENEIRPD) TOFILE(LEEIRDPD) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+               CPYF       FROMFILE(LENERAPD) TOFILE(LEEIRAPD) +
+                          MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+               DLTF       FILE(XCLOANCL)
+               MONMSG     MSGID(CPF0000)
+               DLTF       FILE(XLEERAPPD)
+               MONMSG     MSGID(CPF0000)
+ 
+             ENDDO
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('LEC004601 Midas LE Effective +
+                          Interest Rate Period Split +
+                          ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

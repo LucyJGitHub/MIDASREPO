@@ -1,0 +1,1188 @@
+     C*****************************************************************
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER016             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRT001  *CREATE    Date 28Feb95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016 - German Interest Calculation: Upgrade of FGE059      *
+      *           to Midas Plus                                       *
+      *  242286 - Enhance computation for calc basis 6.               *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTCHRG - Subroutine which calcules interest        *
+     C*                     between two dates.                        *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            @ACNO  - Retail account number                     *
+     C*            @CHGT  - Charge type                               *
+     C*            @CHST  - Charge sub-type                           *
+     C*            @CHAC  - Account to post charges                   *
+     C*            @RCA   - Rebatable charges                         *
+     C*            @NRCA  - Non-rebatable charges                     *
+     C*            @DDDD  - A constant field of 'D'                   *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            @CHRG  - service charge                            *
+     C*            *IN80  - Database error in LF/RECRG                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INTCAL    BEGSR                           ** INTCAL **
+     C*
+     C** LOADING OF CURRENCY TO CHAIN TO REHRDJ/REHRCJ FILES
+     C*
+     C                     MOVE CCY       REHCCY
+     C                     Z-ADD*ZEROS    INRT
+     C                     Z-ADD*ZEROS    INTP
+     C                     Z-ADD*ZEROS    ZINTR
+     C                     Z-ADD*ZEROS    ZLDTM
+     C*
+     C** DEBIT PROCESSING
+     C*
+     C           RHISB     IFGT *ZEROS                     - B1
+     C           MNBL      ORGT *ZEROS
+     C                     EXSR DRINIT
+     C                     END                             - E1
+     C*
+     C                     Z-ADDINRT      ZIRATE
+     C                     Z-ADDINTP      ZICT
+     C                     Z-ADDDRIC      ZICALC
+     C                     Z-ADDRHISD     ZIBEG
+     C                     Z-ADDRUND      ZIEND
+     C*
+      *                                                                                       CER016
+     C           WFIRST    IFEQ ' '                                                           CER016
+     C                     EXSR SRAOS                                                         CER016
+     C                     ENDIF                                                              CER016
+      *                                                                                       CER016
+     C           INTP      IFLT 3                          - B1
+     C           RHISB     IFGT 0                          - B2
+     C                     Z-ADDRHISB     ZIAMT
+     C           ZICT      CASEQ0         ZIC00
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     DINT
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** SEARCHING END-OF-MONTH DATE
+     C*
+     C                     EXSR DATEIN
+     C*
+     C           RUND      IFLE ZLDTM                      - B2
+     C           MNBL      IFGT 0                          - B3
+     C                     Z-ADDMNBL      ZIAMT
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     DINT
+     C                     END                             - E3
+     C*
+     C                     ELSE                            - X2
+     C*
+     C** IF CHANGE OF MONTH OCCURS WITH METHODS 3 & 4 THEN TWO PROCESSINGS
+     C** FIRST PROCESSING :
+     C*
+     C           MNBL      IFGT 0                          - B3
+     C                     Z-ADDMNBL      ZIAMT
+     C                     Z-ADDZLDTM     ZIEND
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     DINT
+     C                     END                             - E3
+     C*
+     C** SECOND PROCESSING :
+     C*
+     C           RHISB     IFGT 0                          - B3
+     C                     Z-ADDRHISB     ZIAMT
+     C                     Z-ADDZLDTM     ZIBEG
+     C                     Z-ADDRUND      ZIEND
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     ADD  ZINTR     DINT
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** CREDIT PROCESSING
+     C*
+     C                     Z-ADD*ZEROS    INRT
+     C                     Z-ADD*ZEROS    INTP
+     C                     Z-ADD*ZEROS    ZINTR
+     C                     Z-ADD*ZEROS    ZLDTM
+     C*
+     C           RHISB     IFLT *ZEROS                     - B1
+     C           MNBL      ORLT *ZEROS
+     C                     EXSR CRINIT
+     C                     END                             - E1
+     C*
+     C                     Z-ADDINRT      ZIRATE
+     C                     Z-ADDINTP      ZICT
+     C                     Z-ADDCRIC      ZICALC
+     C                     Z-ADDRHISD     ZIBEG
+     C                     Z-ADDRUND      ZIEND
+     C*
+     C           INTP      IFLT 3                          - B1
+     C           RHISB     IFLT 0                          - B2
+     C                     Z-ADDRHISB     ZIAMT
+     C           ZICT      CASEQ0         ZIC00
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     CINT
+     C                     END                             - E2
+     C*
+     C                     ELSE                            - X1
+     C*
+     C** SEARCHING END-OF-MONTH DATE
+     C*
+     C                     EXSR DATEIN
+     C*
+     C           RUND      IFLE ZLDTM                      - B2
+     C           MNBL      IFGT 0                          - B3
+     C                     Z-ADDMNBL      ZIAMT
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     CINT
+     C                     END                             - E3
+     C*
+     C                     ELSE                            - X2
+     C*
+     C** IF CHANGE OF MONTH OCCURS WITH METHODS 3 & 4 THEN TWO PROCESSINGS
+     C** FIRST PROCESSING :
+     C*
+     C           MNBL      IFGT 0                          - B3
+     C                     Z-ADDMNBL      ZIAMT
+     C                     Z-ADDZLDTM     ZIEND
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     Z-ADDZINTR     CINT
+     C                     END                             - E3
+     C*
+     C** SECOND PROCESSING :
+     C*
+     C           RHISB     IFGT 0                          - B3
+     C                     Z-ADDRHISB     ZIAMT
+     C                     Z-ADDZLDTM     ZIBEG
+     C                     Z-ADDRUND      ZIEND
+     C           INTP      IFEQ 3                          - B4
+     C                     Z-ADD1         ZICT
+     C                     ELSE                            - X4
+     C                     Z-ADD2         ZICT
+     C                     END                             - E4
+     C           ZICT      CASEQ1         ZIC01
+     C           ZICT      CASEQ2         ZIC02
+     C                     END
+     C                     ADD  ZINTR     CINT
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **INTCAL ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C** ZICD subroutine to find number of days to calculate interest *
+     C**      according to calculation basis                          *
+     C**                                                              *
+     C**     Called by       ZIC00,ZIC01,ZIC02                        *
+     C**                                                              *
+     C** CALLS      DBERR  - Database Error Handling                  *
+     C**                                                              *
+     C*****************************************************************
+     C           ZICD      BEGSR                           **ZICD BEGSR**
+     C*
+     C* TO DETERMINE NUMBER OF DAYS INTEREST TO BE CALCULATED
+     C*
+     C           ZIEND     SUB  ZIBEG     ZDAYN1
+     C*
+     C* CHECK FOR INTEREST CALCULATION BASIS
+     C*
+     C           ZICALC    IFEQ 3                          - B1
+     C           ZICALC    OREQ 6                                                             242286
+     C           ZICALC    OREQ 0                                                             CER016
+      *                                                                                       242286
+     C           ZIEND     IFGT ZIBEG                      - B2
+     C*
+     C** CALCULATING DATE FROM DAY NUMBER (BEGINNING DATE)
+     C*
+     C                     Z-ADDZIBEG     ZDAYNO
+     C                     CALL 'ZDATEP'
+     C                     PARM           ZDAYNO
+     C                     PARM           ZDATE
+     C                     PARM           ZERROR
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           ZERROR    IFNE 0                          - B3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD90        DBASE            ***************
+     C                     MOVE 'ZDAT2'   DBFILE           **DB ERROR 90*
+     C                     MOVE ZERROR    ERRDAT           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELERRDAT    DBKEY
+     C                     EXSR DBERR
+     C                     END                             - E3
+     C*
+     C                     Z-ADDZDATE     SRES
+     C*
+     C** CALCULATING DATE FROM DAY NUMBER (FINISHING DATE)
+     C*
+     C                     Z-ADDZIEND     ZDAYNO
+     C                     CALL 'ZDATEP'
+     C                     PARM           ZDAYNO
+     C                     PARM           ZDATE
+     C                     PARM           ZERROR
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           ZERROR    IFNE 0                          - B3
+     C           *LOCK     IN   LDA
+     C                     Z-ADD91        DBASE            ***************
+     C                     MOVE 'ZDAT2'   DBFILE           **DB ERROR 91**
+     C                     MOVE ZERROR    ERRDAT           **************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELERRDAT    DBKEY
+     C                     EXSR DBERR
+     C                     END                             - E3
+     C*
+     C                     Z-ADDZDATE     FRES
+     C*
+     C           ZICALC    IFEQ 3                                                             242286
+     C           ZICALC    OREQ 0                                                             CER016
+     C*
+     C** IN ORDER FOR THE FINISH YEAR TO BE LESS THAN THE START YEAR IF ZIEND
+     C** IS GREATER THAN ZIBEG, THEN THE DATE ZIEND MUST BE IN A DIFFERENT
+     C** CENTURY TO ZIBEG. IF SO ADD 100 YEARS TO IT.
+     C*
+     C*
+     C           ZIFY      IFLT ZISY                       - B3
+     C           ZIFY      ADD  100       ZIFY2
+     C                     ELSE                            - X3
+     C                     Z-ADDZIFY      ZIFY2
+     C                     END                             - E3
+     C*
+     C                     Z-ADDZISY      ZISY2
+     C*
+     C** DETERMINE WHETHER START YEAR IS A LEAP YEAR AND IF START MONTH
+     C** IS FEBRUARY  THEN CONSIDER LAST DAY OF FEBRUARY AS DATE 30ND. OF THE
+     C*  MONTH
+     C*
+     C           ZICALC    IFEQ 3                                                             CER016
+     C           ZICALC    OREQ 0                                                             CER016
+     C           CER016    ANDEQ'N'                                                           CER016
+      *                                                                                       CER016
+     C           ZISM      IFEQ 2                          - B3
+     C           ZISY2     ADD  1900      ZLYCHK
+     C           ZLYCHK    DIV  4         ZLYCHK
+     C                     MVR            ZLYREM
+     C           ZLYREM    IFEQ 0                          - B4
+     C           ZISD      IFEQ 29                         - B5
+     C                     Z-ADD30        ZISD
+     C                     END                             - E5
+     C                     ELSE                            - X4
+     C           ZISD      IFEQ 28                         - B5
+     C                     Z-ADD30        ZISD
+     C                     END                             - E5
+     C                     END                             - E4
+     C                     END                             - E3
+      *                                                                                       CER016
+     C                     ENDIF                                                              CER016
+     C*
+     C           30        SUB  ZISD      ZID1
+     C*
+     C           ZID1      IFLT 0                          - B3
+     C                     Z-ADD*ZEROS    ZID1
+     C                     END                             - E3
+     C*
+     C           ZISM      IFEQ 12                         - B3
+     C                     Z-ADD*ZEROS    ZISM
+     C                     ADD  1         ZISY
+     C                     ADD  1         ZISY2
+     C                     END                             - E3
+     C*
+     C** DETERMINE WHETHER END YEAR IS A LEAP YEAR AND IF END MONTH IS FEBRUARY
+     C*
+     C           ZICALC    IFEQ 3                                                             CER016
+     C           ZICALC    OREQ 0                                                             CER016
+     C           CER016    ANDEQ'N'                                                           CER016
+      *                                                                                       CER016
+     C           ZIFM      IFEQ 2                          - B3
+     C           ZIFY2     ADD  1900      ZLYCHK
+     C           ZLYCHK    DIV  4         ZLYCHK
+     C                     MVR            ZLYREM
+     C           ZLYREM    IFEQ 0                          - B4
+     C           ZIFD      IFEQ 29                         - B5
+     C                     Z-ADD30        ZIFD
+     C                     END                             - E5
+     C                     ELSE                            - X4
+     C           ZIFD      IFEQ 28                         - B5
+     C                     Z-ADD30        ZIFD
+     C                     END                             - E5
+     C                     END                             - E4
+     C                     END                             - E3
+      *                                                                                       CER016
+     C                     ENDIF                                                              CER016
+     C*
+     C           ZIFD      IFEQ 31                         - B3
+     C                     ADD  30        ZID1
+     C                     ELSE                            - X3
+     C                     ADD  ZIFD      ZID1
+     C                     END                             - E3
+     C*
+     C                     SUB  1         ZIFM
+     C*
+     C           ZISY      IFEQ ZIFY                       - B3
+     C           ZIFM      SUB  ZISM      ZINOM
+     C                     ELSE                            - X3
+     C           12        SUB  ZISM      ZIM1
+     C                     Z-ADD1         ZISM
+     C*
+     C** USE ENLARGE FIELDS THAT CAN HANDLE 1999 ONWARDS
+     C*
+     C                     ADD  1         ZISY2
+     C           ZIFY2     SUB  ZISY2     ZIY1
+     C           ZIY1      MULT 12        ZIM2
+     C           ZIM2      ADD  ZIFM      ZIM2
+     C           ZIM2      ADD  ZIM1      ZINOM
+     C*
+     C                     END                             - E3
+     C*
+     C           ZINOM     MULT 30        ZID2
+     C           ZID2      ADD  ZID1      ZDAYN1
+      *                                                                                       242286
+      ** End for Calc Method = 3                                                              242286
+      *                                                                                       242286
+     C                     ENDIF                                                              242286
+      *                                                                                       242286
+      ** Perform no. of days calculation for method 6                                         242286
+      ** Find the number of leap year and non-leap year days in the                           242286
+      ** interest period. The non-leap year days are then adjusted by a                       242286
+      ** factor of 366/365 to allow for the divisor of 366 in Retail PGM                      242286
+      ** This figure is then added to the actual leap year days to give                       242286
+      ** a factored number of days in the interest period.                                    242286
+      *                                                                                       242286
+     C           ZICALC    IFEQ 6                                                             242286
+      *                                                                                       242286
+     C                     Z-ADD0         LEAP50  50                                          242286
+     C                     Z-ADD0         NLEAP   50                                          242286
+      *                                                                                       242286
+      ** If start and end date are in the same year, check if the                             242286
+      ** year is a leap year and add no. of interest days to the                              242286
+      ** relevant total                                                                       242286
+      *                                                                                       242286
+     C           ZISY      IFEQ ZIFY                       B2                                 242286
+     C           ZISY      DIV  4         ZZWN5   50                                          242286
+     C                     MVR            ZZWN5                                               242286
+     C           ZZWN5     IFNE 0                          B3                                 242286
+     C                     ADD  ZDAYN1    NLEAP                                               242286
+     C                     ELSE                            X3                                 242286
+     C                     ADD  ZDAYN1    LEAP50                                              242286
+     C                     END                             E3                                 242286
+      *                                                                                       242286
+      ** Else must break down the interest period into leap years                             242286
+      ** and non-leap years                                                                   242286
+      *                                                                                       242286
+     C                     ELSE                            X2                                 242286
+      *                                                                                       242286
+      ** Save end date year value                                                             242286
+      *                                                                                       242286
+     C                     Z-ADDFRES      DATSV1  60                                          242286
+     C                     Z-ADDZIFY      YY2SV1  20                                          242286
+      *                                                                                       242286
+      ** Add 1 to starting year number                                                        242286
+      *                                                                                       242286
+     C           ZISY      ADD  1         ZIFY                                                242286
+      *                                                                                       242286
+      ** Get Midas day number for 1st Jan of year after start date                            242286
+      *                                                                                       242286
+     C                     MOVE '01'      ZIFM                                                242286
+     C                     MOVE '01'      ZIFD                                                242286
+     C                     MOVE FRES      ZDATE                                               242286
+     C                     EXSR ZDATE1                                                        242286
+     C           ZDAYNO    SUB  1         ZZENDW  50                                          242286
+     C           ZZENDW    SUB  ZIBEG     ZDAYN1                                              242286
+      *                                                                                       242286
+      ** Check if current year is a leap year                                                 242286
+      *                                                                                       242286
+     C           ZISY      DIV  4         ZZWN5                                               242286
+     C                     MVR            ZZWN5                                               242286
+     C           ZZWN5     IFNE 0                          B3                                 242286
+     C                     ADD  ZDAYN1    NLEAP                                               242286
+     C                     ELSE                            X3                                 242286
+     C                     ADD  ZDAYN1    LEAP50                                              242286
+     C                     END                             E3                                 242286
+      *                                                                                       242286
+      ** Accumulate leap year and non-leap year days for complete                             242286
+      ** years in the interest period                                                         242286
+      *                                                                                       242286
+     C           ZIFY      DOWLTYY2SV1                     B3                                 242286
+      *                                                                                       242286
+      ** Check if current year is a leap year                                                 242286
+      *                                                                                       242286
+     C           ZIFY      DIV  4         ZZWN5                                               242286
+     C                     MVR            ZZWN5                                               242286
+     C           ZZWN5     IFNE 0                          B4                                 242286
+     C                     ADD  365       NLEAP                                               242286
+     C                     ELSE                            X4                                 242286
+     C                     ADD  366       LEAP50                                              242286
+     C                     END                             E4                                 242286
+      *                                                                                       242286
+      ** Add 1 to year number                                                                 242286
+      *                                                                                       242286
+     C                     ADD  1         ZIFY                                                242286
+     C                     ENDDO                           E3                                 242286
+      *                                                                                       242286
+      ** Finally calculate the days for the last part-year up                                 242286
+      ** to the end date                                                                      242286
+      **                                                                                      242286
+      ** Get Midas day number for 1st Jan of current year                                     242286
+      *                                                                                       242286
+     C                     MOVE '01'      ZIFM                                                242286
+     C                     MOVE '01'      ZIFD                                                242286
+     C                     MOVE FRES      ZDATE                                               242286
+     C                     EXSR ZDATE1                                                        242286
+     C           ZDAYNO    SUB  1         ZIBEGW  50                                          242286
+     C           ZIEND     SUB  ZIBEGW    ZDAYN1                                              242286
+      *                                                                                       242286
+      ** Check if year is a leap year                                                         242286
+      *                                                                                       242286
+     C           ZIFY      DIV  4         ZZWN5                                               242286
+     C                     MVR            ZZWN5                                               242286
+     C           ZZWN5     IFNE 0                          B3                                 242286
+     C                     ADD  ZDAYN1    NLEAP                                               242286
+     C                     ELSE                            X3                                 242286
+     C                     ADD  ZDAYN1    LEAP50                                              242286
+     C                     END                             E3                                 242286
+      *                                                                                       242286
+     C                     END                             E2                                 242286
+      *                                                                                       242286
+      ** Multiply non-leap year days by 366/365                                               242286
+      *                                                                                       242286
+     C           NLEAP     MULT 366       WNLP1  150                                          242286
+     C           WNLP1     DIV  365       WNLP2  159H                                         242286
+      *                                                                                       242286
+      ** Add the result to the number of leap year days to give                               242286
+      ** the total days in interest period                                                    242286
+      *                                                                                       242286
+     C           ZIEND     SUB  ZIBEG     ZDAYN1                                              242286
+     C           LEAP50    ADD  WNLP2     INT6DY 159H                                         242286
+      *                                                                                       242286
+      ** Restore saved data                                                                   242286
+      *                                                                                       242286
+     C                     Z-ADDDATSV1    FRES                                                242286
+      *                                                                                       242286
+      ** End for Calc Method = 6                                                              242286
+      *                                                                                       242286
+     C                     ENDIF                                                              242286
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C           ZICALC    IFEQ 4                          - B1
+     C           ZICALC    OREQ 5
+     C*
+     C** ONE DAY IS SUBTRACTED FROM ZDAYN1 FOR EACH OCCURANCE OF 29 FEB IN THE
+     C** THE INTEREST CALCULATION PERIOD INCLUSIVE OF ZIBEG AND ZIEND
+     C*
+     C** FIND NO OF FOUR YEAR PERIODS BETWEEN DATES
+     C*
+     C           ZDAYN1    DIV  1461      ZIMAN
+     C                     MVR            ZIREM
+     C*
+     C** FIND NEXT 29 FEB DAY NO. ON OR AFTER ZIBEG.
+     C*
+     C           ZIBEG     SUB  60        ZIBW1
+     C           ZIBW1     DIV  1461      ZIDW1
+     C                     MVR            ZIDREM
+     C*
+     C           ZIDREM    IFEQ 0                          - B2
+     C                     Z-ADDZIBEG     ZIDW2
+     C                     END                             - E2
+     C*
+     C** ROUND UP RESULT
+     C*
+     C           ZIDW1     ADD  1         ZIDW2
+     C*
+     C** CALCULATE NEXT 29 FEB.
+     C*
+     C           ZIDW2     MULT 1461      ZIDW2
+     C           ZIDW2     ADD  60        ZIDW2
+     C*
+     C** IF THIS NEXT 29 FEB. DAYNO - ZIBEG IS GREATER OR EQUAL TO ZIREM THEN
+     C** ADD 1 TO ZIMAN.
+     C*
+     C           ZIDW2     SUB  ZIBEG     ZILPCP
+     C*
+     C           ZIREM     IFGE ZILPCP                     - B2
+     C                     ADD  1         ZIMAN
+     C                     END                             - E2
+     C*
+     C** SUBTRACT ZIMAN FROM ZDAYN1 TO GIVE VALUE OF ZDAYN1 REQUIRED FOR THIS
+     C** INTEREST CALCULATION
+     C*
+     C           ZDAYN1    SUB  ZIMAN     ZDAYN1
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **ZICD ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ZIC00 subroutine to calculate interest (type=00)
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           ZICD
+     C**
+     C           ZIC00     BEGSR                           **ZIC00 BEGSR**
+     C*
+     C** REVERSE SIGN OF AMOUNT IF IT'S NEGATIVE
+     C*
+     C           ZIAMT     IFLT 0                          - B1
+     C                     Z-SUBZIAMT     ZIAMT
+     C                     END                             - E1
+     C*
+     C** FIND NUMBER OF DAYS TO CALCULATE INTEREST ACCORDING TO CALC. BASIS
+     C*
+     C                     EXSR ZICD
+      *                                                                                       242286
+     C           ZIAMT     MULT ZIRATE    ZIWRK1                                              242286
+     C           ZIWRK1    MULT ZDAYN1    ZIWRK2                                              242286
+     C*
+     C           ZICALC    IFEQ 7                          - B1
+     C           ZICALC    OREQ 5
+     C           ZICALC    OREQ 3
+     C           ZICALC    OREQ 2
+     C           ZICALC    OREQ 0                                                             CER016
+     C********** ZIAMT     DIV  36000     ZIWRK1    H                                         242286
+      *                                                                                       CER016
+     C           ZICALC    IFEQ 0                                                             CER016
+     C           PINTN     ANDEQ'Y'                                                           CER016
+     C                     Z-ADDZIAMT     WAMT1  150                                          CER016
+     C                     Z-ADDZIRATE    WRATE  117                                          CER016
+     C                     EXSR SRINT0                                                        CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C           ZIWRK2    DIV  36000     ZINTR     H                                         242286
+      *                                                                                       CER016
+     C                     END                                                                CER016
+      *                                                                                       CER016
+     C                     END                             - E1
+     C*
+     C           ZICALC    IFEQ 4                          - B1
+     C           ZICALC    OREQ 1
+     C********** ZIAMT     DIV  36500     ZIWRK1    H                                         242286
+     C           ZIWRK2    DIV  36500     ZINTR     H                                         242286
+     C                     END                             - E1
+     C*
+     C           ZICALC    IFEQ 6                          - B1
+     C********** ZIAMT     DIV  36600     ZIWRK1    H                                         242286
+     C           ZIWRK2    DIV  36600     ZINTR     H                                         242286
+     C                     END                             - E1
+     C*
+     C********** ZIWRK1    MULT ZIRATE    ZIWRK2                                              242286
+     C********** ZIWRK2    MULT ZDAYN1    ZINTR                                               242286
+     C*
+     C                     ENDSR                           **ZIC00 ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ZIC01 subroutine to calculate interest (type=01)
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           ZICD
+     C**
+     C           ZIC01     BEGSR                           **ZIC01 BEGSR**
+     C*
+     C** REVERSE SIGN OF AMOUNT IF IT'S NEGATIVE
+     C*
+     C           ZIAMT     IFLT 0                          - B1
+     C                     Z-SUBZIAMT     ZIAMT
+     C                     END                             - E1
+     C*
+     C** INITIALIZE WORK FIELDS
+     C*
+     C                     Z-ADDZIAMT     ZIAMT1
+     C                     Z-ADD1         Z
+     C                     Z-ADD*ZEROS    ZIAMTR
+     C                     Z-ADD*ZEROS    ZIA
+     C                     Z-ADD*ZEROS    ZIA1
+     C                     Z-ADD*ZEROS    LOOP
+     C                     Z-ADD*ZEROS    Y
+     C                     Z-ADD*ZEROS    ZIN
+     C*
+     C** INTEREST IS ONLY CALCULATED ON AN AMOUNT THAT EXCEEDS OR IS EQUAL
+     C** TO THE INITIAL THRESHOLD BALANCE
+     C*
+     C           ZIAMT     IFGE ZITHR                      - B1
+     C*
+     C** FIND NUMBER OF DAYS TO CALCULATE INTEREST ACCORDING TO CALC. BASIS
+     C*
+     C                     EXSR ZICD
+     C*
+     C*
+     C           LOOP      DOWEQ0                          - B2
+     C                     Z-ADDZIAMT1    ZIAMTR
+     C*
+     C           Z         IFEQ 11                         - B3
+     C                     Z-ADDZIAMTR    ZIA,Z
+     C                     Z-ADD1         LOOP
+     C*
+     C                     ELSE                            - X3
+     C                     ADD  1         Y
+     C                     ADD  1         Z
+     C*
+     C           ZIB,Z     IFEQ 0                          - B4
+     C                     ADD  ZIAMTR    ZIA,Y
+     C                     Z-ADD1         LOOP
+     C*
+     C                     ELSE                            - X4
+     C           ZIB,Z     SUB  ZIB,Y     ZBAL
+     C           ZIAMTR    SUB  ZBAL      ZIAMT1
+     C*
+     C           ZIAMT1    IFLE 0                          - B5
+     C                     ADD  ZIAMTR    ZIA,Y
+     C                     Z-ADD1         LOOP
+     C*
+     C                     ELSE                            - X5
+     C                     ADD  ZBAL      ZIA,Y
+     C*
+     C                     END                             - E5
+     C*
+     C                     END                             - E4
+     C*
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+      *                                                                                       242286
+     C           ZIA       MULT ZIR       ZIA1                                                242286
+     C           ZIA1      MULT ZDAYN1    ZIA1                                                242286
+     C*
+     C           ZICALC    IFEQ 7                          - B2
+     C           ZICALC    OREQ 5
+     C           ZICALC    OREQ 3
+     C           ZICALC    OREQ 2
+     C           ZICALC    OREQ 0                                                             CER016
+     C********** ZIA       DIV  36000     ZIA1      H                                         242286
+      *                                                                                       CER016
+     C           ZICALC    IFEQ 0                                                             CER016
+     C           PINTN     ANDEQ'Y'                                                           CER016
+     C                     Z-ADD1         C       20                                          CER016
+      *                                                                                       CER016
+     C           C         DOWLT12                                                            CER016
+     C                     Z-ADDZIA,C     WAMT1                                               CER016
+     C                     Z-ADDZIR,C     WRATE                                               CER016
+     C                     EXSR SRINT0                                                        CER016
+     C                     Z-ADDZINTR     ZIN,C                                               CER016
+     C                     ADD  1         C                                                   CER016
+     C                     ENDDO                                                              CER016
+      *                                                                                       CER016
+     C                     XFOOTZIN       ZINTR1 185H                                         CER016
+     C                     Z-ADDZINTR1    ZINTR     H                                         CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C           ZIA1      DIV  36000     ZIN       H                                         242286
+      *                                                                                       CER016
+     C                     END                                                                CER016
+     C*
+     C                     END                             - E2
+     C*
+     C           ZICALC    IFEQ 4                          - B2
+     C           ZICALC    OREQ 1
+     C********** ZIA       DIV  36500     ZIA1      H                                         242286
+     C           ZIA1      DIV  36500     ZIN       H                                         242286
+     C*
+     C                     END                             - E2
+     C*
+     C           ZICALC    IFEQ 6                          - B2
+     C********** ZIA       DIV  36600     ZIA1      H                                         242286
+     C           ZIA1      DIV  36600     ZIN       H                                         242286
+     C*
+     C                     END                             - E2
+      *                                                                                       CER016
+     C           ZICALC    IFNE 0                                                             CER016
+     C           PINTN     ORNE 'Y'                                                           CER016
+     C*
+     C********** ZIA1      MULT ZIR       ZIA1                                                242286
+     C********** ZIA1      MULT ZDAYN1    ZIN                                                 242286
+     C                     XFOOTZIN       ZINTR
+      *                                                                                       CER016
+     C                     ENDIF                                                              CER016
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **ZIC01 ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** ZIC02 subroutine to calculate interest (type=02)
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           ZICD
+     C**
+     C           ZIC02     BEGSR                           **ZIC02 BEGSR**
+     C*
+     C** REVERSE SIGN OF AMOUNT IF IT'S NEGATIVE
+     C*
+     C           ZIAMT     IFLT 0                          - B1
+     C                     Z-SUBZIAMT     ZIAMT
+     C                     END                             - E1
+     C*
+     C** INTEREST IS ONLY CALCULATED ON AN AMOUNT THAT EXCEEDS OR IS EQUAL
+     C** TO THE INITIAL THRESHOLD BALACE
+     C*
+     C           ZIAMT     IFGE ZITHR                      - B1
+     C*
+     C** FIND NUMBER OF DAYS TO CALCULATE INTEREST ACCORDING TO CALC. BASIS
+     C*
+     C                     EXSR ZICD
+     C*
+     C                     Z-ADD1         Z
+     C           ZIAMT     LOKUPZIB,Z                  40
+     C*
+     C           ZIAMT     MULT ZIR,Z     ZIWRK1                                              242286
+     C           ZIWRK1    MULT ZDAYN1    ZIWRK2                                              242286
+      *                                                                                       242286
+     C           ZICALC    IFEQ 7                          - B2
+     C           ZICALC    OREQ 5
+     C           ZICALC    OREQ 3
+     C           ZICALC    OREQ 2
+     C           ZICALC    OREQ 0                                                             CER016
+     C********** ZIAMT     DIV  36000     ZIWRK1    H                                         242286
+      *                                                                                       CER016
+     C           ZICALC    IFEQ 0                                                             CER016
+     C           PINTN     ANDEQ'Y'                                                           CER016
+     C                     Z-ADDZIAMT     WAMT1                                               CER016
+     C                     Z-ADDZIR,Z     WRATE                                               CER016
+     C                     EXSR SRINT0                                                        CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C           ZIWRK2    DIV  36000     ZINTR     H                                         242286
+      *                                                                                       CER016
+     C                     END                                                                CER016
+     C*
+     C                     END                             - E2
+     C*
+     C           ZICALC    IFEQ 4                          - B2
+     C           ZICALC    OREQ 1
+     C********** ZIAMT     DIV  36500     ZIWRK1    H                                         242286
+     C           ZIWRK2    DIV  36500     ZINTR     H                                         242286
+     C*
+     C                     END                             - E2
+     C*
+     C           ZICALC    IFEQ 6                          - B2
+     C********** ZIAMT     DIV  36600     ZIWRK1    H                                         242286
+     C           ZIWRK2    DIV  36600     ZINTR     H                                         242286
+     C*
+     C                     END                             - E2
+     C*
+     C********** ZIWRK1    MULT ZIR,Z     ZIWRK2                                              242286
+     C********** ZIWRK2    MULT ZDAYN1    ZINTR                                               242286
+     C*
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **ZIC02 ENDSR**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** DRINIT subroutine for debit rates loading
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           DBSR
+     C**
+     C           DRINIT    BEGSR                           **DRINIT BEGSR**
+     C*
+     C                     Z-ADD*ZEROS    ZIRD
+     C                     Z-ADD*ZEROS    ZIBD
+     C                     Z-ADD*ZERO     ZITHR
+     C                     Z-ADD*ZEROS    INTHD
+     C*
+     C** CHAIN TO DEBIT RATE CHANGES FILE
+     C*
+     C                     Z-ADDDRCD      KDATE
+     C*
+     C           DCKEY     CHAINREHRDJ               99
+     C*
+     C** ERROR IN REHRDJ
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C           DRIB      ANDEQ*ZEROS
+     C           DRIS      ANDEQ*ZEROS
+     C                     MOVE '0'       *IN99
+     C                     END                             - E1
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD92        DBASE            ***************
+     C                     MOVE 'HRDJ '   DBFILE           **DB ERROR 92*
+     C                     Z-ADDKDATE     REHDAT           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELREHKEY    DBKEY
+     C                     EXSR DBERR
+     C                     END                             - E1
+     C*
+     C** PICK-UP DEBIT THRESHOLD BALANCE
+     C*
+     C                     Z-ADDINTHD     ZITHR
+     C*
+     C** SETUP WORK DEBIT FIELDS WITH FIELDS READ
+     C*
+     C           RAT2      IFNE *BLANKS                    - B1
+     C                     MOVELRAT2      WDRAT
+     C                     END                             - E1
+     C*
+     C           RAT3      IFNE *BLANKS                    - B1
+     C                     MOVE RAT3      WDRAT
+     C                     END                             - E1
+     C*
+     C           BAL2      IFNE *BLANKS                    - B1
+     C                     MOVELBAL2      WDBAL
+     C                     END                             - E1
+     C*
+     C           BAL3      IFNE *BLANKS                    - B1
+     C                     MOVE BAL3      WDBAL
+     C                     END                             - E1
+     C*
+     C** LOADING OF DEBIT INTEREST RATES AND DEBIT INTEREST BALANCES
+     C*
+     C                     Z-ADDZIRD      ZIR
+     C                     Z-ADDZIBD      ZIB
+     C*
+     C                     ENDSR                           **DRINIT ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** CRINIT subroutine for credit rates loading
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           DBSR
+     C**
+     C           CRINIT    BEGSR                           **CRINIT BEGSR**
+     C*
+     C                     Z-ADD*ZEROS    ZIRC
+     C                     Z-ADD*ZEROS    ZIBC
+     C                     Z-ADD*ZERO     ZITHR
+     C                     Z-ADD*ZEROS    INTHC
+     C*
+     C** CHAIN TO CREDIT RATE CHANGES FILE
+     C*
+     C                     Z-ADDCRCD      KDATE
+     C*
+     C           DCKEY     CHAINREHRCJ               99
+     C*
+     C** ERROR IN REHRCJ
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C           CRIB      ANDEQ*ZEROS
+     C           CRIS      ANDEQ*ZEROS
+     C                     MOVE '0'       *IN99
+     C                     END                             - E1
+     C*
+     C           *IN99     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD93        DBASE            ***************
+     C                     MOVE 'HRDJ '   DBFILE           **DB ERROR 93*
+     C                     Z-ADDKDATE     REHDAT           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELREHKEY    DBKEY
+     C                     EXSR DBERR
+     C                     END                             - E1
+     C*
+     C** PICK-UP CREDIT THRESHOLD BALANCE
+     C*
+     C                     Z-ADDINTHC     ZITHR
+     C*
+     C** SETUP WORK CREDIT FIELDS WITH FIELDS READ PROCESSING
+     C*
+     C           RAT2      IFNE *BLANKS                    - B1
+     C                     MOVELRAT2      WCRAT
+     C                     END                             - E1
+     C*
+     C           RAT3      IFNE *BLANKS                    - B1
+     C                     MOVE RAT3      WCRAT
+     C                     END                             - E1
+     C*
+     C           BAL2      IFNE *BLANKS                    - B1
+     C                     MOVELBAL2      WCBAL
+     C                     END                             - E1
+     C*
+     C           BAL3      IFNE *BLANKS                    - B1
+     C                     MOVE BAL3      WCBAL
+     C                     END                             - E1
+     C*
+     C** LOADING OF CREDIT INTEREST RATES AND CREDIT INTEREST BALANCES
+     C*
+     C                     Z-ADDZIRC      ZIR
+     C                     Z-ADDZIBC      ZIB
+     C*
+     C                     ENDSR                           **CRINIT ENDSR**
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+      *                                                               *                       CER016
+      *  SRINT0 - Subroutine to calculate interest for Retail type    *                       CER016
+      *           account (Method 0)                                  *                       CER016
+      *                                                               *                       CER016
+      *  Called By: ZIC00, ZIC01 and ZIC02 Subroutine                 *                       CER016
+      *                                                               *                       CER016
+      *  Calls: None                                                  *                       CER016
+      *                                                               *                       CER016
+      *****************************************************************                       CER016
+      *                                                                                       CER016
+     C           SRINT0    BEGSR                                                              CER016
+      *                                                                                       CER016
+     C                     MOVE @CYDP     WNDP    10                                          CER016
+     C                     Z-ADD1         WNDTMP 150                                          CER016
+      *                                                                                       CER016
+     C           WNDP      IFEQ 0                                                             CER016
+     C                     Z-ADD1         WNDTMP 150                                          CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C                     DO   WNDP                                                          CER016
+     C           10        MULT WNDTMP    WNDTMP                                              CER016
+     C                     ENDDO                                                              CER016
+      *                                                                                       CER016
+     C                     ENDIF                                                              CER016
+      *                                                                                       CER016
+     C           WAMT1     MULT ZDAYN1    WINAMT 150                                          CER016
+     C           WINAMT    DIV  100       WNAMT1 150H                                         CER016
+     C           WNAMT1    DIV  WNDTMP    WNAMT2 150H                                         CER016
+     C           WNAMT2    MULT WNDTMP    WRKFLD 150                                          CER016
+     C           WRKFLD    MULT WRATE     ZINT1  150                                          CER016
+     C           ZINT1     DIV  360       ZINT2  150H                                         CER016
+     C                     Z-ADDZINT2     ZINTR                                               CER016
+      *                                                                                       CER016
+     C                     ENDSR                                                              CER016
+      *****************************************************************                       CER016
+      /EJECT                                                                                  CER016
+      *****************************************************************                       CER016
+      *                                                               *                       CER016
+      *  SRAOS - Subroutine to call AOSVALR0 for New system valuele   *                       CER016
+      *          Interest Number                                      *                       CER016
+      *                                                               *                       CER016
+      *  Called By: INTCAL Subroutine                                 *                       CER016
+      *                                                               *                       CER016
+      *  Calls: AOSVALR0                                              *                       CER016
+      *                                                               *                       CER016
+      *****************************************************************                       CER016
+      *                                                                                       CER016
+     C           SRAOS     BEGSR                                                              CER016
+      *                                                                                       CER016
+      ** Check for Switchable Feature for CER016                                              CER016
+      *                                                                                       CER016
+     C                     CALL 'AOSARDR0'                                                    CER016
+     C                     PARM *BLANKS   PRTCD   7                                           CER016
+     C                     PARM '*VERIFY' POPTN   7                                           CER016
+     C                     PARM 'CER016'  PSARD   6                                           CER016
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER016
+      *                                                                                       CER016
+     C           PRTCD     IFEQ *BLANK                                                        CER016
+     C                     MOVE 'Y'       CER016  1                                           CER016
+     C                     MOVE 'Y'       WFIRST  1                                           CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C                     MOVE 'N'       CER016                                              CER016
+     C                     MOVE 'N'       WFIRST                                              CER016
+      *                                                                                       C6R016
+     C                     ENDIF                                                              CER016
+      *                                                                                       CER016
+     C           PRTCD     IFNE *BLANK                                                        CER016
+     C           PRTCD     ANDNE'*NRF   '                                                     CER016
+     C           *LOCK     IN   LDA                                                           CER016
+     C                     MOVEL'CER016'  DBKEY                                               CER016
+     C                     MOVEL'SCSARDPD'DBFILE                                              CER016
+     C                     Z-ADD046       DBASE                                               CER016
+     C                     OUT  LDA                                                           CER016
+     C                     EXSR *PSSR                                                         CER016
+      *                                                                                       CER016
+     C                     ENDIF                                                              CER016
+      *                                                                                       CER016
+     C                     MOVEL'Interest'PSYSVL 14                                           CER016
+     C                     MOVE 'Number'  PSYSVL                                              CER016
+      *                                                                                       CER016
+     C                     CALL 'AOSVALR0'                                                    CER016
+     C                     PARM *BLANKS   PRTCD   7                                           CER016
+     C                     PARM PSYSVL    PSVLK1 20                                           CER016
+     C                     PARM           PSVL1 200                                           CER016
+     C                     PARM *BLANKS   PSVLK2 20                                           CER016
+     C                     PARM           PSVL2 200                                           CER016
+     C                     PARM *BLANKS   PSVLK3 20                                           CER016
+     C                     PARM           PSVL3 200                                           CER016
+     C                     PARM *BLANKS   PSVLK4 20                                           CER016
+     C                     PARM           PSVL4 200                                           CER016
+     C                     PARM *BLANKS   PSVLK5 20                                           CER016
+     C                     PARM           PSVL5 200                                           CER016
+     C                     PARM *BLANKS   PSVLK6 20                                           CER016
+     C                     PARM           PSVL6 200                                           CER016
+     C                     PARM *BLANKS   PSVLK7 20                                           CER016
+     C                     PARM           PSVL7 200                                           CER016
+     C                     PARM *BLANKS   PSVLK8 20                                           CER016
+     C                     PARM           PSVL8 200                                           CER016
+     C                     PARM *BLANKS   PSVLK9 20                                           CER016
+     C                     PARM           PSVL9 200                                           CER016
+     C                     PARM *BLANKS   PSVLK0 20                                           CER016
+     C                     PARM           PSVL0 200                                           CER016
+      *                                                                                       CER016
+     C           PRTCD     IFNE *BLANKS                                                       CER016
+     C           PSVL1     ANDEQ'*NRF  '                                                      CER016
+      *                                                                                       CER016
+     C                     EXSR *PSSR                                                         CER016
+      *                                                                                       CER016
+     C                     ELSE                                                               CER016
+     C                     MOVELPSVL1     PINTN   1                                           CER016
+      *                                                                                       CER016
+     C                     ENDIF                                                              CER016
+      *                                                                                       CER016
+     C                     ENDSR                                                              CER016
+      *****************************************************************                       CER016
+      /EJECT                                                                                  CER016
+      *****************************************************************                       CER016
+     C**
+     C** DATEIN subroutine for date init processing
+     C**
+     C**     Called by       INTCAL
+     C**     Calls           DBSR
+     C**
+     C           DATEIN    BEGSR                           **DATEIN BEGSR**
+     C*
+     C** WORK FIELD INIT
+     C*
+     C                     Z-ADD*ZEROS    ZLDTM
+     C*
+     C** CALCULATING DATE FROM DAY NUMBER (REACR HISTORY DATE)
+     C*
+     C                     Z-ADDRHISD     ZDAYNO
+     C                     CALL 'ZDATEP'
+     C                     PARM           ZDAYNO
+     C                     PARM           ZDATE
+     C                     PARM           ZERROR
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           ZERROR    IFNE 0                          - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD94        DBASE            ***************
+     C                     MOVE 'ZDAT2'   DBFILE           **DB ERROR 94*
+     C                     MOVE ZERROR    ERRDAT           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELERRDAT    DBKEY
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBERR
+     C                     END                             - E1
+     C*
+     C** CALCULATING FIRST DAY OF THIS MONTH TO CALCULATE THE LAST ONE
+     C*
+     C                     Z-ADDZDATE     RESULT
+     C                     Z-ADD1         ZDAY
+     C                     Z-ADDRESULT    ZDATE
+     C                     CALL 'ZDATEO'
+     C                     PARM           ZDATE
+     C                     PARM           ZDAYNO
+     C                     PARM           ZERROR
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           ZERROR    IFNE 0                          - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD95        DBASE            ***************
+     C                     MOVE 'ZDATO'   DBFILE           **DB ERROR 95*
+     C                     MOVE ZERROR    ERRDAT           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELERRDAT    DBKEY
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBERR
+     C                     END                             - E1
+     C*
+     C           ZMTH      IFEQ 12                         - B1
+     C                     Z-ADD1         ZMTH
+     C                     ADD  1         ZYEAR
+     C                     ELSE                            - X1
+     C                     ADD  1         ZMTH
+     C                     END                             - E1
+     C*
+     C                     Z-ADDRESULT    ZDATE
+     C                     CALL 'ZDATEO'
+     C                     PARM           ZDATE
+     C                     PARM           ZDAYNO
+     C                     PARM           ZERROR
+     C*
+     C** VERIFY IF ERROR
+     C*
+     C           ZERROR    IFNE 0                          - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD96        DBASE            ***************
+     C                     MOVE 'ZDATO'   DBFILE           **DB ERROR 96*
+     C                     MOVE ZERROR    ERRDAT           ***************
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVELERRDAT    DBKEY
+     C                     MOVEA'1'       *IN,89
+     C                     EXSR DBERR
+     C                     END                             - E1
+     C*
+     C           ZDAYNO    SUB  1         ZLDTM
+     C*
+     C           *INLR     IFEQ '1'                        - B1
+     C                     FREE 'ZDATEO'
+     C                     FREE 'ZDATEP'
+     C                     END                             - E1
+     C*
+     C                     ENDSR                           **DATEIN ENDSR**
+     C*
+     C********************************************************************

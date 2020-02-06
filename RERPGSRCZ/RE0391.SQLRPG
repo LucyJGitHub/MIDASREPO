@@ -1,0 +1,253 @@
+     H        1
+      *****************************************************************
+/*S*D****RPGBASE*******************************************************                     CRE083AG
+/*STD *  RPGSQL                                                       *                     CRE083AG
+/*EXI *  TEXT('Midas RE Shadow Balances file housekeepung')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE0391 - Midas RE Shadow Balances file housekeeping          *
+      *                                                               *
+      *  Function:  This program will remove records from PF/MEMOS    *
+      *             that have been dropped from the Accounts Master   *
+      *             file.                                             *
+      *                                                               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CRE083AG           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB002             Date 29JUL96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CRE083AG - COB Restructure - RE COB Optimisation Phase 1     *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CCB002 - COB Performance Enhancements                        *
+      *           Access now via access object                        *
+      *           Remove records from MEMOS which are no longer on the*
+      *           Accounts Master file.                               *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     F***ACCNT   IF  E           K        DISK         KINFSR *PSSR                         CRE083AG
+     F***            ACCNTAAF                          KIGNORE                              CRE083AG
+     F***            ACCNTACF                          KIGNORE                              CRE083AG
+     F***MEMOSL1 UF  E           K        DISK         KINFSR *PSSR                         CRE083AG
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /EJECT
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *                                                                                     CRE083AG
+      ** Storage of the SQL Select statement                                                CRE083AG
+      *                                                                                     CRE083AG
+     IMDS         DS                       1000  24                                         CRE083AG
+     I                                        1   6 CNUM                                    CRE083AG
+     I                                        7   9 CCY                                     CRE083AG
+     I                                       10  190ACOD                                    CRE083AG
+     I                                       20  210ACSQ                                    CRE083AG
+     I                                       22  24 BRCA                                    CRE083AG
+     IWWMDS       DS                          1  24                                         CRE083AG
+     I                                        1   6 WWCNUM                                  CRE083AG
+     I                                        7   9 WWCCY                                   CRE083AG
+     I                                       10  190WWACOD                                  CRE083AG
+     I                                       20  210WWACSQ                                  CRE083AG
+     I                                       22  24 WWBRCA                                  CRE083AG
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+     C                     Z-ADD0         TOTROW 100                                        CRE083AG
+     C                     Z-ADD0         INDEX   40                                        CRE083AG
+     C                     Z-ADD0         LOPCTR 100                                        CRE083AG
+     C                     Z-ADD0         ROWSF   40                                        CRE083AG
+      *                                                                                     CRE083AG
+      ** Select Record from MEMOSL1 if not found on ACCNTAB                                 CRE083AG
+      *                                                                                     CRE083AG
+     C/EXEC SQL                                                                             CRE083AG
+     C+ DECLARE MEMOSCURSOR INSENSITIVE SCROLL CURSOR FOR                                   CRE083AG
+     C+ SELECT                                                                              CRE083AG
+     C+ M.CNUM,M.CCY,M.ACOD,M.ACSQ,M.BRCA                                                   CRE083AG
+     C+ FROM                                                                                CRE083AG
+     C+ MEMOSL1 M LEFT JOIN ACCNTAB A                                                       CRE083AG
+     C+ ON M.CNUM = A.CNUM AND M.CCY = A.CCY                                                CRE083AG
+     C+ AND M.ACOD = A.ACOD AND M.ACSQ = A.ACSQ                                             CRE083AG
+     C+ AND M.BRCA = A.BRCA                                                                 CRE083AG
+     C+ WHERE                                                                               CRE083AG
+     C+ A.CNUM IS NULL OR A.CCY IS NULL OR A.ACOD                                           CRE083AG
+     C+ IS NULL OR A.ACSQ IS NULL OR A.BRCA IS NULL                                         CRE083AG
+     C/END-EXEC                                                                             CRE083AG
+      *                                                                                     CRE083AG
+     C/EXEC SQL                                                                             CRE083AG
+     C+ Open MEMOScursor                                                                    CRE083AG
+     C/END-EXEC                                                                             CRE083AG
+      *                                                                                     CRE083AG
+      ** End Program if there's an error                                                    CRE083AG
+      *                                                                                     CRE083AG
+     C           SQLCOD    IFNE 0                                                           CRE083AG
+     C           SQLCOD    ANDNE100                                                         CRE083AG
+     C                     EXSR *PSSR                                                       CRE083AG
+     C                     ENDIF                                                            CRE083AG
+      *                                                                                     CRE083AG
+      ** Get the number of rows of the selected records                                     CRE083AG
+      *                                                                                     CRE083AG
+     C/EXEC SQL                                                                             CRE083AG
+     C+ GET DIAGNOSTICS :TOTROW  = DB2_NUMBER_ROWS                                          CRE083AG
+     C/END-EXEC                                                                             CRE083AG
+      *                                                                                     CRE083AG
+      ** Skip if Rows is 0                                                                  CRE083AG
+      *                                                                                     CRE083AG
+     C           TOTROW    IFNE 0                                                           CRE083AG
+      *                                                                                     CRE083AG
+      ** Get the loop count                                                                 CRE083AG
+      *                                                                                     CRE083AG
+     C           TOTROW    IFGT 1000                                                        CRE083AG
+     C           TOTROW    DIV  1000      LOPCTR                                            CRE083AG
+     C                     MVR            ROWSF                                             CRE083AG
+      *                                                                                     CRE083AG
+     C           ROWSF     IFNE 0                                                           CRE083AG
+     C                     ADD  1         LOPCTR                                            CRE083AG
+     C                     ENDIF                                                            CRE083AG
+      *                                                                                     CRE083AG
+     C                     ELSE                                                             CRE083AG
+     C                     ADD  1         LOPCTR                                            CRE083AG
+     C                     MOVE TOTROW    ROWSF                                             CRE083AG
+     C                     ENDIF                                                            CRE083AG
+      *                                                                                     CRE083AG
+     C           LOPCTR    DOWGT0                                                           CRE083AG
+     C           ROWSF     IFNE 0                                                           CRE083AG
+     C/EXEC SQL                                                                             CRE083AG
+     C+ FETCH NEXT FROM MEMOSCURSOR FOR :ROWSF ROWS INTO :MDS                               CRE083AG
+     C/END-EXEC                                                                             CRE083AG
+      *                                                                                     CRE083AG
+     C           SQLCOD    DOWEQ0                                                           CRE083AG
+     C           INDEX     ANDLTROWSF                                                       CRE083AG
+     C                     ADD  1         INDEX                                             CRE083AG
+     C           INDEX     OCUR MDS                                                         CRE083AG
+     C           WWMDS     IFNE MDS                                                         CRE083AG
+      *                                                                                     CRE083AG
+     C/EXEC SQL                                                                             CRE083AG
+     C+ DELETE FROM MEMOSL1 M WHERE CNUM = :CNUM                                            CRE083AG
+     C+ AND CCY = :CCY AND ACOD = :ACOD AND                                                 CRE083AG
+     C+ ACSQ = :ACSQ AND BRCA = :BRCA                                                       CRE083AG
+     C/END-EXEC                                                                             CRE083AG
+      *                                                                                     CRE083AG
+     C                     ENDIF                                                            CRE083AG
+     C                     MOVE MDS       WWMDS                                             CRE083AG
+     C                     ENDDO                                                            CRE083AG
+     C                     SUB  1         LOPCTR                                            CRE083AG
+     C                     ENDIF                                                            CRE083AG
+     C                     Z-ADD1000      ROWSF                                             CRE083AG
+     C                     Z-ADD0         INDEX                                             CRE083AG
+     C                     ENDDO                                                            CRE083AG
+     C                     ENDIF                                                            CRE083AG
+      *                                                                                     CRE083AG
+     C           SQLCOD    IFNE 0                                                           CRE083AG
+     C           SQLCOD    ANDNE100                                                         CRE083AG
+     C                     EXSR *PSSR                                                       CRE083AG
+     C                     ENDIF                                                            CRE083AG
+     C/EXEC SQL                                                                             CRE083AG
+     C+ CLOSE MEMOSCURSOR                                                                   CRE083AG
+     C/END-EXEC                                                                             CRE083AG
+      *****************************************************************                     CRE083AG
+      ***Account*file*key*list*****************************************                     CRE083AG
+      *****************************************************************                     CRE083AG
+     C********** ACCKEY    KLIST                                                            CRE083AG
+     C**********           KFLD           CNUM                                              CRE083AG
+     C**********           KFLD           CCY                                               CRE083AG
+     C**********           KFLD           ACOD                                              CRE083AG
+     C**********           KFLD           ACSQ                                              CRE083AG
+     C**********           KFLD           BRCA                                              CRE083AG
+      *****************************************************************                     CRE083AG
+      ***Set*key*for*MEMOSL1*******************************************                     CRE083AG
+      *****************************************************************                     CRE083AG
+     C********** *LOVAL    SETLLMEMOSL1                                                     CRE083AG
+     C**********           READ MEMOSL1                  50                                 CRE083AG
+      *****************************************************************                     CRE083AG
+      ***Process*all*Accounts.*****************************************                     CRE083AG
+      *****************************************************************                     CRE083AG
+     C********** *IN50     DOWEQ*OFF                                                        CRE083AG
+      *****************************************************************                     CRE083AG
+      ***Check*if*record*is*still*on*the*Accounts*Master*File.*********                     CRE083AG
+      *****************************************************************                     CRE083AG
+     C********** ACCKEY    CHAINACCNT                51                                     CRE083AG
+      *****************************************************************                     CRE083AG
+      ***If*no*longer*on*the*Accounts*Master*file*delete*it*from*******                     CRE083AG
+      ***MEMOSL1.******************************************************                     CRE083AG
+      *****************************************************************                     CRE083AG
+     C********** *IN51     IFEQ *ON                                                         CRE083AG
+     C**********           DELETMEMOSMDF                                                    CRE083AG
+     C**********           ENDIF                                                            CRE083AG
+      *****************************************************************                     CRE083AG
+     C**********           READ MEMOSL1                  50                                 CRE083AG
+     C**********           ENDDO                                                            CRE083AG
+      *****************************************************************                     CRE083AG
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: Mainline                                           *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+      **                                                               ***
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

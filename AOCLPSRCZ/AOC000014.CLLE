@@ -1,0 +1,172 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas AO Transaction validate and update')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail APIs                                         */
+/*                                                                   */
+/*       AOC000014 - Retail Transaction for AOSPOSU0.                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      247922             Date 05Jun07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      239164 *CREATE     Date 29Mar06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       247922 - Applied core fix 239164 from 1.3.                  */
+/*       239164 - New program for error tracing.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&TRANSTYPE &PRTCD &PACTN &PIDTA)
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&PACTN) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&PIDTA) TYPE(*CHAR) LEN(256)
+ 
+/**********  DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                    /*CCB020*/
+             DCL        VAR(&A11RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&BRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&TRANSTYPE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZZDTA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&SWS)   TYPE(*CHAR) LEN(8)
+             DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TRANSID)   TYPE(*CHAR) LEN(300)
+             DCL        VAR(&TYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PIGDC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&COBST) TYPE(*CHAR) LEN(4)                                    /*CCB020*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
+ 
+/** Program can only be run in Input Cycle */
+ 
+/**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                                      /*CCB020*/
+/**********  IF         COND(&MPHAS *NE 'A') THEN(DO)                                     /*CCB020*/
+             CALL       PGM(CBC001001) PARM(&COBST)                                       /*CCB020*/
+             IF         COND(&COBST = '*YES') THEN(DO)                                    /*CCB020*/
+                CHGVAR     VAR(&PRTCD) VALUE(' : : :Midas not in input +
+                             cycle.  Entry prohibited:')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/** Create local data area */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+ 
+/** MPLUS_ERR is created by DBERRCTL */
+ 
+             DLTDTAARA  DTAARA(QTEMP/MPLUS_ERR)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             CHGVAR     VAR(&PIGDC) VALUE('Y')
+             CHKOBJ OBJ(AOCDTA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&PIGDC) +
+                          VALUE(' '))
+ 
+/** Check if CUSX or STOR, this field should have come from java. */
+ 
+             IF         COND((&TRANSTYPE = '    ') *AND +
+                             (%SST(&PIDTA 83 2) = 'CE')) THEN(DO)
+                CHGVAR     VAR(&TRANSTYPE) VALUE('CUSX')
+             ENDDO
+ 
+/** Send status message to message queue */
+ 
+             SNDPGMMSG  MSG('AOC000014 - Shadow Post Wrapper for +
+                        JAVA with action = ' *CAT &PACTN)
+ 
+             IF         COND(&PACTN = '*CLEAR') THEN(DO)
+                CHGVAR     VAR(&A11RTCD) VALUE('       ')
+             ENDDO
+ 
+             RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)
+             CHGVAR     VAR(&TRANSID) VALUE(%SST(&PIDTA 83 6))
+             SNDMSG     MSG('AOC000014 called: Retail ' *BCAT +
+                          &TRANSTYPE *BCAT &TRANSID *BCAT &PACTN +
+                          *TCAT '. Job number is ' *CAT &JOBNO) +
+                          TOMSGQ(MOPERQ)
+ 
+/** Call Trace program to dump parameter from JAVA to PF */
+ 
+             CHGVAR     VAR(&BRTCD) VALUE(&A11RTCD)
+             CHGVAR     VAR(&ZZDTA) VALUE(&PIDTA)
+ 
+             CALL       PGM(AO000011) PARM(&A11RTCD ' ' &TRANSTYPE +
+                          &BRTCD &PACTN &PIDTA &PRTCD &PIGDC)
+ 
+             IF         COND(&A11RTCD *NE '       ') THEN(DO)
+                SNDPGMMSG  MSG('AOC000014 - Program AO000011 ended in +
+                                error(1st batch).  AOSPOSU0 will still be +
+                                called.') TOMSGQ(MOPERQ) MSGTYPE(*INFO)
+                CHGJOB     SWS(XXXXXX00)
+             ENDDO
+ 
+/** Call the online shadow posting program */
+ 
+             CALL       PGM(AOSPOSU0) PARM(&PRTCD &PACTN &PIDTA)
+ 
+             IF         COND((&PRTCD *EQ '*ERROR*') +
+                            *OR (%SWITCH(XXXXXX11))) THEN(DO)
+                CHGVAR     VAR(&PRTCD) VALUE('AOC000014: Online update +
+                          program AOSPOSU0 ended in error. Please +
+                          inform a Midas System operator.')
+                SNDPGMMSG  MSG(&PRTCD)
+                GOTO CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Call Trace program again if the parameter was changed by AOSPOSU0 */
+/** Set 2nd paramter to 'Y' (field AOBUFC)                            */
+ 
+             IF         COND(&PIDTA *NE &ZZDTA) THEN(DO)
+                CHGVAR     VAR(&BRTCD) VALUE(&A11RTCD)
+                CALL       PGM(AO000011) PARM(&A11RTCD 'Y' &TRANSTYPE +
+                             &BRTCD '**CHNG*' &PIDTA &PRTCD &PIGDC)
+                SNDPGMMSG  MSG('AOC000014 - Program AO000011 ended in +
+                                error(2nd batch.') +
+                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)
+                CHGJOB     SWS(XXXXXX00)
+             ENDDO
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             RTVJOBA    SWS(&SWS)
+             IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal Termination */
+ ABNOR:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             CHGVAR     VAR(&PRTCD) VALUE('AOC000014: Database +
+                          error has occurred in Midas. Please +
+                          inform a Midas System operator :')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDMSG     MSG('AOC000014 failed: Retail Input (CUSX or +
+                          STOR)' *BCAT &PACTN *TCAT '.  Please +
+                          check the job log for ' *CAT &JOBNO *TCAT +
+                          '/QUSER/QZDASOINIT') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ END:
+ ENDPGM

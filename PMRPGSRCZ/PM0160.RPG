@@ -1,0 +1,1239 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Customer Documentation Maintenance')
+     F********************************************************************
+     F*                                                                  *
+     F*    Midas PORTFOLIO MANAGEMENT                                *
+     F*                                                                  *
+     F*    PM0160  - CUSTOMER DOCUMENTATION MAINTENANCE                  *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *S01486
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             Date 21Sep94                  *S01486
+      *                 51776      GB      Date 08Mar93                  *S01486
+     F*                 R0982      LC      DATE 20NOV90                  *S01486
+     F*                 R00300             DATE 14AUG90                  *
+     F*                                                                  *
+     F********************************************************************
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CSC022 - Commitment Control Changes for MidasPlus               *
+     F*  S01486  -  Portfolio management upgrade to R10                  *S01486
+     F*  51776   -  SDBANKPD ALREADY READ BY CALLING PGM                 *
+     F*  R0982   -  ENHANCEMENT FOR CUST. SCREEN HANDLING                *
+     F*  R00300  -  Message file changes                                 *
+     F********************************************************************
+     F***SDBANKPDIF  E           K        DISK                            51776
+     F**********                                    KINFSR *PSSR          51776
+     F**SDBANKPDIF  E                    DISK                       51776 S01486
+     F**
+     F**PM0160DDCF  E                    WORKSTN                          S01486
+     FPM0160DFCF  E                    WORKSTN                            S01486
+     F                                        RRN   KSFILE PM0160S0
+     F**
+     F**PMDCOMPPIF  E           K        DISK                             S01486
+     FPMDCOMPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F**
+     F**PMCUSDPPUF  E           K        DISK         KCOMIT       A      S01486
+     FPMCUSDPDUF  E           K        DISK         KCOMIT       A        S01486
+     F                                              KINFDS INFDS
+     F                                              KINFSR *PSSR
+     F* FILE ID 'P6'
+     FPMCUSDL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            PMCUSDP0                          KRENAMEPMCUSDXX
+     F* FILE ID 'P6'
+     F**SDCUSTL5IF  E           K        DISK                             S01486
+     F**********                                    KINFSR *PSSR          S01486
+     F**
+     FPMDOCCLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*********************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       03         END OF JOB
+     F*       12         INITIAL PROGRAM
+     F*
+     F*
+     F*
+     F*       56         ROLLUP
+     F*
+     F*       35         S/PM0160C0  PROTECT
+     F*       36         S/PM0160C0  ERROR-DDDCCC
+     F*       37         S/PM0160S0  ERROR-DDDCCM
+     F*       38         S/PM0160S0  ERROR-DDDCMS
+     F*       39         PROTECT INPUT DETAILS
+     F*
+     F*       45         VLDCMDKY INDICATOR FOR DISPLAY FILE
+     F*
+     F*       52         S/PM0160F2  SFLEND
+     F*       53         S/PM0160C0  SFLNXTCHG
+     F*       54         S/PM0160C0  SFLDSP
+     F*       55         S/PM0160C0  SFLEND
+     F*
+     F********71         FILE OPERATIONS INDICATOR - SDBANKPD             S01486
+     F********72         FILE OPERATIONS INDICATOR - PMCUSDPP             S01486
+     F*       72         FILE OPERATIONS INDICATOR - PMCUSDPD             S01486
+     F********73         FILE OPERATIONS INDICATOR - SDCUSTPD             S01486
+     F*       74         FILE OPERATIONS INDICATOR - PMDOCCLL
+     F*       75         FILE OPERATIONS INDICATOR - PMCUSDXX
+     F*       76         SUBFILE OPERATIONS INDICATOR - PM0160S0
+     F*       78         SUBFILE OPERATIONS INDICATOR - PM0160S0
+     F********77         FILE OPERATIONS INDICATOR - PMDCOMPP             S01486
+     F*       77         FILE OPERATIONS INDICATOR - PMDCOMPD             S01486
+     F*
+     F*       80         ERROR
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       ''WWAID' VALUES USED
+     F*
+     F*       03         CA3
+     F*       12         CA12
+     F*       RA         ENTER PRESSED
+     F*       UP         ROLLUP
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   ..   04   05   06   07   08   09   10 *
+     F**      * 11   ..   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   ..   ..   ..   ..   ..   40 *
+     F**      * 41   42   43   44   ..   46   47   48   49   50 *
+     F**      * 51   ..   ..   ..   ..   ..   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * ..   ..   ..   ..   ..   ..   ..   ..   79   .. *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   98   99      *
+     F**      ***************************************************
+     F*********************************************************************
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E*
+      ** Commitment Control Array                                                             CSC022
+     E                    WCMTAR     10 10                                                    CSC022
+     I*
+     I** DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA         DS                            256
+     I************                          132 141 WWFILE                S01486
+     I************                          142 170 WWKEY                 S01486
+     I************                          171 180 WWPGM                 S01486
+     I************                          181 1830WWASE                 S01486
+     I                                      134 141 DBFILE                S01486
+     I                                      142 170 DBKEY                 S01486
+     I                                      171 180 DBPGM                 S01486
+     I                                      181 1830DBASE                 S01486
+     I*
+     I*    MIDAS 'Next Available Transaction No.' Data Area  MNATN .
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I** DATA STRUCTURE FOR SETUP OF COMMIT TEXT
+     I*
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I**
+     I** DATA STRUCTURE FOR LAST UPDATE
+     I**
+     I            DS
+     I                                        1   20WWDLUP
+     I                                        3   5 WWMLUP
+     I                                        6   70WWYLUP
+     I                                        1   7 WWHLUP
+     I            DS                                                      S01486
+     I                                        1  10 WWCNUT                S01486
+     I                                        1   6 WWCNM1                S01486
+     I                                        7  10 WWCNM2                S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** EXTERNAL DS FOR CUSTOMER DETAILS                                 S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, LONG  DATA STRUCTURE                S01486
+     IRUNDT       DS                                                      S01486
+      **  DATA AREA RUNDAT                                                S01486
+     I                                        1   7 RUNA                  S01486
+     I                                    P   8  100RUND                  S01486
+     I                                       11  11 SSF                   S01486
+     I                                       12  12 DATF                  S01486
+     I                                       13  13 MBIN                  S01486
+     IZMUSER      DS                             17                       S01486
+     I** DATA AREA OF MENU USER                                           S01486
+     I                                       11  13 USRBCH                S01486
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**
+      ** Switchable Features File                                                             CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      *                                                                                       CSC022
+      ** Commitment Control dataarea                                                          CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCMTJB                                    CSC022
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN CONTROLLING ROUTINE                              *
+      * #A       - INITIAL PROCESSING                                    *
+      * #AA      - SET UP SCREEN DETAILS SUBFILE                         *
+      * #B       - MAIN PROCESSING ROUTINE                               *
+      * #BA      - SET UP VALUES IN WWAID                                *
+      * #BB      - VALIDATE SCREEN DETAILS INPUT                         *
+      * #BC      - CONTROL FILE UPDATING                                 *
+      * #BCB     - UPDATE FILE FOR DOCUMENT STATUS 'N'                   *
+      * #BCA     - PERFORM UPDATING IF DOCUMENTATIO STATUS 'I' OR 'C'    *
+      * #BCD     - FILE UPDATED BY ANOTHER WORKSTATION ROUTINE           *
+      * #ZAB     - PREPARE DETAILS FOR UPDATE                            *
+      * #ZAA     - PREPARE DOCUMENTATION DETAILS FOR OUTPUT              *
+      * #BCC     - DETERMINE DOCUMENTATION STATUS INDICATOER             *
+      * ZTNLU1   - OBTAIN NEW TNLU                                       *
+      * *PSSR    - STANDARD DATABASE ERROR ROUTINE                       *
+      * ZASNMS   - Send message                                          *R00300
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      **ZA0250***-*SEND MESSAGE TO PROGRAM MESSAGE QUEUE                 *R00300
+      **ZA0240***-*CLEAR PROGRAM MESSAGE QUEUE                           *R00300
+      * Y2CLMSC  - Clear program message queue                           *R00300
+      * Y2SNMGC  - Send message to program message queue                 *R00300
+      *                                                                  *
+      ********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           WWACTN  1
+     C                     PARM           WWRTRN  1
+     C                     PARM           WWCLNM  6
+     C                     PARM           WWDCRI  1
+     C**
+     C** KEY LIST
+     C**
+     C           PMDOCK    KLIST
+     C                     KFLD           WWDCSK  20
+     C                     KFLD           WWDCOK  3
+     C**
+     C** KEY LIST
+     C**
+     C           PMCUSK    KLIST
+     C**********           KFLD           WWCNUM  60                                          CSD027
+     C                     KFLD           WWCNUM  6                                           CSD027
+     C                     KFLD           WWDCOK
+     C*
+     C** PERFORM INITIAL PROCESSING
+     C           MDID      IFEQ *BLANKS
+     C                     EXSR #A
+     C                     END
+     C*
+     C** PERFORM MAIN PROCESSING UNLESS RETURN CODE SET TO '9' IN
+     C** WHICH CASE PROCESSING TERMINATED IMMEDIATELY
+     C           WWRTRN    IFNE '9'
+     C                     EXSR #B
+     C                     ELSE
+     C                     MOVE '1'       *INLR
+     C                     END
+     C*
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #A       - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - STANDARD DATABASE ERROR ROUTINE                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN CONTROLLING ROUTINE                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #A        BEGSR                           ** #A    BSR **
+     C*
+     C                     MOVEL'*'       DDPGMQ
+     C*                                                                   R00300
+     C**   Select the program MSGQ for error msg.                         R00300
+     C                     MOVEL'*'       TOPQ   10                       R00300
+     C                     MOVEL'*PRV'    TOPRQ   5                       R00300
+     C*                                                                   R00300
+     C**   Fill in fields for subroutine ZASNMS                           R00300
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue  R00300
+     C                     MOVEL'PMUSRMSG'ZAMSGF 10        Message file   R00300
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.    R00300
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.  R00300
+      ***  Copyright Statement.                                           S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C**                                                                  S01486
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01486
+     C                     IN   RUNDT                                     S01486
+     C           *NAMVAR   DEFN           ZMUSER                          S01486
+     C                     IN   ZMUSER                                    S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C*                                                                   R00300
+     C** PREPARE LDA
+     C*
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'PM0160'  DBPGM  10
+     C                     OUT  LDA                                       S01486
+     C*
+     C** PREPARE COMIT TEXT
+     C*
+     C                     MOVEL'PM'      MDID
+     C                     MOVEL'PM0160'  PGMN
+     C                     MOVELWSID      WSIDX
+     C                     MOVELUSID      USIDX
+     C**
+     C**
+     C**  SET UP PARAMETER TO RETRIEVE MESSAGE FROM MESSAGE FILE
+     C           PLLANG    PLIST
+     C                     PARM           MSMBR4  7
+     C                     PARM           MSGER  10
+     C                     PARM           MSGTXT 80
+     C***********          MOVEL'MLGBMSGF'MSGER                           S01486
+     C                     MOVEL'PMUSRMSG'MSGER                           S01486
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C******************** READ SDBANKPD                 71               51776
+     C***********1         CHAINSDBANKPD             71             51776 S01486
+     C************IN71     IFEQ '1'                                       S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   WWRTCD  7                       S01486
+     C                     PARM '*FIRST ' WWOPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*                                                    ***************
+     C                     Z-ADD1         DBASE   30       **DB ERROR 01**
+     C***********          MOVEL'SDBANK'  DBFILE 10        ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           ***************S01486
+     C                     MOVE *BLANKS   DBKEY  29
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+      ** Access SAR details file to determine if CSC022 is on.                                CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WSKIP   1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFNE *BLANKS                                                       CSC022
+     C           @RTCD     ANDNE'*NRF   '                                                     CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     Z-ADD3         DBASE                                               CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCMTJB    WCMTAR                                              CSC022
+     C           WSID      LOKUPWCMTAR                   10                                   CSC022
+     C           *IN10     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WSKIP                                               CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ENDSR                           **#A   ENDSR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #AA      - SET UP SCREEN DETAILS SUBFILE                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #ZAB     - PREPARE DETAILS FOR UPDATE                            *
+      * *PSSR    - STANDARD DATABASE ERROR ROUTINE                       *
+      * #ZAA     - PREPARE DOCUMENTATION DETAILS FOR OUTPUT              *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #B       - MAIN PROCESSING ROUTINE                               *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRRN    - RRN OF SUBFILE RECORD                                 *
+      * WWTDOC   - TOTAL NUMBER OF DOCUMENT CODES ON FILE                *
+      * WWDCIC   - COUNT OF NUMBER OF DOCUMENTS NOT COMPLETED            *
+      * WWDCNR   - COUNT OF NUMBER OF DOCUMENTS NOT REQUIRED             *
+      * WWDCMP   - COUNT OF NUMBER OF DOCUMENTS COMPLETED                *
+      * WWSAVE   - SAVED RRN                                             *
+      * WWDOCS   - DOCUMENTATION SEQUENCE                                *
+      * WWDCCO   - DOCUMENT COMMENT                                      *
+      * WWCNUM   - KEY TO ACCES PMCUSDXX                                 *
+      * WWACTN   - ACTION CODE PARAMETER                                 *
+      * WWDCRI   - DOCUMENTATION STATUS RETURNED TO CALLING PROGRAM      *
+      * WWCLNM   - CUSTOMER NUMBER RECEIVED FROM CALLING PROGRAM         *
+      *                                                                  *
+      ********************************************************************
+     C           #AA       BEGSR                           ** #AA   BSR **
+     C*
+     C** INITIALIZE WORK FIELDS
+     C                     MOVE '1'       *IN55
+     C                     Z-ADD1         RRN     40
+     C                     Z-ADD1         SFLRRN
+     C                     Z-ADD0         WWRRN   40
+     C                     Z-ADD0         WWTDOC  50
+     C                     Z-ADD0         WWDCIC  50
+     C                     Z-ADD0         WWDCNR  50
+     C                     Z-ADD0         WWDCMP  50
+     C                     Z-ADD1         WWSAVE  40
+     C                     Z-ADD0         WWDOCS  20
+     C                     MOVE *BLANKS   WWDCCO  3
+     C                     MOVE WWCLNM    WWCNUM
+     C**
+     C** IF DELETION MODE : CHANGE RECORD ID FROM 'D' INTO '*'
+     C** OTHERWISE PREPARE SUBFILE AND READ DETAILS
+     C           WWACTN    IFEQ 'D'
+     C**
+     C***********WWCNUM    SETLLPMCUSDPP                                  S01486
+     C***********WWCNUM    READEPMCUSDPP                 72               S01486
+     C           WWCNUM    SETLLPMCUSDPD                                  S01486
+     C           WWCNUM    READEPMCUSDPD                 72               S01486
+     C**
+     C           *IN72     DOWEQ'0'
+     C                     MOVE 'D'       P6CHTP
+     C                     EXSR #ZAB
+     C                     MOVE '*'       P6RECI
+     C                     UPDATPMCUSDP0
+     C**
+     C** READ NEXT
+     C**
+     C***********WWCNUM    READEPMCUSDPP                 72               S01486
+     C           WWCNUM    READEPMCUSDPD                 72               S01486
+     C                     END
+     C*
+     C** SET RETURN INDICATOR AND END PROGRAM
+     C                     MOVE 'N'       WWDCRI
+     C                     RETRN
+     C                     END
+     C**
+     C** COMIT THE UPDATES
+     C**
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           WSKIP     OREQ 'N'                                                           CSC022
+     C           CSC022    ANDEQ'Y'                                                           CSC022
+     C           CMTTXT    COMIT
+     C                     ENDIF                                                              CSC022
+     C**
+     C** SET THE DOCUMENTATION RETURN INDICATOR TO 'N'
+     C**
+     C                     MOVE 'N'       WWDCRI
+     C**
+     C** ACTION NOT EQUAL 'D'
+     C**
+     C           WWACTN    IFNE 'D'
+     C**
+     C***********WWCLNM    CHAIN@CUSTFT              73                   S01486
+     C************                                                        S01486
+     C***NOT*FOUND                                                        S01486
+     C************                                                        S01486
+     C************IN73     IFEQ '1'                                       S01486
+     C                     MOVELWWCLNM    WWCNUT 10                       S01486
+     C**********           TESTN          WWCNM1     83                                S01486 CSD027
+     C           WWCNM2    IFEQ *BLANKS                    B2             S01486
+     C********** *IN83     ANDEQ'1'                                                    S01486 CSD027
+     C                     MOVEL'*CNUM  ' WWSORT  7                       S01486
+     C                     ELSE                                           S01486
+     C                     MOVEL'*CSHT  ' WWSORT                          S01486
+     C                     END                                            S01486
+     C                     MOVEL*BLANKS   WWCNUT                          S01486
+     C**                                                                  S01486
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM '*MSG    'WWRTCD  7                       S01486
+     C                     PARM '*KEY    'WWOPTN  7                       S01486
+     C                     PARM WWCLNM    WWKEY  10                       S01486
+     C                     PARM           WWSORT  7                       S01486
+     C           SDCUST    PARM SDCUST    DSSDY                           S01486
+     C           WWRTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C***********          MOVEL'SDCUSTL' DBFILE                          S01486
+     C                     MOVE 'SDCUSTPD'DBFILE                          S01486
+     C                     MOVE WWCLNM    DBKEY                           S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C**
+     C** FILL FIELDS OF SUBFILE HEADER
+     C                     MOVELWWCNUM    DDCNUM
+     C                     MOVELBBCRNM    DDNAME
+     C** FILL SUBFILE DETAILS
+     C**
+     C                     MOVE '1'       *IN54
+     C                     WRITEPM0160C0
+     C                     MOVE '0'       *IN54
+     C                     EXSR #ZAA
+     C                     END
+     C**
+     C** RETURN CODE = 9 THEN END PROGRAM
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #B       - MAIN PROCESSING ROUTINE                               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #AA      - SET UP SCREEN DETAILS SUBFILE                         *
+      * ZTNLU1   - OBTAIN NEW TNLU                                       *
+      **ZA0250***-*SEND MESSAGE TO PROGRAM MESSAGE QUEUE                 *R00300
+      * Y2CLMSC  - Clear program message queue                           *R00300
+      * #BA      - SET UP VALUES IN WWAID                                *
+      * #BB      - VALIDATE SCREEN DETAILS INPUT                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN CONTROLLING ROUTINE                              *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    - CONTAINS DETAILS OF COMMAND KEY TAKEN                 *
+      * WWUPD    - RECORD UPDATED BY ANOTHER WORKSTATION FLAG            *
+      * WWREAD   - INDICATES DOCUMENT CODES FOUND                        *
+      *                                                                  *
+      ********************************************************************
+     C           #B        BEGSR                           **#B     BSR **
+     C*
+     C** PERFORM PROCESSING TO SET UP SCREEN FIELDS
+     C                     EXSR #AA
+     C*
+     C** GET NEXT AVAILABLE TRANSACTION NUMBER. SAME TRANSACTION
+     C** NUMBER OUTPUT ON ALL RECORDS
+     C                     EXSR ZTNLU1
+     C*
+     C           WWAID     DOUEQ'03'
+     C           WWAID     OREQ '12'
+     C           WWAID     OREQ 'RA'
+     C           *IN80     ANDEQ'0'
+     C           WWUPD     ANDEQ'N'
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN37
+     C                     MOVE '0'       *IN38
+     C                     MOVE 'N'       WWUPD
+     C**
+     C** SEND INFORMATION MESSAGE
+     C**
+     C                     MOVEL'PM90013' MSMBR4
+     C                     CALL 'SDRTVTXT'PLLANG
+     C                     MOVELMSGTXT    DDINFO
+     C**
+     C                     WRITEPM0160F2
+     C                     WRITEPM0160F1
+     C**
+     C           WWREAD    IFEQ 'Y'
+     C                     WRITEPM0160F1
+     C                     EXFMTPM0160C0
+     C                     ELSE
+     C                     EXFMTPM0160F1
+     C                     END
+     C**
+     C*********************CALL 'ZA0250'                                  R00300
+     C                     CALL 'Y2CLMSC'                                 R00300
+     C                     PARM           TOPQ                            R00300
+     C                     PARM           TOPRQ                           R00300
+     C                     MOVE '0'       *IN80
+     C**
+     C                     EXSR #BA
+     C**
+     C           WWAID     IFEQ 'RA'
+     C                     EXSR #BB
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #BA      - SET UP VALUES IN WWAID                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #B       - MAIN PROCESSING ROUTINE                               *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWAID    - CONTAINS DETAILS OF COMMAND KEY TAKEN                 *
+      * WWRTRN   - RETURN CODE RETURNED TO CALLING PROGRAM               *
+      *                                                                  *
+      ********************************************************************
+     C           #BA       BEGSR                           **#BA    BSR **
+     C**
+     C           *INKC     IFEQ '1'
+     C                     MOVEL'03'      WWAID   2
+     C                     MOVE '1'       WWRTRN
+     C                     END
+     C**
+     C           *INKL     IFEQ '1'
+     C                     MOVEL'12'      WWAID
+     C                     MOVE '2'       WWRTRN
+     C                     END
+     C**
+     C           *IN45     IFEQ '0'
+     C                     MOVEL'RA'      WWAID
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #BB      - VALIDATE SCREEN DETAILS INPUT                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **ZA0240***-*CLEAR PROGRAM MESSAGE QUEUE                           *R00300
+      * ZASNMS   - Send message to program message queue                 *R00300
+      * #BC      - CONTROL FILE UPDATING                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #B       - MAIN PROCESSING ROUTINE                               *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWERR    - USED TO INDICATE VALIDATION ERROR                     *
+      * WWACTN   - ACTION CODE PARAMETER                                 *
+      * WWCONT   - COUNT OF NUMBER OF DOCUMENT CODES OUTPUT              *
+      * WWSAVE   - SAVED RRN                                             *
+      *                                                                  *
+      ********************************************************************
+     C           #BB       BEGSR                           **#BB    BSR **
+     C**
+     C** INITIALISE SUBFILE RELLATIVE RECORD NUMBER SO FIRST ERROR
+     C** DISPLAYED
+     C                     MOVE 'N'       WWERR   1
+     C**
+     C** VALIDATE INSERTED / AMENDED DETAILS
+     C           WWACTN    IFEQ 'A'                        - B1
+     C           WWACTN    OREQ 'I'
+     C**
+     C** READ SUBFILE
+     C**
+     C                     Z-ADD1         WWCONT
+     C           WWCONT    DOWLTWWSAVE                     - B2
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN37
+     C                     MOVE '0'       *IN38
+     C           WWCONT    CHAINPM0160S0             76
+     C**
+     C           *IN76     IFEQ '0'                        - B3
+     C**
+     C** CHAIN ON PMDCOMPP TO VERIFY DOCUMENT CODE VALIDITY
+     C**
+     C           DDDCCC    IFNE *BLANKS                    - B4
+     C***********DDDCCC    CHAINPMDCOMPP             77                   S01486
+     C           DDDCCC    CHAINPMDCOMPD             77                   S01486
+     C**
+     C           *IN77     IFEQ '1'                        - B5
+     C           P4RECI    ORNE 'D'
+     C*********************MOVEL'PM16200' MSGID  10                       R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM16200' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN80
+     C                     ELSE                                           R0982
+     C                     MOVELP4DCMN    DDDCCM                          R0982
+     C                     END                             - E5
+     C                     END                             - E4
+     C**
+     C           DDDCMS    IFNE 'N'                        - B4
+     C           DDDCMS    ANDNE'I'
+     C           DDDCMS    ANDNE'C'
+     C*********************MOVEL'PM16202' MSGID  10                       R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM16202' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN38
+     C                     MOVE '1'       *IN80
+     C**
+     C                     ELSE                            - X4
+     C           DDDCMS    IFNE 'N'                        - B5
+     C           DDDCCC    ANDEQ*BLANKS
+     C           DDDCCM    ANDEQ*BLANKS
+     C**
+     C*********************MOVEL'PM16201' MSGID  10                       R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM16201' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN37
+     C                     MOVE '1'       *IN80
+     C                     END                             - E5
+     C**
+     C                     END                             - E4
+     C**
+     C** UPDATE SUBFILE
+     C**
+     C** SAVE RELATIVE RECORD NUMBER OF FIRST RECORD IN ERROR
+     C           *IN80     IFEQ '1'                        - B4
+     C           WWERR     ANDEQ'N'
+     C                     Z-ADDWWCONT    SFLRRN
+     C                     MOVE 'Y'       WWERR
+     C                     END                             - E4
+     C**
+     C***                  MOVE '1'       *IN53
+     C                     UPDATPM0160S0
+     C                     ADD  1         WWCONT
+     C                     END                             - E3
+     C**
+     C** READ NEXT CHANGED RECORD IN SUBFILE
+     C**
+     C                     END                             - E2
+     C**
+     C** IF OK THEN UPDATE FILE
+     C**
+     C           *IN80     IFEQ '0'                        - B2
+     C                     EXSR #BC
+     C                     END                             - E2
+     C**
+     C                     END                             - E1
+     C**
+     C** IF NO ERRORS FOUND RESET SFLRRN
+     C           WWERR     IFEQ 'N'
+     C                     ADD  1         SFLRRN
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #BC      - CONTROL FILE UPDATING                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #BCB     - UPDATE FILE FOR DOCUMENT STATUS 'N'                   *
+      * #BCA     - PERFORM UPDATING IF DOCUMENTATIO STATUS 'I' OR 'C'    *
+      * #BCC     - DETERMINE DOCUMENTATION STATUS INDICATOER             *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #BB      - VALIDATE SCREEN DETAILS INPUT                         *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCONT   - COUNT OF NUMBER OF DOCUMENT CODES OUTPUT              *
+      * WWSAVE   - SAVED RRN                                             *
+      * WWTDOC   - TOTAL NUMBER OF DOCUMENT CODES ON FILE                *
+      * WWDCNR   - COUNT OF NUMBER OF DOCUMENTS NOT REQUIRED             *
+      * WWDCIC   - COUNT OF NUMBER OF DOCUMENTS NOT COMPLETED            *
+      * WWDCMP   - COUNT OF NUMBER OF DOCUMENTS COMPLETED                *
+      * WWUPD    - RECORD UPDATED BY ANOTHER WORKSTATION FLAG            *
+      *                                                                  *
+      ********************************************************************
+     C           #BC       BEGSR                           **#BC    BSR **
+     C**
+     C**
+     C                     Z-ADD1         WWCONT  40
+     C           WWCONT    DOWLTWWSAVE
+     C           WWCONT    CHAINPM0160S0             78
+     C           *IN78     IFEQ '0'
+     C**
+     C                     ADD  1         WWTDOC
+     C**
+     C           DDDCMS    IFEQ 'N'
+     C                     ADD  1         WWDCNR
+     C                     EXSR #BCB
+     C                     END
+     C**
+     C           DDDCMS    IFEQ 'I'
+     C                     ADD  1         WWDCIC
+     C                     EXSR #BCA
+     C                     END
+     C**
+     C           DDDCMS    IFEQ 'C'
+     C                     ADD  1         WWDCMP
+     C                     EXSR #BCA
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     ADD  1         WWCONT
+     C**
+     C           WWUPD     CABEQ'Y'       #BC9
+     C**
+     C                     END
+     C**
+     C                     EXSR #BCC
+     C**
+     C           #BC9      ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #BCB     - UPDATE FILE FOR DOCUMENT STATUS 'N'                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #BCD     - FILE UPDATED BY ANOTHER WORKSTATION ROUTINE           *
+      * #ZAB     - PREPARE DETAILS FOR UPDATE                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #BC      - CONTROL FILE UPDATING                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDCOK   - DOCUMENT CODE USED IN KEY TO PMDOCCPP                 *
+      * WWEXT    - INDICATES CUSTOMER DOCUMENTATION DETAILS FOUND        *
+      * WWTNLU   - SAVED TRANSACTION NUMBER OF LAST UPDATE               *
+      * WWUPD    - RECORD UPDATED BY ANOTHER WORKSTATION FLAG            *
+      *                                                                  *
+      ********************************************************************
+     C           #BCB      BEGSR                           **#BCB   BSR **
+     C**
+     C                     MOVELDDDCCO    WWDCOK
+     C**
+     C***********PMCUSK    CHAINPMCUSDPP             72                   S01486
+     C           PMCUSK    CHAINPMCUSDPD             72                   S01486
+     C**
+     C           *IN72     IFEQ '0'
+     C*
+     C** CHECK FOR RECORD UPDATED BY ANOTHER WORKSTATION
+     C           WWEXT     IFEQ 'Y'
+     C           WWTNLU    ANDNEP6TNLU
+     C                     EXSR #BCD
+     C                     MOVE 'Y'       WWUPD
+     C                     GOTO #BCB9
+     C                     END
+     C*
+     C** IF DELETION OF CURRENT DOCUMENT DELETE DETAILS
+     C           P6RECI    IFEQ 'D'
+     C                     MOVE '*'       P6RECI
+     C                     MOVE 'D'       P6CHTP
+     C                     EXSR #ZAB
+     C*
+     C** OTHERWISE RESET TRANSACTION NUMBER
+     C                     ELSE
+     C                     Z-ADDNATN      P6TNLU
+     C                     END
+     C**
+     C                     UPDATPMCUSDP0
+     C                     END
+     C**
+     C           #BCB9     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #BCA     - PERFORM UPDATING IF DOCUMENTATIO STATUS 'I' OR 'C'    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #BCD     - FILE UPDATED BY ANOTHER WORKSTATION ROUTINE           *
+      * #ZAB     - PREPARE DETAILS FOR UPDATE                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #BC      - CONTROL FILE UPDATING                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWDCOK   - DOCUMENT CODE USED IN KEY TO PMDOCCPP                 *
+      * WWEXT    - INDICATES CUSTOMER DOCUMENTATION DETAILS FOUND        *
+      * WWTNLU   - SAVED TRANSACTION NUMBER OF LAST UPDATE               *
+      * WWUPD    - RECORD UPDATED BY ANOTHER WORKSTATION FLAG            *
+      *                                                                  *
+      ********************************************************************
+     C           #BCA      BEGSR                           **#BCA   BSR **
+     C**
+     C                     MOVELDDDCCO    WWDCOK
+     C**
+     C***********PMCUSK    CHAINPMCUSDPP             72                   S01486
+     C           PMCUSK    CHAINPMCUSDPD             72                   S01486
+     C**
+     C           *IN72     IFEQ '0'
+     C*
+     C** CHECK FOR RECORD UPDATED BY ANOTHER WORKSTATION
+     C           WWEXT     IFEQ 'Y'
+     C           WWTNLU    ANDNEP6TNLU
+     C                     EXSR #BCD
+     C                     MOVE 'Y'       WWUPD   1
+     C                     GOTO #BCA9
+     C                     END
+     C*
+     C                     MOVE 'A'       P6CHTP
+     C                     MOVE 'D'       P6RECI
+     C                     EXSR #ZAB
+     C                     UPDATPMCUSDP0
+     C                     ELSE
+     C                     MOVE 'I'       P6CHTP
+     C                     MOVE 'D'       P6RECI
+     C                     EXSR #ZAB
+     C                     WRITEPMCUSDP0
+     C                     END
+     C**
+     C           #BCA9     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #BCD     - FILE UPDATED BY ANOTHER WORKSTATION ROUTINE           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZA0240   - CLEAR PROGRAM MESSAGE QUEUE                           *
+      * ZASNMS   - Send message to program message queue                 *R00300
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #BCB     - UPDATE FILE FOR DOCUMENT STATUS 'N'                   *
+      * #BCA     - PERFORM UPDATING IF DOCUMENTATIO STATUS 'I' OR 'C'    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #BCD      BEGSR                           ** #UPWS  BSR**
+     C*
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C                     ROLBK
+     C                     ELSE                                                               CSC022
+     C           WSKIP     IFNE 'Y'                                                           CSC022
+     C                     ROLBK                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     MOVE '1'       *IN80
+     C*********************MOVEL'PM16302' MSGID                           R00300
+     C*********************CALL 'ZA0240'                                  R00300
+     C*********************PARM           MSGID                           R00300
+     C                     MOVEL'PM16302' ZAMSID                          R00300
+     C                     EXSR ZASNMS                                    R00300
+     C*
+     C                     ENDSR                           ** #UPWS  ESR**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #ZAB     - PREPARE DETAILS FOR UPDATE                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #AA      - SET UP SCREEN DETAILS SUBFILE                         *
+      * #BCB     - UPDATE FILE FOR DOCUMENT STATUS 'N'                   *
+      * #BCA     - PERFORM UPDATING IF DOCUMENTATIO STATUS 'I' OR 'C'    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWHLUP   - TIME OF LAST UPDATE                                   *
+      * WWDLUP   - DAY OF LAST UPDATE                                    *
+      * WWMLUP   - MONTH OF LAST UPDATE                                  *
+      * WWYLUP   - YEAR OF LAST UPDATE                                   *
+      *                                                                  *
+      ********************************************************************
+     C           #ZAB      BEGSR                           **#ZAB   BSR **
+     C*
+     C                     MOVE BJMRDT    WWHLUP
+     C                     Z-ADDWWDLUP    P6DLUP
+     C                     MOVE WWMLUP    P6MLUP
+     C                     Z-ADDWWYLUP    P6YLUP
+     C                     Z-ADDBJRDNB    P6LCD
+     C                     TIME           P6TLUP
+     C                     MOVELNATN      P6TNLU
+     C*
+     C** UPDATE FILE DETAILS IF NOT DELETION
+     C           P6CHTP    IFNE 'D'
+     C                     MOVE DDCNUM    P6CNUM
+     C                     MOVE DDDCCO    P6DCCO
+     C                     MOVELDDDCCC    P6DCCC
+     C                     MOVELDDDCCM    P6DCCM
+     C                     MOVELDDDCMS    P6DCMS
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #ZAA     - PREPARE DOCUMENTATION DETAILS FOR OUTPUT              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #AA      - SET UP SCREEN DETAILS SUBFILE                         *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRRN    - RRN OF SUBFILE RECORD                                 *
+      * WWSAVE   - SAVED RRN                                             *
+      **WWDCSK***-*DOCUMENT SEQUENCE USED IN KEY TO PMDOCCPP             *S01486
+      **WWDCOK***-*DOCUMENT CODE USED IN KEY TO PMDOCCPP                 *S01486
+      * WWDCSK   - DOCUMENT SEQUENCE USED IN KEY TO PMDOCCPD             *S01486
+      * WWDCOK   - DOCUMENT CODE USED IN KEY TO PMDOCCPD                 *S01486
+      * WWREAD   - INDICATES DOCUMENT CODES FOUND                        *
+      * WWACTN   - ACTION CODE PARAMETER                                 *
+      * WWTNLU   - SAVED TRANSACTION NUMBER OF LAST UPDATE               *
+      * WWEXT    - INDICATES CUSTOMER DOCUMENTATION DETAILS FOUND        *
+      *                                                                  *
+      ********************************************************************
+     C           #ZAA      BEGSR                           ** #ZAA  BSR **
+     C**
+     C** POSITION POINTER IN FILE FOR FIRST TIME
+     C**
+     C                     Z-ADD0         WWRRN
+     C                     Z-ADDWWSAVE    SFLRRN
+     C                     MOVE *LOVAL    WWDCSK
+     C                     MOVE *LOVAL    WWDCOK
+     C                     MOVE 'N'       WWREAD  1
+     C                     MOVE 'N'       WWEXT
+     C**
+     C           PMDOCK    SETLLPMDOCCLL
+     C**
+     C           WWACTN    IFEQ 'E'
+     C                     MOVE '1'       *IN35
+     C                     ELSE
+     C                     MOVE '0'       *IN35
+     C                     END
+     C**
+     C** READ IN SEQUENCE
+     C**
+     C                     READ PMDOCCLL                 74
+     C**
+     C           *IN74     DOWEQ'0'
+     C**
+     C                     MOVELP3DCCO    WWDCOK
+     C                     MOVELP3DCCO    DDDCCO
+     C                     MOVELP3DNAR    DDDNAR
+     C**
+     C           PMCUSK    CHAINPMCUSDXX             77
+     C*
+     C** SAVE TRANSACTION NUMBER OF LAST UPDATE
+     C           *IN77     IFEQ '0'
+     C                     Z-ADDP6TNLU    WWTNLU  50
+     C                     MOVE 'Y'       WWEXT   1
+     C                     END
+     C**
+     C** IF RECORD FOUND FOR DOCUMENT ON CUSTOMER DOCUMENTATION FILE
+     C***SET*UP*COMMENT*DETAILS FROM PF/PMCUSDPP OTHERWISE SET DETAILS    S01486
+     C** SET UP COMMENT DETAILS FROM PF/PMCUSDPD OTHERWISE SET DETAILS    S01486
+     C** TO BLANK
+     C           *IN77     IFEQ '0'
+     C           P6RECI    ANDEQ'D'
+     C                     MOVELP6DCCC    DDDCCC
+     C                     MOVELP6DCMS    DDDCMS
+     C*
+     C***IF*THE*DOCUMENT COMMENT TEXT (PMDOCCPP) IS BLANK OUTPUT TEXT     S01486
+     C** IF THE DOCUMENT COMMENT TEXT (PMDOCCPD) IS BLANK OUTPUT TEXT     S01486
+     C** ASSOCIATED WITH DOCUMENT COMMENT CODE IN PMDCOMPP
+     C           P6DCCM    IFEQ *BLANKS
+     C*
+     C***********P6DCCC    CHAINPMDCOMPP             76                   S01486
+     C           P6DCCC    CHAINPMDCOMPD             76                   S01486
+     C*
+     C           *IN76     IFEQ '0'
+     C                     MOVE P4DCMN    DDDCCM
+     C                     ELSE
+     C                     MOVE *BLANKS   DDDCCM
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVELP6DCCM    DDDCCM
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   DDDCCC
+     C                     MOVE *BLANKS   DDDCCM
+     C                     MOVE 'N'       DDDCMS
+     C                     END
+     C**
+     C                     ADD  1         WWSAVE
+     C                     ADD  1         WWRRN
+     C                     MOVE 'Y'       WWREAD
+     C                     WRITEPM0160S0
+     C*
+     C** OBTAIN NEXT SET OF DOCUMENT DETAILS
+     C                     READ PMDOCCLL                 74
+     C                     ADD  1         RRN
+     C                     END
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #BCC     - DETERMINE DOCUMENTATION STATUS INDICATOER             *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #BC      - CONTROL FILE UPDATING                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWTDOC   - TOTAL NUMBER OF DOCUMENT CODES ON FILE                *
+      * WWDCRI   - DOCUMENTATION STATUS RETURNED TO CALLING PROGRAM      *
+      * WWDCIC   - COUNT OF NUMBER OF DOCUMENTS NOT COMPLETED            *
+      *                                                                  *
+      ********************************************************************
+     C           #BCC      BEGSR                           **#BCC   BSR **
+     C**
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           WSKIP     OREQ 'N'                                                           CSC022
+     C           CSC022    ANDEQ'Y'                                                           CSC022
+     C           CMTTXT    COMIT
+     C                     ENDIF                                                              CSC022
+     C**
+     C           WWDCNR    IFEQ WWTDOC
+     C                     MOVE 'N'       WWDCRI
+     C                     ELSE
+     C           WWDCIC    IFEQ 0
+     C                     MOVE 'C'       WWDCRI
+     C                     ELSE
+     C                     MOVE 'I'       WWDCRI
+     C                     END
+     C                     END
+     C**
+     C                     MOVE '1'       *INLR
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ZTNLU1   - OBTAIN NEW TNLU                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #B       - MAIN PROCESSING ROUTINE                               *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           ZTNLU1    BEGSR
+     C**
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C*****************************************************************   R00300
+     C*                                                               *   R00300
+     C* ZASNMS    - Send message to program message queue             *   R00300
+     C*                                                               *   R00300
+     C* CALLS     - Y2SNMGC                                           *   R00300
+     C*                                                               *   R00300
+     C* CALLED BY - #BB  - Validate screen details input              *   R00300
+     C*           - #BCD - Process update by another workstation      *   R00300
+     C*                                                               *   R00300
+     C*****************************************************************   R00300
+     C           ZASNMS    BEGSR                                          R00300
+     C*                                                                   R00300
+     C                     CALL 'Y2SNMGC'                                 R00300
+     C                     PARM           ZAPGM            Program queue  R00300
+     C                     PARM           ZAPGRL           Rel queue      R00300
+     C                     PARM           ZAMSID           Message Id.    R00300
+     C                     PARM           ZAMSGF           Message file.  R00300
+     C                     PARM           ZAMSDA           Message data.  R00300
+     C                     PARM           ZAMSTP           Message type.  R00300
+     C*                                                                   R00300
+     C** Clear all fields for default mechanism next time.                R00300
+     C                     MOVEL*BLANK    ZAPGM            Message queue  R00300
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSDA           Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP           Message type.  R00300
+     C*                                                                   R00300
+     C           ZASNM9    ENDSR                           ZASNM9 TAG     R00300
+     C*                                                                   R00300
+      /EJECT                                                              R00300
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - STANDARD DATABASE ERROR ROUTINE                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #A       - INITIAL PROCESSING                                    *
+      * #AA      - SET UP SCREEN DETAILS SUBFILE                         *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C************NAMVAR   DEFN           LDA                             S01486
+     C************LOCK     IN   LDA                                       S01486
+     C************         MOVELDBFILE    WWFILE                          S01486
+     C************         MOVELDBKEY     WWKEY                           S01486
+     C************         MOVELDBPGM     WWPGM                           S01486
+     C************         MOVELDBASE     WWASE                           S01486
+     C************         OUT  LDA                                       S01486
+     C*
+     C                     SETON                     U7U8LR
+     C**
+     C** ROLL BACK CHANGES, PRINT DUMP AND CANCEL PROGRAM
+     C**
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           WSKIP     OREQ 'N'                                                           CSC022
+     C           CSC022    ANDEQ'Y'                                                           CSC022
+     C                     ROLBK
+     C                     ENDIF                                                              CSC022
+     C                     DUMP
+     C                     CALL 'DBERRCTL'                                S01486
+     C                     RETRN
+     C**
+     C                     ENDSR
+**  CPY@
+(c) Finastra International Limited 2001

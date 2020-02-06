@@ -1,0 +1,1313 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Incoming Messages summary')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas S.W.I.F.T. Direct Link
+     A*                                                               *
+     A*  MS5010 - Incoming Messages Summary                           *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 TDA035             Date 02Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 124673             Date 04Jun98               *
+      *                 E40815             Date 09Dec92               *
+     A*                 S01310             DATE 06DEC90               *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE026 - Consumer Banking                                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *   124673 - Add Century field to key lists and use for         *
+      *            selection purposes.                                *
+     A*  E40815 - Recompiled due to display file changes (MS5010DF)   *
+     A*  S01310 - S.W.I.F.T.  Rationalisation                         *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+     A*  C R E A T I O N     P A R A M E T E R S                      *
+     F*****************************************************************
+     FMS5010DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE MS5010F3
+     F                                              KINFDS INFDS
+     F*ABTB10*IF**E********   K        DISK                               S01310
+     FMUSER   IF  E           K        DISK                               S01310
+     FSDBRCHL0IF  E           K        DISK                               S01310
+     FMSMSI2L0IF  E           K        DISK                           UC
+     F            MSMSI2D0                          KRENAMEMSMSI20F
+     FMSMSI2L1IF  E           K        DISK                           UC
+     F            MSMSI2D0                          KRENAMEMSMSI21F
+     FMSMSI2L2IF  E           K        DISK                           UC
+     F            MSMSI2D0                          KRENAMEMSMSI22F
+     FMSMSI2L3IF  E           K        DISK                           UC
+     F            MSMSI2D0                          KRENAMEMSMSI23F
+     FMSMSI2LBIF  E           K        DISK                           UC  S01310
+     F            MSMSI2D0                          KRENAMEMSMSI2BF       S01310
+     FMSMSI2LCIF  E           K        DISK                           UC  S01310
+     F            MSMSI2D0                          KRENAMEMSMSI2CF       S01310
+     FMSMSI2LDIF  E           K        DISK                           UC  S01310
+     F            MSMSI2D0                          KRENAMEMSMSI2DF       S01310
+     FMSMSI2LEIF  E           K        DISK                           UC  S01310
+     F            MSMSI2D0                          KRENAMEMSMSI2EF       S01310
+      *
+      * ID C  F  H  L    FUNCTION OF INDICATORS
+      * 10               EOF MSMSI2PD
+      * 20               SFLDSP
+      * 21               SFLDSPCTL
+      * 22               SFLEND
+      * 23               ROLLUP
+      * 30               Error
+      * 31               Message type error
+      * 32               Message priority error
+      * 33               Start message ouput date error
+      * 34               Start message output time error
+      * 35               Branch error                                     S01310
+      * 40               HELP
+      * 41               Multibranching on                                S01310
+      * 50               MSMSI2L0 open
+      * 51               MSMSI2L1 open
+      * 52               MSMSI2L2 open
+      * 53               MSMSI2L2 open
+      * 54               MSMSI2LB open                                    S01310
+      * 55               MSMSI2LC open                                    S01310
+      * 56               MSMSI2LD open                                    S01310
+      * 57               MSMSI2LE open                                    S01310
+      * 60               Message type not numeric
+      * 88               EOF SDBRCHL0                                     S01310
+      * 89               EOF MUSER                                        S01310
+      **89***************EOF TABTB10                                      S01310
+      * KC               F3
+      * KL               F12
+      * U7U8LR           DB error
+      *
+     E                    MSGA    1   1 78               Error messages
+     E                    ERCD        9  4               Error codes
+     E                    IMSG       32  1               User heading
+     E                    LINE       16  1               Work array
+     E                    CPY@    1   1 80                                S01310
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USRID                 S01310
+     I**  Workstation ID
+      *
+     IDSRUN       DS                             13                       S01310
+     I                                        1   7 RUNA                  S01310
+     I                                       13  13 MBIN                  S01310
+      **  RUNDAT data area                                                S01310
+      *
+     IINFDS       DS
+     I                                    B 378 3790LSTRRN
+      **  Last subfile start RRN
+      *
+     I            DS
+     I                                        1 115 @HDR
+     I                                       34  36 MTYP
+     I                                       41  46 IDAT
+     I                                       47  58 OSDR
+     I                                       59  62 OSSN
+     I                                       63  68 OSEQ
+     I                                       69  74 ODAT
+     I                                       75  78 OTIM
+     I                                       79  79 @MPY
+     I                                       81  83 @WK3
+     I                                       84 115 @WK32
+      **  Message header data structure
+      *
+     I            DS
+     I                                        1   6 SDAT
+     I                                        7  10 STIM
+     I*
+     I                                        1   2 SDYY
+     I                                        3   4 SDMM
+     I                                        5   6 SDDD
+      *
+     I                                        7   8 STHH
+     I                                        9  10 STMM
+      **  Date and Time from screen for validation
+      *
+     C           KEY0      KLIST
+     C                     KFLD           MTPY
+     C                     KFLD           MPRY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY1      KLIST
+     C                     KFLD           MTPY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY2      KLIST
+     C                     KFLD           MPRY
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEY3      KLIST
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+     C                     KFLD           MOR
+      *
+     C           KEYB      KLIST                                          S01310
+     C                     KFLD           BRCA                            S01310
+     C                     KFLD           MTPY                            S01310
+     C                     KFLD           MPRY                            S01310
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE                            S01310
+     C                     KFLD           MOTM                            S01310
+     C                     KFLD           MOR                             S01310
+      *                                                                   S01310
+     C           KEYC      KLIST                                          S01310
+     C                     KFLD           BRCA                            S01310
+     C                     KFLD           MTPY                            S01310
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE                            S01310
+     C                     KFLD           MOTM                            S01310
+     C                     KFLD           MOR                             S01310
+      *                                                                   S01310
+     C           KEYD      KLIST                                          S01310
+     C                     KFLD           BRCA                            S01310
+     C                     KFLD           MPRY                            S01310
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE                            S01310
+     C                     KFLD           MOTM                            S01310
+     C                     KFLD           MOR                             S01310
+      *                                                                   S01310
+     C           KEYE      KLIST                                          S01310
+     C                     KFLD           BRCA                            S01310
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE                            S01310
+     C                     KFLD           MOTM                            S01310
+     C                     KFLD           MOR                             S01310
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   Main process                                                *
+      *   INIT  - Initial process                                     *
+      *   VSEL  - Validate selection                                  *
+      *   ENQR0 - Enquiry by type,priority,date,time                  *
+      *   ENQR1 - Enquiry by type,date,time                           *
+      *   ENQR2 - Enquiry by priority,date,time                       *
+      *   ENQR3 - Enquiry by date,time                                *
+      *   ENQRB - Enquiry by branch,type,priority,date,time           *   S01310
+      *   ENQRC - Enquiry by branch,type,date,time                    *   S01310
+      *   ENQRD - Enquiry by branch,priority,date,time                *   S01310
+      *   ENQRE - Enquiry by branch,date,time                         *   S01310
+      *   VRCD  - Validate record                                     *
+      *   BLK3  - Format fields from Block 3, if present              *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   Main process                                                *
+      *   Calls - INIT Initial process                                *
+      *           VSEL Validate selection                             *
+      *           ENQR0 Enquiry by type,priority,date,time            *
+      *           ENQR1 Enquiry by type,date,time                     *
+      *           ENQR2 Enquiry by priority,date,time                 *
+      *           ENQR3 Enquiry by date,time                          *
+      *           ENQRB Enquiry by branch,type,priority,date,time     *   S01310
+      *           ENQRC Enquiry by branch,type,date,time              *   S01310
+      *           ENQRD Enquiry by branch,priority,date,time          *   S01310
+      *           ENQRE Enquiry by branch,date,time                   *   S01310
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+      **  Display selection screen until F3 pressed
+     C           *INKC     DOWEQ'0'
+      *
+      **  If no errors clear input fields
+     C           *IN30     IFEQ '0'
+     C                     MOVE *BLANKS   SBCH                            S01310
+     C                     MOVE *BLANKS   STYP
+     C                     MOVE *BLANKS   SPTY
+     C                     MOVE *BLANKS   SDAT
+     C                     MOVE *BLANKS   STIM
+      *                    MOVE *BLANKS   SOET
+     C                     END
+      *
+     C                     WRITEMS5010F2
+     C                     WRITEMS5010F1
+      *
+      ****Do*while*HELP*pressed                                           S01310
+     C************IN40*****DOUEQ'0'                                       S01310
+     C                     READ MS5010F2                 40
+      *
+     C************IN40*****IFEQ '1'                                       S01310
+     C*********************MOVEAERCD      HERCD 160                       S01310
+     C*********************MOVEL'MSSWII'  HBPGM   8                       S01310
+     C*********************CALL 'MHELP'                                   S01310
+     C*********************PARM           HBPGM                           S01310
+     C*********************PARM           HERCD                           S01310
+     C*********************END                                            S01310
+     C*********************END                                            S01310
+      *
+     C                     MOVE *BLANKS   SFMG
+     C                     SETOF                     223031
+     C                     SETOF                     323334
+     C                     SETOF                     35                   S01310
+      *
+      **  If F3 not pressed validate selection
+     C           *INKC     IFEQ '0'
+     C                     EXSR VSEL
+      *
+      **  If selection valid
+     C           *IN30     IFEQ '0'
+      *
+     C                     MOVE SBCH      BRCA                            S01310
+     C                     MOVE STYP      MTPY
+     C                     MOVE SPTY      MPRY
+     C                     MOVE CENT      MODEC                           124673
+     C                     MOVE SDAT      MODE
+     C                     MOVE STIM      MOTM
+     C                     MOVE *BLANKS   MOR
+     C                     MOVE SDAT      @DAT    60
+     C                     MOVE STIM      @TIM    40
+      *
+     C           MBIN      IFEQ 'Y'                                       S01310
+     C           SBCH      ANDNE'ALL'                                     S01310
+      **  If type & priority entered enquiry by type,priority,date,time   S01310
+     C           MTPY      IFNE *BLANK                                    S01310
+     C           MPRY      IFNE *BLANK                                    S01310
+     C                     EXSR ENQRB                                     S01310
+      **  If type entered enquiry by type,date,time                       S01310
+     C                     ELSE                                           S01310
+     C                     EXSR ENQRC                                     S01310
+     C                     END                                            S01310
+      **  If priority entered enquiry by priority,date,time               S01310
+     C                     ELSE                                           S01310
+     C           MPRY      IFNE *BLANK                                    S01310
+     C                     EXSR ENQRD                                     S01310
+      **  Enquiry by date,time                                            S01310
+     C                     ELSE                                           S01310
+     C                     EXSR ENQRE                                     S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ELSE                                           S01310
+      **  If type & priority entered enquiry by type,priority,date,time
+     C           MTPY      IFNE *BLANK
+     C           MPRY      IFNE *BLANK
+     C                     EXSR ENQR0
+      **  If type entered enquiry by type,date,time
+     C                     ELSE
+     C                     EXSR ENQR1
+     C                     END
+      **  If priority entered enquiry by priority,date,time
+     C                     ELSE
+     C           MPRY      IFNE *BLANK
+     C                     EXSR ENQR2
+      **  Enquiry by date,time
+     C                     ELSE
+     C                     EXSR ENQR3
+     C                     END
+     C                     END
+      *
+     C                     END                                            S01310
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Calls - *PSSR Error process                                 *
+      *   Called by Main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80                       S01310
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MS5010  'DBPGM
+     C                     OUT  LDA
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+     C                     MOVE *LOVAL    ETX     1
+     C                     BITON'67'      ETX
+      *
+      ****Access*TABTB10*to find run date                                 S01310
+     C*********************READ TABTB10                  89               S01310
+      *********************                                               S01310
+     C************IN89*****IFEQ '1'                                       S01310
+     C***********RECI******ORNE 'D'                                       S01310
+     C************LOCK*****IN   LDA                                       S01310
+     C*********************MOVE '01'      DBASE                           S01310
+     C*********************MOVE 'FIRST'   DBKEY            * DB ERROR 01 *S01310
+     C*********************MOVE 'TABTB10' DBFILE                          S01310
+     C*********************OUT  LDA                                       S01310
+     C*********************EXSR *PSSR                                     S01310
+     C*********************END                                            S01310
+      *                                                                   S01310
+      **  Access RUNDAT to find run date & multibranching indicator       S01310
+     C           *NAMVAR   DEFN RUNDAT    DSRUN                           S01310
+     C                     IN   DSRUN                                     S01310
+      *                                                                   S01310
+      **  Access MUSER for user's authority                               S01310
+     C           USRID     CHAINMUSER                89                   S01310
+      *                                                                   S01310
+     C           *IN89     IFEQ '1'                                       S01310
+     C           RECI      ORNE 'D'                                       S01310
+     C           *LOCK     IN   LDA                                       S01310
+     C                     MOVE '01'      DBASE                           S01310
+     C                     MOVE USRID     DBKEY            * DB ERROR 01 *S01310
+     C                     MOVE 'MUSER'   DBFILE                          S01310
+     C                     OUT  LDA                                       S01310
+     C                     EXSR *PSSR                                     S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Seton multibranching indicator                                  S01310
+     C           MBIN      IFEQ 'Y'                                       S01310
+     C                     SETON                     41                   S01310
+     C                     END                                            S01310
+      *
+      **  Seton SFLEND
+     C                     SETON                     22
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      **  VSEL - Validate selection                                   *
+      **  Called by Main process                                      *
+      *****************************************************************
+      *
+     C           VSEL      BEGSR
+      *
+      **  Blank out error codes array
+     C                     MOVE *BLANKS   ERCD
+     C                     Z-ADD0         W       20
+      *
+      **  Message type must be blank or numeric
+     C           STYP      IFNE *BLANK
+     C                     TESTN          STYP       60
+     C           *IN60     IFNE '1'
+     C                     SETON                     3031
+     C                     ADD  1         W
+     C                     MOVE '001'     ERCD,W
+     C                     END
+     C                     END
+      *
+      **  Message priority must be blank,'N' or 'U'.
+     C           SPTY      IFNE *BLANK
+     C           SPTY      ANDNE'N'
+     C           SPTY      ANDNE'U'
+     C                     SETON                     3032
+     C                     ADD  1         W
+     C                     MOVE '009'     ERCD,W
+     C                     END
+      *                                                                   124673
+      ** Initialise Century indicator.                                    124673
+     C                     MOVE *BLANKS   CENT    2                       124673
+      *
+      **  Date must be blank or numeric
+     C           SDAT      IFNE *BLANK
+      *
+      ****Year*must*be*blank*or*numeric*in*range*01-99**************      124673
+     C***********SDYY      IFLT '01'                                      124673
+      **  Year must be blank or numeric in range 00-99                    124673
+     C           SDYY      IFLT '00'                                      124673
+     C           SDYY      ORGT '99'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '003'     ERCD,W
+     C                     ELSE                                           124673
+      *                                                                   124673
+      ** Allocate century to start date entered.                          124673
+     C           SDYY      IFLT '72'                                      124673
+     C                     MOVE '20'      CENT                            124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      CENT                            124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     END
+      *
+      **  Month must be blank or numeric in range 01-12
+     C           SDMM      IFLT '01'
+     C           SDMM      ORGT '12'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '004'     ERCD,W
+     C                     END
+      *
+      **  Day must be blank or numeric in range 01-31
+     C           SDDD      IFLT '01'
+     C           SDDD      ORGT '31'
+     C                     SETON                     3033
+     C                     ADD  1         W
+     C                     MOVE '005'     ERCD,W
+      *
+     C                     END
+      *
+     C                     END
+      *
+      **  Time must not be entered if day is not entered
+     C           SDAT      IFEQ *BLANKS
+     C           STIM      ANDNE*BLANKS
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '006'     ERCD,W
+     C                     END
+      *
+      **  Time must be blank or numeric
+     C           STIM      IFNE *BLANK
+      *
+      **  Hours must be numeric in range 00-23
+     C           STHH      IFLT '00'
+     C           STHH      ORGT '23'
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '007'     ERCD,W
+     C                     END
+      *
+      **  Minutes must be numeric in range 00-59
+     C           STMM      IFLT '00'
+     C           STMM      ORGT '59'
+     C                     SETON                     3034
+     C                     ADD  1         W
+     C                     MOVE '008'     ERCD,W
+     C                     END
+     C                     END
+      *
+      **  If multibranching active                                        S01310
+     C           MBIN      IFEQ 'Y'                                       S01310
+      *                                                                   S01310
+      **  If branch blank substitute user's default branch                S01310
+     C           SBCH      IFEQ *BLANK                                    S01310
+     C                     MOVE DBRN      SBCH                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Is branch code valid                                            S01310
+     C           SBCH      IFNE 'ALL'                                     S01310
+     C           SBCH      CHAINSDBRCHL0             88                   S01310
+      *                                                                   S01310
+     C           *IN88     IFEQ '1'                                       S01310
+     C                     ADD  1         W                               S01310
+     C                     MOVE '025'     ERCD,W                          S01310
+     C                     SETON                     3035                 S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+     C           BANK      IFNE 'Y'                                       S01310
+     C           ROUF      ANDNE'Y'                                       S01310
+     C                     MOVE SBCH      ZBR     3                       S01310
+     C                     Z-ADD0         ZERR    10                      S01310
+     C                     CALL 'ZVBBU'                                   S01310
+     C                     PARM           ZBR                             S01310
+     C                     PARM           ZERR                            S01310
+      *                                                                   S01310
+     C           ZERR      IFNE 0                                         S01310
+     C                     ADD  1         W                               S01310
+     C                     MOVE '026'     ERCD,W                          S01310
+     C                     SETON                     3035                 S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  If branch 'ALL' user must have bank level authority             S01310
+      **  or be system routing officer                                    S01310
+     C           SBCH      IFEQ 'ALL'                                     S01310
+     C           BANK      IFNE 'Y'                                       S01310
+     C           ROUF      ANDNE'Y'                                       S01310
+     C                     ADD  1         W                               S01310
+     C                     MOVE '027'     ERCD,W                          S01310
+     C                     SETON                     3035                 S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *
+     C                     MOVEAERCD      SFMG   78
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQR0 - Enquiry by type,priority,date,time                  *
+      *   Calls - VRCD Validate record                                *
+      *           BLK3 Format fields from Block 3, if present         *
+      *   Called by Main process                                      *
+      *****************************************************************
+      *
+     C           ENQR0     BEGSR
+      *
+      **  Open file & read first record
+     C           *IN50     IFEQ '0'
+     C                     OPEN MSMSI2L0
+     C                     SETON                     50
+     C                     END
+      *
+     C           KEY0      SETLLMSMSI2L0
+     C                     READ MSMSI2L0                 10
+     C                     MOVELMDTA      @HDR
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,1    SFMG
+     C                     SETON                     30
+     C                     ELSE
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5010F4
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  perform rollup
+     C           *IN23     DOUEQ'0'
+      *
+      **  if end of subfile set on message
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     ELSE
+      *
+      **  RRN of first record on page
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  fill subfile page
+     C           *IN10     DOWEQ'0'
+     C           @CNT      ANDLT16
+      *
+     C                     EXSR BLK3
+     C                     WRITEMS5010F3
+     C                     ADD  1         RRN
+     C                     ADD  1         @CNT
+      *
+     C           KEY0      SETGTMSMSI2L0
+     C                     READ MSMSI2L0                 10
+     C                     MOVELMDTA      @HDR
+      *
+     C                     EXSR VRCD
+     C                     END
+      *
+      **  Display subfile until F3, F12 or rollup pressed
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+      *
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     END
+      *
+     C                     WRITEMS5010F5
+     C                     EXFMTMS5010F4
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     SETOF                     22
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQR1 - Enquiry by type,date,time                           *
+      *   Calls - VRCD Validate record                                *
+      *           BLK3 Format fields from Block 3, if present         *
+      *   Called by Main process                                      *
+      *****************************************************************
+      *
+     C           ENQR1     BEGSR
+      *
+      **  Open file & read first record
+     C           *IN51     IFEQ '0'
+     C                     OPEN MSMSI2L1
+     C                     SETON                     51
+     C                     END
+      *
+     C           KEY1      SETLLMSMSI2L1
+     C                     READ MSMSI2L1                 10
+     C                     MOVELMDTA      @HDR
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,1    SFMG
+     C                     SETON                     30
+     C                     ELSE
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5010F4
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  perform rollup
+     C           *IN23     DOUEQ'0'
+      *
+      **  if end of subfile set on message
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     ELSE
+      *
+      **  RRN of first record on page
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  fill subfile page
+     C           *IN10     DOWEQ'0'
+     C           @CNT      ANDLT16
+      *
+     C                     EXSR BLK3
+     C                     WRITEMS5010F3
+     C                     ADD  1         RRN
+     C                     ADD  1         @CNT
+      *
+     C           KEY1      SETGTMSMSI2L1
+     C                     READ MSMSI2L1                 10
+     C                     MOVELMDTA      @HDR
+      *
+     C                     EXSR VRCD
+     C                     END
+      *
+      **  Display subfile until F3, F12 or rollup pressed
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+      *
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     END
+      *
+     C                     WRITEMS5010F5
+     C                     EXFMTMS5010F4
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     SETOF                     22
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQR2 - Enquiry by priority,date,time                       *
+      *   Calls - VRCD Validate record                                *
+      *           BLK3 Format fields from Block 3, if present         *
+      *   Called by Main process                                      *
+      *****************************************************************
+      *
+     C           ENQR2     BEGSR
+      *
+      **  Open file & read first record
+     C           *IN52     IFEQ '0'
+     C                     OPEN MSMSI2L2
+     C                     SETON                     52
+     C                     END
+      *
+     C           KEY2      SETLLMSMSI2L2
+     C                     READ MSMSI2L2                 10
+     C                     MOVELMDTA      @HDR
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,1    SFMG
+     C                     SETON                     30
+     C                     ELSE
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5010F4
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  perform rollup
+     C           *IN23     DOUEQ'0'
+      *
+      **  if end of subfile set on message
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     ELSE
+      *
+      **  RRN of first record on page
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  fill subfile page
+     C           *IN10     DOWEQ'0'
+     C           @CNT      ANDLT16
+      *
+     C                     EXSR BLK3
+     C                     WRITEMS5010F3
+     C                     ADD  1         RRN
+     C                     ADD  1         @CNT
+      *
+     C           KEY2      SETGTMSMSI2L2
+     C                     READ MSMSI2L2                 10
+     C                     MOVELMDTA      @HDR
+      *
+     C                     EXSR VRCD
+     C                     END
+      *
+      **  Display subfile until F3, F12 or rollup pressed
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+      *
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     END
+      *
+     C                     WRITEMS5010F5
+     C                     EXFMTMS5010F4
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     SETOF                     22
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   ENQR3 - Enquiry by date,time                                *
+      *   Calls - VRCD Validate record                                *
+      *           BLK3 Format fields from Block 3, if present         *
+      *   Called by Main process                                      *
+      *****************************************************************
+      *
+     C           ENQR3     BEGSR
+      *
+      **  Open file & read first record
+     C           *IN53     IFEQ '0'
+     C                     OPEN MSMSI2L3
+     C                     SETON                     53
+     C                     END
+      *
+     C           KEY3      SETLLMSMSI2L3
+     C                     READ MSMSI2L3                 10
+     C                     MOVELMDTA      @HDR
+      *
+     C                     EXSR VRCD
+      *
+      **  Write 'No records match selection criteria'
+     C           *IN10     IFEQ '1'
+     C                     MOVE MSGA,1    SFMG
+     C                     SETON                     30
+     C                     ELSE
+      *
+      **  Clear subfile
+     C                     SETOF                     2021
+     C                     WRITEMS5010F4
+     C                     SETON                     2021
+     C                     Z-ADD1         RRN     50
+      *
+      **  perform rollup
+     C           *IN23     DOUEQ'0'
+      *
+      **  if end of subfile set on message
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     ELSE
+      *
+      **  RRN of first record on page
+     C                     Z-ADDRRN       DSPREC
+     C                     Z-ADD0         @CNT    20
+      *
+      **  fill subfile page
+     C           *IN10     DOWEQ'0'
+     C           @CNT      ANDLT16
+      *
+     C                     EXSR BLK3
+     C                     WRITEMS5010F3
+     C                     ADD  1         RRN
+     C                     ADD  1         @CNT
+      *
+     C           KEY3      SETGTMSMSI2L3
+     C                     READ MSMSI2L3                 10
+     C                     MOVELMDTA      @HDR
+      *
+     C                     EXSR VRCD
+     C                     END
+      *
+      **  Display subfile until F3, F12 or rollup pressed
+     C           *INKC     DOUEQ'1'
+     C           *INKL     OREQ '1'
+     C           *IN23     OREQ '1'
+      *
+     C           *IN10     IFEQ '1'
+     C                     SETON                     22
+     C                     END
+      *
+     C                     WRITEMS5010F5
+     C                     EXFMTMS5010F4
+     C                     Z-ADDLSTRRN    DSPREC
+     C                     SETOF                     22
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   ENQRB - Enquiry by branch,type,priority,date,time           *   S01310
+      *   Calls - VRCD Validate record                                *   S01310
+      *           BLK3 Format fields from Block 3, if present         *   S01310
+      *   Called by Main process                                      *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           ENQRB     BEGSR                                          S01310
+      *                                                                   S01310
+      **  Open file & read first record                                   S01310
+     C           *IN54     IFEQ '0'                                       S01310
+     C                     OPEN MSMSI2LB                                  S01310
+     C                     SETON                     54                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C           KEYB      SETLLMSMSI2LB                                  S01310
+     C                     READ MSMSI2LB                 10               S01310
+     C                     MOVELMDTA      @HDR                            S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'No records match selection criteria'                     S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,1    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  Clear subfile                                                   S01310
+     C                     SETOF                     2021                 S01310
+     C                     WRITEMS5010F4                                  S01310
+     C                     SETON                     2021                 S01310
+     C                     Z-ADD1         RRN     50                      S01310
+      *                                                                   S01310
+      **  perform rollup                                                  S01310
+     C           *IN23     DOUEQ'0'                                       S01310
+      *                                                                   S01310
+      **  if end of subfile set on message                                S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     SETON                     22                   S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  RRN of first record on page                                     S01310
+     C                     Z-ADDRRN       DSPREC                          S01310
+     C                     Z-ADD0         @CNT    20                      S01310
+      *                                                                   S01310
+      **  fill subfile page                                               S01310
+     C           *IN10     DOWEQ'0'                                       S01310
+     C           @CNT      ANDLT16                                        S01310
+      *                                                                   S01310
+     C                     EXSR BLK3                                      S01310
+     C                     WRITEMS5010F3                                  S01310
+     C                     ADD  1         RRN                             S01310
+     C                     ADD  1         @CNT                            S01310
+      *                                                                   S01310
+     C           KEYB      SETGTMSMSI2LB                                  S01310
+     C                     READ MSMSI2LB                 10               S01310
+     C                     MOVELMDTA      @HDR                            S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Display subfile until F3, F12 or rollup pressed                 S01310
+     C           *INKC     DOUEQ'1'                                       S01310
+     C           *INKL     OREQ '1'                                       S01310
+     C           *IN23     OREQ '1'                                       S01310
+      *                                                                   S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     SETON                     22                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     WRITEMS5010F5                                  S01310
+     C                     EXFMTMS5010F4                                  S01310
+     C                     Z-ADDLSTRRN    DSPREC                          S01310
+     C                     SETOF                     22                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   ENQRC - Enquiry by branch,type,date,time                    *   S01310
+      *   Calls - VRCD Validate record                                *   S01310
+      *           BLK3 Format fields from Block 3, if present         *   S01310
+      *   Called by Main process                                      *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           ENQRC     BEGSR                                          S01310
+      *                                                                   S01310
+      **  Open file & read first record                                   S01310
+     C           *IN55     IFEQ '0'                                       S01310
+     C                     OPEN MSMSI2LC                                  S01310
+     C                     SETON                     55                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C           KEYC      SETLLMSMSI2LC                                  S01310
+     C                     READ MSMSI2LC                 10               S01310
+     C                     MOVELMDTA      @HDR                            S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'No records match selection criteria'                     S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,1    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  Clear subfile                                                   S01310
+     C                     SETOF                     2021                 S01310
+     C                     WRITEMS5010F4                                  S01310
+     C                     SETON                     2021                 S01310
+     C                     Z-ADD1         RRN     50                      S01310
+      *                                                                   S01310
+      **  perform rollup                                                  S01310
+     C           *IN23     DOUEQ'0'                                       S01310
+      *                                                                   S01310
+      **  if end of subfile set on message                                S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     SETON                     22                   S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  RRN of first record on page                                     S01310
+     C                     Z-ADDRRN       DSPREC                          S01310
+     C                     Z-ADD0         @CNT    20                      S01310
+      *                                                                   S01310
+      **  fill subfile page                                               S01310
+     C           *IN10     DOWEQ'0'                                       S01310
+     C           @CNT      ANDLT16                                        S01310
+      *                                                                   S01310
+     C                     EXSR BLK3                                      S01310
+     C                     WRITEMS5010F3                                  S01310
+     C                     ADD  1         RRN                             S01310
+     C                     ADD  1         @CNT                            S01310
+      *                                                                   S01310
+     C           KEYC      SETGTMSMSI2LC                                  S01310
+     C                     READ MSMSI2LC                 10               S01310
+     C                     MOVELMDTA      @HDR                            S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Display subfile until F3, F12 or rollup pressed                 S01310
+     C           *INKC     DOUEQ'1'                                       S01310
+     C           *INKL     OREQ '1'                                       S01310
+     C           *IN23     OREQ '1'                                       S01310
+      *                                                                   S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     SETON                     22                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     WRITEMS5010F5                                  S01310
+     C                     EXFMTMS5010F4                                  S01310
+     C                     Z-ADDLSTRRN    DSPREC                          S01310
+     C                     SETOF                     22                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   ENQRD - Enquiry by branch,priority,date,time                *   S01310
+      *   Calls - VRCD Validate record                                *   S01310
+      *           BLK3 Format fields from Block 3, if present         *   S01310
+      *   Called by Main process                                      *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           ENQRD     BEGSR                                          S01310
+      *                                                                   S01310
+      **  Open file & read first record                                   S01310
+     C           *IN56     IFEQ '0'                                       S01310
+     C                     OPEN MSMSI2LD                                  S01310
+     C                     SETON                     56                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C           KEYD      SETLLMSMSI2LD                                  S01310
+     C                     READ MSMSI2LD                 10               S01310
+     C                     MOVELMDTA      @HDR                            S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'No records match selection criteria'                     S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,1    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  Clear subfile                                                   S01310
+     C                     SETOF                     2021                 S01310
+     C                     WRITEMS5010F4                                  S01310
+     C                     SETON                     2021                 S01310
+     C                     Z-ADD1         RRN     50                      S01310
+      *                                                                   S01310
+      **  perform rollup                                                  S01310
+     C           *IN23     DOUEQ'0'                                       S01310
+      *                                                                   S01310
+      **  if end of subfile set on message                                S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     SETON                     22                   S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  RRN of first record on page                                     S01310
+     C                     Z-ADDRRN       DSPREC                          S01310
+     C                     Z-ADD0         @CNT    20                      S01310
+      *                                                                   S01310
+      **  fill subfile page                                               S01310
+     C           *IN10     DOWEQ'0'                                       S01310
+     C           @CNT      ANDLT16                                        S01310
+      *                                                                   S01310
+     C                     EXSR BLK3                                      S01310
+     C                     WRITEMS5010F3                                  S01310
+     C                     ADD  1         RRN                             S01310
+     C                     ADD  1         @CNT                            S01310
+      *                                                                   S01310
+     C           KEYD      SETGTMSMSI2LD                                  S01310
+     C                     READ MSMSI2LD                 10               S01310
+     C                     MOVELMDTA      @HDR                            S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Display subfile until F3, F12 or rollup pressed                 S01310
+     C           *INKC     DOUEQ'1'                                       S01310
+     C           *INKL     OREQ '1'                                       S01310
+     C           *IN23     OREQ '1'                                       S01310
+      *                                                                   S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     SETON                     22                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     WRITEMS5010F5                                  S01310
+     C                     EXFMTMS5010F4                                  S01310
+     C                     Z-ADDLSTRRN    DSPREC                          S01310
+     C                     SETOF                     22                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+     C/EJECT                                                              S01310
+      *****************************************************************   S01310
+      *   ENQRE - Enquiry by branch,date,time                         *   S01310
+      *   Calls - VRCD Validate record                                *   S01310
+      *           BLK3 Format fields from Block 3, if present         *   S01310
+      *   Called by Main process                                      *   S01310
+      *****************************************************************   S01310
+      *                                                                   S01310
+     C           ENQRE     BEGSR                                          S01310
+      *                                                                   S01310
+      **  Open file & read first record                                   S01310
+     C           *IN57     IFEQ '0'                                       S01310
+     C                     OPEN MSMSI2LE                                  S01310
+     C                     SETON                     57                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C           KEYE      SETLLMSMSI2LE                                  S01310
+     C                     READ MSMSI2LE                 10               S01310
+     C                     MOVELMDTA      @HDR                            S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+      *                                                                   S01310
+      **  Write 'No records match selection criteria'                     S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     MOVE MSGA,1    SFMG                            S01310
+     C                     SETON                     30                   S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  Clear subfile                                                   S01310
+     C                     SETOF                     2021                 S01310
+     C                     WRITEMS5010F4                                  S01310
+     C                     SETON                     2021                 S01310
+     C                     Z-ADD1         RRN     50                      S01310
+      *                                                                   S01310
+      **  perform rollup                                                  S01310
+     C           *IN23     DOUEQ'0'                                       S01310
+      *                                                                   S01310
+      **  if end of subfile set on message                                S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     SETON                     22                   S01310
+     C                     ELSE                                           S01310
+      *                                                                   S01310
+      **  RRN of first record on page                                     S01310
+     C                     Z-ADDRRN       DSPREC                          S01310
+     C                     Z-ADD0         @CNT    20                      S01310
+      *                                                                   S01310
+      **  fill subfile page                                               S01310
+     C           *IN10     DOWEQ'0'                                       S01310
+     C           @CNT      ANDLT16                                        S01310
+      *                                                                   S01310
+     C                     EXSR BLK3                                      S01310
+     C                     WRITEMS5010F3                                  S01310
+     C                     ADD  1         RRN                             S01310
+     C                     ADD  1         @CNT                            S01310
+      *                                                                   S01310
+     C           KEYE      SETGTMSMSI2LE                                  S01310
+     C                     READ MSMSI2LE                 10               S01310
+     C                     MOVELMDTA      @HDR                            S01310
+      *                                                                   S01310
+     C                     EXSR VRCD                                      S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+      **  Display subfile until F3, F12 or rollup pressed                 S01310
+     C           *INKC     DOUEQ'1'                                       S01310
+     C           *INKL     OREQ '1'                                       S01310
+     C           *IN23     OREQ '1'                                       S01310
+      *                                                                   S01310
+     C           *IN10     IFEQ '1'                                       S01310
+     C                     SETON                     22                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     WRITEMS5010F5                                  S01310
+     C                     EXFMTMS5010F4                                  S01310
+     C                     Z-ADDLSTRRN    DSPREC                          S01310
+     C                     SETOF                     22                   S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR                                          S01310
+     C/EJECT
+      *****************************************************************
+      *   VRCD - validate record                                      *
+      *   Called by - ENQY0 Enquiry by type,priority,date,time        *
+      *               ENQY1 Enquiry by type,date,time                 *
+      *               ENQY2 Enquiry by priority,date,time             *
+      *               ENQY3 Enquiry by date,time                      *
+      *               ENQYB Enquiry by branch,type,priority,date,time *   S01310
+      *               ENQYC Enquiry by branch,type,date,time          *   S01310
+      *               ENQYD Enquiry by branch,priority,date,time      *   S01310
+      *               ENQYE Enquiry by branch,date,time               *   S01310
+      *****************************************************************
+      *
+     C           VRCD      BEGSR
+      *
+      **  If message type does not match parameter
+     C           STYP      IFNE *BLANKS
+     C           STYP      ANDNEMTPY
+     C                     SETON                     10
+     C                     END
+      *
+      **  If priority does not match parameter
+     C           SPTY      IFNE *BLANKS
+     C           SPTY      ANDNEMPRY
+     C                     SETON                     10
+     C                     END
+      *
+     C           MBIN      IFEQ 'Y'                                       S01310
+     C           SBCH      ANDNE'ALL'                                     S01310
+     C           SBCH      ANDNEBRCA                                      S01310
+     C                     SETON                     10                   S01310
+     C                     END                                            S01310
+      *                                                                   S01310
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   BLK3  - Format fields from block 3, if present              *
+      *   Called by - ENQY0 Enquiry by type,priority,date,time        *
+      *               ENQY1 Enquiry by type,date,time                 *
+      *               ENQY2 Enquiry by priority,date,time             *
+      *               ENQY3 Enquiry by date,time                      *
+      *               ENQYB Enquiry by branch,type,priority,date,time *   S01310
+      *               ENQYC Enquiry by branch,type,date,time          *   S01310
+      *               ENQYD Enquiry by branch,priority,date,time      *   S01310
+      *               ENQYE Enquiry by branch,date,time               *   S01310
+      *****************************************************************
+      *
+     C           BLK3      BEGSR
+      *
+     C           @MPY      IFEQ 'N'
+     C                     MOVE 'NORMAL'  OMPY    6
+     C                     ELSE
+     C                     MOVE 'URGENT'  OMPY
+     C                     END
+      *
+     C                     MOVE *BLANKS   OBPY
+     C                     MOVE *BLANKS   OMUR
+      *
+      **  If user header present
+     C           @WK3      IFEQ '{3:'
+     C                     MOVEA@WK32     IMSG
+     C                     Z-ADD1         X       20
+      *
+      **  If banking priority present
+     C                     MOVEAIMSG,X    @WK5    5
+     C           @WK5      IFEQ '{113:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z       20
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OBPY
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+      *
+      **  If message user reference (MUR) present
+     C                     MOVEAIMSG,X    @WK5
+     C           @WK5      IFEQ '{108:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OMUR
+     C                     MOVEA*BLANKS   LINE
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *   Called by - INIT Initial process                            *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+**  Messages
+No records match selection criteria
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

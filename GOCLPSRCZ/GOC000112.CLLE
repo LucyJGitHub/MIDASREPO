@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GO PEA Status updater Submission')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC000112 - PEA Status Updater Submission Program           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR993055           Date 26Jun12              */
+/*                      AR993999           Date 22Jun12              */
+/*                      CSC054  *CREATE    Date 23Feb12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR993055 - Status of Period End Adjustments system does not */
+/*                  change to 'Restore Started' during restore       */
+/*       AR993999 - PEA system becomes in Close of Business after    */
+/*                  starting global system                           */
+/*       CSC054 - Period End Adjustments                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&JOBN &SYS)
+ 
+             DCL        VAR(&JOBN)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SYS)   TYPE(*CHAR) LEN(2)
+             DCL        VAR(&XLIB)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALIB)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&XPLIB) TYPE(*CHAR) LEN(10)                                 /*AR993055*/
+             DCL        VAR(&MQMGR) TYPE(*CHAR) LEN(48)                                 /*AR993999*/
+             DCL        VAR(&MQUEUE) TYPE(*CHAR) LEN(48)                                /*AR993999*/
+             DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*AR993999*/
+/*/COPY SDCPYSRC,SDSVALDCL  */                                                          /*AR993999*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          Ltd. 2012')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&XLIB) VALUE(&SYS *CAT 'XLIB')
+             CHGVAR     VAR(&DTALIB) VALUE(&SYS *CAT 'DTALIB')
+             CHGVAR     VAR(&SVALK1) VALUE('PEAHandShakingQM')                          /*AR993999*/
+             CHGVAR     VAR(&SVALK2) VALUE('PEAHandShakingIQ')                          /*AR993999*/
+             CHGVAR     VAR(&XPLIB) VALUE(&SYS *CAT 'XPLIB')                            /*AR993055*/
+                                                                                        /*AR993055*/
+/** Set-up library list */                                                              /*AR993055*/
+                                                                                        /*AR993055*/
+             CALL       PGM(&XPLIB/UPC0014) PARM(&SYS)                                  /*AR993055*/
+                                                                                        /*AR993999*/
+/** Get MQ Details from the system values */                                            /*AR993999*/
+                                                                                        /*AR993999*/
+             CALL       PGM(AOSVALR0) PARM(&RTNCDE +
+                        &SVALK1 &SVAL1 &SVALK2 +
+                        &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                        &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                        &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                        &SVALK10 &SVAL10)                                               /*AR993999*/
+                                                                                        /*AR993999*/
+             CHGVAR VAR(&MQMGR) VALUE(&SVAL1)                                           /*AR993999*/
+             CHGVAR VAR(&MQUEUE) VALUE(&SVAL2)                                          /*AR993999*/
+                                                                                        /*AR993999*/
+/** Clear incoming handshaking queue */                                                 /*AR993999*/
+                                                                                        /*AR993999*/
+             CLRMQMQ    QNAME(&MQUEUE) MQMNAME(&MQMGR)                                  /*AR993999*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                          /*AR993999*/
+ 
+             SBMJOB     CMD(CALL PGM(SC000114)) JOB(&JOBN) +
+                          JOBD(&XLIB/MBATCH) JOBQ(GPNOMAX) OUTQ(*JOBD) +
+                          USER(*JOBD) RTGDTA(*JOBD) INLLIBL(*JOBD) +
+                          MSGQ(&XLIB/MOPERQ)
+ 
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:
+ 
+/** Abnormal termination */
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(MEM5003) MSGF(&DTALIB/MIDAS) TOPGMQ(*EXT) +
+                          TOMSGQ(&XLIB/MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+             ENDPGM

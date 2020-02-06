@@ -1,0 +1,123 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+     C*  Last Amend No. BUG8514            Date 30Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*  Prev Amend No. 104270             DATE 17Sep97               *
+     C*                 CRT001  *CREATE    DATE 28Feb95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+     C*  BUG8514- Issue regarding teller overrides.                   *
+     C*  104270 - Initialise override (@O) array element(s).          *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTBVIC - Backvalue check                           *
+     C*                                                               *
+     C* FLDS USED  Input                                              *
+     C*            ZDAYNO - Value date                                *
+     C*            BJRDNB - Run day number                            *
+     C*            BJBVPD - Back value period                         *
+     C*            DRIF   - Debit  interest frequency                 *
+     C*            CRIF   - Credit interest frequency                 *
+     C*            LCID   - Last credit int. capt. date               *
+     C*            LDID   - Last debit  int. capt. date               *
+     C*            @BV    - Backvaluation i/c                         *
+     C*            @ACIN  - Account indicator                         *
+     C*                                                               *
+     C* FLDS USED  Output                                             *
+     C*            @BVDT  - Back value date                           *
+     C*            @BVLM  - Back value limit                          *
+     C*                                                               *
+     C*****************************************************************
+     C           RTBVIC    BEGSR                           ** RTBVIC **
+      *
+      ** Define parameters
+     C                     Z-ADD@LDID     @LDID   50
+     C                     MOVE @DRIF     @DRIF   1
+     C                     Z-ADD@LCID     @LCID   50
+     C                     MOVE @CRIF     @CRIF   1
+     C                     MOVEL@ACIN     @ACIN   2
+      *                                                                   104270
+      ** Initialise override array element                                104270
+      *                                                                   104270
+     C           PFNCD     IFNE '***'                                                        BUG8514
+     C                     MOVE ' '       @O,@BV                          104270
+     C                     ENDIF                                                             BUG8514
+      *
+      ** If value date is not zero?
+     C           @VLDT     IFNE 0
+      *
+      ** Obtain back-value-date as run date minus back value period
+     C           BJRDNB    SUB  BJBVPD    @BVDT   50
+      *
+      ** Determine back-value-date as earliest of back-value-date
+      ** and last interest capitalisation date
+      *
+      ** If both debit & credit interest frequency are not blank
+      ** Set back-value-limit as earliest of last debit int. capt. date,
+      ** last credit int. capt. date, and back-value-date
+     C           @DRIF     IFNE ' '
+     C           @CRIF     ANDNE' '
+     C           @LDID     IFLT @LCID
+     C                     Z-ADD@LDID     @BVLM   50
+     C                     ELSE
+     C                     Z-ADD@LCID     @BVLM
+     C                     END
+     C           @BVDT     IFLT @BVLM
+     C                     Z-ADD@BVDT     @BVLM
+     C                     END
+     C                     END
+      *
+      ** If only debit interest frequency are not blank,
+      ** Set back-value-limit as earliest of last debit int. capt. date
+     C           @DRIF     IFNE ' '
+     C           @CRIF     ANDEQ' '
+     C           @LDID     IFLT @BVDT
+     C                     Z-ADD@LDID     @BVLM
+     C                     ELSE
+     C                     Z-ADD@BVDT     @BVLM
+     C                     END
+     C                     END
+      *
+      ** If only credit interest frequency are not blank,
+      ** Set back-value-limit as earliest of last credit int. capt. date
+     C           @CRIF     IFNE ' '
+     C           @DRIF     ANDEQ' '
+     C           @LCID     IFLT @BVDT
+     C                     Z-ADD@LCID     @BVLM
+     C                     ELSE
+     C                     Z-ADD@BVDT     @BVLM
+     C                     END
+     C                     END
+      *
+      ** If value date is less than back value limit
+      ** Set message to 'BFBVIC' suffixed by account indicator
+     C           @VLDT     IFLT @BVLM
+      *
+      ** If override allowed
+     C           @V,@BV    IFEQ 'Y'
+     C                     ADD  1         @WI
+     C                     MOVEL'BFBVIC'  @W,@WI
+     C                     MOVE @ACIN     @W,@WI
+     C                     MOVE 'Y'       @O,@BV
+     C                     END
+      *
+      ** If override not allowed
+     C           @V,@BV    IFEQ 'N'
+     C                     ADD  1         @TI
+     C                     MOVEL'BFBVIC'  @T,@TI
+     C                     MOVE @ACIN     @T,@TI
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************

@@ -1,0 +1,1364 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Report on Time/Call statements')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  RPG/DL0767 - Statements for Time/Call Deposits               *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 238204             Date 02Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG3021            Date 02Jun04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 BUG2596            Date 28Apr04               *
+      *                 BUG1988            Date 28Apr04               *
+      *                 CDL012  *CREATE    Date 12Aug03               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  238204 - Input cycle reports-interest statements on          *
+      *           Time/Call deposit                                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  BUG3021 - Incorrect dates and amount formatting in           *
+      *            certificate and confirmation of balances           *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  BUG2596- Check if BGN1ST is 'Y' not *ON.                     *
+      *  BUG1988- Call CG9010 only if UDC is installed.               *
+      *  CDL012 - Interest Statement for Call/Time Deposits.          *
+      *         - STATEMENT NOT GENERATED BECAUSE PGM TRIES TO DIVIDE *
+      *           BY 0. COMMENT LINES.                                *
+      *         - Halt in year-end COB as some customers who have int.
+      *           statements have been deleted. Change to accomodate
+      *           deleted (but not dropped) customers as well, accordin
+      *           -g to bank's requirements.
+      *           PRINTING OF INTEREST IN BASE CCY SUPPRESSED DUE TO  *
+      *           BANK'S REQUEST. ALSO SUPPRESSED TOTAL INTEREST.     *
+      *         - STATEMENTS FOR TIME/CALL DEPOSITS                   *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Dummy file for QRYF records
+      *
+     F***DLTCSTPTUF  E                    DISK                           UC                   238204
+     FDLTCSTPTIF  E                    DISK                           UC                      238204
+     FCGTCSTPDO   E                    DISK                           UC
+      *
+     FDL0767P1O   E                    PRINTER      KINFDS SPOOL
+      *
+     FDL0767AUO   E                    PRINTER      KINFDS SPOOLU     UC
+      *
+      *================================================================
+     E                    CMD     1  16 80
+      *
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      *================================================================
+      *
+      ** Data structure for Bank details
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      * First DS for Access Programs, Short Data Structure
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Module File Details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access programs, long data structure
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** DATA STRUCTURE FOR CUSTOMER DETAILS
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Data structure for currency details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Program status data structure
+      *
+     I##UDCR    E DSCGUDCRPD
+      ** External DS for incomplete reference
+      *
+     IPGMDS     ESDSY2PGDSP
+      *
+     I            DS
+     I                                        1  18 @DATA
+     I                                        1   6 UGFRM
+     I                                        7  12 UGTO
+     I                                       13  18 UGCUST
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      *
+     ILDA         DS                            256
+      * Local Data Area
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 188 DBASE
+      *
+     ISPOOL       DS
+      * P1 printer file information data structure
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I                                    B 188 1890OFLOW
+     I                                    B 367 3680CURLIN
+     I*
+     ISPOOLU      DS
+     I**   FILE INFORMATION DATA STRUCTURE
+     I                                       83  90 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ** Data structure for OPNQRYF
+      *
+     I@QRYSL      DS                            350
+     I                                        1  75 @OPN
+     I                                       81 195 @QRY
+     I                                       99 1030@FRM
+     I                                      125 1290@TO
+     I                                      130 136 @BRKT
+     I                                      152 154 @CODE
+     I                                      156 195 @EXTRA
+     I                                      174 179 @CUST
+     I                                      205 270 @KEY
+     I                                      275 350 @IGN
+      *
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+     I              'DL_INTSTMT'          C         W#PTYP
+      *
+      *================================================================
+     C           *LIKE     DEFN MBIN      FSROLI                                              CDL012
+      *
+      * Use access program AOBANKR0 to retrieve header details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error in access program, exit via *PSSR subroutine
+      *
+     C           @RTCD     IFNE *BLANKS                    B001
+     C                     MOVEL##PGM     AUDBP  10           1
+     C                     MOVE *BLANKS   AUDBK  10           1
+     C                     MOVEL'SDBANKPD'AUDBS  10        ***************
+     C                     MOVE ##SQNO    AUDSQ   8        * DBERROR 002 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF                           E001
+      *
+      ** Setup fields for report heading
+      *
+     C                     MOVE BJMRDT    P#DATE
+      *
+     C                     MOVE BJLCCY    @CYCD
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+      *
+     C                     Z-ADDA6NBDP    UGNBDP  10
+      *
+     C                     ELSE
+      *
+     C                     MOVEL##PGM     AUDBP               1
+     C                     MOVELBJLCCY    AUDBK               1
+     C                     MOVEL'SDCURRPD'AUDBS            ***************
+     C                     MOVE ##SQNO    AUDSQ            * DBERROR 002 *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADD350       CMDLEN
+     C                     Z-ADD80        CPYLEN 155
+      *
+     C                     MOVELCMD,15    PCONST
+      *
+     C                     MOVE 'L'       ZECODE
+      *
+     C           PARENT    IFEQ 'Y'
+     C                     EXSR #GPRNT
+     C                     ENDIF
+      *
+     C           PARENT    IFEQ 'N'
+     C                     EXSR #GCHLD
+     C                     ENDIF
+      *
+     C           PARENT    IFEQ 'A'
+     C                     EXSR #GALL
+     C                     ENDIF
+      *
+     C                     MOVELCMD,13    CLOCMD 50
+     C                     Z-ADD50        CMDLEN
+      *
+      ** Close the QRYF
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CLOCMD
+     C                     PARM           CMDLEN
+      *
+     C           END       TAG
+     C                     SETON                     LR
+      *================================================================
+      *
+      * #GPRNT - SR for printing statements for parent customer
+      *
+      *================================================================
+      *
+     C           #GPRNT    BEGSR
+      *
+     C                     MOVE BBCNA1    PCUSA1
+     C                     MOVE BBCNA2    PCUSA2
+     C                     MOVE BBCNA3    PCUSA3
+     C                     MOVE BBCNA4    PCUSA4
+      *
+     C                     MOVE BBCUST    @CUST
+      *
+      ** OPNQRYF
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           @QRYSL
+     C                     PARM           CMDLEN
+      *
+      ** CPYFRMQRYF
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CPYCMD
+     C                     PARM           CPYLEN
+      *
+      ** Check if statement is to be generated by CM
+     C                     MOVE 'N'       VIACM   1
+     C           BGN1ST    IFEQ 'Y'
+     C                     MOVEL@CUST     ##CUST
+     C                     MOVEL'DL'      DRMODI
+     C                     MOVELW#PTYP    DRPTYP
+     C                     MOVEL'PARENT'  DRPSTP
+     C                     MOVEL'N'       DRATRM
+     C                     CALL 'CG9010'
+     C                     PARM *BLANK    ##RTCD  7
+     C                     PARM '*REF'    ##MODE 10
+     C                     PARM 'NO '     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+      *
+      **  Blank return code implies generate correspondence.
+      **  CGD1270 => no error, but suppress output for this transaction.
+      *
+     C           ##RTCD    IFEQ *BLANK
+     C                     MOVE 'Y'       VIACM
+     C                     ELSE
+     C           ##RTCD    IFNE 'CGD1270'
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     AUDBP  10
+     C                     MOVE *BLANKS   AUDBK  10
+     C                     MOVEL'CG9010'  AUDBS  10
+     C                     MOVE '901'     AUDSQ   8
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Generate Statement via CM ?
+      *
+     C           VIACM     IFEQ 'Y'
+      *
+      **  Copy the content of DLTCSTPT to CGTCSTPD
+     C                     EXSR #GUDC
+      *
+      **  Set on U1 to inform DLC0767
+     C                     MOVE '1'       *INU1
+      *
+      **  Return to DLC0767
+     C                     GOTO PRNEND
+     C                     ENDIF
+      *
+      ** Output report heading
+     C                     WRITEDL0767CD
+      *
+     C                     OPEN DLTCSTPT
+      *
+     C           1         SETLLDLTCSTP0
+     C                     READ DLTCSTP0                 77
+      *
+      ** If no record found, indicate so.
+      *
+     C           *IN77     IFEQ *ON
+     C                     WRITEDL0767ET
+     C                     GOTO PRNEND
+     C                     ENDIF
+      *                                                                                      BUG3021
+     C                     WRITEDL0767NM                                                     BUG3021
+     C                     WRITEDL0767HR                                                     BUG3021
+      *
+     C           *IN77     DOWEQ*OFF
+      *
+     C**********           MOVE GBRCD     BRCDSV  3                                          BUG3021
+      **********                                                                             BUG3021
+     C**********           WRITEDL0767NM                                                     BUG3021
+     C**********           WRITEDL0767HR                                                     BUG3021
+      **********                                                                             BUG3021
+      ***Loop*for level break on branch                                                      BUG3021
+      **********                                                                             BUG3021
+     C********** *IN77     DOWEQ*OFF                                                         BUG3021
+     C********** BRCDSV    ANDEQGBRCD                                                        BUG3021
+      *
+     C                     MOVELGCUST     CUSTSV  6
+     C                     MOVELGCUST     @KEY1
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           @RTCD     OREQ '*NRF'                                    BEA015
+     C           BBDTDL    ANDNE0                                         BEA015
+     C                     MOVE BBCNA1    PCHLD1
+      *
+     C                     ELSE
+      *
+     C                     MOVEL##PGM     AUDBP               1
+     C                     MOVELGCUST     AUDBK               1
+     C                     MOVEL'SDCUSTPD'AUDBS            ***************
+     C                     MOVE ##SQNO    AUDSQ            * DBERROR 002 *
+     C                     EXSR *PSSR                      ***************
+      *
+     C                     ENDIF
+      *
+     C                     WRITEDL0767CH
+      *
+      ** Write the footer of the report at the end of each page.
+      *
+     C           OFLOW     SUB  CURLIN    REM     30
+      *
+     C           REM       IFLT 6
+      *
+     C                     WRITEDL0767CT
+     C                     WRITEDL0767HD
+     C                     WRITEDL0767HR
+      *
+     C                     ENDIF
+      *
+      ** Loop for level break on customer number
+      *
+     C                     Z-ADD0         UGTINT 150
+      *
+     C           *IN77     DOWEQ*OFF
+     C********** BRCDSV    ANDEQGBRCD                                                        BUG3021
+     C           CUSTSV    ANDEQGCUST
+      *
+     C                     Z-ADDGDLNO     DLNOSV  60
+     C                     Z-ADD0         INTPRV 150
+      *
+      ** If deal ccy <> base ccy, check the rollover ind. for interest
+      ** conversion
+      *
+     C           GDCCY     IFNE BJLCCY
+      *
+     C                     ENDIF
+      *
+     C                     MOVE GDCCY     @CYCD
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL##PGM     AUDBP               1
+     C                     MOVELGDCCY     AUDBK               1
+     C                     MOVEL'SDCURRPD'AUDBS            ***************
+     C                     MOVE ##SQNO    AUDSQ            * DBERROR 002 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Loop for level break on deal number.
+      *
+     C           *IN77     DOWEQ*OFF
+     C********** BRCDSV    ANDEQGBRCD                                                        BUG3021
+     C           CUSTSV    ANDEQGCUST
+     C           DLNOSV    ANDEQGDLNO
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGVDAT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    VDATP
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGNIDT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    IDATP
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGMDAT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    MDATP
+      *
+      ** Subtract int. from previous int. to get int. for that period
+      *
+     C           GDINT     SUB  INTPRV    UGDINT 150
+     C                     Z-ADDUGDINT    UGBINT 150
+      *
+     C                     Z-ADDGDINT     INTPRV
+      *
+      ** Convert int. to base ccy amount
+      *
+     C           GDCCY     IFNE BJLCCY
+      *
+      ** If record not found in dealdcx0 => dtyp = 'CD'
+      *
+      *
+     C                     Z-ADDGEXCR     UGEXCR 158
+      *
+      *
+     C           FSROLI    IFNE 'F'
+      *
+     C                     Z-ADDGEXCR     UGEXCR
+      *
+     C                     ELSE
+      *
+      ** For fsroli = 'F', use par rate on the day the report is reqstd
+      *
+     C                     Z-ADDA6PRRT    UGEXCR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDUGBINT    ZFLD15
+     C                     Z-ADDUGNBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PUGINT 16
+      *
+     C                     Z-ADDGPCPL     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPCPL
+      *
+     C                     Z-ADDUGDINT    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PDINT
+      *
+     C                     ADD  UGBINT    UGTINT
+      *
+     C                     WRITEDL0767DT
+     C                     READ DLTCSTP0                 77
+      *
+      ** Write the footer of the report at the end of each page.
+      *
+     C           OFLOW     SUB  CURLIN    REM     30
+      *
+     C           REM       IFLT 6
+      *
+     C                     WRITEDL0767CT
+     C                     WRITEDL0767HD
+     C                     WRITEDL0767HR
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADDUGTINT    ZFLD15
+     C                     Z-ADDUGNBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PTGINT 16
+      *
+     C**********           ENDDO                                                             BUG3021
+      **********                                                                             BUG3021
+      ***Write*the footer of the report at the end of each page.                             BUG3021
+      **********                                                                             BUG3021
+     C**N77*****           WRITEDL0767FT                                                     BUG3021
+     C**N77*****           WRITEDL0767HD                                                     BUG3021
+      *
+     C                     ENDDO
+      *
+     C           OFLOW     SUB  CURLIN    REM     30
+      *
+     C           REM       IFLT 6
+      *
+     C                     WRITEDL0767CT
+     C                     WRITEDL0767HD
+     C                     WRITEDL0767HR
+      *
+     C                     ENDIF
+      *
+     C                     WRITEDL0767EN
+      *
+     C           PRNEND    ENDSR
+      *
+      *================================================================
+      *
+      * #GCHLD - SR to print statements for a child customer requested.
+      *
+      *================================================================
+      *
+     C           #GCHLD    BEGSR
+      *
+     C                     MOVE BBCNA1    PCUSA1
+     C                     MOVE BBCNA2    PCUSA2
+     C                     MOVE BBCNA3    PCUSA3
+     C                     MOVE BBCNA4    PCUSA4
+      *
+     C                     MOVE BBCUST    @CUST
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           @QRYSL
+     C                     PARM           CMDLEN
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CPYCMD
+     C                     PARM           CPYLEN
+      *
+      ** Check if statement is to be generated by CM
+     C                     MOVE 'N'       VIACM   1
+     C           BGN1ST    IFEQ 'Y'
+     C                     MOVEL@CUST     ##CUST
+     C                     MOVEL'DL'      DRMODI
+     C                     MOVELW#PTYP    DRPTYP
+     C                     MOVEL'CHILD '  DRPSTP
+     C                     MOVEL'N'       DRATRM
+     C                     CALL 'CG9010'
+     C                     PARM *BLANK    ##RTCD  7
+     C                     PARM '*REF'    ##MODE 10
+     C                     PARM 'NO '     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+      *
+      **  Blank return code implies generate correspondence.
+      **  CGD1270 => no error, but suppress output for this transaction.
+      *
+     C           ##RTCD    IFEQ *BLANK
+     C                     MOVE 'Y'       VIACM
+     C                     ELSE
+     C           ##RTCD    IFNE 'CGD1270'
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     AUDBP  10
+     C                     MOVE *BLANKS   AUDBK  10
+     C                     MOVEL'CG9010'  AUDBS  10
+     C                     MOVE '901'     AUDSQ   8
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Generate Statement via CM ?
+      *
+     C           VIACM     IFEQ 'Y'
+      *
+      **  Copy the content of DLTCSTPT to CGTCSTPD
+     C                     EXSR #GUDC
+      *
+      **  Return to DLC0767
+     C                     GOTO CHDEND
+     C                     ENDIF
+      *
+      ** Write report heading
+     C                     WRITEDL0767CD
+      *
+      ** Generate Statement
+     C                     OPEN DLTCSTPT
+      *
+     C           1         SETLLDLTCSTP0
+     C                     READ DLTCSTP0                 77
+      *
+      ** If no record found, indicate so.
+      *
+     C           *IN77     IFEQ *ON
+     C                     WRITEDL0767ET
+     C                     GOTO CHDEND
+     C                     ENDIF
+      *
+     C           *IN77     DOWEQ*OFF
+      *
+     C                     MOVE GBRCD     BRCDSV  3
+      *
+     C                     WRITEDL0767NM
+     C                     WRITEDL0767HR
+      *
+     C                     Z-ADD0         UGTINT
+      *
+      ** Level break for branch code
+      *
+     C           *IN77     DOWEQ*OFF
+     C           BRCDSV    ANDEQGBRCD
+      *
+     C                     Z-ADDGDLNO     DLNOSV
+     C                     Z-ADD0         INTPRV
+      *
+     C           GDCCY     IFNE BJLCCY
+      *
+     C                     ENDIF
+      *
+     C                     MOVE GDCCY     @CYCD
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL##PGM     AUDBP               1
+     C                     MOVELGDCCY     AUDBK               1
+     C                     MOVEL'SDCURRPD'AUDBS            ***************
+     C                     MOVE ##SQNO    AUDSQ            * DBERROR 002 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Level break for deal number
+      *
+     C           *IN77     DOWEQ*OFF
+     C           BRCDSV    ANDEQGBRCD
+     C           DLNOSV    ANDEQGDLNO
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGVDAT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    VDATP
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGNIDT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    IDATP
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGMDAT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    MDATP
+      *
+      ** Get the right int. amount for that period
+      *
+     C           GDINT     SUB  INTPRV    UGDINT
+     C                     Z-ADDUGDINT    UGBINT
+      *
+     C                     Z-ADDGDINT     INTPRV
+      *
+      ** Convert int. maount to base ccy
+      *
+     C           GDCCY     IFNE BJLCCY
+      *
+      *
+     C                     Z-ADDGEXCR     UGEXCR 158
+      *
+      *
+     C           FSROLI    IFNE 'F'
+      *
+     C                     Z-ADDGEXCR     UGEXCR
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDA6PRRT    UGEXCR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDUGBINT    ZFLD15
+     C                     Z-ADDUGNBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PUGINT
+      *
+     C                     Z-ADDGPCPL     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPCPL
+      *
+     C                     Z-ADDUGDINT    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PDINT
+      *
+     C                     ADD  UGBINT    UGTINT
+      *
+     C                     WRITEDL0767DT
+     C                     READ DLTCSTP0                 77
+      *
+      ** Write the footer of the report at the end of each page.
+      *
+     C           OFLOW     SUB  CURLIN    REM     30
+      *
+     C           REM       IFLT 6
+      *
+     C                     WRITEDL0767CT
+     C                     WRITEDL0767HD
+     C                     WRITEDL0767HR
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADDUGTINT    ZFLD15
+     C                     Z-ADDUGNBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PTGINT
+      *
+      ** Write the footer of the report at the end of each page.
+      *
+     C  N77                WRITEDL0767FT
+     C  N77                WRITEDL0767HD
+      *
+     C                     ENDDO
+      *
+     C           OFLOW     SUB  CURLIN    REM     30
+      *
+     C           REM       IFLT 6
+      *
+     C                     WRITEDL0767CT
+     C                     WRITEDL0767HD
+     C                     WRITEDL0767HR
+      *
+     C                     ENDIF
+      *
+     C                     WRITEDL0767EN
+      *
+     C           CHDEND    ENDSR
+      *
+      *================================================================
+      *
+      * #GALL - SR to print statements for all customers
+      *
+      *================================================================
+      *
+     C           #GALL     BEGSR
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           @QRYSL
+     C                     PARM           CMDLEN 155
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CPYCMD
+     C                     PARM           CPYLEN
+      *
+      ** Output to UDC driver file
+     C                     EXSR #GUDC
+      *
+     C                     OPEN DLTCSTPT
+      *
+     C           1         SETLLDLTCSTP0
+     C                     READ DLTCSTP0                 77
+      *
+      ** If no record found, indicate so.
+      *
+     C           *IN77     IFEQ *ON
+     C                     WRITEDL0767ET
+     C                     GOTO ALLEND
+     C                     ENDIF
+      *
+     C           *IN77     DOWEQ*OFF
+      *
+     C                     MOVE GBRCD     BRCDSV  3
+      *
+      ** Level break on branch code
+      *
+     C           *IN77     DOWEQ*OFF
+     C           BRCDSV    ANDEQGBRCD
+      *
+     C                     MOVELGCUST     CUSTSV
+     C                     MOVELGCUST     @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           @RTCD     OREQ '*NRF'                                    BEA015
+     C           BBDTDL    ANDNE0                                         BEA015
+      *
+     C                     MOVE BBCNA1    PCUSA1
+     C                     MOVE BBCNA2    PCUSA2
+     C                     MOVE BBCNA3    PCUSA3
+     C                     MOVE BBCNA4    PCUSA4
+      *
+     C                     WRITEDL0767CD
+      *
+     C                     WRITEDL0767NM
+     C                     WRITEDL0767HR
+      *
+     C                     ELSE
+      *
+     C                     MOVEL##PGM     AUDBP               1
+     C                     MOVELGCUST     AUDBK               1
+     C                     MOVEL'SDCUSTPD'AUDBS            ***************
+     C                     MOVE ##SQNO    AUDSQ            * DBERROR 002 *
+     C                     EXSR *PSSR                      ***************
+      *
+     C                     ENDIF
+      *
+      ** Level break on customer number
+      *
+     C                     Z-ADD0         UGTINT
+      *
+     C           *IN77     DOWEQ*OFF
+     C           BRCDSV    ANDEQGBRCD
+     C           GCUST     ANDEQCUSTSV
+      *
+     C                     Z-ADDGDLNO     DLNOSV
+     C                     Z-ADD0         INTPRV
+      *
+     C           GDCCY     IFNE BJLCCY
+      *
+     C                     ENDIF
+      *
+     C                     MOVE GDCCY     @CYCD
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @CYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL##PGM     AUDBP               1
+     C                     MOVELGDCCY     AUDBK               1
+     C                     MOVEL'SDCURRPD'AUDBS            ***************
+     C                     MOVE ##SQNO    AUDSQ            * DBERROR 002 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ** Level break on deal number
+      *
+     C           *IN77     DOWEQ*OFF
+     C           BRCDSV    ANDEQGBRCD
+     C           GCUST     ANDEQCUSTSV
+     C           GDLNO     ANDEQDLNOSV
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGVDAT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    VDATP
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGNIDT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    IDATP
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADDGMDAT     WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    MDATP
+      *
+      ** Get the right int. amount for that period
+      *
+     C           GDINT     SUB  INTPRV    UGDINT
+     C                     Z-ADDUGDINT    UGBINT
+      *
+     C                     Z-ADDGDINT     INTPRV
+      *
+      ** Convert int. amount to base ccy.
+      *
+     C           GDCCY     IFNE BJLCCY
+      *
+      *
+     C                     Z-ADDGEXCR     UGEXCR 158
+      *
+      *
+     C           FSROLI    IFNE 'F'
+      *
+     C                     Z-ADDGEXCR     UGEXCR
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDA6PRRT    UGEXCR
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     Z-ADDUGBINT    ZFLD15
+     C                     Z-ADDUGNBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PUGINT
+      *
+     C                     Z-ADDGPCPL     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPCPL
+      *
+     C                     Z-ADDUGDINT    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PDINT
+      *
+     C                     ADD  UGBINT    UGTINT
+      *
+     C                     WRITEDL0767DT
+     C                     READ DLTCSTP0                 77
+      *
+      ** Write the footer of the report at the end of each page.
+      *
+     C           OFLOW     SUB  CURLIN    REM     30
+      *
+     C           REM       IFLT 6
+      *
+     C                     WRITEDL0767CT
+     C                     WRITEDL0767HD
+     C                     WRITEDL0767HR
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDDO
+      *
+     C                     Z-ADDUGTINT    ZFLD15
+     C                     Z-ADDUGNBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PTGINT
+      *
+     C  N77                WRITEDL0767FT
+      *
+     C                     ENDDO
+      *
+      ** Write the footer of the report at the end of each page.
+      *
+     C  N77                WRITEDL0767FT
+      *
+     C                     ENDDO
+      *
+     C           OFLOW     SUB  CURLIN    REM     30
+      *
+     C           REM       IFLT 6
+      *
+     C                     WRITEDL0767CT
+     C                     WRITEDL0767HD
+     C                     WRITEDL0767HR
+      *
+     C                     ENDIF
+      *
+     C                     WRITEDL0767EN
+      *
+     C           ALLEND    ENDSR
+      *****************************************************************
+     C           #GUDC     BEGSR
+      *
+     C                     OPEN DLTCSTPT
+     C           1         SETLLDLTCSTPT
+     C                     READ DLTCSTPT                 77
+     C           *IN77     DOWEQ*OFF
+      *
+     C                     MOVE 'N'       VIACM                                              BUG1988
+      *                                                                                      BUG1988
+     C********** BGN1ST    IFEQ *ON                                                  BUG1988 BUG2596
+     C           BGN1ST    IFEQ 'Y'                                                          BUG2596
+     C                     MOVE 'Y'       VIACM
+      *
+      ** All Customers
+     C           PARENT    IFEQ 'A'
+     C                     MOVELGCUST     ##CUST
+     C                     MOVEL'DL'      DRMODI
+     C                     MOVELW#PTYP    DRPTYP
+     C                     MOVEL'CHILD '  DRPSTP
+     C                     MOVEL'N'       DRATRM
+     C                     CALL 'CG9010'
+     C                     PARM *BLANK    ##RTCD  7
+     C                     PARM '*REF'    ##MODE 10
+     C                     PARM 'NO '     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+      *
+      **  Blank return code implies generate correspondence.
+      **  CGD1270 => no error, but suppress output for this transaction.
+      *
+     C           ##RTCD    IFEQ *BLANK
+     C                     ELSE
+     C                     MOVE 'N'       VIACM
+     C           ##RTCD    IFNE 'CGD1270'
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     AUDBP  10
+     C                     MOVE *BLANKS   AUDBK  10
+     C                     MOVEL'CG9010'  AUDBS  10
+     C                     MOVE '902'     AUDSQ   8
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF                                                             BUG1988
+      *                                                                                      BUG1988
+      ** Write to CGTCSTPD and delete from DLTCSTPT if
+      ** interest statement is to be generated via CM
+     C           VIACM     IFEQ 'Y'
+      *
+      ** Open CGTCSTPD
+     C           CGOPEN    IFNE 'Y'
+     C                     OPEN CGTCSTPD
+     C                     MOVE 'Y'       CGOPEN  1
+     C                     ENDIF
+      *
+     C                     WRITECGTCSTD0
+     C**********           DELETDLTCSTP0                                                     238204
+     C                     ENDIF
+      *
+     C                     READ DLTCSTPT                 77
+     C                     ENDDO
+      *
+     C                     CLOSEDLTCSTPT
+      *
+      ** Re-organize DLTCSTPT
+     C                     MOVELCMD,16    RGZCMD 21
+     C                     Z-ADD21        CMDLEN
+     C*                    CALL 'QCMDEXC'
+     C*                    PARM           RGZCMD
+     C*                    PARM           CMDLEN
+      *
+     C                     ENDSR
+      *
+      *================================================================
+      *
+      ** Initial subroutine for plists etc.
+      *
+      *================================================================
+      *
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           SEQNO
+     C                     PARM           LEVEL   1
+     C                     PARM           ENTY    3
+     C                     PARM           RDATA  18
+      *
+     C                     MOVE RDATA     @DATA
+      *
+     C                     MOVE LEVEL     UGLEVL  1
+     C                     MOVE ENTY      UGENTY  3
+      *
+     C           PLIST1    PLIST
+     C                     PARM           WQ0001  50
+     C                     PARM           WQ0002  1
+     C                     PARM           WQ0003  60
+     C                     PARM           WQ0004  7
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Access MIDAS Modules details via access program
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANK    @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL##PGM     AUDBP
+     C                     MOVE *BLANKS   AUDBK
+     C                     MOVEL'AOMMODR0'AUDBS
+     C                     MOVE '903'     AUDSQ
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Ensure totals spool file recorded by RCF
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+      ** Call ZSFILE for DL0767P1
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQNO   5
+     C                     PARM           ENTY    3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** If error in ZSFILE, exit via *PSSR subroutine
+      *
+     C           ZSERR     IFEQ 'Y'                        B001
+     C                     MOVEL##PGM     AUDBP               1
+     C                     MOVE *BLANKS   AUDBK               1
+     C                     MOVEL'ZSFILE'  AUDBS            ***************
+     C                     MOVE ##SQNO    AUDSQ            * DBERROR 001 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF                           E001
+      *
+     C           UGLEVL    IFEQ 'B'
+     C           UGENTY    ANDEQ'ALL'
+     C                     MOVE 'S'       UGLEVL
+     C                     MOVE *BLANKS   UGENTY
+     C                     ENDIF
+      *
+     C           UGCUST    IFNE *BLANKS
+      *
+     C                     MOVELUGCUST    @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C           @RTCD     OREQ '*NRF'
+     C           BBDTDL    ANDNE0
+      *
+      ** Check whether customer requested is parent or child
+      *
+     C           BBPAIN    IFEQ 'P'
+     C           BBPCNB    ANDEQ*BLANKS
+      *
+     C                     MOVE 'Y'       PARENT  1
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'N'       PARENT
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVEL##PGM     AUDBP               1
+     C                     MOVELGCUST     AUDBK               1
+     C                     MOVEL'SDCUSTPD'AUDBS            ***************
+     C                     MOVE ##SQNO    AUDSQ            * DBERROR 002 *
+     C                     EXSR *PSSR                      ***************
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE 'A'       PARENT
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   @QRYSL
+      *
+      ** Select group for getting the right QRYF
+      *
+     C                     SELEC
+      *
+      ** System level, select all customers within the requested interest period
+     C           UGLEVL    WHEQ 'S'
+     C           UGCUST    ANDEQ*BLANKS
+     C                     MOVELCMD,2     @QRY
+     C                     MOVELCMD,6     @KEY
+      *
+      ** System level, with a requested customer
+     C           UGLEVL    WHEQ 'S'
+     C           UGCUST    ANDNE*BLANKS
+      *
+     C                     MOVELCMD,2     @QRY
+     C                     MOVE '  '      @BRKT
+      *
+      ** If requested customer is a parent, select deals for all his child customers
+     C           PARENT    IFEQ 'Y'
+     C                     MOVELCMD,11    @EXTRA
+      *
+      ** Else, if requested customer is a child, select only his own deals
+     C                     ELSE
+     C                     MOVELCMD,5     @EXTRA
+     C                     ENDIF
+      *
+      ** Sort by branch
+     C                     MOVELCMD,6     @KEY
+      *
+      ** Company level, select all customers within the requested interest period
+     C           UGLEVL    WHEQ 'C'
+     C           UGCUST    ANDEQ*BLANKS
+      *
+      ** Select only a specific company
+     C           UGENTY    IFNE 'ALL'
+     C                     MOVELCMD,3     @QRY
+     C                     MOVE UGENTY    @CODE
+      *
+      ** Select all companies
+     C                     ELSE
+     C                     MOVELCMD,2     @QRY
+      *
+     C                     ENDIF
+      *
+      ** Sort by company, then by branch
+     C                     MOVELCMD,7     @KEY
+      *
+      ** Company level, with a requested customer
+     C           UGLEVL    WHEQ 'C'
+     C           UGCUST    ANDNE*BLANKS
+      *
+      ** Select only a specific company
+     C           UGENTY    IFNE 'ALL'
+      *
+     C                     MOVELCMD,3     @QRY
+     C                     MOVE UGENTY    @CODE
+      *
+     C                     ELSE
+      *
+      ** Select all companies
+     C                     MOVELCMD,2     @QRY
+     C                     MOVE '  '      @BRKT
+      *
+     C                     ENDIF
+      *
+      ** If requested customer is a parent, select deals for all his child customers
+     C           PARENT    IFEQ 'Y'
+     C                     MOVELCMD,11    @EXTRA
+      *
+      ** Else, if requested customer is a child, select only his own deals
+     C                     ELSE
+     C                     MOVELCMD,5     @EXTRA
+     C                     ENDIF
+      *
+     C                     MOVELCMD,7     @KEY
+      *
+      ** Branch level, select all customers within the requested interest period
+     C           UGLEVL    WHEQ 'B'
+     C           UGCUST    ANDEQ*BLANKS
+     C                     MOVELCMD,4     @QRY
+     C                     MOVELCMD,8     @KEY
+     C                     MOVE UGENTY    @CODE
+      *
+      ** Branch level, with a requested customer
+     C           UGLEVL    WHEQ 'B'
+     C           UGCUST    ANDNE*BLANKS
+     C                     MOVELCMD,4     @QRY
+      *
+      ** If requested customer is a parent, select deals for all his child customers
+     C           PARENT    IFEQ 'Y'
+     C                     MOVELCMD,11    @EXTRA
+      *
+      ** Else, if requested customer is a child, select only his own deals
+     C                     ELSE
+      *
+     C                     MOVELCMD,5     @EXTRA
+     C                     ENDIF
+      *
+     C                     MOVELCMD,8     @KEY
+     C                     MOVE UGENTY    @CODE
+      *
+     C                     ENDSL
+      *
+     C           PARENT    IFNE 'Y'
+     C                     MOVELCMD,1     @OPN
+     C                     MOVELCMD,9     @IGN
+      *
+      **  If requested customer is a parent, perform joined query
+     C                     ELSE
+      *
+     C                     MOVELCMD,10    @OPN
+     C                     MOVELCMD,12    @IGN
+      *
+     C                     ENDIF
+      *
+      **  Convert 'From date' to midas day number
+     C                     MOVE UGFRM     @DAT
+     C                     CALL 'ZA0270'
+     C                     PARM           @DAT    60
+     C                     PARM           DFF
+     C                     PARM           @RTCDE  1
+     C                     PARM           @MDYNO  50
+     C                     Z-ADD@MDYNO    @FRM
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADD@MDYNO    WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    P#DAT1
+      *
+      **  Convert 'To date' to midas day number
+     C                     MOVE UGTO      @DAT
+     C                     CALL 'ZA0270'
+     C                     PARM           @DAT    60
+     C                     PARM           DFF
+     C                     PARM           @RTCDE  1
+     C                     PARM           @MDYNO  50
+     C                     Z-ADD@MDYNO    @TO
+      *
+     C                     MOVE DFF       WQ0002
+     C                     Z-ADD@MDYNO    WQ0001
+     C                     CALL 'ZDATE2'  PLIST1
+     C                     MOVE WQ0004    P#DAT2
+      *
+      **  CPYFRMQRYF command
+     C                     MOVE CMD,14    CPYCMD 80
+     C                     ENDSR
+      *
+      *================================================================
+      * ERROR PROCESSING
+      *================================================================
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     OPEN DL0767AU
+      *
+      ** Ensure totals spool file recorded by RCF
+     C                     Z-ADDSFNUMU    ZSNUM   60
+      *
+      ** Call ZSFILE for DL0767AU
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQNO   5
+     C                     PARM *BLANKS   ENTY    3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+     C                     DUMP
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELAUDBK     DBKEY
+     C                     MOVELAUDBS     DBFILE
+     C                     MOVE AUDSQ     DBASE
+     C                     OUT  LDA
+      *
+      * Use access program AOBANKR0 to retrieve header details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C                     WRITEG#HDR
+     C                     WRITEG#ERR
+     C                     CLOSEDL0767AU
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *================================================================
+     C/COPY ZSRSRC,ZSEDITZ3
+      *================================================================
+** CMD **
+OPNQRYF FILE((DLTCSTPD)) OPTION(*INP)
+QRYSLT('GNIDT *GE            *AND GNIDT *LE           ')
+QRYSLT('GNIDT *GE            *AND GNIDT *LE            *AND GCMCD *EQ "   "')
+QRYSLT('GNIDT *GE            *AND GNIDT *LE            *AND GBRCD *EQ "   "')
+ *AND GCUST *EQ  "      "')
+KEYFLD((GBRCD) (GCUST) (GDCCY) (GDLNO) (GNIDT))
+KEYFLD((GCMCD) (GBRCD) (GCUST) (GDCCY) (GDLNO) (GNIDT))
+KEYFLD((GCUST) (GDCCY) (GDLNO) (GNIDT))
+IGNDECERR(*YES) OPNID(TEMP)
+OPNQRYF FILE((DLTCSTPD) (SDCUSTPD)) OPTION(*INP) FORMAT(DLTCSTPD)
+ *AND BBPCNB *EQ "      "')
+JFLD((GCUST BBCUST *EQ)) IGNDECERR(*YES) OPNID(TEMP)
+CLOF OPNID(TEMP)
+CPYFRMQRYF FROMOPNID(TEMP) TOFILE(DLTCSTPT) MBROPT(*REPLACE)
+cont'd....
+RGZPFM FILE(DLTCSTPT)

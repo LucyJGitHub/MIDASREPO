@@ -1,0 +1,2676 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Pool position settlements maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE5230 - POOL POSITION SETTLEMENT MAINTENANCE                *
+      *                                                               *
+      *  Calls: AOBANKR0 - Access object for Bank I.C.D. details      *
+      *         AOCURRR0 - Access object for Currency details         *
+      *         AOPORTR0 - Access object for Portfolio Management I.C.D.
+      *         AOUSERR0 - Access object for SD User Detail           *
+      *         AOACOFR0 - Access object for Account Officers         *
+      *         AOBRCHR0 - Access object for Branches details         *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CSC023             Date 28Jan04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CPK014             Date 14Nov01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CGL008             Date 03Mar99               *
+      *                 CAC003             Date 25Feb97               *
+      *                 087588             Date 15May95               *
+      *                 S01486     VP      DATE 31OCT94               *
+      *                 058935             DATE 27JUL93               *
+      *                 058886             DATE 20JUL93               *
+      *                 S01313             DATE 19MAY92               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CSC023 - SBMJOB output queue must be *JOBD.                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CPK014 - Submit jobs with user *JOBD                         *
+      *  CGL008 - Security on Journal Entry. Recompile.               *
+      *  CAC003 - Profit Centre Accounting Development Phase 3.       *
+      *  087588  -  ACOF field is redefined as ACFA on MUSERDD        *
+      *  S01486  -  Private Banking Upgrade to Release 10.            *
+      *  058935  -  CORRECTION TO VALIDATION OF POSITION SETTLEMENT   *
+      *             DETAILS ENTERED ON INITIAL SCREEN                 *
+      *  058886  -  PM5130 RENAMED TO SE5230                          *
+      *  S01313  -  RECOMPILED FOR PORTFOLIO PERFORMANCE              *
+      *  WRITTEN FOR SAR 91/08 - POOL SECURITIES TRANSACTIONS         *
+      *                                                               *
+      *****************************************************************
+     F*
+     F*PM5130DDCF**E                    WORKSTN                           58886
+     F*SE5230DDCF**E********************WORKSTN****                 58886 S01486
+     FSE5230DFCF  E                    WORKSTN                            S01486
+     F*********************************************                       S01486
+     F***RECORD*ID*OF*FILE*SDBANKL1*=*'BJ'*********                       S01486
+     F*SDBANKL1IF**E***********K********DISK*******                       S01486
+     F********************************************* KINFSR *PSSR          S01486
+     F*********************************************                       S01486
+     F***RECORD*ID*OF*FILE*SDCURRL1*=*'A6'*********                       S01486
+     F*SDCURRL1IF**E***********K********DISK*******                       S01486
+     F********************************************* KINFSR *PSSR          S01486
+     F*********************************************                       S01486
+     F*POSETDL1IF**E***********K********DISK*******                       S01486
+     FPMPOSDL4IF  E           K        DISK         KINFSR *PSSR          S01486
+     FPOSET   IF  E           K        DISK                               S01486
+     F            POSETDF                           KRENAMEPOSETDFA       S01486
+     F                                              KINFSR *PSSR
+     F*
+     FSECGT   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F** RECORD ID OF FILE PMPPTDPD = 'OR'
+     FPMPPTDPDIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*                                                                   58935
+     F** RECORD ID OF FILE PMPPTMPD = 'OS'                                58935
+     FPMPPTML0IF  E           K        DISK                               58935
+     F                                              KINFSR *PSSR          58935
+     F*
+     FBLKRFD  UF  E                    DISK
+     F                                              KINFSR *PSSR
+     F*
+     F** RECORD ID OF FILE PMPSETPD = 'OT'
+     FPMPSETPDO   E                    DISK
+     F                                              KCOMIT
+     F*
+      /EJECT
+     F********************************************************************
+     F*
+     F*   INDICATOR      FUNCTION OF INDICATOR
+     F*
+     F******* 32         S/SE5230DD  ERROR-DDPCNU                         S01486
+     F******* 33         S/SE5230DD  ERROR-DDPTFR                         S01486
+     F******* 34         S/SE5230DD  ERROR-DDPSSH                         S01486
+     F******* 35         S/SE5230DD  ERROR-DDPDUD                         S01486
+     F******* 36         S/SE5230DD  ERROR-DDPEVT                         S01486
+     F******* 39         S/SE5230DD  ERROR-DDACTN                         S01486
+     F******* 40         S/SE5230DD  ERROR-DDPSCU                         S01486
+     F******* 41         S/SE5230DD  ERROR-DDPSXR                         S01486
+     F******* 42         S/SE5230DD  ERROR-DDPMDI                         S01486
+     F******* 43         S/SE5230DD  ERROR-DDPCHC                         S01486
+     F******* 44         S/SE5230DD  ERROR-DDPCCD                         S01486
+     F*       30         Analytical Accounting and CAC003 is installed    CAC003
+     F*       31         Error indicator of Margin Points                 CAC003
+     F*       32         S/SE5230DF  ERROR-DDPCNU                         S01486
+     F*       33         S/SE5230DF  ERROR-DDPTFR                         S01486
+     F*       34         S/SE5230DF  ERROR-DDPSSH                         S01486
+     F*       35         S/SE5230DF  ERROR-DDPDUD                         S01486
+     F*       36         S/SE5230DF  ERROR-DDPEVT                         S01486
+     F*       39         S/SE5230DF  ERROR-DDACTN                         S01486
+     F*       40         S/SE5230DF  ERROR-DDPSCU                         S01486
+     F*       41         S/SE5230DF  ERROR-DDPSXR                         S01486
+     F*       42         S/SE5230DF  ERROR-DDPMDI                         S01486
+     F*       43         S/SE5230DF  ERROR-DDPCHC                         S01486
+     F*       44         S/SE5230DF  ERROR-DDPCCD                         S01486
+     F*       45         VLDCMDKY INDICATOR FOR DISPLAY FILE
+     F******* 46         S/SE5230DD  ERROR-DDVDAT                         S01486
+     F******* 46         S/SE5230DF  ERROR-DDVDAT                         S01486
+     F*
+     F*       50         SECOND SCREEN TO BE DISPLAYED
+     F*
+     F*       80         FIRST SCREEN VALIDATION ERROR
+     F*       81         SECOND SCREEN VALIDATION ERROR
+     F*       82         SECOND SCREEN VALIDATION WRANING
+     F*       83         INCORECT USER DEPARTMENT                         S01486
+     F*
+     F******* 84         S/SE5230DD  DISPLAY ERMSG IN REVERSE IMAGE       S01486
+     F*       84         S/SE5230DF  DISPLAY ERMSG IN REVERSE IMAGE       S01486
+     F*       85         MULTIBRANCHING INDICATOR                         S01486
+     F*       87         READ-CHAIN INDICATOR
+     F*
+     F*       98         DATF = MMDDYY
+     F*       99         ZDATE1 INDICATOR FOR DATE NOT VALID
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     F*       'WWAID' VALUES USED
+     F*
+     F*       03         CA3
+     F*       12         CA12
+     F*       RA         ENTER PRESSED
+     F*       HP         HELP PRESSED
+     F*
+     F********************************************************************
+      /EJECT
+     E********************************************************************
+     E*
+     E**********          @TX     1   2 80               TEXT STRINGS                         CSC023
+     E                    @TX     1   3 80               TEXT STRINGS                         CSC023
+     E                    ZS1        15  1 0             ZSEDITZ1 / ZSRSRC
+     E                    ZS2        21  1               ZSEDITZ1 / ZSRSRC
+     E                    POWER   1   7  7 3             POWER ARRAY
+     E                    AP      1  10 10 0             POWER 10 ARRAY   CAC003
+     E                    ZYDY    4   4  4 0             ZDATE1 YEAR
+     E                    ZMDY   13  13  3 0             ZDATE1 MONTH
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    ERR        19  4               ERROR MESSAGES
+      * input array for za0840
+     E                    @F         16  1
+      * output array for za0840
+     E                    @G         16  1
+      * array of powers of ten
+     E                    @H      1  15 15 0
+     E                    CPY@    1   1 80
+     E*
+      /EJECT
+     I********************************************************************
+     I*
+     I** ZSEDIT DATA STRUCTURE
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I*
+     I** Data structure to strip last character from ZSEDIT output
+     I            DS
+     I                                        1  21 ZOUT21
+     I                                        1  20 ZOUT20
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     I*LDA********UDS**********************      256                      S01486
+     I************************************* 132 183 DBLOT                 S01486
+     I************************************* 132 141 DBFILE                S01486
+     I************************************* 142 170 DBKEY                 S01486
+     I************************************* 171 180 DBPGM                 S01486
+     I************************************* 181 1830DBASE                 S01486
+     ILDA       E DSLDA                                                   S01486
+      *                                                                   S01486
+      *** DATA STRUCTURE FOR RUN DATE DETAILS                             S01486
+     IRUNDT       DS                                                      S01486
+     I                                        1   7 RUNA                  S01486
+     I                                    P   8  100RUND                  S01486
+     I                                       11  11 SSF                   S01486
+     I                                       12  12 DATF                  S01486
+     I                                       13  13 AGMBIN                S01486
+      *                                                                   S01486
+      *** DATA AREA OF MENU USER                                          S01486
+     IZMUSER      DS                             17                       S01486
+     I                                        1  10 WWNAME                S01486
+     I                                       11  13 USRBCH                S01486
+      *                                                                   S01486
+      *** Bank Details                                                    S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+      *                                                                   S01486
+      *** Currency Details                                                S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+      *                                                                   S01486
+      *** Branch Details                                                  S01486
+     ISDBRCH    E DSSDBRCHPD                                              S01486
+      *                                                                   S01486
+      *** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE              S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+      *                                                                   S01486
+      *** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE              S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+      *                                                                   S01486
+      *** DATA STRUCTURE FOR USER DETAILS                                 S01486
+     ID@USER    E DSMUSERDD                                               S01486
+      *                                                                   S01486
+      *** Portfolio Definition Via Access Program                         S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+      *                                                                   S01486
+      *** DATA STRUCTURE FOR ACCOUNT OFFICER                              S01486
+     ISDACOF    E DSSDACOFPD                                              S01486
+      *                                                                   S01486
+      *** EXTERNAL DS FOR CUSTOMER DETAILS                                S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I*                                                                   CAC003
+     I** External DS for Modules File                                     CAC003
+     ISDMMOD    E DSSDMMODPD                                              CAC003
+     I*                                                                   CAC003
+     I** External DS for Profit Center Accounting ICD                     CAC003
+     ISDPCAC    E DSSDPCACPD                                              CAC003
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPSDS       SDS
+     I************************************* 244 253 WSID                  S01486
+     I************************************* 254 263 USID                  S01486
+     I                                      244 253 SWSID                 S01486
+     I                                      254 263 SUSER                 S01486
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DATA STRUCTURE FOR ERROR MESSAGES TO SCREEN
+     I*
+     I                                        1  76 ERR
+     I                                        1  76 ERMSG
+     I*
+     I*  DATA STRUCTURE FOR COMMAND STRING FOR QCMDEXC
+     I*@CMD*****  DS                            160                                           CSC023
+     I@CMD        DS                            240                                           CSC023
+     I                                       12  20 @CJOB
+     I                                       14  19 @CBREF
+     I                                       20  20 @CACTN
+     I                                       84  93 @CMWI
+     I                                       99 104 @CMBR
+     I                                      161 240 XPARM                                     CSC023
+     I*
+     I********************************************************************
+      /EJECT
+     C*===================================================================
+      *                                                                   S01486
+      *** Copyright Statement                                             S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*
+     C** CALCULATION SPECIFICATIONS:KEY LISTS
+     C*
+     C***DEFINE*KEY*LIST*FOR*CHAINING*TO*POSETDL1                         S01486
+     C** DEFINE KEY LIST FOR CHAINING TO PMPOSDL4                         S01486
+     C*
+     C           POSKEY    KLIST
+     C                     KFLD           DDPSSH
+     C****                 KFLD           XXPCNU                          58935
+     C**********           KFLD           WNCNUM  60                                    58935 CSD027
+     C                     KFLD           WNCNUM  6                                           CSD027
+     C                     KFLD           XXPDUD
+     C                     KFLD           DDPEVT
+     C****                 KFLD           DDPTFR                          58935
+     C                     KFLD           WAPTFR  4                       58935
+      *                                                                   S01486
+      **  Define Key List for chaining to POSET file with Portfolio       S01486
+      **   Management Installed                                           S01486
+      *                                                                   S01486
+     C           PTFRK     KLIST                                          S01486
+     C                     KFLD           D#PBCA                          S01486
+     C                     KFLD           DDPSSH                          S01486
+     C                     KFLD           WNCNUM                          S01486
+     C                     KFLD           XXPDUD                          S01486
+     C                     KFLD           DDPEVT                          S01486
+     C                     KFLD           WAPTFR                          S01486
+     C***********          KFLD           TNLU                            S01486
+     C*
+     C** DEFINE KEY LIST FOR CHAINING TO POSETDL1
+     C*
+     C           PTDKEY    KLIST
+     C                     KFLD           XXPCNU
+     C                     KFLD           DDPTFR
+     C*
+     C** DEFINE KEY LIST FOR CHAINING TO SECGT
+     C*
+     C           SECKEY    KLIST
+     C                     KFLD           DDPNCY
+     C                     KFLD           DDPCHC
+     C*
+     C** DEFINE KEY LIST FOR CHAINING TO SECGT
+     C*
+     C           SEDKEY    KLIST
+     C                     KFLD           DDPNCY
+     C                     KFLD           DDPCCD
+     C*                                                                   58935
+     C** DEFINE KEY LIST FOR CHAINING TO PMPPTML0                         58935
+     C           PTMKEY    KLIST                                          58935
+     C**********           KFLD           WNPCNU  60                                    58935 CSD027
+     C                     KFLD           WNPCNU  6                                           CSD027
+     C                     KFLD           WAPPTF  4                       58935
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+     C*  P R O G R A M     S T A R T
+     C*===================================================================
+      **
+      **  I N D E X   O F   S U B R O U T I N E S
+      **
+      **  P1001      S/R TO MAINTAIN PF/PMPSETPD
+      **  P1002      S/R TO PROCESS UPDATE SCREEN
+      **  P1003      S/R TO SET UP SECOND SCREEN FIELDS
+      **  U1001      S/R TO DISPLAY FIRST SCREEN
+      **  U1002      S/R TO DISPLAY SECOND SCREEN
+      **  V1001      S/R TO VALIDATE PF/PMPSETPD KEY INPUT
+      **  V1002      S/R TO VALIDATE PF/PMPSETPD DETAILS
+      **  W1001      S/R TO WRITE TO PF/PMPSETPD
+      **  CUREX      S/R TO CALCULATE THE CURRENT EXCHANGE RATE
+      **  #ZBAA      S/R TO SET UP WWAID FIELD
+      **  AMDSR      S/R TO VALIDATE FIELDS IN AMEND MODE
+      **  DELSR      S/R TO VALIDATE FIELDS IN DELETE MODE
+      **  CLEAR      S/R TO CLEAR WORK FIELDS
+      **  ZCCYCN     S/R TO CONVERT AN AMOUNT FROM ONE CURRENCY TO AN OTHER
+      **  ZCCYXR     S/R TO CONVERT AN AMOUNT FROM ONE CURRENCY TO AN OTHER
+      **  ZSEDIT     S/R TO EDIT AND FORMAT FILE AMOUNT
+      **  ZA0840     S/R TO EDIT AND FORMAT INPUT FIELD AMOUNT
+      **  ZDATE1     S/R TO CONVERT DATE TO DAY NUMBER
+      **  ZDATE2     S/R TO CONVERT DAY NUMBER TO DATE
+      **  *PSSR      S/R TO HANDLE FILE EXEPTION/ERROR
+      **
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** P1001: MAIN PROCESSING
+      ** CALLED BY:
+      ** CALLS: *PSSR
+      **
+     C*===================================================================
+     C*
+     C** INITIALIZE INDICATORS
+     C*
+     C                     MOVE '0'       *IN
+     C*
+     C** INITIALIZE WWAID FIELD
+     C*
+     C                     MOVE *BLANKS   WWAID   2
+     C*
+     C** INITIALIZE ERROR MESSAGES
+     C*
+     C                     MOVE *BLANKS   ERMSG
+      *                                                                   S01486
+      *** IN THE DATAAREA ZMUSER                                          S01486
+      *                                                                   S01486
+     C           *NAMVAR   DEFN           ZMUSER                          S01486
+     C                     IN   ZMUSER                                    S01486
+      *                                                                   S01486
+      *** Read in the data area RUNDAT                                    S01486
+      *                                                                   S01486
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01486
+     C                     IN   RUNDT                                     S01486
+      *                                                                   S01486
+      ***  Test for multi-branching                                       S01486
+      *                                                                   S01486
+     C           AGMBIN    IFEQ 'Y'                                       S01486
+     C                     MOVE *ON       *IN85                           S01486
+     C                     ELSE                                           S01486
+     C                     MOVE *OFF      *IN85                           S01486
+     C                     ENDIF                                          S01486
+     C*
+     C** PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY                           S01486
+     C                     Z-ADD*ZERO     DBASE                           S01486
+     C***********          MOVEL*BLANK    DBLOT                           S01486
+     C****                 MOVEL'PM5130'  DBPGM                           58886
+     C                     MOVEL'SE5230'  DBPGM                           58886
+     C                     OUT  LDA                                       S01486
+     C***********                                                         S01486
+     C***RETRIEVE*BANK*INFORMATIONS************************************   S01486
+     C***********                                                         S01486
+     C***********          READ SDBANKL1                 87               S01486
+     C***********                                                         S01486
+     C************IN87     IFEQ '1'                                       S01486
+     C***********          Z-ADD1         DBASE            ***************S01486
+     C***********          MOVEL'SDBANKL1'DBFILE           **DB ERROR 01**S01486
+     C***********          MOVEL*BLANKS   DBKEY            ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                                            S01486
+      *                                                                   S01486
+      *** Access Bank details file to get run date & title                S01486
+      *                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+      *                                                                   S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************S01486
+     C                     MOVEL'SDBANKL1'DBFILE           * DBERROR  001 S01486
+     C                     MOVE *BLANKS   DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+      **  Access PM I.C.D.                                                S01486
+      *                                                                   S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+      *                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD7         DBASE            ***************S01486
+     C                     MOVEL'SDPORTPD'DBFILE           * DBERROR 007 *S01486
+     C                     MOVE *BLANKS   DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   CAC003
+     C**  Access MIDAS Modules.                                           CAC003
+     C                     CALL 'AOMMODR0'                                CAC003
+     C                     PARM '*MSG   ' P@RTCD                          CAC003
+     C                     PARM '*FIRST'  P@OPTN                          CAC003
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CAC003
+     C*                                                                   CAC003
+     C           P@RTCD    IFNE *BLANKS                                   CAC003
+     C           *LOCK     IN   LDA                                       CAC003
+     C                     Z-ADD8         DBASE            ***************CAC003
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERROR 008 *CAC003
+     C                     MOVEL*BLANKS   DBKEY            ***************CAC003
+     C                     OUT  LDA                                       CAC003
+     C                     EXSR *PSSR                                     CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C** Access PCA ICD File if Analytical Accounting Module is installed CAC003
+     C           BGN0ST    IFEQ 'Y'                                       CAC003
+     C                     CALL 'AOPCACR0'                                CAC003
+     C                     PARM *BLANKS   P@RTCD                          CAC003
+     C                     PARM '*FIRST ' P@OPTN                          CAC003
+     C           SDPCAC    PARM SDPCAC    DSFDY                           CAC003
+     C*                                                                   CAC003
+     C           P@RTCD    IFNE *BLANKS                                   CAC003
+     C           *LOCK     IN   LDA                                       CAC003
+     C                     Z-ADD9         DBASE            ***************CAC003
+     C                     MOVEL'SDPCACPD'DBFILE           * DBERROR 009 *CAC003
+     C                     MOVEL*BLANKS   DBKEY            ***************CAC003
+     C                     OUT  LDA                                       CAC003
+     C                     EXSR *PSSR                                     CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C** Check if SAR CAC003 is installed                                 CAC003
+     C                     CALL 'AOSARDR0'                                CAC003
+     C                     PARM *BLANKS   P@RTCD                          CAC003
+     C                     PARM '*VERIFY' P@OPTN                          CAC003
+     C                     PARM 'CAC003'  P@SARD  6                       CAC003
+     C*                                                                   CAC003
+     C** Set on *IN30 if Analytical Accounting Module and                 CAC003
+     C** SAR CAC003 is installed                                          CAC003
+     C           P@RTCD    IFEQ *BLANKS                                   CAC003
+     C           BGN0ST    ANDEQ'Y'                                       CAC003
+     C                     MOVE '1'       *IN30                           CAC003
+     C                     ENDIF                                          CAC003
+     C*
+     C** CHECK DATE FORMAT INDICATOR
+     C*
+     C           BJDFIN    IFEQ 'M'                        B1
+     C                     MOVE '1'       *IN98
+     C                     END                             E1
+     C*
+     C***********          MOVELBJMRDT    DDRUNA                          S01486
+     C                     MOVELBJMRDT    SRUNA                           S01486
+     C*
+     C** DO UNTIL F3 PRESSED
+     C*
+     C           WWAID     DOUEQ'03'                       B1
+     C*
+     C           WWAID     IFEQ '12'                       B*2
+     C                     EXSR CLEAR
+     C                     MOVE '0'       *IN50
+     C                     END                             E*2
+     C*
+     C                     EXSR P1002
+     C*
+     C                     END                             E1
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** P1002: TO OUTPUT AND PROCESS KEY FIELDS SCREEN
+      ** CALLED BY: P1001
+      ** CALLS: #ZBAA, V1001, V1002, W1001, P1003
+      **
+     C*===================================================================
+     C*
+     C           P1002     BEGSR
+     C*
+     C** DISPLAY SCREEN FORMAT AS PER FIRST SCREEN
+     C*
+     C           *IN50     IFEQ '0'                        B1
+     C                     MOVE *BLANKS   DDACTN
+     C                     WRITEPM5130F3
+     C                     EXFMTPM5130F1
+     C                     END                             E1
+     C*
+     C** CALL S/R TO MOVE VALUES INTO WWAID
+     C*
+     C                     EXSR #ZBAA
+     C*
+     C           WWAID     IFNE '03'                       B1
+     C           WWAID     ANDNE'12'
+     C*
+     C** ENTER TAKEN VALIDATE KEY INPUT
+     C*
+     C           WWAID     IFEQ 'RA'                       B*2
+     C           *IN50     ANDEQ'0'
+     C                     EXSR V1001
+     C                     END                             E*2
+     C*
+     C** IF NO ERRORS, DETERMINE NEXT SCREEN
+     C*
+     C           *IN80     IFEQ '0'                        B*2
+     C*
+     C** SET UP SECOND SCREEN FIELDS
+     C*
+     C                     EXSR P1003
+     C*
+     C                     MOVE '1'       *IN50
+     C*
+     C** DISPLAY SECOND SCREEN WITH KEY FIELDS PROTECTED
+     C*
+     C                     WRITEPM5130F3
+     C                     EXFMTPM5130F1
+     C*
+     C*  CALL S/R TO MOVE VALUES INTO WWAID
+     C*
+     C                     EXSR #ZBAA
+     C*
+     C** IF NOT CMD3 OR CMD12
+     C*
+     C           WWAID     IFNE '03'                       B**3
+     C           WWAID     ANDNE'12'
+     C*
+     C** ENTER TAKEN VALIDATE KEY INPUT
+     C*
+     C           WWAID     IFEQ 'RA'                       B***4
+     C                     EXSR V1002
+     C*
+     C** PERFORM VALIDATION PROCESSING UNTIL NO ERROR
+     C*
+     C           *IN81     DOWEQ'1'
+     C           WWAID     ANDEQ'RA'                       B****5
+     C                     WRITEPM5130F3
+     C                     EXFMTPM5130F1
+     C                     EXSR V1002
+     C                     EXSR #ZBAA
+     C                     END                             E****5
+     C*
+     C                     END                             E***4
+     C*
+     C** IF NO ERRORS, WRITE TO PMPSETPD
+     C*
+     C           *IN81     IFEQ '0'                        B***4
+     C                     MOVE '0'       *IN50
+     C                     EXSR W1001
+     C*
+     C                     EXSR CLEAR
+     C*
+     C                     END                             E***4
+     C*
+     C                     END                             E**3
+     C*
+     C                     END                             E*2
+     C*
+     C                     END                             E1
+     C*
+     C                     ENDSR
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** P1003 S/R TO SET UP SECOND SCREEN FIELDS
+      ** CALLED FROM P1002
+      ** CALLS:
+      **
+     C*===================================================================
+     C*
+     C           P1003     BEGSR
+     C*
+     C           1         SETLLBLKRFD
+     C                     READ BLKRFD                   87
+     C*
+     C           *IN87     IFEQ '1'
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'BLKRFD  'DBFILE           **DB ERROR 02**
+     C                     MOVEL*BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C           *IN50     IFEQ '0'
+     C                     MOVE NABLKR    DDBLKR
+     C                     ADD  1         NABLKR
+     C*
+     C** UPDATE BLKRFD WITH NEW VALUE
+     C*
+     C                     UPDATBLKRFDF
+     C                     END
+     C*
+     C                     MOVELPNCY      DDPNCY
+     C                     MOVELPSCU      DDPSCU
+     C                     MOVELPSCU      W1PSCU  3
+     C                     MOVELPCHC      DDPCHC
+     C                     MOVELPCCD      DDPCCD
+     C***********PSVL      IFNE *ZEROS                                    S01486
+     C***********          Z-ADDPSVL      ZDAYNO                          S01486
+     C***********          EXSR ZDATE2                                    S01486
+     C***********          MOVELZDATE     DDVDAT                          S01486
+     C***********          MOVELZDATE     WSVDAT  6                       S01486
+     C***********          ELSE                                           S01486
+     C***********          MOVE *BLANKS   DDVDAT                          S01486
+     C***********          END                                            S01486
+     C*
+     C** CHAIN TO SDCURRL1 WITH NOMINAL CURRENCY AND SAVE SPOT RATE,
+     C** DECIMAL PLACES AND MULT/DIV INDICATOR.
+     C*
+     C***********PNCY      CHAINSDCURRL1             87                   S01486
+     C***********                                                         S01486
+     C************IN87     IFEQ '1'                                       S01486
+     C***********          Z-ADD3         DBASE            ***************S01486
+     C***********          MOVEL'SDCURRL1'DBFILE           **DB ERROR 03**S01486
+     C***********          MOVELPNCY      DBKEY            ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                                            S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY'    @OPTN                           S01486
+     C                     PARM PNCY      @CCY    3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+      *                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD3         DBASE            ***************S01486
+     C                     MOVEL'SDCURRL1'DBFILE           * DBERROR 003 *S01486
+     C                     MOVELPNCY      DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF                                          S01486
+     C*
+     C                     Z-ADDA6SPRT    W1SPRT 138
+     C                     Z-ADDA6NBDP    W1NBDP  10
+     C                     MOVELA6MDIN    W1MDIN  1
+     C                     MOVE A6NQDP    ZNQDP1                          CAC003
+     C*
+     C** CHAIN TO SDCURRL1 WITH SETTLEMENT CURRENCY AND SAVE SPOT RATE,
+     C** DECIMAL PLACES AND MULT/DIV INDICATOR.
+     C*
+     C***********DDPSCU    CHAINSDCURRL1             87                   S01486
+     C***********                                                         S01486
+     C************IN87     IFEQ '1'                                       S01486
+     C***********          Z-ADD4         DBASE            ***************S01486
+     C***********          MOVEL'SDCURRL1'DBFILE           **DB ERROR 04**S01486
+     C***********          MOVELPSCU      DBKEY            ***************S01486
+     C***********          EXSR *PSSR                                     S01486
+     C***********          END                                            S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY'    @OPTN                           S01486
+     C                     PARM DDPSCU    @CCY    3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+      *                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD4         DBASE            ***************S01486
+     C                     MOVEL'SDCURRL1'DBFILE           * DBERROR 004 *S01486
+     C                     MOVELDDPSCU    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF                                          S01486
+     C*
+     C                     Z-ADDA6SPRT    W2SPRT 138
+     C                     Z-ADDA6NBDP    W2NBDP  10
+     C                     MOVELA6MDIN    W2MDIN  1
+     C                     MOVE A6NQDP    ZNQDP2                          CAC003
+     C*
+     C                     MOVELA6MDIN    DDPMDI
+     C*                                                                   CAC003
+     C** To calculate for Settlement Exchange Rate                        CAC003
+     C           *IN30     IFEQ '0'                                       CAC003
+     C           DDPSCU    OREQ PNCY                                      CAC003
+     C                     MOVE PSXR      ZFLD15
+     C                     ELSE                                           CAC003
+     C*                                                                   CAC003
+     C                     Z-ADD0         WAPSXR 138                      CAC003
+     C           PPRE      IFEQ 'R'                                       CAC003
+     C           W2MDIN    ANDEQ'M'                                       CAC003
+     C           PPRE      OREQ 'P'                                       CAC003
+     C           W2MDIN    ANDEQ'D'                                       CAC003
+     C           PSXR      SUB  FXMR      WAPSXR 138                      CAC003
+     C*                                                                   CAC003
+     C                     ELSE                                           CAC003
+     C           PSXR      ADD  FXMR      WAPSXR                          CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     MOVE WAPSXR    ZFLD15                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT20    DDPSXR
+     C                     MOVE ZOUT20    WSPSXR 14
+     C*                                                                   CAC003
+     C** Format FX Margin Points using ZSEDIT                             CAC003
+     C           *IN30     IFEQ '1'                                       CAC003
+     C           PNCY      ANDNEDDPSCU                                    CAC003
+     C                     Z-ADD0         ZFLD15                          CAC003
+     C                     MOVE FXMP      ZFLD15                          CAC003
+     C                     Z-ADD2         ZDECS                           CAC003
+     C                     EXSR ZSEDIT                                    CAC003
+     C                     MOVE ZOUT20    DDFXMP                          CAC003
+     C                     ELSE                                           CAC003
+     C                     MOVE *BLANKS   DDFXMP                          CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C*
+     C                     EXSR CUREX
+     C*
+     C                     ENDSR
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** CUREX S/R TO CALCULATE CURRENT EXCHANGE RATE
+      **
+     C*===================================================================
+     C*
+     C           CUREX     BEGSR                           ** CUREX BSR **
+     C*
+     C** STORE FIELDS IN SR ZCCYN FIELDS
+     C*
+     C                     Z-ADD0         ZAMTF
+     C                     MOVELPNCY      ZCCYF
+     C                     MOVELDDPSCU    ZCCYT
+     C                     Z-ADDW1SPRT    ZRATEF
+     C                     Z-ADDW2SPRT    ZRATET
+     C                     MOVELW1MDIN    ZMDINF
+     C                     MOVELW2MDIN    ZMDINT
+     C                     Z-ADDW1NBDP    ZCDPF
+     C                     Z-ADDW2NBDP    ZCDPT
+     C*
+     C                     EXSR ZCCYCN
+     C*
+     C                     Z-ADDZCRSRT    WWSPRT 138
+     C                     MOVE ZCRSRT    ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT20    DDSPRT
+     C                     MOVELZCRSMD    DDMDIN
+     C*
+     C                     ENDSR
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** #ZBAA S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD WWAID,
+      ** DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.
+      ** CALLED FROM #BA, #BB, #C
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           #ZBAA     BEGSR                           ** #ZBAA BSR **
+     C*
+     C** If ENTER pressed, the VLDCMDKEY indicator will be off
+     C*
+     C           *IN45     IFEQ '0'
+     C                     MOVE 'RA'      WWAID
+     C                     END
+     C*
+     C** If F3
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE '03'      WWAID
+     C                     MOVE '0'       *INKC
+     C                     END
+     C*
+     C** If F12
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE '12'      WWAID
+     C                     MOVE '0'       *INKL
+     C                     END
+     C*
+     C                     ENDSR                           ** #ZBAA ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** V1001 S/R TO VALIDATE KEY FIELDS
+      ** CALLED FROM S/R P1002
+      ** CALLS :
+      **
+     C*===================================================================
+     C*
+     C           V1001     BEGSR
+     C*
+     C** RESET INDICATORS
+     C*
+     C                     MOVE '0'       *IN31                           CAC003
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN84
+     C                     MOVE '0'       *IN87
+     C                     MOVE *BLANKS   ERMSG
+     C                     Z-ADD0         EC      20
+     C*
+     C** CHECK POOL CUSTOMER
+     C*
+     C** MUST BE ENTERED
+     C*
+     C           DDPCNU    IFEQ *BLANK
+     C                     ADD  1         EC
+     C                     MOVEL' 001'    ERR,EC
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** CHECK POOL PORTFOLIO
+     C*
+     C** MUST BE ENTERED
+     C*
+     C           DDPTFR    IFEQ *BLANK
+     C                     ADD  1         EC
+     C                     MOVEL' 006'    ERR,EC
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** MUST REFER TO A POOL PORTFOLIO
+     C*
+     C           *IN32     IFEQ '0'
+     C           *IN33     ANDEQ'0'
+     C**********           MOVELDDPCNU    XXPCNU  60                                          CSD027
+     C                     MOVELDDPCNU    XXPCNU  6                                           CSD027
+     C           PTDKEY    CHAINPMPPTDPD             87
+     C           *IN87     IFEQ '1'
+     C                     ADD  1         EC
+     C                     MOVEL' 026'    ERR,EC
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** TRADE NUMBER RANGE MUST BE DIFFERENT FROM ZERO
+     C*
+     C           *IN87     IFEQ '0'
+     C           ORRANG    ANDEQ*ZEROS
+     C                     ADD  1         EC
+     C                     MOVEL' 027'    ERR,EC
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN80
+     C                     END
+     C                     END
+     C*
+     C** CHECK SECURITY SHORTNAME
+     C*
+     C** MUST BE ENTERED
+     C*
+     C           DDPSSH    IFEQ *BLANK
+     C                     ADD  1         EC
+     C                     MOVEL' 011'    ERR,EC
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** CHECK DUE DATE
+     C*
+     C** MUST BE ENTERED
+     C*
+     C           DDPDUD    IFEQ *BLANK
+     C                     ADD  1         EC
+     C                     MOVEL' 016'    ERR,EC
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C** MUST BE NUMERIC
+     C*
+     C           *IN35     IFEQ '0'
+     C                     MOVELDDPDUD    WWPDUD  60
+     C                     MOVELWWPDUD    WAPDUD  6
+     C           DDPDUD    IFNE WAPDUD
+     C                     ADD  1         EC
+     C                     MOVEL' 017'    ERR,EC
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN80
+     C                     END
+     C                     END
+     C*
+     C** MUST BE VALID
+     C*
+     C           *IN35     IFEQ '0'
+     C                     MOVELDDPDUD    ZDATE
+     C                     EXSR ZDATE1
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         EC
+     C                     MOVEL' 018'    ERR,EC
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN80
+     C                     ELSE
+     C                     Z-ADDZDAYNO    XXPDUD  50
+     C                     END
+     C                     END
+     C*
+     C** CHECK EVENT TYPE
+     C*
+     C** MUST BE ENTERED
+     C*
+     C           DDPEVT    IFEQ *BLANK
+     C                     ADD  1         EC
+     C                     MOVEL' 021'    ERR,EC
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN80
+     C                     END
+      *                                                                   S01486
+      * IF BRANCH IS NOT ENTERED, USE DEFAULT BRANCH TO CHECK AUTHORITY   S01486
+      * OF USER AND SET BRANCH TO DEFAULT BRANCH                          S01486
+      *                                                                   S01486
+     C           AGMBIN    IFEQ 'Y'                                       S01486
+     C           D#PBCA    IFEQ *BLANK                                    S01486
+     C                     MOVE USRBCH    D#PBCA                          S01486
+     C                     MOVE USRBCH    BRCH    3                       S01486
+      *                                                                   S01486
+     C                     ELSE                                           S01486
+      *                                                                   S01486
+      * OTHERWISE, VALIDATE THE BRANCH ENTERED AND CHECK SPF AUTHORITY    S01486
+      *                                                                   S01486
+     C**********           CALL 'AOBRCHR0'                                S01486              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*KEY   ' @OPTN   7                       S01486
+     C                     PARM D#PBCA    @DSNB   3                       S01486
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           S01486              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFEQ *BLANKS                                   S01486
+     C                     MOVE A8BRCD    D#PBCA                          S01486
+     C                     MOVE D#PBCA    BRCH                            S01486
+     C                     ELSE                                           S01486
+     C                     ADD  1         EC         25                   S01486
+     C                     MOVEL' 110'    ERR,EC                          S01486
+     C                     ENDIF                                          S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+      ** VALIDATE SPF - USER'S AUTHORITY TO BRANCH                        S01486
+      *                                                                   S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+      **   VALIDATE SPF-ACTION FOR THIS USER                              S01486
+      *                                                                   S01486
+     C           DDACTN    IFEQ 'D'                                       S01486
+     C           DDACTN    OREQ 'X'                                       S01486
+     C           DDACTN    OREQ 'A'                                       S01486
+      *                                                                   S01486
+      **   IF SINGLE BRANCH ENVIRONMENT                                   S01486
+      *                                                                   S01486
+     C           AGMBIN    IFNE 'Y'                                       S01486
+     C                     CALL 'ZVACTU'                                  S01486
+     C                     PARM DDACTN    @ZACTN  1                       S01486
+     C                     PARM           @ERR    10                      S01486
+      *                                                                   S01486
+     C           @ERR      IFNE *ZERO                                     S01486
+     C                     ADD  1         EC         21                   S01486
+     C                     MOVE ' 302'    ERR,EC                          S01486
+     C                     ENDIF                                          S01486
+     C                     ELSE                                           S01486
+      *                                                                   S01486
+      **   IF MULTIBRANCHING ENVIRONMENT                                  S01486
+      *                                                                   S01486
+     C                     CALL 'ZVACTBU'                                 S01486
+     C                     PARM DDACTN    @ZACTN  1                       S01486
+     C                     PARM BRCH      @ZBR    3                       S01486
+     C                     PARM           @ERR    10                      S01486
+      *                                                                   S01486
+     C           @ERR      IFEQ 1                                         S01486
+     C                     ADD  1         EC         21                   S01486
+     C                     MOVE ' 303'    ERR,EC                          S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+     C           @ERR      IFEQ 2                                         S01486
+     C                     ADD  1         EC         21                   S01486
+     C                     MOVE ' 304'    ERR,EC                          S01486
+     C                     ENDIF                                          S01486
+     C                     ENDIF                                          S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+      ** IF THE 'HIGH LEVEL SECURITY' FIELD ON SDPORTPD                   S01486
+      ** IS EQUAL TO 'Y'. ACCESS MUSERDD WITH THE USER PROFILE            S01486
+      ** TO OBTAIN THE ACCOUNT OFFICER OR DEPARTMENT ASSIGNED             S01486
+      ** TO THAT PROFILE.                                                 S01486
+      *                                                                   S01486
+     C           FCHLVS    IFEQ 'Y'                                       S01486
+     C                     MOVE *OFF      *IN83                           S01486
+      *                                                                   S01486
+     C                     CALL 'AOUSERR0'                                S01486
+     C                     PARM           WUAPRC  7        B:Return Cde   S01486
+     C                     PARM '*KEY'    UUAPOP  7        I:Option       S01486
+     C                     PARM WWNAME    UUUSID 10        I:User ProfiancS01486
+     C           D@USER    PARM D@USER    DSSDY            O:MUSER fmt    S01486
+      *                                                                   S01486
+      ** IF ACCOUNT OFFICER CODE NOT BLANK                                S01486
+      ** TEST IF ACCOUNT OFFICER CODE NOT EQUAL "ALL"                     S01486
+      ** AND NOT EQUAL TO CUSTOMER ACCOUNT OFFICER                        S01486
+      *                                                                   S01486
+     C***********ACOF      IFNE *BLANKS                             S01486087588
+     C           ACFA      IFNE *BLANKS                                   087588
+      *                                                                   S01486
+     C***********ACOF      IFNE 'ALL'                               S01486087588
+     C***********ACOF      ANDNEBBACOC                              S01486087588
+     C           ACFA      IFNE 'ALL'                                     087588
+     C           ACFA      ANDNEBBACOC                                    087588
+     C                     ADD  1         EC         21                   S01486
+     C                     MOVE ' 103'    ERR,EC                          S01486
+     C                     MOVE *ON       *IN80                           S01486
+     C                     MOVE *ON       *IN83                           S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+      ** IF ACCOUNT OFFICER CODE BLANK                                    S01486
+      ** ACCESS SDACOFPD TO OBTAIN DEPARTMENT OF ACCOUNT                  S01486
+      ** OFFICER ASSIGNED TO CUSTOMER                                     S01486
+      *                                                                   S01486
+     C                     ELSE                                           S01486
+      *                                                                   S01486
+     C                     CALL 'AOACOFR0'                                S01486
+     C                     PARM '*MSG   ' @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM BBACOC    ACOKEY  2                       S01486
+     C           SDACOF    PARM SDACOF    DSFDY                           S01486
+      *                                                                   S01486
+     C           AZDPCD    IFNE DPPT                                      S01486
+     C                     ADD  1         EC         21                   S01486
+     C                     MOVE ' 103'    ERR,EC                          S01486
+     C                     MOVE *ON       *IN80                           S01486
+     C                     MOVE *ON       *IN83                           S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+     C                     ENDIF                                          S01486
+     C*
+     C** CHECK IF A POSITION SETTLEMENT EXISTS FOR ANY LIVE MEMBER OF
+     C** THE POOL PORTFOLIO
+     C           *IN80     IFEQ '0'                        B1
+     C*                                                                   58935
+     C** READ FIRST MEMBER OF POOL PORTFOLIO                              58935
+     C                     MOVE DDPCNU    WNPCNU                          58935
+     C                     MOVE DDPTFR    WAPPTF                          58935
+     C                     MOVE 'N'       WWFOND  1                       58935
+     C*                                                                   58935
+     C           PTMKEY    SETLLPMPPTML0                                  58935
+     C           PTMKEY    READEPMPPTML0                 86               58935
+     C*                                                                   58935
+     C** DO WHILE MEMBERS HAVE NOT BEEN CHECKED OR WHILE NO POSITION      58935
+     C** SETTLEMENT FOUND FOR POOL MEMBER                                 58935
+     C           *IN86     DOWEQ'0'                        B2             58935
+     C           WWFOND    ANDEQ'N'                                       58935
+     C*                                                                   58935
+     C                     MOVE OSCNUM    WNCNUM                          58935
+     C                     MOVE OSPTFR    WAPTFR                          58935
+     C*                                                                   58935
+     C           AGMBIN    IFEQ 'Y'                                       S01486
+     C***********POSKEY    CHAINPOSETDL1             87                   S01486
+     C           PTFRK     CHAINPOSET                87                   S01486
+      *                                                                   S01486
+     C                     ELSE                                           S01486
+      *                                                                   S01486
+      ** ACCESS PMPOSDL4 USING SECURITY, MEMBER CUSTOMER, DUE DATE,       S01486
+      ** EVENT TYPE AND MEMBER PORTOFOLIO                                 S01486
+     C           POSKEY    SETLLPMPOSDL4                                  S01486
+     C           POSKEY    READEPMPOSDL4                 87               S01486
+      *                                                                   S01486
+      ** DO WHILE SAME KEYS                                               S01486
+     C           *IN87     DOWEQ'0'                                       S01486
+      *                                                                   S01486
+     C           RECI      IFEQ 'D'                                       S01486
+     C                     LEAVE                                          S01486
+     C                     ENDIF                                          S01486
+      *                                                                   S01486
+     C           POSKEY    READEPMPOSDL4                 87               S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   58935
+     C** IF POSITION SETTLEMENT FOUND FOR POOL MEMBER SET FOUND           58935
+     C** INDICATOR TO 'Y'                                                 58935
+     C           *IN87     IFEQ '0'                        B3             58935
+     C           RECI      ANDEQ'D'                                       58935
+     C                     MOVE 'Y'       WWFOND                          58935
+     C                     END                             E3             58935
+     C*                                                                   58935
+     C           PTMKEY    READEPMPPTML0                 86               58935
+     C                     END                             E2             58935
+     C*                                                                   58935
+     C** IF NO POSITION SETTLEMENT FOUND OUTPUT ERROR MESSAGE             58935
+     C****       *IN87     IFEQ '1'                                       58935
+     C           WWFOND    IFEQ 'N'                        B2             58935
+     C                     ADD  1         EC
+     C                     MOVEL' 031'    ERR,EC
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN80
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C           *IN80     IFEQ '1'
+     C                     MOVE '1'       *IN84
+     C                     END
+     C*
+     C                     ENDSR                                        **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** V1002 S/R TO VALIDATE KEY FIELDS
+      ** CALLED FROM S/R P1002
+      ** CALLS :
+      **
+     C*===================================================================
+     C*
+     C           V1002     BEGSR
+     C*
+     C** RESET INDICATORS
+     C*
+     C                     MOVE '0'       *IN39
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN41
+     C                     MOVE '0'       *IN42
+     C                     MOVE '0'       *IN43
+     C                     MOVE '0'       *IN44
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN84
+     C                     MOVE *BLANKS   ERMSG
+     C                     Z-ADD0         EC
+     C*
+     C** CHECK THAT DDACTN IS VALID
+     C*
+     C           DDACTN    IFEQ *BLANK
+     C                     ADD  1         EC
+     C                     MOVEL' 041'    ERR,EC
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN81
+     C*
+     C                     ELSE
+     C*
+     C           DDACTN    IFNE 'D'
+     C           DDACTN    ANDNE'X'
+     C           DDACTN    ANDNE'A'
+     C                     ADD  1         EC
+     C                     MOVEL' 042'    ERR,EC
+     C                     MOVE '1'       *IN39
+     C                     MOVE '1'       *IN81
+     C                     END
+     C                     END
+     C*
+     C           *IN39     IFEQ '0'
+     C           DDACTN    IFEQ 'D'
+     C                     EXSR DELSR
+     C                     ELSE
+     C                     EXSR AMDSR
+     C                     END
+     C                     END
+     C*
+     C***CHECK*THAT DDVDAT IS VALID                                       S01486
+     C***********                                                         S01486
+     C***********DDVDAT    IFEQ *BLANK                                    S01486
+     C***********          ADD  1         EC                              S01486
+     C***********          MOVEL' 080'    ERR,EC                          S01486
+     C***********          MOVE '1'       *IN46                           S01486
+     C***********          MOVE '1'       *IN81                           S01486
+     C***********          ELSE                                           S01486
+     C***********                                                         S01486
+     C***********          MOVELDDVDAT    WWVDAT  60                      S01486
+     C***********          MOVELWWVDAT    WAVDAT  6                       S01486
+     C***********                                                         S01486
+     C***********DDVDAT    IFNE WAVDAT                                    S01486
+     C***********          ADD  1         EC                              S01486
+     C***********          MOVEL' 083'    ERR,EC                          S01486
+     C***********          MOVE '1'       *IN46                           S01486
+     C***********          MOVE '1'       *IN81                           S01486
+     C***********          ELSE                                           S01486
+     C***********                                                         S01486
+     C***********          MOVELDDVDAT    ZDATE                           S01486
+     C***********          EXSR ZDATE1                                    S01486
+     C************IN99     IFEQ '1'                                       S01486
+     C***********          ADD  1         EC                              S01486
+     C***********          MOVEL' 081'    ERR,EC                          S01486
+     C***********          MOVE '1'       *IN46                           S01486
+     C***********          MOVE '1'       *IN81                           S01486
+     C***********          ELSE                                           S01486
+     C***********                                                         S01486
+     C***********ZDAYNO    IFLT PDUD                                      S01486
+     C***********          ADD  1         EC                              S01486
+     C***********          MOVEL' 082'    ERR,EC                          S01486
+     C***********          MOVE '1'       *IN46                           S01486
+     C***********          MOVE '1'       *IN81                           S01486
+     C***********          ELSE                                           S01486
+     C***********                                                         S01486
+     C***********          Z-ADDZDAYNO    WWPSVL  50                      S01486
+     C***********          END                                            S01486
+     C***********          END                                            S01486
+     C***********          END                                            S01486
+     C***********          END                                            S01486
+     C*
+     C           *IN81     IFEQ '1'
+     C                     MOVE '1'       *IN84
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** AMDSR S/R TO VALIDATE KEY FIELDS
+      ** CALLED FROM S/R P1002
+      ** CALLS :
+      **
+     C*===================================================================
+     C*
+     C           AMDSR     BEGSR
+     C*
+     C** CHECK THAT DDPSCU IS VALID
+     C*
+     C           DDPSCU    IFEQ *BLANK
+     C                     ADD  1         EC
+     C                     MOVEL' 047'    ERR,EC
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN81
+     C*
+     C                     ELSE
+     C*
+     C***********DDPSCU    CHAINSDCURRL1             87                   S01486
+     C************IN87     IFEQ '1'                                       S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY'    @OPTN                           S01486
+     C                     PARM DDPSCU    @CCY    3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+      *                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C                     ADD  1         EC
+     C                     MOVEL' 049'    ERR,EC
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN81
+     C                     END
+     C                     END
+     C*
+     C           *IN40     IFEQ '0'
+     C                     Z-ADDA6SPRT    W2SPRT
+     C                     Z-ADDA6NBDP    W2NBDP
+     C                     MOVELA6MDIN    W2MDIN
+     C                     MOVE A6NQDP    ZNQDP2                          CAC003
+     C                     EXSR CUREX
+     C                     END
+     C*
+     C** CHECK THAT DDPSXR IS VALID
+     C*
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE *BLANKS   @@AMT
+     C*
+     C           DDPSXR    IFEQ *BLANKS
+     C                     ADD  1         EC
+     C                     MOVEL' 054'    ERR,EC
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN81
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDPSXR    @@ALPH
+     C                     Z-ADD8         @@IDP
+     C                     Z-ADD5         @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+     C           @@ERCD    IFNE 0
+     C                     ADD  1         EC
+     C                     MOVEL' 057'    ERR,EC
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN81
+     C                     ELSE
+     C                     MOVE @@ALPH    DDPSXR
+     C                     MOVE @@AMT     WWPSXR 138
+     C                     END
+     C                     END
+     C*
+     C           *IN41     IFEQ *ZEROS
+     C*
+     C           WWPSXR    DIV  WWSPRT    XXPSXR 138
+     C           XXPSXR    IFLT 0.9
+     C           XXPSXR    ORGT 1.1
+     C*
+     C           DDPSCU    IFNE W1PSCU
+     C                     MOVE '0'       *IN82
+     C                     MOVE DDPSCU    W1PSCU
+     C                     END
+     C*
+     C           *IN82     IFEQ '0'
+     C                     ADD  1         EC
+     C                     MOVEL' W56'    ERR,EC
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN81
+     C                     MOVE '1'       *IN82
+     C                     ELSE
+     C                     MOVE '0'       *IN82
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*                                                                   CAC003
+     C                     Z-ADD0         WWFXMP  72                      CAC003
+     C                     Z-ADD0         WWFXMR 138                      CAC003
+     C*                                                                   CAC003
+     C           *IN30     IFEQ '1'                                       CAC003
+     C           *IN40     ANDEQ'0'                                       CAC003
+     C           DDFXMP    ANDNE*BLANK                                    CAC003
+     C*                                                                   CAC003
+     C           PNCY      IFEQ DDPSCU                                    CAC003
+     C                     ADD  1         EC                              CAC003
+     C                     MOVE ' 401'    ERR,EC                          CAC003
+     C                     MOVE '1'       *IN31                           CAC003
+     C                     MOVE '1'       *IN81                           CAC003
+     C                     ELSE                                           CAC003
+     C*                                                                   CAC003
+     C** Validate Forex Margin Points using ZA0840                        CAC003
+     C                     MOVE *BLANKS   @@ALPH                          CAC003
+     C                     MOVE DDFXMP    @@ALPH                          CAC003
+     C                     Z-ADD2         @@IDP                           CAC003
+     C                     Z-ADD5         @@IINT                          CAC003
+     C                     MOVE *BLANK    @@ERCD                          CAC003
+     C                     EXSR ZA0840                                    CAC003
+     C*                                                                   CAC003
+     C           @@ERCD    IFNE 0                                         CAC003
+     C                     ADD  1         EC                              CAC003
+     C                     MOVE ' 402'    ERR,EC                          CAC003
+     C                     MOVE '1'       *IN31                           CAC003
+     C                     MOVE '1'       *IN81                           CAC003
+     C                     ELSE                                           CAC003
+     C                     MOVE @@ALPH    DDFXMP                          CAC003
+     C                     MOVE @@AMT     WWFXMP                          CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C** Execute SRNQDP to get the Normally-Quoted Decimal Places         CAC003
+     C           *IN31     IFEQ '0'                                       CAC003
+     C           *IN41     ANDEQ'0'                                       CAC003
+     C                     EXSR SRNQDP                                    CAC003
+     C*                                                                   CAC003
+     C           ZNQDPX    ADD  1         ZA      10                      CAC003
+     C*                                                                   CAC003
+     C**  Compute the maximum margin points allowed.                      CAC003
+     C**  Maximum Marg Pts = Xccy rate * Tolerance * 10**Quoted DP        CAC003
+     C           FTTMRT    DIV  100       W1      32                      CAC003
+     C           W1        MULT WWPSXR    W2     138H                     CAC003
+     C           W2        MULT AP,ZA     WMAXPT  72H                     CAC003
+     C*                                                                   CAC003
+     C** Entered Margin Points is greater than the maximum allowed        CAC003
+     C           WWFXMP    IFGT WMAXPT                                    CAC003
+     C           WWFXMP    ANDNEWWFXM1                                    CAC003
+     C                     ADD  1         EC                              CAC003
+     C                     MOVE ' W15'    ERR,EC                          CAC003
+     C                     MOVE '1'       *IN31                           CAC003
+     C                     MOVE '1'       *IN81                           CAC003
+     C                     MOVE '1'       *IN82                           CAC003
+     C                     Z-ADDWWFXMP    WWFXM1  72                      CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C** Compute for the Margin Rate                                      CAC003
+     C           WWFXMP    DIV  AP,ZA     WWFXMR    H                     CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*
+     C** CHECK THAT DDPMDI IS VALID
+     C*
+     C           DDPMDI    IFEQ *BLANK
+     C                     ADD  1         EC
+     C                     MOVEL' 061'    ERR,EC
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN81
+     C                     ELSE
+     C*
+     C           DDPMDI    IFNE 'D'
+     C           DDPMDI    ANDNE'M'
+     C                     ADD  1         EC
+     C                     MOVEL' 063'    ERR,EC
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN81
+     C                     END
+     C                     END
+     C*
+     C** CHECK THAT DDPCHC IS VALID
+     C*
+     C           DDPCHC    IFNE *BLANKS
+     C           SECKEY    CHAINSECGT                87
+     C           *IN87     IFEQ '1'
+     C                     ADD  1         EC
+     C                     MOVEL' 069'    ERR,EC
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN81
+     C                     END
+     C                     END
+     C*
+     C** CHECK THAT DDPCCD IS VALID
+     C*
+     C           DDPCCD    IFNE *BLANKS
+     C           SEDKEY    CHAINSECGT                87
+     C           *IN87     IFEQ '1'
+     C                     ADD  1         EC
+     C                     MOVEL' 075'    ERR,EC
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN81
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR                                        **
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** DELSR S/R TO WRITE TO PF/PMSETPD
+      ** CALLED FROM S/R P1002
+      ** CALLS :
+      **
+     C*===================================================================
+     C*
+     C           DELSR     BEGSR
+     C*
+     C           DDPSCU    IFNE PSCU
+     C                     ADD  1         EC
+     C                     MOVEL' 048'    ERR,EC
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN81
+     C                     END
+     C*
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDPSXR    @@ALPH
+     C                     Z-ADD8         @@IDP
+     C                     Z-ADD5         @@IINT
+     C                     MOVE *BLANK    @@ERCD
+     C                     EXSR ZA0840
+     C                     MOVE @@AMT     WDPSXR 138
+     C*                                                                   CAC003
+     C** Re-compute for WDPSXR if Analytical Accounting Module            CAC003
+     c** and SAR CAC003 are installed                                     CAC003
+     C           *IN30     IFEQ '1'                                       CAC003
+     C*                                                                   CAC003
+     C           PPRE      IFEQ 'R'                                       CAC003
+     C           PMDI      ANDEQ'M'                                       CAC003
+     C           PPRE      OREQ 'P'                                       CAC003
+     C           PMDI      ANDEQ'D'                                       CAC003
+     C                     ADD  FXMR      WDPSXR                          CAC003
+     C                     ELSE                                           CAC003
+     C                     SUB  FXMR      WDPSXR                          CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*
+     C           WDPSXR    IFNE PSXR
+     C                     ADD  1         EC
+     C                     MOVEL' 055'    ERR,EC
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN81
+     C                     END
+     C*
+     C           DDPMDI    IFNE PMDI
+     C                     ADD  1         EC
+     C                     MOVEL' 062'    ERR,EC
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN81
+     C                     END
+     C*                                                                   CAC003
+     C** Validate Forex margin points using ZA0840                        CAC003
+     C           *IN30     IFEQ '1'                                       CAC003
+     C*                                                                   CAC003
+     C                     MOVE *BLANKS   @@ALPH                          CAC003
+     C                     MOVE DDFXMP    @@ALPH                          CAC003
+     C                     Z-ADD2         @@IDP                           CAC003
+     C                     Z-ADD5         @@IINT                          CAC003
+     C                     MOVE *BLANK    @@ERCD                          CAC003
+     C                     EXSR ZA0840                                    CAC003
+     C                     MOVE @@AMT     WDFXMP  72                      CAC003
+     C*                                                                   CAC003
+     C           WDFXMP    IFNE FXMP                                      CAC003
+     C                     ADD  1         EC                              CAC003
+     C                     MOVE ' 403'    ERR,EC                          CAC003
+     C                     MOVE '1'       *IN31                           CAC003
+     C                     MOVE '1'       *IN81                           CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*
+     C           DDPCHC    IFNE PCHC
+     C                     ADD  1         EC
+     C                     MOVEL' 068'    ERR,EC
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN81
+     C                     END
+     C*
+     C           DDPCCD    IFNE PCCD
+     C                     ADD  1         EC
+     C                     MOVEL' 074'    ERR,EC
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN81
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** CLEAR S/R TO WRITE TO PF/PMSETPD
+      **
+     C*===================================================================
+     C*
+     C           CLEAR     BEGSR
+     C*
+     C                     MOVE '0'       *IN31                           CAC003
+     C                     MOVE '0'       *IN39
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN41
+     C                     MOVE '0'       *IN42
+     C                     MOVE '0'       *IN43
+     C                     MOVE '0'       *IN44
+     C                     MOVE '0'       *IN46
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN84
+     C                     MOVEA*BLANKS   ERR
+     C                     MOVE *BLANKS   DDPCNU
+     C                     MOVE *BLANKS   DDPTFR
+     C                     MOVE *BLANKS   DDPSSH
+     C                     MOVE *BLANKS   DDPDUD
+     C                     MOVE *BLANKS   DDPEVT
+     C                     MOVE *BLANKS   DDACTN
+     C                     ENDSR
+     C*
+     C*===================================================================
+      /EJECT
+     C*===================================================================
+      **
+      ** W1001 S/R TO WRITE TO PF/PMPSETPD
+      ** CALLED FROM S/R P1002
+      ** CALLS :
+      **
+     C*===================================================================
+     C*
+     C           W1001     BEGSR
+     C*
+     C                     MOVE 'D'       OTRECI
+     C                     MOVELBJMRDT    OTDLUP
+     C                     MOVELBJMRDT    XXMLUP  5
+     C                     MOVE XXMLUP    OTMLUP
+     C                     MOVE BJMRDT    OTYLUP
+     C                     TIME           OTTLUP
+     C                     MOVELDDACTN    OTCHTP
+     C                     Z-ADDBJRDNB    OTLCD
+     C                     Z-ADD0         OTTNLU
+     C**********           Z-ADDXXPCNU    OTPCNU                                              CSD027
+     C                     MOVE XXPCNU    OTPCNU                                              CSD027
+     C                     MOVELDDPTFR    OTPPTF
+     C                     MOVELDDPSSH    OTPSSH
+     C                     Z-ADDXXPDUD    OTPDUP
+     C                     MOVELDDPEVT    OTPEVT
+     C                     MOVELDDPSCU    OTPSCU
+     C           DDACTN    IFEQ 'D'
+     C                     Z-ADDPSXR      OTPSXR
+     C                     ELSE
+     C                     Z-ADDWWPSXR    OTPSXR
+     C                     END
+     C                     MOVELDDPMDI    OTPMDI
+     C                     MOVELDDPCHC    OTPCHC
+     C                     MOVELDDPCCD    OTPCCD
+     C***********          MOVELWSID      OTWSID                          S01486
+     C                     MOVELSWSID     OTWSID                          S01486
+     C                     MOVE DDBLKR    OTBLKR
+     C***********          Z-ADDWWPSVL    OTPSVL                          S01486
+     C*                                                                   CAC003
+     C** Initialize fields to zero                                        CAC003
+     C                     Z-ADD0         OTFXMP                          CAC003
+     C                     Z-ADD0         OTFXMR                          CAC003
+     C*                                                                   CAC003
+     C           *IN30     IFEQ '1'                                       CAC003
+     C           DDPSCU    ANDNEPNCY                                      CAC003
+     C*                                                                   CAC003
+     C           DDACTN    IFEQ 'D'                                       CAC003
+     C                     MOVE FXMP      OTFXMP                          CAC003
+     C                     MOVE FXMR      OTFXMR                          CAC003
+     C                     ELSE                                           CAC003
+     C                     MOVE WWFXMP    OTFXMP                          CAC003
+     C                     MOVE WWFXMR    OTFXMR                          CAC003
+     C*                                                                   CAC003
+     C           PPRE      IFEQ 'R'                                       CAC003
+     C           DDPMDI    ANDEQ'M'                                       CAC003
+     C           PPRE      OREQ 'P'                                       CAC003
+     C           DDPMDI    ANDEQ'D'                                       CAC003
+     C                     ADD  WWFXMR    OTPSXR                          CAC003
+     C                     ELSE                                           CAC003
+     C                     SUB  WWFXMR    OTPSXR                          CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDIF                                          CAC003
+     C*
+     C                     WRITEPMPSETD0               02
+     C*
+     C** IF PROBLEM, THEN DATABASE ERROR AND ROLLBACK
+     C*
+     C           *IN02     IFEQ '1'                        B1
+     C                     Z-ADD5         DBASE            ***************
+     C                     MOVEL'PMPSETPD'DBFILE           * DB ERROR 05 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     ROLBK
+     C                     EXSR *PSSR
+     C                     END                             E1
+     C*
+     C* SET UP COMMAND STRING TO SUBMIT BATCH UPDATE
+     C*
+     C                     MOVEL@TX,1     @CMD
+     C                     MOVE @TX,2     @CMD
+     C                     MOVELOTBLKR    @CBREF
+     C                     MOVELOTCHTP    @CACTN
+     C                     MOVELOTWSID    @CMWI
+     C                     MOVELOTBLKR    @CMBR
+     C                     MOVEL@TX,3     XPARM                                               CSC023
+     C*
+     C* USE QCMDEXC TO SUBMIT JOB
+     C*
+     C                     COMIT
+     C                     CALL 'QCMDEXC'              01
+     C                     PARM           @CMD
+     C**********           PARM 160       @CMLEN 155                                          CSC023
+     C                     PARM 240       @CMLEN 155                                          CSC023
+     C*
+     C           *IN01     IFEQ '1'                        B1
+     C                     Z-ADD6         DBASE            ***************
+     C                     MOVEL*BLANKS   DBFILE           * DB ERROR 06 *
+     C                     MOVE 'QCMDEXC' DBKEY            ***************
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     EXSR *PSSR
+     C                     END                             E1
+     C*
+     C                     ENDSR
+     C*
+     C*===================================================================
+      /EJECT
+     C*================================================================== CAC003
+      **                                                                  CAC003
+      **  Subroutine  :  SRNQDP                                           CAC003
+      **  Function    :  Get Normally-Quoted Decimal Places               CAC003
+      **                                                                  CAC003
+      **  Called by   :  D3VALD - Validate Screen 3 Data Entry            CAC003
+      **  Calls       :  -                                                CAC003
+      **                                                                  CAC003
+     C*================================================================== CAC003
+     C*                                                                   CAC003
+     C           SRNQDP    BEGSR                                          CAC003
+     C*                                                                   CAC003
+     C** --------------------------------------------------------------   CAC003
+     C**  If either the nominal or settlement currency is the base        CAC003
+     C**  currency obtain the number of normally-quoted decimal places    CAC003
+     C**  for the other currency. Otherwise:                              CAC003
+     C**      A)  If ZNQDP1 =  ZNQDP2 =  5       :   ZNQDPX = 5           CAC003
+     C**      B)  If ZNQDP1 =  ZNQDP2 <> 5  or                            CAC003
+     C**             ZNQDP1 <> ZNQDP2                                     CAC003
+     C**             1)  If Rate >= 100          :   ZNQDPX = 2           CAC003
+     C**             2)  If 100 > Rate >= 20     :   ZNQDPX = 3           CAC003
+     C**             3)  If 20  > Rate >= 1      :   ZNQDPX = 4           CAC003
+     C**             4)  If 1   > Rate           :   ZNQDPX = 5           CAC003
+     C**---------------------------------------------------------------   CAC003
+     C*                                                                   CAC003
+     C** Define Fields                                                    CAC003
+     C           *LIKE     DEFN A6NQDP    ZNQDPX                          CAC003
+     C           *LIKE     DEFN A6NQDP    ZNQDP1                          CAC003
+     C           *LIKE     DEFN A6NQDP    ZNQDP2                          CAC003
+     C*                                                                   CAC003
+     C                     SELEC                                          CAC003
+     C*                                                                   CAC003
+     C           PNCY      WHEQ BJCYCD                                    CAC003
+     C                     Z-ADDZNQDP2    ZNQDPX                          CAC003
+     C*                                                                   CAC003
+     C           DDPSCU    WHEQ BJCYCD                                    CAC003
+     C                     Z-ADDZNQDP1    ZNQDPX                          CAC003
+     C*                                                                   CAC003
+     C           ZNQDP1    WHEQ ZNQDP2                                    CAC003
+     C           ZNQDP1    ANDEQ5                                         CAC003
+     C                     Z-ADD5         ZNQDPX                          CAC003
+     C*                                                                   CAC003
+     C           WWPSXR    WHGE 100                                       CAC003
+     C                     Z-ADD2         ZNQDPX                          CAC003
+     C*                                                                   CAC003
+     C           WWPSXR    WHLT 100                                       CAC003
+     C           WWPSXR    ANDGE20                                        CAC003
+     C                     Z-ADD3         ZNQDPX                          CAC003
+     C*                                                                   CAC003
+     C           WWPSXR    WHLT 20                                        CAC003
+     C           WWPSXR    ANDGE1                                         CAC003
+     C                     Z-ADD4         ZNQDPX                          CAC003
+     C*                                                                   CAC003
+     C           WWPSXR    WHLT 1                                         CAC003
+     C                     Z-ADD5         ZNQDPX                          CAC003
+     C*                                                                   CAC003
+     C                     ENDSL                                          CAC003
+     C*                                                                   CAC003
+     C                     ENDSR                                          CAC003
+     C*                                                                   CAC003
+     C*===================================================================CAC003
+     C/EJECT                                                              CAC003
+     C*===================================================================
+      **
+      ** *PSSR S/R TO HANDLE FILE EXEPTION/ERROR
+      ** CALLED FROM #A, #CD
+      ** CALLS NO OTHER S/R'S
+      **
+     C*===================================================================
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR BSR **
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C           @RUN      IFEQ *BLANKS                                   S01486
+     C                     MOVE 'Y'       @RUN    1                       S01486
+     C                     DUMP
+     C                     ENDIF                                          S01486
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR                           ** *PSSR ESR **
+     C*
+     C*===================================================================
+      /EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZCCYCN SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER            *
+     C*  CURRENCY USING THE SPOT RATES FOR THE TWO CURRENCIES                  *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                         *
+     C*       ZCCYF   3A     FROM CURRENCY                                     *
+     C*       ZCCYT   3A     TO CURRENCY                                       *
+     C*       ZRATEF 138     SPOT RATE FOR 'FROM' CURRENCY                     *
+     C*       ZRATET 138     SPOT RATE FOR 'TO' CURRENCY                       *
+     C*       ZMDINF  1A     MULTIPLY/DIVIDE INDICATOR FOR 'FROM' CURRENCY     *
+     C*       ZMDINT  1A     MULTIPLY/DIVIDE INDICATOR FOR 'TO' CURRENCY       *
+     C*       ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CURRENCY       *
+     C*       ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CURRENCY         *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED AMOUNT)    *
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                               *
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR              *
+     C*                                                                        *
+     C*                                                                        *
+     C*  CALLS:                                                                *
+     C*       ZCCYXR                                                           *
+     C*                                                                        *
+     C*  CALLED BY:                                                            *
+     C*                                                                        *
+     C**************************************************************************
+     C*
+     C           ZCCYCN    BEGSR                           *** ZCCYCN ***
+     C*
+     C** DEFINE ALL FIELDS
+     C                     Z-ADDZAMTF     ZAMTF  150
+     C                     MOVE ZCCYF     ZCCYF   3
+     C                     MOVE ZCCYT     ZCCYT   3
+     C                     Z-ADDZRATEF    ZRATEF 138
+     C                     Z-ADDZRATET    ZRATET 138
+     C                     MOVE ZMDINF    ZMDINF  1
+     C                     MOVE ZMDINT    ZMDINT  1
+     C                     Z-ADDZCDPF     ZCDPF   10
+     C                     Z-ADDZCDPT     ZCDPT   10
+     C                     Z-ADDZAMTT     ZAMTT  150
+     C                     Z-ADDZCRSRT    ZCRSRT 138
+     C                     MOVE ZCRSMD    ZCRSMD  1
+     C*
+     C** IF 'FROM' CURRENCY EQUAL TO 'TO' CURRENCY SET AMOUNT IN 'TO' CURRENCY
+     C** EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C           ZCCYF     IFEQ ZCCYT                      B1
+     C                     Z-ADDZAMTF     ZAMTT
+     C                     Z-ADD1         ZCRSRT
+     C                     MOVE 'M'       ZCRSMD
+     C                     GOTO CCYEND
+     C                     END                             E1
+     C*
+     C** INITIALIZE CROSS EXCHANGE RATE (ZCRSSRT) TO ZERO
+     C                     Z-ADD*ZEROS    ZCRSRT
+     C*
+     C** IF MULT/DIV INDIC. FOR 'FROM' IS = MULT/DIV INDIC FOR 'TO' INDIC
+     C**   AND SPOT RATE FOR 'TO' CURRENCY (ZRATET) IS NOT = ZERO
+     C           ZMDINF    IFEQ ZMDINT                     B1
+     C           ZRATET    ANDNE*ZEROS
+     C           ZRATEF    DIV  ZRATET    ZCRSRT
+     C*
+     C** IF MULT/DIV INDIC FOR 'FROM' IS NOT= MULT/DIV INDIC FOR 'TO' INDIC
+     C** OR  SPOT RATE FOR 'TO' CURRENCY (ZRATET) IS  = ZERO1
+     C                     ELSE                            X1
+     C           ZRATEF    MULT ZRATET    ZCRSRT
+     C                     END                             E1
+     C*
+     C** MOVE MULT/DIV INDIC FOR 'FROM' CURRENCY TO CROSS RATE MULT/DIV
+     C** INDICATOR (ZCRSMD)
+     C                     MOVE ZMDINF    ZCRSMD
+     C*
+     C** EXECUTE   SR ZCCYXR
+     C                     EXSR ZCCYXR
+     C           CCYEND    ENDSR
+     C********************************************************************
+      /EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*    ZCCYXR SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+     C*    CURRENCY USING AN EXCHANGE RATE BETWEEN THE TWO CURRENCIES          *
+     C*                                                                        *
+     C*   INPUT  FIELDS                                                        *
+     C*       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                         *
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                               *
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR              *
+     C*                      NOTE: FIELD EITHER SET UP IN SR/ZCCYCN OR IF ONE  *
+     C*                      M / D INDICATOR FOR NON-BASE CURRENCY             *
+     C*       ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CURRENCY       *
+     C*       ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CURRENCY         *
+     C*                                                                        *
+     C*   OUTPUT  FIELDS                                                       *
+     C*       ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED AMOUNT)    *
+     C*                                                                        *
+     C*   WORK FIELDS                                                          *
+     C*       ZWKPX   10     POWER INDEX                                       *
+     C*       ZWK153 153                                                       *
+     C*                                                                        *
+     C*   ALSO REQUIRED                                                        *
+     C*       POWER ARRAY                                                      *
+     C*                                                                        *
+     C*   CALLED BY:                                                           *
+     C*                                                                        *
+     C**************************************************************************
+     C*
+     C           ZCCYXR    BEGSR                           *** ZCCYXR ***
+     C*
+     C**   DEFINE ALL FIELDS
+     C                     Z-ADDZAMTF     ZAMTF  150
+     C                     Z-ADDZCDPF     ZCDPF   10
+     C                     Z-ADDZCDPT     ZCDPT   10
+     C                     Z-ADDZAMTT     ZAMTT  150
+     C                     Z-ADDZCRSRT    ZCRSRT 138
+     C                     MOVE ZCRSMD    ZCRSMD  1
+     C                     Z-ADDZWKPX     ZWKPX   10
+     C                     Z-ADDZWK153    ZWK153 153
+     C*
+     C** IF CROSS EXCHANGE RATE IS EQUAL TO ZERO
+     C** SET ZAMTT  TO *ZERO  & EXIT
+     C           ZCRSRT    IFEQ 0
+     C                     Z-ADD*ZEROS    ZAMTT
+     C                     GOTO ZCCEND
+     C                     END
+     C*
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF) EQUALS DECIMAL
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY
+     C           ZCDPF     IFEQ ZCDPT
+     C*
+     C** IF CROSS RATE MULTIPLY/DIVIDE INDICATOR EQUALS 'D'
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN FROM CURRENCY (ZAMTF)
+     C** DIVIDED BY CROSS EXCHANGE RATE
+     C           ZCRSMD    IFEQ 'D'
+     C                     Z-ADDZAMTF     ZAMTT
+     C           ZAMTT     DIV  ZCRSRT    ZAMTT     H
+     C                     END
+     C*
+     C** IF CROSS RATE MULTIPLY/DIVIDE INDICATOR EQUALS 'M'
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN FROM CURRENCY (ZAMTF)
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C           ZCRSMD    IFEQ 'M'
+     C                     Z-ADDZAMTF     ZAMTT
+     C           ZAMTT     MULT ZCRSRT    ZAMTT     H
+     C                     END
+     C                     END
+     C*
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF)  NOT EQUALS DECIMAL
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY
+     C           ZCDPF     IFNE ZCDPT
+     C*
+     C** SUBTRACT DECIMAL PLACES 'FROM' FROM DECIMAL PLACES 'TO' IN POWER INDEX
+     C           ZCDPT     SUB  ZCDPF     ZWKPX
+     C           ZWKPX     ADD  4         Z       10
+     C*
+     C** IF POWER ELEMENT (8,4) LESS THAN 1
+     C           POWER,Z   IFLT 1
+     C*
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY
+     C           POWER,Z   MULT ZAMTF     ZWK153
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT WORK FIELD ZWK153
+     C** DIVIDED    BY CROSS EXCHANGE RATE
+     C           ZCRSMD    IFEQ 'D'
+     C           ZWK153    DIV  ZCRSRT    ZAMTT     H
+     C                     END
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT WORK FIELD ZWK153
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C           ZCRSMD    IFEQ 'M'
+     C           ZWK153    MULT ZCRSRT    ZAMTT     H
+     C                     END
+     C                     END
+     C*
+     C** IF POWER ELEMENT (8,4) GREATER OR EQUAL TO 1
+     C           POWER,Z   IFGE 1
+     C*
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY
+     C           ZAMTF     MULT POWER,Z   ZAMTF
+     C*
+     C** TEST CROSS MULT/DIV INDICATOR
+     C           ZCRSMD    IFEQ 'D'
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C** DIVIDED    BY CROSS EXCHANGE RATE
+     C           ZAMTF     DIV  ZCRSRT    ZAMTT     H
+     C                     END
+     C*
+     C** TEST CROSS MULT/DIV INDICATOR
+     C           ZCRSMD    IFEQ 'M'
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C           ZAMTF     MULT ZCRSRT    ZAMTT     H
+     C                     END
+     C                     END
+     C                     END
+     C           ZCCEND    ENDSR
+     C**************************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+     C**              CONVERT TO A NUMBER OF DAYS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER. RESET ERROR INDICATOR
+     C                     Z-ADD0         ZDAYNO  50
+     C                     SETOF                     99
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID. BYPASS IF ERROR
+     C           ZMTH      IFLE 0
+     C           ZMTH      ORGT 12
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   ENSURE DAY IS VALID. BYPASS IF ERROR
+     C           ZDAY      IFLE 0
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   CHECK FOR 30 DAY MONTHS. BYPASS IF ERROR
+     C           ZMTH      IFEQ 4
+     C           ZMTH      OREQ 6
+     C           ZMTH      OREQ 9
+     C           ZMTH      OREQ 11
+     C**
+     C           ZDAY      IFGT 30
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C**   CHECK FOR 31 DAY MONTHS (ALL OTHERS BUT FEB). BYPASS IF ERROR
+     C           ZDAY      IFGT 31
+     C           ZMTH      ANDNE2
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   CHECK FOR LEAP YEAR: REMAINDER WILL BE ZERO IF IT IS A LEAP YR
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+     C**
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C           ZMTH      IFEQ 2
+     C**
+     C**   INVALID IF GREATER THAN 28 AND NOT A LEAP YEAR
+     C           ZLY       IFGT 0
+     C           ZDAY      ANDGT28
+     C                     SETON                     99
+     C                     GOTO ZDEND1                     BYPASS IF ERROR
+     C                     END
+     C**
+     C**   INVALID IF GREATER THAN 29 AND A LEAP YEAR - BYPASS IF ERROR
+     C           ZLY       IFEQ 0
+     C           ZDAY      ANDGT29
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.
+     C**
+     C**   MULTIPLY NO. OF FOUR-YEAR SPANS, BY NO. OF DAYS IN SPAN
+     C           ZLYR      MULT 1461      ZDAYNO
+     C**
+     C**   IF NOT A LEAP YEAR, ADD APPROPRIATE NO. OF DAYS FOR EXTRA
+     C**   YEARS USING REMAINDER FIELD (IE. 1, 2 OR 3 X 356)
+     C           ZLY       IFGT 0
+     C           ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO
+     C                     END
+     C**
+     C**   IF IT IS A LEAP YEAR, AND LATER THAN FEBRUARY, ADD ONE FOR
+     C**   29TH OF FEB
+     C           ZLY       IFEQ 0
+     C           ZMTH      ANDGT2
+     C           ZDAYNO    ADD  1         ZDAYNO
+     C                     END
+     C**
+     C**   ADD APPROPRIATE NUMBER OF DAYS FOR THE MONTH NUMBER
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO
+     C**
+     C**   ADD NUMBER OF DAYS IN MONTH
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*                                                               *
+     C*           This subroutine will take as input a 16A field      *
+     C*           a 1N number of integers and a 1N number of decimal  *
+     C*           places. Ignoring the leading and trailing blanks    *
+     C*           it will ensure that the field contains only numeric *
+     C*           characters and a decimal point, and that it has no  *
+     C*           embedded blanks, or more than one decimal point.    *
+     C*           It will also check that the number of figures before*
+     C*           and after the decimal point do not exceed the input *
+     C*           parameters. The subroutine will output the number as*
+     C*           a 16A field and a 15N field, along with an error    *
+     C*           code. The alpha field will be right aligned with    *
+     C*           the leading zeros blanked, and trailing blanks zero *
+     C*           filled. The number returned will be 15 long with 0  *
+     C*           decimal places. The error code will contain 0 if    *
+     C*           there was no error, 1 if there was a non-numeric    *
+     C*           character found, and 2 if the number of decimal     *
+     C*           places are wrong.                                   *
+     C*                                                               *
+     C*  Input  : @@ALPH - 16A field containing the field to validate *
+     C*           @@IDP  - number of decimal places                   *
+     C*           @@IINT - number of integers                         *
+     C*                                                               *
+     C*  Output : @@ALPH - 16A field for display                      *
+     C*           @@AMT  - 15N field for calculation                  *
+     C*           @@ERCD - 1N error code                              *
+     C*                                                               *
+     C*  Uses   : @F     - array of 16 elements 1 character long      *
+     C*           @G     - array of 16 elements 1 character long      *
+     C*           @@CADP - calculated number of decimal places        *
+     C*           @@CINT - calculated number of integers              *
+     C*           @@PIDP - position of dp in input array              *
+     C*           @@PODP - position of dp in output array             *
+     C*           @@C    - index for array @F                         *
+     C*           @@D    - index for array @G                         *
+     C*           @@WK7  - workfield used for converting array element*
+     C*                    to a 1N number.                            *
+     C*           @H     - array containing powers of 10              *
+     C*           @@E    - index to array @H                          *
+     C*           @@WK5  - work field                                 *
+     C*           @@ALP1 - feild used to right align 0 decimal places *
+     C*           @@MIEA - maximum input elements allowed             *
+     C*           @@FEL  - first integer element of array @F          *
+     C*           @@MTF  - millions or thousands (M or T) flag        *
+     C*           @@S    - counter                                    *
+     C*           @@S1   - number of decimals after the decimal place *
+     C*           @@S2   - counter                                    *
+     C*           @@MRTS - tests decimal elements for M or T          *
+     C*                                                              *
+      *****************************************************************
+      *
+     C           ZA0840    BEGSR
+      *
+      **   initialize the fields and the arrays
+     C                     MOVE '0'       *IN91
+     C                     MOVE '0'       *IN92
+     C                     Z-ADD0         @@ERCD  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+      *
+      **   define the input fields
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+      *
+      ** first check that the number input will not produce a number
+      ** output with more than 15 figures.
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15                         B1
+     C                     Z-ADD2         @@ERCD           *1
+     C                     GOTO ZA0849                     *1
+     C                     END                             E1
+      *
+      ** work through input array, ignoring leading zeros and blanks,
+      ** also blanking the leading zeros in the input array.
+     C                     MOVE '0'       *IN93
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16                         B1
+     C           *IN93     ANDEQ'0'                        *1
+     C           @F,@@C    IFNE ' '                        B*2
+     C           @F,@@C    ANDNE'0'                        **2
+     C                     MOVE '1'       *IN93            **2
+     C                     SUB  1         @@C              **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              **2
+     C                     END                             E1
+      *
+      ** check the integer part of the number for valid characters.
+     C           @@C       DOWLE16                         B1
+     C           @F,@@C    ANDNE'.'                        *1
+     C           @F,@@C    ANDNE' '                        *1
+      *
+      ** check for non numeric characters
+     C           @F,@@C    IFGT '9'                        B*2
+     C           @F,@@C    ORLT '0'                        **2
+     C                     Z-ADD0         @@AMT            **2
+     C                     Z-ADD1         @@ERCD           **2
+     C                     GOTO ZA0849                     **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     ADD  1         @@CINT           **2
+      *
+      ** check number of integers is not greater than that required
+     C           @@CINT    IFGT @@IINT                     B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** multiply the output amount by 10 then add the number in
+      ** the input array element being processed.
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C           @@AMT     ADD  @@WK7     @@AMT            **2
+     C                     END                             E*2
+      *
+      ** increase array index
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+      *
+      ** set up position of decimal point in input array
+     C                     Z-ADD@@C       @@PIDP
+      *
+      ** if the character pointed to is a decimal point add 1 to the
+      ** index
+     C           @@C       IFLE 16                         B1
+     C           @F,@@C    ANDEQ'.'                        *1
+     C                     ADD  1         @@C              *1
+     C                     MOVE '1'       *IN92            *1
+     C                     END                             E1
+      *
+      ** now validate the decimal part of the number
+     C           @@C       DOWLE16                         B1
+      *
+      ** if a blank is found set on the blank input indicator
+     C           @F,@@C    IFEQ ' '                        B*2
+     C                     MOVE '1'       *IN91            **2
+     C                     END                             E*2
+      *
+      ** if the figure is numeric, check that the number of decimal
+      ** places does not exceed that specified, and that no blanks
+      ** have been entered.
+     C           @F,@@C    IFGE '0'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     ADD  1         @@CADP           **2
+      *
+     C           @@CADP    IFGT @@IDP                      B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C           *IN91     IFEQ '1'                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** update output amount
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C                     ADD  @@WK7     @@AMT            **2
+      *
+     C                     ELSE                            X*2
+      *
+      ** if the character is not numeric and not a blank then it is
+      ** invalid
+     C           @F,@@C    IFNE ' '                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+      ** increase index
+     C                     ADD  1         @@C              *1
+      *
+     C                     END                             E1
+      *
+      ** correct the output number for any decimal places not input
+      ** in the alpha field.
+     C           @@IDP     SUB  @@CADP    @@E
+      *
+      ** increase the index by one to get correct array entry
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+      *
+      ** now format the output alpha field, first calculate where
+      ** the decimal point goes
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+      *
+      ** if there are no decimal points set the position to 17
+     C           @@IDP     IFEQ 0                          B1
+     C                     Z-ADD17        @@PODP           *1
+     C                     END                             E1
+      *
+      ** move the output number into the input array
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+      *
+      ** set up indexes
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN90
+      *
+      ** now fill up the output array
+     C           @@D       DOWLE16                         B1
+      *
+      ** insert decimal point if the position is found
+     C           @@D       IFEQ @@PODP                     B*2
+     C                     MOVE '.'       @G,@@D           **2
+     C                     ADD  1         @@D              **2
+     C                     END                             E*2
+      *
+      ** insert the zero before the decimal point
+     C           *IN90     IFEQ '0'                        B*2
+     C           @@D       ANDEQ@@PIDP                     **2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE '1'       *IN90            **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** blank leading zeros
+     C           *IN90     IFEQ '0'                        B*2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** move a normal character
+     C           @F,@@C    IFGE '1'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     MOVE @F,@@C    @G,@@D           **2
+     C                     MOVE '1'       *IN90            **2
+     C                     END                             E*2
+      *
+      ** non blanked zero
+     C           @F,@@C    IFEQ '0'                        B*2
+     C           *IN90     ANDEQ'1'                        **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         @@C              *1
+     C                     ADD  1         @@D              *1
+     C                     END                             E1
+      *
+      *
+      ** put output array into output amount
+     C                     MOVEA@G        @@ALPH
+      *
+      ** align figure with zero decimal places.
+     C           @@IDP     IFEQ 0                          B1
+     C                     MOVE *BLANKS   @@ALP1 17        *1
+     C                     MOVE @@ALPH    @@ALP1           *1
+     C                     MOVEL@@ALP1    @@ALPH           *1
+     C                     END                             E1
+      *
+     C           ZA0849    ENDSR                           ZA0849 TAG
+      *
+     C*
+     C********************************************************************
+     C**                                                                 *
+     C** ZSEDIT subroutine to insert a decimal point and sign into a     *
+     C** numeric field and to blank out leading zeros (optionaly         *
+     C** inserting commas).                                              *
+     C**     Input fields:   ZFLD15 15/0                                 *
+     C**                     ZDECS  1/0                                  *
+     C**                     ZECODE 1/  ('J', 'L' or blank)              *
+     C**                                                                 *
+     C**     Arrays:         ZS1    15/1/0                               *
+     C**                     ZS2    21/1/                                *
+     C**                                                                 *
+     C**     Output fields:  ZOUT21 21                                   *
+     C**                                                                 *
+     CSR         ZSEDIT    BEGSR                           **  ZSEDIT   *
+     C*
+     C* Define/Clear fields
+     C*
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+     C*
+     C*       SET UP WORK FIELDS
+     C*
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+     C*
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+     C*
+     C           15        SUB  ZDECS     ZINTS   20
+     C*
+     C* Check if numeric field is negative
+     C*
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+     C*
+     C                     Z-ADDZFLD15    WORK15
+     C*
+     C*       CHECK TO SEE IF THERE ARE ANY DECIMAL PLACES
+     C*
+     C           ZDECS     CABEQ0         ZS10
+     C*
+     C*       SET UP DECIMALS
+     C*
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+     C*
+     C*       PUT IN DECIMAL PLACE
+     C*
+     C                     MOVE '.'       ZS2,Z2
+     C                     SUB  1         Z2
+     C*
+     C           ZS10      TAG                             ** ZS10 TAG **
+     C*
+     C*       SET UP INTEGERS
+     C*
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+     C*
+     C* If edit code is 'J', insert a ',' before each group of three
+     C* digits - not if beginning of array reached.
+     C*
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE ','       ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*       PUT IN LEADING BLANKS
+     C*
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ ','
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+     C*
+     C*       IF NO INTEGERS PUT IN LEADING ZERO
+     C*
+     C           ZS20      TAG                             ** ZS20 TAG **
+     C*
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+     C*
+     C           ZS2,Z2    IFEQ '.'
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+     C*
+     C*       SET UP OUTPUT FIELD
+     C*
+     C                     MOVEAZS2       ZOUT21
+     C*
+     CSR                   ENDSR
+     C*****************************************************************
+**  @TX - LARGE TEXT STRINGS
+SBMJOB JOB(PSnnnnnnx) JOBD(BULKTJOBD) USER(*JOBD) RQSDTA('CALL PGM(SEC5240) PARM              CPK014
+(''xxxxxxxxxx'' ''xxxxxx'')')   MSGQ(MOPERQ) RTGDTA(*NONE) INLLIBL(*JOBD)
+OUTQ(*JOBD)                                                                                   CSC023
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  AP - Array of Powers of Ten for Currency Conversion                   CAC003
+0000000001                                                                CAC003
+0000000010                                                                CAC003
+0000000100                                                                CAC003
+0000001000                                                                CAC003
+0000010000                                                                CAC003
+0000100000                                                                CAC003
+0001000000                                                                CAC003
+0010000000                                                                CAC003
+0100000000                                                                CAC003
+1000000000                                                                CAC003
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** array of powers of 10 from 0 to 8
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000
+**  CPY@
+(c) Finastra International Limited 2001

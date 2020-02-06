@@ -1,0 +1,851 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Customer portfolio selection')                *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - PORTFOLIO MANAGEMENT                                 *
+     F*                                                               *
+     F*  PM0635 - PM DELETED CUSTOMER PORTFOLIO SELECTION             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CPB001             Date 06Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 CPM005             Date 16JUL96               *
+     F*                 CFF004             DATE 02OCT96               *
+     F*                 101324             DATE 24JUN96               *
+     F*                 CPM004             DATE 16FEB96               *
+     F*                 085817             DATE 13MAR95               *
+     F*                 S01486             DATE 08JUL94               *
+     F*                 038430             DATE 20AUG93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CPB001 -  'Private Banking' Module                           *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET / LIABILITY SPLIT         *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+     F*  101324 - F3 EXIT DOES NOT WORK PROPERLY                      *
+     F*  CPM004 - Bank Portfolios (RECOMPILED)                        *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  S01486 - Portfolio Management Upgrade                        *
+     F*  038430 - CUSTOMER INSERTION / DELETION ENHANCEMENTS          *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F***PREFIX*'P9'*-*PM*ICD                                             S01486
+     F** PREFIX 'FC' - PM ICD                                             S01486
+     F****SDPORTL1IF  E           K        DISK                           S01486
+     F********************************************* KINFSR *PSSR          S01486
+     F*                                                               *
+     F** PREFIX 'A6' - CURRENCY DETAILS
+     F****SDCURRL1IF  E           K        DISK                           S01486
+     F********************************************* KINFSR *PSSR          S01486
+     F*                                                               *
+     F** PREFIX 'QB' - PM CUSTOMER DETAILS
+     F****SDPCSDPDIF  E           K        DISK
+     FPMPCSDPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F*                                                               *
+     F** PREFIX 'PN' - DELETED PORTFOLIO DETAILS
+     F****PMPORDPPIF  E           K        DISK                           S01486
+     FPMPORDPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F*                                                               *
+     F** PREFIX 'PE' - PORTFOLIO TYPE DETAILS
+     F****PMPTFTPPIF  E           K        DISK                           S01486
+     FPMPTFTPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F*                                                               *
+     F** PREFIX 'QF' - POSITIONS SAVED ON DAY DELETED
+     F****PMCLOCPPIF  E           K        DISK                           S01486
+     FPMCLOCPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F*                                                               *
+     F** PREFIX 'DD' **
+     F****PM0635DDCF  E                    WORKSTN                        S01486
+     FPM0635DFCF  E                    WORKSTN                            S01486
+     F                                        RRN1  KSFILE PM0635S1
+      /COPY ZSRSRC,ZDATE2Z1
+     E                    VC1    10  10  1               Valides codes    S01486
+     E                    VC2        19  1               Valides codes    S01486
+     E                    CPY@    1   1 80
+     E** Array containing Copyright statement
+     E*
+     I*
+     I** EXTERNAL FORMAT FOR GROUP DATA AREA
+     I****WWGDA     E DSPMGRDAPP                                          S01486
+     I**
+     I****WWLDA     E DSPMLDAPP                                           S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     I*
+     ISDMMOD    E DSSDMMODPD                                              S01486
+     I** EXTERNAL DS FOR LANGUAGE ID'S                                    S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I* Portfolio Definition Via Access Program                           S01486
+     I*                                                                   S01486
+     ISDBOOK    E DSSDBOOKPD                                              CPM004
+     I** EXTERNAL DS FOR BOOK DETAILS                                     CPM004
+     I*                                                                   CPM004
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I* DS FOR CURRENCIES DETAILS                                         S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* First DS For Access Programs, Short Data Structure                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* Second DS For Access Programs, Long Data Structure                S01486
+     I*                                                                   S01486
+     IPSDS       SDS
+     I**********                            244 253 WSID                  S01486
+     I**********                            254 263 USID                  S01486
+     I                                      244 253 WKSTN                 S01486
+     I                                      254 263 USER                  S01486
+     I*
+     IPARC        DS                              6
+     I                                        1   6 PACUST
+     I** Format Valid codes                                               S01486
+     I*                                                                   S01486
+     I            DS                                                      S01486
+     I                                        1  19 WWVALC                S01486
+     I                                        1   3 DDVAC1                S01486
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           WWUPRF 10
+     C*
+     C** KEY LIST
+     C           CLOCKY    KLIST
+     C                     KFLD           QMCNUM
+     C                     KFLD           DDPTFR
+     C*                                                                   CPM005
+     C           CLOCKX    KLIST                                          CPM005
+     C                     KFLD           QMCNUM                          CPM005
+     C                     KFLD           KPTFR   4                       CPM005
+     C**
+     C                     EXSR #P1001
+     C**
+     C                     RETRN
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+     C*
+     C*  #P1001 - MAIN CONTOLLING ROUTINE
+     C*
+      ********************************************************************
+     C           #P1001    BEGSR
+     C*
+     C** RETRIEVE DATA AREA
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C*
+     C** INITIALIZE RECORD NUMBER
+     C                     Z-ADD0         RRN1    40
+     C                     MOVE '0'       *IN98
+     C*
+     C** ACCESS LF/SDPORTL1 TO OBTAIN PM ICD
+     C**********           READ SDPORTL1                 70               S01486
+     C**
+     C********** *IN70     IFEQ '1'                                       S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'Y'       QMENQT
+     C                     MOVE 'SDPORT'  QMFILE
+     C                     MOVE 'PM0635'  QMPGM
+     C                     MOVE *BLANKS   QMKEY            ***************
+     C                     Z-ADD1         QMERRN           **DB ERROR 01**
+     C**                                                   ***************
+     C***UPDATE*GDA                                                       S01486
+     C** UPDATE LDA                                                       S01486
+     C**
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C***CALL*PMC1020*TO*TERMINATE*GROUP*JOB                              S01486
+     C**
+     C**
+     C**********           CALL 'PMC1020'                                 S01486
+     C**
+     C                     END
+     C                     CALL 'AOMMODR0'                                S01486
+     C                     PARM '*DBERR ' @RTCD   7                       S01486
+     C                     PARM '*FIRST ' @OPTN   7                       S01486
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01486
+     C**                                                                  S01486
+     C                     MOVELQMBRCA    @BRCA                           S01486
+     C                     Z-ADD0         C       20                      S01486
+     C                     Z-ADD1         D       20                      S01486
+      *                                                                   S01486
+     C           D         DOWLT10                                        S01486
+      *                                                                   S01486
+     C           VC1,D     IFNE *BLANKS                                   S01486
+     C                     MOVELVC1,D     @ZACTN                          S01486
+     C                     EXSR #AUTH                                     S01486
+      *                                                                   S01486
+     C                     ADD  1         C                               S01486
+     C           @ERR      IFEQ 0                                         S01486
+     C                     MOVELVC1,D     VC2,C                           S01486
+     C                     END                                            S01486
+     C                     ADD  1         C                               S01486
+     C                     MOVEA','       VC2,C                           S01486
+      *                                                                   S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+     C                     ADD  1         D                               S01486
+     C                     END                                            S01486
+      *                                                                   S01486
+     C                     MOVEAVC2       WWVALC                          S01486
+     C*
+     C** SET UP INDICATOR USED INSCREEN TITLE
+     C********** P9TVPS    IFEQ 'V'                                       S01486
+     C           FCTVPS    IFEQ 'V'                                       S01486
+     C                     MOVE '1'       *IN35
+     C                     ELSE
+     C                     MOVE '0'       *IN35
+     C                     END
+     C*
+     C** SET UP SCREEN DETAILS
+     C                     EXSR #P1002
+     C*
+     C** DO UNTIL TERMINATION FLAG SET TO 'Y'
+     C                     MOVEL'N'       WWFLAG  1
+     C           WWFLAG    DOUEQ'Y'                        B1
+     C*
+     C** DISPLAY AND VALIDATE DETAILS SCREEN
+     C                     EXSR #P1003
+     C*
+     C** IF F3 TAKEN
+     C           *INKC     IFEQ '1'                        B2
+     C                     MOVEL'Y'       WWFLAG                          101324
+     C**
+     C***SET*ENQUIRIES*TERMINATING*ON *GDA*TO*'Y'                         S01486
+     C** SET ENQUIRIES TERMINATING ON *LDA TO 'Y'                         S01486
+     C**
+     C                     MOVEL'Y'       QMENQT
+     C**
+     C***UPDATE *GDA                                                      S01486
+     C** UPDATE *LDA                                                      S01486
+     C**
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C*
+     C**
+     C***CALL*PMC1020*TO*TERMINATE*GROUP*JOB                              S01486
+     C**********           CALL 'PMC1020'                                 S01486
+     C                     END                             E2
+     C*
+     C** IF F12 TAKEN
+     C           *INKL     IFEQ '1'
+     C**********           CALL 'PMC1020'                                 S01486
+     C                     RETRN                                          S01486
+     C                     END
+     C*
+     C** IF F24 TAKEN DO CUSTOMER DETAILS ENQUIRY
+     C**
+     C           *INKY     IFEQ '1'                        B2
+     C*                                                                   CPM005
+     C** UPDATE DTAARA/*LDA                                               CPM005
+     C                     MOVE 'Y'       QMDLCS                          CPM005
+     C*                                                                   CPM005
+     C                     CALL 'PMC1001'                                 CPM005
+     C                     PARM           WWLDA                           CPM005
+     C*                                                                   CPM005
+     C**********           MOVE QMCNUM    PACUST                          CPM005
+     C**********           CALL 'SD0011E'                                 CPM005
+     C**********           PARM *BLANK    W0RTN   7        Return code    CPM005
+     C**********           PARM           PARC             KEY: Client DeTCPM005
+     C                     CALL 'PM0710'                                  CPM005
+     C                     PARM *BLANKS   WFIELD  2                       CPM005
+     C                     END                             E2
+     C*
+     C** IF OPTION 'E' HAS BEEN TAKEN CALL PGM/PM0720 TO DISPLAY
+     C** PORTFOLIO DETILS
+     C           WSACTN    IFEQ 'E'                        B2
+     C*
+     C** UPDATE DTAARA/*LDA WITH INFO USED IN PM0720
+     C                     MOVE DDPTFR    QMPTF1
+     C                     MOVE DDPTFN    QMPTFN
+     C*
+     C                     CALL 'PMC1001'
+     C                     PARM           WWLDA
+     C*
+     C** CALL PROGRAM TO OUTPUT SCREEN
+     C                     CALL 'PM0720'
+     C                     END                             E2
+     C*
+     C** IF OPTION 'S' HAS BEEN TAKEN START SCROLL SCREEN
+     C           WSACTN    IFEQ 'S'                        B2
+     C*
+     C** CALL SR/#W1001 TO FORMAT DETAILS TO BE OUTPUT ON DTAARA/*LDA
+     C                     EXSR #W1001
+     C*
+     C** CALL  PMC1001 TO UPDATE LDA
+     C                     CALL 'PMC1001'
+     C                     PARM           WWLDA
+     C**
+     C**********           CALL 'PMC0636'                                 S01486
+     C                     CALL 'PM0675'                                  S01486
+     C**
+     C***RETRIEVE*DATA*AREA *GDA*TO*CHECK*IF*TERMINATION*INDICATOR*'ON'   S01486
+     C** RETRIEVE DATA AREA *LDA TO CHECK IF TERMINATION INDICATOR 'ON'   S01486
+     C**
+     C**********           CALL 'PMC1004'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1003'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C           QMENQT    IFNE 'P'
+     C           QMENQT    ANDNE' '
+     C**********           CALL 'PMC1020'                                 S01486
+     C                     END
+     C**
+     C** CALL PMC1001 TO UPDATE LDA WITH BLANKS IN FIELD
+     C** SET UP IN #W1002
+     C**
+     C                     MOVEL*BLANKS   QMPTF1
+     C                     MOVEL*BLANKS   QMPTF2
+     C                     MOVEL*BLANKS   QMPTFN
+     C                     MOVEL*BLANKS   QMTPMV
+     C                     MOVEL*BLANKS   QMVPMV
+     C                     MOVEL*BLANKS   QMPTAI
+     C                     MOVEL*BLANKS   QMPVAI
+     C                     MOVEL*BLANKS   QMPTCY
+     C                     Z-ADD0         QMPCDP
+     C                     MOVEL*BLANKS   QMPTFT
+     C                     MOVEL*BLANKS   QMDPO1
+     C                     MOVEL*BLANKS   QMPPDG
+     C                     MOVEL*BLANKS   QMPGM
+     C                     MOVEL*BLANKS   QMATTN
+     C                     MOVEL*BLANKS   QMPOLC
+     C                     MOVEL*BLANKS   QMPPCS
+     C**
+     C                     CALL 'PMC1001'
+     C                     PARM           WWLDA
+     C**
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C**
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1002   - PROCESS SCREEN SET UP                                 *
+      *                                                                  *
+      ********************************************************************
+     C           #P1002    BEGSR
+     C*
+     C** CLEAR SUBFILES
+     C                     MOVE '1'       *IN61
+     C                     WRITEPM0635C1
+     C                     MOVE '0'       *IN61
+     C                     Z-ADD0         RRN1
+     C*
+     C** SET UP SCREEN FIELDS
+     C                     MOVELQMRUNA    DDRUNA
+     C                     MOVELQMCNUM    DDCNUM
+     C                     MOVELQMCSSN    DDCSSN
+     C                     MOVELQMCRNM    DDCRNM
+     C                     MOVELQMACOC    DDACOC
+     C                     MOVELQMACON    DDACON
+     C                     MOVELQMCSBY    DDCSBY
+     C                     MOVELQMNCTX    DDNCTX
+     C                     MOVELQMDCTX    DDDCTX
+     C                     MOVELQMLANG    DDLANG
+     C                     MOVELQMCRTN    DDCRTN
+     C                     MOVELQMBDA1    DDBDA1
+     C                     MOVELQMDCMS    DDDCMS
+     C*
+     C***ACCESS*DELETED*CUSTOMER*DETAILS*ON*LF/SDPCSDPD                   S01486
+     C** ACCESS DELETED CUSTOMER DETAILS ON LF/PMPCSDPD                   S01486
+     C                     MOVE QMCNUM    WACNUM  6
+     C********** WACNUM    CHAINSDPCSDPD             70                   S01486
+     C           WACNUM    CHAINPMPCSDPD             70                   S01486
+     C**
+     C           *IN70     IFEQ '1'
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'Y'       QMENQT
+     C**********           MOVE 'SDPCSDPD'QMFILE                          S01486
+     C                     MOVE 'PMPCSDPD'QMFILE                          S01486
+     C                     MOVE 'PM0635'  QMPGM
+     C                     MOVELWACNUM    QMKEY            ***************
+     C                     Z-ADD1         QMERRN           **DB ERROR 01**
+     C**                                                   ***************
+     C***UPDATE*GDA                                                       S01486
+     C** UPDATE LDA                                                       S01486
+     C**
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C***CALL*PMC1020*TO*TERMINATE*GROUP*JOB                              S01486
+     C**
+     C**
+     C**********           CALL 'PMC1020'                                 S01486
+     C**
+     C                     END
+     C*
+     C***SET*DATE*DELETED*TO*DATE*FROM*SDPCSDPD                           S01486
+     C** SET DATE DELETED TO DATE FROM PMPCSDPD                           S01486
+     C                     MOVELQBDLUP    WWORK5  5
+     C                     MOVE QBMLUP    WWORK5
+     C                     MOVELWWORK5    DDCUSD
+     C                     MOVE QBYLUP    DDCUSD
+     C*
+     C** POSITION IN FILE PMPORTPP
+     C********** QMCNUM    SETLLPMPORDPP                                  S01486
+     C           QMCNUM    SETLLPMPORDPD                                  S01486
+     C**
+     C**********           READ PMPORDPP                 71               S01486
+     C                     READ PMPORDPD                 71               S01486
+     C**
+     C** LOOP WHILE CUSTOMER NUMBER FOUND
+     C           PNCNUM    DOWEQQMCNUM                     B1
+     C           *IN71     ANDEQ'0'
+     C*
+     C** LOAD SCREEN FIELDS
+     C                     MOVELPNPTFR    DDPTFR
+     C                     MOVELPNPTFN    DDPTFN
+     C                     MOVELPNPTCY    DDPTCY
+     C                     MOVELPNPTFR    DDPTF1
+     C*
+     C** WRITE RECORD TO SUBFILE
+     C                     ADD  1         RRN1
+     C                     WRITEPM0635S1
+     C*
+     C**********           READ PMPORDPP                 71               S01486
+     C                     READ PMPORDPD                 71               S01486
+     C                     END                             E1
+     C*
+     C** WRITE RECORD TO SUBFILE FOR 9997, 9998 AND 9999 PORTFOLIOS
+     C** IF REQUIRED
+     C********** P9DP97    IFEQ 'Y'                                       S01486
+     C           FCDP97    IFEQ 'Y'                                       S01486
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C**********           MOVELP9R997    DDPTFR                          S01486
+     C**********           MOVELP9N997    DDPTFN                          S01486
+     C                     MOVELFCR997    DDPTFR                          S01486
+     C                     MOVELFCN997    DDPTFN                          S01486
+     C                     MOVELQBCSBY    DDPTCY
+     C                     MOVEL'9997'    DDPTF1
+     C                     ADD  1         RRN1
+     C                     WRITEPM0635S1
+     C                     END
+     C*
+     C********** P9DP98    IFEQ 'Y'                                       S01486
+     C           FCDP98    IFEQ 'Y'                                       S01486
+     C**********           MOVELP9R998    DDPTFR                          S01486
+     C**********           MOVELP9N998    DDPTFN                          S01486
+     C                     MOVELFCR998    DDPTFR                          S01486
+     C                     MOVELFCN998    DDPTFN                          S01486
+     C                     MOVELQBCSBY    DDPTCY
+     C                     MOVEL'9998'    DDPTF1
+     C                     ADD  1         RRN1
+     C                     WRITEPM0635S1
+     C                     END
+     C*
+     C           BGN4ST    IFNE 'Y'                                       CPB001
+     C**********           MOVELP9R999    DDPTFR                          S01486
+     C**********           MOVELP9N999    DDPTFN                          S01486
+     C                     MOVELFCR999    DDPTFR                          S01486
+     C                     MOVELFCN999    DDPTFN                          S01486
+     C                     MOVELQBCSBY    DDPTCY
+     C                     MOVEL'9999'    DDPTF1
+     C                     ADD  1         RRN1
+     C                     WRITEPM0635S1
+     C                     ENDIF                                          CPB001
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P1003   - OUTPUT SCREEN AND VALIDATE SELECTION OFFERSR          *
+      *                                                                  *
+      ********************************************************************
+     C           #P1003    BEGSR
+     C*
+     C** LOOP AROUND UNTIL VALID SELECTION DETAILS ENTERED
+     C                     MOVE 'N'       WWVALD  1
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN37
+     C*
+     C           WWVALD    DOUEQ'Y'                        B1
+     C*
+     C** OUTPUT SCREEN
+     C                     Z-ADDRRN1      SFLRRN
+     C                     WRITEPM0635F1
+     C                     WRITEPM0635F2
+     C                     WRITEPM0635C1
+     C*
+     C** READ IN SCREEN
+     C                     READ PM0635C1                 70
+     C*
+     C** IF ONE OF FUNCTION KEYS SELECTED SET VALID FLAG TO 'Y' AND
+     C** EXIT ROUTINE
+     C           *INKC     IFEQ '1'                        B2
+     C           *INKL     OREQ '1'
+     C           *INKY     OREQ '1'
+     C                     MOVE 'Y'       WWVALD
+     C*
+     C** OTHERWISE READ CHANGED RECORD AND VALIDATE SELECTION OPTION
+     C                     ELSE                            X2
+     C                     MOVE '0'       *IN36
+     C                     MOVE '0'       *IN37
+     C                     MOVE 'Y'       WWVALD
+     C                     READCPM0635S1                 70
+     C                     MOVE DDACTN    WSACTN  1
+     C                     MOVE *BLANKS   DDACTN
+     C                     UPDATPM0635S1
+     C*
+     C** OPTION 'E' MAY ONLY BE ENTERED FOR DEFINED PORTFOLIO
+     C           WSACTN    IFEQ 'E'                        B3
+     C********** DDPTFR    IFEQ P9R997                     B4             S01486
+     C********** DDPTFR    OREQ P9R998                                    S01486
+     C********** DDPTFR    OREQ P9R998                                    S01486
+     C           DDPTFR    IFEQ FCR997                     B4             S01486
+     C           DDPTFR    OREQ FCR998                                    S01486
+     C********** DDPTFR    OREQ FCR998                              S01486CPM005
+     C           DDPTFR    OREQ FCR999                                    CPM005
+     C                     MOVE '1'       *IN37
+     C                     MOVE 'N'       WWVALD
+     C                     END                             E4
+     C                     END                             E3
+     C*
+     C***OPTION*'S'*MAY*ONLY*BE*ENTERED*IF*POSIIONS*EXIST*ON*PMCLOCPP     S01486
+     C** OPTION 'S' MAY ONLY BE ENTERED IF POSIIONS EXIST ON PMCLOCPD     S01486
+     C           WSACTN    IFEQ 'S'                        B3
+     C           DDPTFR    IFEQ FCR997                     B4             CPM005
+     C                     MOVE '9997'    KPTFR                           CPM005
+     C                     ELSE                            X4             CPM005
+     C           DDPTFR    IFEQ FCR998                     B5             CPM005
+     C                     MOVE '9998'    KPTFR                           CPM005
+     C                     ELSE                            X5             CPM005
+     C           DDPTFR    IFEQ FCR999                     B6             CPM005
+     C                     MOVE '9999'    KPTFR                           CPM005
+     C                     ELSE                            X6             CPM005
+     C                     MOVE DDPTFR    KPTFR                           CPM005
+     C                     END                             E6             CPM005
+     C                     END                             E5             CPM005
+     C                     END                             E4             CPM005
+     C********** CLOCKY    SETLLPMCLOCPP                                  S01486
+     C********** CLOCKY    READEPMCLOCPP                 70               S01486
+     C********** CLOCKY    SETLLPMCLOCPD                            S01486CPM005
+     C********** CLOCKY    READEPMCLOCPD                 70         S01486CPM005
+     C           CLOCKX    SETLLPMCLOCPD                                  CPM005
+     C           CLOCKX    READEPMCLOCPD                 70               CPM005
+     C           *IN70     IFEQ '1'                        B4
+     C                     MOVE '1'       *IN36
+     C                     MOVE 'N'       WWVALD
+     C                     END                             E4
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W1001   - FORMAT DETAILS TO BE OUTPUT ON DTAARA/*LDA            *
+      *                                                                  *
+      ********************************************************************
+     C           #W1001    BEGSR
+     C*
+     C***OBTAIN*PORTFOLIO*DETAILS*FROM*PF/PMPORDPP                        S01486
+     C** OBTAIN PORTFOLIO DETAILS FROM PF/PMPORDPD                        S01486
+     C********** DDPTFR    IFNE P9R997                     B1             S01486
+     C********** DDPTFR    ANDNEP9R998                                    S01486
+     C********** DDPTFR    ANDNEP9R999                                    S01486
+     C           DDPTFR    IFNE FCR997                     B1             S01486
+     C           DDPTFR    ANDNEFCR998                                    S01486
+     C           DDPTFR    ANDNEFCR999                                    S01486
+     C********** CLOCKY    CHAINPMPORDPP             70                   S01486
+     C           CLOCKY    CHAINPMPORDPD             70                   S01486
+     C                     ELSE                            X1
+     C**
+     C**   SET 'PORTFOLIO' CURRENCY,DEC.PLACES & DATE OPENED FOR NON-PORTF
+     C**
+     C                     MOVELQMCSBY    PNPTCY
+     C                     MOVELQMBYDP    PNPCDP
+     C                     Z-ADD*ZERO     PNDPOP
+     C                     END                             E1
+     C*
+     C** PORTFOLIO REFERENCE ON FILE
+     C                     MOVELDDPTF1    QMPTF1
+     C**
+     C** SET UP PORTFOLIO REFERENCE ON SCREEN
+     C**
+     C           QMPTF1    IFEQ '9997'                     B1
+     C**********           MOVELP9R997    QMPTF2                          S01486
+     C**********           MOVELP9N997    QMPTFN                          S01486
+     C                     MOVELFCR997    QMPTF2                          S01486
+     C                     MOVELFCN997    QMPTFN                          S01486
+     C                     ELSE                            X1
+     C**
+     C           QMPTF1    IFEQ '9998'                     B2
+     C**********           MOVELP9R998    QMPTF2                          S01486
+     C**********           MOVELP9N998    QMPTFN                          S01486
+     C                     MOVELFCR998    QMPTF2                          S01486
+     C                     MOVELFCN998    QMPTFN                          S01486
+     C                     ELSE                            X2
+     C**
+     C           QMPTF1    IFEQ '9999'                     B3
+     C**********           MOVELP9R999    QMPTF2                          S01486
+     C**********           MOVELP9N999    QMPTFN                          S01486
+     C                     MOVELFCR999    QMPTF2                          S01486
+     C                     MOVELFCN999    QMPTFN                          S01486
+     C                     ELSE                            X3
+     C**
+     C                     MOVELDDPTFR    QMPTF2
+     C                     MOVELDDPTFN    QMPTFN
+     C**
+     C                     END                             E3
+     C**
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C**
+     C**********           MOVELP9TVPS    QMTVPS                          S01486
+     C                     MOVELFCTVPS    QMTVPS                          S01486
+     C                     MOVELPNPTCY    QMPTCY
+     C*
+     C** DETERMINE PORTFOLIO
+     C********** QMPTCY    CHAINSDCURRL1             70                   S01486
+     C**
+     C                     MOVELQMPTCY    @AJCD                           S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '*DBERR'  @RTCD   7                       S01486
+     C                     PARM '*KEY   ' @OPTN   7                       S01486
+     C                     PARM           @AJCD   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C           @RTCD     IFNE *BLANKS                                   S01486
+     C********** *IN70     IFEQ '1'                        B3             S01486
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'Y'       QMENQT
+     C                     MOVE 'SDCURRL1'QMFILE
+     C                     MOVE 'PM0635'  QMPGM
+     C                     MOVE QMPTCY    QMKEY            ***************
+     C                     Z-ADD4         QMERRN           **DB ERROR 10**
+     C**                                                   ***************
+     C***UPDATE*GDA                                                       S01486
+     C** UPDATE LDA                                                       S01486
+     C**
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C***CALL*PMC1020*TO*TERMINATE*GROUP*JOB                              S01486
+     C**
+     C**********           CALL 'PMC1020'                                 S01486
+     C*
+     C                     END
+     C**
+     C                     MOVE A6NBDP    QMPCDP
+     C**
+     C** PORTFOLIO TYPE
+     C**
+     C           DDPTF1    IFEQ '9997'                     B1
+     C           DDPTF1    OREQ '9998'
+     C           DDPTF1    OREQ '9999'
+     C                     MOVE *BLANKS   QMPTFT
+     C                     ELSE                            X1
+     C           PNPTFT    IFNE *BLANK                     B2
+     C********** PNPTFT    CHAINPMPTFTPP             70                   S01486
+     C           PNPTFT    CHAINPMPTFTPD             70                   S01486
+     C**
+     C           *IN70     IFEQ '1'                        B3
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'Y'       QMENQT
+     C**********           MOVE 'PMPTFTPP'QMFILE                          S01486
+     C                     MOVE 'PMPTFTPD'QMFILE                          S01486
+     C                     MOVE 'PM0635'  QMPGM
+     C                     MOVE PNPTFT    QMKEY            ***************
+     C                     Z-ADD5         QMERRN           **DB ERROR 10**
+     C**                                                   ***************
+     C***UPDATE GDA                                                       S01486
+     C** UPDATE LDA                                                       S01486
+     C**
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C***CALL*PMC1020*TO*TERMINATE*GROUP*JOB                              S01486
+     C**
+     C**********           CALL 'PMC1020'                                 S01486
+     C*
+     C                     END                             E3
+     C**
+     C                     MOVELPEPTFT    QMPTFT
+     C                     END                             E2
+     C                     END                             E1
+     C**
+     C** DATE PORTFOLIO OPENED
+     C**
+     C                     Z-ADDPNDPOP    ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    QMDPO1
+     C**
+     C** PORTFOLIO PLEDGED INDICATOR
+     C**
+     C                     MOVEL'N'       QMPPDG
+     C**
+     C** ENQUIRIES TERMINATING
+     C**
+     C                     MOVEL*BLANKS   QMENQT
+     C**
+     C** DATA BASE ERROR
+     C**
+     C                     MOVEL'PM0635'  QMPGM
+     C**
+     C** ATTENTION KEY ALLOWED
+     C**
+     C           DDACTN    IFEQ 'S'
+     C                     MOVEL'Y'       QMATTN
+     C                     ELSE
+     C                     MOVEL'N'       QMATTN
+     C                     END
+     C**
+     C** BANK INVESTMENT POLICY CODE
+     C                     MOVE *BLANKS   QMPOLC
+     C**                                                                  CPM004
+     C** DETERMINE BOOK CODE                                              CPM004
+     C**                                                                  CPM004
+     C           QMPTF1    IFNE '9996'                                    CPM004
+     C           QMPTF1    ANDNE'9997'                                    CPM004
+     C           QMPTF1    ANDNE'9998'                                    CPM004
+     C**                                                                  CPM004
+     C                     CALL 'AOBOOKR1'                                CPM004
+     C                     PARM *BLANKS   @RTCD   7                       CPM004
+     C                     PARM '*KEY   ' @OPTN   7                       CPM004
+     C                     PARM DDPTF1    @PTFR   4                       CPM004
+     C           SDBOOK    PARM SDBOOK    DSSDY                           CPM004
+     C           @RTCD     IFEQ *BLANK                                    CPM004
+     C                     MOVELBDBKCD    QMBOKC                          CPM004
+     C                     END                                            CPM004
+     C**                                                                  CPM004
+     C                     ELSE                                           CPM004
+     C                     MOVEL*BLANK    QMBOKC                          CPM004
+     C                     END                                            CPM004
+     C**
+     C                     ENDSR
+     C********************************************************************S01486
+     C**                                                                  S01486
+      /EJECT                                                              S01486
+     C**                                                                  S01486
+     C********************************************************************S01486
+     C*                                                                  *S01486
+     C*    #AUTH - CHECK ACTION CODE AND BRANCH AUTHORITY                *S01486
+     C*                                                                  *S01486
+     C*    CALLED BY: #V10F0 - PROCESS VALIDATION OF START SCREEN        *S01486
+     C*    CALLS:                                                        *S01486
+     C*                                                                  *S01486
+     C********************************************************************S01486
+     C           #AUTH     BEGSR                                          S01486
+     C*                                                                   S01486
+     C** Multi-branch system, user must be authorised to action on        S01486
+     C** branch.                                                          S01486
+     C*                                                                   S01486
+     C           BGMBIN    IFEQ 'Y'                                       S01486
+     C                     CALL 'ZVACTBU'                                 S01486
+     C***********          PARM           @ZACTN  1                 S01486CPM005
+     C                     PARM 'E'       @ZACTN  1                       CPM005
+     C                     PARM           @BRCA   3                       S01486
+     C                     PARM           @ERR    10                      S01486
+     C*                                                                   S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C** Single branch system, check user is authorised to action code    S01486
+     C*                                                                   S01486
+     C                     CALL 'ZVACTU'                                  S01486
+     C***********          PARM           @ZACTN                    S01486CPM005
+     C                     PARM 'E'       @ZACTN                          CPM005
+     C                     PARM           @ERR                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+      ********************************************************************S01486
+     C**                                                                  S01486
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - TO PROCESS DATA BASE ERRORS                           *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'Y'       QMENQT
+     C**
+     C***UPDATE *GDA                                                      S01486
+     C** UPDATE *LDA                                                      S01486
+     C**
+     C**********           CALL 'PMC1002'                                 S01486
+     C**********           PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C**
+     C                     DUMP
+     C**
+     C**********           CALL 'PMC1020'                                 S01486
+     C**
+     C                     ENDSR
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+     C**
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  VC1 - Valid codes for program
+SE
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,77 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#JEPOST2 - Journal Entry Postings to include extensions             */
+/*                                                                             */
+/*       (c) Finastra International Limited 2013                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. MD046901           Date 21Jul17                        */
+/*                      CGL182             Date 14Jul17                        */
+/*                      CGL135A   *CREATE   Date 04Oct13                       */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       MD046901 - Batch details listview is not loading in the other zone    */
+/*       CGL182 - Journal Entry via the Interface File-Java Version            */
+/*       CGL135A - Accounting Rules Process                                    */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+   BTBTNB, BTIBCA, BTCYCD, BTACCD, BTACSN, BTNNBI,                              :
+   BTRINO, BTRINE, BTTRTY, BTDCIN, BTNVCD, BTNRDC, BTACTY,                      :
+   BTACNB, BTCQNB, BTCOIN, BTSWCR, BTPRCN, BTRADP, BTSHPI,                      :
+   BTRNBE, BTRARC, BTTSTY, BTBKCD, BTSPFC, BTRVDI, BTNITM,                      :
+   BTOCCY, BTFRNT, BTAFRT, BTTMST, BTVALI,                                      :
+   BTCUST, BTRACN, BTBINB, BTPTDT, BTVLDT,                                      :
+   DIGITS(BTBINB) AS PADBINB,                                                   :
+   BTCUST AS PADCUST,                                                           :
+   CASE WHEN BTRACN=0 THEN NULL ELSE DIGITS(BTRACN) END AS PADRACN,             :
+   CASE WHEN BEPSDN IS NULL THEN DATE(BTPTDT+719892) ELSE DATE(BEPSDN+719892)   :
+   END AS FBEPSDN,                                                              :
+   CASE WHEN BTVLDT=0 THEN NULL ELSE DATE(BTVLDT+719892) END AS FBTVLDT,        :
+   BTPTAM AS SBTPTAM,                                                           :
+   BTOAMT AS SBTOAMT,                                                           :
+   GZGLJENXPD.BAADI1, GZGLJENXPD.BAADI2, GZGLJENXPD.BAADI3, GZGLJENXPD.BAADI4,  :
+   GZGLJENXPD.BAADI5, GZGLJENXPD.BAADI6, GZGLJENXPD.BAAERI,                     :
+   A8ZONE AS CUSTZONE,                                                          :
+   GPGLCUSL.CGGLOB,GPGLCUSL.CGCSSN,GPGLCUSL.CGRNM,GPGLCUSL.CGRTN,               :
+   GPGLCUSL.CGICD,GPGLCUSL.CGACO,GPGLCUSL.CGCNCZ,GPGLCUSL.CGCOLC,               :
+***GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE,*A.IQBCRT,*A.IQBCIN**********:             CGL182
+   GPGLCUSL.CGBRCD,GPGLCUSL.CGCUST,GPGLCUSL.CGZONE, A.IQBCRT, A.IQBCIN,         :             CGL182
+   OEAPIN, OETREF                                                               :             CGL182
+  FROM GZGLJENPPD                                                               :
+  LEFT JOIN GZGLJENXPD ON BTBTNB = BABTNB AND BTBINB = BABINB                   :
+  LEFT JOIN GZSDBRCHPD ON BTIBCA = A8BRCD                                       :
+  LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCUST = BTCUST AND                 :
+  CGBRCD = A8BRCD                                                               :
+  LEFT JOIN GZGLJENPQD A ON BTBTNB = A.IQBTCH AND BTBINB = A.IQBITM             :
+                        AND BTIBCA = A.IQBRCD                                   :
+  LEFT JOIN GZGLJENP1D C ON C.BEPSTD = BTPTDT AND C.BEBTNB = BTBTNB AND         :
+**C.BEBINB = BTBINB;************************************************************:             CGL182
+  C.BEBINB = BTBINB                                                             :             CGL182
+**LEFT*JOIN*SCOEAPTD*ON*OEAPIN*=*'BITP'*AND*OETREF*=*BTBTNB*CONCAT*'|'**********:    CGL182 MD046901
+**CONCAT*DIGITS(BTBINB);********************************************************:    CGL182 MD046901
+  LEFT JOIN GZSCOEAPTD ON OEAPIN = 'BITP' AND OETREF = BTBTNB CONCAT '|'        :           MD046901
+  CONCAT DIGITS(BTBINB) AND A8ZONE = OEZONE;                                    :           MD046901
+ 
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADBINB    AS BTBINB     USING GZGLJENPPD                      :
+ * DESCRIBEFIELD FBEPSDN    AS BEPSDN     USING GZGLJENP1D                      :
+ * DESCRIBEFIELD FBTVLDT    AS BTVLDT     USING GZGLJENPPD                      :
+ * DESCRIBEFIELD SBTPTAM    AS BTPTAM     USING GZGLJENPPD                      :
+ * DESCRIBEFIELD SBTOAMT    AS BTOAMT     USING GZGLJENPPD                      :
+ * DESCRIBEFIELD PADCUST    AS BTCUST     USING GZGLJENPPD                      :
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :
+ * DESCRIBEEND                                                                  :
+                                                                                :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Journal entry postings - GZGLJENPPD      ';                     :
+                                                                                :

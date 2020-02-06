@@ -1,0 +1,150 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AA Initialise account postings profit centre')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Analytical Accounting Module                         *
+      *                                                               *
+      *  AA0021 - Initialise Account Postings Profit Centre           *
+      *                                                               *
+      *  Function:  This program initialises the profit centre of     *
+      *             each retail and nostro accounts posting record    *
+      *             with the profit centre on the account.            *
+      *                                                               *
+      *             NOTE: This program DOES NOT pass Department and   *
+      *             User to the PCDM (it passes Blanks) As these are  *
+      *             generally unavailable from the transaction file.  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 184967             Date 12Sep00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC001 *CREATE     Date 01FEB96               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information (Recompile)                             *
+      *  184967 - Run PGM only if AADTA has run successfully          *
+      *  CAC001 - Profit Centre Accounting Development                *
+      *                                                               *
+      *****************************************************************
+      *
+     F**ACCNT****IF**E***********K********DISK*************************       184967
+      ****Accounts*Master*File*****************************************       184967
+     F************ACCNTAAF**************************KIGNORE************       184967
+     F************ACCNTACF**************************KIGNORE************       184967
+     FACCNTAB IF  E                    DISK                                   184967
+      *
+     FAPOSTL1 UF  E           K        DISK
+      **  Account Postings File
+      *
+      /SPACE 3
+     E                    CPY@    1   1 80
+      **  Copyright array
+      *
+     IACCNTABF
+      **  Rename profit centre
+      *
+     I              PRFC                            ACPRFC
+     IAPOSTPDF    01
+     IGLACPHPF    02
+      *                                                                       184967
+     IAADTA     E DS                                                          184967
+      **  AA Data Area                                                        184967
+      *                                                                       184967
+      /EJECT
+      *****************************************************************
+      *  MAIN PROCESSING
+      *****************************************************************
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Define key list for LF/APOSTL1
+      *
+     C           KAPOST    KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+      *                                                                       184967
+      **  Read in data area AADTA to test if AA0002 has been called           184967
+      *                                                                       184967
+     C           *NAMVAR   DEFN           AADTA                               184967
+     C                     IN   AADTA                                         184967
+      *                                                                       184967
+      *                                                                       184967
+      **  Run only if AA0001 has already been run successfully                184967
+     C           AARNPI    IFEQ 'Y'                                           184967
+      *
+      **  Read account master file
+      **  until retail or nostro account found
+      *
+     C                     READ ACCNTABF                 20
+     C           *IN20     DOWEQ'0'
+     C           ATYP      ANDNE'R'
+     C           ATYP      ANDNE'N'
+     C                     READ ACCNTABF                 20
+     C                     END
+      *
+      **  Do while not end of file
+      *
+     C           *IN20     DOWEQ'0'
+      *
+      **  Set lower limits on APOST
+      *
+     C           KAPOST    SETLLAPOSTL1
+     C                     MOVEA'00'      *IN,01
+     C           KAPOST    READEAPOSTL1                  30*
+      *
+      **  Read all postings for the account from GLACPHPD/APOSTPD
+      *
+     C           *IN30     DOWEQ'0'
+      *
+      **  Update the profit centre on GLACPHPD/APOSTPD
+      **  with the account profit centre
+      *
+     C                     MOVE ACPRFC    PRFC
+     C   01                EXCPTAPOST
+     C   02                EXCPTGLACPH
+     C                     MOVEA'00'      *IN,01
+     C           KAPOST    READEAPOSTL1                  30*
+     C                     ENDDO
+      *
+      **  Read next record
+     C                     READ ACCNTABF                 20
+     C           *IN20     DOWEQ'0'
+     C           ATYP      ANDNE'R'
+     C           ATYP      ANDNE'N'
+     C                     READ ACCNTABF                 20
+     C                     END
+      *
+     C                     ENDDO
+      *                                                                       184967
+      * ENDIF for AA0001 has run succesfully                                  184967
+     C                     ENDIF                                              184967
+      *
+      **  Seton last record indicator and return to calling pgm
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+     OAPOSTPDFE                APOST
+     O                         PRFC
+     OGLACPHPFE                GLACPH
+     O                         PRFC
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

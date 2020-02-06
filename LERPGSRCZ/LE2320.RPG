@@ -1,0 +1,2788 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Unauthorized transactions report')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE2320 - Midas LE Unauthorised Transactions Report           *
+      *                                                               *
+      *  Function:  This program will process all Customer Lending    *
+      *  (I/C)      transactions performed during the day.  If any    *
+      *             are found which have not been authorized, the     *
+      *             Unauthorized Transactions Audit Report will be    *
+      *             produced.                                         *
+      *                                                               *
+      *                                                               *
+      *  Called By: LEC2320 - Unauthorised Transactions Print Control *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR787620           Date 10Jun11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 244279             Date 07Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 28Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE030             Date 20Sep02               *
+      *                 CAS006             Date 21Jan03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 201123             Date 24Jul02               *
+      *                 204452             Date 03May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 202364             Date 28Jan02               *
+      *                 201797             Date 15Jan02               *
+      *                 194662             Date 04Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CRT004             Date 04May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176443             Date 18Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 168809             Date 07Oct99               *
+      *                 CLE009             Date 11May99               *
+      *                 128150             Date 29DEC97               *
+      *                 127657             Date 25Nov97               *
+      *                 124047             Date 14Oct97               *
+      *                 123846             Date 14Oct97               *
+      *                 121783             Date 20AUG97               *
+      *                 CLE002 *Create     Date 02Dec96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees                *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00276                                 *
+      *             WNCPYSRC,LEH00283                                 *
+      *             WNCPYSRC,LEH00277                                 *
+      *             WNCPYSRC,LEH00278                                 *
+      *             WNCPYSRC,LEH00279                                 *
+      *             WNCPYSRC,LEH00280                                 *
+      *             WNCPYSRC,LEH00281                                 *
+      *             WNCPYSRC,LEH00282                                 *
+      *  244279 - Include adjustments to accrued interest/margin in   *
+      *           enquiry and report.                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CLE106 - Syndication Manager                                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE030 - Customer Lending Enhancement - Release Authorisation*
+      *           Recompile due to the changes in LF/LELOANL1,        *
+      *           LF/LELOAML1, LF/LELOANL3                            *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAS005 - Enahancements to CAS001, CAS002 and CAS004          *
+      *           (Recompile)                                         *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  201123 - Include Original Borrower in this report when       *
+      *           processing type of loan is either 64, 65, 68 or 71. *
+      *  204452 - Recompiled due to changed PF/LEFEED.                *
+      *  202364 - Fee settlement is not included in the unauthorised  *
+      *           transaction report.  Fix was to add LF/LEFEEAL3 to  *
+      *           be able to generate entries for Fee settlement      *
+      *           transactions.                                       *
+      *  201797 - Several changes to report LE2320P1.                 *
+      *  194662 - Repayment schedule amount 0 on unauthorised enq     *
+      *  CSD006 - Use long DS with SDCURRPD.                          *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CRT004 - Cashier Midas TCP/IP interface.                     *
+      *             Recompiled over SDBRCHPD Changes                  *
+      *  176443 - Avoid MCH3601 to be sent.                           *
+      *           Pass correct parameter to AOCUSTR0.                 *
+      *  168809 - Error in 128150 causes database error because       *
+      *           program has shortname in customer number field      *
+      *           when chaining to customer record.                   *
+      *  CLE009 - LE I/C Swift Message Generation for Fees            *
+      *           Recompiled due to changes in LEFEED                 *
+      *  128150 - Output customer shortname on all formats            *
+      *  127657 - Unauthorised facility amendments and manual         *
+      *           facility utilisation not reported.                  *
+      *  124047 - Unauthorised facilities not reported                *
+      *  123846 - Unauthorised fees should only be reported if        *
+      *           CLE005 is ON                                        *
+      *  121783 - Call new access object AOBRCHR1 instead of AOBRCHR0 *
+      *           (uses the long data structure DSSDY)                *
+      *  CLE002 - Customer Lending Enhancements - Authorisation       *
+      *                                                               *
+      *****************************************************************
+     FLE2320AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     FLE2320P1O   E                    PRINTER
+     F                                              KINFDS SPOOL1
+     FLELOANL1IF  E           K        DISK         KINFSR *PSSR
+     FLELOAMLDIF  E           K        DISK         KINFSR *PSSR                              244279
+     F***LELOAML1IF  E           K        DISK         KINFSR *PSSR                           244279
+     FLELOANL3IF  E           K        DISK         KINFSR *PSSR
+     FLEGTEEL1IF  E           K        DISK         KINFSR *PSSR
+     FLEFEESL1IF  E           K        DISK         KINFSR *PSSR
+      *                                                                                       202364
+     FLEFEEAL3IF  E           K        DISK         KINFSR *PSSR                              202364
+      *                                                                                       202364
+     FCLOAN   IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANCKF                          KRENAMECLOANCK
+     F            CLOANCLF                          KRENAMECLOANCL
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FLEFCLTL1IF  E           K        DISK         KINFSR *PSSR          124047
+     FLEFCAML2IF  E           K        DISK         KINFSR *PSSR          127657
+     FLEMNFUL2IF  E           K        DISK         KINFSR *PSSR          127657
+     FLEFERCL2IF  E           K        DISK         KINFSR *PSSR                              CLE071
+     F/COPY WNCPYSRC,LE2320F001
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   33  - CLE006 is ON                                          *                       201797
+      *   34  - CHAIN failed in CLOANCL                               *                       201797
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REP1   - Process Unauthroised Loans/Parts                    *
+      *  REP2   - Process Unauthroised Loan Amendments                *
+      *  REP3   - Process Unauthroised Rollovers                      *
+      *  REP4   - Process Unauthroised Guarantees                     *
+      *  REP5   - Process Unauthroised Fees                           *
+      *  REP6   - Process Unauthroised Facilities                     *   124047
+      *  REP7   - Process Unauthorised Facility Amendments            *   127657
+      *  REP8   - Process Unauthorised Manual Facility Utilisation    *   127657
+      *  REP10  - Process Unauthorised Fee Rate Changes               *                       CLE071
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *
+      *  ZFRPED - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E********************LBL     1   5 45                                124047
+     E********************LBL     1   6 45                          124047127657
+     E/COPY WNCPYSRC,LE2320E001
+     E**********          LBL     1   8 45                                             127657 202364
+     E**********          LBL     1   9 45                                             202364 CLE071
+     E                    LBL     1  10 45                                                    CLE071
+     E/COPY WNCPYSRC,LE2320E002
+      *
+      ** Array containing Label for Audit Report
+      *
+     E***********         DESC    1  12 20                                127657
+     E**********          DESC    1  17 20                                             127657 201797
+     E**********          DESC    1  18 20                                             201797 244279
+     E**********          DESC    1  20 20                                             244279 CLE148
+     E                    DESC    1  21 20                                                    CLE148
+     E/COPY WNCPYSRC,LEH00276
+      *
+      ** Array containing Description of Unauthorised Loans/Parts
+      *
+     E**********          SYTP    1   4  9                                             124047 CLE106
+     E                    SYTP    1   6  9                                                    CLE106
+      *                                                                   124047
+      ** Array containing Description of Syndicate type                   124047
+      *                                                                   124047
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+     E/COPY ZSRSRC,ZEDITZ1                                                127657
+      /SPACE 3
+     E/COPY WNCPYSRC,LEH00283
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for MMNNNNPY.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for MMNNNNAU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I                                    B 188 1890OFLLNU
+     I                                    B 367 3680PRTLNU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ***  External data structures for Branch Details
+      *
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      ***  External data structures for Customer Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+      *
+     IDSFDY     E DSDSFDY
+      ***  Short data structures for Access Objects
+      *
+     IDSSDY     E DSDSSDY                                                 121783
+      ** Long data structure for access objects                           121783
+      *                                                                                       CLE028
+     ISCSARD    E DSSCSARDPD                                                                  CLE028
+      ** External data structure for SAR Details                                              CLE028
+      *                                                                                       CLE028
+     I/COPY WNCPYSRC,LE2320I001
+      *                                                                   121783
+     I/COPY ZSRSRC,ZFRPEDZ2
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  End Program.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+      *
+      ***  Initialise LDA field.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'LE2320'  DBPGM
+     C                     OUT  LDA
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *                                                                   123846
+      **  Access Switchable SAR details for the existence of CLE005       123846
+     C                     CALL 'AOSARDR0'                                123846
+     C                     PARM *BLANK    PRTCD                           123846
+     C                     PARM '*VERIFY' POPTN                           123846
+     C                     PARM 'CLE005'  PSARD   6                       123846
+      *                                                                   123846
+     C           PRTCD     IFEQ *BLANK                                    123846
+     C                     MOVE 'Y'       CLE005  1                       123846
+     C                     ELSE                                           123846
+     C                     MOVE 'N'       CLE005                          123846
+     C                     ENDIF                                          123846
+      *                                                                                       201797
+      **  Access Switchable SAR details for the existence of CLE006                           201797
+      *                                                                                       201797
+     C                     CALL 'AOSARDR0'                                                    201797
+     C                     PARM *BLANK    PRTCD                                               201797
+     C                     PARM '*VERIFY' POPTN                                               201797
+     C                     PARM 'CLE006'  PSARD   6                                           201797
+      *                                                                                       201797
+     C           PRTCD     IFEQ *BLANK                                                        201797
+     C                     MOVE 'Y'       CLE006  1                                           201797
+     C                     MOVE '1'       *IN33                                               201797
+     C                     ELSE                                                               201797
+     C                     MOVE 'N'       CLE006                                              201797
+     C                     MOVE '0'       *IN33                                               201797
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+      ** Determine if Flat Rate Personal Loans (Rule of 78s) is                               CLE028
+      ** installed                                                                            CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   PRTCD                                               CLE028
+     C                     PARM '*VERIFY' POPTN                                               CLE028
+     C                     PARM 'CLE028'  PSARD                                               CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFNE *BLANKS                                                       CLE028
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     Z-ADD14        DBASE                                               CLE028
+     C                     MOVELPSARD     DBKEY                                               CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     EXSR *PSSR                                                         CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           PRTCD     IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE071
+      ** Determine if the Switchable feature CLE071 is Enabled                                CLE071
+      *                                                                                       CLE071
+     C                     MOVE 'N'       CLE071  1                                           CLE071
+     C                     CALL 'AOSARDR0'                                                    CLE071
+     C                     PARM *BLANKS   PRTCD                                               CLE071
+     C                     PARM '*VERIFY' POPTN                                               CLE071
+     C                     PARM 'CLE071'  PSARD                                               CLE071
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE071
+      *                                                                                       CLE071
+     C           PRTCD     IFEQ *BLANKS                                                       CLE071
+     C                     MOVE 'Y'       CLE071                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C/COPY WNCPYSRC,LE2320C006
+      *
+      ***  RCF Processing for Printer File
+      *
+     C                     EXSR RCFP1
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Report Work fields.
+      *
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+      ***  Audit Work fields.
+      *
+     C                     Z-ADD0         RQDLNU  30
+     C                     Z-ADD0         DIFLNU  30
+      *
+      ***  Program Work fields
+      *
+     C**********           Z-ADD0         I       10                                          CLE071
+     C                     Z-ADD0         I       20                                          CLE071
+     C                     MOVE *OFF      HAUIND  1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  REP1   - Process Unauthroised Loans/Parts                    *
+      *  REP2   - Process Unauthroised Loan Amendments                *
+      *  REP3   - Process Unauthroised Rollovers                      *
+      *  REP4   - Process Unauthroised Guarantees                     *
+      *  REP5   - Process Unauthroised Fees                           *
+      *  REP6   - Process Unauthroised Facilities                     *   124047
+      *  REP7   - Process Unauthorised Facility Amendments            *   127657
+      *  REP8   - Process Unauthorised Manual Facility Utilisation    *   127657
+      *  REP9   - Process Unauthorised Fee Settlement                 *                       202364
+      *  REP10  - Process Unauthorised Fee Rate Change Amendments     *                       CLE071
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ***  Do While Not EOF LELOANL1
+      *
+     C                     Z-ADD1         I                *** Index
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     READ LELOANL1                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Process Unauthorised Loans/Parts
+      *
+     C                     EXSR REP1
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Process Audit Report
+      *
+     C                     EXSR AUDIT
+      *
+      *****Do*While*Not*EOF*LELOAML1****************                                          244279
+      ***  Do While Not EOF LELOAMLD                                                          244279
+      *
+     C                     Z-ADD2         I                *** Index
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C**********           READ LELOAML1                 89                                   244279
+     C                     READ LELOAMLD                 89                                   244279
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Process Unauthorised Loan Amendments
+      *
+     C                     EXSR REP2
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Process Audit Report
+      *
+     C                     EXSR AUDIT
+      *
+      ***  Do While Not EOF LELOANL3
+      *
+     C                     Z-ADD3         I                *** Index
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     READ LELOANL3                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Process Unauthorised Rollovers
+      *
+     C                     EXSR REP3
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Process Audit Report
+      *
+     C                     EXSR AUDIT
+      *
+      ***  Do While Not EOF LEGTEEL1
+      *
+     C                     Z-ADD4         I                *** Index
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     READ LEGTEEL1                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Process Unauthorised Guarantees
+      *
+     C                     EXSR REP4
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Process Audit Report
+      *
+     C                     EXSR AUDIT
+      *
+      ***  Do While Not EOF LEFEESL1
+      *
+     C           CLE005    IFEQ 'Y'                                       123846
+      *                                                                   123846
+     C                     Z-ADD5         I                *** Index
+     C                     MOVE *OFF      *IN89
+     C           *IN89     DOWEQ*OFF
+      *
+     C                     READ LEFEESL1                 89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Process Unauthorised Fees
+      *
+     C                     EXSR REP5
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ***  Process Audit Report
+      *
+     C                     EXSR AUDIT
+      *                                                                   123846
+     C                     Z-ADD9         I                                                   202364
+     C                     MOVE '0'       *IN89                                               202364
+     C           *IN89     DOWEQ'0'                                                           202364
+      *                                                                                       202364
+     C                     READ LEFEEAL3                 89                                   202364
+      *                                                                                       202364
+     C           *IN89     IFEQ '0'                                                           202364
+      *                                                                                       202364
+      ** Process Unauthorised Fee Settlement                                                  202364
+      *                                                                                       202364
+     C                     EXSR REP9                                                          202364
+      *                                                                                       202364
+     C                     ENDIF                                                              202364
+      *                                                                                       202364
+     C                     ENDDO                                                              202364
+      *                                                                                       202364
+      ** Process Audit Report                                                                 202364
+      *                                                                                       202364
+     C                     EXSR AUDIT                                                         202364
+      *                                                                                       202364
+     C                     Z-ADD7         I                *** Index      127657
+     C                     MOVE '0'       *IN89                           127657
+     C           *IN89     DOWEQ'0'                                       127657
+      *                                                                   127657
+     C                     READ LEFCAML2                 89               127657
+      *                                                                   127657
+     C           *IN89     IFEQ '0'                                       127657
+      *                                                                   127657
+      ***  Process Unauthorised Facility Amendment                        127657
+      *                                                                   127657
+     C                     EXSR REP7                                      127657
+      *                                                                   127657
+     C                     ENDIF                                          127657
+      *                                                                   127657
+     C                     ENDDO                                          127657
+      *                                                                   127657
+      ***  Process Audit Report                                           127657
+      *                                                                   127657
+     C                     EXSR AUDIT                                     127657
+      *                                                                   127657
+     C                     Z-ADD8         I                *** Index      127657
+     C                     MOVE '0'       *IN89                           127657
+     C           *IN89     DOWEQ'0'                                       127657
+      *                                                                   127657
+     C                     READ LEMNFUL2                 89               127657
+      *                                                                   127657
+     C           *IN89     IFEQ '0'                                       127657
+      *                                                                   127657
+      ***  Process Unauthorised Manual Facility Utilisation               127657
+      *                                                                   127657
+     C                     EXSR REP8                                      127657
+      *                                                                   127657
+     C                     ENDIF                                          127657
+      *                                                                   127657
+     C                     ENDDO                                          127657
+      *                                                                   127657
+      ***  Process Audit Report                                           127657
+      *                                                                   127657
+     C                     EXSR AUDIT                                     127657
+      *                                                                   123846
+     C                     ENDIF                                          123846
+      *                                                                   124047
+     C/COPY WNCPYSRC,LE2320C001
+      ***  Do While Not EOF LEFCLTL1                                      124047
+      *                                                                   124047
+     C                     Z-ADD6         I                *** Index      124047
+     C                     MOVE *OFF      *IN89                           124047
+     C           *IN89     DOWEQ*OFF                                      124047
+      *                                                                   124047
+     C                     READ LEFCLTL1                 89               124047
+      *                                                                   124047
+     C           *IN89     IFEQ *OFF                                      124047
+      *                                                                   124047
+      ***  Process Unauthorised Facilities                                124047
+      *                                                                   124047
+     C                     EXSR REP6                                      124047
+      *                                                                   124047
+     C                     ENDIF                                          124047
+      *                                                                   124047
+     C                     ENDDO                                          124047
+      *                                                                   124047
+      ***  Process Audit Report                                           124047
+      *                                                                   124047
+     C                     EXSR AUDIT                                     124047
+      *
+      ** Do While Not EOF LEFERCL2                                                            CLE071
+      *                                                                                       CLE071
+     C           CLE071    IFEQ 'Y'                                                           CLE071
+      *                                                                                       CLE071
+     C                     Z-ADD10        I                                                   CLE071
+     C                     MOVE *OFF      *IN89                                               CLE071
+     C           *IN89     DOWEQ*OFF                                                          CLE071
+      *                                                                                       CLE071
+     C                     READ LEFERCL2                 89                                   CLE071
+      *                                                                                       CLE071
+     C           *IN89     IFEQ *OFF                                                          CLE071
+      *                                                                                       CLE071
+      ** Process Unauthorised Fee Rate Changes                                                CLE071
+      *                                                                                       CLE071
+     C                     EXSR REP10                                                         CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDDO                                                              CLE071
+      *                                                                                       CLE071
+      ** Process Audit Report                                                                 CLE071
+      *                                                                                       CLE071
+     C                     EXSR AUDIT                                                         CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ***  Write End of Report
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REP1
+      *****************************************************************
+      *                                                               *
+      *  REP1   - Process Unauthorised Loans/Parts                    *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  VALID  - Validate Fields                                     *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *
+      *  ZFRPED - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REP1      BEGSR                           *** REP1   ***
+      *
+      ***  Move File Fields to Report Fields
+      *
+     C                     MOVELLNRF      PLNRF
+     C                     MOVELCNUM      PCNUM                                               201123
+      *                                                                                       201797
+      ** Display Original Borrower as customer for parts pucrhased                            201797
+      ** loans regardless of recourse indicator.                                              201797
+      *                                                                                       201797
+     C           PTYP      IFEQ 64                                                            201797
+     C           PTYP      OREQ 65                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ68                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ71                                                            201797
+     C**********           MOVELOLNO      PCNUM                                        201797 201123
+     C**********           ELSE                                                        201797 201123
+     C                     MOVELOLNO      OLNOZ                                               201123
+     C**********           MOVELCNUM      PCNUM                                        168809 201123
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C                     MOVELBRCA      PBRCA                           168809
+     C                     MOVELCCY       PCCY                            168809
+     C                     MOVELIUSR      PIUSR                           168809
+     C                     MOVELAUSR      PAUSR                           168809
+      *                                                                   168809
+      ***  Validate Fields                                                168809
+      *                                                                   168809
+     C                     EXSR VALID                                     168809
+     C***********          MOVELCNUM      PCNUM                           128150
+      *                                                                   128150
+      * Retrieve customer shortname                                       128150
+     C                     MOVE *BLANKS   PKEY1  10                       128150
+     C**********           MOVELCNUM      PKEY1  10                                    128150 201797
+     C                     MOVELPCNUM     PKEY1  10                                           201797
+     C                     CALL 'AOCUSTR0'                                128150
+     C                     PARM *BLANKS   PRTCD   7                       128150
+     C                     PARM '*KEY   ' POPTN   7                       128150
+     C                     PARM           PKEY1                           128150
+     C                     PARM           PKYST   7                       128150
+     C***********SDCUST    PARM SDCUST    DSFDY                     128150176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *                                                                   128150
+      ***  Handle Database Error.                                         128150
+      *                                                                   128150
+     C           PRTCD     IFNE *BLANKS                                   128150
+     C           *LOCK     IN   LDA                                       128150
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************128150
+     C**********           MOVELCNUM      DBKEY            * DB ERROR 05 *             128150 201797
+     C                     MOVELPCNUM     DBKEY            * DB ERROR 05 *                    201797
+     C                     Z-ADD005       DBASE            ***************128150
+     C                     OUT  LDA                                       128150
+     C                     EXSR *PSSR                                     128150
+     C                     ELSE                                           128150
+     C**********           MOVELBBCSSN    PCNUM                                        128150 201797
+     C                     MOVELBBCSSN    PCSSN                                               201797
+     C                     ENDIF                                          128150
+      *                                                                   128150
+     C*******              MOVELBRCA      PBRCA                           168809
+     C*******              MOVELCCY       PCCY                            168809
+     C*******              MOVELIUSR      PIUSR                           168809
+     C*******              MOVELAUSR      PAUSR                           168809
+      *******                                                             168809
+      ***  Validate Fields                                                168809
+      *******                                                             168809
+     C*******              EXSR VALID                                     168809
+      *
+      ***  Determine Description of Unauthorised Loans/Parts
+      *
+     C           PTYP      IFGE 60
+     C           PTYP      ANDLE63
+     C           PTYP      OREQ 70
+     C           PTYP      OREQ 80                                                            CLE028
+     C           CLE028    ANDEQ'Y'                                                           CLE028
+     C                     MOVELDESC,1    PDESC
+     C                     ENDIF
+      *
+     C           PTYP      IFEQ 64
+     C           PTYP      OREQ 65
+     C           CLE005    OREQ 'Y'                                       127657
+     C           PTYP      ANDEQ68                                        127657
+     C           CLE005    OREQ 'Y'                                       127657
+     C           PTYP      ANDEQ71                                        127657
+     C                     MOVELDESC,2    PDESC
+     C                     ENDIF
+      *
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C           CLE005    OREQ 'Y'                                       127657
+     C           PTYP      ANDEQ69                                        127657
+     C           CLE005    OREQ 'Y'                                       127657
+     C           PTYP      ANDEQ72                                        127657
+     C                     MOVELDESC,3    PDESC
+     C                     ENDIF
+      *
+      ***  Format Amount
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDCPAM      ZFLD15
+      *                                                                                       CLE028
+      ** For flat rate loans, if the loan hasn't started or just input                        CLE028
+      ** today, add interest and/or charges if these were added on                            CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C           VDAT      IFGT BJRDNB                                                        CLE028
+     C           ORED      OREQ BJRDNB                                                        CLE028
+     C           ADIF      IFEQ 'Y'                                                           CLE028
+     C                     ADD  FLTI      ZFLD15                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C           ADCF      IFEQ 'Y'                                                           CLE028
+     C                     ADD  CHGA      ZFLD15                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C                     ENDIF                                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C                     EXSR ZFRPED
+     C**********           MOVELZOUT25    PCPAM                                               201797
+     C                     MOVE ZOUT25    PCPAM                                               201797
+      *
+      ***  Format Value Date
+      *
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PVDAT
+      *
+      ***  Format Maturity Date
+      *
+     C                     Z-ADDMDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PMDAT
+     C/COPY WNCPYSRC,LEH00277
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+      ***  Increment Record Count
+      *
+     C                     ADD  1         RCOUNT  50
+      *
+      ***  Initialise Detail Record
+      *
+     C                     MOVE *BLANKS   PLNRF
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PBRCA
+     C                     MOVE *BLANKS   PDESC
+     C                     MOVE *BLANKS   PCPAM
+     C                     MOVE *BLANKS   PCCY
+     C                     MOVE *BLANKS   PVDAT
+     C                     MOVE *BLANKS   PMDAT
+     C                     MOVE *BLANKS   PCSSN                                               201797
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REP2
+      *****************************************************************
+      *                                                               *
+      *  REP2   - Process Unauthorised Loan Amendments                *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  VALID  - Validate Fields                                     *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *
+      *  ZFRPED - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REP2      BEGSR                           *** REP2   ***
+      *
+      ***  Move File Fields to Report Fields
+      *
+     C                     MOVELLNRF      PLNRF
+     C                     MOVELCNUM      PCNUM                                               201123
+     C                     MOVELBRCA      PBRCA                           168809
+     C                     MOVELLASN      PLASN                           168809
+     C           AMTP      IFEQ 'MM'                                                          244279
+     C           AMTP      OREQ 'MI'                                                          244279
+     C                     MOVE *BLANKS   PLASN                                               244279
+     C                     ENDIF                                                              244279
+     C                     MOVELCCY       PCCY                            168809
+     C                     MOVELIUSR      PIUSR                           168809
+     C                     MOVELAUSR      PAUSR                           168809
+     C                     Z-ADDRTSP      PRTSP  117                                          201797
+     C                     Z-ADDVDAT      LVDAT   50                                          201797
+     C                     MOVE BRTT      PBRTT   2                                           201797
+     C                     MOVE LTYP      PLTYP   2                                           201797
+     C                     MOVE SUTP      PSUTP   2                                           201797
+     C                     MOVE CLAS      PCLAS   4                                           CLE042
+      *                                                                   168809
+      ***  Validate Fields                                                168809
+      *                                                                   168809
+      ** Display Original Borrower as customer for part purchased                             201797
+      ** loans regardless of recourse indicator.                                              201797
+      *                                                                                       201797
+     C           LNRF      CHAINCLOANCL              34                                       201797
+      *                                                                                       201797
+     C           *IN34     IFEQ '1'                                                           201797
+     C           *LOCK     IN   LDA                                                           201797
+     C                     MOVE 'CLOANCL 'DBFILE           ***************                    201797
+     C                     MOVELLNRF      DBKEY            * DB ERROR 10 *                    201797
+     C                     Z-ADD010       DBASE            ***************                    201797
+     C                     OUT  LDA                                                           201797
+     C                     EXSR *PSSR                                                         201797
+     C                     ELSE                                                               201797
+      *                                                                                       201797
+     C           PTYP      IFEQ 64                                                            201797
+     C           PTYP      OREQ 65                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ68                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ71                                                            201797
+      *                                                                                       201797
+     C**********           MOVELOLNO      PCNUM                                        201797 201123
+     C**********           ELSE                                                        201797 201123
+      *                                                                                       201797
+     C**********           MOVELCNUM      PCNUM                                        168809 201123
+     C                     MOVELOLNO      OLNOZ                                               201123
+      *                                                                                       201797
+     C                     ENDIF                                                              201797
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C                     Z-ADDPRTSP     RTSP                                                201797
+     C                     Z-ADDLVDAT     VDAT                                                201797
+     C                     MOVE PBRTT     BRTT                                                201797
+     C                     MOVE PLTYP     LTYP                                                201797
+     C                     MOVE PSUTP     SUTP                                                201797
+     C                     MOVE PCLAS     CLAS                                                CLE042
+      *                                                                                       201797
+     C                     EXSR VALID                                     168809
+     C***********          MOVELCNUM      PCNUM                           128150
+      *                                                                   128150
+      * Retrieve customer shortname                                       128150
+     C                     MOVE *BLANKS   PKEY1  10                       128150
+     C**********           MOVELCNUM      PKEY1  10                                    128150 201797
+     C                     MOVELPCNUM     PKEY1  10                                           201797
+     C                     CALL 'AOCUSTR0'                                128150
+     C                     PARM *BLANKS   PRTCD   7                       128150
+     C                     PARM '*KEY   ' POPTN   7                       128150
+     C                     PARM           PKEY1                           128150
+     C                     PARM           PKYST   7                       128150
+     C***********SDCUST    PARM SDCUST    DSFDY                     128150176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *                                                                   128150
+      ***  Handle Database Error.                                         128150
+      *                                                                   128150
+     C           PRTCD     IFNE *BLANKS                                   128150
+     C           *LOCK     IN   LDA                                       128150
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************128150
+     C**********           MOVELCNUM      DBKEY            * DB ERROR 06 *             128150 201797
+     C                     MOVELPCNUM     DBKEY            * DB ERROR 06 *                    201797
+     C                     Z-ADD006       DBASE            ***************128150
+     C                     OUT  LDA                                       128150
+     C                     EXSR *PSSR                                     128150
+     C                     ELSE                                           128150
+     C**********           MOVELBBCSSN    PCNUM                                        128150 201797
+     C                     MOVELBBCSSN    PCSSN                                               201797
+     C                     ENDIF                                          128150
+      *                                                                   128150
+     C******               MOVELBRCA      PBRCA                           168809
+     C******               MOVELLASN      PLASN                           168809
+     C******               MOVELCCY       PCCY                            168809
+     C******               MOVELIUSR      PIUSR                           168809
+     C******               MOVELAUSR      PAUSR                           168809
+      ******                                                              168809
+      *****Validate Fields                                                168809
+      ******                                                              168809
+     C******               EXSR VALID                                     168809
+      *
+      ***  Format Value Date
+      *
+     C                     Z-ADDVDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PVDAT
+      *                                                                                       244279
+     C           AMTP      IFEQ 'MM'                                                          244279
+     C           AMTP      OREQ 'MI'                                                          244279
+     C                     MOVE *BLANKS   PVDAT                                               244279
+     C                     ENDIF                                                              244279
+      *
+      ***  Determine Amendment Type
+      *
+     C           AMTP      IFEQ 'MR'
+     C                     MOVELDESC,4    PAMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'RE'
+     C                     MOVELDESC,5    PAMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PI'
+     C                     MOVELDESC,6    PAMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'SC'
+     C                     MOVELDESC,7    PAMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'BC'
+     C                     MOVELDESC,8    PAMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'SA'
+     C           STAI      IFEQ 'Y'                                                           201797
+     C                     MOVELDESC,9    PAMTP
+     C                     ELSE                                                               201797
+     C                     MOVELDESC,18   PAMTP                                               201797
+     C                     ENDIF                                                              201797
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'LS'
+     C                     MOVELDESC,10   PAMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PF'
+     C                     MOVELDESC,11   PAMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'PT'
+     C                     MOVELDESC,12   PAMTP
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'MI'                                                          244279
+     C                     MOVELDESC,19   PAMTP                                               244279
+     C                     ENDIF                                                              244279
+      *                                                                                       244279
+     C           AMTP      IFEQ 'MM'                                                          244279
+     C                     MOVELDESC,20   PAMTP                                               244279
+     C                     ENDIF                                                              244279
+      *                                                                                       244279
+      ***  Format Amount/Rate
+      *
+     C           AMTP      IFEQ 'SC'
+     C********** AMTP      OREQ 'BC'                                                          201797
+     C**********           MOVE RTSP      #RTSP7  7                                           201797
+     C**********           MOVELRTSP      #RTSP  12                                           201797
+     C**********           MOVE '.       '#RTSP                                               201797
+     C**********           MOVE #RTSP7    #RTSP                                               201797
+     C**********           MOVEL#RTSP     PPRAM                                               201797
+     C                     MOVE *BLANKS   ZFIELD                                              201797
+     C                     MOVE RTSP      ZFIELD                                              201797
+     C                     Z-ADD7         ZADEC                                               201797
+     C                     EXSR ZEDIT                                                         201797
+     C                     MOVE ZFIELD    PPRAM                                               201797
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+      ** Move base rate code to report field                                                  201797
+      *                                                                                       201797
+     C           AMTP      IFEQ 'BC'                                                          201797
+     C                     MOVE BRTT      PPRAM                                               201797
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+      ** Format loan type/sub-type                                                            201797
+      *                                                                                       201797
+     C           AMTP      IFEQ 'LS'                                                          201797
+     C*********************MOVELLTYP      WLTST   5                                    201797 CLE042
+     C                     MOVELLTYP      WLTST   8                                           CLE042
+     C                     MOVELSUTP      WKSTCL  6                                           CLE042
+     C                     MOVE CLAS      WKSTCL                                              CLE042
+     C                     MOVE WKSTCL    WLTST                                               CLE042
+     C                     MOVE SUTP      WLTST                                               201797
+     C                     MOVE WLTST     PPRAM                                               201797
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C**********           ELSE                                                               201797
+      *                                                                                       201797
+      ** Format amounts                                                                       201797
+      *                                                                                       201797
+     C           AMTP      IFEQ 'RE'                                                          201797
+     C           AMTP      OREQ 'MR'                                                          201797
+     C           AMTP      OREQ 'PI'                                                          201797
+     C           AMTP      OREQ 'PF'                                                          201797
+     C           AMTP      OREQ 'PT'                                                          201797
+     C           AMTP      OREQ 'MI'                                                          244279
+     C           AMTP      OREQ 'MM'                                                          244279
+     C                     Z-ADDA6NBDP    ZDECS
+     C           REPT      IFNE 3                                                             194662
+     C                     Z-ADDPRAM      ZFLD15
+     C                     ELSE                                                               194662
+     C                     Z-ADDTAMT      ZFLD15                                              194662
+     C                     ENDIF                                                              194662
+      *                                                                                       244279
+     C                     SELEC                                                              244279
+     C           AMTP      WHEQ 'MI'                                                          244279
+     C           ADJS      IFEQ '-'                                                           244279
+     C                     Z-SUBADJA      ZFLD15                                              244279
+     C                     ELSE                                                               244279
+     C                     Z-ADDADJA      ZFLD15                                              244279
+     C                     ENDIF                                                              244279
+     C           AMTP      WHEQ 'MM'                                                          244279
+     C           SIGN      IFEQ '-'                                                           244279
+     C                     Z-SUBMAAM      ZFLD15                                              244279
+     C                     ELSE                                                               244279
+     C                     Z-ADDMAAM      ZFLD15                                              244279
+     C                     ENDIF                                                              244279
+     C                     ENDSL                                                              244279
+      *                                                                                       244279
+     C                     EXSR ZFRPED
+     C**********           MOVELZOUT25    PPRAM                                               201797
+     C                     MOVE ZOUT25    PPRAM                                               201797
+     C                     ENDIF
+      *
+     C           AMTP      IFEQ 'SA'
+     C********** AMTP      OREQ 'LS'                                                          201797
+     C                     MOVE *BLANKS   PPRAM
+     C                     ENDIF
+      *
+      *****Format*Stop*Accrual*****************************************                       201797
+      **********                                                                              201797
+     C********** STAI      IFEQ 'Y'                                                           201797
+     C**********           MOVEL'YES'     PSTAI                                               201797
+     C**********           ELSE                                                               201797
+     C**********           MOVEL' NO'     PSTAI                                               201797
+     C**********           ENDIF                                                              201797
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+      ***  Increment Record Count
+      *
+     C                     ADD  1         RCOUNT  50
+      *
+      ***  Initialise Detail Record
+      *
+     C                     MOVE *BLANKS   PLNRF
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PBRCA
+     C                     MOVE *BLANKS   PLASN
+     C                     MOVE *BLANKS   PVDAT
+     C                     MOVE *BLANKS   PAMTP
+     C                     MOVE *BLANKS   PPRAM
+     C                     MOVE *BLANKS   PCCY
+     C**********           MOVE *BLANKS   PSTAI                                               201797
+     C                     MOVE *BLANKS   PIUSR
+     C                     MOVE *BLANKS   PAUSR
+     C                     MOVE *BLANKS   PCSSN                                               201797
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REP3
+      *****************************************************************
+      *                                                               *
+      *  REP3   - Process Unauthorised Rollovers                      *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  VALID  - Validate Fields                                     *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *
+      *  ZFRPED - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REP3      BEGSR                           *** REP3   ***
+      *
+      ***  Move File Fields to Report Fields
+      *
+     C                     MOVELLNRF      PLNRF
+     C                     MOVELCNUM      PCNUM                                               201123
+     C                     MOVELRIUS      PIUSR
+     C                     MOVELRAUS      PAUSR
+      *
+      ***  Chain CLOAN to Get Rollover Details
+      *
+     C           CLOANK    KLIST
+     C**********           KFLD           #LNRF   60                                          CLE148
+     C                     KFLD           #LNRF   6                                           CLE148
+     C                     KFLD           RCDT
+      *
+     C                     MOVEL'A'       RCDT
+     C**********           Z-ADDLNRF      #LNRF                                               CLE148
+     C                     MOVELLNRF      #LNRF                                               CLE148
+     C           CLOANK    CHAINCLOAN                89
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Move File Fields to Report Fields
+      *
+     C                     MOVELBRCA      PBRCA                           168809
+     C                     MOVELCCY       PCCY                            168809
+     C                     MOVELNSIN      PNSIN                           168809
+      *                                                                   168809
+      ***  Validate Fields                                                168809
+      *                                                                   168809
+      ** Display Original Borrower as customer for parts pucrhased                            201797
+      ** loans regardless of recourse indicator.                                              201797
+      *                                                                                       201797
+     C           PTYP      IFEQ 64                                                            201797
+     C           PTYP      OREQ 65                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ68                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ71                                                            201797
+     C**********           MOVELOLNO      PCNUM                                        201797 201123
+     C**********           ELSE                                                        201797 201123
+     C**********           MOVELCNUM      PCNUM                                        168809 201123
+     C                     MOVELOLNO      OLNOZ                                               201123
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C                     EXSR VALID                                     168809
+     C***********          MOVELCNUM      PCNUM                           128150
+      *                                                                   128150
+      * Retrieve customer shortname                                       128150
+     C                     MOVE *BLANKS   PKEY1  10                       128150
+     C**********           MOVELCNUM      PKEY1  10                                    128150 201797
+     C                     MOVELPCNUM     PKEY1  10                                           201797
+     C                     CALL 'AOCUSTR0'                                128150
+     C                     PARM *BLANKS   PRTCD   7                       128150
+     C                     PARM '*KEY   ' POPTN   7                       128150
+     C                     PARM           PKEY1                           128150
+     C                     PARM           PKYST   7                       128150
+     C***********SDCUST    PARM SDCUST    DSFDY                     128150176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *                                                                   128150
+      ***  Handle Database Error.                                         128150
+      *                                                                   128150
+     C           PRTCD     IFNE *BLANKS                                   128150
+     C           *LOCK     IN   LDA                                       128150
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************128150
+     C**********           MOVELCNUM      DBKEY            * DB ERROR 07 *             128150 201797
+     C                     MOVELPCNUM     DBKEY            * DB ERROR 07 *                    201797
+     C                     Z-ADD007       DBASE            ***************128150
+     C                     OUT  LDA                                       128150
+     C                     EXSR *PSSR                                     128150
+     C                     ELSE                                           128150
+     C**********           MOVELBBCSSN    PCNUM                                        128150 201797
+     C                     MOVELBBCSSN    PCSSN                                               201797
+     C                     ENDIF                                          128150
+      *                                                                   128150
+     C*****                MOVELBRCA      PBRCA                           168809
+     C*****                MOVELCCY       PCCY                            168809
+     C*****                MOVELNSIN      PNSIN                           168809
+      *****                                                               168809
+      *****Validate Fields                                                168809
+      *****                                                               168809
+     C*****                EXSR VALID                                     168809
+      *
+      ***  Format Rollover Date
+      *
+     C                     Z-ADDRLDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PRLDT
+      *
+      ***  Format New Base Rate Type
+      *
+     C           NBRA      IFNE *ZERO
+     C                     MOVELNBRA      PNBRA
+     C                     ENDIF
+      *
+      ***  Format New Spread/Rate
+      *
+     C           NRTS      IFNE *ZERO
+     C***********          MOVE NRTS      #NRTS7  7                       127657
+     C***********          MOVELNRTS      #NRTS  12                       127657
+     C***********          MOVE '.       '#NRTS                           127657
+     C***********          MOVE #NRTS7    #NRTS                           127657
+     C***********          MOVEL#NRTS     PNRTS                           127657
+     C                     MOVE *BLANKS   ZFIELD                          127657
+     C                     MOVE NRTS      ZFIELD                          127657
+     C                     Z-ADD7         ZADEC                           127657
+     C                     EXSR ZEDIT                                     127657
+     C                     MOVE ZFIELD    PNRTS                           127657
+     C                     ENDIF
+      *
+      ***  Format New Calculation Basis
+      *
+     C           NCAS      IFNE *ZERO
+     C                     MOVELNCAS      PNCAS
+     C                     ENDIF
+      *
+      ***  Format Next Rollover Date
+      *
+     C                     Z-ADDNROD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PNROD
+      *
+      ***  Format Principal
+      *
+     C           PTYP      IFEQ 63
+     C                     Z-ADDNPRAM     ZFLD15
+     C                     ELSE
+     C                     Z-ADDCPAM      ZFLD15
+     C                     ENDIF
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C**********           MOVELZOUT25    PNPRAM                                              201797
+     C                     MOVE ZOUT25    PNPRAM                                              201797
+      *
+      ***  Format New Maturity
+      *
+     C                     Z-ADDNMDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PNMDT
+      *
+     C                     ENDIF
+      *                                                                                       201797
+      ** Format New Currency                                                                  201797
+      *                                                                                       201797
+     C           NCCY      IFNE ' '                                                           201797
+     C                     MOVE NCCY      PNCCY                                               201797
+     C                     ENDIF                                                              201797
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+      ***  Increment Record Count
+      *
+     C                     ADD  1         RCOUNT  50
+      *
+      ***  Initialise Detail Record
+      *
+     C                     MOVE *BLANKS   PLNRF
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PBRCA
+     C                     MOVE *BLANKS   PRLDT
+     C                     MOVE *BLANKS   PNBRA
+     C                     MOVE *BLANKS   PNRTS
+     C                     MOVE *BLANKS   PNSIN
+     C                     MOVE *BLANKS   PNCAS
+     C                     MOVE *BLANKS   PNROD
+     C                     MOVE *BLANKS   PNPRAM
+     C                     MOVE *BLANKS   PNMDT
+     C                     MOVE *BLANKS   PIUSR
+     C                     MOVE *BLANKS   PAUSR
+     C                     MOVE *BLANKS   PCSSN                                               201797
+     C                     MOVE *BLANKS   PNCCY                                               201797
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REP4
+      *****************************************************************
+      *                                                               *
+      *  REP4   - Process Unauthorised Guarantees                     *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  VALID  - Validate Fields                                     *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *
+      *  ZFRPED - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REP4      BEGSR                           *** REP4   ***
+     C                     MOVELBRCA      PBRCA                           168809
+     C                     MOVELCCY       PCCY                            168809
+     C                     MOVELIUSR      PIUSR                           168809
+     C                     MOVELAUSR      PAUSR                           168809
+      *                                                                   168809
+      ***  Validate Fields                                                168809
+      *                                                                   168809
+     C                     MOVELFCLN      #FCLN1                                              201797
+      *                                                                                       201797
+     C********** #FCLN1    IFNE 'F'                                                    201797 CLE148
+     C**********           MOVE FCLN      LOANR   60                                   201797 CLE148
+     C           #FCLN1    IFNE ' '                                                           CLE148
+     C                     MOVE FCLN      LOANR   6                                           CLE148
+      *                                                                                       201797
+      ** Display Original Borrower as customer for part purchased                             201797
+      ** loans regardless of recourse indicator.                                              201797
+      *                                                                                       201797
+     C           LOANR     CHAINCLOANCL              34                                       201797
+      *                                                                                       201797
+     C           *IN34     IFEQ '1'                                                           201797
+     C           *LOCK     IN   LDA                                                           201797
+     C                     MOVE 'CLOANCL 'DBFILE           ***************                    201797
+     C                     MOVELLOANR     DBKEY            * DB ERROR 11 *                    201797
+     C                     Z-ADD011       DBASE            ***************                    201797
+     C                     OUT  LDA                                                           201797
+     C                     EXSR *PSSR                                                         201797
+     C                     ELSE                                                               201797
+      *                                                                                       201797
+     C           PTYP      IFEQ 64                                                            201797
+     C           PTYP      OREQ 65                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ68                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ71                                                            201797
+      *                                                                                       201797
+     C**********           MOVELOLNO      PCNUM                                        201797 201123
+     C**********           ELSE                                                        201797 201123
+      *                                                                                       201797
+     C**********           MOVELCNUM      PCNUM                                        168809 201123
+     C                     MOVELOLNO      OLNOZ                                               201123
+      *                                                                                       201797
+     C                     ENDIF                                                              201797
+     C                     MOVELCNUM      PCNUM                                               201123
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C                     ELSE                                                               201797
+     C                     MOVELCNUM      PCNUM                                               201797
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C                     EXSR VALID                                     168809
+      *
+      ***  Move File Fields to Report Fields
+      *
+     C***********          MOVELCNUM      PCNUM                           128150
+      *                                                                   128150
+      * Retrieve customer shortname                                       128150
+     C                     MOVE *BLANKS   PKEY1  10                       128150
+     C**********           MOVELCNUM      PKEY1  10                                    128150 201797
+     C                     MOVELPCNUM     PKEY1  10                                           201797
+     C                     CALL 'AOCUSTR0'                                128150
+     C                     PARM *BLANKS   PRTCD   7                       128150
+     C                     PARM '*KEY   ' POPTN   7                       128150
+     C                     PARM           PKEY1                           128150
+     C                     PARM           PKYST   7                       128150
+     C***********SDCUST    PARM SDCUST    DSFDY                     128150176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *                                                                   128150
+      ***  Handle Database Error.                                         128150
+      *                                                                   128150
+     C           PRTCD     IFNE *BLANKS                                   128150
+     C           *LOCK     IN   LDA                                       128150
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************128150
+     C**********           MOVELCNUM      DBKEY            * DB ERROR 08 *             128150 201797
+     C                     MOVELPCNUM     DBKEY            * DB ERROR 08 *                    201797
+     C                     Z-ADD008       DBASE            ***************128150
+     C                     OUT  LDA                                       128150
+     C                     EXSR *PSSR                                     128150
+     C                     ELSE                                           128150
+     C**********           MOVELBBCSSN    PCNUM                                        128150 201797
+     C                     MOVELBBCSSN    PCSSN                                               201797
+     C                     ENDIF                                          128150
+      *                                                                   128150
+     C*****                MOVELBRCA      PBRCA                           168809
+     C*****                MOVELCCY       PCCY                            168809
+     C*****                MOVELIUSR      PIUSR                           168809
+     C*****                MOVELAUSR      PAUSR                           168809
+      *****                                                               168809
+      *****Validate Fields                                                168809
+      *****                                                               168809
+     C*****                EXSR VALID                                     168809
+      *
+      ***  Format Loan/Facility
+      *
+     C                     MOVELFCLN      #FCLN1  1
+     C********** #FCLN1    IFEQ 'F'                                                           CLE148
+     C           #FCLN1    IFEQ ' '                                                           CLE148
+     C                     MOVE FCLN      #FCLN5  5
+     C                     MOVE FCLN      #FCLN2  2
+     C                     MOVEL#FCLN5    PFCLN
+     C                     MOVE '/  '     PFCLN
+     C                     MOVE #FCLN2    PFCLN
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+     C                     ELSE
+     C                     MOVELFCLN      PFCLN
+     C                     ENDIF
+      *
+      ***  Format Guaranteed Amount
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDTAMT      ZFLD15
+     C                     EXSR ZFRPED
+     C**********           MOVELZOUT25    PTAMT                                               201797
+     C                     MOVE ZOUT25    PTAMT                                               201797
+      *
+      *****Get*Interest*Rate/Interest*Accrued*If*Loan******************                       201797
+      **********                                                                              201797
+     C********** #FCLN1    IFNE 'F'                                                           201797
+      **********                                                                              201797
+     C**********           MOVEL'A'       RCDT                                                201797
+     C**********           MOVELFCLN      #LNRF                                               201797
+     C********** CLOANK    CHAINCLOAN                89                                       201797
+      **********                                                                              201797
+     C********** *IN89     IFEQ *OFF                                                          201797
+      **********                                                                              201797
+      *****Format*Interest*Rate****************************************                       201797
+      **********                                                                              201797
+     C**********           MOVELINTR      #INTR  12                                           201797
+     C**********           MOVE INTR      #INTR7  7                                           201797
+     C**********           MOVE '.       '#INTR                                               201797
+     C**********           MOVE #INTR7    #INTR                                               201797
+     C**********           MOVEL#INTR     PINTR                                               201797
+      **********                                                                              201797
+      *****Format*Interest*Accrued*************************************                       201797
+      **********                                                                              201797
+     C**********           Z-ADDA6NBDP    ZDECS                                               201797
+     C**********           Z-ADDAIPD      ZFLD15                                              201797
+     C**********           EXSR ZFRPED                                                        201797
+     C**********           MOVELZOUT25    PAIPD                                               201797
+      **********                                                                              201797
+     C**********           ENDIF                                                              201797
+      **********                                                                              201797
+     C**********           ENDIF                                                              201797
+      *                                                                                       201797
+      ** Move Guarantee Sequence Number file field to report field                            201797
+      *                                                                                       201797
+     C                     MOVELGUSN      PGUSN                                               201797
+      *                                                                                       201797
+      ** Format Guarantor shortname                                                           201797
+      *                                                                                       201797
+     C                     MOVE *BLANKS   PKEY1  10                                           201797
+     C                     MOVELGBCN      PKEY1  10                                           201797
+     C                     CALL 'AOCUSTR0'                                                    201797
+     C                     PARM *BLANKS   PRTCD   7                                           201797
+     C                     PARM '*KEY   ' POPTN   7                                           201797
+     C                     PARM           PKEY1                                               201797
+     C                     PARM           PKYST   7                                           201797
+     C           SDCUST    PARM SDCUST    DSSDY                                               201797
+      *                                                                                       201797
+      ***  Handle Database Error.                                                             201797
+      *                                                                                       201797
+     C           PRTCD     IFNE *BLANKS                                                       201797
+     C           *LOCK     IN   LDA                                                           201797
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************                    201797
+     C                     MOVELGBCN      DBKEY            * DB ERROR 12 *                    201797
+     C                     Z-ADD012       DBASE            ***************                    201797
+     C                     OUT  LDA                                                           201797
+     C                     EXSR *PSSR                                                         201797
+     C                     ELSE                                                               201797
+     C                     MOVELBBCSSN    PGBCN                                               201797
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+      ** Format Review Date                                                                   201797
+      *                                                                                       201797
+     C           RVDT      IFGT 0                                                             201797
+     C                     Z-ADDRVDT      ZDAYNO                                              201797
+     C                     EXSR ZDATE2                                                        201797
+     C                     MOVELZADATE    PRVDT                                               201797
+     C                     ENDIF                                                              201797
+      *
+      ***  Format Maturity Date
+      *
+     C                     Z-ADDEDDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PEDDT
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+      ***  Increment Record Count
+      *
+     C                     ADD  1         RCOUNT  50
+      *
+      ***  Initialise Detail Record
+      *
+     C                     MOVE *BLANKS   PFCLN
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PBRCA
+     C                     MOVE *BLANKS   PCCY
+     C                     MOVE *BLANKS   PTAMT
+     C**********           MOVE *BLANKS   PINTR                                               201797
+     C**********           MOVE *BLANKS   PAIPD                                               201797
+     C                     MOVE *BLANKS   PEDDT
+     C                     MOVE *BLANKS   PIUSR
+     C                     MOVE *BLANKS   PAUSR
+     C                     MOVE *BLANKS   PCSSN                                               201797
+     C                     MOVE *BLANKS   PGUSN                                               201797
+     C                     MOVE *BLANKS   PGBCN                                               201797
+     C                     MOVE *BLANKS   PRVDT                                               201797
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REP5
+      *****************************************************************
+      *                                                               *
+      *  REP5   - Process Unauthorised Fees                           *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  VALID  - Validate Fields                                     *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *
+      *  ZFRPED - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REP5      BEGSR                           *** REP5   ***
+     C                     MOVELFEBRCA    PBRCA                           168809
+     C                     MOVELFEFSEQ    PFSEQ                           168809
+     C                     MOVELFEFCOD    PFCOD                           168809
+     C                     MOVELFEFCCY    PFCCY                           168809
+     C                     MOVELFEFCCY    PCCY                            168809
+     C                     MOVELFEPYON    PPYON                           168809
+     C                     MOVELFEAUTO    PAUTO                           168809
+     C                     MOVELIUSR      PIUSR                           168809
+     C                     MOVELAUSR      PAUSR                           168809
+      *                                                                   168809
+     C********** FELOAN    IFGT 0                                                      201797 CLE148
+     C           FELOAN    IFGT *BLANKS                                                       CLE148
+      *                                                                                       201797
+      ** Display Original Borrower as customer for part purchased                             201797
+      ** loans regardless of recourse indicator.                                              201797
+      *                                                                                       201797
+     C           FELOAN    CHAINCLOANCL              34                                       201797
+      *                                                                                       201797
+     C           *IN34     IFEQ '1'                                                           201797
+     C           *LOCK     IN   LDA                                                           201797
+     C                     MOVE 'CLOANCL 'DBFILE           ***************                    201797
+     C                     MOVELLOANR     DBKEY            * DB ERROR 13 *                    201797
+     C                     Z-ADD013       DBASE            ***************                    201797
+     C                     OUT  LDA                                                           201797
+     C                     EXSR *PSSR                                                         201797
+     C                     ELSE                                                               201797
+      *                                                                                       201797
+     C           PTYP      IFEQ 64                                                            201797
+     C           PTYP      OREQ 65                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ68                                                            201797
+     C           CLE005    OREQ 'Y'                                                           201797
+     C           PTYP      ANDEQ71                                                            201797
+     C**********           MOVELOLNO      PCNUM                                        201797 201123
+     C**********           ELSE                                                        201797 201123
+     C**********           MOVELFECNUM    PCNUM                                        201797 201123
+     C                     MOVELOLNO      OLNOZ                                               201123
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C                     MOVELFECNUM    PCNUM                                               201123
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C                     ELSE                                                               201797
+      ***  Validate Fields                                                168809
+      *                                                                   168809
+     C                     MOVELFECNUM    PCNUM                           168809
+     C                     ENDIF                                                              201797
+      *                                                                                       201797
+     C                     EXSR VALID                                     168809
+      *
+      ***  Move File Fields to Report Fields
+      *
+     C***********          MOVELFECNUM    PCNUM                           128150
+      *                                                                   128150
+      * Retrieve customer shortname                                       128150
+     C                     MOVE *BLANKS   PKEY1  10                       128150
+     C**********           MOVELFECNUM    PKEY1  10                                    128150 201797
+     C                     MOVELPCNUM     PKEY1  10                                           201797
+     C                     CALL 'AOCUSTR0'                                128150
+     C                     PARM *BLANKS   PRTCD   7                       128150
+     C                     PARM '*KEY   ' POPTN   7                       128150
+     C                     PARM           PKEY1                           128150
+     C                     PARM           PKYST   7                       128150
+     C***********SDCUST    PARM SDCUST    DSFDY                     128150176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *                                                                   128150
+      ***  Handle Database Error.                                         128150
+      *                                                                   128150
+     C           PRTCD     IFNE *BLANKS                                   128150
+     C           *LOCK     IN   LDA                                       128150
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************128150
+     C**********           MOVELFECNUM    DBKEY            * DB ERROR 09 *             128150 201797
+     C                     MOVELPCNUM     DBKEY            * DB ERROR 09 *                    201797
+     C                     Z-ADD009       DBASE            ***************128150
+     C                     OUT  LDA                                       128150
+     C                     EXSR *PSSR                                     128150
+     C                     ELSE                                           128150
+     C**********           MOVELBBCSSN    PCNUM                                        128150 201797
+     C                     MOVELBBCSSN    PCSSN                                               201797
+     C                     ENDIF                                          128150
+      *                                                                   128150
+     C*****                MOVELFEBRCA    PBRCA                           168809
+     C*****                MOVELFEFSEQ    PFSEQ                           168809
+     C*****                MOVELFEFCOD    PFCOD                           168809
+     C*****                MOVELFEFCCY    PFCCY                           168809
+     C*****                MOVELFEFCCY    PCCY                            168809
+     C*****                MOVELFEPYON    PPYON                           168809
+     C*****                MOVELFEAUTO    PAUTO                           168809
+     C*****                MOVELIUSR      PIUSR                           168809
+     C*****                MOVELAUSR      PAUSR                           168809
+      *****                                                               168809
+      *****Validate Fields                                                168809
+      *****                                                               168809
+     C*****                EXSR VALID                                     168809
+      *
+      ***  Format Facility
+      *
+     C           FEFACL    IFNE *ZERO
+     C                     MOVE FEFACL    #FACL5  5
+     C                     MOVE FEFACL    #FACL2  2
+     C                     MOVEL#FACL5    PFACL
+     C                     MOVE '/  '     PFACL
+     C                     MOVE #FACL2    PFACL
+     C                     MOVE '1'       *IN19                                               201797
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+     C/COPY WNCPYSRC,LEH00446
+     C                     ENDIF
+      *
+      ***  Format Loan
+      *
+     C********** FELOAN    IFNE *ZERO                                                         CLE148
+     C           FELOAN    IFNE *BLANKS                                                       CLE148
+     C                     MOVELFELOAN    PLOAN
+     C                     MOVE '0'       *IN19                                               201797
+     C                     ENDIF
+      *
+      ***  Format Amount
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     Z-ADDFEFAMT    ZFLD15
+     C                     EXSR ZFRPED
+     C**********           MOVELZOUT25    PFAMT                                               201797
+     C                     MOVE ZOUT25    PFAMT                                               201797
+      *
+      ***  Format Fee Period Start
+      *
+     C                     Z-ADDFEPSTD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PPSTD
+      *
+      ***  Format Fee Period End
+      *
+     C                     Z-ADDFEPEND    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PPEND
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+      ***  Increment Record Count
+      *
+     C                     ADD  1         RCOUNT  50
+      *
+      ***  Initialise Detail Record
+      *
+     C                     MOVE *BLANKS   PCNUM
+     C                     MOVE *BLANKS   PBRCA
+     C                     MOVE *BLANKS   PFACL
+     C                     MOVE *BLANKS   PLOAN
+     C                     MOVE *BLANKS   PFSEQ
+     C                     MOVE *BLANKS   PFCOD
+     C                     MOVE *BLANKS   PFAMT
+     C                     MOVE *BLANKS   PFCCY
+     C                     MOVE *BLANKS   PCCY
+     C                     MOVE *BLANKS   PPSTD
+     C                     MOVE *BLANKS   PPEND
+     C                     MOVE *BLANKS   PPYON
+     C                     MOVE *BLANKS   PAUTO
+     C                     MOVE *BLANKS   PIUSR
+     C                     MOVE *BLANKS   PAUSR
+     C                     MOVE *BLANKS   PCSSN                                               201797
+     C                     MOVE *BLANKS   OLNOZ                                               201123
+     C/COPY WNCPYSRC,LEH00447
+      *
+     C                     ENDSR
+      *                                                                   124047
+      *****************************************************************   124047
+      /TITLE SR/REP6                                                      124047
+      *****************************************************************   124047
+      *                                                               *   124047
+      *  REP6   - Process Unauthorised Facilities                     *   124047
+      *                                                               *   124047
+      *  Called By: PROCES                                            *   124047
+      *  Calls:                                                       *   124047
+      *  VALID  - Validate Fields                                     *   124047
+      *  WP1REC - Format and Write a Detail Record to the Report      *   124047
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *   124047
+      *  ZFRPED - Edit an Amount                                      *   124047
+      *                                                               *   124047
+      *****************************************************************   124047
+      *                                                                   124047
+     C           REP6      BEGSR                           *** REP6   *** 124047
+      *                                                                   124047
+      ***  Move File Fields to Report Fields                              124047
+      *                                                                   124047
+     C                     MOVELCNUM      PCNUM                           124047
+     C                     MOVELBRCA      PBRCA                           124047
+     C                     MOVELFCCY      PFCCY                           124047
+     C                     MOVELFCCY      PCCY                            124047
+     C                     MOVELIUSR      PIUSR                           124047
+     C                     MOVELAUSR      PAUSR                           124047
+      *                                                                   124047
+      ***  Validate Fields                                                124047
+     C                     EXSR VALID                                     124047
+      *                                                                   124047
+     C                     MOVELBBCSSN    PCSSN                           124047
+      *                                                                   124047
+      ***  Format Facility                                                124047
+     C                     MOVE '   /  '  PFACL                           124047
+     C                     MOVELFACT      PFACL                           124047
+     C                     MOVE FCNO      PFACL                           124047
+      *                                                                   124047
+      ***  Format Syndicate Type                                          124047
+     C                     MOVE *BLANKS   PSYTP                           124047
+     C           CLE006    IFEQ 'Y'                                                           201797
+     C           SYIN      IFEQ 'Y'                                       124047
+     C                     SELEC                                          124047
+     C           PRTR      WHEQ *BLANK                                    124047
+     C                     MOVEASYTP,1    PSYTP                           124047
+     C           PRTR      WHEQ 'A'                                       124047
+     C                     MOVEASYTP,2    PSYTP                           124047
+     C           PRTR      WHEQ 'I'                                       124047
+     C                     MOVEASYTP,3    PSYTP                           124047
+     C           PRTR      WHEQ 'P'                                       124047
+     C                     MOVEASYTP,4    PSYTP                           124047
+     C           PRTR      WHEQ 'R'                                                           CLE106
+     C                     MOVEASYTP,5    PSYTP                                               CLE106
+     C           PRTR      WHEQ 'S'                                                           CLE106
+     C                     MOVEASYTP,6    PSYTP                                               CLE106
+     C                     ENDSL                                          124047
+     C                     ENDIF                                          124047
+     C                     ENDIF                                                              201797
+      *                                                                   124047
+      ***  Format Amount                                                  124047
+     C                     Z-ADDA6NBDP    ZDECS                           124047
+     C                     Z-ADDFAMT      ZFLD15                          124047
+     C                     EXSR ZFRPED                                    124047
+     C                     MOVE ZOUT25    PFCMT                           124047
+      *                                                                   124047
+      ***  Format Facility start date                                     124047
+      *                                                                   124047
+     C                     Z-ADDDTAP      ZDAYNO                          124047
+     C                     EXSR ZDATE2                                    124047
+     C                     MOVELZADATE    PDTAP                           124047
+      *                                                                   124047
+      ***  Format Facility expiry date                                    124047
+     C                     Z-ADDDTEX      ZDAYNO                          124047
+     C                     EXSR ZDATE2                                    124047
+     C                     MOVELZADATE    PDTEX                           124047
+      *                                                                   124047
+      ***  Write out the record.                                          124047
+      *                                                                   124047
+     C                     EXSR WP1REC                                    124047
+      *                                                                   124047
+      ***  Increment Record Count                                         124047
+      *                                                                   124047
+     C                     ADD  1         RCOUNT  50                      124047
+      *                                                                   124047
+      ***  Initialise Detail Record                                       124047
+     C                     MOVE *BLANKS   PCNUM                           124047
+     C                     MOVE *BLANKS   PCSSN                           124047
+     C                     MOVE *BLANKS   PBRCA                           124047
+     C                     MOVE *BLANKS   PFACL                           124047
+     C                     MOVE *BLANKS   PSYTP                           124047
+     C                     MOVE *BLANKS   PFCMT                           124047
+     C                     MOVE *BLANKS   PFCCY                           124047
+     C                     MOVE *BLANKS   PCCY                            124047
+     C                     MOVE *BLANKS   PDTAP                           124047
+     C                     MOVE *BLANKS   PDTEX                           124047
+     C/COPY WNCPYSRC,LEH00278
+     C                     MOVE *BLANKS   PIUSR                           124047
+     C                     MOVE *BLANKS   PAUSR                           124047
+      *                                                                   124047
+     C                     ENDSR                                          124047
+      *****************************************************************   124047
+      /TITLE SR/REP7                                                      127657
+      *****************************************************************   127657
+      *                                                               *   127657
+      *  REP7   - Process Unauthorised Facility Amendment             *   127657
+      *                                                               *   127657
+      *  Called By: PROCES                                            *   127657
+      *  Calls:                                                       *   127657
+      *  VALID  - Validate Fields                                     *   127657
+      *  WP1REC - Format and Write a Detail Record to the Report      *   127657
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *   127657
+      *  ZFRPED - Edit an Amount                                      *   127657
+      *                                                               *   127657
+      *****************************************************************   127657
+      *                                                                   127657
+     C           REP7      BEGSR                           *** REP7   *** 127657
+      *                                                                   127657
+      ***  Move File Fields to Report Fields                              127657
+      *                                                                   127657
+     C                     MOVELCNUM      PCNUM                           127657
+     C                     MOVELBRCA      PBRCA                           127657
+     C                     MOVELSQNO      PLASN                           127657
+     C                     MOVELACCY      PCCY                            127657
+     C                     MOVELRVCR      PRVLC                           127657
+     C                     MOVELIUSR      PIUSR                           127657
+     C                     MOVELAUSR      PAUSR                           127657
+     C           FATP      IFEQ 'FI'                                      127657
+     C                     MOVELDESC,13   PAMTP                           127657
+     C                     ENDIF                                          127657
+     C           FATP      IFEQ 'FD'                                      127657
+     C                     MOVELDESC,14   PAMTP                           127657
+     C                     ENDIF                                          127657
+     C           FATP      IFEQ 'RC'                                      127657
+     C                     MOVELDESC,15   PAMTP                           127657
+     C                     ENDIF                                          127657
+     C           FATP      IFEQ 'FR'                                      127657
+     C                     MOVELDESC,16   PAMTP                           127657
+     C                     ENDIF                                          127657
+     C/COPY WNCPYSRC,LEH00279
+      *                                                                   127657
+      ***  Validate Fields                                                127657
+     C                     EXSR VALID                                     127657
+      *                                                                   127657
+     C                     MOVELBBCSSN    PCSSN                           127657
+      *                                                                   127657
+      ***  Format Facility                                                127657
+     C                     MOVE '   /  '  PFACL                           127657
+     C                     MOVELFACT      PFACL                           127657
+     C                     MOVE FCNO      PFACL                           127657
+      *                                                                   127657
+      ***  Format Amount                                                  127657
+     C                     Z-ADDA6NBDP    ZDECS                           127657
+     C                     Z-ADDAAMT      ZFLD15                          127657
+     C                     EXSR ZFRPED                                    127657
+     C                     MOVE ZOUT25    PAAMT                           127657
+      *                                                                   127657
+      ***  Format Facility value date                                     127657
+      *                                                                   127657
+     C                     Z-ADDVLDT      ZDAYNO                          127657
+     C                     EXSR ZDATE2                                    127657
+     C                     MOVELZADATE    PVDAT                           127657
+      *                                                                   127657
+     C                     Z-ADDNDEX      ZDAYNO                          127657
+     C                     EXSR ZDATE2                                    127657
+     C                     MOVELZADATE    PNEXP                           127657
+     C/COPY WNCPYSRC,LEH00280
+      *                                                                   127657
+      ***  Write out the record.                                          127657
+      *                                                                   127657
+     C                     EXSR WP1REC                                    127657
+      *                                                                   127657
+      ***  Increment Record Count                                         127657
+      *                                                                   127657
+     C                     ADD  1         RCOUNT  50                      127657
+      *                                                                   127657
+      ***  Initialise Detail Record                                       127657
+     C                     MOVE *BLANKS   PCNUM                           127657
+     C                     MOVE *BLANKS   PBRCA                           127657
+     C                     MOVE *BLANKS   PFACL                           127657
+     C                     MOVE *BLANKS   PVDAT                           127657
+     C                     MOVE *BLANKS   PAMTP                           127657
+     C                     MOVE *BLANKS   PCCY                            127657
+     C                     MOVE *BLANKS   PRVLC                           127657
+     C                     MOVE *BLANKS   PNEXP                           127657
+     C                     MOVE *BLANKS   PIUSR                           127657
+     C                     MOVE *BLANKS   PAUSR                           127657
+     C                     MOVE *BLANKS   PCSSN                                               201797
+     C/COPY WNCPYSRC,LEH00281
+      *                                                                   127657
+     C                     ENDSR                                          127657
+      *****************************************************************   127657
+      /TITLE SR/REP8                                                      127657
+      *****************************************************************   127657
+      *                                                               *   127657
+      *  REP8   - Process Unauthorised Manual Facility Amendment      *   127657
+      *                                                               *   127657
+      *  Called By: PROCES                                            *   127657
+      *  Calls:                                                       *   127657
+      *  VALID  - Validate Fields                                     *   127657
+      *  WP1REC - Format and Write a Detail Record to the Report      *   127657
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *   127657
+      *  ZFRPED - Edit an Amount                                      *   127657
+      *                                                               *   127657
+      *****************************************************************   127657
+      *                                                                   127657
+     C           REP8      BEGSR                           *** REP8   *** 127657
+      *                                                                   127657
+      ***  Move File Fields to Report Fields                              127657
+      *                                                                   127657
+     C                     MOVELCNUM      PCNUM                           127657
+     C                     MOVELBRCA      PBRCA                           127657
+     C                     MOVELUCCY      PCCY                            127657
+     C                     MOVELUXID      PUXIN                           127657
+     C                     MOVELIUSR      PIUSR                           127657
+     C                     MOVELAUSR      PAUSR                           127657
+      *                                                                   127657
+      ***  Validate Fields                                                127657
+     C                     EXSR VALID                                     127657
+      *                                                                   127657
+     C                     MOVELBBCSSN    PCSSN                           127657
+      *                                                                   127657
+      ***  Format Facility                                                127657
+     C                     MOVE '   /  '  PFACL                           127657
+     C                     MOVELFACT      PFACL                           127657
+     C                     MOVE FCNO      PFACL                           127657
+      *                                                                   127657
+      ***  Format Amount                                                  127657
+     C                     Z-ADDA6NBDP    ZDECS                           127657
+     C                     Z-ADDUAMT      ZFLD15                          127657
+     C                     EXSR ZFRPED                                    127657
+     C                     MOVE ZOUT25    PUAMT                           127657
+      *                                                                   127657
+      ***  Format Facility start date                                     127657
+      *                                                                   127657
+     C                     Z-ADDSTDT      ZDAYNO                          127657
+     C                     EXSR ZDATE2                                    127657
+     C                     MOVELZADATE    PSTDT                           127657
+      *                                                                   127657
+      ***  Format Facility expiry date                                    127657
+      *                                                                   127657
+     C                     Z-ADDEXDT      ZDAYNO                          127657
+     C                     EXSR ZDATE2                                    127657
+     C                     MOVELZADATE    PEXDT                           127657
+      *                                                                   127657
+      ***  Format Interest Rate                                           127657
+      *                                                                   127657
+     C           UXRT      IFNE 0                                         127657
+     C                     MOVE *BLANKS   ZFIELD                          127657
+     C                     MOVE UXRT      ZFIELD                          127657
+     C                     Z-ADD7         ZADEC                           127657
+     C                     EXSR ZEDIT                                     127657
+     C                     MOVE ZFIELD    PUXRT                           127657
+     C                     ENDIF                                          127657
+      *                                                                   127657
+      ***  Write out the record.                                          127657
+      *                                                                   127657
+     C                     EXSR WP1REC                                    127657
+      *                                                                   127657
+      ***  Increment Record Count                                         127657
+      *                                                                   127657
+     C                     ADD  1         RCOUNT  50                      127657
+      *                                                                   127657
+      ***  Initialise Detail Record                                       127657
+     C                     MOVE *BLANKS   PCNUM                           127657
+     C                     MOVE *BLANKS   PBRCA                           127657
+     C                     MOVE *BLANKS   PFACL                           127657
+     C                     MOVE *BLANKS   PCCY                            127657
+     C                     MOVE *BLANKS   PUAMT                           127657
+     C                     MOVE *BLANKS   PUXRT                           127657
+     C                     MOVE *BLANKS   PUXIN                           127657
+     C                     MOVE *BLANKS   PSTDT                           127657
+     C                     MOVE *BLANKS   PEXDT                           127657
+     C                     MOVE *BLANKS   PIUSR                           127657
+     C                     MOVE *BLANKS   PAUSR                           127657
+     C                     MOVE *BLANKS   PCSSN                                               201797
+      *                                                                   127657
+     C                     ENDSR                                          127657
+      *                                                                                       202364
+      *****************************************************************                       202364
+      /TITLE SR/REP9                                                                          202364
+      *****************************************************************                       202364
+      *                                                               *                       202364
+      *  REP9   - Process Unauthorised Fees Settlement                *                       202364
+      *                                                               *                       202364
+      *  Called By: PROCES                                            *                       202364
+      *  Calls:                                                       *                       202364
+      *  VALID  - Validate Fields                                     *                       202364
+      *  WP1REC - Format and Write a Detail Record to the Report      *                       202364
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *                       202364
+      *  ZFRPED - Edit an Amount                                      *                       202364
+      *                                                               *                       202364
+      *****************************************************************                       202364
+      *                                                                                       202364
+     C           REP9      BEGSR                           *** REP9   ***                     202364
+      *                                                                                       202364
+     C                     MOVELFABRCA    PBRCA                                               202364
+     C                     MOVELFAFSEQ    PFSEQ                                               202364
+     C                     MOVELFAFCCY    PCCY                                                202364
+     C                     MOVELFATYPE    PTYPE                                               202364
+     C                     MOVELIUSR      PIUSR                                               202364
+     C                     MOVELAUSR      PAUSR                                               202364
+      *                                                                                       202364
+      ** Validate Fields                                                                      202364
+      *                                                                                       202364
+     C                     MOVELFACNUM    PCNUM                                               202364
+     C                     EXSR VALID                                                         202364
+      *                                                                                       202364
+      ** Retrieve customer shortname                                                          202364
+      *                                                                                       202364
+     C                     MOVE *BLANKS   PKEY1  10                                           202364
+     C                     MOVELFACNUM    PKEY1  10                                           202364
+     C                     CALL 'AOCUSTR0'                                                    202364
+     C                     PARM *BLANKS   PRTCD   7                                           202364
+     C                     PARM '*KEY   ' POPTN   7                                           202364
+     C                     PARM           PKEY1                                               202364
+     C                     PARM           PKYST   7                                           202364
+     C           SDCUST    PARM SDCUST    DSFDY                                               202364
+      *                                                                                       202364
+      ** Handle Database Error.                                                               202364
+      *                                                                                       202364
+     C           PRTCD     IFNE *BLANKS                                                       202364
+     C           *LOCK     IN   LDA                                                           202364
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************                    202364
+     C                     MOVELFACNUM    DBKEY            * DB ERROR 10 *                    202364
+     C                     Z-ADD010       DBASE            ***************                    202364
+     C                     OUT  LDA                                                           202364
+     C                     EXSR *PSSR                                                         202364
+     C                     ELSE                                                               202364
+     C                     MOVELBBCSSN    PCSSN                                               202364
+     C                     ENDIF                                                              202364
+      *                                                                                       202364
+      ** Format Facility                                                                      202364
+      *                                                                                       202364
+     C           FAFACL    IFNE *ZERO                                                         202364
+     C                     MOVE FAFACL    #FACL5  5                                           202364
+     C                     MOVE FAFACL    #FACL2  2                                           202364
+     C                     MOVEL#FACL5    PFACL                                               202364
+     C                     MOVE '/  '     PFACL                                               202364
+     C                     MOVE #FACL2    PFACL                                               202364
+     C                     ENDIF                                                              202364
+      *                                                                                       202364
+      ** Format Amount                                                                        202364
+      *                                                                                       202364
+     C                     Z-ADDA6NBDP    ZDECS                                               202364
+     C                     Z-ADDFASADJ    ZFLD15                                              202364
+     C                     EXSR ZFRPED                                                        202364
+     C                     MOVE ZOUT25    PFAMT                                               202364
+      *                                                                                       202364
+      ** Format Fee Value Date                                                                202364
+      *                                                                                       202364
+     C                     Z-ADDFAVDAT    ZDAYNO                                              202364
+     C                     EXSR ZDATE2                                                        202364
+     C                     MOVELZADATE    PFFVD                                               202364
+      *                                                                                       202364
+      ** Write out the record.                                                                202364
+      *                                                                                       202364
+     C                     EXSR WP1REC                                                        202364
+      *                                                                                       202364
+      ** Increment Record Count                                                               202364
+      *                                                                                       202364
+     C                     ADD  1         RCOUNT  50                                          202364
+      *                                                                                       202364
+      ** Initialise Detail Record                                                             202364
+      *                                                                                       202364
+     C                     MOVE *BLANKS   PCNUM                                               202364
+     C                     MOVE *BLANKS   PCSSN                                               202364
+     C                     MOVE *BLANKS   PBRCA                                               202364
+     C                     MOVE *BLANKS   PFACL                                               202364
+     C                     MOVE *BLANKS   PFSEQ                                               202364
+     C                     MOVE *BLANKS   PFAMT                                               202364
+     C                     MOVE *BLANKS   PCCY                                                202364
+     C                     MOVE *BLANKS   PTYPE                                               202364
+     C                     MOVE *BLANKS   PFFVD                                               202364
+     C                     MOVE *BLANKS   PIUSR                                               202364
+     C                     MOVE *BLANKS   PAUSR                                               202364
+      *                                                                                       202364
+     C                     ENDSR                                                              202364
+      *
+      *****************************************************************                       CLE071
+      /TITLE SR/REP10                                                                         CLE071
+      *****************************************************************                       CLE071
+      *                                                               *                       CLE071
+      *  REP10  - Process Unauthorised Fee Rate Changes               *                       CLE071
+      *                                                               *                       CLE071
+      *  Called By: PROCES                                            *                       CLE071
+      *  Calls:                                                       *                       CLE071
+      *  VALID  - Validate Fields                                     *                       CLE071
+      *  WP1REC - Format and Write a Detail Record to the Report      *                       CLE071
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMMYY)        *                       CLE071
+      *  ZFRPED - Edit an Amount                                      *                       CLE071
+      *                                                               *                       CLE071
+      *****************************************************************                       CLE071
+     C           REP10     BEGSR                                                              CLE071
+      *                                                                                       CLE071
+     C                     MOVELFCCNUM    PCNUM                                               CLE071
+     C                     MOVELFCBRCA    PBRCA                                               CLE071
+     C                     MOVELFCFCCY    PCCY                                                CLE071
+     C                     MOVELFCFCCY    PFCCY                                               CLE071
+      *                                                                                       CLE071
+      ** Validate Fields                                                                      CLE071
+      *                                                                                       CLE071
+     C                     EXSR VALID                                                         CLE071
+      *                                                                                       CLE071
+      ** Customer Short Name                                                                  CLE071
+      *                                                                                       CLE071
+     C                     MOVELBBCSSN    PCSSN                                               CLE071
+      *                                                                                       CLE071
+      ** Format Facility/Loan                                                                 CLE071
+      *                                                                                       CLE071
+     C                     MOVEL*OFF      *IN15                                               CLE071
+     C           FCFACL    IFNE *ZEROS                                                        CLE071
+     C                     MOVEL*OFF      *IN15                                               CLE071
+     C                     MOVE FCFACL    #FACL5  5                                           CLE071
+     C                     MOVE FCFACL    #FACL2  2                                           CLE071
+     C                     MOVEL#FACL5    PFACL                                               CLE071
+     C                     MOVE '/  '     PFACL                                               CLE071
+     C                     MOVE #FACL2    PFACL                                               CLE071
+     C                     MOVELFCFSEQ    PFSEQ                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C           FCLOAN    IFNE *BLANKS                                                       CLE071
+     C                     MOVEL*ON       *IN15                                               CLE071
+     C                     MOVELFCLOAN    PLOAN                                               CLE071
+     C                     MOVELFCFSEQ    PFSEQ                                               CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Format Fee Value Date                                                                CLE071
+      *                                                                                       CLE071
+     C                     Z-ADDFCRCVD    ZDAYNO                                              CLE071
+     C                     EXSR ZDATE2                                                        CLE071
+     C                     MOVELZADATE    PRCVD                                               CLE071
+      *                                                                                       CLE071
+      ** Format Amount                                                                        CLE071
+      *                                                                                       CLE071
+     C           FCPIND    IFEQ 'P'                                                           CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   WFIELD                                              CLE071
+     C                     MOVE *BLANKS   PFAMT1                                              CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANK    ZFIELD                                              CLE071
+     C                     MOVE FCAMT1    ZFIELD                                              CLE071
+     C                     MOVE 3         ZADEC   10                                          CLE071
+     C                     EXSR ZEDIT                                                         CLE071
+     C                     MOVELZFIELD    WFIELD 16                                           CLE071
+     C           ' '       CHECKWFIELD    IDX     20                                          CLE071
+     C           IDX       IFGT 0                                                             CLE071
+     C                     MOVE *BLANKS   #STR1                                               CLE071
+     C                     SUBSTWFIELD:IDX#STR1  16                                           CLE071
+     C                     MOVE #STR1     PFAMT1                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVE WFIELD    PFAMT1                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ELSE                                                               CLE071
+      *                                                                                       CLE071
+     C                     Z-ADD*ZERO     ZDECS                                               CLE071
+     C                     Z-ADDFCAMT1    ZFLD15                                              CLE071
+     C                     EXSR ZFRPED                                                        CLE071
+     C           ' '       CHECKZOUT25    IDX                                                 CLE071
+     C           IDX       IFGT 0                                                             CLE071
+     C                     MOVE *BLANKS   #STR1                                               CLE071
+     C                     SUBSTZOUT25:IDX#STR1                                               CLE071
+     C                     MOVE #STR1     PFAMT1                                              CLE071
+     C                     ELSE                                                               CLE071
+     C                     MOVE ZOUT25    PFAMT1                                              CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+      ** Format Rate                                                                          CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   WFIELD                                              CLE071
+     C                     MOVE *BLANK    ZFIELD                                              CLE071
+     C                     MOVE FCFRT1    ZFIELD                                              CLE071
+     C                     MOVE 5         ZADEC                                               CLE071
+     C                     EXSR ZEDIT                                                         CLE071
+     C                     MOVELZFIELD    WFIELD 16                                           CLE071
+     C                     MOVE *BLANKS   PRTE1                                               CLE071
+     C                     MOVE WFIELD    PRTE1                                               CLE071
+      *                                                                                       CLE071
+     C                     MOVELFCPIND    PIND                                                CLE071
+     C                     MOVELFCIUSR    PIUSR                                               CLE071
+     C                     MOVELFCAUSR    PAUSR                                               CLE071
+      *                                                                                       CLE071
+      ** Write out the record.                                                                CLE071
+      *                                                                                       CLE071
+     C                     EXSR WP1REC                                                        CLE071
+      *                                                                                       CLE071
+      ** Increment Record Count                                                               CLE071
+      *                                                                                       CLE071
+     C                     ADD  1         RCOUNT  50                                          CLE071
+      *                                                                                       CLE071
+      ** Initialise Detail Record                                                             CLE071
+      *                                                                                       CLE071
+     C                     MOVE *BLANKS   PBRCA                                               CLE071
+     C                     MOVE *BLANKS   PCNUM                                               CLE071
+     C                     MOVE *BLANKS   PCCY                                                CLE071
+     C                     MOVE *BLANKS   PFCCY                                               CLE071
+     C                     MOVE *BLANKS   PFACL                                               CLE071
+     C                     MOVE *BLANKS   PFSEQ                                               CLE071
+     C                     MOVE *BLANKS   PCSSN                                               CLE071
+     C                     MOVE *BLANKS   PRCVD                                               CLE071
+     C                     MOVE *BLANKS   PFAMT1                                              CLE071
+     C                     MOVE *BLANKS   PRTE1                                               CLE071
+     C                     MOVE *BLANKS   PIND                                                CLE071
+     C                     MOVE *BLANKS   PIUSR                                               CLE071
+     C                     MOVE *BLANKS   PAUSR                                               CLE071
+      *                                                                                       CLE071
+     C                     ENDSR                                                              CLE071
+      *                                                                                       CLE071
+      *****************************************************************
+     C/COPY WNCPYSRC,LE2320C002
+      /TITLE SR/VALID
+      *****************************************************************
+      *                                                               *
+      *  VALID  - Validate Customer, Branch and Currency Codes        *
+      *                                                               *
+      ***Called By:*REP1,*REP2,*REP3,*REP4,*REP5,*REP6,*REP7*and*REP8**                127657 202364
+      *  Called By: REP1, REP2, REP3, REP4, REP5, REP6, REP7, REP8    *                       202364
+      *             and REP9                                          *                       202364
+      *  Calls:                                                       *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      ***AOBRCHR0*Access*Program***************************************   121783
+      *  AOBRCHR1 Access Program                                      *   121783
+      *  AOCUSTR0 Access Program                                      *
+      *  AOCURRR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VALID     BEGSR                           *** VALID  ***
+      *
+      ***  Validate Customer Number
+      *
+     C                     MOVELPCNUM     PKEY1  10
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM           PKEY1
+     C                     PARM           PKYST   7
+     C***********SDCUST    PARM SDCUST    DSFDY                           176443
+     C           SDCUST    PARM SDCUST    DSSDY                           176443
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCUSTPD'DBFILE           ***************
+     C                     MOVELPCNUM     DBKEY            * DB ERROR 02 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Validate Branch Code
+      *
+     C***********          CALL 'AOBRCHR0'                                121783
+     C                     CALL 'AOBRCHR1'                                121783
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM PBRCA     PBRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY                           121783
+     C***********SDBRCH    PARM SDBRCH    DSFDY                           121783
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDBRCHPD'DBFILE           ***************
+     C                     MOVELPBRCA     DBKEY            * DB ERROR 03 *
+     C                     Z-ADD003       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***  Validate Currency Code
+      *
+     C           PCCY      IFNE *BLANKS
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM PCCY      PK101   3
+     C********** SDCURR    PARM SDCURR    DSFDY                                 CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                                 CSD006
+      *
+      ***  Handle Database Error.
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVE 'SDCURRPD'DBFILE           ***************
+     C                     MOVELPCCY      DBKEY            * DB ERROR 04 *
+     C                     Z-ADD004       DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write Detail Record                   *
+      *                                                               *
+      *  Called By: REP1, REP2, REP3, REP4, REP5, REP6, REP7, REP8    *   127657
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR                           *** WP1REC ***
+      *
+      ***  Write out Sub-Header If New Transaction
+      *
+     C           RCOUNT    IFEQ 0
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings.
+      *
+     C                     Z-ADD5         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+     C           I         IFEQ 1
+     C                     WRITESUB1
+     C                     ENDIF
+      *
+     C           I         IFEQ 2
+     C                     WRITESUB2
+     C                     ENDIF
+      *
+     C           I         IFEQ 3
+     C                     WRITESUB3
+     C                     ENDIF
+      *
+     C           I         IFEQ 4
+     C                     WRITESUB4
+     C                     ENDIF
+      *
+     C           I         IFEQ 5
+     C                     WRITESUB5
+     C                     ENDIF
+      *                                                                   124047
+     C           I         IFEQ 6                                         124047
+     C                     WRITESUB6                                      124047
+     C                     ENDIF                                          124047
+      *
+     C           I         IFEQ 7                                         127657
+     C                     WRITESUB7                                      127657
+     C                     ENDIF                                          127657
+      *                                                                   127657
+     C           I         IFEQ 8                                         127657
+     C                     WRITESUB8                                      127657
+     C                     ENDIF                                          127657
+      *                                                                                       202364
+     C           I         IFEQ 9                                                             202364
+     C                     WRITESUB9                                                          202364
+     C                     ENDIF                                                              202364
+      *                                                                                       202364
+     C           I         IFEQ 10                                                            CLE071
+     C                     WRITESUB10                                                         CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C/COPY WNCPYSRC,LE2320C003
+      *                                                                   127657
+     C                     ENDIF
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings and Sub Headings on a new page.
+      *
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+      *
+     C           I         IFEQ 1
+     C                     WRITESUB1
+     C                     ENDIF
+      *
+     C           I         IFEQ 2
+     C                     WRITESUB2
+     C                     ENDIF
+      *
+     C           I         IFEQ 3
+     C                     WRITESUB3
+     C                     ENDIF
+      *
+     C           I         IFEQ 4
+     C                     WRITESUB4
+     C                     ENDIF
+      *
+     C           I         IFEQ 5
+     C                     WRITESUB5
+     C                     ENDIF
+      *                                                                   124047
+     C           I         IFEQ 6                                         124047
+     C                     WRITESUB6                                      124047
+     C                     ENDIF                                          124047
+      *
+     C           I         IFEQ 7                                         127657
+     C                     WRITESUB7                                      127657
+     C                     ENDIF                                          127657
+      *                                                                   127657
+     C           I         IFEQ 8                                         127657
+     C                     WRITESUB8                                      127657
+     C                     ENDIF                                          127657
+      *                                                                                       202364
+     C           I         IFEQ 9                                                             202364
+     C                     WRITESUB9                                                          202364
+     C                     ENDIF                                                              202364
+      *                                                                                       202364
+     C           I         IFEQ 10                                                            CLE071
+     C                     WRITESUB10                                                         CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C/COPY WNCPYSRC,LE2320C004
+      *                                                                   127657
+     C                     ENDIF
+      *
+      ***  Write out Detail Record.
+      *
+     C           I         IFEQ 1
+     C                     WRITEDTL1
+     C                     ENDIF
+      *
+     C           I         IFEQ 2
+     C                     WRITEDTL2
+     C                     ENDIF
+      *
+     C           I         IFEQ 3
+     C                     WRITEDTL3
+     C                     ENDIF
+      *
+     C           I         IFEQ 4
+     C                     WRITEDTL4
+     C                     ENDIF
+      *
+     C           I         IFEQ 5
+     C                     WRITEDTL5
+     C                     ENDIF
+      *                                                                   124047
+     C           I         IFEQ 6                                         124047
+     C                     WRITEDTL6                                      124047
+     C                     ENDIF                                          124047
+      *
+     C           I         IFEQ 7                                         127657
+     C                     WRITEDTL7                                      127657
+     C                     ENDIF                                          127657
+      *                                                                   127657
+     C           I         IFEQ 8                                         127657
+     C                     WRITEDTL8                                      127657
+     C                     ENDIF                                          127657
+      *                                                                                       202364
+     C           I         IFEQ 9                                                             202364
+     C                     WRITEDTL9                                                          202364
+     C                     ENDIF                                                              202364
+      *                                                                                       202364
+     C           I         IFEQ 10                                                            CLE071
+     C                     WRITEDTL10                                                         CLE071
+     C                     ENDIF                                                              CLE071
+      *                                                                                       CLE071
+     C/COPY WNCPYSRC,LE2320C005
+      *                                                                   127657
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      ***  Write out Trail Format.
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report                   *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Output Header and CLC Record
+      *
+     C           HAUIND    IFEQ *OFF
+     C                     WRITEHEADAU
+     C                     WRITECLC
+     C                     MOVE *ON       HAUIND
+     C                     ENDIF
+      *
+      ***  Output File Controls.
+      *
+     C                     MOVELLBL,I     RLBL
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD12        RQDLNU
+     C           OFLLNU    SUB  PRTLNU    DIFLNU
+     C           DIFLNU    IFLE RQDLNU
+     C                     WRITEHEADAU
+     C                     ENDIF
+      *
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C***********RCOUNT    IFEQ *ZERO                                     127657
+     C***********          WRITENODTLS                                    127657
+     C***********          ENDIF                                          127657
+     C                     ENDIF
+      *
+      ***  Initialize RCOUNT
+      *
+     C                     Z-ADD*ZERO     RCOUNT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZFRPED
+     C/COPY ZSRSRC,ZFRPEDZ3
+     C/COPY ZSRSRC,ZEDITZ2                                                127657
+**  CPY@
+(c) Finastra International Limited 2001
+**  LBL
+Unauthorised Loans/Parts        - LF/LELOANL1 =1
+Unauthorised Loan Amendments    - LF/LELOAML1 =2
+Unauthorised Rollovers          - LF/LELOANL3 =3
+Unauthorised Guarantees         - LF/LEGTEEL1 =4
+Unauthorised Fees               - LF/LEFEESL1 =5
+Unauthorised Facilities         - LF/LEFCLTL1 =6                          124047
+Unauthorised Fclty Amendment    - LF/LEFCAML2 =7                          127657
+Unauthorised Manual Fclty Util  - LF/LEMNFUL2 =8                          127657
+Unauthorized Fees Settlement    - LF/LEFEEAL3 =9                                              202364
+Unauthorised Fee Rate Changes   - LF/LEFERCL2 =0                                              CLE071
+     X/COPY WNCPYSRC,LE2320X001
+**  DESC
+LOAN                 =1
+PARTS PURCHASED      =2
+PARTS SOLD           =3
+MANUAL REPAYMENT     =4
+REPAYMENT SCHEDULE   =5
+PRINCIPAL INCREASE   =6
+SPREAD RATE CHANGE   =7
+BASE RATE CODE       =8
+STOP ACCRUAL         =9                                                                       201797
+LOAN SUB-TYPE        =10
+TRANSFER FROM        =11
+TRANSFER TO          =12
+FACILITY INCREASE     13                                                  127657
+FACILITY DECREASE     14                                                  127657
+REVOLVING CR CHANGE   15                                                  127657
+FCLTY REACTIVATION    16                                                  127657
+MANUAL FCLTY UTLSTN   17                                                  127657
+START ACCRUAL        =18                                                                      201797
+ACCRUED INTEREST ADJ =19                                                                      244279
+ACCRUED MARGIN ADJ.  =20                                                                      244279
+X/COPY WNCPYSRC,LEH00282
+**  SYTP                                                                  124047
+NON-AGENT  =1                                                             124047
+AGENT      =2                                                             124047
+INTERNAL   =3                                                             124047
+FUND PART  =4                                                             124047
+RISK PART  =5                                                                                 CLE106
+SUB PART   =6                                                                                 CLE106
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,0 +1,1680 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Portfolio Lending Groups Maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Lending Module                         *
+     F*                                                               *
+     F*  LB0225 - Portfolio Lending Group Maintenance                 *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01498             Date 11Aug94               *
+     F*                 066235             Date 27JAN93               *
+     F*                 B9935  ADIF        DATE 20SEP91               *
+     F*                 B9258  ADIF        DATE 12JUL91               *
+     F*                 SA9018             DATE 17JAN91               *
+     F*                 R00300             DATE 20AUG90               *
+     F*                 LB0009             DATE 17JUL90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01498 - Portfolio Lending Upgrade to Release 10             *
+     F*  066235 - Recompile program due to changes in DSPF            *
+     F*  B9935  - PGM ACCEPTS TO DELETE PORTFOLIO GROUP ATTACHED TO   *
+     F*           LIVE INSTRUMENTS                                    *
+     F*  B9258  - PGM ACCEPTS BLANKS IN SEQUENCE NO AND DEFAULTS      *
+     F*           TO 00 , BUT DOES NOT ACCEPT 00 IN INPUT             *
+     F*  SA9018 - REMOVE ATTACHED LIMIT                               *
+     F*  R00300 - Message file changes                                *
+     F*  LB0009 - CHANGE REVIEW SUBFILE TO INCLUDE MULTIPLE ENTRY     *
+     F*           PROCESSING                                          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F*****BANK*DETAILS.*PREFIX*-*BJ*****************************         S01498
+     F***SDBANKPDIF**E                    DISK         KINFSR *PSSR       S01498
+     F*
+     F**   PORTFOLIO LENDING GROUPS. PREFIX - GP
+     FLBGROUL3IF  E           K        DISK         KINFSR *PSSR
+     F*
+     F**   PORTFOLIO LENDING GROUPS. PREFIX - GP
+     FLBGROUL4UF  E           K        DISK         KINFSR *PSSR A
+     F            LBGROUD0                          KRENAMELBGROUMM
+     F                                              KINFDS FILEDS
+     F                                              KCOMIT
+     F*
+     F**   PORTFOLIO LENDING TRAILER FILE. PREFIX - TR
+     FLBTRAIPDUF  E           K        DISK         KINFSR *PSSR
+     F*                                                                   B9935
+     F**   INSTRUMENT TYPES                                               B9935
+     FSDPLINL3IF  E           K        DISK         KINFSR *PSSR          B9935
+     F*
+     F**   SCREEN FORMAT
+     FLB0225DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                        DDRRN KSFILE LB0225S5
+     F*
+     F********************************************************************
+     F/EJECT
+     F********************************************************************
+     F**                                                                 *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                         *
+     F**                 ------------------------                        *
+     F** 15 - '?' is entered to select a group code                      *S01498
+     F** 26 - END OF MESSAGE SUBFILE                                     *
+     F**    50 - FILE INDICATOR ON SDBANKPD                              *
+     F**    51 - FILE INDICATOR ON LBGROUL4                              *
+     F**    52 - FILE INDICATOR ON LBTRAIPD                              *
+     F**    53 - FILE INDICATOR ON LBGROUL3                              *
+     F**    54 - WRITE INDICATOR ON LBGROUL4                             *
+     F**    59 - READ INDICATOR ON LB0225F1                              *
+     F**       60 - SECOND SCREEN DISPLAYED                              *
+     F**       61 - ERROR ON ACTION CODE                                 *
+     F**       62 - ERROR ON GROUP CODE                                  *
+     F**       63 - ERROR ON TITLE                                       *
+     F**       64 - ERROR ON SEQUENCE                                    *
+     F**       65 - ERROR ON ATTACHED LIMIT                              *
+     F**       66 - ERROR ON REVIEW FROM                                 *
+     F**       67 - 'DELETED' RECORD INDICATOR                           *
+     F**       68 - CMD10 ACTIONED                                       *
+     F**       69 - ERROR ON SUBFILE SELECT                              *
+     F**          70 - ERROR INDICATOR                                   *
+     F**          71 - 'INVALID' INDICATOR                               *
+     F**             99 - FILE ERROR INDICATOR                           *
+     F********************************************************************
+     F/EJECT
+     E********************************************************************
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*                                                                   S01498
+     E** Array for Portfolio Lending Group code                           S01498
+     E                    INP         3  1                                S01498
+     E*
+     E/COPY ZSRSRC,ZALIGNZ1
+     E********************************************************************
+     E/EJECT
+     I********************************************************************
+     I*
+     I** DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I***********                           244 253 DDWID                 S01498
+     I***********                           254 263 USER                  S01498
+     I                                      244 253 SWSID                 S01498
+     I                                      254 263 SUSER                 S01498
+     I*                                                                   S01498
+     I** DS for Group code input field                                    S01498
+     IWWLCGR      DS                                                      S01498
+     I                                        1   3 INP                   S01498
+     I*
+     I** FILE INFORMATION DATA STRUCTURE
+     IFILEDS      DS
+     I                                     *STATUS  STATUS
+     I*
+     I**  LOCAL DATA AREA FOR DATA BASE ERRORS
+     ILDA         DS                            256
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**  DATA AREA FOR UPDATE PROCESSING
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I** DATA STRUCTURE TO PROVIDE TEXT ON COMIT ENTRY IN JOURNAL
+     ICMTTXT      DS                             45
+     I                                        1   50WWNATN
+     I                                        6   7 MDID
+     I                                        8  17 PGMN
+     I                                       18  27 WSIDX
+     I                                       28  330MTIME
+     I                                       34  34 ACTCDX
+     I                                       35  42 USIDX
+     I                                       43  45 DD1LCG
+     I** DATA STRUCTURE TO SPLIT DATE INTO DAY, MONTH AND YEAR
+     IWWDMY       DS
+     I                                        1   7 WWDATE
+     I                                        1   20GPDLUP
+     I                                        3   5 GPMLUP
+     I                                        6   70GPYLUP
+     I*                                                                   S01498
+     ISDBANK    E DSSDBANKPD                                              S01498
+     I**  Midas  Bank details                                          S01498
+     I*                                                                   S01498
+     ISDGROU    E DSLBGROUPD                                              S01498
+     I**  Midas  Portfolio Lending Groups details                      S01498
+     I              GPDLUP                          WPDLUP                S01498
+     I              GPMLUP                          WPMLUP                S01498
+     I              GPYLUP                          WPYLUP                S01498
+     I*                                                                   S01498
+     IDSFDY     E DSDSFDY                                                 S01498
+     I**  Short data structure                                            S01498
+     I*                                                                   S01498
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIALISATION
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C           *INKC     DOWEQ'0'
+     C*
+     C                     MOVEL*BLANKS   DD1ACT
+     C                     MOVEL*BLANKS   DD1LCG
+     C                     MOVEL*BLANKS   DD1RVF
+     C                     EXSR #B
+     C                     MOVE '1'       *IN71
+     C*
+     C                     END
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C**          INDEX TO SUBROUTINES                                   *
+     C**         ----------------------                                  *
+     C**                                                                 *
+     C**   1.  #B     - MAINLINE                                         *
+     C**       #SELCT - Data selection via '?' processing                *S01498
+     C**   2.  #BA    - VALIDATION OF SCREEN 1                           *
+     C**   3.  #BB    - SUBFILE PROCESSING                               *
+     C**   4.  #BBA   - PROCESSES ENTRY FROM SUBFILE                     *
+     C**   5.  #ZA    - FILE MAINTENANCE SCREENS                         *
+     C**   6.  #ZC    - CMD12 PROCESSING                                 *
+     C**   7.  #ZAB   - VALIDATION OF FILE MAINTENANCE SCREENS           *
+     C**   8.  #A     - INITIALISATION                                   *
+     C**   9.  #ZB    - LOADS ONE PAGE OF SUBFILE RECORDS                *
+     C**  10.  #ZAAA  - UPDATES TRAILER AS NECESSARY                     *
+     C**  11.  #BBAA  - VALIDATES SELECTION ON SUBFILE                   *
+     C**  12.  #ZAA   - UPDATE PROCESSING                                *
+     C**  13.  ZTNLU1 - TRANSACTION NUMBER PROCESSING                    *
+     C**  14.  ZASNMS - WRITES A MESSAGE TO MESSAGE SUBFILE              *
+     C**  15.  #PSSR  - ERROR HANDLING SUBROUTINE                        *
+     C**  16.  ZALIGN - VALIDATE NUMERICS                                *
+     C**                                                                 *
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #B        - MAIN PROCESSING                                     *
+     C**                                                                 *
+     C** CALLS     - #BA, #BB, #ZA                                       *
+     C**                                                                 *
+     C** CALLED BY - MAINLINE                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #B        BEGSR
+     C*
+     C** WHILE NOT END REQUESTED AND INVALID DATA
+     C           *INKC     DOWEQ'0'
+     C           *IN71     ANDEQ'1'
+     C*
+     C**  DISPLAY SELECTION SCREEN
+     C                     WRITELB0225F1
+     C*
+     C**  IF ERROR AND NOT HELP, WRITE MESSAGE SUBFILE
+     C           *IN70     IFEQ '1'
+     C                     WRITELB0225C7
+     C                     END
+     C*
+     C**  READ SELECTION SCREEN
+     C                     READ LB0225F1                 59
+     C*
+     C** IF NOT END REQUESTED
+     C** PROCESS HELP OR ENTER AS NECESSARY
+     C           *INKC     IFEQ '0'
+     C*
+     C**  If '?' entered, bypass validation and redisplay screen          S01498
+     C*                                                                   S01498
+     C                     EXSR #SELCT                                    S01498
+     C*                                                                   S01498
+     C           *IN15     IFNE '1'                                       S01498
+     C                     EXSR #BA
+     C                     ENDIF                                          S01498
+     C*
+     C                     END
+     C*
+     C**   IF VALID DATA GET DETAILS AS NECESSARY
+     C           *IN71     IFEQ '0'
+     C                     MOVE '1'       *IN71
+     C*
+     C**   DISPLAY NEXT SCREEN AS NECESSARY
+     C                     MOVE '1'       *IN60
+     C*
+     C           WWSFL     IFEQ 'Y'
+     C*
+     C                     EXSR #BB
+     C*
+     C                     ELSE
+     C*
+     C                     EXSR #ZA
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT                                                              S01498
+     C*****************************************************************   S01498
+     C*                                                               *   S01498
+     C*  #SELCT    - This subroutine performs data selection          *   S01498
+     C*              processing via the entry of a '?'.               *   S01498
+     C*                                                               *   S01498
+     C*  CALLS     - AOGROUR0                                         *   S01498
+     C*                                                               *   S01498
+     C*  CALLED BY - #B                                               *   S01498
+     C*                                                               *   S01498
+     C*****************************************************************   S01498
+     C           #SELCT    BEGSR                                          S01498
+     C*                                                                   S01498
+     C** Resolve ? before validation                                      S01498
+     C*                                                                   S01498
+     C                     MOVEADD1LCG    INP                             S01498
+     C           '?'       LOKUPINP                      15               S01498
+     C*                                                                   S01498
+     C           *IN15     IFEQ '1'                                       S01498
+     C*                                                                   S01498
+     C                     CALL 'AOGROUR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD                          S01498
+     C                     PARM '*KEY'    P@OPTN                          S01498
+     C                     PARM '?'       P@LCGR  3                       S01498
+     C           SDGROU    PARM SDGROU    DSFDY                           S01498
+     C*                                                                   S01498
+     C** If selection made, move value to screen field                    S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFEQ *BLANKS                                   S01498
+     C                     MOVE GPLCGR    DD1LCG                          S01498
+     C                     ELSE                                           S01498
+     C                     MOVE *BLANKS   DD1LCG                          S01498
+     C                     ENDIF                                          S01498
+     C*                                                                   S01498
+     C                     ENDIF                                          S01498
+     C*                                                                   S01498
+     C                     ENDSR                                          S01498
+     C*****************************************************************   S01498
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BA       - THIS SUBROUTINE PERFORMS VALIDATION OF SCREEN 1     *
+     C**                                                                 *
+     C** CALLS     - ZASNMS                                              *
+     C**                                                                 *
+     C** CALLED BY - #B                                                  *
+     C**                                                                 *
+     C********************************************************************
+     C           #BA       BEGSR
+     C*
+     C** CLEAR SCREEN MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C** CLEAR SCREEN ERROR INDICATORS
+     C                     MOVEA'0000000' *IN,61
+     C                     MOVEA'00'      *IN,70
+     C                     MOVE 'N'       WWIOVR
+     C*
+     C** VALIDATE ENTRIES AS FOLLOWS:
+     C*
+     C**   IF BOTH ACTION & PORTFOLIO LENDING GROUP ARE BLANK
+     C**   SET SUBFILE NEEDED FLAG TO 'Y' & STORE REVIEW FROM VALUE
+     C           DD1ACT    IFEQ *BLANKS
+     C           DD1LCG    ANDEQ*BLANKS
+     C*
+     C                     MOVE 'Y'       WWSFL   1
+     C*
+     C                     ELSE
+     C*
+     C                     MOVE 'N'       WWSFL
+     C*
+     C**   IF ACTION IS BLANK & PORTFOLIO LENDING GROUP IS BLANK
+     C**   REVIEW FROM SHOULD BE BLANK, IF NOT, OUTPUT ERROR LBM0054
+     C           DD1RVF    IFNE *BLANKS
+     C*
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1LCG    ORNE *BLANKS
+     C*
+     C                     MOVE '1'       *IN66
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0054' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C**   IF ACTION IS BLANK & PORTFOLIO LENDING GROUP IS NOT
+     C**   OUTPUT ERROR LBM0041 'ACTION CODE MUST BE ENTERED'
+     C           DD1ACT    IFEQ *BLANKS
+     C           DD1LCG    ANDNE*BLANKS
+     C*
+     C                     MOVE '1'       *IN61
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0041' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C**   IF ACTION IS NOT BLANK & PORTFOLIO LENDING GROUP IS
+     C**   OUTPUT ERROR LBM0040 'GROUP CODE MUST BE ENTERED'
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1LCG    ANDEQ*BLANKS
+     C*
+     C                     MOVE '1'       *IN62
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0040' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**   IF ACTION & F PORTFOLIO LENDING GROUP ARE NOT BLANK
+     C           DD1ACT    IFNE *BLANKS
+     C           DD1LCG    ANDNE*BLANKS
+     C           *IN71     ANDEQ'0'
+     C*
+     C**   IF ACTION IS NOT EQUAL TO 'I', 'A', 'E', OR 'D'
+     C**   OUTPUT ERROR LBM0039 'ACTION CODE MUST BE ....
+     C           DD1ACT    IFNE 'I'
+     C           DD1ACT    ANDNE'A'
+     C           DD1ACT    ANDNE'E'
+     C           DD1ACT    ANDNE'D'
+     C*
+     C                     MOVE '1'       *IN61
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0039' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C**   IF ACTION EQUALS 'I', CHAIN THE PORTFOLIO LENDING GROUPS
+     C**   FILE FOR THE ENTERED PORTFOLIO LENDING GROUP
+     C           DD1ACT    IFEQ 'I'
+     C           DD1LCG    CHAINLBGROUL4             51
+     C*
+     C**   IF RECORD FOUND
+     C**    IF RECORD NOT DELETED,
+     C**     OUTPUT ERROR LBM0042 'GROUP CODE ALREADY EXISTS'
+     C**    ELSE
+     C**     SET 'INSERT OVER' TO 'Y', FORMAT TO 'IA', INITIALISE SCRN2
+     C**   ELSE
+     C**    SET FORMAT FLAG TO 'IA', INITIALISE SCRN2
+     C           *IN51     IFEQ '0'
+     C*
+     C           GPRECI    IFNE '*'
+     C*
+     C                     MOVE '1'       *IN61
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0042' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL*BLANKS   DD2TTL
+     C                     MOVEL*BLANKS   DD2SEQ
+     C*****                MOVEL*BLANKS   DD2ATL                          SA9018
+     C                     MOVE 'Y'       WWIOVR  1
+     C                     MOVEL'IA'      WWFMT   2
+     C                     Z-ADDGPTNLU    DDTNLU
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     MOVEL*BLANKS   DD2TTL
+     C                     MOVEL*BLANKS   DD2SEQ
+     C*****                MOVEL*BLANKS   DD2ATL                          SA9018
+     C                     MOVE 'IA'      WWFMT
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C**   IF ACTION NOT EQUALS 'I', CHAIN THE PORTFOLIO LENDING GROUPS
+     C**   FILE FOR THE ENTERED PORTFOLIO LENDING GROUP
+     C           DD1LCG    CHAINLBGROUL4             51
+     C*
+     C**   IF RECORD NOT FOUND
+     C**     OUTPUT ERROR LBM0043 'GROUP CODE DOES NOT EXIST'
+     C**   ELSE
+     C**    STORE VALUES AND SET FORMAT INDICATOR AS NECESSARY
+     C           *IN51     IFEQ '1'
+     C*
+     C                     MOVE '1'       *IN62
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0043' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C           GPRECI    IFEQ '*'
+     C*
+     C           DD1ACT    IFEQ 'A'
+     C           DD1ACT    OREQ 'D'
+     C*
+     C                     MOVE '1'       *IN62
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0123' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C                     ELSE
+     C*
+     C           DD1ACT    IFEQ 'E'
+     C                     MOVE '1'       *IN67
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*                                                                   B9935
+     C* ERROR IF GROUP IS STILL ATTACHED TO A LIVE INSTRUMENT FOR DELETE  B9935
+     C*                                                                   B9935
+B001 C           DD1ACT    IFEQ 'D'                                       B9935
+     C           DD1LCG    CHAINSDPLINL3             51                   B9935
+B002 C           *IN51     IFEQ '0'                                       B9935
+     C                     MOVE '1'       *IN62                           B9935
+     C                     MOVEA'11'      *IN,70                          B9935
+     C                     MOVEL'LBM0200' ZAMSID                          B9935
+     C                     EXSR ZASNMS                                    B9935
+E002 C                     END                                            B9935
+E001 C                     END                                            B9935
+     C*
+     C                     MOVELGPLCGN    DD2TTL
+     C                     MOVELGPLCGS    DD2SEQ
+     C*****                MOVELGPATTI    DD2ATL                          SA9018
+     C                     Z-ADDGPTNLU    DDTNLU
+     C*
+     C**   IF ACTION EQUALS 'A', SET FORMAT FLAG TO 'IA'
+     C**   IF ACTION EQUALS 'E', SET FORMAT FLAG TO 'EN'
+     C**   IF ACTION EQUALS 'D', SET FORMAT FLAG TO 'DL'
+     C           DD1ACT    IFEQ 'A'
+     C                     MOVEL'IA'      WWFMT
+     C                     ELSE
+     C*
+     C           DD1ACT    IFEQ 'E'
+     C                     MOVEL'EN'      WWFMT
+     C                     ELSE
+     C*
+     C                     MOVEL'DL'      WWFMT
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BB       - THIS SUBROUTINE DOES SUBFILE PROCESSING             *
+     C**                                                                 *
+     C** CALLS     - #BBA, #ZB, #ZC                                      *
+     C**                                                                 *
+     C** CALLED BY - #B                                                  *
+     C**                                                                 *
+     C********************************************************************
+     C           #BB       BEGSR
+     C*
+     C** CLEAR SCREEN MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C                     EXSR #ZB
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C*
+     C                     WRITELB0225C5
+     C                     WRITELB0225F6
+     C*
+     C           *IN70     IFEQ '1'
+     C                     WRITELB0225C7
+     C                     END
+     C*
+     C                     READ LB0225C5                 59
+     C*
+     C           *INKC     IFEQ '0'
+     C*
+     C************IN27     CASEQ'1'       #ZB                             LB0009
+     C************IN32     CASEQ'1'       #ZB                             LB0009
+     C************INKL     CASEQ'1'       #ZC                             LB0009
+     C***********          CAS            #BBA                            LB0009
+     C***********          END                                            LB0009
+     C*
+     C*
+     C           *IN59     IFEQ '1'                                       LB0009
+     C           *IN27     ANDEQ'1'                                       LB0009
+     C           *IN59     OREQ '1'                                       LB0009
+     C           *IN32     ANDEQ'1'                                       LB0009
+     C                     EXSR #ZB                                       LB0009
+     C                     ELSE                                           LB0009
+     C           *INKL     IFEQ '1'                                       LB0009
+     C                     EXSR #ZC                                       LB0009
+     C                     ELSE                                           LB0009
+     C                     EXSR #BBA                                      LB0009
+     C                     END                                            LB0009
+     C                     END                                            LB0009
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BBA      - THIS SUBROUTINE PPROCESSES ANY ENTRY FROM SUBFILE   *
+     C**                                                                 *
+     C** CALLS     - #BBAA, #ZB, #ZC, ZASNMS                             *
+     C**                                                                 *
+     C** CALLED BY - #BB                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBA      BEGSR
+     C*
+     C**   CLEAR SCREEN MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C**   SET OF INDICATORS
+     C                     MOVEA'00'      *IN,70
+     C*
+     C**   IF BLANK SUBFILE DISPLAYED - ASSUME REVIEW FROM REQUIRED
+B1   C           *IN28     IFEQ '0'
+     C*
+     C                     MOVE '1'       *IN59
+     C*
+X1   C                     ELSE
+     C*
+     C**   ELSE IDENTIFY WHETHER 'REVIEW FROM' OR SELECTION REQUIRED
+     C                     READCLB0225S5                 59
+     C*
+E1   C                     END
+     C*
+     C**   NO RECORDS CHANGED => 'REVIEW FROM' REQUIRED
+B1   C           *IN59     IFEQ '1'
+     C*
+     C                     EXSR #ZB
+     C*
+X1   C                     ELSE
+     C*
+     C**   VALIDATE SELECTION
+     C                     EXSR #BBAA
+     C*
+     C**   IF VALID
+     C************IN71     IFEQ '0'                                       LB0009
+B2   C           *IN80     IFEQ '0'                                       LB0009
+     C*                                                                   LB0009
+     C                     Z-ADD1         DDRRN                           LB0009
+     C*                                                                   LB0009
+B3   C           DDRRN     DOWLEWWLRRN                                    LB0009
+     C           *INKC     ANDEQ'0'                                       LB0009
+     C           *INKL     ANDEQ'0'                                       LB0009
+     C*                                                                   LB0009
+     C           DDRRN     CHAINLB0225S5             59                   LB0009
+     C*                                                                   LB0009
+B4   C           DD2SEL    IFNE *BLANKS                                   LB0009
+     C*                                                                   LB0009
+     C                     MOVELDD2SEL    DD1ACT                          LB0009
+     C                     MOVELDD2LCG    DD1LCG                          LB0009
+     C*                                                                   LB0009
+     C**   IF SELECT EQUALS 'I' OR 'A', SET FORMAT FLAG TO 'IA'           LB0009
+     C**   IF SELECT EQUALS 'E', SET FORMAT FLAG TO 'EN'                  LB0009
+     C**   IF SELECT EQUALS 'D', SET FORMAT FLAG TO 'DL'                  LB0009
+     C           DD2SEL    IFEQ 'I'                                       LB0009
+     C                     MOVEL'IA'      WWFMT                           LB0009
+     C                     MOVE *BLANKS   DD2TTL                          LB0009
+     C                     MOVE *BLANKS   DD2SEQ                          LB0009
+     C*****                MOVE *BLANKS   DD2ATL                          SA9018
+     C*                                                                   LB0009
+     C                     ELSE                                           LB0009
+     C*                                                                   LB0009
+     C                     MOVELDD2SQH    DD2SEQ                          LB0009
+     C*****                MOVELDD2ALH    DD2ATL                          SA9018
+     C*                                                                   LB0009
+     C           DD2SEL    IFEQ 'A'                                       LB0009
+     C                     MOVEL'IA'      WWFMT                           LB0009
+     C                     ELSE                                           LB0009
+     C*                                                                   LB0009
+     C           DD2SEL    IFEQ 'E'                                       LB0009
+     C                     MOVEL'EN'      WWFMT                           LB0009
+     C                     ELSE                                           LB0009
+     C*                                                                   LB0009
+     C                     MOVEL'DL'      WWFMT                           LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     END                                            LB0009
+     C*                                                                   LB0009
+     C*
+     C**   LOAD NECESSARY SCREEN
+     C                     MOVE '1'       *IN71
+     C                     EXSR #ZA
+     C*
+E4   C                     END                                            LB0009
+     C*                                                                   LB0009
+     C                     ADD  1         DDRRN                           LB0009
+E3   C                     END                                            LB0009
+     C*                                                                   LB0009
+     C**   CHAIN TO SUBFILE TO GET FIRST CUSTOMER NUMBER/START DATE       LB0009
+     C           1         CHAINLB0225S5             59                   LB0009
+     C                     MOVELDD2LCG    DD1RVF                          LB0009
+     C*                                                                   LB0009
+     C**   REBUILD SUBFILE                                                LB0009
+     C                     EXSR #ZB                                       LB0009
+     C*                                                                   LB0009
+E2   C                     END                                            LB0009
+     C*                                                                   LB0009
+     C*                    ELSE                                           LB0009
+     C*                                                                   LB0009
+     C**   SAVE RRN OF CHANGED SUBFILE RECORD                             LB0009
+     C*                                                                   LB0009
+     C****                 Z-ADDDDRRN     WWSRRN  40                      LB0009
+     C****                 MOVE DD2SEL    WWSSEL  1                       LB0009
+     C*                                                                   LB0009
+     C**   REMOVE REVERSE IMAGE FROM SUBFILE                              LB0009
+     C****                 Z-ADD0         WWCNTR  40                      LB0009
+     C*                                                                   LB0009
+     C***        WWCNTR    DOWLTWWLRRN                                    LB0009
+     C*                                                                   LB0009
+     C**                   ADD  1         WWCNTR                          LB0009
+     C*                                                                   LB0009
+     C**         WWCNTR    CHAINLB0225S5             59                   LB0009
+     C*                    MOVE *BLANKS   DD2SEL                          LB0009
+     C*                    MOVE '0'       *IN69                           LB0009
+     C*                                                                   LB0009
+     C*                    UPDATLB0225S5                                  LB0009
+     C*                                                                   LB0009
+     C*                    END                                            LB0009
+     C*                                                                   LB0009
+     C*                    MOVE '1'       *IN69                           LB0009
+     C*                    MOVEA'11'      *IN,70                          LB0009
+     C*                    MOVELWWMSGD    ZAMSID                          LB0009
+     C*                    EXSR ZASNMS                                    LB0009
+     C*          WWSRRN    CHAINLB0225S5             59                   LB0009
+     C*                    MOVE WWSSEL    DD2SEL                          LB0009
+     C*                    UPDATLB0225S5                                  LB0009
+     C*                                                                   LB0009
+     C*                    END                                            LB0009
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZA       - THIS SUBROUTINE PROCESSES FILE MAINTENANCE SCREENS  *
+     C**                                                                 *
+     C** CALLS     - #BCA, #BCB, #ZC                                     *
+     C**                                                                 *
+     C** CALLED BY - #B, #BBA                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZA       BEGSR
+     C*
+     C           *INKC     DOWEQ'0'
+     C           *INKL     ANDEQ'0'
+     C           *IN71     ANDEQ'1'
+     C*
+     C           WWFMT     IFEQ 'IA'
+     C                     WRITELB0225F2
+     C                     ELSE
+     C*
+     C           WWFMT     IFEQ 'EN'
+     C                     WRITELB0225F3
+     C                     ELSE
+     C*
+     C                     MOVE '1'       *IN68
+     C                     WRITELB0225F4
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  IF ERROR AND NOT HELP, WRITE MESSAGE SUBFILE
+     C           *IN70     IFEQ '1'
+     C                     WRITELB0225C7
+     C                     END
+     C*
+     C**  READ SCREEN
+     C           WWFMT     IFEQ 'IA'
+     C                     READ LB0225F2                 59
+     C                     ELSE
+     C*
+     C           WWFMT     IFEQ 'EN'
+     C                     READ LB0225F3                 59
+     C                     ELSE
+     C*
+     C                     READ LB0225F4                 59
+     C                     END
+     C*
+     C                     END
+     C*
+     C** IF NOT END REQUESTED
+     C           *INKC     IFEQ '0'
+     C*
+     C           *INKJ     CASEQ'1'       #ZAA
+     C           *INKL     CASEQ'1'       #ZC
+     C                     CAS            #ZAB
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *INKC     IFEQ '0'
+     C           *INKL     ANDEQ'0'
+     C           *IN71     ANDEQ'0'
+     C*
+     C           DD1ACT    IFEQ 'I'
+     C           DD1ACT    OREQ 'A'
+     C*
+     C                     EXSR #ZAA
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZC       - THIS SUBROUTINE PERFORMS CMD12 PROCESSING           *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BB, #ZA                                            *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZC       BEGSR
+     C*
+     C** CLEAR SCREEN MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C** CLEAR SCREEN ERROR INDICATORS
+     C                     MOVEA'00000000'*IN,60
+     C                     MOVEA'0000'    *IN,68
+     C*
+     C                     MOVEL*BLANKS   DD1ACT
+     C                     MOVEL*BLANKS   DD1LCG
+     C                     MOVEL*BLANKS   DD1RVF
+     C                     MOVEL*BLANKS   DD2TTL
+     C                     MOVEL*BLANKS   DD2SEQ
+     C                     MOVEL*BLANKS   DD2SQH
+     C*****                MOVEL*BLANKS   DD2ATL                          SA9018
+     C*****                MOVEL*BLANKS   DD2ALH                          SA9018
+     C                     MOVEL*BLANKS   DDTNLU
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZAB      - THIS SUBROUTINE PERFORMS VALIDATION OF FILE         *
+     C**             MAINTENANCE SCREENS                                 *
+     C**                                                                 *
+     C** CALLS     - ZASNMS, ZALIGN                                      *
+     C**                                                                 *
+     C** CALLED BY - #ZA                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZAB      BEGSR
+     C*
+     C**   IF DELETE SCREEN DON'T VALIDATE
+     C           WWFMT     IFNE 'DL'
+     C*
+     C**   CLEAR SCREEN MESSAGE QUEUE
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C*
+     C**   SET OF INDICATORS
+     C                     MOVEA'000'     *IN,63
+     C                     MOVEA'00'      *IN,70
+     C*
+     C**   IF ACTION IS 'I' OR 'A' :-
+     C**   SEQUENCE, IF ENTERED, MUST BE IN TH RANGE 0 TO 99
+     C**   SEQUENCE MUST BE UNIQUE
+     C**   ATTACHED LIMIT, IF ENTERED, MUST BE 'RE' 'LE' 'FX' OR 'MM'
+     C           DD1ACT    IFEQ 'I'
+     C           DD1ACT    OREQ 'A'
+     C*
+     C           DD2TTL    IFEQ *BLANKS
+     C                     MOVE '1'       *IN63
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0044' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C                     MOVE 'N'       WWSQER  1
+     C* IF SEQUENCE IS LEFT BLANKS ---> ERROR                             B9258
+     C           DD2SEQ    IFEQ *BLANKS                                   B9258
+     C                     MOVE '00'      DD2SEQ                          B9258
+     C                     END                                            B9258
+     C*
+     C           DD2SEQ    IFNE *BLANKS
+     C                     Z-ADD*ZEROS    ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     MOVE '0'       *IN99
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE DD2SEQ    ZFIELD
+     C                     EXSR ZALIGN
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVE ZFIELD    DD2SEQ
+     C*
+     C                     MOVELDD2SEQ    WWSEQN  20
+     C           WWSEQN    IFLT 1
+     C           WWSEQN    ORGT 99
+     C                     MOVE 'Y'       WWSQER
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVE 'Y'       WWSQER
+     C                     END
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WWSEQN
+     C                     END
+     C*
+     C           WWSQER    IFEQ 'Y'
+     C                     MOVE '1'       *IN64
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0124' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C*
+     C           WWSEQN    CHAINLBGROUL3             53
+     C*
+     C           *IN53     IFEQ '0'
+     C*
+     C           GPLCGR    IFNE DD1LCG
+     C                     MOVE '1'       *IN64
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0125' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C*****      DD2ATL    IFNE *BLANKS                                   SA9018
+     C*****                                                               SA9018
+     C*****      DD2ATL    IFNE 'RE'                                      SA9018
+     C*****      DD2ATL    ANDNE'LE'                                      SA9018
+     C*****      DD2ATL    ANDNE'FX'                                      SA9018
+     C*****      DD2ATL    ANDNE'MM'                                      SA9018
+     C*****                                                               SA9018
+     C*****                MOVE '1'       *IN65                           SA9018
+     C*****                MOVEA'11'      *IN,70                          SA9018
+     C*****                MOVEL'LBM0045' ZAMSID                          SA9018
+     C*****                EXSR ZASNMS                                    SA9018
+     C*****                END                                            SA9018
+     C*****                                                               SA9018
+     C*****                END                                            SA9018
+     C*****                                                               SA9018
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #A         - THIS SUBROUTINE PERFORMS INITIALISATION            *
+     C**                                                                 *
+     C**  CALLS     - NONE                                               *
+     C**                                                                 *
+     C**  CALLED BY - MAINLINE                                           *
+     C**                                                                 *
+     C********************************************************************
+     C           #A        BEGSR
+     C*                                                                   S01498
+     C**  Define local data area                                          S01498
+     C*                                                                   S01498
+     C           *NAMVAR   DEFN           LDA                             S01498
+     C*                                                                   S01498
+     C*
+     C**   INITIALISE DB ERROR FIELDS ETC, AND STORE PROGRAM NAME FOR
+     C**   DB ERROR FIELD.
+     C*                                                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVE *BLANKS   DBASE
+     C                     MOVEL'LB0225'  DBPGM
+     C                     OUT  LDA                                       S01498
+     C*                                                                   S01498
+     C                     Z-ADD*ZERO     WWDSTN  50
+     C                     MOVE '1'       *IN26
+     C                     MOVE *BLANKS   ZAMSGF
+     C*********************MOVEL'LXGBMSGF'ZAMSGF
+     C*                                                                   R00300
+     C                     MOVEL'*'       DDPGMQ                          R00300
+     C*                                                                   R00300
+     C**   Select the program MSGQ for error msg.                         R00300
+     C                     MOVEL'*'       TOPQ   10                       R00300
+     C                     MOVEL'*PRV'    TOPRQ   5                       R00300
+     C*                                                                   R00300
+     C**   Fill in fields for subroutine ZASNMS                           R00300
+     C                     MOVEL*BLANK    ZAPGM  10        Message queue  R00300
+     C                     MOVEL'LBUSRMSG'ZAMSGF 10        Message file   R00300
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.    R00300
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.  R00300
+     C*
+     C*****ACCESS*ICD*RECORD*1***********************************         S01498
+     C***********1         SETLLSDBANKPD                                  S01498
+     C***********          READ SDBANKPD                 50               S01498
+     C***********                                                         S01498
+     C*****IF*ICD*1*NOT*FOUND*THEN*DB*ERROR**********************         S01498
+     C************IN50     IFEQ '1'                                       S01498
+     C***********BJTYLC    OREQ 'D'                                       S01498
+     C***********                                                         S01498
+     C***********          MOVE '001'     DBASE                           S01498
+     C*                                                                   S01498
+     C**  Access bank details                                             S01498
+     C*                                                                   S01498
+     C                     CALL 'AOBANKR0'                                S01498
+     C                     PARM *BLANKS   P@RTCD  7                       S01498
+     C                     PARM '*FIRST'  P@OPTN  7                       S01498
+     C           SDBANK    PARM SDBANK    DSFDY                           S01498
+     C*                                                                   S01498
+     C           P@RTCD    IFNE *BLANKS                                   S01498
+     C           *LOCK     IN   LDA                                       S01498
+     C                     Z-ADD1         DBASE                           S01498
+     C                     MOVE *BLANKS   DBFILE           *****************
+     C                     MOVEL'SDBANKPD'DBFILE           ** DBERROR 001 **
+     C                     MOVE *BLANKS   DBKEY            *****************
+     C                     MOVEL'*FIRST'  DBKEY                           S01498
+     C                     OUT  LDA                                       S01498
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     EXSR *PSSR                                     S01498
+     C                     RETRN
+     C                     END
+     C*                                                                   S01498
+     C**  Set up screen header run date                                   S01498
+     C*                                                                   S01498
+     C                     MOVELBJMRDT    SMRDT                           S01498
+     C*
+     C                     MOVE *BLANKS   WWTPGQ
+     C                     MOVEL'*'       WWTPGQ
+     C                     MOVE *BLANKS   WWPGQR
+     C                     MOVEL'*PRV'    WWPGQR
+     C*
+     C                     MOVE '1'       *IN71
+     C*
+     C** INITIALISE SUBFILE
+     C                     MOVE '1'       *IN30
+     C                     WRITELB0225C5
+     C                     MOVE '0'       *IN30
+     C*
+     C** INITIALISE SCREEN MESSAGE QUEUE
+     C                     MOVEL'*'       DDPGMQ
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZB       - THIS SUBROUTINE LOADS A PAGE OF RECORDS TO SUBFILE  *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BB, #BBA                                           *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZB       BEGSR
+     C*
+     C                     Z-ADD*ZERO     WWLRRN  40
+     C                     Z-ADD*ZERO     DDRRN
+     C                     Z-ADD*ZERO     WWCNTR
+     C                     MOVEL*BLANKS   DD2SEL
+     C                     MOVEA'00'      *IN,28
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN61
+     C                     MOVE '0'       *IN67
+     C*
+     C                     MOVE '1'       *IN30
+     C                     WRITELB0225C5
+     C                     MOVE '0'       *IN30
+     C*
+     C           *IN32     IFEQ '1'
+     C           *LOVAL    SETLLLBGROUL4
+     C                     ELSE
+     C           DD1RVF    SETLLLBGROUL4
+     C                     END
+     C*
+     C                     READ LBGROUL4                 51
+     C*
+     C           *IN51     IFEQ '1'
+     C                     MOVE '1'       *IN29
+     C                     ELSE
+     C                     MOVEA'11'      *IN,28
+     C*
+     C           *IN51     DOWEQ'0'
+     C           WWCNTR    ANDLT13
+     C*
+     C           GPCHTP    IFEQ 'D'
+     C                     MOVEL'D'       DD2TYP
+     C                     MOVE '1'       *IN67
+     C                     ELSE
+     C                     MOVEL*BLANKS   DD2TYP
+     C                     MOVE '0'       *IN67
+     C                     END
+     C*
+     C                     MOVELGPLCGR    DD2LCG
+     C                     MOVELGPLCGN    DD2TTL
+     C                     MOVELGPLCGS    DD2SQH
+     C*****                MOVELGPATTI    DD2ALH                          SA9018
+     C                     MOVELGPTNLU    DDTNLU
+     C*
+     C                     ADD  1         WWCNTR  40
+     C                     ADD  1         DDRRN
+     C*
+     C                     WRITELB0225S5
+     C*
+     C                     READ LBGROUL4                 51
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN51     IFEQ '0'
+     C                     MOVELGPLCGR    DD1RVF
+     C                     EXCPTLBGROU
+     C                     ELSE
+     C                     MOVE '1'       *IN31
+     C                     MOVEL*BLANKS   DD1RVF
+     C                     END
+     C*
+     C                     Z-ADDDDRRN     WWLRRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZAAA     - THIS SUBROUTINE UPDATES TRAILER AS NECESSARY        *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #ZAA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZAAA     BEGSR
+     C*
+     C           WWUPDT    IFEQ 'Y'
+     C*
+     C                     MOVE 'LBGROUPD'WWFILE  8
+     C           WWFILE    CHAINLBTRAIPD             59
+     C*
+     C           *IN59     IFEQ '1'
+     C           TRRECI    ORNE 'T'
+     C                     ROLBK
+     C                     MOVEL'LBTRAIPD'DBFILE           *****************
+     C                     MOVELWWFILE    DBKEY            ** DBERROR 002 **
+     C                     MOVE '002'     DBASE            *****************
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     END
+     C*
+     C                     Z-ADDBJRDNB    TRLCD
+     C                     MOVE 'A'       TRCHTP
+     C*
+     C           DD1ACT    IFEQ 'I'
+     C*
+     C                     ADD  1         TRLIVE
+     C                     ADD  1         TRINS
+     C*
+     C           WWDELT    IFEQ 'Y'
+     C                     SUB  1         TRDEL
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           DD1ACT    IFEQ 'A'
+     C*
+     C*  IF NOT AMENDED TODAY
+     C           GPLCD     IFNE BJRDNB
+     C           GPCHTP    ORNE 'A'
+     C                     ADD  1         TRAMD
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           DD1ACT    IFEQ 'D'
+     C*
+     C                     ADD  1         TRDEL
+     C                     SUB  1         TRLIVE
+     C*
+     C           WWINST    IFEQ 'Y'
+     C                     SUB  1         TRINS
+     C                     ELSE
+     C*
+     C           WWAMDT    IFEQ 'Y'
+     C                     SUB  1         TRAMD
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     UPDATLBTRAID0
+     C                     END
+     C*
+     C*
+     C**   SET UP COMMITMENT TEXT
+     C                     MOVEL'LB'      MDID
+     C                     MOVEL'LB0225'  PGMN
+     C***********          MOVELDDWID     WSIDX                           S01498
+     C***********          MOVELUSER      USIDX                           S01498
+     C                     MOVELSWSID     WSIDX                           S01498
+     C                     MOVELSUSER     USIDX                           S01498
+     C                     MOVE *BLANKS   ACTCDX
+     C                     TIME           MTIME
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #BBAA     - THIS SUBROUTINE VALIDATES SELECTION ON SUBFILE      *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #BBA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           #BBAA     BEGSR
+     C*
+     C                     MOVE 'N'       WWIOVR
+     C                     MOVE '0'       *IN67
+     C*
+     C*                                                                   LB0009
+     C* If changed record on subfile.                                     LB0009
+     C*                                                                   LB0009
+B1   C           *IN59     IFEQ '0'                                       LB0009
+     C*                                                                   LB0009
+     C                     SETOF                     8033                 LB0009
+     C                     SETOF                     474849               LB0009
+     C*                                                                   LB0009
+     C* Dowhile more changed records on subfile.                          LB0009
+     C*                                                                   LB0009
+B2   C           *IN59     DOWEQ'0'                                       LB0009
+     C                     SETOF                     328871               LB0009
+     C*
+E3   C           DD2SEL    IFNE 'I'
+     C           DD2SEL    ANDNE'A'
+     C           DD2SEL    ANDNE'E'
+     C           DD2SEL    ANDNE'D'
+     C*
+     C           *IN47     IFEQ '0'                                       LB0009
+     C                     MOVEL'LBM0039' WWMSGD  7
+     C                     MOVE '1'       *IN71
+     C                     SETON                     47                   LB0009
+     C                     END                                            LB0009
+     C*
+X3   C                     ELSE
+     C*
+B4   C           DD2SEL    IFEQ 'I'
+     C           DD2TYP    ANDNE'D'
+     C*
+     C           *IN48     IFEQ '0'                                       LB0009
+     C                     MOVEL'LBM0042' WWMSGD
+     C                     MOVE '1'       *IN71
+     C                     SETON                     48                   LB0009
+     C                     END                                            LB0009
+     C*
+X4   C                     ELSE
+     C*
+B5   C           DD2TYP    IFEQ 'D'
+     C*
+B6   C           DD2SEL    IFEQ 'I'
+     C                     MOVE 'Y'       WWIOVR
+E6   C                     END
+     C*
+B6   C           DD2SEL    IFEQ 'E'
+     C                     MOVE '1'       *IN67
+E6   C                     END
+     C*
+B6   C           DD2SEL    IFEQ 'A'
+     C           DD2SEL    OREQ 'D'
+     C*
+     C           *IN49     IFEQ '0'                                       LB0009
+     C                     MOVEL'LBM0123' WWMSGD
+     C                     MOVE '1'       *IN71
+     C                     SETON                     49                   LB0009
+     C                     END                                            LB0009
+     C*
+E6   C                     END
+     C*
+E5   C                     END
+     C*
+E4   C                     END
+     C*
+E3   C                     END
+     C*                                                                   B9935
+     C* ERROR IF GROUP IS STILL ATTACHED TO A LIVE INSTRUMENT FOR DELETE  B9935
+     C*                                                                   B9935
+B003 C           DD2SEL    IFEQ 'D'                                       B9935
+     C           DD2TYP    ANDNE'D'                                       B9935
+     C           DD2LCG    CHAINSDPLINL3             51                   B9935
+B004 C           *IN51     IFEQ '0'                                       B9935
+     C                     MOVE '1'       *IN71                           B9935
+     C                     MOVEL'LBM0200' WWMSGD                          B9935
+E004 C                     END                                            B9935
+E003 C                     END                                            B9935
+     C*
+B3   C           *IN71     IFEQ '1'                                       LB0009
+     C                     SETON                     808833               LB0009
+     C                     SETON                     6970                 LB0009
+     C                     MOVELWWMSGD    ZAMSID                          LB0009
+     C                     EXSR ZASNMS                                    LB0009
+     C                     ELSE                                           LB0009
+     C                     SETOF                     69                   LB0009
+E3   C                     END                                            LB0009
+     C                     UPDATLB0225S5                                  LB0009
+     C*                                                                   LB0009
+     C                     READCLB0225S5                 59               LB0009
+E2   C                     END                                            LB0009
+     C*                                                                   LB0009
+E1   C                     END                                            LB0009
+     C*
+     C**   IF VALID ENTRY
+     C*          *IN80     IFEQ '0'                                       LB0009
+     C*                                                                   LB0009
+     C*                    MOVELDD2SEL    DD1ACT                          LB0009
+     C*                    MOVELDD2LCG    DD1LCG                          LB0009
+     C*                                                                   LB0009
+     C**   IF SELECT EQUALS 'I' OR 'A', SET FORMAT FLAG TO 'IA'           LB0009
+     C**   IF SELECT EQUALS 'E', SET FORMAT FLAG TO 'EN'                  LB0009
+     C**   IF SELECT EQUALS 'D', SET FORMAT FLAG TO 'DL'                  LB0009
+     C*          DD2SEL    IFEQ 'I'                                       LB0009
+     C*                    MOVEL'IA'      WWFMT                           LB0009
+     C*                    MOVE *BLANKS   DD2TTL                          LB0009
+     C*                    MOVE *BLANKS   DD2SEQ                          LB0009
+     C*****                MOVE *BLANKS   DD2ATL                          SA9018
+     C*                                                                   LB0009
+     C*                    ELSE                                           LB0009
+     C*                                                                   LB0009
+     C*                    MOVELDD2SQH    DD2SEQ                          LB0009
+     C*                    MOVELDD2ALH    DD2ATL                          LB0009
+     C*                                                                   LB0009
+     C*          DD2SEL    IFEQ 'A'                                       LB0009
+     C*                    MOVEL'IA'      WWFMT                           LB0009
+     C*                    ELSE                                           LB0009
+     C*                                                                   LB0009
+     C*          DD2SEL    IFEQ 'E'                                       LB0009
+     C*                    MOVEL'EN'      WWFMT                           LB0009
+     C*                    ELSE                                           LB0009
+     C*                                                                   LB0009
+     C*                    MOVEL'DL'      WWFMT                           LB0009
+     C*                                                                   LB0009
+     C*                    END                                            LB0009
+     C*                                                                   LB0009
+     C*                    END                                            LB0009
+     C*                                                                   LB0009
+     C*                    END                                            LB0009
+     C*                                                                   LB0009
+     C*                    END                                            LB0009
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** #ZAA      - THIS SUBROUTINE DOES UPDATE PROCESSING              *
+     C**                                                                 *
+     C** CALLS     - #BCAA, ZASNMS, ZTNLU1, *PSSR                        *
+     C**                                                                 *
+     C** CALLED BY - #ZA                                                 *
+     C**                                                                 *
+     C********************************************************************
+     C           #ZAA      BEGSR
+     C*
+     C                     MOVEA'00'      *IN,70
+     C                     MOVE 'Y'       WWUPDT  1
+     C                     MOVE 'N'       WWINST  1
+     C                     MOVE 'N'       WWAMDT  1
+     C                     MOVE 'N'       WWDELT  1
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C           DD1LCG    CHAINLBGROUL4             51
+     C*
+     C           DD1ACT    IFEQ 'I'
+     C           DD1ACT    OREQ 'A'
+     C           DD1ACT    OREQ 'D'
+     C*
+     C           *IN51     IFEQ '1'
+     C*
+     C           DD1ACT    IFEQ 'I'
+     C*
+     C**=================================================================*
+     C** INSERT  a new record                                            *
+     C**=================================================================*
+     C*
+     C                     MOVE 'D'       GPRECI
+     C                     MOVELDD1LCG    GPLCGR
+     C                     MOVELDD2TTL    GPLCGN
+     C                     Z-ADDWWSEQN    GPLCGS
+     C*****                MOVELDD2ATL    GPATTI                          SA9018
+     C                     Z-ADDWWDSTN    GPTNLU
+     C                     Z-ADDBJRDNB    GPLCD
+     C                     Z-ADDBJRDNB    GPORED
+     C                     TIME           GPTLUP
+     C*
+     C* GET DAY, MONTH AND YEAR OF LAST UPDATE
+     C                     MOVE BJMRDT    WWDATE
+     C*
+     C                     MOVE 'I'       GPCHTP
+     C*
+     C                     WRITELBGROUMM               54
+     C*
+     C**   IF DUPLICATE KEY ERROR
+     C           *IN54     IFEQ '1'
+     C*
+     C           STATUS    IFEQ 01021
+     C*
+     C                     ROLBK
+     C*
+     C**   CLEAR MESSAGES CAUSED BY STATUS ERROR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ
+     C                     PARM           WWPGQR
+     C                     GOTO #ZA0
+     C                     ELSE
+     C*
+     C                     EXSR *PSSR
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     EXSR #ZAAA
+     C*
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C                     GOTO #ZA0
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           GPTNLU    IFNE DDTNLU
+     C*
+     C                     EXCPTLBGROU
+     C                     GOTO #ZA0
+     C                     ELSE
+     C*
+     C           DD1ACT    IFEQ 'I'
+     C*
+     C**=================================================================*
+     C** INSERT  (Reinstate) a deleted record                            *
+     C**=================================================================*
+     C*
+     C**   MOVE CORRECT FIELDS TO FILE FIELDS
+     C           GPLCD     IFEQ BJRDNB
+     C           GPCHTP    ANDEQ'D'
+     C           GPRECI    ANDEQ'*'
+     C                     MOVE 'Y'       WWDELT
+     C                     END
+     C*
+     C                     MOVE 'D'       GPRECI
+     C                     MOVELDD1LCG    GPLCGR
+     C                     MOVELDD2TTL    GPLCGN
+     C                     Z-ADDWWSEQN    GPLCGS
+     C*****                MOVELDD2ATL    GPATTI                          SA9018
+     C                     Z-ADDWWDSTN    GPTNLU
+     C                     Z-ADDBJRDNB    GPLCD
+     C                     Z-ADDBJRDNB    GPORED
+     C                     TIME           GPTLUP
+     C                     MOVE 'I'       GPCHTP
+     C*
+     C* GET DAY, MONTH AND YEAR OF LAST UPDATE
+     C                     MOVE BJMRDT    WWDATE
+     C*
+     C                     UPDATLBGROUMM
+     C*
+     C                     EXSR #ZAAA
+     C                     ELSE
+     C*
+     C**   MOVE SCREEN FIELDS ETC TO FILE FIELDS AS NECESSARY
+     C           DD1ACT    IFEQ 'A'
+     C*
+     C**=================================================================*
+     C** AMEND   an existing record                                      *
+     C**=================================================================*
+     C*
+     C                     MOVELDD1LCG    GPLCGR
+     C                     MOVELDD2TTL    GPLCGN
+     C                     Z-ADDWWSEQN    GPLCGS
+     C*****                MOVELDD2ATL    GPATTI                          SA9018
+     C                     Z-ADDWWDSTN    GPTNLU
+     C*
+     C           GPLCD     IFNE BJRDNB
+     C           GPCHTP    ORNE 'I'
+     C                     MOVE 'A'       GPCHTP
+     C                     Z-ADDBJRDNB    GPLCD
+     C                     TIME           GPTLUP
+     C*
+     C* GET DAY, MONTH AND YEAR OF LAST UPDATE
+     C                     MOVE BJMRDT    WWDATE
+     C                     ELSE
+     C*
+     C                     MOVE 'N'       WWUPDT
+     C                     END
+     C*
+     C                     UPDATLBGROUMM
+     C*
+     C                     ELSE
+     C*
+     C           DD1ACT    IFEQ 'D'
+     C*
+     C**=================================================================*
+     C** DELETE  an existing record                                      *
+     C**=================================================================*
+     C*
+     C                     MOVE '*'       GPRECI
+     C*
+     C           GPLCD     IFEQ BJRDNB
+     C*
+     C           GPCHTP    IFEQ 'I'
+     C                     MOVE 'Y'       WWINST
+     C                     ELSE
+     C*
+     C           GPCHTP    IFEQ 'A'
+     C                     MOVE 'Y'       WWAMDT
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     Z-ADDWWDSTN    GPTNLU
+     C                     MOVE 'D'       GPCHTP
+     C                     Z-ADDBJRDNB    GPLCD
+     C                     TIME           GPTLUP
+     C*
+     C* GET DAY, MONTH AND YEAR OF LAST UPDATE
+     C                     MOVE BJMRDT    WWDATE
+     C*
+     C*
+     C                     UPDATLBGROUMM
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     EXSR #ZAAA
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     GOTO #ZA1
+     C*
+     C           #ZA0      TAG
+     C                     MOVEA'11'      *IN,70
+     C                     MOVEL'LBM0057' ZAMSID
+     C                     EXSR ZASNMS
+     C*
+     C           #ZA1      ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** ZTNLU1    - RETRIEVE/UPDATE TRANS NO. OF LAST UPDATE            *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #ZAA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           ZTNLU1    BEGSR                                        **
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     Z-ADDFNATN     WWDSTN
+     C                     Z-ADDFNATN     WWNATN
+     C                     ADD  1         FNATN
+     C                     OUT  DNATN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** ZASNMS    - Send message to program's message queue             *
+     C**                                                                 *
+     C** CALLS     - Y2SNMGC                                             *
+     C**                                                                 *
+     C** CALLED BY - #BA, #BBA, #ZAA                                     *
+     C**                                                                 *
+     C********************************************************************
+     C           ZASNMS    BEGSR                           ** ZASNMS    **
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+     C*                                                                   R00300
+     C** Clear all fields for default mechanism next time.                R00300
+     C                     MOVEL*BLANK    ZAPGM            Message queue  R00300
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue      R00300
+     C                     MOVEL*BLANK    ZAMSDA           Message data.  R00300
+     C                     MOVEL*BLANK    ZAMSTP           Message type.  R00300
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**                                                                 *
+     C** *PSSR     - PROGRAM ERROR HANDLING ROUTINE                      *
+     C**                                                                 *
+     C** CALLS     - NONE                                                *
+     C**                                                                 *
+     C** CALLED BY - #ZAA                                                *
+     C**                                                                 *
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     DUMP
+     C*
+     C                     ROLBK
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+     C********************************************************************
+     C/EJECT
+     O********************************************************************
+     O*
+     O**   RELEASE RECORD
+     OLBGROUMME                LBGROU
+     O********************************************************************
+     O/EJECT
+** CPY@
+(c) Finastra International Limited 2001

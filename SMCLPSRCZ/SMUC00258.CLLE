@@ -1,0 +1,74 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Update LASQ of CLOANCL for PDCL Loan Fee')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       SMUC00258 - Midas SM Update LASQ of CLOANCL for PDCL        */
+/*                   Loan Fee                                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD025112 *CREATE   Date 20Feb14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD025112  -  Incorrect LASQ field of PDCL loan fees in      */
+/*                    CLOANCL file                                   */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          Systems Ltd. 2014')
+ 
+/** Global monitor message  */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             SNDPGMMSG  MSG('SMUC00258 - Midas SM Update LASQ of +
+                          CLOANCL for PDCL Loan Fee') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/** Create temporary file for PDCL Loan Fees */
+             DLTF       FILE(QTEMP/CLOANTMP)
+             MONMSG     MSGID(CPF2105)
+             CPYF       FROMFILE(CLOANCL) TOFILE(QTEMP/CLOANTMP) +
+                          CRTFILE(*YES) FROMRCD(1) TORCD(1)
+             CLRPFM     FILE(QTEMP/CLOANTMP)
+ 
+/** Create temporary driving file for CLOANCL update */
+             DLTF       FILE(QTEMP/CLOANTEMP)
+             MONMSG     MSGID(CPF2105)
+             CPYF       FROMFILE(CLOANCL) TOFILE(QTEMP/CLOANTEMP) +
+                          CRTFILE(*YES) FROMRCD(1) TORCD(1)
+             CLRPFM     FILE(QTEMP/CLOANTEMP)
+ 
+/** Process utility program */
+             IF         COND(&MODE *EQ 'L' *OR &MODE *EQ 'U') THEN(DO)
+             CALL       PGM(SMU00258) PARM(&MODE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             ENDDO
+ 
+ 
+             SNDPGMMSG  MSG('Program SMUC00258 completed +
+                          succesfully') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             SNDPGMMSG  MSG('Program SMUC00258 ended abnormally +
+                          - job cancelled') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:      ENDPGM

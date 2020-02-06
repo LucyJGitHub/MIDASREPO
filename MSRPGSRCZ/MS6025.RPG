@@ -1,0 +1,1655 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Merva/2 database update')                     *
+      *****************************************************************
+      *                                                               *
+      *   Midas - SWIFT direct link                                   *
+      *                                                               *
+      *   MS6025 - Merva/2 version 2 - Database Update                *
+      *                                                               *
+      *   Written for S01431 - Midas to Merva/2 interface             *
+      *                                                               *
+      *   This program performs database update for incoming          *
+      *   messages, ACKs and NAKs. It is called by MS6020, the        *
+      *   Merva/2 incoming message reception program.                 *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR976772           Date 25May12               *
+      *                 CSW212             Date 03May12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 145692             Date 07Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CTI004             Date 12Apr04               *
+      *                 CRE008             Date 23May02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                  184427            DATE 02Oct00               *
+      *                  184013            DATE 20Sep00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                  148751            DATE 06Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                  141572            DATE 21SEP98               *
+      *                  146340            DATE 29Oct98               *
+      *                  140532            Date 11Aug98               *
+      *                  124673            DATE 04Jun98               *
+      *                  120451            DATE 03MAR98               *
+      *                  113352            DATE 13FEB97               *
+      *                  116405            DATE 17Feb98               *
+      *                  123750            DATE 03JUL97               *
+      *                  CSW095            DATE 19APR95               *
+      *                  075968            DATE 13SEP94               *
+      *                  068105            DATE 20JAN94               *
+      *                  S01435            DATE 16MAR94               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR976772 - Value date century is not populated for all types *
+      *  CSW212 _ SWIFT 2012 Changes                                  *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  145692 - The SWIFT II message output date (MODE) written in  *
+      *           PF/MSMSI2PD is invalid.                             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CTI004 - MidasPlus-TI Integration Enhancements               *
+      *           Routing Swift Messages                              *
+      *   CRE008 - Cash Management                                    *
+      *            Here, add type 103 in TABTYP to extract            *
+      *            date and amount in MSIXI2PD                        *
+      *   CDL008 - Continuous Linked Settlement (Recompiled MGOREFPD) *
+      *  184427 - Add MT340s and MT360s                               *
+      *  184013 - Swift 2000 get correct date format from 30V         *
+      *  148751 - Sender field set up incorrectly on MSIXI2PD so      *
+      *           corrected STID to be incoming SWIFT address.        *
+      *         - Add commitment control to the files                 *
+      *         - The pgm does not remove the LT ID from the          *
+      *           incoming SWIFT msgs and this causes inconsistency   *
+      *           between the MSDL and IMM enquirys.                  *
+      *           For MSDL enq by sender, the pgm expects BIC+LT ID   *
+      *           For IMM enq, the pgm expects BIC only.              *
+      *           For MSDL, even if the Sender customer record exists *
+      *           in Midas, it cannot be chained to due to LT added   *
+      *  141572 - Recompile over changes in MGOREFPD                  *
+      *           Setup century indicator for value date.             *
+      *  146340 - Century field set up in wrong position.            *
+      *  140532 - SWIFT98 fix                                        *
+      *            Crashes if incoming message contains :20C: instead *
+      *            of :20:. Format of :20C: is :20C::CCCC//TRN...     *
+      *  124673 - Add Century field to key list.                     *
+      *  120451 - ERROR IN THE SUBSTRING OPERATION USED TO SET UP THE*
+      *            LAST ACTION TIME (LATM) IN PACK AND PNAK SUBROUT.  *
+      *  113352 - Recompile over changes in MGOREFPD                  *
+      *  116405 - Write the incoming index record after the write     *
+      *           of the data.                                        *
+      *  123750 - SWIFT 1997 changes (CSW097)                         *
+      *            o change to format of MT300                        *
+      *  CSW095 - S.W.I.F.T 1995 Message Changes.                     *
+      *           Increase arrays to handle a 10,000 character        *
+      *           message.                                            *
+      *  075968 - CHAIN should be on Header to use key TRNF           *
+      *            instead of TRNO;                                   *
+      *           the TRN for an ACK or N'ACK needs to be extracted   *
+      *            from field :20: of the copy                        *
+      *            of the outgoing message;                           *
+      *           add the ACK or N'ACK                                *
+      *            to the incoming messages file                      *
+      *            irrespective of whether its corresponding          *
+      *            outgoing message is on file                        *
+      *   068105 - Output MOR and MIR to MEDTA                        *
+      *   S01435 - Incoming Message Management                        *
+      *                                                               *
+      *****************************************************************
+      *
+     FMGOREFL0UF  E           K        DISK
+     F                                              KCOMIT                148751
+     FMSIXI2L2IF  E           K        DISK
+     F            MSIXI2D0                          KRENAMEMSREF2L2
+     FMSMSI2L0O   E                    DISK
+     F                                              KCOMIT                148751
+     FMSIXI2PDO   E                    DISK
+     F                                              KCOMIT                148751
+     FSDBRCHL0IF  E           K        DISK
+     FSDCUSTL7IF  E           K        DISK
+     F/COPY WNCPYSRC,MS6025F001
+     FMS6025AUO   E                    PRINTER                        UC
+      *
+      *****************************************************************
+      *                                                               *
+      *   Indicator Usage                                             *
+      *   ---------------                                             *
+      *                                                               *
+      *   11        CHAIN fail on customer                            *
+      *   12        CHAIN fail on branch                              *
+      *                                                               *
+      *   20        Message type found on array for processing        *
+      *                                                               *
+      *   50        Work                                              *
+      *   51        Work                                              *
+      *   52        Work                                              *
+      *                                                               *
+      *   70        Work                                              *                       CSW209
+      *                                                               *                       CSW209
+      *   88        *PSSR called                                      *
+      *                                                               *   S01435
+      *   90        General Work Indicator (can be used anywhere)     *   S01435
+      *                                                               *
+      *   U7 & U8   Database error                                    *
+      *   nn        X                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+      /EJECT
+     F/COPY WNCPYSRC,MS6025F002
+     E                    CPY@    1   1 80               Copyright
+     E***********         TABTYP  1  14  3   TABCAS  1   Message typE V S/184427
+     E***********         TABTYP  1  19  3   TABCAS  1   Message ty184427 CRE008
+     E**********          TABTYP  1  20  3   TABCAS  1   Message type                  CRE008 CSW212
+     E                    TABTYP  1  22  3   TABCAS  1                                        CSW212
+     E                    AR1     1  14  4   AR2     1                                        CSW209
+     E                    TABTY2  1   1  3   TABAMC 10                                        CSW212
+     E                    TABTY3  1   1  3   TABDAT 10                                        CSW212
+      ** Escape Sequence Translation Array                                                    CSW209
+     E***********         MSI        12256               Incoming message CSW095
+     E***********         IMSG     3072  1               Incoming message CSW095
+     E                    MSI        40256               Incoming message CSW095
+     E                    IMSG     9999  1               Incoming message CSW095
+     E                    INT        36  1               Date, amount or ccy
+      **  Tables and arrays
+      *
+      /EJECT
+     E/COPY WNCPYSRC,MS6025E001
+     I***INCOM*******DS                       2560                        CSW095
+     I***********                             1 256 MSG1                  CSW095
+     I***********                           257 512 MSG2                  CSW095
+     I***********                           513 768 MSG3                  CSW095
+     I***********                           7691024 MSG4                  CSW095
+     I***********                          10251280 MSG5                  CSW095
+     I***********                          12811536 MSG6                  CSW095
+     I***********                          15371792 MSG7                  CSW095
+     I***********                          17932048 MSG8                  CSW095
+     I***********                          20492304 MSG9                  CSW095
+     I***********                          23052560 MSG10                 CSW095
+     IINCOM       DS                           9999                       CSW095
+     I                                        1 256 MSG1                  CSW095
+     IPINCOM      DS                           9999                                           CTI004
+      **  Incoming data - passed as parameters by MS6020
+      *
+     I***MSID********DS                       3072                        CSW095
+     I***********                             13072 MSI                   CSW095
+     IMSID        DS                           9999                       CSW095
+     I                                        7  18 SDID
+     I                                        7  14 ADDR
+     I                                       15  15 TERM
+     I                                       16  18 BRAN
+     I                                       47  54 BICC                  148751
+     I                                       56  58 BICB                  148751
+      **  Incoming message
+      *
+     IA8BTID      DS                             12
+     I                                        1   8 ADDR1
+     I                                       10  12 BRAN1
+      **  The branch's TID address
+      *
+     I            DS
+     I                                        1   60@TIME
+     I                                        1   20@HRS
+     I                                        3   40@MINS
+     I                                        5   60@SECS
+      **  Data structure for TIME
+      *
+     I            DS
+     I                                        1   2 IMOD
+     I                                        3  16 ITRF
+     I                                        1  16 ACKTRN
+      **  Common data for all ACK/NAKs
+      *
+     I@HOLD       DS                             46
+     I                                        1   3 MTPY
+     I                                        4   7 TME
+     I                                        8  35 MIR
+     I                                       36  410MODE
+     I                                       42  450MOTM
+     I                                       46  46 MPRY
+      **  Split up Block 2 of incoming message
+      *
+     I            DS
+     I                                        1  28 @MOR
+     I                                        1   60@MORD
+     I                                        7  28 @MORI
+      **  Data Structure to set up the MOR
+      *
+     I            DS
+     I                                        1  28 @MIR
+     I                                        1   60@LADT
+     I                                        7  28 @INMIR
+      **  Data Structure to set up the MIR
+      *
+     I            DS
+     I                                        1   60@LATM
+     I                                        1   40@LAHR
+     I I            00                        5   60@LASE
+      **  Data Structure for Last Action Time
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area
+      *
+     ID@IMSG      DS                           9999                       123750
+     I                                        19999 IMSG                  123750
+      ** String representation of incoming message for scan operation     123750
+      *                                                                   123750
+     IDS1         DS                           9999                                           CSW209
+     IDS2         DS                           9999                                           CSW209
+     IDS3         DS                           9999                                           CSW209
+     IDS4         DS                           9999                                           CSW209
+      ** Data Structure to hold MSG during processing                                         CSW209
+      *                                                                                       CSW209
+     IMEDTA     E DSMEDTA                                                 068105
+      *                                                                   068105
+      *  Message Management Data Area                                     068105
+      *                                                                                       CTI004
+     IDSFDY     E DSDSFDY                                                                     CTI004
+      ** Short data structure for Access programs                                             CTI004
+      *                                                                                       CTI004
+     ISCSARD    E DSSCSARDPD                                                                  CTI004
+      ** Data structure for Switchable features file                                          CTI004
+      *                                                                                       CTI004
+     I/COPY WNCPYSRC,MS6025I001
+      *                                                                   068105
+     I              '0123456789'          C         DIGITS                                    CSW212
+      *                                                                                       CSW212
+      *****************************************************************
+      *                                                               *
+      *   Index to subroutines                                        *
+      *   --------------------                                        *
+      *                                                               *
+      *   INIT      Initial process                                   *
+      *   ICRX      Process incoming data                             *
+      *   PRCESC    Process escape sequence translation               *                       CSW209
+      *   PACK      Process Logical Acknowldgement                    *
+      *   PNAK      Process Negative Acknowledgement                  *
+      *   ICRX      Process incoming message                          *
+      *   GETIX     Get outgoing message index record                 *
+      *   MSIWRT    Write message to file                             *
+      *   FNDEOT    Find end-of-text and add end-of-text marker       *
+      *   CREP      Create incoming message reference record          *
+      *   TYPA      Process incoming messages                         *
+      *   TYPB      Process incoming messages                         *
+      *   TYPC      Process incoming messages                         *
+      *   TYPD      Process incoming messages                         *
+      *   SRCH      Search for field tags in incoming messages        *
+      *                                                               *
+      *****************************************************************
+      *
+     C/EJECT
+      **  MAIN PROCESSING
+      *
+      **  Parameter list: Message (1-10), Bank name, Rundate, Return
+     C************ENTRY    PLIST                                          CSW095
+     C***********          PARM           PMSG1 256                       CSW095
+     C***********          PARM           PMSG2 256                       CSW095
+     C***********          PARM           PMSG3 256                       CSW095
+     C***********          PARM           PMSG4 256                       CSW095
+     C***********          PARM           PMSG5 256                       CSW095
+     C***********          PARM           PMSG6 256                       CSW095
+     C***********          PARM           PMSG7 256                       CSW095
+     C***********          PARM           PMSG8 256                       CSW095
+     C***********          PARM           PMSG9 256                       CSW095
+     C***********          PARM           PMSG10256                       CSW095
+     C           *ENTRY    PLIST                                          CSW095
+     C                     PARM           INCOM                           CSW095
+     C                     PARM           BJURPT 53
+     C                     PARM           BJMRDT  7
+     C                     PARM           @RC     1
+      *
+      **  Initial Processing
+     C                     EXSR INIT
+      *
+      **  Process Incoming Transmission
+     C                     EXSR ICRX
+      *
+      **  Terminate - leave files open
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  ICRX                                           *
+      * Purpose     :  Process incoming data                          *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  PACK                                           *
+      *                PNAK                                           *
+      *                ICMSG                                          *
+      *                PRCESC                                         *                       CSW209
+      *****************************************************************
+      *
+     C           ICRX      BEGSR
+      *
+      **  CASE                            Processed by subroutine
+      **  ----                            -----------------------
+      **  Logical acknowledgement         PACK
+      **  Negative acknowledgement        PNAK
+      **  Incoming message                ICMSG
+      *                                                                                       CSW209
+      ** Scan message for Escape Sequence Translation                                         CSW209
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     EXSR PRCESC                                                        CSW209
+     C                     ENDIF                                                              CSW209
+      *
+      **  Access block {2:
+     C           '{2:'     SCAN INCOM     H       50     50
+      *
+      **  If block {2: posn 1 is 'I', process as ACK/NAK, else message
+     C                     ADD  3         H
+     C           1         SUBSTINCOM:H   @TEST   1
+     C           @TEST     IFEQ 'I'                        IF1
+      *
+     C/COPY WNCPYSRC,MS6025C006
+      **  Access field {451:} for ACK/NAK
+     C           '{451:'   SCAN INCOM     H       50
+     C                     ADD  5         H
+      *
+      **  If the message is a NAK field {451: position 1 will be a
+      **  '0'. If it is an ACK it will be a '1'.
+     C           1         SUBSTINCOM:H   @TEST
+     C           @TEST     IFEQ '1'                        IF2
+     C                     EXSR PNAK
+     C                     ELSE                            ELSE2
+     C                     EXSR PACK
+     C                     END                             END2
+      *
+      **  else for an actual message ({451: not found)
+     C                     ELSE                            ELSE1
+     C                     EXSR ICMSG
+      *
+     C                     END                             END1
+      *
+     C                     ENDSR                           ICRX
+     C/EJECT
+      *****************************************************************                       CSW209
+      * Subroutine  :  PRCESC                                         *                       CSW209
+      * Purpose     :  Process Escape Sequence Translation            *                       CSW209
+      *                                                               *                       CSW209
+      * Called by   :  ICRX                                           *                       CSW209
+      * Calls       :                                                 *                       CSW209
+      *****************************************************************                       CSW209
+     C           PRCESC    BEGSR                                                              CSW209
+      *                                                                                       CSW209
+     C                     Z-ADD0         A1      40                                          CSW209
+     C                     Z-ADD0         B1      40                                          CSW209
+     C                     Z-ADD0         C1      40                                          CSW209
+     C                     MOVEL*BLANK    @TT1    1                                           CSW209
+      *                                                                                       CSW209
+     C                     MOVELINCOM     DS1                                                 CSW209
+      *                                                                                       CSW209
+     C                     Z-ADD1         Z       20                                          CSW209
+      *                                                                                       CSW209
+     C           Z         DOWLT15                                                            CSW209
+      *                                                                                       CSW209
+     C           AR1,Z     SCAN DS1       A1             70                                   CSW209
+     C           *IN70     DOWEQ*ON                                                           CSW209
+     C                     MOVELAR2,Z     @TT1                                                CSW209
+      *                                                                                       CSW209
+     C           A1        IFEQ 1                                                             CSW209
+     C           A1        ADD  4         C1                                                  CSW209
+     C                     SUBSTDS1:C1    DS3                                                 CSW209
+     C           @TT1      CAT  DS3:0     DS4                                                 CSW209
+     C                     ELSE                                                               CSW209
+     C           A1        SUB  1         B1                                                  CSW209
+     C           B1        SUBSTDS1       DS2                                                 CSW209
+     C           A1        ADD  4         C1                                                  CSW209
+     C                     SUBSTDS1:C1    DS3                                                 CSW209
+     C                     MOVE *BLANKS   TEMP    1                                           CSW209
+     C                     MOVE B1        POST    50                                          CSW209
+     C                     SUBSTDS1:POST  TEMP                                                CSW209
+     C                     MOVE 0         CTR     10                                          CSW209
+     C           TEMP      DOWEQ' '                                                           CSW209
+     C                     ADD  1         CTR                                                 CSW209
+     C                     SUB  1         POST                                                CSW209
+     C                     SUBSTDS1:POST  TEMP                                                CSW209
+     C                     ENDDO                                                              CSW209
+     C           DS2       CAT  @TT1:0    DS2                                                 CSW209
+     C           DS2       CAT  DS3:0     DS4                                                 CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C                     MOVELDS4       DS1                                                 CSW209
+     C                     MOVEL*BLANKS   DS2                                                 CSW209
+     C                     MOVEL*BLANKS   DS3                                                 CSW209
+     C                     MOVEL*BLANKS   DS4                                                 CSW209
+     C           AR1,Z     SCAN DS1       A1             70                                   CSW209
+     C                     ENDDO                                                              CSW209
+      *                                                                                       CSW209
+     C                     ADD  1         Z                                                   CSW209
+     C                     ENDDO                                                              CSW209
+      *                                                                                       CSW209
+     C                     MOVELDS1       INCOM                                               CSW209
+      *                                                                                       CSW209
+     C                     ENDSR                                                              CSW209
+      *                                                                                       CSW209
+      *****************************************************************                       CSW209
+     C/EJECT                                                                                  CSW209
+      *****************************************************************
+      * Subroutine  :  PACK                                           *
+      * Purpose     :  Process logical acknowledgement                *
+      *                                                               *
+      * Called by   :  ICRX                                           *
+      * Calls       :  GETIX                                          *
+      *                MSIWRT                                         *
+      *****************************************************************
+      *
+     C           PACK      BEGSR
+      *
+      **  Access the ACK/NAK for the TRN (for access of index record
+      **  in s/r GETIX)
+     C***********'{TRN:'   SCAN INCOM     H                               075968
+     C***********':20:'    SCAN INCOM     H                        075968 140532
+     C           ':20:'    SCAN INCOM     H              65               140532
+      *                                                                   140532
+     C           *IN65     IFEQ *OFF                                      140532
+     C           ':20C:'   SCAN INCOM     H                               140532
+     C                     ADD  8         H                               140532
+     C                     ENDIF                                          140532
+      *
+     C/COPY WNCPYSRC,MS6025C007
+      **  Scan for the end of the TRN
+     C***********'}'       SCAN INCOM:H   J       50                      075968
+     C           CRLF      SCAN INCOM:H   J       50                      075968
+      *
+     C/COPY WNCPYSRC,MS6025C008
+      **  Calculate the length of the TRN
+     C***********          ADD  5         H                               075968
+     C                     ADD  4         H                               075968
+     C           J         SUB  H         K       20
+      *
+      **  Move the TRN into the field ACKTRN
+     C                     MOVE *BLANKS   ACKTRN
+     C           K         SUBSTINCOM:H   ACKTRN
+      *
+      **  Access Outgoing Message index record on MGOREFL0
+     C                     EXSR GETIX
+      *
+      **  Set message status to 'L' - Logically acknowledged
+     C                     MOVE 'LACK'    MGST
+     C                     MOVE '3'       MGSG
+      *
+      **  Find the ACK date and time from field 177:.
+     C           '{177:'   SCAN INCOM     H
+     C                     ADD  11        H
+      *
+      **  Move the ACK time to the last action time.
+     C***********4         SUBSTINCOM:J   LAHR    6                       120451
+     C           4         SUBSTINCOM:H   LAHR    4                       120451
+     C                     MOVE LAHR      @LAHR
+      *
+     C                     MOVE @LATM     LATM
+      *
+      **  Set last action date to run-date from PF/SDBANKPD
+     C                     MOVELBJMRDT    LADT
+      *
+      **  Check if the message has been sent via Telex or SWIFT
+     C           '{311:'   SCAN INCOM     H              51
+      *
+      **  If *in51 is on, field {311: has been found and the message
+      **  has been sent via Telex, otherwise it has been sent via SWIFT
+     C           *IN51     IFEQ '1'                        If1
+      *
+      **  Set Network Indicator to Telex.
+     C                     MOVE 'T'       NETI
+     C                     ELSE                            Else1
+      *
+      **  Set Network Indicator to SWIFT.
+     C                     MOVE 'S'       NETI
+      *
+      **  Set up the MIR from the NAK date, and the 'In-MIR'.
+     C                     MOVELLADT      @LADT
+      *
+     C           '{1:'     SCAN INCOM     H
+     C                     ADD  6         H
+     C           22        SUBSTINCOM:H   @INMIR
+      *
+     C                     MOVE @MIR      MIR
+      *
+      **  Save the MIR for use in the write to the file.
+     C                     MOVE @MIR      @MIRH  28
+     C                     END                             End1
+      *
+      **  Update Outgoing Message index record
+      **  as long as this ACK corresponds                                 075968
+      **  to a message on the file                                        075968
+     C           @AOF      IFEQ 'TRUE '                    If1            075968
+      *                                                                   141572
+      ** Setup century indicator CINDV for value date SVDT                141572
+     C           SVDT      IFEQ *BLANK                                    141572
+     C                     MOVE *BLANK    CINDV                           141572
+     C                     ELSE                                           141572
+     C                     MOVELSVDT      YY      20                      141572
+     C           YY        IFLT 72                                        141572
+     C                     MOVE '2'       CINDV                           141572
+     C                     ELSE                                           141572
+     C                     MOVE '1'       CINDV                           141572
+     C                     ENDIF                                          141572
+     C                     ENDIF                                          141572
+     C                     UPDATMGOREFD0
+     C/COPY WNCPYSRC,MS6025C001
+     C                     END                             End1           075968
+      *
+      **  Write ACK to MSMSI2L0
+     C/COPY WNCPYSRC,MS6025C009
+     C                     MOVE 'A'       MSIPAR
+     C                     EXSR MSIWRT
+     C/COPY WNCPYSRC,MS6025C010
+      *
+     C                     ENDSR                           PACK
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  PNAK                                           *
+      * Purpose     :  Process negative acknowledgement               *
+      *                                                               *
+      * Called by   :  ICRX                                           *
+      * Calls       :  GETIX                                          *
+      *                MSIWRT                                         *
+      *****************************************************************
+      *
+     C           PNAK      BEGSR
+      *
+      **  Access the ACK/NAK for the TRN (for access of index record
+      **  in s/r GETIX)
+     C***********'{TRN:'   SCAN INCOM     H                               075968
+     C***********':20:'    SCAN INCOM     H                        075968 140532
+     C           ':20:'    SCAN INCOM     H              65               140532
+      *                                                                   140532
+     C           *IN65     IFEQ *OFF                                      140532
+     C           ':20C:'   SCAN INCOM     H                               140532
+     C                     ADD  8         H                               140532
+     C                     ENDIF                                          140532
+      *
+     C/COPY WNCPYSRC,MS6025C011
+      **  Scan for the end of the TRN
+     C***********'}'       SCAN INCOM:H   J                               075968
+     C           CRLF      SCAN INCOM:H   J                               075968
+     C/COPY WNCPYSRC,MS6025C012
+      *
+      **  Calculate the length of the TRN
+     C***********          ADD  5         H                               075968
+     C                     ADD  4         H                               075968
+     C           J         SUB  H         K
+      *
+      **  Move the TRN into the field ACKTRN
+     C                     MOVE *BLANKS   ACKTRN
+     C           K         SUBSTINCOM:H   ACKTRN
+      *
+     C                     EXSR GETIX
+      *
+      **  Set message status to 'N' - Negatively Acknowledged
+     C                     MOVE 'NACK'    MGST
+     C                     MOVE '4'       MGSG
+      *
+      **  Find the NAK date and time from field 177:
+     C           '{177:'   SCAN INCOM     H
+     C                     ADD  11        H
+      *
+      **  Move the NAK time to the last action time
+     C********** 4         SUBSTINCOM:J   LAHR                            120451
+     C           4         SUBSTINCOM:H   LAHR                            120451
+     C                     MOVE LAHR      @LAHR
+      *
+     C                     MOVE @LATM     LATM
+      *
+      **  Set last action date to run-date from PF/SDBANKPD
+     C                     MOVELBJMRDT    LADT
+      *
+      **  Check if the message has been sent via STTX or Telex
+     C           '{311:'   SCAN INCOM     H              51
+      *
+      **  If *in51 is on, field {311: has been found and the message
+      **  has been sent via Telex, otherwise it has been sent via SWIFT
+     C           *IN51     IFEQ '1'                        If1
+      *
+      **  Set Network Indicator to Telex.
+     C                     MOVE 'T'       NETI
+     C                     ELSE                            Else1
+      *
+      **  Set Network Indicator to SWIFT.
+     C                     MOVE 'S'       NETI
+      *
+      **  Set up the MIR from the NAK date, and the 'In-MIR'.
+     C                     MOVELLADT      @LADT
+      *
+     C           '{1:'     SCAN INCOM     H
+     C                     ADD  6         H
+     C           22        SUBSTINCOM:H   @INMIR
+      *
+     C                     MOVE @MIR      MIR
+      *
+      **  Save the MIR for use in the write to the file.
+     C                     MOVE @MIR      @MIRH
+      *
+      **  Set up the error code
+     C           '{405:'   SCAN INCOM:J   H
+     C                     ADD  5         H
+     C           3         SUBSTINCOM:H   MSE1
+     C                     ADD  3         H
+     C           3         SUBSTINCOM:H   ELIN
+     C                     END                             End1
+      *
+      **  Update Outgoing Message index record
+      **  as long as this ACK corresponds                                 075968
+      **  to a message on the file                                        075968
+     C           @AOF      IFEQ 'TRUE '                    If1            075968
+      *                                                                   141572
+      ** Setup century indicator CINDV for value date SVDT                141572
+     C           SVDT      IFEQ *BLANK                                    141572
+     C                     MOVE *BLANK    CINDV                           141572
+     C                     ELSE                                           141572
+     C                     MOVELSVDT      YY      20                      141572
+     C           YY        IFLT 72                                        141572
+     C                     MOVE '2'       CINDV                           141572
+     C                     ELSE                                           141572
+     C                     MOVE '1'       CINDV                           141572
+     C                     ENDIF                                          141572
+     C                     ENDIF                                          141572
+     C                     UPDATMGOREFD0
+     C/COPY WNCPYSRC,MS6025C002
+     C                     END                             End1           075968
+      *
+      **  Write NAK to MSMSI2L0
+     C/COPY WNCPYSRC,MS6025C013
+     C                     MOVE 'N'       MSIPAR
+     C                     EXSR MSIWRT
+     C/COPY WNCPYSRC,MS6025C014
+      *
+     C                     ENDSR                           PNAK
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  ICMSG                                          *
+      * Purpose     :  Process incoming message                       *
+      *                                                               *
+      * Called by   :  ICRX                                           *
+      * Calls       :  MSIWRT                                         *
+      *****************************************************************
+      *
+     C           ICMSG     BEGSR
+      *
+      **  Check for System Possible Duplicate (SPD)
+     C           '{SPD:}'  SCAN INCOM     P              50
+      *
+      **  50 on => message is System Possible Duplicate, so
+      **  check file for other occurences.
+     C           *IN50     IFEQ '1'                        IF1
+      *
+      **  Set up the MIR
+     C           '{2:'     SCAN INCOM     H
+     C                     ADD  4         H
+      *
+      **  Access MSIXI2PD using the MIR.
+     C           MIR       CHAINMSREF2L2             52
+      *
+     C                     END                             IF1
+      *
+      ** If message is not a duplicate, write to MSMSI2PD
+     C           *IN52     IFEQ '1'                        IF1
+     C           *IN50     OREQ '0'
+     C/COPY WNCPYSRC,MS6025C005
+      *
+      **  Set up Incoming Message in array, dropping first blocks
+      **  {1} and {2} if there are two.
+     C                     MOVE *BLANKS   MSID
+     C           '{1:'     SCAN INCOM:9                  50
+     C           *IN50     IFEQ '1'
+     C***********2504      SUBSTINCOM:57  MSID             IF2            CSW095
+     C           9943      SUBSTINCOM:57  MSID             IF2            CSW095
+     C                     ELSE
+     C                     MOVELINCOM     MSID
+     C                     END                             IF2
+      *                                                                   CSW095
+      ** Manually move the incoming message into array MSI.               CSW095
+     C                     MOVEAMSID      MSI                             CSW095
+      *
+      **  Write message to MSMSI2L0
+     C                     MOVE 'M'       MSIPAR
+     C                     EXSR MSIWRT
+      *
+     C                     END                             IF1
+      *
+     C                     ENDSR                           ICMSG
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  GETIX                                          *
+      * Purpose     :  Get Outgoing Message index record for message  *
+      *                referred to in incoming ACK/NAK                *
+      *                                                               *
+      * Called by   :  PACK                                           *
+      *                PNAK                                           *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           GETIX     BEGSR
+      *
+      **  Remove CR/LF and anything after from TRN
+     C           CRLF      SCAN ITRF      Q       50     50
+     C           *IN50     IFEQ '1'
+     C                     MOVE *BLANKS   @WK15A 15
+     C                     SUB  1         Q
+     C           Q         SUBSTITRF      @WK15A
+     C                     MOVEL@WK15A    ITRF
+     C                     END
+      *
+      **  Use TRN from incoming message buffer to access LF/MGOREFL0
+     C           ACKTRN    CHAINMGOREFL0             50
+      *                                                                   075968
+      **  If the message cannot be found,                                 075968
+      **  this may be because the ACK/N'ACK relates to a message          075968
+      **  which was not transmitted from Midas,                           075968
+      **  for example, a message manually entered into MERVA.             075968
+      **  The ACK or N'ACK should still be written                        075968
+      **  to the incoming messages file                                   075968
+     C                     MOVE 'FALSE'   @AOF    5                       075968
+     C           *IN50     IFEQ '0'                                       075968
+     C                     MOVE 'TRUE '   @AOF                            075968
+      *
+      **  If this record is a part (such as in the case of a 203, where
+      **  the first part was deleted before transmission), access the
+      **  header for update.
+     C           TRNF      IFNE *BLANKS
+     C***********TRNO      CHAINMGOREFL0             50                   075968
+     C           TRNF      CHAINMGOREFL0             50                   075968
+     C                     END
+      *
+      **  Database error if record not found
+     C           *IN50     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '001'     DBASE            * * * * * * * *
+     C                     MOVELACKTRN    DBKEY            *  DBERR 001  *
+     C                     MOVEL'MGOREFL0'DBFILE           * * * * * * * *
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             IF
+      *
+     C                     END                             IF             075968
+      *                                                                   075968
+     C                     ENDSR                           GETIX
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  MSIWRT                                         *
+      * Purpose     :  Write ACK/NAK/incoming message to LF/MSMSI2L0  *
+      *                                                               *
+      * Called by   :  PACK                                           *
+      *                PNAK                                           *
+      *                ICMSG                                          *
+      * Calls       :  FNDEOT                                         *
+      * Parameters  :  MSIPAR - type of incoming transmission         *
+      *                          A : ACK                              *
+      *                          N : NAK                              *
+      *                          M : incoming message                 *
+      *****************************************************************
+      *
+     C           MSIWRT    BEGSR
+      *
+      **  Define parameter length
+     C                     MOVE MSIPAR    MSIPAR  1
+      *
+      **  Set up fields common to all incoming transmissions
+     C***********          MOVELBJMRDT    MODE                            145692
+     C                     MOVELWRUND     MODE                            145692
+     C                     TIME           @TIME
+     C                     MOVEL@TIME     MOTM
+     C                     MOVE 'Y'       MSPF
+      ***********                                                  124673 146340
+      ***Set*up*century field.                                     124673 146340
+     C***********          MOVELMODE      CENT    2                124673 146340
+     C***********CENT      IFLT '72'                               124673 146340
+     C***********          MOVE '20'      MODEC                    124673 146340
+     C***********          ELSE                                    124673 146340
+     C***********          MOVE '19'      MODEC                    124673 146340
+     C***********          ENDIF                                   124673 146340
+      *
+      **  Set up fields for incoming messages only
+     C           MSIPAR    IFEQ 'M'                        IF1
+      *
+      **  Locate Block 2 of the message to set up the data fields
+     C           '{2:'     SCAN INCOM     H
+     C                     ADD  4         H
+      *
+      **  Move Block 2 into a data structure
+     C           46        SUBSTINCOM:H   @HOLD
+      *                                                                   146340
+      ** Set up century field.                                            146340
+     C                     MOVELMODE      CENT    2                       146340
+     C           CENT      IFLT '72'                                      146340
+     C                     MOVE '20'      MODEC                           146340
+     C                     ELSE                                           146340
+     C                     MOVE '19'      MODEC                           146340
+     C                     ENDIF                                          146340
+      *
+      **  Set up the MOR date from the incoming date
+     C                     MOVE MODE      @MORD
+      *
+      **  Locate Block 1 of the message to set up the MOR fields
+     C           '{1:'     SCAN INCOM     H
+     C                     ADD  6         H
+     C           22        SUBSTINCOM:H   @MORI
+      *
+      **  Move the MOR to the output field
+     C                     MOVE @MOR      MOR
+      *
+     C                     MOVE *BLANKS   ACNK
+     C                     MOVE *BLANKS   TRNO
+      *
+      **  Find end of incoming message and add ETX
+     C                     EXSR FNDEOT
+      *                                                                   116405
+      ****Create*message reference record                                 116405
+     C***********          EXSR CREP                                      116405
+      *
+      **  Write all records to MSMSI2PD
+     C                     Z-ADD1         P       50
+     C           MSI,P     DOWNE*BLANKS
+     C           P         ANDLE40                                        CSW095
+     C***********P         ANDLE12                                        CSW095
+     C                     MOVEAMSI,P     MDTA
+     C                     WRITEMSMSI2D0
+     C                     ADD  1         P
+     C                     END                             DOW
+      *
+      *                                                                   116405
+      **  Create message reference record after the data.                 116405
+     C                     EXSR CREP                                      116405
+      *                                                                   116405
+     C                     COMIT
+      *                                                                   S01435
+      * Prompt Incoming Message Management                                S01435
+      *                                                                   S01435
+     C                     CALL 'MEC1024'              9090               S01435
+     C                     PARM *BLANKS   P@RTCD  7                       S01435
+      *                                                                   068105
+      *  Update received network information                              068105
+      *                                                                   068105
+     C           *NAMVAR   DEFN           MEDTA                           068105
+     C           *LOCK     IN   MEDTA                                     068105
+     C                     MOVELMOR       DAMOR                           068105
+     C                     MOVELMIR       DAMIR                           068105
+     C                     OUT  MEDTA                                     068105
+      *
+      **  Else set up fields For ACK/NAK
+     C                     ELSE                            ELSE 1
+     C                     MOVE *BLANKS   MTPY
+     C                     MOVE *BLANKS   MPRY
+     C                     MOVE *BLANKS   MOR
+      *
+      **  Move the saved MIR to MIR
+     C                     MOVE @MIRH     MIR
+      *
+      **  Find the NAK date and time from field 177:.
+     C           '{177:'   SCAN INCOM     H
+     C                     ADD  11        H
+      *
+      **  Move the NAK time to the last action time.
+     C           4         SUBSTINCOM:H   LAHR
+     C                     MOVE LAHR      @LAHR
+      *
+     C                     MOVE @LATM     LATM
+      *
+      **  Set last action date to run-date from PF/SDBANKPD
+     C***********          MOVELBJMRDT    MODE                            145692
+     C                     MOVELWRUND     MODE                            145692
+      *
+      **  Access the TRN.
+     C***********'{TRN:'   SCAN INCOM     H                               075968
+     C***********          ADD  5         H                               075968
+     C***********':20:'    SCAN INCOM     H                        075968 140532
+     C           ':20:'    SCAN INCOM     H              65               140532
+      *                                                                   140532
+     C           *IN65     IFEQ *OFF                                      140532
+     C           ':20C:'   SCAN INCOM     H                               140532
+     C                     ADD  8         H                               140532
+     C                     ENDIF                                          140532
+      *                                                                   140532
+     C                     ADD  4         H                               075968
+      *
+      **  Scan for the end of the TRN.
+     C           '}'       SCAN INCOM:H   J                               075968
+     C           CRLF      SCAN INCOM:H   J                               075968
+     C           J         SUB  H         LENT    20
+     C           LENT      SUBSTINCOM:H   TRNO
+      *
+      **  If ACK, set ACNK to 'A'; else NAK, so set ACNK to 'N'
+     C           MSIPAR    IFEQ 'A'
+     C                     MOVE 'A'       ACNK
+     C                     ELSE
+     C                     MOVE 'N'       ACNK
+     C                     END                             IF-ELSE
+      *
+      **  Output 1st record of ACK/NAK to MSMSI2PD.
+     C                     MOVE MSG1      MDTA
+     C                     WRITEMSMSI2D0
+     C                     COMIT
+     C                     END                             IF-ELSE
+      *
+     C                     ENDSR                           MSIWRT
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  FNDEOT                                         *
+      * Purpose     :  Find end of incoming message text, and add ETX *
+      *                                                               *
+      * Called by   :  MSIWRT                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           FNDEOT    BEGSR
+      *
+      **  Move incoming message to array EOT
+     C                     MOVEAMSI       IMSG
+      *
+      **  Find last non-blank character in message
+     C***********          Z-ADD3072      Q
+     C                     Z-ADD9999      Q                               CSW095
+     C           Q         DOWGE1
+     C           IMSG,Q    ANDEQ' '
+     C                     SUB  1         Q
+     C                     END                             DOW
+      *
+      **  Add ETX
+     C           Q         IFNE 0
+     C                     ADD  1         Q
+     C                     MOVE ETX       IMSG,Q
+     C                     END                             IF
+      *
+      **  Move array IMSG back into message
+     C                     MOVEAIMSG      MSI
+      *
+     C                     ENDSR                           FNDEOT
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  CREP                                           *
+      * Purpose     :  Create message reference file record           *
+      *                                                               *
+      * Called by   :  MSIWRT                                         *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           CREP      BEGSR
+      *
+      **  Determine branch code
+     C                     MOVE *BLANKS   @WK12  12
+     C***********TERM      IFEQ 'X'                                       148751
+     C***********BRAN      IFEQ 'XXX'                                     148751
+     C***********          MOVELADDR      @WK12                           148751
+     C***********          ELSE                                           148751
+     C***********          MOVE BRAN      @WK11  11                       148751
+     C***********          MOVELADDR      @WK11                           148751
+     C***********          MOVEL@WK11     @WK12                           148751
+     C***********          END                                            148751
+     C***********          ELSE                                           148751
+     C***********BRAN      IFEQ 'XXX'                                     148751
+     C***********          MOVE TERM      @WK9    9                       148751
+     C***********          MOVELADDR      @WK9                            148751
+     C***********          MOVEL@WK9      @WK12                           148751
+     C***********          ELSE                                           148751
+     C***********          MOVE SDID      @WK12                           148751
+     C***********          END                                            148751
+     C***********          END                                            148751
+      *                                                                   148751
+      ** The Sender SWIFT address should be formatted as follows:         148751
+      ** pick up the Sender Address + Branch Code (not = XXX).            148751
+      ** As standard SWIFT address is either 8 chars or 11 chars and      148751
+      ** this will match with MIDAS customer details SWIFT address        148751
+      ** format.  Otherwsie there is no meaning in chaining back to       148751
+      ** customer details file.                                           148751
+      *                                                                   148751
+     C           BRAN      IFEQ 'XXX'                                     148751
+     C                     MOVELADDR      @WK12                           148751
+     C                     ELSE                                           148751
+     C                     MOVELADDR      @WK11                           148751
+     C                     MOVE BRAN      @WK11  11                       148751
+     C                     MOVEL@WK11     @WK12                           148751
+     C                     END                                            148751
+      *
+      **  If MIDAS branch, set up branch code for reference
+     C                     MOVE *BLANKS   @BRCA
+      *
+     C           *LOVAL    SETLLSDBRCHL0
+     C                     READ SDBRCHL0                 12
+      *
+      **  Search SDBRCHPD for branch code by comparing
+      **  the first eight and the last three
+      **  characters of the destination address
+      **  with the branch address in SDBRCHPD
+     C           *IN12     DOWNE'1'
+     C           @BRCA     ANDEQ*BLANKS
+     C           ADDR      IFEQ ADDR1
+     C           BRAN      ANDEQBRAN1
+     C                     MOVE A8BRCD    @BRCA   3
+     C                     END
+     C                     READ SDBRCHL0                 12
+     C                     END
+      *
+      **  If no match was found,
+      **  search SDBRCHPD again
+      **  but this time
+      **  use the first 8 chars only in the compare
+     C           @BRCA     IFEQ *BLANKS
+     C           *LOVAL    SETLLSDBRCHL0
+     C                     READ SDBRCHL0                 12
+     C           *IN12     DOWNE'1'
+     C           @BRCA     ANDEQ*BLANKS
+     C           ADDR      IFEQ ADDR1
+     C                     MOVE A8BRCD    @BRCA
+     C                     END
+     C                     READ SDBRCHL0                 12
+     C                     END
+     C                     END
+      *
+      **  Attempt to locate Midas customer number
+     C           @WK12     CHAINSDCUSTL7             11
+     C           *IN11     IFEQ '0'
+     C                     MOVE BBCUST    CNUM
+     C                     ELSE
+     C                     MOVE *BLANK    CNUM
+     C                     END
+      *
+     C***********          MOVE @WK12     STID                            148751
+      *                                                                   148751
+      ** Set up sender correctly                                          148751
+      *                                                                   148751
+     C                     MOVELBICC      STID      P                     148751
+     C           BICB      IFNE 'XXX'                                     148751
+     C           BICC      CAT  BICB:0    STID                            148751
+     C                     ENDIF                                          148751
+      *                                                                   148751
+      *
+      ** Locate TRN
+     C***********':20:'    SCAN INCOM     H                               140532
+     C           ':20:'    SCAN INCOM     H              65               140532
+      *                                                                   140532
+     C           *IN65     IFEQ *OFF                                      140532
+     C           ':20C:'   SCAN INCOM     H                               140532
+     C                     ADD  8         H                               140532
+     C                     ENDIF                                          140532
+      *
+      **  Scan for the end of the TRN
+     C           CRLF      SCAN INCOM:H   J
+      *
+      **  Calculate the length of the TRN
+     C                     ADD  4         H
+     C           J         SUB  H         K       20
+      *
+      **  Move the TRN into the reference record field
+     C                     MOVE *BLANKS   @TRNO  16
+     C           K         SUBSTINCOM:H   @TRNO
+     C                     Z-ADD1         X       50
+      *
+      **  Determine message type
+     C           MTPY      LOKUPTABTYP    TABCAS         20
+     C           *IN20     IFEQ '1'
+     C           TABCAS    CASEQ'A'       TYPA
+     C           TABCAS    CASEQ'B'       TYPB
+     C           TABCAS    CASEQ'C'       TYPC
+     C           TABCAS    CASEQ'D'       TYPD
+     C           TABCAS    CASEQ'E'       TYPE                                                CSW212
+     C                     END
+     C                     ELSE
+     C                     MOVE *BLANK    SVDT
+     C                     MOVE *BLANK    AMTS
+     C                     MOVE *BLANK    CCY
+     C                     MOVE *BLANK    FD25
+     C                     END
+      *
+     C/COPY WNCPYSRC,MS6025C015
+      **  Output record to MSIXI2PD
+     C                     MOVE @BRCA     BRCA
+     C                     MOVE @TRNO     TRNO
+      *                                                                                       CTI004
+     C           CTI004    IFEQ 'Y'                                                           CTI004
+     C                     CALL 'MS6200'                                                      CTI004
+     C                     PARM MTPY      PMTPY   3                                           CTI004
+     C                     PARM INCOM     PINCOM                                              CTI004
+     C                     PARM ' '       POKFLG  1                                           CTI004
+      *                                                                                       CTI004
+     C           POKFLG    IFEQ 'Y'                                                           CTI004
+     C                     MOVE 'P'       IMPF                                                CTI004
+     C                     MOVE 'T'       LSTS                                                CTI004
+     C                     ENDIF                                                              CTI004
+      *                                                                                       CTI004
+     C                     ENDIF                                                              CTI004
+      *                                                                                       CTI004
+     C                     WRITEMSIXI2D0
+      *
+     C                     ENDSR                           CREP
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  TYPA                                           *
+      * Purpose     :  Process 100,200,202,300,320,324,330,900,910    *
+      *                600                                            *                       CSW212
+      *                                                               *
+      * Called by   :  MSIWRT                                         *
+      * Calls       :  SRCH                                           *
+      *****************************************************************
+      *
+     C           TYPA      BEGSR
+      *                                                                   123750
+      ** SWIFT 1997 for MT300s check for field :30V: for value date       123750
+      ** SWIFT 2000 for MT320s and MT330s                                 184013
+      ** SWIFT 2000 for MT360s, MT361s and MT362s                         184427
+     C           MTPY      IFEQ '300'                                     123750
+     C           MTPY      OREQ '320'                                     184013
+     C           MTPY      OREQ '330'                                     184013
+     C           MTPY      OREQ '360'                                     184427
+     C           MTPY      OREQ '361'                                     184427
+     C           MTPY      OREQ '362'                                     184427
+     C           ':30V:'   SCAN D@IMSG    X              88               123750
+     C                     ENDIF                                          123750
+      *                                                                   184427
+      ** If message is MT340 or MT341 extract value date from field :30F: 184427
+     C           MTPY      IFEQ '340'                                     184427
+     C           MTPY      OREQ '341'                                     184427
+     C           ':30F:'   SCAN D@IMSG    X              88               184427
+     C                     ENDIF                                          184427
+      *                                                                   123750
+     C           MTPY      IFEQ '300'                                     123750
+     C           *IN88     ANDEQ*ON                                       123750
+     C           MTPY      OREQ '320'                                     184013
+     C           *IN88     ANDEQ*ON                                       184013
+     C           MTPY      OREQ '330'                                     184013
+     C           *IN88     ANDEQ*ON                                       184013
+     C           MTPY      OREQ '340'                                     184427
+     C           *IN88     ANDEQ*ON                                       184427
+     C           MTPY      OREQ '341'                                     184427
+     C           *IN88     ANDEQ*ON                                       184427
+     C           MTPY      OREQ '360'                                     184427
+     C           *IN88     ANDEQ*ON                                       184427
+     C           MTPY      OREQ '361'                                     184427
+     C           *IN88     ANDEQ*ON                                       184427
+     C           MTPY      OREQ '362'                                     184427
+     C           *IN88     ANDEQ*ON                                       184427
+     C                     ADD  7         X                               123750
+     C                     MOVEAIMSG,X    SVDT                            123750
+     C           MTPY      IFEQ '362'                                     184427
+     C           ':32M:'   SCAN D@IMSG    X                               184427
+     C                     ELSE                                           184427
+     C           ':32B:'   SCAN D@IMSG    X                               123750
+     C                     END                                            184427
+     C                     ADD  5         X                               123750
+     C                     ELSE                                           123750
+      *                                                                                       CSW212
+     C           MTPY      IFEQ '600'                                                         CSW212
+     C                     MOVE ':34'     @TAG                                                CSW212
+     C                     ELSE                                                               CSW212
+      *
+      **  Search MDTA for field tag 32
+     C                     MOVE ':32'     @TAG
+     C                     ENDIF                                                              CSW212
+     C                     EXSR SRCH
+      *
+      **  Move date into array
+     C                     MOVEAIMSG,X    SVDT
+     C                     ADD  6         X
+     C                     ENDIF                                          123750
+      *                                                                                     AR976772
+      ** Initialisation of SWIFT Value Date Century field                                   AR976772
+      *                                                                                     AR976772
+     C           SVDT      IFNE *BLANKS                                                     AR976772
+     C                     MOVELSVDT      SVDTC                                             AR976772
+     C           SVDTC     IFLT '72'                                                        AR976772
+     C                     MOVE '20'      SVDTC                                             AR976772
+     C                     ELSE                                                             AR976772
+     C                     MOVE '19'      SVDTC                                             AR976772
+     C                     ENDIF                                                            AR976772
+     C                     ENDIF                                                            AR976772
+      *
+      **  Move currency into array
+     C                     MOVEAIMSG,X    CCY
+     C                     ADD  3         X
+      *
+      **  Move amount into array (amount can be up to 15 characters)
+     C                     Z-ADD1         A       20
+     C                     MOVEA*BLANKS   INT
+     C           IMSG,X    DOWGE'0'
+     C           IMSG,X    ANDLE'9'
+     C           IMSG,X    OREQ ','
+     C                     MOVE IMSG,X    INT,A
+     C                     ADD  1         X
+     C                     ADD  1         A
+     C                     END
+     C                     MOVEAINT       AMTS
+      *
+     C                     MOVE *BLANK    FD25
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TYPB                                           *
+      * Purpose     :  Process 201,203                                *
+      *                                                               *
+      * Called by   :  MSIWRT                                         *
+      * Calls       :  SRCH                                           *
+      *****************************************************************
+      *
+     C           TYPB      BEGSR
+      *
+      **  Search MDTA for field tag 19
+     C                     MOVE ':19'     @TAG
+     C                     EXSR SRCH
+      *
+      **  Move amount into array (amount can be up to 17 characters)
+     C                     Z-ADD1         A
+     C                     MOVEA*BLANKS   INT
+     C           IMSG,X    DOWGE'0'
+     C           IMSG,X    ANDLE'9'
+     C           IMSG,X    OREQ ','
+     C                     MOVE IMSG,X    INT,A
+     C                     ADD  1         X
+     C                     ADD  1         A
+     C                     END
+     C                     MOVEAINT       AMTS
+      *
+      **  Search MDTA for field tag 30
+     C                     MOVE ':30'     @TAG
+     C                     EXSR SRCH
+      *
+      **  Move date into array
+     C                     MOVEAIMSG,X    SVDT
+     C                     ADD  6         X
+      *                                                                                     AR976772
+      ** Initialisation of SWIFT Value Date Century field                                   AR976772
+      *                                                                                     AR976772
+     C           SVDT      IFNE *BLANKS                                                     AR976772
+     C                     MOVELSVDT      SVDTC                                             AR976772
+     C           SVDTC     IFLT '72'                                                        AR976772
+     C                     MOVE '20'      SVDTC                                             AR976772
+     C                     ELSE                                                             AR976772
+     C                     MOVE '19'      SVDTC                                             AR976772
+     C                     ENDIF                                                            AR976772
+     C                     ENDIF                                                            AR976772
+      *
+      **  Search MDTA for field tag 32
+     C                     MOVE ':32'     @TAG
+     C                     EXSR SRCH
+      *
+      **  Move currency into array
+     C                     MOVEAIMSG,X    CCY
+     C                     ADD  3         X
+      *
+     C                     MOVE *BLANK    FD25
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TYPC                                           *
+      * Purpose     :  Process 950                                    *
+      *                                                               *
+      * Called by   :  MSIWRT                                         *
+      * Calls       :  SRCH                                           *
+      *****************************************************************
+      *
+     C           TYPC      BEGSR
+      *
+      **  Search MDTA for field tag 25
+     C                     MOVE ':25'     @TAG
+     C                     EXSR SRCH
+      *
+      **  Move field 25 into array (can be up to 35 characters)
+     C                     Z-ADD1         A
+     C                     MOVEA*BLANKS   INT
+     C           IMSG,X    DOWNECR
+     C                     MOVE IMSG,X    INT,A
+     C                     ADD  1         X
+     C                     ADD  1         A
+     C                     END
+     C                     MOVEAINT       FD25
+      *
+     C                     MOVE *BLANK    SVDT
+     C                     MOVE *BLANK    AMTS
+     C                     MOVE *BLANK    CCY
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  TYPD                                           *
+      * Purpose     :  Process 350                                    *
+      *                                                               *
+      * Called by   :  MSIWRT                                         *
+      * Calls       :  SRCH                                           *
+      *****************************************************************
+      *
+     C           TYPD      BEGSR
+      *                                                                   184013
+      ** Check for field :30V: for value date                             184013
+     C           ':30V:'   SCAN D@IMSG    X              88               184013
+      *                                                                   184013
+     C           *IN88     IFEQ *ON                                       184013
+     C                     ADD  7         X                               184013
+     C                     MOVEAIMSG,X    SVDT                            184013
+     C           ':34B:'   SCAN D@IMSG    X                               184013
+     C                     ADD  5         X                               184013
+     C                     ELSE                                           184013
+      *
+      **  Search MDTA for field tag 34
+     C                     MOVE ':34'     @TAG
+     C                     EXSR SRCH
+      *
+      **  Move date into array
+     C                     MOVEAIMSG,X    SVDT
+     C                     ADD  6         X
+     C                     ENDIF                                          184013
+      *                                                                                     AR976772
+      ** Initialisation of SWIFT Value Date Century field                                   AR976772
+      *                                                                                     AR976772
+     C           SVDT      IFNE *BLANKS                                                     AR976772
+     C                     MOVELSVDT      SVDTC                                             AR976772
+     C           SVDTC     IFLT '72'                                                        AR976772
+     C                     MOVE '20'      SVDTC                                             AR976772
+     C                     ELSE                                                             AR976772
+     C                     MOVE '19'      SVDTC                                             AR976772
+     C                     ENDIF                                                            AR976772
+     C                     ENDIF                                                            AR976772
+      *
+      **  Move currency into array
+     C                     MOVEAIMSG,X    CCY
+     C                     ADD  3         X
+      *
+      **  Move amount into array (amount can be up to 15 characters)
+     C                     Z-ADD1         A
+     C                     MOVEA*BLANKS   INT
+     C           IMSG,X    DOWGE'0'
+     C           IMSG,X    ANDLE'9'
+     C           IMSG,X    OREQ ','
+     C                     MOVE IMSG,X    INT,A
+     C                     ADD  1         X
+     C                     ADD  1         A
+     C                     END
+     C                     MOVEAINT       AMTS
+      *
+     C                     MOVE *BLANK    FD25
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  SRCH                                           *
+      * Purpose     :  Search for field tag ':99'                     *
+      *                                                               *
+      * Called by   :  TYPA                                           *
+      *                TYPB                                           *
+      *                TYPC                                           *
+      *                TYPD                                           *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           SRCH      BEGSR
+      *
+      **  Find ':99'
+     C                     Z-ADD1         X
+     C           @WK4      DOUEQ@TAG
+     C                     ADD  1         X
+     C                     MOVEAIMSG,X    @WK4    4
+     C                     END
+     C                     ADD  1         X
+      *
+     C           IMSG,X    DOUEQ':'
+     C                     ADD  1         X
+     C                     END
+     C                     ADD  1         X
+      *
+     C                     ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,MS6025C003
+      *****************************************************************
+      * Subroutine  :  INIT                                           *
+      * Purpose     :  Initial process                                *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **  Initialise object copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Initialise LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MS6025'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Initialise constant fields:
+      **   - CarriageReturn
+     C                     BITOF'01234567'CR      1
+     C                     BITON'457'     CR
+      **   - LineFeed
+     C                     BITOF'01234567'LF      1
+     C                     BITON'257'     LF
+      **   - CrLf
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      **   - ETX
+     C                     BITOF'01234567'ETX     1
+     C                     BITON'67'      ETX
+      *
+      **  Set up tag field for searches
+     C                     MOVELLF        @TAG    4
+      *
+      **  Move incoming data from paramters do DS fields for processing
+     C***********          MOVE PMSG1     MSG1                            CSW095
+     C***********          MOVE PMSG2     MSG2                            CSW095
+     C***********          MOVE PMSG3     MSG3                            CSW095
+     C***********          MOVE PMSG4     MSG4                            CSW095
+     C***********          MOVE PMSG5     MSG5                            CSW095
+     C***********          MOVE PMSG6     MSG6                            CSW095
+     C***********          MOVE PMSG7     MSG7                            CSW095
+     C***********          MOVE PMSG8     MSG8                            CSW095
+     C***********          MOVE PMSG9     MSG9                            CSW095
+     C***********          MOVE PMSG10    MSG10                           CSW095
+      *                                                                   145692
+      **  Obtain MIDAS run date in YYMMDD format                          145692
+      *                                                                   145692
+     C                     CALL 'ZM0080'                                  145692
+     C                     PARM *BLANKS   WRUND   6                       145692
+     C                     PARM *BLANKS   WDFIN   1                       145692
+      *
+      ** Call AOSARDR0 to see if CTI004 is switched ON.                                       CTI004
+      *                                                                                       CTI004
+     C                     CALL 'AOSARDR0'                                                    CTI004
+     C                     PARM *BLANKS   PRTCD   7                                           CTI004
+     C                     PARM '*VERIFY' POPTN   7                                           CTI004
+     C                     PARM 'CTI004'  PSARD   6                                           CTI004
+     C           SCSARD    PARM SCSARD    DSFDY                                               CTI004
+      *                                                                                       CTI004
+      ** If feature is switched ON, set a variable to condition                               CTI004
+      *  the rest of the processing.                                                          CTI004
+      *                                                                                       CTI004
+     C           PRTCD     IFEQ *BLANKS                                                       CTI004
+     C                     MOVE 'Y'       CTI004  1                                           CTI004
+     C                     ELSE                                                               CTI004
+     C                     MOVE 'N'       CTI004                                              CTI004
+     C                     ENDIF                                                              CTI004
+      *                                                                                       CTI004
+      ** Check if SWIFT2009 is installed                                                      CSW209
+      *                                                                                       CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM           P@RTCD                                              CSW209
+      *                                                                                       CSW209
+     C           P@RTCD    IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVE 'Y'       CSW209  1                                           CSW209
+     C                     ELSE                                                               CSW209
+     C                     MOVE 'N'       CSW209                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CSW209
+     C/COPY WNCPYSRC,MS6025C004
+     C                     ENDSR                           INIT
+     C/EJECT
+      *****************************************************************                       CSW212
+      *   TYPE - Process MT370                                        *                       CSW212
+      *   Called by - Main processing                                 *                       CSW212
+      *****************************************************************                       CSW212
+      *                                                                                       CSW212
+     C           TYPE      BEGSR                                                              CSW212
+      *                                                                                       CSW212
+      ** Check for field :19A:                                                                CSW212
+      *                                                                                       CSW212
+     C           MTPY      LOKUPTABTY2    TABAMC         20                                   CSW212
+     C           *IN20     IFEQ '1'                                                           CSW212
+     C           TABAMC    SCAN D@IMSG    X              88                                   CSW212
+     C                     ELSE                                                               CSW212
+     C           ':19A:'   SCAN D@IMSG    X              88                                   CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+      ** Extract Currency and Amount                                                          CSW212
+      *                                                                                       CSW212
+     C           *IN88     IFEQ *ON                                                           CSW212
+     C                     ADD  12        X                                                   CSW212
+     C                     Z-ADD0         T       70                                          CSW212
+     C           X         ADD  3         T                                                   CSW212
+     C                     MOVEL*BLANKS   XTESTN  1                                           CSW212
+     C                     SUBSTD@IMSG:T  XTESTN                                              CSW212
+     C           DIGITS    CHECKXTESTN                   84                                   CSW212
+     C           *IN84     IFEQ '1'                                                           CSW212
+     C                     ADD  1         X                                                   CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+     C                     MOVEAIMSG,X    CCY                                                 CSW212
+     C                     ADD  3         X                                                   CSW212
+      *                                                                                       CSW212
+     C                     Z-ADD1         A                                                   CSW212
+     C                     MOVEA*BLANKS   INT                                                 CSW212
+     C           IMSG,X    DOWGE'0'                                                           CSW212
+     C           IMSG,X    ANDLE'9'                                                           CSW212
+     C           IMSG,X    OREQ ','                                                           CSW212
+     C                     MOVE IMSG,X    INT,A                                               CSW212
+     C                     ADD  1         X                                                   CSW212
+     C                     ADD  1         A                                                   CSW212
+     C                     END                                                                CSW212
+     C                     MOVEAINT       AMTS                                                CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+      ** Check for field :98a:                                                                CSW212
+      *                                                                                       CSW212
+     C           MTPY      LOKUPTABTY3    TABDAT         20                                   CSW212
+     C           *IN20     IFEQ '1'                                                           CSW212
+     C           TABDAT    SCAN D@IMSG    X              88                                   CSW212
+     C                     ELSE                                                               CSW212
+     C           ':98A:'   SCAN D@IMSG    X              88                                   CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+      ** Extract Value Date                                                                   CSW212
+      *                                                                                       CSW212
+     C           *IN88     IFEQ *ON                                                           CSW212
+     C                     ADD  12        X                                                   CSW212
+     C                     MOVEAIMSG,X    SVDTC                                               CSW212
+     C                     ADD  2         X                                                   CSW212
+     C                     MOVEAIMSG,X    SVDT                                                CSW212
+     C                     ENDIF                                                              CSW212
+      *                                                                                       CSW212
+     C                     MOVE *BLANK    FD25                                                CSW212
+      *                                                                                       CSW212
+     C                     ENDSR                                                              CSW212
+      *****************************************************************
+      * Subroutine  :  *PSSR                                          *
+      * Purpose     :  General error handling sub-routine             *
+      *                                                               *
+      * Called by   :  GETIX, RPG ERROR                               *
+      * Calls       :  -                                              *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Ensure this subroutine does not loop by only allowing it
+      **  it to be run once.
+     C           *IN88     IFEQ '0'
+     C                     MOVE '1'       *IN88
+      *
+      **  Set switches
+     C                     SETON                     U7U8LR
+      *
+      **  Set up return code to indicate program ended in error
+     C                     MOVE 'E'       @RC
+      *
+      **  If database error, produce report
+     C           DBFILE    IFNE *BLANK
+     C                     OPEN MS6025AU
+     C                     WRITEMS6025F1
+     C                     WRITEMS6025F2
+     C                     WRITEMS6025F3
+     C                     CLOSEMS6025AU
+     C                     END                             IF
+      *
+      **  Dump and return
+     C                     DUMP
+      *
+     C                     END                             IF
+      *
+     C                     RETRN
+      *
+     C                     ENDSR                           *PSSR
+      *                                                                         184427
+      ** tabtyp add MT340, MT341, MT360, MT361 and MT362.                       184427
+      ** tabtyp add MT103                                                       CRE008
+      ** tabtyp add MT370 and MT600                                                           CSW212
+**  CPY@  - Object copyright
+(c) Finastra International Limited 2001
+**  TABTYP v TABCAS - Message type v sub-routine i/d to process
+100A
+103A
+200A
+201B
+202A
+203B
+300A
+320A
+324A
+330A
+335A
+350D
+900A
+910A
+950C
+340A
+341A
+360A
+361A
+362A
+370E                                                                                          CSW212
+600A                                                                                          CSW212
+** AR1 AR2
+??4C<
+??4F!
+??50&
+??5C*
+??5E;
+??6C%
+??6D_
+??6E>
+??7B#
+??7C@
+??7E=
+??7F"
+??C0{
+??D0}
+** TABTY2                                                                                     CSW212
+370:19A::NETT                                                                                 CSW212
+** TABTY3                                                                                     CSW212
+370:98A::VALU                                                                                 CSW212

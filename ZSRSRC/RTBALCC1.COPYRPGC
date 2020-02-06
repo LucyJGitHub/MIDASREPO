@@ -1,0 +1,149 @@
+     C*****************************************************************
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSD027             Date 10Mar06               *
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 145752             Date 15Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCB002             Date 16Jul96               *
+     C*                 CRT001  *CREATE    DATE 28FEB95               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  CSD027 - Change Customer Number to alpha.                    *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  145752 - Fields for full A/c are zeroised & since RE A/c no  *
+     F*           is 0, DBERR occurred                                *
+     F*  CCB002 - COB Performance Enhancements                        *
+     F*           Access now via access object                        *
+     F*           MEMOS is now accessed via GL/RE key rather than old *
+     F*           relative record number.                             *
+     C*  CRT001 - Retail Teller System                                *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C*            RTBALC  - Calculate available balances             *
+     C*                                                               *
+     C* FLDS USED Input                                               *
+     C************@RRNM  - Memo RRN                                   *
+     C*           @ODLN  - OD limit                                   *
+     C*           @ODED  - OD expiry date                             *
+     C*           @HELD  - Held amount                                *
+     C*           @RUND  - Run day number                             *
+     C*           @CYDP  - Curreny decimal place                      *
+     C*                                                               *
+     C* FLDS USED Output                                              *
+     C*           @AVBL  - Available balance                          *
+     C*                                                               *
+     C*****************************************************************
+     C           RTBALC    BEGSR                           ** RTBALC **
+      *
+      ** Define parameters
+     C                     Z-ADD@RRNM     @RRNM   50
+     C                     Z-ADD@ODLN     @ODLN  150
+     C                     Z-ADD@ODED     @ODED   50
+     C                     Z-ADD@HELD     @HELD  150
+     C                     Z-ADD@RUND     @RUND   50
+     C                     MOVE @CYDP     @CYDP   10
+     C                     Z-ADD0         @AVBL  150
+      *                                                                   CCB002
+     C**********           Z-ADD0         @CNUMM  60               CCB002 145752
+     C**********           MOVE *BLANK    @CCYM   3                CCB002 145752
+     C**********           Z-ADD0         @ACCDM  40               CCB002 145752
+     C**********           Z-ADD0         @ACSQM  20               CCB002 145752
+     C**********           MOVE *BLANK    @BRCAM  3                CCB002 145752
+     C                     Z-ADD@ACNOM    @ACNOM 100                      CCB002
+     C**********           Z-ADDCNUM      @CNUMM  60                                   145752 CSD027
+     C                     MOVELCNUM      @CNUMM  6                                           CSD027
+     C                     MOVE ACCY      @CCYM   3                       145752
+     C**********           Z-ADDACOD      @ACCDM  40                                   145752 CGL029
+     C                     Z-ADDACOD      @ACCDM 100                                          CGL029
+     C                     Z-ADDACSQ      @ACSQM  20                      145752
+     C                     MOVE BRCA      @BRCAM  3                       145752
+      *
+      ** Retrieve PF/MEMOS details
+     C***********@RRNM*****CHAINMEMOS                80                   CCB002
+      *                                                                   CCB002
+     C                     MOVE '0'       *IN80                           CCB002
+      *                                                                   CCB002
+     C           @ACNOM    IFNE *ZEROS                                    CCB002
+      *                                                                   CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANKS   W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        I:Option       CCB002
+     C                     PARM @ACNOM    W0RETL 100       O:Retail A/C NoCCB002
+     C**********           PARM *ZERO     W0CNUM  60       I:Customer No.              CCB002 CSD027
+     C                     PARM *BLANKS   W0CNUM  6        I:Customer No.                     CSD027
+     C                     PARM *BLANKS   W0CCY   3        I:Currency     CCB002
+     C**********           PARM *ZERO     W0ACCD  40       I:Account Code              CCB002 CGL029
+     C                     PARM *ZERO     W0ACCD 100                                          CGL029
+     C                     PARM *ZERO     W0ACSQ  20       I:Account Seq. CCB002
+     C                     PARM *BLANKS   W0BRCA  3        I:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    DSFDY                           CCB002
+      *                                                                   CCB002
+     C                     ELSE                                           CCB002
+      *                                                                   CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANK    W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option       CCB002
+     C                     PARM *ZERO     W0RETL 100       I:Retail A/C NoCCB002
+     C**********           PARM @CNUMM    W0CNUM  60       O:Customer No.              CCB002 CSD027
+     C                     PARM @CNUMM    W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM @CCYM     W0CUCD  3        O:Currency     CCB002
+     C**********           PARM @ACCDM    W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM @ACCDM    W0ACCD 100                                          CGL029
+     C                     PARM @ACSQM    W0ACSQ  20       O:Account Seq. CCB002
+     C                     PARM @BRCAM    W0BRCA  3        O:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    DSFDY                           CCB002
+      *                                                                   CCB002
+     C                     ENDIF                                          CCB002
+      *                                                                   CCB002
+     C           W0RTCD    IFNE *BLANK                                    CCB002
+     C                     MOVE '1'       *IN80                           CCB002
+     C                     ENDIF                                          CCB002
+      *                                                                   CCB002
+      ** If record found?
+     C           *IN80     IFEQ '0'
+      *
+      ***Release record****                                               CCB002
+     C*********************EXCPT@RLMEM                                    CCB002
+      *
+      ** Overdraft expiry date is earlier than today's date (ie. expired)
+     C           @ODED     IFLT @RUND
+     C                     Z-ADD0         @ODLN
+     C                     END
+      *
+      ** If overdraft limit is not zero
+     C           @ODLN     IFNE 0
+      *
+      ** If currency decimal place is 1
+     C           @CYDP     IFEQ 1
+     C           @ODLN     MULT 10        @ODLN
+     C                     END
+      *
+      ** If currency decimal place is 2
+     C           @CYDP     IFEQ 2
+     C           @ODLN     MULT 100       @ODLN
+     C                     END
+      *
+      ** If currency decimal place is 3
+     C           @CYDP     IFEQ 3
+     C           @ODLN     MULT 1000      @ODLN
+     C                     END
+      *
+     C                     END
+      *
+      ** Calculate available balance
+     C                     Z-ADDCLBLN     @AVBL
+     C                     SUB  @ODLN     @AVBL
+     C                     ADD  @HELD     @AVBL
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************

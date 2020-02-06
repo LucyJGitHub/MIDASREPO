@@ -1,0 +1,403 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Er Luxembourg I.C.D. - print')
+     F********************************************************************
+     F*                                                                  *
+     F*    MIDAS/ABS - EUROPEAN REPORTING                                *
+     F*                                                                  *
+     F*    ERLU95 - EUROPEAN LUXEMBOURG I.C.D. MAINTENANCE               *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX008             Date 19Jul00               *
+      *                 ULX008             Date 16Mar00               *
+      *                 ULX008             Date 23Feb00               *
+      *                 ULX012             Date 20Aug98               *
+      *                 CAD003 PT          Date 24Jul98               *
+      *                 132893             Date 15Apr98               *
+      *                 ULX004             Date 29Jan97               *
+     F*                   ERL422 LV               DATE 30AUG94           *
+     F*                   ERL371                  DATE 12OCT93           *
+     F*                   ERL328                  DATE 22MAR93           *
+     F*                                                                  *
+     F********************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX008 - "Commissariat aux Bourses" - Change Control C       *
+      *  ULX008 - "Commissariat aux Bourses" - Change Control A       *
+      *  ULX008 - CSSF Statutory Reporting : Commissariat aux Bourses *
+      *  ULX012 - Guarantees and Collateral Management enhancements   *
+      *  CAD003 - 'CAD REPORTS TO BE PRODUCED' CHANGED FOR THE        *
+      *           INTEGRATED CAD (RECOMPILED)                         *
+     F*    132893 - SPF/RCF for IBLC/BNB on DBA2.3                       *
+     F*    ULX004 - CAPITAL ADEQUACY                                     *
+     F*    ERL422 - REPAYMENT MANAGEMENT DEVELOPMENT                     *
+     F*    ERL371 - IML 1.4 DEVELOPMENT                                  *
+     F*    ERL328 - IML 2.4 DEVELOPMENT                                  *
+     F********************************************************************
+      *
+      *  Use of indicators:
+      *
+      *  *IN01  -  Overflow on ERLU95
+      *  *IN81  -  EOF on SDBANKPD
+      *  *IN95  -  DATABASE error
+      *  *INLR  -  End processing
+     F*****************************************************************
+     FERLU95AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         132893
+      *                                Audit report
+     FERLU95P1O   E             01     PRINTER                        UC
+     F*********                                     KINFDS INFDS          132893
+     F                                              KINFDS SPOOL1         132893
+      *                                Statements
+     FERLUICL1IF  E           K        DISK
+      *                                European reporting I.C.D For Luxembourg
+     FERICDRL1IF  E           K        DISK
+      *                                European reporting I.C.D
+     FSDBANKL1IF  E           K        DISK
+      *-------------------------------------------------------------------------
+      *
+     E                    MES     1   2 80               DB error msg.
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+      *-------------------------------------------------------------------------
+     I*INFDS       DS                                                     132893
+      *
+      * Get current line number from printer INFDS
+      *
+     I*****                               B 367 3680WWLINE                132893
+      *-------------------------------------------------------------------------
+     I           SDS
+      *
+      * Get program name and exception data from PSDS.
+      *
+     I                                     *PROGRAM #PGM
+     I                                       91 170 WWEXCP
+      *-------------------------------------------------------------------------
+     I            DS
+      *
+      * Use a DS to access file/program fields via the PRTF field names,
+      * thus avoiding MOVE operations
+      *
+     ISPOOLU      DS                                                      132893
+      *                                                                   132893
+      **  File Information Data Structure - AU report                     132893
+     I                                       83  92 SFILEU                132893
+     I                                    B 123 1240SFNUMU                132893
+     ISPOOL1      DS                                                      132893
+      *                                                                   132893
+      **  File Information Data Structure - P1 report                     132893
+     I                                       83  92 SFIL1                 132893
+     I                                    B 123 1240SFNUM1                132893
+     I                                    B 367 3680WWLINE                132893
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Initial processing
+      *-------------------------------------------------------------------------
+      /EJECT
+      *-------------------------------------------------------------------------
+     C*
+     C           *ENTRY    PLIST                                          132893
+     C                     PARM           @RSEQ   5                       132893
+     C                     PARM           @RLEV   1                       132893
+      *                                                                   132893
+      /EJECT
+      *-------------------------------------------------------------------------
+      * Initial processing
+      *-------------------------------------------------------------------------
+      /EJECT
+      *-------------------------------------------------------------------------
+     C*
+     C           *LOVAL    SETLLSDBANKL1
+     C                     READ SDBANKL1                 88
+     C           *IN88     IFEQ '1'
+     C                     MOVEL'01'      P2ERR            *********************
+     C                     Z-ADD1         X       20       * DB ERROR 01       *
+     C                     MOVE *BLANKS   P2EDTA           *********************
+     C                     MOVE '1'       *IN95
+     C                     EXSR SAUDIT
+     C                     END
+      *
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON
+      *                                                                   ULX012
+      **  Determine if feature ULX012                                     ULX012
+      **  is installed                                                    ULX012
+     C                     MOVE 'N'       ULX012  1                       ULX012
+     C                     CALL 'AOSARDR0'                                ULX012
+     C                     PARM '       ' @RTCD   7                       ULX012
+     C                     PARM '*VERIFY' @OPTN   7                       ULX012
+     C                     PARM 'ULX012'  @SARD   6                       ULX012
+      *                                                                   ULX012
+      **  If feature ULX012 is installed.                                 ULX012
+     C           @RTCD     IFEQ *BLANKS                                   ULX012
+     C                     MOVE 'Y'       ULX012                          ULX012
+     C                     MOVE '1'       *IN20                           ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX008
+      **  Determine if feature ULX008                                     ULX008
+      **  is installed                                                    ULX008
+     C                     MOVE 'N'       ULX008  1                       ULX008
+     C                     CALL 'AOSARDR0'                                ULX008
+     C                     PARM '       ' @RTCD   7                       ULX008
+     C                     PARM '*VERIFY' @OPTN   7                       ULX008
+     C                     PARM 'ULX008'  @SARD   6                       ULX008
+      *                                                                   ULX008
+      **  If feature ULX012 is installed.                                 ULX008
+     C           @RTCD     IFEQ *BLANKS                                   ULX008
+     C                     MOVE 'Y'       ULX008                          ULX008
+     C                     MOVE '1'       *IN51                           ULX008
+     C                     ENDIF                                          ULX008
+      *
+     C*
+      * Main processing - Loop on I.C.D.
+      *
+     C                     OPEN ERLU95P1
+      *
+      * Record Printer file ERLU95P1 on RCF                               132893
+     C                     Z-ADDSFNUM1    ZSNUM                           132893
+     C                     MOVELSFIL1     SFILE                           132893
+      *                                                                   132893
+     C                     EXSR SRZSFL                                    132893
+      *                                                                   132893
+      * Record Printer file ERLU95AU on RCF                               132893
+     C                     Z-ADDSFNUMU    ZSNUM                           132893
+     C                     MOVELSFILEU    SFILE                           132893
+      *                                                                   132893
+     C                     EXSR SRZSFL                                    132893
+      *
+     C                     MOVE *OFF      *IN50                           132893
+      *                                                                   132893
+     C                     READ ERLUICL1                 86
+     C           *IN86     IFEQ '1'
+     C                     MOVE *ON       *IN50                           132893
+     C                     MOVEL'02'      P2ERR            *********************
+     C                     Z-ADD2         X                * DB ERROR 02       *
+     C                     MOVE *BLANKS   P2EDTA           *********************
+     C                     MOVE '1'       *IN95
+     C                     EXSR SAUDIT
+     C                     END
+      *
+     C**
+     C** Access I.C.D. file to retireve the user country code for print
+     C**
+     C           VPICCD    CHAINERICDRL1             87
+     C           *IN87     IFEQ '1'
+     C                     MOVEL'03'      P2ERR            *********************
+     C                     Z-ADD3         X                * DB ERROR 03       *
+     C                     MOVE *BLANKS   P2EDTA           *********************
+     C                     MOVE '1'       *IN95
+     C                     EXSR SAUDIT
+     C                     END
+     C*
+     C                     MOVE VDUCCD    P1UCCD
+     C**********           Z-ADDVPCSL1    P1COD1                          ULX004
+     C**********           Z-ADDVPCSL1    P1CODA                          ULX004
+     C**********           Z-ADDVPCSL2    P1COD2                          ULX004
+     C**********           Z-ADDVPCSL2    P1CODB                          ULX004
+     C**********           Z-ADDVPCSL3    P1COD3                          ULX004
+     C**********           Z-ADDVPCSL3    P1CODC                          ULX004
+     C**********           Z-ADDVPCSL4    P1COD4                          ULX004
+     C**********           Z-ADDVPCSL4    P1CODD                          ULX004
+     C**********           Z-ADDVPOWFA    P1OWFA                   ERL328 ULX004
+     C                     MOVE VPIM14    P1IM14                          ERL371
+     C                     Z-ADDVPCRMT    P1CRMT                          ERL371
+     C                     MOVE VPCYPR    P1CYPR                          ERL371
+     C                     MOVE VPLERP    P1LERP                          ERL422
+     C                     MOVE VPCLRP    P1CLRP                          ERL422
+     C                     MOVE VPMMPD    P1MMPD                          ERL422
+      *                                                                   ULX004
+     C                     Z-ADDVPCORD    P1CORD                          ULX004
+     C                     Z-ADDVPPRRD    P1PRRD                          ULX004
+     C                     Z-ADDVPOPCM    P1OPCM                          ULX004
+     C                     Z-ADDVPIRCS    P1IRCS                          ULX004
+     C                     Z-ADDVPIRCG    P1IRCG                          ULX004
+     C                     Z-ADDVPEPRM    P1EPRM                          ULX004
+      *                                                                   ULX012
+      **  If feature UlX012 is installed                                  ULX012
+     C           ULX012    IFEQ 'Y'                                       ULX012
+     C                     Z-ADDVPSTSQ    P1STSQ                          ULX012
+     C                     Z-ADDVPDAYF    P1DAYF                          ULX012
+     C                     ENDIF                                          ULX012
+      *                                                                   ULX008
+      **  If feature UL0082 is installed                                  ULX008
+     C           ULX008    IFEQ 'Y'                                       ULX008
+     C                     MOVELVPINCC    P1INCC                          ULX008
+     C                     MOVELVPDMOV    P1DMOV                          ULX008
+     C                     MOVELVPCTLN    P1CTLN                          ULX008
+     C                     MOVELVPMKSE    P1MKSE                          ULX008
+     C                     MOVELVPEXTT    P1EXTT                          ULX008
+     C                     ENDIF                                          ULX008
+     C*
+     C                     Z-ADDVPLCD     ZDAYNO  50
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    P1LCD
+     C*
+     C                     MOVE VPTYLC    P1TYLC
+      *
+     C                     WRITEERLU95F1
+      *
+     C                     CLOSEERLU95P1
+      *
+      *  Program exit
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      /EJECT
+      *
+      /EJECT
+      *-------------------------------------------------------------------------
+      * SAUDIT - Subroutine for audit report
+      *-------------------------------------------------------------------------
+      *
+     C           SAUDIT    BEGSR
+      *
+      * If DB error, setup message and switches
+      *
+     C           *IN95     IFEQ '1'
+     C                     MOVEAMES,X     P2MSG
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     END
+      *
+     C                     WRITEAUDIT
+      *                                                                   132893
+     C           *IN50     IFEQ *ON                                       132893
+     C                     WRITENODLI                                     132893
+     C                     ENDIF                                          132893
+      *                                                                   132893
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************   132893
+     C* SRZSFL - Subroutine to call ZSFILE                                132893
+     C*****************************************************************   132893
+     C*                                                                   132893
+     C           SRZSFL    BEGSR                                          132893
+     C*                                                                   132893
+     C                     CALL 'ZSFILE'                                  132893
+     C                     PARM           @RSEQ   5                       132893
+     C                     PARM           @RENT   3                       132893
+     C                     PARM           SFILE  10                       132893
+     C                     PARM           ZSNUM   60                      132893
+     C                     PARM           ZSERR   1                       132893
+     C*                                                                   132893
+     C** If an error occurred during ZSFILE processing,                   132893
+     C** return to the calling program.                                   132893
+     C*                                                                   132893
+     C           ZSERR     IFEQ 'Y'                                       132893
+     C                     SETON                     U7U8LR               132893
+     C                     RETRN                                          132893
+     C                     END                                            132893
+     C*                                                                   132893
+     C                     ENDSR                                          132893
+      ****************************************************************    132893
+      /EJECT                                                              132893
+     C********************************************************************
+     C*
+     C*
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+      /EJECT
+** MES -  Array to contain error messages for audit report
+ICD1 record not found in SDBANKPD
+ICD1 record not found in ERBEICPD
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

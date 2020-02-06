@@ -1,0 +1,1703 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU Create Euro GL account')                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0730 - EMU Create Euro GL Accounts                         *
+      *                                                               *
+      *  Function:  This program generates the new Euro GL accounts   *
+      *  (I/C)      in the Midas file PF/ACCNTAB, transfer the ledger *
+      *             balance of the 'In' GL account to the new Euro GL *
+      *             account, asks for the closure of the 'In' account *
+      *             and produces a report.                            *
+      *                                                               *
+      *  Called By: EUC0700 - 'In' Currency to Euro GL Account Mapping*
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CRE090             Date 14Feb14               *
+      *                 AR1095876          Date 30Sep13               *
+      *                 AR899028           Date 25Jan12               *
+      *                 AR847269           Date 09Nov11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CER042             Date 11May11               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 04Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 240852             Date 10Jul06               *
+      *                 239729             Date 04May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CER001             Date 25Apr05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 28Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 11Oct00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 164970             Date 28Jul99               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 153384             Date 24Feb99               *
+      *                 152600             Date 09Dec98               *
+      *                 149250             Date 09Dec98               *
+      *                 CEU029             Date 15Oct98               *
+      *                 CEU028  *Create    Date 24Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE095 - Rate Fixing for RE Accounts                         *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CRE090 - Delay Capitalisation of Interest                    *
+      *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
+      *             RUND (Child: AR1095877) (Recompile)               *
+      *  AR899028 - NOSTRO AMAD System errors occured; applied        *
+      *             fix AR847269                                      *
+      *  AR847269 - Column F1DACN not in specified tables (Recompile) *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CER042 - Interest Scale Report Correspondence                *
+      *           (Upgrade of FGE178/179) (Recompile)                 *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *           (Recompile)                                         *
+      *  240852 - Do not generate zero postings to EUPOSTPD.          *
+      *  239729 - When a new account is created a record for it       *
+      *           should also be created on GLACNTQD                  *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information (Recompile)                             *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CSD006 - Use long DS with SDBSRTPD and SDCURRPD.             *
+      *  164970 - PTIM=235959 for ALL COB generated postings          *
+      *           from SPOS GE-TT, GE-GLEU or GE-SF                   *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  153384 - ANAM is filled with the acc name and add ref from   *
+      *           ACCNTAB if one to one mapping (EUMULT is 'N') ,     *
+      *           otherwise it is from SDACODPD and add ref is 'B' .  *
+      *  152600 - Any reference not correctly updated.                *
+      *  149250 - Fist Mapped GL Account narrative is blank           *
+      *  CEU029 - EMU Midas/Trade Innovation Interface Enhancements:  *
+      *           creation of TI Euro accounts.                       *
+      *  CEU028 - EMU GL Utilities                                    *
+      *                                                               *
+      *****************************************************************
+      *
+     FEUGLMLL2UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FACCNT   UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FEUPOSTZZUF  E                    DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     FEUPOSTPDO   E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+     FACCNTTI IF  E           K        DISK                               CEU029
+     F            ACCNTABF                          KRENAMEACCNTTBF       CEU029
+      *                                                                   CEU029
+     FGLACNTL3UF  E           K        DISK                      A                            239729
+     FEU0730AUO   E                    PRINTER      KINFDS SPOOLU     UC
+     F                                              KINFSR *PSSR
+     FEU0730P1O   E                    PRINTER      KINFDS SPOOL1     UC
+     F                                              KINFSR *PSSR
+     F/COPY WNCPYSRC,EU0730F001
+      *                                                                                       CER001
+     FREACX1PDUF  E           K        DISK         KINFSR *PSSR A    UC                      CER001
+     F                                              KCOMIT                                    CER001
+      *                                                                                       CER001
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10 - Read for EUGLMLL2                                       *
+      *  11 - Read for EUPOSTZZ                                       *
+      *  12 - Read for ACCNT                                          *
+      *  13 - Write for ACCNTAB                                       *
+      *  14 - Read  for ACCNTAC                                       *
+      *  15 - Call  for EU0200                                        *
+      *  16 - On for no record found on CHAIN into ACCNTTI.           *   CEU029
+      *  17 - No record found on CHAIN to GLACNTL3                    *                       239729
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRP002 - Program Initialisation                              *
+      *  SRP003 - Generate New Euro GL Account                        *
+      *  SRP004 - Transfer 'In' GL Account Balances to Euro GL Account*
+      *  SRP005 - 'In' GL Account Closure                             *
+      *  SRP006 - EMU Create Euro GL Account Reporting                *
+      *  SRP007 - EMU Create Euro GL Account Reporting - Audit        *
+      *  TIACCS  - Set up Trade Innovation account fields.            *   CEU029
+      *  ZTNLU1 - Update Next Available Transaction Number            *
+      *  ZCONV  - Convert Amount to another currency                  *
+      *  ZHASH  - Hash Totalling                                      *
+      *  ZSEDIT - Edit Amount with decimal amount and signs           *
+      *  SRCFP1  - RCF Processing for P1 Report                       *
+      *  SRCFAU  - RCF Processing for Audit Report                    *
+      *  *PSSR  - Program exception error routine                     *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+     E                    ACSTS   2   5 40
+      ** Array containing Account Status narrative
+      *
+     E                    INT         1 15 0
+     E                    DEC         1  3 0
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+      /SPACE 3
+     E/COPY WNCPYSRC,EU0730E001
+     IACCNTTBF                                                            CEU029
+     I** Rename fields of ACCNTTI                                         CEU029
+     I              RECI                            TIRECI                CEU029
+     I              CNUM                            TICNUM                CEU029
+     I              CCY                             TICCY                 CEU029
+     I              ACOD                            TIACOD                CEU029
+     I              ACSQ                            TIACSQ                CEU029
+     I              ZZ006                           TIZ006                CEU029
+     I              BRCA                            TIBRCA                CEU029
+     I              ATYP                            TIATYP                CEU029
+     I              STYP                            TISTYP                CEU029
+     I              MFFQ                            TIMFFQ                CEU029
+     I              ACST                            TIACST                CEU029
+     I              DACO                            TIDACO                CEU029
+     I              DACC                            TIDACC                CEU029
+     I              ANAM                            TIANAM                CEU029
+     I              LDBL                            TIADBL                CEU029
+     I              CLBL                            TICLBL                CEU029
+     I              STFQ                            TISTFQ                CEU029
+     I              STDY                            TISTDY                CEU029
+     I              LSTD                            TILSTD                CEU029
+     I              NSTD                            TINSTD                CEU029
+     I              LSTP                            TILSTP                CEU029
+     I              CFSB                            TICFSB                CEU029
+     I              LMVD                            TILMVD                CEU029
+     I              EPLB                            TIEPLB                CEU029
+     I              EPCB                            TIEPCB                CEU029
+     I              YTDB                            TIYTDB                CEU029
+     I              GLBT                            TIGLBT                CEU029
+     I              ADREF1                          TIREF1                CEU029
+     I              PRFC                            TIPRFC                CEU029
+     I              ZZ004                           TIZ004                CEU029
+     I              ORED                            TIORED                CEU029
+     I              DLIM                            TIDLIM                CEU029
+     I              LRCR                            TILRCR                CEU029
+     I              RTCB                            TIRTCB                CEU029
+     I              RTLB                            TIRTLB                CEU029
+     I              DITM                            TIDITM                CEU029
+     I              CITM                            TICITM                CEU029
+     I              ADREF2                          TIREF2                CEU029
+     I              ZZ002                           TIZ002                CEU029
+     I              CDIR                            TICDIR                CEU029
+     I              CCIR                            TICCIR                CEU029
+     I              ACNO                            TIACNO                CEU029
+     I              RETB                            TIRETB                CEU029
+     I              ODSC                            TIODSC                CEU029
+     I              ODLN                            TIODLN                CEU029
+     I              ODED                            TIODED                CEU029
+     I              DIOD                            TIDIOD                CEU029
+     I              FACT                            TIFACT                CEU029
+     I              FCNO                            TIFCNO                CEU029
+     I              EFAC                            TIEFAC                CEU029
+     I              HELD                            TIHELD                CEU029
+     I              MINB                            TIMINB                CEU029
+     I              LACD                            TILACD                CEU029
+     I              LISP                            TILISP                CEU029
+     I              RRNM                            TIRRNM                CEU029
+     I              DRIB                            TIDRIB                CEU029
+     I              DRIS                            TIDRIS                CEU029
+     I              DRCD                            TIDRCD                CEU029
+     I              DRIC                            TIDRIC                CEU029
+     I              DRIF                            TIDRIF                CEU029
+     I              DRDY                            TIDRDY                CEU029
+     I              NDID                            TINDID                CEU029
+     I              LDID                            TILDID                CEU029
+     I              LDIA                            TILDIA                CEU029
+     I              SDAP                            TISDAP                CEU029
+     I              LPAR                            TILPAR                CEU029
+     I              DIIE                            TIDIIE                CEU029
+     I              DAIC                            TIDAIC                CEU029
+     I              MADI                            TIMADI                CEU029
+     I              GADI                            TIGADI                CEU029
+     I              DDIS                            TIDDIS                CEU029
+     I              DDIA                            TIDDIA                CEU029
+     I              OLDR                            TIOLDR                CEU029
+     I              OLDB                            TIOLDB                CEU029
+     I              OLDS                            TIOLDS                CEU029
+     I              CRIB                            TICRIB                CEU029
+     I              CRIS                            TICRIS                CEU029
+     I              CRCD                            TICRCD                CEU029
+     I              CRIC                            TICRIC                CEU029
+     I              CRIF                            TICRIF                CEU029
+     I              CRDY                            TICRDY                CEU029
+     I              NCID                            TINCID                CEU029
+     I              LCID                            TILCID                CEU029
+     I              LCIA                            TILCIA                CEU029
+     I              SCAP                            TISCAP                CEU029
+     I              LPAP                            TILPAP                CEU029
+     I              CIIE                            TICIIE                CEU029
+     I              CAIC                            TICAIC                CEU029
+     I              MACI                            TIMACI                CEU029
+     I              GACI                            TIGACI                CEU029
+     I              CDIS                            TICDIS                CEU029
+     I              DCIA                            TIDCIA                CEU029
+     I              OLCR                            TIOLCR                CEU029
+     I              OLCB                            TIOLCB                CEU029
+     I              OLCS                            TIOLCS                CEU029
+     I              LCD                             TILCD                 CEU029
+     I              CHTP                            TICHTP                CEU029
+     I              TNLU                            TITNLU                CEU029
+     I              BRTCA                           TIRTCA                CEU029
+     I              NACSG                           TIACSG                CEU029
+     I              R4ACNT                          TIACNT                CEU029
+     I              ENOC                            TIENOC                CEU029
+     I              EPNO                            TIEPNO                CEU029
+     I              ECFB                            TIECFB                CEU029
+     I              LTAB                            TILTAB                CEU029
+     I              LTAC                            TILTAC                CEU029
+     I              LTAS                            TILTAS                CEU029
+     I              HCFB                            TIHCFB                CEU029
+     I              PTFR                            TIPTFR                CEU029
+     I              HLEX                            TIHLEX                CEU029
+     I              A5TIAC                          TITIAC                CEU029
+     I              A5TIAN                          TITIAN                CEU029
+     I              A5TIAS                          TITIAS                CEU029
+     I              EUSB                            TIEUSB                CEU029
+     I/COPY WNCPYSRC,EU0730I002
+      *                                                                   CEU029
+     ILDA       E DSLDA                         256
+      ** Local Data Area
+      *
+     ISPOOL1      DS
+      **   File Information Data Structure for EU0730P1.
+      *
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+     ISPOOLU      DS
+      ***  File Information Data Structure for EU0730AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     ISDACOD    E DSSDACODPD
+      ** Account Codes Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      **  Branch Codes Details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Codes Details
+      *
+     ISDGELR    E DSSDGELRPD
+      ** General Ledger ICD Details
+     I              QQACCD                          QQACCX                                    CGL029
+      *
+     ISDMMOD    E DSSDMMODPD
+      ** Module Details
+      *
+     ISDTRAD    E DSSDTRADPD
+      ** Trading ICD Details
+     I              QQACCD                          QQACCY                                    CGL029
+      *
+     IDSSDY     E DSDSSDY
+      ** DS for access programs, Long data structure
+      *
+     IDSFDY     E DSDSFDY
+      ** DS for access programs, Short data structure
+      **                                                                  CEU029
+     I            DS                                                      CEU029
+      ** Data structure for TI Account Suffix                             CEU029
+     I                                        1   3 A5TIAS                CEU029
+     I                                        1   30COUNT                 CEU029
+      *
+     I/COPY WNCPYSRC,EU0730I001
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I/COPY ZSRSRC,ZHASHZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP001 - Main Processing                                     *
+      *                                                               *
+      *  Called by: None                                              *
+      *                                                               *
+      *  Calls:     SRP002 - Program Initialisation                   *
+      *             SRP003 - Generate New Euro GL Account             *
+      *             SRP004 - Transfer 'In' GL Account Balances to     *
+      *                      Euro GL Account                          *
+      *             SRP005 - 'In' GL Account Closure                  *
+      *             SRP006 - EMU Create Euro GL Account Reporting     *
+      *             SRP007 - EMU Create Euro GL Accnts Rept. - Audit  *
+      *                                                               *
+      *****************************************************************
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C                     EXSR SRP002
+      *
+     C           *LOVAL    SETLLEUGLMLL2                 10
+     C                     READ EUGLMLL2                 10
+      *
+     C           *IN10     DOWEQ'0'
+      *
+     C                     EXSR SRP003
+      *
+     C           EUIBAL    IFNE *ZEROS
+     C                     EXSR SRP004
+     C                     ENDIF
+      *
+     C                     EXSR SRP005
+     C                     EXSR SRP006
+      *
+     C                     READ EUGLMLL2                 10
+      *
+     C                     ENDDO
+      *
+      ***  Update/Write on Trailer file EUPOSTZZ
+      *
+     C           RCTR1     IFNE *ZEROS
+      *
+     C                     Z-ADDINT,S     HRWN
+     C                     Z-ADDDEC,S     HRDC
+      *
+     C           *IN11     IFEQ '1'
+     C                     WRITEAPOSTZZF
+     C                     ELSE
+     C                     UPDATAPOSTZZF
+     C                     ENDIF
+      *
+      ***  Write End of Report
+      *
+     C           PRTLN1    IFGT 52
+     C                     WRITEEU0730D1
+     C                     ENDIF
+     C                     WRITEEU0730D4
+      *
+     C                     ENDIF
+      *
+     C                     EXSR SRP007
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP002 - Program Initialization                              *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Bank ICD Access Object                 *
+      *             AOTRADR0 - Trading ICD Access Object              *
+      *             AOGELRR0 - General Ledger ICD Access Object       *
+      *             AOMMODR0 - Module Detail Access Object            *
+      *             AOCURRR0 - Currency Codes Access Object           *
+      *             *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+     C           SRP002    BEGSR
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0730'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Bank Details via access program AOBANKR0
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 01 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Trading Details via access program AOTRADR0
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDTRAD    PARM SDTRAD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVEL'SDTRADPD'DBFILE           * DBERR 02 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** General Ledger ICD via access program AOGELRR0
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'SDGELRPD'DBFILE           * DBERR 03 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Module Details via access program AOMMODR0
+      *
+     C                     CALL 'AOMMODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*FIRST ' POPTN
+     C           SDMMOD    PARM SDMMOD    DSFDY
+      *
+     C           PRTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERR 04 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Currency Codes via access program AOCURRR0 (Euro Currency)
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BKEURO    PCCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD5         DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 05 *
+     C                     MOVELBKEURO    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C**********           MOVELA6SPAE    WESPAE  4                                           CGL029
+     C                     MOVELA6SPAE    WESPAE 10                                           CGL029
+      *
+      ** Currency Codes via access program AOCURRR0 (Base Currency)
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM BJCYCD    PCCY
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD6         DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 06 *
+     C                     MOVELBJCYCD    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA6INCY    WBINCY  1
+     C                     MOVELA6NBDP    WBNBDP  10
+     C/COPY WNCPYSRC,EU0730C001
+      *
+      ** Initialise screen fields
+      *
+     C           1         SETLLEUPOSTZZ                 11
+     C                     READ EUPOSTZZ                 11
+      *
+     C           *IN11     IFEQ '1'
+     C                     MOVE 'T'       RECI
+     C                     Z-ADD*ZEROS    NORE1
+     C                     Z-ADD*ZEROS    HRWN
+     C                     Z-ADD*ZEROS    HRDC
+     C                     MOVE *BLANKS   ZZ144
+     C                     Z-ADD*ZEROS    INT,1
+     C                     Z-ADD*ZEROS    DEC,1
+     C                     ELSE
+     C                     Z-ADDHRWN      INT,1
+     C                     Z-ADDHRDC      DEC,1
+     C                     ENDIF
+      *
+     C                     Z-ADD1         S
+     C                     Z-ADD1         Z
+      *
+     C           WEUKEY    KLIST
+     C**********           KFLD           WEUCNM  60                                          CSD027
+     C                     KFLD           WEUCNM  6                                           CSD027
+     C                     KFLD           WEUCCY  3
+     C**********           KFLD           WEUACD  40                                          CGL029
+     C                     KFLD           WEUACD 100                                          CGL029
+     C                     KFLD           WEUSQN  20
+     C                     KFLD           WEUBRC  3
+      *
+     C           WINKY1    KLIST
+     C**********           KFLD           WINCNM  60                                          CSD027
+     C                     KFLD           WINCNM  6                                           CSD027
+     C                     KFLD           WINCCY  3
+     C**********           KFLD           WINACD  40                                          CGL029
+     C                     KFLD           WINACD 100                                          CGL029
+     C                     KFLD           WINSQN  20
+     C                     KFLD           WINBRC  3
+      *
+     C           WINKY2    KLIST
+     C**********           KFLD           WICNM2  60                                          CSD027
+     C                     KFLD           WICNM2  6                                           CSD027
+     C                     KFLD           WICCY2  3
+     C**********           KFLD           WIACD2  40                                          CGL029
+     C                     KFLD           WIACD2 100                                          CGL029
+     C                     KFLD           WISQN2  20
+     C                     KFLD           WIBRC2  3
+      *
+     C           KGLACT    KLIST                                                              239729
+     C                     KFLD           F1CNUM                                              239729
+     C                     KFLD           F1CCY                                               239729
+     C                     KFLD           F1ACOD                                              239729
+     C                     KFLD           F1ACSQ                                              239729
+     C                     KFLD           F1BRCA                                              239729
+      *                                                                                       239729
+     C                     MOVE *BLANKS   WEUSTS  1
+     C                     MOVE *BLANKS   WINSTS  1
+      *
+     C                     MOVE *BLANKS   WEUBRC
+     C                     MOVE *BLANKS   WEUCCY
+     C**********           Z-ADD*ZEROS    WEUCNM                                              CSD027
+     C                     MOVE *BLANKS   WEUCNM                                              CSD027
+     C                     Z-ADD*ZEROS    WEUACD
+     C                     Z-ADD*ZEROS    WEUSQN
+      *
+     C                     MOVE *BLANKS   WINBRC  3
+     C                     MOVE *BLANKS   WINCCY  3
+     C**********           Z-ADD*ZEROS    WINCNM  60                                          CSD027
+     C                     MOVE *BLANKS   WINCNM  6                                           CSD027
+     C**********           Z-ADD*ZEROS    WINACD  40                                          CGL029
+     C                     Z-ADD*ZEROS    WINACD                                              CGL029
+     C                     Z-ADD*ZEROS    WINSQN  20
+      *
+     C                     MOVE *BLANKS   WIBRC2  3
+     C                     MOVE *BLANKS   WICCY2  3
+     C**********           Z-ADD*ZEROS    WICNM2  60                                          CSD027
+     C                     MOVE *BLANKS   WICNM2  6                                           CSD027
+     C**********           Z-ADD*ZEROS    WIACD2  40                                          CGL029
+     C                     Z-ADD*ZEROS    WIACD2                                              CGL029
+     C                     Z-ADD*ZEROS    WISQN2  20
+     C/COPY WNCPYSRC,EU0730C004
+      *                                                                                       CER001
+      ** Check Switchable feature ULX004 is initialised                                       CER001
+      *                                                                                       CER001
+     C                     CALL 'AOSARDR0'                                                    CER001
+     C                     PARM '       ' @RTCD   7                                           CER001
+     C                     PARM '*VERIFY' @OPTN   7                                           CER001
+     C                     PARM 'ULX004'  @SARD   6                                           CER001
+      *                                                                                       CER001
+     C           @RTCD     IFEQ *BLANK                     B1                                 CER001
+     C                     MOVE 'Y'       ULX004  1                                           CER001
+     C                     OPEN REACX1PD                                                      CER001
+     C                     ELSE                            X1                                 CER001
+      *                                                                                       CER001
+     C           @RTCD     IFEQ '*NRF'                     B2                                 CER001
+     C                     MOVE 'N'       ULX004                                              CER001
+     C                     ELSE                            X2                                 CER001
+     C           *LOCK     IN   LDA                                                           CER001
+     C                     Z-ADD16        DBASE            ************                       CER001
+     C                     MOVEL'SCSARDPD'DBFILE           * DBERR 01 *                       CER001
+     C                     MOVEL'ULX004'  DBKEY            ************                       CER001
+     C                     OUT  LDA                                                           CER001
+     C                     EXSR *PSSR                                                         CER001
+     C                     ENDIF                           E2                                 CER001
+     C                     ENDIF                           E1                                 CER001
+      *                                                                                       CER001
+      ** Define Fields                                                                        CER001
+      *                                                                                       CER001
+     C           *LIKE     DEFN CNUM      K#CNUM                                              CER001
+     C           *LIKE     DEFN CCY       K#CCY                                               CER001
+     C           *LIKE     DEFN WEACOD    K#ACOD                                              CER001
+     C           *LIKE     DEFN BRCA      K#BRCA                                              CER001
+     C           *LIKE     DEFN ACSQ      K#ACSQ                                              CER001
+      *                                                                                       CER001
+     C           K#KY02    KLIST                                                              CER001
+     C                     KFLD           K#CNUM                                              CER001
+     C                     KFLD           K#CCY                                               CER001
+     C                     KFLD           K#ACOD                                              CER001
+     C                     KFLD           K#ACSQ                                              CER001
+     C                     KFLD           K#BRCA                                              CER001
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP003 - Generate New Euro GL Account                        *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     ZTNLU1 - Update Next Available Transaction No.    *
+      *             *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+     C           SRP003    BEGSR
+      *
+     C           EUEBRC    IFNE WEUBRC
+     C           EUECNM    ORNE WEUCNM
+     C           EUECCY    ORNE WEUCCY
+     C           EUEACD    ORNE WEUACD
+     C           EUESQN    ORNE WEUSQN
+      *
+     C                     MOVE EUEBRC    WEUBRC
+     C                     MOVE EUECCY    WEUCCY
+     C**********           Z-ADDEUECNM    WEUCNM                                              CSD027
+     C                     MOVE EUECNM    WEUCNM                                              CSD027
+     C                     Z-ADDEUEACD    WEUACD
+     C                     Z-ADDEUESQN    WEUSQN
+      *
+     C           WEUKEY    CHAINACCNT                12
+      *
+     C           *IN12     IFEQ '0'
+     C                     MOVE 'E'       WEUSTS
+     C                     ELSE
+      *
+     C                     MOVE EUIBRC    WINBRC
+     C                     MOVE EUICCY    WINCCY
+     C**********           Z-ADDEUICNM    WINCNM                                              CSD027
+     C                     MOVE EUICNM    WINCNM                                              CSD027
+     C                     Z-ADDEUIACD    WINACD
+     C                     Z-ADDEUISQN    WINSQN
+     C/COPY WNCPYSRC,EU0730C002
+      *
+     C           WINKY1    CHAINACCNT                12
+      *
+     C           *IN12     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE WINCNM    WTPCNM  6
+     C**********           MOVE WINACD    WTPACD  4                                           CGL029
+     C                     MOVE WINACD    WTPACD 10                                           CGL029
+     C                     MOVE WINSQN    WTPSQN  2
+     C           WINBRC    CAT  WTPCNM:1  WTMP1  10
+     C           WTMP1     CAT  WINCCY:1  WTMP2  14
+     C           WTMP2     CAT  WTPACD:1  WTMP3  19
+     C           WTMP3     CAT  WTPSQN:1  WTMP4  30
+     C                     Z-ADD7         DBASE            ************
+     C                     MOVEL'ACCNT   'DBFILE           * DBERR 07 *
+     C                     MOVELWTMP4     DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Save TI account fields                                            CEU029
+      *                                                                   CEU029
+     C           *LIKE     DEFN A5TIAC    ##TIAC                          CEU029
+     C           *LIKE     DEFN A5TIAN    ##TIAN                          CEU029
+     C           *LIKE     DEFN A5TIAS    ##TIAS                          CEU029
+     C                     MOVE STFQ      WWSTFQ  1                       152600
+     C                     MOVE RETB      WWRETB  1                       152600
+     C                     MOVE GLBT      WWGLBT  1                       152600
+     C                     MOVE A5TIAC    ##TIAC                          CEU029
+     C                     MOVE A5TIAN    ##TIAN                          CEU029
+     C                     MOVE A5TIAS    ##TIAS                          CEU029
+     C                     MOVELANAM      WWANAM 20        Save acc name  153384
+     C                     MOVELADREF1    WWADR1  8        Save acc ref   153384
+     C                     CLEARACCNTABF
+      *
+     C                     MOVE 'O'       WEUSTS
+     C                     MOVE 'D'       RECI
+     C**********           Z-ADDEUECNM    CNUM                                                CSD027
+     C                     MOVE EUECNM    CNUM                                                CSD027
+     C                     MOVE EUECCY    CCY
+     C                     Z-ADDEUEACD    ACOD
+     C                     Z-ADDEUESQN    ACSQ
+     C                     MOVE EUEBRC    BRCA
+     C                     MOVE 'G'       ATYP
+     C                     Z-ADDBJRDNB    DACO
+     C*                                                                   153384
+     C           EUMULT    IFEQ 'Y'                                       153384
+      *
+      ** Account Codes Details via access program AOACODR0                149250
+      *                                                                   149250
+     C**********           MOVELEUIACD    PACCD   4                                    149250 CGL029
+     C                     MOVELEUIACD    PACCD  10                                           CGL029
+     C                     CALL 'AOACODR0'                                149250
+     C                     PARM *BLANKS   PRTCD                           149250
+     C                     PARM '*KEY    'POPTN                           149250
+     C                     PARM           PACCD                           149250
+     C           SDACOD    PARM SDACOD    DSSDY                           149250
+      *                                                                   149250
+     C           PRTCD     IFNE *BLANKS                                   149250
+     C           *LOCK     IN   LDA                                       149250
+     C                     Z-ADD10        DBASE            ************   149250
+     C                     MOVEL'SDACODPD'DBFILE           * DBERR 10 *   149250
+     C                     MOVELEUIACD    DBKEY            ************   149250
+     C                     OUT  LDA                                       149250
+     C                     EXSR *PSSR                                     149250
+     C                     ELSE                                           153384
+     C                     MOVEL*BLANKS   WWANAM                          153384
+     C                     MOVELA5ACCN    WWANAM                          153384
+     C                     MOVEL*BLANKS   WWADR1                          153384
+     C                     MOVEL'B'       WWADR1                          153384
+     C                     ENDIF                                          149250
+      *                                                                   149250
+     C                     ENDIF                                          153384
+      *                                                                   153384
+     C**********           MOVE A5ACCN    ANAM                            152600
+     C**********           MOVELA5ACCN    ANAM                     152600*153384
+     C                     MOVELWWANAM    ANAM                            153384
+     C                     Z-ADDBJRDNB    LSTD
+     C**********           MOVE BKDSFC    STFQ                            152600
+     C                     MOVE WWSTFQ    STFQ                            152600
+     C                     MOVE WWRETB    RETB                            152600
+     C                     MOVE WWGLBT    GLBT                            152600
+     C                     Z-ADDBKAPDT    NSTD
+     C**********           MOVE 'B'       ADREF1                          152600
+     C**********           MOVEL'B'       ADREF1                   152600*153384
+     C                     MOVELWWADR1    ADREF1                          153384
+     C                     Z-ADDBJRDNB    ORED
+     C                     Z-ADDBJRDNB    LACD
+     C                     Z-ADDBJRDNB    LDID
+     C                     Z-ADDBJRDNB    DDIA
+     C                     Z-ADDBJRDNB    LCID
+     C                     Z-ADDBJRDNB    LPAP
+     C                     Z-ADDBJRDNB    DCIA
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'I'       CHTP
+     C                     EXSR ZTNLU1
+     C                     Z-ADDNATN      TNLU
+      *                                                                   CEU029
+      ** Set up the Trade Innovation account details                      CEU029
+      *                                                                   CEU029
+     C                     EXSR TIACCS                                    CEU029
+      *
+     C                     MOVEASTAMP,1   TMST             Default Timestamp                  CPK015
+     C                     WRITEACCNTABF               13
+     C/COPY WNCPYSRC,EU0730C003
+      *                                                                                       239729
+      ** Put a record onto GLACNTQD for each account added to ACCNTAB                         239729
+      *                                                                                       239729
+      *                                                                                       239729
+     C**********           Z-ADDCNUM      F1CNUM                                       239729 CSD027
+     C                     MOVE CNUM      F1CNUM                                              CSD027
+     C                     MOVE CCY       F1CCY                                               239729
+     C                     Z-ADDACOD      F1ACOD                                              239729
+     C                     Z-ADDACSQ      F1ACSQ                                              239729
+     C                     MOVE BRCA      F1BRCA                                              239729
+      *                                                                                       239729
+     C           KGLACT    CHAINGLACNTD0             17                                       239729
+      *                                                                                       239729
+     C           *IN17     IFEQ *ON                                                           239729
+     C                     Z-ADD*ZERO     F1FCHD                                              239729
+     C                     Z-ADD*ZERO     F1LFCD                                              239729
+     C                     Z-ADD*ZERO     F1ACBL                                              239729
+     C                     Z-ADD*ZERO     F1TEXO                                              239729
+     C                     Z-ADD*ZERO     F1TEOF                                              239729
+     C                     Z-ADD*ZERO     F1TEOC                                              239729
+     C                     Z-ADD*ZERO     F1DECD                                              CRE090
+     C                     Z-ADD*ZERO     F1DRFD                                              CRE095
+     C                     Z-ADD*ZERO     F1DNFD                                              CRE095
+     C                     Z-ADD*ZERO     F1DNFM                                              CRE095
+     C                     Z-ADD*ZERO     F1CRFD                                              CRE095
+     C                     Z-ADD*ZERO     F1CNFD                                              CRE095
+     C                     Z-ADD*ZERO     F1CNFM                                              CRE095
+     C                     WRITEGLACNTD0                                                      239729
+     C                     ENDIF                                                              239729
+      *                                                                                       CER001
+      ** Test is the feature ULX004 is ON                                                     CER001
+      *                                                                                       CER001
+     C           ULX004    IFEQ 'Y'                                                           CER001
+      *                                                                                       CER001
+      ** Save the indicator before proces ULX004                                              CER001
+      *                                                                                       CER001
+     C                     MOVE *IN99     WWIN99  1                                           CER001
+      *                                                                                       CER001
+      ** If Found, check is EURO account exist                                                CER001
+      *                                                                                       CER001
+     C                     MOVE EUECNM    K#CNUM                                              CER001
+     C                     MOVE EUECCY    K#CCY                                               CER001
+     C                     MOVE EUEACD    K#ACOD                                              CER001
+     C                     MOVE EUESQN    K#ACSQ                                              CER001
+     C                     MOVE EUEBRC    K#BRCA                                              CER001
+      *                                                                                       CER001
+     C           K#KY02    CHAINREACX1PD             99                                       CER001
+      *                                                                                       CER001
+      ** If not found, write a new record                                                     CER001
+      *                                                                                       CER001
+     C           *IN99     IFNE *OFF                                                          CER001
+      *                                                                                       CER001
+      ** Set up field                                                                         CER001
+      *                                                                                       CER001
+     C                     MOVELEUECNM    WECNUM                                              CER001
+     C                     MOVELEUECCY    WECCYC                                              CER001
+     C                     MOVELEUEACD    WEACOD                                              CER001
+     C                     MOVELEUESQN    WEACSQ                                              CER001
+     C                     MOVELEUEBRC    WEBRCA                                              CER001
+     C                     MOVELATYP      WEATYP                                              CER001
+      *                                                                                       CER001
+      ** Move Blank/zero the extension file fields                                            CER001
+      *                                                                                       CER001
+     C                     Z-ADD0         WE1UAC                                              CER001
+     C                     Z-ADD0         WELUSU                                              CER001
+     C                     Z-ADD0         WELURA                                              CER001
+     C                     Z-ADD0         WECOAM                                              CER001
+     C                     MOVE *BLANKS   WECOAC                                              CER001
+     C                     MOVE *BLANKS   WECOBR                                              CER001
+      *                                                                                       CER001
+     C                     WRITEACCNTBF6                                                      CER001
+     C                     ENDIF                                                              CER001
+      *                                                                                       CER001
+      ** Restore the indicator after proces ULX004                                            CER001
+      *                                                                                       CER001
+     C                     MOVE WWIN99    *IN99                                               CER001
+     C                     ENDIF                                                              CER001
+      *
+     C           *IN13     IFEQ '1'
+     C                     MOVE 'F'       WEUSTS
+     C                     ELSE
+      *
+     C           *LOVAL    SETLLACCNTACF                 14
+     C                     READ ACCNTACF                 14
+      *
+     C           *IN14     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD8         DBASE            ************
+     C                     MOVEL'ACCNTAC 'DBFILE           * DBERR 08 *
+     C                     MOVEL'*READ   'DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ADD  1         NINU
+     C                     Z-ADDBJRDNB    LCD
+     C                     Z-ADDNATN      TNLU
+     C                     UPDATACCNTACF
+      *
+     C                     ADD  1         RANINU
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP004 - Transfer 'In' GL Account Balances to Euro GL Account*
+      *
+      *  Called by: Main processing                                   *
+      *                                                               *
+      *  Calls:     AOBRCHR0 - Branch Code Access Object              *
+      *             AOACODR0 - Account Code Access Object             *
+      *             EU0200   - Convert 'In' Ccy amount to Euro Ccy    *
+      *             ZCONV    - Convert Amount to Another Currency     *
+      *             ZHASH    - Hash totalling                         *
+      *             *PSSR    - Handles Database Error                 *
+      *                                                               *
+      *****************************************************************
+     C           SRP004    BEGSR
+      *
+      ** Branch Codes Details via access program AOBRCHR0
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM EUIBRC    PBRCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD9         DBASE            ************
+     C                     MOVEL'SDBRCHPD'DBFILE           * DBERR 09 *
+     C                     MOVELEUIBRC    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ***Account*Codes*Details*via*access*program*AOACODR0*************** 149250
+      ***                                                                 149250
+     C**********           MOVELEUIACD    PACCD   4                       149250
+     C**********           CALL 'AOACODR0'                                149250
+     C**********           PARM *BLANKS   PRTCD                           149250
+     C**********           PARM '*KEY    'POPTN                           149250
+     C**********           PARM           PACCD                           149250
+     C********** SDACOD    PARM SDACOD    DSSDY                           149250
+      *                                                                   149250
+     C********** PRTCD     IFNE *BLANKS                                   149250
+     C********** *LOCK     IN   LDA                                       149250
+     C**********           Z-ADD10        DBASE            ************   149250
+     C**********           MOVEL'SDACODPD'DBFILE           * DBERR 10 *   149250
+     C**********           MOVELEUIACD    DBKEY            ************   149250
+     C**********           OUT  LDA                                       149250
+     C**********           EXSR *PSSR                                     149250
+     C**********           ENDIF                                          149250
+      *
+      ** Posting #1 ('In' Account)
+      *
+     C                     CLEARAPOSTPDF
+      *
+     C                     MOVE 'P'       RECI
+     C**********           Z-ADDEUICNM    CNUM                                                CSD027
+     C                     MOVE EUICNM    CNUM                                                CSD027
+     C                     MOVELEUICCY    CCY
+     C                     Z-ADDEUIACD    ACOD
+     C                     Z-ADDEUISQN    ACSQ
+     C                     Z-ADDBJRDNB    PSTD
+     C                     Z-ADDBJRDNB    VALD
+     C                     Z-ADD40001     TRAT
+      *
+     C                     MOVE EUECNM    WALCNM  6
+     C**********           MOVE EUEACD    WALACD  4                                           CGL029
+     C                     MOVE EUEACD    WALACD 10                                           CGL029
+     C                     MOVE EUESQN    WALSQN  2
+     C********** 'Transfer'CAT  'Euro':1  WPNAR1 13                                           CGL029
+     C********** WPNAR1    CAT  WALCNM:1  WPNAR2 20                                           CGL029
+     C********** WPNAR2    CAT  WALACD:1  WPNAR3 25                                           CGL029
+     C********** WPNAR3    CAT  WALSQN:1  WPNARE 30                                           CGL029
+     C           'Trans'   CAT  'Euro':1  WPNAR1 10                                           CGL029
+     C           WPNAR1    CAT  WALCNM:1  WPNAR2 17                                           CGL029
+     C           WPNAR2    CAT  WALACD:1  WPNAR3 28                                           CGL029
+     C           WPNAR3    CAT  WALSQN    WPNARE 30                                           CGL029
+     C                     MOVELWPNARE    PNAR
+      *
+     C           EUIBAL    IFGT 0
+     C                     Z-ADDEUIBAL    PSTA
+     C                     MOVE '1'       DRCR
+     C                     ELSE
+     C                     Z-SUBEUIBAL    PSTA
+     C                     MOVE '0'       DRCR
+     C                     ENDIF
+      *
+     C                     MOVE 'GE-GLEU' SPOS
+     C                     Z-ADD235959    PTIM                            164970
+     C                     MOVE EUIBRC    BRCA
+     C                     MOVE 'G'       ATYP
+     C                     MOVE 'V'       GETP
+     C                     MOVE EUIPRF    PRFC
+     C                     MOVE A5ACSC    ACSC
+     C                     MOVEL'40001   'OTTP
+      *
+     C                     WRITEAPOSTPDF
+      *
+     C                     ADD  1         NORE1
+     C           PSTA      DIV  1000      ZZAMT
+     C                     EXSR ZHASH
+      *
+      ** Posting #2 (Euro Account)
+      *
+     C**********           Z-ADDEUECNM    CNUM                                                CSD027
+     C                     MOVE EUECNM    CNUM                                                CSD027
+     C                     MOVELEUECCY    CCY
+     C                     Z-ADDEUEACD    ACOD
+     C                     Z-ADDEUESQN    ACSQ
+      *
+     C                     MOVE *BLANKS   PNAR
+     C                     MOVE EUICNM    WALCNM
+     C                     MOVE EUIACD    WALACD
+     C                     MOVE EUISQN    WALSQN
+     C********** 'Transfer'CAT  'In':1    WPNAR4 11                                           CGL029
+     C********** WPNAR4    CAT  WALCNM:1  WPNAR5 18                                           CGL029
+     C********** WPNAR5    CAT  EUICCY:1  WPNAR6 22                                           CGL029
+     C********** WPNAR6    CAT  WALACD:1  WPNAR7 27                                           CGL029
+     C********** WPNAR7    CAT  WALSQN:1  WPNARI 30                                           CGL029
+     C           'Trans'   CAT  'In':1    WPNAR4  8                                           CGL029
+     C           WPNAR4    CAT  WALCNM:1  WPNAR5 15                                           CGL029
+     C           WPNAR5    CAT  EUICCY    WPNAR6 19                                           CGL029
+     C           WPNAR6    CAT  WALACD    WPNAR7 27                                           CGL029
+     C           WPNAR7    CAT  WALSQN    WPNARI 30                                           CGL029
+     C                     MOVELWPNARI    PNAR
+      *
+     C           EUEBAL    IFGT 0
+     C                     Z-ADDEUEBAL    PSTA
+     C                     MOVE '0'       DRCR
+     C                     ELSE
+     C                     Z-SUBEUEBAL    PSTA
+     C                     MOVE '1'       DRCR
+     C                     ENDIF
+      *
+     C                     MOVE EUEBRC    BRCA
+     C                     MOVE EUEPRF    PRFC
+      *
+     C           EUEBAL    IFNE *ZERO                                                         240852
+     C                     WRITEAPOSTPDF
+      *
+     C                     ADD  1         NORE1
+     C           PSTA      DIV  1000      ZZAMT
+     C                     EXSR ZHASH
+     C                     ENDIF                                                              240852
+      *
+      ** Posting #3 ('In' Account Spot Trade)
+      *
+     C                     MOVELA8BICN    CNUM
+     C                     MOVELEUICCY    CCY
+     C                     MOVELBLSPTA    ACOD
+     C                     Z-ADD1         ACSQ
+      *
+     C                     MOVE *BLANKS   PNAR
+     C                     MOVELWPNARE    PNAR
+      *
+     C           EUIBAL    IFGT 0
+     C                     Z-ADDEUIBAL    PSTA
+     C                     MOVE '0'       DRCR
+     C                     ELSE
+     C                     Z-SUBEUIBAL    PSTA
+     C                     MOVE '1'       DRCR
+     C                     ENDIF
+      *
+     C                     MOVE EUIBRC    BRCA
+     C                     MOVE EUIPRF    PRFC
+      *
+     C                     WRITEAPOSTPDF
+      *
+     C                     ADD  1         NORE1
+     C           PSTA      DIV  1000      ZZAMT
+     C                     EXSR ZHASH
+      *
+      ** Posting #4 (Euro Account Spot Trade)
+      *
+     C                     MOVELEUECCY    CCY
+      *
+     C                     MOVE *BLANKS   PNAR
+     C                     MOVELWPNARI    PNAR
+      *
+     C           EUEBAL    IFGT 0
+     C                     Z-ADDEUEBAL    PSTA
+     C                     MOVE '1'       DRCR
+     C                     ELSE
+     C                     Z-SUBEUEBAL    PSTA
+     C                     MOVE '0'       DRCR
+     C                     ENDIF
+      *
+     C                     MOVE EUEBRC    BRCA
+     C                     MOVE EUEPRF    PRFC
+      *
+     C           EUEBAL    IFNE *ZERO                                                         240852
+     C                     WRITEAPOSTPDF
+      *
+     C                     ADD  1         NORE1
+     C           PSTA      DIV  1000      ZZAMT
+     C                     EXSR ZHASH
+     C                     ENDIF                                                              240852
+      *
+      ** Currency Codes via access program AOCURRR0 ('In' Currency)
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM EUICCY    PCCY
+     C***********SDCURR    PARM SDCURR    DSFDY                                               CSD006
+     C           SDCURR    PARM SDCURR    DSSDY                                               CSD006
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD11        DBASE            ************
+     C                     MOVEL'SDCURRPD'DBFILE           * DBERR 11 *
+     C                     MOVELEUICCY    DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C**********           MOVELA6SPAE    WISPAE  4                                           CGL029
+     C                     MOVELA6SPAE    WISPAE 10                                           CGL029
+     C                     Z-ADDA6NBDP    WINBDP  10
+     C                     Z-ADDA6SPRT    WISPRT 138
+     C                     MOVELA6MDIN    WIMDIN  1
+      *
+     C           WESPAE    IFNE *BLANKS
+     C           WISPAE    ANDNE*BLANKS
+      *
+     C           EUICCY    IFEQ BJCYCD
+     C                     Z-ADDEUIBAL    WBCEA  130
+     C                     ELSE
+      *
+     C           EUECCY    IFEQ BJCYCD
+     C                     Z-ADDEUEBAL    WBCEA
+     C                     ELSE
+     C           WBINCY    IFEQ 'Y'
+      *
+     C                     CALL 'EU0200'               1515
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM EUEBAL    PFRAM  183
+     C                     PARM EUECCY    PFRCY   3
+     C                     PARM BJCYCD    PTOCY   3
+     C                     PARM *ZEROS    POUTA  150
+     C                     PARM *ZEROS    PINTA  183
+     C                     PARM *ZEROS    PEXRT  159
+     C                     PARM *BLANKS   PMDIN   1
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD12        DBASE            ************
+     C                     MOVEL'*CALL   'DBFILE           * DBERR 12 *
+     C                     MOVEL'EU0200'  DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDPOUTA     WBCEA
+      *
+     C                     ELSE
+      *
+     C                     Z-ADDEUIBAL    ZAMTCI
+     C                     Z-ADDWISPRT    ZEXCH
+     C                     MOVE WIMDIN    ZMD
+     C                     MOVE EUICCY    ZCCYI
+     C                     MOVE BJCYCD    ZCCYO
+     C                     Z-ADDWINBDP    ZCDPI
+     C                     Z-ADDWBNBDP    ZCDPO
+      *
+     C                     EXSR ZCONV
+      *
+     C                     Z-ADDZAMTCO    WBCEA
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Posting #5 ('In' Account Spot Trade Account Equivalent)
+      *
+     C                     MOVELBJCYCD    CCY
+     C                     MOVE WISPAE    ACOD
+     C                     MOVE *BLANKS   PNAR
+     C                     MOVELWPNARI    PNAR
+      *
+     C           EUIBAL    IFGT 0
+     C                     Z-ADDWBCEA     PSTA
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C                     Z-SUBWBCEA     PSTA
+     C                     Z-ADD0         DRCR
+     C                     ENDIF
+     C                     MOVE EUIBRC    BRCA
+     C                     MOVE EUIPRF    PRFC
+      *
+     C           WBCEA     IFNE *ZERO                                                         240852
+     C                     WRITEAPOSTPDF
+      *
+     C                     Z-ADD1         S
+     C                     Z-ADD1         Z
+     C                     ADD  1         NORE1
+     C           PSTA      DIV  1000      ZZAMT
+     C                     EXSR ZHASH
+     C                     ENDIF                                                              240852
+      *
+      ** Posting #6 (Euro Account Spot Trade Account Equivalent)
+      *
+     C                     MOVELWESPAE    ACOD
+      *
+     C                     MOVE *BLANKS   PNAR
+     C                     MOVELWPNARE    PNAR
+      *
+     C           EUEBAL    IFGT 0
+     C                     Z-ADD0         DRCR
+     C                     ELSE
+     C                     Z-ADD1         DRCR
+     C                     ENDIF
+      *
+     C                     MOVE EUEBRC    BRCA
+     C                     MOVE EUEPRF    PRFC
+      *
+     C           EUEBAL    IFNE *ZERO                                                         240852
+     C                     WRITEAPOSTPDF
+      *
+     C                     ADD  1         NORE1
+     C           PSTA      DIV  1000      ZZAMT
+     C                     EXSR ZHASH
+     C                     ENDIF                                                              240852
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP005 - 'In' GL Account Closure                             *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           SRP005    BEGSR
+      *
+     C           EUIBRC    IFNE WIBRC2
+     C           EUICNM    ORNE WICNM2
+     C           EUICCY    ORNE WICCY2
+     C           EUIACD    ORNE WIACD2
+     C           EUISQN    ORNE WISQN2
+      *
+     C                     MOVE EUIBRC    WIBRC2
+     C                     MOVE EUICCY    WICCY2
+     C**********           Z-ADDEUICNM    WICNM2                                              CSD027
+     C                     MOVE EUICNM    WICNM2                                              CSD027
+     C                     Z-ADDEUIACD    WIACD2
+     C                     Z-ADDEUISQN    WISQN2
+      *
+     C           WINKY2    CHAINACCNT                12
+      *
+     C           *IN12     IFEQ '1'
+     C           ACST      OREQ 'C'
+     C                     MOVE 'E'       WINSTS
+     C                     ELSE
+     C                     MOVE 'C'       WINSTS
+      *
+     C                     MOVE 'C'       ACST
+     C                     Z-ADDBJRDNB    DACC
+     C                     Z-ADDBJRDNB    LCD
+     C                     MOVE 'C'       CHTP
+     C                     Z-ADDNATN      TNLU
+      *
+     C                     UPDATACCNTABF
+      *
+     C           *LOVAL    SETLLACCNTACF                 14
+     C                     READ ACCNTACF                 14
+      *
+     C           *IN14     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD13        DBASE            ************
+     C                     MOVEL'ACCNTAC 'DBFILE           * DBERR 13 *
+     C                     MOVEL'*READ   'DBKEY            ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ADD  1         NOCL
+     C                     Z-ADDBJRDNB    LCD
+     C                     Z-ADDNATN      TNLU
+     C                     UPDATACCNTACF
+      *
+     C                     ADD  1         RANOCL
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP006 - EMU Create Euro GL Accounts Reporting               *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     ZSEDIT - Edit amount with decimal and signs       *
+      *             SRCFP1 - Subroutine to register the P1 Printer    *
+      *                      File via RCF                             *
+      *****************************************************************
+     C           SRP006    BEGSR
+      *
+      ** Open Printer file
+      *
+     C           WFLGP1    IFEQ ' '
+     C                     OPEN EU0730P1
+     C                     EXSR SRCFP1
+     C                     MOVE 'Y'       WFLGP1  1
+     C                     ENDIF
+      *
+      ** Initials Report fields
+      *
+     C                     CLEAREU0730D1
+     C                     CLEAREU0730D2
+     C                     CLEAREU0730D3
+      *
+      ** Setup Report fields
+      *
+     C                     ADD  1         RCTR1
+     C                     MOVE BJMRDT    RMRDT
+     C                     MOVE BJURPT    RPTTL
+     C                     MOVE EUIBRC    RBRCA
+     C                     MOVE A8BRNM    RBRNM
+      *
+      ** Euro Account Report Details
+      *
+     C**********           Z-ADDEUECNM    REUCNM                                              CSD027
+     C                     MOVE EUECNM    REUCNM                                              CSD027
+     C                     MOVE EUECCY    REUCCY
+     C                     Z-ADDEUEACD    REUACD
+     C                     Z-ADDEUESQN    REUSQN
+      *
+     C           WEUSTS    IFEQ 'F'
+     C                     MOVEAACSTS,1   REUSTS
+     C                     ENDIF
+      *
+     C           WEUSTS    IFEQ 'E'
+     C                     MOVEAACSTS,2   REUSTS
+     C                     ENDIF
+      *
+     C           WEUSTS    IFEQ 'O'
+     C                     MOVEAACSTS,3   REUSTS
+     C                     ENDIF
+      *
+      ** 'In' GL Account Details
+      *
+     C**********           Z-ADDEUICNM    RINCNM                                              CSD027
+     C                     MOVE EUICNM    RINCNM                                              CSD027
+     C                     MOVE EUICCY    RINCCY
+     C                     Z-ADDEUIACD    RINACD
+     C                     Z-ADDEUISQN    RINSQN
+      *
+     C                     Z-ADDEUIBAL    ZFLD15
+     C                     Z-ADDWINBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RINBAL
+      *
+     C           BGN0ST    IFEQ 'Y'
+     C                     MOVE EUIPRF    RINPRF
+     C                     ELSE
+     C                     MOVE *BLANKS   RINPRF
+     C                     ENDIF
+      *
+     C           WINSTS    IFEQ 'E'
+     C                     MOVEAACSTS,4   RINSTS
+     C                     ENDIF
+      *
+     C           WINSTS    IFEQ 'C'
+     C                     MOVEAACSTS,5   RINSTS
+     C                     ENDIF
+      *
+     C           EUEBRC    IFNE WREBRC
+     C           EUECNM    ORNE WRECNM
+     C           EUECCY    ORNE WRECCY
+     C           EUEACD    ORNE WREACD
+     C           EUESQN    ORNE WRESQN
+      *
+     C           EUEBRC    IFNE WREBRC
+     C                     WRITEEU0730D1
+     C                     ENDIF
+      *
+     C                     MOVE EUEBRC    WREBRC  3
+     C**********           MOVE EUECNM    WRECNM  60                                          CSD027
+     C                     MOVE EUECNM    WRECNM  6                                           CSD027
+     C                     MOVE EUECCY    WRECCY  3
+     C**********           MOVE EUEACD    WREACD  40                                          CGL029
+     C                     MOVE EUEACD    WREACD 100                                          CGL029
+     C                     MOVE EUESQN    WRESQN  20
+      *
+     C           PRTLN1    IFGT 52
+     C                     WRITEEU0730D1
+     C                     ENDIF
+      *
+     C                     WRITEEU0730D2
+      *
+     C                     ENDIF
+      *
+      ***  Write out Detail Record.
+      *
+     C           PRTLN1    IFGT 52
+     C                     WRITEEU0730D1
+     C                     ENDIF
+      *
+     C                     WRITEEU0730D3
+      *
+      ** Delete the record from the mapping file PF/EUGLMLPD.
+      *
+     C                     DELETEUGLMLD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRP007 - EMU Create Euro GL Accounts Reporting - Audit       *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *             *PSSR - Handles Database Error                    *
+      *                                                               *
+      *  Calls:     SRCFAU  - RCF Processing for Audit Report         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRP007    BEGSR
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     OPEN EU0730AU
+     C                     EXSR SRCFAU
+      *
+     C                     MOVE BJMRDT    RMRDT
+     C                     MOVE BJURPT    RPTTL
+     C                     Z-ADDNORE1     RENORE
+     C                     Z-ADDHRWN      REHRWN
+     C                     Z-ADDHRDC      REHRDC
+      *
+     C                     WRITEEU0730A1
+     C                     WRITEEU0730A2
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ '1'
+     C           *INU8     ANDEQ'1'
+     C                     WRITEEU0730A4
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCTR1     IFEQ *ZEROS
+     C                     WRITEEU0730A3
+     C                     ENDIF
+     C                     ENDIF
+     C/COPY WNCPYSRC,EU0730C005
+      *                                                                                       CER001
+      ** IF Switchable feature ULX004 is ON  - CLOSE_FILES                                    CER001
+      *                                                                                       CER001
+     C           ULX004    IFEQ 'Y'                                                           CER001
+     C                     CLOSEREACX1PD                                                      CER001
+     C                     ENDIF                                                              CER001
+      *
+      ** End Program and Return.
+      *
+     C                     MOVE '1'       *INLR
+     C                     COMIT
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFP1 - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *  Called by:  SRP006 - EMU Create Euro GL Accounts Reporting   *
+      *                                                               *
+      *****************************************************************
+     C           SRCFP1    BEGSR
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           SFNUM1
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCFAU  - Routine to register EU0730AU via RCF.              *
+      *                                                               *
+      *  Called by:  Main Processing                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFAU    BEGSR
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ
+     C                     PARM           SENTY
+     C                     PARM           SFILEU
+     C                     PARM           SFNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************   CEU029
+      *                                                               *   CEU029
+      * TIACCS - Sets up the TI account fields for the new Euro       *   CEU029
+      *          account, depending upon the fields on the original   *   CEU029
+      *          account.                                             *   CEU029
+      *                                                               *   CEU029
+      * Called by: SRP003 - Generate new Euro GL account.             *   CEU029
+      *                                                               *   CEU029
+      * Calls:     none                                               *   CEU029
+      *                                                               *   CEU029
+      *****************************************************************   CEU029
+     C           TIACCS    BEGSR                                          CEU029
+     C**                                                                  CEU029
+     C** Key list to access accounts on ACCNTTI                           CEU029
+     C**                                                                  CEU029
+     C           K#KY04    KLIST                                          CEU029
+     C                     KFLD           BRCA                            CEU029
+     C                     KFLD           A5TIAN                          CEU029
+     C                     KFLD           A5TIAS                          CEU029
+      *                                                                   CEU029
+      ** If the original account is a Trade Innovation account then       CEU029
+      ** generate the new Euro account as a TI account.                   CEU029
+      *                                                                   CEU029
+     C           ##TIAC    IFEQ 'Y'                                       CEU029
+      *                                                                   CEU029
+     C                     MOVE 'Y'       A5TIAC                          CEU029
+      *                                                                   CEU029
+      ** determine whether the customer is the branch internal customer   CEU029
+      *                                                                   CEU029
+     C**********           CALL 'AOBRCHR0'                                CEU029              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   PRTCD                           CEU029
+     C                     PARM '*KEY    'POPTN                           CEU029
+     C                     PARM BRCA      PBRCD   3                       CEU029
+     C           SDBRCH    PARM SDBRCH    DSSDY                           CEU029
+      *                                                                   CEU029
+      ** Database error                                                   CEU029
+     C           PRTCD     IFNE *BLANKS                                   CEU029
+     C           *LOCK     IN   LDA                                       CEU029
+     C                     Z-ADD14        DBASE                           CEU029
+     C                     MOVEL'SDBRCHPD'DBFILE                          CEU029
+     C                     MOVELBRCA      DBKEY                           CEU029
+     C                     OUT  LDA                                       CEU029
+     C                     EXSR *PSSR                                     CEU029
+     C                     ENDIF                                          CEU029
+      *                                                                   CEU029
+     C                     MOVE CNUM      CNUMA   6                       CEU029
+      *                                                                   CEU029
+      ** When customer is the branch internal customer:                   CEU029
+      **  leave TI Account Number as the value on the old account;        CEU029
+      **  set TI Account Suffix to 978 (ISO standard ccy no. for EUR).    CEU029
+      *                                                                   CEU029
+     C           CNUMA     IFEQ A8BICN                                    CEU029
+     C                     MOVE ##TIAN    A5TIAN                          CEU029
+     C                     MOVE '978'     A5TIAS                          CEU029
+      *                                                                   CEU029
+      ** When customer is not the branch internal customer:               CEU029
+      **  set TI Account Number to the customer number;                   CEU029
+      **  set TI Account Suffix to next available number.                 CEU029
+      *                                                                   CEU029
+     C                     ELSE                                           CEU029
+     C                     MOVE CNUMA     A5TIAN                          CEU029
+      *                                                                   CEU029
+      ** determine the next available TI Account Suffix                   CEU029
+      *                                                                   CEU029
+     C                     Z-ADD0         COUNT                           CEU029
+     C           *IN66     DOUEQ*ON                                       CEU029
+     C           COUNT     OREQ 999                                       CEU029
+     C                     ADD  1         COUNT                           CEU029
+     C           K#KY04    CHAINACCNTTI              66                   CEU029
+     C                     ENDDO                                          CEU029
+      *                                                                   CEU029
+      ** error if no moure suffixes are available                         CEU029
+     C           COUNT     IFEQ 999                                       CEU029
+     C           *LOCK     IN   LDA                                       CEU029
+     C                     Z-ADD15        DBASE                           CEU029
+     C                     MOVEL'ACCNTTI 'DBFILE                          CEU029
+     C                     MOVEL'999     'DBKEY                           CEU029
+     C                     OUT  LDA                                       CEU029
+     C                     EXSR *PSSR                                     CEU029
+     C                     ENDIF                                          CEU029
+      *                                                                   CEU029
+     C                     ENDIF                                          CEU029
+      *                                                                   CEU029
+     C                     ELSE                                           CEU029
+      *                                                                   CEU029
+      * otherwise the account is not a TI account                         CEU029
+      *                                                                   CEU029
+     C                     MOVE 'N'       A5TIAC                          CEU029
+     C                     MOVE *BLANKS   A5TIAN                          CEU029
+     C                     MOVE *BLANKS   A5TIAS                          CEU029
+     C                     ENDIF                                          CEU029
+     C                     ENDSR                                          CEU029
+      *****************************************************************   CEU029
+      /EJECT                                                              CEU029
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: SRP002 - Program Initialisation                    *
+      *            SRP003 - Generate New Euro GL Account              *
+      *            SRP004 - Transfer 'In' GL Account Balances to Euro *
+      *                     GL Account                                *
+      * Calls:     SRP007 - EMU Create Euro GL Accnts Reporting -Audit*
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ROLBK
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     EXSR SRP007
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZCONVZ1
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C/COPY ZSRSRC,ZHASHZ3
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015
+**  CPY@
+(c) Finastra International Limited 2001
+**  ACSTS - 'In' GL Account and Euro Account Status
+FAILED                                  ALREADY EXISTING
+OPENED                                  ALREADY CLOSED
+CLOSURE REQUESTED
+**  POWER - Array of powers for currency conversion
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

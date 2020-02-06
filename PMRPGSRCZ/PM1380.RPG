@@ -1,0 +1,1067 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Generate forward cashflow events')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Portfolio Management Module                          *
+      *                                                               *
+      *  PM1380 - Generate Forward Cashflow Events                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 192099             Date 19Jun01               *
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CGL007             Date 26Mar99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 CTI002 Exposure Management / TI Interface     *
+      *                 CPM005             DATE 11JUL96               *
+      *                 S01124             DATE 15JUL94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL154 - FATCA Reporting (Recompile)                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  192099 - Review processing between PM/PB                     *
+      *  CGL007 - Account Postings Enquiry (Recompile)                *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  CPM005 - Private Banking Phase 2                             *
+      *           Focus Group Changes upgraded to DBA                 *
+      *  S01124 - PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+      *           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+      *                                                               *
+      *****************************************************************
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*BJ*************************************************   CPM005
+     FCLEAR   IF  E           K        DISK         KINFSR *PSSR
+     F            APOSTHHF                          KIGNORE
+     F            APOSTZZF                          KIGNORE
+      *
+     FACCNTL0 IF  E           K        DISK         KINFSR *PSSR
+      *
+     F***SDCURRL0IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*A6*************************************************   CPM005
+      *
+     F***SDACODL0IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*A5*************************************************   CPM005
+     F***SDRETRL0IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX A1*************************************************   CPM005
+     F***SDCUSTL0IF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*BB*************************************************   CPM005
+     F***SDPLCSPDIF**E           K        DISK         KINFSR *PSSR       CPM005
+      *******PREFIX*QB*************************************************   CPM005
+     FPMPORTLLIF  E           K        DISK         KINFSR *PSSR
+      *      PREFIX PN
+     F***PMEVNTPPO***E           K        DISK         KINFSR *PSSR       CPM005
+     FPMEVNTPDO   E           K        DISK         KINFSR *PSSR          CPM005
+      *      PREFIX Q9
+     F***PMEVCYPPO***E           K        DISK         KINFSR *PSSR       CPM005
+     FPMEVCYPDO   E           K        DISK         KINFSR *PSSR          CPM005
+      *      PREFIX FG
+     FPM1380AUO   E                    PRINTER      KINFSR *PSSR
+      *****************************************************************
+     E                    CPY@    1   1 80
+      /COPY ZSRSRC,ZPOWERZ1
+      *
+      ** FORMAT RE DETAILS FOR OUTPUT
+     E**********          ZLI        20  1                                                    CGL029
+     E                    ZLI        26  1                                                    CGL029
+      *****************************************************************
+      *
+      **  LOCAL DATA AREA FOR DATA BASE ERRORS:
+     ILDA         DS                            256
+     I***********                           132 141 DBFILE                CPM005
+     I                                      134 141 DBFILE                CPM005
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** OBTAIN EVENT CONTROL DATE
+     IPMSTAT      DS                            256
+     I                                        1   50WWECDT
+      *
+      **  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+      ** DS FOR DATABASE ERROR ON PMPORTLL
+     IWWERRO      DS
+     I**********                              1   60CNUM                                      CSD027
+     I                                        1   6 CNUM                                      CSD027
+     I                                        7  10 PTFR
+      *
+      ***DS*TO*OUTPUT*PNAR*FROM*CLEAR*ON*PMEVNTPP**********************   CPM005
+      ** DS to output PNAR from clear on PMEVNTPD                         CPM005
+     IPNAR        DS
+     I                                        1  15 WWNA15
+     I                                       16  30 WWNA30
+      *
+      ** DS TO OUTPUT NARRATIVE OF POSTING
+     I            DS
+     I I            'BATCH CR REF '           1  13 NAR1
+     I            DS
+     I I            'BATCH DR REF '           1  13 NAR2
+      *                                                                   CPM005
+     ISDBANK    E DSSDBANKPD                                              CPM005
+      ** Bank details                                                     CPM005
+      *                                                                   CPM005
+     ISDCURR    E DSSDCURRPD                                              CPM005
+      ** Currency codes                                                   CPM005
+      *                                                                   CPM005
+     ISDACOD    E DSSDACODPD                                              CPM005
+      ** Account codes                                                    CPM005
+      *                                                                   CPM005
+     ISDRETR    E DSSDRETRPD                                              CPM005
+      ** Retail transaction types                                         CPM005
+      *                                                                   CPM005
+     ISDCUST    E DSSDCUSTPD                                              CPM005
+      ** Customer numbers/shortnames                                      CPM005
+      *                                                                   CPM005
+     ISDPLCS    E DSSDPLCSPD                                              CPM005
+      ** Portfolio management customer details                            CPM005
+      *                                                                   CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+      ** First DS for access programs                                     CPM005
+      *                                                                   CPM005
+     IDSSDY     E DSDSSDY                                                 CPM005
+      ** Second DS for access programs, long data structure               CPM005
+      *                                                                   CPM005
+     IDSLDY     E DSDSLDY                                                 192099
+      ** Second DS for access programs, very long data structure          192099
+      *                                                                   192099
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #MAIN    - MAIN PROCESSING                                       *
+      **#EVNT****-*GENERATE*RECORD*IN*PMEVNTPP*************************  *CPM005
+      * #EVNT    - Generate record in PMEVNTPD                        *   CPM005
+      **#CYNT****-*GENERATE*RECORD*IN*PMEVCYPP*************************  *CPM005
+      * #CYNT    - Generate record in PMEVCYPD                        *   CPM005
+      * #TERM    - TERMINATION PROCESSING                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      *                                                                  *
+      ********************************************************************
+     C                     EXSR #INIT
+      *
+     C                     EXSR #MAIN
+      *
+     C                     EXSR #TERM
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN                                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPGM    - DATABASE ERROR                                        *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      **WWNOR1***-*NBR*OF*RECORDS*OUTPUT*ON*PMEVNTPP*******************  *CPM005
+      * WWNOR1   - Nbr of records output on PMEVNTPD                  *   CPM005
+      **WWNOR2***-*NBR*ON*RECORDS*OUTPUT*ON*PMEVCYPP*******************  *CPM005
+      * WWNOR2   - Nbr of records output on PMEVCYPD                  *   CPM005
+      * WWACCN   - KEY TO ACCESS ON ACCNTL0                              *
+      * WWPORT   - KEY TO ACCESS ON PMPORTLL                             *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+      *
+      **  PREPARE LDA:
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'PM1380'  WWPGM  10
+      *
+      **  GET INSTALLATION CONTROL DATA RECORD 1: BANK DETAILS
+     C************LOVAL    SETLLSDBANKL1                                  CPM005
+     C***********          READ SDBANKL1                 71               CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD   7                       CPM005
+     C                     PARM '*FIRST ' WOPTN   7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN71     IFEQ *ON                        *B1            CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD1         WWBASE  30       ***************CPM005
+     C***********          MOVEL'SDBANKL1'WWFILE 10        * DB ERROR 01 *CPM005
+     C***********          MOVEL*BLANKS   WWKEY1 28        ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD1         DBASE                           CPM005
+     C                     MOVE 'SDBANKPD'DBFILE                          CPM005
+     C                     MOVEL*BLANKS   DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ELSE
+     C** TEST DATE FORMAT FOR SR/ZDATE2
+     C           BJDFIN    IFEQ 'M'                        **B2
+     C                     MOVE *ON       *IN98
+     C                     ENDIF                           **E2
+     C                     ENDIF                           *E1
+      *
+      **  OBTAIN EVENT CONTROL MIDAS
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+      *
+      **  INITIALIZE WORK FIELDS
+     C                     Z-ADD*ZEROS    WWNOR1  50
+     C                     Z-ADD*ZEROS    WWNOR2  50
+      *
+      **  ACCESS TO ACCNTL0
+     C           WWACCN    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           CCY
+     C                     KFLD           ACOD
+     C                     KFLD           ACSQ
+     C                     KFLD           BRCA                            CPM005
+      *
+      **  ACCESS TO PMPORTLL
+     C           WWPORT    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           PTFR
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **#EVNT****-*GENERATE*RECORD*IN*PMEVNTPP*************************  *CPM005
+      * #EVNT    - Generate record in PMEVNTPD                        *   CPM005
+      * *PSSR    - ERROR IN FILE                                         *
+      **#CYNT****-*GENERATE*RECORD*IN*PMEVCYPP*************************  *CPM005
+      * #CYNT    - Generate record in PMEVCYPD                        *   CPM005
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN                                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWECDT   - EVENT CONTROL DATE                                    *
+      * WWACCN   - KEY TO ACCESS ON ACCNTL0                              *
+      **WWNOR1***-*NBR*OF*RECORDS*OUTPUT*ON*PMEVNTPP*******************  *CPM005
+      * WWNOR1   - Nbr of records output on PMEVNTPD                  *   CPM005
+      * WWTRAT   - KEY TO ACCESS ON SDRETRL0                             *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      **WWNOR2***-*NBR*ON*RECORDS*OUTPUT*ON*PMEVCYPP*******************  *CPM005
+      * WWNOR2   - Nbr of records output on PMEVCYPD                  *   CPM005
+      *                                                                  *
+      ********************************************************************
+     C           #MAIN     BEGSR
+      *
+      **  POSITION ON FIRST RECORD
+     C                     READ CLEAR                    71
+      *
+     C           *IN71     IFEQ *ON                                       CPM005
+     C                     MOVE 'Y'       WEMPTY  1                       CPM005
+     C                     ELSE                                           CPM005
+     C                     MOVE 'N'       WEMPTY                          CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C           *IN71     DOWEQ*OFF                       *BW1
+      *
+      **  VALUE DATE GT EVEN CONTROL DATE OTHERWISE BYPASS
+     C           VALD      IFGT WWECDT                     *B1
+      *
+      **  ACCESS TO ACCOUNT FILE
+     C           WWACCN    CHAINACCNTL0              72
+      *
+      **  RECORD FOUND AND LIVE OTHERWISE BYPASS
+     C           *IN72     IFEQ '0'                        **B2
+     C           RECI      ANDEQ'D'
+      *
+      *ACCOUNT*ASSIGNED*TO*A*PORTFOLIO,*WRITE*ON*PMEVNTPP*OTHERWISE*BYPASSCPM005
+      **  Account assigned to a portfolio, write on PMEVNTPD, otherwise   CPM005
+      **  bypass                                                          CPM005
+     C           PTFR      IFNE *BLANKS                    ***B3
+     C                     ADD  1         WWNOR1
+     C                     EXSR #EVNT
+      *
+      **  ACCESS TO RETAIL TRANSACTION STYPE
+     C                     MOVE TRAT      WWTRAT  5
+     C***********WWTRAT    CHAINSDRETRL0             73                   CPM005
+     C                     MOVELWWTRAT    WTRAT   5                       CPM005
+     C                     CALL 'AORETRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WTRAT                           CPM005
+     C           SDRETR    PARM SDRETR    DSFDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN73     IFEQ *ON                        ****B4         CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD2         WWBASE           ***************CPM005
+     C***********          MOVEL'SDRETRL0'WWFILE           * DB ERROR 02 *CPM005
+     C***********          MOVELWWTRAT    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD2         DBASE                           CPM005
+     C                     MOVE 'SDRETRPD'DBFILE                          CPM005
+     C                     MOVELWWTRAT    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           ****E4
+      *
+      **  CHANGE PORTFOLIO CAPITAL = 'Y'
+     C           A1CPTC    IFEQ 'Y'                        ****B4
+     C                     ADD  1         WWNOR2
+     C                     EXSR #CYNT
+     C                     ENDIF                           ****E4
+     C                     ENDIF                           ***E3
+     C                     ENDIF                           **E2
+     C                     ENDIF                           *E1
+      *
+      **  READ NEXT RECORD
+     C                     READ CLEAR                    71
+      *
+     C                     ENDDO                           *EW1
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      **#EVNT****-*GENERATE*RECORD*IN*PMEVNTPP*************************  *CPM005
+      * #EVNT    - Generate record in PMEVNTPD                        *   CPM005
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      * ZFRELN   -                                                       *
+      * ZCCYCN   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCNUM   - KEY TO ACCESS SDCUSTL0                                *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      * WWPORT   - KEY TO ACCESS ON PMPORTLL                             *
+      * WWACOD   - KEY IN ALPHA TO ACCESS ON SDACODL0                    *
+      * WWNA15   - FIRST 15 CHARACTER OF PNAR FROM CLEAR                 *
+      * WWNA30   - SECOND 15 CHARACTER OF PNAR FROM CLEAR                *
+      *                                                                  *
+      ********************************************************************
+     C           #EVNT     BEGSR
+      *
+      **-----------------  RECORD ID
+     C                     MOVEL'D'       Q9RECI
+      *
+      **-----------------  ACCOUNT OFFICER
+     C                     MOVE CNUM      WWCNUM  6
+     C***********WWCNUM    CHAINSDCUSTL0             70                   CPM005
+     C                     MOVELWWCNUM    WCSNM  10                       CPM005
+     C**********           CALL 'AOCUSTR0'                         CPM005 192099
+     C                     CALL 'AOCUSTR1'                                192099
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCSNM                           CPM005
+     C                     PARM *BLANKS   WCUST   7                       CPM005
+     C********** SDCUST    PARM SDCUST    DSSDY                    CPM005 192099
+     C           SDCUST    PARM SDCUST    DSLDY                           192099
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        *B1            CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD3         WWBASE           ***************CPM005
+     C***********          MOVEL'SDCUSTL0'WWFILE           * DB ERROR 03 *CPM005
+     C***********          MOVELWWCNUM    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD3         DBASE                           CPM005
+     C                     MOVE 'SDCUSTPD'DBFILE                          CPM005
+     C                     MOVELWWCNUM    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           *E1
+      *
+     C                     MOVELBBACOC    Q9ACOC
+      *
+      **-----------------  CUSTOMER NUMBER
+     C**********           Z-ADDCNUM      Q9CNUM                                              CSD027
+     C                     MOVE CNUM      Q9CNUM                                              CSD027
+      *
+      **-----------------  PORTFOLIO REFERENCE
+     C                     MOVELPTFR      Q9PTFR
+      *
+      **-----------------  TRANSACTION REFERENCE
+     C                     MOVEL*BLANKS   Q9TTRF
+      *
+      **-----------------  SECURITY/PAYMENT REFERENCE
+     C                     MOVELWWNA15    Q9SEPR
+      *
+      **-----------------  MODULE ID
+     C                     MOVEL'RE'      Q9MODI
+      *
+      **-----------------  CUSTOMER BASE CURRENCY
+     C***********WWCNUM    CHAINSDPLCSPD             70                   CPM005
+     C                     MOVELWWCNUM    WCSNM                           CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCSNM                           CPM005
+     C           SDPLCS    PARM SDPLCS    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        *B1            CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           BBPRBA    ANDNE'Y'                                       192099
+     C***********          Z-ADD4         WWBASE           ***************CPM005
+     C***********          MOVEL'SDPLCSPD'WWFILE           * DB ERROR 04 *CPM005
+     C***********          MOVELWWCNUM    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD4         DBASE                           CPM005
+     C                     MOVE 'SDPLCSPD'DBFILE                          CPM005
+     C                     MOVELWWCNUM    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           *E1
+      *
+     C           WRTCD     IFEQ *BLANKS                                   192099
+     C                     MOVELQBCSBY    Q9CSBY
+      *
+      **-----------------  CUSTOMER BASE CURRENCY DECIMAL PLACE
+     C                     Z-ADDQBBYDP    Q9BYDP
+     C                     MOVE 'Y'       WWPMCS  1                       192099
+     C                     ELSE                                           192099
+     C                     MOVE 'N'       WWPMCS                          192099
+     C                     ENDIF                                          192099
+      *
+      **-----------------  PORTFOLIO CURRENCY
+     C           PTFR      IFNE '9997'                     *B1
+     C           BBPRBA    OREQ 'Y'                                       192099
+      *
+     C           WWPORT    CHAINPMPORTLL             70
+      *
+      **  IF RECORD NOT FOUND:
+     C           *IN70     IFEQ *ON                        **B2
+     C***********          Z-ADD5         WWBASE           ***************CPM005
+     C***********          MOVEL'PMPORTLL'WWFILE           * DB ERROR 05 *CPM005
+     C***********          MOVELWWERRO    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD5         DBASE                           CPM005
+     C                     MOVE 'PMPORTLL'DBFILE                          CPM005
+     C                     MOVELWWERRO    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C                     MOVELPNPTCY    Q9PTCY
+     C                     ELSE                            *X1
+     C                     MOVELQBCSBY    Q9PTCY
+     C                     ENDIF                           *E1
+      *                                                                   192099
+     C           WWPMCS    IFEQ 'N'                                       192099
+     C                     MOVELPNPTCY    QBCSBY                          192099
+     C                     Z-ADDPNPCDP    QBBYDP                          192099
+     C                     ENDIF                                          192099
+      *
+      **-----------------  PORTFOLIO CURRENCY DECIMAL PLACE
+     C           PTFR      IFNE '9997'                     *B1
+     C           BBPRBA    OREQ 'Y'                                       192099
+     C                     Z-ADDPNPCDP    Q9PCDP
+     C                     ELSE                            *X1
+     C                     Z-ADDQBBYDP    Q9PCDP
+     C                     ENDIF                           *E1
+      *
+      **-----------------  INSTRUMENT TYPE
+     C**********           MOVE ACOD      WWACOD  4                                           CGL029
+     C                     MOVE ACOD      WWACOD 10                                           CGL029
+     C***********WWACOD    CHAINSDACODL0             70                   CPM005
+     C**********           MOVELWWACOD    WACOD   4                                    CPM005 CGL029
+     C                     MOVELWWACOD    WACOD  10                                           CGL029
+     C                     CALL 'AOACODR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WACOD                           CPM005
+     C********** SDACOD    PARM SDACOD    DSFDY                                        CPM005 CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        **B2           CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD6         WWBASE           ***************CPM005
+     C***********          MOVEL'SDACODL0'WWFILE           * DB ERROR 06 *CPM005
+     C***********          MOVELWWACOD    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD6         DBASE                           CPM005
+     C                     MOVE 'SDACODPD'DBFILE                          CPM005
+     C                     MOVELWWACOD    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+     C                     MOVELA5INNR    Q9INNR
+      *
+      **-----------------  INSTRUMENT NAME
+     C                     MOVELWWNA30    Q9T1XT
+      *
+      **-----------------  INSTRUMENT ENQUIRY DETAILS
+     C**********           Z-ADDCNUM      ZCNUM                                               CSD027
+     C                     MOVE CNUM      ZCNUM                                               CSD027
+     C                     MOVELCCY       ZCCY
+     C                     MOVELACOD      ZACOD
+     C                     Z-ADDACSQ      ZACSQ
+     C                     MOVELBRCA      ZBRCA                           CPM005
+     C                     EXSR ZFRELN
+     C                     MOVELZLIN      Q9T2XT
+      *
+      **-----------------  EVENT DATE
+     C                     Z-ADDVALD      Q9EVTD
+      *
+      **-----------------  EVENT CURRENCY
+     C                     MOVELCCY       Q9ECCY
+      *
+      **-----------------  POSTING AMOUNT
+     C                     Z-ADDPSTA      Q9ETAM
+      *
+      **-----------------  EVENT AMOUNT PAY/RECEIVE & EVENT NARRATIVE
+     C           DRCR      IFEQ 1                          *B1
+     C                     MOVEL'R'       Q9AMTR
+     C           NAR1      CAT  SPOS      Q9ENAR
+     C                     ELSE                            *X1
+     C                     MOVEL'P'       Q9AMTR
+     C           NAR2      CAT  SPOS      Q9ENAR
+     C                     ENDIF                           *E1
+      *
+      **-----------------  EVENT AMOUNT CONVERTED IN CUSTOMER BASE CURRENCY
+     C***********QBCSBY    CHAINSDCURRL0             70                   CPM005
+     C                     MOVELQBCSBY    WCYCD   3                       CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCYCD                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        **B2           CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD7         WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL0'WWFILE           * DB ERROR 07 *CPM005
+     C***********          MOVELQBCSBY    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD7         DBASE                           CPM005
+     C                     MOVE 'SDCURRPD'DBFILE                          CPM005
+     C                     MOVELQBCSBY    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C                     MOVELQBCSBY    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+     C***********CCY       CHAINSDCURRL0             70                   CPM005
+     C                     MOVELCCY       WCYCD                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCYCD                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        **B2           CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD8         WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL0'WWFILE           * DB ERROR 08 *CPM005
+     C***********          MOVELCCY       WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD8         DBASE                           CPM005
+     C                     MOVE 'SDCURRPD'DBFILE                          CPM005
+     C                     MOVELCCY       DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C                     MOVELCCY       ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVELA6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+      *
+     C                     Z-ADDPSTA      ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9CUCA
+      *
+      **-----------------  EVENT AMOUNT CONVERTED IN PORTFOLIO CURRENCY
+     C           PTFR      IFNE '9997'                     *B1
+      *
+     C***********PNPTCY    CHAINSDCURRL0             70                   CPM005
+     C                     MOVELPNPTCY    WCYCD                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCYCD                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        **B2           CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD9         WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL0'WWFILE           * DB ERROR 09 *CPM005
+     C***********          MOVELPNPTCY    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD9         DBASE                           CPM005
+     C                     MOVE 'SDCURRPD'DBFILE                          CPM005
+     C                     MOVELPNPTCY    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C                     MOVELPNPTCY    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9PTFA
+      *
+     C                     ELSE                            *X1
+     C                     Z-ADDQ9CUCA    Q9PTFA
+     C                     ENDIF                           *E1
+      *
+      **-----------------  EVENT AMOUNT CONVERTED IN BASE CURRENCY FROM SDBANKPD
+     C***********BJCYCD    CHAINSDCURRL0             70                   CPM005
+     C                     MOVELBJCYCD    WCYCD                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCYCD                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        **B2           CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD10        WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL0'WWFILE           * DB ERROR 10 *CPM005
+     C***********          MOVELBJCYCD    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD10        DBASE                           CPM005
+     C                     MOVE 'SDCURRPD'DBFILE                          CPM005
+     C                     MOVELBJCYCD    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C                     MOVELBJCYCD    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9BCYA
+      *
+     C                     WRITEPMEVNTP0
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      **#CYNT****-*GENERATE*RECORD*IN*PMEVCYPP*************************  *CPM005
+      * #CYNT    - Generate record in PMEVCYPD                        *   CPM005
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - ERROR IN FILE                                         *
+      * ZCCYCN   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #MAIN    - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPORT   - KEY TO ACCESS ON PMPORTLL                             *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      * WWPTCY   - PORTFOLIO CURRENCY                                    *
+      * WWCNUM   - KEY TO ACCESS SDCUSTL0                                *
+      * WWAMNT   - WORK FIELD AMOUNT IN PORTFOLIO CURRENCY               *
+      *                                                                  *
+      ********************************************************************
+     C           #CYNT     BEGSR
+      *
+      **-----------------  RECORD ID
+     C                     MOVEL'D'       FGRECI
+      *
+      **-----------------  CUSTOMER NUMBER
+     C**********           Z-ADDCNUM      FGCNUM                                              CSD027
+     C                     MOVE CNUM      FGCNUM                                              CSD027
+      *
+      **-----------------  PORTFOLIO REFERENCE
+     C                     MOVELPTFR      FGPTFR
+      *
+      **-----------------  EVENT DATE
+     C                     Z-ADDVALD      FGEVDT
+      *
+      **-----------------  EVENT TYPE FX
+     C                     MOVEL*BLANKS   FGEVFX
+      *
+      **-----------------  GROUP SEQUENCE
+     C                     Z-ADD*ZEROS    FGDGRS
+      *
+      **-----------------  INSTRUMENT CODE
+     C                     MOVEL*BLANKS   FGINSC
+      *
+      **-----------------  INSTRUMENT SEQUENCE
+     C                     Z-ADD*ZEROS    FGINDS
+      *
+      **-----------------  EVENT TYPE
+     C                     MOVEL'CC'      FGEVTY
+      *
+      **-----------------  CURRENCY
+     C                     MOVELCCY       FGCURR
+      *
+      **-----------------  AMOUNT IN PORTFOLIO CCY
+     C           PTFR      IFNE '9997'                     *B1
+     C           BBPRBA    OREQ 'Y'                                       192099
+      *
+     C           WWPORT    CHAINPMPORTLL             70
+      *
+      **  IF RECORD NOT FOUND:
+     C           *IN70     IFEQ *ON                        **B2
+     C***********          Z-ADD11        WWBASE           ***************CPM005
+     C***********          MOVEL'PMPORTLL'WWFILE           * DB ERROR 11 *CPM005
+     C***********          MOVELWWERRO    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD11        DBASE                           CPM005
+     C                     MOVE 'PMPORTLL'DBFILE                          CPM005
+     C                     MOVELWWERRO    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C                     MOVELPNPTCY    WWPTCY  3
+      *
+     C                     ELSE                            *X1
+      *
+      **  CUSTOMER BASE CURRENCY
+     C                     MOVE CNUM      WWCNUM
+     C***********WWCNUM    CHAINSDPLCSPD             70                   CPM005
+     C                     MOVELWWCNUM    WCSNM                           CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCSNM                           CPM005
+     C           SDPLCS    PARM SDPLCS    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        **B2           CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           BBPRBA    ANDNE'Y'                                       192099
+     C***********          Z-ADD12        WWBASE           ***************CPM005
+     C***********          MOVEL'SDPLCSPD'WWFILE           * DB ERROR 12 *CPM005
+     C***********          MOVELWWCNUM    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD12        DBASE                           CPM005
+     C                     MOVE 'SDPLCSPD'DBFILE                          CPM005
+     C                     MOVELWWCNUM    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C           WRTCD     IFEQ *BLANKS                                   192099
+     C                     MOVELQBCSBY    WWPTCY
+     C                     ELSE                                           192099
+     C                     MOVELPNPTCY    WWPTCY  3                       192099
+     C                     ENDIF                                          192099
+      *
+     C                     ENDIF                           *E1
+      *
+      **  CURRENCY (FROM CLEAR) <> TO PORTFOLIO CCY, CONVERT IN PORT CCY
+     C           CCY       IFNE WWPTCY                     *B1
+      *
+     C***********CCY       CHAINSDCURRL0             70                   CPM005
+     C                     MOVELCCY       WCYCD                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCYCD                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        **B2           CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD13        WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL0'WWFILE           * DB ERROR 13 *CPM005
+     C***********          MOVELCCY       WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD13        DBASE                           CPM005
+     C                     MOVE 'SDCURRPD'DBFILE                          CPM005
+     C                     MOVELCCY       DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C                     MOVELCCY       ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVELA6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+      *
+     C***********WWPTCY    CHAINSDCURRL0             70                   CPM005
+     C                     MOVELWWPTCY    WCYCD                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCYCD                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        **B2           CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD14        WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL0'WWFILE           * DB ERROR 14 *CPM005
+     C***********          MOVELWWPTCY    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD14        DBASE                           CPM005
+     C                     MOVE 'SDCURRPD'DBFILE                          CPM005
+     C                     MOVELWWPTCY    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           **E2
+      *
+     C                     MOVELWWPTCY    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+     C                     Z-ADDPSTA      ZAMTF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WWAMNT 150
+      *
+     C                     ELSE                            *X1
+     C                     Z-ADDPSTA      WWAMNT
+     C                     ENDIF                           *E1
+      *
+      **-----------------  AMOUNT IN CUSTOMER BASE CCY
+     C                     MOVE CNUM      WWCNUM
+     C***********WWCNUM    CHAINSDPLCSPD             70                   CPM005
+     C                     MOVELWWCNUM    WCSNM                           CPM005
+     C                     CALL 'AOPLCSR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCSNM                           CPM005
+     C           SDPLCS    PARM SDPLCS    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        *B1            CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C           BBPRBA    ANDNE'Y'                                       192099
+     C***********          Z-ADD15        WWBASE           ***************CPM005
+     C***********          MOVEL'SDPLCSPD'WWFILE           * DB ERROR 15 *CPM005
+     C***********          MOVELWWCNUM    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD15        DBASE                           CPM005
+     C                     MOVE 'SDPLCSPD'DBFILE                          CPM005
+     C                     MOVELWWCNUM    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           *E1
+      *
+     C***********QBCSBY    CHAINSDCURRL0             70                   CPM005
+     C           WRTCD     IFEQ *BLANKS                                   192099
+     C                     MOVELQBCSBY    WCYCD                           CPM005
+     C                     ELSE                                           192099
+     C                     MOVELPNPTCY    WCYCD                           192099
+     C                     ENDIF                                          192099
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCYCD                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        *B1            CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD16        WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL0'WWFILE           * DB ERROR 16 *CPM005
+     C***********          MOVELQBCSBY    WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD16        DBASE                           CPM005
+     C                     MOVE 'SDCURRPD'DBFILE                          CPM005
+     C                     MOVELQBCSBY    DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           *E1
+      *
+     C**********           MOVELQBCSBY    ZCCYT                           192099
+     C                     MOVELWCYCD     ZCCYT                           192099
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVELA6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+      *
+     C***********CCY       CHAINSDCURRL0             70                   CPM005
+     C                     MOVELCCY       WCYCD                           CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   WRTCD                           CPM005
+     C                     PARM '*KEY'    WOPTN                           CPM005
+     C                     PARM           WCYCD                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *
+      **  IF RECORD NOT FOUND:
+     C************IN70     IFEQ *ON                        *B1            CPM005
+     C           WRTCD     IFNE *BLANKS                                   CPM005
+     C***********          Z-ADD17        WWBASE           ***************CPM005
+     C***********          MOVEL'SDCURRL0'WWFILE           * DB ERROR 17 *CPM005
+     C***********          MOVELCCY       WWKEY1           ***************CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD17        DBASE                           CPM005
+     C                     MOVE 'SDCURRPD'DBFILE                          CPM005
+     C                     MOVELCCY       DBKEY                           CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR
+     C                     ENDIF                           *E1
+      *
+     C                     MOVELCCY       ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVELA6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+      *
+     C                     Z-ADDPSTA      ZAMTF
+     C                     EXSR ZCCYCN
+      *
+      **  IF CREDIT
+     C           DRCR      IFEQ 1                          *B1
+     C                     Z-ADDWWAMNT    FGMNT1           Amount in Port Ccy
+     C                     Z-ADDZAMTT     FGMNT2           Amount in Base Ccy
+     C                     ELSE                            *X1
+     C                     Z-SUBWWAMNT    FGMNT1           Amount in Port Ccy
+     C                     Z-SUBZAMTT     FGMNT2           Amount in Base Ccy
+     C                     ENDIF                           *E1
+      *
+     C                     WRITEPMEVCYD0
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #TERM    - TERMINATION PROCESSING                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN                                                  *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      **WWNOR1***-*NBR*OF*RECORDS*OUTPUT*ON*PMEVNTPP*******************  *CPM005
+      * WWNOR1   - Nbr of records output on PMEVNTPD                  *   CPM005
+      **WWNOR2***-*NBR*ON*RECORDS*OUTPUT*ON*PMEVCYPP*******************  *CPM005
+      * WWNOR2   - Nbr of records output on PMEVCYPD                  *   CPM005
+      *                                                                  *
+      ********************************************************************
+     C           #TERM     BEGSR
+      *
+      **  WRITE AUDIT REPORT WITH DETAILS
+     C                     Z-ADDWWNOR1    RRNOR1
+     C                     Z-ADDWWNOR2    RRNOR2
+      *
+     C           WEMPTY    IFEQ 'Y'                                       CPM005
+     C                     WRITETITLAU                                    CPM005
+     C                     WRITENODTLS                                    CPM005
+     C                     ELSE                                           CPM005
+     C                     WRITEPM1380PP
+     C                     ENDIF                                          CPM005
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - ERROR IN FILE                                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * #MAIN    - MAIN PROCESSING                                       *
+      **#EVNT****-*GENERATE*RECORD*IN*PMEVNTPP*************************  *CPM005
+      * #EVNT    - Generate record in PMEVNTPD                        *   CPM005
+      **#CYNT****-*GENERATE*RECORD*IN*PMEVCYPP*************************  *CPM005
+      * #CYNT    - Generate record in PMEVCYPD                        *   CPM005
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFILE   - DATABASE ERROR                                        *
+      * WWKEY1   - DATABASE ERROR                                        *
+      * WWBASE   - DATABASE ERROR                                        *
+      * WWPGM    - DATABASE ERROR                                        *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C************LOCK     IN   LDA                                       CPM005
+     C***********          MOVELWWFILE    DBFILE                          CPM005
+     C***********          MOVELWWKEY1    DBKEY                           CPM005
+     C***********          Z-ADDWWBASE    DBASE                           CPM005
+     C***********          MOVELWWPGM     DBPGM                           CPM005
+      *
+     C                     WRITETITLAU                                    CPM005
+     C                     WRITEERRORAU
+      *
+     C***********          OUT  LDA                                       CPM005
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      **=================================================================
+      ***/COPY*ZSRSRC,ZFRELN                                              CPM005
+      /COPY PMCPYSRC,ZFRELN                                               CPM005
+      /COPY ZSRSRC,ZCCYCN
+      /COPY ZSRSRC,ZCCYXR
+      *******************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

@@ -1,0 +1,54 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                /*AR1089863*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Security Profile Facility Module                    */
+/*                                                                   */
+/*       SFC0522 - Submit RCFMONITOR                                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*                                                                   */
+/*       Last Amend No. AR1089863*REDUNDANTDate 19Feb13              */
+/*       Prev Amend No. AR823326 *CREATE   Date 24Jul12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR1089863 - Merging issues of 2.0 and 2.1 releases          */
+/*       AR823326 - SFC0521 went on LCKW status due to file MUSER is */
+/*                  being locked by RCFMONITOR job. Created a new    */
+/*                  component that will submit RCFMONITOR.           */
+/*                  (Child: AR823327)                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Submit RCFMONITOR */
+ 
+             SBMJOB     CMD(CALL PGM(FCC0401) PARM(C)) +
+                          JOB(RCFMONITOR) JOBD(FCJOBD) JOBQ(FCJOBQ) +
+                          OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
+                          INLLIBL(*JOBD)
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Global error processing */
+ 
+ ABNOR:      SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SFC0522 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+ END:        MONMSG     MSGID(CPF0000)
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

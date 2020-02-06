@@ -1,0 +1,89 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL ZVACTBU Check on JE Ccy File')
+     T* GL Journal Entries: Fill Currency file
+      *
+     H* DESCRIPTION : Validate Branch codes within a batch against
+     H*               a specific action code . If the user is auth-
+     H*               orised to all of the branches within the batch
+     H*               then a blank return code will be passed back.
+     H*               Otherwise an error code will be passed back.
+      *
+     M* MAINTENANCE : *NONE
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*   PREV AMEND  S01340                 DATE  21FEB92            *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  MD046248 - Finastra Rebranding                               *
+     F*   S01340   -   RECOMPILED FOR MIS RELEASE 10                  *
+     F*                                                               *
+     F*****************************************************************
+      *
+      ********************************************************************
+      /EJECT
+     F*FSTART
+      ************************************************************
+     F******GLBSREL2IF  E           K        DISK
+     FGLJENSL2IF  E           K        DISK
+      * I/O - @BSREAI Journal currency (JDNB¦AHCD¦B2CD)
+      ************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     I*ISTART
+      ************************************************************
+      ************************************************************
+      /EJECT
+     C                     MOVEACPY@      BIS@   80
+     C*CSTART
+      *****************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  10       O:Return code
+     C                     PARM           P@ANCD  1        B:Action code
+     C*********************PARM           P@BTNO  30       B:Batch Number
+     C                     PARM           P@BTNO  3        B:Batch Number
+      *****************************************************
+      *MAIN
+      *
+      * Read all Currency records and for each record check the action
+      * code and the branch code by calling the SPF program ZVACTBU. Checks
+      * are only made on branches which change within the batch in
+      * question.
+      *
+     C           P@BTNO    SETLL@BSREBW              010103 Set currency
+      *
+     C           *IN03     IFEQ '1'                        IF Data 1
+     C           *IN01     DOUEQ'1'                        DO Read 1
+     C           P@BTNO    READE@BSREBW                0101  Read Ccy.
+     C           *IN01     IFEQ '0'                        IF Data 2
+     C                     CALL 'ZVACTBU'
+     C                     PARM           P@ANCD           Action Code
+     C*********************PARM***********BSB2CD           Branch Code
+     C                     PARM           BSBRCD           Branch Code
+     C                     PARM           P@RTCD           Error Code
+     C           P@RTCD    IFNE 0                          IF      3
+     C                     SETON                     01      Not Auth
+     C                     Z-ADD3         P@RTCD           SPF Error Condition
+     C                     END                             FI      3
+     C                     END                             FI      2
+     C                     END                             OD      1
+     C                     END                             FI      1
+      * Return to caller :
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************
+      *ENDMAIN
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

@@ -1,0 +1,139 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Posting Interface Control')                   *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas General Ledger Module                                  *
+     F*                                                               *
+     F*  GL1720 - GL Posting Interface Control                        *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2006                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL160             Date 11Nov14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGL047 *C *CREATE  Date 30Jun06               *
+     F*                 xxxxxx             Date ddmmmyy               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL160 - Cheque Details Upload via Generic Posting Interface *
+      *             (Recompile)                                       *
+     F*  CGL047 - Generic Postings Interface                          *
+     F*                                                               *
+     F*****************************************************************
+     FGLGPICL0UF  E           K        DISK
+      ** Generic Posting Interface Control Data
+      *
+      /EJECT
+      ********************************************************************
+      *
+      ** Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /EJECT
+      ********************************************************************
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank ICD Details
+      *
+     IDSFDY     E DSDSFDY
+      * Data strucuture for access programs
+      *
+     IDSSDY     E DSDSSDY
+      * Data strucuture for access programs
+      *
+      /EJECT
+      ********************************************************************
+      *
+      **  Process according to mode
+     C                     SELEC
+     C           P@MODE    WHEQ '*VERIFY'
+     C                     EXSR SRVRFY
+     C           P@MODE    WHEQ '*UPDATE'
+     C                     EXSR SRUPDT
+     C                     ENDSL
+      *
+      **  Return to calling program
+     C                     RETRN
+      *
+      /EJECT
+     C********************************************************************
+     C* SRVRFY - Verify if Interface File Copied Today
+     C********************************************************************
+     C           SRVRFY    BEGSR
+      *
+      **  Get control data record from LF/GLGPICL0
+     C           K@GPIC    CHAINGLGPICL0            N90
+      *
+      **  Check if interface file has been copied today
+     C           GPIDAT    IFEQ BJRDNB
+     C                     MOVE '*RUN   ' P@RTCD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+     C********************************************************************
+     C* SRUPDT - Update Interface File Control Record
+     C********************************************************************
+     C           SRUPDT    BEGSR
+      *
+      **  Get control data record from LF/GLGPICL0
+     C           K@GPIC    CHAINGLGPICL0             90
+      *
+      **  Update interface run control date with today's run date
+     C                     Z-ADDBJRDNB    GPIDAT
+     C                     UPDATGLGPICD0
+      *
+     C                     ENDSR
+      /EJECT
+     C********************************************************************
+     C* *INZSR - Initialisation routine
+     C********************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Program entry parameter list
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  7
+     C                     PARM           P@MODE  7
+     C                     PARM           P@SARN  6
+      *
+      ** Copyright
+     C                     MOVEACPY@      @MISYS 80
+      *
+      ** Get Bank ICD
+     C                     CALL 'AOBANKR0'
+     C                     PARM           P@RTNC  7        B:Return code
+     C                     PARM '*FIRST'  P@OPTN  7        I:Option       S01117
+     C           SDBANK    PARM *BLANK    DSFDY            O:Format
+      *
+      ** Key list for chain to LF/GLGPICL0
+     C           K@GPIC    KLIST
+     C                     KFLD           P@SARN
+      *
+     C                     ENDSR
+      /EJECT
+     C********************************************************************
+     C* *PSSR - Error Handling Routine
+     C********************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Dump program if not already run
+     C           @@ERR     IFNE 'Y'
+     C                     MOVE 'Y'       @@ERR   1
+     C                     DUMP
+     C                     MOVE '*ERROR ' P@RTCD
+     C                     ENDIF
+      *
+      ** Exit program
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Finastra International Limited 2006

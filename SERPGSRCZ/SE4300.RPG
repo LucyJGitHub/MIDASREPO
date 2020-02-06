@@ -1,0 +1,1161 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Movement Status Audit List - Report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SECURITIES TRADING MODULE                            *
+      *                                                               *
+      *  SE4300  - Movement Status Audit List                         *
+      *                                                               *
+      *  Function:  This program generates an Audit List for          *
+      *             Movements Status                                  *
+      *                                                               *
+      *  Called By: SEC0302 -                                         *
+      *             SEC0601 -                                         *
+      *             SEC4300 -                                         *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG8931            Date  7Nov05               *
+      *                 CSE039  *CREATE    Date 27Feb03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG8931  Check to ensure printer file is open                *
+      *  CSE039 - Automatic Trades Settlement                         *
+      *                                                               *
+      *****************************************************************
+     FSE4300AUO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOLU
+     FSE4300PMO   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FSEMVTSL5IF  E           K        DISK
+      ** KEY: BRANCH, TRANS. REF, TRANS. TYPE, NOT. DATE & SEQ NO
+      *
+     FSEMVTSL6IF  E           K        DISK
+     F            SEMVTSD0                          KRENAMESEMVTSD6
+      ** KEY: TRANS. REF
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *  RCFAU  - RCF Processing for Audit Report                     *
+      *                                                               *
+      *  ZDATE1 - Validate Date and Convert into Midas Day Number     *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E                    TRTY    1   3 15
+      *
+      ** Array containing TRADES TYPE NARRATIVES
+      *
+     E                    FLARR     256 10                               BUG8931
+      *                                                                  BUG8931
+      ** Array containing open files their libraries                     BUG8931
+      *                                                                  BUG8931
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE4300PM.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     ISPOOLU      DS
+      ***  File Information Data Structure for SE4300AU.
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     IDSFDY     E DSDSFDY
+      * DS for Access Programs, short data structure.
+      *
+     IDSNARR      DS                            720
+      ***
+     I                                        1  80 DSNAR1
+     I                                       81 160 DSNAR2
+     I                                      161 240 DSNAR3
+     I                                      241 320 DSNAR4
+     I                                      321 400 DSNAR5
+     I                                      401 480 DSNAR6
+     I                                      481 560 DSNAR7
+     I                                      561 640 DSNAR8
+     I                                      641 720 DSNAR9
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  END OF PROGRAM
+      *
+     C                     EXSR END
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Receive Parameter List.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PPAS    1
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+     C                     PARM           TRADE   6
+     C                     PARM           DEPMV   6
+     C                     PARM           ALL     1
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'SE4300 ' DBPGM
+      *                                                                                      BUG8931
+      ***  Initialise printer file field                                                     BUG8931
+      *                                                                                      BUG8931
+     C                     MOVEL'SE4300PM'FILE   10                                          BUG8931
+      *
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ***  Check System Date Format, DDMMYY (*IN98 off)
+      ***                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      **   Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+     C           AGMBIN    IFEQ 'M'
+     C                     SETON                     37
+     C                     END
+      *
+     C                     MOVELBJMRDT    ##MRDT
+      *
+      ** KLIST TO ACCESS SEMVTSL5
+      *
+     C           KTRANS    KLIST
+     C                     KFLD           KBRCH   3
+     C                     KFLD           KTRRF   6
+     C                     KFLD           KTRTY   1
+     C                     KFLD           KNDAT   50
+     C                     KFLD           KSEQ    30
+      *
+      ** Initialise Counters Fields
+      *
+     C                     Z-ADD0         RCOUST  50
+     C                     Z-ADD0         RCOUNT  50
+     C                     Z-ADD0         RINSER  50
+     C                     Z-ADD0         RAMEND  50
+     C                     Z-ADD0         RDELET  50
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  PROC1  - List of Selected Records from screen                *
+      *  PROC2  - List of Amended, Deleted, Inserted Records today    *
+      *  PROC3  - List of ALL Records on File                         *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ** Output details depending from where the program has
+      ** been called
+      *
+      ** IF calling program is SEC4300 (I/C), then PROC1
+      ** List of selected records from screen
+     C           PPAS      IFEQ 'I'
+     C                     MOVE *ON       *IN32
+     C                     EXSR PROC1
+     C                     ELSE
+      *
+      ** IF calling program is SEC0601 (CoB), then PROC2
+      ** List of amended, deleted, inserted records today
+     C           PPAS      IFEQ 'A'
+     C                     MOVE *OFF      *IN32
+     C                     EXSR PROC2
+     C                     ELSE
+      *
+      ** IF calling program is SEC0302 (CoB), then PROC3
+      ** List of all records on file
+     C           PPAS      IFEQ 'L'
+     C                     MOVE *ON       *IN32
+     C                     EXSR PROC3
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Output end of Report
+      *
+     C           PENT      IFNE 'ALL'
+     C                     EXSR WP1END
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROC1  - Subroutine to do the Detail Processing 1.           *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  REPORT - Process Report Lines                                *
+      *  RCFP1  - RCF Processing                                      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC1     BEGSR                           *** PROC1  ***
+      *
+      *** IF parm ALL is not blank, then output all records on file
+      *
+B1   C           ALL       IFNE *BLANKS
+      *
+B2   C           PENT      IFNE 'ALL'
+      *
+     C                     MOVELPENT      KBRCH
+     C                     MOVEL*BLANKS   KTRRF
+     C                     MOVEL*BLANKS   KTRTY
+     C                     Z-ADD0         KNDAT
+     C                     Z-ADD0         KSEQ
+      *
+      ***  Read first record from File.
+      *
+     C           KTRANS    SETLLSEMVTSL5
+     C                     READ SEMVTSL5                 89
+      *
+      ***  If End of Records, (*IN89), Perform: Audit Reporting (No
+      ***  Records).
+      *
+B3   C           *IN89     IFEQ *ON
+     C                     EXSR AUDIT
+E3   C                     ENDIF
+      *
+      ***  Do Until End of File.
+      *
+     C                     OPEN SE4300PM
+      *
+     C                     Z-ADD0         RCOUST
+      *
+     C                     MOVELPENT      UTRBB   3
+      *
+YB   C                     EXSR RCFP1
+      *
+B3   C           *IN89     DOWEQ*OFF
+     C           UTRBB     ANDEQTMTRBB
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUST
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C                     READ SEMVTSL5                 89
+      *
+      ***  End of Do Until End of Valid Records.
+E3   C                     ENDDO
+      *
+X2   C                     ELSE
+      *
+      ***  Read first record from File.
+      *
+     C           *LOVAL    SETLLSEMVTSL5
+     C                     READ SEMVTSL5                 89
+      *
+      ***  If End of Records, (*IN89), Perform: Audit Reporting (No
+      ***  Records).
+      *
+B3   C           *IN89     IFEQ *ON
+     C                     EXSR AUDIT
+E3   C                     ENDIF
+      *
+      ***  Do Until End of File.
+      *
+B3   C           *IN89     DOUEQ*ON
+      *
+     C                     OPEN SE4300PM
+      *
+     C                     Z-ADD0         RCOUST
+      *
+     C                     MOVELTMTRBB    UTRBB
+      *
+YB   C                     EXSR RCFP1
+      *
+B4   C           *IN89     DOWEQ*OFF
+     C           UTRBB     ANDEQTMTRBB
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUST
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C                     READ SEMVTSL5                 89
+      *
+      ***  End of Do Until End of Valid Records.
+E4   C                     ENDDO
+      *
+     C                     EXSR WP1END
+      *
+E3   C                     ENDDO
+      *
+E2   C                     ENDIF
+      *
+X1   C                     ELSE
+      *
+      ** ELSE, IF parm TRADE is not blanks, output records related
+      ** to this trade
+      *
+B2   C           TRADE     IFNE *BLANKS
+      *
+B3   C           PENT      IFNE 'ALL'
+      *
+     C                     MOVELPENT      KBRCH
+     C                     MOVELTRADE     KTRRF
+     C                     MOVEL*BLANKS   KTRTY
+     C                     Z-ADD0         KNDAT
+     C                     Z-ADD0         KSEQ
+      *
+     C           KTRANS    SETLLSEMVTSL5
+     C                     READ SEMVTSL5                 88
+      *
+      ***  If End of Records, (*IN88), Perform: Audit Reporting (No
+      ***  Records).
+      *
+B4   C           *IN88     IFEQ *ON
+     C                     EXSR AUDIT
+E4   C                     ENDIF
+      *
+     C                     Z-ADD0         RCOUST
+      *
+     C                     OPEN SE4300PM
+      *
+Y    C                     EXSR RCFP1
+      *
+      ***  Do Until End of File.
+      *
+B4   C           *IN88     DOWEQ*OFF
+     C           KTRRF     ANDEQTMTRRF
+     C           KBRCH     ANDEQTMTRBB
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUST
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C                     READ SEMVTSL5                 88
+      *
+      ***  End of Do Until End of Valid Records.
+E4   C                     ENDDO
+      *
+X3   C                     ELSE
+      *
+     C                     MOVEL*BLANKS   KBRCH
+     C                     MOVELTRADE     KTRRF
+     C                     MOVEL*BLANKS   KTRTY
+     C                     Z-ADD0         KNDAT
+     C                     Z-ADD0         KSEQ
+      *
+     C           KTRRF     SETLLSEMVTSL6
+     C                     READ SEMVTSL6                 88
+      *
+      ***  If End of Records, (*IN88), Perform: Audit Reporting (No
+      ***  Records).
+      *
+B4   C           *IN88     IFEQ *ON
+     C                     EXSR AUDIT
+E4   C                     ENDIF
+      *
+B4   C           *IN88     DOUEQ*ON
+      *
+     C                     Z-ADD0         RCOUST
+      *
+     C                     MOVELTMTRBB    UTRBB
+      *
+     C                     OPEN SE4300PM
+      *
+YB   C                     EXSR RCFP1
+      *
+      ***  Do Until End of File.
+      *
+B6   C           *IN88     DOWEQ*OFF
+     C           KTRRF     ANDEQTMTRRF
+     C           UTRBB     ANDEQTMTRBB
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUST
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C                     READESEMVTSL6                 88
+      *
+      ***  End of Do Until End of Valid Records.
+E6   C                     ENDDO
+      *
+     C                     EXSR WP1END
+      *
+E4   C                     ENDDO
+      *
+E3   C                     ENDIF
+      *
+X2   C                     ELSE
+      *
+      ** ELSE, IF parm DEPMV is not blanks, output records related
+      ** to this Depot Movement
+      *
+B3   C           DEPMV     IFNE *BLANKS
+      *
+B4   C           PENT      IFNE 'ALL'
+      *
+     C                     MOVELPENT      KBRCH
+     C                     MOVELDEPMV     KTRRF
+     C                     MOVEL'W'       KTRTY
+     C                     Z-ADD0         KNDAT
+     C                     Z-ADD0         KSEQ
+      *
+     C           KTRANS    SETLLSEMVTSL5
+     C                     READ SEMVTSL5                 87
+      *
+      ***  If End of Records, (*IN87), Perform: Audit Reporting (No
+      ***  Records).
+      *
+B5   C           *IN87     IFEQ *ON
+     C                     EXSR AUDIT
+E5   C                     ENDIF
+      *
+     C                     Z-ADD0         RCOUST
+      *
+      ***  Do Until End of File.
+      *
+     C                     OPEN SE4300PM
+      *
+YB   C                     EXSR RCFP1
+      *
+B6   C           *IN87     DOWEQ*OFF
+     C           KTRRF     ANDEQTMTRRF
+     C           KBRCH     ANDEQTMTRBB
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUST
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C                     READ SEMVTSL5                 88
+      *
+      ***  End of Do Until End of Valid Records.
+E6   C                     ENDDO
+      *
+X5   C                     ELSE
+      *
+     C                     MOVEL*BLANKS   KBRCH
+     C                     MOVELTRADE     KTRRF
+     C                     MOVEL*BLANKS   KTRTY
+     C                     Z-ADD0         KNDAT
+     C                     Z-ADD0         KSEQ
+      *
+     C           KTRRF     SETLLSEMVTSL6
+     C                     READ SEMVTSL6                 87
+      *
+      ***  If End of Records, (*IN88), Perform: Audit Reporting (No
+      ***  Records).
+      *
+B6   C           *IN87     IFEQ *ON
+     C                     EXSR AUDIT
+E6   C                     ENDIF
+      *
+B6   C           *IN87     DOUEQ*ON
+      *
+     C                     Z-ADD0         RCOUST
+      *
+     C                     OPEN SE4300PM
+      *
+     C                     MOVELTMTRBB    UTRBB
+      *
+     C                     EXSR RCFP1
+      *
+      ***  Do Until End of File.
+      *
+B8   C           *IN87     DOWEQ*OFF
+     C           KTRRF     ANDEQTMTRRF
+     C           UTRBB     ANDEQTMTRBB
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUST
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C                     READESEMVTSL6                 87
+      *
+      ***  End of Do Until End of Valid Records.
+E7   C                     ENDDO
+      *
+     C                     EXSR WP1END
+      *
+E5   C                     ENDDO
+      *
+E4   C                     ENDIF
+      *
+E3   C                     ENDIF
+E2   C                     ENDIF
+E1   C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROC2
+      *****************************************************************
+      *                                                               *
+      *  PROC2  - Subroutine to do the Detail Processing 2.           *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  REPORT - Process Report Lines                                *
+      *  RCFP1  - RCF Processing                                      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC2     BEGSR                           *** PROC2  ***
+      *
+B1   C           ALL       IFNE *BLANKS
+      *
+      ***  Read first record from File.
+      *
+     C           *LOVAL    SETLLSEMVTSL5
+     C                     READ SEMVTSL5                 86
+      *
+      ***  If End of Records, (*IN86), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN86     IFEQ *ON
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  Do Until End of File.
+      *
+     C           *IN86     DOUEQ*ON
+      *
+     C                     MOVELTMTRBB    UTRBB
+      *
+     C                     OPEN SE4300PM
+      *
+     C                     Z-ADD0         RCOUST
+      *
+YB   C                     EXSR RCFP1
+      *
+     C           *IN86     DOWEQ*OFF
+     C           UTRBB     ANDEQTMTRBB
+      *
+      ** Output only records amended, inserted, deleted today
+      *
+     C           TMLCDT    IFEQ BJRDNB
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUST
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+     C                     ENDIF
+      *
+      ***  Read next record.
+      *
+     C                     READ SEMVTSL5                 86
+      *
+      ***  End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROC3
+      *****************************************************************
+      *                                                               *
+      *  PROC3  - Subroutine to do the Detail Processing 3.           *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  REPORT - Process Report Lines                                *
+      *  RCFP1  - RCF Processing                                      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROC3     BEGSR                           *** PROC3  ***
+      *
+      *** IF parm ALL is not blank, then output all records on file
+      *
+B1   C           ALL       IFNE *BLANKS
+      *
+      ***  Read first record from File.
+      *
+     C           *LOVAL    SETLLSEMVTSL5
+     C                     READ SEMVTSL5                 85
+      *
+      ***  If End of Records, (*IN85), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN85     IFEQ *ON
+     C                     EXSR AUDIT
+     C                     ENDIF
+      *
+      ***  Do Until End of File.
+      *
+     C           *IN85     DOUEQ*ON
+      *
+     C                     MOVELTMTRBB    UTRBB
+      *
+     C                     OPEN SE4300PM
+      *
+     C                     Z-ADD0         RCOUST
+      *
+YB   C                     EXSR RCFP1
+      *
+     C           *IN85     DOWEQ*OFF
+     C           UTRBB     ANDEQTMTRBB
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUST
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Read next record.
+      *
+     C                     READ SEMVTSL5                 85
+      *
+      ***  End of Do Until End of Valid Records.
+     C                     ENDDO
+      *
+     C                     EXSR WP1END
+      *
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROC1, PROC2, PROC3                               *
+      *  Calls:                                                       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR                           *** REPORT ***
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1REC
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: REPORT                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR                           *** WP1REC ***
+      *
+     C                     MOVELTMTRBB    XRBRCH
+      *
+      ***  Write out HEADER
+     C                     WRITEHEADER
+      *
+      ***  Write out HEADER DETAIL
+     C                     WRITEHEDDET
+      *
+      ** Write details
+      *
+     C                     MOVELTMTRRF    XRTRRF
+      *
+     C           TMTRTY    IFEQ 'T'
+     C                     MOVEATRTY,1    XRTRTY
+     C                     ELSE
+     C           TMTRTY    IFEQ 'D'
+     C                     MOVEATRTY,2    XRTRTY
+     C                     ELSE
+     C                     MOVEATRTY,3    XRTRTY
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDTMLCDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    XRLCDT
+      *
+     C                     MOVELTMLCTP    XRLCTY
+      *
+     C                     MOVELTMLCUS    XRLCUS
+      *
+     C                     Z-ADDTMNTDT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    XRNTDT
+      *
+     C                     Z-ADDTMSQNR    XRSQNO
+      *
+     C                     MOVELTMSWSC    XRSWSC
+      *
+     C                     MOVELTMSWRC    XRSWRC
+      *
+     C                     MOVELTMMSGK    XRMSGK
+      *
+     C                     MOVELTMNARR    DSNARR
+     C                     MOVELDSNAR1    XRNAR1
+     C                     MOVELDSNAR2    XRNAR2
+     C                     MOVELDSNAR3    XRNAR3
+     C                     MOVELDSNAR4    XRNAR4
+     C                     MOVELDSNAR5    XRNAR5
+     C                     MOVELDSNAR6    XRNAR6
+     C                     MOVELDSNAR7    XRNAR7
+     C                     MOVELDSNAR8    XRNAR8
+     C                     MOVELDSNAR9    XRNAR9
+      *
+      ***  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+      *
+      ** Set Counters
+      *
+     C           TMLCTP    IFEQ 'A'
+     C                     ADD  1         RAMEND
+     C                     ELSE
+     C           TMLCTP    IFEQ 'D'
+     C                     ADD  1         RDELET
+     C                     ELSE
+     C           TMLCTP    IFEQ 'I'
+     C                     ADD  1         RINSER
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/WP1END
+      *****************************************************************
+      *                                                               *
+      *  WP1END - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROC1, PROC2, PROC3                               *
+      *  Calls    : AUDIT                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *                                                                                      BUG8931
+      * * Ensure SE4300PM is open before writing to it                                       BUG8931
+      *                                                                                      BUG8931
+     C                     Z-ADD0         NUM                                                BUG8931
+     C                     MOVEA*BLANKS   FLARR                                              BUG8931
+     C                     CALL 'ZAOPNFL'                                                    BUG8931
+     C                     PARM           NUM     50                                         BUG8931
+     C                     PARM           FLARR                                              BUG8931
+      *                                                                                      BUG8931
+     C                     MOVE '0'       *IN74                                              BUG8931
+     C           2         MULT NUM       NUM1    50                                         BUG8931
+     C                     Z-ADD1         SZ      30                                         BUG8931
+      *                                                                                      BUG8931
+     C           SZ        DOWLENUM1                                                         BUG8931
+     C           FILE      IFEQ FLARR,SZ                                                     BUG8931
+     C                     MOVE '1'       *IN74                                              BUG8931
+     C                     LEAVE                                                             BUG8931
+     C                     END                                                               BUG8931
+     C                     ADD  1         SZ                                                 BUG8931
+     C                     END                                                               BUG8931
+      *                                                                                      BUG8931
+     C           *IN74     IFEQ '0'                                                          BUG8931
+     C                     OPEN SE4300PM                                                     BUG8931
+     C                     END                                                               BUG8931
+      *                                                                                      BUG8931
+     C                     WRITEHEADER
+      *
+      ***  Write TOTAL of records printed
+      *
+     C           RCOUNT    IFNE 0
+      *
+     C                     MOVE *OFF      *IN79
+     C                     Z-ADDRCOUNT    ZTNCRC
+      *
+     C                     ELSE
+     C                     MOVE *ON       *IN79
+     C                     ENDIF
+      *
+      ***  Write out Total Format.
+      *
+     C                     WRITETOTAL
+      *
+      ***  Write out End of Report.
+      *
+     C                     WRITEENDRPT
+      *
+     C                     CLOSESE4300PM
+      *
+     C                     EXSR AUDIT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/AUDIT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: PROC1, PROC2, PROC3                               *
+      *  Calls: RCFAU                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+     C                     OPEN SE4300AU
+      *
+      ***  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+      ***  Output Report Headers.
+      *
+     C                     WRITEHEADAU1
+      *
+     C                     WRITEHEADAU2
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     MOVE *ON       *IN79
+     C                     WRITENODTLS
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     MOVE *ON       *IN79
+     C                     WRITENODTLS
+      *
+     C                     ELSE
+      *
+      ** Output Counters values
+      *
+     C                     Z-ADDRINSER    ZTNINS
+     C                     Z-ADDRAMEND    ZTNAMD
+     C                     Z-ADDRDELET    ZTNDEL
+      *
+     C                     WRITETOTDTLS
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEAUENDRPT
+      *
+     C                     Z-ADD0         RCOUST
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD0         RINSER
+     C                     Z-ADD0         RAMEND
+     C                     Z-ADD0         RDELET
+      *
+     C                     CLOSESE4300AU
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/END
+      *****************************************************************
+      *                                                               *
+      *  END    - END OF PRGRAM                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           END       BEGSR                           ** END   **
+      *
+     C                     SETON                     LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C                     SETON                     U7U8LR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFP1
+      *****************************************************************
+      *                                                               *
+      *  RCFP1  - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+     C           PENT      IFEQ 'ALL'
+     C                     MOVELUTRBB     SENTY
+     C                     ELSE
+     C                     MOVELPENT      SENTY
+     C                     ENDIF
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM 'SE4300PM'SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/RCFAU
+      *****************************************************************
+      *                                                               *
+      *  RCFAU  - Subroutine to register the AU Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+     C           PENT      IFEQ 'ALL'
+     C                     MOVELUTRBB     SENTY
+     C                     ELSE
+     C                     MOVELPENT      SENTY
+     C                     ENDIF
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM PSEQ      SEQ
+     C                     PARM           SENTY
+     C                     PARM 'SE4300AU'SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/ZDATE1
+     C/COPY ZSRSRC,ZDATE1Z2
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+**  CPY@
+(c) Finastra International Limited 2003
+**  TRTY
+Trade
+DVP/RVP
+Walk In/Out
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

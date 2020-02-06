@@ -1,0 +1,1524 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Project Forward Security Events')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE1420 - PROJECT FORWARD SECURITY EVENTS AND AUDIT REPORT    *
+     F*                                                               *
+     F*  Function: This program produces the PF/Security Non-Diary    *
+     F*   (COB)    Events - Forward. The Security file is read; Next  *
+     F*            Coupon Date or Maturity Date are projected for     *
+     F*            Interest-bearing Securities and Securities with a  *
+     F*            Maturity Date. These are then used for projecting  *
+     F*            Forward Events on Securities and Positions.        *
+     F*            Event Types: CP - Coupon                           *
+     F*                         DE - Expected Dividend                *
+     F*                         MA - Maturity                         *
+     F*                                                               *
+     F*  Called by: SEC1103 - Project Forward Security Events         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11319           Date 09May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG11242           Date 17Nov05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 194370             Date 12Jul01               *
+      *                 211407             Date 09Nov02               *
+      *                 CSE035             Date 22Apr02               *
+      *                 CAS006             Date 21Jan03               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+     F*                 132063             DATE 27Mar00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     F*                 CPB001             Date 13Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 164817             Date 10Aug99               *
+     F*                 130862             Date 16Oct98               *
+     F*                 138200             Date 06Oct98               *
+      *                 151945             DATE 06Jan99               *
+     F*                 121782             Date 24Feb98               *
+     F*                 CSE005             Date 04Feb97               *
+     F*                 S01408             DATE 27SEP96               *
+     F*                 084704             DATE 14AUG96               *
+     F*                 083039             DATE 14AUG96               *
+     F*                 059110             DATE 14AUG96               *
+     F*                 048970             DATE 07AUG96               *
+     F*                 088047             DATE 26JUN96               *
+     F*                 100228             DATE 30MAY96               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 S01486  RS         DATE 27OCT94               *
+     F*                 S01509             DATE 14SEP94               *
+     F*                 S01408             DATE 19AUG94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01410             DATE 18FEB93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E34034             DATE 07JAN92               *
+     F*                 E29025             DATE 01OCT91               *
+     F*                 E24333             DATE 14JAN91               *
+     F*                 S01117             DATE 02NOV90               *
+     F*                 S01220             DATE 11JUL90               *
+     F*                 E23436             DATE 03SEP90               *
+     F*                 E22919             DATE 02AUG90               *
+     F*                 E20085             DATE 07NOV89               *
+     F*                 E20132             DATE 07NOV89               *
+     F*                 E17303             DATE 21/04/89              *
+     F*                 S01176             DATE 09/08/88              *
+     F*                 S01158             DATE 06/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  BUG11319 - Generate coupon events for perpetual bonds to one *
+      *             year in the future.                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG11242-Maturity Events not projected for perpetual bonds.  *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  211407 - Recompile after change on copy sources ZYLDZ2,      *
+      *           ZACCRZ1 and ZYCEZ1 for NX/NNX processing.           *
+      *           The change was to call subroutine ZLCD1 instead     *
+      *           of ZLCD in retrieving the PERIOD for NNX processing *
+      *           and ZNCD1 is called instead of ZNCD in retrieving   *
+      *           the WBENCD for NNX processing. Also rewrite tests   *
+      *           for identifying if position is NX,NNX or CUM.       *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed ZYLDZ2
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+     F*  206316 - Recompiled over changed ZLCDZ1.                     *
+     F*  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  180707 - No Position Settlements generated. Recompile over   *
+     F*           changes in /COPY ZNCDZ3.                            *
+     F*  132063 - Don't produce 'CP' event if the processing type     *
+     F*           is '9'. Applied fix 101155.                         *
+     F*  CPB001 - 'Private Banking' Module                            *
+     F*  164817 - Pgm loops in SR/COUPDT due to SR/ZNCD being called  *
+     F*           while NCD is less than RMLCD. Reverse fix 138200.   *
+     F*  130862 - Recompiled over changed ZLCDZ1.                     *
+     F*  138200 - Cash flow report only shows first coupon date.      *
+     F*           Succeeding coupon dates not shown.  Generate        *
+     F*           entries for all coupons, not just the first.        *
+     F*           Applied fix 057224.                                 *
+     F*  151945 - Recompiled Over changed ZDYYRZ3 .                   *
+     F*  121782 - REMOVE PART OF 87177 OTHERWISE COUPON OCCURING ON A *
+     F*           WEEK-END OR ON A HOLIDAY IS NOT CONSIDERED IN THE   *
+     F*           EOD PRECEDING THIS DAY IF THE ACCRUAL PROFIT DATE IS*
+     F*           NOT EQUAL TO THE RUND                               *
+     F*           can't loop for all future coupons if BCNV is 'M'    *
+     F*           because next coupon might be before ECD             *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates:             *
+     F*           can't loop for all future coupons if BCNV is 'M'    *
+     F*           because next coupon might be before ECD             *
+     F*  S01408 - Addition of core hook SE1420FFP2                    *
+     F*           Addition of core hook SE1420FFP1                    *
+     F*           Addition of core hook SE1420IIP1                    *
+     F*           Addition of core hook SE1420CP10                    *
+     F*           Addition of core hook SE1420CCP9                    *
+     F*           Addition of core hook SE1420CCP8                    *
+     F*           Addition of core hook SE1420CCP7                    *
+     F*           Addition of core hook SE1420CCP6                    *
+     F*           Addition of core hook SE1420CCP5                    *
+     F*           Addition of core hook SE1420CCP4                    *
+     F*           Addition of core hook SE1420CCP3                    *
+     F*           Addition of core hook SE1420CCP2                    *
+     F*           Addition of core hook SE1420CCP1                    *
+     F*  084704 - RECOMPILE over changed SR/ZYLDZ2.                   *
+     F*  083039 - RECOMPILE over changed SR/ZYLDZ2.                   *
+     F*  059110 - RECOMPILE over changed SR/ZYLDZ2.                   *
+     F*  048970 - Maturity events on holidays are not reflected on    *
+     F*           GL0550 (Events by currency) although coupon events  *
+     F*           are.  Fix is to generate events after Event Control *
+     F*           Date (ECD) rather than rundate.                     *
+     F*  088047 - RECOMPILE over change SR/ZYLDZ2.                    *
+     F*  100228 - ADD STANDARD SR ZLCDZ1.                             *
+     F*           RECOMPILE OVER CHANGED SR ZLCDZ1 AND ZNCDZ3         *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  S01486 - PORTFOLIO MANAGEMENT ENHANCEMENT                    *
+     F*  S01509 - Value currency to be currency of issuer of payments *
+     F*  S01408 - Addition of core hook SE1420PDR                     *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01410 - Release 10.04 packaging change: program would no    *
+     F*           longer compile due to the change of the field names *
+     F*           in the Synon-generated file SDRISKL1.  This         *
+     F*           happened when Risk Management was delivered.  The   *
+     F*           solution is to use the file field EUNXDT instead of *
+     F*           NRDT.                                               *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E34034 - Recompiled over changed printer file                *
+     F*  E29025 - File controls always out of balance due to Risk     *
+     F*           management change                                   *
+     F*  E24333 - Wrong field is being used as condition to Set-on    *
+     F*           *IN55.                                              *
+     F*  S01117 - Multibranching                                      *
+     F*  S01220 - STRATEGIC RISK MANAGEMENT                           *
+     F*           Generate additional events for all forward coupon   *
+     F*           and dividend payment dates and write them to new    *
+     F*           file PF/SRMNDE                                      *
+     F*  E23436 - Next expected dividend should be output to SNCP on  *
+     F*           SNDEVD when producing a dividend expected.          *
+     F*  E22919 - Discounted security test used SPBS instead of STBS  *
+     F*           Also processing type 9 wrongly excluded when        *
+     F*           determing interest-bearing securities.              *
+     F*  E20085 - Interest and Coupon Calculations Rewrite:           *  E20085
+     F*          - Don't produce Coupon Events for Discount Securities*  E20085
+     F*          - NDVD on SECTY is not maintained, so produce the    *  E20085
+     F*            Dividend Expected Event by looking at the CD Array *  E20085
+     F*            if there are no future Diary Dividend Dates.       *  E20085
+     F*            Also, produce Coupon Event at Maturity.            *  E20085
+     F*          - Prevent generation of Coupon Events for Coupons    *  E20085
+     F*            payable today.                                     *  E20085
+     F*          - SR/ZNCD returns Next Coupon Date as today if today *  E20085
+     F*            is a Coupon Date. This program then outputs an     *  E20085
+     F*            SNDEFD record for Next Coupon = Today, which is    *  E20085
+     F*            read by SE1520, causing ZACRBD to produce a zero   *  E20085
+     F*            Coupon for Expected Coupon Report run on Coupon    *  E20085
+     F*            Date. Need to pick up NCD after today.             *  E20085
+     F*  E20132 - DB error reported when there was not one.           *  E20132
+     F*  E17303 - RECOMPILE PROGRAM OVER CHANGED ZDYYRZ3 ZYLDZ1 ZYLDZ2*  E17303
+     F*  S01176 - SECURITIES TRADING 3.1 AUSTRALIAN ENHANCEMENTS      *  S01176
+     F*  S01158 - POST INCORPORATION DEVELOPMENT FIXES                *  S01158
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSECTY   IPE E           K        DISK
+     FSECTYA  IF  E                    DISK
+     FINVTO   IF  E           K        DISK
+     FFDDIV   IF  E           K        DISK                               E20085
+     F            SEDEVDF                           KRENAMESEDEVD2        E20085
+     FSEDEV   IF  E           K        DISK                               S01509
+     F*TABSE***IF**E********** K        DISK                              S01117
+     F************TABLETAF                          KIGNORE               S01117
+     F************TABLETHF                          KIGNORE               S01117
+     F************TABLETJF                          KIGNORE               S01117
+     F************TABLETLF                          KIGNORE               S01117
+     F************TABLETKF                          KIGNORE               S01117
+     F************TABLETNF                          KIGNORE               S01117
+     F************TABLETPF                          KIGNORE               S01117
+     F************TABLETRF                          KIGNORE               S01117
+     F************TABLETXF                          KIGNORE               S01117
+     F**ICD*1*****TABTB10F**************************KIGNORE***            S01117
+     F************TABTB10F                          KIGNORE               S01117
+     F**ICD*2*****TABTB11F                          KIGNORE
+     F************TABTB36F                          KIGNORE               S01117
+     F************TABTB40F                          KIGNORE               S01117
+     F************TABTE10F                          KIGNORE               S01117
+     F************TABTE20F                          KIGNORE               S01117
+     F************TABTG10F                          KIGNORE               S01117
+     F************TABTG20F                          KIGNORE               S01117
+     F************TABLET2F                          KIGNORE               S01117
+     F************TABLET3F                          KIGNORE               S01117
+     F************TABLET5F                          KIGNORE               S01117
+     FSDRISKL1IF  E           K        DISK                               S01220
+      *                                                                                       CSE075
+     FSDSVALL0IF  E           K        DISK                                                   CSE075
+      ** Midas SD system value                                                                CSE075
+      *                                                                   S01408
+     F/COPY WNCPYSRC,SE1420FFP1                                           S01408
+      *                                                                   S01408
+     FSRMNDE  O   E                    DISK                               S01220
+     FSNDEFD  O   E                    DISK
+     FSNDEFA  O   E                    DISK
+     FSE1420AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F****05**-*Error*in*ZSYSTM*************************           E20132 S01117
+     F*   40  - Detail records read                                   *
+     F*   50  - Work indicator                                        *
+     F****51**-*ICD*record*2*not*found******************              *   S01117
+     F*   52  - LF/INVTO record not found                             *
+     F*   53  - LF/SDRISKL1 record not found                          *   S01220
+     F*   54  - LF/SEDEV record not found                             *   S01509
+     F*   55  - Security is Overdue                                   *   S01176
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines                          *
+     F*                                                               *
+     F*   U7  - Database Error                                        *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  SRLR   - Total Time Calculations                             *
+     F*  COUPDT - Calculate additional coupon dates                   *   S01220
+     F*                                                               *
+     F*  *PSSR  - Error Handling Subroutine                           *   S01117
+     F*                                                               *
+     F*  ZEVCD  - Calculate Event Control Date                        *
+     F***ZICD2**-*Access*ICD*record*2**(TABTB11)                      *
+     F*  ZNCD   - Calculate Next Coupon Date                          *
+     F***ZSYSTM*-*Access*ICD*record*1**(TABTB10)*************         *   S01117
+     F*                                                               *
+      *                                                                   S01408
+     F/COPY WNCPYSRC,SE1420FFP2                                           S01408
+      *                                                                   S01408
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFREQBZ1                                                                   CSE075
+     E/COPY ZSRSRC,ZDATE9Z1                                                                   CSE075
+      /EJECT
+     ISECTYDF
+     I              RECI                            SRECI
+     I*                                                                   S01509
+     ISEDEVDF                                                             S01509
+     I              NMCY                            SNMCY                 S01509
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZCPDZ1                                                                     CSE075
+     I/COPY ZSRSRC,ZDATE9Z2                                                                   CSE075
+     I/COPY ZSRSRC,ZDAT10Z1                                                                   CSE075
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+      *                                                                   S01408
+     I/COPY WNCPYSRC,SE1420IIP1                                           S01408
+      *                                                                   S01408
+     ISESTAT     UDS                                                                          CSE075
+     I                                        1 133 SEDATA                                    CSE075
+     I***********                           100 1020DYSFWD                           CSE075 BUG11242
+     I***********                           100 102 DYSFWA                           CSE075 BUG11242
+      *
+     I*LDA********UDS                           256                       S01117
+     ILDA         DS                            256                       S01117
+      ***  Local Dat Area for DB Error Information
+     I***********                           134 177 #DBLOT                S01117
+     I            DS
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   S01117
+     IRUNDT       DS                                                      S01117
+     I*                                                                   S01117
+     I** DATA AREA RUNDAT                                                 S01117
+     I*                                                                   S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*                                                                   S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I*                                                                   S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     I*                                                                   S01117
+     ISDGELR    E DSSDGELRPD                                              S01117
+     I** General ledger details                                           S01117
+     I*                                                                   S01117
+     I*                                                                   S01220
+     ISDMMOD    E DSSDMMODPD                                              S01220
+     I*                                                                   S01220
+     I** Module details                                                   S01220
+     I*                                                                   S01220
+     IDSFDY     E DSDSFDY                                                 S01220
+     I*                                                                   S01220
+     I** DS for access programs, short data structure                     S01220
+     I*                                                                   S01220
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I              'PROJMATPERIOD       'C         WSYSVA                                    CSE075
+      *
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Initial Processing
+      *
+     C           *IN40     IFEQ '0'
+      *
+      * Prepare LDA for the database error output
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE1420'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *
+     C**Access*the*I.C.D.*record*1**(PF/TABTB10)**************************S01117
+      ***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C*                                                                   S01117
+     C**  In the dataarea rundat                                          S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C**  Check System Date Format, DDMMYY or MMDDYY.                     S01117
+     C*                                                                   S01117
+     C           DATF      COMP 'M'                      98               S01117
+     C*                                                                   S01117
+     C**  Get Bank Title by access object                                 S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C**Error*in*ZSYSTM***************************************************S01117
+      * Error in Access Object                                            S01117
+     C*                                                                   S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C***********          MOVE '1'       *IN05                     E20132S01117
+     C                     MOVE '1'       *INLR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     SETON                     U7U8                 S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+      *
+      **Access*the*I.C.D.*record*2**(PF/TABTB11)                          S01117
+     C* Access general ledger details                                     S01117
+      *
+     C******************** EXSR ZICD2                                     S01117
+     C**********           CALL 'AOGELRR0'                                             S01117 CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C********** SDGELR    PARM SDGELR    DSFDY                                        S01117 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      **Error*in*ZICD2****                                                S01117
+      * Error in access object                                            S01117
+      *
+     C************INU8*****IFEQ '1'                                       S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C***********          MOVE '1'       *IN51                           S01117
+     C                     MOVE '1'       *INLR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     MOVEL'SDGELRPD'DBFILE           * DB ERROR 02 *S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8                 S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+      *
+      **ICD*records*1*&*2*found********
+      * Calculate the Event Control Date
+      *
+     C                     Z-ADDBJDNWD    ZZDNWD                          S01117
+     C                     Z-ADDBKAPDT    ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP1                                           S01408
+      *                                                                                       CSE075
+      ** Access SAR details file to see if CSE037 is installed                                CSE075
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE075
+     C                     PARM *BLANKS   PRTCD   7                                           CSE075
+     C                     PARM '*VERIFY' POPTN   7                                           CSE075
+     C                     PARM 'CSE075'  PSARD   6                                           CSE075
+      *                                                                                       CSE075
+     C                     MOVE 'N'       CSE075  1                                           CSE075
+     C           PRTCD     IFEQ *BLANK                                                        CSE075
+     C                     MOVE 'Y'       CSE075                                              CSE075
+     C                     ELSE                                                               CSE075
+      *                                                                                       CSE075
+      ** Database Error (return code other than *NRF)                                         CSE075
+      *                                                                                       CSE075
+     C           PRTCD     IFNE '*NRF   '                                                     CSE075
+     C           *LOCK     IN   LDA                                                           CSE075
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSE075
+     C                     MOVEL'CSE075 ' DBKEY                                               CSE075
+     C                     Z-ADD8         DBASE                                               CSE075
+     C                     OUT  LDA                                                           CSE075
+     C                     MOVE *ON       *INU7                                               CSE075
+     C                     MOVE *ON       *INU8                                               CSE075
+     C                     MOVE *ON       *INLR                                               CSE075
+     C                     EXSR *PSSR                                                         CSE075
+     C                     ENDIF                                                              CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C           CSE075    IFEQ 'Y'                                                           CSE075
+      *                                                                                       CSE075
+      ** Calculate end date for event generation                                              CSE075
+      *                                                                                       CSE075
+     C***********          SELEC                                                     CSE075 BUG11242
+     C***********DYSFWA    WHEQ *BLANKS                                              CSE075 BUG11242
+     C***********          Z-ADD0         ENDDAT  50                                 CSE075 BUG11242
+      *                                                                                       CSE075
+      ***If*'Days*Forward'*on*SESTAT*is*999,*generate*events*to*end*of*book.*        CSE075 BUG11242
+      *                                                                                       CSE075
+     C***********DYSFWA    WHEQ '999'                                                CSE075 BUG11242
+     C***********          Z-ADD99999     ENDDAT                                     CSE075 BUG11242
+      *                                                                                       CSE075
+      ** Calculate X years forward to get end date for perpetuals.                            CSE075
+      ** Access System Value file to get the period for perpetual bonds.                      CSE075
+      *                                                                                       CSE075
+     C           WSYSVA    CHAINSDSVALL0             60                                       CSE075
+     C           *IN60     IFEQ *OFF                                                          CSE075
+     C***********          MOVELGIDFT     XSYS    20                                 CSE075 BUG11242
+     C                     MOVELGIVAL     XSYS    20                                        BUG11242
+     C                     Z-ADD0         @@DAYN  50                                          CSE075
+     C                     Z-ADDRUND      ZINDT                                               CSE075
+     C                     Z-ADDXSYS      ZNYR                                                CSE075
+     C                     Z-ADD0         ZNMN                                                CSE075
+     C                     Z-ADD0         ZNDY                                                CSE075
+     C                     EXSR ZCPD                                                          CSE075
+     C                     Z-ADDZPDNO     YR5DAT  50                                          CSE075
+     C***********          ELSE                                                      CSE075 BUG11242
+     C***********          Z-ADD0         YR5DAT                                     CSE075 BUG11242
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+      ***If*'Days*Forward'*on*SESTAT*not*blank*or*999,*calculate*end*date.*          CSE075 BUG11242
+      *                                                                                       CSE075
+     C***********          OTHER                                                     CSE075 BUG11242
+     C***********RUND      ADD  DYSFWD    ENDDAT                                     CSE075 BUG11242
+     C***********          ENDSL                                                     CSE075 BUG11242
+      *                                                                                       CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+      *                                                                   S01408
+     C*                                                                   S01220
+     C** Find if Strategic Risk Management module is present              S01220
+     C*                                                                   S01220
+     C                     CALL 'AOMMODR0'                                S01220
+     C                     PARM '*MSG  '  @RTCD   7                       S01220
+     C                     PARM '*FIRST ' @OPTN   7                       S01220
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01220
+     C*                                                                   S01220
+     C           @RTCD     IFNE *BLANKS                                   S01220
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INLR            ***************S01220
+     C***********          MOVEL'06'      DBASE            **DB ERROR 06**S01117
+     C                     Z-ADD6         DBASE            ***************S01117
+     C                     MOVEL'SDMMODPD'DBFILE                          S01220
+     C                     MOVEL@OPTN     DBKEY                           S01220
+     C                     SETON                     U7U8                 S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE                                           S01220
+     C*                                                                   S01220
+     C** Access Risk Management ICD file                                  S01220
+     C*                                                                   S01220
+     C           BGRKMG    IFEQ 'Y'                                       S01220
+     C                     READ SDRISKL1                 53               S01220
+     C*                                                                   S01220
+     C** If record not found, database error                              S01220
+     C*                                                                   S01220
+     C           *IN53     IFEQ '1'                                       S01220
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *INLR            ***************S01220
+     C***********          MOVEL'05'      DBASE            **DB ERROR 05**S01117
+     C                     Z-ADD5         DBASE            ***************S01117
+     C                     MOVEL'SDRISKL1'DBFILE                          S01220
+     C                     MOVE *BLANK    DBKEY                           S01220
+     C                     SETON                     U7U8                 E29025
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C*                                                                   S01220
+     C** Otherwise, determine if Risk Management run is required          S01220
+     C** (Next RM Run Date < Date of Next Working Day)                    S01220
+     C*                                                                   S01220
+     C                     ELSE                                           S01220
+     C***********NRDT      IFLT DNWD                               S01220 S01117
+      *
+      ** Use the Synon-generated field name from SDRISKL1, instead of the S01410
+      ** old name.                                                        S01410
+     C***********NRDT      IFLT BJDNWD                              S01117S01410
+     C           EUNXDT    IFLT BJDNWD                                    S01410
+     C*                                                                   S01220
+     C** Calculate Risk Management Cut Off Date = Run Date + 1860         S01220
+     C*                                                                   S01220
+     C           RUND      ADD  1860      RMCOFF  50                      S01220
+     C                     END                                            S01220
+     C                     END                                            S01220
+     C***********          ELSE                                    138200 164817
+     C***********          Z-ADD99999     RMCOFF                   138200 164817
+     C                     END                                            E29025
+     C*
+     C** Check if Value currency is active                                S01509
+     C*                                                                   S01509
+     C                     CALL 'AOSARDR0'                                S01509
+     C                     PARM *BLANKS   @RTCD   7                       S01509
+     C                     PARM '*VERIFY' @OPTN   7                       S01509
+     C                     PARM 'S01509'  @SARD   6                       S01509
+     C*                                                                   S01509
+     C                     MOVE 'N'       S01509                          S01509
+     C           @RTCD     IFEQ *BLANK                                    S01509
+     C                     MOVE 'Y'       S01509  1                       S01509
+     C                     ELSE                                           S01509
+     C*                                                                   S01509
+     C** database error (return code other than *NRF)                     S01509
+     C*                                                                   S01509
+     C           @RTCD     IFNE '*NRF   '                                 S01509
+     C           *LOCK     IN   LDA                                       S01509
+     C                     MOVEL'SCSARDPD'DBFILE           ***************S01509
+     C                     MOVEL'*VERIFY' DBKEY            * DB ERROR 07 *S01509
+     C                     Z-ADD7         DBASE            ***************S01509
+     C                     OUT  LDA                                       S01509
+     C                     SETON                     U7U8LR               S01509
+     C                     EXSR *PSSR                                     S01509
+     C                     END                                            S01509
+     C                     END                                            S01509
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD                                               CSE035
+     C                     PARM '*VERIFY' @OPTN                                               CSE035
+     C                     PARM 'CSE035'  WSARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       CSE035
+     C/COPY WNCPYSRC,SE1420C001
+     C*
+     C                     MOVE '1'       *IN40
+     C***********          END                                     S01220 E29025
+     C                     END
+     C                     END                                            S01220
+     C*                                                                   S01486
+     C** A DATE 50 YEARS IN THE FUTURE FOR EVENTS GENERATION              S01486
+     C*                                                                   S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C           ECD       ADD  18250     YEARDT  50                      S01486
+     C                     END                                            S01486
+      *
+     C                     END
+     C                     END
+      *================================================================
+      /EJECT
+      *================================================================
+      *
+      *  M A I N L I N E   P R O C E S S I N G
+      *
+      * Process All Live Records read
+     C           *IN40     IFEQ '1'
+     C           SRECI     IFNE '*'
+     C           SRECI     ANDNE'C'                                       S01158
+     C                     ADD  1         TRCNT   50
+     C                     END
+      *
+     C           SRECI     IFEQ 'D'
+      *
+      * Access Investment Type record
+      *
+     C           SITP      CHAININVTO                52
+     C           *IN52     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C                     MOVE '1'       *INLR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE '1'       *IN52            ***************
+     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *S01117
+     C                     MOVEL'INVTO  ' DBFILE           ***************
+     C                     MOVELSITP      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8                 S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+      *
+     C                     MOVELSESN      SNSN
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP2                                           S01408
+      *                                                                   S01408
+      *
+      *  Calculate next coupon date for each Interest bearing security
+      ****event******(ie.;*Processing*Type*EQ**1,*3,*5,*6,*or*8*****      S01176
+      *   event      (ie.; Processing Type EQ  1, 3, 5, 6, 8 OR 9         S01176
+      *                    and not a Discount Security,                   E20085
+      *                    and Day Basis NE  4  (DYBS).)
+      *
+      ** If Enhanced Treasury is switched on:                                                 CSE075
+      *                                                                                       CSE075
+     C           CSE075    IFEQ 'Y'                                                           CSE075
+     C                     Z-ADDCFCT      SNCF                                                CSE075
+     C                     Z-ADD0         MPCOEF                                              CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C           PROT      IFEQ '9'                                       S01176
+     C***********MTDI      ANDEQ'A'                                S01176 E24333
+     C           MDTI      ANDEQ'A'                                       E24333
+     C           MATY      ANDLTECD                                       S01176
+     C                     SETON                     55                   S01176
+     C                     END                                            S01176
+      *                                                                   S01176
+     C           *IN55     IFEQ '0'                                       S01176
+     C           DYBS      IFNE '4'
+     C***********SPBS      ANDNE'D'                                 E20085E22919
+     C           STBS      ANDNE'D'                                       E22919
+      *
+     C           PROT      IFEQ '1'
+     C           PROT      OREQ '3'
+     C           PROT      OREQ '5'
+     C           PROT      OREQ '6'
+     C           PROT      OREQ '8'
+     C           PROT      OREQ '9'                                       E22919
+     C*                                                                   E20085
+     C*  Because of DN033 in ZNCD, giving NCD as today if today is a      E20085
+     C*  coupon date, must make ECD = RUND+1 for ZNCD as this program     E20085
+     C*  needs next coupon after today.                                   E20085
+     C*                                                                   E20085
+     C                     Z-ADDECD       ECD1    50                      E20085
+     C***********1         ADD  RUND      ECD                      E20085 048970
+     C***********1         ADD  ECD       ECD                      048970 121782
+     C           1         ADD  RUND      ECD                             121782
+     C*                                                                   E20085
+     C                     EXSR ZNCD
+     C*                                                                   E20085
+     C                     Z-ADDECD1      ECD                             E20085
+      *
+      ***Write*Coupon*Event*'CP',*if*Next*Coupon*Date*NE*maturity*or*zero.E20085
+      *  Write Coupon Event 'CP', even if next coupon date is maturity    E20085
+      *
+     C***********NCD       IFNE MATY                                      E20085
+     C***********NCD       ANDNE0                                         E20085
+     C           NCD       IFNE 0                                         E20085
+     C           PROT      ANDNE'9'                                       132063
+     C                     Z-ADDNCD       SNDT
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP3                                           S01408
+      *                                                                   S01408
+      ** If more than one coupon to maturity and last coupon on maturity date,                CSE075
+      ** write both 'CP' and 'MA' to the events file                                          CSE075
+      *                                                                                       CSE075
+      ** If Enhanced Treasury is switched on:                                                 CSE075
+      *                                                                                       CSE075
+     C           CSE075    IFEQ 'Y'                                                           CSE075
+      *                                                                                     BUG11242
+     C           MATY      IFEQ 99999                                                       BUG11242
+     C           MATY      OREQ 0                                                           BUG11242
+     C**********           Z-ADDYR5DAT    ENDDAT  50                               BUG11242 BUG11319
+     C           RUND      ADD  365       ENDDAT  50                                        BUG11319
+     C                     ENDIF                                                            BUG11242
+      *                                                                                       CSE075
+      ** In some cases, even the next coupon can be beyond the limit date.                    CSE075
+      *                                                                                       CSE075
+     C           NCD       IFLE ENDDAT                                                        CSE075
+     C           ENDDAT    OREQ 0                                                             CSE075
+     C                     Z-ADDCPNR      SNCR                                                CSE075
+     C           PPDI      IFEQ 'Y'                                                           CSE075
+     C                     Z-ADDCPDP      SNCP                                                CSE075
+     C                     ENDIF                                                              CSE075
+     C                     MOVE 'CP'      SNET                                                CSE075
+     C                     MOVE ' '       MDTI                                                CSE075
+      *                                                                                       CSE075
+      ** If 'Days Forward' is blank on SESTAT, ENDDAT will be zero and the                    CSE075
+      ** following loop will execute only once.  If DYSFWD is 999, ENDDAT                     CSE075
+      ** will be 99999 and events will be generated through maturity date                     CSE075
+      ** (except for perpetuals, for which the limit is five years).  If                      CSE075
+      ** DYSFWD is neither blank nor 999, generate events through ENDDAT.                     CSE075
+      *                                                                                       CSE075
+     C                     MOVEL'N'       ENDIND                                              CSE075
+     C           ENDIND    DOWEQ'N'                                                           CSE075
+     C                     Z-ADDNCD       SNDT                                                CSE075
+     C                     ADD  1         OUTREC  50                                          CSE075
+      *                                                                                       CSE075
+      ** If S01509 is active, set ccy field to value ccy from SECTYD.                         CSE075
+      ** Store the original NMCY first and move it back after update                          CSE075
+      ** to avoid overriding NMCY for a possible 'AC' event later                             CSE075
+      *                                                                                       CSE075
+     C           S01509    IFEQ 'Y'                                                           CSE075
+     C                     MOVE NMCY      WNMCY   3                                           CSE075
+     C                     MOVE VLCY      NMCY                                                CSE075
+     C                     WRITESNDEVDF                                                       CSE075
+     C                     MOVE WNMCY     NMCY                                                CSE075
+     C                     ELSE                                                               CSE075
+     C                     WRITESNDEVDF                                                       CSE075
+     C                     ENDIF                                                              CSE075
+     C           NCD       IFEQ MATY                                                          CSE075
+     C                     MOVEL'Y'       ENDIND                                              CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+      ** For mortgage-backeds, calculate new factor and generate MP event                     CSE075
+      *                                                                                       CSE075
+     C           PROT      IFEQ '8'                                                           CSE075
+     C           SNCF      ANDGT0                                                             CSE075
+     C                     EXSR SRMBS                                                         CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+      ** Set ECD to NCD+1 so next call to ZNCD can return subsequent coupon                   CSE075
+      *                                                                                       CSE075
+     C           NCD       ADD  1         ECD                                                 CSE075
+     C                     EXSR ZNCD                                                          CSE075
+     C           ENDIND    IFNE 'Y'                                                           CSE075
+     C           NCD       IFEQ 0                                                             CSE075
+     C           NCD       ORGT ENDDAT                                                        CSE075
+     C           MATY      OREQ 99999                                                         CSE075
+     C           NCD       ANDGEYR5DAT                                                        CSE075
+     C           MATY      ORNE 99999                                                       BUG11242
+     C           MATY      ANDNE0                                                           BUG11242
+     C                     MOVEL'Y'       ENDIND  1                                           CSE075
+     C                     ENDIF                                                              CSE075
+     C                     ENDIF                                                              CSE075
+     C                     ENDDO                                                              CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+      ** Restore original ECD                                                                 CSE075
+      *                                                                                       CSE075
+     C                     Z-ADDECD1      ECD                                                 CSE075
+      *                                                                                       CSE075
+      ** If Enhanced Treasury is switched OFF:                                                CSE075
+      *                                                                                       CSE075
+     C                     ELSE                                                               CSE075
+      *                                                                                       CSE075
+     C                     Z-ADDCPNR      SNCR
+     C                     Z-ADDCPDP      SNCP
+     C                     MOVE 'CP'      SNET
+     C                     MOVE ' '       MDTI                            S01176
+     C                     ADD  1         OUTREC  50
+     C*                                                                   S01509
+     C** If S01509 is active, set ccy field to value ccy from SECTYD.     S01509
+     C** Store the original NMCY first and move it back after update      S01509
+     C** to avoid overriding NMCY for a possible 'AC' event later         S01509
+     C*                                                                   S01509
+     C           S01509    IFEQ 'Y'                                       S01509
+     C                     MOVE NMCY      WNMCY   3                       S01509
+     C                     MOVE VLCY      NMCY                            S01509
+     C                     WRITESNDEVDF                                   S01509
+     C                     MOVE WNMCY     NMCY                            S01509
+     C                     ELSE                                           S01509
+     C                     WRITESNDEVDF
+     C                     END                                            S01509
+     C*                                                                   S01220
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP4                                           S01408
+      *                                                                   S01408
+      ** End of Enhanced Treasury loop.                                                       CSE075
+      *                                                                                       CSE075
+     C                     ENDIF                                                              CSE075
+      *
+     C** If Risk Management Run is required AND Security is a Floating    S01220
+     C** Rate Note or Yen Bond, write an 'AC' event to PF/SRMNDE          S01220
+     C*                                                                   S01220
+     C***********NRDT      IFLT DNWD                               S01220 S01117
+      *
+      ** Use the Synon-generated field name from SDRISKL1, instead of the S01410
+      ** old name.                                                        S01410
+     C***********NRDT      IFLT BJDNWD                              S01117S01410
+     C           EUNXDT    IFLT BJDNWD                                    S01410
+     C           BGRKMG    ANDEQ'Y'                                       S01220
+     C           PROT      IFEQ '3'                                       S01220
+     C           PROT      OREQ '5'                                       S01220
+     C                     MOVE 'AC'      SNET                            S01220
+     C                     WRITESRMNDEF                                   S01220
+     C                     END                                            S01220
+     C                     END                                            S01220
+     C*                                                                   S01220
+     C** If Risk Management Run is required AND Security is not           S01220
+     C** mortgage-backed AND the Next Coupon Date already calculated      S01220
+     C** is less than Maturity Date, calculate additional Coupon dates    S01220
+     C*                                                                   S01220
+     C***********NRDT      IFLT DNWD                               S01220 S01117
+      *
+      ** Use the Synon-generated field name from SDRISKL1, instead of the S01410
+      ** old name.                                                        S01410
+     C***********NRDT      IFLT BJDNWD                              S01117S01410
+     C           EUNXDT    IFLT BJDNWD                                    S01410
+     C***********BGRKMG    ANDEQ'Y'                                S01220 138200
+     C           BGRKMG    ANDEQ'Y'                                       164817
+     C           PROT      ANDNE'8'                                       S01220
+     C           NCD       ANDLTMATY                                      S01220
+     C                     EXSR COUPDT                                    S01220
+     C                     END                                            S01220
+     C*                                                                   S01220
+     C                     Z-ADD0         SNCR
+     C                     Z-ADD0         SNCP
+     C                     END
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP5                                           S01408
+      *                                                                   S01408
+      * If Enhanced Treasury is switched on:                                                  CSE075
+     C           CSE075    IFEQ 'Y'                                                           CSE075
+      *                                                                                       CSE075
+      ** Restore original ECD, in case this step was bypassed above.                          CSE075
+      *                                                                                       CSE075
+     C                     Z-ADDECD1      ECD                                                 CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C*                                                                   S01486
+     C** IF PORTFOLIO MANAGEMENT PRESENT                                  S01486
+     C*                                                                   S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C** DETERMINE NEXT COUPON DATE AFTER THE LAST CALCULATED COUPON DATE S01486
+     C*                                                                   S01486
+     C                     Z-ADDECD       ECD1    50       Save ECD       S01486
+     C           NCD       ADD  1         ECD                             S01486
+     C                     EXSR ZNCD                                      S01486
+     C*                                                                   S01486
+     C** WRITE COUPON EVENTS OUT TO ONE YEAR IN THE FUTURE                S01486
+     C*                                                                   S01486
+     C           NCD       DOWLEYEARDT                                    S01486
+     C           NCD       ANDGTECD                                       S01486
+     C                     Z-ADDNCD       SNDT             Next Coupon DatS01486
+     C                     Z-ADDCPNR      SNCR             Coupon Rate    S01486
+     C                     Z-ADDCPDP      SNCP                            S01486
+     C                     MOVE 'CP'      SNET                            S01486
+     C                     ADD  1         OUTREC  50                      S01486
+     C                     WRITESNDEVDF                                   S01486
+     C           NCD       ADD  1         ECD                             S01486
+     C                     EXSR ZNCD                                      S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     Z-ADD0         SNCR                            S01486
+     C                     Z-ADD0         SNCP                            S01486
+     C                     Z-ADDECD1      ECD              Restore ECD    S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+      *
+     C                     END
+     C                     END
+     C                     END                                            S01176
+     C                     SETOF                     55                   S01176
+      *                                                                                     BUG11242
+      **  Process forward coupons/maturity events if security is                            BUG11242
+      **  defined as perpetual bonds and CSE075 is switched on.                             BUG11242
+      **  This is applicable only for processing type 1,3,5,6,8 and 9.                      BUG11242
+      *                                                                                     BUG11242
+     C                     MOVE 'N'       PPBOND  1                                         BUG11242
+     C           CSE075    IFEQ 'Y'                                                         BUG11242
+      *                                                                                     BUG11242
+     C           MATY      IFEQ 0                                                           BUG11242
+     C           MATY      OREQ 99999                                                       BUG11242
+      *                                                                                     BUG11242
+     C           PROT      IFEQ '1'                                                         BUG11242
+     C           PROT      OREQ '3'                                                         BUG11242
+     C           PROT      OREQ '5'                                                         BUG11242
+     C           PROT      OREQ '6'                                                         BUG11242
+     C           PROT      OREQ '8'                                                         BUG11242
+     C           PROT      OREQ '9'                                                         BUG11242
+     C                     MOVE 'Y'       PPBOND                                            BUG11242
+     C                     ENDIF                                                            BUG11242
+     C                     ENDIF                                                            BUG11242
+     C                     ENDIF                                                            BUG11242
+      *
+      * Produce Maturity Events, if Maturity Date NE zero, or 99999.
+      *
+     C           MATY      IFNE 0
+     C           MATY      ANDNE99999
+     C           PPBOND    OREQ 'Y'                                                         BUG11242
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP6                                           S01408
+      *                                                                   S01408
+      *                                                                                       CSE075
+      ** If Enhanced Treasury is switched on:                                                 CSE075
+      *                                                                                       CSE075
+     C           CSE075    IFEQ 'Y'                                                           CSE075
+      *                                                                                       CSE075
+      ***If*'Days*Forward'*specified,*only*create*event*if*within*range.**           CSE075 BUG11242
+      *                                                                                       CSE075
+     C***********MATY      IFLE ENDDAT                                               CSE075 BUG11242
+     C***********DYSFWA    OREQ *BLANKS                                              CSE075 BUG11242
+      *                                                                                       CSE075
+     C           PROT      IFEQ '9'                                                           CSE075
+     C           MATY      ANDLTECD                                                           CSE075
+     C                     Z-ADDECD       SNDT                                                CSE075
+     C                     MOVE 'O'       MDTI                                                CSE075
+     C                     ELSE                                                               CSE075
+      *                                                                                     BUG11242
+     C           MATY      IFEQ 0                                                           BUG11242
+     C           CSE075    ANDEQ'Y'                                                         BUG11242
+     C           MATY      OREQ 99999                                                       BUG11242
+     C           CSE075    ANDEQ'Y'                                                         BUG11242
+     C                     Z-ADDYR5DAT    MATY                                              BUG11242
+     C                     ENDIF                                                            BUG11242
+      *                                                                                     BUG11242
+     C                     Z-ADDMATY      SNDT                                                CSE075
+      *                                                                                       CSE075
+     C                     ENDIF                                                              CSE075
+     C                     MOVE 'MA'      SNET                                                CSE075
+      *                                                                                       CSE075
+      ** If S01509 is active, set ccy field to redemption currency if                         CSE075
+      ** non-blank and an event of type 'RC' is found for the security                        CSE075
+      *                                                                                       CSE075
+     C           S01509    IFEQ 'Y'                                                           CSE075
+      *                                                                                       CSE075
+     C                     MOVE 'RC'      WEVTP                                               CSE075
+      *                                                                                       CSE075
+     C           WKSED     CHAINSEDEV                54                                       CSE075
+     C           *IN54     IFEQ '0'                                                           CSE075
+     C           SDCX      ANDNE*BLANK                                                        CSE075
+     C                     MOVE SDCX      NMCY                                                CSE075
+     C                     ENDIF                                                              CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C                     ADD  1         OUTREC  50                                          CSE075
+     C                     WRITESNDEVDF                                                       CSE075
+     C***********          ENDIF                                                     CSE075 BUG11242
+      *                                                                                       CSE075
+      ** If Enhanced Treasury is switched OFF:                                                CSE075
+      *                                                                                       CSE075
+     C                     ELSE                                                               CSE075
+      *
+     C           PROT      IFEQ '9'                                       S01176
+     C           MATY      ANDLTECD                                       S01176
+     C                     Z-ADDECD       SNDT                            S01176
+     C                     MOVE 'O'       MDTI                            S01176
+     C                     ELSE                                           S01176
+     C                     Z-ADDMATY      SNDT
+     C*                                                                   S01408
+     C** Core hook for externalisation.                                   S01408
+     C/COPY WNCPYSRC,SE1420PDR                                            S01408
+     C*                                                                   S01408
+     C                     END                                            S01176
+     C                     MOVE 'MA'      SNET
+     C*                                                                   S01509
+     C** If S01509 is active, set ccy field to redemption currency if     S01509
+     C** non-blank and an event of type 'RC' is found for the security    S01509
+     C*                                                                   S01509
+     C           S01509    IFEQ 'Y'                                       S01509
+     C*                                                                   S01509
+     C           WKSED     KLIST                                          S01509
+     C                     KFLD           SESN                            S01509
+     C                     KFLD           MATY                            S01509
+     C                     KFLD           WEVTP   2                       S01509
+     C                     MOVE 'RC'      WEVTP                           S01509
+     C*                                                                   S01509
+     C           WKSED     CHAINSEDEV                54                   S01509
+     C           *IN54     IFEQ '0'                                       S01509
+     C           SDCX      ANDNE*BLANK                                    S01509
+     C                     MOVE SDCX      NMCY                            S01509
+     C                     END                                            S01509
+     C                     END                                            S01509
+      *
+     C                     ADD  1         OUTREC  50
+     C                     WRITESNDEVDF
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP7                                           S01408
+      *                                                                   S01408
+      *                                                                                       CSE075
+      ** End of Enhanced Treasury loop.                                                       CSE075
+      *                                                                                       CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C                     END
+      *
+      **Produce*Dividend*Expected*Event,*if*Expected*Dividend*Amount*and  E20085
+      ****Next*Dividend*Date*are**NE*zero*(LF/SECTY).******************   E20085
+      ***********                                                         E20085
+     C***********NEXD      IFNE 0                                         E20085
+     C***********NDVD      ANDNE0                                         E20085
+      *
+      * Produce Dividend Expected event if security is dividend bearing   E20085
+      * and no actual dividend event has been entered                     E20085
+      *                                                                   E20085
+     C           PROT      IFEQ '4'                                       E20085
+     C           PROT      OREQ '7'                                       E20085
+      *                                                                   E20085
+     C                     Z-ADDECD       ECD1                            E20085
+     C***********RUND      ADD  1         ECD                      E20085 048970
+     C           ECD       ADD  1         ECD                             048970
+     C           ZKDIV     SETLLSEDEVD2                                   E20085
+     C                     READ SEDEVD2                  37               E20085
+      *                                                                   E20085
+     C           *IN37     IFEQ '1'                                       E20085
+     C           SESN      ORNE SDSN                                      E20085
+     C                     EXSR ZNDD                                      E20085
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP8                                           S01408
+      *                                                                   S01408
+      *                                                                                       CSE075
+      ** If Enhanced Treasury is switched on:                                                 CSE075
+      *                                                                                       CSE075
+     C           CSE075    IFEQ 'Y'                                                           CSE075
+     C           MATY      IFEQ 0                                                           BUG11242
+     C           MATY      OREQ 99999                                                       BUG11242
+     C**********           Z-ADDYR5DAT    ENDDAT                                   BUG11242 BUG11319
+     C           RUND      ADD  365       ENDDAT                                            BUG11319
+     C                     ENDIF                                                            BUG11242
+      *                                                                                       CSE075
+      ** If 'Days Forward' specified, only create event if within range.                      CSE075
+      *                                                                                       CSE075
+     C           NDD       IFLE ENDDAT                                                        CSE075
+     C***********DYSFWA    OREQ *BLANKS                                              CSE075 BUG11242
+     C                     Z-ADDNDD       SNDT                                                CSE075
+     C                     Z-ADDNEXD      SNCP                                                CSE075
+      *                                                                                       CSE075
+     C                     MOVE ' '       MDTI                                                CSE075
+     C                     MOVE 'DE'      SNET                                                CSE075
+      *                                                                                       CSE075
+      ** If S01509 is active, set ccy field to value ccy from SECTYD                          CSE075
+      *                                                                                       CSE075
+     C           S01509    IFEQ 'Y'                                                           CSE075
+     C                     MOVE VLCY      NMCY                                                CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+     C                     ADD  1         OUTREC  50                                          CSE075
+     C                     WRITESNDEVDF                                                       CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+      * If Enhanced Treasury is switched OFF:                                                 CSE075
+     C                     ELSE                                                               CSE075
+      *                                                                                       CSE075
+     C                     Z-ADDNDD       SNDT                            E20085
+     C***********          Z-ADD0         SNCP                      E20085E23436
+     C                     Z-ADDNEXD      SNCP                            E23436
+      *                                                                   E20085
+     C***********          Z-ADDNDVD      SNDT                            E20085
+     C***********          Z-ADDNEXD      SNCP                            E20085
+     C                     MOVE ' '       MDTI                            S01176
+     C                     MOVE 'DE'      SNET
+     C*                                                                   S01509
+     C** If S01509 is active, set ccy field to value ccy from SECTYD      S01509
+     C*                                                                   S01509
+     C           S01509    IFEQ 'Y'                                       S01509
+     C                     MOVE VLCY      NMCY                            S01509
+     C                     END                                            S01509
+      *
+     C                     ADD  1         OUTREC  50
+     C                     WRITESNDEVDF
+     C***********          Z-ADD0         SNCP                      E20085E23436
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CCP9                                           S01408
+      *                                                                   S01408
+      ** End of Enhanced Treasury loop.                                                       CSE075
+      *                                                                                       CSE075
+     C                     ENDIF                                                              CSE075
+     C*                                                                   S01220
+     C** If Risk Management Run is required AND Dividend Roll Forward     S01220
+     C** Indicator is 'Y' AND Next Expected Dividend is not zero,         S01220
+     C** calculate additional Dividend dates                              S01220
+     C*                                                                   S01220
+     C***********NRDT      IFLT DNWD                               S01220 S01117
+      *
+      ** Use the Synon-generated field name from SDRISKL1, instead of the S01410
+      ** old name.                                                        S01410
+     C***********NRDT      IFLT BJDNWD                              S01117S01410
+     C           EUNXDT    IFLT BJDNWD                                    S01410
+     C           RFDI      ANDEQ'Y'                                       S01220
+     C           NEXD      ANDNE0                                         S01220
+     C           BGRKMG    ANDEQ'Y'                                       S01220
+     C*                                                                   S01220
+     C** Calculate Dividend dates to Risk Management Cut Off date         S01220
+     C*                                                                   S01220
+     C           NDD       DOWLTRMCOFF                                    S01220
+     C           NDD       ADD  1         ECD                             S01220
+     C                     EXSR ZNDD                                      S01220
+     C*                                                                   S01220
+     C           NDD       IFLE RMCOFF                                    S01220
+     C                     Z-ADDNDD       SNDT                            S01220
+     C                     MOVE 'DE'      SNET                            S01220
+     C*                                                                   S01509
+     C** If S01509 is active, set ccy field to value ccy from SECTYD      S01509
+     C*                                                                   S01509
+     C           S01509    IFEQ 'Y'                                       S01509
+     C                     MOVE VLCY      NMCY                            S01509
+     C                     END                                            S01509
+     C                     WRITESRMNDEF                                   S01220
+     C                     END                                            S01220
+     C*                                                                   S01220
+     C                     END                                            S01220
+     C                     END                                            S01220
+     C*                                                                   S01220
+     C                     Z-ADD0         SNCP                            E23436
+     C                     END
+      *
+     C                     Z-ADDECD1      ECD                             E20085
+     C                     END                                            E20085
+      *
+     C                     END
+     C                     END
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     CLR                   EXSR SRLR
+      *                                                               *
+      *================================================================
+      /EJECT                                                              S01220
+     C*****************************************************************   S01220
+     C*                                                                   S01220
+     C*  COUPDT - CALCULATE ADDITIONAL COUPON DATES                       S01220
+     C*                                                                   S01220
+     C*****************************************************************   S01220
+     C*                                                                   S01220
+     C           COUPDT    BEGSR                                          S01220
+     C*                                                                   S01220
+     C** If there is no Maturity Date, set Last Coupon Date equal to      S01220
+     C** Risk Management Cut Off Date                                     S01220
+     C*                                                                   S01220
+     C           MATY      IFEQ 0                                         S01220
+     C           MATY      OREQ 99999                                     S01220
+     C                     Z-ADDRMCOFF    RMLCD   50                      S01220
+     C*                                                                   S01220
+     C** Otherwise, set Last Coupon Date equal to Maturity Date           S01220
+     C*                                                                   S01220
+     C                     ELSE                                           S01220
+     C                     Z-ADDMATY      RMLCD                           S01220
+     C                     END                                            S01220
+     C*                                                                   S01220
+     C** If Security is a Floating Rate Note or a Yen Bond                S01220
+     C** AND the Maturity Date is greater than the Risk Management        S01220
+     C** Cut Off Date, set Last Coupon Date equal to Risk Management      S01220
+     C** Cut Off Date                                                     S01220
+     C*                                                                   S01220
+     C           PROT      IFEQ '3'                                       S01220
+     C           PROT      OREQ '5'                                       S01220
+     C           MATY      IFGT RMCOFF                                    S01220
+     C                     Z-ADDRMCOFF    RMLCD                           S01220
+     C                     END                                            S01220
+     C                     END                                            S01220
+     C*                                                                   S01220
+     C** Calculate Coupon dates to Last Coupon Date determined above      S01220
+     C** NB. if BCNV is 'M' then NCD might be before ECD.                 CSE005
+     C*                                                                   S01220
+     C                     Z-ADDECD       ECD1                            S01220
+     C           BCNV      IFNE 'M'                                       CSE005
+     C           NCD       DOWLTRMLCD                                     S01220
+     C           NCD       ADD  1         ECD                             S01220
+     C                     EXSR ZNCD                                      S01220
+     C*                                                                   S01220
+     C** If Coupon Date calculated is less than or equal to Last Coupon   S01220
+     C** Date, write Coupon event to PF/SRMNDE                            S01220
+     C*                                                                   S01220
+     C           NCD       IFLE RMLCD                                     S01220
+     C***********BGRKMG    IFEQ 'Y'                                138200 164817
+     C                     Z-ADDNCD       SNDT                            S01220
+     C                     MOVE 'CP'      SNET                            S01220
+     C*                                                                   S01509
+     C** If S01509 is active, set ccy field to value ccy from SECTYD.     S01509
+     C** Save NMCY first to avoid being overwritten by VLCY for the       S01509
+     C** next record                                                      S01509
+     C*                                                                   S01509
+     C           S01509    IFEQ 'Y'                                       S01509
+     C                     MOVE NMCY      WNMCY                           S01509
+     C                     MOVE VLCY      NMCY                            S01509
+     C                     WRITESRMNDEF                                   S01509
+     C                     MOVE WNMCY     NMCY                            S01509
+     C                     ELSE                                           S01509
+     C                     WRITESRMNDEF                                   S01220
+     C***********          ENDIF                                   138200 164817
+     C************************************************************ 138200 164817
+     C****Output*details*to*events*file*************************** 138200 164817
+     C************************************************************ 138200 164817
+     C***********          Z-ADDNCD       SNDT                     138200 164817
+     C/COPY WNCPYSRC,SE1420C002
+     C***********          MOVE 'CP'      SNET                     138200 164817
+     C***********          MOVE ' '       MDTI                     138200 164817
+     C***********          ADD  1         OUTREC                   138200 164817
+     C***********          WRITESNDEVDF                            138200 164817
+     C                     END                                            S01509
+     C                     END                                            S01220
+     C                     END                                            S01220
+     C                     ENDIF                                          CSE005
+     C*                                                                   S01220
+     C                     Z-ADDECD1      ECD                             S01220
+     C*                                                                   S01220
+     C                     ENDSR                                          S01220
+     C*                                                                   S01220
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLR   - Subroutine for Control Processing                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLR      BEGSR                           ***  SRLR  ***
+      *
+      * If no records read - Empty Primary File,
+      ***access*the*I.C.D.*records*1*(PF/TABTB10)*************************S01117
+      *  in the dtaara/rundat and get title by access object              S01117
+      *
+     C           *IN40     IFEQ '0'
+     C************IN99     ANDEQ'0'                                       S01117
+     C           @RTCD     ANDEQ*BLANKS                                   S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C*                                                                   S01117
+     C**  In the dataarea rundat                                          S01117
+     C*                                                                   S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   S01117
+     C**  Check System Date Format, DDMMYY or MMDDYY.                     S01117
+     C*                                                                   S01117
+     C           DATF      COMP 'M'                      98               S01117
+     C*                                                                   S01117
+     C**  Get Bank Title by access object                                 S01117
+     C*                                                                   S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C**  Error in Access Object                                          S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANKS   DBLOT                           S01117
+     C                     MOVEL'SE1420'  DBPGM                           S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7                       S01117
+     C*                    SETON                    U7U8                  S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     END
+      *
+      * Write control report headings
+      *
+     C                     WRITEHEADAU
+      *
+      * Error
+     C************IN99     IFEQ '1'                                       E20132
+     C************IN05     IFEQ '1'                                 E20132S01117
+     C************IN52     OREQ '1'                                       S01117
+     C************IN53     OREQ '1'                                S01220 S01117
+     C***********                                                         S01117
+     C***********          MOVE '1'       *INU8                           S01117
+     C***********          MOVE '1'       *INU7                           S01117
+     C***********                                                         S01117
+     C************IN52     IFEQ '0'                        ***************S01117
+     C***********          MOVEL'01'      DBASE            * DB ERROR 01 *S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          END                                            S01117
+     C***********                                                         S01117
+     C************IN51     IFEQ '1'                        ***************S01117
+     C***********          MOVEL'02'      DBASE            * DB ERROR 02 *S01117
+     C***********          END                             ***************S01117
+      *                                                                   S01117
+     C           *INU7     IFEQ '1'                                       S01117
+     C           *INU8     ANDEQ'1'                                       S01117
+      *
+     C                     WRITEERROR
+      *
+     C                     END
+      *
+      *  Access Securities' AUDIT record.
+      *
+     C                     Z-ADD0         NORE       50
+     C                     READ SECTYA                   50
+     C                     Z-ADDNORE      TRIN    50
+      *
+      *  Compare Control Totals
+      *
+     C                     WRITETRTOT
+      *
+     C           TRIN      IFNE TRCNT
+     C           *INU7     IFEQ '0'                                       S01117
+     C                     WRITEDIFF
+     C                     END                                            S01117
+     C           *INU8     IFEQ '0'
+     C                     MOVE '1'       *INU8            ***************
+     C***********          MOVEL'04'      DBASE            * DB ERROR 04 *S01117
+     C***********          MOVEL'SECTYA  'DBFILE           ***************S01117
+     C***********          MOVEL'*AUDIT**'DBKEY                           S01117
+     C***********          WRITEERROR                                     S01117
+     C                     END
+     C                     END
+      *
+      *          - Write Securities' Events Audit record
+      *
+     C                     Z-ADDOUTREC    NORE
+     C                     WRITESNDEFAF
+      *
+     C***********                                                         S01117
+     C***IF*NO*OUTPUT*-*Print*a*message*to*this*effect******              S01117
+      *
+     C************IN40     IFEQ '0'                                       S01117
+     C***********          WRITENONE                                      S01117
+     C***********                                                         S01117
+     C*********ELSE***-*Print*Records*Written*Total******                 S01117
+     C***********          ELSE                                           S01117
+     C                     WRITECONTROL
+     C***********          END                                            S01117
+      *
+      *  END OF PROGRAM
+     C***********          WRITETRAILAU                                   S01117
+      *
+      ***If*Database*Errors*found,*update*LDA**************************** S01117
+      ***********                                                         S01117
+     C************NAMVAR   DEFN           LDA                             S01117
+      ***********                                                         S01117
+     C************INU8     IFEQ '1'                                       S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVELDBLOT     #DBLOT                          S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          END                                            S01117
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *                                                                   S01408
+     C/COPY WNCPYSRC,SE1420CP10                                           S01408
+      *                                                                   S01408
+      /EJECT                                                                                  CSE075
+      *****************************************************************                       CSE075
+      *                                                               *                       CSE075
+      *  SRMBS  - Subroutine for Special Processing of Mortgage       *                       CSE075
+      *           Backed Securities                                   *                       CSE075
+      *                                                               *                       CSE075
+      *****************************************************************                       CSE075
+      *                                                                                       CSE075
+     C           SRMBS     BEGSR                                                              CSE075
+      *                                                                                       CSE075
+      ** If SRMBS is being called for the first time for this security...                     CSE075
+      *                                                                                       CSE075
+     C           MPCOEF    IFEQ 0                                                             CSE075
+      *                                                                                       CSE075
+      ** Determine number of interest periods in year.                                        CSE075
+      *                                                                                       CSE075
+     C                     Z-ADD1         X                                                   CSE075
+     C           *BLANK    LOKUPCR,X                     50                                   CSE075
+     C           *IN50     IFEQ '1'                                                           CSE075
+     C                     SUB  1         X                                                   CSE075
+     C                     ELSE                                                               CSE075
+     C                     Z-ADD12        X                                                   CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+      ** Calculate coefficient for periodic factor reduction.                                 CSE075
+      *                                                                                       CSE075
+     C           X         IFNE 0                                                             CSE075
+      *                                                                                       CSE075
+      ** Divide annual repay rate by number of interest periods.                              CSE075
+      ** Note: For MBS, RPRT  holds annual repay percentage in 10,000ths.                     CSE075
+      *                                                                                       CSE075
+     C           RPRT      DIV  1000000   MPRATE 109                                          CSE075
+     C                     DIV  X         MPRATE    H                                         CSE075
+      *                                                                                       CSE075
+      ** Subtract from 1 to get portion NOT repaid each period.                               CSE075
+      *                                                                                       CSE075
+     C           1         SUB  MPRATE    MPCOEF 109                                          CSE075
+     C                     ELSE                                                               CSE075
+     C                     Z-ADD1         MPCOEF                                              CSE075
+     C                     ENDIF                                                              CSE075
+     C                     ENDIF                                                              CSE075
+      *                                                                                       CSE075
+      ** Use 'Market Price' field on SNDEFD to hold old factor                                CSE075
+      *                                                                                       CSE075
+     C                     Z-ADDSNCF      SNPR                                                CSE075
+      *                                                                                       CSE075
+      ** Calculate new factor                                                                 CSE075
+      *                                                                                       CSE075
+     C                     MULT MPCOEF    SNCF      H                                         CSE075
+     C                     MOVE 'MP'      SNET                                                CSE075
+     C                     ADD  1         OUTREC                                              CSE075
+     C                     WRITESNDEVDF                                                       CSE075
+      *                                                                                       CSE075
+      ** Restore prior values to output fields for next CP event.                             CSE075
+      *                                                                                       CSE075
+     C                     Z-ADD0         SNPR                                                CSE075
+     C                     MOVE 'CP'      SNET                                                CSE075
+      *                                                                                       CSE075
+     C                     ENDSR                                                              CSE075
+     C*****************************************************************   S01117
+     C*                                                               *   S01117
+     C* *PSSR - SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS        *   S01117
+     C*                                                               *   S01117
+     C* CALLED FROM : AFTER ABNORMAL OPERATION OCCURS                 *   S01117
+     C*                                                               *   S01117
+     C* CALLS : NOTHING                                               *   S01117
+     C*                                                               *   S01117
+     C*****************************************************************   S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C*/COPY*ZSRSRC,ZICD2Z1************                                   S01117
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT                                                              E20085
+     C/COPY ZSRSRC,ZLCDZ1                                                 100228
+      /EJECT                                                              100228
+     C/COPY ZSRSRC,ZNDDZ1                                                 E20085
+      /EJECT
+     C*COPY*ZSRSRC*ZSYSTMZ1*******                                        S01117
+      /EJECT
+     C/COPY ZSRSRC,ZCPDZ2                                                                     CSE075
+      /EJECT                                                                                  CSE075
+     C/COPY ZSRSRC,ZDATE9Z3                                                                   CSE075
+      /EJECT                                                                                  CSE075
+     C/COPY ZSRSRC,ZDAT10Z2                                                                   CSE075
+      /EJECT                                                                                  CSE075
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH                                                     CSE075
+312831303130313130313031                                                                      CSE075
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN                        CSE075
+00366007310109601461                                                                          CSE075
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                           CSE075
+00000000310005900090001200015100181002120024300273003040033400365                             CSE075

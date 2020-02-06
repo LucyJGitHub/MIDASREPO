@@ -1,0 +1,51 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                 /*MD023662*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC220000 - Global UDF Files purging                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*                                                                   */
+/*       Last Amend No. MD023662 *REDUNDANTDate 21Nov13              */
+/*       Prev Amend No. AR685293 *CREATE   Date 26Jan11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*  MD023662 - Reconciliation: T_GZAMADEX records not dropped        */
+/*  AR685293 - UDF Files are not purged during COB.  Created         */
+/*             program to purge UDF files during COB.                */
+/*             (Child: AR685294)                                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTCD)  TYPE(*CHAR) LEN( 7)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2011')
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+ 
+             CHGJOB     SWS(00000000)
+ 
+/** UDF purging program */
+ 
+             CALL       PGM(GO220000)
+              IF         COND(&RTCD *NE '       ') THEN(GOTO CMDLBL(ABNOR))
+ 
+              GOTO CMDLBL(END)
+ 
+ /** Abnormal Error Processing */
+  ABNOR:      SNDPGMMSG  MSG('PROGRAM GOC220000 ENDED ABNORMALLY') +
+                           TOMSGQ(MOPERQ)
+              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+              CHGJOB     SWS(XXXXXX11)
+ 
+ END:
+              ENDPGM

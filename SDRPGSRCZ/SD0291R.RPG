@@ -1,0 +1,2754 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Customer Safe Handling')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Standing Data Module                               *
+     F*                                                               *
+     F*  SD0291R - CUSTOMER SAFE HANDLING                             *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG5139            Date 10Mar05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 082067             Date 24Jan95               *
+     F*                 076002             Date 12Oct94               *
+     F*                 063568             DATE 25NOV93               *
+     F*                 S01413 *CREATE     DATE 13APR93               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG5139 - Unable to process additional customer during       *
+      *            insert                                             *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  082067 - Replace the use of PF/SDSAFEPD with LF/SDSAFEL0.    *
+     F*  076002 - SET RTCD CORRECTLY IF F3 PRESSED                    *
+     F*  063568 - Deleted records could not be reinserted if Run Date *
+     F*           is same as Last Change Date .                       *
+     F*  S01413 - Retail 3 Incorporation                              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+      ** RTV : Customer Details Shadow file by key                                           BUG5139
+      *                                                                                      BUG5139
+     FSDCDSHL1IF  E           K        DISK                           UC                     BUG5139
+     F            @BBREBF                           KRENAME@BBREBFZ                          BUG5139
+     F                                              KINFSR *PSSR                             BUG5139
+     FSDFCTLL0UF  E           K        DISK
+     F** PREFIX : AH
+     F                                              KCOMIT
+     F*SDSAFEPDUF*E**         K        DISK                      A        082067
+     FSDSAFEL0UF  E           K        DISK                      A        082067
+     F** PREFIX : SA
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+     F                                              KINFDS INFDS1
+     FSD0291R#CF  E                    WORKSTN
+     F** PREFIX : DD
+     F                                              KINFDS INFDS#
+     F*
+     F/EJECT
+     F****************************************************************
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       01         Command key 1
+     F*       02         Command key 2
+     F*       03         Command key 3
+     F*
+     F*       05         Command key 5
+     F*
+     F*       09         Command key 9
+     F*       10         Command key 10
+     F*
+     F*       12         Command key 12
+     F*
+     F*       19         Invalid Customer No
+     F*       20         Invalid Safe Number 1
+     F*       21         Invalid Size 1
+     F*       22         Invalid Safe Rented Date 1
+     F*       23         Invalid Safe Number 2
+     F*       24         Invalid Size 2
+     F*
+     F*       25         Used in SD0291R#
+     F*
+     F*       26         Invalid Safe Rented Date 2
+     F*       27         Invalid Safe Number 3
+     F*       28         Invalid Size 3
+     F*
+     F*       29         Valid cmd key
+     F*
+     F*       30         Invalid Safe Rented Date 3
+     F*       31         Invalid Safe Number 4
+     F*       32         Invalid Size 4
+     F*       33         Invalid Safe Rented Date 4
+     F*       34         Invalid Safe Number 5
+     F*       35         Invalid Size 5
+     F*       36         Invalid Safe Rented Date 5
+     F*
+     F*       76         Invalid day in month
+     F*       77         Flip to change mode
+     F*       78         Global error indicator
+     F*       79         WWIPST = Y
+     F*
+     F*       86         Condition putovr
+     F*       87         Enable cmd key
+     F*       88         Protect key field
+     F*       89         ADD mode
+     F*       90-99      Standard subroutine indicators.
+     F*
+     F*          U7    Set on with U8 if a database error occurs.
+     F*          U8    File out of balance if on on its own.
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       ..  ..  ..  04  ..  06  07  08  ..  ..
+     F*       11  ..  13  14  15  16  17  18  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  37  38  39  40
+     F*       41  42  43  44  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  70
+     F*       71  72  73  74  75  ..  ..  ..  ..  80
+     F*       81  82  83  84  85  ..  ..  ..  ..  ..
+     F*       ..  ..  ..  ..  ..  ..  ..  ..  ..
+     F*
+     F/EJECT
+     E*
+     E** Copyright.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** Tables for standard subroutines ZDATE1 / ZDATE2
+     E*
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E*
+      ** Commitment Control Array                                                             CSC022
+     E                    WCMTAR     10 10                                                    CSC022
+     F*****************************************************************
+     E                    @F         16  1
+      * input array for za0840
+     E                    @G         16  1
+      * output array for za0840
+     E                    @H      1  15 15 0
+      * array of powers of ten
+      *****************************************************************
+     E/EJECT
+     I*
+     I** Data structure for compilation - copyright insertion.
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** Program data structure.
+     I*
+     IPGMDS     ESDSY2PGDSP
+     I*
+     I** Job date/time.
+     I*
+     IJBDTTM      DS
+     I                                        1   60WWJDT
+     I                                        1   20WWJYY
+     I                                        3   40WWJMM
+     I                                        5   60WWJDD
+     I                                        7  120WWJTM
+     I                                        7   80WWJHH
+     I                                        9  100WWJNN
+     I                                       11  120WWJSS
+     I*
+     I** Display file data structure.
+     I*
+     IINFDS#    E DSY2I#DSP
+     I*
+     I** File information data structure.
+     I*
+     IINFDS1    E DSY2I1DSP
+     I*
+     I** Local Data Area for database error details
+     I*
+     ILDA       E DSLDA
+     I*
+     I** Current/previous master file format fields for change control.
+     I*
+     I@1DBRC    E DSSDSAFEPD
+     I*
+     I** Stored master file format fields.
+     I*
+     I#1DBRC      DS                            122
+     I                                        1   1 #1DB1
+     I*
+     IRUNDAT    E DS
+     I                                        1   20RDLUP
+     I                                        3   5 RMLUP
+     I                                        6   70RYLUP
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      **   CUSTOMER
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+      ** Switchable Features File                                                             CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      *                                                                                       CSC022
+      ** Commitment Control dataarea                                                          CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCMTJB                                    CSC022
+     I/EJECT
+     I*
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     -                                                       *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      * KEYDSP   - DISPLAY KEY SCREEN AND PROCESS HELP REQUESTS          *
+      * KEYVAL   - VALIDATE KEY FIELD                                    *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      * DETPRC   - PROCESS DETAILS                                       *
+      * DETDSP   - DISPLAY DETAIL SCREEN AND PROCESS HELP REQUESTS       *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      * DETINZ   - INITIALIZE SCREEN FIELDS                              *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      * RECPRC   - PROCESS RECORD                                        *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      * PGMEND   - EXIT PROGRAM                                          *
+      * ZDATE1   - VALIDATE DATES SUBMITTED AND CONVERT                  *
+      *            TO A NUMBER OF DAYS.                                  *
+      * ZDATE2   - CONVERT A DAY NUMBER TO DATE FORMATS.                 *
+      * INIT     -                                                       *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * Y2CLMSC  -                                                       *
+      * Y2SNMGC  -                                                       *
+      * Y2BGCMC  -                                                       *
+      *                                                                  *
+      ********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           WWRET7  7
+     C                     PARM           DDCUST
+     C                     PARM           WBCSSN 10                                          BUG5139
+     C                     PARM           WBCRNM 20                                          BUG5139
+     C                     PARM           WBCRTN 10                                          BUG5139
+     C*
+     C** Initialise
+     C*
+     C                     EXSR INIT
+     C*
+     C** Perform once if Customer parameter passed, else repeat
+     C*
+     C           WWRPT     DOUEQ'N'
+     C                     EXSR KEYPRC
+     C                     END
+     C*
+     C** Terminate program.
+     C*
+     C                     MOVEL*BLANKS   WWRET7                          076002
+     C                     EXSR PGMCLS
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * DETINZ   - INITIALIZE SCREEN FIELDS                              *
+      * KEYDSP   - DISPLAY KEY SCREEN AND PROCESS HELP REQUESTS          *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      * KEYVAL   - VALIDATE KEY FIELD                                    *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWBYP    -                                                       *
+      * WWTRN    -                                                       *
+      * WWPMD    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         KEYPRC    BEGSR
+     C*
+     C** Initialise key screen
+     C*
+     C** Bypass first display of key screen is possible.
+     C*
+     C                     MOVEL'Y'       WWBYP   1
+     C*
+     C** Signal start of transaction.
+     C*
+     C                     MOVEL'Y'       WWTRN   1
+     C*
+     C           WWTRN     DOWEQ'Y'
+     C           WWTRN     OREQ 'R'
+     C*
+     C** Ensure transaction continues (if reset).
+     C*
+     C                     MOVEL'Y'       WWTRN
+     C*
+     C** Initialise Detail screen.
+     C*
+     C                     EXSR DETINZ
+     C*
+     C** Conduct screen conversation:
+     C*
+     C           WWTRN     DOWEQ'Y'
+     C*
+     C** Key field is blank: display key screen.
+     C*
+     C           WWBYP     IFEQ 'Y'
+     C           DDCUST    ANDEQ*BLANK
+     C                     MOVEL'N'       WWBYP
+     C                     EXSR KEYDSP
+     C                     END
+     C*
+     C** Process response to key screen:
+     C** Cancel & exit program.
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVEL'Y2U9999' WWRET7                          076002
+     C                     EXSR PGMCLS
+     C                     END
+     C*
+     C** Switch between *ADD/*CHANGE modes.
+     C*
+     C           *IN09     IFEQ '1'
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     MOVEL'CHG'     WWPMD   3
+     C                     ELSE
+     C                     MOVEL'ADD'     WWPMD
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C** HOME: Reset screen fields.
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVEL'N'       WWTRN
+     C                     ELSE
+     C*
+     C** Validate key field.
+     C*
+     C                     EXSR KEYVAL
+     C*
+     C** Process key screen input.
+     C*
+     C           *IN78     IFEQ '0'
+     C                     EXSR KEYDET
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     CSR                   ENDSR                           * KEYPRC ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * KEYDSP   -                                                       *
+      * KEYDSP   - DISPLAY KEY SCREEN AND PROCESS HELP REQUESTS          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * Y2CLMSC  -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPMD    -                                                       *
+      * WWHLP    -                                                       *
+      * WWIN89   -                                                       *
+      * WWJTM    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         KEYDSP    BEGSR
+     C*
+     C** Set screen conditioning indicators.
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     MOVE '1'       *IN89
+     C                     END
+     C*
+     C** Update screen time.
+     C*
+     C                     TIME           DDTIME           Screen time.
+     C*
+     C** PUTOVR unless conditioned fields change.
+     C*
+     C           WWHLP     DOUEQ'N'
+     C                     MOVE '1'       *IN86
+     C*
+     C           *IN89     IFNE WWIN89
+     C                     MOVE '0'       *IN86
+     C                     END
+     C*
+     C                     MOVE *IN89     WWIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+     C                     MOVEL'N'       WWHLP   1        Reset help requ
+     C                     END
+     C*
+     C** Update job time.
+     C*
+     C                     TIME           WWJTM            Job time.
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C** Reset first message only flag.
+     C*
+     C                     MOVEL'Y'       ZAFSMS  1
+     C*
+     C** Reset global error indicator.
+     C*
+     C                     MOVE '0'       *IN78
+     C*
+     CSR                   ENDSR                           * KEYDSP ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * KEYVAL   - VALIDATE KEY FIELD                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      * WWCUSX   -                                                       *
+      * WWDFCF   -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         KEYVAL    BEGSR
+     C*
+     C** Check relations.
+     C** Check reference to Client Details.
+     C*
+     C                     MOVE *BLANKS   WWRET7
+     C                     MOVELDDCUST    WWCUSX  1
+     C*
+     C** Name search required ?
+     C*
+     C           WWCUSX    IFEQ '?'
+     C                     CALL 'SD0010S'              90
+     C                     PARM           WWRET7
+     C           DDCUST    PARM DDCUST    WQ0009  6
+     C*
+     C** Call to program ended in error.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SD99913' WWRET7
+     C                     END
+     C*
+     C                     MOVE 'Y'       WWDFCF  1        Defer confirm
+     C*
+     C           WWRET7    IFEQ *BLANKS
+     C           DDCUST    ANDNE*BLANKS
+     C                     CALL 'AOCUSTR0'AOCUST
+      *                                                                                      BUG5139
+      ** If not found in SDCUSTPD then check if it is in the                                 BUG5139
+      ** shadow file SDCDSHPD                                                                BUG5139
+      *                                                                                      BUG5139
+     C           @RTCD     IFNE *BLANKS                                                      BUG5139
+     C           DDCUST    CHAIN@BBREBFZ             90                                      BUG5139
+     C           *IN90     IFEQ *OFF                                                         BUG5139
+     C                     MOVE *BLANKS   @RTCD                                              BUG5139
+     C                     ENDIF                                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+     C*
+     C** Send message 'Client Details not found'
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SD60200' ZAMSID
+     C                     EXSR PGMMSG
+     C                     MOVEL'SD60200' WWRET7
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C           WWRET7    IFNE *BLANK
+     C                     MOVE '1'       *IN78
+     C                     MOVE '1'       *IN31
+     C                     END
+     C*
+     C** Customer Number required.
+     C*
+     C           DDCUST    IFEQ *BLANK
+     C                     MOVE '1'       *IN78
+     C                     MOVE '1'       *IN31
+     C                     MOVEL'SD60201' ZAMSID           Message id.
+     C                     EXSR PGMMSG                     Send message
+     C                     END
+     C*
+     CSR                   ENDSR                           * KEYVAL ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    -                                                       *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPMD    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         KEYDET    BEGSR
+     C*
+     C** Access Customer details
+     C*
+     C           DDCUST    CHAINSDCDSHL1             90                                      BUG5139
+     C           *IN90     IFEQ *ON                                                          BUG5139
+      *                                                                                      BUG5139
+     C           WWPMD     IFNE 'CHG'                                                        BUG5139
+     C                     MOVEL'*DBERR ' @RTCD
+     C                     CALL 'AOCUSTR0'AOCUST
+     C*
+     C                     MOVE BBCSSN    DDCSSN                                             BUG5139
+     C                     MOVE BBCRNM    DDCRNM
+     C                     MOVE BBCRTN    DDCRTN                                             BUG5139
+     C                     ELSE                                                              BUG5139
+     C                     MOVE WBCSSN    DDCSSN                                             BUG5139
+     C                     MOVE WBCRNM    DDCRNM                                             BUG5139
+     C                     MOVE WBCRTN    DDCRTN                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+      *                                                                                      BUG5139
+     C                     ELSE                                                              BUG5139
+     C                     MOVE BBCSSN    DDCSSN                                             BUG5139
+     C                     MOVE BBCRNM    DDCRNM                                             BUG5139
+     C                     MOVE BBCRTN    DDCRTN                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+     C*
+     C** Check for existing record.
+     C*
+     C********** DDCUST    CHAINSDSAFEPD             9091  *              082067
+     C           DDCUST    CHAINSDSAFEL0             9091  *              082067
+     C*
+     C** Record locked.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVE '1'       *IN78
+     C                     MOVE '1'       *IN31
+     C                     ELSE
+     C*
+     C** If record does not exist, flip to add mode.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'ADD'     WWPMD
+     C                     MOVEL'I'       DDACTN                                             BUG5139
+     C                     MOVE '0'       *IN77
+     C*
+     C** USER: Initialise detail screen (new record)
+     C** Retrieve for other screen - Client Details  *
+     C*
+     C                     EXSR DETDEF
+     C*
+     C** If record does exist, flip to change mode.
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN77
+     C                     MOVEL'CHG'     WWPMD
+     C                     MOVEL'A'       DDACTN                                             BUG5139
+     C*
+     C** Load screen fields from DBF.
+     C*
+     C                     EXSR DETFIL
+     C*
+     C** CASE:     WRK.Set Up Complete is No
+     C*
+     C           WWSUC     IFEQ 'N'
+     C                     MOVEL'Y'       WWDELA           Deletion Allowed
+     C                     ELSE
+     C                     MOVEL'N'       WWDELA
+     C                     END
+     C*
+     C** Retrieve for other screen - Client Details  *
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C                     MOVE *BLANKS   @RTCD
+     C                     CALL 'AOCUSTR0'AOCUST
+      *                                                                                      BUG5139
+      ** If not found in SDCUSTPD then check if it is in the                                 BUG5139
+      ** shadow file SDCDSHPD                                                                BUG5139
+      *                                                                                      BUG5139
+     C           @RTCD     IFNE *BLANKS                                                      BUG5139
+     C           DDCUST    CHAIN@BBREBFZ             90                                      BUG5139
+     C           *IN90     IFEQ *OFF                                                         BUG5139
+     C                     MOVE *BLANKS   @RTCD                                              BUG5139
+     C                     ENDIF                                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+     C*
+     C** DBF Record not found.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SD99908' WWRET7
+     C                     MOVEL'SD99908' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C** USER: Process DBF record
+     C*
+     C                     ELSE
+     C                     MOVEL*BLANKS   WWRET7
+     C                     MOVELBBCRNM    DDCRNM
+     C                     END
+     C*
+     C** CASE:     WRK.Set Up Complete is Yes
+     C*
+     C           WWSUC     IFEQ 'Y'
+     C                     MOVEL'Y'       WWBINS           broker indicator
+     C                     END
+     C*
+     C                     END
+     C*
+     C** No errors: Display and process details
+     C*
+     C           *IN78     IFEQ '0'
+     C                     EXSR DETPRC
+     C                     END
+     C*
+     C                     END
+     C*
+     CSR                   ENDSR                           * KEYDET ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * DETDSP   - DISPLAY DETAIL SCREEN AND PROCESS HELP REQUESTS       *
+      * PM0601   - CUSTOMER NOTEPAD MAINTENANCE PGM                      *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      * RECPRC   - PROCESS RECORD                                        *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWTRN    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETPRC    BEGSR
+     C*
+     C** Conduct detail screen conversation:
+     C** - repeat until screen control flag is reset:
+     C*
+     C           WWTRN     DOWEQ'Y'                        - B1
+     C           *IN03     ANDEQ'0'
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN02
+     C*
+     C** Display detail screen.
+     C*
+     C                     EXSR DETDSP
+     C*
+     C** Redisplay previous screen
+     C*
+     C           *IN12     IFEQ '1'                        - B2
+     C                     MOVEL'R'       WWTRN
+     C                     END                             - E2
+     C*
+     C** Process detail screen input.
+     C*
+     C           *IN03     IFEQ '0'                        - B2
+     C           *IN12     ANDEQ'0'
+     C           *IN01     ANDEQ'0'
+     C           *IN02     ANDEQ'0'
+     C                     MOVE 'N'       WWDFCF
+     C*
+     C** If delete is not pending....
+     C** Validate details.
+     C*
+     C           *IN10     IFEQ '0'                        - B3
+     C                     EXSR DETVAL
+     C                     END                             - E3
+     C*
+     C** Update record if no error
+     C*
+     C           *IN78     IFEQ '0'                        - B3
+     C           WWDFCF    ANDNE'Y'
+     C                     EXSR RECPRC
+     C                     END                             - E3
+     C*
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** Process response to F3:
+     C** Cancel & exit program.
+     C*
+     C           *IN03     IFEQ '1'                        - B1
+     C                     MOVEL'Y2U9999' WWRET7                          076002
+     C                     EXSR PGMCLS
+     C                     END                             - E1
+     C*
+     CSR                   ENDSR                           * DETPRC ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETDSP   - DISPLAY DETAIL SCREEN AND PROCESS HELP REQUESTS       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * Y2CLMSC  -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPMD    -                                                       *
+      * WWRPT    -                                                       *
+      * WWHLP    -                                                       *
+      * WWJTM    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETDSP    BEGSR
+     C*
+     C** Set screen conditioning indicators.
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     MOVE '1'       *IN89
+     C                     END
+     C*
+     C** Protect key field  on detail screen.
+     C*
+     C                     MOVE '1'       *IN88
+     C                     MOVE '0'       *IN79
+     C*
+     C           WWBINS    IFEQ 'Y'
+     C                     MOVE '1'       *IN79
+     C                     END
+     C*
+     C** Disable key screen - not applicable.
+     C*
+     C           WWRPT     IFEQ 'N'
+     C                     MOVE '0'       *IN87
+     C*
+     C** Enable key screen.
+     C*
+     C                     ELSE
+     C                     MOVE '1'       *IN87
+     C                     END
+     C*
+     C** Update screen time.
+     C*
+     C                     TIME           DDTIME           Screen time.
+     C           SACHTP    COMP 'D'                      85
+     C*
+     C** PUTOVR unless conditioned fields change.
+     C*
+     C           WWHLP     DOUEQ'N'
+     C                     MOVE '1'       *IN86
+     C*
+     C           *IN89     IFNE CBIN89
+     C                     MOVE '0'       *IN86
+     C                     END
+     C*
+     C                     MOVE *IN89     CBIN89  1
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMTSD0291F0
+     C                     MOVEL'N'       WWHLP   1        Reset help requ
+     C                     END
+     C*
+     C** Update job time.
+     C*
+     C                     TIME           WWJTM            Job time.
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C** Reset first message only flag.
+     C*
+     C                     MOVEL'Y'       ZAFSMS
+     C*
+     C** Reset global error indicator.
+     C*
+     C                     MOVE '0'       *IN78
+     C*
+     CSR                   ENDSR                           * DETDSP ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * ZDATE1   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETVAL    BEGSR
+     C*
+     C*
+     C** VALIDATE SAFE NUMBER 1
+     C** Mandatory entry
+     C*
+     C           DDSFN1    IFEQ *BLANKS
+     C           DDSFS1    IFNE *BLANKS
+     C           DDSFI1    ORNE *BLANKS
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1113' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDSFN1    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFN1    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '6'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid safe number
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN20
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1114' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFN1
+     C                     END
+     C*
+     C** VALIDATE SIZE
+     C** Mandatory entry
+     C*
+     C           DDSFS1    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFS1    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '2'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid size
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1116' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFS1
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN21
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1115' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C                     END
+     C*
+     C** VALIDATE SAFE RENTED DATE
+     C** Mandatory entry
+     C*
+     C           DDSFI1    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDSFI1    DATEN   60
+     C                     MOVE DATEN     DATEA   6
+     C           DDSFI1    IFNE DATEA
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE DDSFI1    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN22
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWSFI1  50
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C*
+     C** VALIDATE SAFE NUMBER 2
+     C** Mandatory entry
+     C*
+     C           DDSFN2    IFEQ *BLANKS
+     C           DDSFS2    IFNE *BLANKS
+     C           DDSFI2    ORNE *BLANKS
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1113' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDSFN2    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFN2    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '6'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid safe number
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN23
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1114' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFN2
+     C                     END
+     C*
+     C** VALIDATE SIZE
+     C** Mandatory entry
+     C*
+     C           DDSFS2    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFS2    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '2'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid size
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1116' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFS2
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN24
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1115' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C                     END
+     C*
+     C** VALIDATE SAFE RENTED DATE
+     C** Mandatory entry
+     C*
+     C           DDSFI2    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDSFI2    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDSFI2    IFNE DATEA
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE DDSFI2    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN26
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWSFI2  50
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C*
+     C** VALIDATE SAFE NUMBER 3
+     C** Mandatory entry
+     C*
+     C           DDSFN3    IFEQ *BLANKS
+     C           DDSFS3    IFNE *BLANKS
+     C           DDSFI3    ORNE *BLANKS
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1113' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDSFN3    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFN3    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '6'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid safe number
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN27
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1114' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFN3
+     C                     END
+     C*
+     C** VALIDATE SIZE
+     C** Mandatory entry
+     C*
+     C           DDSFS3    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFS3    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '2'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid size
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1116' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFS3
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN28
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1115' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C                     END
+     C*
+     C** VALIDATE SAFE RENTED DATE
+     C** Mandatory entry
+     C*
+     C           DDSFI3    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDSFI3    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDSFI3    IFNE DATEA
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE DDSFI3    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN30
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWSFI3  50
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C*
+     C** VALIDATE SAFE NUMBER 4
+     C** Mandatory entry
+     C*
+     C           DDSFN4    IFEQ *BLANKS
+     C           DDSFS4    IFNE *BLANKS
+     C           DDSFI4    ORNE *BLANKS
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1113' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDSFN4    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFN4    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '6'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid safe number
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN31
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1114' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFN4
+     C                     END
+     C*
+     C** VALIDATE SIZE
+     C** Mandatory entry
+     C*
+     C           DDSFS4    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFS4    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '2'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid size
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1116' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFS4
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN32
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1115' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C                     END
+     C*
+     C** VALIDATE SAFE RENTED DATE
+     C** Mandatory entry
+     C*
+     C           DDSFI4    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDSFI4    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDSFI4    IFNE DATEA
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE DDSFI4    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN33
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWSFI4  50
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C*
+     C*
+     C** VALIDATE SAFE NUMBER 5
+     C** Mandatory entry
+     C*
+     C           DDSFN5    IFEQ *BLANKS
+     C           DDSFS5    IFNE *BLANKS
+     C           DDSFI5    ORNE *BLANKS
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1113' ZAMSID
+     C                     EXSR PGMMSG
+     C                     END
+     C                     END
+     C*
+     C           DDSFN5    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFN5    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '6'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid safe number
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN34
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1114' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFN5
+     C                     END
+     C*
+     C** VALIDATE SIZE
+     C** Mandatory entry
+     C*
+     C           DDSFS5    IFNE *BLANKS
+      *
+      **   Move screen fields in data structure working field
+      *
+     C                     MOVE *BLANKS   @@ALPH
+     C                     MOVE DDSFS5    @@ALPH
+     C                     MOVE '0'       @@IDP
+     C                     MOVE '2'       @@IINT
+     C                     EXSR ZA0840
+     C*
+     C** Invalid size
+     C*
+     C           @@ERCD    IFNE *ZEROS
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1116' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE @@ALPH    DDSFS5
+     C                     END
+     C                     ELSE
+     C                     MOVE '1'       *IN35
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1115' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C                     END
+     C*
+     C** VALIDATE SAFE RENTED DATE
+     C** Mandatory entry
+     C*
+     C           DDSFI5    IFNE *BLANKS
+      *
+      **   The date is invalid if the input date is not equal to a
+      **   numeric field transfered in an alphanumeric field
+      *
+     C                     MOVE DDSFI5    DATEN
+     C                     MOVE DATEN     DATEA
+     C           DDSFI5    IFNE DATEA
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE DDSFI5    ZDATE
+     C                     EXSR ZDATE1
+     C*
+     C** Invalid date
+     C*
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *IN36
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'LZP1118' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     MOVE ZDAYNO    WWSFI5  50
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     CSR                   ENDSR                           * DETVAL ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETINZ   - INITIALIZE SCREEN FIELDS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETINZ    BEGSR
+     C*
+     C                     MOVEL*BLANK    DDCSSN
+     C                     MOVEL*BLANK    DDCRNM
+     C                     MOVEL*BLANK    DDCRTN
+     C                     MOVEL*BLANK    DDSFN1
+     C                     MOVEL*BLANK    DDSFS1
+     C                     MOVEL*BLANK    DDSFI1
+     C                     MOVEL*BLANK    DDSFN2
+     C                     MOVEL*BLANK    DDSFS2
+     C                     MOVEL*BLANK    DDSFI2
+     C                     MOVEL*BLANK    DDSFN3
+     C                     MOVEL*BLANK    DDSFS3
+     C                     MOVEL*BLANK    DDSFI3
+     C                     MOVEL*BLANK    DDSFN4
+     C                     MOVEL*BLANK    DDSFS4
+     C                     MOVEL*BLANK    DDSFI4
+     C                     MOVEL*BLANK    DDSFN5
+     C                     MOVEL*BLANK    DDSFS5
+     C                     MOVEL*BLANK    DDSFI5
+     C*
+     CSR                   ENDSR                           * DETINZ ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETFIL    BEGSR
+     C*
+     C                     MOVE SACSSN    DDCSSN
+     C                     MOVE SACRNM    DDCRNM
+     C                     MOVE SACRTN    DDCRTN
+     C*
+     C                     MOVE SASFN1    DDSFN1
+     C                     MOVE SASFS1    DDSFS1
+     C           SASFI1    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSASFI1    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDSFI1
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDSFI1                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SASFN2    DDSFN2
+     C                     MOVE SASFS2    DDSFS2
+     C           SASFI2    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSASFI2    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDSFI2
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDSFI2                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SASFN3    DDSFN3
+     C                     MOVE SASFS3    DDSFS3
+     C           SASFI3    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSASFI3    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDSFI3
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDSFI3                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SASFN4    DDSFN4
+     C                     MOVE SASFS4    DDSFS4
+     C           SASFI4    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSASFI4    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDSFI4
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDSFI4                          R0972
+     C                     END                                            R0972
+     C*
+     C                     MOVE SASFN5    DDSFN5
+     C                     MOVE SASFS5    DDSFS5
+     C           SASFI5    IFNE *ZEROS                                    R0972
+     C                     Z-ADDSASFI5    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     DDSFI5
+     C                     ELSE                                           R0972
+     C                     MOVE *BLANKS   DDSFI5                          R0972
+     C                     END                                            R0972
+     C*
+     C** Hold existing record image.
+     C*
+     C                     MOVEL@1DBRC    #1DBRC
+     C*
+     CSR                   ENDSR                           * DETFIL ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * RECPRC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPMD    -                                                       *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      * WWDFCF   -                                                       *
+      * WWTRN    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         RECPRC    BEGSR
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     EXSR RECADD
+     C                     ELSE
+     C                     EXSR RECUPD
+     C                     END
+     C*
+     C** COMMIT any DBF changes.
+     C*
+     C           WWRET7    IFEQ *BLANK
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C           WSKIP     OREQ 'N'                                                           CSC022
+     C           CSC022    ANDEQ'Y'                                                           CSC022
+     C                     COMIT
+     C                     ENDIF                                                              CSC022
+     C                     MOVE 'N'       WWDFCF           *Defer confirm
+     C*
+     C** Error: ROLLBACK any DBF changes.
+     C*
+     C                     ELSE
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C                     ROLBK
+     C                     ELSE                                                               CSC022
+     C           WSKIP     IFNE 'Y'                                                           CSC022
+     C                     ROLBK                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     END
+     C*
+     CSR                   ENDSR                           * RECPRC ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      * #ZFRQA   - TO INCREMENT A DAY NUMBER DATE BY A PERIOD VALUE      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * RECPRC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         RECADD    BEGSR
+     C*
+     C** Create SAFE
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C*
+     C** Move all fields to SDSAFEPD
+     C*
+     C                     MOVE 'D'       SARECI
+     C                     TIME           SATLUP
+     C                     Z-ADDRDLUP     SADLUP
+     C                     MOVELRMLUP     SAMLUP
+     C                     Z-ADDRYLUP     SAYLUP
+     C                     MOVE 'I'       SACHTP
+     C                     Z-ADDBJRDNB    SALCD
+     C                     Z-ADD0         SATNLU
+     C                     MOVE DDCUST    SACUST
+     C*
+     C                     MOVE DDCSSN    SACSSN
+     C                     MOVE DDCRNM    SACRNM
+     C                     MOVE DDCRTN    SACRTN
+     C*
+     C                     MOVE DDSFN1    SASFN1
+     C                     MOVE DDSFS1    SASFS1
+     C                     MOVE WWSFI1    SASFI1
+     C                     MOVE DDSFN2    SASFN2
+     C                     MOVE DDSFS2    SASFS2
+     C                     MOVE WWSFI2    SASFI2
+     C                     MOVE DDSFN3    SASFN3
+     C                     MOVE DDSFS3    SASFS3
+     C                     MOVE WWSFI3    SASFI3
+     C                     MOVE DDSFN4    SASFN4
+     C                     MOVE DDSFS4    SASFS4
+     C                     MOVE WWSFI4    SASFI4
+     C                     MOVE DDSFN5    SASFN5
+     C                     MOVE DDSFS5    SASFS5
+     C                     MOVE WWSFI5    SASFI5
+     C*
+     C** Check for duplicate primary key.
+     C*
+     C********** DDCUST    SETLLSDSAFEPD                 90               082067
+     C           DDCUST    SETLLSDSAFEL0                 90               082067
+     C*
+     C** Send message 'Safe already defined'
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SD60202' WWRET7
+     C                     MOVEL'SD60202' ZAMSID
+     C                     EXSR PGMMSG
+     C                     ELSE
+     C                     WRITESDSAFEPF               91
+     C*
+     C** Write error detected.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'Y2U0004' WWRET7
+     C*
+     C** DBF Write successful.
+     C** Change Standing Data Cont - Standing Data Controls  *
+     C*
+     C                     ELSE
+     C                     Z-ADD1         WWNORC           No. of Records
+     C                     Z-ADD*ZERO     WWNOAM           No. of Amends
+     C                     Z-ADD*ZERO     WWNODL           No. of Deletes
+     C                     Z-ADD1         WWNOIN           No. of Inserts
+     C                     MOVEL'I'       WWTYLC           Type of Last Ch
+     C                     EXSR RECCNT
+     C                     END
+     C*
+     C                     END
+     C*
+     C** Send message '*Record added'
+     C*
+     C           WWRET7    IFEQ *BLANK
+     C                     MOVEL'SD99905' ZAMSID           Message id.
+     C                     EXSR PGMMSG                     Send message
+     C                     END
+     C*
+     CSR                   ENDSR                           * RECADD ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      * #ZFRQA   - TO INCREMENT A DAY NUMBER DATE BY A PERIOD VALUE      *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * RECPRC   - PROCESS RECORD                                        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         RECUPD    BEGSR
+     C*
+     C                     MOVE *BLANKS   WWRET7
+     C*
+     C** Send message 'cmd 10 not allowed'
+     C*
+     C           WWDELA    IFEQ 'N'                        - B1
+     C           *IN10     ANDEQ'1'
+     C                     MOVEL'SD99912' ZAMSID
+     C                     EXSR PGMMSG
+     C                     MOVE '1'       *IN78
+     C                     MOVEL'SD99912' WWRET7
+     C                     MOVE '0'       *IN90
+     C                     MOVE '0'       *IN91
+     C                     MOVEL#1DBRC    @1DBRC
+     C                     ELSE                            - X1
+     C********** DDCUST    CHAINSDSAFEPD             9091                 082067
+     C           DDCUST    CHAINSDSAFEL0             9091                 082067
+     C                     MOVEL#1DBRC    @1DBRC                          063568
+     C                     END                             - E1
+     C*
+     C           *IN90     IFEQ '1'                        - B1
+     C*
+     C** Record already deleted.
+     C*
+     C           *IN10     IFEQ '1'                        - B2
+     C                     MOVEL'Y2U0009' WWRET7
+     C                     MOVEL'SD99916' ZAMSID
+     C*
+     C** Record not found.
+     C*
+     C                     ELSE                            - X2
+     C                     MOVEL'SD99908' WWRET7
+     C                     MOVEL'SD99908' ZAMSID
+     C                     END                             - E2
+     C*
+     C                     EXSR PGMMSG
+     C                     ELSE                            - X1
+     C*
+     C** Record locked.
+     C*
+     C           *IN91     IFEQ '1'                        - B2
+     C                     MOVEL'SD99910' WWRET7
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** Record changed.
+     C** Send message '*Update not accepted'
+     C*
+     C           *IN90     IFEQ '0'                        - B1
+     C           *IN91     ANDEQ'0'
+     C           #1DBRC    ANDNE@1DBRC
+     C                     MOVEL'SD99914' WWRET7
+     C                     MOVEL'SD99914' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C** Use SETLL to release record lock.
+     C*
+     C********** DDCUST    SETLLSDSAFEPD             9091                 082067
+     C           DDCUST    SETLLSDSAFEL0             9091                 082067
+     C                     ELSE                            - X1
+     C*
+     C** Delete record
+     C*
+     C           *IN10     IFEQ '1'                        - B2
+     C                     Z-ADDRDLUP     SADLUP
+     C                     MOVE RMLUP     SAMLUP
+     C                     Z-ADDRYLUP     SAYLUP
+     C                     TIME           SATLUP
+     C                     MOVE 'D'       SACHTP
+     C                     Z-ADDBJRDNB    SALCD
+     C                     UPDATSDSAFEPF               91
+     C*
+     C** Update record
+     C*
+     C                     ELSE                            - X2
+     C*
+     C*
+     C*********  BJRDNB    IFNE SALCD                      - B3           063568
+     C                     Z-ADDRDLUP     SADLUP
+     C                     MOVE RMLUP     SAMLUP
+     C                     Z-ADDRYLUP     SAYLUP
+     C                     MOVE 'A'       SACHTP
+     C                     Z-ADDBJRDNB    SALCD
+     C*********            END                             - E3           063568
+     C*
+     C** Move all fields to SDSAFEPD
+     C                     MOVE DDSFN1    SASFN1
+     C                     MOVE DDSFS1    SASFS1
+     C                     MOVE WWSFI1    SASFI1
+     C                     MOVE DDSFN2    SASFN2
+     C                     MOVE DDSFS2    SASFS2
+     C                     MOVE WWSFI2    SASFI2
+     C                     MOVE DDSFN3    SASFN3
+     C                     MOVE DDSFS3    SASFS3
+     C                     MOVE WWSFI3    SASFI3
+     C                     MOVE DDSFN4    SASFN4
+     C                     MOVE DDSFS4    SASFS4
+     C                     MOVE WWSFI4    SASFI4
+     C                     MOVE DDSFN5    SASFN5
+     C                     MOVE DDSFS5    SASFS5
+     C                     MOVE WWSFI5    SASFI5
+     C*
+     C                     TIME           SATLUP
+     C                     UPDATSDSAFEPF               91
+     C                     END                             - E2
+     C*
+     C** Error detected
+     C*
+     C           *IN91     IFEQ '1'                        - B2
+     C*
+     C           *IN10     IFEQ '1'                        - B3
+     C                     MOVEL'SD99915' WWRET7
+     C                     ELSE
+     C                     MOVEL'SD99911' WWRET7
+     C                     END                             - E3
+     C*
+     C** Delete/Update successful:
+     C** Change Standing Data Cont - Standing Data Controls  *
+     C*
+     C                     ELSE                            - X2
+     C                     Z-ADD0         WWNOIN           No. of Inserts
+     C*
+     C           *IN10     IFEQ '1'                        - B3
+     C                     Z-ADD-1        WWNORC           No. of Records
+     C                     Z-ADD1         WWNODL           No. of Deletes
+     C                     Z-ADD0         WWNOAM           No. of Amends
+     C                     MOVEL'D'       WWTYLC
+     C                     ELSE                            - X3
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     Z-ADD0         WWNORC           No. of Records
+     C                     Z-ADD0         WWNODL           No. of Deletes
+     C                     Z-ADD1         WWNOAM           No. of Amends
+     C                     MOVEL'A'       WWTYLC
+     C                     END                             - E3
+     C*
+     C                     EXSR RECCNT
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** DBF Update error detected.
+     C** Reset screen fields if changed record.
+     C*
+     C           *IN10     IFEQ '0'                        - B1
+     C           WWRET7    ANDEQ'Y2U0007'
+     C                     EXSR DETFIL
+     C                     END                             - E1
+     C*
+     C           WWRET7    IFEQ *BLANKS                    - B1
+     C*
+     C** Send message '*Record deleted'
+     C*
+     C           *IN10     IFEQ '1'                        - B2
+     C                     MOVEL'SD99906' ZAMSID
+     C*
+     C** Send message '*Record changed'
+     C*
+     C                     ELSE
+     C                     MOVEL'SD99907' ZAMSID
+     C                     END                             - E2
+     C*
+     C                     EXSR PGMMSG
+     C                     END                             - E1
+     C*
+     CSR                   ENDSR                           * RECUPD ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         DETDEF    BEGSR
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C                     MOVE *BLANKS   @RTCD
+     C                     CALL 'AOCUSTR0'AOCUST
+      *                                                                                      BUG5139
+      ** If not found in SDCUSTPD then check if it is in the                                 BUG5139
+      ** shadow file SDCDSHPD                                                                BUG5139
+      *                                                                                      BUG5139
+     C           @RTCD     IFNE *BLANKS                                                      BUG5139
+     C           DDCUST    CHAIN@BBREBFZ             90                                      BUG5139
+     C           *IN90     IFEQ *OFF                                                         BUG5139
+     C                     MOVE *BLANKS   @RTCD                                              BUG5139
+     C                     ENDIF                                                             BUG5139
+     C                     ENDIF                                                             BUG5139
+     C*
+     C** DBF Record not found.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SD99908' WWRET7
+     C                     MOVEL'SD99908' ZAMSID
+     C                     EXSR PGMMSG
+     C*
+     C** Move default values to screen fields
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   WWRET7
+     C                     MOVELBBCSSN    DDCSSN
+     C                     MOVELBBCRNM    DDCRNM
+     C                     MOVELBBCRTN    DDCRTN
+     C                     END
+     C*
+     CSR                   ENDSR                           * DETDEF ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         RECCNT    BEGSR
+     C*
+     C                     MOVEL*BLANKS   WWRET7
+     C                     MOVEL'SDSAFEPD'AHFLNM           Filename
+     C           AHFLNM    CHAIN@AHREAU              9091
+     C*
+     C** Record not found.
+     C** Send message '*Record no longer on file'
+     C*
+     C           *IN90     IFEQ '1'
+     C*
+     C           WWPMD     IFEQ 'ADD'
+     C                     MOVEL'SD99909' WWRET7
+     C                     MOVEL'SD99909' ZAMSID
+     C                     ELSE
+     C                     MOVEL'SD99908' WWRET7
+     C                     MOVEL'SD99908' ZAMSID
+     C                     END
+     C*
+     C                     EXSR PGMMSG                     Send message
+     C                     ELSE
+     C*
+     C** Record locked.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'SD99910' WWRET7
+     C                     ELSE
+     C*
+     C** USER: Processing after DBF read
+     C*
+     C                     ADD  AHNORC    WWNORC           No. of Records
+     C                     ADD  AHNOIN    WWNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WWNOAM           No. of Amends
+     C                     ADD  AHNODL    WWNODL           No. of Deletes
+     C*
+     C** Move Non-key field  to @AHREAU
+     C*
+     C                     Z-ADDWWNORC    AHNORC           No. of Records
+     C                     Z-ADDWWNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWWNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWWNODL    AHNODL           No. of Deletes
+     C                     UPDAT@AHREAU                91  *
+     C*
+     C** Change error detected.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVEL'SD99911' WWRET7
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     CSR                   ENDSR                           * RECCNT ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * PGMMSG   - SEND PROGRAM MESSAGES                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * Y2SNMGC  -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYVAL   - VALIDATE KEY FIELD                                    *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      * RECADD   - PROCESS ADD REQUEST                                   *
+      * RECUPD   - PROCESS AMEND/DELETE REQUEST                          *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      * RECCNT   - UPDATE NO OF RECORDS IN STANDING DATA CONTROLS        *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         PGMMSG    BEGSR
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGM     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM 'MIDAS   'ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C** Clear all fields for default mechanism next time.
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     CSR         ZAEXIT    ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * PM0601   - CUSTOMER NOTEPAD MAINTENANCE PGM                      *
+      * PGMEND   - EXIT PROGRAM                                          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      * KEYPRC   - PROCESS KEY SCREEN                                    *
+      * DETPRC   - PROCESS DETAILS                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPTFR   -                                                       *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         PGMCLS    BEGSR
+     C*
+     C*********************MOVEL*BLANKS   WWRET7                          076002
+     C                     EXSR PGMEND
+     C*
+     CSR         ZXEXIT    ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * PGMEND   - EXIT PROGRAM                                          *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * PGMCLS   - CLOSE CALLED PROGRAMS                                 *
+      * INIT     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     CSR         PGMEND    BEGSR
+     C*
+     C** ROLLBACK any uncommitted DBF changes.
+     C*
+     C*********************ROLBK                       90                 076002
+     C**N03*****           ROLBK                       90                 076002              CSC022
+     C           *IN03     IFNE *ON                                                           CSC022
+     C           CSC022    IFEQ 'N'                                                           CSC022
+     C                     ROLBK                       90                                     CSC022
+     C                     ELSE                                                               CSC022
+     C           WSKIP     IFNE 'Y'                                                           CSC022
+     C                     ROLBK                       90                                     CSC022
+     C                     ELSE                                                               CSC022
+     C                     SETON                     U7U8                                     CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+     CSR         ZYEXIT    ENDSR
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ZDATE1   - VALIDATE DATES SUBMITTED AND CONVERT                  *
+      *            TO A NUMBER OF DAYS.                                  *
+      *                                                                  *
+      *    THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETVAL   - VALIDATE DETAILS                                      *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER. RESET ERROR INDICATOR
+     C                     Z-ADD0         ZDAYNO  50
+     C                     SETOF                     99
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID. BYPASS IF ERROR
+     C           ZMTH      IFLE 0
+     C           ZMTH      ORGT 12
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   ENSURE DAY IS VALID. BYPASS IF ERROR
+     C           ZDAY      IFLE 0
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C**   CHECK FOR 30 DAY MONTHS. BYPASS IF ERROR
+     C           ZMTH      IFEQ 4
+     C           ZMTH      OREQ 6
+     C           ZMTH      OREQ 9
+     C           ZMTH      OREQ 11
+     C**
+     C           ZDAY      IFGT 30
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     ELSE
+     C**
+     C**   CHECK FOR 31 DAY MONTHS (ALL OTHERS BUT FEB). BYPASS IF ERROR
+     C           ZDAY      IFGT 31
+     C           ZMTH      ANDNE2
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   CHECK FOR LEAP YEAR: REMAINDER WILL BE ZERO IF IT IS A LEAP YR
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10
+     C**
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C           ZMTH      IFEQ 2
+     C**
+     C**   INVALID IF GREATER THAN 28 AND NOT A LEAP YEAR
+     C           ZLY       IFGT 0
+     C           ZDAY      ANDGT28
+     C                     SETON                     99
+     C                     GOTO ZDEND1                     BYPASS IF ERROR
+     C                     END
+     C**
+     C**   INVALID IF GREATER THAN 29 AND A LEAP YEAR - BYPASS IF ERROR
+     C           ZLY       IFEQ 0
+     C           ZDAY      ANDGT29
+     C                     SETON                     99
+     C                     GOTO ZDEND1
+     C                     END
+     C**
+     C                     END
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.
+     C**
+     C**   MULTIPLY NO. OF FOUR-YEAR SPANS, BY NO. OF DAYS IN SPAN
+     C           ZLYR      MULT 1461      ZDAYNO
+     C**
+     C**   IF NOT A LEAP YEAR, ADD APPROPRIATE NO. OF DAYS FOR EXTRA
+     C**   YEARS USING REMAINDER FIELD (IE. 1, 2 OR 3 X 356)
+     C           ZLY       IFGT 0
+     C           ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO
+     C                     END
+     C**
+     C**   IF IT IS A LEAP YEAR, AND LATER THAN FEBRUARY, ADD ONE FOR
+     C**   29TH OF FEB
+     C           ZLY       IFEQ 0
+     C           ZMTH      ANDGT2
+     C           ZDAYNO    ADD  1         ZDAYNO
+     C                     END
+     C**
+     C**   ADD APPROPRIATE NUMBER OF DAYS FOR THE MONTH NUMBER
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO
+     C**
+     C**   ADD NUMBER OF DAYS IN MONTH
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ZDATE2   - CONVERT A DAY NUMBER TO DATE FORMATS.                 *
+      *                                                                  *
+      *    THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * DETFIL   - MOVE RECORD FIELDS TO SCREEN FIELDS                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR LEAP YEAR WORK FIELD.
+     C                     MOVE 'N'       ZLEAP   1
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50
+     C           ZDAYN1    IFLT 0
+     C                     GOTO ZDEND2
+     C                     END
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    IFGE ZYDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG1
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C           ZWRK2     IFNE 0
+     C           ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C                     END
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C           ZWRK2     IFEQ 0
+     C           ZDAYN1    IFEQ 59
+     C                     MOVE 'Y'       ZLEAP
+     C                     END
+     C           ZDAYN1    IFGE 59
+     C           ZDAYN1    SUB  1         ZDAYN1
+     C                     END
+     C                     END
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    IFGE ZMDY,ZWRK2
+     C           ZWRK2     ADD  1         ZWRK2
+     C                     GOTO ZDTAG2
+     C                     END
+     C*
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C           ZLEAP     IFEQ 'Y'
+     C           ZDAY      ADD  1         ZDAY
+     C                     END
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C                     MOVELZDAY      ZWRK5   5
+     C           ZDAY      IFLT 10
+     C                     MOVEL' '       ZWRK5
+     C                     END
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT     -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * Y2BGCMC  -                                                       *
+      * PGMEND   - EXIT PROGRAM                                          *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      * WWPMD    -                                                       *
+      * WWJDT    -                                                       *
+      * WWJTM    -                                                       *
+      * WWPTFR   -                                                       *
+      * WWRPT    -                                                       *
+      *                                                                  *
+      ********************************************************************
+     CSR         INIT      BEGSR
+     C*
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 is on.                                CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WSKIP   1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFNE *BLANKS                                                       CSC022
+     C           @RTCD     ANDNE'*NRF   '                                                     CSC022
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSC022
+     C                     Z-ADD1         DBASE                                               CSC022
+     C                     MOVEL'CSC022'  DBKEY                                               CSC022
+     C                     EXSR *PSSR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCMTJB    WCMTAR                                              CSC022
+     C           ##JOB     LOKUPWCMTAR                   10                                   CSC022
+     C           *IN10     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WSKIP                                               CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     MOVEL*BLANKS   WWRET7
+     C*
+     C** Open files.
+     C                     OPEN SDCDSHL1                                                     BUG5139
+     C** Begin commit control.
+     C*
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           WWRET7
+     C*
+     C           WWRET7    IFNE *BLANKS
+     C           WWRET7    ANDNE'CPF8351'
+     C                     EXSR PGMEND
+     C                     END
+     C*
+     C** Access Bank details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C* Select initial mode.
+     C*
+     C           @1NROP    IFEQ *ZERO
+     C                     MOVEL'ADD'     WWPMD   3        Add mode
+     C                     MOVE 'I'       DDACTN
+     C                     ELSE
+     C                     MOVEL'CHG'     WWPMD            Change mode
+     C                     MOVE 'A'       DDACTN
+     C                     END
+     C*
+     C** Setup job date/time.
+     C*
+     C                     Z-ADDUDATE     WWJDT            Job date.
+     C                     TIME           WWJTM            Job time.
+     C*
+     C** Define work field Deletion Allowed
+     C*
+     C                     MOVEL*BLANK    WWDELA  1
+     C*
+     C** Define work field broker indicator set
+     C*
+     C                     MOVEL*BLANK    WWBINS  1
+     C*
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WWNORC  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WWNOAM  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WWNODL  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WWNOIN  50
+      * Define work field Safe Reference
+     C                     MOVE *BLANKS   WWPTFR  4
+      * Define work field Type of Last Change
+     C                     MOVE *BLANK    WWTYLC  1
+      * Define work field run day number
+     C                     Z-ADD*ZERO     WWRDNB  50
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WWSUC   1
+      * Define work field date format flag
+     C                     MOVEL*BLANK    WWDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WWMBIN  1
+      *
+      * USER: Initialise program
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE AGMRDT    DDRUND
+     C                     MOVE AGRDNB    WWRDNB
+     C                     MOVE AGSUC     WWSUC
+     C                     MOVE AGDFF     WWDFF
+     C                     MOVE AGMBIN    WWMBIN
+     C*
+     C** Not every key field passed - loop program.
+     C*
+     C           DDCUST    IFEQ *BLANK                     Customer Number
+     C                     MOVEL'Y'       WWRPT   1
+     C*
+     C** Full key passed, so single shot program.
+     C*
+     C                     ELSE
+     C                     MOVEL'N'       WWRPT
+     C                     END
+      *
+      * parameter list for aocustr0
+     C           AOCUST    PLIST
+     C                     PARM           @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM DDCUST    CUSKEY 10
+     C                     PARM '*CNUM  ' KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      * define db error work fields
+     C           *LIKE     DEFN DBFILE    WWFILE
+     C           *LIKE     DEFN DBKEY     WWKEY
+     C           *LIKE     DEFN DBASE     WWASE
+     C*
+     CSR                   ENDSR                           * INIT   ESR *
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    -                                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * KEYDET   - ACCESS DETAILS FOR KEY                                *
+      * DETDEF   - MOVE DEFAULT VALUES TO SCREEN FIELDS                  *
+      * INIT     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWFILE   -                                                       *
+      * WWKEY    -                                                       *
+      * WWASE    -                                                       *
+      * WWRET7   - RETURN CODE FOR CALLING PGM                           *
+      *                                                                  *
+      ********************************************************************
+     CSR         *PSSR     BEGSR
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELWWFILE    DBFILE
+     C                     MOVELWWKEY     DBKEY
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVELWWASE     DBASE
+     C                     OUT  LDA
+     C*
+     C** DUMP AND RETURN TO THE CALLING PROGRAM
+     C*
+     C                     SETON                     LRU7U8
+     C                     MOVEL'1'       WWRET7
+     C                     DUMP
+     C                     RETRN
+     C*
+     CSR                   ENDSR                           * *PSSR  ESR *
+     C*****************************************************************
+     C*                                                               *
+     C*                                                               *
+     C*           This subroutine will take as input a 16A field      *
+     C*           a 1N number of integers and a 1N number of decimal  *
+     C*           places. Ignoring the leading and trailing blanks    *
+     C*           it will ensure that the field contains only numeric *
+     C*           characters and a decimal point, and that it has no  *
+     C*           embedded blanks, or more than one decimal point.    *
+     C*           It will also check that the number of figures before*
+     C*           and after the decimal point do not exceed the input *
+     C*           parameters. The subroutine will output the number as*
+     C*           a 16A field and a 15N field, along with an error    *
+     C*           code. The alpha field will be right aligned with    *
+     C*           the leading zeros blanked, and trailing blanks zero *
+     C*           filled. The number returned will be 15 long with 0  *
+     C*           decimal places. The error code will contain 0 if    *
+     C*           there was no error, 1 if there was a non-numeric    *
+     C*           character found, and 2 if the number of decimal     *
+     C*           places are wrong.                                   *
+     C*                                                               *
+     C*  Input  : @@ALPH - 16A field containing the field to validate *
+     C*           @@IDP  - number of decimal places                   *
+     C*           @@IINT - number of integers                         *
+     C*                                                               *
+     C*  Output : @@ALPH - 16A field for display                      *
+     C*           @@AMT  - 15N field for calculation                  *
+     C*           @@ERCD - 1N error code                              *
+     C*                                                               *
+     C*  Uses   : @F     - array of 16 elements 1 character long      *
+     C*           @G     - array of 16 elements 1 character long      *
+     C*           @@CADP - calculated number of decimal places        *
+     C*           @@CINT - calculated number of integers              *
+     C*           @@PIDP - position of dp in input array              *
+     C*           @@PODP - position of dp in output array             *
+     C*           @@C    - index for array @F                         *
+     C*           @@D    - index for array @G                         *
+     C*           @@WK7  - workfield used for converting array element*
+     C*                    to a 1N number.                            *
+     C*           @H     - array containing powers of 10              *
+     C*           @@E    - index to array @H                          *
+     C*           @@WK5  - work field                                 *
+     C*           @@ALP1 - feild used to right align 0 decimal places *
+     C*                                                              *
+     C*****************************************************************
+     C*
+     C           ZA0840    BEGSR
+     C*
+     C** initialize the fields and the arrays
+     C                     MOVE '0'       *IN81
+     C                     MOVE '0'       *IN82
+     C                     Z-ADD0         @@ERCD  10
+     C                     Z-ADD0         @@AMT  150
+     C                     MOVEA*BLANKS   @G
+     C                     MOVEA@@ALPH    @F
+     C                     MOVE *BLANKS   @@ALPH 16
+     C                     Z-ADD0         @@WK7   10
+     C                     Z-ADD0         @@CADP  30
+     C                     Z-ADD0         @@CINT  30
+     C                     Z-ADD0         @@PIDP  30
+     C                     Z-ADD0         @@PODP  30
+     C                     Z-ADD0         @@C     20
+     C                     Z-ADD0         @@D     20
+     C                     Z-ADD0         @@E     20
+      *
+      ** define the input fields
+     C           *LIKE     DEFN @@CADP    @@IDP
+     C           *LIKE     DEFN @@CINT    @@IINT
+      *
+      ** first check that the number input will not produce a number
+      ** output with more than 15 figures.
+     C           @@IDP     ADD  @@IINT    @@WK2   20
+     C           @@WK2     IFGT 15                         B1
+     C                     Z-ADD2         @@ERCD           *1
+     C                     GOTO ZA0849                     *1
+     C                     END                             E1
+      *
+      ** work through input array, ignoring leading zeros and blanks,
+      ** also blanking the leading zeros in the input array.
+     C                     MOVE '0'       *IN83
+     C                     ADD  1         @@C
+     C           @@C       DOWLE16                         B1
+     C           *IN83     ANDEQ'0'                        *1
+     C           @F,@@C    IFNE ' '                        B*2
+     C           @F,@@C    ANDNE'0'                        **2
+     C                     MOVE '1'       *IN83            **2
+     C                     SUB  1         @@C              **2
+     C                     END                             E*2
+     C                     ADD  1         @@C              **2
+     C                     END                             E1
+      *
+      ** check the integer part of the number for valid characters.
+     C           @@C       DOWLE16                         B1
+     C           @F,@@C    ANDNE'.'                        *1
+     C           @F,@@C    ANDNE' '                        *1
+      *
+      ** check for non numeric characters
+     C           @F,@@C    IFGT '9'                        B*2
+     C           @F,@@C    ORLT '0'                        **2
+     C                     Z-ADD0         @@AMT            **2
+     C                     Z-ADD1         @@ERCD           **2
+     C                     GOTO ZA0849                     **2
+      *
+     C                     ELSE                            X*2
+      *
+     C                     ADD  1         @@CINT           **2
+      *
+      ** check number of integers is not greater than that required
+     C           @@CINT    IFGT @@IINT                     B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** multiply the output amount by 10 then add the number in
+      ** the input array element being processed.
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C           @@AMT     ADD  @@WK7     @@AMT            **2
+     C                     END                             E*2
+      *
+      ** increase array index
+     C                     ADD  1         @@C              *1
+     C                     END                             E1
+      *
+      ** set up position of decimal point in input array
+     C                     Z-ADD@@C       @@PIDP
+      *
+      ** if the character pointed to is a decimal point add 1 to the
+      ** index
+     C           @@C       IFLE 16                         B1
+     C           @F,@@C    ANDEQ'.'                        *1
+     C                     ADD  1         @@C              *1
+     C                     MOVE '1'       *IN82            *1
+     C                     END                             E1
+      *
+      ** now validate the decimal part of the number
+     C           @@C       DOWLE16                         B1
+      *
+      ** if a blank is found set on the blank input indicator
+     C           @F,@@C    IFEQ ' '                        B*2
+     C                     MOVE '1'       *IN81            **2
+     C                     END                             E*2
+      *
+      ** if the figure is numeric, check that the number of decimal
+      ** places does not exceed that specified, and that no blanks
+      ** have been entered.
+     C           @F,@@C    IFGE '0'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     ADD  1         @@CADP           **2
+      *
+     C           @@CADP    IFGT @@IDP                      B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD2         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C           *IN81     IFEQ '1'                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+      ** update output amount
+     C           @@AMT     MULT 10        @@AMT            **2
+     C                     MOVE @F,@@C    @@WK7            **2
+     C                     ADD  @@WK7     @@AMT            **2
+      *
+     C                     ELSE                            X*2
+      *
+      ** if the character is not numeric and not a blank then it is
+      ** invalid
+     C           @F,@@C    IFNE ' '                        B**3
+     C                     Z-ADD0         @@AMT            ***3
+     C                     Z-ADD1         @@ERCD           ***3
+     C                     GOTO ZA0849                     ***3
+     C                     END                             E**3
+      *
+     C                     END                             E*2
+      *
+      ** increase index
+     C                     ADD  1         @@C              *1
+      *
+     C                     END                             E1
+      *
+      ** correct the output number for any decimal places not input
+      ** in the alpha field.
+     C           @@IDP     SUB  @@CADP    @@E
+      *
+      ** increase the index by one to get correct array entry
+     C                     ADD  1         @@E
+     C           @@AMT     MULT @H,@@E    @@AMT
+      *
+      ** now format the output alpha field, first calculate where
+      ** the decimal point goes
+     C           16        SUB  @@IDP     @@PODP
+     C           @@PODP    SUB  1         @@PIDP
+      *
+      ** if there are no decimal points set the position to 17
+     C           @@IDP     IFEQ 0                          B1
+     C                     Z-ADD17        @@PODP           *1
+     C                     END                             E1
+      *
+      ** move the output number into the input array
+     C                     MOVEA*BLANKS   @F
+     C                     MOVE @@AMT     @@AMTA 15
+     C                     MOVEA@@AMTA    @F
+      *
+      ** set up indexes
+     C                     Z-ADD1         @@C
+     C                     Z-ADD1         @@D
+     C                     MOVE '0'       *IN80
+      *
+      ** now fill up the output array
+     C           @@D       DOWLE16                         B1
+      *
+      ** insert decimal point if the position is found
+     C           @@D       IFEQ @@PODP                     B*2
+     C                     MOVE '.'       @G,@@D           **2
+     C                     ADD  1         @@D              **2
+     C                     END                             E*2
+      *
+      ** insert the zero before the decimal point
+     C           *IN80     IFEQ '0'                        B*2
+     C           @@D       ANDEQ@@PIDP                     **2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE '1'       *IN80            **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** blank leading zeros
+     C           *IN80     IFEQ '0'                        B*2
+     C           @F,@@C    ANDEQ'0'                        **2
+     C                     MOVE ' '       @G,@@D           **2
+     C                     END                             E*2
+      *
+      ** move a normal character
+     C           @F,@@C    IFGE '1'                        B*2
+     C           @F,@@C    ANDLE'9'                        **2
+     C                     MOVE @F,@@C    @G,@@D           **2
+     C                     MOVE '1'       *IN80            **2
+     C                     END                             E*2
+      *
+      ** non blanked zero
+     C           @F,@@C    IFEQ '0'                        B*2
+     C           *IN80     ANDEQ'1'                        **2
+     C                     MOVE '0'       @G,@@D           **2
+     C                     END                             E*2
+      *
+     C                     ADD  1         @@C              *1
+     C                     ADD  1         @@D              *1
+     C                     END                             E1
+      *
+      *
+      ** put output array into output amount
+     C                     MOVEA@G        @@ALPH
+      *
+      ** align figure with zero decimal places.
+     C           @@IDP     IFEQ 0                          B1
+     C                     MOVE *BLANKS   @@ALP1 17        *1
+     C                     MOVE @@ALPH    @@ALP1           *1
+     C                     MOVEL@@ALP1    @@ALPH           *1
+     C                     END                             E1
+      *
+     C           ZA0849    ENDSR                           ZA0849 TAG
+     C*=========================================================================
+** CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** array of powers of 10 from 0 to 8
+000000000000001
+000000000000010
+000000000000100
+000000000001000
+000000000010000
+000000000100000
+000000001000000
+000000010000000
+000000100000000
+000001000000000
+000010000000000
+000100000000000
+001000000000000
+010000000000000
+100000000000000

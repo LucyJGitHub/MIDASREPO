@@ -1,0 +1,3948 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL City Dealer LE cashflow extract ETVS fmt')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0012 - Midas/Citydealer Cash Flow extract in EVTS format   *
+      *                                                               *
+      *  Function:  This program is executed as the EXIT program on   *
+      *  ( I/C )    the RCVJRNE command for journal ICJRN from within *
+      *             program DLC0002. It monitors for any Customer     *
+      *             Lending loans and loan amendments inserted,       *
+      *             amended or deleted during input cycle which may   *
+      *             affect cashflow and exposure. Details of these    *
+      *             transactions are extracted for transmission to    *
+      *             City Dealer.                                      *
+      *                                                               *
+      *             The program is based on DL0002. It transmits data *
+      *             in the new Citydealer ETVS commercial loans       *
+      *             format rather than the MM formats used by DL0011. *
+      *                                                               *
+      *  Called By: DLC0002 - LE, FT, RE & NT Transactions Extract    *
+      *                       Control                                 *
+      *                                                               *
+      *  Calls    : DL0011   - ETVS Cashflow extract                  *
+      *             DLC0012  - Lending download to City Dealer ETVS   *
+      *             AOCURRR0 - Currency details access object         *
+      *             AOCUSTR0 - Customer details access object         *
+      *             AONOSTR0 - Nostro details access object           *
+      *             AOBANKR0 - Bank details access object             *
+      *             AOGELRR0 - General ledger details access object   *
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG11425           Date 31May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 195084             Date 19Jul01               *
+      *                 192766             Date 19Jul01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CCM003 *CREATE     Date 31Jan01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  BUG11425 - Error in CLOANL DS buffer positions               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  195084 - Add the following three fields to CLFIXING format:  *
+      *           new interest payment date; next rollover date;      *
+      *           new maturity date.                                  *
+      *           Remove processing for spread changes.               *
+      *           Remove rate fix cancellations.                      *
+      *  192766 - No records should be sent to City Dealer for action *
+      *           'A' amend on a principal change loan amendment.     *
+      *           Only settlement details may be changed on an amend  *
+      *           and these are not used by City Dealer on a CLCPR.   *
+      *           Fix also prevents duplicate CLCPR record problems   *
+      *           in City Dealer.                                     *
+      *  CCM003 - New program to transmit data in new Citydealer ETVS *
+      *           commercial loans record formats.                    *
+      *           Based on program DL0002.                            *
+      *                                                               *
+      *****************************************************************
+     FCLOAN   IF  E           K        DISK
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+      ** Midas loans master file.
+      *
+     FLOAMSDK IF  E                    DISK
+      ** Midas loan amendments master file.
+      *
+     FLOAMS   IF  E           K        DISK
+     F            LOAMSDKF                          KRENAMELOAMSF
+     F            LOAMSDHF                          KIGNORE
+     F            LOAMSZ1F                          KIGNORE
+      ** Midas loan amendments master file.
+      *
+     FFCLTY   IF  E           K        DISK
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFNF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+      ** Midas facilities master file.
+      *
+     FCLOANF  IF  E           K        DISK
+     F            CLOANCLF                          KRENAMECLOANFF
+      ** Loans by facility file.
+      *
+     FACNUMA  IF  E           K        DISK
+      ** Retail accounts file.
+      *
+     FDLCDJNPDUF  E                    DISK         KCOMIT
+      ** Journal entry sequence number pointer.
+      *
+     FDLETLEPDO   E                    DISK         KCOMIT            UC
+      ** Lending transactions extract in City Dealer ETVS format.
+      *
+     FDLETCLPDO   E                    DISK         KCOMIT            UC
+      ** Demand loan transactions extract in City Dealer ETVS format.
+      *
+     FDLETCPPDO   E                    DISK         KCOMIT            UC
+      ** Demand parts purchased extract in City Dealer ETVS format.
+      *
+     FDL0012AUO   E                    PRINTER                        UC
+      ** Audit report.
+      *
+     F/EJECT
+      /TITLE FUNCTION OF INDICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N  C T I O N    O F    I N D I C A T O R S               *
+      *                                                               *
+      *  40         Record not found on logical file CLOAN.           *
+      *  42         Error on update to file DLCDJNPD.                 *
+      *  43         No record found on file DLCDJNPD.                 *
+      *  44         Record not found on logical file ACNUMA.          *
+      *  45         Record not found on file LOAMSDK.                 *
+      *  46         Record not found on file LOAMS.                   *
+      *  47         Record not found on file FCLTY.                   *
+      *  48         Record not found on file CLOANF.                  *
+      *  90         Used by standard subroutines.                     *
+      *  91         Used by standard subroutines.                     *
+      *  97         Determine if program is going to shut down.       *
+      *  98         Date format indicator.                            *
+      *  U6         Journal entry type XJ read.                       *
+      *  U7         Database error.                                   *
+      *  U8         Database error.                                   *
+      *  LR         Exit program                                      *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E    I N D E X                             *
+      *                                                               *
+      *                                                               *
+      *  AMOUNT - Calculate principal amount.                         *
+      *  CURRCY - Access currency details (no of decimal positions).  *
+      *  ADDRES - Access customer details (report name and town).     *
+      *  EXTRCT - Write to appropriate extract file depending on      *
+      *           on loan processing type.                            *
+      *  INSERT - Inserts in City Dealer commercial loans format.     *
+      *  CANCEL - Deletes in City Dealer commercial loans format.     *
+      *  PRNCPL - Inserts in City Dealer commercial loans principal   *
+      *           changes record format.                              *
+      *  FIXING - Rate changes in City Dealer commercial loans rate   *
+      *           fixing format.                                      *
+      *  RCVTO  - Format receive to name and receive to city.         *
+      *  PAYFRM - Format pay from name and pay from city.             *
+      *  NOSTRO - Access nostro customer details.                     *
+      *  INITL  - Initial processing.                                 *
+      *  TAKEON - Take on of loans and loan amendments in City Dealer *
+      *  ZDATE9 - Convert date from Midas day number to CCYYMMDD.     *
+      *  ZEDIT  - Insert decimal point in numeric field and blank     *
+      *           out leading zeros.                                  *
+      *  *PSSR  - Exception error routine.                            *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+      *
+     E                    AAMT       16  1
+      ** Array for formatting amounts.
+      *
+     E                    CPY@    1   1 80
+      ** Array containing copyright statement.
+      *
+     E                    POWR    1   7  7 3
+      ** Array for currency conversion.
+      *
+      /COPY ZSRSRC,ZDATE9Z1
+      /COPY ZSRSRC,ZEDITZ1
+      *
+      *
+      ** Rename fields from loan amendments file LOAMSDK.
+      ** This file is only accessed when program is running in take-on
+      ** mode.
+      *
+     ILOAMSDKF
+     I              RECI                            RECIDK
+     I              LNRF                            LNRFDK
+     I              VDAT                            VDATDK
+     I              LASN                            LASNDK
+     I              MRIN                            MRINDK
+     I              LTYP                            LTYPDK
+     I              SUTP                            SUTPDK
+     I              PTYP                            PTYPDK
+     I              AMTP                            AMTPDK
+     I              PRSQ                            PRSQDK
+     I              BRTT                            BRTTDK
+     I              RTSP                            RTSPDK
+     I              CCY                             CCYDK
+     I              PRAM                            PRAMDK
+     I              INTA                            INTADK
+     I              WTXA                            WTXADK
+     I              FEAM                            FEAMDK
+     I              TAMT                            TAMTDK
+     I              BRCA                            BRCADK
+     I              CNUM                            CNUMDK
+     I              REPT                            REPTDK
+     I              AUTO                            AUTODK
+     I              STAI                            STAIDK
+     I              SETP                            SETPDK
+     I              OSAC                            OSACDK
+     I              TSEN                            TSENDK
+     I              FACO                            FACODK
+     I              SPI1                            SPI1DK
+     I              SPI2                            SPI2DK
+     I              SPI3                            SPI3DK
+     I              LAIN                            LAINDK
+     I              BRTE                            BRTEDK
+     I              SPIN                            SPINDK
+     I              CALC                            CALCDK
+     I              WTIN                            WTINDK
+     I              LLAG                            LLAGDK
+     I              LWOI                            LWOIDK
+     I              XAVD                            XAVDDK
+     I              XASQ                            XASQDK
+     I              FCUS                            FCUSDK
+     I              FTYP                            FTYPDK
+     I              FSEQ                            FSEQDK
+     I              RLON                            RLONDK
+     I              FECD                            FECDDK
+     I              PONI                            PONIDK
+     I              ACTI                            ACTIDK
+     I              CNFY                            CNFYDK
+     I              TLXY                            TLXYDK
+     I              CBLY                            CBLYDK
+     I              INTC                            INTCDK
+     I              NACD                            NACDDK
+     I              ACBI                            ACBIDK
+     I              LSWCC                           LSWCCD
+     I              LSWSC                           LSWSCD
+     I              OSBR                            OSBRDK
+     I              FCLB                            FCLBDK
+     I              LSMD                            LSMDDK
+     I              REBT                            REBTDK
+     I              ORED                            OREDDK
+     I              LCD                             LCDDK
+     I              CHTP                            CHTPDK
+     I              TNLU                            TNLUDK
+     I              RSTM                            RSTMDK
+     I              RONS                            RONSDK
+     I              RIBN                            RIBNDK
+     I              RIBA                            RIBADK
+     I              ROBN                            ROBNDK
+     I              ROCN                            ROCNDK
+     I              PSTM                            PSTMDK
+     I              PONS                            PONSDK
+     I              PIBN                            PIBNDK
+     I              PIBA                            PIBADK
+     I              POBN                            POBNDK
+     I              POCN                            POCNDK
+     I              RCRN                            RCRNDK
+     I              RCRA                            RCRADK
+     I              RVNO                            RVNODK
+     I              AWBN                            AWBNDK
+     I              AWBA                            AWBADK
+     I              BENN                            BENNDK
+     I              BENA                            BENADK
+      *
+      ** Rename fields from loan amendments file LOAMS.
+      *
+     ILOAMSF
+     I              RECI                            RECIDK
+     I              LNRF                            LNRFDK
+     I              VDAT                            VDATDK
+     I              LASN                            LASNDK
+     I              MRIN                            MRINDK
+     I              LTYP                            LTYPDK
+     I              SUTP                            SUTPDK
+     I              PTYP                            PTYPDK
+     I              AMTP                            AMTPDK
+     I              PRSQ                            PRSQDK
+     I              BRTT                            BRTTDK
+     I              RTSP                            RTSPDK
+     I              CCY                             CCYDK
+     I              PRAM                            PRAMDK
+     I              INTA                            INTADK
+     I              WTXA                            WTXADK
+     I              FEAM                            FEAMDK
+     I              TAMT                            TAMTDK
+     I              BRCA                            BRCADK
+     I              CNUM                            CNUMDK
+     I              REPT                            REPTDK
+     I              AUTO                            AUTODK
+     I              STAI                            STAIDK
+     I              SETP                            SETPDK
+     I              OSAC                            OSACDK
+     I              TSEN                            TSENDK
+     I              FACO                            FACODK
+     I              SPI1                            SPI1DK
+     I              SPI2                            SPI2DK
+     I              SPI3                            SPI3DK
+     I              LAIN                            LAINDK
+     I              BRTE                            BRTEDK
+     I              SPIN                            SPINDK
+     I              CALC                            CALCDK
+     I              WTIN                            WTINDK
+     I              LLAG                            LLAGDK
+     I              LWOI                            LWOIDK
+     I              XAVD                            XAVDDK
+     I              XASQ                            XASQDK
+     I              FCUS                            FCUSDK
+     I              FTYP                            FTYPDK
+     I              FSEQ                            FSEQDK
+     I              RLON                            RLONDK
+     I              FECD                            FECDDK
+     I              PONI                            PONIDK
+     I              ACTI                            ACTIDK
+     I              CNFY                            CNFYDK
+     I              TLXY                            TLXYDK
+     I              CBLY                            CBLYDK
+     I              INTC                            INTCDK
+     I              NACD                            NACDDK
+     I              ACBI                            ACBIDK
+     I              LSWCC                           LSWCCD
+     I              LSWSC                           LSWSCD
+     I              OSBR                            OSBRDK
+     I              FCLB                            FCLBDK
+     I              LSMD                            LSMDDK
+     I              REBT                            REBTDK
+     I              ORED                            OREDDK
+     I              LCD                             LCDDK
+     I              CHTP                            CHTPDK
+     I              TNLU                            TNLUDK
+     I              RSTM                            RSTMDK
+     I              RONS                            RONSDK
+     I              RIBN                            RIBNDK
+     I              RIBA                            RIBADK
+     I              ROBN                            ROBNDK
+     I              ROCN                            ROCNDK
+     I              PSTM                            PSTMDK
+     I              PONS                            PONSDK
+     I              PIBN                            PIBNDK
+     I              PIBA                            PIBADK
+     I              POBN                            POBNDK
+     I              POCN                            POCNDK
+     I              RCRN                            RCRNDK
+     I              RCRA                            RCRADK
+     I              RVNO                            RVNODK
+     I              AWBN                            AWBNDK
+     I              AWBA                            AWBADK
+     I              BENN                            BENNDK
+     I              BENA                            BENADK
+      *
+      ** Rename fields from facilities master file FCLTY.
+      *
+     IFCLTYFMF
+     I              RECI                            RECIFC
+     I              CNUM                            CNUMFC
+     I              FACT                            FACTFC
+     I              FCNO                            FCNOFC
+     I              RCTP                            RCTPFC
+     I              BRCA                            BRCAFC
+     I              FCTI                            FCTIFC
+     I              FCCY                            FCCYFC
+     I              FAMT                            FAMTFC
+     I              OVPC                            OVPCFC
+     I              DTAP                            DTAPFC
+     I              DTEX                            DTEXFC
+     I              RVCR                            RVCRFC
+     I              SECI                            SECIFC
+     I              MCCY                            MCCYFC
+     I              MCSI                            MCSIFC
+     I              NACD                            NACDFC
+     I              CRSK                            CRSKFC
+     I              DLFS                            DLFSFC
+     I              NOMR                            NOMRFC
+     I              RVDT                            RVDTFC
+     I              RVFR                            RVFRFC
+     I              RVDY                            RVDYFC
+     I              NAR1                            NAR1FC
+     I              NAR2                            NAR2FC
+     I              NAR3                            NAR3FC
+     I              NAR4                            NAR4FC
+     I              MTDH                            MTDHFC
+     I              MTDL                            MTDLFC
+     I              MTDA                            MTDAFC
+     I              QTDA                            QTDAFC
+     I              YTDA                            YTDAFC
+     I              ACOF                            ACOFFC
+     I              ORBR                            ORBRFC
+     I              RVCD                            RVCDFC
+     I              ORED                            OREDFC
+     I              LCD                             LCDFC
+     I              CHTP                            CHTPFC
+     I              TNLU                            TNLUFC
+     I              SYIN                            SYINFC
+     I              ANUM                            ANUMFC
+     I              DTPS                            DTPSFC
+     I              DICB                            DICBFC
+     I              RTPS                            RTPSFC
+     I              RLPD                            RLPDFC
+     I              CSEL                            CSELFC
+     I              ALCY                            ALCYFC
+     I              COMD                            COMDFC
+     I              CDTE                            CDTEFC
+     I              AVLD                            AVLDFC
+     I              LPTP                            LPTPFC
+     I              LPBR                            LPBRFC
+     I              LPAM                            LPAMFC
+     I              LPPS                            LPPSFC
+     I              DFTP                            DFTPFC
+     I              DFST                            DFSTFC
+     I              TRCA                            TRCAFC
+     I              CANM                            CANMFC
+     I              CAFT                            CAFTFC
+     I              CAFN                            CAFNFC
+     I              ACSQ                            ACSQFC
+     I              FSTS                            FSTSFC
+     I              IUSR                            IUSRFC
+     I              AUSR                            AUSRFC
+     I              XUSR                            XUSRFC
+     I              SYCP                            SYCPFC
+     I              PCRF                            PCRFFC
+     I              PRTR                            PRTRFC
+     I              PMFC                            PMFCFC
+     I              PMFT                            PMFTFC
+     I              PMFN                            PMFNFC
+     I              INUM                            INUMFC
+     I              JDTE                            JDTEFC
+     I              SHTP                            SHTPFC
+     I              SHPC                            SHPCFC
+     I              RCSI                            RCSIFC
+     I              SKIR                            SKIRFC
+     I              SKIS                            SKISFC
+     I              SKFR                            SKFRFC
+     I              SKFS                            SKFSFC
+     I              VDTC                            VDTCFC
+     I              OSDB                            OSDBFC
+     I              OMDB                            OMDBFC
+     I              RSTM                            RSTMFC
+     I              RONS                            RONSFC
+     I              RIBN                            RIBNFC
+     I              RIBA                            RIBAFC
+     I              ROBN                            ROBNFC
+     I              ROCN                            ROCNFC
+     I              PSTM                            PSTMFC
+     I              PONS                            PONSFC
+     I              PIBN                            PIBNFC
+     I              PIBA                            PIBAFC
+     I              POBN                            POBNFC
+     I              POCN                            POCNFC
+     I              RCRN                            RCRNFC
+     I              RCRA                            RCRAFC
+     I              RVNO                            RVNOFC
+     I              AWBN                            AWBNFC
+     I              AWBA                            AWBAFC
+     I              BENN                            BENNFC
+     I              BENA                            BENAFC
+     I              DTP1                            DTP1FC
+     I              DTP2                            DTP2FC
+     I              DTP3                            DTP3FC
+     I              DTP4                            DTP4FC
+     I              DCHG                            DCHGFC
+     I              BTB1                            BTB1FC
+     I              BTB2                            BTB2FC
+     I              BTB3                            BTB3FC
+     I              BTB4                            BTB4FC
+     I              BTB5                            BTB5FC
+     I              BTB6                            BTB6FC
+     I              CVMR                            CVMRFC
+     I              PCOB                            PCOBFC
+     I              CAXR                            CAXRFC
+     I              CMDI                            CMDIFC
+     I              CACY                            CACYFC
+     I              PFTI                            PFTIFC
+     I              SCCY                            SCCYFC
+     I              ICCY                            ICCYFC
+      *
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details.
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      *
+      ** The data structure defines the following fields:
+      *
+      **                                    134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+      ** Define the following fields from journal entry:
+      ** sequence number; entry type; program; file.
+      *
+     IJRNENT      DS                           2000
+     I                                        6  150JRNSQ
+     I                                       17  18 JOENTT
+     I                                       57  66 JOPGM
+     I                                       87  96 JFILE
+      *
+      ** Special parameters used if program is NOT being called as
+      ** joural entry exit program:
+      ** TAKEON contains 'TAKEON' if loans are being taken on.
+      *
+     I                                        1   6 TAKE
+      *
+      ** Define fields from journal entries for loans master file
+      ** record 1 CLOANCL.
+      *
+     I***LOANCL*     DS                            858                                        CGL029
+     I***LOANCL      DS                           1586                               CGL029 BUG11425
+     I***LOANCL      DS                           1757                               BUG11425 CER020
+     ILOANCL      DS                           1782                                           CER020
+     I                                      126 126 RECI
+     I**********                            127 1320LNRF                                      CLE148
+     I                                      127 132 LNRF                                      CLE148
+     I                                      133 133 RCDT
+     I                                      134 1340MRIN
+     I                                      135 1360PTYP
+     I**********                            137 1420CNUM                                      CSD027
+     I                                      137 142 CNUM                                      CSD027
+     I                                      143 145 BRCACL
+     I                                      146 147 LTYP
+     I                                      148 149 SUTP
+     I                                    P 150 1520DDAT
+     I                                    P 153 1550VDAT
+     I                                    P 156 1580MDAT
+     I                                      159 1600LASQ
+     I**********                            161 1660FCUS                                      CSD027
+     I                                      161 166 FCUS                                      CSD027
+     I                                      167 1690FTYP
+     I                                      170 1710FSEQ
+     I                                      172 174 CCY
+     I                                    P 175 1810CPAM
+     I                                      182 182 INTC
+     I                                    P 183 1887INTR
+     I                                      189 1900BRTT
+     I                                    P 191 1967BRTE
+     I                                    P 197 2027RTSP
+     I                                    P 203 2065MARG
+     I                                      207 207 SPIN
+     I                                      208 208 CHIN
+     I                                    P 209 2147WTRT
+     I                                      215 215 WTIN
+     I                                      216 2160REPT
+     I                                    P 217 2230RAMT
+     I                                    P 224 2260NRPD
+     I                                      227 227 RFRQ
+     I                                      228 2290RDYN
+     I                                      230 232 FCCYCL
+     I                                      233 2350LIND
+     I                                      236 237 CRSK
+     I                                      238 239 ACOF
+     I                                      240 240 NACD
+     I                                      241 241 RELI
+     I                                      242 242 AUTO
+     I                                    P 243 2490PSAM
+     I                                    P 250 2568BCXR
+     I                                    P 257 2638FCXR
+     I                                      264 2650SDST
+     I**********                            266 277 OSDA                                      CGL029
+     I                                      266 277 OSDAQQ                                    CGL029
+     I                                      278 287 TSTN
+     I                                      288 2890MDST
+     I**********                            290 301 OMDA                                      CGL029
+     I                                      290 301 OMDAQQ                                    CGL029
+     I                                      302 311 TMAN
+     I                                      312 321 FACO
+     I                                    P 322 3240RLDT
+     I                                    P 325 3270NROD
+     I                                      328 328 RLFQ
+     I                                      329 3300RLDY
+     I                                      331 331 RDFC
+     I                                      332 3330NBRA
+     I                                    P 334 3397NRTS
+     I                                      340 340 NSIN
+     I                                      341 3410NCAS
+     I                                    P 342 3480AWTP
+     I                                    P 349 3550WTRD
+     I                                    P 356 3620WTWD
+     I                                    P 363 3690IWOD
+     I                                    P 370 3760PWOD
+     I                                      377 377 BMDI
+     I                                      378 378 FMDI
+     I                                    P 379 3850PDIN
+     I                                    P 386 3870LSWC
+     I                                    P 388 3890LSWS
+     I                                      390 392 OSDB
+     I                                      393 395 OMDB
+     I                                      396 398 ORBR
+     I                                      399 402 PRFC
+     I                                      403 405 FCLB
+     I**********                            406 4110MLNR                                      CLE148
+     I                                      406 411 MLNR                                      CLE148
+     I                                      412 412 BTIN
+     I                                      413 4140BLDY
+     I**********                            415 4200OLNO                                      CSD027
+     I                                      415 420 OLNO                                      CSD027
+     I                                      421 421 RCSI
+     I                                      422 4220ICBS
+     I                                      423 423 IPFR
+     I                                    P 424 4300TOTI
+     I                                    P 431 4330NIDT
+     I                                    P 434 4360IBDT
+     I                                    P 437 4390SLID
+     I                                    P 440 4460AIPD
+     I                                    P 447 4490DLRC
+     I                                    P 450 4520IACD
+     I                                    P 453 4590AITC
+     I                                    P 460 4660TFEP
+     I                                    P 467 4730AIAP
+     I                                    P 474 4800IPRD
+     I                                    P 481 4870IPRM
+     I                                    P 488 4940ICTD
+     I                                    P 495 5010AIMN
+     I                                    P 502 5040RBDT
+     I                                    P 505 5060NOPS
+     I                                      507 507 NCHI
+     I                                      508 508 FLR1
+     I                                      509 5100IFDY
+     I                                      511 511 LONI
+     I                                      512 512 CNFI
+     I                                      513 513 ACEI
+     I                                      514 514 TLXI
+     I                                      515 515 CBLI
+     I                                    P 516 5180ORED
+     I                                    P 519 5210LCD
+     I                                      522 522 CHTP
+     I                                    P 523 5250TNLU
+     I                                      526 526 ADDI
+     I                                    P 527 5290ORMD
+     I                                    P 530 5360ORTI
+     I                                      537 559 FLR2
+     I                                      560 561 BOKC
+     I**********                            562 5670COCU                                      CSD027
+     I**********                            568 5730RECE                                      CSD027
+     I                                      562 567 COCU                                      CSD027
+     I                                      568 573 RECE                                      CSD027
+     I                                    P 574 5760OMDT
+     I                                    P 577 5790NIPD
+     I                                    P 580 5820NMDT
+     I                                      583 583 APMI
+     I                                      584 5850RSTM
+     I**********                            586 597 RONS                                      CGL029
+     I                                      586 597 RONSQQ                                    CGL029
+     I                                      598 605 RIBN
+     I                                      606 640 RIBA
+     I**********                            641 6460ROBN                                      CSD027
+     I**********                            647 6520ROCN                                      CSD027
+     I                                      641 646 ROBN                                      CSD027
+     I                                      647 652 ROCN                                      CSD027
+     I                                      653 6540PSTM
+     I**********                            655 666 PONS                                      CGL029
+     I                                      655 666 PONSQQ                                    CGL029
+     I                                      667 674 PIBN
+     I                                      675 709 PIBA
+     I**********                            710 7150POBN                                      CSD027
+     I**********                            716 7210POCN                                      CSD027
+     I                                      710 715 POBN                                      CSD027
+     I                                      716 721 POCN                                      CSD027
+     I                                      722 729 RCRN
+     I                                      730 764 RCRA
+     I                                      765 772 RVNO
+     I                                      773 780 AWBN
+     I                                      781 815 AWBA
+     I                                      816 823 BENN
+     I                                      824 858 BENA
+     I*********                            15151532 OSDA                             CGL029 BUG11425
+     I*********                            15331550 OMDA                             CGL029 BUG11425
+     I*********                            15511568 RONS                             CGL029 BUG11425
+     I*********                            15691586 PONS                             CGL029 BUG11425
+     I                                     16861703 OSDA                                    BUG11425
+     I                                     17041721 OMDA                                    BUG11425
+     I                                     17221739 RONS                                    BUG11425
+     I                                     17401757 PONS                                    BUG11425
+     I                                     17801782 LOIC                                      CER020
+      *
+      ** Define fields from journal entries for facilities master
+      ** file record 1 FCLTYFM.
+      *
+     IFACJRN      DS                            378
+     I                                      126 126 RECIFJ
+     I**********                            127 1320CNUMFJ                                    CSD027
+     I                                      127 132 CNUMFJ                                    CSD027
+     I                                      133 1350FACTFJ
+     I                                      136 1370FCNOFJ
+     I                                      138 138 RCTPFJ
+     I                                      139 141 BRCAFJ
+     I                                      142 142 FCTIFJ
+     I                                      143 145 FCCYFJ
+     I                                    P 146 1520FAMTFJ
+     I                                    P 153 1553OVPCFJ
+     I                                    P 156 1580DTAPFJ
+     I                                    P 159 1610DTEXFJ
+     I                                      162 162 RVCRFJ
+     I                                      163 163 SECIFJ
+     I                                      164 164 MCCYFJ
+     I                                      165 165 MCSIFJ
+     I                                      166 166 NACDFJ
+     I                                      167 168 CRSKFJ
+     I                                    P 169 1710DLFSFJ
+     I                                    P 172 1777NOMRFJ
+     I                                    P 178 1800RVDTFJ
+     I                                      181 181 RVFRFJ
+     I                                      182 1830RVDYFJ
+     I                                      184 218 NAR1FJ
+     I                                      219 253 NAR2FJ
+     I                                      254 288 NAR3FJ
+     I                                      289 323 NAR4FJ
+     I                                    P 324 3300MTDHFJ
+     I                                    P 331 3370MTDLFJ
+     I                                    P 338 3440MTDAFJ
+     I                                    P 345 3520QTDAFJ
+     I                                    P 353 3600YTDAFJ
+     I                                      361 362 ACOFFJ
+     I                                      363 365 ORBRFJ
+     I                                    P 367 3690RVCDFJ
+     I                                    P 372 3740OREDFJ
+     I                                    P 375 3770LCDFJ
+     I                                      378 378 CHTPFJ
+      *
+      ** Define fields from journal entries for loan amendments file
+      ** LOAMSDK.
+      *
+     I***LOAMDK*     DS                            720                                        CGL029
+     ILOAMDK      DS                           1254                                           CGL029
+     I                                      126 126 RECIDK
+     I**********                            127 1320LNRFDK                                    CLE148
+     I                                      127 132 LNRFDK                                    CLE148
+     I                                      133 1370VDATDK
+     I                                      138 1400LASNDK
+     I                                      141 1410MRINDK
+     I                                      142 143 LTYPDK
+     I                                      144 145 SUTPDK
+     I                                      146 1470PTYPDK
+     I                                      148 149 AMTPDK
+     I                                      150 1510PRSQDK
+     I                                      152 1530BRTTDK
+     I                                    P 154 1597RTSPDK
+     I                                      160 162 CCYDK
+     I                                    P 163 1690PRAMDK
+     I                                    P 170 1760INTADK
+     I                                    P 177 1830WTXADK
+     I                                    P 184 1900FEAMDK
+     I                                    P 191 1970TAMTDK
+     I                                      198 200 BRCADK
+     I**********                            201 2060CNUMDK                                    CSD027
+     I                                      201 206 CNUMDK                                    CSD027
+     I                                      207 2070REPTDK
+     I                                      208 208 AUTODK
+     I                                      209 209 STAIDK
+     I                                      210 2110SETPDK
+     I**********                            212 223 OSACDK                                    CGL029
+     I                                      212 223 OSACQQ                                    CGL029
+     I                                      224 233 TSENDK
+     I                                      234 243 FACODK
+     I                                      244 273 SPI1DK
+     I                                      274 303 SPI2DK
+     I                                      304 333 SPI3DK
+     I                                      334 334 LAINDK
+     I                                    P 335 3407BRTEDK
+     I                                      341 341 SPINDK
+     I                                      342 3420CALCDK
+     I                                      343 343 WTINDK
+     I                                      344 344 LLAGDK
+     I                                      345 345 LWOIDK
+     I                                      346 3500XAVDDK
+     I                                      351 3530XASQDK
+     I**********                            354 3590FCUSDK                                    CSD027
+     I                                      354 359 FCUSDK                                    CSD027
+     I                                      360 3620FTYPDK
+     I                                      363 3640FSEQDK
+     I**********                            365 3700RLONDK                                    CSD027
+     I                                      365 370 RLONDK                                    CSD027
+     I                                      371 3720FECDDK
+     I                                      373 373 PONIDK
+     I                                      374 374 ACTIDK
+     I                                      375 375 CNFYDK
+     I                                      376 376 TLXYDK
+     I                                      377 377 CBLYDK
+     I                                      378 378 INTCDK
+     I                                      379 379 NACDDK
+     I                                      380 380 ACBIDK
+     I                                      381 381 FLR1DK
+     I                                    P 382 3830LSWCCD
+     I                                    P 384 3850LSWSCD
+     I                                      386 388 OSBRDK
+     I                                      389 391 FCLBDK
+     I                                    P 392 3940LSMDDK
+     I                                    P 395 4010REBTDK
+     I                                      402 435 FLR2DK
+     I                                    P 436 4380OREDDK
+     I                                    P 439 4410LCDDK
+     I                                      442 442 CHTPDK
+     I                                    P 443 4450TNLUDK
+     I                                      446 4470RSTMDK
+     I**********                            448 459 RONSDK                                    CGL029
+     I                                      448 459 ROQQDK                                    CGL029
+     I                                      460 467 RIBNDK
+     I                                      468 502 RIBADK
+     I**********                            503 5080ROBNDK                                    CSD027
+     I**********                            509 5140ROCNDK                                    CSD027
+     I                                      503 508 ROBNDK                                    CSD027
+     I                                      509 514 ROCNDK                                    CSD027
+     I                                      515 5160PSTMDK
+     I**********                            517 528 PONSDK                                    CGL029
+     I                                      517 528 POQQDK                                    CGL029
+     I                                      529 536 PIBNDK
+     I                                      537 571 PIBADK
+     I**********                            572 5770POBNDK                                    CSD027
+     I**********                            578 5830POCNDK                                    CSD027
+     I                                      572 577 POBNDK                                    CSD027
+     I                                      578 583 POCNDK                                    CSD027
+     I                                      584 591 RCRNDK
+     I                                      592 626 RCRADK
+     I                                      627 634 RVNODK
+     I                                      635 642 AWBNDK
+     I                                      643 677 AWBADK
+     I                                      678 685 BENNDK
+     I                                      686 720 BENADK
+     I                                     12011218 OSACDK                                    CGL029
+     I                                     12191236 RONSDK                                    CGL029
+     I                                     12371254 PONSDK                                    CGL029
+      *
+      ** Data structures to convert date to CCYYMMDD format.
+      *
+     I            DS
+     I                                        1   8 DATF2
+     I                                        1   40YEAR
+     I                                        5   6 MONTH
+     I                                        7   8 DAY
+      *
+     I            DS
+     I                                        1   6 DATF1
+     I                                        1   2 DY
+     I                                        3   4 MTH
+     I                                        5   60YR
+      *
+      ** Data structures to define data output in ETVS format.
+      *
+     IPFLD        DS                            512
+     ITEMP        DS                            512
+      *
+      ** Split settlement fields.
+      *
+     IISDTA       DS                            256
+      *
+      ** Account type: 'N' nostro no; 'F' full nostro number & currency;
+      **               'G' general ledger; 'P' partial general ledger;
+      **               'R' retail account number.
+     I                                        1   1 ISATYP
+      *
+      ** Full general ledger account number.
+     I**********                              2  19 ISACCT                                    CGL029
+     I                                        2  25 ISACCT                                    CGL029
+     I**********                              2   70ISCNU1                                    CSD027
+     I                                        2   7 ISCNU1                                    CSD027
+     I                                        8  10 ISCCY1
+     I**********                             11  140ISACO1                                    CGL029
+     I**********                             15  160ISACS1                                    CGL029
+     I**********                             17  19 ISBRC1                                    CGL029
+     I                                       11  200ISACO1                                    CGL029
+     I                                       21  220ISACS1                                    CGL029
+     I                                       23  25 ISBRC1                                    CGL029
+      *
+      ** Nostro number.
+     I                                        2   30ISNOSN
+     I                                        4   4 ISTEST
+      *
+      ** Full nostro number and currency code.
+     I                                        2   6 ISNOS
+      *
+      ** Retail account number.
+     I                                        2  110ISACNO
+      *
+      ** Partial general ledger account number CNUM/ACOD/ACSQ/BRCA.
+     I**********                              2   70ISCNUM                                    CSD027
+     I                                        2   7 ISCNUM                                    CSD027
+     I**********                              8  110ISACOD                                    CGL029
+     I**********                             12  130ISACSQ                                    CGL029
+     I**********                             14  16 ISBRCA                                    CGL029
+     I                                        8  170ISACOD                                    CGL029
+     I                                       18  190ISACSQ                                    CGL029
+     I                                       20  22 ISBRCA                                    CGL029
+      *
+      ** Multiple occurrence data structure to store unprocessed
+      ** journal entry update before (UB) images from CLOANCL.
+      ** Multiple images are stored because corresponding UB & UB
+      ** entries are not necessarily consecutive.
+      *
+     IMULTI       DS                       0010
+     I**********                              1   60UBLNRF                                    CLE148
+     I                                        1   6 UBLNRF                                    CLE148
+     I                                    P   7   90UBMDAT
+     I                                       10  10 UBIPFR
+     I                                    P  11  130UBNIDT
+     I                                       14  150UBIFDY
+     I                                    P  16  220UBRAMT
+     I                                       23  23 UBRFRQ
+     I                                    P  24  260UBNRPD
+     I                                       27  280UBRDYN
+     I**********                             29  40 UBOMDA                                    CGL029
+     I                                       29  40 QQOMDA                                    CGL029
+     I                                       41  420UBMDST
+     I**********                             43  54 UBOSDA                                    CGL029
+     I                                       43  54 QQOSDA                                    CGL029
+     I                                       55  560UBSDST
+     I                                    P  57  590UBNROD
+     I                                    P  60  620UBRLDT
+     I                                       63  640UBNBRA
+     I                                    P  65  707UBNRTS
+     I                                       71  71 UBNCHI
+     I                                       72  72 UBNSIN
+     I                                       73  740UBPSTM
+     I**********                             75  86 UBPONS                                    CGL029
+     I                                       75  86 QQPONS                                    CGL029
+     I                                       87  880UBRSTM
+     I**********                             89 100 UBRONS                                    CGL029
+     I                                       89 100 QQRONS                                    CGL029
+     I                                      101 1020UBRLDY
+     I                                      103 103 UBRLFQ
+     I                                    P 104 1060UBVDAT
+     I                                      107 124 UBOMDA                                    CGL029
+     I                                      125 142 UBOSDA                                    CGL029
+     I                                      143 160 UBPONS                                    CGL029
+     I                                      161 178 UBRONS                                    CGL029
+      *
+      ** Multiple occurrence data structure to store unprocessed
+      ** journal entry update before (UB) images from FCLTYFM.
+      ** Multiple images are stored because corresponding UB & UP
+      ** entries are not necessarily consecutive.
+      *
+     IMULTIF      DS                       0010
+     I**********                              1   60UFCNUM                                    CSD027
+     I                                        1   6 UFCNUM                                    CSD027
+     I                                        7   90UFFACT
+     I                                       10  110UFFCNO
+     I                                    P  12  140UFDTEX
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details.
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer details.
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency details.
+      *
+     ISDNOST    E DSSDNOSTPD
+     I              QQACCD                          QQACC1                                    CGL029
+      ** Nostro details.
+      *
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+      ** Branch details.
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure.
+      *
+     ISCSARD    E DSSCSARDPD
+     I              SARN                            SARNSC
+     I              SARD                            SARDSC
+     I              LCD                             LCDSC
+     I              TYLC                            TYLCSC
+      ** Data structure for Switchable Features Details File
+      *
+     ISDACCT    E DSACCNTAB
+     I              RECI                            SDRECI
+     I              CNUM                            SDCNUM
+     I              CCY                             SDCCY
+     I              ACOD                            SDACOD
+     I              ACSQ                            SDACSQ
+     I              PRFC                            SDPRFC
+     I              ORED                            SDORED
+     I              LCD                             SDLCD
+     I              CHTP                            SDCHTP
+     I              TNLU                            SDTNLU
+      ** Account details.
+      *
+     I/COPY ZSRSRC,ZDATE9Z2
+     I/COPY ZSRSRC,ZHOLDS
+     I/COPY ZSRSRC,ZAOZ2
+      *
+      *****************************************************************
+      *                    MAIN CYCLE PROCESSING                      *
+      *****************************************************************
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Entry parameters from exit program on RCVJRNE command.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           JRNENT
+     C                     PARM           CALLCD  1
+      *
+      ** If program is NOT being called as a journal entry exit
+      ** program ...
+      *
+     C           TAKE      IFEQ 'TAKEON'                   B1
+      *
+      ** Perform initial processing.
+      *
+     C                     EXSR INITL
+      *
+      ** Perform processing for take on.
+      *
+     C                     EXSR TAKEON
+      *
+      ** Perform processing if program is being called as journal entry
+      ** exit program ...
+      *
+     C                     ELSE
+      *
+      ** If journal entry is NOT from a Customer Lending file then call
+      ** program DL0011 instead to process transaction.
+      *
+     C           JFILE     IFEQ 'LOAMSDK'                  B2                                 195084
+     C           AMTPDK    ANDEQ'SC'                                                          195084
+     C                     GOTO PGMEND                                                        195084
+     C                     ENDIF                           E2                                 195084
+     C           JFILE     IFNE 'CLOANCL'                  B2
+     C           JFILE     ANDNE'LOAMSDK'
+     C           JFILE     ANDNE'FCLTYFM'
+     C                     CALL 'DL0011'
+     C                     PARM           JRNENT
+     C                     PARM           CALLCD  1
+     C                     GOTO PGMEND
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ** Process journal entries.
+      *
+      ** If there are journal entries to process for files CLOANCL or
+      ** LOAMSDK ...
+      *
+     C           CALLCD    IFEQ '1'                        B0
+      *
+      ** Perform initial processing.
+      *
+     C                     EXSR INITL
+      *
+      *
+      ** Check whether journal entry is from file
+      ** CLOANCL, LOAMSDK or FCLTYFM.
+      *
+     C                     SELEC                           B1
+      *
+      ** Perform process for journal entries on loans master file.
+      *
+     C           JFILE     WHEQ 'CLOANCL'
+      *
+      ** Move the journal entry parameter into a data structure
+      ** defining all of the individual fields on file CLOANCL.
+      *
+     C                     MOVELJRNENT    LOANCL
+      *
+      ** Only include loans with the following processing types:
+      **
+      ** 61 - demand loan;
+      ** 62 - term loan;
+      ** 63 - discount loan;
+      ** 64 - term participation purchased;
+      ** 65 - discount participation purchased;
+      ** 66 - term participation sold;
+      ** 67 - discount participation sold
+      ** 68 - participation purchased demand loan.
+      *
+     C           PTYP      IFGE 61                         B2
+     C           PTYP      ANDLE68
+     C           PTYP      OREQ 70
+     C           CCM004    ANDEQ'Y'
+      *
+      ** Open appropriate extract file depending on processing type.
+      *
+     C                     SELEC                           B3
+      *
+      ** Demand loan.
+      *
+     C           PTYP      WHEQ 61
+     C                     OPEN DLETCLPD
+      *
+      ** Participation purchased demand loan.
+      *
+     C           PTYP      WHEQ 68
+     C                     OPEN DLETCPPD
+      *
+      ** All other processing types.
+      *
+     C                     OTHER
+     C                     OPEN DLETLEPD
+     C                     ENDSL                           E3
+      *
+      ** Process all puts as add drawdown (insert loan).
+      *
+     C           JOENTT    IFEQ 'PT'                       B3
+     C                     EXSR INSERT
+     C                     ENDIF                           E3
+      *
+      ** Process all update after images ...
+      *
+     C           JOENTT    IFEQ 'UP'                       B3
+     C           JOENTT    OREQ 'UR'
+      *
+      ** Initialise fields to indicate whether rate fixing details are
+      ** present on the before and after images.
+      *
+     C                     MOVEL*BLANKS   BEFORE
+     C                     MOVEL*BLANKS   AFTER
+      *
+      ** Process amendments to file CLOANCL.
+      *
+     C           CHTP      IFEQ 'A'                        B4
+      *
+      ** Retrieve before update image from multiple occurrence data
+      ** structure.
+      *
+     C                     Z-ADD1         GETUB   20
+     C           GETUB     OCUR MULTI
+     C           LNRF      DOWNEUBLNRF                     B5
+     C           GETUB     ANDLT10
+     C                     ADD  1         GETUB
+     C           GETUB     OCUR MULTI
+     C                     ENDDO                           E5
+      *
+      ** Drawdown maintenance processing.
+      *
+      ** Only process amendment if at least one of the changed fields
+      ** is on the City Dealer format.
+      *
+     C           MDAT      IFNE UBMDAT                     B5
+     C           IPFR      ORNE UBIPFR
+     C           NIDT      ORNE UBNIDT
+     C           IFDY      ORNE UBIFDY
+     C           RAMT      ORNE UBRAMT
+     C           RFRQ      ORNE UBRFRQ
+     C           NRPD      ORNE UBNRPD
+     C           RDYN      ORNE UBRDYN
+     C           RONS      ORNE UBRONS
+     C           RSTM      ORNE UBRSTM
+     C           PONS      ORNE UBPONS
+     C           PSTM      ORNE UBPSTM
+     C           RLDY      ORNE UBRLDY
+     C           RLDT      ORNE UBRLDT
+     C           RLFQ      ORNE UBRLFQ
+     C           VDAT      ORNE UBVDAT
+      *
+      ** If no before image found then process amendment anyway.
+      *
+     C           GETUB     ORGT 9
+      *
+     C                     EXSR CANCEL
+     C                     EXSR INSERT
+      ***********                                                                             195084
+      ***Any*previously*applied*rate*fixes*for*the*loan*need*to*be*                           195084
+      ***re-sent*to*City*Dealer*                                                              195084
+      ***********                                                                             195084
+      ***Firstly*check*if*next*rate/spread*has*been*entered.*                                 195084
+      ***********                                                                             195084
+     C***********NRTS      IFNE 0                          B6                                 195084
+     C***********RLDT      ANDNE0                                                             195084
+     C***********          EXSR FIXING                                                        195084
+     C***********          ENDIF                           E6                                 195084
+      ***********                                                                             195084
+      ***Secondly*check*if*any*spread*changes*have*been*entered*                              195084
+      ***value*today*or*forward*valued.*                                                      195084
+      ***********                                                                             195084
+     C***********          MOVEL'LOAMSDK' JFILE                                               195084
+     C***********          Z-ADDLNRF      LNRFDK                                              195084
+     C***********LNRFDK    CHAINLOAMSF               46                                       195084
+      ***********                                                                             195084
+     C*********** IN46     DOWEQ'0'                        B6                                 195084
+      ***********                                                                             195084
+     C***********RECIDK    IFEQ 'D'                        B7                                 195084
+     C***********AMTPDK    ANDEQ'SC'                                                          195084
+     C***********VDATDK    ANDGEBJRDNB                                                        195084
+     C***********          EXSR FIXING                                                        195084
+     C***********          ENDIF                           E7                                 195084
+      ***********                                                                             195084
+     C***********LNRFDK    READELOAMSF                   46                                   195084
+      ***********                                                                             195084
+     C***********          ENDDO                           E6                                 195084
+      *
+     C                     ENDIF                           E5
+      *
+      ** Determine if amendment constitutes a rate fixing insert,
+      ** amendment or deletion.
+      *
+      ** First determine whether rate fixing details are present on
+      ** the image before update 'UB', i.e.
+      ** next rate/spread is non-zero and rollover date is non-zero.
+      *
+     C                     MOVEL'CLOANCL' JFILE
+      *
+     C           UBNRTS    IFNE 0                          B5
+     C           UBRLDT    ANDNE0
+     C                     MOVEL'RATE FIX'BEFORE  8
+     C                     ELSE
+     C                     MOVEL'NO   FIX'BEFORE
+     C                     ENDIF                           E5
+      *
+      ** Determine whether rate fixing details are present on the image
+      ** after update 'UP' or 'UR', i.e.
+      ** next base rate code is zero and rollover date is non-zero.
+      *
+     C           NRTS      IFNE 0                          B5
+     C           RLDT      ANDNE0
+     C                     MOVEL'RATE FIX'AFTER   8
+     C                     ELSE
+     C                     MOVEL'NO   FIX'AFTER
+     C                     ENDIF                           E5
+      *
+      ** Determine whether rate fixing details are present on both
+      ** images before and after update.
+      *
+     C           BEFORE    IFEQ 'RATE FIX'                 B5
+     C           AFTER     ANDEQ'RATE FIX'
+     C                     MOVEL'RATE FIX'BOTH    8
+     C                     ELSE
+     C                     MOVEL'NO   FIX'BOTH
+     C                     ENDIF                           E5
+      *
+      ** Rate fix processing.
+      *
+     C                     SELEC                           B5
+      *
+      ** (i) Process rate fix insertions.
+      *
+     C           BEFORE    WHEQ 'NO   FIX'
+     C           AFTER     ANDEQ'RATE FIX'
+     C                     EXSR FIXING
+      *
+      ** (ii) Process rate fix deletions.
+      *
+     C           BEFORE    WHEQ 'RATE FIX'
+     C           AFTER     ANDEQ'NO   FIX'
+     C***********          EXSR CANCEL                                                        195084
+      *
+      ** (iii) Process rate fix amendments.
+      *
+      ** At least one of the following fields must have changed:
+      ** next rate/spread; rollover date; next spread indicator;
+      ** next base rate type.
+      *
+     C           BOTH      WHEQ 'RATE FIX'
+     C           UBNRTS    ANDNENRTS
+      *
+     C           BOTH      OREQ 'RATE FIX'
+     C           UBRLDT    ANDNERLDT
+      *
+     C           BOTH      OREQ 'RATE FIX'
+     C           UBNSIN    ANDNENSIN
+      *
+     C           BOTH      OREQ 'RATE FIX'
+     C           UBNBRA    ANDNENBRA
+      *
+     C***********          EXSR CANCEL                                                        195084
+     C                     EXSR FIXING
+      *
+     C                     ENDSL                           E5
+     C                     ENDIF                           E4
+      *
+      ** Process all reversals as cancel drawdown (delete loan).
+      *
+     C           CHTP      IFEQ 'R'                        B4
+     C                     EXSR CANCEL
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+      *
+      ** Save all before update images (recycle after 9 images).
+      *
+     C           JOENTT    IFEQ 'UB'                       B3
+      *
+      ** First check whether an update image is already stored for this
+      ** loan ...
+      *
+     C                     Z-ADD1         GETUB   20
+     C           GETUB     OCUR MULTI
+     C           LNRF      DOWNEUBLNRF
+     C           GETUB     ANDLT10
+     C                     ADD  1         GETUB
+     C           GETUB     OCUR MULTI
+     C                     ENDDO
+      *
+      ** ... if so, then replace it.
+      *
+     C           LNRF      IFEQ UBLNRF                     B4
+     C                     Z-ADDGETUB     PUTUB
+     C                     ELSE
+     C                     ADD  1         PUTUB
+     C                     ENDIF                           E4
+      *
+      ** Recycle first image if 9 images already stored.
+      *
+     C           PUTUB     IFGT 9                          B4
+     C                     Z-ADD1         PUTUB
+     C                     ENDIF                           E4
+      *
+      ** Save before image.
+      *
+     C           PUTUB     OCUR MULTI
+     C**********           Z-ADDLNRF      UBLNRF                                              CLE148
+     C                     MOVELLNRF      UBLNRF                                              CLE148
+     C                     Z-ADDVDAT      UBVDAT
+     C                     Z-ADDMDAT      UBMDAT
+     C                     MOVELIPFR      UBIPFR
+     C                     Z-ADDNIDT      UBNIDT
+     C                     Z-ADDIFDY      UBIFDY
+     C                     Z-ADDRAMT      UBRAMT
+     C                     MOVELRFRQ      UBRFRQ
+     C                     Z-ADDNRPD      UBNRPD
+     C                     Z-ADDRDYN      UBRDYN
+     C                     MOVELOMDA      UBOMDA
+     C                     Z-ADDMDST      UBMDST
+     C                     MOVELOSDA      UBOSDA
+     C                     Z-ADDSDST      UBSDST
+     C                     Z-ADDNROD      UBNROD
+     C                     Z-ADDRLDT      UBRLDT
+     C                     Z-ADDNBRA      UBNBRA
+     C                     Z-ADDNRTS      UBNRTS
+     C                     MOVELNCHI      UBNCHI
+     C                     MOVELNSIN      UBNSIN
+     C                     Z-ADDPSTM      UBPSTM
+     C                     MOVELPONS      UBPONS
+     C                     Z-ADDRSTM      UBRSTM
+     C                     MOVELRONS      UBRONS
+     C                     Z-ADDRLDY      UBRLDY
+     C                     MOVELRLFQ      UBRLFQ
+      *
+     C                     ENDIF                           E3
+      *
+      ** Close appropriate extract file depending on processing type.
+      *
+     C                     SELEC                           B3
+      *
+      ** Demand loan.
+      *
+     C           PTYP      WHEQ 61
+     C                     CLOSEDLETCLPD
+      *
+      ** Participation purchased demand loan.
+      *
+     C           PTYP      WHEQ 68
+     C                     CLOSEDLETCPPD
+      *
+      ** All other processing types.
+      *
+     C                     OTHER
+     C                     CLOSEDLETLEPD
+     C                     ENDSL                           E3
+      *
+     C                     ENDIF                           E2
+      *
+      ** Perform process for journal entries on loan amendments file.
+      *
+     C           JFILE     WHEQ 'LOAMSDK'
+      *
+      ** Move the journal entry parameter into a data structure
+      ** defining all of the individual fields on file LOAMSDK.
+      *
+     C                     MOVELJRNENT    LOAMDK
+      *
+      ** Only include loans with the following processing types:
+      **
+      ** 61 - demand loan;
+      ** 62 - term loan;
+      ** 63 - discount loan;
+      ** 64 - term participation purchased;
+      ** 65 - discount participation purchased;
+      ** 66 - term participation sold;
+      ** 67 - discount participation sold
+      ** 68 - participation purchased demand loan.
+      *
+     C           PTYPDK    IFGE 61                         B2             LUC006
+     C           PTYPDK    ANDLE68                                        LUC006
+     C           PTYPDK    OREQ 70
+     C           CCM004    ANDEQ'Y'
+      *
+      ** Open appropriate extract file depending on processing type.
+      *
+     C                     SELEC                           B3
+      *
+      ** Demand loan.
+      *
+     C           PTYPDK    WHEQ 61
+     C                     OPEN DLETCLPD
+      *
+      ** Participation purchased demand loan.
+      *
+     C           PTYPDK    WHEQ 68
+     C                     OPEN DLETCPPD
+      *
+      ** All other processing types.
+      *
+     C                     OTHER
+     C                     OPEN DLETLEPD
+     C                     ENDSL                           E3
+      *
+      ** Process principal changes:
+      *
+      ** principal increase; scheduled repayment;
+      ** principal transfers from and to; manual repayment.
+      *
+     C           AMTPDK    IFEQ 'PI'                       B3
+     C           AMTPDK    OREQ 'RE'
+     C           AMTPDK    OREQ 'PF'
+     C           AMTPDK    OREQ 'PT'
+      *
+      ** For manual repayments do not process past due payments.
+      ** Only select records where expected value date is zero.
+      *
+     C           AMTPDK    OREQ 'MR'
+     C           XAVDDK    ANDEQ0
+      *
+      ** Also, process spread changes.
+      *
+     C           AMTPDK    OREQ 'SC'
+      *
+      ** Only spread changes are downloaded using the rate fixing
+      ** format.
+      *
+     C           AMTPDK    IFEQ 'SC'                       B4
+     C                     MOVEL'RATE FIX'BEFORE
+     C                     MOVEL'RATE FIX'AFTER
+     C                     ELSE
+     C                     MOVEL'NO   FIX'BEFORE
+     C                     MOVEL'NO   FIX'AFTER
+     C                     ENDIF                           E4
+      *
+      ** Access loans file for related loan details.
+      *
+     C**********           Z-ADDLNRFDK    LNRFK                                               CLE148
+     C                     MOVELLNRFDK    LNRFK                                               CLE148
+     C                     MOVE 'A'       RCDTK
+     C           CLONKY    CHAINCLOANCLF             40
+     C           *IN40     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD8         DBASE            *************
+     C                     MOVEL'CLOAN   'DBFILE           *Db error 08*
+     C                     MOVELLNRFK     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Process spread changes.
+      *
+     C           AMTPDK    IFEQ 'SC'                       B4
+      *
+      ** Process all puts as rate fixes.
+      *
+     C           JOENTT    IFEQ 'PT'                       B5
+     C                     EXSR FIXING
+     C                     ENDIF                           E5
+      *
+      ** Process reversals as rate fix cancellations.
+      ** (Note - no processing required for amendments as spread
+      ** changes cannot be amended in Midas).
+      *
+     C           CHTPDK    IFEQ 'R'                        B5
+     C                     EXSR CANCEL
+     C                     ENDIF                           E5
+      *
+      ** Process principal changes.
+      *
+     C                     ELSE
+      *
+      ** Process all puts as principal change inserts.
+      *
+     C           JOENTT    IFEQ 'PT'                       B5
+     C                     EXSR PRNCPL
+     C                     ENDIF                           E5
+      *
+      ** Process all update after images ...
+      *
+     C           JOENTT    IFEQ 'UP'                       B5
+     C           JOENTT    OREQ 'UR'
+      ***********                                                                             192766
+      ***Process*principal*change*amendments.***                                              192766
+      ***********                                                                             192766
+     C***********CHTPDK    IFEQ 'A'                        B6                                 192766
+     C***********          EXSR CANCEL                                                        192766
+     C***********          EXSR PRNCPL                                                        192766
+     C***********          ENDIF                           E6                                 192766
+      *
+      ** Process reversals as principal change cancellations.
+      *
+     C           CHTPDK    IFEQ 'R'                        B6
+     C                     EXSR CANCEL
+     C                     ENDIF                           E6
+      *
+     C                     ENDIF                           E5
+     C                     ENDIF                           E4
+     C                     ENDIF                           E3
+      *
+      ** Close appropriate extract file depending on processing type.
+      *
+     C                     SELEC                           B3
+      *
+      ** Demand loan.
+      *
+     C           PTYPDK    WHEQ 61
+     C                     CLOSEDLETCLPD
+      *
+      ** Participation purchased demand loan.
+      *
+     C           PTYPDK    WHEQ 68
+     C                     CLOSEDLETCPPD
+      *
+      ** All other processing types.
+      *
+     C                     OTHER
+     C                     CLOSEDLETLEPD
+     C                     ENDSL                           E3
+      *
+     C                     ENDIF                           E2
+      *
+      ** Perform process for journal entries on facilities file.
+      *
+      ** This is necessary, because, for demand loans and demand
+      ** participations purchased, the facility expiry date is used
+      ** as the maturity date. Therefore, whenever the expiry date is
+      ** changed, a cancel/insert pair needs to be downloaded for each
+      ** demand transaction, so that the new maturity date is reflected
+      ** in City Dealer.
+      *
+     C           JFILE     WHEQ 'FCLTYFM'
+      *
+      ** Move the journal entry parameter into a data structure
+      ** defining all of the individual fields on file FCLTYFM.
+      *
+     C                     MOVELJRNENT    FACJRN
+      *
+      ** Process all update after images ...
+      *
+     C           JOENTT    IFEQ 'UP'                       B2
+     C           JOENTT    OREQ 'UR'
+      *
+      ** Initialise rate fix indicator fields to prevent any rate fix
+      ** processing being performed.
+      *
+     C                     MOVEL*BLANKS   BEFORE
+     C                     MOVEL*BLANKS   AFTER
+      *
+      ** Process amendments to file FCLTYFM.
+      *
+     C           CHTPFJ    IFEQ 'A'                        B3
+      *
+      ** Retrieve before update image from multiple occurrence data
+      ** structure.
+      *
+     C                     Z-ADD1         GETUF   20
+     C           GETUF     OCUR MULTIF
+      *
+     C           CNUMFJ    DOWNEUFCNUM                     B4
+     C           GETUF     ANDLT10
+     C           FACTFJ    ORNE UFFACT
+     C           GETUF     ANDLT10
+     C           FCNOFJ    ORNE UFFCNO
+     C           GETUF     ANDLT10
+      *
+     C                     ADD  1         GETUF
+     C           GETUF     OCUR MULTIF
+      *
+     C                     ENDDO                           E4
+      *
+      ** Only process amendment to facility if expiry date has changed.
+      *
+     C           DTEXFJ    IFNE UFDTEX                     B4
+      *
+      ** If no before image found then process amendment anyway.
+      *
+     C           GETUF     ORGT 9
+      *
+      ** Open extract files for demand loans and demand participations
+      ** purchased.
+      *
+     C                     OPEN DLETCLPD
+     C                     OPEN DLETCPPD
+      *
+     C**********           Z-ADDCNUMFJ    CNUMFK                                              CSD027
+     C                     MOVE CNUMFJ    CNUMFK                                              CSD027
+     C                     Z-ADDFACTFJ    FACTFK
+     C                     Z-ADDFCNOFJ    FCNOFK
+      *
+      ** Access all loans attached to the facility.
+      *
+     C           FCLTKY    CHAINCLOANFF              48
+      *
+      ** Set journal entry file to be loans master file CLOANCL.
+      *
+     C                     MOVEL'CLOANCL' JFILE
+      *
+     C           *IN48     DOWEQ'0'                        B5
+      *
+      ** Process all live demand loans and demand participations
+      ** purchased.
+      *
+     C           RECI      IFEQ 'D'                        B6
+     C           PTYP      ANDEQ61
+     C           RECI      OREQ 'D'
+     C           PTYP      ANDEQ68
+      *
+     C                     EXSR CANCEL
+     C                     EXSR INSERT
+      *
+     C                     ENDIF                           E6
+      *
+     C           FCLTKY    READECLOANFF                  48
+      *
+     C                     ENDDO                           E5
+      *
+     C                     CLOSEDLETCLPD
+     C                     CLOSEDLETCPPD
+      *
+     C                     ENDIF                           E4
+      *
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+      *
+      ** Save all before update images (recycle after 9 images).
+      *
+     C           JOENTT    IFEQ 'UB'                       B2
+      *
+      ** First check whether an update image is already stored for this
+      ** facility ...
+      *
+     C                     Z-ADD1         GETUF   20
+     C           GETUF     OCUR MULTIF
+      *
+     C           CNUMFJ    DOWNEUFCNUM
+     C           GETUF     ANDLT10
+     C           FACTFJ    ORNE UFFACT
+     C           GETUF     ANDLT10
+     C           FCNOFJ    ORNE UFFCNO
+     C           GETUF     ANDLT10
+      *
+     C                     ADD  1         GETUF
+     C           GETUF     OCUR MULTIF
+      *
+     C                     ENDDO
+      *
+      ** ... if so, then replace it.
+      *
+     C           CNUMFJ    IFEQ UFCNUM                     B3
+     C           FACTFJ    ANDEQUFFACT
+     C           FCNOFJ    ANDEQUFFCNO
+     C                     Z-ADDGETUF     PUTUF
+     C                     ELSE
+     C                     ADD  1         PUTUF
+     C                     ENDIF                           E3
+      *
+      ** Recycle first image if 9 images already stored.
+      *
+     C           PUTUF     IFGT 9                          B3
+     C                     Z-ADD1         PUTUF
+     C                     ENDIF                           E3
+      *
+      ** Save before image.
+      *
+     C           PUTUF     OCUR MULTIF
+     C**********           Z-ADDCNUMFJ    UFCNUM                                              CSD027
+     C                     MOVE CNUMFJ    UFCNUM                                              CSD027
+     C                     Z-ADDFACTFJ    UFFACT
+     C                     Z-ADDFCNOFJ    UFFCNO
+     C                     Z-ADDDTEXFJ    UFDTEX
+      *
+     C                     ENDIF                           E2
+      *
+     C                     ENDSL                           E1
+      *
+      ** Set on job switch U6 and the LR indicator if new journal
+      ** receiver has been attached to trigger update of journal entry
+      ** sequence number pointer in DLCDJNPD by program DLC0003.
+      *
+     C           JOENTT    IFEQ 'XJ'                       B1
+     C                     MOVE '1'       *INU6
+     C                     MOVE '1'       *INLR
+     C                     MOVEL'9'       CALLCD
+     C                     END                             E1
+      *
+      ** Set on LR indicator if entry is for DSNX error information.
+      *
+     C           JOENTT    IFEQ 'XE'                       B1
+     C                     MOVE '1'       *INLR
+     C                     MOVEL'9'       CALLCD
+     C                     END                             E1
+      *
+      ** Read the previous journal entry sequence number pointer.
+      *
+     C           1         SETLLDLCDJND0                 43
+     C                     READ DLCDJND0                 43
+      *
+     C           *IN43     IFEQ '1'                        B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD9         DBASE            *************
+     C                     MOVEL'DLCDJNPD'DBFILE           *Db error 09*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      ** Update the journal entry sequence number pointer.
+      *
+     C                     MOVELJRNSQ     JOSEQN
+     C                     UPDATDLCDJND0               42
+      *
+     C           *IN42     IFEQ '0'                        B1
+     C                     COMIT
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD10        DBASE            *************
+     C                     MOVEL'DLCDJNPD'DBFILE           *Db error 10*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+      ** Copy details to document LEETVS.CSV in shared folder TSMxx,
+      ** where xx represents the Midas system prefix. City dealer ETVS
+      ** imports the data directly from this document.
+      *
+     C                     CALL 'DLC0012'
+      *
+     C                     END                             E0
+      *
+      ** Try transmission test even if no new entries.
+      *
+     C           CALLCD    IFEQ '0'                        B0
+     C           CALLCD    OREQ *BLANKS
+     C                     CALL 'DLC0012'
+     C                     END                             E0
+      *
+      ** Determine if program is going to shut down.
+      *
+     C                     SHTDN                     97
+      *
+     C           *IN97     IFEQ '1'                        B0
+     C                     MOVE '1'       *INLR
+     C                     MOVEL'9'       CALLCD
+     C                     END                             E0
+      *
+      ** This tag is used to bypass all processing in this program
+      ** if program DL0011 is being used to process entries instead.
+      *
+     C           PGMEND    TAG
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *  AMOUNT - Calculate principal amount.                         *
+      *                                                               *
+      *  Called by  : INSERT; PRNCPL.                                 *
+      *                                                               *
+      *****************************************************************
+     C           AMOUNT    BEGSR
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVEA*BLANKS   AAMT
+     C                     MOVE *BLANKS   PAMT   16
+      *
+     C                     MOVE CCY       WKCCY
+     C                     EXSR CURRCY
+      *
+     C                     Z-ADDWKNBDP    ZADEC
+     C                     MOVE WKAMNT    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVEAZFIELD    AAMT
+     C           ' '       CHECKZFIELD    N       20
+     C                     MOVEAAAMT,N    PAMT
+      *
+     C           PFLD      CAT  PAMT:0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Principal amount is positive for participations sold and
+      ** negative for all other loans.
+      *
+     C           JFILE     IFEQ 'CLOANCL'                  B1
+     C           PTYP      IFEQ 66                         B2
+     C           PTYP      OREQ 67
+     C                     MOVEL'+,'      AMSIGN  2
+     C                     ELSE
+     C                     MOVEL'-,'      AMSIGN
+     C                     ENDIF                           E2
+      *
+      ** For repayments reverse sign.
+      *
+     C           AMTTYP    IFEQ 'REPAYMNT'                 B2
+     C           AMSIGN    IFEQ '+,'                       B3
+     C                     MOVEL'-,'      AMSIGN
+     C                     ELSE
+     C                     MOVEL'+,'      AMSIGN
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+      ** Principal amount is positive for repayments or principal
+      ** transfers from NON-participations sold loans.
+      *
+     C                     ELSE
+     C           AMTPDK    IFEQ 'MR'                       B2
+     C           PTYPDK    ANDNE66
+     C           PTYPDK    ANDNE67
+     C           AMTPDK    OREQ 'RE'
+     C           PTYPDK    ANDNE66
+     C           PTYPDK    ANDNE67
+     C           AMTPDK    OREQ 'PF'
+     C           PTYPDK    ANDNE66
+     C           PTYPDK    ANDNE67
+      *
+      ** Principal amount is also positive for principal increases or
+      ** principal transfers to participations sold.
+      *
+     C           AMTPDK    OREQ 'PI'
+     C           PTYPDK    ANDGE66
+     C           PTYPDK    ANDLE67
+     C           AMTPDK    OREQ 'PT'
+     C           PTYPDK    ANDGE66
+     C           PTYPDK    ANDLE67
+     C                     MOVEL'+,'      AMSIGN
+      *
+      ** Principal amount is negative for other loan amendments.
+      *
+     C                     ELSE
+     C                     MOVEL'-,'      AMSIGN
+      *
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C           PFLD      CAT  AMSIGN:0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *  CURRCY - Access currency details (no. of decimal positions). *
+      *                                                               *
+      *  Called by  : AMOUNT; PRNCPL; INITL.                          *
+      *                                                               *
+      *****************************************************************
+     C           CURRCY    BEGSR
+      *
+      ** Access currency details.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WKRTCD  7
+     C                     PARM '*KEY   ' WKOPTN  7
+     C                     PARM           WKCCY   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ** Database error if currency record not found.
+      *
+     C           WKRTCD    IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD11        DBASE            *************
+     C                     MOVELWKCCY     DBKEY            *Db error 11*
+     C                     MOVEL'SDCURRPD'DBFILE           *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save number of decimal positions to a work field.
+      *
+     C                     Z-ADDA6NBDP    WKNBDP  10
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  ADDRES - Access Customer Details file (Report Name and Town).*
+      *                                                               *
+      *  Called by  : INSERT; PRNCPL; RCVTO; PAYFRM.                  *
+      *                                                               *
+      *****************************************************************
+     C           ADDRES    BEGSR
+      *
+      ** Initialise work fields.
+      *
+     C                     MOVE *BLANKS   WKCRTN 10
+     C                     MOVE *BLANKS   WKCRNM 15
+      *
+      ** Access file SDCUSTPD using customer number as key.
+      *
+     C                     MOVELWKCNUM    WKKEY1
+      *
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WKRTCD  7
+     C                     PARM '*KEY   ' WKOPTN  7
+     C                     PARM           WKKEY1 10
+     C                     PARM *BLANKS   WKKYST  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+      ** Database error if customer record not found.
+      *
+     C           WKRTCD    IFNE *BLANKS
+     C                     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD12        DBASE            *************
+     C                     MOVELWKKEY1    DBKEY            *Db error 12*
+     C                     MOVEL'SDCUSTPD'DBFILE           *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save customer report name and town to work fields.
+      *
+     C                     MOVELBBCRTN    WKCRTN
+     C                     MOVELBBCRNM    WKCRNM
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *  EXTRCT - Write to appropriate extract file in ETVS format    *
+      *           depending on loan processing type.                  *
+      *                                                               *
+      *  Called by  : INSERT; CANCEL; PRNCPL; FIXING.                 *
+      *                                                               *
+      *****************************************************************
+     C           EXTRCT    BEGSR
+      *
+      ** Write to appropriate extract file depending on loan processing
+      ** type.
+      *
+     C                     SELEC
+      *
+      ** Demand loan.
+      *
+     C           JFILE     WHEQ 'CLOANCL'
+     C           PTYP      ANDEQ61
+     C           JFILE     OREQ 'LOAMSDK'
+     C           PTYPDK    ANDEQ61
+      *
+     C                     WRITEDLETCLD0
+      *
+      ** Participation purchased demand loan.
+      *
+     C           JFILE     WHEQ 'CLOANCL'
+     C           PTYP      ANDEQ68
+     C           JFILE     OREQ 'LOAMSDK'
+     C           PTYPDK    ANDEQ68
+      *
+     C                     WRITEDLETCPD0
+      *
+      ** Non-demand loans.
+      *
+     C                     OTHER
+     C                     WRITEDLETLED0
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *  INSERT - Inserts in Citydealer commercial loans format.      *
+      *                                                               *
+      *  Called by  : Main processing and subroutine TAKEON.          *
+      *                                                               *
+      *****************************************************************
+     C           INSERT    BEGSR
+      *
+      ** Specify subroutine name to determine where subsequent routines
+      ** are called from.
+      *
+     C                     MOVEL'INSERT'  WKSUBR  6
+      *
+      ** Initialise record and work field.
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Record identifier.
+      *
+      ** Treat all loans as variable ('CLOANV') NOT fixed ('CLOANF').
+      *
+     C                     MOVEL'CLOANV,' PFLD
+      *
+      ** Currency code.
+      *
+     C           PFLD      CAT  CCY:0     TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty name (customer report name).
+      *
+     C                     MOVE CNUM      WKCNUM  6
+      *
+      ** If participation purchased then use original borrower.
+      *
+     C           PTYP      IFEQ 64
+     C           PTYP      OREQ 65
+     C           PTYP      OREQ 68
+     C********** OLNO      IFNE 0                                                             CSD027
+     C           OLNO      IFNE *BLANKS                                                       CSD027
+     C                     MOVE OLNO      WKCNUM
+     C                     ENDIF
+     C                     ENDIF
+     C                     EXSR ADDRES
+      *
+     C           PFLD      CAT  WKCRNM:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty city (customer report town).
+      *
+     C           PFLD      CAT  WKCRTN:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Principal amount.
+      *
+      ** For discounted loans, discounted paricipations purchased and
+      ** discounted participations sold use the discount amount
+      ** (current principal - total interest).
+      *
+     C           PTYP      IFEQ 63
+     C           PTYP      OREQ 65
+     C           PTYP      OREQ 67
+     C           CPAM      SUB  TOTI      WKAMNT 130
+     C                     ELSE
+     C                     Z-ADDCPAM      WKAMNT 130
+      *
+      ** In take-on mode, if current principal amount is zero then set
+      ** this to be the smallest currency unit, e.g. 1 cent or 1 lire.
+      *
+     C           TAKE      IFEQ 'TAKEON'                   B2
+     C           CPAM      ANDEQ0
+     C           PTYP      IFEQ 61                         B3
+     C           PTYP      OREQ 68
+     C                     Z-ADD1         WKAMNT
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL'PRINCIPL'AMTTYP  8
+     C                     EXSR AMOUNT
+      *
+      ** Interest rate.
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVEA*BLANKS   AAMT
+     C                     MOVE *BLANKS   WKINTR 16
+     C                     Z-ADD7         ZADEC
+      *
+      ** For discounted loans, discounted paricipations purchased and
+      ** discounted participations sold use the yield rate, which is
+      ** calculated as follows:
+      *
+      **               current principal * interest rate
+      ** Yield Rate = ____________________________t_______
+      **              (current principal - total interest)
+      *
+     C           PTYP      IFEQ 63
+     C           PTYP      OREQ 65
+     C           PTYP      OREQ 67
+     C           CPAM      SUB  TOTI      WKDSCA 130
+     C           CPAM      MULT INTR      WKPINT 177
+     C           WKPINT    DIV  WKDSCA    WKRATE 117H
+      *
+     C                     ELSE
+     C                     Z-ADDINTR      WKRATE 117
+     C                     ENDIF
+      *
+     C           WKRATE    IFGE 0
+     C                     MOVEL'+,'      RTSIGN  2
+     C                     ELSE
+     C                     MOVEL'-,'      RTSIGN
+     C                     Z-SUBWKRATE    WKRATE
+     C                     ENDIF
+      *
+     C                     MOVE WKRATE    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVEAZFIELD    AAMT
+     C           ' '       CHECKZFIELD    N
+     C                     MOVEAAAMT,N    WKINTR
+      *
+     C           PFLD      CAT  WKINTR:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  RTSIGN:0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Base rate code.
+      *
+     C           BRTT      IFGE 01
+     C           BRTT      ANDLE99
+     C                     MOVE BRTT      WKBRTT  2
+     C           PFLD      CAT  WKBRTT:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Margin (blank - for possible future use).
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Differential (blank - for possible future use).
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Value date in CCYYMMDD format.
+      *
+      ** For amendments to loans use start/last interest date.
+      *
+     C           JFILE     IFEQ 'LOAMSDK'
+     C           JOENTT    OREQ 'UP'
+     C           JOENTT    OREQ 'UR'
+     C                     Z-ADDSLID      @@DAYN
+     C                     ELSE
+     C                     Z-ADDVDAT      @@DAYN  50
+     C                     ENDIF
+      *
+     C                     EXSR ZDATE9
+     C                     MOVE @@VDT     WKVDAT  8
+      *
+     C           PFLD      CAT  WKVDAT:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Maturity date in CCYYMMDD format.
+      *
+      ** For demand loans use the facility expiry date.
+      *
+     C           PTYP      IFEQ 61                         B1
+     C           PTYP      OREQ 68
+      *
+      ** If the facility record is already loaded via journal entry
+      ** then obtain the expiry date from here.
+      *
+     C           FCUS      IFEQ CNUMFJ                     B2
+     C           FTYP      ANDEQFACTFJ
+     C           FSEQ      ANDEQFCNOFJ
+      *
+     C                     Z-ADDDTEXFJ    @@DAYN
+      *
+      ** Otherwise, access facilities file for expiry date.
+      *
+     C                     ELSE
+      *
+     C**********           Z-ADDFCUS      CNUMFK                                              CSD027
+     C                     MOVE FCUS      CNUMFK                                              CSD027
+     C                     Z-ADDFTYP      FACTFK
+     C                     Z-ADDFSEQ      FCNOFK
+      *
+     C           FCLTKY    CHAINFCLTY                47
+      *
+     C           *IN47     IFEQ '1'                        B3
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD16        DBASE            *************
+     C                     MOVEL'FCLTY   'DBFILE           *Db error 16*
+     C                     MOVELLNRFK     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E3
+      *
+     C                     Z-ADDDTEXFC    @@DAYN
+      *
+     C                     ENDIF                           E2
+      *
+      ** For non-demand loans use the maturity date on the loan.
+      *
+     C                     ELSE
+     C                     Z-ADDMDAT      @@DAYN
+     C                     ENDIF                           E1
+      *
+     C                     EXSR ZDATE9
+      *
+      ** Save maturity date. This may be used to populate next interest
+      ** date later in this subroutine.
+      *
+     C                     MOVE @@VDT     WKMDAT  8
+      *
+     C                     MOVE @@VDT     WKVDAT
+      *
+     C           PFLD      CAT  WKVDAT:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Notice days (blank - field not accepted by City Dealer).
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Interest period (interest payment frequency).
+      *
+      ** Interest frequency.
+      **
+      ** For repayment type 1 (principal and interest paid together)
+      ** interest payment frequency is the same as repayment frequency.
+      *
+     C           REPT      IFEQ 1
+     C           JFILE     ANDEQ'CLOANCL'
+      *
+     C                     SELEC
+     C           RFRQ      WHEQ 'M'
+     C                     MOVEL'M,'      WKIPFQ  2
+     C           RFRQ      WHEQ 'Q'
+     C                     MOVEL'Q,'      WKIPFQ
+     C           RFRQ      WHEQ 'X'
+     C                     MOVEL'X,'      WKIPFQ
+     C           RFRQ      WHEQ 'Y'
+     C                     MOVEL'A,'      WKIPFQ
+     C                     OTHER
+      *
+      ** Set interest payment frequency to 'A' (annual) if repayment
+      ** frequency is blank.
+      *
+     C                     MOVEL'A,'      WKIPFQ
+     C                     ENDSL
+      *
+     C                     ELSE
+      *
+     C                     SELEC
+     C           IPFR      WHEQ 'M'
+     C                     MOVEL'M,'      WKIPFQ
+     C           IPFR      WHEQ 'Q'
+     C                     MOVEL'Q,'      WKIPFQ
+     C           IPFR      WHEQ 'X'
+     C                     MOVEL'X,'      WKIPFQ
+     C           IPFR      WHEQ 'Y'
+     C                     MOVEL'A,'      WKIPFQ
+     C                     OTHER
+      *
+      ** Set interest payment frequency to 'A' (annual) if blank.
+      *
+     C                     MOVEL'A,'      WKIPFQ
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+      ** Note - WKIPFQ is used to populate rate change frequency if
+      ** rollover frequency is blank later in this subroutine.
+      *
+     C           PFLD      CAT  WKIPFQ:0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Next interest payment date.
+      *
+      ** For repayment type 1 (principal and interest paid together)
+      ** next interest payment date is the same as next repayment date.
+      *
+     C           REPT      IFEQ 1
+     C           JFILE     ANDEQ'CLOANCL'
+      *
+     C           NRPD      IFNE *ZEROS
+     C                     Z-ADDNRPD      @@DAYN
+     C                     EXSR ZDATE9
+      *
+      ** Note - WKNIND is also used to populate next rate change date
+      ** later in this subroutine if rollover date is blank.
+      *
+     C                     MOVE @@VDT     WKNIND  8
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** If next interest payment date is blank then populate this
+      ** field with maturity date instead.
+      *
+     C           NIDT      IFEQ *ZEROS
+      *
+      ** Use maturity date calculated earlier in this subroutine.
+      *
+     C                     MOVE WKMDAT    WKNIND
+     C                     ELSE
+      *
+     C                     Z-ADDNIDT      @@DAYN
+     C                     EXSR ZDATE9
+     C                     MOVE @@VDT     WKNIND  8
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           PFLD      CAT  WKNIND:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Interest payment day in month.
+      *
+      ** For repayment type 1 (principal and interest paid together)
+      ** interest payment day in the month is the same as repayment day.
+      *
+     C           REPT      IFEQ 1
+     C           JFILE     ANDEQ'CLOANCL'
+      *
+     C                     MOVE RDYN      WKRDYN  2
+     C           RDYN      IFGE 1
+     C           RDYN      ANDLE31
+     C           PFLD      CAT  WKRDYN:0  TEMP
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVE IFDY      WKIFDY  2
+     C           IFDY      IFGE 1
+     C           IFDY      ANDLE31
+     C           PFLD      CAT  WKIFDY:0  TEMP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Interest calculation basis.
+      *
+     C                     SELEC
+     C           ICBS      WHEQ 1
+     C                     MOVE 4         WKICBS  1
+     C           ICBS      WHEQ 2
+     C                     MOVE 3         WKICBS
+     C           ICBS      WHEQ 3
+     C                     MOVE 1         WKICBS
+     C                     OTHER
+     C                     MOVE *BLANKS   WKICBS
+     C                     ENDSL
+      *
+     C           PFLD      CAT  WKICBS:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Rate change frequency (rollover frequency).
+      *
+     C                     SELEC
+     C           RLFQ      WHEQ 'M'
+     C           PFLD      CAT  'M,':0    TEMP
+     C           RLFQ      WHEQ 'Q'
+     C           PFLD      CAT  'Q,':0    TEMP
+     C           RLFQ      WHEQ 'X'
+     C           PFLD      CAT  'X,':0    TEMP
+     C           RLFQ      WHEQ 'Y'
+     C           PFLD      CAT  'A,':0    TEMP
+      *
+      ** If rollover frequency is blank then use interest payment
+      ** frequency instead.
+      *
+     C           RLFQ      WHEQ ' '
+     C           PFLD      CAT  WKIPFQ:0  TEMP
+     C                     OTHER
+     C           PFLD      CAT  'A,':0    TEMP
+     C                     ENDSL
+      *
+     C                     MOVELTEMP      PFLD
+      *
+      ** Next rate change date (rollover date).
+      *
+     C           RLDT      IFNE *ZEROS
+     C                     Z-ADDRLDT      @@DAYN
+     C                     EXSR ZDATE9
+     C                     MOVE @@VDT     WKVDAT
+     C                     ELSE
+      *
+      ** If rollover date is zero then use next interest date instead.
+      *
+     C                     MOVE WKNIND    WKVDAT
+     C                     ENDIF
+      *
+     C           PFLD      CAT  WKVDAT:0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Rate change day in month (rollover day in month).
+      *
+     C           RLDT      IFNE 0
+     C           RLDY      IFGE 1
+     C           RLDY      ANDLE31
+     C                     MOVE RLDY      WKRLDY  2
+     C           PFLD      CAT  WKRLDY:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+     C                     ELSE
+      *
+      ** If rollover date is zero then use interest payment day in
+      ** month instead.
+      *
+     C           IFDY      IFGE 1
+     C           IFDY      ANDLE31
+     C                     MOVE IFDY      WKRLDY  2
+     C           PFLD      CAT  WKRLDY:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Repayment amount.
+      *
+     C                     Z-ADDRAMT      WKAMNT 130
+      *
+     C                     MOVEL'REPAYMNT'AMTTYP  8
+     C                     EXSR AMOUNT
+      *
+      ** Repayment frequency.
+      *
+     C                     SELEC
+     C           RFRQ      WHEQ 'M'
+     C           PFLD      CAT  'M,':0    TEMP
+     C           RFRQ      WHEQ 'Q'
+     C           PFLD      CAT  'Q,':0    TEMP
+     C           RFRQ      WHEQ 'X'
+     C           PFLD      CAT  'X,':0    TEMP
+     C           RFRQ      WHEQ 'Y'
+     C           PFLD      CAT  'A,':0    TEMP
+      *
+      ** If repayment frequency is blank and repayment amount is
+      ** non-zero then set repayment frequency to 'A' (annual).
+      *
+     C           RFRQ      WHEQ ' '
+     C           RAMT      ANDNE0
+     C           PFLD      CAT  'A,':0    TEMP
+     C                     OTHER
+     C           PFLD      CAT  ',':0     TEMP
+     C                     ENDSL
+      *
+     C                     MOVELTEMP      PFLD
+      *
+      ** Repayment date.
+      *
+     C           NRPD      IFNE *ZEROS
+     C                     Z-ADDNRPD      @@DAYN
+     C                     EXSR ZDATE9
+      *
+     C                     MOVE @@VDT     WKVDAT
+     C           PFLD      CAT  WKVDAT:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Repayment day in month.
+      *
+     C                     MOVE RDYN      WKRDYN  2
+      *
+     C           RDYN      IFGE 1
+     C           RDYN      ANDLE31
+     C           PFLD      CAT  WKRDYN:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Broker code (blank).
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Portfolio (blank).
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Receive to name (customer report name);
+      ** Receive to city (customer report town).
+      *
+     C                     EXSR RCVTO
+      *
+      ** Pay from name (customer report name);
+      ** Pay from city (customer report town);
+      *
+     C                     EXSR PAYFRM
+      *
+      ** Pay to name (blank);
+      ** Pay to city (blank);
+      ** Via name (blank);
+      ** Via city (blank);
+      ** In favour of name (blank);
+      ** In favour of city (blank).
+      *
+     C           PFLD      CAT  ',,,,,,':0TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office flag.
+      *
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office reference number (loan number).
+      *
+     C                     MOVEL'CL'      WKLNRF  8
+     C                     MOVE LNRF      WKLNRF
+      *
+     C           PFLD      CAT  WKLNRF:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Dealer identifier ('CUSTLEND').
+      *
+     C                     MOVEL'CUSTLEND'WKDLID  8
+      *
+     C           PFLD      CAT  WKDLID:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** City Dealer deal number (blank);
+      ** City Dealer cross reference (blank);
+      ** City Dealer cancel reference (blank);
+      ** City Dealer deal flags (blank);
+      ** City Dealer interportfolio PCW (blank).
+      *
+     C           PFLD      CAT  ',,,,,':0 TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Loan maintenance flag.
+      *
+      ** Check for any of the following principal change loan
+      ** amendments attached to the loan:
+      *
+      ** principal increase; manual repayment; scheduled repayment;
+      ** principal transfers from and to.
+      *
+      ** If any live records exist then pass 'M' indicating that
+      ** City Dealer needs to retain principal change information.
+      ** Only check amendments valued today or forward valued.
+      *
+     C                     MOVEL' '       WKMANT  1
+     C**********           Z-ADDLNRF      LNRFDK                                              CLE148
+     C                     MOVELLNRF      LNRFDK                                              CLE148
+     C           LNRFDK    CHAINLOAMSF               46
+      *
+     C           *IN46     DOWEQ'0'
+     C           WKMANT    ANDEQ' '
+      *
+     C           RECIDK    IFEQ 'D'
+     C           AMTPDK    IFEQ 'PI'
+     C           AMTPDK    OREQ 'MR'
+     C           AMTPDK    OREQ 'RE'
+     C           AMTPDK    OREQ 'PF'
+     C           AMTPDK    OREQ 'PT'
+     C           VDATDK    IFGE BJRDNB
+     C                     MOVEL'M'       WKMANT
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           LNRFDK    READELOAMSF                   46
+      *
+     C                     ENDDO
+      *
+     C           WKMANT    IFNE ' '
+     C           PFLD      CAT  WKMANT:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+      ** Write record in City Dealer commercial loans format DEAL.BTR.
+      *
+     C                     MOVELPFLD      EDATA
+      *
+      ** Write to appropriate extract file depending on loan processing
+      ** type.
+      *
+     C                     EXSR EXTRCT
+      *
+     C           ENDINS    TAG
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *  CANCEL - Deletes in Citydealer commercial loans format.      *
+      *                                                               *
+      *  Called by  : Main processing.                                *
+      *                                                               *
+      *****************************************************************
+     C           CANCEL    BEGSR
+      *
+      ** Specify subroutine name to determine where subsequent routines
+      ** are called from.
+      *
+     C                     MOVEL'CANCEL'  WKSUBR  6
+      *
+      ** Initialise record and work field.
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Record identifier.
+      *
+     C                     MOVEL'CANCEL,' PFLD
+      *
+      ** Deal type identifier.
+      *
+     C                     MOVE *BLANKS   WKTYPE  8
+      *
+      ** Process loan amendment cancellations.
+      *
+     C           JFILE     IFEQ 'LOAMSDK'                  B1
+      *
+      ** Process spread change reversals as rate fix cancellations.
+      *
+     C           AMTPDK    IFEQ 'SC'                       B2
+     C                     MOVEL'CLFIXING'WKTYPE
+      *
+      ** Process principal change cancellations.
+      *
+     C                     ELSE
+     C                     MOVEL'CLCPR   'WKTYPE
+     C                     ENDIF                           E2
+      *
+      ** Process entries from the loans file, CLOANCL.
+      *
+     C                     ELSE
+      *
+      ** Rate fix cancellation.
+      *
+     C           BEFORE    IFEQ 'RATE FIX'                 B2
+     C           AFTER     ANDEQ'NO   FIX'
+      *
+      ** Rate fix amendment.
+      *
+      ** At least one of the following fields must have changed:
+      ** next rate/spread; rollover date; next spread indicator;
+      ** next base rate type.
+      *
+     C           BEFORE    OREQ 'RATE FIX'
+     C           AFTER     ANDEQ'RATE FIX'
+     C           UBNRTS    ANDNENRTS
+      *
+     C           BEFORE    OREQ 'RATE FIX'
+     C           AFTER     ANDEQ'RATE FIX'
+     C           UBRLDT    ANDNERLDT
+      *
+     C           BEFORE    OREQ 'RATE FIX'
+     C           AFTER     ANDEQ'RATE FIX'
+     C           UBNSIN    ANDNENSIN
+      *
+     C           BEFORE    OREQ 'RATE FIX'
+     C           AFTER     ANDEQ'RATE FIX'
+     C           UBNBRA    ANDNENBRA
+      *
+     C                     MOVEL'CLFIXING'WKTYPE
+      *
+      ** Loan cancellation.
+      *
+     C                     ELSE
+      *
+      ** All loans are treated as variable ('CLOANV')
+      ** NOT fixed ('CLOANF').
+      *
+     C                     MOVEL'CLOANV'  WKTYPE
+      *
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C           PFLD      CAT  WKTYPE:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office reference number (loan number).
+      *
+     C                     MOVEL'CL'      WKLNRF  8
+     C           JFILE     IFEQ 'CLOANCL'
+     C                     MOVE LNRF      WKLNRF
+     C                     ELSE
+     C                     MOVE LNRFDK    WKLNRF
+     C                     ENDIF
+      *
+     C           PFLD      CAT  WKLNRF:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Value date in CCYYMMDD format.
+      *
+      ** Process loan amendment reversals.
+      *
+     C           JFILE     IFEQ 'LOAMSDK'
+     C                     Z-ADDVDATDK    @@DAYN
+     C                     EXSR ZDATE9
+     C                     MOVE @@VDT     WKVDAT
+      *
+      ** Process rate fixing cancellations.
+      ** Value date is rollover date on image before update.
+      *
+     C                     ELSE
+     C           BEFORE    IFEQ 'RATE FIX'
+     C                     Z-ADDUBRLDT    @@DAYN
+     C                     EXSR ZDATE9
+     C                     MOVE @@VDT     WKVDAT
+      *
+      ** For loan cancellations value date must be passed as blank.
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   WKVDAT
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PFLD      CAT  WKVDAT:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office sequence number.
+      *
+      ** Process loan amendment sequence number.
+      *
+     C           JFILE     IFEQ 'LOAMSDK'
+     C                     MOVE LASNDK    WKLASN  3
+     C           PFLD      CAT  WKLASN:0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Sequence number is zero for loan or rollover cancellations.
+      *
+     C                     ELSE
+     C           BEFORE    IFEQ 'RATE FIX'
+     C           PFLD      CAT  '000':0   TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Write record in City Dealer commercial loans format DEAL.BTR.
+      *
+     C                     MOVELPFLD      EDATA
+      *
+      ** Write to appropriate extract file depending on loan processing
+      ** type.
+      *
+     C                     EXSR EXTRCT
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *  PRNCPL - Inserts in City Dealer commercial loans principal   *
+      *           changes record format.                              *
+      *                                                               *
+      *  Called by  : Main processing and TAKEON subroutine.          *
+      *                                                               *
+      *****************************************************************
+     C           PRNCPL    BEGSR
+      *
+      ** Specify subroutine name to determine where subsequent routines
+      ** are called from.
+      *
+     C                     MOVEL'PRNCPL'  WKSUBR  6
+      *
+      ** Initialise record and work field.
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Record identifier.
+      *
+     C                     MOVEL'CLCPR'   PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Currency code (City Dealer requires repayments in loan ccy).
+      *
+     C           PFLD      CAT  CCY:0     TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty name (customer report name).
+      *
+     C                     MOVE CNUMDK    WKCNUM
+      *
+      ** If participation purchased/sold then use original borrower
+      ** from loans file.
+      *
+     C           PTYP      IFEQ 64
+     C           PTYP      OREQ 65
+     C           PTYP      OREQ 68
+     C********** OLNO      IFNE 0                                                             CSD027
+     C           OLNO      IFNE *BLANKS                                                       CSD027
+     C                     MOVE OLNO      WKCNUM
+     C                     ENDIF
+     C                     ENDIF
+     C                     EXSR ADDRES
+      *
+     C           PFLD      CAT  WKCRNM:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Counterparty city (customer report town).
+      *
+     C           PFLD      CAT  WKCRTN:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Principal amount (repayments are negative).
+      *
+      ** If loan amendment currency is the same as loan currency then
+      ** no conversion of principal amount is required.
+      *
+     C           CCYDK     IFEQ CCY                        B1
+     C                     Z-ADDPRAMDK    WKAMNT 130
+      *
+      ** If loan amendment currency is different to loan currency but
+      ** is the same as facility currency then convert principal amount
+      ** into loan currency using facility currency exchange rate.
+      *
+     C                     ELSE
+     C           CCYDK     IFEQ FCCY                       B2
+      *
+      ** Obtain number of decimal places in facility currency.
+      *
+     C                     MOVE FCCY      WKCCY
+     C                     EXSR CURRCY
+     C                     Z-ADDWKNBDP    WKFCDP  10
+      *
+      ** Obtain number of decimal places in loan currency.
+      *
+     C                     MOVE CCY       WKCCY
+     C                     EXSR CURRCY
+     C                     Z-ADDWKNBDP    WKLCDP  10
+      *
+     C           WKFCDP    SUB  WKLCDP    WKP     10
+     C                     ADD  4         WKP
+     C                     Z-ADDPOWR,WKP  WKPOWR  73
+      *
+      ** Convert principal to loan currency.
+      *
+     C           FMDI      IFEQ 'M'                        B3
+     C           PRAMDK    DIV  FCXR      WKCVAM 204H
+     C                     ELSE
+     C           PRAMDK    MULT FCXR      WKCVAM    H
+     C                     ENDIF                           E3
+     C           WKCVAM    DIV  WKPOWR    WKAMNT    H
+      *
+      ** If loan amendment is in EUR and loan currency is not EUR
+      ** then convert principal amount into loan currency using
+      ** fixed exchange rate against EUR.
+      *
+     C                     ELSE
+     C           CCYDK     IFEQ 'EUR'                      B3
+      *
+      ** Obtain number of decimal places in loan currency.
+      *
+     C                     MOVE CCY       WKCCY
+     C                     EXSR CURRCY
+     C                     Z-ADDWKNBDP    WKLCDP
+      *
+     C           WKEUDP    SUB  WKLCDP    WKP     10
+     C                     ADD  4         WKP
+     C                     Z-ADDPOWR,WKP  WKPOWR  73
+      *
+      ** Convert principal to loan currency.
+      *
+     C           A6EUMD    IFEQ 'M'                        B4
+     C           PRAMDK    DIV  A6EUER    WKCVAM 204H
+     C                     ELSE
+     C           PRAMDK    MULT A6EUER    WKCVAM    H
+     C                     ENDIF                           E4
+     C           WKCVAM    DIV  WKPOWR    WKAMNT    H
+      *
+      ** Database error if loan amendment currency is not the same as
+      ** either loan currency, facility currency or euros.
+      *
+     C                     ELSE
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD13        DBASE            *************
+     C                     MOVELCCYDK     DBKEY            *Db error 13*
+     C                     MOVEL'LOAMS cc'WKDBKY 15        *************
+     C                     MOVE 'y error' WKDBKY
+     C                     MOVE WKDBKY    DBKEY
+     C                     MOVE *BLANKS   DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E3
+      *
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+     C                     MOVEL'PRINCIPL'AMTTYP  8
+     C                     EXSR AMOUNT
+      *
+      ** Value date in CCYYMMDD format.
+      *
+     C                     Z-ADDVDATDK    @@DAYN
+     C                     EXSR ZDATE9
+      *
+     C                     MOVE @@VDT     WKVDAT
+     C           PFLD      CAT  WKVDAT:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Receive to name (customer report name);
+      ** Receive to city (customer report town).
+      *
+     C                     EXSR RCVTO
+      *
+      ** Pay from name (customer report name);
+      ** Pay from city (customer report town).
+      *
+     C                     EXSR PAYFRM
+      *
+      ** Pay to name (blank);
+      ** Pay to city (blank);
+      ** Via name (blank);
+      ** Via city (blank);
+      ** In favour of name (blank);
+      ** In favour of city (blank).
+      *
+     C           PFLD      CAT  ',,,,,,':0TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office flag.
+      *
+     C           PFLD      CAT  'B,':0    TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office reference number (loan number).
+      *
+     C                     MOVEL'CL'      WKLNRF  8
+     C                     MOVE LNRFDK    WKLNRF
+      *
+     C           PFLD      CAT  WKLNRF:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office sequence number (loan amendment sequence number).
+      *
+     C                     MOVE LASNDK    WKLASN  3
+     C           PFLD      CAT  WKLASN:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Dealer identifier ('CUSTLEND')
+      *
+     C                     MOVEL'CUSTLEND'WKDLID  8
+      *
+     C           PFLD      CAT  WKDLID:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** City Dealer deal number (blank);
+      ** City Dealer cross reference (blank);
+      ** City Dealer cancel reference (blank);
+      ** City Dealer deal flags (blank);
+      ** City Dealer interportfolio PCW (blank).
+      *
+     C           PFLD      CAT  ',,,,,':0 TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Write record in City Dealer commercial loans format DEAL.BTR.
+      *
+     C                     MOVELPFLD      EDATA
+      *
+      ** Write to appropriate extract file depending on loan processing
+      ** type.
+      *
+     C                     EXSR EXTRCT
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *  FIXING - Rate changes in City Dealer commercial loans rate   *
+      *           fixing format.                                      *
+      *                                                               *
+      *  Called by  : Main processing and TAKEON subroutine.          *
+      *                                                               *
+      *****************************************************************
+     C           FIXING    BEGSR
+      *
+      ** Specify subroutine name to determine where subsequent routines
+      ** are called from.
+      *
+     C                     MOVEL'FIXING'  WKSUBR  6
+      *
+      ** Initialise record and work field.
+      *
+     C                     MOVE *BLANKS   PFLD
+     C                     MOVE *BLANKS   TEMP
+      *
+      ** Record identifier.
+      *
+     C                     MOVEL'CLFIXING'PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Value date in CCYYMMDD format
+      ** (rollover date for rate fix rollovers and
+      ** loan amendment value date for spread changes).
+      *
+     C           JFILE     IFEQ 'CLOANCL'
+     C                     Z-ADDRLDT      @@DAYN
+     C                     ELSE
+     C                     Z-ADDVDATDK    @@DAYN
+     C                     ENDIF
+      *
+     C                     EXSR ZDATE9
+      *
+     C                     MOVE @@VDT     WKVDAT
+     C           PFLD      CAT  WKVDAT:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Interest rate.
+      *
+      ** Rate fixing records are only downloaded if base rate code is
+      ** not specified. Therefore, rate/spread fields contain the full
+      ** interest rate.
+      *
+      ** For rate fix rollovers use next rate/spread.
+      *
+     C           JFILE     IFEQ 'CLOANCL'
+     C                     Z-ADDNRTS      WKRATE 117
+      *
+      ** For spread changes use loan amendment rate/spread.
+      *
+     C                     ELSE
+     C                     Z-ADDRTSPDK    WKRATE
+     C                     ENDIF
+      *
+      ** Format interest rate.
+      *
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVEA*BLANKS   AAMT
+     C                     MOVE *BLANKS   WKINTR 16
+     C                     Z-ADD7         ZADEC
+      *
+     C           WKRATE    IFGE 0
+     C                     MOVEL'+,'      RTSIGN  2
+     C                     ELSE
+     C                     MOVEL'-,'      RTSIGN
+     C                     Z-SUBWKRATE    WKRATE
+     C                     ENDIF
+      *
+     C                     MOVE WKRATE    ZFIELD
+     C                     EXSR ZEDIT
+     C                     MOVEAZFIELD    AAMT
+     C           ' '       CHECKZFIELD    N
+     C                     MOVEAAAMT,N    WKINTR
+      *
+     C           PFLD      CAT  WKINTR:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  RTSIGN:0  TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office reference number (loan number).
+      *
+     C                     MOVEL'CL'      WKLNRF  8
+      *
+     C           JFILE     IFEQ 'CLOANCL'
+     C                     MOVE LNRF      WKLNRF
+     C                     ELSE
+     C                     MOVE LNRFDK    WKLNRF
+     C                     ENDIF
+      *
+     C           PFLD      CAT  WKLNRF:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Back office sequence number.
+      *
+      ** For loan rollovers use 000 as there are no sequence numbers
+      ** for rollovers in Midas.
+      *
+     C           JFILE     IFEQ 'CLOANCL'
+     C           PFLD      CAT  '000':0   TEMP
+      *
+      ** For spread changes use loan amendment sequence number.
+      *
+     C                     ELSE
+     C                     MOVE LASNDK    WKLASN  3
+     C           PFLD      CAT  WKLASN:0  TEMP
+     C                     ENDIF
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP                                                195084
+     C                     MOVELTEMP      PFLD                                                195084
+      *                                                                                       195084
+      ** New interest payment date in CCYYMMDD format.                                        195084
+      *                                                                                       195084
+     C           NIPD      IFNE *ZEROS                                                        195084
+     C                     Z-ADDNIPD      @@DAYN                                              195084
+      *                                                                                       195084
+     C                     EXSR ZDATE9                                                        195084
+      *                                                                                       195084
+     C                     MOVE @@VDT     WKVDAT                                              195084
+     C           PFLD      CAT  WKVDAT:0  TEMP                                                195084
+     C                     MOVELTEMP      PFLD                                                195084
+     C           PFLD      CAT  ',':0     TEMP                                                195084
+     C                     MOVELTEMP      PFLD                                                195084
+     C                     ELSE                                                               195084
+     C           PFLD      CAT  ',':0     TEMP                                                195084
+     C                     MOVELTEMP      PFLD                                                195084
+     C                     ENDIF                                                              195084
+      *                                                                                       195084
+      ** Next rollover date in CCYYMMDD format.                                               195084
+      *                                                                                       195084
+     C           NROD      IFNE *ZEROS                                                        195084
+     C                     Z-ADDNROD      @@DAYN                                              195084
+      *                                                                                       195084
+     C                     EXSR ZDATE9                                                        195084
+      *                                                                                       195084
+     C                     MOVE @@VDT     WKVDAT                                              195084
+     C           PFLD      CAT  WKVDAT:0  TEMP                                                195084
+     C                     MOVELTEMP      PFLD                                                195084
+     C           PFLD      CAT  ',':0     TEMP                                                195084
+     C                     MOVELTEMP      PFLD                                                195084
+     C                     ELSE                                                               195084
+     C           PFLD      CAT  ',':0     TEMP                                                195084
+     C                     MOVELTEMP      PFLD                                                195084
+     C                     ENDIF                                                              195084
+      *                                                                                       195084
+      ** New maturity date in CCYYMMDD format.                                                195084
+      *                                                                                       195084
+     C           NMDT      IFNE *ZEROS                                                        195084
+     C                     Z-ADDNMDT      @@DAYN                                              195084
+      *                                                                                       195084
+     C                     EXSR ZDATE9                                                        195084
+      *                                                                                       195084
+     C                     MOVE @@VDT     WKVDAT                                              195084
+     C           PFLD      CAT  WKVDAT:0  TEMP                                                195084
+     C                     MOVELTEMP      PFLD                                                195084
+     C                     ENDIF                                                              195084
+      *
+      ** Write record in City Dealer commercial loans format DEAL.BTR.
+      *
+     C                     MOVELPFLD      EDATA
+      *
+      ** Write to appropriate extract file depending on loan processing
+      ** type.
+      *
+     C                     EXSR EXTRCT
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  RCVTO  - Format receive to name and receive to city.         *
+      *                                                               *
+      *  Called by  : INSERT; PRNCPL.                                 *
+      *                                                               *
+      *****************************************************************
+     C           RCVTO     BEGSR
+      *
+      ** Set up receive to details ...
+      *
+      ** Initialise settlement data structure.
+      *
+     C                     MOVE *BLANKS   WKSCCY  3
+     C                     Z-ADD*ZEROS    WKSETT  20
+     C                     CLEARISDTA
+     C                     MOVE *BLANKS   ISACCT
+     C                     MOVEL'G'       ISATYP
+      *
+      ** Set up settlement currency depending on input file.
+      *
+     C           JFILE     IFEQ 'CLOANCL'
+     C                     MOVE CCY       WKSCCY
+     C                     ELSE
+     C                     MOVE CCYDK     WKSCCY
+     C                     ENDIF
+      *
+      ** Process loans.
+      *
+      ** For all loans except participations sold use:
+      ** receipt our nostro; receipt settlement method.
+      *
+     C           JFILE     IFEQ 'CLOANCL'
+     C           PTYP      IFNE 66
+     C           PTYP      ANDNE67
+     C                     MOVELRONS      ISACCT
+     C                     Z-ADDRSTM      WKSETT
+      *
+      ** For participations sold use:
+      ** pay our nostro; payment settlement method.
+      *
+     C                     ELSE
+     C                     MOVELPONS      ISACCT
+     C                     Z-ADDPSTM      WKSETT
+     C                     ENDIF
+      *
+      ** Process loan amendments.
+      *
+      ** For all loans except participations sold use:
+      ** pay our nostro; payment settlement method.
+      *
+     C                     ELSE
+     C           PTYPDK    IFNE 66
+     C           PTYPDK    ANDNE67
+     C                     MOVELPONSDK    ISACCT
+     C                     Z-ADDPSTMDK    WKSETT
+      *
+      ** For participations sold use:
+      ** receipt our nostro; receipt settlement method.
+      *
+     C                     ELSE
+     C                     MOVELRONSDK    ISACCT
+     C                     Z-ADDRSTMDK    WKSETT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If two digit nostro code entered set account type to 'N'ostro.
+      *
+     C           ISTEST    IFEQ *BLANKS
+     C                     MOVE 'N'       ISATYP
+     C                     ENDIF
+      *
+      ** If settlement method is 14 then set account type to 'R'etail.
+      *
+     C           WKSETT    IFEQ 14
+     C                     MOVE 'R'       ISATYP
+     C                     ENDIF
+      *
+      ** If settlement account details blank set customer to blanks.
+      *
+     C           ISACCT    IFEQ *BLANKS
+     C                     MOVE *BLANKS   WKCNUM
+      *
+     C                     ELSE
+     C                     SELEC
+      *
+      ** If account type is 'N' access customer from nostros file.
+      *
+     C           ISATYP    WHEQ 'N'
+     C                     MOVE ISNOSN    WKNOSN
+     C                     EXSR NOSTRO
+      *
+      ** If account type is 'G' access customer from first six
+      ** characters of account number.
+      *
+     C           ISATYP    WHEQ 'G'
+     C                     MOVE ISCNU1    WKCNUM
+      *
+      ** If account type is 'R' access customer from retail accounts.
+      *
+     C           ISATYP    WHEQ 'R'
+     C                     MOVELISACNO    ACNO
+     C           KYRETN    CHAINACNUMA               44
+     C           *IN44     IFEQ '0'
+     C                     MOVE CNUM      WKCNUM
+     C                     ELSE
+     C                     MOVE *BLANKS   WKCNUM
+     C                     ENDIF
+      *
+     C                     OTHER
+     C                     MOVE *BLANKS   WKCNUM
+     C                     ENDSL
+     C                     ENDIF
+      *
+      ** Access customer report name and town.
+      *
+     C           WKCNUM    IFNE *BLANKS
+     C                     EXSR ADDRES
+      *
+      ** Pay to name (customer report name).
+      *
+     C           PFLD      CAT  WKCRNM:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay to city (customer report town).
+      *
+     C           PFLD      CAT  WKCRTN:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** If pay to name and city are blank.
+      *
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  PAYFRM - Format pay from name and pay from city.             *
+      *                                                               *
+      *  Called by  : INSERT; PRNCPL.                                 *
+      *                                                               *
+      *****************************************************************
+     C           PAYFRM    BEGSR
+      *
+      ** Set up pay from details ...
+      *
+      ** Initialise settlement data structure.
+      *
+     C                     MOVE *BLANKS   WKSCCY  3
+     C                     Z-ADD*ZEROS    WKSETT  20
+     C                     CLEARISDTA
+     C                     MOVE *BLANKS   ISACCT
+     C                     MOVEL'G'       ISATYP
+      *
+      ** Set up settlement currency depending on input file.
+      *
+     C           JFILE     IFEQ 'CLOANCL'
+     C                     MOVE CCY       WKSCCY
+     C                     ELSE
+     C                     MOVE CCYDK     WKSCCY
+     C                     ENDIF
+      *
+      ** Process loans.
+      *
+      ** For all loans except participations sold use:
+      ** pay our nostro; payment settlement method.
+      *
+     C           JFILE     IFEQ 'CLOANCL'
+     C           PTYP      IFNE 66
+     C           PTYP      ANDNE67
+     C                     MOVELPONS      ISACCT
+     C                     Z-ADDPSTM      WKSETT
+      *
+      ** For participations sold use:
+      ** receipt our nostro; receipt settlement method.
+      *
+     C                     ELSE
+     C                     MOVELRONS      ISACCT
+     C                     Z-ADDRSTM      WKSETT
+     C                     ENDIF
+      *
+      ** Process loan amendments.
+      *
+      ** For all loans except participations sold use:
+      ** pay our nostro; payment settlement method.
+      *
+     C                     ELSE
+     C           PTYPDK    IFNE 66
+     C           PTYPDK    ANDNE67
+     C                     MOVELPONSDK    ISACCT
+     C                     Z-ADDPSTMDK    WKSETT
+      *
+      ** For participations sold use:
+      ** receipt our nostro; receipt settlement method.
+      *
+     C                     ELSE
+     C                     MOVELRONSDK    ISACCT
+     C                     Z-ADDRSTMDK    WKSETT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** If two digit nostro code entered set account type to 'N'ostro.
+      *
+     C           ISTEST    IFEQ *BLANKS
+     C                     MOVE 'N'       ISATYP
+     C                     ENDIF
+      *
+      ** If settlement method is 14 then set account type to 'R'etail.
+      *
+     C           WKSETT    IFEQ 14
+     C                     MOVE 'R'       ISATYP
+     C                     ENDIF
+      *
+      ** If settlement account details blank set customer to blanks.
+      *
+     C           ISACCT    IFEQ *BLANKS
+     C                     MOVE *BLANKS   WKCNUM
+      *
+      ** If account type is 'N' access customer from nostros file.
+      *
+     C                     ELSE
+     C                     SELEC
+     C           ISATYP    WHEQ 'N'
+     C                     MOVE ISNOSN    WKNOSN
+     C                     EXSR NOSTRO
+      *
+      ** If account type is 'G' access customer from first six
+      ** characters of account number.
+      *
+     C           ISATYP    WHEQ 'G'
+     C                     MOVE ISCNU1    WKCNUM
+      *
+      ** If account type is 'R' access customer from retail accounts.
+      *
+     C           ISATYP    WHEQ 'R'
+     C                     MOVELISACNO    ACNO
+     C           KYRETN    CHAINACNUMA               44
+     C           *IN44     IFEQ '0'
+     C                     MOVE CNUM      WKCNUM
+     C                     ELSE
+     C                     MOVE *BLANKS   WKCNUM
+     C                     ENDIF
+      *
+     C                     OTHER
+     C                     MOVE *BLANKS   WKCNUM
+     C                     ENDSL
+     C                     ENDIF
+      *
+      ** Access customer report name and town.
+      *
+     C           WKCNUM    IFNE *BLANKS
+     C                     EXSR ADDRES
+      *
+      ** Pay from name (customer report name).
+      *
+     C           PFLD      CAT  WKCRNM:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** Pay from city (customer report town).
+      *
+     C           PFLD      CAT  WKCRTN:0  TEMP
+     C                     MOVELTEMP      PFLD
+     C           PFLD      CAT  ',':0     TEMP
+     C                     MOVELTEMP      PFLD
+      *
+      ** If pay from name and city are blank.
+      *
+     C                     ELSE
+     C           PFLD      CAT  ',,':0    TEMP
+     C                     MOVELTEMP      PFLD
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  NOSTRO - Access Nostro customer details.                     *
+      *                                                               *
+      *  Called by  : PAYFROM; RCVTO.                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           NOSTRO    BEGSR
+      *
+      ** Access Nostro details using currency and nostro
+      *
+     C                     CALL 'AONOSTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM *BLANKS   @CUST   6
+     C                     PARM           WKSCCY  3
+     C**********           PARM           @ACCD   4                                           CGL029
+     C                     PARM           @ACCD  10                                           CGL029
+     C                     PARM           @ACSN   2
+     C                     PARM           WKNOSN  2
+     C                     PARM           @BRCA   3
+     C                     PARM *BLANKS   @CSSN  10
+     C                     PARM *BLANKS   @PNOI   1
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C                     MOVE A7CUST    WKCNUM  6
+     C                     ELSE
+     C                     MOVE *BLANKS   WKCNUM
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  INITL  - Initial processing.                                 *
+      *                                                               *
+      *  Called by  : Main processing.                                *
+      *                                                               *
+      *****************************************************************
+     C           INITL     BEGSR
+      *
+      ** Initialise database error fields.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DL0012'  DBPGM
+     C                     Z-ADD0         DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL*BLANKS   DBFILE
+     C                     OUT  LDA
+      *
+      ** Key list for access to loans master file CLOAN for both
+      ** formats CLOANCLF and CLOANCKF.
+      *
+     C           CLONKY    KLIST
+     C**********           KFLD           LNRFK   60                                          CLE148
+     C                     KFLD           LNRFK   6                                           CLE148
+     C                     KFLD           RCDTK   1
+      *
+      ** Key list for access to facilities master file FCLTY for
+      ** format FCLTYFMF or loans by facility file CLOANF for format
+      ** CLOANCLF.
+      *
+     C           FCLTKY    KLIST
+     C**********           KFLD           CNUMFK  60                                          CSD027
+     C                     KFLD           CNUMFK  6                                           CSD027
+     C                     KFLD           FACTFK  30
+     C                     KFLD           FCNOFK  20
+      *
+      ** Key list for access to retail account details file ACNUMA.
+      *
+     C           KYRETN    KLIST
+     C                     KFLD           ACNO
+      *
+      ** If first cycle.
+      *
+     C           WFCYL     IFEQ *BLANKS                    B1
+      *
+      ** Initialise work fields
+      *
+      ** Zeroise counter for multiple occurrence data structure which
+      ** stores images of journal entries before update on file CLOANCL.
+      *
+     C                     Z-ADD0         PUTUB   20
+      *
+      ** Initialise multiple occurrence data structure.
+      *
+     C           1         DO   10        MULTIN  20
+     C           MULTIN    OCUR MULTI
+     C**********           Z-ADD0         UBLNRF                                              CLE148
+     C                     MOVEL*BLANKS   UBLNRF                                              CLE148
+     C                     Z-ADD0         UBMDAT
+     C                     MOVEL*BLANKS   UBIPFR
+     C                     Z-ADD0         UBNIDT
+     C                     Z-ADD0         UBIFDY
+     C                     Z-ADD0         UBRAMT
+     C                     MOVEL*BLANKS   UBRFRQ
+     C                     Z-ADD0         UBNRPD
+     C                     Z-ADD0         UBRDYN
+     C                     MOVEL*BLANKS   UBOMDA
+     C                     Z-ADD0         UBMDST
+     C                     MOVEL*BLANKS   UBOSDA
+     C                     Z-ADD0         UBSDST
+     C                     Z-ADD0         UBNROD
+     C                     Z-ADD0         UBRLDT
+     C                     Z-ADD0         UBNBRA
+     C                     Z-ADD0         UBNRTS
+     C                     MOVEL*BLANKS   UBNCHI
+     C                     MOVEL*BLANKS   UBNSIN
+     C                     Z-ADD0         UBRLDY
+     C                     MOVEL*BLANKS   UBRLFQ
+     C                     Z-ADD0         UBVDAT
+     C                     ENDDO
+      *
+      ** Zeroise counter for multiple occurrence data structure which
+      ** stores images of journal entries before update on file FCLTYFM.
+      *
+     C                     Z-ADD0         PUTUF   20
+      *
+      ** Initialise multiple occurrence data structure.
+      *
+     C           1         DO   10        MULTFN  20
+     C           MULTFN    OCUR MULTIF
+     C**********           Z-ADD0         UFCNUM                                              CSD027
+     C                     MOVE *BLANKS   UFCNUM                                              CSD027
+     C                     Z-ADD0         UFFACT
+     C                     Z-ADD0         UFFCNO
+     C                     Z-ADD0         UFDTEX
+     C                     ENDDO
+      *
+      ** Initialise key facility fields from journal entry data
+      ** structure.
+      *
+     C**********           Z-ADD0         CNUMFJ                                              CSD027
+     C                     MOVE *BLANKS   CNUMFJ                                              CSD027
+     C                     Z-ADD0         FACTFJ
+     C                     Z-ADD0         FCNOFJ
+      *
+      ** Access bank details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS                    B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD2         DBASE            *************
+     C                     MOVEL'SDBANKPD'DBFILE           *Db error 02*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E2
+      *
+      ** Access general ledger details.
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE *BLANKS                    B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD3         DBASE            *************
+     C                     MOVEL'SDGELRPD'DBFILE           *Db error 03*
+     C                     MOVEL'*FIRST'  DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             E2
+      *
+      ** Obtain number of decimal places in euro currency.
+      *
+     C                     MOVE BKEURO    WKCCY
+     C                     EXSR CURRCY
+     C                     Z-ADDWKNBDP    WKEUDP  10
+      *
+      ** Access Switchable Features Details
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY 'POPTN   7
+     C                     PARM 'CCM004'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CCM004  1
+     C                     ELSE
+     C                     MOVE 'N'       CCM004
+     C                     ENDIF
+      *
+     C                     MOVEL'Y'       WFCYL   1
+      *
+     C                     END                             E1
+      *
+      ** Check system date format: DDMMYY if 98 off; MMDDYY if 98 on.
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVEL'1'       *IN98
+     C                     END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  TAKEON - Take on of loans and loan amendments in City Dealer *
+      *                                                               *
+      *  This subroutine is only accessed if program is being run in  *
+      *  take on mode.                                                *
+      *                                                               *
+      *  The following transactions are taken on:                     *
+      *                                                               *
+      *  all live loans; and                                          *
+      *  all live loan amendments value dated today or forward valued.*
+      *                                                               *
+      *  Also, rate fixing records are generated where next rate      *
+      *  /spread and rollover date are non-zero.                      *
+      *                                                               *
+      *                                                               *
+      *  Called by  : Main processing.                                *
+      *                                                               *
+      *****************************************************************
+     C           TAKEON    BEGSR
+      *
+      ** Set up file being processed as CLOANCL.
+      *
+     C                     MOVEL*BLANKS   JFILE
+     C                     MOVEL'CLOANCL 'JFILE
+      *
+      ** Also, records are to be treated as the equivalent of put
+      ** record journal entries.
+      *
+     C                     MOVEL'PT'      JOENTT
+      *
+      ** Open extract file for output.
+      *
+     C                     OPEN DLETLEPD
+     C                     OPEN DLETCLPD
+     C                     OPEN DLETCPPD
+      *
+      ** Read through loans master file CLOANCL.
+      *
+     C           *LOVAL    SETLLCLOANCLF             40
+     C                     READ CLOANCLF                 40
+      *
+     C           *IN40     DOWEQ'0'
+      *
+      ** Only process live records.
+      *
+     C           RECI      IFEQ 'D'                        B1
+     C           MDAT      IFGE BJRDNB                     B2
+     C           MDAT      OREQ 0
+      *
+      ** Only include loans with the following processing types:
+      **
+      ** 61 - demand loan;
+      ** 62 - term loan;
+      ** 63 - discount loan;
+      ** 64 - term participation purchased;
+      ** 65 - discount participation purchased;
+      ** 66 - term participation sold;
+      ** 67 - discount participation sold
+      ** 68 - participation purchased demand loan.
+      *
+     C           PTYP      IFGE 61                         B3
+     C           PTYP      ANDLE68
+     C           PTYP      OREQ 70
+     C           CCM004    ANDEQ'Y'
+      *
+      ** Access corresponding record on file CLOANCK.
+      *
+     C           LNRF      CHAINCLOANCKF             40
+     C           *IN40     IFEQ '1'                        B4
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD18        DBASE            *************
+     C                     MOVEL'CLOANCK 'DBFILE           *Db error 18*
+     C                     MOVELLNRFK     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E4
+      *
+      ** For take on purposes populate value date with start/last
+      ** interest date.
+      *
+     C           SLID      IFNE 0                          B4
+     C                     Z-ADDSLID      VDAT
+     C                     ENDIF                           E4
+      *
+      ** Process record as commercial loans insertion.
+      *
+     C                     EXSR INSERT
+      *
+      ** If next rate/spread and rollover date are non-zero then also
+      ** dowload a rate fixing record.
+      *
+     C           NRTS      IFNE 0                          B4
+     C           RLDT      ANDNE0
+     C                     EXSR FIXING
+     C                     ENDIF                           E4
+      *
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ** Read next record on loans master file CLOANCL.
+      *
+     C                     READ CLOANCLF                 40
+     C                     ENDDO
+      *
+      ** Set up file being processed as LOAMSDK.
+      *
+     C                     MOVEL'LOAMSDK 'JFILE
+      *
+      ** Also, records are to be treated as the equivalent of put
+      ** record journal entries.
+      *
+     C                     MOVEL'PT'      JOENTT
+      *
+      ** Read through loan amendments master file LOAMSDK.
+      *
+     C           1         SETLLLOAMSDKF             45
+     C                     READ LOAMSDKF                 45
+      *
+     C           *IN45     DOWEQ'0'
+      *
+      ** Only process live records value dated today or forward valued.
+      *
+     C           RECIDK    IFEQ 'D'                        B1
+     C           VDATDK    ANDGEBJRDNB
+      *
+      ** Only include loans with the following processing types:
+      **
+      ** 61 - demand loan;
+      ** 62 - term loan;
+      ** 63 - discount loan;
+      ** 64 - term participation purchased;
+      ** 65 - discount participation purchased;
+      ** 66 - term participation sold;
+      ** 67 - discount participation sold
+      ** 68 - participation purchased demand loan.
+      *
+     C           PTYPDK    IFGE 61                         B2
+     C           PTYPDK    ANDLE68
+     C           PTYPDK    OREQ 70
+     C           CCM004    ANDEQ'Y'
+      *
+      ** Process principal changes:
+      *
+      ** principal increase; scheduled repayment;
+      ** principal transfers from and to; manual repayment;
+      *
+     C           AMTPDK    IFEQ 'PI'                       B3
+     C           AMTPDK    OREQ 'RE'
+     C           AMTPDK    OREQ 'PF'
+     C           AMTPDK    OREQ 'PT'
+      *
+      ** For manual repayments do not process past due payments.
+      ** Only select records where expected value date is zero.
+      *
+     C           AMTPDK    OREQ 'MR'
+     C           XAVDDK    ANDEQ0
+      *
+      ** Also, process spread changes.
+      *
+     C           AMTPDK    OREQ 'SC'
+      *
+      ** Only spread changes are downloaded using the rate fixing
+      ** format.
+      *
+     C           AMTPDK    IFEQ 'SC'                       B4
+     C                     MOVEL'RATE FIX'BEFORE
+     C                     MOVEL'RATE FIX'AFTER
+     C                     ELSE
+     C                     MOVEL'NO   FIX'BEFORE
+     C                     MOVEL'NO   FIX'AFTER
+     C                     ENDIF                           E4
+      *
+      ** Access loans file for related loan details.
+      *
+     C**********           Z-ADDLNRFDK    LNRFK                                               CLE148
+     C                     MOVELLNRFDK    LNRFK                                               CLE148
+     C                     MOVE 'A'       RCDTK
+     C           CLONKY    CHAINCLOANCLF             40
+     C           *IN40     IFEQ '1'                        B4
+     C           *LOCK     IN   LDA
+     C                     MOVEL'9'       CALLCD
+     C                     Z-ADD19        DBASE            *************
+     C                     MOVEL'CLOANCL 'DBFILE           *Db error 19*
+     C                     MOVELLNRFK     DBKEY            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           E4
+      *
+      ** Process spread changes.
+      *
+     C           AMTPDK    IFEQ 'SC'                       B4
+     C                     EXSR FIXING
+      *
+      ** Process principal changes.
+      *
+     C                     ELSE
+     C                     EXSR PRNCPL
+     C                     ENDIF                           E4
+      *
+     C                     ENDIF                           E3
+     C                     ENDIF                           E2
+     C                     ENDIF                           E1
+      *
+      ** Commit changes to file DLETLEPD.
+      *
+     C                     COMIT
+      *
+      ** Read next record on loan amendments master file LOAMSDK.
+      *
+     C                     READ LOAMSDKF                 45
+     C                     ENDDO
+      *
+      ** Close extract file.
+      *
+     C                     CLOSEDLETLEPD
+     C                     CLOSEDLETCLPD
+     C                     CLOSEDLETCPPD
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program once.              *
+      *                                                               *
+      * Called by: all database error points in program.              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     OPEN DL0012AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEDL0012AU
+      *
+     C                     DUMP
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZDATE9Z3
+      /EJECT
+     C/COPY ZSRSRC,ZEDITZ2
+      /EJECT
+      *--------------------------------------------------------------
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWR -- USED IN CURRENCY CONVERSION(FACILITY)
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

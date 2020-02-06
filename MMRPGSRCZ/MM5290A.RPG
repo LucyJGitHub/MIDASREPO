@@ -1,0 +1,629 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MM Penalty Termination Adj online updt')         *
+      *****************************************************************
+      *                                                               *
+      *  MIDAS¦DBA - Dealing Money Market Module                      *
+      *                                                               *
+      *  MM5290A - Update of On-Line positions for adjustment of      *
+      *            accrued interest.                                  *
+      *                                                               *
+      *  Function:  This program updates the on-line positions and    *
+      *             projected movements for adjustments to the        *
+      *             accrued interest.                                 *
+      *                                                               *
+      *  Called By: MM5290 - Midas MM Penalty Termination Maint.      *
+      *                                                               *
+      *  (C) Copyright Finastra International Limited 2008            *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CRE075             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 23Feb10               *
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 256795   *Create   Date 25Sep08               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  256795 - Penalty Termination of Time Deposits (CDL052).      *
+      *                                                               *
+      *****************************************************************
+      *
+      * MIDAS DL Loans and Deposits Deals
+     FMMDEALLLIF  E           K        DISK         KINFSR *PSSR
+     F            MMDENSP0                          KIGNORE
+     F            MMDENBP0                          KIGNORE
+      *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   90 - MMDEALLL chain indicator                               *
+      *                                                               *
+      *   98 - Date format indicator                                  *
+      *                                                               *
+      *   LR - Last Record/Program end indicator                      *
+      *   U7/U8 - Program error indicator                             *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *                                                               *
+      *  SRDELD - Retrieve Deal Details                               *
+      *  SRCHKA - Check if account is open                            *
+      *  SRUPD  - Update processing                                   *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *
+     E                    CPY@    1   1 80               MKI Copyright array
+      *
+      **  (Posting) Naratives
+     E                    ##NAR   1   2 30
+      *
+      *-------------------------------------------------------------------
+      *
+      ** Short Data Structure - used as parameter to access programs
+     IDSFDY     E DSDSFDY
+      *
+      ** Long Data Structure - used as parameter to access programs
+     IDSSDY     E DSDSSDY
+      *
+      ** Data Area giving Installation Control Details
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area Definition
+     ILDA       E DSLDA
+      *
+      ** SD Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** SD Customer Details
+     ISDNOST    E DSSDNOSTPD
+      *
+      ** Account Details
+     ISDACNT    E DSACCNTAB
+      *
+      ** External DS for Account details.
+     I              RECI                            NRECI
+     I              CNUM                            NCNUM
+     I              CCY                             NCCY
+     I              BRCA                            NBRCA
+     I              PRFC                            NPRFC
+     I              ORED                            NORED
+     I              FACT                            NFACT
+     I              FCNO                            NFCNO
+     I              CHTP                            NCHTP
+     I              TNLU                            NTNLU
+     I              NACSG                           NNACSG
+      *
+     I##PAYD      DS
+     I                                        1   1 ##PAY
+     I                                        2   3 ##PAYM
+     I*********                               4  15 ##PAYA
+     I*********                              16  18 ##PAYB
+     I                                        4  21 ##PAYA
+     I                                       22  24 ##PAYB
+      *
+     I##SETD      DS
+      *
+      ** Pay/receive (P/R)
+     I                                        1   1 ##PYRC
+      ** Settlement method
+     I                                        2   3 ##SETM
+      ** Settlement account
+     I********                                4  15 ##SETA
+     I                                        4  21 ##SETA
+     I                                        4   5 ##NOSN
+     I                                        4  13 ##ACNO
+     I                                        4   9 ##CNUM
+     I********                               10  13 ##ACOD
+     I********                               14  15 ##ACSQ
+     I                                       10  19 ##ACOD
+     I                                       20  21 ##ACSQ
+      ** Settlement branch
+     I********                               16  18 ##BRCA
+     I                                       22  24 ##BRCA
+      *
+      ** Calling parameter data structure for AOSPOSU0
+     IC#DTA       DS                            256
+      *
+      ** Account type N=nostro nbr F=Full nostro G=General Ledger
+      **              P=Partial Ledger R= Retail Number  X= no settlement
+     I                                        1   1 C#ATYP
+      **              Full General Ledger - CNUM/CCY/ACOD/ACSQ
+     I                                        2  19 C#ACCT
+     I                                        2   70C#CNU1
+     I                                        8  10 C#CCY1
+     I********                               11  140C#ACO1
+     I                                       11  140QQACO1
+     I                                       15  160C#ACS1
+     I                                       17  19 C#BRC1
+      **              Nostro number
+     I                                        2   30C#NOSN
+      **              Full Nostro - CCY/NOSN
+     I                                        2   6 C#NOS
+      **              Retail Number
+     I                                        2  110C#ACNO
+      **              Partial Account - CNUM/ACOD/ACSQ
+     I                                        2   70C#CNUM
+     I*********                               8  110C#ACOD
+     I                                        8  110QQACOD
+     I                                       12  130C#ACSQ
+      **              Branch of account if Partial                      '
+     I                                       14  16 C#BRCA
+      **              OLPOS Incoming/Outgoing Indicator 'I' or 'O' or ' '
+      **                    ' ' no OLPOS update
+     I                                       24  24 C#IO
+      **              Currency of transaction
+     I                                       25  27 C#CCY
+      **              Transaction Type
+     I                                       28  29 C#TRYP
+      **              Transaction Narrative
+     I                                       30  59 C#NARR
+      **              Cheque Number
+     I                                       60  670C#CHQN
+      **              FT transaction reference
+     I                                       68  82 C#PREF
+      **              DL/LE/GL/RE transaction reference
+     I                                       83  88 C#TRN
+      **              Movement amount
+     I                                    P  89  960C#AMT
+      **              Processing indicators Not blank = no update
+      **                                    ' ' = Update
+      **              Prono update indicator
+     I                                       97  97 C#PRON
+      **              Olpos update indicator
+     I                                       98  98 C#OLPS
+      **              Memos update indicator
+     I                                       99  99 C#MEMS
+      **              RSACMTPD write indicator
+     I                                      100 100 C#RSAC
+      *               Module
+     I                                      101 102 C#MOD
+      **              OLPOS record number to update
+      **                    '01' for FX
+      **                    '02' for Interest movements
+      **                    '03' for MM loans and deposits
+     I                                      103 104 C#OLRC
+      **              FT MEMOS ledger balance override
+      **                       'Y' update ledger balance irrespective of
+      **                       posting date
+     I                                      105 105 C#FTOV
+      **              Value date and posting date
+     I                                    P 106 1080C#VDAT
+     I                                    P 109 1110C#PSTD
+      **              Override posting date correction
+      **                       for forward valued items
+      **                       'Y' prevents date being changed
+     I                                      112 112 C#PSTO
+      **              Indicator to show if removal allowed Y, N or " "
+     I                                      113 113 C#RPST
+      **              Removal set number
+     I                                      114 1160C#RPNB
+      **              Removal type "C" = Credit entries
+      **                           "D" = Debit entries
+     I                                      117 117 C#RTYP
+      **              Booking branch
+     I                                      118 120 C#BBRN
+      *
+      ** Account code for full general ledger
+      *
+     I                                      121 1300C#ACO1
+      *
+      ** Account code for partial account
+      *
+     I                                      131 1400C#ACOD
+      *                                                                                       CAP204
+      ** Other Transaction Reference                                                          CAP204
+      *                                                                                       CAP204
+     I                                      141 160 C#OTR1                                    CAP204
+     I                                      161 161 C#MTYP                                    CAP205
+      *                                                                                       CLE134
+      ** Exception Reference Id/Number                                                        CLE134
+      *                                                                                       CLE134
+     I                                      162 164 C#XRFI                                    CLE134
+     I                                      165 1740C#XRFN                                    CLE134
+      *
+      ** Data structure that converts numeric ACSQ to character.
+     ICONV        DS
+     I                                        1   2 D#ACSQ
+      *
+      *-------------------------------------------------------------------
+     C           *ENTRY    PLIST
+     C                     PARM           P@DLNO
+     C                     PARM           P@AAMT
+     C                     PARM           P@REVI
+      *
+      ** Perform initial processing
+     C                     EXSR SRINIT
+      *
+      ** Retrieve posting details
+     C                     EXSR SRDELD
+      *
+      ** Update the online positions
+     C                     EXSR SRUPD
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRDELD - Retrieve Deal Details.                                 *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRDELD    BEGSR
+      *
+      ** Store Pay settlement methods
+     C                     MOVEL'P'       ##PAY            * pay
+     C                     MOVELHKMOPM    ##PAYM           * pay method
+     C                     MOVELHKMOPI    ##PAYA           * pay account
+     C                     MOVELHKPOBR    ##PAYB           * pay branch
+      *
+     C                     MOVEL##PAYD    ##SETD
+      *
+      ** Determine account movement settlement details
+     C                     CLEARC#DTA
+      *
+     C           ##SETM    IFEQ '01'                       B1
+     C           ##SETM    OREQ '02'
+     C           ##SETM    OREQ '07'
+     C           ##SETM    OREQ '08'
+     C           ##SETM    OREQ '12'
+     C                     MOVEL'N'       C#ATYP
+     C                     MOVEL##NOSN    C#NOSN
+     C                     ELSE                            X1
+     C           ##SETM    IFEQ '14'                       B2
+     C                     MOVEL'R'       C#ATYP
+     C                     MOVEL##ACNO    C#ACNO
+     C                     ELSE                            X2
+     C           ##SETM    IFEQ '04'                       B3
+     C           ##SETM    OREQ '05'
+     C                     MOVEL'P'       C#ATYP
+     C                     MOVEL##CNUM    C#CNUM
+     C                     MOVEL##ACOD    C#ACOD
+     C                     MOVEL##ACSQ    C#ACSQ
+     C                     MOVEL##BRCA    C#BRCA
+     C                     END                             E3
+     C                     END                             E2
+     C                     END                             E1
+      *
+      ** OLPOS Incoming/Outgoing Indicator 'I' or 'O'
+     C           ##PYRC    IFEQ 'P'                        B1
+     C                     MOVEL'O'       C#IO             * outgoing
+     C                     ELSE                            X1
+     C                     MOVEL'I'       C#IO             * incoming
+     C                     END                             E1
+      *
+      ** Currency of transaction
+     C                     MOVELHKCCY     C#CCY
+      *
+      ** Transaction type
+     C                     MOVELHKMTYP    C#TRYP
+      *
+      ** Transaction Narrative
+     C                     MOVEL##NAR,1   C#NARR
+      *
+     C           P@REVI    IFEQ 'Y'                        B1
+     C                     MOVE '*'       C#NARR
+     C                     END                             E1
+      *
+      ** DL transaction reference
+     C                     MOVELHKDN38    C#TRN
+      *
+      ** Movement amount
+     C           P@REVI    IFEQ 'Y'                        B1
+     C                     Z-SUBP@AAMT    C#AMT            * pay ie credit
+     C                     ELSE                            X1
+     C                     Z-ADDP@AAMT    C#AMT            * rec ie debit
+     C                     END                             E1
+      *
+      ** Module
+     C                     MOVEL'DL'      C#MOD
+      *
+      ** Olpos record number to update
+      ** '02' for Interest movements
+     C                     MOVE '02'      C#OLRC
+      *
+      ** Value date and posting date
+     C                     Z-ADDBJRDNB    C#VDAT
+     C                     Z-ADDBJRDNB    C#PSTD
+      *
+      ** Booking branch
+     C                     MOVELHKBRCA    C#BBRN
+      *
+      **  If no settlement details are present
+      **  AOSPOSU0 will be called to only update OLPOS
+     C           C#ATYP    IFEQ *BLANK                     B1
+      *
+      ** Set account type indicator to signify no settlement
+     C                     MOVEL'X'       C#ATYP
+      *
+      ** Set update indicators for no update
+     C                     MOVE 'N'       C#PRON
+     C                     MOVE 'N'       C#MEMS
+     C                     MOVE 'N'       C#RSAC           E1
+     C                     END
+      *
+      ** Check if account is open if account posting
+     C           C#ATYP    IFNE 'X'                        B1
+     C                     EXSR SRCHKA
+     C                     END                             E1
+      *
+      ** If account posting and account is open,
+      ** or if not account posting
+      **   Call AOSPOSU0
+     C           C#ATYP    IFNE 'X'                        B1
+     C           NRECI     ANDEQ'D'
+     C           C#ATYP    OREQ 'X'
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+     C                     CALL 'AOSPOSU0'             9090
+     C                     PARM *BLANKS   O#RTN
+     C                     PARM '*ADD    'W0ACT
+     C                     PARM C#DTA     O#DTA
+      *
+     C           *IN90     IFEQ '1'                        B2
+     C           O#RTN     ORNE *BLANKS
+     C                     Z-ADD2         DBASE            ************
+     C                     MOVEL'*CALL   'DBFILE           * DBERR 02 *
+     C                     MOVEL'AOSPOSU0'DBKEY            ************
+     C                     EXSR *PSSR
+     C                     END                             E2
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRCHKA - Check account is open.                                 *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRCHKA    BEGSR
+      *
+     C           C#ATYP    IFEQ 'N'                        B1
+     C           C#ATYP    OREQ 'F'
+     C                     CALL 'AONOSTR0'
+     C                     PARM '*DBERR  '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM *BLANKS   @KEYA
+     C                     PARM C#CCY     @KEYB
+     C                     PARM *BLANKS   @KEYC
+     C                     PARM *BLANKS   @KEYD
+     C                     PARM ##NOSN    @KEYE
+     C                     PARM *BLANKS   @KEYF
+     C                     PARM *BLANKS   @KEYG
+     C                     PARM *BLANKS   @KEYH
+     C           SDNOST    PARM SDNOST    DSFDY
+      *
+      ** Move account details.
+     C                     MOVE A7CYCD    D#CCY
+     C                     MOVE A7ACCD    D#ACOD
+     C                     MOVE A7CUST    D#CNUM
+     C                     MOVE A7ACSN    D#ACSQ
+     C                     MOVE A7BRCD    D#BRCA
+     C                     ENDIF                           E1
+      *
+     C           C#ATYP    IFEQ 'R'                        B1
+     C                     MOVE C#ACNO    D#RTL
+     C                     MOVE *BLANKS   D#CCY
+     C                     MOVE *BLANKS   D#ACOD
+     C                     MOVE *BLANKS   D#CNUM
+     C                     MOVE *BLANKS   D#ACSQ
+     C                     MOVE *BLANKS   D#BRCA
+     C                     ENDIF                           E1
+      *
+     C           C#ATYP    IFNE 'N'                        B1
+     C           C#ATYP    ANDNE'F'
+     C           C#ATYP    ANDNE'R'
+     C                     MOVE *BLANKS   D#RTL
+     C                     MOVE C#CCY     D#CCY
+     C                     MOVE ##ACOD    D#ACOD
+     C                     MOVE ##CNUM    D#CNUM
+     C                     MOVE ##ACSQ    D#ACSQ
+     C                     MOVE ##BRCA    D#BRCA
+     C                     ENDIF                           E1
+      *
+      ** Call AOACCTR0 to retrieve the account record.
+     C                     MOVE *BLANKS   NRECI
+     C                     CALL 'AOACCTR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM D#RTL     @RETL
+     C                     PARM D#CNUM    @CNUM
+     C                     PARM D#CCY     @CYCD
+     C                     PARM D#ACOD    @ACCD
+     C                     PARM D#ACSQ    @ACSN
+     C                     PARM D#BRCA    @DSNB
+     C           SDACNT    PARM SDACNT    DSSDY
+      *
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRUPD -  Update DB with shadow postings in store                *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRUPD     BEGSR
+      *
+      ** Call AOSPOSU0 to update database
+     C                     CALL 'AOSPOSU0'             9090
+     C                     PARM *BLANKS   O#RTN
+     C                     PARM '*UPDATE 'W0ACT
+     C                     PARM C#DTA     O#DTA
+      *
+     C           *IN90     IFEQ '1'                        B1
+     C           O#RTN     ORNE *BLANKS
+     C                     Z-ADD3         DBASE            ************
+     C                     MOVEL'*CALL   'DBFILE           * DBERR 03 *
+     C                     MOVEL'AOSPOSU0'DBKEY            ************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C                     ENDSR
+      *
+      *********************************************************************
+      *                                                                   *
+      * SRPOSC - Clear Shadow Postings                                    *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           SRPOSC    BEGSR
+      *
+      ** Clear arrays in AOSPOSU0
+     C                     CLEARC#DTA
+     C                     CALL 'AOSPOSU0'             9090
+     C                     PARM *BLANKS   O#RTN
+     C                     PARM '*CLEAR  'W0ACT
+     C                     PARM *BLANKS   O#DTA
+      *
+     C           *IN90     IFEQ '1'                        B1
+     C           O#RTN     ORNE *BLANKS
+     C                     Z-ADD4         DBASE            ************
+     C                     MOVEL'*CALL   'DBFILE           * DBERR 04 *
+     C                     MOVEL'AOSPOSU0'DBKEY            ************
+     C                     EXSR *PSSR
+     C                     END                             E1
+      *
+     C           ESPOSC    ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * SRINIT - Initial Program Subroutine                             *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Clear AOSPOSU0 arrays
+     C                     EXSR SRPOSC
+      *
+      ** Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+      ** Define Data Areas
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+      ** Define program work fields
+     C                     MOVE *BLANKS   O#RTN   7
+     C                     MOVE *BLANKS   W0ACT   8
+     C                     MOVE *BLANKS   O#DTA 256
+      *
+     C                     MOVE *BLANKS   @RTCD   7
+     C                     MOVE *BLANKS   @OPTN   7
+     C                     MOVE *BLANKS   @RETL  10
+     C                     MOVE *BLANKS   @CNUM   6
+     C                     MOVE *BLANKS   @CYCD   3
+     C*********            MOVE *BLANKS   @ACCD   4
+     C                     MOVE *BLANKS   @ACCD  10
+     C                     MOVE *BLANKS   @ACSN   2
+     C                     MOVE *BLANKS   @DSNB   3
+      *
+     C                     MOVE *BLANKS   @KEYA   6
+     C                     MOVE *BLANKS   @KEYB   3
+     C*********            MOVE *BLANKS   @KEYC   4
+     C                     MOVE *BLANKS   @KEYC  10
+     C                     MOVE *BLANKS   @KEYD   2
+     C                     MOVE *BLANKS   @KEYE   2
+     C                     MOVE *BLANKS   @KEYF   3
+     C                     MOVE *BLANKS   @KEYG  10
+     C                     MOVE *BLANKS   @KEYH   1
+      *
+     C                     MOVE *BLANKS   D#CCY   3
+     C*********            MOVE *BLANKS   D#ACOD  4
+     C                     MOVE *BLANKS   D#ACOD 10
+     C                     MOVE *BLANKS   D#CNUM  6
+     C                     MOVE *BLANKS   D#BRCA  3
+     C                     MOVE *BLANKS   D#RTL  10
+      *
+      ** Receive the passed parameters
+     C                     Z-ADDP@DLNO    P@DLNO  60
+     C                     Z-ADDP@AAMT    P@AAMT 130
+     C                     MOVE P@REVI    P@REVI  1
+      *
+      ** Access Bank Details (SDBANKPD)
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST  '@OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Data base error in file (SDBANKPD)
+     C           @RTCD     IFNE *BLANKS
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'SDBANKPD'DBFILE           * DBERR 01 *
+     C                     MOVEL'*FIRST  'DBKEY            ************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Get deal details
+     C           P@DLNO    CHAINMMDEALLL            N90
+      *
+      ** Access SAR details file to determine if CAP205 is switched ON                        CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  PSARD   6                                           CAP205
+     C                     MOVE 'N'       CAP205  1                                           CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANKS                                                       CAP205
+     C                     MOVE 'Y'       CAP205                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C                     ENDSR
+      *
+      *******************************************************************
+      *                                                                 *
+      * *PSSR  - Program Exception Error Routine                        *
+      *                                                                 *
+      *******************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     MOVEL'MM5290A' DBPGM
+     C                     OUT  LDA
+     C                     DUMP
+     C                     CALL 'DBERRCTL'
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *******************************************************************
+      /EJECT
+      *******************************************************************
+      *
+** CPY@     : Copyright notice for inclusion in all FINASTRA programs
+(C) Copyright Finastra International Limited 2008
+** ##NAR  **      Narratives
+Interest Adjustment

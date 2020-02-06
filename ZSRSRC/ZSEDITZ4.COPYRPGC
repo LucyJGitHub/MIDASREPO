@@ -1,0 +1,140 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member (RPG)                                   *
+      *                                                               *
+      *  ZSEDITZ4 - Insert decimal point and sign into a numeric      *
+      *             field and to blank out leading zeros.             *
+      *                                                               *
+      *  Last Amend No. CER059             Date 19Jul10               *
+      *  Prev Amend No. CER043  *CREATE    Date 06Sep07               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - Partially applied 245692 (Incorrect validation      *
+      *           of rates when the decimal separator in the Dealing  *
+      *           ICD was defined as "," instead of ".")              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  ZSEDIT subroutine to insert a decimal point and sign into a  *
+      *  numeric field and to blank out leading zeros (optionaly      *
+      *  inserting commas).                                           *
+      *      Input fields:   ZFLD15 15/0                              *
+      *                      ZDECS  1/0                               *
+      *                      ZECODE 1/  ('J', 'L' or blank)           *
+      *                                                               *
+      *      Arrays:         ZS1    15/1/0                            *
+      *                      ZS2    21/1/                             *
+      *                                                               *
+      *      Output fields:  ZOUT21 21                                *
+      *                                                               *
+      *****************************************************************
+      *
+     CSR         ZSEDIT    BEGSR
+      *
+      ** Define/Clear fields
+      *
+     C                     Z-ADDZFLD15    ZFLD15 150
+     C                     Z-ADDZDECS     ZDECS   10
+     C                     MOVE ZECODE    ZECODE  1
+     C                     MOVE *BLANKS   ZOUT21 21
+      *
+      ** Set up work fields
+      *
+     C                     Z-ADD0         ZS1
+     C                     MOVE ' '       ZS2
+      *
+     C                     Z-ADD15        Z1      20
+     C                     Z-ADD20        Z2      20
+      *
+     C           15        SUB  ZDECS     ZINTS   20
+      *
+      ** Check if numeric field is negative
+      *
+     C           ZFLD15    IFLT *ZEROS
+     C                     MOVE '-'       ZS2,21
+     C                     Z-SUBZFLD15    ZFLD15
+     C                     END
+      *
+     C                     Z-ADDZFLD15    WORK15
+      *
+      ** Check to see if there are any decimal places
+      *
+     C           ZDECS     CABEQ0         ZS10
+      *
+      ** Set up decimals
+      *
+     C                     Z-ADD*ZEROS    ZCNT    10
+     C           ZCNT      DOUEQZDECS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     ADD  1         ZCNT
+     C                     SUB  1         Z1
+     C                     END
+      *
+      ** Put in decimal place
+      *
+     C                     MOVE BNDCSP    ZS2,Z2
+     C                     SUB  1         Z2
+      *
+     C           ZS10      TAG
+      *
+      ** Set up integers
+      *
+     C                     Z-ADD*ZEROS    CNT3    10
+     C           Z1        DOUEQ*ZEROS
+     C                     MOVE ZS1,Z1    ZS2,Z2
+     C                     SUB  1         Z1
+     C                     SUB  1         Z2
+      *
+      ** If edit code is 'J', insert a ',' before each group of three
+      ** digits - not if beginning of array reached.
+      *
+     C           Z2        IFGT *ZEROS
+     C           ZECODE    ANDEQ'J'
+     C                     ADD  1         CNT3
+     C           CNT3      IFEQ 3
+     C                     MOVE BNTHSP    ZS2,Z2
+     C                     SUB  1         Z2
+     C                     Z-ADD*ZEROS    CNT3
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      ** Put in leading blanks
+      *
+     C                     Z-ADD1         Z2
+     C           ZS2,Z2    DOWEQ'0'
+     C           ZS2,Z2    OREQ ' '
+     C           ZS2,Z2    OREQ BNTHSP
+     C                     MOVE ' '       ZS2,Z2
+     C                     ADD  1         Z2
+     C           Z2        CABEQ22        ZS20
+     C                     END
+      *
+      ** If no integers put in leading zero
+      *
+     C           ZS20      TAG
+      *
+     C           Z2        IFEQ 22
+     C                     SUB  2         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     ELSE
+      *
+     C           ZS2,Z2    IFEQ BNDCSP
+     C                     SUB  1         Z2
+     C                     MOVE '0'       ZS2,Z2
+     C                     END
+     C                     END
+      *
+      ** Set up output field
+      *
+     C                     MOVEAZS2       ZOUT21
+      *
+     CSR                   ENDSR
+      *
+      *****************************************************************
+      * End of /COPY XXXXXXX                                          *
+      *****************************************************************

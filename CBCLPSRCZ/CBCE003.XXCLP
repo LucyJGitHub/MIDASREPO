@@ -1,0 +1,121 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                  /*CCB016A*/
+/*********************************************************************/
+/*                                                                   */
+/*        Midas - Close of Business Processing                       */
+/*                                                                   */
+/*       CBCE003 - CB Retrieve APOSTPD LF Attributes                 */
+/*                                                                   */
+/*      (c) Misys International Banking Systems Ltd. 2008            */
+/*                                                                   */
+/*       Last Amend No. CCB016A *REDUNDANT Date 06Aug12              */
+/*       Prev Amend No. AR996666           Date 25Nov12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      CCB016  *CREATE    Date 28May08              */
+/*      Midas Plus 1.4 Base -----------------------------------------*/
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB016A - COB Restructure                                   */
+/*                 CCB016 (Change Logical File Maintenance)          */
+/*       AR996666 - Remove GRTOBJAUT command because of authority    */
+/*                  issues.  (Child: AR996667)                       */
+/*       CCB016 - Delay LF Access paths over APOSTPD during GLC42.   */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
+                          COPYRIGHT MISYS INTERNATIONAL BANKING +
+                          SYSTEMS 2008')
+ 
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&EODPOPD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&APOSTPD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+             DCLF       FILE(QADSPDBR)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ                                                                          */
+             SNDPGMMSG  MSG('CBCE003 - CB Retrieve APOSTPD Logical +
+                          File details') TOMSGQ(MRUNQ)
+ 
+/* Retrieve system prefix and set program variables                                               */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+ 
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+/* Delete work file                                                                               */
+ 
+/**********  DLTF       FILE(&DPLIB/CBLATRPA)                                           /*AR996666*/
+/**********  MONMSG     MSGID(CPF0000)                                                  /*AR996666*/
+ 
+/* Ascertain size of EODPOPD relative to APOSTPD                                                  */
+ 
+             RTVMBRD    FILE(&DPLIB/EODPOPD) NBRCURRCD(&EODPOPD)
+             RTVMBRD    FILE(&DMLIB/APOSTPD) NBRCURRCD(&APOSTPD)
+ 
+/* Multiply the number of recrods in EODPOPD by 11 and compare against the number                 */
+/* in APOSTPD (if the number of records in EODPOPD is greater than 10% of those in                */
+/* APOSTPD, the changing of access paths back to *IMMED will cause a complete rebuild             */
+/* of the access path. If this is the case, the change should be made for logicals only           */
+/* over GLACPHPD, 11 is used to sure).                                                            */
+ 
+             CHGVAR     VAR(&EODPOPD) VALUE(&EODPOPD * 11)
+ 
+             IF         COND(&EODPOPD *LT &APOSTPD) THEN(DO)
+                 CHGVAR     VAR(&FILE) VALUE('APOSTPD')
+             ENDDO
+             ELSE (DO)
+                 CHGVAR     VAR(&FILE) VALUE('GLACPHPD')
+             ENDDO
+ 
+/* Obtain list of all logicals based over APOSTPD/GLACPHPD                                        */
+ 
+             DSPDBR     FILE(&DMLIB/&FILE) OUTPUT(*OUTFILE) +
+                          OUTFILE(QTEMP/QADSPDBR)
+ 
+/* For each logical based over APOSTPD/GLACPHPD, obtain file attributes                           */
+ 
+             OVRDBF     FILE(QADSPDBR) TOFILE(QTEMP/QADSPDBR)
+ READ:       RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
+ 
+/**********  DSPFD      FILE(&WHRELI/&WHREFI) TYPE(*ATR) +                              /*AR996666*/
+/**********               OUTPUT(*OUTFILE) FILEATR(*LF) +                               /*AR996666*/
+/**********               OUTFILE(&DPLIB/CBLATRPA) OUTMBR(*FIRST *ADD)                  /*AR996666*/
+             DSPFD      FILE(&WHRELI/&WHREFI) TYPE(*ATR) +
+                          OUTPUT(*OUTFILE) FILEATR(*LF) +
+                          OUTFILE(QTEMP/CBCE003F) OUTMBR(*FIRST *ADD)                   /*AR996666*/
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(READ)
+ 
+ EOF:        DLTOVR     FILE(*ALL)
+ 
+/**Set*authority**PUBLIC**ALL*on*CBLATRPA*to*prevent*problems*when*deleting*            /*AR996666*/
+/**the*file*in*the*following*CoB.*                                                      /*AR996666*/
+ 
+/**********  GRTOBJAUT  OBJ(&DPLIB/CBLATRPA) OBJTYPE(*FILE) +                           /*AR996666*/
+/**********               USER(*PUBLIC) AUT(*ALL)                                       /*AR996666*/
+/* Copy the output to the permanent file. */                                            /*AR996666*/
+             CPYF       FROMFILE(QTEMP/CBCE003F) TOFILE(CBLATRPA) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)                           /*AR996666*/
+ 
+             GOTO       CMDLBL(END)
+ 
+/* Error processing - Change the job switches and send messages to MRUNQ and MOPERQ               */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     &MSG VALUE('Program CBCE003 terminated abnormally')
+             SNDMSG     TOMSGQ(MRUNQ MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CHGVAR     VAR(&MIBSCPY) VALUE('(C) COPYRIGHT MISYS +
+                          INTERNATIONAL BANKING SYSTEMS 2008')
+ ENDPGM

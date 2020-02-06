@@ -1,0 +1,1236 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Extract depot movements telex - ic')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                            *
+     F*                                                               *
+     F*  SE3310 - DEPOT MOVEMENT PAY/RECEIVE OTHER SETTLEMENTS        *
+     F*           EXTRACT - INPUT CYCLE                               *
+     F*                                                               *
+     F*  Function: This program writes to the Other Settlements       *
+     F*    (I/C)   Detail file which is then used in the production   *
+     F*            of the Other Settlements Report. The information   *
+     F*            is extracted from a number of files, primarily     *
+     F*            Depot Movements awaiting Pay/Receive Telexes.      *
+     F*            Processing is according to depot movement type.    *
+     F*            This program is identical to SE3315 but is run     *
+     F*            in I/C from a menu option.                         *
+     F*                                                               *
+     F*  Called by: SEC3305 - Pay / Receive telexes - Input Cycle     *
+     F*                       Processing                              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*  NOTE: THIS PROGRAM IS VERY SIMILAR TO SE3315 - THE ONLY      *
+     F*        DIFFERENCE IS THAT THIS HAS COMMITMENT CONTROL.        *
+     F*        THEREFORE, ANY CHANGES DONE TO THIS PROGRAM PROBABLY   *
+     F*        ALSO NEED TO BE DONE TO SE3315.                        *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 222727             Date 05Nov03               *
+      *                 CPK016             Date 04Sep03               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 18Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 175115             Date 01Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 058625             Date 12Apr94               *
+      *                 S01445             Date 04Nov93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E32674             DATE 03DEC91               *
+     F*                 E29170             DATE 15NOV91               *
+     F*                 E03912             DATE 21OCT91               *
+     F*                 S01117             DATE 11JUN91               *
+     F*                 S01271             DATE 12JUN90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CPK016 - Release 5 packaging.  Clash of field names.         *
+      *  207006 - Add Counterparty & Market Centre to SSI (Recompile) *
+      *  175115 - Do not check Securities Customer file if Depot      *
+      *           Movement is a Repo or Reverse Repo.                 *
+      *  CSE022 - Depository Definition Enhancement                   *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*  058625 - Stock depot movements deliveries have been reported *
+     F*           under the receipt date , rather than the delivery   *
+     F*           date.                                               *
+     F*  S01445 - DEPOT MOVEMENT CHARGES ENHANCEMENT.                 *
+     F*           Recompiled due to changes in PF/DPTMVD.             *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E32674 - Recompiled due to error in DPTMVD                   *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  E03912 - Find correct "For A/c Of" for DTs.                  *
+     F*         - Find correct Security Reference for Our Depot.      *
+     F*         - Find correct Counterparty Depot Reference for Our   *
+     F*           Depot.                                              *
+     F*  S01117 - Multibranching.                                     *
+     F*  S01271 - Created for Pay/Receive in Input Cycle.             *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FDEPPR   UF  E                    DISK         KINFDS DEPDS
+     F                                              KINFSR DEPSR
+     F                                              KCOMIT
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCBF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F*****ICD*1*****TABTB10F                          KIGNORE
+     F*****ICD*2*****TABTB11F                          KIGNORE
+     F*****SE*ICD****TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F************TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     FOTHSTD  O   E                    DISK                      A
+     F                                              KINFSR OSDSR
+     F                                              KINFDS OSDDS
+     F                                              KCOMIT
+     FOTHSTA  UF  E                    DISK                      A
+     F                                              KINFSR OSASR
+     F                                              KINFDS OSADS
+     F                                              KCOMIT
+     FSE3310AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - DPTMVD RECORD READ                                    *
+     F*   02  - OTHSTD ACCESS                                         *
+     F*   03  - OTHSTA ACCESS                                         *
+     F*   04  - CLINTSE RECORD CHAIN                                  *
+     F*   05  - SECTYD ACCESS                                         *
+     F*   06  - INVTP ACCESS                                          *
+     F*   07  - TABLETRF ACCESS                                       *
+     F*                                                               *
+     F*   31  - AUDIT REPORT DATABASE ERROR                           *
+     F*                                                               *
+     F*   41  - Indicator for LOKUP operation                         *
+     F*                                                               *
+     F*   98  - ZSYSTM DATE FORMAT IND                                *
+     F*   99  - ZSYSTM ICD RECORD ERROR                               *
+     F*                                                               *
+     F*   U7  - DATABASE ERROR                                        *
+     F*   U8  - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  USRTRF - PROCESS USER TRANSFER MOVEMENTS                     *
+     F*  WALKIO - PROCESS WALKIN/WALKOUT MOVEMENTS                    *
+     F*  REPO   - PROCESS REPO/PLEDGE/BORROW MOVEMENTS                *
+     F*  WRITEO - WRITE OTHER SETTLEMENT EXTRACTS                     *
+     F*  CLIENT - ACCESS CLIENT FILE                                  *
+     F*  FIRST  - INITIAL PROCESSING                                  *
+     F*  AUDIT  - AUDIT PROCESSING                                    *
+     F*                                                               *
+     F*  DEPSR  - Database error on PF/DPTMVD                         *
+     F*  OSDSR  - Database error on PF/OTHSTD                         *
+     F*  OSASR  - Database error on PF/OTHSTA                         *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*  ZSYSTM - RETRIEVE ICD RECORD 1                               *
+     F*  ZICD2  - RETRIEVE ICD RECORD 2                               *
+     F*  ZICDSE - RETRIEVE SE ICD RECORD                              *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E**********          INA         3  6 0             DEPOTS INVTP                         CSD027
+     E**********          TBA        10  6 0             DEPOTS TABTB36                       CSD027
+     E                    INA         3  6               DEPOTS INVTP                         CSD027
+     E                    TBA        10  6               DEPOTS TABTB36                       CSD027
+     E**********          SEA        10  6               DEPOTS CLINTSE   CSE022
+     E                    SEA        10 20                                CSE022
+     E                    SCA         3 12               SEC. REF SECTY
+     E                    CPY@    1   1 80
+      /EJECT
+      *
+     ICLINTSEF
+      *
+     I** Rename RECI fields and set up trade record data structures
+      *
+     I              RECI                            CRECI
+     IINVTPDF
+     I              RECI                            IRECI
+     I              SFLG                            INSFLG                                    CPK016
+     ISECTYDF
+     I              RECI                            SRECI
+     IDPTMVDF
+     I              RECI                            DRECI
+     I              DPMV                            DDPMV
+     ITABLETRF
+     I              RECI                            TRECI
+      *
+      ** Data structures for error handling
+      *
+     IDEPDS       DS
+      *
+      ** Depot movements
+      *
+     I                                     *STATUS  STSDEP
+      *
+     IOSADS       DS
+      *
+      ** SE other settlements audit
+      *
+     I                                     *STATUS  STSOSA
+      *
+     IOSDDS       DS
+      *
+      ** SE other settlements extract
+      *
+     I                                     *STATUS  STSOSD
+      *
+     ILDA        UDS                            256
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+      *
+     I            DS
+      *
+      ** Depots on INVTP
+      *
+     I                                        1  18 INA
+     I**********                              1   60SDC1                                      CSD027
+     I**********                              7  120SDC2                                      CSD027
+     I**********                             13  180SDC3                                      CSD027
+     I                                        1   6 SDC1                                      CSD027
+     I                                        7  12 SDC2                                      CSD027
+     I                                       13  18 SDC3                                      CSD027
+      *
+     I            DS
+      *
+      ** Depots on TABTB36
+      *
+     I                                        1  60 TBA
+     I**********                              1   60DC01                                      CSD027
+     I**********                              7  120DC02                                      CSD027
+     I**********                             13  180DC03                                      CSD027
+     I**********                             19  240DC04                                      CSD027
+     I**********                             25  300DC05                                      CSD027
+     I**********                             31  360DC06                                      CSD027
+     I**********                             37  420DC07                                      CSD027
+     I**********                             43  480DC08                                      CSD027
+     I**********                             49  540DC09                                      CSD027
+     I**********                             55  600DC10                                      CSD027
+     I                                        1   6 DC01                                      CSD027
+     I                                        7  12 DC02                                      CSD027
+     I                                       13  18 DC03                                      CSD027
+     I                                       19  24 DC04                                      CSD027
+     I                                       25  30 DC05                                      CSD027
+     I                                       31  36 DC06                                      CSD027
+     I                                       37  42 DC07                                      CSD027
+     I                                       43  48 DC08                                      CSD027
+     I                                       49  54 DC09                                      CSD027
+     I                                       55  60 DC10                                      CSD027
+      *
+     I            DS
+      *
+      **  Depots on CLINTSE
+      *
+     I**********                              1  60 SEA                   CSE022
+     I**********                              1   6 C101                  CSE022
+     I**********                              7  12 C102                  CSE022
+     I**********                             13  18 C103                  CSE022
+     I**********                             19  24 C104                  CSE022
+     I**********                             25  30 C105                  CSE022
+     I**********                             31  36 C106                  CSE022
+     I**********                             37  42 C107                  CSE022
+     I**********                             43  48 C108                  CSE022
+     I**********                             49  54 C109                  CSE022
+     I**********                             55  60 C110                  CSE022
+     I                                        1 200 SEA                   CSE022
+     I                                        1  20 C201                  CSE022
+     I                                       21  40 C202                  CSE022
+     I                                       41  60 C203                  CSE022
+     I                                       61  80 C204                  CSE022
+     I                                       81 100 C205                  CSE022
+     I                                      101 120 C206                  CSE022
+     I                                      121 140 C207                  CSE022
+     I                                      141 160 C208                  CSE022
+     I                                      161 180 C209                  CSE022
+     I                                      181 200 C210                  CSE022
+      *
+     I            DS
+      *
+      ** Security references on SECTY
+      *
+     I                                        1  36 SCA
+     I                                        1  12 DASR
+     I                                       13  24 DCSR
+     I                                       25  36 DDSR
+      *
+     I            DS
+      *
+      ** Time data structure
+      *
+     I                                        1   60CTIME
+     I                                        1   2 CHOUR
+     I                                        3   4 CMINT
+      *
+     ICPYR@#      DS
+      *
+      ** Data structure for compilation - copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      **  Perform initial processing - Any problems will set on U7
+      *
+     C                     EXSR FIRST
+      *
+      *  Read first trade on DPTMVD
+      *
+     C                     READ DPTMVDF                  01
+      *
+      **  Process each trade on DPTMVD - how processed depends on
+      **  movement type - deleted and settled movements are not ignored
+      **  as they may still need another settlement report record
+      *
+     C           *IN01     DOWEQ'0'
+     C           *INU7     ANDEQ'0'
+      *
+     C           DDPMV     IFEQ 'DT'
+     C                     EXSR USRTRF
+     C                     END
+      *
+     C           DDPMV     IFEQ 'WI'
+     C           DDPMV     OREQ 'WO'
+     C                     EXSR WALKIO
+     C                     END
+      *
+     C           DDPMV     IFEQ 'RP'
+     C           DDPMV     OREQ 'RR'
+     C           DDPMV     OREQ 'BB'
+     C           DDPMV     OREQ 'BL'
+     C           DDPMV     OREQ 'PD'
+     C           DDPMV     OREQ 'PL'
+     C                     EXSR REPO
+     C                     END
+      *
+      **  Write to OTHSTD audit so that in the event of failure the
+      **  OTHST FILE and its audit trailer match
+      *
+     C           *INU7     IFEQ '0'
+     C           1         CHAINOTHSTA               03
+     C                     Z-ADDOTHCT     NORE
+     C                     UPDATOTHSTAF                03
+     C           *IN03     IFEQ '1'                        *************
+     C           *LOCK     IN   LDA                        *************  S01117
+     C***********          MOVE '03'      DBASE            *DB ERROR 03*  S01117
+     C                     Z-ADD3         DBASE            *DB ERROR 03*  S01117
+     C                     MOVEL'OTHST'   DBFILE           *************
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+     C                     END
+     C                     END
+      *
+      **  IF OK then update the depot movement
+      *
+     C                     EXCPTDEPOTP
+      *
+      **  IF OK then commit the updates
+      **             read next Depot Movement
+      *
+     C           *INU7     IFEQ '0'
+     C                     COMIT
+     C                     ELSE
+     C                     ROLBK
+     C                     END
+      *
+     C           *INU7     IFEQ '0'
+     C                     READ DPTMVDF                  01
+     C                     END
+      *
+      **    END while loop
+      *
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+      ***  Update Audit Records, Output Control Report and End Program*
+      *                                                               *
+     C                     EXSR AUDIT
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  USRTRF  - Subroutine to process user transfer movements.     *
+      *                                                               *
+      *  Called by: Main processing.                                  *
+      *                                                               *
+      *  Calls    : WRITEO - write other settlement extracts.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           USRTRF    BEGSR                           *** USRTRF  ***
+      *
+      ** Write transfer out record
+      *
+     C                     MOVE 'UO'      DPMV
+     C                     MOVE DPMD      VALD
+     C                     MOVE 'D'       DERE
+     C                     EXSR WRITEO
+      *
+      ** Write transfer in record
+      *
+     C                     MOVE 'UI'      DPMV
+     C                     MOVE DPMD      VALD
+     C                     MOVE 'R'       DERE
+     C                     EXSR WRITEO
+      *
+      ** Update depot movement
+      *
+     C                     MOVE 'Y'       DPR1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  WALKIO  - Subroutine to process walkin / walkout movements.  *
+      *                                                               *
+      *  Called by: Main processing.                                  *
+      *                                                               *
+      *  Calls    : WRITEO - write other settlement extracts.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WALKIO    BEGSR                           *** WALKIO  ***
+      *
+     C           DRECI     IFNE 'R'
+     C           DRECI     ANDNE'*'
+      *
+     C           DDPMV     IFEQ 'WI'
+     C                     MOVE 'CI'      DPMV
+     C                     Z-ADDDPMD      VALD
+     C                     MOVE 'R'       DERE
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'CO'      DPMV
+     C                     Z-ADDDPDO      VALD
+     C                     MOVE 'D'       DERE
+      *
+     C                     END
+      *
+     C                     EXSR WRITEO
+      *
+     C                     END
+      *
+     C                     MOVE 'Y'       DPR1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  REPO   - Subroutine to process repo / pledge / borrow        *
+      *           movements.                                          *
+      *                                                               *
+      *  Called by: Main processing.                                  *
+      *                                                               *
+      *  Calls    : WRITEO - write other settlement extracts.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPO      BEGSR                           **** REPO  ****
+      *
+      **  If first leg record not yet written then set up details
+      **  according to movement type
+      *
+     C           DPR1      IFEQ 'N'
+      *
+     C           DDPMV     IFEQ 'BL'
+     C           DDPMV     OREQ 'RP'
+     C           DDPMV     OREQ 'PD'
+     C                     MOVE 'RO'      DPMV
+     C                     Z-ADDDPDO      VALD
+     C                     MOVE 'D'       DERE
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'RI'      DPMV
+     C                     Z-ADDDPMD      VALD
+     C                     MOVE 'R'       DERE
+     C                     END
+      *
+     C                     EXSR WRITEO
+     C                     MOVE 'Y'       DPR1
+      *
+     C                     END
+      *
+      **  Find second date - that of the return leg of the movement
+      *
+     C           DPR2      IFEQ 'N'
+      *
+     C           DDPMV     IFEQ 'BL'
+     C           DDPMV     OREQ 'RP'
+     C           DDPMV     OREQ 'PD'
+      *
+     C                     Z-ADDDPMD      WSECD   50
+     C                     ELSE
+     C                     Z-ADDDPDO      WSECD
+      *
+     C                     END
+      *
+      ** If second date before or equal to next working day
+      ** then write details
+      *
+     C           WSECD     IFLE DNWD
+      *
+     C           DDPMV     IFEQ 'BL'
+     C           DDPMV     OREQ 'RP'
+     C           DDPMV     OREQ 'PD'
+      *
+     C                     MOVE 'RI'      DPMV
+     C                     Z-ADDDPMD      VALD
+     C                     MOVE 'R'       DERE
+      *
+     C                     ELSE
+      *
+     C                     MOVE 'RO'      DPMV
+     C***********          Z-ADDDPMD      VALD                            058625
+     C*                                                                   058625
+     C** Should be delivery date                                          058625
+     C*                                                                   058625
+     C                     Z-ADDDPDO      VALD                            058625
+     C                     MOVE 'D'       DERE
+     C                     END
+      *
+     C                     EXSR WRITEO
+     C                     MOVE 'Y'       DPR2
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  WRITEO  - Subroutine to write other settlement extracts.     *
+      *                                                               *
+      *  Called by: Main processing,                                  *
+      *             USRTRF - process user transfer movements,         *
+      *             WALKIO - process walkin/out movements,            *
+      *             REPO   - process repo / pledge / borrow movements.*
+      *                                                               *
+      *  Calls    : CLIENT - access file CLINTSE.                     *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRITEO    BEGSR                             ** WRITEO **
+      *
+      ** Access security file - needed for depot security reference
+      *
+     C           DPSS      CHAINSECTYDF              05
+     C  N05      SRECI     COMP '*'                      05
+     C           *IN05     IFEQ '1'                        *************
+     C           *LOCK     IN   LDA                        *************  S01117
+     C***********          MOVE '01'      DBASE            *DB ERROR 01*  S01117
+     C                     Z-ADD1         DBASE            *DB ERROR 01*  S01117
+     C                     MOVEL'SECTY'   DBFILE           *************
+     C                     MOVELDPSS      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+     C                     END
+      *
+      **  Access investment type file - needed for depots
+      *
+     C           INVKA     CHAININVTPDF              06
+     C  N06      IRECI     COMP '*'                      06
+     C           *IN06     IFEQ '1'                        *************
+     C           *LOCK     IN   LDA                        *************  S01117
+     C***********          MOVE '02'      DBASE            *DB ERROR 02*  S01117
+     C                     Z-ADD2         DBASE            *DB ERROR 02*  S01117
+     C                     MOVEL'INVTP'   DBFILE           *************
+     C                     MOVELSITP      DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+     C                     RETRN
+     C                     END
+      *
+      ** Record ID
+      *
+     C                     MOVE 'D'       RECI
+      *
+      ** Branch Code
+      *
+     C***********          MOVE DPBC      BRCD                            S01117
+     C                     MOVE DPBA      BRCA                            S01117
+      *
+      ** Our Depot
+      *
+     C           DPMV      IFEQ 'UO'
+     C           DPMV      OREQ 'CO'
+     C**********           Z-ADDDPOD      OUDP                                                CSD027
+     C                     MOVE DPOD      OUDP                                                CSD027
+     C                     ELSE
+     C**********           Z-ADDDPID      OUDP                                                CSD027
+     C                     MOVE DPID      OUDP                                                CSD027
+     C                     END
+      *
+      ** Movement Origin
+      *
+     C                     Z-ADD2         MOVO
+      *
+      ** Security Reference from SECTYD
+      *
+     C**********           Z-ADDOUDP      CLKEY                                        E03912 CSD027
+     C                     MOVE OUDP      CLKEY                                               CSD027
+     C                     EXSR CLIENT                                    E03912
+      *                                                                   E03912
+      *****If*other*than*a*Euroclear,CedelorKassenvereinDepot,then*E03912 CSE022
+      *****find*Depot*on*Investment*Type*fortheSecurity*Reference.*E03912 CSE022
+      ** If other than a Euroclear or Cedel Depot, then find Depot on     CSE022
+      ** Investment Type for the Security Reference.                      CSE022
+      *                                                                   E03912
+     C           C1DI      IFEQ 'X'                                       E03912
+     C           C1DI      OREQ 'M'                                       E03912
+     C           C1DI      OREQ 'I'                                       E03912
+     C                     Z-ADD1         ZX      20
+     C           OUDP      LOKUPINA,ZX                   41
+     C  N41                MOVE *BLANK    SCYR
+     C   41                MOVELSCA,ZX    SCYR
+      *                                                                   E03912
+     C                     ELSE                                           E03912
+     C                     MOVE *BLANKS   SCYR                            E03912
+     C                     MOVE C1DI      DPTIN   1                       E03912
+      *                                                                   E03912
+     C********** SDC1      IFNE 0                                                      E03912 CSD027
+     C           SDC1      IFNE *BLANKS                                                       CSD027
+     C                     MOVE SDC1      CLKEY                           E03912
+     C                     EXSR CLIENT                                    E03912
+      *                                                                   E03912
+     C           C1DI      IFEQ DPTIN                                     E03912
+     C                     MOVE DASR      SCYR                            E03912
+      *                                                                   E03912
+      ***  Otherwise, any Depot of the same type on the Investment Type   E03912
+      ***  has the correct Security Reference.                            E03912
+     C                     ELSE                                           E03912
+      *                                                                   E03912
+     C********** SDC2      IFNE *ZEROS                                                 E03912 CSD027
+     C**********           MOVE SDC2      CLKEY   60                                   E03912 CSD027
+     C           SDC2      IFNE *BLANKS                                                       CSD027
+     C                     MOVE SDC2      CLKEY   6                                           CSD027
+     C                     EXSR CLIENT                                    E03912
+      *                                                                   E03912
+     C           C1DI      IFEQ DPTIN                                     E03912
+     C                     MOVE DCSR      SCYR                            E03912
+     C                     ELSE                                           E03912
+      *                                                                   E03912
+     C********** SDC3      IFNE *ZEROS                                                 E03912 CSD027
+     C           SDC3      IFNE *BLANKS                                                       CSD027
+     C                     MOVE SDC3      CLKEY                           E03912
+     C                     EXSR CLIENT                                    E03912
+      *                                                                   E03912
+     C           C1DI      IFEQ DPTIN                                     E03912
+     C                     MOVE DDSR      SCYR                            E03912
+     C                     END                                            E03912
+      *                                                                   E03912
+     C                     END                                            E03912
+     C                     END                                            E03912
+     C                     END                                            E03912
+     C                     END                                            E03912
+     C                     END                                            E03912
+      *                                                                   E03912
+      ***  End of IF C1DI = X,M,I, ELSE.                                  E03912
+     C                     END                                            E03912
+      *
+      ** Security Shortname
+      *
+     C                     MOVELDPSS      SCSN
+      *
+      ** Counterparty Depot
+      *
+     C           DPMV      IFEQ 'CI'
+     C           DPMV      OREQ 'CO'
+     C**********           Z-ADD*ZERO     CDTN                                                CSD027
+     C                     MOVE *BLANKS   CDTN                                                CSD027
+     C                     ELSE
+     C           DPMV      IFEQ 'UO'
+     C**********           Z-ADDDPID      CDTN                                                CSD027
+     C                     MOVE DPID      CDTN                                                CSD027
+     C                     ELSE
+     C**********           Z-ADDDPOD      CDTN                                                CSD027
+     C                     MOVE DPOD      CDTN                                                CSD027
+     C                     END
+     C                     END
+      *
+      ** Counterparty Depot Reference from client file
+      *
+     C           DPMV      IFEQ 'CI'
+     C           DPMV      OREQ 'CO'
+     C                     MOVE *BLANK    CDTR
+     C                     ELSE
+      *
+     C**********           Z-ADDOUDP      CLKEY   60                                          CSD027
+     C                     MOVE OUDP      CLKEY   6                                           CSD027
+      *
+     C                     EXSR CLIENT
+     C                     MOVE C1DI      CLASS   1                       E03912
+     C**********           Z-ADDCDTN      CLKEY   60                                   E03912 CSD027
+     C                     MOVE CDTN      CLKEY   6                                           CSD027
+     C                     EXSR CLIENT                                    E03912
+      *                                                                   E03912
+      *****If*Euroclear,*Cedel*or*Kassenverein,*the*Referenceisina*E03912 CSE022
+      *****particular*place*on*CLINTSE,*whether*Depots*matchornot.*E03912 CSE022
+      ** If Euroclear or Cedel, the Reference is in a particular place    CSE022
+      ** on CLINTSE, whether Depots match or not.                         CSE022
+      *                                                                   E03912
+     C           CLASS     IFEQ 'E'                                       E03912
+     C                     Z-ADD1         ZX                              E03912
+     C                     SETON                     42                   E03912
+     C                     ELSE                                           E03912
+      *                                                                   E03912
+     C           CLASS     IFEQ 'C'                                       E03912
+     C                     Z-ADD2         ZX                              E03912
+     C                     SETON                     42                   E03912
+     C                     ELSE                                           E03912
+      *                                                                   E03912
+     C********** CLASS     IFEQ 'K'                                E03912 CSE022
+     C**********           Z-ADD3         ZX                       E03912 CSE022
+     C**********           SETON                     42            E03912 CSE022
+     C**********           ELSE                                    E03912 CSE022
+      *                                                                   E03912
+     C                     Z-ADD1         ZX      20
+     C           CDTN      LOKUPTBA,ZX                   41
+     C**********           END                                     E03912 CSE022
+     C                     END                                            E03912
+     C                     END                                            E03912
+      *                                                                   E03912
+     C           CSE022    IFEQ 'N'                                       CSE022
+      *                                                                   CSE022
+     C  N41                MOVE *BLANK    CDTR
+     C   41                MOVELSEA,ZX    CDTR
+      *                                                                   CSE022
+     C                     ELSE                                           CSE022
+      *                                                                   CSE022
+      ** If the feature CSE022 is present, the module SEDORFRTV is used   CSE022
+      ** to access the depot information for the setting up of counter    CSE022
+      ** party depot reference.                                           CSE022
+      *                                                                   CSE022
+     C                     MOVEL'SEDOR'   WPGM    9                       CSE022
+     C                     MOVE 'FRTV'    WPGM                            CSE022
+     C                     MOVELCDTN      PDEPOT                          CSE022
+     C                     MOVELCNUM      PCNUM                           CSE022
+      *                                                                   CSE022
+     C                     CALL WPGM                                      CSE022
+     C                     PARM *BLANKS   PRTCD  10                       CSE022
+     C                     PARM           PDEPOT  6                       CSE022
+     C                     PARM           PCNUM   6                       CSE022
+     C                     PARM *BLANKS   PSKALR 20                       CSE022
+      *                                                                   CSE022
+     C                     MOVELPSKALR    CDTR                            CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C                     END
+      *
+      ** For Account Of
+      *
+     C           DPMV      IFEQ 'CI'
+     C           DPMV      OREQ 'CO'
+     C                     MOVE *BLANK    TRKEY  12
+     C                     MOVEL'10'      TRKEY
+     C***********          MOVE DPBC      TRKEY                           S01117
+     C                     MOVE DPBA      TRKEY                           S01117
+     C           TRKEY     CHAINTABLETRF             07
+     C  N07      TRECI     COMP '*'                      07
+     C           *IN07     IFEQ '1'                        *************
+     C***********          MOVE '04'      DBASE            *DB ERROR 04*  S01117
+     C                     Z-ADD4         DBASE            *DB ERROR 04*  S01117
+     C                     MOVEL'TABLE'   DBFILE           *************
+     C                     MOVELTRKEY     DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C**********           Z-ADDBICN      FAON                                                CSD027
+     C                     MOVE BICN      FAON                                                CSD027
+     C                     ELSE
+     C**********           Z-ADDDPBN      FAON                                                CSD027
+     C                     MOVE DPBN      FAON                                                CSD027
+     C                     END
+      *
+      ** For Account Of Reference
+      *
+     C           DPMV      IFEQ 'UO'
+     C           DPMV      OREQ 'UI'
+     C***********          Z-ADDOUDP      CLKEY                    S01176 E03912
+     C**********           Z-ADDCDTN      CLKEY                                        E03912 CSD027
+     C                     MOVE CDTN      CLKEY                                               CSD027
+     C                     ELSE
+     C**********           Z-ADDFAON      CLKEY                                               CSD027
+     C                     MOVE FAON      CLKEY                                               CSD027
+     C                     END
+      *
+     C                     EXSR CLIENT
+      *                                                                   E03912
+      *****If*Euroclear,*Cedel*or*Kassenverein,*the*Referenceisina*E03912 CSE022
+      *****particular*place*on*CLINTSE,*whether*Depots*matchornot.*E03912 CSE022
+      ** If Euroclear or Cedel, the Reference is in a particular place    CSE022
+      ** on CLINTSE, whether Depots match or not.                         CSE022
+      *                                                                   E03912
+     C           C1DI      IFEQ 'E'                                       E03912
+     C                     Z-ADD1         ZX                              E03912
+     C                     SETON                     42                   E03912
+     C                     ELSE                                           E03912
+      *                                                                   E03912
+     C           C1DI      IFEQ 'C'                                       E03912
+     C                     Z-ADD2         ZX                              E03912
+     C                     SETON                     42                   E03912
+     C                     ELSE                                           E03912
+      *                                                                   E03912
+     C********** C1DI      IFEQ 'K'                                E03912 CSE022
+     C**********           Z-ADD3         ZX                       E03912 CSE022
+     C**********           SETON                     42            E03912 CSE022
+     C**********           ELSE                                    E03912 CSE022
+      *                                                                   E03912
+     C                     Z-ADD1         ZX
+     C           DPMV      IFEQ 'CI'                                      E03912
+     C           DPMV      OREQ 'CO'                                      E03912
+     C           OUDP      LOKUPTBA,ZX                   41
+     C                     ELSE                                           E03912
+     C           CDTN      LOKUPTBA,ZX                   42               E03912
+     C                     END                                            E03912
+      *                                                                   E03912
+     C**********           END                                     E03912 CSE022
+     C                     END                                            E03912
+     C                     END                                            E03912
+      *                                                                   E03912
+     C           CSE022    IFEQ 'N'                                       CSE022
+      *                                                                   CSE022
+     C  N41                MOVE *BLANK    FAOR
+     C   41                MOVELSEA,ZX    FAOR
+      *                                                                   CSE022
+     C                     ELSE                                           CSE022
+      *                                                                   CSE022
+      ** If the feature CSE022 is present, the module SEDORFRTV is used   CSE022
+      ** to access the depot information for the setting up of 'For the   CSE022
+      ** Account Of' reference.                                           CSE022
+      *                                                                   CSE022
+     C                     MOVEL'SEDOR'   WPGM    9                       CSE022
+     C                     MOVE 'FRTV'    WPGM                            CSE022
+     C                     MOVELCLKEY     PDEPOT                          CSE022
+     C                     MOVELCNUM      PCNUM                           CSE022
+      *                                                                   CSE022
+     C                     CALL WPGM                                      CSE022
+     C                     PARM *BLANKS   PRTCD  10                       CSE022
+     C                     PARM           PDEPOT  6                       CSE022
+     C                     PARM           PCNUM   6                       CSE022
+     C                     PARM *BLANKS   PSKALR 20                       CSE022
+      *                                                                   CSE022
+     C                     MOVELPSKALR    FAOR                            CSE022
+     C                     ENDIF                                          CSE022
+      *
+      ** Trade Reference
+      *
+     C                     MOVELDPRN      TDRF
+      *
+      ** Nominal
+     C                     Z-ADDDPNA      NOML
+      *
+      ** Payment Code
+      *
+     C                     MOVE *BLANK    PAYC
+      *
+      ** Cash Amount
+      *
+     C                     Z-ADD*ZERO     CASA
+      *
+      ** Value Currency
+      *
+     C                     MOVE *BLANK    VCCY
+      *
+      ** Action Code
+      *
+     C           DRECI     IFEQ 'D'
+     C           DRECI     OREQ 'S'
+     C                     MOVE 'I'       ACTO
+     C                     ELSE
+     C                     MOVE 'C'       ACTO
+     C                     END
+      *
+      ** Write record to PF/OTHSTD and increment count
+      *
+     C                     WRITEOTHSTDF                02
+      *
+     C                     ADD  1         OTHCT
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CLIENT  - Subroutine to access customer security details     *
+      *            file CLINTSE.                                      *
+      *                                                               *
+      *  Called by: Main processing,                                  *
+      *             WRITEO - write other settlement extracts.         *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLIENT    BEGSR                           ** CLIENT **
+      *
+     C           DDPMV     IFNE 'RP'                                      175115
+     C           DDPMV     ANDNE'RR'                                      175115
+      *                                                                   175115
+     C           CLKEY     CHAINCLINTSEF             04
+     C  N04      CRECI     COMP '*'                      04
+     C           *IN04     IFEQ '1'                        *************
+     C           *LOCK     IN   LDA                        *************  S01117
+     C***********          MOVE '05'      DBASE            *DB ERROR 05*  S01117
+     C                     Z-ADD5         DBASE            *DB ERROR 05*  S01117
+     C                     MOVEL'CLINT'   DBFILE           *************
+     C                     MOVELCLKEY     DBKEY
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *                                                                   175115
+     C                     ENDIF                                          175115
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  FIRST   - Subroutine to set up program data initially.       *
+      *                                                               *
+      *  Called by: Main processing,                                  *
+      *                                                               *
+      *  Calls    : ZSYSTM - Chain to ICD record                      *
+      *             ZICD2  - Access ICD record 2 from TABTB11 for SE  *
+      *             ZICDSE - Access ICD record from TABTB36 for SE    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FIRST     BEGSR                           ** FIRST **
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT                           S01117
+     C                     MOVEL'SE3310'  DBPGM
+     C                     OUT  LDA                                       S01117
+      *
+      ** Get Installation Control Data 1
+      *
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'ICD 1'   DBFILE
+     C                     MOVELZTABKY    DBKEY            *************
+     C***********          MOVE '06'      DBASE            *DB ERROR 06*  S01117
+     C                     Z-ADD6         DBASE            *DB ERROR 06*  S01117
+     C                     OUT  LDA                        *************  S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                             *************
+      *
+      ** Get Installation Control Data 2
+      *
+     C                     EXSR ZICD2
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'ICD 2'   DBFILE
+     C                     MOVELZTABKY    DBKEY            *************
+     C***********          MOVE '07'      DBASE            *DB ERROR 07*  S01117
+     C                     Z-ADD7         DBASE            *DB ERROR 07*  S01117
+     C                     OUT  LDA                        *************  S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                             *************
+      *
+      ** Get Installation Control Data record for Securities Trading
+      *
+     C                     EXSR ZICDSE
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABSE'   DBFILE
+     C                     MOVELZTABKY    DBKEY            *************
+     C***********          MOVE '08'      DBASE            *DB ERROR 08*  S01117
+     C                     Z-ADD8         DBASE            *DB ERROR 08*  S01117
+     C                     OUT  LDA                        *************  S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     END                             *************
+      *
+      ** Read OTHST audit - if not found then write a record with
+      ** 0 on it.
+      *
+     C           1         CHAINOTHSTA               03
+     C           *IN03     IFEQ '1'
+     C                     Z-ADD0         NORE
+     C                     WRITEOTHSTAF
+     C                     COMIT
+     C                     Z-ADD0         OTHCT
+     C                     ELSE
+     C                     Z-ADDNORE      OTHCT   50
+     C                     END
+      *
+      ** Input Cycle time for audit report
+      *
+     C                     TIME           CTIME
+     C                     MOVE ':  '     ATIME   5
+     C                     MOVE CMINT     ATIME
+     C                     MOVELCHOUR     ATIME
+      *
+      ** Define key list for chaining to INVTP file
+      *
+     C           INVKA     KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *                                                                   CSE022
+     C                     CALL 'AOSARDR0'                                CSE022
+     C                     PARM *BLANKS   PRTCO   7                       CSE022
+     C                     PARM '*VERIFY' POPTN   7                       CSE022
+     C                     PARM 'CSE022'  PSARD   6                       CSE022
+      *                                                                   CSE022
+     C           PRTCO     IFNE *BLANKS                                   CSE022
+     C           PRTCO     ANDNE'*NRF   '                                 CSE022
+     C           *LOCK     IN   LDA                                       CSE022
+     C                     Z-ADD12        DBASE                           CSE022
+     C                     MOVE 'SCSARDPD'DBFILE                          CSE022
+     C                     MOVELPSARD     DBKEY                           CSE022
+     C                     OUT  LDA                                       CSE022
+     C                     EXSR *PSSR                                     CSE022
+     C                     MOVE *ON       *INU7                           CSE022
+     C                     MOVE *ON       *INU8                           CSE022
+     C                     MOVE *ON       *INLR                           CSE022
+     C                     ENDIF                                          CSE022
+      *                                                                   CSE022
+     C           PRTCO     IFEQ *BLANKS                                   CSE022
+      *                                                                   CSE022
+     C                     MOVE 'Y'       CSE022  1                       CSE022
+      *                                                                   CSE022
+     C                     ELSE                                           CSE022
+      *                                                                   CSE022
+     C                     MOVE 'N'       CSE022                          CSE022
+      *                                                                   CSE022
+     C                     ENDIF                                          CSE022
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to output run controls and write trailers*
+      *                                                               *
+      *  Called by: Main processing,                                  *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           ** AUDIT **
+      *
+      ** Output run control report
+      *
+     C           *INU7     IFEQ '1'
+     C                     SETON                     31
+     C                     ELSE
+     C                     SETOF                     31
+     C                     END
+      *
+     C                     WRITEHEADAU
+     C  NU7                WRITECONTROL
+     C   U7 U8             WRITEERRORAU
+     C***********          WRITETRAILAU                                   E29170
+      *
+     C                     SETON                     LR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DEPSR   - Subroutine for database error on PF/DPTMVD         *
+      *                                                               *
+      *  Called by: Database error (F-spec).                          *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DEPSR     BEGSR
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'DPTMV'   DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C***********          MOVE '09'      DBASE                           S01117
+     C                     Z-ADD9         DBASE                           S01117
+     C                     MOVE STSDEP    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  OSDSR   - Subroutine for database error on PF/OTHSTD         *
+      *                                                               *
+      *  Called by: Database error (F-spec).                          *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OSDSR     BEGSR
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'OTHSTD'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C***********          MOVE '10'      DBASE                           S01117
+     C                     Z-ADD10        DBASE                           S01117
+     C                     MOVE STSDEP    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  OSASR   - Subroutine for database error on PF/OTHSTA         *
+      *                                                               *
+      *  Called by: Database error (F-spec).                          *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           OSASR     BEGSR
+      *
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'OTHSTA'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C***********          MOVE '11'      DBASE                           S01117
+     C                     Z-ADD11        DBASE                           S01117
+     C                     MOVE STSDEP    DBSTAT
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     LRU7U8
+      *
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     O*****************************************************************
+      *
+      **  Exception output to update DPR1 and DPR2 on DPTMVD
+      *
+     ODPTMVDF E                DEPOTP
+     O                         DPR1
+     O                         DPR2
+      *
+**********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

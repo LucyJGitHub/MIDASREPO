@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*X*I****OVRDBF*FILE(TOFILEMBRS)*TOFILE(QAFDMBRL)*********************/ /*             */ /*CPK025*/
+/*XBI    OVRDBF FILE(TOFILEMBRS) TOFILE(UPMBRLTPD)                   */                   /*CPK025*/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UP Check file members')                         */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade module                                      */
+/*                                                                   */
+/*       UPC0262 - Check file members                                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Last Amend No. CPK025  *MOVED     Date 04Aug06              */
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CPK015  *CREATE    Date 15Mar02              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CPK025 - MidasPlus 1.3 packaging.  Handle global layer.     */
+/*       CPK015 - 4.01 packaging.  Improvements to CPYDBLIB.         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILENAME &FROMLIB &TOLIB)
+ 
+             DCL        VAR(&FILENAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&NOOFRCDS) TYPE(*DEC) LEN(10 0)
+ 
+             DCLF       FILE(TOFILEMBRS)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Copy template file for program version. */                                             /*CPK025*/
+             DLTF       FILE(QTEMP/TOFILEMBRS)                                            /*CPK025*/
+             MONMSG     MSGID(CPF0000)                                                    /*CPK025*/
+             CPYF       FROMFILE(UPMBRLTPD) TOFILE(QTEMP/TOFILEMBRS) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*CPK025*/
+ 
+/* Check if 'to' file exists. */
+             CHKOBJ     OBJ(&TOLIB/&FILENAME) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Create outfile of all members in the 'to' library file. */
+             DSPFD      FILE(&TOLIB/&FILENAME) TYPE(*MBRLIST) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/TOFILEMBRS)
+ 
+READ:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* If number of members = 0 then end processing. */
+             IF         COND(&MLNOMB *EQ 0) THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Check if member exists in 'from' file. */
+             RTVMBRD    FILE(&FROMLIB/&FILENAME) MBR(&MLNAME) +
+                          NBRCURRCD(&NOOFRCDS)
+/* If it doesn't exist then remove member from 'to' file. */
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                RMVM       FILE(&TOLIB/&FILENAME) MBR(&MLNAME)
+                GOTO       CMDLBL(READ)
+             ENDDO
+/* If number of records = 0 then clear 'to' member. */
+             IF         COND(&NOOFRCDS *EQ 0) THEN(DO)
+                CLRPFM     FILE(&TOLIB/&FILENAME) MBR(&MLNAME)
+             ENDDO
+ 
+             GOTO       CMDLBL(READ)
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+END:
+             ENDPGM

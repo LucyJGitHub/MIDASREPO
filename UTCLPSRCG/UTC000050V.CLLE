@@ -1,0 +1,138 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT CPP for FNDUPDSRC')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC000050V - Validity checker for FNDUPDSRC                 */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015  *CREATE    Date 20Apr12              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUT015 - New utility to replace UPDSRC.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &WRKLIB &SRC &STR &CASE &STRLEN)
+ 
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&WRKLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRC) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&STR) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&CASE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&STRLEN) TYPE(*DEC) LEN(3 0)
+ 
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LENGTH) TYPE(*DEC) LEN(3 0) VALUE(10)
+             DCL        VAR(&STARTPOS) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&PATLEN) TYPE(*DEC) LEN(3 0) VALUE(1)
+             DCL        VAR(&RESULT) TYPE(*DEC) LEN(3 0)
+ 
+             DCL        VAR(&MSGSUB) TYPE(*CHAR) LEN(30)
+             DCL        VAR(&MSGTXT) TYPE(*CHAR) LEN(132)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check that the work library exists and that the user has authority to it. */
+             CHKOBJ     OBJ(&WRKLIB) OBJTYPE(*LIB) AUT(*CHANGE)
+             MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                CHGVAR     VAR(&MSGTXT) VALUE('Library' *BCAT &WRKLIB +
+                             *BCAT 'does not exist or there is not +
+                             enough authority.')
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Check if the files and library exist if they are to be scanned. */
+             IF         COND(&MODE *EQ '*FND') THEN(DO)
+                CHGVAR     VAR(&SRCF) VALUE(%SST(&SRC 1 10))
+                CHGVAR     VAR(&LIB) VALUE(%SST(&SRC 11 10))
+                CHGVAR     VAR(&STARTPOS) VALUE(1)
+                CALL       PGM(QCLSCAN) PARM(&SRCF &LENGTH &STARTPOS +
+                             '*' &PATLEN '0' '0' '' &RESULT)
+                IF         COND(&RESULT *EQ 0) THEN(DO)
+                   CHKOBJ     OBJ(&LIB/&SRCF) OBJTYPE(*FILE) AUT(*USE)
+                   MONMSG     MSGID(CPF9801 CPF9802 CPF9810) EXEC(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('Search library/file +
+                                   combination does not exist or there is +
+                                   not enough authority.')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+                ELSE       CMD(DO)
+                   DSPFD      FILE(&LIB/&SRCF) TYPE(*ATR) OUTPUT(*PRINT) +
+                                FILEATR(*PF)
+                   MONMSG     MSGID(CPF3012) EXEC(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('Search library/file +
+                                   combination does not exist.')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                   MONMSG     MSGID(CPF3064) EXEC(DO)
+                      CHGVAR     VAR(&MSGTXT) VALUE('Search library does not +
+                                   exist.')
+                      CHGVAR     VAR(&ERROR) VALUE('Y')
+                      GOTO       CMDLBL(ERROR)
+                   ENDDO
+                ENDDO
+/* Check that the library to be scanned exists. */
+                CHKOBJ     OBJ(&LIB) OBJTYPE(*LIB) AUT(*USE)
+                MONMSG     MSGID(CPF9801 CPF9802) EXEC(DO)
+                   CHGVAR     VAR(&MSGTXT) VALUE('Library' *BCAT &LIB +
+                                *BCAT 'does not exist or there is not +
+                                enough authority.')
+                   CHGVAR     VAR(&ERROR) VALUE('Y')
+                   GOTO       CMDLBL(ERROR)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+/* If validity error then send message back to command . . . */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&MSGTXT) VALUE('0000' *TCAT &MSGTXT)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA(&MSGTXT) +
+                             MSGTYPE(*DIAG)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+/* . . .  else send generic message. */
+             ELSE       CMD(DO)
+                IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                   RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   IF         COND(&MSGID *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                   MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(RCVMSG)
+                   ENDDO
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

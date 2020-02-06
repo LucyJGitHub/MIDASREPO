@@ -1,0 +1,961 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Trades details enquiry')                      *
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                          *
+     F*                                                               *
+     F*  PM2060 - Trade Details Enquiry                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 234300             Date 29Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 11Jul96               *
+      *                 CPM004             Date 15Feb96               *
+     F*                 085817             DATE 13MAR95               *
+     F*                 081239             DATE 01FEB95               *
+     F*                 080706             DATE 28DEC94               *
+     F*                 S01486             DATE 12JUL94               *
+     F*                 SA9108             DATE 06NOV91               *
+     F*                 S01313             DATE 06NOV92               *
+     F*                 049467             DATE 28JAN93               *
+     F*                 R05661             DATE 11MAR91               *
+     F*                 R10036             DATE 26SEP90               *
+     F*                 R10047             DATE 24SEP90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  234300 - Recompiled over changed in PF/HSTTRD.               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  CPM005 - Private Banking Phase II                            *
+     F*           Focus Group Changes Upgraded to DBA                 *
+     F*           PBFG/5 - INSTRUMENT ASSET/LIABILITY SPLIT           *
+     F*           PBFG/6 - ADDITIONAL CUSTOMER DETAILS                *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  CPM004 - Bank Portfolios                                     *
+     F*  085817 - Recompile due to changes in PMLDAPD                 *
+     F*  081239 - R10 Private Banking Rework.                         *
+     F*  080706 - Message file not found                              *
+     F*  S01486 - Portfolio Management Incorporation                  *
+     F*  SA9108 - POOL SECURITIES TRANSACTIONS (ONLY RECOMPILED       *
+     F*           FOR DTAARA/LDA)                                     *
+     F*  S01313 - RECOMPILED DUE TO PORTFOLIO PERFORMANCE             *
+     F*  049467 - RECOMPILED FOR RELEASE 3 PTF 02                     *
+     F*  R05661 - IF 9998 OR 9999 PORTFOLIO DISPLAYED OUTPUT THE      *
+     F*           POSITION PORTFOLIO IN BRACKETS                      *
+     F*  R10036 - SPLIT 'TRADES DETAILS ENQUIRY' SECOND SCREEN        *
+     F*           INTO TWO SCREENS AND DISPLAY TEXT FOR CODES         *
+     F*           ON THE SECOND AND NEW THIRD SCREENS                 *
+     F*  R10047 - ACCESS LF/TRADHS TO OBTAIN TRADES DETAILS           *
+     F*            (USE THIS FILE AS INCLUDES HISTORIC TRADES)        *
+     F*                                                               *
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       02         CHAIN FAIL ON TRADS
+     F*       03         CHAIN FAIL ON SECTY
+     F*       04         CHAIN FAIL ON INVTP
+     F********05*********CHAIN FAIL ON SDCURRL0************************** S01486
+     F********06*********CHAIN*FAIL*ON*SECGTDL1******************* R10036 S01486
+     F*       06         CHAIN FAIL ON SECGT                              S01486
+     F*       11         DISPLAY DETAILS IF PROT NE 2,4,7 AND TRADE
+     F*                  BASIS NE 'D'
+     F*       20         MULITBRANCHING ON                                S01486
+     F*       25         ROLLUP REQUESTED
+     F*       26         ROLLDOWN REQUESTED
+     F*       U7         DATABASE ERROR (JOB SWITCH).
+     F*       U8         DATABASE ERROR (JOB SWITCH).
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***PM2060DDCF**E*                   WORKSTN                         S01486
+     FPM2060DFCF  E                    WORKSTN                            S01486
+     F*RADS***IF**E           K        DISK                               R10047
+     FTRADHS  IF  E           K        DISK                               R10047
+     F                                              KINFSR *PSSR
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     FINVTP   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F***SDCURRL0IF**E*          K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SECGTDL1IF**E*          K        DISK                      R10036S01486
+     FSECGT   IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR          R10036
+     E*********************************************************************
+     E*  TABLES AND ARRAYS
+     E*    ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E*****ARRAY*TO*ENABLE*ATTENTION*KEY********************************* S01486
+     E***********         ATN     1   1 22                                S01486
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZSEDITZ1
+     E/EJECT
+     I*
+     I*****RENAME*COMMON*INPUT*FIELDS*ON*CLOANCKF.*********************** S01486
+     I*
+     ISECGTDF                                                             S01486
+     I              RECI                            BWRECI                S01486
+     I              CCY                             BWCCY                 S01486
+     I              CCOM                            BWCCOM                S01486
+     I              CHGB                            BWCHBG                S01486
+     I              THRI                            BWTHRI                S01486
+     I              CHNR                            BWCHNR                S01486
+     I              TXAP                            BWTXAP                S01486
+     I              REBA                            BWREBA                S01486
+     I              LCD                             BWLCD                 S01486
+     I              CHTP                            BWCHTP                S01486
+     I              TNLU                            BWTNLU                S01486
+     I*****GROUP*DATA*AREA*********************************************** S01486
+     I***WWGDA*****E*DSPMGRDAPP                                           S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** DUMMY RECORD FORMATS FOR ACCESS TO CURRENCIES DETAILS            S01486
+     ISDCUST    E DSSDCUSTPD                                              CPM004
+     I**  Data structure for Customer details                             CPM004
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short DS for access programs                                    S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* Second DS For Access Programs, Long Data Structure                S01486
+     I*
+     I***WWLDA*****E*DSPMLDAPP                                            S01486
+     IWWLDA     E DSPMLDAPD                                               S01486
+     IRUNDAT      DS                                                      S01486
+     I                                       13  13 @MBIN                 S01486
+     I*
+     I*    PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     I**
+     I** DATA STRUCTURE FOR SUBROUTINE ZSEDIT
+     I**
+     I            DS
+     I                                        1  150ZFLD15
+     I                                        1  15 ZFLDA
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     IDSSECG      DS                                                      R10036
+     I                                        1   3 KCCY                  R10036
+     I                                        4   5 KCCOM                 R10036
+     I*                                                                   R10036
+     I*    DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I*    L.D.A. DATA AREA TO HOLD INFORMATION ON DATABASE ERROR.
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * ACCESS   - ACCESS LOAN DETAILS                                   *
+      * CHGCOM   - ACCESS CHARGE TYPE FILE                               *R10036
+      * #INIT    - INITIAL PROCESS                                       *
+      * ZDATE2   - CONVERSION SUBROUTINE (DAY NUMBER TO DATE)            *
+      * ZSEDIT   - EDITION SUBROUTINE FOR NUMERIC FIELDS                 *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      **PMC1000**-*UPDATE*GROUP*JOB*DATA*AREA*****************************S01486
+      **PMC1010**-*READ*GROUP*JOB*DATA*AREA*******************************S01486
+      **QCMDEXC**-*EXEC*AS/400*COMMAND************************************S01486
+      **PMC1020**-*TERMINATE*GROUP*JOB*IF*DATABASE*ERROR******************S01486
+      * PMC1003  - TO RETRIEVE DATA AREA *LDA                            *S01486
+      * PMC1001  - TO UPDATE DATA AREA *LDA                              *S01486
+      * DBERRCTL - DATABASE ERROR PROCESSING                             *S01486
+      * SDRTVTXT - TO RETRIEVE MESSAGE FROM MESSAGE FILE                 *R10036
+      *                                                                  *
+      ********************************************************************
+     C/EJECT
+     C*
+     C                     MOVEACPY@      CPY2@  80
+     C*
+     C*   Initial processing.
+     C                     EXSR #INIT
+     C*
+     C*   Details access processing
+     C                     EXSR ACCESS
+     C*
+     C*   Termination processing
+     C                     RETRN
+     C*
+     C*****************************************************************
+     C/EJECT
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * ACCESS   - ACCESS LOAN DETAILS                                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      * ZDATE2   - CONVERSION SUBROUTINE (DAY NUMBER TO DATE)            *
+      * ZSEDIT   - EDITION SUBROUTINE FOR NUMERIC FIELDS                 *
+      * SDRTVTXT - TO RETRIEVE MESSAGE FROM MESSAGE FILE                 *R10036
+      * CHGCOM   - ACCESS CHARGES + COMMISSIONS DETAILS                  *R10036
+      **PMC1000**-*UPDATE*GROUP*JOB*DATA*AREA*****************************S01486
+      * PMC1001  - UPDATE DATA AREA *LDA                                 *S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRETC   - RETURN CODE PARAMETER PASSED TO PROGRAM               *
+      * WWTDRF   - TRADE REFERENCE PARAMETER PASSED TO PROGRAM           *
+      **WWPARM***-*GROUP*JOB*DATA*STRUCTURE*******************************S01486
+      *                                                                  *
+      ********************************************************************
+     C           ACCESS    BEGSR
+     C*
+     C*   ACCESS TRADES DETAILS
+     C*******    WWTDRF    CHAINTRADS                02                   R10047
+     C           WWTDRF    CHAINTRADHS               02                   R10047
+     C           *IN02     IFEQ '1'
+     C                     Z-ADD2         QMERRN
+     C*******              MOVEL'TRADS'   QMFILE                          R10047
+     C***********          MOVEL'TRADHS'  QMFILE                   R10047 S01486
+     C                     MOVE 'TRADHS'  QMFILE                          S01486
+     C                     MOVELWWTDRF    QMKEY
+     C***********          MOVE '9'       WWRETC  1                       081239
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   R05661
+     C** FOR 9998 AND 9999 PORTFOLIOS OUTPUT ADDITIONAL REFERENCE         R05661
+     C           QMPTF1    IFEQ '9998'                                    R05661
+     C           QMPTF1    OREQ '9999'                                    R05661
+     C                     MOVE '1'       *IN17                           R05661
+     C                     MOVEL'('       WWWRK5  5                       R05661
+     C           PTFR      IFEQ '9997'                                    R05661
+     C                     MOVE QMR997    WWWRK5                          R05661
+     C                     ELSE                                           R05661
+     C                     MOVE PTFR      WWWRK5                          R05661
+     C                     END                                            R05661
+     C                     MOVELWWWRK5    DDPTF1                          R05661
+     C                     MOVE ')'       DDPTF1                          R05661
+     C                     ELSE                                           R05661
+     C                     MOVE '0'       *IN17                           R05661
+     C                     MOVE *BLANKS   DDPTF1                          R05661
+     C                     END                                            R05661
+     C*
+     C*    ACCESS SECURITY DETAILS
+     C           TDSS      CHAINSECTY                03
+     C           *IN03     IFEQ '1'
+     C                     Z-ADD3         QMERRN
+     C***********          MOVEL'SECTY'   QMFILE                          S01486
+     C                     MOVE 'SECTY'   QMFILE                          S01486
+     C                     MOVELTDSS      QMKEY
+     C***********          MOVE '9'       WWRETC  1                       081239
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C*   ACCESS INVESTMENT TYPE FILE
+     C           INVKEY    CHAININVTP                04
+     C           *IN04     IFEQ '1'
+     C                     Z-ADD4         QMERRN
+     C***********          MOVEL'INVTP'   QMFILE                          S01486
+     C                     MOVE 'INVTP'   QMFILE                          S01486
+     C                     MOVELNMCY      QMKEY
+     C                     MOVE SITP      QMKEY
+     C***********          MOVE '9'       WWRETC  1                       081239
+     C                     EXSR *PSSR
+     C                     END
+     C**                                                                  CPM004
+     C** GET COUNTERPARTY NAME IF BANK PORTFOLIOS SUPPORTED               CPM004
+     C**                                                                  CPM004
+     C           QMPORS    IFEQ 'B'                                       CPM004
+     C                     MOVELTCNR      P@KEY1                          CPM004
+     C                     CALL 'AOCUSTR0'                                CPM004
+     C                     PARM *BLANKS   P@RTCD  7                       CPM004
+     C                     PARM '*KEY   ' P@OPTN  7                       CPM004
+     C                     PARM           P@KEY1 10                       CPM004
+     C                     PARM *BLANKS   P@KYST  7                       CPM004
+     C           SDCUST    PARM SDCUST    DSSDY                           CPM004
+     C                     END                                            CPM004
+     C*
+     C****ACCESS*CURRENCY*CODES*FILE************************************* S01486
+     C*   READ CURRENCY CODES DETAILS VIA ACCESS PROGRAM          R10036  S01486
+     C***********NMCY      CHAINSDCURRL0             05                   S01486
+     C************IN05     IFEQ '1'                                       S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   @RTCD   7                       S01486
+     C                     PARM '*KEY   ' @OPTN   7                       S01486
+     C                     PARM NMCY      @K101   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C                     Z-ADD5         QMERRN
+     C***********          MOVEL'SDCURR'  QMFILE                          S01486
+     C                     MOVE 'SDCURR'  QMFILE                          S01486
+     C                     MOVELNMCY      QMKEY
+     C***********          MOVE '9'       WWRETC  1                       081239
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   R10036
+     C*****INITIALISE*FIRST*PART*OF*KEY*TO*CHAIN*TO*SECGTDL1****** R10036 S01486
+     C*    INITIALISE FIRST PART OF KEY TO CHAIN TO SECGT                 S01486
+     C                     MOVELNMCY      KCCY                            R10036
+     C*
+     C*    INITIALISE DISPLAY ZONES
+     C                     MOVELQMCNUM    DDCNUM           CUSTOMER NUMBER
+     C                     MOVELQMCRNM    DDCRNM           CUSTOMER NAME
+     C           QMPORS    IFEQ 'B'                                       CPM004
+     C                     SETON                     74                   CPM004
+     C**                                                                  CPM004
+     C** COUNTERPARTY CUSTOMER NUMBER                                     CPM004
+     C**                                                                  CPM004
+     C                     MOVELTCNR      DDCTPY                          CPM004
+     C**                                                                  CPM004
+     C** COUNTERPARTY CUSTOMER NAME                                       CPM004
+     C**                                                                  CPM004
+     C                     MOVELBBCRNM    DDCPRN                          CPM004
+     C                     ENDIF                                          CPM004
+     C                     MOVELQMPTF2    DDPTFR           PORTFOLIO REF
+     C                     MOVELQMPTFN    DDPTFN              "      NARR
+     C                     MOVELWWTDRF    DDTDRF           TRADE REF
+     C                     MOVELTDSS      DDSESN           SECURITY SHORTNAME
+     C                     MOVELSRPN      DDSRPN           SECURITY REPORT NAME
+     C**********           MOVELTINC      DDINCS           INCOMPLETE IND CPM005
+     C                     Z-ADDTDMC      ZDAYNO           DATE COMPLETED CPM005
+     C                     EXSR ZDATE2                                    CPM005
+     C                     MOVELZADATE    DDTDMC                          CPM005
+     C                     MOVELTDTP      DDTDTP           TRADE TYPE
+     C                     Z-ADD*ZEROS    ZFLD15                          CPM005
+     C                     MOVE NOML      ZFLD15           NOMINAL
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDNOML
+     C                     Z-ADD0         ZFLD15           PRICE/DISC/YIELD
+     C                     MOVE TPDY      ZFLDA
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTPDY
+     C           SPBS      IFEQ 'P'
+     C                     MOVE '%'       DDTPDY
+     C                     END
+     C                     Z-ADDTDVD      ZDAYNO           VALUE DATE
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    DDTDVD
+     C***********          MOVELTDBR      DDTDBR           BRANCH CODE    S01486
+     C                     MOVELTDBA      DDTDBR           BRANCH CODE    S01486
+     C                     MOVELTDBK      DDTDBK           BOOK
+     C*
+     C                     MOVELCLTY      DDCLTY           CLEARANCE TYPE
+     C                     MOVE *BLANK    MSMBR4                          R10036
+     C           DDCLTY    IFEQ '0'                                       R10036
+     C                     MOVEL'PM90062' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDCLTY    IFEQ '1'                                       R10036
+     C                     MOVEL'PM90063' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDCLTY    IFEQ '2'                                       R10036
+     C                     MOVEL'PM90064' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDCLTY    IFEQ '3'                                       R10036
+     C                     MOVEL'PM90065' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDCLTY    IFEQ '4'                                       R10036
+     C                     MOVEL'PM90066' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDCLTY    IFEQ '5'                                       R10036
+     C                     MOVEL'PM90067' MSMBR4                          R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C           MSMBR4    IFNE *BLANK                                    R10036
+     C                     CALL 'SDRTVTXT'PLLANG                          R10036
+     C                     MOVELMSGTXT    DDCLTL                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVE *BLANK    DDCLTL                          R10036
+     C                     END                                            R10036
+     C*
+     C                     MOVELSETC      DDSETC           SETTLEMENT CCY
+     C                     Z-ADD0         ZFLD15           REALLOWANCE
+     C                     MOVE RALL      ZFLDA
+     C                     Z-ADD5         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDRALL
+     C                     MOVELTMKC      DDTMKC           MARKET CENTER
+     C                     MOVELTCAP      DDTCAP           CAPACITY
+     C                     Z-ADD0         ZFLD15           PRICE
+     C                     MOVE PRIC      ZFLDA
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDPRIC
+     C           SPBS      IFEQ 'P'
+     C                     MOVE '%'       DDPRIC
+     C                     END
+     C                     Z-ADD0         ZFLD15           CURRENT FACTOR
+     C                     MOVE TCFC      ZFLDA
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCFC
+     C                     MOVELTDID      DDTDID           TRADER I.D.
+     C                     Z-ADDTDDT      ZDAYNO           TRADE DATE
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    DDTDDT
+     C                     MOVELTSUB      DDTSUB           TRADE SUB-TYPE
+     C                     MOVELLKRF      DDLKRF           LINK REFERENCE
+     C                     MOVELTDMI      DDTDMI           MARKET INDICATOR
+     C                     MOVELAIIP      DDAIIP           AIBD/IPMA
+     C                     MOVELTDNR      DDTDNR           NARRATIVE
+     C           PROT      IFNE '2'
+     C           PROT      ANDNE'4'
+     C           PROT      ANDNE'7'
+     C           STBS      ANDNE'D'
+     C                     MOVE '1'       *IN11
+     C                     MOVELACIN      DDACIN           ACCRUED INDICATOR
+     C                     Z-ADDDADJ      ZFLD15           DAYS ADJUSTMENT
+     C                     Z-ADD0         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDDADJ
+     C                     MOVELADIN      DDADIN           ACTUAL/DIFFERENCE IND
+     C                     Z-ADDITRA      ZFLD15           INTEREST AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDITRA
+     C                     Z-ADD0         ZFLD15           COUPON RATE
+     C                     MOVE TDCR      ZFLDA
+     C                     Z-ADD7         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTDCR
+     C                     END
+     C*
+     C*    SECOND SCREEN
+     C                     Z-ADD0         ZFLD15           EXCHANGE RATE
+     C                     MOVE TDER      ZFLDA
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTDER
+     C                     MOVELTMDI      DDTMDI           MULTIPLY/DIVIDE IND
+     C                     Z-ADD0         ZFLD15           BASE CCY RATE
+     C                     MOVE TBCR      ZFLDA
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTBCR
+     C                     MOVELSMTH      DDSMTH           SETTLEMENT METHOD
+     C                     MOVELPYFM      DDPYFM           PAY FROM
+     C***********          MOVELPYFB      DDPYFB           PAY FROM BRANCHS01486
+     C                     MOVELPYFA      DDPYFB           PAY FROM BRANCHS01486
+     C                     MOVELPAYT      DDPAYT           PAY TO
+     C***********          MOVELPYTB      DDPYTB           PAY TO BRANCH  S01486
+     C                     MOVELPYTA      DDPYTB           PAY TO BRANCH  S01486
+     C                     MOVELTDFA      DDTDFA           FOR A/C OF (PAY TO)
+     C                     MOVELASNM      DDASNM           A/C SEQ NUMBER
+     C                     MOVELDELF      DDDELF           DELIVER FROM
+     C                     MOVELDELT      DDDELT           DELIVER TO
+     C                     MOVELDFFA      DDDFFA           FOR A/C OF (DLIV FRM)
+     C                     MOVELDTFA      DDDTFA           FOR A/C OF (DLIV TO)
+     C                     MOVELTDSI      DDTDSI           SPECIAL INSTRUCTIONS
+     C                     MOVELPRYC      DDPRYC           PRIORITY CODE
+     C*
+     C                     MOVELPCOD      DDPCOD           PAY CODE
+     C                     MOVE *BLANK    MSMBR4                          R10036
+     C           DDPCOD    IFEQ '0'                                       R10036
+     C                     MOVEL'PM90068' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDPCOD    IFEQ '1'                                       R10036
+     C           DDPCOD    OREQ '5'                                       R10036
+     C                     MOVEL'PM90069' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDPCOD    IFEQ '2'                                       R10036
+     C                     MOVEL'PM90070' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDPCOD    IFEQ '3'                                       R10036
+     C                     MOVEL'PM90071' MSMBR4                          R10036
+     C                     ELSE                                           R10036
+     C           DDPCOD    IFEQ '4'                                       R10036
+     C                     MOVEL'PM90072' MSMBR4                          R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C                     END                                            R10036
+     C           MSMBR4    IFNE *BLANK                                    R10036
+     C                     CALL 'SDRTVTXT'PLLANG                          R10036
+     C                     MOVELMSGTXT    DDPCOL                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVE *BLANK    DDPCOL                          R10036
+     C                     END                                            R10036
+     C*
+     C                     MOVELAUTS      DDAUTS           AUTO-SETTLE IND
+     C*
+     C*    THIRD SCREEN                                                   R10036
+     C                     MOVELTBCC      DDTBCC           BROKER COMMN CODE
+     C           TBCC      IFNE *BLANK                                    R10036
+     C                     MOVELTBCC      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTBCL                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTBCL                          R10036
+     C                     END                                            R10036
+     C           TBCA      IFNE 0
+     C                     Z-ADDTBCA      ZFLD15           BROKER COMMN AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTBCA
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTBCA
+     C                     END
+     C*
+     C                     MOVELTCCC      DDTCCC           CUSTOMER COMMN CODE
+     C           TCCC      IFNE *BLANK                                    R10036
+     C                     MOVELTCCC      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTCCL                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTCCL                          R10036
+     C                     END                                            R10036
+     C           TCCA      IFNE 0
+     C                     Z-ADDTCCA      ZFLD15           CUSTOMER COMMN AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCCA
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTCCA
+     C                     END
+     C*
+     C                     MOVELTCC1      DDTCC1           CHARGES CODE 1
+     C           TCC1      IFNE *BLANK                                    R10036
+     C                     MOVELTCC1      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTC1L                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTC1L                          R10036
+     C                     END                                            R10036
+     C           TCA1      IFNE 0
+     C                     Z-ADDTCA1      ZFLD15           CHARGES AMOUNT 1
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCA1
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTCA1
+     C                     END
+     C*
+     C                     MOVELTCC2      DDTCC2           CHARGES CODE 2
+     C           TCC2      IFNE *BLANK                                    R10036
+     C                     MOVELTCC2      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTC2L                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTC2L                          R10036
+     C                     END                                            R10036
+     C           TCA2      IFNE 0
+     C                     Z-ADDTCA2      ZFLD15           CHARGES AMOUNT 2
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCA2
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTCA2
+     C                     END
+     C*
+     C                     MOVELTCC3      DDTCC3           CHARGES CODE 3
+     C           TCC3      IFNE *BLANK                                    R10036
+     C                     MOVELTCC3      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTC3L                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTC3L                          R10036
+     C                     END                                            R10036
+     C           TCA3      IFNE 0
+     C                     Z-ADDTCA3      ZFLD15           CHARGES AMOUNT 3
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCA3
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTCA3
+     C                     END
+     C*
+     C                     MOVELTCC4      DDTCC4           CHARGES CODE 4
+     C           TCC4      IFNE *BLANK                                    R10036
+     C                     MOVELTCC4      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTC4L                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTC4L                          R10036
+     C                     END                                            R10036
+     C           TCA4      IFNE 0
+     C                     Z-ADDTCA4      ZFLD15           CHARGES AMOUNT 4
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCA4
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTCA4
+     C                     END
+     C*
+     C                     MOVELTCC5      DDTCC5           CHARGES CODE 5
+     C           TCC5      IFNE *BLANK                                    R10036
+     C                     MOVELTCC5      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTC5L                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTC5L                          R10036
+     C                     END                                            R10036
+     C           TCA5      IFNE 0
+     C                     Z-ADDTCA5      ZFLD15           CHARGES AMOUNT 5
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCA5
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTCA5
+     C                     END
+     C*
+     C                     MOVELTCC6      DDTCC6           CHARGES CODE 6
+     C           TCC6      IFNE *BLANK                                    R10036
+     C                     MOVELTCC6      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTC6L                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTC6L                          R10036
+     C                     END                                            R10036
+     C           TCA6      IFNE 0
+     C                     Z-ADDTCA6      ZFLD15           CHARGES AMOUNT 6
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCA6
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTCA6
+     C                     END
+     C*
+     C                     MOVELTCC7      DDTCC7           CHARGES CODE 7
+     C           TCC7      IFNE *BLANK                                    R10036
+     C                     MOVELTCC7      KCCOM                           R10036
+     C                     EXSR CHGCOM                                    R10036
+     C                     MOVELBWCHNR    DDTC7L                          R10036
+     C                     ELSE                                           R10036
+     C                     MOVEL*BLANKS   DDTC7L                          R10036
+     C                     END                                            R10036
+     C           TCA7      IFNE 0
+     C                     Z-ADDTCA7      ZFLD15           CHARGES AMOUNT 7
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCA7
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTCA7
+     C                     END
+     C*
+     C           TAXA      IFNE 0
+     C                     Z-ADDTAXA      ZFLD15           TAX AMOUNT
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTAXA
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTAXA
+     C                     END
+     C           BCMR      IFNE 0
+     C                     Z-ADDBCMR      ZFLD15           BROKER COMMN REBATE
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDBCMR
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDBCMR
+     C                     END
+     C           CCMR      IFNE 0
+     C                     Z-ADDCCMR      ZFLD15           CUSTOMER COMMN REBATE
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDCCMR
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDCCMR
+     C                     END
+     C           TXRB      IFNE 0
+     C                     Z-ADDTXRB      ZFLD15           TAX REBATE
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTXRB
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDTXRB
+     C                     END
+     C                     Z-ADDTCTR      ZFLD15           COUNTERVALUE
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDTCTR
+     C           SPXR      IFNE 0
+     C                     Z-ADD0         ZFLD15
+     C                     MOVE SPXR      ZFLD15           FX RATE
+     C                     Z-ADD8         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    DDSPXR
+     C                     ELSE
+     C                     MOVEL*BLANKS   DDSPXR
+     C                     END
+     C                     MOVELSPMD      DDSPMD
+     C*
+     C*   LOOP UNTIL QUIT REQUESTED
+     C************INKC     DOUEQ'1'                                       081239
+     C************INKL     OREQ '1'                                       081239
+     C************INKV     OREQ '1'                                 S01486081239
+     C           QMENQT    DOUEQ'Y'                                       081239
+     C           QMENQT    OREQ 'C'                                       081239
+     C           QMENQT    OREQ 'P'                                       081239
+     C           QMENQT    OREQ 'D'                                       081239
+     C           *INKL     OREQ '1'                                       081239
+     C*
+     C*   DISPLAY CORRECT SCREEN
+     C           DSI       IFEQ '1'
+     C                     EXFMTPM2060F1
+     C                     ELSE
+     C           DSI       IFEQ '2'                                       R10036
+     C                     EXFMTPM2060F2
+     C                     ELSE                                           R10036
+     C                     EXFMTPM2060F3                                  R10036
+     C                     END                                            R10036
+     C                     END
+     C*                                                                   081239
+     C** If F3  pressed, exit program                                     081239
+     C*                                                                   081239
+     C           *INKC     IFEQ '1'                                       081239
+     C                     MOVE 'Y'       QMENQT                          081239
+     C                     CALL 'PMC1001'                                 081239
+     C                     PARM           WWLDA                           081239
+     C                     END                                            081239
+     C**********                                                    081239CPM005
+     C***If*F22*pressed, access Enquiry selection screen            081239CPM005
+     C**********                                                    081239CPM005
+     C********** *INKW     IFEQ '1'                                 081239CPM005
+     C**********           CALL 'PMC0610'                           081239CPM005
+     C**********                                                    081239CPM005
+     C***Retrieve *LDA values                                       081239CPM005
+     C**********                                                    081239CPM005
+     C**********           CALL 'PMC1003'                           081239CPM005
+     C**********           PARM           WWLDA                     081239CPM005
+     C**********           END                                      081239CPM005
+     C*
+     C*   UPDATE DISPLAY SCREEN INDICATOR ACCORDING TO ROLLUP/DOWN
+     C           *IN25     IFEQ '1'
+     C           DSI       IFEQ '1'                                       R10036
+     C                     MOVE '2'       DSI
+     C                     ELSE                                           R10036
+     C                     MOVE '3'       DSI                             R10036
+     C                     END                                            R10036
+     C                     END
+     C           *IN26     IFEQ '1'
+     C           DSI       IFEQ '3'                                       R10036
+     C                     MOVE '2'       DSI                             R10036
+     C                     ELSE                                           R10036
+     C                     MOVE '1'       DSI
+     C                     END                                            R10036
+     C                     END
+     C*
+     C                     END                             ENDDOU
+     C***********                                                         081239
+     C****EXIT*PROGRAM****************************************************081239
+     C************INKC     IFEQ '1'                                       081239
+     C***********          MOVE '1'       WWRETC                          081239
+     C***********          MOVE 'Y'       QMENQT                          081239
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C***********          CALL 'PMC1001'                           S01486081239
+     C***********          PARM           WWLDA                     S01486081239
+     C***********          END                                            081239
+     C*
+     C                     ENDSR
+     C*
+      ********************************************************************
+      /EJECT                                                              R10036
+      ********************************************************************R10036
+      *                                                                  *R10036
+      * CHGCOM   - ACCESS CHARGE TYPE FILE                               *R10036
+      *                                                                  *R10036
+      * SUBROUTINE CALLS:                                                *R10036
+      *                                                                  *R10036
+      * SUBROUTINE CALLED FROM:                                          *R10036
+      * ACCESS   - ACCESS LOAN DETAILS                                   *R10036
+      *                                                                  *R10036
+      * ROUTINE USES VARIABLES:                                          *R10036
+      *                                                                  *R10036
+      ********************************************************************R10036
+     C           CHGCOM    BEGSR                                          R10036
+     C*                                                                   R10036
+     C                     MOVE '0'       *IN06                           R10036
+     C***********KSECGT    CHAINSECGTDL1             06            R10036 S01486
+     C           KSECGT    CHAINSECGT                06                   S01486
+     C           *IN06     IFEQ '1'                                       R10036
+     C                     Z-ADD6         QMERRN                          R10036
+     C***********          MOVEL'SECGTDL1'QMFIL                    R10036 S01486
+     C                     MOVE 'SECGT   'QMFILE                          S01486
+     C                     MOVELDSSECG    QMKEY                           R10036
+     C                     EXSR *PSSR                                     R10036
+     C                     END                                            R10036
+     C*                                                                   R10036
+     C                     ENDSR                                          R10036
+     C*                                                                   R10036
+      ********************************************************************R10036
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESS                                       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **PMC1010**-*READ*GROUP*JOB*DATA*AREA*******************************S01486
+      **QCMDEXC**-*EXEC*AS/400*COMMAND************************************S01486
+      * PMC1003  - TO RETRIEVE DATA AREA *LDA                            *S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWRETC   - RETURN CODE PARAMETER PASSED TO PROGRAM               *
+      * WWTDRF   - TRADE REFERENCE PARAMETER PASSED TO PROGRAM           *
+      **WWPARM***-*GROUP*JOB*DATA*STRUCTURE*******************************S01486
+      **WWFLD****-*COMMAND*PART*OF*QCMDEXEC*PARAMETER*********************S01486
+      **WWNUMB***-*LENGTH*PART*OF*QCMDEXEC*PARAMETER**********************S01486
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           WWRETC  1
+     C                     PARM           WWTDRF  6
+     C*
+     C*    INITIALISE DISPLAY SCREEN INDICATOR
+     C                     MOVE '1'       DSI     1
+     C*
+     C                     MOVEA'0'       *IN
+     C                     MOVE '0'       *INKC
+     C                     MOVE '0'       *INKL
+     C                     MOVE '0'       *INKV                           S01486
+     C*
+     C*****RECEIVE*PARAMETERS*FROM*DATA*AREA**GDA**********************   S01486
+     C**  Receive parameters from data area *LDA                          S01486
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+     C                     MOVELQMRUNA    DDRUNA
+     C                     MOVELUSID      SUSER                           081239
+     C***********                                                         S01486
+     C*****IF*ATTENTION*KEY*ENABLED*SET*THE*ATTENTION*PROGRAM*TO**********S01486
+     C*****PMC0610********************************************************S01486
+     C***********QMATTN    IFEQ 'Y'                                       S01486
+     C***********          MOVEAATN       WWFLD  22                       S01486
+     C***********          Z-ADD22        WWNUMB 155                      S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM           WWFLD                           S01486
+     C***********          PARM           WWNUMB                          S01486
+     C***********                                                         S01486
+     C***********          END                                            S01486
+     C**                                                                  S01486
+     C**  GET RUNDAT to access MULTI-BRANCHING flag.                      S01486
+     C**                                                                  S01486
+     C           *NAMVAR   DEFN           RUNDAT                          S01486
+     C                     IN   RUNDAT                                    S01486
+     C           @MBIN     IFEQ 'Y'                                       S01486
+     C                     MOVE '1'       *IN20                           S01486
+     C                     END                                            S01486
+     C*
+     C*    INIT KEY LIST
+     C           INVKEY    KLIST                           INVTP KEY
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*
+     C           KSECGT    KLIST                                          R10036
+     C                     KFLD           KCCY    3                       R10036
+     C                     KFLD           KCCOM   2                       R10036
+     C*                                                                   R10036
+     C*   SET UP PARAMETER TO RETRIEVE MESSAGE FROM MESSAGE FILE          R10036
+     C*                                                                   R10036
+     C           PLLANG    PLIST                                          R10036
+     C                     PARM           MSMBR4  7                       R10036
+     C                     PARM           MSGER  10                       R10036
+     C                     PARM           MSGTXT 80                       R10036
+     C******************** MOVEL'MLGBMSGF'MSGER                    R10036 080706
+     C                     MOVEL'PMUSRMSG'MSGER                           080706
+     C*
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS DATABASE ERROR                                *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      **PMC1000**-*UPDATE*GROUP*JOB*DATA*AREA*****************************S01486
+      **PMC1020**-*TERMINATE*GROUP*JOB*IF*DATABASE*ERROR******************S01486
+      * PMC1001  - TO UPDATE DATA AREA *LDA                              *S01486
+      * DBERRCTL - DATABASE ERROR PROCESSING                             *S01486
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * ACCESS   - ACCESS LOAN DETAILS                                   *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      **WWPARM***-*GROUP*JOB*DATA*STRUCTURE*******************************S01486
+      **WWEND****-*GROUP*JOB*TERMINATION*VALUE****************************S01486
+      **WWGRPJ***-*GROUP*JOB*VALUE****************************************S01486
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'PM2060'  QMPGM
+     C                     MOVEL'Y'       QMENQT
+     C*
+     C*****UPDATE**GDA*************************************************** S01486
+     C***********          CALL 'PMC1002'                                 S01486
+     C***********          PARM           WWGDA                           S01486
+     C                     CALL 'PMC1001'                                 S01486
+     C                     PARM           WWLDA                           S01486
+     C*
+     C                     DUMP
+     C*
+     C***********          CALL 'PMC1020'                                 S01486
+     C                     CALL 'DBERRCTL'                                S01486
+     C                     RETRN                                          S01486
+     C**
+     C                     ENDSR
+     C**
+     C** **  ATN - ARRAY TO ENABLE ATTN KEY****************************** S01486
+     C** SETATNPGM PGM(PMC0610) ***************************************** S01486
+**  CPY@
+(c) Finastra International Limited 2001
+**  ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**  ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**  ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

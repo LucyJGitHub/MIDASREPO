@@ -1,0 +1,610 @@
+     C*****************************************************************
+     C*                                                               *
+     C*  ZACCR - SUBR. TO CALCULATE INTEREST ACCRUED BETWEEN TWO DATES*
+     C*                                                               *
+     C*  INPUT  - ZSDATE (5,0) START DATE )  FOR ZDAYS SUBROUTINE     *
+     C*           ZEDATE (5,0) END DATE   )                           *
+     C************ZAMT***(11,0)*PRINCIPAL*AMOUNT***********************
+     C*           ZAMT   (15,0) PRINCIPAL AMOUNT                      *
+     C*           IRATE  (15,9) INTEREST RATE FROM ZRATE              *
+     C*           NMDP   (1,0) nominal dec places (SECTYD)            *
+     C************CDP****(1,0)*NOMINAL*CURRENCY*DEC.*PLACES************   S01117
+     C*           ZCDP   (1,0) NOMINAL CURRENCY DEC. PLACES           *   S01117
+     C*           PROT   (1A)  PROCESSING TYPE                        *
+     C*           ARRAY 'POWER8'                                      *
+     C*                                                               *
+     C*  OUTPUT - ZACCRD (15,0) INTEREST ACCRUED                      *
+     C*           ZACCXD (15,1) INTEREST ACCRUED                      *   055420
+     C*           ZRP (1) 'R' RECEIVABLE, 'P' PAYABLE 'X' ZERO        *
+     C*                                                               *
+     C*  CALLS - ZDAYS, ZDYYR (ZDATE2)                                *
+     C*                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CSE071             Date 19Jul05               *
+      *  Prev Amend No. 211407             Date 09Nov02               *
+      *                 CSE035             Date 22Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+     C*                 178500             DATE 28Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     C*                 CSE005             DATE 09MAR98               *
+     C*                 065301             DATE 06MAY94               *
+     C*                 055420             DATE 24NOV93               *
+     C*                 E27934             DATE 22OCT91               *
+     C*                 S01117             DATE 22JAN91               *
+     C*                 E21214             DATE 26FEB90               *
+     C*                 E20890             DATE 23JAN90               *
+     C*                 E20196             DATE 08NOV89               *
+     C*                 E14496             DATE 20SEP89               *
+     C*                                                               *
+     C*---------------------------------------------------------------*
+     C*                                                               *
+      *  CSE071 - Multiple Holidays Re Securities                     *
+     C*  211407 - Correct logic in determining NNX for changes CSE035 *
+     C*           and calculating NNX amounts correctly.              *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+     C*  178500 - To avoid rounding errors, amend work fields ZWMLT   *
+     C*           and ZWAMT to be large enough to hold the product of *
+     C*           a 15,0 amount multiplied by a 15,9 rate.            *
+     C*  CSE005 - Effect of holidays on FRN coupon dates:             *
+     C*           prevent looping for FRNs with divisor basis 5.      *
+     C*  065301 - ZAMT needs to be defined as 15,0 otherwise large    *
+     C*           figures are truncated.                              *
+     C*  055420 - Rounding problems on MORTGAGE BACKED SECURITIES.    *
+     C*  E27934 - Rounding problems on Yen Bonds (Processing type 5)  *
+     C*  S01117 - New SD file changes (R10 Multibranching).           *
+     C*  E21214 - Rounding Problems.                                  *
+     C*  E20890 - Calculating accrued interest on zero coupon rate    *
+     C*           causes loop in SE0050.                              *
+     C*  E20196 - THE INTEREST ACCRUED FIELD IS TRUNCATED. SO THE     *
+     C*           INTEREST AMOUNT IS WRONG ON TRADE FILE              *
+     C*  E14496 - Amended for Divisor Basis 5                         *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           ZACCR     BEGSR                           **ZACCR BEGSR**
+     C*
+     C                     GOTO TACCR1
+     C***********          Z-ADDCDP       CDP     10                      S01117
+     C                     Z-ADDZCDP      ZCDP    10                      S01117
+     C           TACCR1    TAG
+     C*                                                                   E20890
+      *****************************************************************   CSE035
+      *                                                               *   CSE035
+      *           CSE035 NX/NNX Processing                            *   CSE035
+      *                                                               *   CSE035
+      *****************************************************************   CSE035
+      *                                                                   CSE035
+     C           CSE035    IFEQ 'Y'                                       CSE035
+      *                                                                   CSE035
+      * Setup NCDD5 to be first coupon date (done outside SR in ZACCR     211407
+      * module).                                                          211407
+      *                                                                   211407
+     C                     Z-ADDFCPN      NCDD5                           211407
+      *                                                                   211407
+      * Determine last coupon date (may not have been done before)        CSE035
+      *                                                                   CSE035
+     C           DVBS      IFNE '5'                                       CSE035
+     C                     Z-ADDECD       ZVECD   50                      CSE035
+     C                     Z-ADDZZLCD     ZLCDSV  50                      CSE035
+     C           NCD       SUB  1         ZECD                            CSE035
+     C                     EXSR ZLCD                                      CSE035
+     C                     Z-ADDZZLCD     ZLCDN5  50                      CSE035
+     C                     Z-ADDZVECD     ECD                             CSE035
+     C                     Z-ADDZLCDSV    ZZLCD                           CSE035
+     C                     ENDIF                                          CSE035
+      *                                                                   CSE035
+     C                     END                                            CSE035
+      *                                                                   CSE035
+     C*  If the Day Basis is '4' the coupon rate is zero. There           E20890
+     C*   will be no accrued interest to be calculated.                   E20890
+     C*                                                                   E20890
+     C           DYBS      IFEQ '4'                                       E20890
+     C                     Z-ADD0         ZACCRD                          E20890
+     C                     Z-ADD0         ZACCXD                          055420
+     C                     MOVE 'X'       ZRP                             E20890
+     C                     GOTO EZACCR                                    E20890
+     C                     END                                            E20890
+     C*
+     C* DEFINE INPUT AMOUNT
+     C*
+     C***********          Z-ADDZAMT      ZAMT   110                      065301
+     C                     Z-ADDZAMT      ZAMT   150                      065301
+     C                     Z-ADD0         ZACCRD 150
+     C                     Z-ADD0         ZACCXD 151                      055420
+      *****************************************************************   CSE035
+      *                                                               *   CSE035
+      *  CSE035 - NX/NNX Coupon Payment Processing                    *   CSE035
+      *                                                               *   CSE035
+      *****************************************************************   CSE035
+      *                                                                   CSE035
+     C           CSE035    IFEQ 'Y'                                       CSE035
+     C                     Z-ADD0         ZAC100 158                      CSE035
+     C                     MOVE ' '       NNXSV   1                       CSE035
+     C                     END                                            CSE035
+      *
+     C*                                                                   E14496
+     C* SAVE ECD                                                          E14496
+     C                     Z-ADDECD       ZECDSV  50                      E14496
+     C*
+     C**CALCULATE*NO*OF*DAYS*BETWEEN*START*AND*END*DATE
+     C*
+     C* Save Original Start and End Dates                                 E14496
+     C*                                                                   E14496
+     C                     Z-ADDZSDATE    ZVSDAT  50                      E14496
+     C                     Z-ADDZEDATE    ZVEDAT  50                      E14496
+     C                     Z-ADDECD       ZVECD   50                      E14496
+     C*                                                                   E14496
+     C* LOOP TO CALCULATE INTEREST FOR ALL DIV BAS TYPES                  E14496
+     C*                                                                   E14496
+     C           ZEDATE    DOWGTZVSDAT                                    E14496
+     C           ZEDATE    ANDGTITLD                                      E14496
+     C                     Z-ADDZEDATE    ECD                             E14496
+     C*                                                                   CSE005
+     C* Save previous value of LCDD5 in order to prevent the              CSE005
+     C* program looping for FRNs with divisor basis 5.                    CSE005
+     C*                                                                   CSE005
+     C           DVBS      IFEQ '5'                                       CSE005
+     C                     Z-ADDLCDD5     LCDD5X  50                      CSE005
+     C                     ENDIF                                          CSE005
+     C*                                                                   E14496
+     C*Find Coupon Dates on either side of Value Date                     E14496
+     C*                                                                   E14496
+     C                     EXSR ZDYYR                                     E14496
+      *****************************************************************   CSE035
+      *                                                               *   CSE035
+      *           CSE035 NX/NNX Processing                            *   CSE035
+      *                                                               *   CSE035
+      *****************************************************************   CSE035
+      *                                                                   CSE035
+     C           CSE035    IFEQ 'Y'                                       CSE035
+      *                                                                   211407
+      ** Setup BJDFIN in case SDBANKPD not read                           211407
+     C           BJDFIN    IFEQ ' '                                       211407
+     C           *IN98     IFEQ *ON                                       211407
+     C                     MOVE 'M'       BJDFIN  1                       211407
+     C                     ELSE                                           211407
+     C                     MOVE 'D'       BJDFIN                          211407
+     C                     ENDIF                                          211407
+     C                     ENDIF                                          211407
+      *                                                                   211407
+      * Get the logical NCD from the coupon array.                        211407
+      *                                                                   211407
+     C                     CALL 'ZNCD1'                                   211407
+      * INPUTS                                                            211407
+      ** Security details                                                 211407
+     C                     PARM           ITLD                            211407
+     C                     PARM           FCPN                            211407
+     C                     PARM           MATY                            211407
+     C                     PARM           CDDS                            211407
+     C                     PARM           CRDS                            211407
+      ** Event Control Date                                               211407
+      ** Date Format                                                      211407
+     C                     PARM           ECD                             211407
+     C                     PARM           BJDFIN                          211407
+     C                     PARM           NMCY                            211407
+     C                     PARM           SITP                            211407
+     C                     PARM           BCNV                            211407
+     C                     PARM           LCPN                            211407
+      ** Effect of Holidays on Dates                                      CSE071
+     C                     PARM           HCY1                            CSE071
+     C                     PARM           HCY2                            CSE071
+     C                     PARM           HCY3                            CSE071
+     C                     PARM           HCY4                            CSE071
+     C                     PARM           HCY5                            CSE071
+     C                     PARM           HCY6                            CSE071
+     C                     PARM           HCY7                            CSE071
+     C                     PARM           HCY8                            CSE071
+     C                     PARM           HCY9                            CSE071
+      * OUTPUTS                                                           211407
+      ** Last Coupon Date                                                 211407
+     C                     PARM           NCD1    50                      211407
+      *                                                                   211407
+      * Save the value of ZINTDD                                          211407
+      *                                                                   211407
+     C                     Z-ADDZINTDD    ZINTD1  30                      211407
+      *                                                                   CSE035
+      * Adjust days for NX and NNX securities                             CSE035
+      *                                                                   CSE035
+     C           DVBS      IFEQ '5'                                       CSE035
+     C           PROT      ANDEQ'1'                                       CSE035
+     C           SYBS      ANDEQ'AU'                                      211407
+     C           ZEDATE    ANDLEFCPN                                      CSE035
+     C           LCDD5     ANDLEITLD                                      CSE035
+     C                     Z-ADD365       ZINTDD                          CSE035
+     C                     ENDIF                                          CSE035
+      *                                                                   211407
+      ** If Cum securities, put back the original value of ZINTDD as      211407
+      ** otherwise the calculation will have the incorrect divisor.       211407
+      *                                                                   211407
+     C           DVBS      IFEQ '5'                                       211407
+     C           PROT      ANDEQ'1'                                       211407
+     C           SYBS      ANDEQ'AU'                                      211407
+     C           ZEDATE    ANDLEFCPN                                      211407
+     C           LCDD5     ANDEQITLD                                      211407
+     C           NCD1      IFEQ FCPN                                      211407
+     C           ECD       OREQ FCPN                                      211407
+     C                     Z-ADDZINTD1    ZINTDD                          211407
+     C                     ENDIF                                          211407
+     C                     ENDIF                                          211407
+      *                                                                   CSE035
+     C                     END                                            CSE035
+      *
+     C*                                                                   E14496
+     C* Restore original start date after first loop                      E14496
+     C*                                                                   E14496
+     C                     Z-ADDZVSDAT    ZSDATE                          E14496
+     C*                                                                   E14496
+     C* Find start date for interest calculations if divisor basis 5      E14496
+     C*                                                                   E14496
+     C           DVBS      IFEQ '5'                                       E14496
+     C           LCDD5     ANDGEZSDATE                                    E14496
+     C           LCDD5     ANDNELCDD5X                                    CSE005
+     C                     Z-ADDLCDD5     ZSDATE                          E14496
+     C                     END                                            E14496
+     C*                                                                   E14496
+     C           ITLD      IFGE ZSDATE                                    E14496
+     C                     Z-ADDITLD      ZSDATE                          E14496
+     C                     END                                            E14496
+     C*                                                                   E14496
+      *****************************************************************   CSE035
+      *                                                               *   CSE035
+      *           CSE035 NX/NNX Processing                            *   CSE035
+      *                                                               *   CSE035
+      *****************************************************************   CSE035
+      *                                                                   CSE035
+     C           CSE035    IFEQ 'Y'                                       CSE035
+      *                                                                   CSE035
+      *                                                                   CSE035
+      * Adjust start and end dates for NNX securities such that it        CSE035
+      * calculates interest as follows:                                   CSE035
+      *     f/d x (1 + f'/182.5) x g/2                                    CSE035
+      * where f  = days from initial date to value date                   CSE035
+      *       f' = days from initial date to "would be" interest date     CSE035
+      *       d  = days from initial date to next coupon (ie. 1st         CSE035
+      *            coupon date)                                           CSE035
+      *       g  = annual coupon rate                                     CSE035
+      * The check on NNX and adjustment of dates should only be done      CSE035
+      * once in the first loop.                                           CSE035
+      * The NX/NNX processing only applies to Australian fixed interest   211407
+      *                                                                   CSE035
+     C           PROT      IFEQ '1'                                       CSE035
+     C           SYBS      ANDEQ'AU'                                      211407
+     C           NNXSV     IFEQ ' '                                       CSE035
+     C                     MOVE ' '       NNX     1                       CSE035
+     C***********ZEDATE    IFLE FCPN                               CSE035 211407
+      ***********                                                  CSE035 211407
+     C***********ITLD      IFGE LCDD5                              CSE035 211407
+     C***********DVBS      ANDEQ'5'                                CSE035 211407
+     C***********ITLD      ORGE ZLCDN5                             CSE035 211407
+     C***********DVBS      ANDNE'5'                                CSE035 211407
+      ***********                                                  CSE035 211407
+     C***********NCDD5     IFNE FCPN                               CSE035 211407
+     C***********DVBS      ANDEQ'5'                                CSE035 211407
+     C***********NCD       ORNE FCPN                               CSE035 211407
+     C***********DVBS      ANDNE'5'                                CSE035 211407
+     C***********          MOVE 'Y'       NNX                      CSE035 211407
+     C***********          ELSE                                    CSE035 211407
+     C***********          MOVE ' '       NNX                      CSE035 211407
+     C***********          END                                     CSE035 211407
+     C***********          ELSE                                    CSE035 211407
+     C***********          MOVE 'Y'       NNX                      CSE035 211407
+     C***********          END                                     CSE035 211407
+     C***********          END                                     CSE035 211407
+      *                                                                   CSE035
+     C           ZEDATE    IFLT FCPN                                      211407
+      *                                                                   211407
+      ** Compare the Last Coupon Date got from the array with the ITLD    211407
+      ** to classify it correctly.                                        211407
+      *                                                                   211407
+     C           FCPN      SUB  1         ECD1    50                      211407
+      *                                                                   211407
+      ** Setup BJDFIN in case SDBANKPD not read                           211407
+     C           BJDFIN    IFEQ ' '                                       211407
+     C           *IN98     IFEQ *ON                                       211407
+     C                     MOVE 'M'       BJDFIN  1                       211407
+     C                     ELSE                                           211407
+     C                     MOVE 'D'       BJDFIN                          211407
+     C                     ENDIF                                          211407
+     C                     ENDIF                                          211407
+      *                                                                   211407
+     C                     CALL 'ZLCD1'                                   211407
+      * INPUTS                                                            211407
+      ** Security details                                                 211407
+     C                     PARM           ISSD                            211407
+     C                     PARM           ITLD                            211407
+     C                     PARM           FCPN                            211407
+     C                     PARM           MATY                            211407
+     C                     PARM           CDDS                            211407
+     C                     PARM           CRDS                            211407
+      ** Event Control Date                                               211407
+      ** Date Format                                                      211407
+     C                     PARM           ECD1                            211407
+     C                     PARM           BJDFIN                          211407
+     C                     PARM           NMCY                            211407
+     C                     PARM           SITP                            211407
+     C                     PARM           BCNV                            211407
+      ** Effect of Holidays on Dates                                      CSE071
+     C                     PARM           HCY1                            CSE071
+     C                     PARM           HCY2                            CSE071
+     C                     PARM           HCY3                            CSE071
+     C                     PARM           HCY4                            CSE071
+     C                     PARM           HCY5                            CSE071
+     C                     PARM           HCY6                            CSE071
+     C                     PARM           HCY7                            CSE071
+     C                     PARM           HCY8                            CSE071
+     C                     PARM           HCY9                            CSE071
+      * OUTPUTS                                                           211407
+      ** Last Coupon Date                                                 211407
+     C                     PARM           ZZLCD1  50                      211407
+      *                                                                   211407
+      ** If Initial date coincides with the regular coupon date, it       211407
+      ** should be CUM. Here it just needs to be flagged as not 'NNX'.    211407
+      *                                                                   211407
+     C           ITLD      IFEQ ZZLCD1                                    211407
+     C           NCDD5     ANDEQFCPN                                      211407
+     C                     MOVE ' '       NNX                             211407
+     C                     ELSE                                           211407
+      *                                                                   211407
+      ** If Initial date greater than calculated LCD, it                  211407
+      ** should be NX (i.e. short first coupon period).                   211407
+      *                                                                   211407
+     C           ITLD      IFGT ZZLCD1                                    211407
+     C                     MOVE ' '       NNX                             211407
+     C                     ELSE                                           211407
+      *                                                                   211407
+      ** It has a long first coupon period therefore it is                211407
+      ** NNX.                                                             211407
+      *                                                                   211407
+     C                     MOVE 'Y'       NNX                             211407
+     C                     ENDIF                                          211407
+     C                     ENDIF                                          211407
+     C                     ENDIF                                          211407
+      *                                                                   211407
+     C           NNX       IFEQ 'Y'                                       CSE035
+     C           DVBS      ANDEQ'5'                                       CSE035
+     C                     MOVE 'Y'       NNXSV                           CSE035
+      * need to reset counts for NNX for first coupon in COB as           211407
+      * otherwise will calculate interest for first and second coupon     211407
+      * periods at the same time.                                         211407
+     C           ZAC100    IFNE *ZERO                                     211407
+     C                     MOVE 'Y'       NNXCP   1                       211407
+     C                     Z-ADD0         ZAC100                          211407
+     C                     ENDIF                                          211407
+      *                                                                   211407
+     C                     Z-ADDNCD       ZEDATE                          CSE035
+     C           ITLD      IFLT LCDD5                                     CSE035
+     C                     Z-ADDLCDD5     ZSDATE                          CSE035
+     C                     ELSE                                           CSE035
+     C*********************Z-ADDNCDD5     ZSDATE                   CSE035 211407
+     C                     Z-ADDFCPN      ZSDATE                          211407
+     C                     END                                            CSE035
+      *                                                                   CSE035
+      * Find the corresponding ZINTDD for the ZEDATE.                     CSE035
+      *                                                                   CSE035
+     C                     Z-ADDLCDD5     SVLCD5  50                      CSE035
+     C                     Z-ADDNCDD5     SVNCD5  50                      CSE035
+     C                     Z-ADDZEDATE    ECD                             CSE035
+     C                     EXSR ZDYYR                                     CSE035
+     C                     Z-ADDSVLCD5    LCDD5                           CSE035
+     C                     Z-ADDSVNCD5    NCDD5                           CSE035
+     C                     END                                            CSE035
+     C                     END                                            CSE035
+     C                     END                                            CSE035
+      *                                                                   CSE035
+     C                     END                                            CSE035
+      *
+     C* Find no of days between start date and end date                   E14496
+     C                     EXSR ZDAYS
+     C                     Z-ADDZDDAYS    WDDAYS  50
+     C*
+     C*********CALCULATE*NO*OF*DAYS*IN*THE*INTEREST*YEAR
+     C*
+     C*********************EXSR ZDYYR                                     E14496
+     C*
+     C* IF NO OF DAYS IN INTEREST YEAR IS 0
+     C*    - INTEREST AMOUNT IS 0
+     C           ZINTDD    IFEQ 0
+     C***********          Z-ADD0         ZACCRD                          E20196
+     C***********          Z-ADD0         ZACCRD 150                      E14496
+     C                     Z-ADD0         WACCRD 150                      E14496
+     C                     Z-ADD0         WACCXD 151                      055420
+     C                     MOVE 'X'       ZRP
+     C*******************  GOTO EZACCR                                    E14496
+     C                     GOTO ZACCR9                                    E14496
+     C                     END
+     C*
+     C***  Determine index for conversion to Nominal Currency
+     C*
+     C***********CDP       SUB  NMDP      DC                              S01117
+     C           ZCDP      SUB  NMDP      DC                              S01117
+     C           DC        ADD  5         DC      10
+     C*
+     C* CALCULATE INTEREST AMOUNT
+     C*  (i) For non-Yen Bond,
+     C*          PRINCIPAL AMOUNT * INTEREST RATE * DAYS BETWEEN DATES
+     C*          -----------------------------------------------------
+     C*                    DAYS IN INTEREST YEAR * 100
+     C*
+     C           CSE035    IFEQ 'Y'                                       211407
+      *                                                                   211407
+      ** Changed to calculate the interest per 100 and rounded            211407
+      ** to no. of decimal places required by client                      211407
+      *                                                                   211407
+     C           IRATE     MULT WDDAYS    ZWAMT1 158H                     211407
+     C           ZWAMT1    DIV  ZINTDD    ZWAMT1    H                     211407
+     C                     Z-ADDZWAMT1    ZINPF                           211407
+     C                     Z-ADDZINPF     ZOUTF                           211407
+      *                                                                   211407
+     C                     ENDIF                                          211407
+      *                                                                   211407
+     C           PROT      IFNE '5'
+     C***********ZAMT      DIV  100       ZWAMT  112                      E20196
+     C***********ZWAMT     MULT WDDAYS    ZWMLT  154                      E20196
+     C***********ZAMT      MULT IRATE     ZWMLT  150H               E20196178500
+     C***********ZWMLT     DIV  100       ZWAMT  152                E20196178500
+     C           ZAMT      MULT IRATE     ZWMLT  309H                     178500
+     C           ZWMLT     DIV  100       ZWAMT  287                      178500
+     C*
+     C***********ZWMLT     MULT IRATE     ZWMLT                           E20196
+     C***********ZWAMT     MULT WDDAYS    ZWMLT     H              E20196 E21214
+     C                     MULT WDDAYS    ZWAMT                           E21214
+     C*                                                                   E20196
+     C*                                                                   E20196
+     C           ZINTDD    DIV  POWER8,DC ZDIV   156                      E20196
+     C***********ZWMLT     DIV  ZDIV      WACCRD    H              E20196 E21214
+     C           ZWAMT     DIV  ZDIV      WACCRD    H                     E21214
+     C           ZWAMT     DIV  ZDIV      WACCXD    H                     055420
+     C*
+     C**If*not*Mortgage-backed security,                                  E20196
+     C**Convert*interest*amount to MIDAS amount in Nom currency           E20196
+     C**********                                                          E20196
+     C***********PROT      IFNE '8'                                       E20196
+     C***********ZWACCR    MULT POWER8,DC ZACCRD 150H                     E20196
+     C*
+     C***********          ELSE                                           E20196
+     C***********          Z-ADDZWACCR    ZACCRD                          E20196
+     C***********          END                                            E20196
+     C* If Yen Bond
+     C                     ELSE
+     C*  Calc. Factor
+     C           IRATE     MULT WDDAYS    ZFAC   157
+     C           ZFAC      DIV  ZINTDD    ZFAC
+     C*  Calc. Interest
+     C***********ZAMT      MULT ZFAC      ZWACCR 154H                     E20196
+     C***********ZAMT      MULT ZFAC      ZWACCR 153H              E20196 E27934
+     C           ZAMT      MULT ZFAC      ZWACCR 153                      E27934
+     C***********ZWACCR    DIV  100       ZWACCR                          E20196
+     C*  Allow for ccy Dec Places
+     C***********ZWACCR    MULT POWER8,DC ZACCRD                          E20196
+     C           ZWACCR    MULT POWER8,DC WACCRD                          E20196
+     C***********WACCRD    DIV  100       WACCRD                   E20196 E27934
+     C           WACCRD    DIV  100       WACCRD    H                     E27934
+     C           ZWACCR    MULT POWER8,DC WACCXD                          055420
+     C           WACCXD    DIV  100       WACCXD    H                     055420
+     C                     END
+     C*                                                                   E14496
+     C* Add interest to accumulated field                                 E14496
+     C*                                                                   E14496
+     C                     ADD  WACCRD    ZACCRD                          E14496
+     C                     ADD  WACCXD    ZACCXD                          055420
+     C*                                                                   E14496
+      *****************************************************************   CSE035
+      *                                                               *   CSE035
+      *           CSE035 NX/NNX Processing                            *   CSE035
+      *                                                               *   CSE035
+      *****************************************************************   CSE035
+      *                                                                   CSE035
+      * Add interest per 100 to accumulated field                         CSE035
+      *                                                                   CSE035
+     C           CSE035    IFEQ 'Y'                                       CSE035
+      * For NNX coupon in COB do not use first coupon amount as the       211407
+      * system inadvertently calculates two coupon amounts.               211407
+     C           NNXCP     IFEQ 'Y'                                       211407
+     C                     MOVE ' '       NNXCP                           211407
+     C                     ELSE                                           211407
+     C                     ADD  ZOUTF     ZAC100                          CSE035
+     C                     ENDIF                                          211407
+     C                     END                                            CSE035
+      *
+     C* Make start date new end date and restart loop                     E14496
+     C*                                                                   E14496
+     C                     Z-ADDZSDATE    ZEDATE                          E14496
+     C           ZACCR9    TAG                             ** ZACCR9    **E14496
+     C                     END                                            E14496
+      *****************************************************************   CSE035
+      *                                                               *   CSE035
+      *           CSE035 NX/NNX Processing                            *   CSE035
+      *                                                               *   CSE035
+      *****************************************************************   CSE035
+      *                                                                   CSE035
+     C           CSE035    IFEQ 'Y'                                       CSE035
+      *                                                                   CSE035
+      * For NNX interest, apply factor f/d to ZAC100 (accumulated         CSE035
+      * interest per 100), round to the no. of decimal places required,   CSE035
+      * multiply the result with nominal to get the accrued interest.     CSE035
+      *                                                                   CSE035
+     C           NNXSV     IFEQ 'Y'                                       CSE035
+     C           PROT      ANDEQ'1'                                       CSE035
+     C                     Z-ADDZVSDAT    ZSDATE                          CSE035
+     C                     Z-ADDZVEDAT    ZEDATE                          CSE035
+     C                     EXSR ZDAYS                                     CSE035
+     C                     Z-ADDZDDAYS    FNNX    50                      CSE035
+     C                     Z-ADDNCD       ZEDATE                          CSE035
+     C                     EXSR ZDAYS                                     CSE035
+     C                     Z-ADDZDDAYS    DNNX    50                      CSE035
+      * For NNX coupon in COB do not use first coupon amount as the       211407
+      * system inadvertently calculates two coupon amounts. Use check     211407
+      * on DNNX days as first coupon unlikley to be longer than a year.   211407
+     C           DNNX      IFLT 365                                       211407
+     C           ZAC100    MULT FNNX      ZAC100                          CSE035
+     C           ZAC100    DIV  DNNX      ZAC100    H                     CSE035
+     C                     ENDIF                                          211407
+      *                                                                   211407
+      * Restore no of days of accrual to FNNX for reporting               211407
+     C                     Z-ADDFNNX      ZDDAYS                          211407
+      *                                                                   CSE035
+      * Adjust no. of decimal places                                      CSE035
+      *                                                                   CSE035
+     C                     Z-ADDZAC100    ZINPF  158                      CSE035
+     C           ZVSDAT    IFEQ LCDD5                                     CSE035
+     C           ZVEDAT    ANDEQNCDD5                                     CSE035
+     C           DVBS      ANDEQ'5'                                       CSE035
+     C           ZVSDAT    OREQ ZLCDN5                                    CSE035
+     C           ZVEDAT    ANDEQNCD                                       CSE035
+     C           DVBS      ANDNE'5'                                       CSE035
+     C           ZVSDAT    OREQ ITLD                                      CSE035
+     C           ZVEDAT    ANDEQFCPN                                      CSE035
+     C                     Z-ADDZINPF     ZOUTF  158                      CSE035
+     C                     ELSE                                           CSE035
+      *
+      * It is not necessary to call SEADJPRI as the rounding              211407
+      * convention applies to trade input onlt.                           211407
+     C*********************CALL 'SEADJPRI'                         CSE035 211407
+     C*********************PARM *BLANKS   @RTCD   7                CSE035 211407
+     C*********************PARM SESN      @SEKEY 10                CSE035 211407
+     C***********ZINPF*****PARM ZINPF     @INAMT 158               CSE035 211407
+     C***********ZOUTF*****PARM ZOUTF     @OUAMT 158               CSE035 211407
+     C                     Z-ADDZINPF     ZOUTF                           211407
+      *
+     C                     ENDIF                                          CSE035
+     C           NCD       IFGE MATY                                      CSE035
+     C           SYBS      ANDEQ'AU'                                      CSE035
+     C                     Z-ADDZINPF     ZOUTF                           CSE035
+     C                     END                                            CSE035
+      *                                                                   CSE035
+      * Calculate interest                                                CSE035
+      *                                                                   CSE035
+     C           ZAMT      DIV  100       ZWZAMT 152                      CSE035
+     C           ZWZAMT    MULT ZOUTF     ZWACCR 153H                     CSE035
+     C           ZWACCR    MULT POWER8,DC WACCRD    H                     CSE035
+     C                     Z-ADDWACCRD    ZACCRD                          CSE035
+     C           ZWACCR    MULT POWER8,DC WACCXD    H                     CSE035
+     C                     Z-ADDWACCRD    ZACCXD                          CSE035
+     C                     END                                            CSE035
+      *
+     C                     END                                            CSE035
+      *
+     C*
+     C* Set up Pay, Rec, Zero ind
+     C           ZACCRD    IFGT 0
+     C                     MOVE 'R'       ZRP     1
+     C                     ELSE
+     C           ZACCRD    IFLT 0
+     C                     MOVE 'P'       ZRP
+     C                     ELSE
+     C                     MOVE 'X'       ZRP
+     C                     END
+     C                     END
+     C*                                                                   E14496
+     C* RESTORE ORIGINAL START AND END DATES.                             E14496
+     C                     Z-ADDZVSDAT    ZSDATE                          E14496
+     C                     Z-ADDZVEDAT    ZEDATE                          E14496
+     C                     Z-ADDZVECD     ECD                             E14496
+     C*
+     C           EZACCR    ENDSR                           **EZACCR ENDSR**
+     C*
+     C*****************************************************************

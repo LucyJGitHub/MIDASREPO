@@ -1,0 +1,380 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas MM Rollover Deals Maintenance')
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas    MONEY MARKET MODULE                             *
+     A*                                                               *
+     A*     MM5310DF - ROLLOVER DEALS MAINTENANCE                     *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *  Prev Amend No. 124141             Date 20Dec00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 173661             Date 17Aug00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 144199             Date 05Oct98               *
+     A*                    CEU015             Date 19Jun98            *
+     A*                    087656             Date 20Oct95            *
+     A*                    079570             DATE 20DEC94            *
+     A*                    076980             DATE 20DEC94            *
+     A*                    066154             DATE 07FEB94            *
+     A*                    S01434             DATE 22SEP93            *
+     A*                                                               *
+     A*---------------------------------------------------------------*
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  124141 - Correct Help Tag processing for Rate + Spread       *
+      *         - Int. Rate and Spread should not be conditioned      *
+      *           on CEU015 - these fields should be displayed and    *
+      *           amendable for non-Euro rollover also.               *
+      *     173661 - Deals were allowed to be rolledover twice due to *
+      *              ROLBK command clearing the lock status of the    *
+      *              record.                                          *
+     A*     144199 - Include deal ccy as a hidden field on subfile    *
+     A*              selection screen and correct help doc details    *
+     A*              for fields amended/added by CEU015.              *
+     A*     CEU015 - EMU Enhanced MM Deal Rollover                    *
+     A*     087656 - Output 'NO DETAILS TO DISPLAY' if upon selection *
+     A*              by branch, no record was found.                  *
+     A*     079570 - Set on RI for Interest rate error                *
+     A*     076980 - Correction for help text                         *
+     A*     066154 - Subfile should be by branch                      *
+     A*     S01434 - Rollover Upgrade from Rel.3 to Rel.10            *
+     A*---------------------------------------------------------------*
+     A*     CREATION REQUIREMENTS                                     *
+     A*                                                               *
+     A*      RSTDSP(*YES)                                             *
+     A*      SHARE(*YES)                                              *
+     A*                                                               *
+     A*****************************************************************
+     A***********                                    Begin /S01434/
+     A                                      REF(MFRFL)
+     A***********                                    End   /S01434/
+     A                                      VLDCMDKEY(45 'ANY VALID KEY')
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A***********                                    Begin /S01434/
+     A***********                                    End   /S01434/
+     A                                      CF03
+     A**=====================================================================
+     A**
+     A** FORMAT MM5310F1 **
+     A          R MM5310F1                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      OVERLAY
+     A                                      BLINK
+     A*--------------------- Begin 076980 --------------------------------------
+     A*--------------------- End   076980 --------------------------------------
+     A***********                                    Begin /S01434/
+     A***********                       1 10'ROLLOVER DEALS MAINTENANCE'
+     A***********                           DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORK STATION ID')
+     A*********** DDRUNA         7A  O  1 63
+     A***********                       1 72TIME
+     A            WSID      R        O  1  2REFFLD(USER)
+     A                                  1 13'MM5310'
+     A                                  1 27'ROLLOVER DEALS MAINTENANCE'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            BJMRDT    R        O  1 73REFFLD(RUNA)
+     A            USID      R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME EDTWRD('  :  :  ')
+     A***********                                    End   /S01434/
+     A                                  3  3'Action Code'
+     A            DDACTN         1A  B  3 15
+     A                                      DSPATR(HI)
+     A N30N31                               DSPATR(UL)
+     A  30                                  DSPATR(PR)
+     A  31                                  DSPATR(PC RI)
+     A                                  4  3'Deal Number'
+     A            DDDLNO         6A  B  4 15TEXT('DEAL NUMBER')
+     A                                      DSPATR(HI)
+     A N30N32                               DSPATR(UL)
+     A  30                                  DSPATR(PR)
+     A  32                                  DSPATR(PC RI)
+     A***********                                    Begin /S01434/
+     A***********                       4 40'Review From'
+     A**30*******                           DSPATR(ND)
+     A*********** DDPKEY         6A  B  4 52TEXT('REVIEW FROM KEY')
+     A***********                           CHECK(RZ)
+     A***********                           DSPATR(HI UL)
+     A**30*******                           DSPATR(PR ND)
+     A***********                                    End   /S01434/
+     A***********                                    Begin /066154/
+     A                                  4 40'Branch To Be Reviewed'
+     A N10                                  DSPATR(ND)
+     A            DDBRCA         3A  B  4 62TEXT('Review Branch Key')
+     A                                      DSPATR(HI)
+     A N30N33 10                            DSPATR(UL)
+     A N10                                  DSPATR(ND)
+     A N10
+     AO 30 10                               DSPATR(PR)
+     A  33 10                               DSPATR(PC RI)
+     A***********                                    End   /066154/
+     A                                  5  2'                                  -
+     A                                                                         -
+     A                                              '
+     A                                      DSPATR(UL)
+     A***********                                    Begin /S01434/
+     A***********                      23  2'F3-End'
+     A                                 23  2'F3-End'
+     A***********                                    End   /S01434/
+     A**=====================================================================
+     A**
+     A** FORMAT MM5310E2
+     A**
+     A          R MM5310E2                  SFL
+     A                                      SFLMSGRCD(24)
+     A            DDSFKY                    SFLMSGKEY
+     A            DDPGMQ                    SFLPGMQ
+     A**
+     A** FORMAT MM5310F2
+     A**
+     A          R MM5310F2                  SFLCTL(MM5310E2)
+     A                                      SFLSIZ(0024)
+     A                                      SFLPAG(0001)
+     A                                      SFLDSPCTL
+     A                                      SFLDSP
+     A N55                                  SFLEND
+     A                                      SFLINZ
+     A            DDPGMQ                    SFLPGMQ
+     A*
+     A***********                                    Begin /S01434/
+     A*********** DDINFO        76A  O 23  1
+     A***********                                    End   /S01434/
+     A**=====================================================================
+     A** FORMAT MM5310S0 **
+     A          R MM5310S0                  SFL
+     A            DDACTN         1A  B  9  2
+     A                                      DSPATR(HI)
+     A N34                                  DSPATR(UL)
+     A  34                                  DSPATR(PC RI)
+     A                                      AUTO(RA)
+     A            DDSTAT         1A  O  9  4TEXT('STATUS')
+     A                                      DSPATR(BL HI)
+     A            DDDLNO         6A  O  9  9
+     A                                      DSPATR(HI)
+     A            DSDATE         7A  O  9 25
+     A                                      DSPATR(HI)
+     A            DSCUNU         6A  O  9 44
+     A                                      DSPATR(HI)
+     A            DSCUNA        10A  O  9 64
+     A                                      DSPATR(HI)
+     A*                                              Begin /144199/
+     A            DSCCY          3A  H
+     A*                                              End   /144199/
+     A** FORMAT MM5310C0 **
+     A          R MM5310C0                  SFLCTL(MM5310S0)
+     A***********                                    Begin /S01434/
+     A***********                           SFLSIZ(0013)
+     A                                      SFLSIZ(0012)
+     A***********                                    End   /S01434/
+     A                                      SFLPAG(0012)
+     A                                      OVERLAY
+     A                                      BLINK
+     A  50                                  SFLDSP
+     A  51                                  SFLDSPCTL
+     A N50N51                               SFLCLR
+     A  52                                  SFLEND
+     A                                      CA12
+     A N52                                  ROLLUP(25)
+     A N53                                  ROLLDOWN(26)
+     A*--------------------- Begin 076980 --------------------------------------
+     A*--------------------- End   076980 --------------------------------------
+     A***********                                    Begin /S01434/
+     A***********                       1 10'ROLLOVER DEALS MAINTENANCE'
+     A***********                           DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORK STATION ID')
+     A*********** DDRUNA         7A  O  1 63
+     A***********                       1 72TIME
+     A            WSID      R        O  1  2REFFLD(USER)
+     A                                  1 13'MM5310'
+     A                                  1 27'ROLLOVER DEALS MAINTENANCE'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            BJMRDT    R        O  1 73REFFLD(RUNA)
+     A            USID      R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME EDTWRD('  :  :  ')
+     A***********                       4 40'Review From'
+     A*********** DDPKEY         6A  B  4 52TEXT('REVIEW FROM KEY')
+     A***********                           DSPATR(HI UL)
+     A***********                                    End   /S01434/
+     A***********                                    Begin /066154/
+     A                                  4 40'Branch To Be Reviewed'
+     A N10                                  DSPATR(ND)
+     A            DDBRCA         3A  B  4 62TEXT('Review Branch Key')
+     A  10                                  DSPATR(HI)
+     A  10N30N33                            DSPATR(UL)
+     A N10                                  DSPATR(PR ND)
+     A  33 10                               DSPATR(PC RI)
+     A***********                                    End   /066154/
+     A                                  5  2'                                  -
+     A                                                                         -
+     A                                              '
+     A                                      DSPATR(UL)
+     A                                  7  8'Deal Number'
+     A                                  7 24'Maturity Date'
+     A                                  7 41'Customer Number'
+     A                                  7 60'Customer Shortname'
+     A**=====================================================================
+     A** FORMAT MM5310F3 **
+     A          R MM5310F3                  TEXT('CLEAR SCREEN')
+     A                                  1  2' '
+     A**
+     A** FORMAT MM5310F4 **
+     A          R MM5310F4                  TEXT('HEADER FORMAT')
+     A                                      OVERLAY
+     A                                      CA10
+     A                                      CA12
+     A                                      BLINK
+     A***********                                    Begin /S01434/
+     A**Start of change 124141
+     A**End of change 124141
+      *                                              Begin /144199/
+      ***********                                    Begin /CEU015/
+      ***********                                    End   /CEU015/
+     A**Start of change 124141
+     A**End of change 124141
+      *                                              End   /144199/
+     A***********                       1 10'ROLLOVER DEALS MAINTENANCE'
+     A***********                           DSPATR(HI)
+     A*********** WSID          10A  O  1 52TEXT('WORK STATION ID')
+     A*********** DDRUNA         7A  O  1 63
+     A***********                       1 72TIME
+     A            WSID      R        O  1  2REFFLD(USER)
+     A                                  1 13'MM5310'
+     A                                  1 27'ROLLOVER DEALS MAINTENANCE'
+     A                                      DSPATR(HI UL)
+     A                                  1 67'DATE '
+     A            BJMRDT    R        O  1 73REFFLD(RUNA)
+     A            USID      R        O  2  2REFFLD(JOJOB)
+     A                                  2 67'TIME '
+     A                                  2 73TIME EDTWRD('  :  :  ')
+     A***********                                    End   /S01434/
+     A                                  3  3'Action Code'
+     A            DDACTN         1A  B  3 15
+     A                                      DSPATR(HI)
+     A N30N31                               DSPATR(UL)
+     A  30                                  DSPATR(PR)
+     A  31                                  DSPATR(PC RI)
+     A                                  4  3'Deal Number'
+     A            DDDLNO         6A  B  4 15TEXT('DEAL NUMBER')
+     A                                      CHECK(RZ)
+     A                                      DSPATR(HI)
+     A N30N32                               DSPATR(UL)
+     A  30                                  DSPATR(PR)
+     A  32                                  DSPATR(PC RI)
+     A                                  4 30'Customer Shortname '
+     A            DDCUNA        10A  B  4 52TEXT('CUSTOMER SHORTNAME')
+     A                                      DSPATR(HI)
+     A N30N32                               DSPATR(UL)
+     A  30                                  DSPATR(PR)
+     A  32                                  DSPATR(PC RI)
+     A                                  5  2'                                  -
+     A                                                                         -
+     A                                              '
+     A                                      DSPATR(UL)
+     A                                  7  3'New Deal Number '
+     A            DDDLN2         6A  B  7 30TEXT('NEW DEAL NUMBER')
+     A                                      DSPATR(HI)
+     A N35N36                               DSPATR(UL)
+     A  35                                  DSPATR(PR)
+     A  36                                  DSPATR(PC RI)
+     A                                  9  3'Principal '
+     A            DDPRIN        16A  B  9 30TEXT('PRINCIPAL')
+     A                                      DSPATR(HI)
+     A N35N37                               DSPATR(UL)
+     A  35                                  DSPATR(PR)
+     A  37                                  DSPATR(PC RI)
+      *                                              Begin /CEU015/
+     A  43                              9 48'='
+     A                                      DSPATR(HI)
+     A  43        SEAMT         17A  O  9 51TEXT('PRINCIPAL AMT EURO')
+     A                                      DSPATR(HI)
+     A  43                              9 69'Euros'
+     A                                      DSPATR(HI)
+      *                                              End   /CEU015/
+     A                                 11  3'New Maturity Date '
+     A            DDMDAT         6A  B 11 30TEXT('NEW MATURITY DATE')
+     A                                      DSPATR(HI)
+     A N35N38                               DSPATR(UL)
+     A  35                                  DSPATR(PR)
+     A  38                                  DSPATR(PC RI)
+     A***********                                    Begin /S01434/
+     A N60 61                          13  3'Base Rate Code    '
+      *                                              Begin /CEU015/
+     A*N60*61**** DDBSRC         2A  O 13 30TEXT('BASE RATE CODE')
+     A***********                           DSPATR(HI)
+     A*N35*******                           DSPATR(UL)
+     A N60 61     DDBSRC         2A  B 13 30TEXT('BASE RATE CODE')
+     A                                      DSPATR(HI)
+     A N46N63N48                            DSPATR(UL)
+     A  63
+     AO 46                                  DSPATR(PC RI)
+     A**Start of change 124141
+     A  48                                  DSPATR(PR)
+     A*N43******
+     A*O*48*****                            DSPATR(PR)
+     A**End of change 124141
+      *                                              End   /CEU015/
+     A N60 61                          15  3'Spread            '
+      *                                              Begin /CEU015/
+     A*N60*61**** DDSPRD        11A  O 15 30TEXT('SPREAD')
+     A***********                           DSPATR(HI)
+     A*N35*******                           DSPATR(UL)
+     A N60 61     DDSPRD        11A  B 15 30TEXT('SPREAD')
+     A                                      DSPATR(HI)
+     A N47N48                               DSPATR(UL)
+     A  47                                  DSPATR(PC RI)
+     A**Start of change 124141
+     A  48                                  DSPATR(PR)
+     A*N43******
+     A*O*48*****                            DSPATR(PR)
+     A**End of change 124141
+      *                                              End   /CEU015/
+     A  60N61                          13  3'Interest Rate     '
+     A  60N61     DDINTR        11A  B 13 30TEXT('INTEREST RATE')
+     A                                      DSPATR(HI)
+     A N35N63                               DSPATR(UL)
+     A***********                                    Start /079570/
+     A  35                                  DSPATR(PR)
+     A  63                                  DSPATR(PC RI)
+     A***********                                    End   /079570/
+      *                                              Begin /CEU015/
+     A  43                             17  3'Interest Calculation Method'
+     A  43        SICMT          1A  B 17 31TEXT('INTEREST CALCULATION METHOD')
+     A                                      DSPATR(HI)
+     A N44N35                               DSPATR(UL)
+     A  35                                  DSPATR(PR)
+     A  44                                  DSPATR(PC RI)
+      *                                              End   /CEU015/
+     A                                 23  2'F3-End, F12-Prev Screen'
+     A**=====================================================================
+     A** FORMAT MM5310F5 **
+     A          R MM5310F5                  TEXT('FOOTER FORMAT')
+     A                                      OVERLAY
+     A*                                              Begin /087656/
+     A N50N33 51                       22 27'No details to display'
+     A                                      DSPATR(HI)
+     A*                                              End   /087656/
+     A                                 23  2'F3-End, F12-Prev Screen'
+     A*                                              Begin /173661/
+     A  69 75     RDLNO          6A    24 02
+     A  69 75                               DSPATR(BL HI)
+     A  69 75                          24 09'deal no. in used or +
+     A                                       being rolled over by another user.'
+     A  69 75                               DSPATR(BL HI)
+     A*                                              End   /173661/
+     A**=====================================================================
+     A***********                                    End   /S01434/

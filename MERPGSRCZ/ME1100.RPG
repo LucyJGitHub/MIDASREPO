@@ -1,0 +1,1932 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Translate message for funds transfer')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Message Management Module                            *
+     F*                                                               *
+     F*  ME1100 - Translate Message For Funds Transfer                *
+     F*                                                               *
+     F*  Function:  This program extracts the required fields from    *
+     F*  the Network message files and prepares them ready for placing*
+     F*  in the relevant input fields.                                *
+     F*                                                               *
+     F*  Called By: FT0040  - Outgoing Payments Maintenance           *
+     F*             FT0050  - Incomimg Payments Maintenance           *
+     F*             FT0300  - Midas FT Auto Generation                *
+     F*             FT101HRTV  - Midas FT RFT Header Retrieve (API)   *
+     F*             FT101CRTV  - Midas FT RFT Detail Retrieve (API)   *
+     F*             FT102HRTV  - Midas FT CCT Header Retrieve (API)   *
+     F*             FT102CRTV  - Midas FT CCT Detail Retrieve (API)   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 BUG24998           Date 17Jul09               *
+      *                 BUG24802           Date 08Jul09               *
+      *                 CSW209             Date 01Apr09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+     F*                 172911             Date 02Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CFT014             Date 25May00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 175479             Date 14May00               *
+      *                 178181             Date 27Apr00               *
+     F*                 CFT006             DATE 02NOV99               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+     F*                 CGL009             DATE 08JUL99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 145199             DATE 16OCT98               *
+     F*                 CRT002             Date  1DEC95               *
+     F*                 069250             Date 03MAY94               *
+     F*                 HUB001             DATE 18NOV93               *
+     F*                 S01435             DATE 23JUL93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature                            *
+      *  BUG24998 - Bank operation code is missing (Recompile)        *
+      *  BUG24802 - Sending institution in STP is missing             *
+      *  CSW209 - SWIFT 2009 Changes                                  *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  172911 - Amount of incoming SWIFT messages are truncated.   *
+      *  CFT014 - Straight-through processing Phase 2 MT103           *
+      *           Messages Generation for FT.                         *
+     F*  175479 - FONTIS: deal reference field                        *
+     F*  178181 - Sender's mapping is incorrect for MT101             *
+     F*  CFT006 - MT101/2 message addtion for outgoing/incoming RFT   *
+     F*  CGL009 - Midas IAT/TPP FONTIS interface                      *
+     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+     F*           in Year 2000 fix 124673.                            *
+     F*  CRT002 - Retail Branch Access.                               *
+     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+     F*  HUB001 - Incoming BOJ Message Management                     *
+     F*  S01435 - Incoming Message Management                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  11    Record Identifier for MEINDTS2                         *
+     F*  12    Record Identifier for MEINDTS2                         *
+     F*  50    First cycle completed                                  *
+     F*  60    EOF on MEINDTS2                                        *
+     F*  61    EOF on MEINFML1                                        *
+     F*  63    Match found on table LOKUP                             *
+     F*  90    Chain fail                                             *
+     F*  99    EOF on Read                                            *
+     F*                                                               *
+     F*  U7/U8 Error Ocurred                                          *
+     F*  LR    End program                                            *
+     F*                                                               *
+     F*****************************************************************
+     FMEINCRL1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Incoming Message Control
+      *
+     FMEINMPL1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Incoming Message Part Details
+      *
+     FMEINDTS2IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Incoming Message Detail - multiple formats
+      *
+     FMEINFML1IF  E           K        DISK         KINFSR SRFILE     UC
+      *
+      *  Incoming Message Translation File
+      *
+     FSDMTAGL0IF  E           K        DISK         KINFSR SRFILE     UC  CRT002
+      *                                                                   CRT002
+      *  Message tag                                                      CRT002
+      *                                                                   CRT002
+     F/COPY WNCPYSRC,ME1100DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     F/EJECT
+     E                    CPY@    1   1 80
+      *
+      *  Copyright table
+      *
+     E/COPY MECPYSRC,SRERRE
+      *
+      *  End of Copysource for error processing
+      *
+     E                    LIN         6 35
+      *  Special case for :72: in FONTIS                                  CGL009
+     E********************L72       240  1                          CGL009175479
+     E                    L72       250  1                                175479
+      *
+      *  Multiple message line details
+      *
+     E                    IN          6 35
+     E                    OUT         6 35
+      *  Special case for :72: in FONTIS                                  CGL009
+     E********************IN72      240  1                          CGL009175479
+     E********************OT72      240  1                          CGL009175479
+     E                    IN72      250  1                                175479
+     E                    OT72      250  1                                175479
+      *
+      *  Line arrays to fill parameter data structures
+      *
+     E********************TFLD    1  15 10   TPRM    4                    CRT002
+     E********************TFLD    1  18 10   TPRM    4              CRT002CFT006
+     E/COPY WNCPYSRC,ME1100E001
+     E***********         TFLD    1  52 10   TPRM    5             CFT006 CFT014
+     E**********          TFLD    1  55 10   TPRM    5                                 CFT014 CSW209
+     E**********          TFLD    1  68 10   TPRM    5                                 CSW209 CER030
+     E                    TFLD    1  69 10   TPRM    5                                        CER030
+      *
+      *  Field / Parameter Data Structure relationship
+      *
+     E                    TVAA       16  1                                172911
+      *  Array to format amount to prevent the last digit of the amount   172911
+      *  from being truncated.                                            172911
+      *                                                                   172911
+     E/COPY WNCPYSRC,ME1100DEPG
+      *
+      *  /Copy point for Arrays
+      *
+      ** Array of Commitment Job Names                                                        CSC022
+     E                    CMTJOB     10 10                                                    CSC022
+     E/EJECT
+      *
+      * Allocate record identification indicator to each format
+      * of Incoming Message Detail multiple format file.
+      *
+      * Rename fields on second format to the same as the first format.
+      *
+     I@INDTS2     11
+      *
+     I@IN35S2     12
+     I              DSMSGR                          DTMSGR
+     I              DSSEQN                          DTSEQN
+     I              DSMTG                           DTMTG
+     I              DSPART                          DTPART
+     I              DSFPID                          DTFPID
+     I              DSMSEQ                          DTMSEQ                                    CSW209
+      *
+     I/COPY WNCPYSRC,ME1100DIPG
+      *
+      *  /Copy point for Input Specs
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+     I/COPY MECPYSRC,SRERRI
+      *
+      *  End of Program Error Processing copysource member
+      *
+      *
+      *                  ****************************
+      *
+     IPTAG        DS
+      *
+      *  Re-define Incoming Message Tag field
+      *
+     I                                        1   5 DTMTG
+     I                                        1   3 P1MTG
+     I                                        1   2 P2MTG
+      *
+     I/COPY MECPYSRC,SME1100P
+     IDSIN        DS
+      *
+      *  'IN' data structure for tag details - used in formatting
+      *
+      *  General fields
+     I                                        1   5 INTAG
+     I                                        6   6 INTYPE
+     I**********                              7  24 INCODE                                    CGL029
+     I                                        7  30 INCODE                                    CGL029
+      *
+      *  Multiple lines
+      *
+     I**********                             25 234 IN                                        CGL029
+     I                                       31 240 IN                                        CGL029
+     IDSIN72      DS                                                      CGL009
+      *                                                                   CGL009
+      *  'IN' data structure for tag 72 for FONTIS                        CGL009
+      *                                                                   CGL009
+      *  General fields                                                   CGL009
+     I                                        1   5 I72TAG                CGL009
+     I                                        6   6 I72TYP                CGL009
+      *                                                                   CGL009
+      *  Multiple lines                                                   CGL009
+      *                                                                   CGL009
+     I****************************************7 246 IN72            CGL009175479
+     I                                        7 256 IN72                  175479
+      *
+     IDSOUT       DS
+      *
+      *  'OT' data structure for tag details - used in formatting         CFT006
+      *
+      *  General fields
+     I                                        1   5 OTTAG
+     I                                        6   6 OTTYPE
+     I**********                              7  24 OTCODE                                    CGL029
+     I                                        7  30 OTCODE                                    CGL029
+      *
+      *  Multiple lines
+      *
+     I**********                             25 234 OUT                                       CGL029
+     I                                       31 240 OUT                                       CGL029
+      *
+     IDSOT72      DS                                                      CGL009
+      *                                                                   CGL009
+      *  'OT' data structure for tag 72 for FONTIS                        CGL009
+      *                                                                   CGL009
+      *  General fields                                                   CGL009
+     I                                        1   5 O72TAG                CGL009
+     I                                        6   6 O72TYP                CGL009
+      *                                                                   CGL009
+      *  Multiple lines                                                   CGL009
+      *                                                                   CGL009
+     I****************************************7 246 OT72            CGL009175479
+     I                                        7 256 OT72                  175479
+      *
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30CMTNUM                                    CSC022
+     I                                        4 103 CMTARR                                    CSC022
+      *                                                                                       CER030
+      ** Short Data Structure                                                                 CER030
+      *                                                                                       CER030
+     IDSFDY     E DSDSFDY                                                                     CER030
+      *                                                                                       CER030
+      ** External SAR Details                                                                 CER030
+      *                                                                                       CER030
+     ISCSARD    E DSSCSARDPD                                                                  CER030
+      *                                                                                       CER030
+     I/EJECT
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0ACT   8        Action
+     C                     PARM           PHEAD            General Details
+     C                     PARM           PDATA            Message Details
+     C                     PARM           PDAT2                                               CSW209
+     C                     PARM           W0RTN   7        Return Code
+     C/COPY WNCPYSRC,ME1100C013
+      *
+      *  Set up primary reference
+      *
+     C                     MOVELPHEAD     W0PREF
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+      *  Determine the mode of processing and execute subroutine :-
+      *
+      *
+      *  Action Code : *TRANS
+      *  --------------------
+      *
+      *  Called from FT0050/40 to translate the data of the message.
+      *
+      *
+      *  If invalid Action Code passed then report as an error.
+      *
+     C           W0ACT     CASEQ'*TRANS  'SRPROC
+     C                     CAS            SRACT
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      *  Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPROC   : Controlling Subroutine For Translation Process    *
+      *                                                               *
+      *  CALLED BY: Main processing section                           *
+      *                                                               *
+      *  CALLS    : SRPFIL  - Access Detail files for tag nos.        *
+      *             SRERR   - Error Processing                 .      *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPROC    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPROC'  @STK,Q
+      *
+      *  Clear parameter data structure to hold message details
+     C/COPY WNCPYSRC,ME1100C012
+      *
+     C                     CLEARPDATA
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     CLEARPDAT2                                                         CSW209
+     C                     ENDIF                                                              CSW209
+     C/COPY WNCPYSRC,ME1100C010
+      *
+      *          **************************************
+      *
+      *  Access Incoming Message Control File
+      *
+     C           PHMSGR    CHAINMEINCRL1             90
+      *
+      *  If record not found - database error
+      *
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'MEINCRL1'W0FILE           ***************
+     C                     MOVELPHMSGR    W0KEY            * DB ERROR 01 *
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+     C/COPY WNCPYSRC,ME1100C001
+      *
+      *  Move Control fields into parameter data structure
+      *
+     C                     MOVELCRSNDR    PSNDR            Sender
+     C                     MOVELCRMTPY    PMTPY            Msg Type
+     C                     MOVELCRMPRY    PMPRY            Msg Priority
+     C                     MOVELCRBRCA    PBRCA            Branch
+     C                     MOVELCRNWRK    PNWRK            Network
+      *
+     C                     MOVELCRMIR     PHMIR
+     C                     MOVELCRMOR     PHMOR
+     C/COPY WNCPYSRC,ME1100C009
+      *
+      *  Extract Sender Address information and place in data structure
+      *
+     C                     MOVEL*BLANKS   SVTAG
+     C                     MOVEL'SNDR'    SVTAG
+     C                     MOVEL*BLANKS   TRTAG
+     C                     MOVEL'SNDR'    TRTAG
+     C                     MOVELCRSNDR    TMLIN
+     C                     Z-ADD1         L
+     C                     Z-ADD1         B       30                      CGL009
+      * SENDER is not a SWIFT TAG. In this case the call of S/R           178181
+      * is not made after having found a record in MEINDTS2               178181
+      * (like in SRPFIL).                                                 178181
+      * In MT100 all the mapping is done with variable PXX                178181
+      * therefore we need to execute SRMAP with KFPART > 0.               178181
+      * In MT101 or MT102 mapping can group variables as PHXX             178181
+      * or PXX. SRMAP will map the SWIFT TAG to PHXX if KFPART = 0        178181
+      * otherwise it will map the tag to PXX.                             178181
+      * For MT101 MT102 we assume the SENDER is likely to be mapped       178181
+      * on the header screen, like all the tags of sequence A.            178181
+      * Therefore we call SRMAP with KFPART = 0.                          178181
+     C           CRMTPY    IFNE '101'                                     178181
+     C********** CRMTPY    ANDNE'102'                                                178181 BUG24802
+     C                     Z-ADD*HIVAL    KFPART                          CFT006
+     C                     ELSE                                           178181
+     C                     Z-ADD0         KFPART                          178181
+     C                     ENDIF                                          178181
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVEL*BLANKS   SVMSEQ                                              CSW209
+     C                     MOVEL*BLANKS   KFMSEQ                                              CSW209
+     C                     MOVEL*BLANKS   KFMSQN                                              CSW209
+     C                     ENDIF                                                              CSW209
+     C                     EXSR SRMAP
+      *
+      *          **************************************
+      *
+      *  Access Incoming Message Detail file.
+      *
+      *  Initially get the details for the Part 0 record as this holds
+      *  tag data common to all other part nos. The trailer tags also
+      *  are in part 0 but these are not accessed as they occur after
+      *  all the tag details.
+      *
+      *  Then get all message details for the Part No. that was passed
+      *  as a parameter.
+      *
+      *  For each part there will be several tags, for some of the tags
+      *  there will be either one or multiple lines. All details for a
+      *  tag are extracted and stored in the relevant format of the
+      *  DSTRAN data structure.
+      *
+      *  Clear work fields
+      *
+     C                     MOVEL*BLANKS   SVTAG            Tag No.
+      *
+      *  Set up key for Part 0
+      *
+     C                     Z-ADDPHMSGR    KFMSGR           Msg Ref.
+     C                     Z-ADD0         KFPART           Part No.
+     C                     MOVEL*BLANKS   KFTAG            Tag No.
+     C                     Z-ADD0         KFSEQ            Sequence No.
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVEL*BLANKS   KFMSQN                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *
+      *  Extract details from file
+      *
+     C                     EXSR SRPFIL
+      *                                                                         CFT006
+      *  If it was asked to extract tags belonging to part 0                    CFT006
+      *  we don't need to make it twice                                         CFT006
+      *                                                                         CFT006
+     C           PHPART    IFEQ 0                                               CFT006
+     C                     MOVEL'MIN0096' W0RTN                                 CFT006
+     C                     GOTO EXPROC                                          CFT006
+     C                     ENDIF                                                CFT006
+      *
+      *  Set up key for Message Part selected by User
+      *
+     C                     Z-ADDPHPART    KFPART           Part No.
+     C                     MOVEL*BLANKS   KFTAG            Tag No.
+     C                     Z-ADD0         KFSEQ            Sequence No.
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVEL*BLANKS   SVMSEQ                                              CSW209
+     C                     MOVEL*BLANKS   KFMSEQ                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *
+      *  Extract details from file
+      *
+     C                     EXSR SRPFIL
+      *
+      *  /Copy point for analysis/decode
+      *
+     C/COPY WNCPYSRC,ME1100DDC1
+      *
+      * Return to calling program for further processing based on the
+      * value of the return code.
+      *
+     C                     MOVEL'MIN0096' W0RTN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPROC    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPFIL   : Read files for Part Nos Tags                      *
+      *                                                               *
+      *  CALLED BY: SRPROC  - Controlling Sub routine for Translation *
+      *                                                               *
+      *  CALLS    : SRDETL  - Extract each tag's detail lines         *
+      *             SRMAP   - Map Message Details to Parameters       *
+      *                                                               *
+      *****************************************************************
+     CSR         SRPFIL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRPFIL'  @STK,Q
+      *
+      *  Access Incoming Message Detail file for the part no.
+      *
+      *  For each part there will be several tags, for some of the tags
+      *  there will be either one or multiple lines. All details for a
+      *  tag are extracted and stored in the relevant format of the
+      *  DSTRAN data structure.
+      *
+      *  When the tag data is fully extracted then the data must be
+      *  placed in the correct tag parameter data structure. The data
+      *  structure is determined by accessing the Translation File
+      *  using the tag no.
+      *
+      *  If a record is found it gives the FT field name into which the
+      *  data will finally be placed (a function of the calling pgm).
+      *
+      *  This program hard codes the relationship bewteen the FT field
+      *  and the tag parameter data structures by means of a table.
+      *
+      *  Set limits and read first record for the Message Ref/Part
+      *
+     C                     MOVE '0'       *IN11                           CRT002
+     C                     MOVE '0'       *IN12                           CRT002
+     C           KYINDT    SETLLMEINDTS2
+     C                     READ MEINDTS2                 60
+      *
+     C  N60      DTMSGR    IFNE KFMSGR
+     C           DTPART    ORNE KFPART
+     C                     MOVE '1'       *IN60
+     C                     END
+      *
+      * Read until end of part no.
+      *
+     C           *IN60     DOWEQ'0'
+      *
+      * If a new Tag no. is read then map the previous tag's data into
+      * the relevant tag parameter data structure. Save the new tag no.
+      * and initialise fields. (Do not do for first tag in pgm).
+      *
+     C           SVTAG     IFNE DTMTG
+     C           SVTAG     ANDNE*BLANKS
+     C           SVMSEQ    ORNE DTMSEQ                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     EXSR SRMAP
+     C                     END
+      *
+     C                     MOVELDTMTG     SVTAG
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVELDTMSEQ    SVMSEQ                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                   CGL009
+     C                     SELEC                                          CGL009
+      * FONTIS network                                                    CGL009
+      * --------------                                                    CGL009
+     C           PNWRK     WHEQ 'FONTIS'                                  CGL009
+      *                                                                   CGL009
+     C                     SELEC                                          CGL009
+      *                                                                   CGL009
+      * In FONTIS tag :72: has a different structure                      CGL009
+      * Move the line details of the tag into the relevant format of      CGL009
+      * the DSFONT data structure                                         CGL009
+      *                                                                   CGL009
+     C           SVTAG     WHEQ ':72:'                                    CGL009
+     C                     EXSR SRDE72                                    CGL009
+      *                                                                   CGL009
+      * Other tags in FONTIS                                              CGL009
+      * Move the line details of the tag into the relevant format of      CGL009
+      * the DSTRAN data structure                                         CGL009
+      *                                                                   CGL009
+     C                     OTHER                                          CGL009
+     C                     EXSR SRDETL                                    CGL009
+      *                                                                   CGL009
+     C                     ENDSL                                          CGL009
+      *                                                                   CGL009
+      * Other Networks                                                    CGL009
+      * --------------                                                    CGL009
+     C                     OTHER                                          CGL009
+      *
+      * Move the line details of the tag into the relevant format of
+      * the DSTRAN data structure
+      *
+     C                     EXSR SRDETL
+      *                                                                   CGL009
+     C                     ENDSL                                          CGL009
+      *
+      * Check if another record to be read for the Part No.
+      *
+     C                     MOVE '0'       *IN11                           CRT002
+     C                     MOVE '0'       *IN12                           CRT002
+     C                     READ MEINDTS2                 60
+      *
+     C  N60      DTMSGR    IFNE KFMSGR
+     C           DTPART    ORNE KFPART
+     C                     MOVE '1'       *IN60
+     C                     END
+      *
+     C                     ENDDO
+      *
+      * Map last Tag no. for the Part No.
+      *
+     C           SVTAG     IFNE *BLANKS
+     C                     EXSR SRMAP
+     C                     END
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXPFIL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRDETL   : Extract each tag's detail lines                   *
+      *                                                               *
+      *  CALLED BY: SRPFIL - Read Files for Part Nos/Tags             *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRDETL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRDETL'  @STK,Q
+      *
+      *  Determine which record format is being used
+      *
+     C                     MOVEL*BLANKS   WKDATA
+     C   11                MOVELDTMFLD    WKDATA
+     C   12                MOVELDSMF35    WKDATA
+      *
+      *  Move in general fields to the data structure
+      *
+     C                     MOVELSVTAG     TRTAG
+     C                     MOVEL*BLANKS   TRCODE
+      *
+      *  Map message data into the DSTRAN data structure.
+      *  (DSTRAN allows for 3 different formats. They are defined in)
+      *  (this program but are really only relevant for subsequent  )
+      *  (processing.                                               )
+      *
+      *  Increment line count of tag (important for multiple line msgs)
+      *
+      *  Fill next available line.
+      *
+      *  Move the line array into the data structure field.
+      *  It is done for each line because it is the least complicated
+      *  way of coding and most will not have all 6 lines.
+      *
+      *  Only the first 35 are used as ISO formats are only supported
+      *  by FT
+      *
+      *
+      * If more than 6 lines stored in the array, just ignore the
+      * remaining lines.  Since it will be mapped to the FT transaction
+      * input screen.
+      *
+     C           L         IFLT 6
+     C                     ADD  1         L       20
+     C                     MOVELWKDATA    LIN,L
+     C                     END
+      *
+     C                     MOVEALIN       TMLIN
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXDETL    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT                                                              CGL009
+      *****************************************************************   CGL009
+      *                                                               *   CGL009
+      *  SRDE72   : Extract tag :72:                                  *   CGL009
+      *                                                               *   CGL009
+      *  CALLED BY: SRPFIL - Read Files for Part Nos/Tags             *   CGL009
+      *                                                               *   CGL009
+      *  CALLS    :        -                                          *   CGL009
+      *                                                               *   CGL009
+      *****************************************************************   CGL009
+     CSR         SRDE72    BEGSR                                          CGL009
+      *                                                                   CGL009
+      *  Set up subroutine stack name                                     CGL009
+      *                                                                   CGL009
+     C                     ADD  1         Q                               CGL009
+     C                     MOVEL'SRDE72'  @STK,Q                          CGL009
+      *                                                                   CGL009
+      *  Determine which record format is being used                      CGL009
+      *                                                                   CGL009
+     C                     MOVEL*BLANKS   WKDATA                          CGL009
+     C   11                MOVELDTMFLD    WKDATA                          CGL009
+     C   12                MOVELDSMF35    WKDATA                          CGL009
+      *                                                                   CGL009
+      *  Move in general fields to the data structure                     CGL009
+      *                                                                   CGL009
+     C                     MOVELSVTAG     FNTAG                           CGL009
+      *                                                                   CGL009
+      *  Map message data into the DSFONT data structure.                 CGL009
+      *  (DSFONT allows for different formats.                            CGL009
+      *                                                                   CGL009
+      *  Increment line count of tag (important for multiple line msgs)   CGL009
+      *                                                                   CGL009
+      *  Fill next available line.                                        CGL009
+      *                                                                   CGL009
+      *  Move the line array into the data structure field.               CGL009
+      *  It is done for each line because it is the least complicated     CGL009
+      *  way of coding and most will not have all 6 lines.                CGL009
+      *                                                                   CGL009
+      *  In FONTIS the first line of tag :72: can exceed 35 chars (it     CGL009
+      ***can*be*65*chars*indeed)*********                           CGL009175479
+      *  can be 100 chars indeed)                                         175479
+      *                                                                   CGL009
+      *                                                                   CGL009
+      * If more than 6 lines stored in the array, just ignore the         CGL009
+      * remaining lines.  Since it will be mapped to the FT transaction   CGL009
+      * input screen.                                                     CGL009
+      *                                                                   CGL009
+     C           L         IFLT 6                                         CGL009
+     C                     ADD  1         L       20                      CGL009
+     C                     MOVEAWKDATA    L72,B                           CGL009
+      **First*line*of*:72:**has*a*length*65                         CGL009175479
+      * First line of :72:  has a length 100                              175479
+     C           L         IFEQ 1                                         CGL009
+     C*********************ADD  65        B                         CGL009175479
+     C                     ADD  100       B                               175479
+     C                     ELSE                                           CGL009
+     C                     ADD  35        B                               CGL009
+     C                     END                                            CGL009
+     C                     END                                            CGL009
+      *                                                                   CGL009
+     C                     MOVEAL72       FONT72                          CGL009
+      *                                                                   CGL009
+      *  Unwind subroutine stack name                                     CGL009
+      *                                                                   CGL009
+     C           EXDE72    TAG                                            CGL009
+     C                     MOVEA*BLANKS   @STK,Q                          CGL009
+     C                     SUB  1         Q                               CGL009
+      *                                                                   CGL009
+     CSR                   ENDSR                                          CGL009
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRMAP    : Map Extracted Message Details to Parameters       *
+      *                                                               *
+      *  CALLED BY: SRPFIL - Read Files for Part Nos/Tags             *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRMAP     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRMAP '  @STK,Q
+      *
+      * Get the Translation information - there may be multiple FT
+      * fields related to the tag no.
+      *
+     C                     MOVELCRNWRK    KFNWRK
+     C                     MOVELCRMTPY    KFMTPY
+     C                     MOVELSVTAG     KFMTAG
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C                     MOVELSVMSEQ    KFMSQN                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *
+     C           KYINFM    SETLLMEINFML1
+     C           KYINFM    READEMEINFML1                 61
+      *                                                                                       CSW209
+     C           CSW209    IFEQ 'Y'                                                           CSW209
+     C           *IN61     IFEQ '1'                                                           CSW209
+     C           KFMSQN    ANDEQ'A'                                                           CSW209
+     C                     MOVEL*BLANKS   KFMSQN                                              CSW209
+     C           KYINFM    SETLLMEINFML1                                                      CSW209
+     C           KYINFM    READEMEINFML1                 61                                   CSW209
+     C                     ENDIF                                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *
+      * Read until end of tag no.
+      *
+     C           *IN61     DOWEQ'0'
+      *
+      * Use the tag no's related field name to determine which
+      * part of the parameter data structure is to be updated.
+      *
+     C                     Z-ADD1         F       30
+     C           FMFTFD    LOKUPTFLD,F                   63
+      *                                                                                       CSW209
+     C           CSW209    IFEQ 'N'                                                           CSW209
+     C           *IN63     ANDEQ'1'                                                           CSW209
+     C           F         IFGE 61                                                            CSW209
+     C           F         ANDLE68                                                            CSW209
+     C                     MOVEL'0'       *IN63                                               CSW209
+     C                     ENDIF                                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *                                                                                       CER030
+     C           CER031    IFEQ 'N'                                                           CER030
+     C           F         ANDEQ69                                                            CER030
+     C                     MOVE *OFF      *IN63                                               CER030
+     C                     ENDIF                                                              CER030
+      *
+      * Only process if the field was found in the table
+      *
+     C           *IN63     IFEQ '1'
+     C*********************MOVELTPRM,F    PRMDS   4                              CFT006
+     C                     MOVELTPRM,F    PRMDS   5                              CFT006
+      *
+      * Extraction of tags belonging to  part 0 (or sequence A or C)      CFT006
+      * of a message                                                      CFT006
+     C           KFPART    IFEQ 0                                         CFT006
+      *                                                                   CFT006
+     C                     SELEC                                          CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH21R'                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH21R     DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH21R                           CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH51A'                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH51A     DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH51A                           CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH30'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH30      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH30                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH25 '                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH25      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH25                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH23 '                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH23      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH23                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH26T'                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH26T     DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH26T                           CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH77B'                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH77B     DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH77B                           CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH19 '                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH19      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH19                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH20 '                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH20      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH20                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH71G'                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH71G     DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH71G                           CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH71F'                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH71F     DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH71F                           CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH36 '                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH36      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH36                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH72 '                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH72      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH72                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH71'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH71      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH71                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH53'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH53      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH53                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH54'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH54      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH54                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH52'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH52      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH52                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH50'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH50      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH50                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'PH32A'                                   CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELPH32A     DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     PH32A                           CFT006
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'P103'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELP103      DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     P103                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'P108'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELWKDATA    P108                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'P113'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELWKDATA    P113                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'P115'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELWKDATA    P115                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'P119'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELWKDATA    P119                                                CSW209
+      *                                                                   CFT006
+     C                     ENDSL                                          CFT006
+      *                                                                   CFT006
+     C                     ELSE                                           CFT006
+      * Extraction of tags belonging to  part 1, ..., n of a message      CFT006
+      *                                                                   CFT006
+     C                     SELEC
+      *
+      *  Fill value date/Currency/Amount Details using information
+      *  from either the Part No. record, or, if values do not exist
+      *  use the data from the Control file
+      *
+     C           PRMDS     WHEQ 'PDCA'
+      *
+     C           KYINMP    CHAINMEINMPL1             90
+      *
+     C           MPSVDT    IFNE *BLANKS
+     C                     MOVELMPSVDT    TVVDAT
+     C                     ELSE
+     C                     MOVELCRSVDT    TVVDAT
+     C                     END
+      *
+     C           MPCYCD    IFNE *BLANKS
+     C                     MOVELMPCYCD    TVCCY
+     C                     ELSE
+     C                     MOVELCRCYCD    TVCCY
+     C                     END
+      *
+     C           MPAMTS    IFNE *BLANKS
+     C**********           MOVELMPAMTS    TVAMT                           172911
+     C                     MOVELMPAMTS    TVAMT1 16                       172911
+     C                     ELSE
+     C**********           MOVELCRAMTS    TVAMT                           172911
+     C                     MOVELCRAMTS    TVAMT1 16                       172911
+     C                     END
+     C*                                                                   172911
+     C                     MOVEATVAMT1    TVAA                            172911
+     C           TVAA,1    IFEQ '0'                                       172911
+     C           TVAA,2    ANDNE','                                       172911
+     C                     MOVE TVAMT1    TVAMT                           172911
+     C                     ELSE                                           172911
+     C                     MOVELTVAMT1    TVAMT                           172911
+     C                     END                                            172911
+     C/COPY WNCPYSRC,ME1100C003
+      *
+     C                     MOVELDSTRAN    PDCA
+      *
+     C           PRMDS     WHEQ 'P20 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP20       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P20
+      *
+     C           PRMDS     WHEQ 'P21 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP21       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P21
+      *
+     C           PRMDS     WHEQ 'P50 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP50       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P50
+      *
+     C           PRMDS     WHEQ 'P52 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP52       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P52
+      *
+     C           PRMDS     WHEQ 'P53 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP53       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P53
+      *
+     C           PRMDS     WHEQ 'P54 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP54       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P54
+      *                                                                   CFT014
+     C           PRMDS     WHEQ 'P55 '                                    CFT014
+     C                     MOVELDSTRAN    DSIN                            CFT014
+     C                     MOVEL*BLANK    DSOUT                           CFT014
+     C                     MOVELP55       DSOUT                           CFT014
+     C                     EXSR SRFILL                                    CFT014
+     C                     MOVELDSOUT     P55                             CFT014
+      *
+     C           PRMDS     WHEQ 'P56 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP56       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P56
+      *
+     C           PRMDS     WHEQ 'P57 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP57       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P57
+      *
+     C           PRMDS     WHEQ 'P58 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP58       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P58
+      *
+     C           PRMDS     WHEQ 'P59 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP59       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P59
+      *
+     C           PRMDS     WHEQ 'P70 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP70       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P70
+      *                                                                                       CER030
+     C           PRMDS     WHEQ 'PEXN'                                                        CER030
+      *                                                                                       CER030
+     C           CER031    IFEQ 'Y'                                                           CER030
+     C                     MOVELDSTRAN    DSIN                                                CER030
+     C                     MOVEL*BLANKS   DSOUT                                               CER030
+     C                     MOVELPEXN      DSOUT                                               CER030
+     C                     MOVEL'PEXN'    OTTAG                                               CER030
+     C                     EXSR SRFILL                                                        CER030
+     C                     MOVELDSOUT     PEXN                                                CER030
+     C                     ENDIF                                                              CER030
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P26T'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP26T      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P26T                            CFT006
+      *
+     C           PRMDS     WHEQ 'P71 '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP71       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P71
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P50L'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP50L      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P50L                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P21F'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP21F      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P21F                            CFT006
+      *                                                                   CFT014
+     C           PRMDS     WHEQ 'P23B'                                    CFT014
+     C                     MOVELDSTRAN    DSIN                            CFT014
+     C                     MOVEL*BLANK    DSOUT                           CFT014
+     C                     MOVELP23B      DSOUT                           CFT014
+     C                     EXSR SRFILL                                    CFT014
+     C                     MOVELDSOUT     P23B                            CFT014
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P23E'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP23E      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P23E                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P77B'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP77B      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P77B                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P33B'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP33B      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P33B                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P25A'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP25A      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P25A                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P36 '                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP36       DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P36                             CFT006
+      *                                                                   CFT014
+     C           PRMDS     WHEQ 'P71FX'                                   CFT014
+     C                     MOVELDSTRAN    DSIN                            CFT014
+     C                     MOVEL*BLANK    DSOUT                           CFT014
+     C                     MOVELP71FX     DSOUT                           CFT014
+     C                     EXSR SRFILL                                    CFT014
+     C                     MOVELDSOUT     P71FX                           CFT014
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P71F'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP71F      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P71F                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P71G'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP71G      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P71G                            CFT006
+      *                                                                   CFT006
+     C           PRMDS     WHEQ 'P32B'                                    CFT006
+     C                     MOVELDSTRAN    DSIN                            CFT006
+     C                     MOVEL*BLANK    DSOUT                           CFT006
+     C                     MOVELP32B      DSOUT                           CFT006
+     C                     EXSR SRFILL                                    CFT006
+     C                     MOVELDSOUT     P32B                            CFT006
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'PB50'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELPB50      DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     PB50                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'PB52'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELPB52      DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     PB52                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'PB56'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELPB56      DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     PB56                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'PB57'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELPB57      DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     PB57                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'PB59'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELPB59      DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     PB59                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'PB70'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELPB70      DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     PB70                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'PB72'                                                        CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELPB72      DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     PB72                                                CSW209
+      *                                                                                       CSW209
+     C           PRMDS     WHEQ 'PB33B'                                                       CSW209
+     C           CSW209    ANDEQ'Y'                                                           CSW209
+     C                     MOVELDSTRAN    DSIN                                                CSW209
+     C                     MOVEL*BLANK    DSOUT                                               CSW209
+     C                     MOVELPB33B     DSOUT                                               CSW209
+     C                     EXSR SRFILL                                                        CSW209
+     C                     MOVELDSOUT     PB33B                                               CSW209
+      *
+     C           PRMDS     WHEQ 'P72 '
+     C                     SELEC                                          CGL009
+      * FONTIS network                                                    CGL009
+      * --------------                                                    CGL009
+     C           PNWRK     WHEQ 'FONTIS'                                  CGL009
+      ** DSTRAN and DSFONT have not the same structure (translation       CGL009
+      ** field is missing), therefore we move the fields individually     CGL009
+     C           DSTRAN    IFNE *BLANK                                    CGL009
+     C                     MOVELTRTAG     FNTAG                           CGL009
+     C                     MOVELTRTYPE    FNTYPE                          CGL009
+     C                     MOVELTMLIN1    FN72L1                          CGL009
+     C                     MOVELTMLIN2    FN72L2                          CGL009
+     C                     MOVELTMLIN3    FN72L3                          CGL009
+     C                     MOVELTMLIN4    FN72L4                          CGL009
+     C                     MOVELTMLIN5    FN72L5                          CGL009
+     C                     MOVELTMLIN6    FN72L6                          CGL009
+     C                     ENDIF                                          CGL009
+     C                     MOVELDSFONT    DSIN72                          CGL009
+     C                     MOVELP72       DSOT72                          CGL009
+     C                     EXSR SRFI72                                    CGL009
+     C                     MOVELDSOT72    P72                             CGL009
+      * Other networks                                                    CGL009
+      * --------------                                                    CGL009
+     C                     OTHER                                          CGL009
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELP72       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     P72
+     C                     ENDSL                                          CGL009
+      *
+     C           PRMDS     WHEQ 'PSN '
+     C                     MOVELDSTRAN    DSIN
+     C                     MOVELPSN       DSOUT
+     C                     EXSR SRFILL
+     C                     MOVELDSOUT     PSN
+      *
+      **  Fill date/currency/amount from the data itself                  CRT002
+      *                                                                   CRT002
+     C           PRMDS     WHEQ 'SDCA'                                    CRT002
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CDATE'                                   CRT002
+      *                                                                   CRT002
+      **  Extract the value date from CDATE tag and place in SDCA         CRT002
+      *                                                                   CRT002
+     C                     MOVELSDCA      DSTRAN                          CRT002
+     C                     MOVELWKDATA    TVVDAT                          CRT002
+     C                     MOVELDSTRAN    SDCA                            CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CDCCY'                                   CRT002
+     C                     MOVEL*BLANKS   WLIN   25                       CRT002
+     C                     MOVELTMLIN     WLIN                            CRT002
+     C                     MOVELSDCA      DSTRAN                          CRT002
+     C                     MOVELSVTAG     TRTAG                           CRT002
+     C                     MOVEL*BLANKS   TRCODE                          CRT002
+      *                                                                   CRT002
+      **  Access field tag file to get the format type                    CRT002
+      *                                                                   CRT002
+     C                     MOVELSVTAG     KMTAG                           CRT002
+     C                     MOVEL'ALL'     KMTPY                           CRT002
+     C           KYMTAG    CHAINSDMTAGL0             98                   CRT002
+      *                                                                   CRT002
+      **  If description found, fill date, currency or amount based on    CRT002
+      **  format type                                                     CRT002
+      *                                                                   CRT002
+     C           *IN98     IFEQ '0'                                       CRT002
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+     C           EFTAGF    WHEQ 'D'                                       CRT002
+     C           6         SUBSTWLIN:1    WVDAT   6                       CRT002
+     C                     MOVELWVDAT     TVVDAT                          CRT002
+      *                                                                   CRT002
+     C           EFTAGF    WHEQ 'CA'                                      CRT002
+     C           3         SUBSTWLIN:1    TVCCY                           CRT002
+     C           15        SUBSTWLIN:4    TVAMT                           CRT002
+     C/COPY WNCPYSRC,ME1100C004
+      *                                                                   CRT002
+     C           EFTAGF    WHEQ 'DCA'                                     CRT002
+     C           6         SUBSTWLIN:1    WVDAT                           CRT002
+     C                     MOVELWVDAT     TVVDAT                          CRT002
+     C           3         SUBSTWLIN:7    TVCCY                           CRT002
+     C           15        SUBSTWLIN:10   TVAMT                           CRT002
+     C/COPY WNCPYSRC,ME1100C014
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+     C/COPY WNCPYSRC,ME1100C005
+      *                                                                   CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C                     MOVELDSTRAN    SDCA                            CRT002
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *                                                                   CRT002
+      **  Fill date/currency/amount from the data itself                  CRT002
+      *                                                                   CRT002
+     C           PRMDS     WHEQ 'PDC2'                                    CRT002
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CDATE'                                   CRT002
+     C           PMTPY     ANDEQ'DIA'                                     CRT002
+      *                                                                   CRT002
+      **  Extract the value date from CDATE tag and place in PDC2         CRT002
+      *                                                                   CRT002
+     C                     MOVELPDC2      DSTRAN                          CRT002
+     C                     MOVELWKDATA    TVVDAT                          CRT002
+     C                     MOVELDSTRAN    PDC2                            CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CFCCY'                                   CRT002
+      *                                                                   CRT002
+     C                     MOVEL*BLANKS   WLIN                            CRT002
+     C                     MOVELTMLIN     WLIN                            CRT002
+     C                     MOVELPDC2      DSTRAN                          CRT002
+     C                     MOVELSVTAG     TRTAG                           CRT002
+     C                     MOVEL*BLANKS   TRCODE                          CRT002
+      *                                                                   CRT002
+      **  Access field tag file to get the format type                    CRT002
+      *                                                                   CRT002
+     C                     MOVELSVTAG     KMTAG                           CRT002
+     C                     MOVEL'ALL'     KMTPY                           CRT002
+     C           KYMTAG    CHAINSDMTAGL0             98                   CRT002
+      *                                                                   CRT002
+      **  If description found, fill date, currency or amount based on    CRT002
+      **  format type                                                     CRT002
+      *                                                                   CRT002
+     C           *IN98     IFEQ '0'                                       CRT002
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+     C           EFTAGF    WHEQ 'D'                                       CRT002
+     C           6         SUBSTWLIN:1    WVDAT                           CRT002
+     C                     MOVELWVDAT     TVVDAT                          CRT002
+      *                                                                   CRT002
+     C           EFTAGF    WHEQ 'CA'                                      CRT002
+     C           3         SUBSTWLIN:1    TVCCY                           CRT002
+     C           15        SUBSTWLIN:4    TVAMT                           CRT002
+     C/COPY WNCPYSRC,ME1100C006
+      *                                                                   CRT002
+     C           EFTAGF    WHEQ 'DCA'                                     CRT002
+     C           6         SUBSTWLIN:1    WVDAT                           CRT002
+     C                     MOVELWVDAT     TVVDAT                          CRT002
+     C           3         SUBSTWLIN:7    TVCCY                           CRT002
+     C           15        SUBSTWLIN:10   TVAMT                           CRT002
+     C/COPY WNCPYSRC,ME1100C007
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *                                                                   CRT002
+     C                     END                                            CRT002
+      *                                                                   CRT002
+     C                     MOVELDSTRAN    PDC2                            CRT002
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *                                                                   CRT002
+     C           PRMDS     WHEQ 'CASH'                                    CRT002
+      *                                                                   CRT002
+     C                     MOVELCASH      DSTRAN                          CRT002
+     C                     MOVELSVTAG     TRTAG                           CRT002
+     C                     MOVEL*BLANKS   TRCODE                          CRT002
+      *                                                                   CRT002
+     C                     SELEC                                          CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CUSER'                                   CRT002
+     C                     MOVELWKDATA    TUSER                           CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CTRAN'                                   CRT002
+     C                     MOVELWKDATA    TTRAN                           CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CSPCD'                                   CRT002
+     C                     MOVELWKDATA    TSPCD                           CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CPOST'                                   CRT002
+     C                     MOVELWKDATA    TPOST                           CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CHOST'                                   CRT002
+     C                     MOVELWKDATA    THOST                           CRT002
+      *                                                                   CRT002
+     C           SVTAG     WHEQ 'CWKID'                                   CRT002
+     C                     MOVELWKDATA    TWKID                           CRT002
+      *                                                                   CRT002
+     C                     ENDSL                                          CRT002
+      *                                                                   CRT002
+     C                     MOVELDSTRAN    CASH                            CRT002
+      *                                                                   CRT002
+     C                     ENDSL
+      *
+     C                     END
+      *
+      *  /Copy point for Mapping
+      *
+     C/COPY WNCPYSRC,ME1100DMAP
+      *                                                                   CFT006
+     C                     ENDIF                                          CFT006
+      *
+      * Check if another record to be read
+      *
+     C           KYINFM    READEMEINFML1                 61
+      *
+     C                     ENDDO
+     C/COPY WNCPYSRC,ME1100C002
+      *
+      * Initialise fields
+      *
+     C                     CLEARDSTRAN
+     C                     Z-ADD0         L
+     C                     MOVEL*BLANKS   LIN
+     C                     CLEARDSFONT                                         CGL009
+     C                     Z-ADD1         B                                    CGL009
+     C                     MOVEL*BLANKS   L72                                  CGL009
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXMAP     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFILL   : Fill Data Structure fields                        *
+      *                                                               *
+      *  CALLED BY: SRMAP  - Map Extracted Message Details to Paramet *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRFILL    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRFILL'  @STK,Q
+      *
+      *  Update tag information if not already present
+      *
+     C           OTTAG     IFEQ *BLANKS
+     C                     MOVELINTAG     OTTAG
+     C                     MOVELINTYPE    OTTYPE
+     C                     MOVELINCODE    OTCODE
+     C                     END
+      *
+      *  Fill multiple line details
+      *
+      *  For each line in the Tag's details, move it to the next
+      *  available line in the parameter data structure. The maximum
+      *  no. of lines to move is stored in 'L', the counter used when
+      *  extracting the tag's detail lines.
+      *
+     C                     Z-ADD0         Y       20
+     C                     Z-ADD0         X       20
+      *
+     C           X         DOUEQ6
+     C                     ADD  1         X
+      *
+     C           OUT,X     IFEQ *BLANKS
+     C                     LEAVE
+     C                     END
+      *
+     C                     ENDDO
+      *
+     C           X         IFEQ 6
+     C           OUT,X     ANDNE*BLANKS
+     C                     GOTO EXFILL
+     C                     END
+      *
+      *  Fill remainder of OUT array with the new data
+      *
+     C           Y         DOUEQL
+     C           X         OREQ 7
+     C                     ADD  1         Y
+      *
+     C                     MOVELIN,Y      OUT,X
+     C                     ADD  1         X
+      *
+     C                     ENDDO
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXFILL    TAG
+      *
+      *  Hook to process the output data structure
+     C/COPY WNCPYSRC,ME1100PODS
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT                                                              CGL009
+      *****************************************************************   CGL009
+      *                                                               *   CGL009
+      *  SRFI72   : Fill Data Structure fields for tag :72: (FONTIS)  *   CGL009
+      *                                                               *   CGL009
+      *  CALLED BY: SRMAP  - Map Extracted Message Details to Paramet *   CGL009
+      *                                                               *   CGL009
+      *  CALLS    :        -                                          *   CGL009
+      *                                                               *   CGL009
+      *****************************************************************   CGL009
+     CSR         SRFI72    BEGSR                                          CGL009
+      *                                                                   CGL009
+      *  Set up subroutine stack name                                     CGL009
+      *                                                                   CGL009
+     C                     ADD  1         Q                               CGL009
+     C                     MOVEL'SRFI72'  @STK,Q                          CGL009
+      *                                                                   CGL009
+      *  Update tag information if not already present                    CGL009
+      *                                                                   CGL009
+     C           O72TAG    IFEQ *BLANKS                                   CGL009
+     C                     MOVELI72TAG    O72TAG                          CGL009
+     C                     MOVELI72TYP    O72TYP                          CGL009
+     C                     END                                            CGL009
+      *                                                                   CGL009
+      *  Fill multiple line details                                       CGL009
+      *                                                                   CGL009
+      *  For each line in the Tag's details, move it to the next          CGL009
+      *  available line in the parameter data structure. The maximum      CGL009
+      *  no. of lines to move is stored in 'L', the counter used when     CGL009
+      *  extracting the tag's detail lines.                               CGL009
+      *                                                                   CGL009
+     C                     Z-ADD0         X       20                      CGL009
+     C                     Z-ADD1         P       30                      CGL009
+      *                                                                   CGL009
+     C           X         DOUEQ6                                         CGL009
+     C                     ADD  1         X                               CGL009
+      *                                                                   CGL009
+     C           OT72,P    IFEQ *BLANKS                                   CGL009
+     C                     LEAVE                                          CGL009
+     C                     END                                            CGL009
+     C           X         IFEQ 1                                         CGL009
+     C*********************ADD  65        P                         CGL009175479
+     C                     ADD  100       P                               175479
+     C                     ELSE                                           CGL009
+     C                     ADD  35        P                               CGL009
+     C                     END                                            CGL009
+      *                                                                   CGL009
+     C                     ENDDO                                          CGL009
+      *                                                                   CGL009
+     C***********P         IFGT 240                                 CGL009175479
+     C           P         IFGT 250                                       175479
+     C                     GOTO EXFI72                                    CGL009
+     C                     END                                            CGL009
+      *                                                                   CGL009
+      *  Fill remainder of OUT array with the new data                    CGL009
+      *                                                                   CGL009
+      *                                                                   CGL009
+     C           X         IFEQ 1                                         CGL009
+     C                     MOVEAIN72,1    OT72,P                          CGL009
+     C                     ELSE                                           CGL009
+      ***When*72*has*been*already*filled,*the*first*line*(65*chars)*CGL009175479
+      ** When 72 has been already filled, the first line (100 chars)      175479
+      ** is busy, so we assume the remaining lines is 35 char long        CGL009
+      ** each.                                                            CGL009
+      *                                                                   CGL009
+      ** For instance as translations, we have defined                    CGL009
+      ** :59: ----> BANKTOBANK                                            CGL009
+      ** :72: ----> BANKTOBANK                                            CGL009
+      *                                                                   CGL009
+      ** The first line of 59 will fill the field with 65 chars           CGL009
+      ** the remaining lines will fill the other fields (35 chars each)   CGL009
+      *                                                                   CGL009
+      ***If*the*first*line*of*:72:*is*65*chars*long,*it*will*be**** CGL009175479
+      ** If the first line of :72: is 100 chars long, it will be          175479
+      ** truncated                                                        CGL009
+      ** If the first line of :72: is 35 chars long, it will be           CGL009
+      ** appened without any lost of chars.                               CGL009
+      ** Notice :                                                         CGL009
+      ***Field*IN72*is*defined*as*65*+*35x5                         CGL009175479
+      ** Field IN72 is defined as 100 + 35x5                              175479
+      **                                                                  CGL009
+     C                     MOVEAIN72,1    W35    35                       CGL009
+     C                     MOVEAW35       OT72,P                          CGL009
+     C                     ADD  35        P                               CGL009
+     C***********P         IFLE 240                                 CGL009175479
+     C           P         IFLE 250                                       175479
+     C*********************MOVEAIN72,66   OT72,P                    CGL009175479
+     C                     MOVEAIN72,101  OT72,P                          175479
+     C                     END                                            CGL009
+     C                     END                                            CGL009
+      *                                                                   CGL009
+      *  Unwind subroutine stack name                                     CGL009
+      *                                                                   CGL009
+     C           EXFI72    TAG                                            CGL009
+     C                     MOVEA*BLANKS   @STK,Q                          CGL009
+     C                     SUB  1         Q                               CGL009
+      *                                                                   CGL009
+     CSR                   ENDSR                                          CGL009
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRACT    : Undefined action - error                          *
+      *                                                               *
+      *  CALLED BY: Main Processing                                   *
+      *                                                               *
+      *  CALLS    : SRERR   - report error and close down program     *
+      *                                                               *
+      *****************************************************************
+     CSR         SRACT     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+      *
+      *  Database error undefined action
+      *
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            * DB ERROR 03 *
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXACT     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialise and define fields                      *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    :        -                                          *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Define fields
+      *
+     C           *LIKE     DEFN CRNWRK    KFNWRK
+     C           *LIKE     DEFN CRMTPY    KFMTPY
+     C           *LIKE     DEFN DTMTG     KFMTAG
+      *
+     C           *LIKE     DEFN DTMSGR    KFMSGR
+     C           *LIKE     DEFN DTPART    KFPART
+     C           *LIKE     DEFN DTMTG     KFTAG
+     C           *LIKE     DEFN DTSEQN    KFSEQ
+      *
+     C           *LIKE     DEFN DTMFLD    WKDATA
+     C           *LIKE     DEFN DTMTG     SVTAG
+     C           *LIKE     DEFN DTMSEQ    KFMSEQ                                              CSW209
+     C           *LIKE     DEFN FMMSEQ    KFMSQN                                              CSW209
+     C           *LIKE     DEFN DTMSEQ    SVMSEQ                                              CSW209
+      *
+      * Set keylist for Incoming Message Translation File
+      *
+     C           KYINFM    KLIST
+     C                     KFLD           KFNWRK
+     C                     KFLD           KFMTPY
+     C                     KFLD           KFMSQN                                              CSW209
+     C                     KFLD           KFMTAG
+      *
+      * Set keylist for Incoming Message Detail Multi Format file
+      *
+     C           KYINDT    KLIST
+     C                     KFLD           KFMSGR
+     C                     KFLD           KFPART
+     C                     KFLD           KFTAG
+     C                     KFLD           KFMSEQ                                              CSW209
+     C                     KFLD           KFSEQ
+      *
+      * Set keylist for Incoming Message Part No. File
+      *
+     C           KYINMP    KLIST
+     C                     KFLD           PHMSGR
+     C                     KFLD           PHPART
+      *                                                                   CRT002
+      **  Define key list for SDMTAGL0                                    CRT002
+      *                                                                   CRT002
+     C           KYMTAG    KLIST                                          CRT002
+     C                     KFLD           KMTAG   5                       CRT002
+     C                     KFLD           KMTPY   3                       CRT002
+      *
+      * Open Files
+      *
+     C                     OPEN MEINCRL1
+     C                     OPEN MEINMPL1
+     C                     OPEN MEINDTS2
+     C                     OPEN MEINFML1
+     C                     OPEN SDMTAGL0                                  CRT002
+      *
+      *  Get Rundate information
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C/COPY WNCPYSRC,ME1100C011
+      *                                                                                       CSW209
+      ** Check if SWIFT2009 is installed                                                      CSW209
+      *                                                                                       CSW209
+     C                     MOVEL'N'       CSW209  1                                           CSW209
+     C                     CALL 'SWIF2009'                                                    CSW209
+     C                     PARM *BLANKS   PRTCD   7                                           CSW209
+      *                                                                                       CSW209
+     C           PRTCD     IFEQ 'CSW2009'                                                     CSW209
+     C                     MOVEL'Y'       CSW209                                              CSW209
+     C                     ENDIF                                                              CSW209
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C/COPY WNCPYSRC,ME1100C008
+      *                                                                                       CSC022
+      ** Check if CSC022 is switched *ON.                                                     CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+     C                     PARM 'CSC022'  @SARD   6                                           CSC022
+      *                                                                                       CSC022
+     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022  1                                           CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+     C                     Z-ADD1         C       30                                          CSC022
+     C                     MOVEL*BLANKS   WCMTSK  1                                           CSC022
+     C                     MOVEACMTARR    CMTJOB                                              CSC022
+     C           CMTNUM    IFGT 0                                                             CSC022
+     C           C         DOWLECMTNUM                                                        CSC022
+     C           ##JOB     IFEQ CMTJOB,C                                                      CSC022
+     C                     MOVEL'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ADD  1         C                                                   CSC022
+     C                     ENDDO                                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ELSE                                                               CSC022
+     C                     MOVE 'N'       CSC022                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CER030
+      ** Check the switchable feature CER031                                                  CER030
+      *                                                                                       CER030
+     C                     CALL 'AOSARDR0'                                                    CER030
+     C                     PARM *BLANKS   PRTCD   7                                           CER030
+     C                     PARM '*VERIFY' POPTN   7                                           CER030
+     C                     PARM 'CER031'  PSARD   6                                           CER030
+     C           SCSARD    PARM SCSARD    DSFDY                                               CER030
+      *                                                                                       CER030
+     C           PRTCD     IFEQ *BLANKS                                                       CER030
+     C                     MOVEL'Y'       CER031  1                                           CER030
+     C                     ELSE                                                               CER030
+     C                     MOVEL'N'       CER031                                              CER030
+     C                     ENDIF                                                              CER030
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY WNCPYSRC,ME1100DCPG
+      *
+      *  /Copy point for Calculation Specs
+      *
+     C/EJECT
+     C/COPY MECPYSRC,SRERRC
+     C/EJECT
+     C/COPY WNCPYSRC,ME1100DOPG
+      *
+      *  /Copy point for Output Specs
+      *
+**  CPY@ table
+(c) Finastra International Limited 2001
+**  TFLD / TOCC  Field/ Data Structure Occurrence No.
+DTCYAMT :HPH32A                                                           CFT006
+DATECCYAMTPDCA
+SNDR ADDR PSN
+TRAN REF  P20
+RELATE REFP21
+ORD CUST:HPH50                                                            CFT006
+ORDER CUSTP50
+ORD BANK:HPH52                                                            CFT006
+ORDER BANKP52
+SND CORR:HPH53                                                            CFT006
+SNDR CORR P53
+RCV CORR:HPH54                                                            CFT006
+RECV CORR P54
+THIRD REIMP55                                                             CFT014
+INTERMEDY P56
+ACC INST  P57
+BENF INST P58
+BENF CUST P59
+PAY DETLS P70
+TRAN CODE P26T                                                            CFT006
+PAY CHGS:HPH71                                                            CFT006
+PAY CHGS  P71
+BNKTOBNK:HPH72                                                            CFT006
+BANKTOBANKP72
+CASHIER   CASH                                                            CRT002
+DATECYAMT1PDC2                                                            CRT002
+DATECYAMT2SDCA                                                            CRT002
+INST PTY:HPH50L                                                           CFT006
+INSTR PTY P50L                                                            CFT006
+ACSRVINS:HPH52                                                            CFT006
+AC SRV IN P52                                                             CFT006
+FX REF    P21F                                                            CFT006
+INSTR CODEP23E                                                            CFT006
+BANK OPCD P23B                                                            CFT014
+REG REPR:HPH77B                                                           CFT006
+REG REPRT P77B                                                            CFT006
+ORIGCCYAMTP33B                                                            CFT006
+CHGS ACC  P25A                                                            CFT006
+FX RATE :HPH36                                                            CFT006
+FX RATE   P36                                                             CFT006
+SEND CHG:HPH71F                                                           CFT006
+SEND CHG  P71F                                                            CFT006
+SND CHG*  P71FX                                                           CFT014
+RECV CHG:HPH71G                                                           CFT006
+RECV CHG  P71G                                                            CFT006
+CCYAMT    P32B                                                            CFT006
+CUST REF:HPH21R                                                           CFT006
+SNDR IN :HPH51A                                                           CFT006
+EXEC DT :HPH30                                                            CFT006
+AUTHRSN :HPH25                                                            CFT006
+BANK OPC:HPH23                                                            CFT006
+TRAN COD:HPH26T                                                           CFT006
+SUM TOT :HPH19                                                            CFT006
+FILE REF:HPH20                                                            CFT006
+SNDR REF:HPH20                                                            CFT006
+FIN COPY  P103                                                                                CSW209
+MUR       P108                                                                                CSW209
+BANK PTY  P113                                                                                CSW209
+ADDL INFO P115                                                                                CSW209
+VALID FLAGP119                                                                                CSW209
+ORDER CU:BPB50                                                                                CSW209
+ORDER BK:BPB52                                                                                CSW209
+INTERMED:BPB56                                                                                CSW209
+ACC INST:BPB57                                                                                CSW209
+BENFCUST:BPB59                                                                                CSW209
+PAY DETL:BPB70                                                                                CSW209
+BNKTOBNK:BPB72                                                                                CSW209
+ORGCCYAM:BPB33B                                                                               CSW209
+EXT NARR  PEXN                                                                                CER030

@@ -1,0 +1,98 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Modelo 123/193 Initialization Program')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       REC000010 - Midas OF Modelo 123/193 Initialization Program  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE104  *CREATE    Date 31Mar15              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE104 - Modelo 123 and 193 Reports                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2015')
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&INFLR1) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&INFLR2) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&INFLR3) TYPE(*CHAR) LEN(12)
+ 
+             DCLF       FILE(SDBRCHPD)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SUBSTRING(&SDSTAT 6 2))
+ 
+             CHGVAR     VAR(&INFLR1) VALUE('AEAT/' *CAT &PRE)
+             CHGVAR     VAR(&INFLR2) VALUE('AEAT/' *CAT &PRE *CAT '/M123')
+             CHGVAR     VAR(&INFLR3) VALUE('AEAT/' *CAT &PRE *CAT '/M193')
+ 
+             CRTFLR     FLR('AEAT') TEXT('AEAT Folder') AUT(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTFLR     FLR(&PRE) INFLR('AEAT') TEXT('System Folder') AUT(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTFLR     FLR('M123') INFLR(&INFLR1) TEXT('M123 Folder') AUT(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTFLR     FLR('M193') INFLR(&INFLR1) TEXT('M193 Folder') AUT(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTFLR     FLR('ALL') INFLR(&INFLR2) TEXT('Branch Folder') AUT(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             CRTFLR     FLR('ALL') INFLR(&INFLR3) TEXT('Branch Folder') AUT(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             DLTF       FILE(SDBRCTMP)
+             MONMSG     MSGID(CPF0000)
+ 
+             SCRUNSQL   SQL('Declare Global Temporary Table SDBRCTMP +
+                          as (Select * From SDBRCHPD Where A8BICN +
+                          In (Select BBCUST From SDCUSTPD Where +
+                          BBCOLC In (Select A4CNCD from SDCTRYPD Where +
+                          A4ISOC = ''ES''))) with data')
+ 
+              OVRDBF     FILE(SDBRCHPD) TOFILE(SDBRCTMP) +
+                          NBRRCDS(20000) LVLCHK(*NO) SEQONLY(*YES +
+                          20000)
+ 
+LOOP:        RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+ 
+             CRTFLR     FLR(&A8BRCD) INFLR(&INFLR2) TEXT('Branch Folder') AUT(*ALL)
+             MONMSG MSGID(CPF0000)
+ 
+             CRTFLR     FLR(&A8BRCD) INFLR(&INFLR3) TEXT('Branch Folder') AUT(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(LOOP)
+ 
+ABNOR:      SNDPGMMSG  MSG('REC000010 - Ended Abnormally') +
+                         TOMSGQ(MOPERQ MRUNQ)
+            MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+            DMPCLPGM
+            MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+ END:
+             ENDPGM

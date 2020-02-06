@@ -1,0 +1,401 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Windows                                              *
+      *                                                               *
+      *  mmnnnn - (Skeleton Window Program)                           *
+      *                                                               *
+      *  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+      *                                                               *
+      *  (c) Finastra International Limited 2007                      *
+      *                                                               *
+      *  Last Amend No. xxxxxx  *CREATE    Date ddMmmyy               *
+      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  xxxxxx - (fix details)                                       *
+      *                                                               *
+      *****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       03      F3 PRESSED EXIT PROGRAM
+      *       05      F5 PRESSED REDISPLAY THE SCREEN
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *       20      PROTECT FIELDS IN ENQUIRE MODE
+      *       30      REDISPLAY THE SCREEN
+      *       35      ENABLE F5
+      *       40      ENABLE F10
+      *       50      AT LEAST ONE FIELD IN ERROR
+      *       84      CHAIN TO XXXXXXXX FAILED
+      *       85      CHAIN TO XXXXXXXX FAILED
+      *
+     FXXXXXXXXUF  E           K        DISK                      A
+      * EXTENSION FILE (UNDER COMMITMENT CONTROL)
+     F                                              KCOMIT
+     FXXXXXXXXIF  E           K        DISK
+      * EXTENSION FILE FOR READ
+     FXXXXXXXXCF  E                    WORKSTN
+      * DISPLAY FILE FOR WINDOW
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     I/COPY QWINDSRC,XXXXXXGDTA
+      * DATA MEMBER FOR MAIN PROGRAM
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      **   Standard parameter list for window manager
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR INIT
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C           *IN30     DOUEQ'1'
+      *
+      **   If error write messages
+      *
+     C           *IN50     IFEQ '1'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+      * MAIN FORMAT OF THE DISPLAY FILE
+     C                     EXFMTWINDOWF
+     C                     EXSR CLEAR
+      *
+     C           *IN03     CASEQ'1'       EXIT
+     C           *IN05     CASEQ'1'       RESET
+     C           *IN10     CASEQ'1'       DELETE
+     C           *IN12     CASEQ'1'       PREV
+     C                     CAS            VALID
+     C                     ENDCS
+     C                     ENDDO
+      *
+      **   Exit from program
+      *
+     C                     EXSR END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * DELETE RECORD
+      *****************************************************************
+     C           DELETE    BEGSR
+      *
+      ** Delete record or logically delete record
+      *
+     C           K@KEY     CHAINXXXXXXXX             90
+     C           *IN90     IFEQ '0'
+     C                     DELETXXXXXXXX
+     C***                  MOVE '*'       XXRECI
+     C***                  UPDATXXXXXXXX
+     C                     EXSR END
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **   Only do first time through
+      *
+     C           *IN01     IFEQ '0'
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **   Define window position
+      *
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      *
+      **   Retrieve title for window
+      *
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+      *
+      **   Protect input fields if enquiry and enable command keys
+      *
+     C           ACTN      IFEQ 'E'
+     C                     SETON                     20
+     C                     ELSE
+     C                     SETON                     35
+     C           ACTN      IFEQ 'D'
+     C                     SETON                     40
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     SETON                     01
+     C                     ENDIF
+      *
+      ** Set up KLIST and move in key from DATA
+      *
+     C           K@KEY     KLIST
+     C                     KFLD           K@XXXX
+     C                     MOVE #1XXXX    K@XXXX
+      *----------------------------------------------------------------
+      ** If delete does not require window to be displayed, do here
+      *
+     C***        ACTN      IFEQ 'D'
+     C***                  EXSR DELETE
+     C***                  ENDIF
+      *----------------------------------------------------------------
+      *
+     C           K@KEY     CHAINXXXXXXXX             85
+     C           *IN85     IFEQ '1'
+      *
+      ** Record not found therefore if amend mode either error or need
+      ** to change mode to insert depending on type of program
+      *
+     C                     ENDIF
+      *
+     C                     WRITE#MSGCTL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+      **   Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
+      *****************************************************************
+     C           RESET     BEGSR
+      *
+      **   Clear the program message queue and call SR/INIT to retrieve
+      **   the last committed data from the extension file.
+      *
+     C                     EXSR CLEAR
+     C                     WRITE#MSGCTL
+     C                     EXSR INIT
+      *
+      **   Reset all error indicators
+      *
+     C                     SETOF                     50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE THE EXTENSION FILE
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+     C           *IN85     IFEQ '1'
+      *
+      ** IF INDICATOR 85 IS ON THEN NO RECORD CURRENTLY EXISTS
+      ** SO NEED TO WRITE A NEW RECORD
+     C                     WRITEXXXXXXXX
+      **                        EXTENSION FILE FORMAT
+      *
+     C                     ELSE
+      *
+      ** RECORD CURRENTLY EXISTS SO NEED TO UPDATE
+      *
+     C           K@KEY     CHAINXXXXXXXX             84
+      *
+      ** DATABASE ERROR HAS OCCURRED
+      *
+     C           *IN84     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL#1XXXX    DBKEY            ***************
+     C                     MOVE 'XXXXXXXX'DBFILE           * DB ERROR 001*
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      * EXTENSION FILE FORMAT
+     C                     UPDATXXXXXXXX
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALIDATE THE SCREEN
+      *****************************************************************
+     C           VALID     BEGSR
+      *
+      ** IF THE ACTION CODE IS ENQUIRE THEN SIMPLY EXIT FROM PROGRAM
+      *
+     C           ACTN      IFEQ 'E'
+     C                     EXSR END
+     C                     ENDIF
+      *
+     C           ACTN      IFEQ 'D'
+     C                     MOVE 'USR0586' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO VAEXIT
+     C                     ENDIF
+     C                     SETON                     30
+      *
+      ** IF THERE ARE ANY ERRORS *IN30 MUST BE SET OFF
+      *
+      *
+      ** IF THERE IS AN ERROR IN ANY OF THE FIELDS THEN NEED TO
+      ** REDISPLAY THE SCREEN AND SEND ALL ERROR MESSAGES
+      *
+     C           *IN30     IFEQ '1'
+      *
+      ** NO ERRORS SO UPDATE THE EXTENSION FILE
+      *
+     C                     EXSR UPDAT
+     C                     ENDIF
+     C           VAEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Send message to program's message queue.
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2007

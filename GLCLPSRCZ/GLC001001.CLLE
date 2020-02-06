@@ -1,0 +1,63 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Reporting')                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC001001 - Midas GL Reporting                              */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467          Date 27Mar13              */
+/*                      CCB023  *CREATE    Date 06Aug12              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1097467 - Expected 15% COB run optimization not met       */
+/*                   Suppress calling of GL0121P                     */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* GL Reporting */
+ 
+             CALL       PGM(GL0121P) PARM(' ' ' ' 'B' 'ALL')
+ 
+/* Move processing to component GLC002001 and GLC003001 */                             /*AR1097467*/
+/**********  CLRPFM     FILE(GLBBCUPD)                                                 /*AR1097467*/
+/**********  CALL       PGM(GL0112U)                                                   /*AR1097467*/
+/**********                                                                            /*AR1097467*/
+/**********  CALL       PGM(GL0112P) PARM(' ' ' ' 'B' 'ALL')                           /*AR1097467*/
+/**********  CALL       PGM(GL0113P) PARM(' ' ' ')                                     /*AR1097467*/
+ 
+/* Reclaim resource inserted to ensure all Synon files are closed */
+ 
+             RCLRSC
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal Termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC001001 ended abnormally.') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)                                         /*AR1097467*/
+ 
+ENDPGM:
+             ENDPGM

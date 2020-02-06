@@ -1,0 +1,294 @@
+     H DEBUG
+      *****************************************************************
+/*STD *  RPGBASEBND                                                   *
+/*EXI *  TEXT('Midas AO FATCA Classification Code')                   *
+      *****************************************************************
+      *                                                               *
+      *  Midas Access Object                                          *
+      *                                                               *
+      *  AOFATCR0  - Access Object for FATCA Classification Code      *
+      *                                                               *
+      *  (c) Finastra International Limited 2013                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *                 CGL132  *CREATE    Date 01May13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL154 - FATCA Phase 2 - FATCA Reporting                     *
+      *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
+      *           Classification - Master                             *
+      *                                                               *
+      *****************************************************************
+ 
+      ** Midas SD FATCA Classification Code
+     FSDFATCL0  IF   E           K DISK    USROPN
+ 
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ Automatically included D-specs       ¦
+      ** ¦ ==============================       ¦
+      ** +--------------------------------------+
+      **
+      ** Standard D-specs
+      ** ================
+      **
+      ** The following /COPY line includes the LDA layout,
+      ** the copyright array definition,
+      ** and the following named constants:
+      **    True       logical = *on (for indcator processing)
+      **    False      logical = *off (for indcator processing)
+      **    DBErrCtl   10A     = 'DBERRCTL' (the name of the database error
+      **                                    handler)
+      ** and the following variables:
+      **    RunBefore  1A (for the PSSR)
+ 
+     D/COPY ZACPYSRC,STD_D_SPEC
+ 
+     D P@MGDA          DS
+     D  @MG                    1     50
+     D                                     DIM(1) CTDATA PERRCD(1)
+     D PGMDS          SDS
+ 
+      ** Program Status data structure
+     D  PGNAME                 1     10
+     D  PGLIBR                81     90
+     D  PGJBNM               244    253
+     D  PGUSER               254    263
+     D  PGJBNO               264    269  0
+ 
+     D D@FMT         E DS                  EXTNAME(SDFATCPD)
+ 
+     D P@FMT         E DS                  EXTNAME(DSFDY)
+      ** External Data structure to hold the outgoing record format of
+      ** the file.
+ 
+     D P@CLAS          S              5A
+      ** FATCA Classification Code Key Definition
+ 
+     D A@CPY           DS
+ 
+      ** Parameter for ZASNMG
+     D  W@Rtcd         S              7A
+     D  P@PgNm         S             10A
+     D  P@Dest         S              5A
+     D  P@MgID         S              7A
+     D  P@MsgF         S             10A
+     D  P@MgKy         S              4A
+     D  P@MgTp         S              7A
+ 
+      ** Entry Parameters
+     D  P@Rtcd         S              7A
+     D  P@Optn         S              7A
+     D  P@Mode         S              7A
+ 
+     D ReturnDS        DS
+     D RetCode                        7A
+     D ClsCode                        5A
+     D ClsDesc                       50A
+ 
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+ 
+     C     *ENTRY        PLIST
+     C     W@Rtcd        PARM                    P@Rtcd
+     C                   PARM                    P@Optn
+     C                   PARM                    P@CLAS
+     C                   PARM                    P@FMT
+ 
+      ** Access Option *SAME input
+ 
+     C                   IF        P@Optn = '*SAME '
+     C     *IN01         COMP      '0'                                    91
+     C                   GOTO      T@SKIP
+     C                   ENDIF
+ 
+      ** Reset error indicators
+ 
+     C                   EVAL      *IN90 = *OFF
+     C                   EVAL      *IN91 = *OFF
+     C                   EVAL      *IN92 = *OFF
+     C                   EVAL      *IN93 = *OFF
+     C                   EVAL      *IN94 = *OFF
+     C                   EVAL      *IN95 = *OFF
+     C                   EVAL      *IN96 = *OFF
+     C                   EVAL      *IN97 = *OFF
+     C                   EVAL      *IN98 = *OFF
+ 
+      ** First call - open file :
+ 
+     C                   IF        *IN01 = '0'
+     C                   EVAL      *IN01 = *ON
+     C                   OPEN      SDFATCL0                             91
+     C     *IN91         CABEQ     '1'           T@SKIP                   LR
+     C                   ENDIF
+ 
+      ** Last call - close file and terminate program :
+ 
+     C                   IF        P@Optn = '*FREE  '
+     C                   CLOSE     SDFATCL0                             92
+     C     *IN92         CABEQ     '1'           T@SKIP                   LR
+     C                   EVAL      *INLR = *ON
+     C                   ENDIF
+ 
+      ** Caller requests first record :
+ 
+     C                   IF        P@Optn = '*FIRST '
+     C     *LOVAL        SETLL     SDFATCD0                           9390
+     C     *IN93         CABEQ     '1'           T@SKIP
+     C     *IN90         CABEQ     '1'           T@SKIP                   LR
+     C                   EVAL      P@Optn = '*NEXT'
+     C                   ENDIF
+ 
+      ** Caller requests next record :
+ 
+     C                   IF        P@Optn = '*NEXT  '
+     C                   READ      SDFATCD0                             9094
+     C     *IN94         CABEQ     '1'           T@SKIP
+     C     *IN90         CABEQ     '1'           T@SKIP                   LR
+     C                   ENDIF
+ 
+      ** Caller requests last record :
+ 
+     C                   IF        P@Optn = '*LAST  '
+     C     *HIVAL        SETGT     SDFATCD0                             90
+     C     *IN90         CABEQ     '1'           T@SKIP                   LR
+     C                   EVAL      P@Optn = '*PREV'
+     C                   ENDIF
+ 
+      ** Caller requests previous record :
+ 
+     C                   IF        P@Optn = '*PREV  '
+     C                   READP     SDFATCD0                             9094
+     C     *IN94         CABEQ     '1'           T@SKIP
+     C     *IN90         CABEQ     '1'           T@SKIP                   LR
+     C                   ENDIF
+ 
+      ** Caller requests record indicated by key :
+ 
+     C                   IF        P@Optn = '*KEY   ' OR
+     C                             P@Optn = '*VERIFY'
+ 
+     C                   IF        %TRIM(P@CLAS) = '?'
+ 
+     C                   EVAL      ClsCode = P@CLAS
+     C                   CALL      'SD000200'                           98
+     C                   PARM      '*SELECT'     P@Mode
+     C                   PARM                    ReturnDS
+ 
+     C                   EVAL      P@CLAS = ClsCode
+     C                   EVAL      FCCODE = ClsCode
+     C                   EVAL      FCDESC = ClsDesc
+     C                   IF        RetCode <> *BLANKS
+     C                   EVAL      *IN97 = *ON
+     C                   ENDIF
+     C     *IN97         CABEQ     '1'           T@SKIP
+     C     *IN98         CABEQ     '1'           T@SKIP                   LR
+     C                   ENDIF
+ 
+     C     P@CLAS        CHAIN     SDFATCD0                           9590
+     C     *IN95         CABEQ     '1'           T@SKIP
+     C     *IN90         CABEQ     '1'           T@SKIP                   LR
+     C                   ENDIF
+ 
+      ** Caller requests record indicated by key :                                            CGL154
+                                                                                              CGL154
+     C                   IF        P@Optn = '*KEYMNT'                                         CGL154
+                                                                                              CGL154
+     C                   IF        %TRIM(P@CLAS) = '?'                                        CGL154
+                                                                                              CGL154
+     C                   EVAL      ClsCode = P@CLAS                                           CGL154
+     C                   CALL      'SD000203'                           98                    CGL154
+     C                   PARM      '*SELECT'     P@Mode                                       CGL154
+     C                   PARM                    ReturnDS                                     CGL154
+                                                                                              CGL154
+     C                   EVAL      P@CLAS = ClsCode                                           CGL154
+     C                   EVAL      FCCODE = ClsCode                                           CGL154
+     C                   EVAL      FCDESC = ClsDesc                                           CGL154
+     C                   IF        RetCode <> *BLANKS                                         CGL154
+     C                   EVAL      *IN97 = *ON                                                CGL154
+     C                   ENDIF                                                                CGL154
+     C     *IN97         CABEQ     '1'           T@SKIP                                       CGL154
+     C     *IN98         CABEQ     '1'           T@SKIP                   LR                  CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C     P@CLAS        CHAIN     SDFATCD0                           9590                    CGL154
+     C     *IN95         CABEQ     '1'           T@SKIP                                       CGL154
+     C     *IN90         CABEQ     '1'           T@SKIP                   LR                  CGL154
+     C                   ENDIF                                                                CGL154
+                                                                                              CGL154
+     C                   IF        P@Optn <> '*KEY   ' AND
+     C                             P@Optn <> '*NEXT  ' AND
+     C                             P@Optn <> '*PREV  ' AND
+     C                             P@Optn <> '*VERIFY' AND
+     C                             P@Optn <> '*KEYMNT' AND                                    CGL154
+     C                             P@Optn <> '*FREE  '
+     C                   EVAL      *IN96 = *ON
+     C                   ENDIF
+ 
+      ** No record found or End of file - return error code :
+ 
+     C     T@SKIP        TAG
+ 
+     C                   EVAL      P@Rtcd = *BLANK
+     C   90              EVAL      P@Rtcd = '*ERROR '
+     C   91              EVAL      P@Rtcd = '*OPEN  '
+     C   92              EVAL      P@Rtcd = '*CLOSE '
+     C   93              EVAL      P@Rtcd = '*EMPTY '
+     C   94              EVAL      P@Rtcd = '*EOF   '
+     C   95              EVAL      P@Rtcd = '*NRF   '
+     C   96              EVAL      P@Rtcd = '*OPTION'
+     C   97              EVAL      P@Rtcd = '*NOSEL '
+     C   98              EVAL      P@Rtcd = '*CALL'
+ 
+      ** Caller requests message sent to program queue :
+ 
+     C                   IF        W@Rtcd = '*MSG   ' AND
+     C                             P@Rtcd = *BLANK
+     C   90              EVAL      P@MgID = 'ACO1001'
+     C   91              EVAL      P@MgID = 'ACO1002'
+     C   92              EVAL      P@MgID = 'ACO1003'
+     C   93              EVAL      P@MgID = 'ACO1004'
+     C   94              EVAL      P@MgID = 'ACO1005'
+     C   95              EVAL      P@MgID = 'ACO1006'
+     C   96              EVAL      P@MgID = 'ACO1007'
+     C   97              EVAL      P@MgID = 'ACO1009'
+     C   98              EVAL      P@MgID = 'AC01010'
+ 
+     C                   CALL      'ZASNMG'
+     C                   PARM      *BLANK        W@Rtcd
+     C                   PARM      PGNAME        P@PgNm
+     C                   PARM      '*PRV'        P@Dest
+     C                   PARM                    P@MgID
+     C                   PARM      *BLANK        P@MsgF
+     C                   PARM      *BLANK        P@MgKy
+     C                   PARM                    P@MgDa
+     C                   PARM      '*DIAG'       P@MgTp
+     C                   ENDIF
+ 
+      ** Caller Requests DB Error Handling
+ 
+     C                   IF        W@Rtcd = '*DBERR' AND
+     C                             P@Rtcd = *BLANK
+     C                   DUMP
+     C                   CALL      'DBERRCTL'
+     C                   ENDIF
+ 
+     C                   IF        P@Optn <> '*VERIFY' AND
+     C                             P@Optn <> '*FREE'   AND
+     C                             P@Rtcd <> '*OPTION'
+     C                   EVAL      P@FMT = D@FMT
+     C                   ENDIF
+ 
+      ** Return to caller :
+ 
+     C                   RETURN
+ 
+      *****************************************************
+** CPY@
+(c) Finastra International Limited 2013
+**
+SDFATCPD  AOFATCR0  FATCA Classification Code

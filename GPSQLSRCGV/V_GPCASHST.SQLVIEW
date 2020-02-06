@@ -1,0 +1,87 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_GPCASHST - Global Settlement Cashflows                              */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CRE024A            Date 18Oct12                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER043             Date 02Jun08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 05Jun08                        */
+/*                      BUG17427           Date 04Apr08                        */
+/*                      249175             Date 26Aug07                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      BUG11273           Date 28Apr06                        */
+/*                      BUG5376R           Date 20Jul05                        */
+/*                      BUG7169            Date 29Jun05                        */
+/*                      BUG5404            Date 18Jan05                        */
+/*                      BUG5376            Date 11Jan04                        */
+/*                      BUG5221            Date 13Dec04                        */
+/*                      BUG4337 *CREATE    Date 05Mar04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CRE024A - Security Features for Restricted Accounts Enhancement       */
+/*                 (Recompile)                                                 */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*                (Recompile)                                                  */
+/*       BG18886 - Amend non-standard codes. Recompile only.                   */
+/*       BUG17427 - Global Enquiries - Settlement Cashflows (Recompile).       */
+/*       249175   - Inner join on Manual Transactions file. If Manual          */
+/*                  Transactions switched off, Settelement Cashflows displays  */
+/*                  nothing - add system value instead.                        */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       BUG5376R - Additional line of codes for 5376                          */
+/*       BUG7169- HBOS Error change to V_GPTRAPPD        (Recompile)           */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG5376 - Net Cashflow Value Calculation                              */
+/*       BUG5221 - (recompile)                                                 */
+/*       BUG4337- CGP007                                                       */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS
+***SELECT V_GPCASHPD.*, V_GPTRAPPD.*********************************************:BUG5376
+***FROM V_GPCASHPD V_GPCASHPD INNER JOIN V_GPTRAPPD V_GPTRAPPD ON***************:BUG5376
+***C_ID=T_ID********************************************************************:BUG5376
+   SELECT V_GPCASHPD.C_ID,V_GPCASHPD.C_AMNT,V_GPCASHPD.C_CCY,V_GPCASHPD.C_IO,   :BUG5376
+   V_GPCASHPD.FC_DATE,V_GPTRAPPD.T_ZONE,V_GPTRAPPD.T_MOD,V_GPTRAPPD.T_SMOD,     :BUG5376
+   V_GPTRAPPD.PADCNUM,V_GPTRAPPD.T_BRCA,V_GPTRAPPD.T_BOOK,V_GPTRAPPD.T_TREF,    :BUG5376
+   V_GPTRAPPD.T_ACCY,V_GPTRAPPD.T_ACOD,V_GPTRAPPD.T_ACSQ,V_GPTRAPPD.T_SESN,     :BUG5376
+   V_GPTRAPPD.T_ISTT,V_GPTRAPPD.T_YRNO,V_GPTRAPPD.T_MTHN,V_GPTRAPPD.T_PCAL,     :BUG5376
+   V_GPTRAPPD.T_STRP,V_GPTRAPPD.T_ID,V_GPTRAPPD.PRODDESC,V_GPTRAPPD.PRODSEQ,    :BUG5376
+   V_GPTRAPPD.T_SNAM,V_GPTRAPPD.SMMODDESC,V_GPTRAPPD.P_MKPR,                    :BUG5376
+   V_GPTRAPPD.P_MKVL,V_GPTRAPPD.P_AITD,V_GPTRAPPD.T_SDAT,V_GPTRAPPD.T_EDAT,     :BUG5376
+   V_GPTRAPPD.T_LICD,V_GPTRAPPD.T_CNCD,V_GPTRAPPD.CGGLOB,V_GPTRAPPD.CGBRCD,     :BUG5376
+   V_GPTRAPPD.CGCUST,                                                           :BUG5376
+   CASE WHEN C_IO='O' AND C_AMNT > 0 THEN C_AMNT * -1                           :BUG5376
+                                 ELSE C_AMNT END AS C_NETAMNT,                  :BUG5376
+   CASE WHEN C_IO='O' THEN C_AMNT END AS C_OUTAMNT,                             :           BUG5376R
+   CASE WHEN C_IO='I' THEN C_AMNT END AS C_INAMNT,                              :           BUG5376R
+   CASE WHEN P_ONOM > 0 AND C_IO='O' THEN P_ONOM ELSE P_NOML END AS C_NOMVAL,   :BUG5376
+   CASE WHEN P_ONOM > 0 AND C_IO='O' THEN P_NOML ELSE P_ONOM END AS C_ONOMVAL,  :BUG5376
+   CASE WHEN P_ONOM > 0 AND C_IO='O' THEN P_CCY ELSE P_OCCY END AS C_OVALCCY    :BUG5376
+   FROM V_GPCASHPD V_GPCASHPD                                                   :BUG5376
+   INNER JOIN V_GPTRAPPD V_GPTRAPPD ON C_ID=T_ID                                :BUG5376
+   where FC_DATE < (SELECT DATE(BJRDNB + 719892) +11 DAYS FROM                  :
+***GZSDBANKPD*INNER*JOIN*T_MLGBLCD*ON*CDVALUE=BJZONE);**************************:             249175
+   GZSDBANKPD where BJZONE IN (SELECT GIVAL                                     :             249175
+   FROM GPSVALPD WHERE GISVAL='GlobalZone'));                                   :             249175
+   LABEL ON TABLE V_GPCASHST  IS 'GLOBAL SETTLEMENT CASHFLOWS';
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Global Settlement Cashflows                       ';                     :
+                                                                                :

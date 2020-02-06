@@ -1,0 +1,3286 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG PM valuation statement: perf. breakdown')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG4162 - Valuation Statement - Performance Breakdown         *
+     F*                                                               *
+     F*  Function:  This program xxxxxxxxxxxxxxxxxxxxxxxxxxxx         *
+     F*  (phase(s))                                                   *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG9646            Date 20Dec05               *
+      *                 CSC022             Date 24Feb04               *
+      *                 222373             Date 03Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CCG009             Date 01Jun95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9646- Changes in CGPACKE causes programs not to compile   *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  222373 - Correct parameters on program calls                 *
+     F*  CSD006 - Recompiled over changed SDCURRPD.                   *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*                                                               *
+     F*****************************************************************
+     FPMPORTLLIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F** Performance Required - Prefix QR
+     FPMPFMRPDIF  E           K        DISK         KINFSR *PSSR
+     F*
+     F** Portfolio Performance Totals - Prefix QV
+     FPMPSPOQ0IF  E           K        DISK         KINFSR *PSSR
+     E/COPY CGCPYSRC,CGPACKE
+     E/COPY CGCPYSRC,SRERRE
+     E**  Number Arrays
+     E                    ##W        20  1
+     E                    ##NUMA     29  1
+     E*
+     E* ##GRP = Group/RDE Number               ##RDEA = RDE + Attributes
+     E                    ##GRP   1 156 10   ##RDEA 22
+     E*
+     E**  Array of Currencies accessed by program
+     E                    ##CY      100  3
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     E*
+     E**  Array containing Performance Categories on PMPSPOQ0
+     E                    PFMC    1  27  6
+     E*
+     E**  Array used in calculating Performance Totals Period 1, 2 & 3
+     E                    PFM1       27 15 0
+     E                    PFM2       27 15 0
+     E                    PFM3       27 15 0
+      /COPY ZSRSRC,ZSEDITZ1
+      /COPY ZSRSRC,ZDATE2Z1
+     I*
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I            DS
+     I                                        1  10 ##GRPX
+     I                                        1   6 ##GRPS
+     I                                        7  100##RDEN
+     I**  Look-up string for RDE definition Array
+     I*
+     I##SDS       DS
+     I**********                              15120 ##S                                      BUG9646
+     I                                        15632 ##S                                      BUG9646
+     I*
+     I#@SDS       DS
+     I                                     51205120 #@S
+     I**  Packed data string.
+     I*
+     I            DS
+     I                                        1  20 ##W
+     I                                        1  200##WNUM
+     I**  Number Field
+     I*
+     I            DS
+     I                                        1   8 ##ITMA
+     I                                        1   80##ITEM
+     I** Used to convert item reference from character to numeric
+     I*
+     I            DS
+     I                                        1   6 ##NCIT
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     I            DS
+     I                                        1   5 ##CCCC
+     I                                        1   3 ##CCY
+     I                                        4   5 ##CCD
+     I**  For error reporting
+     I*
+     I*----------------------------------------------------------------
+     I*Named constants
+     I*
+     I              'PB_VALS   '          C         W#PTYP
+     I              '12PERFORMA'          C         W#PSTP
+      *
+     IWWKEY1      DS
+     I**********                              1   60K1CNUM                                    CSD027
+     I                                        1   6 K1CNUM                                    CSD027
+     I                                        7  10 K1PTFR
+     I*----------------------------------------------------------------
+     I##UDCR    E DSCGUDCRPD
+      ** External DS for incomplete reference
+      *
+     ISDBANK    E DSSDBANKPD
+     I** Dummy Record Format for Bank Details
+      *
+     ISDPORT    E DSSDPORTPD
+      **  External DS for PM ICD details
+      *
+     ISDCURR    E DSSDCURRPD                101
+      **  External DS for currency details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data structure
+      *
+     IDSPARM    E DSPMUDCEXT
+      **  External DS for parameters based on PF/DTRIXDD
+      *
+     IW0FMT     E DSCGUDTAPD
+      **  Record format of PF/CGUDTAPD for use as a parameter
+      *
+     I##SRDT      DS                         20
+      **  DS to store subroutine specific data.
+      **  - Saved Path
+     I                                        1  70 ##SPAT
+      **  - Saved Binds
+     I                                       71  790##PBIN
+     I                                       80  880##TBIN
+     I            DS
+      **  Latest Bind Number
+      *
+     I                                        1   60#@BIND
+      *
+     I/COPY CGCPYSRC,CGPACKI
+      *
+     ICPYR        DS
+      **  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I/COPY CGCPYSRC,SRERRI
+      **  DS to store subroutine specific data.
+      **  - Saved Path
+     I#PDS        DS
+     I I            0                         1   30P1
+     I                                        4   60P2
+     I                                        7   90P3
+     I                                       10  120P4
+     I                                       13  150P5
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRINZ  - Initialise Fields on Each Invocation  *
+      *                SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+     C                     PARM           ##COPD  1
+     C                     PARM           DSPARM
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      ** Initialisation processing
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+     C                     EXSR SRMAIN
+      *
+      **  Commit updates
+     C           W0CMT     IFEQ 'YES'
+     C                     COMIT
+     C                     END
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Generate reference number by writing to PF/CGUDCRPD
+      **  If no confirmation to be produced, then bypass
+      *
+     C                     MOVE 'N'       ##COPD
+     C                     EXSR SRGENR
+     C           ##COPD    CABEQ'N'       EXMAIN
+      *
+      ** Extract
+      *
+     C                     EXSR P12VPF
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P12VPF                                         *
+      * Function    :  Process:                              #        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P12VPF    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'p12VPF'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Set up Path.
+     C                     MOVEL'\p12VPF' ##PNAM  7
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Store Path & Binds
+     C           1         OCUR ##SRDT
+     C                     MOVELS#PATH    ##SPAT
+     C                     Z-ADD1         ##PBIN
+     C                     Z-ADD1         ##TBIN
+      *
+      ** Account Officer Details
+     C                     EXSR SRACOF
+      *
+      ** Customer Base Details
+     C                     EXSR P@CSTB
+      *
+      ** Portfolio Base Details
+     C                     EXSR P@PTFB
+      *
+      ** Print Request Details
+     C                     EXSR P@PRTD
+      *
+      ** Portfolio Performance Periods
+     C                     EXSR P@PRFP
+      *
+      ** Print First page
+     C                     EXSR P@PRF
+      *
+      ** Print Second page
+     C                     EXSR P@PERF
+      *
+      *................................................................
+      *
+     C           EXVPF     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINZ                                          *
+      * Function    :  Initialise Fields on Program Invocation        *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     Z-ADD*ZEROS    ##W050  50
+     C                     Z-ADD*ZEROS    ##W150 150
+     C                     Z-ADD*ZEROS    #1      60
+     C                     Z-ADD*ZEROS    #2      60
+     C                     Z-ADD*ZEROS    #3      60
+     C                     MOVE *BLANKS   S#PATH256
+     C                     Z-ADD1         #@BIND
+      *
+      **  Initialise output sequence (to CGUDTAPD)
+     C           *LIKE     DEFN DEOSEQ    ##OSEQ
+     C                     Z-ADD*ZEROS    ##OSEQ
+      *
+      **  Reset all Totals to zero
+     C                     Z-ADD1         I       30
+     C           I         DOWLE26
+     C                     Z-ADD0         PFM1,I
+     C                     Z-ADD0         PFM2,I
+     C                     Z-ADD0         PFM3,I
+     C                     ADD  1         I
+     C                     END
+      *
+     C           EXINZ     TAG
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Call access program for PM ICD details
+      *
+     C                     CALL 'AOPORTR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDPORT    PARM SDPORT    DSSDY
+     C*
+     C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+     C                     MOVEL'AOPORTR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD01        W0ERNB           * DB ERROR 01 *
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG  '  ##RTCD
+     C                     PARM '*FIRST'  ##OPTN
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database error
+      *
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVEL'SDBANKPD'W0FILE           ***************
+     C                     MOVEL'*FIRST'  W0KEY            * DB ERROR 02 *
+     C                     Z-ADD02        W0ERNB           ***************
+     C                     MOVEL'MEM5004' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRACOF                                         *
+      * Function    :  Process: Account Officer Details               *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRACOF    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'ACOF  '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\ACOF  ' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Account Officer Code
+     C                     MOVELWWACOC    ##D,1
+      *
+      ** Account Officer Department code
+     C                     MOVELWWDPCD    ##D,2
+      *
+      ** Account Officer Name
+     C                     MOVELWWACON    ##D,3
+      *
+      ** Account Officer Telephone Number
+     C                     MOVELWWAPHN    ##D,4
+      *
+      ** Account Officer Telephone Extension Number
+     C                     MOVELWWAEXT    ##D,5
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXACOF    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@CSTB                                         *
+      * Function    :  Process: Customer Base Details                 *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@CSTB    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_CSTB'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_CSTB' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Customer Number
+     C                     MOVELWWCNUM    ##D,1
+      *
+      ** Customer Name
+     C                     MOVELWWCRNM    ##D,2
+      *
+      ** Customer Town
+     C                     MOVELWWCTWN    ##D,3
+      *
+      ** Customer Address Code
+     C                     MOVELWWADCD    ##D,4
+      *
+      ** Customer Address Line 1
+     C                     MOVELWWCNA1    ##D,5
+      *
+      ** Customer Address Line 2
+     C                     MOVELWWCNA2    ##D,6
+      *
+      ** Customer Address Line 3
+     C                     MOVELWWCNA3    ##D,7
+      *
+      ** Customer Address Line 4
+     C                     MOVELWWCNA4    ##D,8
+      *
+      ** Portfolio Currency
+     C                     MOVELWWPTCY    ##D,9
+      *
+      ** Portfolio Currency Description
+     C                     MOVELWWPTCY    ##CCY   3
+     C                     EXSR SRDCDT
+     C                     MOVELA6CYNM    ##D,10
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXCSTB    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PRTD                                         *
+      * Function    :  Process: Print Request Details                 *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PRTD    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PRTD'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PRTD' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** Request Number
+     C                     MOVELWWRQNO    ##D,1
+      *
+      ** Requested by User
+     C                     MOVELWWUSER    ##D,2
+      *
+      ** Regular or Extra Statement
+     C           WWXTRS    IFEQ 'Y'
+     C                     MOVEL'E'       ##D,3            * EXTRA
+     C                     ELSE
+     C                     MOVEL'R'       ##D,3            * REGULAR
+     C                     END
+      *
+      ** For the Use Of: A/C officer/Customer
+     C           WWVLNT    IFEQ 'A'
+     C                     MOVEL'A'       ##D,4
+     C                     ELSE
+     C                     MOVEL'C'       ##D,4
+     C                     END
+      *
+      ** Hold Mail Y/N
+     C           WWHLDM    IFEQ 'H'
+     C                     MOVEL'Y'       ##D,5
+     C                     ELSE
+     C                     MOVEL'N'       ##D,5
+     C                     END
+      *
+      ** Date of FX Rates
+     C                     MOVELWWFXDT    ##D,6
+      *
+      ** Date of Valuation
+     C                     MOVELWWLXDT    ##D,7
+      *
+      ** Where Printed
+     C                     MOVELWWBMSN    ##D,8
+      *
+      ** When Printed
+     C                     MOVELWWECD     ##D,9
+      *
+     C                     MOVEL*BLANKS   ##D,10
+     C                     MOVEL*BLANKS   ##D,11
+     C                     MOVEL*BLANKS   ##D,12
+     C                     MOVEL*BLANKS   ##D,13
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXPRTD    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PTFB                                         *
+      * Function    :  Process: Portfolio Base Details                *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PTFB    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PTFB'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PTFB' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      **  Portfolio reference
+     C           WWPTFF    IFNE '9997'
+     C           WWPTFF    ANDNE'9998'
+     C           WWPTFF    ANDNE'9999'
+      *
+      **   Access Portfolio Details File with information from PMUDCEXT
+      *
+     C           CUSTK     KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFF
+      *
+     C           CUSTK     CHAINPMPORTLL             63
+      *
+     C           *IN63     IFEQ '1'
+     C**********           Z-ADDWWCNUM    K1CNUM                                              CSD027
+     C                     MOVE WWCNUM    K1CNUM                                              CSD027
+     C                     MOVELWWPTFF    K1PTFR
+     C                     MOVEL'PMPORTLL'W0FILE
+     C                     MOVELWWKEY1    W0KEY            ***************
+     C                     Z-ADD03        W0ERNB           * DB ERROR 03 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Portfolio reference
+     C                     MOVELPNPTFR    ##D,1
+      *
+      **  Portfolio Reference - On File
+     C                     MOVELPNPTFR    ##D,2
+      *
+      **  Portfolio Narrative
+     C                     MOVELPNPTFN    ##D,3
+      *
+      **  Portfolio Currency
+     C                     MOVELPNPTCY    ##D,4
+      *
+      **  Portfolio Currency Description
+     C                     MOVELPNPTCY    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6CYNM    ##D,5
+     C                     ELSE
+      *
+      **  Portfolio Narrative
+     C           WWPTFF    IFEQ '9997'
+     C                     MOVELFCR997    ##D,1
+     C                     ELSE
+     C           WWPTFF    IFEQ '9998'
+     C                     MOVELFCR998    ##D,1
+     C                     ELSE
+     C                     MOVELFCR999    ##D,1
+     C                     END
+     C                     END
+      *
+      **  Portfolio Reference - On File
+     C                     MOVELWWPTFF    ##D,2
+      *
+      **  Portfolio Narrative
+     C           WWPTFF    IFEQ '9997'
+     C                     MOVELFCN997    ##D,3
+     C                     ELSE
+     C           WWPTFF    IFEQ '9998'
+     C                     MOVELFCN998    ##D,3
+     C                     ELSE
+     C                     MOVELFCN999    ##D,3
+     C                     END
+     C                     END
+      *
+      **  Portfolio Currency
+     C                     MOVELWWCSBY    ##D,4
+      *
+      **  Portfolio Currency Description
+     C                     MOVELWWCSBY    ##CCY
+     C                     EXSR SRDCDT
+     C                     MOVELA6CYNM    ##D,5
+     C                     END
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXPTFB    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PRFP                                         *
+      * Function    :  Portfolio Performance Periods                  *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PRFP    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PRFP'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PRFP' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+      *
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      **  KLIST for access of PMPFMRPD
+     C           PFMRKY    KLIST
+     C                     KFLD           WWPFMP
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFF
+      *
+      ** If Performance Period 1 required, obtain period dates from PF/PMPFMRPD
+     C           WWS3VR    IFEQ 'Y'
+     C                     MOVE '1'       WWPFMP  1
+      *
+     C           PFMRKY    CHAINPMPFMRPD             62
+      *
+     C           *IN62     IFEQ '1'
+     C                     MOVEL'PMPFMRPD'W0FILE
+     C                     MOVELWWCNUM    W0KEY
+     C                     MOVE WWPTFF    W0KEY            ***************
+     C                     Z-ADD04        W0ERNB           * DB ERROR 04 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Period Start Date for Past Year
+     C                     Z-ADDQRPMSD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ##D,1
+      *
+      ** Period End Date for Past Year
+     C                     Z-ADDQRPMED    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ##D,2
+      *
+      ** Days in Period for Past Year
+     C                     MOVELQRDYPP    ##D,3
+     C                     MOVE WWPCDP    ##D,3
+      *
+     C                     Z-ADDQRDYPP    WWDYP1  30
+      *
+     C                     ELSE
+     C                     MOVEL*BLANKS   ##D,1
+     C                     MOVEL*BLANKS   ##D,2
+     C                     MOVEL*BLANKS   ##D,3
+     C                     END
+      *
+      ** If Performance Period 2 required, obtain period dates from PF/PMPFMRPD
+     C           WWS4VR    IFEQ 'Y'
+     C                     MOVE '2'       WWPFMP  1
+      *
+     C           PFMRKY    CHAINPMPFMRPD             62
+      *
+     C           *IN62     IFEQ '1'
+     C                     MOVEL'PMPFMRPD'W0FILE
+     C                     MOVELWWCNUM    W0KEY
+     C                     MOVE WWPTFF    W0KEY            ***************
+     C                     Z-ADD05        W0ERNB           * DB ERROR 05 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Period Start Date for Tax Year
+     C                     Z-ADDQRPMSD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ##D,4
+      *
+      ** Period End Date for Tax Year
+     C                     Z-ADDQRPMED    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ##D,5
+      *
+      ** Days in Period for Tax Year
+     C                     MOVELQRDYPP    ##D,6
+     C                     MOVE WWPCDP    ##D,6
+      *
+     C                     Z-ADDQRDYPP    WWDYP2  30
+      *
+     C                     ELSE
+     C                     MOVEL*BLANKS   ##D,4
+     C                     MOVEL*BLANKS   ##D,5
+     C                     MOVEL*BLANKS   ##D,6
+     C                     END
+      *
+      ** If Performance Period 3 required, obtain period dates from PF/PMPFMRPD
+     C           WWS5VR    IFEQ 'Y'
+     C                     MOVE '3'       WWPFMP  1
+      *
+     C           PFMRKY    CHAINPMPFMRPD             62
+      *
+     C           *IN62     IFEQ '1'
+     C                     MOVEL'PMPFMRPD'W0FILE
+     C                     MOVELWWCNUM    W0KEY
+     C                     MOVE WWPTFF    W0KEY            ***************
+     C                     Z-ADD06        W0ERNB           * DB ERROR 06 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Period Start Date for Additional Period
+     C                     Z-ADDQRPMSD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ##D,7
+      *
+      ** Period End Date for Additional Period
+     C                     Z-ADDQRPMED    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    ##D,8
+      *
+      ** Days in Period for Additional Period
+     C                     MOVELQRDYPP    ##D,9
+     C                     MOVE WWPCDP    ##D,9
+      *
+     C                     Z-ADDQRDYPP    WWDYP3  30
+      *
+     C                     ELSE
+     C                     MOVEL*BLANKS   ##D,7
+     C                     MOVEL*BLANKS   ##D,8
+     C                     MOVEL*BLANKS   ##D,9
+     C                     END
+      *
+      **  Accumulate RDE's and associated data and output to
+      **  PF/CGUDTAPD.
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      *................................................................
+      *
+     C           EXPFTP    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PRF                                          *
+      * Function    :  Print First Page                               *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PRF     BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PRF '  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PRF ' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Store Path
+     C           2         OCUR ##SRDT
+     C                     MOVELS#PATH    ##SPAT
+      *
+      **  KLIST for Access of PMPSPOQ0
+     C           PSPOKY    KLIST
+     C                     KFLD           QRCNUM
+     C                     KFLD           QRPTFR
+     C                     KFLD           WWPFMP
+      *
+     C           PSPOK1    KLIST
+     C                     KFLD           QRCNUM
+     C                     KFLD           QRPTFR
+      *
+      **  Read first record to be reported from QRYF/PMPSPOQ0
+     C                     MOVE '1'       WWPFMP
+     C           PSPOKY    SETLLPMPSPOQ0
+     C           PSPOK1    READEPMPSPOQ0                 62
+      *
+      **  Do while records read from PF/PMPSPOQ0
+     C           *IN62     DOWEQ'0'
+      *
+      **  Maintain Portfolio Totals
+     C                     EXSR SRADD
+      *
+     C           PSPOK1    READEPMPSPOQ0                 62
+     C                     END
+      *
+      **  Retrieve subroutine specific data
+     C           1         OCUR ##SRDT
+     C                     Z-ADD##TBIN    S#TBIN  90
+      *
+      **  Increment & store binds
+     C           2         OCUR ##SRDT
+     C                     Z-ADDS#TBIN    ##PBIN
+     C                     ADD  1         #@BIND
+     C                     Z-ADD#@BIND    ##TBIN
+      *
+      **  Market Value
+     C                     EXSR P@PFMK
+      *
+      **  Return on Invested Capital
+     C                     EXSR P@PFRT
+      *
+      **  Annualised Return on Invested Capital
+     C                     EXSR P@PART
+      *
+      **  Average Invested Capital
+     C                     EXSR P@PFAI
+      *
+      *................................................................
+      *
+     C           EXPTY     TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PERF                                         *
+      * Function    :  Print Second Page                              *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PERF    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PERF'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           1         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PERF' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Store Path
+     C           2         OCUR ##SRDT
+     C                     MOVELS#PATH    ##SPAT
+      *
+      **  Retrieve subroutine specific data
+     C           1         OCUR ##SRDT
+     C                     Z-ADD##TBIN    S#TBIN  90
+      *
+      **  Increment & store binds
+     C           2         OCUR ##SRDT
+     C                     Z-ADDS#TBIN    ##PBIN
+     C                     ADD  1         #@BIND
+     C                     Z-ADD#@BIND    ##TBIN
+      *
+      **  Trading Profit/Loss
+     C                     EXSR P@PFTP
+      *
+      **  Annualised Trading Profit/Loss
+     C                     EXSR P@PATP
+      *
+      **  Interest and Dividends
+     C                     EXSR P@PFIT
+      *
+      **  Annualised Interest and Dividends
+     C                     EXSR P@PAIT
+      *
+      **  Exchange Profit/Loss
+     C                     EXSR P@PFXP
+      *
+      **  Annualised Exchange Profit/Loss
+     C                     EXSR P@PAXP
+      *
+      **  Other Items
+     C                     EXSR P@PFOT
+      *
+      **  Annualised Other Items
+     C                     EXSR P@PAOT
+      *
+      *................................................................
+      *
+     C           EXPERF    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRADD                                          *
+      * Function    :  Calculate Performance Category Totals          *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG3999 - Format and Pack Data                  *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRADD     BEGSR
+      *
+      **  Add Performance Amount to correct element of array
+     C                     Z-ADD1         I
+     C                     MOVELQVPFMC    WWPFSC  6
+     C                     MOVE QVPFMS    WWPFSC
+     C           WWPFSC    LOKUPPFMC,I                   64
+      *
+     C           QVPFMP    IFEQ '1'
+     C                     ADD  QVPFMA    PFM1,I
+     C                     ELSE
+     C           QVPFMP    IFEQ '2'
+     C                     ADD  QVPFMA    PFM2,I
+     C                     ELSE
+     C                     ADD  QVPFMA    PFM3,I
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PFMK                                         *
+      * Function    :  Process: Market Value                          *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PFMK    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PFMK'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PFMK' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Value at End for Past Year
+     C                     MOVELPFM1,1    ##D,1
+     C                     MOVE WWPCDP    ##D,1
+      *
+      **  Value at Start for Past Year
+     C                     MOVELPFM1,2    ##D,2
+     C                     MOVE WWPCDP    ##D,2
+      *
+      **  Change in Market Value for Past Year
+     C           PFM1,1    SUB  PFM1,2    WW150  150
+     C                     MOVELWW150     ##D,3
+     C                     MOVE WWPCDP    ##D,3
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Value at End for Tax Year
+     C                     MOVELPFM2,1    ##D,4
+     C                     MOVE WWPCDP    ##D,4
+      *
+      **  Value at Start for Tax Year
+     C                     MOVELPFM2,2    ##D,5
+     C                     MOVE WWPCDP    ##D,5
+      *
+      **  Change in Market Value for Tax Year
+     C           PFM2,1    SUB  PFM2,2    WW150
+     C                     MOVELWW150     ##D,6
+     C                     MOVE WWPCDP    ##D,6
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Value at End for Additional Period
+     C                     MOVELPFM3,1    ##D,7
+     C                     MOVE WWPCDP    ##D,7
+      *
+      **  Value at Start for Additional Period
+     C                     MOVELPFM3,2    ##D,8
+     C                     MOVE WWPCDP    ##D,8
+      *
+      **  Change in Market Value for Additional Period
+     C           PFM3,1    SUB  PFM3,2    WW150
+     C                     MOVELWW150     ##D,9
+     C                     MOVE WWPCDP    ##D,9
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PFRT                                         *
+      * Function    :  Process: Return on Invested Capital            *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PFRT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PFRT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PFRT' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+     C           WWSHCC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'
+     C                     Z-ADDPFM1,4    WW150  150
+     C                     Z-ADDPFM1,5    WW151  150
+     C                     Z-ADDPFM2,4    WW250  150
+     C                     Z-ADDPFM2,5    WW251  150
+     C                     Z-ADDPFM3,4    WW350  150
+     C                     Z-ADDPFM3,5    WW351  150
+     C                     ELSE
+     C           PFM1,4    ADD  PFM1,24   WW150
+     C           PFM1,5    SUB  PFM1,25   WW151
+     C           PFM2,4    ADD  PFM2,24   WW250
+     C           PFM2,5    SUB  PFM2,25   WW251
+     C           PFM3,4    ADD  PFM3,24   WW350
+     C           PFM3,5    SUB  PFM3,25   WW351
+     C                     END
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Capital Added for Past Year
+     C                     MOVELWW150     ##D,1
+     C                     MOVE WWPCDP    ##D,1
+      *
+      **  Capital Withdrawn for Past Year
+     C                     MOVELWW151     ##D,2
+     C                     MOVE WWPCDP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Capital Added for Tax Year
+     C                     MOVELWW250     ##D,6
+     C                     MOVE WWPCDP    ##D,6
+      *
+      **  Capital Withdrawn for Tax Year
+     C                     MOVELWW251     ##D,7
+     C                     MOVE WWPCDP    ##D,7
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Capital Added for Additional Period
+     C                     MOVELWW350     ##D,11
+     C                     MOVE WWPCDP    ##D,11
+      *
+      **  Capital Withdrawn for Additional Period
+     C                     MOVELWW351     ##D,12
+     C                     MOVE WWPCDP    ##D,12
+     C                     END
+      *
+     C           WWPMNG    IFEQ 'G'
+     C                     Z-SUBPFM1,19   WW150
+     C                     Z-SUBPFM2,19   WW250
+     C                     Z-SUBPFM3,19   WW350
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Reclaimable Tax for Past Year
+     C                     MOVELWW150     ##D,3
+     C                     MOVE WWPCDP    ##D,3
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Reclaimable Tax for Tax Year
+     C                     MOVELWW250     ##D,8
+     C                     MOVE WWPCDP    ##D,8
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Reclaimable Tax for Additional Period
+     C                     MOVELWW350     ##D,13
+     C                     MOVE WWPCDP    ##D,13
+     C                     END
+     C                     END
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Adjustement Due to Deletions for Past Year
+     C           PFM1,26   IFNE 0
+     C                     MOVELPFM1,26   ##D,4
+     C                     MOVE WWPCDP    ##D,4
+     C                     END
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Adjustement Due to Deletions for Tax Year
+     C           PFM2,26   IFNE 0
+     C                     MOVELPFM2,26   ##D,9
+     C                     MOVE WWPCDP    ##D,9
+     C                     END
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Adjustement Due to Deletions for Additional Period
+     C           PFM3,26   IFNE 0
+     C                     MOVELPFM3,26   ##D,14
+     C                     MOVE WWPCDP    ##D,14
+     C                     END
+     C                     END
+      *
+     C                     Z-ADD0         WW150
+     C                     Z-ADD0         WW250
+     C                     Z-ADD0         WW350
+      *
+     C           PFM1,1    SUB  PFM1,2    WW150
+     C           WW150     SUB  PFM1,4    WW150
+     C           WW150     ADD  PFM1,5    WW150
+      *
+     C           PFM2,1    SUB  PFM2,2    WW250
+     C           WW250     SUB  PFM2,4    WW250
+     C           WW250     ADD  PFM2,5    WW250
+      *
+     C           PFM3,1    SUB  PFM3,2    WW350
+     C           WW350     SUB  PFM3,4    WW350
+     C           WW350     ADD  PFM3,5    WW350
+      *
+     C           WWPMNG    IFEQ 'G'
+     C           WW150     SUB  PFM1,19   WW150
+     C           WW250     SUB  PFM2,19   WW250
+     C           WW350     SUB  PFM3,19   WW350
+     C                     END
+      *
+     C           WWSHCC    IFEQ 'N'
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'
+     C           WW150     SUB  PFM1,24   WW150
+     C           WW150     SUB  PFM1,25   WW150
+     C           WW250     SUB  PFM2,24   WW250
+     C           WW250     SUB  PFM2,25   WW250
+     C           WW350     SUB  PFM3,24   WW350
+     C           WW350     SUB  PFM3,25   WW350
+     C                     END
+      *
+     C                     SUB  PFM1,26   WW150
+     C                     SUB  PFM2,26   WW250
+     C                     SUB  PFM3,26   WW350
+      *
+     C                     Z-ADDWW150     WWRTN1 150
+     C                     Z-ADDWW250     WWRTN2 150
+     C                     Z-ADDWW350     WWRTN3 150
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Return on Invested Capital for Past Year
+     C                     MOVELWW150     ##D,5
+     C                     MOVE WWPCDP    ##D,5
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Return on Invested Capital for Tax Year
+     C                     MOVELWW250     ##D,10
+     C                     MOVE WWPCDP    ##D,10
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Return on Invested Capital for Additional Period
+     C                     MOVELWW350     ##D,15
+     C                     MOVE WWPCDP    ##D,15
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PART                                         *
+      * Function    :  Process: Annualised Return on Invested Capital *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PART    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PART'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PART' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWRTN1    WWRTRN 150
+     C           PFM1,6    ADD  PFM1,3    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR SRCAL
+      *
+      **  Absolute Return for Past Year
+     C                     MOVELWWABSP    ##D,1
+      *
+      **  Annualised Return for Past Year
+     C                     MOVELWWANNP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWRTN2    WWRTRN
+     C           PFM2,6    ADD  PFM2,3    WWAVIC
+     C                     Z-ADDWWDYP2    WWDYPP
+     C                     EXSR SRCAL
+      *
+      **  Absolute Return for Tax Year
+     C                     MOVELWWABSP    ##D,3
+      *
+      **  Annualised Return for Tax Year
+     C                     MOVELWWANNP    ##D,4
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWRTN3    WWRTRN
+     C           PFM3,6    ADD  PFM3,3    WWAVIC
+     C                     Z-ADDWWDYP3    WWDYPP
+     C                     EXSR SRCAL
+      *
+      **  Absolute Return for Additional Period
+     C                     MOVELWWABSP    ##D,5
+      *
+      **  Annualised Return for Additional Period
+     C                     MOVELWWANNP    ##D,6
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRCAL                                          *
+      * Function    :  Process: Calculate Performance Category Totals *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRCAL     BEGSR
+      *
+      **  Calculate Absolute Performance as Return on Capital divided
+      **  by Average Invested Capital
+     C           WWAVIC    IFNE 0
+      *
+     C           WWAVIC    IFLT 0
+     C                     Z-SUBWWAVIC    WWAVIC
+     C                     END
+      *
+     C           WWRTRN    DIV  WWAVIC    WWABRT 158H
+      *
+      **  Convert Absolute Amount to Percentage Figure
+     C           WWABRT    MULT 100       WWABRT    H
+      *
+     C           WWABRT    IFGT 999.999
+     C           WWABRT    ORLT -999.999
+     C                     Z-ADD*HIVAL    WWABRT
+     C                     END
+      *
+      **  Otherwise if Bottom line (Invested Capital) set to 0
+     C                     ELSE
+      *
+      **  If a Return has been earned, set Return to *HIVAL otherwise no
+      **  Return earned, implies Performance of 0
+     C           WWRTRN    IFNE 0
+     C                     Z-ADD*HIVAL    WWABRT
+     C                     ELSE
+     C                     Z-ADD0         WWABRT
+     C                     END
+      *
+     C                     END
+      *
+      **  If valid Figures not available, output '******'
+     C           WWABRT    IFEQ *HIVAL
+     C                     MOVE '********'WWABSP  8
+     C                     MOVE '********'WWANNP  8
+     C                     ELSE
+      *
+      **  Otherwise format Absolute Return as via SR/ZSEDIT
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWABRT    WRK103 103H
+     C                     MOVE WRK103    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWABSP
+      *
+      **  Convert Absoulte Perofrmance to an Annualised Rate and then Format
+     C           WWABRT    MULT 365       WWANNR 103H
+     C           WWANNR    DIV  WWDYPP    WWANNR 103H
+      *
+     C           WWANNR    IFGT 999.999
+     C           WWANNR    ORLT -999.999
+     C                     MOVE '********'WWANNP
+     C                     ELSE
+      *
+      **  Otherwise format Annualised Return as via SR/ZSEDIT
+     C                     Z-ADD0         ZFLD15
+     C                     Z-ADDWWANNR    WRK103    H
+     C                     MOVE WRK103    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    WWANNP
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      ********************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PFAI                                         *
+      * Function    :  Process: Average Invested Capital              *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PFAI    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PFAI'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PFAI' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Capital Invested at Start for Past Year
+     C                     MOVELPFM1,3    ##D,1
+     C                     MOVE WWPCDP    ##D,1
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Capital Invested at Start for Tax Year
+     C                     MOVELPFM2,3    ##D,4
+     C                     MOVE WWPCDP    ##D,4
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Capital Invested at Start for Additional Period
+     C                     MOVELPFM3,3    ##D,7
+     C                     MOVE WWPCDP    ##D,7
+     C                     END
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+     C           WWSHCC    IFEQ 'N'
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'
+     C           PFM1,6    ADD  PFM1,27   WW150
+     C                     ELSE
+     C                     Z-ADDPFM1,6    WW150
+     C                     END
+      *
+      **  Time Weighted Change in Capital for Past Year
+     C                     MOVELWW150     ##D,2
+     C                     MOVE WWPCDP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+     C           WWSHCC    IFEQ 'N'
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'
+     C           PFM2,6    ADD  PFM2,27   WW250
+     C                     ELSE
+     C                     Z-ADDPFM2,6    WW250
+     C                     END
+      *
+      **  Time Weighted Change in Capital for Tax Year
+     C                     MOVELWW250     ##D,5
+     C                     MOVE WWPCDP    ##D,5
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+     C           WWSHCC    IFEQ 'N'
+     C           WWVLNT    ANDNE'A'
+     C           WWVLNT    ANDNE'L'
+     C           PFM3,6    ADD  PFM3,27   WW350
+     C                     ELSE
+     C                     Z-ADDPFM3,6    WW350
+     C                     END
+      *
+      **  Time Weighted Change in Capital for Additional Period
+     C                     MOVELWW350     ##D,8
+     C                     MOVE WWPCDP    ##D,8
+     C                     END
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+     C           PFM1,6    ADD  PFM1,3    WW150
+      *
+      **  Time Weighted Change in Capital for Past Year
+     C                     MOVELWW150     ##D,3
+     C                     MOVE WWPCDP    ##D,3
+     C                     Z-ADDWW150     WWAVI1 150
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+     C           PFM2,6    ADD  PFM2,3    WW250
+      *
+      **  Time Weighted Change in Capital for Tax Year
+     C                     MOVELWW250     ##D,6
+     C                     MOVE WWPCDP    ##D,6
+     C                     Z-ADDWW250     WWAVI2 150
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+     C           PFM3,6    ADD  PFM3,3    WW350
+      *
+      **  Time Weighted Change in Capital for Additional Period
+     C                     MOVELWW350     ##D,9
+     C                     MOVE WWPCDP    ##D,9
+     C                     Z-ADDWW350     WWAVI3 150
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PFTP                                         *
+      * Function    :  Process: Trading Profit/Loss                   *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PFTP    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PFTP'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PFTP' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'
+     C                     Z-ADDPFM1,7    WW150
+     C                     Z-ADDPFM2,7    WW250
+     C                     Z-ADDPFM3,7    WW350
+     C                     ELSE
+     C           PFM1,7    ADD  PFM1,16   WW150
+     C           WW150     ADD  PFM1,21   WW150
+     C           PFM2,7    ADD  PFM2,16   WW250
+     C           WW250     ADD  PFM2,21   WW250
+     C           PFM3,7    ADD  PFM3,16   WW350
+     C           WW350     ADD  PFM3,21   WW350
+     C                     END
+     C*
+     C                     Z-ADDWW150     WWTDP1 150
+     C                     Z-ADDWW250     WWTDP2 150
+     C                     Z-ADDWW350     WWTDP3 150
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Realised Trading Profit/Loss for Past Year
+     C                     MOVELWW150     ##D,1
+     C                     MOVE WWPCDP    ##D,1
+      *
+      **  Unrealised Trading Profit/Loss for Past Year
+     C                     MOVELPFM1,8    ##D,2
+     C                     MOVE WWPCDP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Realised Trading Profit/Loss for Tax Year
+     C                     MOVELWW250     ##D,4
+     C                     MOVE WWPCDP    ##D,4
+      *
+      **  Unrealised Trading Profit/Loss for Tax Year
+     C                     MOVELPFM2,8    ##D,5
+     C                     MOVE WWPCDP    ##D,5
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Realised Trading Profit/Loss for Additional Period
+     C                     MOVELWW350     ##D,7
+     C                     MOVE WWPCDP    ##D,7
+      *
+      **  Unrealised Trading Profit/Loss for Additional Period
+     C                     MOVELPFM3,8    ##D,8
+     C                     MOVE WWPCDP    ##D,8
+     C                     END
+      *
+     C           WWTDP1    ADD  PFM1,8    WW150
+     C           WWTDP2    ADD  PFM2,8    WW250
+     C           WWTDP3    ADD  PFM3,8    WW350
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Total Trading Profit/Loss for Past Year
+     C                     MOVELWW150     ##D,3
+     C                     MOVE WWPCDP    ##D,3
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Total Trading Profit/Loss for Tax Year
+     C                     MOVELWW250     ##D,6
+     C                     MOVE WWPCDP    ##D,6
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Total Trading Profit/Loss for Additional Period
+     C                     MOVELWW350     ##D,9
+     C                     MOVE WWPCDP    ##D,9
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PATP                                         *
+      * Function    :  Process: Annualised Trading Profit/Loss        *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PATP    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PATP'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PATP' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWW150     WWRTRN 150
+     C                     Z-ADDWWAVI1    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR SRCAL
+      *
+      **  Absolute Return for Past Year
+     C                     MOVELWWABSP    ##D,1
+      *
+      **  Annualised Return for Past Year
+     C                     MOVELWWANNP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWW250     WWRTRN
+     C                     Z-ADDWWAVI2    WWAVIC
+     C                     Z-ADDWWDYP2    WWDYPP
+     C                     EXSR SRCAL
+      *
+      **  Absolute Return for Tax Year
+     C                     MOVELWWABSP    ##D,3
+      *
+      **  Annualised Return for Tax Year
+     C                     MOVELWWANNP    ##D,4
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWW350     WWRTRN
+     C                     Z-ADDWWAVI3    WWAVIC
+     C                     Z-ADDWWDYP3    WWDYPP
+     C                     EXSR SRCAL
+      *
+      **  Absolute Return for Additional Period
+     C                     MOVELWWABSP    ##D,5
+      *
+      **  Annualised Return for Additional Period
+     C                     MOVELWWANNP    ##D,6
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PFIT                                         *
+      * Function    :  Process: Interest and Dividends                *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PFIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PFIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PFIT' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+     C                     Z-ADD0         WWIND1 150
+     C                     Z-ADD0         WWIND2 150
+     C                     Z-ADD0         WWIND3 150
+      *
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'
+     C                     Z-ADDPFM1,9    WW150
+     C                     Z-ADDPFM2,9    WW250
+     C                     Z-ADDPFM3,9    WW350
+     C                     ELSE
+     C           PFM1,9    ADD  PFM1,17   WW150
+     C           WW150     ADD  PFM1,22   WW150
+     C           PFM2,9    ADD  PFM2,17   WW250
+     C           WW250     ADD  PFM2,22   WW250
+     C           PFM3,9    ADD  PFM3,17   WW350
+     C           WW350     ADD  PFM3,22   WW350
+     C                     END
+     C*
+     C                     Z-ADDWW150     WWIND1
+     C                     Z-ADDWW250     WWIND2
+     C                     Z-ADDWW350     WWIND3
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Dividends received for Past Year
+     C                     MOVELWW150     ##D,1
+     C                     MOVE WWPCDP    ##D,1
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Dividends received for Tax Year
+     C                     MOVELWW250     ##D,5
+     C                     MOVE WWPCDP    ##D,5
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Dividends received for Additional Period
+     C                     MOVELWW350     ##D,9
+     C                     MOVE WWPCDP    ##D,9
+     C                     END
+      *
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'
+     C                     Z-ADDPFM1,10   WW150
+     C                     Z-ADDPFM2,10   WW250
+     C                     Z-ADDPFM3,10   WW350
+     C                     ELSE
+     C           PFM1,10   ADD  PFM1,18   WW150
+     C           WW150     ADD  PFM1,23   WW150
+     C           PFM2,10   ADD  PFM2,18   WW250
+     C           WW250     ADD  PFM2,23   WW250
+     C           PFM3,10   ADD  PFM3,18   WW350
+     C           WW350     ADD  PFM3,23   WW350
+     C                     END
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Interest earned and received for Past Year
+     C                     MOVELWW150     ##D,2
+     C                     MOVE WWPCDP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Interest earned and received for Tax Year
+     C                     MOVELWW250     ##D,6
+     C                     MOVE WWPCDP    ##D,6
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Interest earned and received for Additional Period
+     C                     MOVELWW350     ##D,10
+     C                     MOVE WWPCDP    ##D,10
+     C                     END
+      *
+     C                     ADD  WW150     WWIND1
+     C                     ADD  WW250     WWIND2
+     C                     ADD  WW350     WWIND3
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Interest earned and not received for Past Year
+     C                     MOVELPFM1,11   ##D,3
+     C                     MOVE WWPCDP    ##D,3
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Interest earned and not received for Tax Year
+     C                     MOVELPFM2,11   ##D,7
+     C                     MOVE WWPCDP    ##D,7
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Interest earned and not received for Additional Period
+     C                     MOVELPFM3,11   ##D,11
+     C                     MOVE WWPCDP    ##D,11
+     C                     END
+      *
+     C                     ADD  PFM1,11   WWIND1
+     C                     ADD  PFM2,11   WWIND2
+     C                     ADD  PFM3,11   WWIND3
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Total Interest and Dividends for Past Year
+     C                     MOVELWWIND1    ##D,4
+     C                     MOVE WWPCDP    ##D,4
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Total Interest and Dividends for Tax Year
+     C                     MOVELWWIND2    ##D,8
+     C                     MOVE WWPCDP    ##D,8
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Total Interest and Dividends for Additional Period
+     C                     MOVELWWIND3    ##D,12
+     C                     MOVE WWPCDP    ##D,12
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PAIT                                         *
+      * Function    :  Process: Annualised Interest and Dividends     *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PAIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PAIT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PAIT' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWIND1    WWRTRN 150
+     C                     Z-ADDWWAVI1    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR SRCAL
+      *
+      **  Absolute Interest and Dividends for Past Year
+     C                     MOVELWWABSP    ##D,1
+      *
+      **  Annualised Interest and Dividens for Past Year
+     C                     MOVELWWANNP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWIND2    WWRTRN
+     C                     Z-ADDWWAVI2    WWAVIC
+     C                     Z-ADDWWDYP2    WWDYPP
+     C                     EXSR SRCAL
+      *
+      **  Absolute Interest and Dividends for Tax Year
+     C                     MOVELWWABSP    ##D,3
+      *
+      **  Annualised Interest and Dividens for Tax Year
+     C                     MOVELWWANNP    ##D,4
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWIND3    WWRTRN
+     C                     Z-ADDWWAVI3    WWAVIC
+     C                     Z-ADDWWDYP3    WWDYPP
+     C                     EXSR SRCAL
+      *
+      **  Absolute Interest and Dividends for Additional Period
+     C                     MOVELWWABSP    ##D,5
+      *
+      **  Annualised Interest and Dividens for Additional Period
+     C                     MOVELWWANNP    ##D,6
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PFXP                                         *
+      * Function    :  Process: Exchange Profit/Loss                  *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PFXP    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PFXP'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PFXP' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+     C                     Z-ADDPFM1,14   WWFXP1 150
+     C                     Z-ADDPFM2,14   WWFXP2 150
+     C                     Z-ADDPFM3,14   WWFXP3 150
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Realised Trading Exchange P/L for Past Year
+     C                     MOVELPFM1,14   ##D,1
+     C                     MOVE WWPCDP    ##D,1
+      *
+     C                     ADD  PFM1,12   WWFXP1
+      *
+      **  Unrealised Trading Exchange P/L for Past Year
+     C                     MOVELPFM1,12   ##D,2
+     C                     MOVE WWPCDP    ##D,2
+      *
+     C                     ADD  PFM1,15   WWFXP1
+      *
+      **  Realised Interest Exchange P/L for Past Year
+     C                     MOVELPFM1,15   ##D,3
+     C                     MOVE WWPCDP    ##D,3
+      *
+     C                     ADD  PFM1,13   WWFXP1
+      *
+      **  Unrealised Interest Exchange P/L for Past Year
+     C                     MOVELPFM1,13   ##D,4
+     C                     MOVE WWPCDP    ##D,4
+      *
+      **  Total Exchange P/L for Past Year
+     C                     MOVELWWFXP1    ##D,5
+     C                     MOVE WWPCDP    ##D,5
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Realised Trading Exchange P/L for Tax Year
+     C                     MOVELPFM2,14   ##D,6
+     C                     MOVE WWPCDP    ##D,6
+      *
+     C                     ADD  PFM2,12   WWFXP2
+      *
+      **  Unrealised Trading Exchange P/L for Tax Year
+     C                     MOVELPFM2,12   ##D,7
+     C                     MOVE WWPCDP    ##D,7
+      *
+     C                     ADD  PFM2,15   WWFXP2
+      *
+      **  Realised Interest Exchange P/L for Tax Year
+     C                     MOVELPFM2,15   ##D,8
+     C                     MOVE WWPCDP    ##D,8
+      *
+     C                     ADD  PFM2,13   WWFXP2
+      *
+      **  Unrealised Interest Exchange P/L for Tax Year
+     C                     MOVELPFM2,13   ##D,9
+     C                     MOVE WWPCDP    ##D,9
+      *
+      **  Total Exchange P/L for Tax Year
+     C                     MOVELWWFXP2    ##D,10
+     C                     MOVE WWPCDP    ##D,10
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Realised Trading Exchange P/L for Additional Period
+     C                     MOVELPFM3,14   ##D,11
+     C                     MOVE WWPCDP    ##D,11
+      *
+     C                     ADD  PFM3,12   WWFXP3
+      *
+      **  Unrealised Trading Exchange P/L for Additional Period
+     C                     MOVELPFM3,12   ##D,12
+     C                     MOVE WWPCDP    ##D,12
+      *
+     C                     ADD  PFM3,15   WWFXP3
+      *
+      **  Realised Interest Exchange P/L for Additional Period
+     C                     MOVELPFM3,15   ##D,13
+     C                     MOVE WWPCDP    ##D,13
+      *
+     C                     ADD  PFM3,13   WWFXP3
+      *
+      **  Unrealised Interest Exchange P/L for Additional Period
+     C                     MOVELPFM3,13   ##D,14
+     C                     MOVE WWPCDP    ##D,14
+      *
+      **  Total Exchange P/L for Additional Period
+     C                     MOVELWWFXP3    ##D,15
+     C                     MOVE WWPCDP    ##D,15
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PAXP                                         *
+      * Function    :  Process: Annualised Exchange Profit/Loss       *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PAXP    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PAXP'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PAXP' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWFXP1    WWRTRN 150
+     C                     Z-ADDWWAVI1    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR SRCAL
+      *
+      **  Absolute Exchange Profit/Loss for Past Year
+     C                     MOVELWWABSP    ##D,1
+      *
+      **  Annualised Exchange Profit/Loss for Past Year
+     C                     MOVELWWANNP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWFXP2    WWRTRN
+     C                     Z-ADDWWAVI2    WWAVIC
+     C                     Z-ADDWWDYP2    WWDYPP
+     C                     EXSR SRCAL
+      *
+      **  Absolute Exchange Profit/Loss for Tax Year
+     C                     MOVELWWABSP    ##D,3
+      *
+      **  Annualised Exchange Profit/Loss for Tax Year
+     C                     MOVELWWANNP    ##D,4
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWFXP3    WWRTRN
+     C                     Z-ADDWWAVI3    WWAVIC
+     C                     Z-ADDWWDYP3    WWDYPP
+     C                     EXSR SRCAL
+      *
+      **  Absolute Exchange Profit/Loss for Additional Period
+     C                     MOVELWWABSP    ##D,5
+      *
+      **  Annualised Exchange Profit/Loss for Additional Period
+     C                     MOVELWWANNP    ##D,6
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PFOT                                         *
+      * Function    :  Process: Other Items                           *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PFOT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PFOT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PFOT' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+     C                     Z-ADD0         WWOTI1 150
+     C                     Z-ADD0         WWOTI2 150
+     C                     Z-ADD0         WWOTI3 150
+      *
+     C           WWSHCC    IFEQ 'Y'
+     C           WWSHFC    OREQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'
+      *
+      **  If either Fees and Charges or Charges on Capital Changes are
+      **  to be shown, calculate Total Charges
+     C                     Z-ADD0         WW150
+     C                     Z-ADD0         WW250
+     C                     Z-ADD0         WW350
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'
+     C                     ADD  PFM1,21   WW150
+     C                     ADD  PFM1,22   WW150
+     C                     ADD  PFM1,23   WW150
+     C                     ADD  PFM2,21   WW250
+     C                     ADD  PFM2,22   WW250
+     C                     ADD  PFM2,23   WW250
+     C                     ADD  PFM3,21   WW350
+     C                     ADD  PFM3,22   WW350
+     C                     ADD  PFM3,23   WW350
+     C                     END
+      *
+     C           WWSHCC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'
+     C                     ADD  PFM1,24   WW150
+     C                     ADD  PFM1,25   WW150
+     C                     ADD  PFM2,24   WW250
+     C                     ADD  PFM2,25   WW250
+     C                     ADD  PFM3,24   WW350
+     C                     ADD  PFM3,25   WW350
+     C                     END
+      *
+     C                     ADD  WW150     WWOTI1
+     C                     ADD  WW250     WWOTI2
+     C                     ADD  WW350     WWOTI3
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Total Charges for Past Year
+     C                     MOVELWW150     ##D,1
+     C                     MOVE WWPCDP    ##D,1
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Total Charges for Tax Year
+     C                     MOVELWW250     ##D,6
+     C                     MOVE WWPCDP    ##D,6
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Total Charges for Additional Period
+     C                     MOVELWW350     ##D,11
+     C                     MOVE WWPCDP    ##D,11
+     C                     END
+     C                     END
+      *
+     C           WWSHFC    IFEQ 'Y'
+     C           WWVLNT    OREQ 'A'
+     C           WWVLNT    OREQ 'L'
+      *
+     C                     Z-ADD0         WW150
+     C                     Z-ADD0         WW250
+     C                     Z-ADD0         WW350
+      *
+     C                     ADD  PFM1,16   WW150
+     C                     ADD  PFM1,17   WW150
+     C                     ADD  PFM1,18   WW150
+     C                     ADD  PFM2,16   WW250
+     C                     ADD  PFM2,17   WW250
+     C                     ADD  PFM2,18   WW250
+     C                     ADD  PFM3,16   WW350
+     C                     ADD  PFM3,17   WW350
+     C                     ADD  PFM3,18   WW350
+      *
+     C                     ADD  WW150     WWOTI1
+     C                     ADD  WW250     WWOTI2
+     C                     ADD  WW350     WWOTI3
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Fees and Commissions for Past Year
+     C                     MOVELWW150     ##D,2
+     C                     MOVE WWPCDP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Fees and Commissions for Tax Year
+     C                     MOVELWW250     ##D,7
+     C                     MOVE WWPCDP    ##D,7
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Fees and Commissions for Additionnal Period
+     C                     MOVELWW350     ##D,12
+     C                     MOVE WWPCDP    ##D,12
+     C                     END
+     C                     END
+      *
+     C                     ADD  PFM1,19   WWOTI1
+     C                     ADD  PFM2,19   WWOTI2
+     C                     ADD  PFM3,19   WWOTI3
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Withholding Tax for Past Year
+     C                     MOVELPFM1,19   ##D,3
+     C                     MOVE WWPCDP    ##D,3
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Withholding Tax for Past Year
+     C                     MOVELPFM2,19   ##D,8
+     C                     MOVE WWPCDP    ##D,8
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Withholding Tax for Past Year
+     C                     MOVELPFM3,19   ##D,13
+     C                     MOVE WWPCDP    ##D,13
+     C                     END
+      *
+     C                     ADD  PFM1,20   WWOTI1
+     C                     ADD  PFM2,20   WWOTI2
+     C                     ADD  PFM3,20   WWOTI3
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+      *
+      **  Transaction Tax for Past Year
+     C                     MOVELPFM1,20   ##D,4
+     C                     MOVE WWPCDP    ##D,4
+      *
+      **  Total Other Items for Past Year
+     C                     MOVELWWOTI1    ##D,5
+     C                     MOVE WWPCDP    ##D,5
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+      *
+      **  Transaction Tax for Tax Year
+     C                     MOVELPFM2,20   ##D,9
+     C                     MOVE WWPCDP    ##D,9
+      *
+      **  Total Other Items for Tax Year
+     C                     MOVELWWOTI2    ##D,10
+     C                     MOVE WWPCDP    ##D,10
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+      *
+      **  Transaction Tax for Additionnal Period
+     C                     MOVELPFM3,20   ##D,14
+     C                     MOVE WWPCDP    ##D,14
+      *
+      **  Total Other Items for Additional Period
+     C                     MOVELWWOTI3    ##D,15
+     C                     MOVE WWPCDP    ##D,15
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  P@PAOT                                         *
+      * Function    :  Process: Annualised Other Items                *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           P@PAOT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'P_PAOT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Retrieve subroutine specific data.
+     C           2         OCUR ##SRDT
+     C                     MOVEL##SPAT    S#PATH
+      *
+      **  Set up Path.
+     C                     MOVEL'\P_PAOT' ##PNAM
+     C           S#PATH    CAT  ##PNAM:0  S#PATH
+      *
+      **  Retrieve RDE information for RDEs in group set
+     C                     MOVEL@STK,Q    ##GRPS
+     C                     Z-ADD1         ##RDEN
+     C                     EXSR SRRRDE
+      *
+      ** If Performance Period 1 required
+     C           WWS3VR    IFEQ 'Y'
+     C                     Z-ADDWWOTI1    WWRTRN 150
+     C                     Z-ADDWWAVI1    WWAVIC 150
+     C                     Z-ADDWWDYP1    WWDYPP  30
+     C                     EXSR SRCAL
+      *
+      **  Absolute Other Items for Past Year
+     C                     MOVELWWABSP    ##D,1
+      *
+      **  Annualised Other Items for Past Year
+     C                     MOVELWWANNP    ##D,2
+     C                     END
+      *
+      ** If Performance Period 2 required
+     C           WWS4VR    IFEQ 'Y'
+     C                     Z-ADDWWOTI2    WWRTRN 150
+     C                     Z-ADDWWAVI2    WWAVIC 150
+     C                     Z-ADDWWDYP2    WWDYPP  30
+     C                     EXSR SRCAL
+      *
+      **  Absolute Other Items for Tax Year
+     C                     MOVELWWABSP    ##D,3
+      *
+      **  Annualised Other Items for Tax Year
+     C                     MOVELWWANNP    ##D,4
+     C                     END
+      *
+      ** If Performance Period 3 required
+     C           WWS5VR    IFEQ 'Y'
+     C                     Z-ADDWWOTI3    WWRTRN 150
+     C                     Z-ADDWWAVI3    WWAVIC 150
+     C                     Z-ADDWWDYP3    WWDYPP  30
+     C                     EXSR SRCAL
+      *
+      **  Absolute Other Items for Additional Period
+     C                     MOVELWWABSP    ##D,5
+      *
+      **  Annualised Other Items for Additional Period
+     C                     MOVELWWANNP    ##D,6
+     C                     END
+      *
+     C                     EXSR SRADTA
+     C                     EXSR SRODTA
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRADTA                                         *
+      * Function    :  Accumulate RDEs and associated data for output *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG3999 - Format and Pack Data                  *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRADTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRADTA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Reformat RDE data
+      *
+     C                     EXSR SRRFMN
+      *
+      **  Pack RDEs and associated data into data string
+     C                     CLEAR##SDS
+     C                     CALL 'CG3999'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*PACK   'W0ACT
+     C                     PARM           ##R
+     C                     PARM           ##D
+     C                     PARM           ##S
+     C                     PARM *BLANK    W0SPAT 70                                           222373
+     C                     PARM           ##RN                                                222373
+     C                     PARM           ##DN                                                222373
+     C                     PARM           ##FM                                                222373
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'CG3999  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 07 *
+     C                     Z-ADD07        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  Initialise Write Format Parameter.
+     C                     CLEARW0FMT
+      *
+      **  Set up Control Information.
+     C                     Z-ADD##ITEM    DEITEM
+     C                     ADD  1         ##OSEQ
+     C                     Z-ADD##OSEQ    DEOSEQ
+     C                     Z-ADD##PBIN    DEPBIN
+     C                     Z-ADD##TBIN    DETBIN
+     C                     MOVE 'FR'      DEFSLI
+     C                     MOVE *BLANKS   W0PATH
+     C                     MOVELS#PATH    W0PATH
+      *
+      **  Append Data from pack routine.
+     C           W0FMT     CAT  ##SDS:0   W0FMT
+      *
+      *................................................................
+      *
+     C           EXADTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRODTA                                         *
+      * Function    :  Output Accumulated data to PF/CGUDTAPD         *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  CG9020 - Output Data to CGUDTAPD               *
+      *                SRERR  - Database Error                        *
+      *****************************************************************
+     C           SRODTA    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRODTA'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Output PF/CGUDTAPD Record.
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*WRITE  'W0ACT
+     C                     PARM           W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM *BLANK    W0TITL  7
+     C                     PARM *BLANK    W0ULIN  7
+     C                     PARM           W0CMT
+      *
+      **  Database error
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     MOVEL'CG9020  'W0FILE           ***************
+     C                     MOVEL##RTCD    W0KEY            * DB ERROR 08 *
+     C                     Z-ADD08        W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXODTA    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRRFMN                                         *
+      * Function    :  Reformat RDE data                              *
+      *                                                               *
+      * Called by   :  SRADTA                                         *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRRFMN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRFMN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Loop through RDE's and data
+      *
+     C                     Z-ADD0         #1
+     C           #1        DOUEQ20
+     C                     ADD  1         #1
+     C                     MOVEL##R,#1    R#DEFN
+     C                     MOVEL##D,#1    R#DATA
+      *
+      ** If data present and RDE is edited
+      *
+     C           R#DATA    IFNE *BLANK
+     C           ##RDEC    ANDNE*BLANK
+      *
+      * Reformat Amount
+     C                     Z-ADD1         #2
+     C           *BLANK    LOKUP##NUMA,#2                99*
+     C                     Z-ADD20        #3
+     C                     Z-ADD0         ##WNUM
+     C           #2        DOWGT1
+     C           #2        ANDLE20
+     C           #3        ANDGT1
+     C                     SUB  1         #2
+     C                     MOVEL##NUMA,#2 ##W,#3
+     C                     SUB  1         #3
+     C                     ENDDO
+      *
+      * Sign the amount
+     C           ##SIGN    IFEQ '-'
+     C                     Z-SUB##WNUM    ##NUMB
+     C                     ELSE
+     C                     Z-ADD##WNUM    ##NUMB
+     C                     END
+      *
+      * Default Edit Type
+     C           ##EDTT    IFEQ *BLANK
+     C                     MOVEL##RDET    ##EDTT
+     C                     END
+      *
+      * Default Decimal Places
+     C           ##DCPA    IFEQ *BLANK
+     C                     MOVEL##RDED    ##DCPA
+     C                     END
+      * New RDE data
+     C                     MOVELR#DATA    ##D,#1
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXRFMN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRDCDT                                         *
+      * Function    :  Determine Currency Details                     *
+      *                                                               *
+      * Called by   :                                                 *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRDCDT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRDCDT'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Access array of Currency Details already loaded
+     C                     Z-ADD1         C       30
+     C           ##CCY     LOKUP##CY,C                   99
+      *
+      **  If no match is found determine the next free space in the
+      **  loaded currency array.
+     C           *IN99     IFEQ *OFF
+     C                     Z-ADD1         C
+     C           *BLANK    LOKUP##CY,C                   99
+      *
+      **  If no space is left, set the Currency Data data structure to
+      **  the 101st occurrence so that when the new details are
+      **  retrieved no existing details are overwritten.
+     C           *IN99     IFEQ *OFF
+     C           101       OCUR SDCURR
+      *
+      **  If a space is found, set up the new currency into the array
+      **  and position the Currency Data data structure on the
+      **  occurrence matching the array index.
+     C                     ELSE
+     C                     MOVE ##CCY     ##CY,C
+     C           C         OCUR SDCURR
+     C                     ENDIF
+      *
+      **  Retrieve the currency details.
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   ##RTCD           B:Return Cd
+     C                     PARM '*KEY'    ##OPTN           I:Option
+     C                     PARM ##CCY     ##CCYP  3        I:Currency Code
+     C           SDCURR    PARM *BLANK    DSSDY            O:Format
+      *
+      **  Database Error
+     C           ##RTCD    IFNE *BLANK
+     C                     MOVEL'SDCURRPD'W0FILE
+     C                     MOVEL##CCY     W0KEY            ***************
+     C                     Z-ADD09        W0ERNB           * DB ERROR 09 *
+     C                     MOVEL'MEM5004' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      **  If the currency has been retrieved earlier, position the
+      **  Currency Data data structure on the relevant occurrence.
+     C                     ELSE
+     C           C         OCUR SDCURR
+     C                     ENDIF
+     C*
+     C           EXDCDT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRGENR                                         *
+      * Function    :  Generate reference number                      *
+      *                by writing to PF/CGUDCRPD                      *
+      *                                                               *
+      * Called by   :  SRMAIN - Main Processing                       *
+      * Calls       :  CG9010 - Create reference record               *
+      *****************************************************************
+     C           SRGENR    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRGENR'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Generate reference number and check if further processing
+      **  required. Set up all available information in the record
+      **  format before calling.
+      *
+     C                     MOVELWWCBRC    DRBRCA
+     C                     MOVELWWCBRC    DRORBR
+     C                     MOVEL'PB'      DRMODI
+     C                     MOVELWWRQNO    DRMTRN
+     C                     MOVEL*BLANK    DRMACT
+     C                     MOVELW#PTYP    DRPTYP           * print type
+     C                     MOVELW#PSTP    DRPSTP           * print s/type
+     C                     MOVEL'N'       DRATRM
+      *
+     C                     MOVELWWCNUM    ##CUST
+      *
+     C                     CALL 'CG9010'
+     C                     PARM           ##RTCD  7
+     C                     PARM '*GEN'    ##MODE 10
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM           ##CUST  6
+     C                     PARM           ##UDCR
+     C                     PARM           ##ITMA  8
+      *
+      **  Blank return code implies generate correspondence.
+      **  CGD1270 => no error, but suppress output for this transaction.
+      *
+     C           ##RTCD    IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       ##COPD
+      *
+     C                     ELSE
+      *
+     C           ##RTCD    IFNE 'CGD1270'
+     C                     MOVEL'CG9010  'W0FILE
+     C                     MOVEL##RTCD    W0KEY            ***************
+     C                     Z-ADD10        W0ERNB           * DB ERROR 10 *
+     C                     MOVEL'CGD1286' W0MSGD           ***************
+     C                     MOVEL'CGUSRMSG'W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *................................................................
+      *
+     C           EXGENR    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRRRDE                                         *
+      * Function    :  Retrieve RDE information for RDEs in group set *
+      *                                                               *
+      * Called by   :  Simple group set subroutines                   *
+      * Calls       :  -                                              *
+      *****************************************************************
+     C           SRRRDE    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRRRDE'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Reset
+     C                     MOVEL*BLANK    ##R
+     C                     MOVEL*BLANK    ##D
+     C                     MOVEL*BLANK    ##S
+      *
+      **  Get information about next 20 RDEs in group set from compile
+      **  time arrays
+     C                     Z-ADD0         #1
+     C           *IN99     DOUEQ'0'
+     C           #1        OREQ 20
+     C                     Z-ADD1         #2
+     C           ##GRPX    LOKUP##GRP,#2                 99*
+     C           *IN99     IFEQ '1'
+     C                     ADD  1         #1
+     C                     MOVEL##RDEA,#2 ##R,#1
+     C                     ADD  1         ##RDEN
+     C                     ENDIF
+     C                     ENDDO
+      *
+      *................................................................
+      *
+     C           EXRRDE    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      *****************************************************************
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     C/SPACE 5
+      /COPY ZSRSRC,ZSEDITZ3
+      /COPY ZSRSRC,ZDATE2Z2
+     C/SPACE 5
+** ##GRP/##RDE
+ACOF  0001 ACOF_CODE
+ACOF  0002 ACOF_DEPT
+ACOF  0003 ACOF_NAME
+ACOF  0004 ACOF_TELP
+ACOF  0005 ACOF_TELX
+P_CSTB0001 CUSTOMER
+P_CSTB0002 CUST_NAME
+P_CSTB0003 CUST_TOWN
+P_CSTB0004 CUST_ADRCD
+P_CSTB0005 CUST_ADR1
+P_CSTB0006 CUST_ADR2
+P_CSTB0007 CUST_ADR3
+P_CSTB0008 CUST_ADR4
+P_CSTB0009 CUST_BSCCY
+P_CSTB0010 CUST_BSCDS
+P_PRTD0001 REQ_NUMBER
+P_PRTD0002 REQ_USER
+P_PRTD0003 REQ_REGEXT
+P_PRTD0004 REQ_FORUSE
+P_PRTD0005 REQ_HOLDM
+P_PRTD0006 REQ_DATEFX Date
+P_PRTD0007 REQ_DATEVL Date
+P_PRTD0008 REQ_PWHERE
+P_PRTD0009 REQ_PWHEN  Date
+P_PRTD0010 REQ_STCCY
+P_PRTD0011 REQ_STCDS
+P_PRTD0012 REQ_NBCCY
+P_PRTD0013 REQ_NBCDS
+P_PTFB0001 PORT_REF
+P_PTFB0002 PORT_REFF
+P_PTFB0003 PORT_NARR
+P_PTFB0004 PORT_CURR
+P_PTFB0005 PORT_CURRD
+P_PRFP0001 PER_ST_PAS
+P_PRFP0002 PER_ED_PAS
+P_PRFP0003 PER_DY_PAS AmountL
+P_PRFP0004 PER_ST_TAX
+P_PRFP0005 PER_ED_TAX
+P_PRFP0006 PER_DY_TAX AmountL
+P_PRFP0007 PER_ST_ADD
+P_PRFP0008 PER_ED_ADD
+P_PRFP0009 PER_DY_ADD AmountL
+P_PFMK0001 VAL_VE_PAS AmountL
+P_PFMK0002 VAL_VS_PAS AmountL
+P_PFMK0003 CHG_MKT_PA AmountL
+P_PFMK0004 VAL_VE_TAX AmountL
+P_PFMK0005 VAL_VS_TAX AmountL
+P_PFMK0006 CHG_MKT_TA AmountL
+P_PFMK0007 VAL_VE_ADD AmountL
+P_PFMK0008 VAL_VS_ADD AmountL
+P_PFMK0009 CHG_MKT_AD AmountL
+P_PFRT0001 VAL_CI_PAS Amountl
+P_PFRT0002 VAL_CO_PAS Amountl
+P_PFRT0003 VAL_RCT_PA Amountl
+P_PFRT0004 VAL_ADJ_PA Amountl
+P_PFRT0005 RTN_IVC_PA Amountl
+P_PFRT0006 VAL_CI_TAX Amountl
+P_PFRT0007 VAL_CO_TAX Amountl
+P_PFRT0008 VAL_RCT_TA Amountl
+P_PFRT0009 VAL_ADJ_TA Amountl
+P_PFRT0010 RTN_IVC_TA Amountl
+P_PFRT0011 VAL_CI_ADD Amountl
+P_PFRT0012 VAL_CO_ADD Amountl
+P_PFRT0013 VAL_RCT_AD Amountl
+P_PFRT0014 VAL_ADJ_AD Amountl
+P_PFRT0015 RTN_IVC_AD Amountl
+P_PART0001 RTN_ABS_PA
+P_PART0002 RTN_ANN_PA
+P_PART0003 RTN_ABS_TA
+P_PART0004 RTN_ANN_TA
+P_PART0005 RTN_ABS_AD
+P_PART0006 RTN_ANN_AD
+P_PFAI0001 VAL_VP_PAS AmountL
+P_PFAI0002 VAL_CX_PAS AmountL
+P_PFAI0003 AVG_IVC_PA AmountL
+P_PFAI0004 VAL_VP_TAX AmountL
+P_PFAI0005 VAL_CX_TAX AmountL
+P_PFAI0006 AVG_IVC_TA AmountL
+P_PFAI0007 VAL_VP_ADD AmountL
+P_PFAI0008 VAL_CX_ADD AmountL
+P_PFAI0009 AVG_IVC_AD AmountL
+P_PFTP0001 VAL_TR_PAS AmountL
+P_PFTP0002 VAL_TU_PAS AmountL
+P_PFTP0003 TRD_PL_PAS AmountL
+P_PFTP0004 VAL_TR_TAX AmountL
+P_PFTP0005 VAL_TU_TAX AmountL
+P_PFTP0006 TRD_PL_TAX AmountL
+P_PFTP0007 VAL_TR_ADD AmountL
+P_PFTP0008 VAL_TU_ADD AmountL
+P_PFTP0009 TRD_PL_ADD AmountL
+P_PATP0001 TRD_ABS_PA
+P_PATP0002 TRD_ANN_PA
+P_PATP0003 TRD_ABS_TA
+P_PATP0004 TRD_ANN_TA
+P_PATP0005 TRD_ABS_AD
+P_PATP0006 TRD_ANN_AD
+P_PFIT0001 VAL_DV_PAS AmountL
+P_PFIT0002 VAL_IER_PA AmountL
+P_PFIT0003 VAL_IEU_PA AmountL
+P_PFIT0004 INT_DV_PAS AmountL
+P_PFIT0005 VAL_DV_TAX AmountL
+P_PFIT0006 VAL_IER_TA AmountL
+P_PFIT0007 VAL_IEU_TA AmountL
+P_PFIT0008 INT_DV_TAX AmountL
+P_PFIT0009 VAL_DV_ADD AmountL
+P_PFIT0010 VAL_IER_AD AmountL
+P_PFIT0011 VAL_IEU_AD AmountL
+P_PFIT0012 INT_DV_ADD AmountL
+P_PAIT0001 INT_ABS_PA
+P_PAIT0002 INT_ANN_PA
+P_PAIT0003 INT_ABS_TA
+P_PAIT0004 INT_ANN_TA
+P_PAIT0005 INT_ABS_AD
+P_PAIT0006 INT_ANN_AD
+P_PFXP0001 VAL_XTR_PA AmountL
+P_PFXP0002 VAL_XTU_PA AmountL
+P_PFXP0003 VAL_XIR_PA AmountL
+P_PFXP0004 VAL_XIU_PA AmountL
+P_PFXP0005 EXC_PL_PAS AmountL
+P_PFXP0006 VAL_XTR_TA AmountL
+P_PFXP0007 VAL_XTU_TA AmountL
+P_PFXP0008 VAL_XIR_TA AmountL
+P_PFXP0009 VAL_XIU_TA AmountL
+P_PFXP0010 EXC_PL_TAX AmountL
+P_PFXP0011 VAL_XTR_AD AmountL
+P_PFXP0012 VAL_XTU_AD AmountL
+P_PFXP0013 VAL_XIR_AD AmountL
+P_PFXP0014 VAL_XIU_AD AmountL
+P_PFXP0015 EXC_PL_ADD AmountL
+P_PAXP0001 EXC_ABS_PA
+P_PAXP0002 EXC_ANN_PA
+P_PAXP0003 EXC_ABS_TA
+P_PAXP0004 EXC_ANN_TA
+P_PAXP0005 EXC_ABS_AD
+P_PAXP0006 EXC_ANN_AD
+P_PFOT0001 VAL_CHG_PA AmountL
+P_PFOT0002 VAL_FEE_PA AmountL
+P_PFOT0003 VAL_WTX_PA AmountL
+P_PFOT0004 VAL_TTX_PA AmountL
+P_PFOT0005 OTH_IT_PAS AmountL
+P_PFOT0006 VAL_CHG_TA AmountL
+P_PFOT0007 VAL_FEE_TA AmountL
+P_PFOT0008 VAL_WTX_TA AmountL
+P_PFOT0009 VAL_TTX_TA AmountL
+P_PFOT0010 OTH_IT_TAX AmountL
+P_PFOT0011 VAL_CHG_AD AmountL
+P_PFOT0012 VAL_FEE_AD AmountL
+P_PFOT0013 VAL_WTX_AD AmountL
+P_PFOT0014 VAL_TTX_AD AmountL
+P_PFOT0015 OTH_IT_ADD AmountL
+P_PAOT0001 OTH_ABS_PA
+P_PAOT0002 OTH_ANN_PA
+P_PAOT0003 OTH_ABS_TA
+P_PAOT0004 OTH_ANN_TA
+P_PAOT0005 OTH_ABS_AD
+P_PAOT0006 OTH_ANN_AD
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**  PFMC
+VE
+VS
+VP
+CI
+CO
+CX
+TR
+TU
+DV
+IER
+IEU
+XIR
+XIU
+XTR
+XTU
+F  TR
+F  DV
+F  IR
+T
+OT
+C  TR
+C  DV
+C  IR
+C  CI
+C  CO
+ADJ
+CX C
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

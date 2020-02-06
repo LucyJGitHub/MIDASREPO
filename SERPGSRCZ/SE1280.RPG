@@ -1,0 +1,2095 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Euclid Instruction Maintenance')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1280 - EUCLID INSTRUCTION MESSAGES MAINTENANCE             *
+     F*                                                               *
+     F*  Function: To review, amend or delete Euclid Telex Messages   *
+     F*   (I/C)    prior to transmission to Euroclear.  Only          *
+     F*            Narrative comments may be amended whilst entire    *
+     F*            instructions may be deleted.                       *
+     F*                                                               *
+     F*  Called by: SEC02 - Input Cycle Processing                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAAA03             Date 31Mar04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 104633             Date 08Jul96               *
+     F*                 S01455             Date 05Nov93               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 E29170             DATE 14OCT91               *
+     F*                 S01117             DATE 31JUL91               *
+     F*                 S01271             DATE 29JUN90               *
+     F*                 E19954             DATE 03NOV89               *
+     F*                 S01199             DATE 15SEP89               *
+     F*                 S01179             DATE 21/10/88              *
+     F*                 S01190             DATE 30/03/89              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAAA03 - Webfacing Changes (recompile).                      *
+     F*  104633 - GUI Amendments to DSPF with non-standard footers    *
+     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+     F*           Recompiled due to changes in PF/TABTB80.            *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Release 10 Multibranching                           *
+     F*  S01271 - PAY/RECEIVE IN INPUT CYCLE - RECOMPILED FOR         *   S01271
+     F*           DATABASE CHANGE TO SEEUN                            *   S01271
+     F*  E19954 - AID Subroutine not called after Screen reads        *   E19954
+     F*  S01199 -  Help System                                     *   S01199
+     F*  S01179 - AS400 CONVERSION ******                             *   S01179
+     F*                                                               *   S01179
+     F*     The keyword RTGAID is no longer supported on the AS400    *   S01179
+     F*     and command keys and indicators have been used to replace *   S01179
+     F*     this in the display file. To disrupt the structure of the *   S01179
+     F*     program as little as possible a new subroutine - ASCHGS - *   S01179
+     F*     has been coded. This moves the values which would have    *   S01179
+     F*     been passed to the program (via RTGAID) into the AID      *   S01179
+     F*     field depending on which function key has been pressed.   *   S01179
+     F*  S01190 - EUCLID CHANGES.                                     *   S01190
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FSE1280DFCF  E                    WORKSTN      KINFDS SCRDS
+     F                                        RRN   KSFILE SUBFLREC
+     FSE1280AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU         E29170
+     F***SE1280P1O***E                    PRINTER                         E29170
+     FSE1280P1O   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSEEUN   UF  E           K        DISK         KCOMIT       A
+     F                                              KINFDS INFDS
+     F                                              KINFSR INFSR
+     FTRADS   IF  E           K        DISK                               S01117
+     FTABICD  IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB30F                          KIGNORE
+     F            TABTB35F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTB50F                          KIGNORE
+     F            TABTB55F                          KIGNORE
+     F            TABTB70F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   01  - CMD/3 HAS BEEN PRESSED FROM ANY SCREEN                *
+     F*   02  - S/SUBFLCTL  SFLDSPCTL                                 *
+     F*   03  - S/SUBFLCTL  SFLEND                                    *
+     F*   04  - S/SUBFLCTL  SFLDSP                                    *
+     F*   05  - S/SUBFLCTL  NO RECORDS TO DISPLAY                     *
+     F*   06  - S/SUBFLCTL  SFLMSG                                    *
+     F*   07  - PROMPT SCREEN PROCESSING                              *
+     F*   08  - S/SUBFLCTL ACTION CODE PROTECTED AND REV IMAGE        *
+     F*   09  - SUBFILE SCREEN PROCESSING                             *
+     F*                                                               *
+     F*   10  - FIRST CHANGE ON SUBFILE FOUND                         *
+     F*   11  - DELETE SCREEN PROCESSING                              *
+     F*   12  - CONTROLS AMEND/DELETE HEADING                         *
+     F*   13  - CHANGE IN BATCH/ACCNO                                 *
+     F*   14  - PREVIOUS BATCH/ACC PRINTED                            *
+     F*                                                               *
+     F*   20  - S/PROMPT  AN ERROR ON SCREEN                          *
+     F*   21  - S/PROMPT  ERROR-BATCH NUMBER                          *
+     F*   22  - S/PROMPT  ERROR-ACCOUNT CODE                          *
+     F*                                                               *
+     F*   30  - RECORD UPDATED BY ANOTHER WORKSTATION                 *
+     F*   35  - MULTIBRANCHING ON                                     *   E29170
+     F*   40  - CMD/10 ALLOWED ON DELETION SCREEN                     *
+     F*   50  - ROLLUP                                                *   S01179
+     F****51**-*HELP                                               S01179 S01199
+     F*   55  - VLDCMDKY INDICATOR FOR DISPLAY FILE                   *   S01179
+     F*                                                               *
+     F*   60  - S/RECAMD FIRST NARRATIVE LINE PROTECTED               *
+     F*   61  - S/RECAMD SECOND NARRATIVE LINE PROTECTED              *
+     F*   63  - FIRST NARRATIVE RECORD FOUND ON SEEUCD2               *
+     F*   64  - SECOND NARRATIVE RECORD FOUND ON SEEUCD2              *
+     F*                                                               *
+     F*   80  - NO HEADER RECORD FOUND ON SEEUCH                      *
+     F*   81  - RECORD CHANGED ON SUBFILE                             *
+     F*   82  - NO DETAIL RECORD FOUND ON SEEUCD0                     *
+     F*   83  - FIRST NARRATIVE RECORD FOUND ON SEEUCD2               *
+     F*   84  - SECOND NARRATIVE RECORD FOUND ON SEEUCD2              *
+     F*   85  - NO DETAIL RECORD FOUND ON SEEUCD1                     *
+     F*   86  - NO DETAIL RECORDS EXIST FOR THIS HEADER               *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines.                         *
+     F*                                                               *
+     F*   U7  - DATABASE ERROR                                        *
+     F*   U8  - DATABASE ERROR                                        *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ASCHGS - MOVES VALUES INTO AID - AS400 CONVERSION            *   S01179
+     F*  PPTSCR - DISPLAYS PROMPT SCREEN AND VALIDATES INPUT          *
+     F*  PSUBFL - DISPLAY SUBFILE RECORDS ON SCREEN                   *
+     F*  PRCAMD - DISPLAYS AMEND SCREEN AND VALIDTES INPUT            *
+     F*  PRCENQ - DISPLAYS ENQUIRY SCREEN                             *   S01190
+     F*  PRCDEL - DISPLAYS DELETE SCREEN AND PROCESSES DELETION       *
+     F*  PRTCHG - PRINTS DETAILS OF AMENDMENT OR DELETION             *
+     F*  UPDHDR - UPDATES HEADER FOR THIS ACCOUNT/BATCH               *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+     F*                                                               *
+     F*  ZSYSTM - Access Tabtb10 ICD record                           *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E***********         INF     1   4 76                 INFO MESSAGES  S01190
+     E                    INF     1   5 76                 INFO MESSAGES  S01190
+     E************        ERR     1   3 76                 ERROR MESSAGES S01190
+     E***********         ERR     1   4 76                 ERROR MES01190 S01117
+     E                    ERR     1   7 76                 ERROR MESSAGES S01117
+     E                    ZESU       17  1                 '0' SUPPRESS A S01190
+     E                    CPY@    1   1 80                                S01117
+      /EJECT
+     I/COPY ZSRSRC,ZTNLU1Z1
+     IRUNDT       DS                                                      S01117
+      **  DATA AREA RUNDAT                                                S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I*
+     I**  DATA STRUCTURE FOR STORING FILE KEYS FOR SUBFILE
+     I*
+     I            DS
+     I                                        1  42 SCRCTL
+     I                                        1  21 INPK
+     I***********                             1   20EUBC                  S01190
+     I                                        1   20EUBN                  S01190
+     I                                        3   70EURO
+     I                                        8   8 ACTC
+     I                                        9  130EUDT
+     I                                       14  150EUIN
+     I                                       16  210TRDR
+     I                                       22  42 PAGK
+     I***********                            22  230PEUBC                 S01190
+     I                                       22  230PEUBN                 S01190
+     I                                       24  280PEURO
+     I                                       29  29 PACTC
+     I                                       30  340PEUDT
+     I                                       35  360PEUIN
+     I                                       37  420PTRDR
+     I*
+     I**  STORE FOR INPUT FIELDS
+     I*
+     I            DS
+     I***********                             1   2 STEUBC                S01190
+     I                                        1   2 STEUBN                S01190
+     I                                        3   7 STEURO
+     I                                        1   7 STORES
+     I*
+     I**  ERROR KEY
+     I*
+     IERRKEY      DS
+     I***********                             1  22 SKEY                  S01190
+     I                                        1  23 SKEY                  S01190
+     I***********                             1   20KEUBC                 S01190
+     I                                        1   20KEUBN                 S01190
+     I                                        3   70KEURO
+     I                                        8   8 KACTC
+     I                                        9  130KEUDT
+     I                                       14  150KEUIN
+     I                                       16  210KTRDR
+     I***********                            22  22 KEUNI                 S01190
+     I                                       22  23 KEUNI                 S01190
+     I*
+     ISCRMSG      DS                          1 152
+     I                                        1  76 ERRMSG
+     I                                       77 152 INFMSG
+     I*
+     ISCRDS       DS
+     I                                      287 288 AID
+     I*
+     I**  DATA STRUCTURE FOR RPG 01021 ERROR HANDLING
+     I*
+     IINFDS       DS
+     I                                     *STATUS  STATUS
+     I*
+     I*LDA********UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I**                                                                  E29170
+     ISPOOLU      DS                                                      E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     I*
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTNX
+     I                                       26  35 USIDX
+     I                                       51 121 DET
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     C/EJECT
+     C*****************************************************************
+     C*  P R O G R A M     S T A R T
+     C*****************************************************************
+     C*
+     C**  DEFINE KEY LIST FOR CHAINING TO EUCLID TELEX FILE
+     C*
+     C           SEEKEY    KLIST
+     C***********          KFLD           KEUBC   20                      S01190
+     C                     KFLD           KEUBN   20                      S01190
+     C                     KFLD           KEURO   50
+     C                     KFLD           KACTC   1
+     C                     KFLD           KEUDT   50
+     C                     KFLD           KEUIN   20
+     C                     KFLD           KTRDR   60
+     C*
+     C           SEAKEY    KLIST
+     C***********          KFLD           KEUBC                           S01190
+     C                     KFLD           KEUBN                           S01190
+     C                     KFLD           KEURO
+     C                     KFLD           KACTC
+     C                     KFLD           KEUDT
+     C                     KFLD           KEUIN
+     C                     KFLD           KTRDR
+     C***********          KFLD           KEUNI   1                       S01190
+     C                     KFLD           KELNA   2                       S01190
+     C*
+     C           SEPKEY    KLIST
+     C***********          KFLD           KEUBC                           S01190
+     C                     KFLD           KEUBN                           S01190
+     C                     KFLD           KEURO
+     C*
+     C**  PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE1280'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C**  PREPARE COMIT TEXT
+     C*
+     C                     MOVEL'SE'      MDID
+     C                     MOVEL'SE1280'  PGMN
+     C                     MOVELWSID      WSIDX
+     C                     MOVELUSID      USIDX
+     C*
+     C** read in RUNDAT                                                   S01117
+     C*                                                                   S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     35                   E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C** RCF Processing for Audit File                                    E29170
+     C*                                                                   E29170
+     C                     EXSR RCFAU                                     E29170
+     C*
+     C                     Z-ADD0         COUNT   50                      E29170
+     C                     MOVEL'SE1280'  HBPGM   8
+     C*
+     C**  GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C                     EXSR ZSYSTM
+     C*
+     C**  ERROR IN ZSYSTM
+     C*
+     C           *IN,99    IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C***********          MOVEL'01'      DBASE            ***************S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     MOVEL'TABLE'   DBFILE           ** DB ERROR 01 **
+     C                     MOVELZTABKY    DBKEY            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     01U7U8
+     C                     END
+     C*
+     C**  DEFINE AND INITIALISE WORK FIELDS
+     C*
+     C                     Z-ADD0         LCNT    20
+     C                     Z-ADD0         DINSTS  50
+     C                     Z-ADD0         DREC    50
+     C                     Z-ADD0         RRNST   50
+     C                     Z-ADD0         PGNO    40
+     C                     MOVE *BLANKS   STORES
+     C*
+     C**  MAIN PROCESS
+     C**  - PROCESS UNTIL F3 PRESSED (END OF JOB)
+     C*
+     C           *IN01     DOWEQ'0'
+     C*
+     C**  OUTPUT PROMPT SCREEN
+     C*
+     C                     EXSR PPTSCR
+     C*
+     C           *IN01     IFNE '1'
+     C*
+     C**  IF END OF JOB NOT REQUESTED -
+     C**   - DO SUBFILE PROCESSING
+     C*
+     C                     EXSR PSUBFL
+     C*
+     C**  - UPDATE HEADER RECORD
+     C*
+     C           DINSTS    IFNE 0
+     C                     EXSR UPDHDR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  PRINT AUDIT REPORT AND UPDATE TRAILER RECORD
+     C*
+     C           EAUDIT    TAG
+     C                     EXSR AUDIT
+     C*
+     C*****************************************************************
+     C*  P R O G R A M     E N D
+     C*****************************************************************
+     C*
+     C                     SETON                     LR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PPTSCR  - SUBROUTINE TO PROCESS FIRST PROMPT SCREEN
+     C*
+     C*****************************************************************
+     C*
+     C           PPTSCR    BEGSR                           ** PPTSCR **
+     C*
+     C**  CLEAR WHOLE SCREEN
+     C*
+     C***********          MOVE *BLANK    SEUBC                           S01190
+     C                     MOVE *BLANK    SEUBN                           S01190
+     C                     MOVE *BLANK    SEURO
+     C                     WRITECLSCREEN
+     C*
+     C**  PROCESS UNTIL END OF JOB REQUESTED
+     C*
+     C                     MOVE '0'       *IN07
+     C           *IN01     DOWEQ'0'
+     C           *IN07     ANDEQ'0'
+     C*
+     C                     MOVEL*BLANK    SCRCTL
+     C                     MOVELINF,1     INFMSG
+     C*
+     C**  OUTPUT PROMPT SCREEN
+     C*
+     C                     WRITEHEADER
+     C                     WRITEMESSAGES
+     C*
+     C                     EXFMTPROMPT
+     C*
+     C**  Call S/R to move values into AID                                S01179
+     C*                                                                   S01179
+     C                     EXSR ASCHGS                                    S01179
+     C*
+     C**  CHECK RESPONSE KEY
+     C*
+     C**  - F3
+     C*
+     C           AID       IFEQ '01'
+     C                     MOVE '1'       *IN01
+     C                     GOTO EPTSCR
+     C                     ELSE
+     C*
+     C**  - F12
+     C*
+     C           AID       IFEQ '02'
+     C***********          MOVE *BLANKS   SEUBC                           S01190
+     C                     MOVE *BLANKS   SEUBN                           S01190
+     C                     MOVE *BLANKS   SEURO
+     C                     GOTO EPTSCR
+     C                     ELSE
+     C*
+     C*****HELP                                                           S01199
+     C***********AID       IFEQ 'HP'                                      S01199
+     C*********************MOVELHERCD     ERRMSG                          S01199
+     C*********************CALL 'MHELP'                                   S01199
+     C*********************PARM           HBPGM                           S01199
+     C*********************PARM           HERCD 160                       S01199
+     C*
+     C*********************ELSE                                           S01199
+     C*
+     C**  VALIDATE INPUT PROMPT SCREEN
+     C*
+     C***********          MOVE SEUBC     KEUBC                           S01190
+     C                     MOVE SEUBN     KEUBN                           S01190
+     C                     MOVE SEURO     KEURO
+     C                     MOVE *BLANKS   KACTC
+     C                     MOVE *ZEROS    KEUDT
+     C                     MOVE *ZEROS    KEUIN
+     C                     MOVE *ZEROS    KTRDR
+     C*
+     C**  READ HEADER RECORD - IF NOT FOUND - ERROR
+     C*
+     C           SEEKEY    SETLLSEEUN
+     C           SEPKEY    READESEEUCHF                  80
+     C           *IN80     IFEQ '1'
+     C                     MOVE ERR,1     ERRMSG
+     C                     ELSE
+     C*
+     C**  INPUT VALID SO CHECK FOR CHANGE AND RESTORE
+     C*
+     C           STORES    IFNE *BLANKS
+     C***********STEUBC    IFNE SEUBC                                     S01190
+     C           STEUBN    IFNE SEUBN                                     S01190
+     C           STEURO    ORNE SEURO
+     C           *IN14     IFEQ '1'
+     C                     MOVEA'10'      *IN,13
+     C                     END
+     C                     END
+     C                     END
+     C***********          MOVE SEUBC     STEUBC                          S01190
+     C                     MOVE SEUBN     STEUBN                          S01190
+     C                     MOVE SEURO     STEURO
+     C                     MOVE *BLANKS   SCRMSG
+     C                     MOVE '1'       *IN07
+     C                     END
+     C*
+     C*********************END                                            S01199
+     C                     END
+     C                     END
+     C*
+     C           EPTSCR    TAG                             ** EPTSCR **
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PSUBFL  - SUBROUTINE TO PROCESS SUBFILE
+     C*
+     C*****************************************************************
+     C*
+     C           PSUBFL    BEGSR                           ** PSUBFL **
+     C*
+     C**  SET COMMAND KEY,INDICATORS AND RECORD KEY FOR FIRST TIME
+     C**  THROUGH
+     C*
+     C                     MOVELSKEY      PAGK
+     C                     MOVE ' '       ACTN
+     C                     MOVEA'0001'    *IN,2
+     C                     MOVE '0'       *IN09
+     C                     Z-ADD0         RRNNXT  40
+     C                     MOVE '0'       *IN99
+     C                     WRITESUBFLCTL
+     C                     MOVE 'UP'      AID
+     C*
+     C**  DO UNTIL END OF JOB REQUESTED
+     C*
+     C           *IN01     DOWEQ'0'
+     C           *IN09     ANDEQ'0'
+     C*
+     C**  IF ENTER PRESSED - RESET SUBFILE INDS AND FILL PAGE
+     C*
+     C           AID       IFEQ 'UP'
+     C           *IN99     ANDEQ'0'
+     C*
+     C                     Z-ADDRRNNXT    RRN
+     C                     Z-ADD0         RRNL
+     C***********          MOVELPEUBC     KEUBC                           S01190
+     C                     MOVELPEUBN     KEUBN                           S01190
+     C                     MOVELPEURO     KEURO
+     C                     MOVELPACTC     KACTC
+     C                     MOVELPEUDT     KEUDT
+     C                     MOVELPEUIN     KEUIN
+     C                     MOVELPTRDR     KTRDR
+     C           SEEKEY    SETLLSEEUCD0F
+     C*
+     C**  READ IN DETAILS-FILL UP SUBFILE
+     C*
+     C           RRNL      DOUEQ16
+     C           *IN99     OREQ '1'
+     C*
+     C**  DO UNTIL PAGE IS FULL
+     C**  OR BATCH NUMBER/ACCOUNT CODE CHANGES
+     C*
+     C           SEPKEY    READESEEUCD0F                 99
+     C           *IN99     IFEQ '0'
+     C*                                                                   S01117
+     C**  Only display messages for the branches that the user is         S01117
+     C**  authorised to, if in a multibranching environment               S01117
+     C*                                                                   S01117
+     C                     Z-ADD0         @ERR                            S01117
+     C           MBIN      IFEQ 'Y'                                       S01117
+     C                     MOVE TRDR      KTDRF   6                       S01117
+     C           KTDRF     CHAINTRADSDF              99                   S01117
+     C           *IN99     IFEQ '1'                                       S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'TRADS'   DBFILE           ***************S01117
+     C                     MOVEL'KTDRF'   DBKEY            ** DB ERROR 04 S01117
+     C                     Z-ADD04        DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     01U7U8               S01117
+     C                     ELSE                                           S01117
+     C                     CALL 'ZVBBU'                                   S01117
+     C                     PARM TDBA      @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   S01117
+     C           @ERR      IFEQ 0                                         S01117
+     C                     MOVE TDBA      STDBA                           S01117
+     C                     ADD  1         RRN     40
+     C                     ADD  1         RRNL    40
+     C                     MOVE '0'       *IN05
+     C                     MOVELECCP      TEUCP                           S01190
+     C                     MOVE EUCP      TEUCP                           S01190
+     C*
+     C           EUIN      IFEQ 7                                         S01190
+     C           ACTC      ANDEQ'I'                                       S01190
+     C           SEPKEY    READESEEUN                    45               S01190
+     C           *IN45     IFEQ '0'                                       S01190
+     C                     MOVELECCP      TEUCP                           S01190
+     C                     MOVE EUCP      TEUCP                           S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C                     WRITESUBFLREC
+     C*
+     C                     END                                            S01117
+     C                     END
+     C                     END
+     C*
+     C**  READ ONE MORE RECORD FOR NEXT SCREEN AND STORE RELATIVE REC
+     C**  NUMBER
+     C*
+     C                     Z-ADDRRN       RRNNXT
+     C           *IN99     IFEQ '0'
+     C           SEPKEY    READESEEUCD0F                 99
+     C                     END
+     C*
+     C**  RELEASE LAST RECORD READ
+     C*
+     C  N99                EXCPTRLUCD0
+     C*
+     C**  IF NOT EOF SET NEXT RECORD KEY ELSE SET IT TO BLANK
+     C*
+     C           *IN99     IFEQ '0'
+     C                     MOVELINPK      PAGK
+     C                     ELSE
+     C                     MOVEL*BLANK    PAGK
+     C                     END
+     C*
+     C**  FOR SUBFILE CONTROL SET INDICATORS
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVEA'100'     *IN,2
+     C                     ELSE
+     C                     MOVEA'111'     *IN,2
+     C                     END
+     C*
+     C**  IF EOF FOUND, SET MESSAGE INDICATOR
+     C*
+     C                     ELSE
+     C           AID       IFEQ 'UP'
+     C                     MOVE '1'       *IN06
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  DISPLAY SUBFILE SCREEN
+     C*
+     C                     MOVELINF,2     INFMSG
+     C                     WRITEHEADER
+     C                     WRITESUBFLCTL
+     C           *IN05     IFEQ '1'
+     C                     WRITENORECS
+     C                     END
+     C                     WRITEMESSAGES
+     C                     READ SUBFLCTL                 97
+     C*********************MOVELERRMSG    HERCD                           S01199
+     C                     MOVELERRMSG    HERCD 160                       S01199
+     C                     MOVEL*BLANK    SCRMSG
+     C                     MOVE '0'       *IN06
+     C*
+     C** Call S/R to move values into AID                                 S01179
+     C*                                                                   S01179
+     C                     EXSR ASCHGS                                    S01179
+     C*
+     C**  CHECK FOR RESPONSE KEY SELECTED
+     C*
+     C**  - F3
+     C           AID       IFEQ '01'
+     C                     MOVE '1'       *IN01
+     C*
+     C**  - F12
+     C                     ELSE
+     C           AID       IFEQ '02'
+     C                     MOVE '1'       *IN09
+     C*
+     C*****HELP                                                           S01199
+     C*********************ELSE                                           S01199
+     C***********AID       IFEQ 'HP'                                      S01199
+     C*********************MOVELHERCD     ERRMSG                          S01199
+     C*********************CALL 'MHELP'                                   S01199
+     C*********************PARM           HBPGM                           S01199
+     C*********************PARM           HERCD                           S01199
+     C**  - ENTER
+     C**  -  RECORD SELECTED FOR AMEND OR DELETE
+     C*
+     C                     ELSE
+     C           AID       IFEQ 'RA'
+     C                     MOVE '0'       *IN81
+     C*
+     C**  PROCESS ALL SUBFILE CHANGES
+     C*
+     C           *IN05     DOWEQ'0'
+     C           *IN81     ANDEQ'0'
+     C                     READCSUBFLREC                 81
+     C*
+     C           *IN81     IFEQ '0'
+     C*
+     C**  IF FIRST CHANGE ENCOUNTERED STORE RELATIVE RECORD NUMBER FOR
+     C**     REDISPLAY OF SUBFILE SCREEN
+     C*
+     C           *IN10     IFEQ '0'
+     C                     MOVE '1'       *IN10
+     C                     MOVE RRN       RRNST
+     C                     END
+     C*
+     C**  INSERT DETAILS FOR HEADINGS
+     C*
+     C                     MOVE EURO      SHEURO
+     C                     MOVE TRDR      SHTRDR
+     C                     MOVE EUSC      SHEUSC
+     C*                                                                   S01190
+     C**  AMENDS NOT ALLOWED ON CANCELLATION INSTRUCTIONS                 S01190
+     C*                                                                   S01190
+     C                     SETOF                     39                   S01190
+     C           ACTC      IFEQ 'C'                                       S01190
+     C           ACTN      ANDEQ'A'                                       S01190
+     C                     MOVE ERR,4     ERRMSG                          S01190
+     C                     MOVE '1'       *IN81                           S01190
+     C                     SETON                     39                   S01190
+     C                     UPDATSUBFLREC                                  S01190
+     C                     GOTO ENDLP                                     S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C* SPF action code/user validation                                   S01117
+     C*                                                                   S01117
+     C           ACTN      IFEQ 'A'                                       S01117
+     C           ACTN      OREQ 'D'                                       S01117
+     C           ACTN      OREQ 'E'                                       S01117
+     C           MBIN      IFEQ 'N'                                       S01117
+     C                     CALL 'ZVACTU'                                  S01117
+     C                     PARM ACTN      @ZACTN  1                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFNE *ZERO                                     S01117
+     C                     MOVE ERR,5     ERRMSG                          S01117
+     C                     MOVE '1'       *IN81                           S01117
+     C                     SETON                     39                   S01117
+     C                     UPDATSUBFLREC                                  S01117
+     C                     GOTO ENDLP                                     S01117
+     C                     END                                            S01117
+     C                     ELSE                                           S01117
+     C                     CALL 'ZVACTBU'                                 S01117
+     C                     PARM ACTN      @ZACTN  1                       S01117
+     C                     PARM STDBA     @ZBR    3                       S01117
+     C                     PARM           @ERR    10                      S01117
+     C**                                                                  S01117
+     C           @ERR      IFEQ 1                                         S01117
+     C                     MOVE ERR,6     ERRMSG                          S01117
+     C                     MOVE '1'       *IN81                           S01117
+     C                     SETON                     39                   S01117
+     C                     UPDATSUBFLREC                                  S01117
+     C                     GOTO ENDLP                                     S01117
+     C                     END                                            S01117
+     C           @ERR      IFEQ 2                                         S01117
+     C                     MOVE ERR,7     ERRMSG                          S01117
+     C                     MOVE '1'       *IN81                           S01117
+     C                     SETON                     39                   S01117
+     C                     UPDATSUBFLREC                                  S01117
+     C                     GOTO ENDLP                                     S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*
+     C**  CHECK WHETHER AMEND OR DELETE OR ERROR
+     C*
+     C           ACTN      IFEQ 'A'
+     C                     EXSR PRCAMD
+     C                     ELSE
+     C           ACTN      IFEQ 'D'
+     C                     EXSR PRCDEL
+     C                     MOVE '0'       *IN40
+     C                     ELSE                                           S01190
+     C           ACTN      IFEQ 'E'                                       S01190
+     C                     MOVE '1'       *IN44                           S01190
+     C                     EXSR PRCENQ                                    S01190
+     C                     MOVE '0'       *IN44
+     C                     ELSE
+     C           ACTN      IFNE ' '
+     C                     MOVE ERR,2     ERRMSG
+     C                     MOVE '1'       *IN81
+     C                     GOTO ENDLP
+     C*
+     C                     END
+     C                     END
+     C                     END                                            S01190
+     C                     END
+     C*
+     C                     MOVE '0'       *IN30
+     C                     MOVE *BLANKS   ERRMSG
+     C*
+     C**  IF CMD/12 PRESSED ON AMEND OR DELETE SCREEN RETURN TO SUBFILE
+     C**  OR IF CMD/3 PRESSED ON THESE SCREENS                            S01190
+     C*
+     C           AID       IFEQ '02'
+     C           AID       OREQ '01'                                      S01190
+     C                     MOVE '1'       *IN81
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C**  AT END OF SUBFILE CHANGES - REDISPLAY SCREEN OF FIRST CHANGE
+     C*
+     C           *IN10     IFEQ '1'
+     C                     MOVE '0'       *IN10
+     C                     MOVE RRNST     RRN
+     C                     END
+     C                     END
+     C*
+     C           ENDLP     TAG                             ** ENDLP **
+     C                     END
+     C*
+     C                     END
+     C*********************END                                            S01199
+     C                     END
+     C                     END                             *AID=01
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PRCAMD  - SUBROUTINE TO PROCESS AMENDMENTS TO THE FILE
+     C*
+     C*****************************************************************
+     C*
+     C           PRCAMD    BEGSR                           ** PRCAMD **
+     C*
+     C**  SET UP FIELDS FOR KEY
+     C**      AND ACCESS NARRATIVE RECORDS AFTER CLEARING SCREEN
+     C*
+     C                     MOVE ACTC      KACTC
+     C                     MOVE EUDT      KEUDT
+     C                     MOVE EUIN      KEUIN
+     C                     MOVE TRDR      KTRDR
+     C                     MOVE *BLANKS   SAUNR1
+     C                     MOVE *BLANKS   SAUNR2
+     C                     Z-ADD0         WTNLU2
+     C                     Z-ADD0         WTNLU3
+     C*
+     C                     MOVEA'00'      *IN,60
+     C                     MOVEA'11'      *IN,83
+     C***********          MOVE 'A'       KEUNI   1                       S01190
+     C                     MOVE 'NA'      KELNA                           S01190
+     C***********SEAKEY    CHAINSEEUCD2F             83                   S01190
+     C           SEAKEY    CHAINSEEUCD5F             83                   S01190
+     C           *IN83     IFEQ '0'
+     C                     Z-ADDTNLU      WTNLU2
+     C***********          EXCPTRLUCD2                                    S01190
+     C                     EXCPTRLUCD5                                    S01190
+     C                     MOVE EUNR      SAUNR1
+     C                     END
+     C*
+     C***********          MOVE 'B'       KEUNI                           S01190
+     C                     MOVE 'NB'      KELNA                           S01190
+     C***********SEAKEY    CHAINSEEUCD2F             84                   S01190
+     C           SEAKEY    CHAINSEEUCD5F             84                   S01190
+     C           *IN84     IFEQ '0'
+     C                     Z-ADDTNLU      WTNLU3
+     C***********          EXCPTRLUCD2                                    S01190
+     C                     EXCPTRLUCD5                                    S01190
+     C                     MOVE EUNR      SAUNR2
+     C                     END
+     C*
+     C**LIMIT*DISPLAY*FOR*INSTRUCTION*TYPES*07,*BRIDGE*CODE*K,*****       S01190
+     C*****COUNTERPARTY*NOT*BLANK*****                                    S01190
+     C*
+     C***********EUIT      IFEQ 07                                        S01190
+     C***********          MOVE '1'       *IN60                           S01190
+     C*
+     C***********EUCL      IFEQ 'K'                                       S01190
+     C***********          MOVE ' '       SAUNR1                          S01190
+     C***********          MOVE ' '       SAUNR2                          S01190
+     C*
+     C***********EUCP      IFNE *BLANKS                                   S01190
+     C***********EUCP      ANDNE*ZEROS                                    S01190
+     C***********          MOVE *BLANKS   SAUNR2                          S01190
+     C***********          MOVE '1'       *IN61                           S01190
+     C***********          END                                            S01190
+     C***********          END                                            S01190
+     C***********          END                                            S01190
+     C*
+     C**  STORE OUTPUT SCREEN TO TEST FOR CHANGES ON INPUT
+     C*
+     C                     MOVE SAUNR1    SN1ST  33
+     C                     MOVE SAUNR2    SN2ST  33
+     C*
+     C**  DISPLAY AMENDMENT SCREEN
+     C*
+     C           DSPLY     TAG                             ** DSPLY **
+     C                     WRITEHEADER
+     C                     MOVE '1'       *IN12
+     C                     WRITESCRHD
+     C                     MOVELINF,3     INFMSG
+     C                     WRITEMESSAGES
+     C                     EXFMTRECAMD
+     C*                                                                   E19954
+     C**  Call SR to move values to AID                                   E19954
+     C*                                                                   E19954
+     C                     EXSR ASCHGS                                    E19954
+     C*                                                                   E19954
+     C                     MOVE '0'       *IN30
+     C*
+     C**  CHECK RESPONSE KEY
+     C*
+     C                     SETOF                     39                   S01190
+     C**  - F3
+     C           AID       IFEQ '01'
+     C                     MOVE '1'       *IN01
+     C                     GOTO EAMD
+     C****HELP                                                            S01199
+     C*********************ELSE                                           S01199
+     C***********AID       IFEQ 'HP'                                      S01199
+     C*********************MOVELHERCD     ERRMSG                          S01199
+     C*********************CALL 'MHELP'                                   S01199
+     C*********************PARM           HBPGM                           S01199
+     C*********************PARM           HERCD                           S01199
+     C*********************GOTO DSPLY                                     S01199
+     C*
+     C                     ELSE
+     C** - F12
+     C           AID       IFEQ '02'
+     C*
+     C**    -  RESET ACTION CODE
+     C                     MOVE ' '       ACTN
+     C                     SETON                     39                   S01190
+     C                     UPDATSUBFLREC
+     C                     GOTO EAMD
+     C*
+     C**  - ENTER
+     C                     ELSE
+     C*
+     C**  AMEND FILE FOR CHANGES TO NARRATIVES
+     C*
+     C** - IF NO NARRATIVE RECORDS FOUND AND NO NARRATIVES INPUT - EXIT
+     C*
+     C           *IN83     IFEQ '1'
+     C           *IN84     ANDEQ'1'
+     C           SAUNR1    ANDEQ*BLANKS
+     C           SAUNR2    ANDEQ*BLANKS
+     C                     MOVE ' '       ACTN
+     C                     UPDATSUBFLREC
+     C                     GOTO EAMD
+     C                     END
+     C*
+     C**  - UPDATE OF WRITE NEW NARRATIVE RECORDS
+     C*
+     C           SAUNR1    IFNE SN1ST
+     C           SAUNR2    ORNE SN2ST
+     C                     EXSR ZTNLU1
+     C                     END
+     C*
+     C           SAUNR1    IFNE SN1ST
+     C*
+     C***********          MOVE 'A'       KEUNI                           S01190
+     C                     MOVE 'NA'      KELNA                           S01190
+     C***********SEAKEY    CHAINSEEUCD2F             63                   S01190
+     C           SEAKEY    CHAINSEEUCD5F             63                   S01190
+     C           *IN63     IFEQ '1'
+     C                     Z-ADD0         TNLU
+     C                     END
+     C           TNLU      IFNE WTNLU2
+     C**N63******          EXCPTRLUCD2                                    S01190
+     C  N63                EXCPTRLUCD5                                    S01190
+     C                     MOVE '1'       *IN30
+     C                     GOTO ERRAMD
+     C                     END
+     C*
+     C                     MOVE NATN      TNLU
+     C           *IN83     IFEQ '1'
+     C***********          MOVE 'A'       EUNI                            S01190
+     C                     MOVE 'NA'      ELNA                            S01190
+     C                     MOVE SAUNR1    EUNR
+     C                     MOVE *BLANKS   ZZ001A
+     C                     MOVE *BLANKS   ZZ001B
+     C***********          MOVE *BLANKS   ZZ039                           S01190
+     C***********          MOVE EUBC      EUB2                            S01190
+     C                     MOVE EUBN      EUB5                            S01190
+     C***********          WRITESEEUCD2F                                  S01190
+     C           SEEKEY    CHAINSEEUCD4F             45                   S01190
+     C                     ADD  1         EULN                            S01190
+     C                     WRITESEEUCD5F                                  S01190
+     C                     ADD  1         NONA    50                      S01190
+     C                     ELSE
+     C                     MOVE SAUNR1    EUNR
+     C***********          UPDATSEEUCD2F                                  S01190
+     C                     UPDATSEEUCD5F                                  S01190
+     C                     END
+     C*
+     C                     END
+     C*
+     C           SAUNR2    IFNE SN2ST
+     C*
+     C***********          MOVE 'B'       KEUNI                           S01190
+     C                     MOVE 'NB'      KELNA                           S01190
+     C***********SEAKEY    CHAINSEEUCD2F             64                   S01190
+     C           SEAKEY    CHAINSEEUCD5F             64                   S01190
+     C           *IN64     IFEQ '1'
+     C                     Z-ADD0         TNLU
+     C                     END
+     C           TNLU      IFNE WTNLU3
+     C**N64******          EXCPTRLUCD2                                    S01190
+     C  N64                EXCPTRLUCD5                                    S01190
+     C                     MOVE '1'       *IN30
+     C                     GOTO ERRAMD
+     C                     END
+     C*
+     C                     MOVE NATN      TNLU
+     C           *IN84     IFEQ '1'
+     C***********          MOVE 'B'       EUNI                            S01190
+     C                     MOVE 'NB'      ELNA                            S01190
+     C                     MOVE SAUNR2    EUNR
+     C                     MOVE *BLANKS   ZZ001A
+     C                     MOVE *BLANKS   ZZ001B
+     C***********          MOVE *BLANKS   ZZ039                           S01190
+     C***********          MOVE EUBC      EUB2                            S01190
+     C                     MOVE EUBN      EUB2                            S01190
+     C***********          WRITESEEUCD2F                                  S01190
+     C                     ADD  1         EULN                            S01190
+     C                     WRITESEEUCD5F                                  S01190
+     C                     ADD  1         NONA    50                      S01190
+     C                     ELSE
+     C                     MOVE SAUNR2    EUNR
+     C***********          UPDATSEEUCD2F                                  S01190
+     C                     ADD  1         EULN                            S01190
+     C                     UPDATSEEUCD5F                                  S01190
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*********************END                                            S01199
+     C                     END
+     C*
+     C**  CHECK FOR TRANSACTION NO ERROR
+     C*
+     C           ERRAMD    TAG
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVELERR,3     ERRMSG
+     C                     ROLBK
+     C                     GOTO DSPLY
+     C                     ELSE
+     C                     MOVE ' '       ACTN
+     C                     UPDATSUBFLREC
+     C                     EXSR PRTCHG
+     C                     EXSR PCOMIT
+     C                     END
+     C*
+     C           EAMD      ENDSR                           ** EAMD **
+     C*
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PRCDEL  - SUBROUTINE TO PROCESS DELETION SCREEN AND DELETE
+     C*            RECORDS FROM THE FILE IF REQUESTED
+     C*
+     C*****************************************************************
+     C*
+     C           PRCDEL    BEGSR                           ** PRCDEL **
+     C*
+     C**  SET ON F10 INDICATOR
+     C*
+     C                     MOVE '1'       *IN40
+     C*
+     C**  SET KEY FIELDS FOR CHAINING
+     C*
+     C                     MOVE ACTC      KACTC
+     C                     MOVE EUDT      KEUDT
+     C                     MOVE EUIN      KEUIN
+     C                     MOVE TRDR      KTRDR
+     C           ACTC      IFEQ 'C'                                       S01190
+     C                     SETON                     46                   S01190
+     C                     END                                            S01190
+     C*
+     C**  READ FILE FOR DETAILS FOR SCREEN
+     C*
+     C           SEEKEY    CHAINSEEUCD0F             82
+     C*
+     C                     Z-ADDTNLU      WTNLU0  50
+     C                     MOVE EUSC      SHEUSC                          S01190
+     C                     MOVE EUIT      SEUIT
+     C                     MOVE EURF      SEURF
+     C                     MOVE EUPC      SEUPC
+     C                     MOVELECCP      SEUCP                           S01190
+     C                     MOVE EUCP      SEUCP
+     C                     MOVE EUCL      SEUCL
+     C***********          MOVE EUNA      SEUNA                           S01190
+     C                     MOVE ENAM      SENAM                           S01190
+     C***********          MOVE EUCU      SEUCU                           S01190
+     C                     MOVELEUCA      CC     14                       S01190
+     C                     MOVE '.'       CC                              S01190
+     C                     MOVELCC        SEUCA                           S01190
+     C                     MOVE EUCD      SEUCA                           S01190
+     C                     MOVELSEUCA     INP    17                       S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEUCA                           S01190
+     C***********          MOVE EUCD      SEUCD                           S01190
+     C***********          MOVE EUVY      SEUVY                           S01190
+     C***********          MOVE EUSD      SEUSD                           S01190
+     C***********          MOVE EUPR      SEUPR                           S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD1F             85
+     C                     Z-ADDTNLU      WTNLU1  50
+     C                     MOVE EUVY      SEUVY                           S01190
+     C                     MOVE EUSD      SEUSD                           S01190
+     C                     MOVE EUPR      SEUPR                           S01190
+     C                     MOVE EUCO      SEUCO
+     C           SEUCP     IFEQ *BLANKS                                   S01190
+     C                     MOVELECCP      SEUCP                           S01190
+     C                     MOVE EUCP      SEUCP                           S01190
+     C                     END                                            S01190
+     C                     MOVELEUHA      HA     15                       S01190
+     C                     MOVE '.'       HA                              S01190
+     C                     MOVELHA        SEUHA                           S01190
+     C                     MOVE EUHD      SEUHA                           S01190
+     C                     MOVE SEUHA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEUHA                           S01190
+     C                     MOVE EUPA      SEUPA                           S01190
+     C**N85******          EXCPTRLUCD1                                    S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD2F             36                   S01190
+     C                     Z-ADDTNLU      WTNLU4  50                      S01190
+     C                     MOVELETDP      TP     10                       S01190
+     C                     MOVE '.'       TP                              S01190
+     C                     MOVELTP        SETDP                           S01190
+     C                     MOVE ETPD      SETDP                           S01190
+     C                     MOVELSETDP     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SETDP                           S01190
+     C                     MOVE ETDT      SETDT                           S01190
+     C                     MOVE ESPI      SESPI                           S01190
+     C                     MOVE EMKT      SEMKT                           S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD3F             37                   S01190
+     C                     Z-ADDTNLU      WTNLU5  50                      S01190
+     C                     MOVELEPRA      PA     14                       S01190
+     C                     MOVE EDP3      PA                              S01190
+     C                     MOVELPA        SEPRA                           S01190
+     C                     MOVE EPRD      SEPRA                           S01190
+     C                     MOVELSEPRA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEPRA                           S01190
+     C                     MOVE EPRC      SEPRC                           S01190
+     C                     MOVELEPRX      PE      6                       S01190
+     C                     MOVE EDP4      PE                              S01190
+     C                     MOVELPE        SEPRX                           S01190
+     C                     MOVE EPXD      SEPRX                           S01190
+     C                     MOVELSEPRX     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEPRX                           S01190
+     C                     MOVELEAIA      AI     14                       S01190
+     C                     MOVE EDP5      AI                              S01190
+     C                     MOVELAI        SEAIA                           S01190
+     C                     MOVE EAID      SEAIA                           S01190
+     C                     MOVELSEAIA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEAIA                           S01190
+     C                     MOVE EAIC      SEAIC                           S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD4F             38                   S01190
+     C                     Z-ADDTNLU      WTNLU6  50                      S01190
+     C                     MOVELEAIX      AE      6                       S01190
+     C                     MOVE EDP6      AE                              S01190
+     C                     MOVELAE        SEAIX                           S01190
+     C                     MOVE EAXD      SEAIX                           S01190
+     C                     MOVELSEAIX     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEAIX                           S01190
+     C                     MOVE EDAC      SEDAC                           S01190
+     C                     MOVELEARA      AR      4                       S01190
+     C                     MOVE EDP7      AR                              S01190
+     C                     MOVELAR        SEARA                           S01190
+     C                     MOVE EARD      SEARA                           S01190
+     C                     MOVELSEARA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEARA                           S01190
+     C                     MOVE ECLB      SECLB                           S01190
+     C                     MOVELEFCA      EF     14                       S01190
+     C                     MOVE EDP8      EF                              S01190
+     C                     MOVELEF        SEFCA                           S01190
+     C                     MOVE EFCD      SEFCA                           S01190
+     C                     MOVELSEFCA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEFCA                           S01190
+     C                     MOVE EFCC      SEFCC                           S01190
+     C                     MOVELEFCX      FER     6                       S01190
+     C                     MOVE EDP9      FER                             S01190
+     C                     MOVELFER       SEFCX                           S01190
+     C                     MOVE EFXD      SEFCX                           S01190
+     C                     MOVELSEFCX     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEFCX                           S01190
+     C*
+     C***********          MOVE 'A'       KEUNI                           S01190
+     C                     MOVE 'NA'      KELNA                           S01190
+     C***********SEAKEY    CHAINSEEUCD2F             83                   S01190
+     C           SEAKEY    CHAINSEEUCD5F             83                   S01190
+     C           *IN83     IFEQ '1'
+     C                     MOVE *BLANKS   SEUNR1
+     C                     MOVE *BLANKS   SEUNR2
+     C                     ELSE
+     C                     MOVE EUNR      SEUNR1
+     C                     Z-ADDTNLU      WTNLU2  50
+     C***********          EXCPTRLUCD2                                    S01190
+     C                     EXCPTRLUCD5                                    S01190
+     C                     END
+     C*
+     C***********          MOVE 'B'       KEUNI                           S01190
+     C                     MOVE 'NB'      KELNA                           S01190
+     C***********SEAKEY    CHAINSEEUCD2F             84                   S01190
+     C           SEAKEY    CHAINSEEUCD5F             84                   S01190
+     C           *IN84     IFEQ '0'
+     C                     MOVE EUNR      SEUNR2
+     C                     Z-ADDTNLU      WTNLU3  50
+     C***********          EXCPTRLUCD2                                    S01190
+     C                     EXCPTRLUCD5                                    S01190
+     C                     ELSE
+     C                     MOVE *BLANKS   SEUNR2
+     C                     END
+     C*
+     C**  DISPLAY DELETION SCREEN UNTIL SUCCESSFUL DELETE OR
+     C**    CMD/3 OR CMD/12 PRESSED
+     C*
+     C                     SETOF                     39                   S01190
+     C                     MOVE '0'       *IN11
+     C           *IN01     DOUEQ'1'
+     C           *IN11     OREQ '1'
+     C*
+     C                     WRITEHEADER
+     C                     MOVE '0'       *IN12
+     C                     WRITESCRHD
+     C                     MOVELINF,4     INFMSG
+     C                     WRITEMESSAGES
+     C                     EXFMTRECDEL
+     C*                                                                   E19954
+     C** Call SR to move values to AID                                    E19954
+     C*                                                                   E19954
+     C                     EXSR ASCHGS                                    E19954
+     C*                                                                   E19954
+     C                     SETOF                     46                   S01190
+     C                     EXSR BLSCRR                                    S01190
+     C*
+     C                     MOVE '0'       *IN30
+     C*
+     C**  CHECK RESPONSE KEY
+     C*
+     C*  - F3
+     C           AID       IFEQ '01'
+     C                     MOVE '1'       *IN01
+     C****HELP                                                            S01199
+     C*********************ELSE                                           S01199
+     C***********AID       IFEQ 'HP'                                      S01199
+     C*********************MOVELHERCD     ERRMSG                          S01199
+     C*********************CALL 'MHELP'                                   S01199
+     C*********************PARM           HBPGM                           S01199
+     C*********************PARM           HERCD                           S01199
+     C*
+     C                     ELSE
+     C** - F12
+     C           AID       IFEQ '02'
+     C                     MOVE ' '       ACTN
+     C                     SETON                     39                   S01190
+     C                     UPDATSUBFLREC
+     C                     MOVE '1'       *IN11
+     C*
+     C                     ELSE
+     C**  - F10
+     C**  DELETE RELEVANT RECORDS
+     C*
+     C           AID       IFEQ '04'
+     C*
+     C           *IN82     IFEQ '0'
+     C           SEEKEY    CHAINSEEUCD0F             88
+     C           TNLU      IFNE WTNLU0
+     C  N88                EXCPTRLUCD0
+     C                     MOVE '1'       *IN30
+     C                     ELSE
+     C           SEEKEY    DELETSEEUCD0F             89
+     C                     ADD  1         DREC
+     C                     END
+     C                     END
+     C*
+     C           *IN85     IFEQ '0'
+     C           SEEKEY    CHAINSEEUCD1F             88
+     C           TNLU      IFNE WTNLU1
+     C  N88                EXCPTRLUCD1
+     C                     MOVE '1'       *IN30
+     C                     ELSE
+     C           SEEKEY    DELETSEEUCD1F             89
+     C                     ADD  1         DREC
+     C                     END
+     C                     END
+     C*
+     C           *IN36     IFEQ '0'                                       S01190
+     C           SEEKEY    CHAINSEEUCD2F             88                   S01190
+     C           TNLU      IFNE WTNLU4                                    S01190
+     C  N88                EXCPTRLUCD2                                    S01190
+     C                     MOVE '1'       *IN30                           S01190
+     C                     ELSE                                           S01190
+     C           SEEKEY    DELETSEEUCD2F             89                   S01190
+     C                     ADD  1         DREC                            S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C           *IN37     IFEQ '0'                                       S01190
+     C           SEEKEY    CHAINSEEUCD3F             88                   S01190
+     C           TNLU      IFNE WTNLU5                                    S01190
+     C  N88                EXCPTRLUCD3                                    S01190
+     C                     MOVE '1'       *IN30                           S01190
+     C                     ELSE                                           S01190
+     C           SEEKEY    DELETSEEUCD3F             89                   S01190
+     C                     ADD  1         DREC                            S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C           *IN38     IFEQ '0'                                       S01190
+     C           SEEKEY    CHAINSEEUCD4F             88                   S01190
+     C           TNLU      IFNE WTNLU6                                    S01190
+     C  N88                EXCPTRLUCD4                                    S01190
+     C                     MOVE '1'       *IN30                           S01190
+     C                     ELSE                                           S01190
+     C           SEEKEY    DELETSEEUCD4F             89                   S01190
+     C                     ADD  1         DREC                            S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C*
+     C           *IN83     IFEQ '0'
+     C***********          MOVE 'A'       KEUNI                           S01190
+     C                     MOVE 'NA'      KELNA                           S01190
+     C***********SEAKEY    CHAINSEEUCD2F             63                   S01190
+     C           SEAKEY    CHAINSEEUCD5F             63                   S01190
+     C           TNLU      IFNE WTNLU2
+     C**N63******          EXCPTRLUCD2                                    S01190
+     C  N63                EXCPTRLUCD5                                    S01190
+     C                     MOVE '1'       *IN30
+     C                     ELSE
+     C***********SEAKEY    DELETSEEUCD2F             89                   S01190
+     C           SEAKEY    DELETSEEUCD5F             89                   S01190
+     C                     ADD  1         DREC
+     C                     END
+     C                     END
+     C*
+     C           *IN84     IFEQ '0'
+     C***********          MOVE 'B'       KEUNI                           S01190
+     C                     MOVE 'NB'      KELNA                           S01190
+     C***********SEAKEY    CHAINSEEUCD2F             64                   S01190
+     C           SEAKEY    CHAINSEEUCD5F             64                   S01190
+     C           TNLU      IFNE WTNLU3
+     C**N64******          EXCPTRLUCD2                                    S01190
+     C  N64                EXCPTRLUCD5                                    S01190
+     C                     MOVE '1'       *IN30
+     C                     ELSE
+     C***********SEAKEY    DELETSEEUCD2F             89                   S01190
+     C           SEAKEY    DELETSEEUCD5F             89                   S01190
+     C                     ADD  1         DREC
+     C                     END
+     C                     END
+     C*
+     C**  CHECK FOR TRANSACTION NO. ERROR ELSE RESET ACTION CODE
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVELERR,3     ERRMSG
+     C                     ROLBK
+     C                     ELSE
+     C                     EXSR PRTCHG
+     C                     MOVE 'D'       ACTN
+     C                     MOVE '1'       *IN08
+     C                     UPDATSUBFLREC
+     C                     MOVE '0'       *IN08
+     C                     MOVE '1'       *IN11
+     C                     ADD  1         DINSTS
+     C                     EXSR PCOMIT
+     C                     END
+     C                     EXSR BLSCRR                                    S01190
+     C                     END
+     C*
+     C                     END
+     C*
+     C*********************END                                            S01199
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************   S01190
+     C*                                                                   S01190
+     C*  PRCENQ  - SUBROUTINE TO PROCESS ENQUIRE SCREEN                   S01190
+     C*                                                                   S01190
+     C*****************************************************************   S01190
+     C*                                                                   S01190
+     C           PRCENQ    BEGSR                           ** PRCENQ **   S01190
+     C*                                                                   S01190
+     C**  SET KEY FIELDS FOR CHAINING                                     S01190
+     C*                                                                   S01190
+     C                     MOVE ACTC      KACTC                           S01190
+     C                     MOVE EUDT      KEUDT                           S01190
+     C                     MOVE EUIN      KEUIN                           S01190
+     C                     MOVE TRDR      KTRDR                           S01190
+     C           ACTC      IFEQ 'C'                                       S01190
+     C                     SETON                     46                   S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C**  READ FILE FOR DETAILS FOR SCREEN                                S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD0F             82                   S01190
+     C*                                                                   S01190
+     C                     Z-ADDTNLU      WTNLU0  50                      S01190
+     C                     MOVE EUSC      SHEUSC                          S01190
+     C                     MOVE EUIT      SEUIT                           S01190
+     C                     MOVE EURF      SEURF                           S01190
+     C                     MOVE EUPC      SEUPC                           S01190
+     C                     MOVELECCP      SEUCP                           S01190
+     C                     MOVE EUCP      SEUCP                           S01190
+     C                     MOVE EUCL      SEUCL                           S01190
+     C                     MOVE ENAM      SENAM                           S01190
+     C                     MOVELEUCA      CC     14                       S01190
+     C                     MOVE '.'       CC                              S01190
+     C                     MOVELCC        SEUCA                           S01190
+     C                     MOVE EUCD      SEUCA                           S01190
+     C                     MOVELSEUCA     INP    17                       S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEUCA                           S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD1F             85                   S01190
+     C                     Z-ADDTNLU      WTNLU1  50                      S01190
+     C                     MOVE EUVY      SEUVY                           S01190
+     C                     MOVE EUSD      SEUSD                           S01190
+     C                     MOVE EUPR      SEUPR                           S01190
+     C                     MOVE EUCO      SEUCO                           S01190
+     C           SEUCP     IFEQ *BLANKS                                   S01190
+     C                     MOVELECCP      SEUCP                           S01190
+     C                     MOVE EUCP      SEUCP                           S01190
+     C                     END                                            S01190
+     C                     MOVELEUHA      HA     15                       S01190
+     C                     MOVE '.'       HA                              S01190
+     C                     MOVELHA        SEUHA                           S01190
+     C                     MOVE EUHD      SEUHA                           S01190
+     C                     MOVELSEUHA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEUHA                           S01190
+     C                     MOVE EUPA      SEUPA                           S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD2F             36                   S01190
+     C                     Z-ADDTNLU      WTNLU4  50                      S01190
+     C                     MOVELETDP      TP     10                       S01190
+     C                     MOVE '.'       TP                              S01190
+     C                     MOVELTP        SETDP                           S01190
+     C                     MOVE ETPD      SETDP                           S01190
+     C                     MOVELSETDP     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SETDP                           S01190
+     C                     MOVE ETDT      SETDT                           S01190
+     C                     MOVE ESPI      SESPI                           S01190
+     C                     MOVE EMKT      SEMKT                           S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD3F             37                   S01190
+     C                     Z-ADDTNLU      WTNLU5  50                      S01190
+     C                     MOVELEPRA      PA     14                       S01190
+     C                     MOVE EDP3      PA                              S01190
+     C                     MOVELPA        SEPRA                           S01190
+     C                     MOVE EPRD      SEPRA                           S01190
+     C                     MOVELSEPRA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEPRA                           S01190
+     C                     MOVE EPRC      SEPRC                           S01190
+     C                     MOVELEPRX      PE      6                       S01190
+     C                     MOVE EDP4      PE                              S01190
+     C                     MOVELPE        SEPRX                           S01190
+     C                     MOVE EPXD      SEPRX                           S01190
+     C                     MOVELSEPRX     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEPRX                           S01190
+     C                     MOVELEAIA      AI     14                       S01190
+     C                     MOVE EDP5      AI                              S01190
+     C                     MOVELAI        SEAIA                           S01190
+     C                     MOVE EAID      SEAIA                           S01190
+     C                     MOVELSEAIA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEAIA                           S01190
+     C                     MOVE EAIC      SEAIC                           S01190
+     C*                                                                   S01190
+     C           SEEKEY    CHAINSEEUCD4F             38                   S01190
+     C                     Z-ADDTNLU      WTNLU6  50                      S01190
+     C                     MOVELEAIX      AE      6                       S01190
+     C                     MOVE EDP6      AE                              S01190
+     C                     MOVELAE        SEAIX                           S01190
+     C                     MOVE EAXD      SEAIX                           S01190
+     C                     MOVELSEAIX     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEAIX                           S01190
+     C                     MOVE EDAC      SEDAC                           S01190
+     C                     MOVELEARA      AR      4                       S01190
+     C                     MOVE EDP7      AR                              S01190
+     C                     MOVELAR        SEARA                           S01190
+     C                     MOVE EARD      SEARA                           S01190
+     C                     MOVELSEARA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEARA                           S01190
+     C                     MOVE ECLB      SECLB                           S01190
+     C                     MOVELEFCA      EF     14                       S01190
+     C                     MOVE EDP8      EF                              S01190
+     C                     MOVELEF        SEFCA                           S01190
+     C                     MOVE EFCD      SEFCA                           S01190
+     C                     MOVELSEFCA     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEFCA                           S01190
+     C                     MOVE EFCC      SEFCC                           S01190
+     C                     MOVELEFCX      FER     6                       S01190
+     C                     MOVE EDP9      FER                             S01190
+     C                     MOVELFER       SEFCX                           S01190
+     C                     MOVE EFXD      SEFCX                           S01190
+     C                     MOVELSEFCX     INP                             S01190
+     C                     EXSR PZEROS                                    S01190
+     C                     MOVELOUTZ      SEFCX                           S01190
+     C*                                                                   S01190
+     C                     MOVE 'NA'      KELNA                           S01190
+     C           SEAKEY    CHAINSEEUCD5F             83                   S01190
+     C           *IN83     IFEQ '1'                                       S01190
+     C                     MOVE *BLANKS   SEUNR1                          S01190
+     C                     MOVE *BLANKS   SEUNR2                          S01190
+     C                     ELSE                                           S01190
+     C                     MOVE EUNR      SEUNR1                          S01190
+     C                     Z-ADDTNLU      WTNLU2  50                      S01190
+     C                     EXCPTRLUCD5                                    S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C                     MOVE 'NB'      KELNA                           S01190
+     C           SEAKEY    CHAINSEEUCD5F             84                   S01190
+     C           *IN84     IFEQ '0'                                       S01190
+     C                     MOVE EUNR      SEUNR2                          S01190
+     C                     Z-ADDTNLU      WTNLU3  50                      S01190
+     C                     EXCPTRLUCD5                                    S01190
+     C                     ELSE                                           S01190
+     C                     MOVE *BLANKS   SEUNR2                          S01190
+     C                     END                                            S01190
+     C*                                                                   S01190
+     C**  DISPLAY ENQUIRE SCREEN UNTIL F3 OR F12 PRESSED.                 S01190
+     C*                                                                   S01190
+     C                     SETOF                     39                   S01190
+     C                     MOVE '0'       *IN11                           S01190
+     C           *IN11     DOUEQ'1'                                       S01190
+     C*                                                                   S01190
+     C                     WRITEHEADER                                    S01190
+     C                     MOVE '0'       *IN12                           S01190
+     C                     WRITESCRHD                                     S01190
+     C                     MOVELINF,5     INFMSG                          S01190
+     C                     WRITEMESSAGES                                  S01190
+     C                     EXFMTRECDEL                                    S01190
+     C*                                                                   E19954
+     C**  Call SR to move values to AID                                   E19954
+     C*                                                                   E19954
+     C                     EXSR ASCHGS                                    E19954
+     C*                                                                   E19954
+     C                     SETOF                     46                   S01190
+     C                     EXSR BLSCRR                                    S01190
+     C*                                                                   S01190
+     C**  - F3                                                            S01190
+     C*                                                                   S01190
+     C           AID       IFEQ '01'                                      S01190
+     C                     MOVE '1'       *IN01                           S01190
+     C                     MOVE '1'       *IN11                           S01190
+     C                     ELSE                                           S01190
+     C*                                                                   S01190
+     C**  - F12                                                           S01190
+     C*                                                                   S01190
+     C           AID       IFEQ '02'                                      S01190
+     C                     MOVE ' '       ACTN                            S01190
+     C                     SETON                     39                   S01190
+     C                     UPDATSUBFLREC                                  S01190
+     C                     MOVE '1'       *IN11                           S01190
+     C                     ELSE                                           S01190
+     C                     MOVE ' '       ACTN                            S01190
+     C                     UPDATSUBFLREC                                  S01190
+     C                     MOVE '1'       *IN11                           S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C                     ENDSR                                          S01190
+      /EJECT
+     C******************************************************************
+     C*
+     C*  PRTCHG - SUBROUTINE TO PRINT AMENDMENTS AND DELETIONS
+     C*
+     C******************************************************************
+     C*
+     C           PRTCHG    BEGSR                           ** PRTCHG **
+     C*                                                                   E29170
+     C** IF FIRST RECORD TO BE PRINTED THEN OPEN DETAIL PRINTER FILE      E29170
+     C*                                                                   E29170
+     C           COUNT     IFEQ 0                                         E29170
+     C                     OPEN SE1280P1                                  E29170
+     C*                                                                   E29170
+     C** RCF PROCESSING FOR DETAIL PRINTER FILE                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ADD  1         COUNT                           E29170
+     C*                                                                   E29170
+     C** RETRIEVE BRANCH OF TRADE IF MULTIBRANCHING IS ON                 E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     EXSR GETBR                                     E29170
+     C                     END                                            E29170
+     C*
+     C**  CHECK FOR NEW PAGE FOR CHANGE IN ACCNO/BATCH
+     C*
+     C           *IN13     IFEQ '1'
+     C                     MOVE '0'       *IN13
+     C                     Z-ADD0         LCNT
+     C                     END
+     C*
+     C**  CHECK FOR OVERFLOW
+     C*
+     C           LCNT      IFGT 42
+     C           LCNT      OREQ 0
+     C                     MOVE EURO      HACCT
+     C***********          MOVE EUBC      HBTCH                           S01190
+     C                     MOVE EUBN      HBTCH                           S01190
+     C                     ADD  1         PGNO
+     C                     WRITEHEAD1
+     C                     WRITEHEAD2
+     C                     Z-ADD0         LCNT
+     C                     END
+     C*
+     C                     MOVE EULN      DTLINE
+     C                     MOVE EUIT      DTITYP
+     C                     MOVE EUSC      DTSECC
+     C                     MOVE TRDR      DTTREF
+     C*
+     C**  PRINT DETAIL LINES
+     C*
+     C                     MOVE '1'       *IN14
+     C           ACTN      IFEQ 'D'
+     C                     MOVE 'DELETED' DTACTT
+     C                     MOVE *BLANKS   DTNAR1
+     C                     WRITEDETAIL1
+     C                     ADD  1         LCNT
+     C                     ELSE
+     C                     MOVE 'AMENDED' DTACTT
+     C                     MOVE SAUNR1    DTNAR1
+     C                     WRITEDETAIL1
+     C                     MOVE SAUNR2    DTNAR2
+     C                     WRITEDETAIL2
+     C                     ADD  2         LCNT
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************   S01190
+     C*                                                                   S01190
+     C*  BLSCRR  - SUBROUTINE TO BLANK SCREEN FIELDS                      S01190
+     C*                                                                   S01190
+     C*****************************************************************   S01190
+     C*                                                                   S01190
+     C           BLSCRR    BEGSR                           ** BLSCRR **   S01190
+     C*                                                                   S01190
+     C                     MOVE *BLANKS   ETDT                            S01190
+     C                     MOVE *BLANKS   ESPI                            S01190
+     C                     MOVE *BLANKS   EMKT                            S01190
+     C                     MOVE *BLANKS   EPRA                            S01190
+     C                     MOVE *BLANKS   EDP3                            S01190
+     C                     MOVE *BLANKS   EPRD                            S01190
+     C                     MOVE *BLANKS   EPRC                            S01190
+     C                     MOVE *BLANKS   EPRX                            S01190
+     C                     MOVE *BLANKS   EDP4                            S01190
+     C                     MOVE *BLANKS   EPXD                            S01190
+     C                     MOVE *BLANKS   EAIA                            S01190
+     C                     MOVE *BLANKS   EDP5                            S01190
+     C                     MOVE *BLANKS   EAID                            S01190
+     C                     MOVE *BLANKS   EUVY                            S01190
+     C                     MOVE *BLANKS   EAIC                            S01190
+     C                     MOVE *BLANKS   EUSD                            S01190
+     C                     MOVE *BLANKS   EAIX                            S01190
+     C                     MOVE *BLANKS   EDP6                            S01190
+     C                     MOVE *BLANKS   EAXD                            S01190
+     C                     MOVE *BLANKS   EUPR                            S01190
+     C                     MOVE *BLANKS   EDAC                            S01190
+     C                     MOVE *BLANKS   EUCO                            S01190
+     C                     MOVE *BLANKS   EARA                            S01190
+     C                     MOVE *BLANKS   EDP7                            S01190
+     C                     MOVE *BLANKS   EARD                            S01190
+     C                     MOVE *BLANKS   EUHA                            S01190
+     C                     MOVE *BLANKS   EUHD                            S01190
+     C                     MOVE *BLANKS   ECLB                            S01190
+     C                     MOVE *BLANKS   EUPA                            S01190
+     C                     MOVE *BLANKS   EFCA                            S01190
+     C                     MOVE *BLANKS   EDP8                            S01190
+     C                     MOVE *BLANKS   EFCD                            S01190
+     C                     MOVE *BLANKS   ETDP                            S01190
+     C                     MOVE *BLANKS   ETPD                            S01190
+     C                     MOVE *BLANKS   EFCC                            S01190
+     C                     MOVE *BLANKS   EFCX                            S01190
+     C                     MOVE *BLANKS   EDP9                            S01190
+     C                     MOVE *BLANKS   EFXD                            S01190
+     C                     MOVE *BLANKS   EUNR                            S01190
+     C*                                                                   S01190
+     C                     ENDSR                                          S01190
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  UPDHDR  - SUBROUTINE TO UPDATE HEADER FOR ACCOUNT/BATCH WITH
+     C*               NO OF INSTRUCTIONS DELETED
+     C*
+     C*****************************************************************
+     C*
+     C           UPDHDR    BEGSR                           ** UPDHDR **
+     C*
+     C**  SET UP FIELDS FOR KEY AND READ HEADER
+     C*
+     C                     MOVE *BLANKS   KACTC
+     C                     MOVE *ZEROS    KEUDT
+     C                     MOVE *ZEROS    KEUIN
+     C                     MOVE *ZEROS    KTRDR
+     C*
+     C           SEEKEY    SETLLSEEUN
+     C           SEPKEY    READESEEUCHF                  80
+     C*
+     C**  UPDATE NO OF INSTRUCTIONS FIELD
+     C**  - IF ZERO, CHECK NO DETAIL RECORDS FOR THIS HEADER
+     C*
+     C           *IN80     IFEQ '0'
+     C           EUNO      SUB  DINSTS    EUNO
+     C                     UPDATSEEUCHF
+     C                     Z-ADD0         DINSTS
+     C*
+     C           EUNO      IFEQ 0
+     C           SEPKEY    READESEEUN                    86
+     C*
+     C**  IF NO DETAIL RECORDS FOR THIS HEADER
+     C**   - DELETE HEADER
+     C*
+     C           *IN86     IFEQ '1'
+     C           SEPKEY    DELETSEEUCHF              97
+     C                     ADD  1         DREC                            S01190
+     C                     ELSE
+     C                     MOVE '1'       *IN80
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C*
+     C**  IF NO HEADER FOUND OR DETAIL RECORDS FOUND FOR HEADER WITH NO
+     C**  INSTS FIELD ZERO - DATABASE ERROR
+     C*
+     C           *IN80     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SEEUN'   DBFILE           *****************
+     C                     MOVEL'HEADR'   DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD02        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                     01U7U8
+     C                     END
+     C*
+     C                     ENDSR
+      /EJECT
+     C*********************************************************************
+      **           ****** AS400 CONVERSION ******                         S01179
+      **                                                                  S01179
+      ** ASCHGS S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD AID,        S01179
+      ** DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.                S01179
+      ** CALLED FROM UPDATE                                               S01179
+      **                                                                  S01179
+     C*================================================================   S01179
+     C*                                                                   S01179
+     C           ASCHGS    BEGSR                                          S01179
+     C*                                                                   S01179
+     C**  If ENTER pressed, the VLDCMDKEY indicator will be off           S01179
+     C*                                                                   S01179
+     C           *IN55     IFEQ '0'                                       S01179
+     C                     MOVE 'RA'      AID                             S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C**  If F3                                                           S01179
+     C*                                                                   S01179
+     C           *INKC     IFEQ '1'                                       S01179
+     C                     MOVE '01'      AID                             S01179
+     C                     MOVE '0'       *INKC                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C**  If F10                                                          S01179
+     C*                                                                   S01179
+     C           *INKJ     IFEQ '1'                                       S01179
+     C                     MOVE '04'      AID                             S01179
+     C                     MOVE '0'       *INKJ                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C**  If F12                                                          S01179
+     C*                                                                   S01179
+     C           *INKL     IFEQ '1'                                       S01179
+     C                     MOVE '02'      AID                             S01179
+     C                     MOVE '0'       *INKL                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C**  If ROLLUP pressed                                               S01179
+     C*                                                                   S01179
+     C           *IN50     IFEQ '1'                                       S01179
+     C                     MOVE 'UP'      AID                             S01179
+     C                     MOVE '0'       *IN50                           S01179
+     C                     END                                            S01179
+     C*                                                                   S01179
+     C**If*HELP*key*pressed                                               S01179
+     C*                                                                   S01179
+     C********** *IN51     IFEQ '1'                               S01179  S01199
+     C*********************MOVE 'HP'      AID                     S01179  S01199
+     C*********************MOVE '0'       *IN51                   S01179  S01199
+     C*********************END                                    S01179  S01199
+     C*                                                                   S01179
+     C                     ENDSR                                          S01179
+     C*================================================================
+      /EJECT
+     C*================================================================
+     C*
+     C*  AUDIT - SUBROUTINE TO UPDATE TRAILER RECORD AND PRINT AUDIT
+     C*          REPORT
+     C*
+     C*================================================================
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C**  READ AUDIT RECORD IF NO DATABASE ERRORS FOUND
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C           *LOVAL    SETLLSEEUN
+     C                     READ SEEUCAF                  99
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SEEUN'   DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD03        DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     ELSE
+     C                     Z-ADDEUNU      OREC    50
+     C           EUNU      SUB  DREC      EUNU
+     C           EUNU      ADD  NONA      EUNU                            S01190
+     C                     UPDATSEEUCAF
+     C                     EXSR PCOMIT
+     C                     END
+     C*
+     C                     END
+     C*
+     C**  OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C*
+     C           *INU7     IFEQ '0'
+     C*
+     C           COUNT     IFEQ 0                                         E29170
+     C                     WRITENONE                                      E29170
+     C                     ELSE                                           E29170
+     C                     WRITECONTROL
+     C                     END                                            E29170
+     C*
+     C                     ELSE
+     C*
+     C                     WRITEERROR
+     C*
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C**  OUTPUT TRAILER FOR PRINT FILE
+     C*
+     C           LCNT      IFGT 0
+     C                     WRITETRAIL
+     C                     END
+     C*
+     C                     ENDSR
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  PCOMIT - SUBROUTINE TO COMIT UPDATES
+     C*
+     C*****************************************************************
+     C*
+     C           PCOMIT    BEGSR                           ** PCOMIT **
+     C*
+     C**  FORMAT COMIT TEXT
+     C*
+     C                     TIME           MTIME
+     C                     MOVELACTN      ACTNX
+     C                     MOVE SCRCTL    DET
+     C*
+     C**  C  O  M  I  T
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     ENDSR
+     C*
+      /EJECT
+     C*****************************************************************   S01190
+     C*                                                                   S01190
+     C*  PZEROS - SUBROUTINE TO ZERO SUPPRESS SCREEN FIELDS               S01190
+     C*                                                                   S01190
+     C*****************************************************************   S01190
+     C*                                                                   S01190
+     C           PZEROS    BEGSR                           ** PZEROS **   S01190
+     C*                                                                   S01190
+     C                     MOVE *BLANKS   OUTZ   17                       S01190
+     C                     MOVEAINP       ZESU                            S01190
+     C                     Z-ADD1         N       20                      S01190
+     C           ZESU,N    DOUNE'0'                                       S01190
+     C           ZESU,N    OREQ '.'                                       S01190
+     C           ZESU,N    IFEQ '0'                                       S01190
+     C                     MOVE ' '       ZESU,N                          S01190
+     C                     ADD  1         N                               S01190
+     C                     END                                            S01190
+     C                     END                                            S01190
+     C           ZESU,N    IFEQ '.'                                       S01190
+     C                     SUB  1         N                               S01190
+     C                     MOVE '0'       ZESU,N                          S01190
+     C                     END                                            S01190
+     C                     MOVEAZESU      OUTZ                            S01190
+     C                     MOVE *BLANKS   INP                             S01190
+     C*                                                                   S01190
+     C                     ENDSR                                          S01190
+     C*                                                                   S01190
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  FILE EXEPTION/ERROR HANDLING SUBROUTINE
+     C*
+     C*****************************************************************
+     C*
+     C           INFSR     BEGSR                           ** INFSR **
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'SEEUN'   DBFILE
+     C                     MOVELSKEY      DBKEY
+     C                     Z-ADD90        DBASE
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE INFDS     DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                       U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                  *E29170
+     C*  GETBR -- SUBROUTINE TO CHAIN TO TRADS WITH THE TRADE REFERENCE  *E29170
+     C*           TO GET THE BRANCH OF THE TRADE RELATING TO THE         *E29170
+     C*           AMENDED/DELETED MESSAGE                                *E29170
+     C*                                                                  *E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           GETBR     BEGSR                            ** GETBR **   E29170
+     C*                                                                   E29170
+     C                     MOVE TRDR      KTDRF                           E29170
+     C           KTDRF     CHAINTRADSDF              99                   E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM *BLANKS   SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+     O/EJECT
+1856 O**   TABLE FILE - RELEASE.
+1857 OSEEUCD0FE                RLUCD0
+1857 OSEEUCD1FE                RLUCD1
+1857 OSEEUCD2FE                RLUCD2
+1857 OSEEUCD3FE                RLUCD3                                     S01190
+1857 OSEEUCD4FE                RLUCD4                                     S01190
+1857 OSEEUCD5FE                RLUCD5                                     S01190
+1858  /EJECT
+1858  ***
+      * /104633/ Change
+      *INF,1 Enter F3 to Exit
+      *INF,2 Enter Amend,Delete,E-Enquire,Roll-up/down,F3-End,F12-Return,   Help
+      *INF,3 Enter to Accept Changes,F3 to End,F12 to Return
+      *INF,4 F10 to Confirm Deletion,F12 to Return,F3 to End
+      *INF,5 Enter F12 to Return, F3 to Exit.
+** INF
+ Enter:F3=Exit
+ Enter A-Amend,D-Delete,E-Enquire:   Roll-up/down   F3-End   F12-Return   Help
+ Enter to Accept Changes:   F3=End   F12=Previous
+ F3=End   F10=Confirm Deletion   F12 to Return
+ Enter:  F3=Exit    F12=Return
+** ERR
+ ERR100 - No Batch with this number for this Account found - Please Re-enter
+ ERR101 - Action code must be 'A', 'E' or 'D' - Please Re-enter
+ Record has been updated by another workstation
+ ERR102 - Cancellation instructions may not be amended
+ ERR302 - User is not authorised to the action code
+ ERR303 - User is not authorised to any action code for the branch
+ ERR304 - User is not authorised to the action code for the branch
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,1151 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Transfer of Foreign Ccy In/Ex')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  MC0410 - Transfer of Foreign Ccy Income/Expense              *
+      *                                                               *
+      *  Function: This program transfers a Foreign Currency in an    *
+      *    (COB)   Income/Expense account to its Base Currency        *
+      *            Equivalent, via the Spot and Base Currency         *
+      *            Equivalent accounts.                               *
+      *                                                               *
+      *  Called by: MC0320 - Value Date Adjustment Entry Generation   *
+      *                                                               *
+      *  Calls: AOTRADR0   - ICD Trading Data                         *
+      *         AOACODR0   - Accounts Codes Details                   *
+      *         AOCURRR0   - Currency Details                         *
+      *         AOPRFCR0   - Profit Centre Details                    *
+      *         AOPCACR0   - PCA ICD                                  *
+      *         RPG/GL0765 - Convert F/Ccy to Base Ccy                *
+      *         RPG/MC0400 - Spot Revaluation of Foreign Currency     *
+      *         RPG/MC0420 - Transfer of Base Ccy IN/EX to P&L        *
+      *         RPG/MC0430 - Update Gap Accruals History file         *
+      *                                                               *
+      *  Parameters: 7A Return code                                   *
+      *              3A Base Currency                                 *
+      *              6N Branch Internal Cust Number                   *
+      *              1A Locked Record                                 *
+      *            200A Format MCMOVEDPD                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. BUG12471           Date 08Nov06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 160094             Date 30Apr99               *
+      *                 CTI002             Date 23SEP98               *
+      *                 CMC001 *CREATE     DATE 18MAR96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG12471 - Validate profit center code only if they are      *
+      *             non-blanks.                                       *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  160094 - Ensure correct Profit Centre used                   *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+      *  CMC001 - Management Accounts Enhancement for PCA             *
+      *                                                               *
+      *****************************************************************
+      *
+     FMCPCACPDO   E                    DISK         KINFSR *PSSR
+      **  Profit Centre Accounting File
+      *
+     FMCDIRYL2IF  E           K        DISK         KINFSR *PSSR
+      **  Diary Events File (B/Ccy Tfr's)
+      *
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  01  -  First Cycle                                           *
+      *  11  -  End of file on read of MCDIRYL2                       *
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  PRP02  -  Generate Entries to Balance the Profit Centres,    *
+      *            When Profit Centre is not an FX Holder.            *
+      *  PRP03  -  Revaluation of the Spot Trade Amount for each Spot *
+      *            Trade A/c Posting.                                 *
+      *  PRP04  -  Transfer Base Ccy to Retained P&L for each         *
+      *            Transferred Income/Expense Amount, when a Base     *
+      *            Ccy Transfer Calendar Event is processed.          *
+      *  PRP05  -  Update Gap Accrual History for each Profit Centre  *
+      *            Gap.                                               *
+      *  PRW01  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer from the Foreign Ccy Income/Expense       *
+      *            Account Posting Amount is not Zero.                *
+      *  PRW02  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to the Spot Trade Account, when Posting   *
+      *            Amount is not Zero.                                *
+      *  PRW03  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to the Foreign Base Ccy Equivalent Account*
+      *            when Posting Amount is not Zero.                   *
+      *  PRW04  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to Base Ccy Income/Expense Account, when  *
+      *            Posting Amount is not Zero.                        *
+      *  PRW05  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to the Base Ccy Spot Trade Account, when  *
+      *            Base Ccy Spot Trade A/c is maintained.             *
+      *  PRW06  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to the Base Ccy Equivalent Account, when  *
+      *            Base Ccy Spot Trade A/c is Maintained.             *
+      *  PRW07  -  Write to Profit Centre Accounting file for each    *
+      *            Foreign CCy IN/EX Profit Centre Gap Account, when  *
+      *            Profit Centre is not an FX Holder.                 *
+      *  PRW08  -  Write to Profit Centre Accounting file for each    *
+      *            Foreign Spot Trade Profit Centre Gap Account, when *
+      *            Profit Centre is not an FX Holder.                 *
+      *  PRW09  -  Write to Profit Centre Accounting file for each    *
+      *            Base Ccy Equivalent Profit Centre Gap Account, when*
+      *            Profit Centre is not an FX Holder.                 *
+      *  PRW10  -  Write to Profit Centre Accounting file for each    *
+      *            Base Ccy IN/EX Profit Centre Gap Account, when     *
+      *            Profit Centre is not an FX Holder.                 *
+      *  DBERR  -  Error handling                                     *
+      *  *PSSR  -  Subroutine to Handle Abnormal Error Conditions     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80               Copyright
+      /SPACE 3
+     E/COPY WNCPYSRC,MC0410E001
+      *
+     ILDA       E DSLDA
+      **  Local data structure used for error handling
+     I/COPY WNCPYSRC,MC0410I002
+      *
+     ISDTRAD    E DSSDTRADPD
+      **  ICD Trading Data
+      *
+     ISDACOD    E DSSDACODPD
+     I**  Account code details
+     I              QQACCD                          QQACD1                                    CGL029
+      *
+     ISDCURR    E DSSDCURRPD
+      **  Currency Details
+      *
+     ISDPRFC    E DSSDPRFCPD
+      **  Profit Centre Details
+      *
+     ISDPCAC    E DSSDPCACPD
+      **  PCA ICD
+     I              QQFNAA                          FNAAQQ                                    CGL029
+     I              QQFNIC                          FNICQQ                                    CGL029
+      *
+     I/COPY WNCPYSRC,MC0410I001
+     IDSMOVE    E DSMCMOVEPD
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, Short Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, Long Data Structure
+      *
+      **  Posting Narrative
+      *
+     I              'INCOME & EXPENSE '   C         NTRF
+      *                                                                                       CGL029
+      **  Zeros Constant                                                                      CGL029
+     I              '0000000000'          C         WZEROS                                    CGL029
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      **  Receive parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           XRETC   7        Return code
+     C                     PARM           XBCCY   3        Base currency
+     C**********           PARM           XBCUS   60       Branch customer                    CSD027
+     C                     PARM           XBCUS   6        Branch customer                    CSD027
+     C                     PARM           XLCKR   1        Locked Record
+     C           DSMOVE    PARM           DSFDY            MCMOVEPD fmt
+      *
+      **  Save DSMOVE parameters
+      *
+     C                     MOVE BRCA      XBRCA   3        Branch
+     C                     MOVE CCY       XCCY    3        Currency
+     C**********           MOVE ACOD      XACOD   4        Account code                       CGL029
+     C                     MOVE ACOD      XACOD  10                                           CGL029
+     C**********           Z-ADDCNUM      XCNUM   60       Customer                           CSD027
+     C                     MOVE CNUM      XCNUM   6        Customer                           CSD027
+     C                     Z-ADDACSQ      XACSQ   20       A/c Sequence Nbr
+     C                     MOVE PRFC      XPRFC   4        Profit Centre
+     C                     MOVE BOKC      XBOKC   2        Book
+     C                     MOVE OTTP      XOTTP  10        Deal Type
+     C                     MOVE OTST      XOTST  10        Deal Sub-Type
+     C**********           Z-ADDASOC      XASOC   60       Associated Cust.                   CSD027
+     C                     MOVE ASOC      XASOC   6        Associated Cust.                   CSD027
+     C                     Z-ADDEVDT      XEVDT   50       Event Date
+     C                     Z-ADDPAMT      XPAMT  190       Posting Amount
+     C                     Z-ADDVOIN      XVOIN   10       Void Indicator
+     C                     MOVE GETP      XGETP   1        Generated Entry Type
+     C                     MOVE ACSC      XACSC   2        Account Section
+     C                     Z-ADDCPNB      XCPNB   60       Current Period
+     C                     Z-ADDPDTM      XPDTM  110       Posting Date/Time
+     C                     MOVE ATYP      XATYP   1        Account Type
+     C                     MOVE PNAR      XPNAR  30        Posting Narrative
+      *
+      **  Set up copyright
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Define the error DS
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'MC0410'  WPGM   10
+      *
+      **  First Cycle
+      *
+     C           *IN01     IFEQ '0'
+      *
+      **  Get 'Spot Trade A/c code', error if not found
+      *
+     C                     CALL 'AOTRADR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDTRAD    PARM SDTRAD    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDTRADPD'WFILE   8        ************
+     C                     Z-ADD1         WBASE   30       * DBERR 01 *
+     C                     MOVEL'*FIRST'  WKEY   29        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Get 'Primary Funding Gap A/c' and 'EOY P&L Profit Centre',
+      **  Error if not found
+      *
+     C                     CALL 'AOPCACR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDPCAC    PARM SDPCAC    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDPCACPD'WFILE   8        ************
+     C                     Z-ADD2         WBASE   30       * DBERR 02 *
+     C                     MOVEL'*FIRST'  WKEY   29        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Get 'Mgmt A/c' Analysis fields using 'Spot Trade A/c',
+      **  error if not found
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C**********           PARM BLSPTA    PACCD   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM BLSPTA    PACCD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           PRTCD     IFEQ '*NRF   '
+     C                     MOVE 'N'       A5MABK
+     C                     MOVE 'N'       A5MAPR
+     C                     MOVE 'N'       A5MAAC
+     C                     ELSE
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDACODPD'WFILE   8        ************
+     C                     Z-ADD3         WBASE   30       * DBERR 03 *
+     C                     MOVELBLSPTA    WKEY   29        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Save 'Mgmt A/c  Analysis' fields
+      *
+     C                     MOVE A5MABK    SPACBB  1
+     C                     MOVE A5MAPR    SPACBP  1
+     C                     MOVE A5MAAC    SPACBC  1
+      *
+      **  Get 'Base Ccy Spot Trade Equiv. A/c Code' using Base ccy,
+      **  error if not found
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM XBCCY     PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'WFILE   8        ************
+     C                     Z-ADD4         WBASE   30       * DBERR 04 *
+     C                     MOVELXBCCY     WKEY   29        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+     C**********           MOVE A6SPAE    BCEQIV  4                                           CGL029
+     C                     MOVE A6SPAE    BCEQIV 10                                           CGL029
+     C/COPY WNCPYSRC,MC0410C001
+      *
+      **  End First Cycle
+      *
+     C                     SETON                     01
+     C                     ENDIF
+      *
+      **  If 'Currency' is not equal to 'Previous Currency', get 'Base
+      **  Ccy Equiv. A/c Code', error if not found
+      *
+     C           XCCY      IFNE SVCCY
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM XCCY      PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'WFILE   8        ************
+     C                     Z-ADD5         WBASE   30       * DBERR 05 *
+     C                     MOVELXCCY      WKEY   29        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      **  Save Currency to Previous Currency
+      *
+     C                     MOVE XCCY      SVCCY   3
+     C                     ENDIF
+      *
+      **  If 'Profit Centre' is not equal to 'Previous Profit Centre',
+      **  get 'FX Position Profit Centre', error if not found
+      *
+     C           XPRFC     IFNE SVPRFC
+      *
+     C           XPRFC     IFNE *BLANKS                                                     BUG12471
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM XPRFC     PPRFC   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVEL'SDPRFCPD'WFILE   8        ************
+     C                     Z-ADD6         WBASE   30       * DBERR 06 *
+     C                     MOVELXPRFC     WKEY   29        ************
+     C                     EXSR DBERR
+     C                     ENDIF
+     C                     ENDIF                                                            BUG12471
+      *
+      **  Save Profit Centre to Previous Profit Centre
+      *
+     C                     MOVE XPRFC     SVPRFC  4
+      *
+      **  If FX Position Profit Centre is blank, set it to
+      **  Profit Centre
+      *
+     C           DSFPPC    IFEQ *BLANK
+     C                     MOVE XPRFC     DSFPPC
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  Call 'GL0765' to convert the posting amount to base currency
+      **  using the historic exchange rate as at the transfer date
+      *
+     C                     CALL 'GL0765'
+     C                     PARM *BLANKS   GLRTCD  7        Return code
+     C                     PARM XCCY      GLCCY   3        Currency
+     C                     PARM XBCCY     GLBCCY  3        Base currency
+     C                     PARM XEVDT     GLEVDT  50       Event date
+     C                     PARM XPAMT     GLPAMT 190       Posting amount
+      *
+     C           GLRTCD    IFNE *BLANKS
+     C                     MOVEL'GL0765'  WFILE            ************
+     C                     Z-ADD7         WBASE            * DBERR 07 *
+     C                     MOVELGLRTCD    WKEY             ************
+     C                     EXSR DBERR
+     C                     ENDIF
+     C/COPY WNCPYSRC,MC0410C002
+      *
+      **  Write to the Profit Centre Accounting file, for the IN/EX
+      **  Account.
+      *
+     C                     EXSR PRW01
+      *
+      **  Write to the Profit Centre Accounting file, for the Spot Trade
+      **  Account.
+      *
+     C                     EXSR PRW02
+      *
+      **  If the GL0765 Base Currency Amount is not zero,
+      *
+     C           GLPAMT    IFNE 0
+      *
+      **  Revaluation of the Spot Trade Amount, to generate Spot Revaln
+      **  P&L entries due to fluctuations in the exchange rate since the
+      **  transfer date.
+      *
+     C                     EXSR PRP03
+      *
+      **  Write to the Profit Centre Accounting file, for the Base Ccy
+      **  Spot Equivalent Account.
+      *
+     C                     EXSR PRW03
+      *
+      **  Write to the Profit Centre Accounting file, for the Base Ccy
+      **  IN/EX Account.
+      *
+     C                     EXSR PRW04
+      *
+      **  If the Base Ccy Equiv A/c Code for the Base Ccy is not Blank,
+      **  then 2 additional entries are required because a Spot Trade
+      **  Account is being maintained in Base Currency along with its
+      **  Equivalent Account.
+      *
+     C           BCEQIV    IFNE *BLANK
+     C********** BCEQIV    ANDNE'0000'                                                        CGL029
+     C           BCEQIV    ANDNEWZEROS                                                        CGL029
+      *
+      **  Write to the Profit Centre Accounting file, for the Base Ccy
+      **  Spot Trade Account.
+      *
+     C                     EXSR PRW05
+      *
+      **  Write to the Profit Centre Accounting file, for the Base Ccy
+      **  Equivalent Account.
+      *
+     C                     EXSR PRW06
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  If 'Profit Centre' Not Equal 'FX Profit Centre', generate
+      **  entries to balance the profit centres.
+      *
+     C           XPRFC     IFNE DSFPPC
+     C                     EXSR PRP02
+     C                     ENDIF
+      *
+      **  Transfer Base Ccy to Retained P&L, for the Base Currency IN/EX
+      **  amount, if GL0765 Base Ccy Amount is not zero
+      *
+     C           GLPAMT    IFNE 0
+     C                     EXSR PRP04
+     C                     ENDIF
+     C/COPY WNCPYSRC,MC0410C003
+      *
+      **  Not SETON LR to leave data in memory
+      *
+     C                     RETRN
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRP02  -  Generate Entries to Balance the Profit Centres,    *
+      *            When Profit Centre is not an FX Holder.            *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  PRP05 - Update Gap Accrual History               *
+      *              PRW07 - Write to PCA file for each F/Ccy IN/EX   *
+      *                      Profit Centre Gap Account                *
+      *              PRW08 - Write to PCA file for each Foreign Spot  *
+      *                      Trade Profit Centre Gap Account          *
+      *              PRW09 - Write to PCA file for each B/Ccy Equiv.  *
+      *                      Profit Centre Gap Account                *
+      *              PRW10 - Write to PCA file for each B/Ccy IN/EX   *
+      *                      Profit Centre Gap Account                *
+      *                                                               *
+      *****************************************************************
+     C           PRP02     BEGSR
+      *
+      **  Write to the Profit Centre Accounting file, for the F/Ccy Gap
+      **  Funding Account (Profit Centre).
+      *
+     C                     EXSR PRW07
+      *
+      **  If 'Locked Record' not equal to 'Y', update Gap Accrual
+      **  History, for the F/Ccy Gap Funding Account (Profit Centre).
+      *
+     C           XLCKR     IFNE 'Y'
+     C                     EXSR PRP05
+     C                     ENDIF
+      *
+      **  Write to the Profit Centre Accounting file, for the F/Ccy Gap
+      **  Funding Account (FX Profit Centre).
+      *
+     C                     EXSR PRW08
+      *
+      **  Update Gap Accrual History, for the F/Ccy Gap Funding Account
+      **  (FX Profit Centre).
+      *
+     C                     EXSR PRP05
+      *
+      **  If the GL0765 Base Ccy Amount is not zero,
+      *
+     C           GLPAMT    IFNE 0
+      *
+      **  Write to the Profit Centre Accounting file, for the B/Ccy Gap
+      **  Funding Account (FX Profit Centre).
+      *
+     C                     EXSR PRW09
+      *
+      **  Update Gap Accrual History, for the B/Ccy Gap Funding Account
+      **  (FX Profit Centre).
+      *
+     C                     EXSR PRP05
+      *
+      **  Write to the Profit Centre Accounting file, for the B/Ccy Gap
+      **  Funding Account (Profit Centre).
+      *
+     C                     EXSR PRW10
+      *
+      **  Update Gap Accrual History, for the B/Ccy Gap Funding Account
+      **  (Profit Centre).
+      *
+     C                     EXSR PRP05
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRP03  -  Revaluation of the Spot Trade Amount for each Spot *
+      *            Trade A/c Posting.                                 *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  DBERR - Error Handling                           *
+      *                                                               *
+      *****************************************************************
+     C           PRP03     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE XBRCA     BRCA             Branch
+     C                     MOVE XCCY      CCY              Currency
+     C                     MOVE XACOD     ACOD             Account code
+     C**********           Z-ADDXCNUM     CNUM             Customer                           CSD027
+     C                     MOVE XCNUM     CNUM             Customer                           CSD027
+     C                     Z-ADDXACSQ     ACSQ             A/c Sequence Nbr
+     C*********************MOVE XPRFC     PRFC             Profit Centre  160094
+     C                     MOVE DSFPPC    PRFC             Profit Centre  160094
+     C                     MOVE XBOKC     BOKC             Book
+     C                     MOVE XOTTP     OTTP             Deal Type
+     C                     MOVE XOTST     OTST             Deal Sub-Type
+     C**********           Z-ADDXASOC     ASOC             Associated Cust.                   CSD027
+     C                     MOVE XASOC     ASOC             Associated Cust.                   CSD027
+     C                     Z-ADDXEVDT     EVDT             Event Date
+     C                     Z-ADDXPAMT     PAMT             Posting Amount
+     C                     Z-ADDXVOIN     VOIN             Void Indicator
+     C                     MOVE XGETP     GETP             Generated Entry Type
+     C                     MOVE XACSC     ACSC             Account Section
+     C                     Z-ADDXCPNB     CPNB             Current Period
+     C                     Z-ADDXPDTM     PDTM             Posting Date/Time
+     C                     MOVE XATYP     ATYP             Account Type
+     C                     MOVE XPNAR     PNAR             Posting Narrative
+      *
+      **  Call MC0400 - Spot Revaluation of Foreign Currency
+      *
+     C                     CALL 'MC0400'
+     C                     PARM *BLANKS   PRTCD   7        Return code
+     C                     PARM XBCCY     PBCCY   3        Base currency
+     C**********           PARM XBCUS     PBCUS   60       Branch customer                    CSD027
+     C                     PARM XBCUS     PBCUS   6        Branch customer                    CSD027
+     C                     PARM GLPAMT    PPAMT  190       GL0765 B/Ccy Amt
+     C**********           PARM A6SPAE    PSPAE   4        B/Ccy Equiv. A/c                   CGL029
+     C                     PARM A6SPAE    PSPAE  10                                           CGL029
+     C                     PARM DSMOVE    DSFDY            MCMOVEPD fmt
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     IN   LDA
+     C                     MOVELDBFILE    WFILE
+     C                     MOVE DBASE     WBASE
+     C                     MOVELDBKEY     WKEY
+     C                     MOVE DBPGM     WPGM
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRP04  -  Transfer Base Ccy to Retained P&L for each         *
+      *            Transferred Income/Expense Amount, when a Base     *
+      *            Ccy Transfer Calendar Event is processed.          *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  DBERR - Error Handling                           *
+      *                                                               *
+      *****************************************************************
+     C           PRP04     BEGSR
+      *
+      **  If 'Event date' is not equal to 'Previous Event Date'
+      *
+     C           XEVDT     IFNE XXEVDT
+     C                     Z-ADDXEVDT     XXEVDT  50
+      *
+      **  Set lower limits on calendar event file, using the 'Event Date'
+      **  and read the first base ccy transfer date
+      *
+     C           XEVDT     SETLLMCDIRYL2
+     C                     READ MCDIRYL2                 11
+     C                     ENDIF
+      *
+      **  If 'Base Ccy Transfer EQ 'Y' Event Record Found.
+      *
+     C           *IN11     IFEQ *OFF
+     C           GIBTFR    ANDEQ'Y'
+      *
+      **  Call MC0420 - Transfer Base Ccy IN/EX to the Retained P&L Account
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE XBRCA     BRCA             Branch
+     C                     MOVE XBCCY     CCY              Base Currency
+     C                     MOVE XACOD     ACOD             Account code
+     C**********           Z-ADDXCNUM     CNUM             Customer                           CSD027
+     C                     MOVE XCNUM     CNUM             Customer                           CSD027
+     C/COPY WNCPYSRC,MC0410C005
+     C                     Z-ADDXACSQ     ACSQ             A/c Sequence Nbr
+     C                     MOVE XPRFC     PRFC             Profit Centre
+     C                     MOVE XBOKC     BOKC             Book
+     C                     MOVE XOTTP     OTTP             Deal Type
+     C                     MOVE XOTST     OTST             Deal Sub-Type
+     C**********           Z-ADDXASOC     ASOC             Associated Cust.                   CSD027
+     C                     MOVE XASOC     ASOC             Associated Cust.                   CSD027
+     C                     Z-ADDGIEVDT    EVDT             Base Ccy Transfer Dat
+     C                     Z-ADDGLPAMT    PAMT             GL0765 Base Ccy Amt
+     C                     Z-ADDXVOIN     VOIN             Void Indicator
+     C                     MOVE XGETP     GETP             Generated Entry Type
+     C                     MOVE XACSC     ACSC             Account Section
+     C                     Z-ADDXCPNB     CPNB             Current Period
+     C                     Z-ADDXPDTM     PDTM             Posting Date/Time
+     C                     MOVE XATYP     ATYP             Account Type
+     C                     MOVE XPNAR     PNAR             Posting Narrative
+      *
+     C                     CALL 'MC0420'
+     C                     PARM *BLANKS   PRTCD   7        Return code
+     C**********           PARM XBCUS     PBCUS   60       Branch customer                    CSD027
+     C                     PARM XBCUS     PBCUS   6        Branch customer                    CSD027
+     C                     PARM 'N'       PLCKR   1        Locked Record
+     C                     PARM DSMOVE    DSFDY            MCMOVEPD fmt
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     IN   LDA
+     C                     MOVELDBFILE    WFILE
+     C                     MOVE DBASE     WBASE
+     C                     MOVELDBKEY     WKEY
+     C                     MOVELDBPGM     WPGM
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRP05  -  Update Gap Accrual History for each Profit Centre  *
+      *            Gap.                                               *
+      *                                                               *
+      *  Called By:  PRP02 - Generate Entries to Balance Profit Cent. *
+      *                                                               *
+      *  Calls    :  DBERR - Error Handling                           *
+      *                                                               *
+      *****************************************************************
+     C           PRP05     BEGSR
+      *
+      **  Call MC0430 - Update Gap Accruals History file
+      *
+     C                     CALL 'MC0430'
+     C                     PARM *BLANKS   PRTCD   7        Return code
+     C                     PARM DSMOVE    DSFDY            MCMOVEPD fmt
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     IN   LDA
+     C                     MOVELDBFILE    WFILE
+     C                     MOVE DBASE     WBASE
+     C                     MOVELDBKEY     WKEY
+     C                     MOVELDBPGM     WPGM
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW01  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer from the Foreign Ccy Income/Expense       *
+      *            Account when Posting Amount is not Zero.           *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW01     BEGSR
+      *
+     C                     MOVE XBRCA     BRCA             Branch
+     C                     MOVE XCCY      CCY              Currency
+     C                     MOVE XACOD     ACOD             Account code
+     C**********           Z-ADDXCNUM     CNUM             Customer                           CSD027
+     C                     MOVE XCNUM     CNUM             Customer                           CSD027
+     C                     Z-ADDXACSQ     ACSQ             A/c Sequence Nbr
+     C                     MOVE XPRFC     PRFC             Profit Centre
+     C                     MOVE XBOKC     BOKC             Book
+     C                     MOVE XOTTP     OTTP             Deal Type
+     C                     MOVE XOTST     OTST             Deal Sub-Type
+     C**********           Z-ADDXASOC     ASOC             Associated Cust.                   CSD027
+     C                     MOVE XASOC     ASOC             Associated Cust.                   CSD027
+     C                     Z-ADDXEVDT     EVDT             Event Date
+     C           XPAMT     MULT -1        PAMT             Posting Amount
+     C                     Z-ADDXVOIN     VOIN             Void Indicator
+     C                     MOVE 'X'       GETP             Generated Entry Type
+     C                     MOVE XACSC     ACSC             Account Section
+     C                     Z-ADDXCPNB     CPNB             Current Period
+     C                     Z-ADDXPDTM     PDTM             Posting Date/Time
+     C                     MOVE XATYP     ATYP             Account Type
+     C           XPNAR     IFEQ *BLANK
+     C                     MOVE *BLANK    PNAR
+     C           'TRANSFER'CAT  'F/C':1   PNAR
+     C           PNAR      CAT  NTRF:1    PNAR             Posting Narrative
+     C                     ELSE
+     C                     MOVE XPNAR     PNAR
+     C                     ENDIF
+     C/COPY WNCPYSRC,MC0410C006
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW02  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to the Spot Trade Account, when Posting   *
+      *            Amount is not Zero.                                *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW02     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE BLSPTA    ACOD             Spot Trade A/c
+     C**********           Z-ADDXBCUS     CNUM             Branch Intern. Cus                 CSD027
+     C                     MOVE XBCUS     CNUM             Branch Intern. Cus                 CSD027
+     C                     MOVE '01'      ACSQ             A/c Sequence Nbr
+     C                     MOVE DSFPPC    PRFC             Profit Centre
+     C                     Z-ADDXPAMT     PAMT             Posting Amount
+     C                     MOVE *BLANK    ACSC             Spot Trade A/c Sect.
+     C                     MOVE *BLANK    ATYP             Spot Trade A/c Type
+      *
+      **  Blank Book if Spot Trade Analysis is not required
+      *
+     C           SPACBB    IFNE 'Y'
+     C                     MOVE *BLANK    BOKC
+     C                     ENDIF
+      *
+      **  Blank Product if Spot Trade Analysis is not required
+      *
+     C           SPACBP    IFNE 'Y'
+     C                     MOVE *BLANKS   OTST
+     C                     MOVE *BLANKS   OTTP
+     C                     ENDIF
+      *
+      **  Blank Assoc. Cust if Spot Trade Analysis is not required
+      *
+     C           SPACBC    IFNE 'Y'
+     C**********           Z-ADD*ZERO     ASOC                                                CSD027
+     C                     MOVE *BLANKS   ASOC                                                CSD027
+     C                     ENDIF
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW03  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to the Foreign Base Ccy Equivalent Account*
+      *            when Posting Amount is not Zero.                   *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW03     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C**********           Z-ADDXBCUS     CNUM             Branch Intern. Cus                 CSD027
+     C                     MOVE XBCUS     CNUM             Branch Intern. Cus                 CSD027
+     C                     MOVE XBCCY     CCY              Base Currency
+     C                     MOVE A6SPAE    ACOD             Base Ccy Eq A/c code
+     C                     MOVE '01'      ACSQ             A/c Sequence Nbr
+     C                     MOVE DSFPPC    PRFC             Profit Centre
+     C           GLPAMT    MULT -1        PAMT             Posting Amount
+     C                     MOVE 'X'       GETP             Spot Trade A/c Sect.
+     C                     MOVE *BLANK    ACSC             Spot Trade A/c Sect.
+     C                     MOVE *BLANK    ATYP             Spot Trade A/c Type
+     C           XPNAR     IFEQ *BLANK
+     C                     MOVE *BLANK    PNAR
+     C           'TRANSFER'CAT  'F/C':1   PNAR
+     C           PNAR      CAT  NTRF:1    PNAR             Posting Narrative
+     C                     ELSE
+     C                     MOVE XPNAR     PNAR
+     C                     ENDIF
+      *
+      **  Blank Book if Spot Trade Analysis is not required
+      *
+     C           SPACBB    IFNE 'Y'
+     C                     MOVE *BLANK    BOKC
+     C                     ENDIF
+      *
+      **  Blank Product if Spot Trade Analysis is not required
+      *
+     C           SPACBP    IFNE 'Y'
+     C                     MOVE *BLANKS   OTST
+     C                     MOVE *BLANKS   OTTP
+     C                     ENDIF
+      *
+      **  Blank Assoc. Cust if Spot Trade Analysis is not required
+      *
+     C           SPACBC    IFNE 'Y'
+     C**********           Z-ADD*ZERO     ASOC                                                CSD027
+     C                     MOVE *BLANKS   ASOC                                                CSD027
+     C                     ENDIF
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW04  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to Base Ccy Income/Expense Account, when  *
+      *            Posting Amount is not Zero.                        *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW04     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE XBRCA     BRCA             Branch
+     C                     MOVE XBCCY     CCY              Base Currency
+     C                     MOVE XACOD     ACOD             Account code
+     C**********           Z-ADDXCNUM     CNUM             Customer                           CSD027
+     C                     MOVE XCNUM     CNUM             Customer                           CSD027
+     C                     Z-ADDXACSQ     ACSQ             A/c Sequence Nbr
+     C                     MOVE XPRFC     PRFC             Profit Centre
+     C                     MOVE XBOKC     BOKC             Book
+     C                     MOVE XOTTP     OTTP             Deal Type
+     C                     MOVE XOTST     OTST             Deal Sub-Type
+     C**********           Z-ADDXASOC     ASOC             Associated Cust.                   CSD027
+     C                     MOVE XASOC     ASOC             Associated Cust.                   CSD027
+     C                     Z-ADDXEVDT     EVDT             Transfer Date
+     C                     Z-ADDGLPAMT    PAMT             GL0765 Base Ccy Amt
+     C                     Z-ADDXVOIN     VOIN             Void Indicator
+     C                     MOVE 'X'       GETP             Generated Entry Type
+     C                     MOVE XACSC     ACSC             Account Section
+     C                     Z-ADDXCPNB     CPNB             Current Period
+     C                     Z-ADDXPDTM     PDTM             Posting Date/Time
+     C                     MOVE XATYP     ATYP             Account Type
+     C                     MOVE *BLANK    PNAR
+     C           'TRANSFER'CAT  XCCY:1    PNAR
+     C           PNAR      CAT  NTRF:1    PNAR             Posting Narrative
+     C           XPNAR     IFNE *BLANK
+     C                     MOVE *BLANK    PNAR
+     C           'GAP TFR' CAT  XCCY:1    PNAR
+     C           PNAR      CAT  NTRF:1    PNAR             Posting Narrative
+     C                     ENDIF
+     C/COPY WNCPYSRC,MC0410C007
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW05  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to the Base Ccy Spot Trade Account, when  *
+      *            Base Ccy Spot Trade A/c is maintained.             *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW05     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE BLSPTA    ACOD             Spot Trade A/c
+     C**********           Z-ADDXBCUS     CNUM             Branch Internal Cust.              CSD027
+     C                     MOVE XBCUS     CNUM             Branch Internal Cust.              CSD027
+     C                     MOVE '01'      ACSQ             A/c Sequence Nbr
+     C                     MOVE DSFPPC    PRFC             FX Profit Centre
+     C           GLPAMT    MULT -1        PAMT             GM0765 Base Ccy Amt
+     C                     MOVE *BLANK    ACSC             Spot Trade A/c Sect.
+     C                     MOVE *BLANK    ATYP             Spot Trade A/c Type
+     C                     MOVE *BLANK    PNAR
+     C           'TRANSFER'CAT  XCCY:1    PNAR
+     C           PNAR      CAT  NTRF:1    PNAR             Posting Narrative
+     C           XPNAR     IFNE *BLANK
+     C                     MOVE *BLANK    PNAR
+     C           'GAP TFR' CAT  XCCY:1    PNAR
+     C           PNAR      CAT  NTRF:1    PNAR             Posting Narrative
+     C                     ENDIF
+      *
+      **  Blank Book if Spot Trade Analysis is not required
+      *
+     C           SPACBB    IFNE 'Y'
+     C                     MOVE *BLANK    BOKC
+     C                     ENDIF
+      *
+      **  Blank Product if Spot Trade Analysis is not required
+      *
+     C           SPACBP    IFNE 'Y'
+     C                     MOVE *BLANKS   OTST
+     C                     MOVE *BLANKS   OTTP
+     C                     ENDIF
+      *
+      **  Blank Assoc. Cust if Spot Trade Analysis is not required
+      *
+     C           SPACBC    IFNE 'Y'
+     C**********           Z-ADD*ZERO     ASOC                                                CSD027
+     C                     MOVE *BLANKS   ASOC                                                CSD027
+     C                     ENDIF
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW06  -  Write to Profit Centre Accounting file for each    *
+      *            Transfer to the Base Ccy Equivalent Account, when  *
+      *            Base Ccy Spot Trade A/c is Maintained.             *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW06     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE BCEQIV    ACOD             Base Ccy Equiv. A/c
+     C                     Z-ADDGLPAMT    PAMT             GL0765 BASE Ccy Amt
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW07  -  Write to Profit Centre Accounting file for each    *
+      *            Foreign Ccy IN/EX Profit Centre Gap Account, when  *
+      *            Profit Centre is not an FX Holder.                 *
+      *                                                               *
+      *  Called By:  PRP02 - Generate Entries to Balance Profit Cent. *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW07     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE XBRCA     BRCA             Branch
+     C                     MOVE XCCY      CCY              Currency
+     C                     MOVE FTPFGA    ACOD             Prime Gap A/c
+     C**********           Z-ADDXBCUS     CNUM             Branch Internal Cust.              CSD027
+     C                     MOVE XBCUS     CNUM             Branch Internal Cust.              CSD027
+     C                     MOVE '01'      ACSQ             A/c Sequence Nbr
+     C                     MOVE XPRFC     PRFC             Profit Centre
+     C                     MOVE *BLANKS   BOKC             Book
+     C                     MOVE *BLANKS   OTTP             Deal Type
+     C                     MOVE *BLANKS   OTST             Deal Sub-Type
+     C**********           Z-ADD*ZEROS    ASOC             Associated Cust.                   CSD027
+     C                     MOVE *BLANKS   ASOC             Associated Cust.                   CSD027
+     C                     Z-ADDXEVDT     EVDT             Event Date
+     C                     Z-ADDXPAMT     PAMT             Posting Amount
+     C                     Z-ADDXVOIN     VOIN             Void Indicator
+     C                     MOVE 'X'       GETP             Generated Entry Type
+     C                     MOVE *BLANK    ACSC             Prime Gap A/c Sect.
+     C                     Z-ADDXCPNB     CPNB             Current Period
+     C                     Z-ADDXPDTM     PDTM             Posting Date/Time
+     C                     MOVE *BLANK    ATYP             Account Type
+     C                     MOVE *BLANK    PNAR
+     C           'TRANSFER'CAT  XCCY:1    PNAR
+     C           PNAR      CAT  NTRF:1    PNAR             Posting Narrative
+     C           XPNAR     IFNE *BLANK
+     C                     MOVE *BLANK    PNAR
+     C           'GAP TFR' CAT  XCCY:1    PNAR
+     C           PNAR      CAT  NTRF:1    PNAR             Posting Narrative
+     C                     ENDIF
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW08  -  Write to Profit Centre Accounting file for each    *
+      *            Foreign Spot Trade Profit Centre Gap Account, when *
+      *            Profit Centre is not an FX Holder.                 *
+      *                                                               *
+      *  Called By:  PRP02 - Generate Entries to Balance Profit Cent. *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW08     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE DSFPPC    PRFC             FX Profit Centre
+     C           XPAMT     MULT -1        PAMT             Posting Amount
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW09  -  Write to Profit Centre Accounting file for each    *
+      *            Base Ccy Equivalent Profit Centre Gap Account, when*
+      *            Profit Centre is not an FX Holder.                 *
+      *                                                               *
+      *  Called By:  PRP02 - Generate Entries to Balance Profit Cent. *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW09     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE XBCCY     CCY              Base Currency
+     C                     MOVE DSFPPC    PRFC             FX Profit Centre
+     C                     Z-ADDGLPAMT    PAMT             GL0765 Base Ccy Amt
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  PRW10  -  Write to Profit Centre Accounting file for each    *
+      *            Base Ccy IN/EX Profit Centre Gap Account, when     *
+      *            Profit Centre is not an FX Holder.                 *
+      *                                                               *
+      *  Called By:  PRP02 - Generate Entries to Balance Profit Cent. *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           PRW10     BEGSR
+      *
+      **  Set up DSMOVE
+      *
+     C                     MOVE XPRFC     PRFC             Profit Centre
+     C           GLPAMT    MULT -1        PAMT             GL0765 Base Ccy Amt
+      *
+     C                     WRITEMCPCACD0
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/COPY WNCPYSRC,MC0410C004
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DBERR   -  Error handling                                    *
+      *                                                               *
+      *  Called By:  Main Processing                                  *
+      *              PRP03 - Revaluation of Spot Trade Amount for     *
+      *                      each Spot Trade Account posting          *
+      *              PRP04 - Transfer B/Ccy to Retained P&L           *
+      *              PRP05 - Update Gap Accrual History               *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELWFILE     DBFILE
+     C                     MOVE WBASE     DBASE
+     C                     MOVELWKEY      DBKEY
+     C                     MOVELWPGM      DBPGM
+     C                     OUT  LDA
+     C                     MOVEL'*FCTFR'  XRETC
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Subroutine to handle abnormal error conditions       *
+      *                                                               *
+      *  Called by:  Abnormal Termination Processing                  *
+      *                                                               *
+      *  Calls    :  None                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVEL'*FCTFR'  XRETC
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR                           ** *PSSR **
+      *
+      *****************************************************************
+      /SPACE 3
+**  CPY@
+(c) Finastra International Limited 2001

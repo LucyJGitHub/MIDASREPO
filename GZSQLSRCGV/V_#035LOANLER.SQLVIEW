@@ -1,0 +1,791 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing Module                                      */
+/*                                                                             */
+/*       V_#LOANLER  - Rollover Details                                        */
+/*                                                                             */
+/*       (c) Finastra International Limited 2003                               */
+/*                                                                             */
+/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Prev Amend No. CLE141             Date 08Feb16                        */
+/*                      CLE134             Date 01Aug12                        */
+/*                      CLE148             Date 23Jul12                        */
+/*                      CSF011             Date 12Sep11                        */
+/*                      CRE073             Date 06Dec10                        */
+/*                      CLE143             Date 06Dec10                        */
+/*                      CLE064             Date 06Dec10                        */
+/*                      CER059             Date 19Jul10                        */
+/*                      CER020             Date 19May08                        */
+/*                      CER043             Date 19May08                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      246676             Date 27Mar07                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      240950             Date 11Jul06                        */
+/*                      CSD031             Date 10Apr06                        */
+/*                      BUG11273           Date 28Apr06                        */
+/*                      CSD027A            Date 09May06                        */
+/*                      CSD027             Date 18Dec05                        */
+/*                      CLE042             Date 06Sep05                        */
+/*                      CLE106             Date 01Aug04                        */
+/*                      CLE036             Date 22Sep03                        */
+/*                      CAS011             Date 16May05                        */
+/*                      CAP086             Date 08Jun05                        */
+/*                      BUG5722            Date 08Feb05                        */
+/*                      BUG5404            Date 17Jan05                        */
+/*                      BUG3408            Date 01Jul04                        */
+/*                      CLE025             Date 20Oct03                        */
+/*                      BUG1912            Date 12May04                        */
+/*                      BUG019 (CAP084)    Date 21Apr04                        */
+/*                      CAP084  *CREATE    Date 09Jan04                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD046248 - Finastra Rebranding                                        */
+/*       CLE141 - Currency and Location Business Day Convention                */
+/*                (Recompile)                                                  */
+/*       CLE134 - Past Due Call Loan Processing (Recompile)                    */
+/*       CLE148 - Alpha Loan Reference                                         */
+/*       CSF011 - Customer Name on Inputs (Recompile)                          */
+/*       CRE073 - Interest Rate Rounding                                       */
+/*       CLE143 - Original Loan Contract Date & Effective Interest             */
+/*                Rate (Recompile)                                             */
+/*       CLE064 - Enhancement of Lending Frequencies (Recompile)               */
+/*       CER059 - German Feature Upgrade to Delhi                              */
+/*       CER020 - Enhanced Rollover Window: Upgrade FGE089 to                  */
+/*                Midas Plus (Recompile)                                       */
+/*       CER043 - German Features LF041-00 New Fields and Defaulting           */
+/*       246676 - Loan even screen crashes during refresh if rollovers,        */
+/*                 interest adj or margin adj are highlighted.                 */
+/*       240950 - Default to CCY if NCCY not used                              */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       BUG11273 - Attempt to write duplicate record in GPGLCUSL.             */
+/*                  Add GPGLCUSL.CGBRCD as new key(unique). (Recompile)        */
+/*       CSD027A - Conversion Of Customer Number to Alpha                      */
+/*       CSD027 - Conversion Of Customer Number to Alpha                       */
+/*       CLE042 - Extended Loan Sub Type                                       */
+/*       CLE106 - Syndications Manager                                         */
+/*       CLE036 - Lending Enhancements for Nordea Phase 1 Priority 2:          */
+/*                Allow specific base rates (Recompile)                        */
+/*       CAS011 - EIR/AC Accounting Upgrade to MP1 (Recompile)                 */
+/*       CAP086 - Introduce Auto Authorisation to the API's                    */
+/*                without it. (Recompile)                                      */
+/*       BUG5722- Performance Enhancement                                      */
+/*       BUG5404- Local Cust Shortname added to GPGLCUSL (Recompile)           */
+/*       BUG3408- Removed unnecessary fields.                                  */
+/*       CLE025 - Credit Lines (Recompile)                                     */
+/*       BUG1912- SQL performance analysis required                            */
+/*       BUG019 - New LERI front end suite.  Redeliver updated source. (CAP084)*/
+/*       CAP084 - Global Processing                                            */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE VIEW                                                                   :
+  **********/**********                                                         :
+  AS                                                                            :
+  SELECT                                                                        :
+**L.RECI,*L.LNRF,*L.RCDT,*L.MRIN,*L.PTYP,*L.CNUM,*L.BRCA,*L.LTYP,*L.SUTP,*******:              BUG19
+**L.LASQ,*L.FCUS,*L.FTYP,*L.FSEQ,*L.CCY,*L.INTC,*L.INTR,*L.BRTT,*L.BRTE,********:              BUG19
+**L.RECI,*L.LNRF,*L.RCDT,*L.MRIN,*L.BRCA,*L.LTYP,*L.SUTP,***********************:      BUG19 BUG3408
+**L.RECI,*L.LNRF,*L.BRCA,*L.LTYP,*L.SUTP,***************************************:    BUG3408  CLE042
+  L.RECI, L.LNRF, L.BRCA, L.LTYP, L.SUTP, L.CLAS,                               :             CLE042
+  L.CCY, L.INTC, L.INTR, L.BRTE,                                                :              BUG19
+  L.RTSP, L.MARG, L.SPIN, L.CHIN, L.WTRT, L.WTIN, L.REPT, L.RFRQ, L.RDYN,       :
+**L.FCCY,*L.LIND,*L.CRSK,*L.ACOF,*L.NACD,*L.RELI,*L.AUTO,*L.BCXR,*L.FCXR,*******:              BUG19
+**L.SDST,*L.OSDA,*L.TSTN,*L.MDST,*L.OMDA,*L.TMAN,*L.FACO,***********************:              BUG19
+**L.RLFQ,*L.RLDY,*L.RDFC,*L.NBRA,*L.NRTS,*L.NSIN,*L.NCAS,*L.BMDI,*L.FMDI,*******:              BUG19
+**L.LSWC,*L.LSWS,*L.OSDB,*L.OMDB,*L.ORBR,*L.PRFC,*L.FCLB,*L.MLNR,*L.BTIN,*******:              BUG19
+**L.BLDY,*L.OLNO,*L.RCSI,*L.ICBS,*L.IPFR,*L.NOPS,*L.NCHI,*L.IFDY,*L.LONI,*******:              BUG19
+**L.CNFI,*L.ACEI,*L.TLXI,*L.CBLI,*L.CHTP,*L.TNLU,*L.ADDI,*L.BOKC,*L.COCU,*******:              BUG19
+  L.FCCY, L.CRSK, L.ACOF, L.NACD, L.AUTO, L.BCXR, L.FCXR,                       :              BUG19
+  L.OSDA, L.TSTN, L.OMDA, L.TMAN, L.FACO,                                       :              BUG19
+  L.RLFQ, L.RLDY, L.RDFC, L.NRTS, L.NSIN, L.NCAS, L.BMDI, L.FMDI,               :              BUG19
+  L.LSWC, L.LSWS, L.OSDB, L.OMDB, L.ORBR, L.PRFC, L.FCLB, L.BTIN,               :              BUG19
+  L.BLDY, L.RCSI, L.ICBS, L.IPFR, L.NOPS, L.NCHI, L.IFDY,                       :              BUG19
+  L.CHTP, L.TNLU, L.ADDI, L.BOKC, L.COCU,                                       :              BUG19
+  L.RECE, L.APMI, L.RSTM, L.RONS, L.RIBN, L.RIBA, L.ROBN, L.ROCN, L.PSTM,       :
+  L.PONS, L.PIBN, L.PIBA, L.POBN, L.POCN, L.RCRN, L.RCRA, L.RVNO, L.AWBN,       :
+  L.AWBA, L.BENN, L.BENA, L.DTP1, L.DTP2, L.DTP3, L.DTP4, L.DCHG, L.BTB1,       :
+  L.BTB2, L.BTB3, L.BTB4, L.BTB5, L.BTB6, L.CVMR, L.PTFR, L.HLEX, L.FSRP,       :
+**L.FSGN,*L.FPRC,*L.NFRS,*L.NFSN,*L.NFPC,*L.DFTP,*L.DFST,*L.MCRA,*L.FCRA,*******:              BUG19
+**L.PDDI,*L.PTDI,*L.GDPR,*L.GDIN,*L.LNKS,*L.MNSG,*L.GASS,*L.GPRT,*L.TOLN,*******:              BUG19
+**L.LSTS,*L.IUSR,*L.AUSR,*L.XUSR,*L.RATF,*L.CNCF,*L.PCRF,*L.LPFI,*L.PTFC,*******:              BUG19
+**L.PTFT,*L.PTFN,*L.PCOB,*L.SCCY,*L.ICCY,*L.OINR,*L.REPI,*L.RFDY,*L.RFRI,*******:              BUG19
+**L.FSGN,*L.FPRC,*L.NFRS,*L.NFSN,*L.NFPC,*L.DFTP,*L.DFST,*L.MCRA,***************:       BUG19 CLE042
+  L.FSGN, L.FPRC, L.NFRS, L.NFSN, L.NFPC, L.DFTP, L.DFST, L.DFCL, L.MCRA,       :             CLE042
+  L.PDDI, L.PTDI, L.GDPR, L.GDIN, L.LNKS, L.MNSG, L.GASS, L.GPRT,               :              BUG19
+  L.LSTS, L.IUSR, L.AUSR, L.XUSR, L.RATF, L.CNCF, L.PCRF, L.LPFI,               :              BUG19
+  L.PCOB, L.SCCY, L.ICCY, L.OINR, L.REPI, L.RFDY, L.RFRI,                       :              BUG19
+  L.RFRT, L.RFAR, L.FSYLDC, L.FSFYLD, L.ADIF, L.ADCF, L.ICIF, L.REXR,           :
+  L.REXI, L.PSCY, L.PEXR, L.PEXI, L.STAL,                                       :
+  L.CNSP, L.CNSG, L.RDMT, L.RDFD, L.NNSP, L.NNSG, L.NDMT, L.NDFD,               :             CRE073
+**K.NAR1,*K.NAR2,*K.NAR3,*K.NAR4,*K.FRBC,***************************************:              BUG19
+**K.RDST,*K.SPI1,*K.SPI2,*K.SPI3,*K.F57U,*K.ORVD,*K.THRN,*K.RLBR,***************:              BUG19
+**K.RRST,*K.RRON,*K.RRIB,*K.RRBA,*K.RROB,*K.RROC,*K.NCCY,*K.NFCE,*K.NFMD,*******:              BUG19
+**K.RSTS,*K.RIUS,*K.RAUS,*K.RXUS,*K.RPCR,*K.RLSB,*K.RPST,*K.RPON,*K.RPIB,*******:              BUG19
+**K.RPBA,*K.RPOB,*K.RPOC,*K.RRCR,*K.RRCA,*K.RRVN,*K.RAWB,*K.RAWA,*K.RBEN,*******:              BUG19
+  K.NAR1, K.NAR2, K.NAR3, K.NAR4,                                               :              BUG19
+  K.SPI1, K.SPI2, K.SPI3, K.F57U, K.ORVD, K.THRN, K.RLBR,                       :              BUG19
+**K.RRON,*K.RRIB,*K.RRBA,*K.NCCY,*K.NFCE,*K.NFMD,*******************************:      BUG19  240950
+  K.RRON, K.RRIB, K.RRBA, K.NFCE, K.NFMD,                                       :             240950
+  Case when K.NCCY = '   ' then  L.CCY else K.NCCY end as NCCY,                 :             240950
+**K.RSTS,*K.RIUS,*K.RAUS,*K.RXUS,*K.RPCR,*K.RLSB,*K.RPON,*K.RPIB,***************:      BUG19 BUG3408
+  K.RSTS, K.RAUS, K.RXUS, K.RPCR, K.RLSB, K.RPON, K.RPIB,                       :            BUG3408
+  K.RPBA, K.RRCR, K.RRCA, K.RRVN, K.RAWB, K.RAWA, K.RBEN,                       :              BUG19
+  K.RBNA, K.RDP1, K.RDP2, K.RDP3, K.RDP4, K.RDCH, K.RBB1, K.RBB2, K.RBB3,       :
+  K.RBB4, K.RBB5, K.RBB6, K.RCVM, K.NBCE, K.NBMD, K.RRSC, K.RPSC, K.RICY,       :
+**K.ECIN,*K.RPSM,*K.RPOS,*K.RPTS,*K.RPSB,*K.RFAO,*K.FSFYLB,*K.RRSR,*K.RRSI,*****:              BUG19
+  K.ECIN, K.RPOS, K.RPTS, K.RPSB, K.RFAO, K.FSFYLB, K.RRSR, K.RRSI,             :              BUG19
+  K.RPSR, K.RPSI, K.RSTA, K.FRNT, K.AFRT, K.REPA, K.TMST,                       :
+**DIGITS(L.LNRF)*as*PADLNRF,****************************************************:             CLE148
+         L.LNRF  as PADLNRF,                                                    :             CLE148
+**DIGITS(L.CNUM)*as*PADCNUM,****************************************************:             CSD027
+**DIGITS(L.FCUS)*as*PADFCUS,****************************************************:             CSD027
+         L.CNUM  as PADCNUM,                                                    :             CSD027
+         L.FCUS  as PADFCUS,                                                    :             CSD027
+  DIGITS(L.FTYP) as PADFTYP,                                                    :
+  DIGITS(L.FSEQ) as PADFSEQ,                                                    :
+  DIGITS(L.LASQ) as PADLASQ,                                                    :              BUG19
+  DIGITS(L.MDST) as PADMDST,                                                    :              BUG19
+  DIGITS(L.SDST) as PADSDST,                                                    :              BUG19
+  DIGITS(L.PTYP) as PADPTYP,                                                    :
+  DIGITS(L.NBRA) as PADNBRA,                                                    :              BUG19
+**DIGITS(K.LNRF)*as*PADKLNRF,***************************************************:      BUG19  CLE148
+         K.LNRF  as PADKLNRF,                                                   :             CLE148
+  DIGITS(K.FRBC) as PADFRBC,                                                    :              BUG19
+  DIGITS(K.RDST) as PADRDST,                                                    :              BUG19
+  DIGITS(K.RPSM) as PADRPSM,                                                    :              BUG19
+**CASE*WHEN*L.PTFC*=*0*THEN*'*'*ELSE*DIGITS(L.PTFC)*END*AS*PADPTFC,*************:       BUG19 CSD027
+  CASE WHEN L.PTFC ='' THEN ' ' ELSE        L.PTFC  END AS PADPTFC,             :             CSD027
+  CASE WHEN L.PTFN = 0 THEN ' ' ELSE DIGITS(L.PTFN) END AS PADPTFN,             :              BUG19
+  CASE WHEN L.PTFT = 0 THEN ' ' ELSE DIGITS(L.PTFT) END AS PADPTFT,             :              BUG19
+  CASE WHEN L.BRTT = 0 THEN ' ' ELSE DIGITS(L.BRTT) END AS PADBRTT,             :              BUG19
+**CASE*WHEN*L.MLNR*=*0*THEN*'*'*ELSE*DIGITS(L.MLNR)*END*AS*PADMLNR,*************:       BUG19 CLE148
+  L.MLNR AS PADMLNR,                                                            :             CLE148
+**CASE*WHEN*L.OLNO*=*0*THEN*'0'*ELSE*DIGITS(L.OLNO)*END*AS*PADOLNO,*************:      BUG19 CSD027A
+  CASE WHEN L.OLNO = '' THEN ' ' ELSE L.OLNO END AS PADOLNO,                    :            CSD027A
+  CASE WHEN L.LIND = 0 THEN ' ' ELSE DIGITS(L.LIND) END AS PADLIND,             :              BUG19
+**CASE*WHEN*L.TOLN*=*0*THEN*'*'*ELSE*DIGITS(L.TOLN)*END*AS*PADTOLN,*************:       BUG19 CLE148
+  L.TOLN AS PADTOLN,                                                            :             CLE148
+  CASE WHEN K.RRST = 0 THEN ' ' ELSE DIGITS(K.RRST) END AS PADRRST,             :              BUG19
+  CASE WHEN K.RPST = 0 THEN ' ' ELSE DIGITS(K.RPST) END AS PADRPST,             :              BUG19
+**CASE*WHEN*K.RROB*=*0*THEN*'*'*ELSE*DIGITS(K.RROB)*END*AS*PADRROB,*************:       BUG19 CSD027
+**CASE*WHEN*K.RROC*=*0*THEN*'*'*ELSE*DIGITS(K.RROC)*END*AS*PADRROC,*************:       BUG19 CSD027
+**CASE*WHEN*K.RPOB*=*0*THEN*'*'*ELSE*DIGITS(K.RPOB)*END*AS*PADRPOB,*************:       BUG19 CSD027
+**CASE*WHEN*K.RPOC*=*0*THEN*'*'*ELSE*DIGITS(K.RPOC)*END*AS*PADRPOC,*************:       BUG19 CSD027
+  CASE WHEN K.RROB ='' THEN ' ' ELSE        K.RROB  END AS PADRROB,             :             CSD027
+  CASE WHEN K.RROC ='' THEN ' ' ELSE        K.RROC  END AS PADRROC,             :             CSD027
+  CASE WHEN K.RPOB ='' THEN ' ' ELSE        K.RPOB  END AS PADRPOB,             :             CSD027
+  CASE WHEN K.RPOC ='' THEN ' ' ELSE        K.RPOC  END AS PADRPOC,             :             CSD027
+  CASE WHEN L.DDAT=0 THEN NULL ELSE DATE(L.DDAT+719892) END AS FLDDAT,          :
+  CASE WHEN L.VDAT=0 THEN NULL ELSE DATE(L.VDAT+719892) END AS FLVDAT,          :
+  CASE WHEN L.MDAT=0 THEN NULL ELSE DATE(L.MDAT+719892) END AS FLMDAT,          :
+  CASE WHEN L.NRPD=0 THEN NULL ELSE DATE(L.NRPD+719892) END AS FLNRPD,          :
+  CASE WHEN L.RLDT=0 THEN NULL ELSE DATE(L.RLDT+719892) END AS FLRLDT,          :
+  CASE WHEN L.NROD=0 THEN NULL ELSE DATE(L.NROD+719892) END AS FLNROD,          :
+  CASE WHEN L.NIDT=0 THEN NULL ELSE DATE(L.NIDT+719892) END AS FLNIDT,          :
+  CASE WHEN L.IBDT=0 THEN NULL ELSE DATE(L.IBDT+719892) END AS FLIBDT,          :
+  CASE WHEN L.SLID=0 THEN NULL ELSE DATE(L.SLID+719892) END AS FLSLID,          :
+  CASE WHEN L.DLRC=0 THEN NULL ELSE DATE(L.DLRC+719892) END AS FLDLRC,          :
+  CASE WHEN L.IACD=0 THEN NULL ELSE DATE(L.IACD+719892) END AS FLIACD,          :
+  CASE WHEN L.RBDT=0 THEN NULL ELSE DATE(L.RBDT+719892) END AS FLRBDT,          :
+  CASE WHEN L.ORED=0 THEN NULL ELSE DATE(L.ORED+719892) END AS FLORED,          :
+  CASE WHEN L.LCD=0 THEN NULL ELSE DATE(L.LCD+719892) END AS FLLCD,             :
+  CASE WHEN L.ORMD=0 THEN NULL ELSE DATE(L.ORMD+719892) END AS FLORMD,          :
+  CASE WHEN L.OMDT=0 THEN NULL ELSE DATE(L.OMDT+719892) END AS FLOMDT,          :
+  CASE WHEN L.NIPD=0 THEN NULL ELSE DATE(L.NIPD+719892) END AS FLNIPD,          :
+  CASE WHEN L.NMDT=0 THEN NULL ELSE DATE(L.NMDT+719892) END AS FLNMDT,          :
+  CASE WHEN L.FCTD=0 THEN NULL ELSE DATE(L.FCTD+719892) END AS FLFCTD,          :
+  CASE WHEN L.LRLD=0 THEN NULL ELSE DATE(L.LRLD+719892) END AS FLLRLD,          :
+  CASE WHEN L.LMCD=0 THEN NULL ELSE DATE(L.LMCD+719892) END AS FLLMCD,          :
+  CASE WHEN L.OIDT=0 THEN NULL ELSE DATE(L.OIDT+719892) END AS FLOIDT,          :
+  CASE WHEN L.FRPD=0 THEN NULL ELSE DATE(L.FRPD+719892) END AS FLFRPD,          :
+/*CASE*WHEN*K.ORED=0*THEN*NULL*ELSE*DATE(K.ORED+719892)*END*AS*FKORED,**********:            BUG3408
+  CASE WHEN K.LCD=0 THEN NULL ELSE DATE(K.LCD+719892) END AS FKLCD,             :
+  CASE WHEN LAND(X'20',ACEI) <> X'00' THEN 'Y' ELSE 'N' END AS ACEIMATD,        :              BUG19
+  CASE WHEN LAND(X'40',ACEI) <> X'00' THEN 'Y' ELSE 'N' END AS ACEISTRD,        :              BUG19
+  CASE WHEN LAND(X'80',ACEI) <> X'00' THEN 'Y' ELSE 'N' END AS ACEIDELD,        :              BUG19
+  CASE WHEN LAND(X'04',CBLI) <> X'00' THEN 'Y' ELSE 'N' END AS CBLIMBR,         :              BUG19
+  CASE WHEN LAND(X'08',CBLI) <> X'00' THEN 'Y' ELSE 'N' END AS CBLIMBS,         :              BUG19
+  CASE WHEN LAND(X'10',CBLI) <> X'00' THEN 'Y' ELSE 'N' END AS CBLIRBR,         :              BUG19
+  CASE WHEN LAND(X'20',CBLI) <> X'00' THEN 'Y' ELSE 'N' END AS CBLIRBS,         :              BUG19
+  CASE WHEN LAND(X'40',CBLI) <> X'00' THEN 'Y' ELSE 'N' END AS CBLIIPR,         :              BUG19
+  CASE WHEN LAND(X'80',CBLI) <> X'00' THEN 'Y' ELSE 'N' END AS CBLIIPS,         :              BUG19
+  CASE WHEN LAND(X'01',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS CNFICFPR,        :              BUG19
+  CASE WHEN LAND(X'02',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS CNFIDPCF,        :              BUG19
+  CASE WHEN LAND(X'04',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS CNFIPCOB,        :              BUG19
+  CASE WHEN LAND(X'40',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS CNFICFCT,        :              BUG19
+  CASE WHEN LAND(X'80',CNFI) <> X'00' THEN 'Y' ELSE 'N' END AS CNFIDDCF,        :              BUG19
+  CASE WHEN LAND(X'04',LONI) <> X'00' THEN 'Y' ELSE 'N' END AS LONIINCT,        :              BUG19
+  CASE WHEN LAND(X'10',LONI) <> X'00' THEN 'Y' ELSE 'N' END AS LONISTAC,        :              BUG19
+  CASE WHEN LAND(X'20',LONI) <> X'00' THEN 'Y' ELSE 'N' END AS LONITOIN,        :              BUG19
+  CASE WHEN LAND(X'80',LONI) <> X'00' THEN 'Y' ELSE 'N' END AS LONISPIN,        :              BUG19
+  CASE WHEN LAND(X'20',RELI) <> X'00' THEN 'Y' ELSE 'N' END AS RELIFEE,         :              BUG19
+  CASE WHEN LAND(X'40',RELI) <> X'00' THEN 'Y' ELSE 'N' END AS RELIDOC,         :              BUG19
+  CASE WHEN LAND(X'80',RELI) <> X'00' THEN 'Y' ELSE 'N' END AS RELISEC,         :              BUG19
+  CASE WHEN LAND(X'20',TLXI) <> X'00' THEN 'Y' ELSE 'N' END AS TLXIRD,          :              BUG19
+  CASE WHEN LAND(X'20',TLXI) <> X'00' THEN 'Y' ELSE 'N' END AS TLXIID,          :              BUG19
+  CASE WHEN LAND(X'40',TLXI) <> X'00' THEN 'Y' ELSE 'N' END AS TLXIMD,          :              BUG19
+  CASE WHEN LAND(X'80',TLXI) <> X'00' THEN 'Y' ELSE 'N' END AS TLXISD,          :              BUG19
+***DEC(L.CPAM*C1.SCALING,15,4)*AS*"SLCPAM",**************************************:             BUG19
+***DEC(L.CPAM*C1.SCALING*C1.RATE,15,4)*AS*"BSLCPAM",*****************************:             BUG19
+***DEC(L.RAMT*C1.SCALING,15,4)*AS*"SLRAMT",**************************************:             BUG19
+***DEC(L.RAMT*C1.SCALING*C1.RATE,15,4)*AS*"BSLRAMT",*****************************:             BUG19
+***DEC(L.PSAM*C1.SCALING,15,4)*AS*"SLPSAM*",*************************************:             BUG19
+***DEC(L.PSAM*C1.SCALING*C1.RATE,15,4)*AS*"BSLPSAM",*****************************:             BUG19
+***DEC(L.AWTP*C1.SCALING,15,4)*AS*"SLAWTP",**************************************:             BUG19
+***DEC(L.AWTP*C1.SCALING*C1.RATE,15,4)*AS*"BSLAWTP",*****************************:             BUG19
+***DEC(L.WTRD*C1.SCALING,15,4)*AS*"SLWTRD",**************************************:             BUG19
+***DEC(L.WTRD*C1.SCALING*C1.RATE,15,4)*AS*"BSLWTRD",*****************************:             BUG19
+***DEC(L.WTWD*C1.SCALING,15,4)*AS*"SLWTWD",**************************************:             BUG19
+***DEC(L.WTWD*C1.SCALING*C1.RATE,15,4)*AS*"BSLWTWD",*****************************:             BUG19
+***DEC(L.IWOD*C1.SCALING,15,4)*AS*"SLIWOD",**************************************:             BUG19
+***DEC(L.IWOD*C1.SCALING*C1.RATE,15,4)*AS*"BSLIWOD",*****************************:             BUG19
+***DEC(L.PWOD*C1.SCALING,15,4)*AS*"SLPWOD",**************************************:             BUG19
+***DEC(L.PWOD*C1.SCALING*C1.RATE,15,4)*AS*"BSLPWOD",*****************************:             BUG19
+***DEC(L.PDIN*C1.SCALING,15,4)*AS*"SLPDIN",**************************************:             BUG19
+***DEC(L.PDIN*C1.SCALING*C1.RATE,15,4)*AS*"BSLPDIN",*****************************:             BUG19
+***DEC(L.TOTI*C1.SCALING,15,4)*AS*"SLTOTI",**************************************:             BUG19
+***DEC(L.TOTI*C1.SCALING*C1.RATE,15,4)*AS*"BSLTOTI",*****************************:             BUG19
+***DEC(L.AIPD*C1.SCALING,15,4)*AS*"SLAIPD",**************************************:             BUG19
+***DEC(L.AIPD*C1.SCALING*C1.RATE,15,4)*AS*"BSLAIPD",*****************************:             BUG19
+***DEC(L.AITC*C1.SCALING,15,4)*AS*"SLAITC",**************************************:             BUG19
+***DEC(L.AITC*C1.SCALING*C1.RATE,15,4)*AS*"BSLAITC",*****************************:             BUG19
+***DEC(L.TFEP*C1.SCALING,15,4)*AS*"SLTFEP",**************************************:             BUG19
+***DEC(L.TFEP*C1.SCALING*C1.RATE,15,4)*AS*"BSLTFEP",*****************************:             BUG19
+***DEC(L.AIAP*C1.SCALING,15,4)*AS*"SLAIAP",**************************************:             BUG19
+***DEC(L.AIAP*C1.SCALING*C1.RATE,15,4)*AS*"BSLAIAP",*****************************:             BUG19
+***DEC(L.IPRD*C1.SCALING,15,4)*AS*"SLIPRD",**************************************:             BUG19
+***DEC(L.IPRD*C1.SCALING*C1.RATE,15,4)*AS*"BSLIPRD",*****************************:             BUG19
+***DEC(L.IPRM*C1.SCALING,15,4)*AS*"SLIPRM",**************************************:             BUG19
+***DEC(L.IPRM*C1.SCALING*C1.RATE,15,4)*AS*"BSLIPRM",*****************************:             BUG19
+***DEC(L.ICTD*C1.SCALING,15,4)*AS*"SLICTD",**************************************:             BUG19
+***DEC(L.ICTD*C1.SCALING*C1.RATE,15,4)*AS*"BSLICTD",*****************************:             BUG19
+***DEC(L.AIMN*C1.SCALING,15,4)*AS*"SLAIMN",**************************************:             BUG19
+***DEC(L.AIMN*C1.SCALING*C1.RATE,15,4)*AS*"BSLAIMN",*****************************:             BUG19
+***DEC(L.ORTI*C1.SCALING,15,4)*AS*"SLORTI",**************************************:             BUG19
+***DEC(L.ORTI*C1.SCALING*C1.RATE,15,4)*AS*"BSLORTI",*****************************:             BUG19
+***DEC(L.TCOF*C1.SCALING,15,4)*AS*"SLTCOF",**************************************:             BUG19
+***DEC(L.TCOF*C1.SCALING*C1.RATE,15,4)*AS*"BSLTCOF",*****************************:             BUG19
+***DEC(L.ACPD*C1.SCALING,15,4)*AS*"SLACPD",**************************************:             BUG19
+***DEC(L.ACPD*C1.SCALING*C1.RATE,15,4)*AS*"BSLACPD",*****************************:             BUG19
+***DEC(L.ACDA*C1.SCALING,15,4)*AS*"SLACDA",**************************************:             BUG19
+***DEC(L.ACDA*C1.SCALING*C1.RATE,15,4)*AS*"BSLACDA",*****************************:             BUG19
+***DEC(L.ACAJ*C1.SCALING,15,4)*AS*"SLACAJ",**************************************:             BUG19
+***DEC(L.ACAJ*C1.SCALING*C1.RATE,15,4)*AS*"BSLACAJ",*****************************:             BUG19
+***DEC(L.ACAP*C1.SCALING,15,4)*AS*"SLACAP",**************************************:             BUG19
+***DEC(L.ACAP*C1.SCALING*C1.RATE,15,4)*AS*"BSLACAP",*****************************:             BUG19
+***DEC(L.COFD*C1.SCALING,15,4)*AS*"SLCOFD",**************************************:             BUG19
+***DEC(L.COFD*C1.SCALING*C1.RATE,15,4)*AS*"BSLCOFD",*****************************:             BUG19
+***DEC(L.COFM*C1.SCALING,15,4)*AS*"SLCOFM",**************************************:             BUG19
+***DEC(L.COFM*C1.SCALING*C1.RATE,15,4)*AS*"BSLCOFM",*****************************:             BUG19
+***DEC(L.CFCD*C1.SCALING,15,4)*AS*"SLCFCD",**************************************:             BUG19
+***DEC(L.CFCD*C1.SCALING*C1.RATE,15,4)*AS*"BSLCFCD",*****************************:             BUG19
+***DEC(L.PDCF*C1.SCALING,15,4)*AS*"SLPDCF",**************************************:             BUG19
+***DEC(L.PDCF*C1.SCALING*C1.RATE,15,4)*AS*"BSLPDCF",*****************************:             BUG19
+***DEC(L.FWOD*C1.SCALING,15,4)*AS*"SLFWOD",**************************************:             BUG19
+***DEC(L.FWOD*C1.SCALING*C1.RATE,15,4)*AS*"BSLFWOD",*****************************:             BUG19
+***DEC(L.FCRA*C1.SCALING,15,4)*AS*"SLFCRA",**************************************:             BUG19
+***DEC(L.FCRA*C1.SCALING*C1.RATE,15,4)*AS*"BSLFCRA",*****************************:             BUG19
+***DEC(L.FSURPL*C1.SCALING,15,4)*AS*"SLFSURPL",**********************************:             BUG19
+***DEC(L.FSURPL*C1.SCALING*C1.RATE,15,4)*AS*"BSLFSURPL",*************************:             BUG19
+***DEC(L.FSPLAM*C1.SCALING,15,4)*AS*"SLFSPLAM",**********************************:             BUG19
+***DEC(L.FSPLAM*C1.SCALING*C1.RATE,15,4)*AS*"BSLFSPLAM",*************************:             BUG19
+***DEC(L.FSPLDT*C1.SCALING,15,4)*AS*"SLFSPLDT",**********************************:             BUG19
+***DEC(L.FSPLDT*C1.SCALING*C1.RATE,15,4)*AS*"BSLFSPLDT",*************************:             BUG19
+***DEC(L.FSYUPL*C1.SCALING,15,4)*AS*"SLFSYUPL",**********************************:             BUG19
+***DEC(L.FSYUPL*C1.SCALING*C1.RATE,15,4)*AS*"BSLFSYUPL",*************************:             BUG19
+***DEC(L.FLTI*C1.SCALING,15,4)*AS*"SLFLTI",**************************************:             BUG19
+***DEC(L.FLTI*C1.SCALING*C1.RATE,15,4)*AS*"BSLFLTI",*****************************:             BUG19
+***DEC(L.CHGA*C1.SCALING,15,4)*AS*"SLCHGA",**************************************:             BUG19
+***DEC(L.CHGA*C1.SCALING*C1.RATE,15,4)*AS*"BSLCHGA",*****************************:             BUG19
+***DEC(L.ACCH*C1.SCALING,15,4)*AS*"SLACCH",**************************************:             BUG19
+***DEC(L.ACCH*C1.SCALING*C1.RATE,15,4)*AS*"BSLACCH",*****************************:             BUG19
+***DEC(L.FSEFUP*C1.SCALING,15,4)*AS*"SLFSEFUP",**********************************:             BUG19
+***DEC(L.FSEFUP*C1.SCALING*C1.RATE,15,4)*AS*"BSLFSEFUP",*************************:             BUG19
+***DEC(L.FSECUP*C1.SCALING,15,4)*AS*"SLFSECUP",**********************************:             BUG19
+***DEC(L.FSECUP*C1.SCALING*C1.RATE,15,4)*AS*"BSLFSECUP",*************************:             BUG19
+***DEC(L.AIPN*C1.SCALING,15,4)*AS*"SLAIPN",**************************************:             BUG19
+***DEC(L.AIPN*C1.SCALING*C1.RATE,15,4)*AS*"BSLAIPN",*****************************:             BUG19
+***DEC(L.AITN*C1.SCALING,15,4)*AS*"SLAITN",**************************************:             BUG19
+***DEC(L.AITN*C1.SCALING*C1.RATE,15,4)*AS*"BSLAITN",*****************************:             BUG19
+***DEC(L.AIAN*C1.SCALING,15,4)*AS*"SLAIAN",**************************************:             BUG19
+***DEC(L.AIAN*C1.SCALING*C1.RATE,15,4)*AS*"BSLAIAN",*****************************:             BUG19
+***DEC(L.IPRN*C1.SCALING,15,4)*AS*"SLIPRN",**************************************:             BUG19
+***DEC(L.IPRN*C1.SCALING*C1.RATE,15,4)*AS*"BSLIPRN",*****************************:             BUG19
+***DEC(L.AINN*C1.SCALING,15,4)*AS*"SLAINN",**************************************:             BUG19
+***DEC(L.AINN*C1.SCALING*C1.RATE,15,4)*AS*"BSLAINN",*****************************:             BUG19
+***DEC(L.TOTN*C1.SCALING,15,4)*AS*"SLTOTN",**************************************:             BUG19
+***DEC(L.TOTN*C1.SCALING*C1.RATE,15,4)*AS*"BSLTOTN",*****************************:             BUG19
+***DEC(L.ICTN*C1.SCALING,15,4)*AS*"SLICTN",**************************************:             BUG19
+***DEC(L.ICTN*C1.SCALING*C1.RATE,15,4)*AS*"BSLICTN",*****************************:             BUG19
+***DEC(L.IWON*C1.SCALING,15,4)*AS*"SLIWON",**************************************:             BUG19
+***DEC(L.IWON*C1.SCALING*C1.RATE,15,4)*AS*"BSLIWON",*****************************:             BUG19
+***DEC(L.IPNM*C1.SCALING,15,4)*AS*"SLIPNM",**************************************:             BUG19
+***DEC(L.IPNM*C1.SCALING*C1.RATE,15,4)*AS*"BSLIPNM",*****************************:             BUG19
+***DEC(L.PDNN*C1.SCALING,15,4)*AS*"SLPDNN",**************************************:             BUG19
+***DEC(L.PDNN*C1.SCALING*C1.RATE,15,4)*AS*"BSLPDNN",*****************************:             BUG19
+***DEC(L.FSCPAM*C1.SCALING,15,4)*AS*"SLFSCPAM",**********************************:             BUG19
+***DEC(L.FSCPAM*C1.SCALING*C1.RATE,15,4)*AS*"BSLFSCPAM",*************************:             BUG19
+***DEC(L.FPAM*C2.SCALING,15,4)*AS*"SLFPAM",**************************************:             BUG19
+***DEC(L.FPAM*C2.SCALING*C2.RATE,15,4)*AS*"BSLFPAM",*****************************:             BUG19
+**DEC(L.CPAM*C1.SCALING,31,4) AS "SLCPAM",**************************************:BUG19/BUG5722
+**DEC(L.CPAM*C1.SCALING*C1.RATE,31,4) AS "BSLCPAM",*****************************:BUG19/BUG5722
+**DEC(L.RAMT*C1.SCALING,31,4) AS "SLRAMT",**************************************:BUG19/BUG5722
+**DEC(L.RAMT*C1.SCALING*C1.RATE,31,4) AS "BSLRAMT",*****************************:BUG19/BUG5722
+**DEC(L.PSAM*C1.SCALING,31,4) AS "SLPSAM ",*************************************:BUG19/BUG5722
+**DEC(L.PSAM*C1.SCALING*C1.RATE,31,4) AS "BSLPSAM",*****************************:BUG19/BUG5722
+**DEC(L.AWTP*C1.SCALING,31,4) AS "SLAWTP",**************************************:BUG19/BUG5722
+**DEC(L.AWTP*C1.SCALING*C1.RATE,31,4) AS "BSLAWTP",*****************************:BUG19/BUG5722
+**DEC(L.WTRD*C1.SCALING,31,4) AS "SLWTRD",**************************************:BUG19/BUG5722
+**DEC(L.WTRD*C1.SCALING*C1.RATE,31,4) AS "BSLWTRD",*****************************:BUG19/BUG5722
+**DEC(L.WTWD*C1.SCALING,31,4) AS "SLWTWD",**************************************:BUG19/BUG5722
+**DEC(L.WTWD*C1.SCALING*C1.RATE,31,4) AS "BSLWTWD",*****************************:BUG19/BUG5722
+**DEC(L.IWOD*C1.SCALING,31,4) AS "SLIWOD",**************************************:BUG19/BUG5722
+**DEC(L.IWOD*C1.SCALING*C1.RATE,31,4) AS "BSLIWOD",*****************************:BUG19/BUG5722
+**DEC(L.PWOD*C1.SCALING,31,4) AS "SLPWOD",**************************************:BUG19/BUG5722
+**DEC(L.PWOD*C1.SCALING*C1.RATE,31,4) AS "BSLPWOD",*****************************:BUG19/BUG5722
+**DEC(L.PDIN*C1.SCALING,31,4) AS "SLPDIN",**************************************:BUG19/BUG5722
+**DEC(L.PDIN*C1.SCALING*C1.RATE,31,4) AS "BSLPDIN",*****************************:BUG19/BUG5722
+**DEC(L.TOTI*C1.SCALING,31,4) AS "SLTOTI",**************************************:BUG19/BUG5722
+**DEC(L.TOTI*C1.SCALING*C1.RATE,31,4) AS "BSLTOTI",*****************************:BUG19/BUG5722
+**DEC(L.AIPD*C1.SCALING,31,4) AS "SLAIPD",**************************************:BUG19/BUG5722
+**DEC(L.AIPD*C1.SCALING*C1.RATE,31,4) AS "BSLAIPD",*****************************:BUG19/BUG5722
+**DEC(L.AITC*C1.SCALING,31,4) AS "SLAITC",**************************************:BUG19/BUG5722
+**DEC(L.AITC*C1.SCALING*C1.RATE,31,4) AS "BSLAITC",*****************************:BUG19/BUG5722
+**DEC(L.TFEP*C1.SCALING,31,4)*AS*"SLTFEP",**************************************:      BUG19 BUG3408
+**DEC(L.TFEP*C1.SCALING*C1.RATE,31,4)*AS*"BSLTFEP",*****************************:      BUG19 BUG3408
+**DEC(L.AIAP*C1.SCALING,31,4) AS "SLAIAP",**************************************:BUG19/BUG5722
+**DEC(L.AIAP*C1.SCALING*C1.RATE,31,4) AS "BSLAIAP",*****************************:BUG19/BUG5722
+**DEC(L.IPRD*C1.SCALING,31,4) AS "SLIPRD",**************************************:BUG19/BUG5722
+**DEC(L.IPRD*C1.SCALING*C1.RATE,31,4) AS "BSLIPRD",*****************************:BUG19/BUG5722
+**DEC(L.IPRM*C1.SCALING,31,4) AS "SLIPRM",**************************************:BUG19/BUG5722
+**DEC(L.IPRM*C1.SCALING*C1.RATE,31,4) AS "BSLIPRM",*****************************:BUG19/BUG5722
+**DEC(L.ICTD*C1.SCALING,31,4) AS "SLICTD",**************************************:BUG19/BUG5722
+**DEC(L.ICTD*C1.SCALING*C1.RATE,31,4) AS "BSLICTD",*****************************:BUG19/BUG5722
+**DEC(L.AIMN*C1.SCALING,31,4) AS "SLAIMN",**************************************:BUG19/BUG5722
+**DEC(L.AIMN*C1.SCALING*C1.RATE,31,4) AS "BSLAIMN",*****************************:BUG19/BUG5722
+**DEC(L.ORTI*C1.SCALING,31,4) AS "SLORTI",**************************************:BUG19/BUG5722
+**DEC(L.ORTI*C1.SCALING*C1.RATE,31,4) AS "BSLORTI",*****************************:BUG19/BUG5722
+**DEC(L.TCOF*C1.SCALING,31,4) AS "SLTCOF",**************************************:BUG19/BUG5722
+**DEC(L.TCOF*C1.SCALING*C1.RATE,31,4) AS "BSLTCOF",*****************************:BUG19/BUG5722
+**DEC(L.ACPD*C1.SCALING,31,4) AS "SLACPD",**************************************:BUG19/BUG5722
+**DEC(L.ACPD*C1.SCALING*C1.RATE,31,4) AS "BSLACPD",*****************************:BUG19/BUG5722
+**DEC(L.ACDA*C1.SCALING,31,4) AS "SLACDA",**************************************:BUG19/BUG5722
+**DEC(L.ACDA*C1.SCALING*C1.RATE,31,4) AS "BSLACDA",*****************************:BUG19/BUG5722
+**DEC(L.ACAJ*C1.SCALING,31,4) AS "SLACAJ",**************************************:BUG19/BUG5722
+**DEC(L.ACAJ*C1.SCALING*C1.RATE,31,4) AS "BSLACAJ",*****************************:BUG19/BUG5722
+**DEC(L.ACAP*C1.SCALING,31,4) AS "SLACAP",**************************************:BUG19/BUG5722
+**DEC(L.ACAP*C1.SCALING*C1.RATE,31,4) AS "BSLACAP",*****************************:BUG19/BUG5722
+**DEC(L.COFD*C1.SCALING,31,4) AS "SLCOFD",**************************************:BUG19/BUG5722
+**DEC(L.COFD*C1.SCALING*C1.RATE,31,4) AS "BSLCOFD",*****************************:BUG19/BUG5722
+**DEC(L.COFM*C1.SCALING,31,4) AS "SLCOFM",**************************************:BUG19/BUG5722
+**DEC(L.COFM*C1.SCALING*C1.RATE,31,4) AS "BSLCOFM",*****************************:BUG19/BUG5722
+**DEC(L.CFCD*C1.SCALING,31,4) AS "SLCFCD",**************************************:BUG19/BUG5722
+**DEC(L.CFCD*C1.SCALING*C1.RATE,31,4) AS "BSLCFCD",*****************************:BUG19/BUG5722
+**DEC(L.PDCF*C1.SCALING,31,4) AS "SLPDCF",**************************************:BUG19/BUG5722
+**DEC(L.PDCF*C1.SCALING*C1.RATE,31,4) AS "BSLPDCF",*****************************:BUG19/BUG5722
+**DEC(L.FWOD*C1.SCALING,31,4) AS "SLFWOD",**************************************:BUG19/BUG5722
+**DEC(L.FWOD*C1.SCALING*C1.RATE,31,4) AS "BSLFWOD",*****************************:BUG19/BUG5722
+**DEC(L.FCRA*C1.SCALING,31,4) AS "SLFCRA",**************************************:BUG19/BUG5722
+**DEC(L.FCRA*C1.SCALING*C1.RATE,31,4) AS "BSLFCRA",*****************************:BUG19/BUG5722
+**DEC(L.FSURPL*C1.SCALING,31,4) AS "SLFSURPL",**********************************:BUG19/BUG5722
+**DEC(L.FSURPL*C1.SCALING*C1.RATE,31,4) AS "BSLFSURPL",*************************:BUG19/BUG5722
+**DEC(L.FSPLAM*C1.SCALING,31,4) AS "SLFSPLAM",**********************************:BUG19/BUG5722
+**DEC(L.FSPLAM*C1.SCALING*C1.RATE,31,4) AS "BSLFSPLAM",*************************:BUG19/BUG5722
+**DEC(L.FSPLDT*C1.SCALING,31,4) AS "SLFSPLDT",**********************************:BUG19/BUG5722
+**DEC(L.FSPLDT*C1.SCALING*C1.RATE,31,4) AS "BSLFSPLDT",*************************:BUG19/BUG5722
+**DEC(L.FSYUPL*C1.SCALING,31,4) AS "SLFSYUPL",**********************************:BUG19/BUG5722
+**DEC(L.FSYUPL*C1.SCALING*C1.RATE,31,4) AS "BSLFSYUPL",*************************:BUG19/BUG5722
+**DEC(L.FLTI*C1.SCALING,31,4) AS "SLFLTI",**************************************:BUG19/BUG5722
+**DEC(L.FLTI*C1.SCALING*C1.RATE,31,4) AS "BSLFLTI",*****************************:BUG19/BUG5722
+**DEC(L.CHGA*C1.SCALING,31,4) AS "SLCHGA",**************************************:BUG19/BUG5722
+**DEC(L.CHGA*C1.SCALING*C1.RATE,31,4) AS "BSLCHGA",*****************************:BUG19/BUG5722
+**DEC(L.ACCH*C1.SCALING,31,4) AS "SLACCH",**************************************:BUG19/BUG5722
+**DEC(L.ACCH*C1.SCALING*C1.RATE,31,4) AS "BSLACCH",*****************************:BUG19/BUG5722
+**DEC(L.FSEFUP*C1.SCALING,31,4) AS "SLFSEFUP",**********************************:BUG19/BUG5722
+**DEC(L.FSEFUP*C1.SCALING*C1.RATE,31,4) AS "BSLFSEFUP",*************************:BUG19/BUG5722
+**DEC(L.FSECUP*C1.SCALING,31,4) AS "SLFSECUP",**********************************:BUG19/BUG5722
+**DEC(L.FSECUP*C1.SCALING*C1.RATE,31,4) AS "BSLFSECUP",*************************:BUG19/BUG5722
+**DEC(L.AIPN*C1.SCALING,31,4) AS "SLAIPN",**************************************:BUG19/BUG5722
+**DEC(L.AIPN*C1.SCALING*C1.RATE,31,4) AS "BSLAIPN",*****************************:BUG19/BUG5722
+**DEC(L.AITN*C1.SCALING,31,4) AS "SLAITN",**************************************:BUG19/BUG5722
+**DEC(L.AITN*C1.SCALING*C1.RATE,31,4) AS "BSLAITN",*****************************:BUG19/BUG5722
+**DEC(L.AIAN*C1.SCALING,31,4) AS "SLAIAN",**************************************:BUG19/BUG5722
+**DEC(L.AIAN*C1.SCALING*C1.RATE,31,4) AS "BSLAIAN",*****************************:BUG19/BUG5722
+**DEC(L.IPRN*C1.SCALING,31,4) AS "SLIPRN",**************************************:BUG19/BUG5722
+**DEC(L.IPRN*C1.SCALING*C1.RATE,31,4) AS "BSLIPRN",*****************************:BUG19/BUG5722
+**DEC(L.AINN*C1.SCALING,31,4) AS "SLAINN",**************************************:BUG19/BUG5722
+**DEC(L.AINN*C1.SCALING*C1.RATE,31,4) AS "BSLAINN",*****************************:BUG19/BUG5722
+**DEC(L.TOTN*C1.SCALING,31,4) AS "SLTOTN",**************************************:BUG19/BUG5722
+**DEC(L.TOTN*C1.SCALING*C1.RATE,31,4) AS "BSLTOTN",*****************************:BUG19/BUG5722
+**DEC(L.ICTN*C1.SCALING,31,4) AS "SLICTN",**************************************:BUG19/BUG5722
+**DEC(L.ICTN*C1.SCALING*C1.RATE,31,4) AS "BSLICTN",*****************************:BUG19/BUG5722
+**DEC(L.IWON*C1.SCALING,31,4) AS "SLIWON",**************************************:BUG19/BUG5722
+**DEC(L.IWON*C1.SCALING*C1.RATE,31,4) AS "BSLIWON",*****************************:BUG19/BUG5722
+**DEC(L.IPNM*C1.SCALING,31,4) AS "SLIPNM",**************************************:BUG19/BUG5722
+**DEC(L.IPNM*C1.SCALING*C1.RATE,31,4) AS "BSLIPNM",*****************************:BUG19/BUG5722
+**DEC(L.PDNN*C1.SCALING,31,4) AS "SLPDNN",**************************************:BUG19/BUG5722
+**DEC(L.PDNN*C1.SCALING*C1.RATE,31,4) AS "BSLPDNN",*****************************:BUG19/BUG5722
+**DEC(L.FSCPAM*C1.SCALING,31,4) AS "SLFSCPAM",**********************************:BUG19/BUG5722
+**DEC(L.FSCPAM*C1.SCALING*C1.RATE,31,4) AS "BSLFSCPAM",*************************:BUG19/BUG5722
+**DEC(L.FPAM*C2.SCALING,31,4) AS "SLFPAM",**************************************:BUG19/BUG5722
+**DEC(L.FPAM*C2.SCALING*C2.RATE,31,4) AS "BSLFPAM",*****************************:BUG19/BUG5722
+***DEC(K.OPAM*C2.SCALING,15,4) AS "SKOPAM",**************************************:             BUG19
+***DEC(K.OPAM*C2.SCALING*C2.RATE,15,4) AS "BSKOPAM",*****************************:             BUG19
+***DEC(K.YPLN*C2.SCALING,15,4) AS "SKYPLN",**************************************:             BUG19
+***DEC(K.YPLN*C2.SCALING*C2.RATE,15,4) AS "BSKYPLN",*****************************:             BUG19
+***DEC(K.YFLN*C2.SCALING,15,4) AS "SKYFLN",**************************************:             BUG19
+***DEC(K.YFLN*C2.SCALING*C2.RATE,15,4) AS "BSKYFLN",*****************************:             BUG19
+***DEC(K.YWLN*C2.SCALING,15,4) AS "SKYWLN",**************************************:             BUG19
+***DEC(K.YWLN*C2.SCALING*C2.RATE,15,4) AS "BSKYWLN",*****************************:             BUG19
+***DEC(K.ABLN*C2.SCALING,15,4) AS "SKABLN",**************************************:             BUG19
+***DEC(K.ABLN*C2.SCALING*C2.RATE,15,4) AS "BSKABLN",*****************************:             BUG19
+***DEC(K.YPLC*C2.SCALING,15,4) AS "SKYPLC",**************************************:             BUG19
+***DEC(K.YPLC*C2.SCALING*C2.RATE,15,4) AS "BSKYPLC",*****************************:             BUG19
+***DEC(K.YFLC*C2.SCALING,15,4) AS "SKYFLC",**************************************:             BUG19
+***DEC(K.YFLC*C2.SCALING*C2.RATE,15,4) AS "BSKYFLC",*****************************:             BUG19
+***DEC(K.YWLC*C2.SCALING,15,4) AS "SKYWLC",**************************************:             BUG19
+***DEC(K.YWLC*C2.SCALING*C2.RATE,15,4) AS "BSKYWLC",*****************************:             BUG19
+***DEC(K.ABLC*C2.SCALING,15,4) AS "SKABLC",**************************************:             BUG19
+***DEC(K.ABLC*C2.SCALING*C2.RATE,15,4) AS "BSKABLC",*****************************:             BUG19
+***DEC(K.WWLN*C2.SCALING,15,4) AS "SKWWLN",**************************************:             BUG19
+***DEC(K.WWLN*C2.SCALING*C2.RATE,15,4) AS "BSKWWLN",*****************************:             BUG19
+***DEC(K.IWLN*C2.SCALING,15,4) AS "SKIWLN",**************************************:             BUG19
+***DEC(K.IWLN*C2.SCALING*C2.RATE,15,4) AS "BSKIWLN",*****************************:             BUG19
+***DEC(K.PWLN*C2.SCALING,15,4) AS "SKPWLN",**************************************:             BUG19
+***DEC(K.PWLN*C2.SCALING*C2.RATE,15,4) AS "BSKPWLN",*****************************:             BUG19
+***DEC(K.YILN*C2.SCALING,15,4) AS "SKYILN",**************************************:             BUG19
+***DEC(K.YILN*C2.SCALING*C2.RATE,15,4) AS "BSKYILN",*****************************:             BUG19
+***DEC(K.NPRAM*C2.SCALING,15,4) AS "SKNPRAM",************************************:             BUG19
+***DEC(K.NPRAM*C2.SCALING*C2.RATE,15,4) AS "BSKNPRAM",***************************:             BUG19
+***DEC(K.NDAM*C2.SCALING,15,4) AS "SKNDAM",**************************************:             BUG19
+***DEC(K.NDAM*C2.SCALING*C2.RATE,15,4) AS "BSKNDAM",*****************************:             BUG19
+***DEC(K.NCPA*C2.SCALING,15,4) AS "SKNCPA",**************************************:             BUG19
+***DEC(K.NCPA*C2.SCALING*C2.RATE,15,4) AS "BSKNCPA",*****************************:             BUG19
+***DEC(K.NLRA*C2.SCALING,15,4) AS "SKNLRA",**************************************:             BUG19
+***DEC(K.NLRA*C2.SCALING*C2.RATE,15,4) AS "BSKNLRA",****************************:BUG19/BUG5722
+**DEC(K.OPAM*C1.SCALING,31,4) AS "SKOPAM",**************************************:BUG19/BUG5722
+**DEC(K.OPAM*C1.SCALING*C1.RATE,31,4) AS "BSKOPAM",*****************************:BUG19/BUG5722
+**DEC(K.YPLN*C1.SCALING,31,4) AS "SKYPLN",**************************************:BUG19/BUG5722
+**DEC(K.YPLN*C1.SCALING*C1.RATE,31,4) AS "BSKYPLN",*****************************:BUG19/BUG5722
+**DEC(K.YFLN*C1.SCALING,31,4) AS "SKYFLN",**************************************:BUG19/BUG5722
+**DEC(K.YFLN*C1.SCALING*C1.RATE,31,4) AS "BSKYFLN",*****************************:BUG19/BUG5722
+**DEC(K.YWLN*C1.SCALING,31,4) AS "SKYWLN",**************************************:BUG19/BUG5722
+**DEC(K.YWLN*C1.SCALING*C1.RATE,31,4) AS "BSKYWLN",*****************************:BUG19/BUG5722
+**DEC(K.ABLN*C1.SCALING,31,4) AS "SKABLN",**************************************:BUG19/BUG5722
+**DEC(K.ABLN*C1.SCALING*C1.RATE,31,4) AS "BSKABLN",*****************************:BUG19/BUG5722
+**DEC(K.YPLC*C3.SCALING,31,4) AS "SKYPLC",**************************************:BUG19/BUG5722
+**DEC(K.YPLC*C3.SCALING*C3.RATE,31,4) AS "BSKYPLC",*****************************:BUG19/BUG5722
+**DEC(K.YFLC*C3.SCALING,31,4) AS "SKYFLC",**************************************:BUG19/BUG5722
+**DEC(K.YFLC*C3.SCALING*C3.RATE,31,4) AS "BSKYFLC",*****************************:BUG19/BUG5722
+**DEC(K.YWLC*C3.SCALING,31,4) AS "SKYWLC",**************************************:BUG19/BUG5722
+**DEC(K.YWLC*C3.SCALING*C3.RATE,31,4) AS "BSKYWLC",*****************************:BUG19/BUG5722
+**DEC(K.ABLC*C3.SCALING,31,4) AS "SKABLC",**************************************:BUG19/BUG5722
+**DEC(K.ABLC*C3.SCALING*C3.RATE,31,4) AS "BSKABLC",*****************************:BUG19/BUG5722
+**DEC(K.WWLN*C1.SCALING,31,4) AS "SKWWLN",**************************************:BUG19/BUG5722
+**DEC(K.WWLN*C1.SCALING*C1.RATE,31,4) AS "BSKWWLN",*****************************:BUG19/BUG5722
+**DEC(K.IWLN*C1.SCALING,31,4) AS "SKIWLN",**************************************:BUG19/BUG5722
+**DEC(K.IWLN*C1.SCALING*C1.RATE,31,4) AS "BSKIWLN",*****************************:BUG19/BUG5722
+**DEC(K.PWLN*C1.SCALING,31,4) AS "SKPWLN",**************************************:BUG19/BUG5722
+**DEC(K.PWLN*C1.SCALING*C1.RATE,31,4) AS "BSKPWLN",*****************************:BUG19/BUG5722
+**DEC(K.YILN*C1.SCALING,31,4) AS "SKYILN",**************************************:BUG19/BUG5722
+**DEC(K.YILN*C1.SCALING*C1.RATE,31,4) AS "BSKYILN",*****************************:BUG19/BUG5722
+**DEC(K.NPRAM*C1.SCALING,31,4) AS "SKNPRAM",************************************:BUG19/BUG5722
+**DEC(K.NPRAM*C1.SCALING*C1.RATE,31,4) AS "BSKNPRAM",***************************:BUG19/BUG5722
+**DEC(K.NDAM*C1.SCALING,31,4) AS "SKNDAM",**************************************:BUG19/BUG5722
+**DEC(K.NDAM*C1.SCALING*C1.RATE,31,4) AS "BSKNDAM",*****************************:BUG19/BUG5722
+**DEC(K.NCPA*C4.SCALING,31,4) AS "SKNCPA",**************************************:BUG19/BUG5722
+**DEC(K.NCPA*C4.SCALING*C4.RATE,31,4) AS "BSKNCPA",*****************************:BUG19/BUG5722
+**DEC(K.NLRA*C4.SCALING,31,4) AS "SKNLRA",**************************************:BUG19/BUG5722
+**DEC(K.NLRA*C4.SCALING*C4.RATE,31,4) AS "BSKNLRA",*****************************:BUG19/BUG5722
+  L.CPAM AS SLCPAM,                                                             :BUG5722
+  L.RAMT AS SLRAMT,                                                             :BUG5722
+  L.PSAM AS SLPSAM,                                                             :BUG5722
+  L.AWTP AS SLAWTP,                                                             :BUG5722
+  L.WTRD AS SLWTRD,                                                             :BUG5722
+  L.WTWD AS SLWTWD,                                                             :BUG5722
+  L.IWOD AS SLIWOD,                                                             :BUG5722
+  L.PWOD AS SLPWOD,                                                             :BUG5722
+  L.PDIN AS SLPDIN,                                                             :BUG5722
+  L.TOTI AS SLTOTI,                                                             :BUG5722
+  L.AIPD AS SLAIPD,                                                             :BUG5722
+  L.AITC AS SLAITC,                                                             :BUG5722
+  L.AIAP AS SLAIAP,                                                             :BUG5722
+  L.IPRD AS SLIPRD,                                                             :BUG5722
+  L.IPRM AS SLIPRM,                                                             :BUG5722
+  L.ICTD AS SLICTD,                                                             :BUG5722
+  L.AIMN AS SLAIMN,                                                             :BUG5722
+  L.ORTI AS SLORTI,                                                             :BUG5722
+  L.TCOF AS SLTCOF,                                                             :BUG5722
+  L.ACPD AS SLACPD,                                                             :BUG5722
+  L.ACDA AS SLACDA,                                                             :BUG5722
+  L.ACAJ AS SLACAJ,                                                             :BUG5722
+  L.ACAP AS SLACAP,                                                             :BUG5722
+  L.COFD AS SLCOFD,                                                             :BUG5722
+  L.COFM AS SLCOFM,                                                             :BUG5722
+  L.CFCD AS SLCFCD,                                                             :BUG5722
+  L.PDCF AS SLPDCF,                                                             :BUG5722
+  L.FWOD AS SLFWOD,                                                             :BUG5722
+  L.FCRA AS SLFCRA,                                                             :BUG5722
+  L.FSURPL AS SLFSURPL,                                                         :BUG5722
+  L.FSPLAM AS SLFSPLAM,                                                         :BUG5722
+  L.FSPLDT AS SLFSPLDT,                                                         :BUG5722
+  L.FSYUPL AS SLFSYUPL,                                                         :BUG5722
+  L.FLTI AS SLFLTI,                                                             :BUG5722
+  L.CHGA AS SLCHGA,                                                             :BUG5722
+  L.ACCH AS SLACCH,                                                             :BUG5722
+  L.FSEFUP AS SLFSEFUP,                                                         :BUG5722
+  L.FSECUP AS SLFSECUP,                                                         :BUG5722
+  L.AIPN AS SLAIPN,                                                             :BUG5722
+  L.AITN AS SLAITN,                                                             :BUG5722
+  L.AIAN AS SLAIAN,                                                             :BUG5722
+  L.IPRN AS SLIPRN,                                                             :BUG5722
+  L.AINN AS SLAINN,                                                             :BUG5722
+  L.TOTN AS SLTOTN,                                                             :BUG5722
+  L.ICTN AS SLICTN,                                                             :BUG5722
+  L.IWON AS SLIWON,                                                             :BUG5722
+  L.IPNM AS SLIPNM,                                                             :BUG5722
+  L.PDNN AS SLPDNN,                                                             :BUG5722
+  L.FSCPAM AS SLFSCPAM,                                                         :BUG5722
+  L.FPAM AS SLFPAM,                                                             :BUG5722
+  K.OPAM AS SKOPAM,                                                             :BUG5722
+  K.YPLN AS SKYPLN,                                                             :BUG5722
+  K.YFLN AS SKYFLN,                                                             :BUG5722
+  K.YWLN AS SKYWLN,                                                             :BUG5722
+  K.ABLN AS SKABLN,                                                             :BUG5722
+  K.YPLC AS SKYPLC,                                                             :BUG5722
+  K.YFLC AS SKYFLC,                                                             :BUG5722
+  K.YWLC AS SKYWLC,                                                             :BUG5722
+  K.ABLC AS SKABLC,                                                             :BUG5722
+  K.WWLN AS SKWWLN,                                                             :BUG5722
+  K.IWLN AS SKIWLN,                                                             :BUG5722
+  K.PWLN AS SKPWLN,                                                             :BUG5722
+  K.YILN AS SKYILN,                                                             :BUG5722
+  K.NPRAM AS SKNPRAM,                                                           :BUG5722
+  K.NDAM AS SKNDAM,                                                             :BUG5722
+  K.NCPA AS SKNCPA,                                                             :BUG5722
+  K.NLRA AS SKNLRA,                                                             :BUG5722
+  A8ZONE AS CUSTZONE,                                                           :
+**BJLCCY,***********************************************************************:BUG19 /*CLE106*/
+  BJLCCY,F.LAID,F.SYIN,F.PRTR,'RO' AS AMTP,                                     : /*CLE106*/
+**V_GPGLCUSL.* *****************************************************************:BUG5722
+  CGGLOB , CGCSSN , CGRNM  , CGRTN , CGICD ,                                    :BUG5722
+  CGACO , CGCNCZ , CGCOLC , CGBRCD , CGCUST , CGZONE                            :BUG5722
+  ,'00' AS PRSQ                                                                 :246676
+  , CGLCSSN, CGLRNM, CGLRTN                                                     :             CER043
+ FROM GZCLOANCL as L                                                            :
+**LEFT*JOIN*GZFCLTYFM*as*F******************************************************:BUG19/BUG5722
+***ON*F.CNUM=L.FCUS*and*F.FACT=L.FTYP*and*F.FCNO=L.FSEQ*and*F.BRCA=L.BRCA*******:BUG19/BUG5722
+**LEFT*JOIN*GZCLOANCK*as*K*ON*L.LNRF*=*K.LNRF************************************:             BUG19
+  LEFT JOIN GZFCLTYFM as F                                                      : /*CLE106*/
+   ON F.CNUM=L.FCUS and F.FACT=L.FTYP and F.FCNO=L.FSEQ and F.BRCA=L.BRCA       : /*CLE106*/
+ LEFT JOIN GZCLOANCK as K ON K.LNRF=L.LNRF AND K.RDCH=L.BRCA                    :              BUG19
+ LEFT JOIN GZSDBRCHPD ON L.BRCA = A8BRCD                                        :
+ LEFT JOIN GZSDBANKPD ON BJZONE = A8ZONE                                        :              BUG19
+*LEFT*JOIN*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCUST*=*DIGITS(L.CNUM)************:BUG1912
+*LEFT*JOIN*GPGLCUSL*V_GPGLCUSL*ON*A8ZONE*=*CGZONE*AND*CGCNUM*=*L.CNUM***********:BUG1912/BUG5722
+ LEFT JOIN GPGLCUSL ON A8ZONE = CGZONE AND CGCNUM = L.CNUM ;                    :BUG5722
+*LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=L.CCY****************************************:BUG5722
+***LEFT*JOIN*V_GLOBRATE*C2*ON*C2.CCY=L.FCCY;**************************************:            BUG19
+*LEFT*JOIN*V_GLOBRATE*C2*ON*C2.CCY=L.FCCY***************************************:BUG19/BUG5722
+*LEFT*JOIN*V_GLOBRATE*C3*ON*C3.CCY=BJLCCY***************************************:BUG19/BUG5722
+*LEFT*JOIN*V_GLOBRATE*C4*ON*C4.CCY=K.NCCY;**************************************:BUG19/BUG5722
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADLNRF    AS LNRF       USING GZCLOANCL                       :
+ * DESCRIBEFIELD PADCNUM    AS CNUM       USING GZCLOANCL                       :
+ * DESCRIBEFIELD PADFCUS    AS FCUS       USING GZCLOANCL                       :
+ * DESCRIBEFIELD PADFTYP    AS FTYP       USING GZCLOANCL                       :
+ * DESCRIBEFIELD PADFSEQ    AS FSEQ       USING GZCLOANCL                       :
+ * DESCRIBEFIELD PADLASQ    AS LASQ       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADMDST    AS MDST       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADSDST    AS SDST       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADPTYP    AS PTYP       USING GZCLOANCL                       :
+ * DESCRIBEFIELD PADNBRA    AS NBRA       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADKLNRF   AS LNRF       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADFRBC    AS FRBC       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADRDST    AS RDST       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADRPSM    AS RPSM       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADPTFC    AS PTFC       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADPTFN    AS PTFN       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADPTFT    AS PTFT       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADBRTT    AS BRTT       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADMLNR    AS MLNR       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADOLNO    AS OLNO       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADLIND    AS LIND       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADTOLN    AS TOLN       USING GZCLOANCL                       :              BUG19
+ * DESCRIBEFIELD PADRRST    AS RRST       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADRPST    AS RPST       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADRROB    AS RROB       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADRROC    AS RROC       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADRPOB    AS RPOB       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD PADRPOC    AS RPOC       USING GZCLOANCK                       :              BUG19
+ * DESCRIBEFIELD FLDDAT     AS DDAT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLVDAT     AS VDAT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLMDAT     AS MDAT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLNRPD     AS NRPD       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLRLDT     AS RLDT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLNROD     AS NROD       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLNIDT     AS NIDT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLIBDT     AS IBDT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLSLID     AS SLID       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLDLRC     AS DLRC       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLIACD     AS IACD       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLRBDT     AS RBDT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLORED     AS ORED       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLLCD      AS LCD        USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLORMD     AS ORMD       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLOMDT     AS OMDT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLNIPD     AS NIPD       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLNMDT     AS NMDT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLFCTD     AS FCTD       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLLRLD     AS LRLD       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLLMCD     AS LMCD       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLOIDT     AS OIDT       USING GZCLOANCL                       :
+ * DESCRIBEFIELD FLFRPD     AS FRPD       USING GZCLOANCL                       :
+***DESCRIBEFIELD*FKORED*****AS*ORED*******USING*GZCLOANCK***********************:            BUG3408
+ * DESCRIBEFIELD FKLCD      AS LCD        USING GZCLOANCK                       :
+ * DESCRIBEFIELD SLCPAM     AS CPAM       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLCPAM****AS*CP*M*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLRAMT     AS RAMT       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLRAMT****AS*RAMT*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLPSAM     AS PSAM       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLPSAM****AS*PSAM*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLAWTP     AS AWTP       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAWTP****AS*AWTP*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLWTRD     AS WTRD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLWTRD****AS*WTRD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLWTWD     AS WTWD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLWTWD****AS*WTWD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLIWOD     AS IWOD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLIWOD****AS*IWOD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLPWOD     AS PWOD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLPWOD****AS*PWOD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLPDIN     AS PDIN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLPDIN****AS*PDIN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLTOTI     AS TOTI       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLTOTI****AS*TOTI*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLAIPD     AS AIPD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAIPD****AS*AIPD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLAITC     AS AITC       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAITC****AS*AITC*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+***DESCRIBEFIELD*SLTFEP*****AS*TFEP*******USING*GZCLOANCL***********************:            BUG3408
+***DESCRIBEFIELD*BSLTFEP****AS*TFEP*******USING*GZCLOANCL**(BASECCY)************:            BUG3408
+ * DESCRIBEFIELD SLAIAP     AS AIAP       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAIAP****AS*AIAP*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLIPRD     AS IPRD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLIPRD****AS*IPRD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLIPRM     AS IPRM       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLIPRM****AS*IPRM*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLICTD     AS ICTD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLICTD****AS*ICTD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLAIMN     AS AIMN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAIMN****AS*AIMN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLORTI     AS ORTI       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLORTI****AS*ORTI*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLTCOF     AS TCOF       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLTCOF****AS*TCOF*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLACPD     AS ACPD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLACPD****AS*ACPD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLACDA     AS ACDA       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLACDA****AS*ACDA*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLACAJ     AS ACAJ       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLACAJ****AS*ACAJ*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLACAP     AS ACAP       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLACAP****AS*ACAP*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLCOFD     AS COFD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLCOFD****AS*COFD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLCOFM     AS COFM       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLCOFM****AS*COFM*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLCFCD     AS CFCD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLCFCD****AS*CFCD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLPDCF     AS PDCF       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLPDCF****AS*PDCF*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFWOD     AS FWOD       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFWOD****AS*FWOD*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFCRA     AS FCRA       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFCRA****AS*FCRA*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFSURPL   AS FSURPL     USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFSURPL**AS*FSURPL*****USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFSPLAM   AS FSPLAM     USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFSPLAM**AS*FSPLAM*****USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFSPLDT   AS FSPLDT     USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFSPLDT**AS*FSPLDT*****USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFSYUPL   AS FSYUPL     USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFSYUPL**AS*FSYUPL*****USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFLTI     AS FLTI       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFLTI****AS*FLTI*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLCHGA     AS CHGA       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLCHGA****AS*CHGA*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLACCH     AS ACCH       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLACCH****AS*ACCH*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFSEFUP   AS FSEFUP     USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFSEFUP**AS*FSEFUP*****USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFSECUP   AS FSECUP     USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFSECUP**AS*FSECUP*****USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLAIPN     AS AIPN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAIPN****AS*AIPN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLAITN     AS AITN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAITN****AS*AITN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLAIAN     AS AIAN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAIAN****AS*AIAN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLIPRN     AS IPRN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLIPRN****AS*IPRN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLAINN     AS AINN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLAINN****AS*AINN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLTOTN     AS TOTN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLTOTN****AS*TOTN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLICTN     AS ICTN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLICTN****AS*ICTN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLIWON     AS IWON       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLIWON****AS*IWON*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLIPNM     AS IPNM       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLIPNM****AS*IPNM*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLPDNN     AS PDNN       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLPDNN****AS*PDNN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFSCPAM   AS FSCPAM     USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFSCPAM**AS*FSCPAM*****USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SLFPAM     AS FPAM       USING GZCLOANCL                       :
+***DESCRIBEFIELD BSLFPAM****AS*FPAM*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKOPAM     AS OPAM       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKOPAM****AS*OPAM*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKYPLN     AS YPLN       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKYPLN****AS*YPLN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKYFLN     AS YFLN       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKYFLN****AS*YFLN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKYWLN     AS YWLN       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKYWLN****AS*YWLN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKABLN     AS ABLN       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKABLN****AS*ABLN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKYPLC     AS YPLC       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKYPLC****AS*YPLC*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKYFLC     AS YFLC       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKYFLC****AS*YFLC*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKYWLC     AS YWLC       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKYWLC****AS*YWLC*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKABLC     AS ABLC       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKABLC****AS*ABLC*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKWWLN     AS WWLN       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKWWLN****AS*WWLN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKIWLN     AS IWLN       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKIWLN****AS*IWLN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKPWLN     AS PWLN       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKPWLN****AS*PWLN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKYILN     AS YILN       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKYILN****AS*YILN*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKNPRAM    AS NPRAM      USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKNPRAM***AS*NPRAM******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKNDAM     AS NDAM       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKNDAM****AS*NDAM*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKNCPA     AS NCPA       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKNCPA****AS*NCPA*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD SKNLRA     AS NLRA       USING GZCLOANCK                       :
+***DESCRIBEFIELD BSKNLRA****AS*NLRA*******USING*GZCLOANCL**(BASECCY)************:BUG5722
+ * DESCRIBEFIELD CUSTZONE   AS A8ZONE     USING GZSDBRCHPD                      :              BUG19
+ * DESCRIBEEND                                                                  :
+/*******************************************************************************/
+ ;                                                                              :
+  label on table     **********/**********                                      :
+   is 'Midas GZ Rollovers                                ';                     :
+                                                                                :

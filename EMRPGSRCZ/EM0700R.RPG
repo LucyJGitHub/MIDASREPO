@@ -1,0 +1,740 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM EMCEX Update for Retail (Next Day Setup)')    *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  EXPOSURE MANAGEMENT MODULE                        *
+     F*                                                               *
+     F*  EM0700R - Retail Exposure Update At Next Day Setup           *
+     F*                                                               *
+     F*  Function: This program updates the on-line exposure file     *
+     F*    (I/C    (EMCEXX2) for retail accounts for each customer as *
+     F*    INIT)   At the close of business on the next working day.  *
+     F*                                                               *
+     F*            The file EMCEXX2 will be maintained during the     *
+     F*            following input cycle and used in the Customer     *
+     F*            Limit Exposure Availability Enquiry (EM0301).      *
+     F*                                                               *
+     F*            This program also updates the I/C Exposure file    *
+     F*            header (EMCEXX1) with the journal sequence number  *
+     F*            and journal receiver name which will be used to    *
+     F*            update the on-line exposure file during the        *
+     F*            following input cycle.                             *
+     F*                                                               *
+     F*            The file ACCNT is read to pick up all records      *
+     F*            relating to a particular customer.                 *
+     F*                                                               *
+     F*            The cleared balance is converted to the Exposure   *
+     F*            Management limit currency.                         *
+     F*                                                               *
+     F*            If the account has a facility, then the balance is *
+     F*            added to the lending exposure/offset on EMCEXX2.   *
+     F*                                                               *
+     F*            If the account does not have a facility, the       *
+     F*            balance is added to the retail exposure on EMCEXX2 *
+     F*            after applying the exposure scaling factor from    *
+     F*            EMEXSCL1.                                          *
+     F*                                                               *
+     F*            If the account does not have a facility, and has an*
+     F*            overdraft line, the overdraft line is converted to *
+     F*            the exposure management limit currency and added to*
+     F*            the Retail Granted field after applying the        *
+     F*            exposure scaling factor.                           *
+     F*                                                               *
+     F*                                                               *
+     F*  Called By: EMC09                                             *
+     F*                                                               *
+     F*  Calls: None                                                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029791           Date 25Aug14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CTI002             Date 23Sep98               *
+      *                 CCB002             Date 20Aug96               *
+     F*                 074776             DATE 14OCT94               *
+     F*                 051673             DATE 07MAR94               *
+     F*                 042733             DATE 27OCT93               *
+     F*                 046050             DATE 30OCT92               *
+     F*                 E26193             DATE 10JUN91               *
+     F*                 S01332             DATE 07JUN91               *
+     F*                 S01117             DATE 24/10/89              *
+     F*                 S01129             DATE 24/11/87              *
+     F*                 S01128             DATE 21/05/87              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD029791 - Retail Exposure is not updated correctly.         *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CTI002 - Recompiled : File EMCEXX2  changed                  *
+     F*  CCB002 - COB Performance Enhancements                        *
+     F*           Access now via access object                        *
+     F*           Change MEMOS processing to use access objects.      *
+     F*  074776 - Reset *IN20 after currency accessed for conversion  *
+     F*  051673 - The Multiply/Divid Indicator MDIN carried from      *
+     F*           limit currency when determined incoming CCY'S spot  *
+     F*           rate                                                *
+     F*  042733 - Pgm reads through ACCNTAB until it finds a live     *
+     F*           record before checking the customer - this  causes  *
+     F*           a problem when many accounts are closed.            *
+     F*  046050 - Incorrect program referenced on database error      *
+     F*  E26193 - REDEFINED XSPOT AS 13(8) AS OPPOSED TO 13(5) FOR    *
+     F*           GREATER ACCURACY WITH CURRENCY CONVERSION.          *
+     F*  S01332 - EXPOSURE MANAGEMENT RELEASE 10 ENHANCEMENTS.        *
+     F*  S01117 - RELEASE TEN MULTIBRANCHING                          *
+     F*  S01129 - SECURITIES TRADING RELEASE 2                        *
+     F*  S01128 - Printer file MPRINT changed to EM0700P1.            *
+     F*           Report Title chnged to EM0700R.                     *
+     F*  S01128 - Field JNSQ - Journal Sequence No.- in EMCEXX1       *
+     F*           renamed to JOSEQN, as it exists in the FRF.         *
+     F*  S01128 - UPDATE EMCEXX1 WITH JOURNAL RECEIVER NAME           *
+     F*           AND SEQUENCE NUMBER                                 *
+     F*  S01128 - MAINTAIN 2 TOTALS INSTEAD OF 1 TOTAL FOR EACH       *
+     F*           OF EXPOSURE AND OFFSET                              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***ACCNT** IF  F     400 15AI     2 DISK                           U1                   CGL029
+     FACCNT   IF  F     573 18AI     2 DISK                                                   CGL029
+     F*****  MEMOS   IF  F      40            DISK                    U1  CCB002
+     F*****  TABLE   IF  F      96 12AI     2 DISK                        S01129
+     FTABEM   IF  E           K        DISK                               S01129
+     F            TABTB11F                          KIGNORE               S01129
+     F            TABTB36F                          KIGNORE               S01129
+     F            TABTE10F                          KIGNORE               S01129
+     F            TABLETHF                          KIGNORE               S01129
+     F            TABLETIF                          KIGNORE               S01129
+     F            TABLETNF                          KIGNORE               S01129
+     F            TABLETTF                          KIGNORE               S01129
+     FEMEXSCL1IF  E           K        DISK                               S01332
+0019 F*****  EMCEX   UP  F     128  6AI     2 DISK                        S01128
+0019 F*****EMCEX   UP  F     150  6AI     2 DISK               S01129     S01128
+0019 FEMCEX   UP  F     174  6AI     2 DISK                               S01129
+     F***MPRINT  O   F     132            PRINTER                         S01128
+     F*M0700P1O***F     132            PRINTER                            S01117
+     FEM0700AUO   F     132            PRINTER                            S01117
+     F/COPY WNCPYSRC,EM0700RF01
+     F*                                                                  *
+0022 F*   INDICATORS USED                                                *
+0023 F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+0024 F**01***************EMDEX - DETAIL RECORD                           *S01332
+0025 F**02***************EMTES - DEALING EVENTS RECORD                   *S01332
+0026 F**03***************     - SYNDICATED LOAN EVENT RECORD             *S01332
+0027 F**04***************     - CUSTOMER LENDING RECORD                  *S01332
+0028 F**05***************     - TRAILER RECORD                           *S01332
+0029 F**06***************EMLEE - DETAIL RECORD                           *S01332
+0030 F**07***************      - TRAILER RECORD                          *S01332
+0031 F* 08               ACCNT - DETAIL RECORD OF ACCOUNT TYPE RETAIL    *
+     F* 09               EMCEX - HEADER RECORD                           *S01128
+     F*   10             EMCEX - DETAIL RECORD                           *
+     F****11*************EMCEXX1 CHAIN FAILED                       S01128S01332
+0032 F*   20             MULTIPLY/DIVIDE INDICATOR ZERO                  *
+0033 F********40*********FX UPDATE OF EXPOSURE                           *S01332
+0034 F********41*********MM UPDATE OF EXPOSURE/OFFSETTING BALANCE        *S01332
+0035 F********42*********LOANS UPDATE OF EXPOSURE/OFFSETTING BALANCE     *S01332
+0036 F********44*********EVENT RECORD WILL UPDATE EXPOSURES FILE         *S01332
+0037 F********45*********ADD EVENT AMOUNT TO EXPOSURE                    *S01332
+0038 F********46*********SUBTRACT EVENT AMOUNT FROM EXPOSURE             *S01332
+0039 F********47*********ADD EVENT AMOUNT TO OFF-SETTING BALANCE         *S01332
+0040 F********48*********SUBTRACT EVENT AMOUNT FROM OFF-SETTING BALANCE  *S01332
+0041 F*       50         NOT FIRST CYCLE                                 *
+0042 F********51*********TRAILER RECORD OF TYPE 'L','D','C' FOUND        *S01332
+0043 F*       52         ACCOUNT RECORDS FOUND FOR A CURRENT CUSTOMER    *
+0044 F*       53         ACCOUNT FOUND IS A RETAIL ACCOUNT               *
+     F*       57         FACILITY TYPE ON ACCNT RECORD NOT = ZERO        *S01332
+     F*       58         FACILITY TYPE ON ACCNT RECORD = ZERO            *S01332
+0045 F*       61         EVENT AMOUNT IN LIMIT CURRENCY IS NEGATIVE      *
+0045 F*       72         SCALING RECORD EXISTS FOR RETAIL                *S01332
+0046 F********85*********FILE CONTROLS ON EMTES OUT OF BALANCE           *S01332
+0047 F********86*********FILE CONTROLS ON EMLEE OUT OF BALANCE           *S01332
+0048 F*       87         READ OF ACCNT FAILED                            *
+0049 F*       89         CHAIN FAILED                                    *
+0050 F*       98         DATE FORMAT DDMMYY                              *
+0051 F*       99         DATABASE ERROR FOUND                            *
+0052 F*                                                                  *
+0053 F*************L1****CUSTOMER CHANGED                                *S01332
+0054 F*************M1****CUSTOMER NUMBER ON EMDE4,EMTES EQUAL            *S01332
+0055 F*            U1    RETAIL MODULE PRESENT IN THE SYSTEM             *
+0056 F*************U2****CUSTOMER LENDING PRESENT IN THE SYSTEM          *S01332
+0057 F*            U7,U8 DATABASE ERROR FOUND                            *
+0058 F*************U8****FILE CONTROLS OUT OF BALANCE                    *S01332
+0059 F*                                                                  *
+0060 F**
+ 061 F********************************************************************
+0062 F/EJECT
+     E                    CPY@    1   1 80               COPYRIGHT STATEMENT
+0063 E                    POWER   1   7  7 0             POWERS OF TEN
+ 067 E***************************************************
+ 068 I***************************************************
+0105 I**  EMCEX - HEADER RECORD                                           EM0100
+0106 IEMCEX   NS  09   1 CH                                               EM0100
+0111 I                                        8   8 MDI                   E81129
+     I                                        9  18 JNRCP                 E81129
+     I                                       19  28 JNRCN                 E81129
+     I****                                P  29  340JNSQ                  S01128
+     I****                                P  29  340JOSEQN                S01128
+     I                                       29  380JOSEQN                S01128
+0120 I**                                                                  EM0100
+0131 I**  EMCEX    MASTER FILE - DETAIL RECORD
+0132 IEMCEX   NS  10   1 CD
+0123 I*****                                        2   7 MCUN
+0124 I*****                                    P   8  150MFXE
+0125 I*****                                    P  16  230MFXB
+0126 I*****                                    P  24  310MMME
+0127 I*****                                    P  32  390MMMB
+0128 I*****                                    P  40  470MLEE
+0129 I*****                                    P  48  550MLEB
+0130 I*****                                    P  56  630MREE
+0131 I*****                                    P  64  710MREB
+0132 I*****                                    P 122 1240LCD
+0133 I*****                                    P 126 1280MXPT
+0123 I                                        2   7 MCUN
+0124 I                                    P   8  150MFXE
+0125 I                                    P  16  230MFXB
+0126 I                                    P  24  310MMME
+0127 I                                    P  32  390MMMB
+0128 I                                    P  40  470MLEG
+0129 I                                    P  48  550MLEE
+0130 I                                    P  56  630MLEB
+0131 I                                    P  64  710MLAE
+0131 I                                    P  72  790MLAB
+0131 I                                    P  80  870MREG
+0131 I                                    P  88  950MREE
+0131 I                                    P  96 1030MREB
+0125 I                                    P 104 1110MLCG                  S01129
+0126 I                                    P 112 1190MLCA                  S01129
+0127 I                                    P 120 1270MLCB                  S01129
+0128 I                                    P 128 1350MSTE                  S01129
+0129 I                                    P 136 1430MSTB                  S01129
+0130 I                                    P 144 1510MSIE                  S01129
+0131 I                                    P 152 1590MSCE                  S01129
+0131 I                                    P 160 1670MSPO                  S01129
+0131 I                                    P 168 1700LCD                   S01129
+0131 I                                      171 171 CHTP                  S01129
+0131 I                                    P 172 1740MXPT                  S01129
+     I*                                                                   S01129
+0132 I***                                 P 144 1460LCD                   S01129
+0133 I***                                 P 148 1500MXPT                  S01129
+0138 I**
+0139 I**  - CATCHALL
+0140 I        NS
+ 068 I********
+0131 I**  ACCOUNTS MASTER FILE - DETAIL RECORD
+0132 IACCNT   NS  08   1 CD
+0133 I                                        2   7 CNUM
+0134 I                                        8  10 CCY
+     I**********                             11  140ACOD                               CCB002 CGL029
+     I                                       11  140ACODQQ                                    CGL029
+     I                                       15  160ACSQ                  CCB002
+     I/COPY WNCPYSRC,EM0700RI01
+     I                                       23  25 BRCA                  CCB002
+0135 I                                       26  26 ATYP
+0136 I                                    P  64  710CLBL
+     I                                    P 202 2070ODLN                  S01128
+     I                                      213 2150FACT
+0137 I                                    P 239 2410RRNM                  S01128
+     I**********                            401 4100ACOD                             CGL029 MD029791
+     I                                      554 5630ACOD                                    MD029791
+0138 I**
+0139 I**  - CATCHALL
+0140 I        NS
+ 141 I********
+0142 I****MEMOS*FILE - DETAIL RECORD                                      CCB002
+0143 I***********MEMOS   NS       1 CD                                    CCB002
+0144 I***********                            17  310CLBL                  CCB002
+0145 I**
+0146 I**  - CATCHALL
+0147 I        NS
+ 148 I**********
+0149 I*****TABLE FILE - ICDR1 RECORD                                      S01129
+0150 I****TABLE   NS       2 C0   3 C1  12 C1                             S01129
+0151 I****   AND      13 C0                                               S01129
+0152 I****                                    1   1 RECI                  S01129
+0153 I****                                   14  66 TITL                  S01129
+0154 I****                                   67  67 DATF                  S01129
+0155 I****                                P  77  790RUND                  S01129
+0156 I****                                   80  86 RUNA                  S01129
+0157 I****                                                                S01129
+0158 I**** - ICDR2 RECORD                                                 S01129
+0159 I****    NS       2 C0   3 C1  12 C1                                 S01129
+0160 I****   AND      13 C1                                               S01129
+0161 I****                                    1   1 RECI                  S01129
+0162 I****                                   69  71 LCCY                  S01129
+0163 I****                                                                S01129
+0164 I**** - CURRENCIES DETAIL RECORD                                     S01129
+0165 I****    NS       2 C2   3 C0  13 C1                                 S01129
+0166 I****                                    1   1 RECI                  S01129
+0167 I****                                P  28  348SPOT                  S01129
+0168 I****                                   38  380CDP                   S01129
+0169 I****                                   86  860MDIN            20    S01129
+0170 I****                                                                S01129
+0171 I**** CATCHALL                                                       S01129
+0172 I****    NS                                                          S01129
+0173 I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+0174 I** DATA STRUCTURE FOR DATABASE ERRORS
+0175 ILDA        UDS                            256
+0176 I**********                            134 138 DBFILE                S01117
+0177 I**********                            139 167 DBKY                  S01117
+0178 I**********                            168 175 DBPGM                 S01117
+0179 I**********                            176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKY                  S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I@DSFDY    E DSDSFDY                                                 CCB002
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               CCB002
+     I*                                                                   CCB002
+     IDSMEMS    E DSMEMOS                                                 CCB002
+     I** External data structure for MEMOS Details                        CCB002
+     I** Renamed fields in PF/MEMOS                                       CCB002
+     I              RECI                            MERECI                CCB002
+     I              CNUM                            MECNUM                CCB002
+     I              CCY                             MECCY                 CCB002
+     I              ACOD                            MEACOD                CCB002
+     I              ACSQ                            MEACSQ                CCB002
+     I              BRCA                            MEBRCA                CCB002
+     I              ACNO                            MEACNO                CCB002
+     IUMEMER      DS                                                      CCB002
+      ** Data structure for database error on call to AOMEMSR0.           CCB002
+     I**********                              1   60U0CNUM                             CCB002 CSD027
+     I                                        1   6 U0CNUM                                    CSD027
+     I                                        7   9 U0CUCD                CCB002
+     I                                       10  190U0ACCD                                    CGL029
+     I                                       20  210U0ACSQ                                    CGL029
+     I                                       22  24 U0BRCA                                    CGL029
+     I**********                             10  130U0ACCD                             CCB002 CGL029
+     I**********                             14  150U0ACSQ                             CCB002 CGL029
+     I**********                             16  18 U0BRCA                             CCB002 CGL029
+0180 I/EJECT
+ 213 C********************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C**                                                                  S01128
+     C           *ENTRY    PLIST                                          S01128
+     C                     PARM           SEQNO  100                      S01128
+     C                     PARM           JRNRC  10                       S01128
+0742 C**                                                                  S01128
+0182 C** FIRST CYCLE CALCULATIONS
+0183 C  N50                EXSR FIRST
+0184 C   99                SETON                     U7U8LR
+0186 C**
+ 213 C********************************************************************
+0214 C** IF CUSTOMER CHANGED, PROCESS END OF CUSTOMER DETAILS
+0215 C**  IF RETAIL PRESENT DO RETAIL PROCESSING FOR THE CUSTOMER
+0216 C   U1 10             EXSR RETAIL
+0217 C**
+ 213 C********************************************************************
+0226 C/EJECT
+ 227 C********************************************************************
+0228 C**
+0229 C**   FIRST  S.R.  TO PERFORM FIRST CYCLE CALCULATIONS
+0230 C**
+0231 C           FIRST     BEGSR                           ** FIRST  **
+     C                     SETON                     50
+0234 C***********          MOVE 'EM0700  'DBPGM                           046050
+     C                     MOVE 'EM0700R 'DBPGM                           046050
+     C**                                                                  S01128
+     C** IF EMCEX HEADER NOT FOUND, DATABASE ERROR                        S01128
+     C  N09                Z-ADD15        DBASE            ** DBASE 15**  S01128
+     C**N09******          MOVE '000000'  DBKY                      S01128S01332
+     C  N09                MOVE *BLANKS   DBKY                            S01332
+     C  N09                MOVE 'EMCEX'   DBFILE                          S01128
+     C  N09                SETON                     U7U899               S01128
+     C   99                GOTO ENDF                                      S01128
+     C****                 Z-ADDSEQNO     JNSQ                            S01128
+     C                     Z-ADDSEQNO     JOSEQN                          S01128
+     C                     MOVE JRNRC     JNRCN                           S01128
+0232 C**
+0233 C** SET PROGRAM NAME ETC
+0235 C                     MOVE 'TABLE'   DBFILE
+0236 C**
+0237 C** GET ICDR1 RECORD FROM TABLE FILE
+0238 C                     EXSR ZSYSTM
+0239 C   99                Z-ADD1         DBASE            ** DBASE1 **
+0240 C   99                MOVE ZTABKY    DBKY
+0241 C   99                GOTO ENDF
+0242 C**
+0243 C****GET ICDR2 RECORD FROM TABLE FILE                                S01129
+0244 C****                 MOVE '  11'    ZTABKY                          S01129
+0245 C****       ZTABKY    CHAINTABLE                99    ON=NOT THERE   S01129
+     C** GET EXPOSURE MANAGEMENT RECORD FROM TABLE FILE                   S01129
+     C                     MOVE '  95'    ZTABKY                          S01129
+     C           ZTABKY    CHAINTABEM                99    ON=NOT THERE   S01129
+0246 C  N99      RECI      COMP 'D'                  9999  ON=NOT LIVE REC
+0247 C   99                Z-ADD2         DBASE            ** DBASE2 **
+0248 C   99                MOVE ZTABKY    DBKY
+0249 C   99                GOTO ENDF
+0250 C**
+0251 C** READ LIMITS BASE CURRENCY RECORD
+0252 C                     MOVEL'20'      ZTABKY
+0253 C                     MOVELLCCY      WORK1   4
+0254 C                     MOVE '1'       WORK1
+0255 C                     MOVE WORK1     ZTABKY
+0256 C****       ZTABKY    CHAINTABLE                99    ON=NOT THERE   S01129
+0256 C           ZTABKY    CHAINTABEM                99    ON=NOT THERE   S01129
+0257 C  N99      RECI      COMP 'D'                  9999  ON=NOT LIVE REC
+0258 C   99                Z-ADD3         DBASE            ** DBASE3 **
+0259 C   99                MOVE ZTABKY    DBKY
+0260 C   99                GOTO ENDF
+     C*                                                                   S01129
+     C* SET INDICATOR IF MDIN IS ZERO                                     S01129
+     C*                                                                   S01129
+     C           MDIN      IFEQ 0                                         S01129
+     C                     SETON                     20                   S01129
+     C                     END                                            S01129
+0261 C**
+0262 C** STORE LIMITS CURRENCY SPOT RATE AND DECIMAL PLACES
+0263 C                     Z-ADDCDP       LCDP    10
+0264 C                     Z-ADDSPOT      LSPOT  138
+0265 C   20      1         DIV  SPOT      LSPOT
+0277 C**
+0278 C** SET UP WORK FIELD AS ZEROS
+0279 C                     Z-ADD0         ZERO5   50
+0277 C**
+0278 C** SET UP ACCUMULATOR FOR EMCEX
+0279 C                     Z-ADD0         EMCEXR  50
+0286 C**
+      *                                                                   S01332
+      ** If scaling record exists for Retail obtain scaling factor.       S01332
+      *                                                                   S01332
+     C           'RE'      CHAINEMEXSCL1             72                   S01332
+      *                                                                   S01332
+     C           *IN72     IFEQ '1'                        B1             S01332
+     C                     MOVE 'N'       @SCALE  1                       S01332
+     C                     ELSE                            X1             S01332
+     C                     MOVE 'Y'       @SCALE                          S01332
+     C                     Z-ADDEKPR1P    @PERCT  30                      S01332
+     C                     END                             E1             S01332
+      *                                                                   S01332
+     C/COPY WNCPYSRC,EM0700RC04
+0287 C           ENDF      ENDSR                           ** ENDF TAG **
+0288 C**
+0289 C/EJECT
+ 290 C********************************************************************
+0472 C**
+ 473 C********************************************************************
+0474 C**
+0475 C**   CCYCON  S.R.  TO CALCULATE EVENT AMOUNT IN TERMS OF LIMIT CCY
+0476 C**              THE CONVERTED BALANCE IS IN CONBAL
+0477 C**         61 - ON IF CONVERTED BALANCE IS NEGATIVE
+0478 C**     FIELDS USED - AMOUNT = EVENT AMOUNT
+0479 C**                 - CURR = EVENT CURRENCY
+0480 C**     FIELD OUTPUT - CONBAL = CONVERTED AMOUNT
+0481 C**
+0482 C           CCYCON    BEGSR                           ** CCYCON **
+0483 C**
+0484 C** ACCESS EVENT CURRENCY RECORD FOR SPOT RATE
+0485 C                     MOVE *BLANK    ZTABKY
+0486 C                     MOVEL'20'      ZTABKY
+0487 C                     MOVELCURR      WORK1
+0488 C                     MOVE '1'       WORK1
+0489 C                     MOVE WORK1     ZTABKY
+0490 C****       ZTABKY    CHAINTABLE                99                   S01129
+0490 C           ZTABKY    CHAINTABEM                99                   S01129
+0491 C  N99      RECI      COMP 'D'                  9999
+0492 C**
+0493 C** IF RECORD NOT FOUND, DATABASE ERROR
+0494 C   99                MOVE ZTABKY    DBKY
+0495 C   99                Z-ADD4         DBASE            ** DBASE 4 **
+0496 C   99                SETON                     U7U8LR
+0497 C   99                GOTO ENDCCY
+     C*                                                                   074776
+     C* SET INDICATOR IF MDIN IS ZERO                                     074776
+     C*                                                                   074776
+     C           MDIN      IFEQ 0                                         074776
+     C                     SETON                     20                   074776
+     C                     END                                            074776
+0498 C**
+0499 C** CALCULATE X RATE
+0500 C**
+     C*                                                                   051673
+     C** Set spot rate according to MDIN                                  051673
+     C*                                                                   051673
+     C           MDIN      IFEQ 0                                         051673
+0501 C***20******1         DIV  SPOT      SPOT                            051673
+     C           1         DIV  SPOT      SPOT                            051673
+     C                     END                                            051673
+0502 C***********SPOT      DIV  LSPOT     XSPOT  135                      E26193
+0502 C           SPOT      DIV  LSPOT     XSPOT  138                      E26193
+0503 C**
+0504 C** SET UP EXPONENT
+0505 C**
+0506 C           CDP       ADD  1         N       10
+0507 C           LCDP      ADD  1         M       10
+0508 C           1         DIV  POWER,N   DECP   138H
+0509 C** CALCULATE AMOUNT TO BE OUTPUT/ACCUM.
+0510 C**
+0511 C           AMOUNT    MULT DECP      AMOUNT
+0512 C           AMOUNT    MULT XSPOT     CONBAL 150   61
+0513 C**
+0514 C** DO NOT MULTIPLY BY POWER ARRAY FOR WHOLE UNITS
+0515 C**         AMOUNT    MULT POWER,M   CONBAL 150   61
+0516 C**
+0517 C           ENDCCY    ENDSR
+0518 C/EJECT
+ 519 C********************************************************************
+0520 C**
+0521 C**   RETAIL S.R.  TO CALCULATE THE RETAIL EXPOSURE FOR A CUSTOMER
+0522 C**
+0523 C           RETAIL    BEGSR                           ** RETAIL **
+0524 C   10                ADD  1         EMCEXR
+     C                     Z-ADD0         REBAL
+     C                     Z-ADD0         REEXP
+     C*
+     C                     Z-ADD0         RABAL                           S01128
+     C                     Z-ADD0         RAEXP                           S01128
+     C                     Z-ADD0         RGBAL  150                      S01128
+0524 C**
+0525 C** SET LOWER LIMITS TO READ ACCOUNT MASTER
+0526 C                     MOVE *BLANK    ACCKY  15
+0527 C                     MOVELMCUN      ACCKY
+0528 C           ACCKY     SETLLACCNT
+0529 C**
+0530 C           RETTAG    TAG                             ** RETTAG TAG *
+0531 C**
+     C                     SETOF                     0887
+0532 C                     READ ACCNT                    87 ON IF END FILE
+     C*****************************************************************   042733
+     C***IF*RECORD*OTHER*THAN*TYPE*08,*IGNORE:*LOOP*BACK*TO*READ*NEXT**   042733
+     C**N87N08***          GOTO RETTAG                                    042733
+     C*                                                                   042733
+     C** When closed account read, check customer nbr to see if next      042733
+     C** record should be read.                                           042733
+     C*                                                                   042733
+     C           *IN87     IFEQ '0'                                       042733
+     C           *IN08     ANDEQ'0'                                       042733
+     C           CNUM      ANDEQMCUN                                      042733
+     C                     GOTO RETTAG                                    042733
+     C                     END                                            042733
+     C**
+0533 C                     SETOF                     5253
+     C*
+0533 C                     SETOF                     5758                 S01128
+0534 C**
+0535 C** IF A RECORD READ, CHECK THE RECORD IS FOR THE
+0536 C** CURRENT CUSTOMER, AND IS A RETAIL ACCOUNT
+0537 C  N87 08   CNUM      COMP MCUN                     52
+0538 C   52      ATYP      COMP 'R'                      53
+     C   52 53   FACT      COMP 0                    57575857=>NON A/AC   S01128
+0539 C**
+0540 C** IF A RETAIL ACCOUNT, GET CLEARED BALANCE FROM MEMOS FILE
+0541 C***53******RRNM      CHAINMEMOS                89     ON IF FAILED  CCB002
+     C/COPY WNCPYSRC,EM0700RC01
+      *                                                                   CCB002
+      ** If Retail account                                                CCB002
+     C           *IN53     IFEQ *ON                                       CCB002
+      *                                                                   CCB002
+      ** Call Access Object AOMEMSR0                                      CCB002
+     C                     MOVE CNUM      W0CNUM                          CCB002
+     C                     CALL 'AOMEMSR0'                                CCB002
+     C                     PARM *BLANKS   W0RTCD  7        I:Return code  CCB002
+     C                     PARM '*KEY   ' W0OPTN  7        O:Option       CCB002
+     C                     PARM 0         W0RETL 100       O:Retail A/C NoCCB002
+     C**********           PARM           W0CNUM  60       O:Customer No.              CCB002 CSD027
+     C                     PARM           W0CNUM  6        O:Customer No.                     CSD027
+     C                     PARM CCY       W0CUCD  3        O:Currency     CCB002
+     C**********           PARM ACOD      W0ACCD  40       O:Account Code              CCB002 CGL029
+     C                     PARM ACOD      W0ACCD 100                                          CGL029
+     C                     PARM ACSQ      W0ACSQ  20       O:Account Seq. CCB002
+     C                     PARM BRCA      W0BRCA  3        O:Branch       CCB002
+     C           DSMEMS    PARM DSMEMS    @DSFDY                          CCB002
+      *                                                                   CCB002
+      ** If valid record                                                  CCB002
+     C           W0RTCD    IFEQ '       '                                 CCB002
+     C                     Z-ADDCLBLN     CLBL                            CCB002
+     C                     ENDIF                                          CCB002
+      *                                                                   CCB002
+     C                     ENDIF                                          CCB002
+0542 C**
+0543 C** CONVERT EVENT AMOUNT TO LIMITS CURRENCY AND APPLY TO TOTALS
+     C/COPY WNCPYSRC,EM0700RC05
+0544 C   53                Z-ADDCLBL      AMOUNT 130
+     C/COPY WNCPYSRC,EM0700RC02
+0545 C   53                MOVE CCY       CURR    3
+0546 C   53                EXSR CCYCON
+     C*****   53 61             SUB  CONBAL    REBAL  150                 S01128
+     C*****   53N61             ADD  CONBAL    REEXP  150                 S01128
+     C   53 61 57          SUB  CONBAL    RABAL  150        57= NON A/C   S01128
+     C   53N61 57          ADD  CONBAL    RAEXP  150                      S01128
+     C/COPY WNCPYSRC,EM0700RC03
+      *                                                                   S01332
+      ** If retail exposure,scaling applies,and amount ne 0 then scale.   S01332
+      *                                                                   S01332
+     C           @SCALE    IFEQ 'Y'                         B1            S01332
+     C           *IN53     ANDEQ'1'                                       S01332
+     C           *IN58     ANDEQ'1'                                       S01332
+     C           CONBAL    ANDNE*ZERO                                     S01332
+     C           CONBAL    MULT @PERCT    CONBAL                          S01332
+     C           CONBAL    DIV  100       CONBAL                          S01332
+     C                     END                              E1            S01332
+      *                                                                   S01332
+     C   53 61 58          SUB  CONBAL    REBAL  150                      S01128
+     C   53N61 58          ADD  CONBAL    REEXP  150        58 = A/C      S01128
+0549 C**
+     C   53 58   ODLN      IFGT 0                                         S01128
+     C                     Z-ADDODLN      AMOUNT                          S01128
+     C                     EXSR CCYCON                                    S01128
+     C           CONBAL    DIV  DECP      CONBAL                          S01128
+      *                                                                   S01332
+      ** If scaling applies then scale.                                   S01332
+      *                                                                   S01332
+     C           @SCALE    IFEQ 'Y'                                       S01332
+     C           CONBAL    MULT @PERCT    CONBAL                          S01332
+     C           CONBAL    DIV  100       CONBAL                          S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+     C           CONBAL    ADD  RGBAL     RGBAL                           S01128
+     C                     END                                            S01128
+0550 C** IF A RECORD PROCESSED FOR THE CURRENT CUSTOMER, CONTINUE
+0551 C   52                GOTO RETTAG
+0552 C**
+0553 C                     ENDSR
+0554 C**
+ 569 C********************************************************************
+0570 C**
+0571 C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+0572 C**
+0573 C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+0574 C**
+0575 C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+0576 C                     MOVEL'01      'ZTABKY 12
+0577 C                     MOVE '  10'    ZTABKY
+0578 C**
+0579 C****       ZTABKY    CHAINTABLE                99    ON NOT THERE   S01129
+0579 C           ZTABKY    CHAINTABEM                99    ON NOT THERE   S01129
+0580 C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+0581 C**
+0582 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+0583 C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+0584 C**
+0585 C                     ENDSR
+ 589 C********************************************************************
+0588 C/EJECT
+0608 O**
+0609 O*****    EMCEX   D        50N99                                     S01128
+0609 OEMCEX   D        50N99 10                                           S01128
+0618 O*****                 10      REEXP     63P
+0619 O*****                 10      REBAL     71P
+0620 O*****                 10      RUND     124P
+0621 O*****                 10               125 'I'
+0622 O*****                 10      ZERO5    128P
+     O*
+0618 O                 10      RAEXP     71P
+0619 O                 10      RABAL     79P
+     O                 10      RGBAL     87P                              S01128
+0618 O                 10      REEXP     95P
+0619 O                 10      REBAL    103P
+0620 O***              10      RUND     146P                              S01129
+0621 O***              10               147 'I'                           S01129
+0622 O***              10      ZERO5    150P                              S01129
+     O                 10      RUND     170P                              S01129
+     O                 10               171 'I'                           S01129
+     O                 10      ZERO5    174P                              S01129
+0608 O**
+     O        D        50N99 09                                           S01128
+     O                         JNRCN     28                               S01128
+     O****                     JNSQ      34P                              S01128
+     O****                     JOSEQN    34P                              S01128
+     O                         JOSEQN    38                               S01128
+0628 O/EJECT
+ 629 O*********************************
+0630 O** PRINT REPORT
+0631 O**   DATABASE ERROR OUTPUT
+0632 O**
+     O****MPRINT  T 3      99                                             S01128
+     O*M0700P1T*3***   99                                        S01128   S01117
+     OEM0700AUT 3      99                                                 S01117
+0634 O                                   48 '**** DATABASE ERROR ****'
+0635 O        T 3      99
+0636 O                                   34 '************************'
+0637 O                                   58 '************************'
+0638 O                                   64 '******'
+0639 O        T 1      99
+0640 O                                   11 '*'
+0641 O                                   64 '*'
+0642 O        T 1      99
+0643 O                                   29 '*    FILE NAME    '''
+0644 O                         DBFILE    34
+0645 O                                   35 ''''
+0646 O                                   64 '*'
+0647 O        T 1      99
+0648 O                                   29 '*    KEY          '''
+0649 O                         DBKY      58
+0650 O                                   64 '''    *'
+0651 O        T 1      99
+0652 O                                   29 '*    PROGRAM NAME '''
+0653 O                         DBPGM     37
+0654 O                                   38 ''''
+0655 O                                   64 '*'
+0656 O        T 1      99
+0657 O                                   29 '*    AT           '''
+0658 O                         DBASE     31
+0659 O                                   32 ''''
+0660 O                                   64 '*'
+0661 O        T 1      99
+0662 O                                   11 '*'
+0663 O                                   64 '*'
+0664 O        T 1      99
+0665 O                                   34 '************************'
+0666 O                                   58 '************************'
+0667 O                                   64 '******'
+0668 O**
+0669 O** REPORT
+0670 O        T  202   LRN99
+     O****                               22 'REFERENCE EM0700'            S01128
+     O****                               22 'REFERENCE EM0700R'    S01128 S01117
+     O                                   22 'REFERENCE EM0700AU'          S01117
+0672 O                         TITL      81
+0673 O                                  103 'DATE'
+0674 O                         RUNA     112
+0675 O                                  122 'PAGE'
+0676 O                         PAGE  Z  127
+0677 O        T  1     LRN99
+0678 O                                   58 'INPUT CYCLE ON-LINE EXPO'
+     O****                               74 'SURE FILE CREATE'            S01128
+     O                                   82 'SURE FILE CREATE - RETAI'    S01128
+     O                                   83 'L'                           S01128
+0680 O        T  3     LRN99
+0681 O                                   58 '------------------------'
+0682 O                                   74 '----------------'
+0728 O        T  1     LRN99
+0729 O                                   33 'S/EMCEX - INPUT CYCLE EX'
+0730 O                                   44 'POSURE FILE'
+0731 O        T  2     LRN99
+0732 O                                   33 '------------------------'
+0733 O                                   44 '-----------'
+0734 O        T  3     LRN99
+0735 O                                   32 'TOTAL NUMBER OF RECORDS'
+0736 O                         EMCEXR    73
+0738 O        T 3      LRN99
+0739 O                                   76 '*** END OF REPORT ***'
+0740 O/EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   POWER - ARRAY OF POWERS OF 10 FOR CURRENCY CONVERSIONS
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

@@ -1,0 +1,235 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE Repayment Methodology')                      */
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC000459 - PDCL Repayment Priority Assignment            */
+/*                                                                 */
+/*       (c) Finastra International Limited 2012                   */
+/*                                                                 */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021018           Date 28Jun13              */
+/*                      AR1097203          Date 06Apr13              */
+/*                      CLE157             Date 06Aug12            */
+/*                      AR1063761          Date 04Dec12            */
+/*                      AR1022006          Date 01Aug12            */
+/*                      AR402058           Date 01Aug12            */
+/*                      AR217562           Date 01Aug12            */
+/*                      263074             Date 01Aug12            */
+/*                      CLE134  *CREATE    Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD021018 - PDCL Loan amendments went to repair queue due  */
+/*                  due to same sequence number                    */
+/*       AR1097203A - Failed component LEC007052 00001             */
+/*                  - Error message appeared during open LEACCFL3  */
+/*       CLE157 - COB Restructure - Tactical COB changes LEC0459   */
+/*       AR1063761 - COB Optimisation Issues for PDP               */
+/*       AR1022006 - COB Performance Optimisation                  */
+/*       AR402058 - Wrong Available Balance (Child:AR402059)       */
+/*       AR217562 - Wrong repayment methodology (Child:AR217563)   */
+/*       263074 - Wrong Postings when interest and principal are   */
+/*                paid on the same day (Recompile)                 */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)    TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT)    TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&FLAG)    TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&PRE)     TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&TOLIB)   TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&SLCF)    TYPE(*CHAR) LEN(512)      */            /*AR217562 AR1022006*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2012')
+/**********  DCL        VAR(&SAVDP) TYPE(*CHAR) LEN(10) +  */                             /*CLE157*/
+/**********                VALUE('LEC07001DP')             */                    /*AR402058 CLE157*/
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+/** Main Processing Control */
+ 
+             SNDPGMMSG  MSG('Repayment Priority') +
+                           TOMSGQ(MRUNQ)
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&FLAG) +
+                           VALUE('N'))
+ 
+/** Check the current status of this component */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Update Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+ 
+/** Restore LEPK1DPD, LEPK2DPD, LEPK3DPD */                                             /*AR402058*/
+ 
+/**********  RSTOBJ     OBJ(LEPK1DPD LEPK2DPD LEPK3DPD) +   */                            /*CLE157*/
+/**********                SAVLIB(&TOLIB) +                 */                            /*CLE157*/
+/**********                DEV(*SAVF) SAVF(&SAVDP) RSTLIB(QTEMP)*/               /*AR402058 CLE157*/
+ 
+/**********  CPYF       FROMFILE(QTEMP/LEPK1DPD) +              */                        /*CLE157*/
+/**********                TOFILE(&TOLIB/LEPK1DPD) MBROPT(*REPLACE) +*/                   /*CLE157*/
+/**********                FMTOPT(*MAP *DROP)                   */               /*AR402058 CLE157*/
+/**********  MONMSG     MSGID(CPF2817 CPF2869)                  */               /*AR402058 CLE157*/
+ 
+/**********  CPYF       FROMFILE(QTEMP/LEPK2DPD) +               */                       /*CLE157*/
+/**********                TOFILE(&TOLIB/LEPK2DPD) MBROPT(*REPLACE) +*/                   /*CLE157*/
+/**********                FMTOPT(*MAP *DROP)                    */              /*AR402058 CLE157*/
+/**********  MONMSG     MSGID(CPF2817 CPF2869)                   */              /*AR402058 CLE157*/
+ 
+/**********  CPYF       FROMFILE(QTEMP/LEPK3DPD) +    */                                 /*CLE157*/
+/**********                TOFILE(&TOLIB/LEPK3DPD) MBROPT(*REPLACE) + */                 /* CLE157*/
+/**********                FMTOPT(*MAP *DROP)         */                         /*AR402058 CLE157*/
+/**********  MONMSG     MSGID(CPF2817 CPF2869)        */                         /*AR402058 CLE157*/
+ 
+/** Extract Active PDCL Records */
+ 
+QRY010:
+/**********  CLRPFM     FILE(LEPDCRPD)                          */                     /*AR1022006*/
+             CLRPFM     FILE(LEACCTPD)
+/**********  CLRPFM     FILE(LEACCFPD)                          */           /*AR217562 AR1097203A*/
+ 
+/**********  CLOF       OPNID(LEPDCLQRY)                        */                     /*AR1022006*/
+ 
+ 
+ 
+/**********  CHGVAR     VAR(&SLC) VALUE('%SST(LTYP 1 1) *EQ +
+                           %VALUES(''X'' ''Y'' ''Z'') +
+                           *AND RECI = ''D'' *AND +
+                           ORED *LE ' *CAT &BJRDNBX *TCAT +
+                           ' *AND (CPAM *NE 0 *OR AIPD *NE 0 *OR +
+                           TOTI *NE 0)') */                                             /*AR217562*/
+ 
+/**********  CHGVAR     VAR(&SLCF) VALUE('FECALT = ''90''')     */             /*AR217562 AR102206*/
+ 
+/**********  OPNQRYF    FILE((CLOANCL)) OPTION(*ALL) QRYSLT(&SLC) +
+                           OPNID(LEPDCLQRY)                     */                     /*AR1022006*/
+ 
+/**********  CPYFRMQRYF FROMOPNID(LEPDCLQRY) TOFILE(LEPDCRPD) +
+                           MBROPT(*ADD)                         */                     /*AR1022006*/
+ 
+/**********  CLOF       OPNID(LEPDCLQRY)                        */                     /*AR1022006*/
+ 
+/** Extract record to LEACCTPD */
+ 
+             CALL       PGM(LE000459)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Extract record to LEACCFPD */                                                       /*AR217562*/
+ 
+/**********  CLOF       OPNID(LEFEED)                           */            /*AR217562 AR1022006*/
+/**********  MONMSG     MSGID(CPF4520)                          */            /*AR217562 AR1022006*/
+ 
+/**********  OPNQRYF    FILE((LEFEED)) OPTION(*ALL) QRYSLT(&SLCF) */          /*AR217562 AR1022006*/
+                                                                                        /*AR217562*/
+/**********  CALL       PGM(LE007052)                                         */ /*AR217562 CLE157*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)                     */ /*AR217562 CLE157*/
+/**********  CLOF       OPNID(LEFEED)                                         /*AR217562 AR1022006*/
+/**********  MONMSG     MSGID(CPF4520)                                        /*AR217562 AR1022006*/
+/**********  IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)*/             /*AR217562 CLE157*/
+ 
+/** Execute Primary Function */
+ 
+/**********    OVRDBF     FILE(LEREPLL1) TOFILE(LEREPLL2)*/                      /*AR217562 CLE157*/
+                                                                                       /*AR1063761*/
+/** Merge all postings from ACPO1 and GLACPOL0 to single file GLACPML0 */              /*AR1063761*/
+                                                                                       /*AR1063761*/
+/**********  CLRPFM     FILE(GLACPMPD)                      */                  /*AR1063761 CLE157*/
+/**********  CLRPFM     FILE(GLACRMPD)                      */                  /*AR1063761 CLE157*/
+/**********  CPYF       FROMFILE(ACPO1) TOFILE(GLACPMPD) +  */                            /*CLE157*/
+/**********               MBROPT(*REPLACE) RCDFMT(APOSTPDF) */                  /*AR1063761 CLE157*/
+/**********  MONMSG    (CPF2817) CMPDTA(CPF2869)            */                  /*AR1063761 CLE157*/
+                                                                                       /*AR1063761*/
+/**********  CPYF       FROMFILE(GLACPOL0) TOFILE(GLACPMPD) + */                          /*CLE157*/
+/**********               MBROPT(*ADD) RCDFMT(APOSTPDF)       */                /*AR1063761 CLE157*/
+/**********  MONMSG    (CPF2817) CMPDTA(CPF2869)              */                /*AR1063761 CLE157*/
+                                                                                       /*AR1063761*/
+/**********  CPYF       FROMFILE(ACPO1) TOFILE(GLACRMPD) + */                             /*CLE157*/
+/**********               MBROPT(*REPLACE) RCDFMT(APOSTRAF)*/                   /*AR1063761 CLE157*/
+/**********  MONMSG    (CPF2817) CMPDTA(CPF2869)           */                   /*AR1063761 CLE157*/
+ 
+/**********  CALL       PGM(LE000479)                         */                /*AR1063761 CLE157*/
+/**********  MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)     */                /*AR1063761 CLE157*/
+ 
+/**********  IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)           */ /*AR1063761 CLE157*/
+ 
+/** Reset Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('N')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Commit Database Changes */
+ 
+             COMMIT
+ 
+/** Clear LEMQLGPD Midas LE PDP Transaction Log File sent to MQ */
+             CLRPFM     FILE(LEMQLGPD)
+             CLRPFM     FILE(LELOANPI)                                                  /*MD021018*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_CDE:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Job terminated, component does not +
+                           exist.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Termination Process */
+ 
+ENDPGM:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+ 
+             IF         COND(&FLAG *EQ 'Y') THEN(ENDCMTCTL)
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited')
+             ENDPGM
+ 

@@ -1,0 +1,314 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ RTEVENTS select first two chars')
+      *****************************************************************
+     F*                                                               *
+     F*  Midas - Midas/Q Module                                       *
+     F*                                                               *
+     F*    MQ542X    -  Select Event Codes for subset RTEVENTS        *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CMQ001             Date 04Nov97               *
+      *                                    Date DDMmmYY               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  CMQ001 - MidasQ rationalisation.                             *
+     F*                                                               *
+      *****************************************************************
+      **
+      ** Screen Display File
+      **
+     FMQ543XDFCF  E                    WORKSTN
+     F                                        RRN   KSFILE ##SRCD
+      **
+      ** File to Store Selected records
+      **
+     FMQ543XLFUF  E           K        DISK                      A
+      **
+      ** Array to Store Event Codes and Descriptions
+      **
+     E                    EVC     1  31  2   EVD    67
+     E/EJECT
+      **
+      ** Title Data Structure
+      **
+     I#RNAME      DS                             13
+     I                                        1   2 A
+     I                                        3  12 CPY#NM
+     I                                       13  13 B
+      **
+      ** Data Structure to split up EVD into Module and description
+      **
+     ISPLIT       DS
+     I                                        1   2 MOD
+     I                                        3  67 DESC
+      **
+      ** System definition data area - O#XA01
+      **
+     IO#XA01      DS                           1000
+      **
+      ** Bring in the system definition block
+      **
+     I/COPY O#XP04,O#SDBLOCKP
+      **
+     C           *ENTRY    PLIST
+     C                     PARM           MQID2   8
+     C                     PARM           #RNAME
+     C                     PARM           MODE    1
+     C                     PARM           USED    3
+     C                     PARM           RTN     1
+     C           LE        PARM           LE1     3
+     C           DL        PARM           DL1     3
+     C           FF        PARM           FF1     3
+     C           FT        PARM           FT1     3
+     C           SE        PARM           SE1     3
+      **
+      ** Initialise
+      **
+     C                     EXSR INIT
+      **
+      ** Load Subfile
+      **
+     C                     EXSR LOAD
+      **
+      ** Exit Pressed?
+      **
+     C           *IN03     IFEQ '1'
+     C                     ELSE
+      **
+      ** Save Data Input if in Change Mode
+      **
+     C           MODE      IFEQ 'C'
+     C                     MOVE 'C'       RTN
+     C                     EXSR SAVE
+     C                     END
+     C                     END
+      **
+      ** Set up USED Flag depending on whether or not any
+      ** Event Codes are selected
+      **
+     C           MQID2     CHAINOPT2                 99
+     C           *IN99     IFEQ '0'
+     C                     MOVE 'YES'     USED
+     C                     ELSE
+     C                     MOVE 'NO '     USED
+     C                     END
+      **
+     C                     SETON                     LR
+     C                     RETRN
+      **
+      ** Load Subfile
+      **
+     C           LOAD      BEGSR
+      **
+      ** Initialise
+      **
+     C                     Z-ADD1         RRN     40
+     C                     Z-ADD0         X       30
+     C                     MOVEA'110'     *IN,50
+      **
+      ** Initialise Module fields
+      **
+     C           LE        IFEQ 'YES'
+     C                     MOVE 'LE '     LE      3
+     C                     END
+     C           DL        IFEQ 'YES'
+     C                     MOVE 'DL '     DL      3
+     C                     END
+     C           FF        IFEQ 'YES'
+     C                     MOVE 'FF '     FF      3
+     C                     END
+     C           FT        IFEQ 'YES'
+     C                     MOVE 'FT '     FT      3
+     C                     END
+     C           SE        IFEQ 'YES'
+     C                     MOVE 'SE '     SE      3
+     C                     END
+      **
+      ** Get First Record
+      **
+     C                     EXSR GETREC
+      **
+      ** Do While Rolldown Requested
+      **
+     C           *IN25     DOUEQ'0'
+      **
+      ** Ensure First record is at RRN
+      **
+     C                     Z-ADDRRN       DSPREC
+      **
+      ** Load Next 8 Records
+      **
+     C                     DO   15
+     C                     WRITE##SRCD
+     C                     ADD  1         RRN
+     C                     EXSR GETREC
+     C  N52                END
+      **
+     C                     WRITE##FOOT
+      **
+     C                     EXFMT##SCTL
+      **
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Get Data for Subfile
+      **
+     C           GETREC    BEGSR
+      **
+     C           EVSEL     DOUEQ'YES'
+     C           *IN52     OREQ '1'
+     C                     ADD  1         X
+      **
+      ** 31 is the number of items in the event codes array
+      **
+     C           X         IFLE 31
+     C                     MOVELEVD,X     SPLIT
+     C           MOD       IFEQ LE
+     C           MOD       OREQ DL
+     C           MOD       OREQ FF
+     C           MOD       OREQ FT
+     C           MOD       OREQ SE
+     C                     MOVELDESC      ##DESC
+     C                     MOVELEVC,X     ##CODE
+     C                     MOVE 'YES'     EVSEL
+     C                     END
+      **
+     C                     ELSE
+     C                     SETON                     52
+     C                     END
+      **
+     C                     END
+      **
+     C           EVSEL     IFEQ 'YES'
+      **
+      ** Load Selection Field Depending on Whether already Selected
+      **
+     C           KL1       CHAINOPT2                 99
+     C           *IN99     IFEQ '0'
+     C                     MOVE 'X'       ##SEL
+     C                     ELSE
+     C                     MOVE ' '       ##SEL
+     C                     END
+      **
+     C                     END
+      **
+     C                     MOVE 'NO'      EVSEL   3
+      **
+     C                     ENDSR
+      **
+      ** Save Data Input back to File
+      **
+     C           SAVE      BEGSR
+      **
+     C                     READC##SRCD                 9898
+      **
+     C           *IN98     DOWEQ'0'
+      **
+     C           KL1       CHAINOPT2                 97
+      **
+     C           ##SEL     IFEQ *BLANK
+     C           *IN97     IFEQ '0'
+     C                     DELETOPT2
+     C                     END
+     C                     ELSE
+     C           *IN97     IFEQ '1'
+     C                     MOVE ##CODE    ECOD2
+     C                     WRITEOPT2
+     C                     END
+     C                     END
+      **
+     C                     READC##SRCD                 9898
+     C                     END
+      **
+     C                     ENDSR
+      **
+      ** Initialise
+      **
+     C           INIT      BEGSR
+      **
+     C           KL1       KLIST
+     C                     KFLD           MQID2
+     C                     KFLD           ##CODE
+      **
+      ** Set Up Return Code
+      **
+     C                     MOVE *BLANKS   RTN
+      **
+      ** Set Up Mode
+      **
+     C           MODE      IFEQ 'C'
+     C                     SETON                     30
+     C                     ELSE
+     C                     SETOF                     30
+     C                     END
+      **
+      ** Set Up Action Bar Header Text
+      **
+     C                     EXSR SACT
+     C                     MOVE '-'       #BOX1
+     C                     MOVE '-('      A
+     C                     MOVE ')'       B
+      **
+     C                     ENDSR
+     **
+     **  Subroutine to Set up Action Bar Header Text
+     **
+     C           SACT      BEGSR
+     C                     MOVEL'Report'  #BOX2
+     C                     MOVEL'Options' #BOX3
+     C                     MOVE *BLANKS   #BOX4
+     C                     MOVEL'Refine'  #BOX5
+     C                     MOVEL'Subsets' #BOX6
+     C                     MOVEL'House'   #BOX7
+     C                     MOVE 'keep '   #BOX7
+     C                     MOVEL'AS/400'  #BOX8
+     C                     MOVEL' Help'   #BOX9
+     C                     ENDSR
+      **
+** EVC EVD ARRAY
+61LEDEMAND LOAN
+62LETERM LOAN
+63LEDISCOUNTED LOAN
+64LETERM PART PURCHASED
+65LEDISCOUNTED PART PURCHASED
+66LETERM PART PURCHASED/SOLD
+67LEDISCOUNTED PART SOLD
+70LEGUARANTEE ISSUED
+71LECOMMITMENT FEE
+10DLNOSTRO TRANSFER
+11DLFX OUTRIGHT
+12DLOPTION
+13DLOPTION TAKEDOWN
+14DLSWAP
+15DLDEPOSIT PLACED/LOAN
+16DLDEPOSIT TAKEN
+17DLNA PURCHASED
+18DLNA SOLD
+20DLINTERNAL CONTRACT
+21DLFORWARD RATE AGREEMENT
+22DLINTEREST RATE SWAP
+23DLCROSS CURRENCY
+24DLCAP/COLLAR/FLOOR
+94FFLONG FUTURE
+95FFSHORT FUTURE
+96FFLONG PUT OPTION
+97FFSHORT PUT OPTION
+98FFLONG CALL OPTION
+99FFSHORT CALL OPTION
+91FTFUNDS TRANSFER
+31SESECURITIES TRADING

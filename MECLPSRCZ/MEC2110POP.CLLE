@@ -1,0 +1,119 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas ME Work Midas Msg Mgr Ctl Info Prmpt Ovr Pgm')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas Message Management                                    */
+/*                                                                   */
+/*       MEC2100POP - Work with Midas Message Manager Control Info   */
+/*                    Prompt Over Program                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CSW025  *CREATE    Date 22Apr02              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSW025 - Midas Message Manager                              */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&CMDNAME &RTNSTRING)
+ 
+/* Parameters */
+             DCL        VAR(&CMDNAME)   TYPE(*CHAR) LEN(20)
+             DCL        VAR(&RTNSTRING) TYPE(*CHAR) LEN(500)
+ 
+/*  Values to be returned                                           */
+             DCL        VAR(&MLDBNAME)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MDNSVRNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MGNSYS)    TYPE(*CHAR) LEN(4)
+             DCL        VAR(&MERIDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MDL2CASLIB) TYPE(*CHAR) LEN(10)
+ 
+/*  Constants                                                       */
+             DCL        VAR(&CLOSEPAREN) TYPE(*CHAR) LEN(1) VALUE(')')
+             DCL        VAR(&KWDDBNAME) TYPE(*CHAR) LEN(10) +
+                          VALUE(' MLDBNAME(')
+             DCL        VAR(&KWDSVRNAM) TYPE(*CHAR) LEN(11) +
+                          VALUE(' MDNSVRNAM(')
+             DCL        VAR(&KWDMGNSYS) TYPE(*CHAR) LEN(8) +
+                          VALUE(' MGNSYS(')
+             DCL        VAR(&KWDMDNLIB) TYPE(*CHAR) LEN(10) +
+                          VALUE(' MERIDLIB(')
+             DCL        VAR(&KWDMDNCASL) TYPE(*CHAR) LEN(12) +
+                          VALUE(' MDL2CASLIB(')
+ 
+/*  Temporary values                       */
+             DCL        VAR(&MGNSYS1A) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Extract the current values from the data area                    */
+             RTVDTAARA  DTAARA(MESTAT (9 10)) RTNVAR(&MLDBNAME)
+             RTVDTAARA  DTAARA(MESTAT (39 10)) RTNVAR(&MDNSVRNAM)
+ 
+             RTVDTAARA  DTAARA(MESTAT (50 1)) RTNVAR(&MGNSYS1A)
+             IF         COND(&MGNSYS1A = 'Y') THEN(DO)
+                CHGVAR     VAR(&MGNSYS) VALUE('*YES')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&MGNSYS) VALUE('*NO ')
+             ENDDO
+ 
+             RTVDTAARA  DTAARA(MESTAT (51 10)) RTNVAR(&MERIDLIB)
+             RTVDTAARA  DTAARA(MESTAT (61 10)) RTNVAR(&MDL2CASLIB)
+ 
+/* Build the complete command string                              */
+        /* First two bytes are the returned length in hex           */
+             CHGVAR     VAR(&RTNSTRING) VALUE(X'0064') /* Decimal +
+                          value is 100 */
+ 
+        /* Now add the data in format 'KEYWORD(' + 'VALUE' + ')'   */
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDDBNAME)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &MLDBNAME)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+ 
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDSVRNAM)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &MDNSVRNAM)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+ 
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDMGNSYS)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &MGNSYS)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+ 
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDMDNLIB)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &MERIDLIB)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+ 
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &KWDMDNCASL)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &MDL2CASLIB)
+             CHGVAR VAR(&RTNSTRING) VALUE(&RTNSTRING *TCAT &CLOSEPAREN)
+ 
+/* Normal end */
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal end */
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          MEC2110POP ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* Delete data queue */
+ END:
+ 
+             ENDPGM

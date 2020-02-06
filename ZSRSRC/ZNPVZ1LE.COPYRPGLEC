@@ -1,0 +1,327 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standard Subroutines                                 *
+      *                                                               *
+      *  ZNPV   - Standard Subroutine to Calculate the Net Present    *
+      *           Value of a Future Amount using Money Market Rates.  *
+      *                                                               *
+      *  Input:  ZNPSDT ( 5,0) Spot Date                              *
+      *          ZNPFDT ( 5,0) Future Date                            *
+      *          ZNPAMT (13,0) Future Amount                          *
+      *          ZNPCCY ( 3A ) Currency                               *
+      *          ZCBCBS ( 1,0) Calculation Basis (for SR/ZCBDYS)      *
+      *          ZNPBOF ( 1A ) Bid/Offer Flag                         *
+      *                                                               *
+      *  Output: ZNPOUT (13,0) Net Present Value                      *
+      *          ZNPRAT (11,7) Discount Rate (if used)                *
+      *          ZNPDF  (11,9) Discount Factor (if used)              *
+      *          *IN93 is set on if no Rates for Currency on File     *
+      *                                                               *
+      *  Calls:  ZAINTPL - Straight Line Interpolation of a Rate      *
+      *          ZCBDYS - Calculation Basis Number of Days            *
+      *                                                               *
+      *  Files:  DLINTRL2 - MM Interest Rates File (1 year and less)  *
+      *          DLMMDFL1 - MM Discount Factors Table                 *
+      *                                                               *
+      *  Indicators used in this Subroutine: 91, 92, 93.              *
+      *                                                               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Last Amend No. CIR013             Date 22Jun05               *
+      *  Prev Amend No. CAAA02  *CREATE    Date 06Sep03               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Method 9 - Actual/365 or 366 for Feb 29 period      *
+      *  CAAA02 - WebFacing (Converted to ILE)                        *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  182370 - Incorrect calculation of number of days for calcu-  *
+      *           lation basis 6. Amended /COPY such that for calcu-  *
+      *           lation basis 6, the number of days per year is      *
+      *           equal to 366 when the year in question is a leap    *
+      *           year, and 365 days/year for non-leap years. Calcu-  *
+      *           lation was made so that processing would be in-line *
+      *           with that of /COPY ZINTDY.                          *
+      *                                                               *
+      *****************************************************************
+      *
+     C     ZNPV          BEGSR                                                  ***  ZNPV  ***
+      *
+      ***  Initialise fields.
+      *
+     C                   Z-ADD     ZNPSDT        ZNPSDT            5 0
+     C                   Z-ADD     ZNPFDT        ZNPFDT            5 0
+     C                   Z-ADD     ZNPAMT        ZNPAMT           13 0
+     C                   MOVE      ZNPCCY        ZNPCCY            3
+     C                   MOVE      ZNPBOF        ZNPBOF            1
+     C                   Z-ADD     0             ZNPRAT           11 7
+     C                   Z-ADD     1             ZNPDF            11 9
+     C                   Z-ADD     0             ZNPOUT           13 0
+     C                   SETOFF                                       919293
+      *
+      ***  Key List for both the Money Market Interest Rates File and
+      ***  the Money Market Discount Factors Table.
+      *
+     C     ZNPMMK        KLIST
+     C                   KFLD                    ZNPCCY            3
+     C                   KFLD                    ZNPFDT            5 0
+      *
+      ***  NOTE: If the Future Date is Less Than one year from Spot,
+      ***  Discounting should be done using the Money Market Rate, else
+      ***  the Discount Factors should be used.
+      *
+     C     ZNPSDT        ADD       365           ZNPYDT            5 0
+      *
+      *---------------------------------------------------------------*
+      ***  CASE 1: The Future Date is one year or less from Spot Date.*
+      *---------------------------------------------------------------*
+      *
+     C     ZNPFDT        IFLE      ZNPYDT
+      *
+      ***  First find the Money Market Rate to use for Discounting.
+      *
+     C     ZNPMMK        SETLL     DLINTRL2                           91
+      *
+      ***  If not EOF, Read Equal the next record of the Currency.
+      *
+     C     *IN91         IFEQ      '0'
+     C     ZNPCCY        READE     DLINTRL2                               92
+      *
+      ***  If a record was read and is the correct date, set up the
+      ***  Rate and GOTO Present Value Calculation.
+      *
+     C     *IN92         IFEQ      '0'
+     C     HWPRDN        ANDEQ     ZNPFDT
+     C     ZNPBOF        IFEQ      'B'
+     C                   Z-ADD     HWBRRT        ZNPRAT
+     C                   ELSE
+     C                   Z-ADD     HWLDRT        ZNPRAT
+     C                   END
+     C                   GOTO      ZNP001
+     C                   END
+      *
+     C                   END
+      *
+      ***  If a record has not yet been retrieved, reposition the file
+      ***  and read the last record of the Currency.
+      *
+     C     *IN91         IFEQ      '1'
+     C     *IN92         OREQ      '1'
+     C     ZNPMMK        SETGT     DLINTRL2
+      *
+      ***  If Record found then set up the Rate and GOTO Present Value
+      ***  Calculation, else Currency is not on File, (*IN93 returned).
+      *
+     C     ZNPCCY        READPE    DLINTRL2                               93
+     C     *IN93         IFEQ      '0'
+     C     ZNPBOF        IFEQ      'B'
+     C                   Z-ADD     HWBRRT        ZNPRAT
+     C                   ELSE
+     C                   Z-ADD     HWLDRT        ZNPRAT
+     C                   END
+     C                   GOTO      ZNP001
+     C                   END
+      *
+     C                   GOTO      ZNPEND
+     C                   END
+      *
+      ***  If this point has been reached, a record has been found with
+      ***  a date greater than the one we want and it will probably be
+      ***  necessary to use interpolation, so set up Far Date and Far
+      ** Rate fields (for PGM/ZAINTPL).
+      *
+     C                   Z-ADD     HWPRDN        ZIFDAT
+     C     ZNPBOF        IFEQ      'B'
+     C                   Z-ADD     HWBRRT        ZIFRAT
+     C                   ELSE
+     C                   Z-ADD     HWLDRT        ZIFRAT
+     C                   END
+      *
+      ***  Read the Previous record to get the Near Rate. If not found,
+      ***  then the the record already retrieved is the first record of
+      ***  the Currency and that Rate should be used.
+      *
+     C     ZNPCCY        READPE    DLINTRL2                               91
+      *
+     C     *IN91         IFEQ      '1'
+     C                   Z-ADD     ZIFRAT        ZNPRAT
+     C                   ELSE
+      *
+      ***  Else set up Near Date and Near Rate for interpolation.
+      *
+     C                   Z-ADD     HWPRDN        ZINDAT
+     C     ZNPBOF        IFEQ      'B'
+     C                   Z-ADD     HWBRRT        ZINRAT
+     C                   ELSE
+     C                   Z-ADD     HWLDRT        ZINRAT
+     C                   END
+      *
+      ***  Set up Broken Date and interpolate the Rate.
+      *
+     C                   Z-ADD     ZNPFDT        ZIBDAT
+     C                   Z-ADD     0             ZIBRAT
+     C                   CALL      'ZAINTPL'
+     C                   PARM                    ZINDAT            5 0
+     C                   PARM                    ZIBDAT            5 0
+     C                   PARM                    ZIFDAT            5 0
+     C                   PARM                    ZINRAT           13 9
+     C                   PARM                    ZIFRAT           13 9
+     C                   PARM                    ZIBRAT           13 9
+     C                   Z-ADD     ZIBRAT        ZNPRAT
+     C                   END
+      *
+     C     ZNP001        TAG                                                    *** ZNP001 ***
+      *
+      ***  Present Value is then calculated as:
+      ***
+      ***                   Future Amount
+      ***  Present Value = ---------------
+      ***                       1 + X
+      ***
+      ***             Discount Rate * Days in Period
+      ***  where X = --------------------------------
+      ***                   Days in Year * 100
+      ***
+      ***  Days in Period and Days in Year are dependent on the
+      ***  Calculation Basis and are calculated by SR/ZCBDYS.
+      *
+     C                   Z-ADD     ZNPSDT        ZCBSDT
+     C                   Z-ADD     ZNPFDT        ZCBEDT
+     C                   EXSR      ZCBDYS
+      *
+     C     ZCBCBS        IFEQ      6
+     C     ZCBCBS        OREQ      9                                                          CIR013
+     C     #29FEB        ANDEQ     'Y'                                                        CIR013
+     C     ZNPRAT        MULT      ZINT6         ZNPXA
+     C                   ELSE
+     C     ZNPRAT        MULT      ZCBDAY        ZNPXA            18 9
+     C                   ENDIF
+      *
+     C     ZCBDIV        MULT      100           ZNPXB             5 0
+     C     ZNPXA         DIV(H)    ZNPXB         ZNPXA
+     C                   ADD       1             ZNPXA
+     C     ZNPAMT        DIV(H)    ZNPXA         ZNPOUT
+      *
+      *---------------------------------------------------------------*
+      ***  CASE 2: The Future Date is more than one year ahead.       *
+      *---------------------------------------------------------------*
+      *
+     C                   ELSE
+      *
+      ***  First find the Discount Factor to use for discounting.
+      *
+     C     ZNPMMK        SETLL     DLMMDFL1                           91
+      *
+      ***  If not EOF, Read Equal the next record of the Currency.
+      *
+     C     *IN91         IFEQ      '0'
+     C     ZNPCCY        READE     DLMMDFL1                               92
+      *
+      ***  If a record was read and is the correct date, set up the
+      ***  Factor and GOTO Present Value Calculation.
+      *
+     C     *IN92         IFEQ      '0'
+     C     DFPRDN        ANDEQ     ZNPFDT
+     C     ZNPBOF        IFEQ      'B'
+     C                   Z-ADD     DFBDF         ZNPDF
+     C                   ELSE
+     C                   Z-ADD     DFODF         ZNPDF
+     C                   END
+     C                   GOTO      ZNP002
+     C                   END
+      *
+     C                   END
+      *
+      ***  If a record has not yet been retrieved, reposition the file
+      ***  and read the last record of the Currency.
+      *
+     C     *IN91         IFEQ      '1'
+     C     *IN92         OREQ      '1'
+     C     ZNPMMK        SETGT     DLMMDFL1
+      *
+      ***  If Record found, set up the Factor and GOTO Present Value
+      ***  Calculation, else Currency is not on File, (*IN93 returned).
+      *
+     C     ZNPCCY        READPE    DLMMDFL1                               93
+     C     *IN93         IFEQ      '0'
+     C     ZNPBOF        IFEQ      'B'
+     C                   Z-ADD     DFBDF         ZNPDF
+     C                   ELSE
+     C                   Z-ADD     DFODF         ZNPDF
+     C                   END
+     C                   GOTO      ZNP002
+     C                   END
+      *
+     C                   GOTO      ZNPEND
+     C                   END
+      *
+      ***  If this point has been reached, a record has been found with
+      ***  a date greater than the one we want and it will probably be
+      ***  necessary to use interpolation, so set up Far Date and Far
+      ** Rate fields (for PGM/ZAINTPL).
+      *
+     C                   Z-ADD     DFPRDN        ZIFDAT
+     C     ZNPBOF        IFEQ      'B'
+     C                   Z-ADD     DFBDF         ZIFRAT
+     C                   ELSE
+     C                   Z-ADD     DFODF         ZIFRAT
+     C                   END
+      *
+      ***  Read the Previous record to get the Near Discount Factor. If
+      ***  not found, then the the record already retrieved is the first
+      ***  record of the Currency and that Factor should be used.
+      *
+     C     ZNPCCY        READPE    DLMMDFL1                               91
+      *
+     C     *IN91         IFEQ      '1'
+     C                   Z-ADD     ZIFRAT        ZNPDF
+     C                   ELSE
+      *
+      ***  Else set up Near Date and Near Factor for interpolation.
+      *
+     C                   Z-ADD     DFPRDN        ZINDAT
+     C     ZNPBOF        IFEQ      'B'
+     C                   Z-ADD     DFBDF         ZINRAT
+     C                   ELSE
+     C                   Z-ADD     DFODF         ZINRAT
+     C                   END
+      *
+      ***  Set up Broken Date and interpolate the Factor
+      *
+     C                   Z-ADD     ZNPFDT        ZIBDAT
+     C                   Z-ADD     0             ZIBRAT
+     C                   CALL      'ZAINTPL'
+     C                   PARM                    ZINDAT            5 0
+     C                   PARM                    ZIBDAT            5 0
+     C                   PARM                    ZIFDAT            5 0
+     C                   PARM                    ZINRAT           13 9
+     C                   PARM                    ZIFRAT           13 9
+     C                   PARM                    ZIBRAT           13 9
+     C                   Z-ADD     ZIBRAT        ZNPDF
+     C                   END
+      *
+     C     ZNP002        TAG                                                    *** ZNP002 ***
+      *
+      ***  Present Value is then calculated as:
+      ***
+      ***                    Future Amount
+      ***  Present Value = -----------------
+      ***                   Discount Factor
+      *
+     C     ZNPAMT        DIV(H)    ZNPDF         ZNPOUT
+      *
+     C                   END
+      *
+      *---------------------------------------------------------------*
+      *
+     C     ZNPEND        TAG                                                    *** ZNPEND ***
+      *
+     C                   ENDSR
+      *
+      *****************************************************************

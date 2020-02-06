@@ -1,0 +1,136 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                     /*CLE164*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Customer Lending Module                           */
+/*                                                                 */
+/*       LEC000479 - Calculate Available Balance                   */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. CLE164  *REDUNDANT Date 18Aug14            */
+/*       Prev Amend No. AR1097203          Date 26Mar13            */
+/*                      CLE157   *CREATE   Date 06Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)     */
+/*       AR1097203 - Error message appeared during open for file   */
+/*                   LEACCFL3                                      */
+/*       CLE157 - COB Restructure - Tactical Cob Changes LEC0459   */
+/*                                                                 */
+/*******************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)    TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STAT)    TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&FLAG)    TYPE(*CHAR) LEN(1) VALUE('Y')
+             DCL        VAR(&PRE)     TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT)  TYPE(*CHAR) LEN(256)
+             DCL        VAR(&TOLIB)   TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+/*   Set off Switches                     */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&TOLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+             OVRDBF     FILE(LEREPLL1) TOFILE(LEREPLL2)
+ 
+/** Main Processing Control */
+ 
+             SNDPGMMSG  MSG('Extract Late Fees') +
+                           TOMSGQ(MRUNQ)
+ 
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&FLAG) +
+                           VALUE('N'))
+ 
+/** Check the current status of this component */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Update Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             OVRDBF     FILE(LEREPLL1) TOFILE(LEREPLL2)
+ 
+/** Merge all postings from ACPO1 and GLACPOL0 to single file GLACPML0 */
+ 
+             CLRPFM     FILE(GLACPMPD)
+             CLRPFM     FILE(GLACRMPD)
+             CPYF       FROMFILE(ACPO1) TOFILE(GLACPMPD) +
+                          MBROPT(*REPLACE) RCDFMT(APOSTPDF)
+             MONMSG    (CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(GLACPOL0) TOFILE(GLACPMPD) +
+                          MBROPT(*ADD) RCDFMT(APOSTPDF)
+             MONMSG    (CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(ACPO1) TOFILE(GLACRMPD) +
+                          MBROPT(*REPLACE) RCDFMT(APOSTRAF)
+             MONMSG    (CPF2817) CMPDTA(CPF2869)
+ 
+             CALL       PGM(LE000479)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+/** Reset Component Status */
+ 
+             CHGVAR     VAR(&STAT) VALUE('N')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_CDE)
+ 
+/** Commit Database Changes */
+ 
+             COMMIT
+             GOTO       CMDLBL(ENDPGM)                                                 /*AR1097203*/
+ 
+/*  Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_CDE:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Job terminated, component does not +
+                           exist.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             ROLLBACK
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ENDPGM:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+                          Banking Systems Ltd.')
+ 
+             ENDPGM
+ 

@@ -1,0 +1,647 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Single confirmation reprint request')         *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module                                   *
+     F*                                                               *
+     F*  DL0115  -  SINGLE CONFIRMATION REPRINT REQUEST               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 05Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 197434             Date 09Oct01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 091452             Date 18Aug95               *
+      *                 064780             Date 28Mar94               *
+     F*                 E40890             DATE 29JUN92               *
+     F*                 AUS009             DATE 22JUL92               *
+     F*                 E40982             DATE 12JUN92               *
+     F*                 E38769             DATE 23APR92               *
+     F*                 S01117/E298        DATE 30MAR90               *
+     F*                 S01117             DATE 06/03/89              *
+     F*                 S01194             DATE 06/03/89              *
+     F*                 E15504             DATE 27/10/88              *
+     F*                 S01119             DATE 27/08/86              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  197434 - Array index error on SF0021. Increase maximum       *
+      *           number of branches from 100 to 900.                 *
+     F*  091452 - No confirmations should be printed for NX deals.    *
+     F*  064780 - Open MSDLRPF only when MSDL module is present       *
+     F*  E40890 - APPLY RCF CHANGES AND RUN MSDLRPF UNDER COMIT CONT  *
+     F*  AUS009 - AUSTRALIAN PRODUCT - USER DEFINED CONFIRMATIONS     *
+     F*  E40982 - ENSURE ERROR CODE 5 DOES NOT OVERWRITE ERROR CODE 1 *
+     F*           IF INVALID DEAL NO ENTERED                          *
+     F*         - AMEND TEXT FOR ERROR CODE 1 - IF DEAL HAS NOT BEEN  *
+     F*           AUTHORISED, IT WILL NOT BE ON DEALS FILE            *
+     F*  E38769 - PROMPT PGM SHOULD ALLOW FOR F12. ALSO TIDY UP.      *
+     F*  E298   - AMEND TO USE ITS OWN DISPLAY FILE WITH FULL HELP    *
+     F*  S01117 - MULTIBRANCHING                                      *
+     F*  S01194 - NEW STANDING DATA - ADD ACCESS OBJECTS              *
+     F*  E15504 - SWIFT MESSAGE NEVER PRODUCED IF REPRINT             *
+     F*           TAKEN ORIGINAL CONFIRMATION                         *
+     F*  S01119 - LENGTH OF DEALS FILE CHANGED FOR FRA/IRS            *
+     F*                                                               *
+     F*****************************************************************
+0012 F*********SETKEYDFCF  E                    WORKSTN                   S01117
+     FDL0115DFCF  E                    WORKSTN                            S01117
+0013 FDTRIXHH UF  F      40            DISK
+     F                                              KCOMIT
+0013 FDTRIXDD O   F      40            DISK
+     F                                              KCOMIT
+0014 F*EALS***IF**F*****400**6AI*****2*DISK                               S01119
+0014 FDEALS   IF  F     600  6AI     2 DISK                               S01119
+     FDEAMS   IF  F     200 14AI     2 DISK                               AUS009
+0015 F*****TABLE   IF  F      96 12AI     2 DISK                          S01194
+     F***MSDLRPF*O***F      40            DISK                     E15504 064780
+     FMSDLRPF O   F      40            DISK                           UC  064780
+     F                                              KCOMIT                E40890
+     F/SPACE 3                                                            E40890
+     F* 12            INDICATOR SET BY CA12 (PREVIOUS SCREEN)             E40890
+     F* 13            INDICATOR SET BY CA03 (EXIT WITHOUT REQUEST)        E40890
+     F* 14            INDICATOR SET BY CA06 (EXIT LAST REQUEST)           E40890
+     E                    CPY@    1   1 80
+0018 E********************ERRMSG  1   4 40               ERROR MESSAGES   S01117
+     E***********         ERRMSG  1   5 50            ERROR MESSAGESS01117AUS009
+     E                    ERRMSG  1  10 50               ERROR MESSAGES   AUS009
+     E**********          ZBR       100  3               SPF USER/BRS                  S01117 197434
+     E                    ZBR       900  3               SPF USER/BRS                         197434
+     E/COPY ZSRSRC,ZDATE1Z1                                               AUS009
+0019 I*
+0020 I*    DEAL TRANSACTIONS INDEX FILE - HEADER RECORD.
+0021 I*
+0022 IDTRIXHH NS  01   1 CH
+0023 I                                        1   1 RECI
+0024 I                                        2   2 RCDT
+0025 I                                        3   80DLNO
+0030 I                                    P  21  230RRLX
+0031 I                                    P  24  260RRXP
+0032 I                                    P  27  290NDLR
+0033 I                                    P  30  320NDAR
+0034 I                                       33  330STPI
+0036 I                                    P  38  400TNLU
+0037 I                                        1  40 LOT
+0040 I*
+0041 I        NS
+0042 I*
+0043 I*
+0044 I*
+0045 IDEALS   NS  03   1 CD   8 CG                                        S01119
+0046 I       OR   04   1 CR   8 CG                                        S01119
+0257 I                                       17  19 BRCA                  S01117
+     I                                       20  21 DTYP                  091452
+0047 I                                    P 591 5930ORED                  S01119
+0048 I                                    P 594 5960LCD                   S01119
+0045 IDEALS   NS  03   1 CD
+0046 I       OR   04   1 CR
+0257 I                                       17  19 BRCA                  S01117
+     I                                       20  21 DTYP                  AUS009
+     I                                    P  30  320MDAT                  AUS009
+     I                                    P  49  550PCPL                  AUS009
+0047 I                                    P 391 3930ORED
+0048 I                                    P 394 3960LCD
+0049 I        NS
+     I*                                                                   AUS009
+     I*    DEALS AMENDMENT FILE - DETAIL RECORD.                          AUS009
+     I*                                                                   AUS009
+     IDEAMS   NS  05   1 CD                                               AUS009
+     I       OR   06   1 CR                                               AUS009
+     I                                       20  21 AMTP                  AUS009
+     I                                    P  34  400DAAM                  AUS009
+     I                                    P 191 1930OREDDA                AUS009
+     I                                    P 194 1960LCDDA                 AUS009
+     I        NS                                                          AUS009
+0050 I*
+0051 I*****TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.               S01194
+0052 I*****                                                               S01194
+0053 I*****TABLE   NS       2 C0   3 C1  12 C1                            S01194
+0054 I*****  AND      13 C0                                               S01194
+0055 I*****                                   1   1 RECI                  S01194
+0056 I*****                                   2   30RECT                  S01194
+0057 I*****                                  12  130RCDE                  S01194
+0058 I*****                                  14  66 TITL                  S01194
+0059 I*****                                  67  67 DATF                  S01194
+0060 I*****                                  68  700DFBR                  S01194
+0061 I*****                                  74  74 MODI1                 S01194
+0062 I*****                                  75  75 MODI2                 S01194
+0063 I*****                                  76  76 MODI3                 S01194
+0064 I*****                               P  77  790RUND                  S01194
+0065 I*****                                  80  86 RUNA                  S01194
+0066 I*****                                  87  870SFLG                  S01194
+0067 I*****                               P  90  920LCD                   S01194
+0068 I*****                                  93  93 CHTP                  S01194
+0069 I*****                               P  94  960TNLU                  S01194
+0070 I*****   NS                                                          S01194
+     I*                                                                   AUS009
+     I**   DEAMS FILE KEY                                                 AUS009
+     I*                                                                   AUS009
+     I            DS                                                      AUS009
+     I                                        1  14 DAMKEY                AUS009
+     I                                        1   6 DNO                   AUS009
+     I                                        7  110VDAYNO                AUS009
+     I                                       12  140SEQNO                 AUS009
+     I**
+     IPSDS       SDS
+     I                                      244 246 WSID
+     I                                      244 253 SWSID                 E38769
+     I                                      254 263 USRID
+     I**
+     I** DATA STRUCTURE  TO UPDATE LAST TRANSACTION NUMBER DTAARA
+     I**
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I**
+     IRUNDAT      DS                             13                       S01194
+     I                                        1   7 SRUNA                 E38769
+     I                                    P   8  100@RUND                 S01194
+     I                                       12  12 @DATF                 S01194
+     I                                       13  13 @MBIN                 S01117
+     I**                                                                  E40890
+     I**  MODULE DATA AREA                                                E40890
+     I**                                                                  E40890
+     IMMOD        DS                            256                       E40890
+     I                                       25  25 MSDL                  E40890
+     I**                                                                  S01194
+     I**  EXTERNAL DATA AREA OF BRANCHES FOR THIS USER, TOP DOWN          S01117
+     IZBRU        DS                                                      S01117
+     I                                        1   1 ZCHB                  S01117
+     I                                        2   4 ZIN                   S01117
+     I                                        5 154 ZBR1                  S01117
+     I                                      155 304 ZBR2                  S01117
+      *                                                                                       197434
+     IZBRU1       DS                                                                          197434
+      *                                                                                       197434
+      ** Bank Level Functions / Booking Branches 1                                            197434
+      *                                                                                       197434
+     I                                        1 255 ZBR11                                     197434
+     I                                      256 510 ZBR12                                     197434
+     I                                      511 765 ZBR13                                     197434
+     I                                      7661020 ZBR14                                     197434
+     I                                     10211275 ZBR15                                     197434
+     I                                     12761530 ZBR16                                     197434
+     I                                     15311785 ZBR17                                     197434
+     I                                     17861998 ZBR18                                     197434
+     IZBRU2       DS                                                                          197434
+      *                                                                                       197434
+      ** Bank Level Functions / Booking Branches 2                                            197434
+      *                                                                                       197434
+     I                                        1 255 ZBR21                                     197434
+     I                                      256 402 ZBR22                                     197434
+     I*                                                                   AUS009
+     ISCSARD    E DSSCSARDPD                                              AUS009
+     I** EXTERNAL DS FOR SAR DETAILS                                      AUS009
+     I*                                                                   AUS009
+     IDSFDY     E DSDSFDY                                                 AUS009
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                AUS009
+     I**                                                                  S01117
+     C                     MOVEACPY@      BIS@   80
+     C*                                                                   E40890
+     C** ENTRY PARAMETER LIST                                             E40890
+     C*                                                                   E40890
+     C           *ENTRY    PLIST                                          E40890
+     C                     PARM           RSEQ    5                       E40890
+     C                     PARM           RLEV    1                       E40890
+     C                     PARM           RENT    3                       E40890
+     C                     PARM           RPARM 100                       E40890
+     C                     PARM           RACT    1                       E40890
+     C                     PARM           RCMD    1                       E40890
+     C*                                                                   E40890
+0103 C*    ONE CYCLE ONLY - SET UP CONSTANTS
+0104 C*
+0105 C                     SETON                     LR
+0106 C                     MOVE ' '       BLANKS100
+0107 C                     Z-ADD0         ZERO05  50
+0110 C*
+0111 C*********************EXSR ZSYSTM                                    S01194
+     C** ACCESS BANK DETAILS VIA DATA AREA                                S01194
+     C*                                                                   S01194
+     C                     IN   RUNDAT                                    S01194
+     C           *NAMVAR   DEFN           RUNDAT                          S01194
+     C                     IN   MMOD                                      E40890
+     C           *NAMVAR   DEFN           MMOD                            E40890
+     C*                                                                   S01194
+0112 C***99****************SETON                     U7U8                 S01194
+0113 C***99****************GOTO END                                       S01194
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
+     C           @DATF     COMP 'M'                      98MMDDYY, 98 ON. S01194
+     C**                                                                  S01117
+     C**  IF MBIN = Y, OBTAIN BOOKING/ A/C BRANCHES                       S01117
+     C**  VALID FOR THIS USER, IN FIRST CYCLE                             S01117
+     C           @MBIN     IFEQ 'Y'                                       S01117
+     C                     EXSR ZSPFB                                     S01117
+     C                     END                                            S01117
+     C*                                                                   AUS009
+     C** Access SAR details file to determine if User Defined             AUS009
+     C** Confirmations is switched on                                     AUS009
+     C*                                                                   AUS009
+     C                     CALL 'AOSARDR0'                                AUS009
+     C                     PARM *BLANKS   RTCD    7                       AUS009
+     C                     PARM '*VERIFY' OPTN    7                       AUS009
+     C                     PARM 'AUS009'  @SARD   6                       AUS009
+     C           SCSARD    PARM SCSARD    DSFDY                           AUS009
+     C           RTCD      IFEQ *BLANK                                    AUS009
+     C                     SETON                     11                   AUS009
+     C                     END                                            AUS009
+0719 C**                                                                  S01117
+0115 C*    LOOP TO VALIDATE DEAL NUMBERS ENTERED
+0116 C*
+0117 C           LOOP      TAG                             ** LOOP TAG **
+0118 C*
+0186 C                     EXSR TIME
+0119 C***20******          MOVELERRMSG,X  FLD2B                           AUS009
+     C***20******          MOVELERCOD     FLD3B                     S01117AUS009
+     C           *IN20     IFEQ '1'                                       AUS009
+     C           *IN10     OREQ '1'                                       AUS009
+     C                     MOVELERRMSG,X  FLD2B                           AUS009
+     C                     MOVELERCOD     FLD3B                           AUS009
+     C                     SETON                     20                   AUS009
+     C                     END                                            AUS009
+0121 C**********           EXFMTSETKEY6B                                  E298
+     C                     EXFMTDL0115D0                                  E298
+     C                     MOVE VARB      DNO     6
+0122 C***30******          GOTO END                        END OF JOB     E40890
+     C**N87*31***          GOTO END                        PREVIOUS E38769E40890
+     C*                                                                   E40890
+     C***LEAVE*PROGRAM*IF*F10,*F12*OR*F3*PRESSED                          E40890
+     C*  LEAVE PROGRAM IF F12, F3 OR F6 PRESSED                           E40890
+     C*                                                                   E40890
+     C   12                                                               E40890
+     C*R*13******          GOTO END                        END OF JOB     E40890
+     COR 13                                                               E40890
+     COR 14                GOTO END                        END OF JOB     E40890
+0123 C*
+0124 C                     SETOF                     030421
+     C*                                                                   AUS009
+     C           *IN11     IFEQ '1'                                       AUS009
+     C                     SETOF                     061020               AUS009
+     C                     SETOF                     052223               AUS009
+     C*                                                                   AUS009
+     C                     MOVE DATE      VDATE   60                      AUS009
+     C                     MOVE AMDSEQ    SEQNO                           AUS009
+     C*                                                                   AUS009
+     C*                                                                   AUS009
+     C*   DEAL AMENDMENT PROCESSING                                       AUS009
+     C*                                                                   AUS009
+     C           VDATE     IFEQ *ZERO                                     AUS009
+     C           SEQNO     ANDNE*ZERO                                     AUS009
+     C           VDATE     ORNE *ZERO                                     AUS009
+     C           SEQNO     ANDEQ*ZERO                                     AUS009
+     C                     Z-ADD6         X                               AUS009
+     C                     MOVE '1'       *IN10                           AUS009
+     C                     GOTO LOOP                                      AUS009
+     C                     END                                            AUS009
+     C*                                                                   AUS009
+     C           VDATE     IFNE *ZERO                                     AUS009
+     C           SEQNO     ANDNE*ZERO                                     AUS009
+     C*                                                                   AUS009
+     C*   CONVERT VALUE DATE                                              AUS009
+     C                     MOVE VDATE     ZDATE                           AUS009
+     C                     EXSR ZDATE1                                    AUS009
+     C                     Z-ADDZDAYNO    VDAYNO                          AUS009
+     C*                                                                   AUS009
+     C           DAMKEY    CHAINDEAMS                10                   AUS009
+     C  N05N06             Z-ADD6         X          10                   AUS009
+     C   05      OREDDA    COMP @RUND                1010                 AUS009
+     C   05 10             Z-ADD7         X                               AUS009
+     C   06      LCDDA     COMP @RUND                1010                 AUS009
+     C   06 10             Z-ADD8         X                               AUS009
+     C   10                GOTO LOOP                                      AUS009
+     C*                                                                   AUS009
+     C           AMTP      IFNE 'SC'                                      AUS009
+     C           AMTP      ANDNE'PI'                                      AUS009
+     C           AMTP      ANDNE'PD'                                      AUS009
+     C                     Z-ADD9         X          10                   AUS009
+     C                     GOTO LOOP                                      AUS009
+     C                     END                                            AUS009
+     C*                                                                   AUS009
+     C           AMTP      IFEQ 'PD'                                      AUS009
+     C           DNO       CHAINDEALS                10                   AUS009
+     C  N03N04             Z-ADD10        X                               AUS009
+     C  N03N04             GOTO LOOP                                      AUS009
+     C           DAAM      COMP PCPL                     21               AUS009
+     C                     END                                            AUS009
+     C*                                                                   AUS009
+     C                     GOTO UPDATE                                    AUS009
+     C                     END                                            AUS009
+     C                     END                                            AUS009
+     C*                                                                   AUS009
+     C*   DEAL PROCESSING                                                 AUS009
+0125 C           DNO       CHAINDEALS                20
+     C**  IF NO RECORD FOUND ON DEALS FILE, OUTPUT ERROR MSG 1            E40982
+     C*                                                                   E40982
+0126 C**N03N04****         Z-ADD1         X       10 20                   E40982
+     C           *IN03     IFEQ '0'                                       E40982
+     C           *IN04     ANDEQ'0'                                       E40982
+     C                     Z-ADD1         X       10 20                   E40982
+     C**                                                                  E40982
+     C**  ELSE CHECK IF CONFIRMATION CAN BE PRODUCED                      E40982
+     C                     ELSE                                           E40982
+     C*                                                                   091452
+     C**  Do not allow reprint if NX deal                                 091452
+     C           *IN03     IFEQ '1'                                       091452
+     C           DTYP      ANDEQ'NX'                                      091452
+     C                     Z-ADD1         X          20                   091452
+     C                     END                                            091452
+     C*                                                                   091452
+     C           *IN03     IFEQ '1'
+     C***********ORED******COMP RUND                 2020                 S01194
+     C***20******LCD*******COMP RUND                 202021               S01194
+     C           DTYP      ANDNE'NX'                                      091452
+     C           ORED      COMP @RUND                2020                 S01194
+     C   20      LCD       COMP @RUND                202021               S01194
+     C   20                Z-ADD4         X                               S01194
+     C                     END
+0129 C***04******LCD*******COMP RUND                 2020                 S01194
+0129 C   04      LCD       COMP @RUND                2020                 S01194
+0130 C   04 20             Z-ADD3         X
+     C*                                                                   S01117
+     C           @MBIN     IFEQ 'Y'                                       S01117
+     C                     MOVE BRCA      ZBRCDX  3                       S01117
+     C                     EXSR ZBRR                                      S01117
+     C*                                                                   S01117
+     C                     MOVE *BLANKS   ERCOD                           S01117
+     C*                                                                   S01117
+     C           *IN99     IFEQ '1'                                       S01117
+     C                     Z-ADD5         X                               S01117
+     C                     MOVEL' 287'    ERCOD  50                       S01117
+     C                     SETON                     20                   S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C*                                                                   E40982
+     C                     END                                            E40982
+     C*                                                                   S01117
+     C   20 87             SETOF                     87                   E38769
+0131 C   20                GOTO LOOP                       ERROR
+     C*                                                                   AUS009
+     C**  REPRINT MATURITY CONFIRMATION FOR CALL DEALS                    AUS009
+     C*                                                                   AUS009
+     C           *IN11     IFEQ '1'                                       AUS009
+     C  N03N04             GOTO UPDATE                                    AUS009
+     C           DTYP      COMP 'CD'                     60               AUS009
+     C     N60   DTYP      COMP 'CL'                     60               AUS009
+     C     N60             GOTO UPDATE                                    AUS009
+     C           LCD       COMP @RUND                    60               AUS009
+     C   60      MDAT      COMP @RUND                    60               AUS009
+     C   60                SETON                     22                   AUS009
+     C                     END                                            AUS009
+     C*                                                                   AUS009
+     C*    UPDATE DTRIX HEADER & INSERT NEW DETAIL RECORD                 AUS009
+     C           UPDATE    TAG                             * UPDATE TAG * AUS009
+0132 C**
+     C           MSDL      COMP 'Y'                      U5               E40890
+     C           *INU5     IFEQ '1'                                       E15504
+     C                     OPEN MSDLRPF                                   064780
+     C                     EXCPTMSDLR                                     E15504
+     C                     CLOSEMSDLRPF                                   064780
+     C                     ELSE                                           E15504
+0133 C**
+0134 C**   CALCULATIONS TO UPDATE DTRIX INSERTION
+0135 C           UDLOG     TAG                             ** UDLOG TAG **
+0139 C**
+     C**
+     C**   OBTAIN LAST TRANSACTION NUMBER
+     C                     EXSR ZTNLU1
+0184 C**   INSERT DTRIX RECORD
+0185 C                     SETON                     71
+0187 C                     EXSR EXCPTN
+0188 C**
+0189 C**   GET DTRIX HEADER RECORD READY FOR UPDATE
+0190 C           1         CHAINDTRIXHH              10
+0192 C  N01                SETON                     U7U8
+0193 C  N01                GOTO END
+0201 C**
+0202 C**   INCREMENT HEADER FIELDS
+0205 C           NDLR      ADD  1         NDLR
+0206 C**
+0207 C**   UPDATE DTRIX HEADER RECORD
+0208 C                     SETON                     72
+0210 C                     EXSR EXCPTN
+     C**
+     C**   END OF COMMITMENT CYCLE
+     C                     COMIT
+     C**
+     C                     END                                            E15504
+     C*
+     C  N87                SETON                     87                   E38769
+     C                     MOVE *BLANKS   VARB                            E38769
+     C*                                                                   AUS009
+     C**   BLANK THE SCREEN FIELDS                                        AUS009
+     C*                                                                   AUS009
+     C                     MOVE *BLANK    DATE                            AUS009
+     C                     MOVE *BLANK    AMDSEQ                          AUS009
+0232 C*
+0233 C*    PROMPT FOR ANOTHER DEAL NUMBER
+0234 C                     GOTO LOOP
+0235 C**
+0236 C**
+0237 C           END       TAG                             ** END TAG **
+0238 C*
+     C** SET RETURN COMMANDS TO INDICATE HOW PROGRAM WAS EXITED           E40890
+     C*                                                                   E40890
+     C           *IN13     IFEQ '1'                                       E40890
+     C                     MOVE 'E'       RCMD                            E40890
+     C                     ROLBK                                          E40890
+     C                     END                                            E40890
+     C           *IN12     IFEQ '1'                                       E40890
+     C                     MOVE 'F'       RCMD                            E40890
+     C                     ROLBK                                          E40890
+     C                     END                                            E40890
+0239 C*
+0240 C********************************************************************
+0258 C*
+0259 C           EXCPTN    BEGSR                           *** EXCPTN ***
+0260 C                     EXCPT
+     C                     SETOF                     457172
+0263 C                     ENDSR
+0264 C*
+0265 C********************************************************************
+0266 C**   TIME SR. TO OBTAIN TIME.
+0267 C**
+0268 C           TIME      BEGSR                           *** TIME ***
+0269 C                     TIME           MTIME   60
+0270 C                     ENDSR
+0271 C**
+0272 C********************************************************************
+0273 C*********************                                               S01194
+0274 C*****ZSYSTM*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.   S01194
+0275 C*********************                                               S01194
+0276 C***********ZSYSTM****BEGSR                           *** ZSYSTM *** S01194
+0277 C*********************                                               S01194
+0278 C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.*****************   S01194
+0279 C*********************MOVEL'01      'ZTABKY 12                       S01194
+0280 C*********************MOVE '  10'    ZTABKY                          S01194
+0281 C*********************                                               S01194
+0282 C***********ZTABKY****CHAINTABLE                99    ON NOT THERE   S01194
+0283 C**N99******RECI******COMP 'D'                  9999  ON, IS DELETED S01194
+0284 C*********************                                               S01194
+0285 C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.*****************   S01194
+0286 C***********DATF******COMP 'M'                      98MMDDYY, 98 ON. S01194
+0287 C*********************                                               S01194
+0288 C*********************ENDSR                                          S01194
+0289 C*********************                                               S01194
+0290 C*********************                                               S01194
+0291 C********************************************************************
+     C**
+     C**  ZTNLU1 SR. - TO LOCK THE TRANSACTION NUMBER DATA AREA AND
+     C**               THEN UPDATE AND RELEASE THE DATA AREA.
+     C**
+     C           ZTNLU1    BEGSR
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C*****************************************************************
+     C**  P/ZSPFB STD SR TO MAKE SPF USER/BRANCHES AVAILABLE TO PGM       S01117
+     C**    INPUT FROM EXT.DTAARA- ZBR1 & 2,UP TO 100 BRANCHES,TOP DOWN   S01117
+     C**                           ZIN,INDEX OF LOWEST ENTRY FOR ARRAY    S01117
+     C**    OUTPUT - ZBR  ARRAY, TOP DOWN                                 S01117
+     C**             U, EQ ZIN                                            S01117
+     C**                                                                  S01117
+     C           ZSPFB     BEGSR                           **  ZSPFB **   S01117
+     C           *NAMVAR   DEFN           ZBRU                            S01117
+     C                     IN   ZBRU                                      S01117
+     C                     MOVEAZBR1      ZBR,1                           S01117
+     C                     MOVEAZBR2      ZBR,51                          S01117
+     C                     MOVE ZIN       U       30                      S01117
+      *                                                                                       197434
+      ** Set up the array ZBR by branches in data areas ZBRU1 and ZBRU2                       197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZBRU1                                               197434
+     C                     IN   ZBRU1                                                         197434
+     C                     Z-ADD101       W       30                                          197434
+     C                     MOVEAZBR11     ZBR,W                                               197434
+     C                     Z-ADD186       W                                                   197434
+     C                     MOVEAZBR12     ZBR,W                                               197434
+     C                     Z-ADD271       W                                                   197434
+     C                     MOVEAZBR13     ZBR,W                                               197434
+     C                     Z-ADD356       W                                                   197434
+     C                     MOVEAZBR14     ZBR,W                                               197434
+     C                     Z-ADD441       W                                                   197434
+     C                     MOVEAZBR15     ZBR,W                                               197434
+     C                     Z-ADD526       W                                                   197434
+     C                     MOVEAZBR16     ZBR,W                                               197434
+     C                     Z-ADD611       W                                                   197434
+     C                     MOVEAZBR17     ZBR,W                                               197434
+     C                     Z-ADD696       W                                                   197434
+     C                     MOVEAZBR18     ZBR,W                                               197434
+      *                                                                                       197434
+     C           *NAMVAR   DEFN           ZBRU2                                               197434
+     C                     IN   ZBRU2                                                         197434
+     C                     Z-ADD767       W                                                   197434
+     C                     MOVEAZBR21     ZBR,W                                               197434
+     C                     Z-ADD852       W                                                   197434
+     C                     MOVEAZBR22     ZBR,W                                               197434
+      *                                                                                       197434
+     C                     ENDSR                                          S01117
+     C**                                                                  S01117
+     C*****************************************************************   S01117
+     C** ZBRR SR - RELATED BRANCH MUST BE VALID FOR USER-BOOK/A/C BR      S01117
+     C**  INPUT - ZBRCDX - BRANCH CODE                                    S01117
+     C**  KNOWN - ZBR - ARRAY OF UP TO 100 BRS, TOPDOWN                   S01117
+     C**          U - LOWEST ENTRY IN ARRAY                               S01117
+     C**  OUTPUT -99,IF NO BRS IN ARRAY, OR THIS BR NOT IN ARRAY          S01117
+     C**                                                                  S01117
+     C           ZBRR      BEGSR                           ** ZBRR **     S01117
+     C                     SETOF                     9099                 S01117
+     C                     Z-ADDU         V       30     99ON IF ZERO     S01117
+     C**                                                                  S01117
+     C           *IN99     IFNE '1'                                       S01117
+     C           ZBRCDX    LOKUPZBR,V                    90               S01117
+     C           *IN90     IFNE '1'                                       S01117
+     C                     SETON                     99                   S01117
+     C                     END                                            S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+     C********************************************************************S01117
+     C/EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+0351 O*
+0352 O*    DTRIX FILE OUTPUT
+0353 O*
+0354 O*    UPDATE FILE HEADER RECORD.
+0355 ODTRIXHH E        72
+0358 O                         NDLR      29P
+0359 O*
+0360 O*    INSERT DETAIL RECORD
+0361 ODTRIXDD E        71
+0362 O                                    2 'DD'
+     O                 11 05              2 'DA'                          AUS009
+     O                 11 06              2 'DA'                          AUS009
+0363 O                         DNO        8
+0364 O                                   17 '00000000I'
+     O                    21             17 'A'
+     O                 11 05   VDAYNO    13                               AUS009
+     O                 11 06   VDAYNO    13                               AUS009
+     O                 11 05   SEQNO     16                               AUS009
+     O                 11 06   SEQNO     16                               AUS009
+0365 O                    04             17 'R'
+     O                 11 06             17 'R'                           AUS009
+     O                 11 23             17 'A'                           AUS009
+0366 O                                   29 'RNY00000N000'
+     O                 11 05             20 'C'                           AUS009
+     O                 11 06             20 'C'                           AUS009
+     O                 11 21             20 'M'                           AUS009
+     O                 11 22             20 'M'                           AUS009
+0368 O                         BRCA      37                               E40890
+0368 O                         NATN      40P
+0360 O*    SWIFT DEAL REPRINT RECORD                                      E15504
+0361 OMSDLRPF E                MSDLR                                      E15504
+0362 O                                    2 'DD'                          E15504
+0363 O                         DNO        8                               E15504
+0364 O                                   17 '00000000I'                   E15504
+     O                    21             17 'A'                           E15504
+0365 O                    04             17 'R'                           E15504
+0366 O                                   29 'RNY00000N000'                E15504
+     O                         BRCA      37                               E38769
+0369 O*
+0372 O*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+**   ERRMSG - ERROR MESSAGES
+INVALID DEAL NUMBER or DEAL REQUIRES AUTHORISATION
+DEAL NOT INSERTED TODAY
+DEAL NOT REVERSED TODAY
+DEAL NOT INSERTED/AMENDED TODAY
+BOOKING BRANCH ON RELATED REC. INVALID FOR USER
+INVALID DEAL AMENDMENT NUMBER
+DEAL AMENDMENT NOT INSERTED TODAY
+DEAL AMENDMENT NOT REVERSED TODAY
+DEAL AMENDMENT IS NOT PI, PD OR SC
+ASSOCIATED DEAL NUMBER NOT FOUND
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365

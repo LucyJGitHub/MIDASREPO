@@ -1,0 +1,452 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Reconcile Book Posn Head.&Details')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2670  - RECONCILE BOOK POSITION HEADERS AND DETAILS        *
+     F*                                                               *
+     F*  Function: This program reads each record on the Book         *
+     F*   (COB)    Positions - Detail file and checks whether a       *
+     F*            corresponding record exist on the Historic Book    *
+     F*            Positions Header file.  If not reconciled, the     *
+     F*            record is deleted from the Detail file. A report   *
+     F*            showing missing records is produced.               *
+     F*                                                               *
+     F*  Called By: Called interactively when Book Positions are      *
+     F*             out of balance.                                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC005             Date 15Dec98               *
+      *                 052254             Date 10Jan94               *
+      *                 S01401             Date 16Jun93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                 E22957             DATE 25JUL90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CAC005 - PCA-SE Enhancement.                                 *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01117 - Multibranching.                                     *
+     F*  E22957 - NEW PGM TO CHECK THAT HEADER EXISTS FOR EVERY BKPOS *   E22957
+     F*             RECORD.                                           *   E22957
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FBKPOS   UF  E           K        DISK
+     FBKPOSA  UF  E           K        DISK
+     FBKPHH   IF  E           K        DISK
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     FSECTY   IF  E           K        DISK
+     FSE2670P1O   E             77     PRINTER
+     FSE2670AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   33       Chain fail on SECTY                                *
+     F*   40       File controls OOB                                  *
+     F*   41       BKPOSD records have been Deleted                   *
+     F*   50       BKPOSD empty                                       *
+      *  68 - CAC005 is on, include profit centre in printer file.    *   CAC005
+     F*   77       Overflow indicator                                 *
+     F*   88       No corresponding BKPHH record                      *
+     F*   90       BKPOSD EOF                                         *
+     F*   99       BKPOSA record missing                              *
+     F*                                                               *
+     C*****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    CPY@    1   1 80                                S01117
+      /EJECT
+     I/COPY ZSRSRC,ZSEDITZ2
+     I* DATA STRUCTURE FOR ZSEDIT
+     I*
+     I*LDA********UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     ICPYR@#      DS                                                      S01117
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+     C/EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T                                  *
+     C*================================================================
+     C*
+     C* KEYLIST FOR FILE CHAIN TO BKPHH
+     C*
+     C           BKKEY     KLIST
+     C                     KFLD           BPSC
+     C***********          KFLD           BPBR                            S01117
+     C                     KFLD           BPBA                            S01117
+     C                     KFLD           BPBK
+     C                     KFLD           BPMK
+     C                     KFLD           BPTV
+     C                     KFLD           BPPD
+     C*
+     C*  PREPARE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'SE2670'  DBPGM
+     C                     OUT  LDA                                       S01117
+     C*
+     C           *LIKE     DEFN NORE      WCNT
+     C*
+     C**  Fetch ICD record 1
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C***********          MOVEL'01'      DBASE            ***************S01117
+     C                     Z-ADD1         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     WRITEHEADAU
+     C                     WRITEERROR
+     C                     WRITETRAILAU
+     C                     SETON                         LR
+     C                     RETRN
+     C                     END
+      *                                                                   CAC005
+      ***  Check if CAC005 - PCA-SE Enhancement is on.                    CAC005
+      *                                                                   CAC005
+     C                     MOVE 'N'       CAC005  1                       CAC005
+     C                     MOVE *OFF      *IN68                           CAC005
+     C                     CALL 'AOSARDR0'                                CAC005
+     C                     PARM *BLANKS   @RTCD   7                       CAC005
+     C                     PARM '*VERIFY' @OPTN   7                       CAC005
+     C                     PARM 'CAC005'  @SARD   6                       CAC005
+      *                                                                   CAC005
+     C           @RTCD     IFEQ *BLANK                                    CAC005
+     C                     MOVE 'Y'       CAC005                          CAC005
+     C                     MOVE *ON       *IN68                           CAC005
+     C                     ENDIF                                          CAC005
+     C*
+     C* Initialise count
+     C*
+     C                     Z-ADD*ZEROS    HCNT
+     C*
+     C                     MOVE *BLANKS   BPSC
+     C                     SETOF                         90
+     C           BPSC      SETLLBKPOSDF              50
+     C*
+     C                     WRITEHEADS
+     C*
+     C* Print header if file not empty, else print no details report
+     C*
+     C           *IN50     IFEQ '0'
+     C                     WRITEHEADS2
+     C                     WRITEHEADS3
+     C                     ELSE
+     C                     WRITENONE
+     C                     GOTO ENDPGM
+     C                     END
+     C           *IN90     DOWEQ'0'
+     C                     READ BKPOSDF                  90
+     C           *IN90     IFEQ '0'
+     C                     EXSR POSPR
+     C                     END
+     C                     END
+     C*
+     C* Write trailer
+     C*
+     C                     WRITETRAILER
+     C*
+     C* Compare file controls
+     C*
+     C                     READ BKPOSAF                  99
+     C           *IN99     IFEQ '1'                        B2
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'BKPOS'   DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 02 **
+     C***********          MOVEL'02'      DBASE            ***************S01117
+     C                     Z-ADD2         DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO ENDPGM
+     C                     ELSE                            X2
+     C           HCNT      ADD  DCNT      WCNT
+     C           WCNT      COMP NORE                 4040
+     C*
+     C*    -  OUTPUT CONTROL REPORT
+     C*
+     C           EAUDIT    TAG
+     C*
+     C                     WRITEHEADAU
+     C*
+     C                     WRITEDETLAU
+     C*
+     C                     WRITETRAILAU
+     C*
+     C                     END                             E1
+     C*
+     C* UPDATE BKPOSA AUDIT RECORD
+     C*
+     C           *INU1     IFEQ '1'                        B3
+     C                     Z-ADDHCNT      NORE
+     C                     UPDATBKPOSAF
+     C                     END                             E3
+     C           ENDPGM    TAG
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C                     SETON                     LR
+      *                                                               *
+      *================================================================
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* POSPR - SUBROUTINE TO ACCESS BKPHH                            *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           POSPR     BEGSR                           ** POSPR **
+     C           BKKEY     CHAINBKPHH                88
+     C*
+     C           *IN88     IFEQ '0'
+     C                     ADD  1         HCNT
+     C                     ELSE
+     C                     EXSR PRINT
+     C           *INU1     IFEQ '1'
+     C                     DELETBKPOSDF
+     C                     ADD  1         DCNT
+     C                     MOVE '1'       *IN41
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* PRINT - SUBROUTINE TO PRINT OUT DETAILS OF MISSING REC        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           PRINT     BEGSR                           ** POSPR **
+     C*
+     C* Overflow
+     C*
+     C           *IN77     IFEQ '1'
+     C                     WRITEHEADS
+     C                     WRITEHEADS2
+     C                     WRITEHEADS3
+     C                     SETOF                     77
+     C                     END
+     C*
+     C* Set up fields on report
+     C*
+     C                     MOVEL*BLANKS   PRSC
+     C***********          MOVEL*BLANKS   PRBR                            S01117
+     C                     MOVEL*BLANKS   PRBA                            S01117
+     C                     MOVEL*BLANKS   PRBK
+     C                     MOVEL*BLANKS   MRKT
+     C                     MOVEL*BLANKS   PRTV
+     C                     MOVEL*BLANKS   PRPD
+     C*
+     C* Security
+     C*
+     C                     MOVELBPSC      PRSC
+     C*
+     C* Branch
+     C*
+     C***********          MOVELBPBR      PRBR                            S01117
+     C                     MOVELBPBA      PRBA                            S01117
+     C*
+     C* Book
+     C*
+     C                     MOVELBPBK      PRBK
+      *                                                                   CAC005
+      ** If CAC005 is on, retrieve user book from AOBKPCR0.               CAC005
+      *                                                                   CAC005
+     C           CAC005    IFEQ 'Y'                                       CAC005
+     C                     CALL 'AOBKPCR0'                                CAC005
+     C                     PARM           PRTCD   7                       CAC005
+     C                     PARM '*USER  ' POPTN   7                       CAC005
+     C           PMBKCD    PARM *BLANKS   PMBKCD  2                       CAC005
+     C           PMPRFC    PARM *BLANKS   PMPRFC  4                       CAC005
+     C                     PARM BPBK      PMPSBK  2                       CAC005
+     C           PRTCD     IFEQ *BLANKS                                   CAC005
+     C                     MOVELPMBKCD    PRBK                            CAC005
+     C                     MOVE PMPRFC    PRFC                            CAC005
+     C                     ELSE                                           CAC005
+     C                     MOVEL*BLANKS   PRFC                            CAC005
+     C                     ENDIF                                          CAC005
+     C                     ENDIF                                          CAC005
+      *                                                                   CAC005
+     C*
+     C* market
+     C*
+     C                     MOVELBPMK      MRKT
+     C*
+     C* Trade/value date
+     C*
+     C           BPTV      IFEQ 'T'
+     C                     MOVEL'TRADE'   PRTV
+     C                     ELSE
+     C                     MOVEL'VALUE'   PRTV
+     C                     END
+     C*
+     C* Position date
+     C*
+     C                     Z-ADDBPPD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PRPD
+     C*
+     C* Get nominal currency dec places
+     C*
+     C           BPSC      CHAINSECTY                33
+     C           *IN33     IFEQ '1'
+     C                     MOVEL'********'PRNOM
+     C                     MOVE '*******' PRNOM
+     C                     MOVEL'********'PREX
+     C                     MOVE '*******' PREX
+     C                     MOVEL'********'PRAVP
+     C                     MOVE '*******' PRAVP
+     C                     MOVEL'********'PRPI
+     C                     MOVE '*****'   PRPI
+     C                     GOTO WRTDET
+     C                     END
+     C*
+     C* Nominal Position
+     C*
+     C                     MOVE *ZEROS    PRNOM
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE NPSN      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRNOM
+     C*
+     C* Ex-coupon Nominal Position
+     C*
+     C                     MOVE *ZEROS    PREX
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE ECNP      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PREX
+     C*
+     C* Average price numerator
+     C*
+     C                     MOVE *ZEROS    PRAVP
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE APNC      ZFLD15
+     C                     Z-ADDNMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRAVP
+     C*
+     C* Purchased interest
+     C*
+     C                     MOVE *ZEROS    PRPI
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADDPILP      ZFLD15
+     C                     Z-ADDCDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PRPI
+     C           WRTDET    TAG
+     C                     WRITEDETAIL
+     C                     ENDSR
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+     C*
+     C*
+     C/COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ31
+      /EJECT
+      /COPY ZSRSRC,ZSYSTMZ1
+     C*
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN                       #DATE
+0366073110961461                                                           #DATE
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR                         #DATE
+000031059090120151181212243273304334365                                    #DATE
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,168 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas OF Generation of Modelo 123')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       REC000007 - Midas OF Generation of Modelo 123               */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD034330           Date 07May15              */
+/*                      CRE104  *CREATE    Date 26Mar15              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*     MD034330 - Cancelled 123 request on the Modelo 123 screen is  */
+/*                saved on the audit file. Issue COMMIT command.     */
+/*       CRE104 - Modelo 123 and 193 Reports                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &RLEV &RENT &RPARMX)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2015')
+ 
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&RPARMX) TYPE(*CHAR) LEN(100)
+ 
+             DCL        VAR(&BRCH) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&MNTH) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&YEAR) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&CMPF) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&FOLD) TYPE(*CHAR) LEN(16)
+             DCL        VAR(&DOCF) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JNBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&PDFD) TYPE(*CHAR) LEN(12)
+             DCL        VAR(&SPLFLR) TYPE(*CHAR) LEN(22)
+             DCL        VAR(&TOTINC17) TYPE(*CHAR) LEN(17) VALUE(' ')
+             DCL        VAR(&W123FLD) TYPE(*CHAR) LEN(502) VALUE(' ')
+             DCL        VAR(&SQLCMD) TYPE(*CHAR) LEN(550) VALUE(' ')
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+ 
+             DCLF       FILE(RE123FTD)
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&SDSTAT)
+             CHGVAR     VAR(&PRE) VALUE(%SUBSTRING(&SDSTAT 6 2))
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     PRTTXT(*BLANK) SWS(XXXXXX00)
+ 
+             CHGVAR     VAR(&BRCH) VALUE(%SUBSTRING(&RPARMX 1 3))
+             CHGVAR     VAR(&MNTH) VALUE(%SUBSTRING(&RPARMX 4 2))
+             CHGVAR     VAR(&YEAR) VALUE(%SUBSTRING(&RPARMX 6 4))
+             CHGVAR     VAR(&CMPF) VALUE(%SUBSTRING(&RPARMX 10 1))
+             CHGVAR     VAR(&FOLD) VALUE('AEAT/' *CAT &PRE *CAT '/M123/' *CAT +
+                          &BRCH)
+             CHGVAR     VAR(&DOCF) VALUE(&YEAR *CAT &MNTH *CAT '.TXT')
+ 
+/* Allocate file to ensure no one is using it */
+ 
+             ALCOBJ     OBJ((RE123ETD *FILE *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF1085 CPF1002) EXEC(DO)
+ 
+             SNDPGMMSG  MSG('Another user is generating the extract +
+                          list. Please try later.') TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CLRPFM     FILE(RE123ETD)
+             CLRPFM     FILE(RE123FTD)
+             CLRPFM     FILE(RE123ITD)
+ 
+             IF         COND(&CMPF *EQ 'Y') THEN(DO)
+             CHGVAR     VAR(&DOCF) VALUE(&YEAR *CAT &MNTH *CAT 'X.TXT')
+             ENDDO
+ 
+/* Call program to populate RE123ETD, RE123FTD and RE123ITD files */
+ 
+ PROC:       CALL       PGM(RE000007) PARM(&RSEQ &RLEV &RENT &RPARMX)
+ 
+/* Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Copy to Flat File */
+             CPYF       FROMFILE(RE123ETD) TOFILE(RE123FTD) +
+                          MBROPT(*REPLACE) FMTOPT(*NOCHK)
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(END))
+ 
+/* Check if a Negative Total Income was returned */
+ 
+             CHGVAR     VAR(&TOTINC17) VALUE(%SUBSTRING(&RPARMX 11 17))
+ 
+             IF         COND(&TOTINC17 *NE ' ') THEN(DO)
+ 
+/* Get the negative Total Income and replace the previously generated flat file */
+ 
+             CHGVAR     (%SUBSTRING(&M123FLD 226 17)) &TOTINC17
+             CHGVAR     VAR(&W123FLD) VALUE(&QUOTE *CAT &M123FLD *CAT &QUOTE)
+             SCRUNSQL   SQL('DELETE FROM RE123FTD')
+             CHGVAR     VAR(&SQLCMD) VALUE( 'INSERT +
+                          INTO RE123FTD (M123FLD) VALUES (' *CAT +
+                          &W123FLD *CAT ')')
+             SCRUNSQL   SQL(&SQLCMD)
+             ENDDO
+ 
+ 
+/* Create document in folder */
+ 
+             CPYTOPCD   FROMFILE(RE123FTD) TOFLR(&FOLD) +
+                          TODOC(&DOCF) REPLACE(*YES)
+ 
+             SNDPGMMSG  MSG('Generation of Modelo 123 completed. +
+                          Check Flat File ' *CAT &DOCF *CAT ' in +
+                          folder ' *CAT &FOLD *CAT '.') TOMSGQ(MOPERQ MRUNQ)
+ 
+             RTVJOBA    JOB(&JOB) USER(&USER) NBR(&JNBR)
+             CHGVAR     VAR(&SPLFLR) VALUE('/QDLS/AEAT/' *CAT &PRE *CAT '/M123/' +
+                          *CAT &BRCH)
+             CHGVAR     VAR(&PDFD) VALUE('M' *CAT &YEAR *CAT &MNTH *CAT '.PDF')
+             IF         COND(&CMPF *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&PDFD) VALUE('M' *CAT &YEAR *CAT &MNTH *CAT 'X.PDF')
+             ENDDO
+ 
+             UTCVTSPOOL FROMFILE(RE000007P1) TOSTMF(&PDFD) TODIR(&SPLFLR) +
+                          JOB(&JNBR/&USER/&JOB) SPLNBR(*ONLY) TOFMT(*PDF) +
+                          STMFOPT(*REPLACE)
+ 
+             COMMIT                                                                     /*MD034330*/
+             GOTO       CMDLBL(END)
+ 
+ 
+ABNOR:      SNDPGMMSG  MSG('REC000007 - Ended Abnormally') +
+                         TOMSGQ(MOPERQ MRUNQ)
+            MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+            DMPCLPGM
+            MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+END:
+ 
+             DLCOBJ     OBJ((RE123ETD *FILE *EXCLRD))
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+ 
+             ENDPGM

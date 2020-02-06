@@ -1,0 +1,317 @@
+     H        1
+      *****************************************************************
+/*X*IA***OVRDBF*FILE(CMPN1)*TOFILE(UPCMPNTPD)**************************                CUP019 CUP021
+/*X*IB***OVRDBF*FILE(CMPN2)*TOFILE(UPCMPNTPD)**************************                CUP019 CUP021
+/*S*D****RPGBASE*******************************************************                       CUP021
+/*O*R****OVRDBF*CMPN1*CBCMPNL1*****************************************                       CUP019
+/*O*R****OVRDBF*CMPN2*CBCMPNL1*****************************************                       CUP019
+      *****************************************************************
+      *                                                               *
+      *  Midas - Upgrade module                                       *
+      *                                                               *
+      *  UP0800 - Compare two CoB component files                     *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4.01.02 ----------------------------------------*
+      *  Prev Amend No. CUP019             Date 17Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CUP004             Date 16Mar98               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CUP019 - Use templates for Action Files.                     *
+      *  CUP004 - Make upgrade of DTALIB files easier                 *
+      *                                                               *
+      *****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write or chain fail
+      *       70 - 85 Indicators for changed fields
+      *
+     FCMPN1   IF  E                    DISK         KINFSR *PSSR
+     FCMPN2   IF  E           K        DISK         KINFSR *PSSR
+     F********    @DHREGH                           KRENAMECMPNF                              CUP019
+     F            CBCMPND0                          KRENAMECMPNF                              CUP019
+     FUPCMPNPDO   E                    DISK         KINFSR *PSSR
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      * Fields with the same name will need to be renamed.
+      *
+     ICMPNF
+     I              DHCOTT                          COTT
+     I              DHCSEQ                          CSEQ
+     I              DHCSTS                          CSTS
+     I              DHCSHP                          CSHP
+     I              DHCEPY                          CEPY
+     I              DHCTSL                          CTSL
+     I              DHCFOB                          CFOB
+     I              DHCTXT                          CTXT
+     I              DHCPRM                          CPRM
+     I              DHCRQD                          CRQD
+     I              DHCMOD                          CMOD
+     I              DHCEMI                          CEMI
+     I              DHCRES                          CRES
+     I              DHCODP                          CODP
+     I              DHCMEF                          CMEF
+     I              DHCFRQ                          CFRQ
+     I              DHCSDE                          CSDE
+     I              DHCSTI                          CSTI
+     I              DHCEDE                          CEDE
+     I              DHCETI                          CETI
+     I              DHCHTB                          CHTB
+     I              DHCHTA                          CHTA
+     I              DHCFAL                          CFAL
+     I              DHEODT                          EODT
+     I              DHEOMT                          EOMT
+     I              DHBOMT                          BOMT
+     I              DHEOYT                          EOYT
+     I              DHEODC                          EODC
+     I              DHEOMC                          EOMC
+     I              DHBOMC                          BOMC
+     I              DHEOYC                          EOYC
+     I              DHABIC                          ABIC
+     I              DHCBSN                          CBSN
+     I              DHTASK                          TASK
+     I              DHTSNO                          TSNO
+      *
+      ** Array containing Copyright statement
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+     C           COMP      KLIST
+     C                     KFLD           DHCOTT
+     C                     KFLD           DHCSEQ
+      *
+     C                     READ CMPN1                  6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN20     DOWEQ'0'
+     C           COMP      CHAINCMPNF                3069
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * If record not found then record has been deleted or added
+      *  depending on mode
+     C           *IN30     IFEQ *ON
+     C                     MOVE MODE      DHACTC
+     C                     WRITEUPCMPND0               69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Need to find differences but this should only be run once;
+      *  run only if mode is 'Delete'
+     C           MODE      IFEQ 'D'
+      *
+      * If record found then look for any differences; only look in
+      *  fields that have data all of the time.
+     C           *IN30     IFEQ *OFF
+     C                     MOVE 'A'       DHACTC
+      * Scheduling priority
+     C           DHCSHP    IFNE CSHP
+     C                     SETON                     70
+     C                     ENDIF
+      * Execution priority
+     C           DHCEPY    IFNE CEPY
+     C                     SETON                     71
+     C                     ENDIF
+      * Timeslice
+     C           DHCTSL    IFNE CTSL
+     C                     SETON                     72
+     C                     ENDIF
+      * FCOOB Error Acceptability
+     C           DHCFOB    IFNE CFOB
+     C                     SETON                     73
+     C                     ENDIF
+      * Text
+     C           DHCTXT    IFNE CTXT
+     C                     SETON                     74
+     C                     ENDIF
+      * Execution Parameters
+     C           DHCPRM    IFNE CPRM
+     C                     SETON                     75
+     C                     ENDIF
+      * Module
+     C           DHCMOD    IFNE CMOD
+     C                     SETON                     76
+     C                     ENDIF
+      * Complex Module Conditions Flag
+     C           DHCEMI    IFNE CEMI
+     C                     SETON                     77
+     C                     ENDIF
+      * Mutually Exclusive Flag
+     C           DHCMEF    IFNE CMEF
+     C                     SETON                     78
+     C                     ENDIF
+      * Run Conditions
+     C           DHCFRQ    IFNE CFRQ
+     C                     SETON                     79
+     C                     ENDIF
+      * End of Day Run Time
+     C           DHEODT    IFNE EODT
+     C                     SETON                     80
+     C                     ENDIF
+      * End of Month Run Time
+     C           DHEOMT    IFNE EOMT
+     C                     SETON                     81
+     C                     ENDIF
+      * Beginning of Month Run Time
+     C           DHBOMT    IFNE BOMT
+     C                     SETON                     82
+     C                     ENDIF
+      * End of Year Run Time
+     C           DHEOYT    IFNE EOYT
+     C                     SETON                     83
+     C                     ENDIF
+      * Allow Bypass in CoB
+     C           DHABIC    IFNE ABIC
+     C                     SETON                     84
+     C                     ENDIF
+      * Task Split Indicator
+     C           DHTASK    IFNE TASK
+     C                     SETON                     85
+     C                     ENDIF
+      * Number of Task Split Jobs
+     C           DHTSNO    IFNE TSNO
+     C                     SETON                     86
+     C                     ENDIF
+      *
+     C                     MOVEA*IN,70    INTEST 16
+     C                     MOVE INTEST    INTNUM 160
+      * If any indicators are set on then write record
+     C           INTNUM    IFNE 0
+     C                     WRITEUPCMPND0               69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Set values to write second record
+     C                     Z-ADDCSHP      DHCSHP
+      *
+     C                     Z-ADDCEPY      DHCEPY
+      *
+     C                     Z-ADDCTSL      DHCTSL
+      *
+     C                     MOVELCFOB      DHCFOB
+      *
+     C                     MOVELCTXT      DHCTXT
+      *
+     C                     MOVELCPRM      DHCPRM
+      *
+     C                     MOVELCMOD      DHCMOD
+      *
+     C                     MOVELCEMI      DHCEMI
+      *
+     C                     MOVELCMEF      DHCMEF
+      *
+     C                     MOVELCFRQ      DHCFRQ
+      *
+     C                     Z-ADDEODT      DHEODT
+      *
+     C                     Z-ADDEOMT      DHEOMT
+      *
+     C                     Z-ADDBOMT      DHBOMT
+      *
+     C                     Z-ADDEOYT      DHEOYT
+      *
+     C                     MOVELABIC      DHABIC
+      *
+     C                     MOVELTASK      DHTASK
+      *
+     C                     MOVELTSNO      DHTSNO
+      *
+     C                     WRITEUPCMPND0               69
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * Read next record
+     C                     MOVEA'00000000'*IN,70
+     C                     MOVEA'00000000'*IN,78
+     C                     MOVEA'0'       *IN,86
+     C                     READ CMPN1                  6920
+     C           *IN69     IFEQ *ON
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2001

@@ -1,0 +1,186 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Rvw/Conf/Proc *ALL GP Action Files- shell')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC008002 - Review/Conflict/Process *ALL GP Action Files    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2003                     */
+/*                                                                   */
+/*       Last Amend No. CUP040             Date 04Mar13              */
+/*       Prev Amend No. CUP021             Date 07Feb11              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CUP033             Date 18Sep06              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CSM005             Date 21Sep05              */
+/*                      CPK020             Date 30Jul04              */
+/*                      CUP022  *CREATE    Date 21Apr04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP040 - New deliverable data methodology.                  */
+/*       CUP021 - Rewrite of Action File processing.                 */
+/*       CUP033 - Removal of System Value /COPYs                     */
+/*       CSM005 - Changes to /COPYs.  Recompile.                     */
+/*       CPK020 - Incorrect library list set up.                     */
+/*       CUP022 - Copy from UPC8002 and amend for files in global    */
+/*                layer.                                             */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&MODE)                                                    */ /*CUP033*/
+/**********  PGM        PARM(&MODE &GPFXSVAL &DTASVAL)                      */ /*CUP033*/ /*CUP021*/
+/**********  PGM        PARM(&MODE &GPFXSVAL &BRGSVAL &LAYER)                   */ /*CUP021 CUP040*/
+             PGM        PARM(&MODE &GPFXSVAL &BRGSVAL &BRGDTASV &LAYER)                   /*CUP040*/
+                                                                                          /*CUP021*/
+/* Mode can be of three types: */
+/*  *REVIEW                    */
+/*  *CONFLICT                  */
+/*  *PROCESS                   */
+ 
+             DCL        VAR(&GPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
+/**********  DCL        VAR(&DTASVAL) TYPE(*CHAR) LEN(20)                   */ /*CUP033*/ /*CUP021*/
+             DCL        VAR(&BRGSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP021*/
+             DCL        VAR(&BRGDTASV) TYPE(*CHAR) LEN(20)                                /*CUP040*/
+/**COPY*UPCPYSRCG,UPGSVALDCL*                                        */ /*             */ /*CUP033*/
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&LAYER) TYPE(*CHAR) LEN(7)                                    /*CUP021*/
+                                                                                          /*CUP021*/
+             DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)                                  /*CUP033*/
+             DCL        VAR(&PTFDTA) TYPE(*CHAR) LEN(10)                                  /*CUP033*/
+             DCL        VAR(&BRGDTALIB) TYPE(*CHAR) LEN(10)                               /*CUP040*/
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')                     /*CUP033*/
+/**********  DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                */ /*CUP021*/
+ 
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPGSVALJ0)                                                   /*CUP033*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2004')
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
+             CHGJOB     SWS(XXXXXX00)
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+                                                                                          /*CUP021*/
+/* Create temporary file to hold error messages. */                                       /*CUP021*/
+             DLTF       FILE(QTEMP/UPERRMQT)                                              /*CUP021*/
+             MONMSG     MSGID(CPF2105)                                                    /*CUP021*/
+             CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +
+                          TEXT('Temporary file for holding error +
+                          messages')                                                      /*CUP021*/
+ 
+/**COPY*UPCPYSRCG,UPGSVALCL1*                                        */ /*             */ /*CUP033*/
+/**********  IF         COND(&PTFDTA *EQ ' ' *OR &GPSBSID *EQ ' ') +                   */ /*CUP033*/
+/**********               THEN(DO)                                                     */ /*CUP033*/
+ 
+VALIDATE:                                                                                 /*CUP033*/
+             RCVF                                                                         /*CUP033*/
+             MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
+                GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+             IF         COND(&GISVAL *EQ &GPFXSVAL) THEN(DO)                              /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&GPSBSID) VALUE(&GIVAL)                                 /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+ 
+/**********  IF         COND(&GISVAL *EQ &DTASVAL) THEN(DO)                 */ /*CUP033*/ /*CUP021*/
+             IF         COND(&GISVAL *EQ &BRGSVAL) THEN(DO)                               /*CUP033*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+                ELSE       CMD(DO)                                                        /*CUP033*/
+                   CHGVAR     VAR(&PTFDTA) VALUE(&GIVAL)                                  /*CUP033*/
+                ENDDO                                                                     /*CUP033*/
+             ENDDO                                                                        /*CUP033*/
+             IF         COND(&GISVAL *EQ &BRGDTASV) THEN(DO)                              /*CUP040*/
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP040*/
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP040*/
+                ENDDO                                                                     /*CUP040*/
+                ELSE       CMD(DO)                                                        /*CUP040*/
+                   CHGVAR     VAR(&BRGDTALIB) VALUE(&GIVAL)                               /*CUP040*/
+                ENDDO                                                                     /*CUP040*/
+             ENDDO                                                                        /*CUP040*/
+ 
+             GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
+ 
+ CHECK:                                                                                   /*CUP033*/
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+/**********     CALL       PGM(SCC0010) PARM('UPC8002' 'ENTER' ' ')                    */ /*CPK020*/
+                CALL       PGM(SCC0010) PARM('UPC008002' 'ENTER' ' ')                     /*CPK020*/
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Save library list. */                                                                  /*CUP021*/
+             SAVLIBL    SAVDTL(UPC008002)                                                 /*CUP021*/
+ 
+/* Set up library list. */                                                                /*CUP021*/
+             CALL       PGM(GPC000016) PARM(&GPSBSID)                                     /*CUP021*/
+                                                                                          /*CUP021*/
+/**********  CALL       PGM(UPC0014) PARM(&GPSBSID)                                    */ /*CPK020*/
+ 
+/**********  CHGVAR     VAR(&DPLIB) VALUE(&GPSBSID *TCAT 'DPLIB')                      */ /*CPK020*/
+/**********  CHGVAR     VAR(&DPLIB) VALUE(&GPSBSID *TCAT 'GPLIB')           */ /*CPK020*/ /*CUP021*/
+                                                                                          /*CUP021*/
+/* Copy UPDLVCPD file to temporary version. */                                            /*CUP021*/
+             DLTF       FILE(QTEMP/UPDLVCQT)                                              /*CUP021*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP021*/
+             CPYF       FROMFILE(&PTFDTA/UPDLVCPD) +
+                          TOFILE(QTEMP/UPDLVCQT) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF AUMBTP *EQ +
+                          'DATA') (*AND AUDTYP *EQ 'I') (*AND +
+                          AUDTLB *EQ &LAYER))                                             /*CUP021*/
+ 
+/* Call program to check Action Files. */
+             OVRDBF     FILE(UPDLVCPD) TOFILE(QTEMP/UPDLVCQT)                             /*CUP021*/
+/**********  CALL       PGM(UPC8003) PARM(&MODE &PTFDTA)                               */ /*CUP021*/
+/**********  CALL       PGM(UPC8003) PARM(&MODE)                                          /*CUP021*/
+             CALL       PGM(UPC8003) PARM(&MODE &BRGDTALIB)                               /*CUP040*/
+             DLTOVR     FILE(UPDLVCPD)                                                    /*CUP021*/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC8003') MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('UPC8003' 'JOBLOG' 'Y')
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('UPC008002') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('UPC008002' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+/* Restore original library list. */                                                      /*CUP021*/
+             RSTLIBL    SAVEDLIBL(UPC008002)                                              /*CUP021*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP021*/
+                                                                                          /*CUP021*/
+             ENDPGM

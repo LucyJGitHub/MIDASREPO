@@ -1,0 +1,103 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas UT CMPFMNT validity checker')                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC000006V - Validity checker for CMPFMNT                   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27790 *CREATE   Date 02Jul10              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG27790 - New utility                                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&TFILE &MBROVR)
+ 
+             DCL        VAR(&TFILE) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&MBROVR) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&TF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FILEATR) TYPE(*CHAR) LEN(3)
+ 
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check that file / library combination exists. */
+             CHGVAR     VAR(&TF) VALUE(%SST(&TFILE 1 10))
+             CHGVAR     VAR(&TL) VALUE(%SST(&TFILE 11 10))
+             CHKOBJ     OBJ(&TL/&TF) OBJTYPE(*FILE) AUT(*USE)
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000' +
+                             *TCAT &TL *TCAT '/' *TCAT &TF *BCAT 'does +
+                             not exist.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+             MONMSG     MSGID(CPF9802) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000User is not authorised to' +
+                             *BCAT &TL *TCAT '/' *TCAT &TF *TCAT '.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Check if the file is a physical file. */
+             RTVMBRD    FILE(&TL/&TF) FILEATR(&FILEATR)
+             IF         COND(&FILEATR *NE '*PF') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Template file' *BCAT &TF +
+                             *BCAT 'is not a physical file.') +
+                             MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+/* If validity error then send message back to command . . . */
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE)
+             ENDDO
+/* . . .  else send generic message. */
+             ELSE       CMD(DO)
+                IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
+                   CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+RCVMSG:
+                   RCVMSG     MSGTYPE(*DIAG) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   IF         COND(&MSGID *NE ' ') THEN(DO)
+                      SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                   MSGDTA(&MSGDTA) MSGTYPE(*DIAG)
+                      GOTO       CMDLBL(RCVMSG)
+                   ENDDO
+                   RCVMSG     MSGTYPE(*EXCP) MSGDTA(&MSGDTA) MSGID(&MSGID) +
+                                MSGF(&MSGF) SNDMSGFLIB(&MSGFLIB)
+                   SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
+                                MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

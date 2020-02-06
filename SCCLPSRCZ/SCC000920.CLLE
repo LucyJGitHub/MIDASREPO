@@ -1,0 +1,94 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas SC Display File Description *BASATR')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - System Control Module                            */
+/*                                                                   */
+/*       SCC000920 - Display File Description                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4.01 -----------------------------------------------*/
+/*       Prev Amend No. CSC011  *CREATE    Date 18Sep01              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSC011 - 24x7 Midas Availability                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFILE &RETCD)
+ 
+             DCL        VAR(&PFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETCD) TYPE(*CHAR) LEN(3)
+ 
+             DCLF       FILE(SCBATRPD)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* DSPFD command */
+ 
+             CHGVAR     VAR(&RETCD) VALUE('   ')
+             DLTF       FILE(QTEMP/BASATR)
+             MONMSG     MSGID(CPF0000)
+             CLRPFM     FILE(SCBATRPD)
+             MONMSG     MSGID(CPF0000)
+             DSPFD      FILE(&PFILE) TYPE(*BASATR) OUTPUT(*OUTFILE) +
+                          FILEATR(*ALL) OUTFILE(QTEMP/BASATR)
+             MONMSG     MSGID(CPF0000)
+             CPYF       FROMFILE(QTEMP/BASATR) TOFILE(SCBATRPD) +
+                          MBROPT(*REPLACE) FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF0000)
+             RCVF
+ 
+/* If file does not exist, return 'EOF' */
+ 
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                CHGVAR     VAR(&RETCD) VALUE('EOF')
+                GOTO       CMDLBL(NEXT)
+             ENDDO
+ 
+/* If library is not DM, DP or DTALIB, return: 'LIB' */
+ 
+             IF         COND((%SST(&ATLIB 3 5) *NE 'DMLIB') *AND +
+                          (%SST(&ATLIB 3 5) *NE 'DPLIB') *AND +
+                          (%SST(&ATLIB 3 6) *NE 'DTALIB')) THEN(DO)
+                CHGVAR     VAR(&RETCD) VALUE('LIB')
+                GOTO       CMDLBL(NEXT)
+             ENDDO
+ 
+/* If file type is not 'P'hysical, return: 'TYP' */
+ 
+             IF         COND(&ATFTYP *NE 'P') THEN(DO)
+                CHGVAR     VAR(&RETCD) VALUE('TYP')
+                GOTO       CMDLBL(NEXT)
+             ENDDO
+ 
+ NEXT:       DLTF       FILE(QTEMP/BASATR)
+             MONMSG     MSGID(CPF0000)
+             GOTO       CMDLBL(END)
+ 
+/* Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             CHGVAR     VAR(&RETCD) VALUE('ERR')
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000920 ended abnormally - see job +
+                          log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+/* End program */
+ 
+ END:        ENDPGM

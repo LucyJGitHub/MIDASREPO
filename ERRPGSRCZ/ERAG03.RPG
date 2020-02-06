@@ -1,0 +1,1249 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AGDL Account file maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  ERAG03 - AGDL Reporting account file maintenance             *
+      *                                                               *
+      *  Function:  This program enables the user to maintain the     *
+      *             AGDL account file using a menu option             *
+      *  (phase(s)) Input cycle and end of year                       *
+      *                                                               *
+      *  Called By: ERCAG03 - AGDL account file maintenance           *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027A            Date 11May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 05Oct04               *
+      *                 UPGCSW             Date 27Sep02               *
+      *                 210004             Date 26Sep02               *
+      *                 ULX010  *CREATE    Date 30Mar98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to change in ZALIGNZ2                 *
+      *  UPGCSW - Due to an upgrade of swift changes 2002 rename      *
+      *           variable V to W (confict with hook ZSRSRC/ZCOTRZ1   *
+      *           Amend ZSRSRC,ZALIGNZ2
+      *  210004 - Mismatch between ',' and '.' in Amend mode.         *
+      *           Link with fix 206456 in ZEDIT. So, apply same fix   *
+      *           in SR/ZALIGN and SR/ZFRPED.                         *
+      *  ULX010 - AGDL Reporting statistiques sur les d{pôts garantis *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      ****************************************************************
+      * UTILISATION DES INDICATEURS                                  *
+      *--------------------------------------------------------------*
+      * 20 = ECRITURE FORMAT DE CONTROLE DU SOUS-FICHIER             *
+      * 21 = ECRITURE DU SOUS-FICHIER                                *
+      * 23 = CLEAR DU SOUS-FICHIER                                   *
+      * 30 = OPTION MISE A JOUR                                      *
+      * 31 = OPTION VISUALISATION                                    *
+      * 32 = OPTION AJOUT                                            *
+      * 33 = TRAITEMENT DU FICHIER A METTRE A JOUR                   *
+      * 34 = FIN DE FICHIER POUR SOUS-FICHIER                        *
+      * 35 = PAS DE "+" POUR CONTINUATION AU NIVEAU DU SOUS-FICHIER  *
+      * 36 = TOUCHE ROLLUP (FLECHE VERS LE HAUT)                     *
+      * 37 = SOUS-FICHIER VIDE                                       *
+      * 40 = ANOMALIE SUR ACTION CODE                                *
+      * 41 = ANOMALIE SUR NOMBRE DE PARTICIPANTS                     *
+      * 42 = ANOMALIE SUR LINKED CUSTOMER 1                          *
+      * 43 = ANOMALIE SUR LINKED CUSTOMER 2                          *
+      * 44 = ANOMALIE SUR LINKED CUSTOMER 3                          *
+      * 45 = SI LINKED CUSTOMER 1 TROUVE                             *
+      * 46 = SI LINKED CUSTOMER 2 TROUVE                             *
+      * 47 = SI LINKED CUSTOMER 3 TROUVE                             *
+      * 50 = TEST POUR UPDATE DE AGDLACV0                            *
+      * 60 = TEST SI ACTION CODE D TROUVE                            *
+      * 70 = CLIENT NON TROUVE SUR SDCUSTPD                          *
+      * 71 = CLE NON TROUVEE POUR SETLL                              *
+      * 75 = RETOUR POUR AFFICHAGE DE LA WINDOW                      *
+      * 76 = TEST SI TRAITEMENT DE TOUT LE SOUS-FICHIER              *
+      * 80 = FORCAGE POUR RELECTURE DU SOUS-FICHIER                  *
+      * 82 = SI UN ENREGISTREMENT MODIFIE A ETE TROUVE               *
+      * 83 = ANOMALIE SUR ZONE DE SELECTION                          *
+      * 85 = ANOMALIE LORS DES CONTROLES DE ZONES                    *
+      * 89 = TEST POUR PREMIER PASSAGE DANS LE PROGRAMME             *
+      ****************************************************************
+      /SPACE 3
+      ****************************************************************
+      * APPEL DES SOUS PROGRAMMES                                    *
+      *--------------------------------------------------------------*
+      * AFFEPS = AFFICHAGE ENTETE + PIED + SOUS-FICHIER              *
+      * AFFSF1 = AFFICHAGE DU SOUS-FICHIER                           *
+      * AFFWIN = AFFICHAGE DE LA WINDOW                              *
+      * CLRSFL = CLEAR DU SOUS-FICHIER                               *
+      * DELETE = DELETE SUR FICHIER AGDLACV0                         *
+      * INITSF = INITIALISATION DU SOUS-FICHIER                      *
+      * INIZFC = INITIALISATION DES ZONES DU FICHIER A METTRE A JOUR *
+      * RECCLT = RECHERCHE DU CLIENT SUR SDCUSTPD                    *
+      * RETWIN = RETOUR DE LA WINDOW                                 *
+      * ROLLUP = REMPLISSAGE DU SOUS-FICHIER APRES TOUCHE ROLLUP     *
+      * RSFARG = REMPLISSAGE DU SOUS-FICHIER SELON ARGUMENT INDIQUE  *
+      * RSFCOD = REMPLISSAGE DU SOUS-FICHIER PAR CODE                *
+      * SRINIT = INITIALISATION DU PROGRAMME                         *
+      * SUPDEL = SUPPRESSION DES 'D' SUR LE SOUS-FICHIER             *
+      * TRTENT = TRAITEMENT POUR ENTREE SANS ACTION                  *
+      * TRTSAI = TRAITEMENT POUR SAISIE DANS LE SOUS-FICHIER         *
+      * TRTVID = TRAITEMENT POUR SOUS-FICHIER VIDE                   *
+      * UPDATF = UPDATE SUR FICHIER AGDLACV0                         *
+      * VERARG = VERIFICATION DE L'ARGUMENT DE RECHERCHE INDIQUE     *
+      * VERZON = VERIFICATION DES ZONES DE SAISIE                    *
+      * ZALIGN = VERIFICATION DES ZONES NUMERIQUES EN SAISIE         *
+      * ZASNMS = CHARGEMENT MESSAGE DANS SOUS-FICHIER DE MESSAGES    *
+      * *PSSR  = DATA BASE ERROR                                     *
+      ****************************************************************
+      /EJECT
+     FAGDLACV0UF  E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      ** AGDL account file
+      *
+     FERAG03DFCF  E                    WORKSTN
+     F                                        LIGNE1KSFILE ERAG03F1
+     F                                              KINFDS INFDS
+      *
+      ** Workstation file
+      *
+      /SPACE 3
+     E/COPY ZSRSRC,ZALIGNZ1
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     I            DS
+     I                                        1   3 ALBRCA
+     I**********                              4   90ALCUST                                   CSD027A
+     I                                        4   9 ALCUST                                   CSD027A
+     I                                       10  12 ALCURR
+     I**********                             13  160ALACOD                                    CER001
+     I                                       13  220ALACOD                                    CER001
+     I**********                             17  180ALACSQ                                    CER001
+     I                                       23  240ALACSQ                                    CER001
+     I**********                              1  18 ALACNT                                    CER001
+     I                                        1  24 ALACNT                                    CER001
+      *
+      ** DS to define account number in the subfile
+      *
+     IZCPT        DS
+     I                                        1   3 ZBRA
+     I                                        4   9 ZCUS
+     I                                       10  12 ZCUR
+     I**********                             13  16 ZACD                                      CER001
+     I                                       13  22 ZACD                                      CER001
+     I**********                             17  18 ZASQ                                      CER001
+     I                                       23  24 ZASQ                                      CER001
+      *
+      ** DS to define account number for positionning the subfile
+      *
+     IINFDS       DS
+     I                                    B 376 3770CPFENR
+     I                                    B 378 3790CPFPOS
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Data Structure for bank details
+      *
+     ISDCUST    E DSSDCUSTPD
+      *
+      ** Data Structure for customer details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure for acces programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Long Data Structure for acces programs
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      ****************************************************************
+      ** Program Start                                               *
+      ****************************************************************
+     C           DEBUT     TAG
+     C*
+     C* First cycle
+     C*
+     C           *IN89     IFEQ '0'                        - B1
+     C                     EXSR SRINIT
+     C                     EXSR INITSF
+     C                     ENDIF                           - E1
+      *
+      ***  Reset indicators
+      *
+     C                     MOVEA'00000000'*IN,40
+     C                     MOVE '0'       *IN71
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN82
+     C                     MOVE '0'       *IN83
+      *
+      ***  Initialize program message queue
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           TOPQ   10
+     C                     PARM           TOPRQ   5
+     C*
+     C* Display window
+     C*
+     C           *IN60     IFEQ '1'                        - B1
+     C           *IN76     ANDEQ'0'
+     C                     EXSR AFFWIN
+     C                     ENDIF                           - E1
+     C*
+     C* Come back from the window
+     C*
+     C           *IN75     IFEQ '1'                        - B1
+     C                     EXSR RETWIN
+     C                     ENDIF                           - E1
+     C*
+     C* F3 = Exit
+     C*
+     C   KC                GOTO FIN
+     C*
+     C* F5 = Refresh
+     C*
+     C           *INKE     IFEQ '1'                        - B1
+     C                     EXSR INITSF
+     C                     ENDIF                           - E1
+     C*
+     C* If subfile is empty
+     C*
+     C           *IN37     IFEQ '1'                        - B1
+     C                     EXSR TRTVID
+     C                     ENDIF                           - E1
+     C*
+     C* If ROLLUP
+     C*
+     C           *IN36     IFEQ '1'                        - B1
+     C                     EXSR ROLLUP
+     C                     ENDIF                           - E1
+     C*
+     C* If input in the subfile
+     C*
+     C                     EXSR TRTSAI
+     C*
+     C* If selection for positionning in the subfile
+     C*
+     C           ZCPT      IFNE ' '                        - B1
+     C                     EXSR RSFARG
+     C                     ENDIF                           - E1
+     C*
+     C* If ENTER without action
+     C*
+     C                     EXSR TRTENT
+      ****************************************************************
+      ** Program End                                                 *
+      ****************************************************************
+     C           FIN       TAG
+     C                     SETON                       LR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SRINIT - Subroutine to do program initialisation              *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+     C                     MOVE *ALL'-'   ZA78
+     C                     MOVE '1'       *IN89
+      *
+      ***  Select the program MSGQ for error msg.
+      *
+     C                     MOVEL'*'       TOPQ
+     C                     MOVEL'*PRV'    TOPRQ
+     C                     MOVEL'*'       PGMQ
+     C**********           MOVEL'XXUSRMSG'PMSGF  10                                           CER001
+     C                     MOVEL'STUSRMSG'PMSGF  10                                           CER001
+      *
+      ***  Fill in fields for subroutine ZASNMS
+      *
+     C                     MOVELPGM       ZAPGM  10        Message queue
+     C**********           MOVEL'XXUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL'STUSRMSG'ZAMSGF 10        Message file                       CER001
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+      *
+      ** Define klist
+      *
+     C           KL01      KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCUST
+     C                     KFLD           KCURR
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Access to bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS                    - B1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ****************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 001 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ****************
+     C                     MOVELPGM       DBPGM     P
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF                           - E1
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           BJDFIN    IFEQ 'M'                        - B1
+     C                     SETON                     98
+     C                     ENDIF                           - E1
+      *
+     C                     MOVELWSID      SWSID
+     C                     MOVELUSER      SUSER
+     C                     MOVELBJMRDT    SRUNA
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * INITSF - Subroutine to do subfile initialisation              *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INITSF    BEGSR
+      *
+     C                     EXSR CLRSFL
+      *
+      ** Initialize key fields for SETLL
+      *
+     C**********           Z-ADD0         KCUST   60                                         CSD027A
+     C                     MOVE *BLANKS   KCUST   6                                          CSD027A
+     C                     MOVE *BLANKS   KCURR   3
+     C**********           Z-ADD0         KACOD   40                                          CER001
+     C                     Z-ADD0         KACOD  100                                          CER001
+     C                     Z-ADD0         KACSQ   20
+     C                     MOVE *BLANKS   KBRCA   3
+      *
+     C**********           Z-ADD0         CMCNUM  60                                         CSD027A
+     C                     MOVE *BLANKS   CMCNUM  6                                          CSD027A
+     C                     MOVE *BLANKS   ZCPT
+      *
+     C                     EXSR RSFCOD
+     C*
+     C* Test if subfile is empty
+     C*
+     C           LIGNE1    IFEQ 0                          - B1
+     C                     MOVE '1'       *IN37
+     C                     MOVEL'ULX0101' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+     C*
+     C                     EXSR AFFEPS
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * TRTENT - Subroutine if ENTER without action                   *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TRTENT    BEGSR
+      *
+     C           CPFPOS    IFEQ 0                          - B1
+     C                     Z-ADD1         RANGF1
+     C                     ELSE                            - X1
+     C                     Z-ADDCPFPOS    RANGF1
+     C                     ENDIF                           - E1
+      *
+     C                     EXSR AFFSF1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * TRTVID - Subroutine if subfile is empty                       *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TRTVID    BEGSR
+      *
+     C* If selection for repositionning the subfile
+      *
+     C           ZCPT      IFNE ' '                        - B1
+     C                     EXSR RSFARG
+     C                     ENDIF                           - E1
+     C*
+     C                     MOVEL'ULX0101' ZAMSID
+     C                     EXSR ZASNMS
+     C                     EXSR AFFEPS
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * TRTSAI - Subroutine if input in the subfile                   *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           TRTSAI    BEGSR
+      *
+     C*
+     C* Find change record
+     C*
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN60
+     C                     MOVE '1'       *IN76
+     C           *IN34     DOWEQ'0'                        - B1
+     C                     READCERAG03F1                 34
+     C           *IN34     IFEQ '0'                        - B2
+     C*
+     C* Check if selection field is indicated
+     C*
+     C           ZCPT      IFNE ' '                        - B3
+     C                     MOVEL'ULX0117' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN83
+     C                     UPDATERAG03F1
+     C                     Z-ADDLIGNE1    RANGF1
+     C                     EXSR AFFEPS
+     C                     ENDIF                           - E3
+     C*
+     C* Check for change record
+     C*
+     C                     MOVE '1'       *IN82
+     C                     EXSR VERZON
+     C*
+     C* Updat for file AGDLACV0
+     C*
+     C           *IN50     IFEQ '0'                        - B4
+     C                     EXSR UPDATF
+     C                     ENDIF                           - E4
+     C*
+     C                     ENDIF                           - E2
+     C                     ENDDO                           - E1
+     C                     MOVE '0'       *IN76
+     C*
+     C* If record modified in the subfile
+     C*
+     C           *IN82     IFEQ '1'                        - B1
+     C*
+     C* If action code = D found
+     C*
+     C           *IN60     IFEQ '1'                        - B2
+     C                     EXSR AFFWIN
+     C                     ELSE                            - X2
+     C                     Z-ADDLIGNE1    RANGF1
+     C                     EXSR AFFEPS
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * CLRSFL - Subroutine to clear the subfile                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLRSFL    BEGSR
+      *
+     C                     MOVE '1'       *IN23
+     C                     WRITEERAG03F2
+     C                     MOVE '0'       *IN23
+     C                     Z-ADD0         LIGNE1  40
+     C                     Z-ADD0         SAVLIG  40
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * RSFCOD - Load the subfile                                     *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RSFCOD    BEGSR
+      *
+     C                     Z-ADDSAVLIG    LIGNE1
+     C           SAVLIG    ADD  1         RANGF1
+     C           KL01      SETLLAGDLACV0
+     C                     Z-ADD0         I       20
+     C                     READ AGDLACV0                 33
+     C           *IN33     DOWEQ*OFF                       - B1
+     C           I         ANDLT11
+     C                     MOVE ' '       WTANN
+     C                     MOVE ALACNT    WACNT
+      *
+      ** If new client acces to customer detail
+      *
+     C           ALCUST    IFNE CMCNUM                     - B3
+     C**********           Z-ADDALCUST    CMCNUM                                             CSD027A
+     C                     MOVE ALCUST    CMCNUM                                             CSD027A
+     C                     MOVE ALCUST    WKCNUM  6
+     C                     EXSR RECCLT
+     C                     ENDIF                           - E3
+      *
+     C           *IN70     IFEQ '0'                        - B4
+     C                     MOVE BBCRNM    WNAME
+     C                     MOVE BBCRTN    WTOWN
+     C                     ELSE                            - X4
+     C                     MOVE *BLANKS   WNAME
+     C                     MOVE *BLANKS   WTOWN
+     C                     ENDIF                           - E4
+     C                     MOVE ALPART    WPART
+     C********** ALLIN1    IFEQ 0                          - B5                              CSD027A
+     C           ALLIN1    IFEQ *BLANKS                    - B5                              CSD027A
+     C                     MOVE *BLANKS   WLIN1
+     C                     ELSE                            - X5
+     C                     MOVE ALLIN1    WLIN1
+     C                     ENDIF                           - E5
+     C********** ALLIN2    IFEQ 0                          - B6                              CSD027A
+     C           ALLIN2    IFEQ *BLANKS                    - B6                              CSD027A
+     C                     MOVE *BLANKS   WLIN2
+     C                     ELSE                            - X6
+     C                     MOVE ALLIN2    WLIN2
+     C                     ENDIF                           - E6
+     C********** ALLIN3    IFEQ 0                          - B7                              CSD027A
+     C           ALLIN3    IFEQ *BLANKS                    - B7                              CSD027A
+     C                     MOVE *BLANKS   WLIN3
+     C                     ELSE                            - X7
+     C                     MOVE ALLIN3    WLIN3
+     C                     ENDIF                           - E7
+     C                     ADD  1         I
+     C                     ADD  1         LIGNE1
+     C                     WRITEERAG03F1
+     C                     MOVE '0'       *IN37
+     C                     READ AGDLACV0                 33
+     C                     ENDDO                           - E1
+     C                     Z-ADDLIGNE1    SAVLIG
+     C*
+     C           *IN33     IFEQ '1'                        - B1
+     C                     MOVE '1'       *IN35
+     C                     ELSE                            - X1
+     C                     MOVE '0'       *IN35
+     C**********           Z-ADDALCUST    SCUST   60                                         CSD027A
+     C                     MOVE ALCUST    SCUST   6                                          CSD027A
+     C                     MOVE ALCURR    SCURR   3
+     C**********           Z-ADDALACOD    SACOD   40                                          CER001
+     C                     Z-ADDALACOD    SACOD  100                                          CER001
+     C                     Z-ADDALACSQ    SACSQ   20
+     C                     MOVE ALBRCA    SBRCA   3
+     C                     ENDIF                           - E1
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * RECCLT - Subroutine to acces on SDCUSTPD file                 *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           RECCLT    BEGSR
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM WKCNUM    WKEY10 10
+     C                     PARM *BLANKS   WKYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS                    - B1
+     C                     MOVE '1'       *IN70
+     C                     ELSE                            - X1
+     C                     MOVE '0'       *IN70
+     C                     ENDIF                           - E1
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * AFFEPS - Display Header + Foot + Subfile                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           AFFEPS    BEGSR
+     C*
+     C* AFFICHAGE FORMAT ENTETE
+     C*
+     C                     WRITEERAG03F0
+     C*
+     C* AFFICHAGE FORMAT PIED
+     C*
+     C                     WRITEERAG03F4
+     C*
+     C* AFFICHAGE DU SOUS-FICHIER
+     C*
+     C                     EXSR AFFSF1
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * AFFSF1 - Display Subfile                                      *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           AFFSF1    BEGSR
+     C*
+     C                     MOVE '1'       *IN20
+     C           *IN37     IFEQ '0'                        - B1
+     C                     MOVE '1'       *IN21
+     C                     ENDIF                           - E1
+     C*
+     C                     EXFMTERAG03F2
+     C                     MOVEA'00'      *IN,20
+     C                     GOTO DEBUT
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * AFFWIN - Display the window                                   *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           AFFWIN    BEGSR
+     C*
+     C                     MOVE '0'       *IN60
+     C                     MOVE '1'       *IN75
+     C                     WRITEERAG03F4
+     C                     MOVEA'11'      *IN,20
+     C                     Z-ADDLIGNE1    RANGF1
+     C                     WRITEERAG03F2
+     C                     MOVEA'00'      *IN,20
+     C                     EXFMTERAG03F5
+     C                     GOTO DEBUT
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * RSFARG - Load Subfile from selection                          *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           RSFARG    BEGSR
+     C*
+     C                     MOVE ZCUS      KCUST
+     C                     MOVE ZCUR      KCURR
+     C                     MOVE ZACD      KACOD
+     C                     MOVE ZASQ      KACSQ
+     C                     MOVE ZBRA      KBRCA
+     C                     EXSR VERARG
+     C                     EXSR CLRSFL
+     C                     EXSR RSFCOD
+     C                     MOVE *BLANKS   ZCPT
+     C                     EXSR AFFEPS
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * ROLLUP - Load Subfile after ROLLUP                            *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+     C*
+     C           ROLLUP    BEGSR
+     C*
+     C**********           Z-ADDSCUST     KCUST                                              CSD027A
+     C                     MOVE SCUST     KCUST                                              CSD027A
+     C                     MOVE SCURR     KCURR
+     C                     Z-ADDSACOD     KACOD
+     C                     Z-ADDSACSQ     KACSQ
+     C                     MOVE SBRCA     KBRCA
+     C                     EXSR RSFCOD
+     C                     EXSR AFFEPS
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * VERZON - Verify input fields                                  *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VERZON    BEGSR
+      *
+     C                     MOVEA'000'     *IN,45
+     C                     MOVE '0'       *IN50
+     C                     MOVE '0'       *IN85
+     C                     MOVE WACNT     ALACNT
+     C                     MOVE ALCUST    STCUST  6
+     C*
+     C* ACTION CODE
+     C*
+     C           WTANN     IFNE ' '                        - B1
+     C           WTANN     ANDNE'D'
+     C                     MOVE '1'       *IN40
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0102' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+     C*
+     C           WTANN     IFNE 'D'                        - B0
+     C*
+     C* NOMBRE DE PARTICIPANTS
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WPART     ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'                        - B1
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0103' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E1
+     C           *IN41     IFEQ '0'                        - B1
+     C                     MOVE WPART     NBPART  20
+     C           NBPART    IFEQ 0                          - B2
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0104' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+     C*
+     C* LINKED CUSTOMER 1
+     C*
+     C           WLIN1     IFNE '      '                   - B1
+     C           WLIN1     ANDNE'000000'
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WLIN1     ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD6         ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0105' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+     C           *IN42     IFEQ '0'                        - B3
+     C                     MOVE WLIN1     WKCNUM
+     C                     EXSR RECCLT
+     C           *IN70     IFEQ '1'                        - B4
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0106' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+     C           STCUST    IFEQ WLIN1                      - B5
+     C                     MOVE '1'       *IN42
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0107' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E5
+     C                     ENDIF                           - E3
+     C           *IN42     IFEQ '0'                        - B6
+     C                     MOVE '1'       *IN45
+     C                     ENDIF                           - E6
+     C                     ENDIF                           - E1
+     C*
+     C* LINKED CUSTOMER 2
+     C*
+     C           WLIN2     IFNE '      '                   - B1
+     C           WLIN2     ANDNE'000000'
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WLIN2     ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD6         ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0108' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+     C           *IN43     IFEQ '0'                        - B3
+     C                     MOVE WLIN2     WKCNUM
+     C                     EXSR RECCLT
+     C           *IN70     IFEQ '1'                        - B4
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0109' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+     C           STCUST    IFEQ WLIN2                      - B5
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0110' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E5
+     C           WLIN2     IFEQ WLIN1                      - B6
+     C                     MOVE '1'       *IN43
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0111' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E6
+     C                     ENDIF                           - E3
+     C           *IN43     IFEQ '0'                        - B7
+     C                     MOVE '1'       *IN46
+     C                     ENDIF                           - E7
+     C                     ENDIF                           - E1
+     C*
+     C* LINKED CUSTOMER 3
+     C*
+     C           WLIN3     IFNE '      '                   - B1
+     C           WLIN3     ANDNE'000000'
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE WLIN3     ZFIELD
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD6         ZADIG
+     C                     EXSR ZALIGN
+     C           *IN99     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0112' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+     C           *IN44     IFEQ '0'                        - B3
+     C                     MOVE WLIN3     WKCNUM
+     C                     EXSR RECCLT
+     C           *IN70     IFEQ '1'                        - B4
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0113' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E4
+     C           STCUST    IFEQ WLIN3                      - B5
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0114' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E5
+     C           WLIN3     IFEQ WLIN1                      - B6
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0115' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E6
+     C           WLIN3     IFEQ WLIN2                      - B7
+     C                     MOVE '1'       *IN44
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0116' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E7
+     C                     ENDIF                           - E3
+     C           *IN44     IFEQ '0'                        - B8
+     C                     MOVE '1'       *IN47
+     C                     ENDIF                           - E8
+     C                     ENDIF                           - E1
+     C*
+     C* Check number of participants with number linked customer
+     C*
+     C                     Z-ADD0         NBLINK  10
+     C           *IN45     IFEQ '1'                        - B1
+     C                     ADD  1         NBLINK
+     C                     ENDIF                           - E1
+     C           *IN46     IFEQ '1'                        - B1
+     C                     ADD  1         NBLINK
+     C                     ENDIF                           - E1
+     C           *IN47     IFEQ '1'                        - B1
+     C                     ADD  1         NBLINK
+     C                     ENDIF                           - E1
+     C           NBPART    IFEQ 1                          - B1
+     C           NBLINK    IFNE 0                          - B2
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0118' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+     C           NBPART    IFEQ 2                          - B1
+     C           NBLINK    IFGT 1                          - B2
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0118' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+     C           NBPART    IFEQ 3                          - B1
+     C           NBLINK    IFGT 2                          - B2
+     C                     MOVE '1'       *IN41
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN85
+     C                     MOVEL'ULX0118' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ENDIF                           - E2
+     C                     ENDIF                           - E1
+     C*
+     C* RI for linked customers if incompatibility with number
+     C* of participants
+     C*
+     C           *IN41     IFEQ '1'                        - B1
+     C           *IN45     IFEQ '1'                        - B2
+     C                     MOVE '1'       *IN42
+     C                     ENDIF                           - E2
+     C           *IN46     IFEQ '1'                        - B3
+     C                     MOVE '1'       *IN43
+     C                     ENDIF                           - E3
+     C           *IN47     IFEQ '1'                        - B4
+     C                     MOVE '1'       *IN44
+     C                     ENDIF                           - E4
+     C                     ENDIF                           - E1
+     C*
+     C                     ELSE                            - X0
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN80
+     C                     MOVE '1'       *IN60
+     C                     ENDIF                           - E0
+     C*
+     C* Update of the subfile
+     C*
+     C                     UPDATERAG03F1
+     C*
+     C* If error for the input fields
+     C*
+     C           *IN85     IFEQ '1'                        - B1
+     C                     Z-ADDLIGNE1    RANGF1
+     C                     EXSR AFFEPS
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * UPDATF - Update du fichier AGDLACV0                           *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           UPDATF    BEGSR
+      *
+     C**********           Z-ADDALCUST    KCUST                                              CSD027A
+     C                     MOVE ALCUST    KCUST                                              CSD027A
+     C                     MOVE ALCURR    KCURR
+     C                     Z-ADDALACOD    KACOD
+     C                     Z-ADDALACSQ    KACSQ
+     C                     MOVE ALBRCA    KBRCA
+     C           KL01      CHAINAGDLACV0             33
+     C           *IN33     IFEQ '0'                        - B1
+     C                     MOVE WPART     ALPART
+     C                     MOVE WLIN1     ALLIN1
+     C                     MOVE WLIN2     ALLIN2
+     C                     MOVE WLIN3     ALLIN3
+     C                     UPDATAGDLACD0
+     C                     COMIT
+     C                     ENDIF                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * SUPDEL - Replace 'D' with ' ' in the subfile                  *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SUPDEL    BEGSR
+     C*
+     C* Find change record
+     C*
+     C                     SETOF                     34
+     C           *IN34     DOWEQ'0'                        - B1
+     C                     READCERAG03F1                 34
+     C           *IN34     IFEQ '0'                        - B2
+     C*
+     C* Replace 'D' with ' '
+     C*
+     C           WTANN     IFEQ 'D'                        - B3
+     C                     MOVE ' '       WTANN
+     C                     MOVE '0'       *IN80
+     C*
+     C* Update of the subfile
+     C*
+     C                     UPDATERAG03F1
+      *
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DELETE - Delete record in AGDLACV0                            *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DELETE    BEGSR
+     C*
+     C* Find change record
+     C*
+     C                     SETOF                     34
+     C           *IN34     DOWEQ'0'                        - B1
+     C                     READCERAG03F1                 34
+     C           *IN34     IFEQ '0'                        - B2
+     C*
+     C* If record to be deleted
+     C*
+     C           WTANN     IFEQ 'D'                        - B3
+     C                     MOVE WACNT     ALACNT
+     C*
+     C* Delete record on AGDLACV0
+     C*
+     C**********           Z-ADDALCUST    KCUST                                              CSD027A
+     C                     MOVE ALCUST    KCUST                                              CSD027A
+     C                     MOVE ALCURR    KCURR
+     C                     Z-ADDALACOD    KACOD
+     C                     Z-ADDALACSQ    KACSQ
+     C                     MOVE ALBRCA    KBRCA
+     C           KL01      CHAINAGDLACV0             33
+     C           *IN33     IFEQ '0'                        - B4
+     C                     DELETAGDLACD0
+     C                     ENDIF                           - E4
+      *
+     C                     ENDIF                           - E3
+     C                     ENDIF                           - E2
+     C                     ENDDO                           - E1
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * VERARG - Verify if the key for selection is valid             *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           VERARG    BEGSR
+      *
+     C           KL01      SETLLAGDLACV0             71
+      *
+     C           *IN71     IFEQ '1'                        - B1
+     C                     EXSR CLRSFL
+     C                     MOVE '1'       *IN37
+     C                     MOVEL'ULX0101' ZAMSID
+     C                     EXSR ZASNMS
+     C                     EXSR AFFEPS
+     C                     ENDIF                           - E1
+     C*
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      * RETWIN - Processing for return from the window                *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RETWIN    BEGSR
+      *
+     C                     MOVE '0'       *IN75
+     C           *INKL     IFEQ '1'                        - B1
+     C                     EXSR SUPDEL
+     C                     Z-ADDLIGNE1    RANGF1
+     C                     EXSR AFFSF1
+     C                     ELSE                            - X1
+     C                     EXSR DELETE
+     C                     EXSR INITSF
+     C                     ENDIF                           - E1
+     C*
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK                     - B1
+     C                     MOVE 'Y'       @RUN    1
+      *
+      ***  Update data area LDA
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVELPGM       DBPGM
+     C                     OUT  LDA
+      *
+      ***  Roll back changes, print DUMP and cancel program
+      *
+     C                     ROLBK
+     C                     DUMP
+      *
+      ***  Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF                           - E1
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      ****************************************************************
+      **                                                             *
+      ** ZASNMS - SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE            *
+      ** CALLS  - Y2SNMSGC - SEND MESSAGE.                           *
+      ** CALLED BY SCREENS VALIDATIONS                               *
+      **                                                             *
+      ****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+      ***   message file specified use PMSGF
+      *
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      ***   Clear all fields for default mechanism next time.
+      *
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+      *
+     C           ZAEXIT    ENDSR
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2005

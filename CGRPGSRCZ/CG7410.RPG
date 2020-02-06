@@ -1,0 +1,410 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Tax Advice - Driver')                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7410 - CG Tax Advice - Driver                              *
+      *                                                               *
+      *  Function: This program reads the customer tax advice header  *
+      *            file and calls the extract program for each        *
+      *            statement required.                                *
+      *                                                               *
+      *  Called By: CGC7410 - CG Tax Advice (COB)                     *
+      *                                                               *
+      *  (c) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG24188           Date 09Jun09               *
+      *                 BUG23732           Date 23Apr09               *
+      *                 BUG23135B          Date 30Mar09               *
+      *                 BUG23135A          Date 18Mar09               *
+      *                 CER048  *CREATE    Date 19May08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG24188 - No Single Tax advices produced (Recompile)        *
+      *  BUG23732 - Joint Account threshold (Recompile)               *
+      *  BUG23135B - Don't Change Statment Reuired flag value         *
+      *  BUG23135A - DL Single Tax Advice missing in COB extract      *
+      *  CER048 - German Features - Taxes                             *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas SD Interest Payment History File
+      *
+     FSDINPHL1UF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+     E/SPACE 5
+      *
+      ** Copyright array.
+      *
+     E                    ##CPY   1   1 80
+     E/COPY CGCPYSRC,SRERRE
+      *
+     I/SPACE 5
+     IDSPARM    E DSSDINPHPD
+      *
+      ** External DS for parameter passed to CG7420
+      *
+     ICPYR        DS
+      *
+      ** Data Structure for Compilation - Copyright Insertion
+      *
+     I                                        1  80 ##CPY
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, short data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for Bank details
+      *
+     IW0FMT     E DSCGUDTAPD
+      *
+      ** Record format of PF/CGUDTAPD for use as a parameter
+      *
+     I/COPY CGCPYSRC,CGAUDTI
+     I/COPY CGCPYSRC,SRERRI
+      *
+     C/SPACE 5
+      *****************************************************************
+      *  Process     -  MAINLINE                                      *
+      *  Function    -  Mainline processing                           *
+      *                                                               *
+      *  Called by   -  None                                          *
+      *  Calls       -  SRINIT - Initial Processing - On First Call   *
+      *                 SRINZ  - Initialise Fields on Each Invocation *
+      *                 SRMAIN - Main Processing                      *
+      *                 SRAUDT - Audit Report Processing              *
+      *****************************************************************
+      *
+      ** Parameter list for current program invocation.
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN
+     C                     PARM           W0CMT   3
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      ** Initial processing - Once Only
+      *
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      ** Initialisation processing
+      *
+     C                     EXSR SRINZ
+      *
+      ** Main processing
+      *
+     C                     EXSR SRMAIN
+      *
+      ** Audit processing
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      ** Terminate program
+      *
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *  Subroutine  -  SRMAIN                                        *
+      *  Function    -  Main processing                               *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  CG7420  - Withholding Tax Statements          *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      ** Read from the Customer Advice Header file
+      *
+     C           *LOVAL    SETLLSDINPHL1
+     C                     READ SDINPHL1                 99*
+      *
+      ** Read until End of File
+      *
+     C           *IN99     DOWEQ'0'
+      *
+      ** Increment the count of SDINPHPD records read.
+      *
+     C                     ADD  1         ##DREC  50
+      *
+      ** If Statement required
+      *
+     C           TISTRQ    IFEQ 'Y'
+      *
+      ** Produce Statement
+      *
+     C                     CALL 'CG7420 '
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM W0CMT     ##CMT   3
+     C                     PARM *BLANK    ##COPD  1
+     C                     PARM           DSPARM
+      *
+      ** Error in called program.
+      *
+     C           ##RTCD    IFNE *BLANK
+      *
+     C                     EXSR SRAUDT
+      *
+      ** Database error
+      *
+     C                     MOVEL'CG7420  'W0FILE
+     C                     MOVEL##RTCD    W0KEY
+     C                     Z-ADD1         W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *
+      ** Statement Produced?
+      *
+     C           ##COPD    IFNE 'N'
+      *
+      ***Update*Statement*Required*Indicator*on*SDINPHPD                                   BUG23135B
+      *
+     C**********           MOVEL'N'       TISTRQ                                           BUG23135B
+      *
+      ** Update Last Statement Number on SDINPHPD
+      *
+     C           TIPGNO    ADD  1         TIPGNO
+      *
+      ** Update Last Generation Date on SDINPHPD
+      *
+     C                     Z-ADDBJRDNB    TILSSD
+      *
+     C                     UPDATSDINPHD0
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read next record from SDINPHL1
+      *
+     C                     READ SDINPHL1                 99*
+     C                     ENDDO
+      *
+     C           EXMAIN    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  -  SRINZ                                         *
+      *  Function    -  Initialise Fields on Program Invocation       *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  CGZAUDIT - Audit Processing                   *
+      *****************************************************************
+     C           SRINZ     BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINZ '  @STK,Q
+      *
+      ** Open the Audit Print File.
+      *
+     C                     CLEARI#DTA
+     C                     MOVEL'CG7410AU'I#SPLN
+     C                     MOVEL'CG7410 ' I#REF
+     C                     MOVE 'CGD3006' I#TITL                                           BUG23135A
+     C                     MOVE 'CGD1123' I#TUL                                            BUG23135A
+     C                     MOVEL'CGUSRMSG'I#FILE                                           BUG23135A
+     C**********           MOVE 'XUDC001' I#TITL                                           BUG23135A
+     C**********           MOVE 'XUDC002' I#TUL                                            BUG23135A
+     C**********           MOVEL'XXUSRMSG'I#FILE                                           BUG23135A
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   W0RTN   7
+     C                     PARM '*OPEN   'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+     C           EXINZ     TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  Subroutine  -  SRINIT                                        *
+      *  Function    -  Initial processing - First Call Only          *
+      *                                                               *
+      *  Called by   -  Mainline                                      *
+      *  Calls       -  None                                          *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      ** Call access program for bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST  '##OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           ##RTCD    IFNE *BLANK
+      *
+      ** Database error
+      *
+     C                     MOVEL'AOBANKR0'W0FILE
+     C                     MOVEL'*CALL'   W0KEY
+     C                     Z-ADD02        W0ERNB
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Initialise work fields
+      *
+     C                     Z-ADD*ZEROS    ##DREC
+      *
+      ** Copyright
+      *
+     C                     MOVEA##CPY     ##BIS  80
+      *
+     C           EXINIT    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *  Subroutine  :  SRAUDT                                        *
+      *  Function    :  Audit Report Processing                       *
+      *                                                               *
+      *  Called by   :  Mainline                                      *
+      *  Calls       :  CGZAUDIT - Audit Processing                   *
+      *                 CG9020   - Write Data to UDC Data Files -     *
+      *                 Audit                                         *
+      *****************************************************************
+     C           SRAUDT    BEGSR
+      *
+      ** Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRAUDT'  @STK,Q
+      *
+      ** Output the Count of records read
+      *
+     C                     CLEARI#DTA
+     C                     MOVEL'CG7410 ' I#REF
+     C                     MOVE 'CGD3006' I#TITL                                           BUG23135A
+     C                     MOVE 'CGD1123' I#TUL                                            BUG23135A
+     C                     MOVEL'CGUSRMSG'I#FILE                                           BUG23135A
+     C**********           MOVE 'XUDC001' I#TITL                                           BUG23135A
+     C**********           MOVE 'XUDC002' I#TUL                                            BUG23135A
+     C**********           MOVEL'XXUSRMSG'I#FILE                                           BUG23135A
+     C                     MOVE '*LINE   'W1ACT
+     C                     MOVE *BLANKS   I#SUB
+     C                     MOVEL'SDINPHL1'I#SUB
+     C                     MOVEL'CGD3003' I#TEXT                                           BUG23135A
+     C**********           MOVEL'XUDC003' I#TEXT                                           BUG23135A
+     C                     Z-ADD##DREC    I#QTY
+     C                     Z-ADD*ZERO     I#DECS
+     C                     MOVE '1'       I#EDIT
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      ** Skip a line.
+      *
+     C                     MOVE '*SKIP   'W1ACT
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM           W1RTN   7
+     C                     PARM           W1ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W1RSQN  5
+      *
+      ** Produce the Audit Report.
+      *
+     C                     CALL 'CG9020'
+     C                     PARM *BLANK    ##RTCD
+     C                     PARM '*AUDIT  'W0ACT
+     C                     PARM *BLANKS   W0PATH256
+     C                     PARM           W0FMT
+     C                     PARM 'CGD3006' W0TITL  7                                        BUG23135A
+     C                     PARM 'CGD1123' W0ULIN  7                                        BUG23135A
+     C**********           PARM 'XUDC001' W0TITL  7                                        BUG23135A
+     C**********           PARM 'XUDC002' W0ULIN  7                                        BUG23135A
+     C                     PARM           W0CMT
+      *
+      ** Close the Audit Print File.
+      *
+     C                     CLEARI#DTA
+     C                     MOVEL'CG7410 ' I#REF
+     C                     MOVE 'CGD3006' I#TITL                                           BUG23135A
+     C                     MOVE 'CGD1123' I#TUL                                            BUG23135A
+     C                     MOVEL'CGUSRMSG'I#FILE                                           BUG23135A
+     C**********           MOVE 'XUDC001' I#TITL                                           BUG23135A
+     C**********           MOVE 'XUDC002' I#TUL                                            BUG23135A
+     C**********           MOVEL'XXUSRMSG'I#FILE                                           BUG23135A
+      *
+     C                     CALL 'CGZAUDIT'
+     C                     PARM *BLANKS   ##RTCD
+     C                     PARM '*CLOSE  'W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           W0RSQN  5
+      *
+     C           EXAUDT    TAG
+      *
+      ** Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/SPACE 5
+     C/COPY CGCPYSRC,SRERRC
+     O/SPACE 5
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2008

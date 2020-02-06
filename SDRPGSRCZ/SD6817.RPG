@@ -1,0 +1,243 @@
+     H        1                                                           S01390
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD conf. format combinations report')
+     H***********                                                   S37004S01390
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  Standing Data Module
+     F*                                                               *
+     F*  SD6817 - LIST OF FORMAT NAME COMBINATIONS.                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  FUNCTION :  Program is part of User-Defined Confirmations Sar*
+     F*              PGM lists all combinations of format name &      *
+     F*              deal type, deal sub-type, event code from FMTLINK*
+     F*              from CONFLINK file.                              *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CDL038             Date 10May05               *
+     F*                 142799             Date 27Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 053522             Date 10JAN94               *
+     F*                 S01405             DATE 30NOV92               *
+     F*                 S01390             DATE 22JUN92               *
+     F*                 AUS009             DATE 20DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  CDL038 - Extended Deal Sub Type (Recompile)                  *
+     F*  142799 - SD6817P1 report was not distributed by RCF. Fix is  *
+     F*           to add ZSFILE processing.                           *
+     F*  053522 - Pgm should pass error msg through LDA and switch    *
+     F*           on U7, U8 and LR.                                   *
+     F*           Also, RTCD *DBERR is invalid for batch mode.        *
+     F*           Output DB error details to report.                  *
+     F*           If file is empty, print 'No Details To Report'.     *
+     F*  S01405 - User defined confirmations file names changed.      *
+     F*  S01390 - Release 10 Changes for Australianisation            *
+     F*  AUS009 - AUSTRALIAN PRODUCT - USER DEFINED CONFIRMATIONS     *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F***********CONFLINKIP  E                    DISK                    S01405
+     FSDUDCLPDIP  E                    DISK                               S01405
+     F***TABTB10*IF**E                    DISK                            S01390
+     F***SD6817P1O***E                    PRINTER                         S01390
+     FSD6817P1O   E                    PRINTER      KINFDS SPOOL      UC  S01390
+     F*
+     F********************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F********************************************************************
+     F*
+     F*       01      NOT 'ON' - FIRST CYCLE
+     F*       99      READ/WRITE FAIL
+     E                    CPY@    1   1 80                                S01390
+     I*                                                                   S01390
+     ISPOOL       DS                                                      S01390
+     I**    SPOOL FILE INFORMATION DATA STRUCTURE                         S01390
+     I                                       83  92 SFILE                 S01390
+     I                                    B 123 1240SFNUM                 S01390
+     I*                                                                   S01390
+     ISDBANK    E DSSDBANKPD                                              S01390
+     I* Bank Details Accesses Via Access Program                          S01390
+     I*                                                                   S01390
+     IDSFDY     E DSDSFDY                                                 S01390
+     I* First DS For Access Programs, Short Data Structure                S01390
+     I*                                                                   S01390
+     I** Local Data Area                                                  053522
+     I*                                                                   053522
+     ILDA        UDS                            256                       053522
+     I                                      134 141 DBFILE                053522
+     I                                      142 170 DBKEY                 053522
+     I                                      171 180 DBPGM                 053522
+     I                                      181 1830DBASE                 053522
+     C/EJECT
+     C*       ***   M A I N L I N E    P R O C E S S I N G   ***
+     C*
+     C*
+     C*    FIRST INITIALIZATION.
+     C*
+     C           *IN01     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+     C*                                                                   053522
+     C** If database error, output error details.                         053522
+     C*                                                                   053522
+     C           *INU7     IFEQ '1'                                       053522
+     C           *INU8     ANDEQ'1'                                       053522
+     C                     WRITEERR                    99                 053522
+     C                     GOTO TAG2                                      053522
+     C                     END                                            053522
+     C*
+     C*    PAGE OVERFLOW PROCESSING.
+     C*
+     C           LINES     IFEQ 60
+     C                     WRITEHEADER                 99
+     C                     Z-ADD10        LINES
+     C                     END
+     C*
+     C*    OUTPUT A REPORT LINE.
+     C                     WRITELINER                  99
+     C                     ADD  1         LINES
+     C*                                                                   053522
+     C           TAG2      TAG                             **  TAG2  **   053522
+     C*
+     C***LR*********          WRITEEND                    99              S01390
+     CLR 01                WRITEEND                    99                 S01390
+     C*                                                                   053522
+     C** If file is empty, print 'No Details To Report'.                  053522
+     C*                                                                   053522
+     CLRN01                OPEN SD6817P1                                  053522
+     CLR         *IN01     IFEQ '0'                                       142799
+      *                                                                   142799
+      ** Report printer file to RCF via ZSFILE                            142799
+      *                                                                   142799
+     CLR                   Z-ADDSFNUM     ZSNUM   60                      142799
+     CLR                   CALL 'ZSFILE'                                  142799
+     CLR                   PARM           SEQ                             142799
+     CLR                   PARM *BLANKS   ENT     3                       142799
+     CLR                   PARM           SFILE                           142799
+     CLR                   PARM           ZSNUM                           142799
+     CLR                   PARM *BLANKS   ZSERR   1                       142799
+      *                                                                   142799
+      ** Error during ZSFILE processing, return to calling program        142799
+      ** Error details will output to report in main routine.             142799
+      *                                                                   142799
+     CLR         ZSERR     IFEQ 'Y'                                       142799
+     CLR                   SETON                     U7U8LR               142799
+     CLR         *LOCK     IN   LDA                                       142799
+     CLR                   MOVE 'ZSFILE  'DBFILE                          142799
+     CLR                   MOVE *BLANKS   DBKEY                           142799
+     CLR                   MOVELZSNUM     DBKEY                           142799
+     CLR                   MOVE *BLANKS   DBPGM                           142799
+     CLR                   MOVEL'SD6817'  DBPGM            ***************142799
+     CLR                   Z-ADD02        DBASE            *  DBERR 002  *142799
+     CLR                   OUT  LDA                        ***************142799
+     CLR                   END                                            142799
+     CLR                   END                                            142799
+     CLRN01                WRITEHEADER                 99                 053522
+     CLRN01                WRITENODET                  99                 053522
+     CLRN01                WRITEEND                    99                 053522
+     CLRN01                CLOSESD6817P1                                  053522
+     C/SPACE 3
+     C********************************************************************
+     C*     SUBROUTINE FOR FIRST CYCLE INITIALIZATION.                   *
+     C*------------------------------------------------------------------*
+     C           INIT      BEGSR
+     C*
+     C                     MOVE '1'       *IN01
+     C                     MOVEACPY@      BIS@   80                       S01390
+     C           *ENTRY    PLIST                                          S01390
+     C                     PARM           SEQ     5                       S01390
+     C*                                                                   053522
+     C** Define dataarea LDA.                                             053522
+     C*                                                                   053522
+     C           *NAMVAR   DEFN           LDA                             053522
+     C*
+     C*    GET USER'S TITLE, RUN DATE, FORMAT NAME & PAGE NUMBER.
+     C*
+     C***********          READ TABTB10                  99               S01390
+     C*                                                                   S01390
+     C** READ BANK DETAILS VIA ACCESS PROGRAM                             S01390
+     C*                                                                   S01390
+     C                     CALL 'AOBANKR0'                                S01390
+     C*                                                                   053522
+     C** Value *DBERR is invalid for pgm running in batch mode.           053522
+     C*                                                                   053522
+     C***********          PARM '*DBERR ' RTCD    7                S01390 053522
+     C                     PARM *BLANKS   RTCD    7                       053522
+     C                     PARM '*FIRST ' OPTN    7                       S01390
+     C           SDBANK    PARM SDBANK    DSFDY                           S01390
+     C*                                                                   053522
+     C** If RTCD is not blank, database error.                            053522
+     C** Error details will output to report in main routine.             053522
+     C*
+     C           RTCD      IFNE *BLANKS                                   053522
+     C                     SETON                     U7U8LR               053522
+     C           *LOCK     IN   LDA                                       053522
+     C                     MOVEL'SDBANKPD'DBFILE                          053522
+     C                     MOVE *BLANKS   DBKEY                           053522
+     C                     MOVELOPTN      DBKEY                           053522
+     C                     MOVE *BLANKS   DBPGM                           053522
+     C                     MOVEL'SD6817'  DBPGM            ***************053522
+     C                     Z-ADD01        DBASE            *  DBERR 001  *053522
+     C                     OUT  LDA                        ***************053522
+     C                     END                                            053522
+     C*                                                                   S01390
+     C                     OPEN SD6817P1                                  S01390
+     C*                                                                   053522
+     C   U7 U8             GOTO TAG1                                      053522
+     C*                                                                   S01390
+     C** Report printer file to RCF via ZSFILE                            S01390
+     C*                                                                   S01390
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01390
+     C                     CALL 'ZSFILE'                                  S01390
+     C                     PARM           SEQ                             S01390
+     C                     PARM *BLANKS   ENT     3                       S01390
+     C                     PARM           SFILE                           S01390
+     C                     PARM           ZSNUM                           S01390
+     C                     PARM *BLANKS   ZSERR   1                       S01390
+     C*                                                                   S01390
+     C** Error during ZSFILE processing, return to calling program        S01390
+     C** Error details will output to report in main routine.             053522
+     C*                                                                   S01390
+     C           ZSERR     IFEQ 'Y'                                       S01390
+     C                     SETON                     U7U8LR               S01390
+     C           *LOCK     IN   LDA                                       053522
+     C                     MOVE 'ZSFILE  'DBFILE                          053522
+     C                     MOVE *BLANKS   DBKEY                           053522
+     C                     MOVELZSNUM     DBKEY                           053522
+     C                     MOVE *BLANKS   DBPGM                           053522
+     C                     MOVEL'SD6817'  DBPGM            ***************053522
+     C                     Z-ADD02        DBASE            *  DBERR 002  *053522
+     C                     OUT  LDA                        ***************053522
+     C                     END                                            S01390
+     C*                                                                   053522
+     C           TAG1      TAG                             **  TAG1  **   053522
+     C*
+     C*    OUTPUT REPORT HEADINGS.
+     C                     WRITEHEADER                 99
+     C*
+     C*    SETUP LINE COUNTER.
+     C                     Z-ADD10        LINES   20
+     C*
+     C                     ENDSR
+     C********************************************************************
+** CPY@   **      OBJECT COPYRIGHT                                        S01390
+(c) Finastra International Limited 2001

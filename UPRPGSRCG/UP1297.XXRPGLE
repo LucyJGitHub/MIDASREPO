@@ -1,0 +1,205 @@
+      *****************************************************************
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************                       CUP021
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bridge                                               *
+      *                                                               *
+      ***UP1297 - Process Action File for UPACTFPD                    *
+      *  UP1297 - Process Action File for UPGPACTFPD                  *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *                                                               *
+      *  Last Amend No. CUP021  *REDUNDANT Date 11Feb11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CPK019             Date 13Jul04               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 CUP020 *CREATE     Date 06Nov02               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CUP021 - Rewrite of Action File processing                   *
+      *  CPK019 - Change to use UPACT2L0 and UPGPACTFL0 instead.      *
+      *           Amended for the inclusion of new fields.            *
+      *  CUP020 - Creation of new set of Action File utilities.       *
+      *                                                               *
+      *****************************************************************
+      * Function of indicators
+      *
+      *       20      End of file
+      *       30      Chain - record not found
+      *       69      Read, write, update or delete fail
+      *
+     F*UPACTFAL0 IF   E           K DISK    INFSR(*PSSR)                                      CPK019
+     FUPACTF2L0 IF   E           K DISK    INFSR(*PSSR)                                       CPK019
+     F*UPACTFL0  UF A E           K DISK    INFSR(*PSSR)                                      CPK019
+     FUPGPACTFL0UF A E           K DISK    INFSR(*PSSR)                                       CPK019
+     F                                     RENAME(UPACTFD0:ACTFF) PREFIX(X)
+      /EJECT
+      *
+     D LDA           E DS           256    EXTNAME(LDA)
+      *
+      * Local data area for database error details
+      * *LOCK IN LDA immediately before and OUT LDA immediately
+      * after each database error handling.
+      *
+      *                                     134 141 DBFILE
+      *        Defines:                     142 170 DBKEY
+      *                                     171 180 DBPGM
+      *                                     181 1830DBASE
+      *
+     D PSDS           SDS
+      *
+      ** Program Status Data Structure.
+      *
+     D  PGM              *PROC
+     D  WSID                 244    253
+     D  USER                 254    263
+      *
+     C     COMP          KLIST
+     C                   KFLD                    AABONF
+      *
+     C******LOVAL        SETLL     UPACTFAL0                                                  CPK019
+     C     *LOVAL        SETLL     UPACTF2L0                                                  CPK019
+      *
+     C******             READ      UPACTFAL0                            6920                  CPK019
+     C                   READ      UPACTF2L0                            6920                  CPK019
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C     *IN20         DOWEQ     '0'
+      *
+     C     AAACTC        IFEQ      'I'
+     C                   EXSR      SETVAL
+     C                   WRITE     ACTFF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     AAACTC        IFEQ      'D'
+     C*****COMP          CHAIN     UPACTFL0                           3069                    CPK019
+     C     COMP          CHAIN     UPGPACTFL0                         3069                    CPK019
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+     C                   DELETE    ACTFF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+      * If Action code = AMEND then read next record.
+     C     AAACTC        IFEQ      'A'
+     C                   MOVEL     AABONF        BONFX            10
+     C*****              READ      UPACTFAL0                            6920                  CPK019
+     C                   READ      UPACTF2L0                            6920                  CPK019
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+      * If key fields do not match exit
+      *  - or if EOF indicator is on.
+     C     AABONF        IFNE      BONFX
+     C     *IN20         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C*****COMP          CHAIN     UPACTFL0                           3069                    CPK019
+     C     COMP          CHAIN     UPGPACTFL0                         3069                    CPK019
+     C     *IN69         IFEQ      *ON
+     C     *IN30         OREQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+      *
+     C                   ELSE
+      *
+     C                   EXSR      SETVAL
+     C                   UPDATE    ACTFF                                69
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C*****              READ      UPACTFAL0                            6920                  CPK019
+     C                   READ      UPACTF2L0                            6920                  CPK019
+     C     *IN69         IFEQ      *ON
+     C                   EXSR      *PSSR
+     C                   GOTO      ENDPGM
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C     ENDPGM        TAG
+     C                   SETON                                        LR
+     C                   RETURN
+      *
+      *****************************************************************
+      *                                                               *
+      * SETVAL subroutine - set values for deletes/writes/updates     *
+      *                                                               *
+      *****************************************************************
+     C     SETVAL        BEGSR
+      * Set values to update record.
+     C                   MOVEL     AABONF        XAABONF
+     C                   MOVEL     AAFRMF        XAAFRMF
+     C                   MOVEL     AATOFL        XAATOFL
+     C                   MOVEL     AACOPY        XAACOPY
+     C                   MOVEL     AALIBR        XAALIBR
+     C                   MOVEL     AAAFLF        XAAAFLF
+     C                   MOVEL     AAUPPF        XAAUPPF
+     C                   MOVEL     AAUPLF        XAAUPLF
+     C                   MOVEL     AAPROG        XAAPROG
+     C                   MOVEL     AABLDP        XAABLDP                                      CPK019
+     C                   MOVEL     AARVWP        XAARVWP                                      CPK019
+     C                   MOVEL     AAPRCP        XAAPRCP                                      CPK019
+     C                   MOVEL     AACNFP        XAACNFP                                      CPK019
+     C                   MOVEL     AARSTP        XAARSTP                                      CPK019
+     C                   MOVEL     AARTAY        XAARTAY                                      CPK019
+      *
+     C                   ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: None                                               *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR                                                  ** *PSSR SR **
+      *
+     C     @RUN          IFEQ      *BLANK
+     C                   MOVE      'Y'           @RUN              1
+     C                   DUMP
+     C                   END
+      *
+     C                   SETON                                        U7U8LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      ********************************************************************

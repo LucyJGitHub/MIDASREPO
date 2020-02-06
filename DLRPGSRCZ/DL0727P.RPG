@@ -1,0 +1,362 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL Fixed Deposits Prompt')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Dealing Module                                       *
+      *                                                               *
+      *  DL0727P - Fixed Deposits Prompt Screen                       *
+      *                                                               *
+      *  Function:  This will be the prompt program for DL0725        *
+      *             Fixed Deposit Register.                           *
+      *                                                               *
+      *  Called by:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2004                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. 248219             Date 06Jul07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CDL024  *CREATE    Date 31Mar04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  248219 - Use the appropriate error message id                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CDL024 - Fixed Deposit Register                              *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N   O F   I N D I C A T O R S                *
+      *                                                               *
+      *                                                               *
+      *  41 - Error indicator for Deal Type                           *
+      *  42 - Error indicator for Customer                            *
+      *  43 - Error indicator for Start Date                          *
+      *  44 - Error indicator for End Date                            *
+      *                                                               *
+      *---------------------------------------------------------------*
+      * U7 U8 LR                                                      *
+      *****************************************************************
+     FDL0727DFCF  E                    WORKSTN
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+     ILDA       E DS
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 SWSID
+     I                                      254 263 SUSER
+      *
+     IPPARM       DS                            100
+      ***  Parameters passed into program
+     I                                        1   6 #SDAT
+     I                                        7  12 #EDAT
+     I                                       13  14 #DTYP
+     I                                       15  20 #CNUM
+      ** External DS for bank details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS for customer details
+     ISDCUST    E DSSDCUSTPD
+      *
+      *  First DS for access program, short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      * Second DS for access program, long data structure
+     IDSSDY     E DSDSSDY
+      *
+      /EJECT
+      *****************************************************************
+      *  MAIN
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PSEQ    5
+     C                     PARM           PLEV    1
+     C                     PARM           PENT    3
+     C                     PARM           PPARM 100
+     C                     PARM           PACT    1
+     C                     PARM           PCMD    1
+      ** Perform initial processing
+      *
+     C                     EXSR INIT
+      *
+      ** Display Prompt Screen
+      *
+     C                     EXSR DISPLY
+      *
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'E'       PCMD
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      /EJECT
+      *****************************************************************
+      *  INIT - Initialisation
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **   Define the LDA for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+     C                     SETOF                     414243
+     C                     SETOF                     44
+      *
+      * Set up message file name for error message execution, and
+      * rundate.
+      *
+     C                     MOVEL'DRSMM'   ZAMSGF
+     C                     MOVEL'DL0727P' DBPGM
+      *
+      *    Access Bank Details
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG'    @RTCD   7
+     C                     PARM '*FIRST'  @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           *************
+     C                     MOVEL'*FIRST'  DBKEY            * DBERR 001 *
+     C                     Z-ADD1         DBASE            *************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       W#ERR1  1
+      *
+      * Clear message queue for screen.
+      *
+     C                     EXSR CLEARM
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  DISPLY - Display Prompt screen
+      *****************************************************************
+      *
+     C           DISPLY    BEGSR
+      *
+     C                     WRITEDL0727F0                   Header
+      *
+      * Default Start and End Date to be rundate
+     C                     CALL 'ZDATE2'
+     C                     PARM           BJRDNB
+     C                     PARM           BJDFIN
+     C                     PARM           ZDATE   60
+     C                     PARM           ZADATE  7
+      *
+     C                     MOVE ZDATE     #SDAT
+     C                     MOVE ZDATE     #EDAT
+     C                     MOVE *BLANKS   #CNUM
+     C                     MOVE *BLANKS   #DTYP
+     C                     EXSR SCREEN
+      *
+     C           *IN03     DOWEQ*OFF
+     C           W#ERR1    ANDEQ'Y'
+      *
+     C                     MOVE 'N'       W#ERR1
+      *
+      * Validate screen fields.
+      *
+     C                     EXSR VALID
+      *
+      * Display error message.
+      *
+     C           W#ERR1    IFEQ 'Y'
+     C                     EXSR SCREEN
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  VALID - Validate Screen input
+      *****************************************************************
+      *
+     C           VALID     BEGSR
+      *
+      *   Validate Deal Type field
+      *   Must be one of
+     C           #DTYP     IFNE '  '
+     C           #DTYP     ANDNE'TD'
+     C           #DTYP     ANDNE'IT'
+     C           #DTYP     ANDNE'IP'
+     C           #DTYP     ANDNE'TI'
+     C           #DTYP     ANDNE'LN'
+     C           #DTYP     ANDNE'FL'
+     C           #DTYP     ANDNE'FT'
+     C**********           MOVEL'XXXNNNN' ZAMSID                                              248219
+     C                     MOVEL'MMM0355' ZAMSID                                              248219
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN41
+     C                     MOVE 'Y'       W#ERR1
+     C                     ENDIF
+      *
+      *   Validate Customer Number field if entered
+     C           #CNUM     IFNE '  '
+      *
+     C                     MOVEL#CNUM     @KEY1
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM           @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C**********           MOVEL'XXXNNNN' ZAMSID                                              248219
+     C                     MOVEL'DLF0007' ZAMSID                                              248219
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN42
+     C                     MOVE 'Y'       W#ERR1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      *   Validate Start Date
+     C                     MOVE #SDAT     ZDATE
+     C                     CALL 'ZDATE1'
+     C                     PARM           ZERR    7
+     C                     PARM           ZDATE   60
+     C                     PARM           BJDFIN
+     C                     PARM           ZDAYNO  50
+      *
+     C           ZERR      IFNE *BLANKS
+     C**********           MOVEL'XXXNNNN' ZAMSID                                              248219
+     C                     MOVEL'MMM0356' ZAMSID                                              248219
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN43
+     C                     MOVE 'Y'       W#ERR1
+     C                     ELSE
+     C                     Z-ADDZDAYNO    SNUM    50
+     C                     ENDIF
+      *
+      *   Validate End Date
+     C                     MOVE #EDAT     ZDATE
+     C                     CALL 'ZDATE1'
+     C                     PARM           ZERR    7
+     C                     PARM           ZDATE   60
+     C                     PARM           BJDFIN
+     C                     PARM           ZDAYNO  50
+      *
+     C           ZERR      IFNE *BLANKS
+     C**********           MOVEL'XXXNNNN' ZAMSID                                              248219
+     C                     MOVEL'MMM0357' ZAMSID                                              248219
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN44
+     C                     MOVE 'Y'       W#ERR1
+     C                     ELSE
+     C                     Z-ADDZDAYNO    ENUM    50
+     C                     ENDIF
+      *
+      * If both dates are valid then ensure end date is not before
+      * start date
+     C           *IN43     IFEQ *OFF
+     C           *IN44     ANDEQ*OFF
+     C           ENUM      ANDLTSNUM
+     C**********           MOVEL'XXXNNNN' ZAMSID                                              248219
+     C                     MOVEL'MMM0358' ZAMSID                                              248219
+     C                     EXSR ZASNMS
+     C                     MOVE *ON       *IN44
+     C                     MOVE 'Y'       W#ERR1
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * SCREEN  - Display Screen
+      *****************************************************************
+     C           SCREEN    BEGSR
+      *
+     C                     SETON                     45    Msg SFLEND
+     C                     WRITE#MSGCTL                    Messages
+     C                     EXFMTDL0727F1                   Main Screen
+     C                     EXSR CLEARM
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  ZASNMS - Sends messages to the program's message queue       *
+      *****************************************************************
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZAMSDA
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * CLEARM  -  Clears the message queue                           *
+      *****************************************************************
+     C           CLEARM    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR - Exception error processing
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** PSSR **
+      *
+     C           @DUMP     IFEQ *BLANK
+     C                     DUMP
+     C                     MOVE 'Y'       @DUMP   1
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2001

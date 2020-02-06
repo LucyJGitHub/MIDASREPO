@@ -1,0 +1,446 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Ref Integrity Check: Format Options')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CG0270 - Referential Integrity Check                         *
+     F*     CGPDEFL4 - Plane definition by numeric format.            *
+     F*     CGPDEFL5 - Plane definition by character format           *   083777
+     F*     CGPDEFL7 - Plane definition by code format                *   083777
+     F*     CGFLNGLO - Data element format by language - update index *
+     F*                                                               *
+     F*  Function:  This program tests the first 10 records and if    *
+     F*             they exist they cannot then be deleted and        *
+     F*             the return code will be set to CGD1202.           *
+     F*                                                               *
+     F*  Called By:                                                   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 083777             Date 16Feb95               *
+      *                 S01522             Date 21Nov94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *  083777 - Add Code and Character format on Layout Files       *
+      *  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*                                                               *
+     F*  90   -    General work indicator                             *
+     F*                                                               *
+     F*****************************************************************
+     F/COPY WNCPYSRC,CG0270DFPG
+      *
+      *  /Copy point for File Definition
+      *
+     FCGPDEFL4IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Plane definition by numeric format.
+      *
+     FCGPDEFL5IF  E           K        DISK                               083777
+     F                                              KINFSR SRFILE         083777
+      *                                                                   083777
+      * Plane definition by character format                              083777
+      *                                                                   083777
+     FCGPDEFL7IF  E           K        DISK                               083777
+     F                                              KINFSR SRFILE         083777
+      *                                                                   083777
+      * Plane definition by code format                                   083777
+      *                                                                   083777
+     FCGFLNGL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      * Data element format by language - update index.
+      *
+     F/EJECT
+     E/COPY CGCPYSRC,SRERRE
+     E/COPY WNCPYSRC,CG0270DEPG
+      *
+      *  /Copy point for Arrays
+      *
+     E                    CPY@    1   1 80
+      **                                                                                      CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      **                                                                                      CSC022
+     E                    WCMT       10 10                                                    CSC022
+      **                                                                                      CSC022
+     I/COPY WNCPYSRC,CG0270DIPG
+      *
+      *  /Copy point for Input Specs
+      *
+     ICPYR@#      DS
+      *
+      *  Data structure for compilation  - Copyright insertion
+      *
+     I                                        1  80 CPY@
+     I/COPY CGCPYSRC,SRERRI
+     IRUNDTA    E DSRUNDAT
+      *
+      *  Define rundat data area
+      *
+      **                                                                                      CSC022
+     ISCCMT       DS                            256                                           CSC022
+     I                                        1   30WCMTNO                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      **                                                                                      CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+      ** DS for Switchable Features details                                                   CSC022
+      **                                                                                      CSC022
+     IDSFDY     E DSDSFDY                                                                     CSC022
+      **                                                                                      CSC022
+      ** Data Structures used by Access Programs                                              CSC022
+      **                                                                                      CSC022
+      *****************************************************************
+      *                 M A I N L I N E
+      *****************************************************************
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *  Define entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7        Return Code
+     C                     PARM           I#FOPT 10        Num. Format Group
+     C                     PARM           I#FRMT 15        Num. Format Option
+     C                     PARM           I#CPGM 10        Calling Pgm tr.
+      *
+      * Initialise program
+      *
+     C           *IN50     IFEQ '0'
+     C                     EXSR SRINIT
+     C                     END
+      *
+     I/COPY WNCPYSRC,CG0270C
+      *
+      * Check if Numeric format exists on CGPDEFL4.
+      *
+     C                     EXSR SREFL4
+      *                                                                   083777
+      * Check if Character format exists on CGPDEFL5.                     083777
+      *                                                                   083777
+     C                     EXSR SREFL5                                    083777
+      *                                                                   083777
+      * Check if Code format exists on CGPDEFL7.                          083777
+      *                                                                   083777
+     C                     EXSR SREFL7                                    083777
+      *
+      * Check format group exists on CGFLNGL1.
+      *
+     C                     EXSR SRNGL1
+      *
+      *  Unwind subroutine stack name
+      *
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      * Return to calling program
+      *
+     C                     RETRN
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SREFL4   : Process CGPDEFL4                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SREFL4    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SREFL4'  @STK,Q
+      *
+      * Define key list for Plane Declaration
+      *
+     C           KPDEF     KLIST
+     C                     KFLD           I#FOPT           Num. Format Group
+     C                     KFLD           I#FRMT           Num. Format Option
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           KPDEF     SETLLCGPDEFL4
+     C           KPDEF     READECGPDEFL4                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVEL'CGD1235' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           KPDEF     READECGPDEFL4                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXEFL4    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT                                                              083777
+      *****************************************************************   083777
+      *                                                               *   083777
+      *  SREFL5   : Process CGPDEFL5                                  *   083777
+      *                                                               *   083777
+      *  CALLED BY: Main processing                                   *   083777
+      *                                                               *   083777
+      *  CALLS    : None                                              *   083777
+      *                                                               *   083777
+      *****************************************************************   083777
+     CSR         SREFL5    BEGSR                                          083777
+      *                                                                   083777
+      *  Set up subroutine stack name                                     083777
+      *                                                                   083777
+     C                     ADD  1         Q       50                      083777
+     C                     MOVEL'SREFL5'  @STK,Q                          083777
+      *                                                                   083777
+     C                     Z-ADD1         I#NUMR                          083777
+      *                                                                   083777
+     C           KPDEF     SETLLCGPDEFL5                                  083777
+     C           KPDEF     READECGPDEFL5                 90               083777
+      *                                                                   083777
+     C           *IN90     DOWEQ*OFF                       B1             083777
+     C           I#NUMR    ANDLT11                                        083777
+      *                                                                   083777
+      * If record found set return code to CGD1202, and send message.     083777
+      *                                                                   083777
+     C                     MOVEL'CGD1202' W0RTN                           083777
+      *                                                                   083777
+      *  Set up message details.                                          083777
+      *                                                                   083777
+     C                     MOVEL'CGD2501' CGMSID                          083777
+     C                     MOVELI#CPGM    CGPGMQ                          083777
+     C                     EXSR CGSNMS                                    083777
+      *                                                                   083777
+     C           KPDEF     READECGPDEFL5                 90               083777
+     C                     ADD  1         I#NUMR                          083777
+     C                     ENDDO                           E              083777
+      *                                                                   083777
+     C           EXEFL5    TAG                                            083777
+     C                     MOVEA*BLANKS   @STK,Q                          083777
+     C                     SUB  1         Q                               083777
+      *                                                                   083777
+     CSR                   ENDSR                                          083777
+     C/EJECT                                                              083777
+      *****************************************************************   083777
+      *                                                               *   083777
+      *  SREFL7   : Process CGPDEFL7                                  *   083777
+      *                                                               *   083777
+      *  CALLED BY: Main processing                                   *   083777
+      *                                                               *   083777
+      *  CALLS    : None                                              *   083777
+      *                                                               *   083777
+      *****************************************************************   083777
+     CSR         SREFL7    BEGSR                                          083777
+      *                                                                   083777
+      *  Set up subroutine stack name                                     083777
+      *                                                                   083777
+     C                     ADD  1         Q       50                      083777
+     C                     MOVEL'SREFL7'  @STK,Q                          083777
+      *                                                                   083777
+     C                     Z-ADD1         I#NUMR                          083777
+      *                                                                   083777
+     C           KPDEF     SETLLCGPDEFL7                                  083777
+     C           KPDEF     READECGPDEFL7                 90               083777
+      *                                                                   083777
+     C           *IN90     DOWEQ*OFF                       B1             083777
+     C           I#NUMR    ANDLT11                                        083777
+      *                                                                   083777
+      * If record found set return code to CGD1202, and send message.     083777
+      *                                                                   083777
+     C                     MOVEL'CGD1202' W0RTN                           083777
+      *                                                                   083777
+      *  Set up message details.                                          083777
+      *                                                                   083777
+     C                     MOVEL'CGD2502' CGMSID                          083777
+     C                     MOVELI#CPGM    CGPGMQ                          083777
+     C                     EXSR CGSNMS                                    083777
+      *                                                                   083777
+     C           KPDEF     READECGPDEFL7                 90               083777
+     C                     ADD  1         I#NUMR                          083777
+     C                     ENDDO                           E              083777
+      *                                                                   083777
+     C           EXEFL7    TAG                                            083777
+     C                     MOVEA*BLANKS   @STK,Q                          083777
+     C                     SUB  1         Q                               083777
+      *                                                                   083777
+     CSR                   ENDSR                                          083777
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRNGL1   : Process CGFLNGL1                                  *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRNGL1    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRNGL1'  @STK,Q
+      *
+      * Define key list for User Narratives
+      *
+     C           KFLNG     KLIST
+     C                     KFLD           I#FOPT           Num. Format Group
+     C                     KFLD           I#FRMT           Num. Format Option
+      *
+     C                     Z-ADD1         I#NUMR
+      *
+     C           KFLNG     SETLLCGFLNGL1
+     C           KFLNG     READECGFLNGL1                 90
+      *
+     C           *IN90     DOWEQ*OFF                       B1
+     C           I#NUMR    ANDLT11
+      *
+      * If record found set return code to CGD1202, and send message.
+      *
+     C                     MOVEL'CGD1202' W0RTN
+      *
+      *  Set up message details.
+      *
+     C                     MOVEL'CGD1236' CGMSID
+     C                     MOVELI#CPGM    CGPGMQ
+     C                     EXSR CGSNMS
+      *
+     C           KFLNG     READECGFLNGL1                 90
+     C                     ADD  1         I#NUMR
+     C                     ENDDO                           E
+      *
+     C           EXNGL1    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT   : Initialisation                                    *
+      *                                                               *
+      *  CALLED BY: Main processing                                   *
+      *                                                               *
+      *  CALLS    : None                                              *
+      *                                                               *
+      *****************************************************************
+     CSR         SRINIT    BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+      *
+      *  Set up copyright statement
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      *  Indicate that set up is complete
+      *
+     C                     SETON                     50
+      *
+      *  Define the number of records to process.
+      *
+     C                     Z-ADD10        I#NUMR  20
+      *
+      *  Get Rundate - Rundate
+      *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+      **                                                                                      CSC022
+      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+      **                                                                                      CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      **                                                                                      CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      **                                                                                      CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   P@RTCD  7                                           CSC022
+     C                     PARM '*VERIFY 'P@OPTN  7                                           CSC022
+     C                     PARM 'CSC022'  P@SARD  6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      **                                                                                      CSC022
+     C           P@RTCD    IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+      **                                                                                      CSC022
+      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+      **                                                                                      CSC022
+     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+     C                     IN   SCCMT                                                         CSC022
+      **                                                                                      CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+      ** Move committed jobs to arrary for checking                                           CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+      ** Verify if job running exists in array                                                CSC022
+     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+     C           *IN50     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ELSE                                                               CSC022
+      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+     C           P@RTCD    IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD1         W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+     C                     ENDIF                                                              CSC022
+      **                                                                                      CSC022
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXINIT    TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     CSR                   ENDSR
+     C/EJECT
+     C/COPY CGCPYSRC,SRERRPSSR
+     C/COPY CGCPYSRC,SCGSNMSC
+     C/COPY CGCPYSRC,SRERRC
+**  CPY@ table
+(c) Finastra International Limited 2001

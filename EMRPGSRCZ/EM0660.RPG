@@ -1,0 +1,1596 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EM Security Trading Exps Ext')                   *
+/*XBIA*: OVRDBF CLINTC CLINT                                        : *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas EXPOSURE MANAGEMENT MODULE                             S01176
+     F*                                                                  *
+     F*       EM0660 - SECURITIES TRADING EXPOSURE EXTRACT               *
+     F*                                                                  *
+     F*  Function: This program creates the exposure, as at close of
+     F*  (COB)     business, for the business area of Securities
+     F*            Trading.
+0008 F*                                                                  *
+0008 F*            A record is output to the Securities Trading extract  *
+0008 F*            file (EMXT6D1) for any customer (issuer) on the       *
+0008 F*            Securities file (SECTYD) . Reference is also made to  *
+0008 F*            book positions on BKPOS, depot movements on DPTEM,    *
+0008 F*            Trades on Tradem and cusomer positions from CPOSEM.   *
+0008 F*                                                                  *
+0008 F*            The exposure amount calculated above is then scaled   *
+0008 F*            according to the relevant scling factor on the        *
+0008 F*            Exposure Scaling File (EMEXSCPD).                     *
+0008 F*                                                                  *
+0008 F*            The scaled exposure is then converted to the          *
+0008 F*            Exposure Management limit currency before being       *
+     F*            output to the extract file.                           *
+0008 F*                                                                  *
+     F*  Called By: EMC0602
+     F*
+     F*  Calls: None
+     F*
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23967           Date 13May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 222727             Date 05Nov03               *
+      *                 153041             Date 20Jan99               *
+     F*                 135004             DATE 11JUN98               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 207213             Date 24Sep02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 088428             Date 19Oct95               *
+      *                 077009 SL          Date 19Oct95               *
+     F*                      051790             DATE 19OCT95             *
+     F*                      042594             DATE 19OCT95             *
+     F*                      052254             DATE 10JAN94             *
+     F*                      S01397             DATE 17SEP92             *
+     F*                      E32674             DATE 03DEC91
+     F*                      E29129             DATE 03OCT91             *E29129
+     F*                      E27919             DATE 03SEP91             *E27919
+     F*                      S01220             DATE 25JUN91             *E21677
+     F*                      S01332             DATE 20MAY91             *S01176
+     F*                      S01117             DATE 19APR91             *S01117
+     F*                      E21677             DATE 10APR90             *E21677
+     F*                      S01117             DATE 25/10/89            *S01176
+     F*                      E16476             DATE 11/05/89            *S01176
+     F*                      S01176             DATE 18/08/88            *S01176
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *S01176
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field.                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+     F*  153041 - Increase size of Nominal - ZPRCCAL                  *
+     F*  135004 - Do not call ZPRCCAL if nominal posisiton is 0.      *
+     F*           Put code from EM0660C008 directly into source.      *
+     F*           This code refers to a core fix not an SAR.          *
+     F*           Market value of security calculated incorrectly.    *
+     F*           Used market price, now calls ZPRCCAL for price %.   *
+     F*           Added Hook EM0660C008                               *
+      *  207213 - Exposure wrongly calculated as price basis of       *
+      *           previous Security is used. Fix is to correct fix    *
+      *           051790.                                             *
+      *  CSE015 - Forward Valued Depot Movements (Recompiled)         *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+     F*       088428 - NMDP OF NEXT SECURITY IS USED IN CLCVAL SUBR.     *
+     F*                CORRECTION APPLIED FOR CLIENT SUBR. ONLY          *
+     F*                NB ||| SUBR DEPOT AND BOOK NEED TO BE REVIEW      *
+     F*                COMPLETELY (CALC. DONE WITH DETAILS OF NEXT RECORD*
+     F*       077009 - WHEN 2 SECURITIES HAVE SAME IND. & CTRY CODE,     *
+     F*                VALUE OF 2ND IS CALC. WITH MARKET PRICE OF 1ST    *
+     F*       051790 - AMOUNT FOR SECURITIES OFF SETTING BALNCES IS      *
+     F*                SOMETIMES WRONGLY CALCULATED AS PRICE BASIS OF    *
+     F*                NEXT RECORD WAS CONSIDERED, CONSIDERATION WAS     *
+     F*                DIVIDED BY 100 LIKE FOR PERCENTAGE EVEN IF IT IS  *
+     F*                AN UNIT.                                          *
+     F*       042594 - THE CLIENT PORTFOLIO EXTRACT VALUES ARE NOT       *
+     F*                CORRECT. THE REASON IS THE OVERWRITTING           *
+     F*       052254 - RECOMPILED as CURRENT FACTOR amended from 9,8     *
+     F*                to 10,9                                           *
+     F*       S01397 - Rel 10 Incorporation of BNZ SARs A46008 and       *
+     F*                A46013 - Recompiled for New Zealand Bond Formula  *S01176
+     F*       E32674 - Recompiled due to error in DPTMVD
+     F*       E29129 - RECOMPILE OVER CHANGED LF/TRADEM
+     F*       E27919 - 2 DB ERRORS NUMBERED 10
+     F*       S01220 - RECOMPILE FOR RISK MANAGEMENT CHANGES             *E21677
+     F*       S01332 - R10 Exposure Mgmt - scale Issuer and C'Party
+     F*                Exposures
+     F*       S01117 - RELEASE 10 MULTIBRANCHING (CHANGES TO STANDARD    *S01117
+     F*                SR. ZCONV FOR SE MULTIBRANCHING)                  *S01117
+     F*       E21677 - THE CLIENT PORTFOLIO EXTRACT VALUES ARE NOT       *E21677
+     F*                CORRECT.                                          *E21677
+     F*       S01117 - RELEASE 10 MULTIBRANCHING
+     F*       E16476 - OFFSETTING AMOUNTS NOT CORRECTLY CALCULATED DUE   *E16476
+     F*                TO CONVERSION PROBLEMS.                           *E16476
+     F*       S01176 - RELEASE 3.1 MODIFICATIONS                         *S01176
+     F*                                                                  *S01176
+     F********************************************************************S01176
+     FEM0660AUO   E                    PRINTER
+     FEMXT6T1 O   E                    DISK         KINFDS EMT1DS
+     F                                              KINFSR EMT1SR
+     FEMXT6D1 O   E                    DISK         KINFDS EMD1DS
+     F                                              KINFSR EMD1SR
+     FEMEXSCL1IF  E           K        DISK                               S01332
+     FSECTY   IF  E           K        DISK                               S01332
+     F            SECTYDF                           KRENAMESECSNF         S01332
+     FTRADEM  IF  E           K        DISK
+     FCPOSEM  IF  E           K        DISK
+     FBKPOS   IF  E           K        DISK
+     FBKPHD   IF  E           K        DISK
+     FDPTEM   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSECIS   IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     FCLINTC  IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTCBF                          KIGNORE
+     FTABEM   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE               S01176
+     F* ICD SE    TABTB36F                          KIGNORE
+     F* ICD EM    TABTB95F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F* CURRENCY  TABTG10F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETIF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETTF                          KIGNORE
+     F/COPY WNCPYSRC,EM0660F001
+     F**********************************************************************
+     F*
+     F* I N D I C A T O R   U S A G E
+     F*
+     F*     01    CHANGE OF BRANCH ON CPOSEM FILE
+     F*     02      "    "  SECURITY  ON CPOSEM FILE
+     F*     03    CHANGE OF INDUSTRY CODE/ COUNTRY OF RISK.
+     F*     30    NOMIMAL CCY HAS 0 DECIMAL PLACES
+     F*     31    NOMIMAL CCY HAS 1 DECIMAL PLACES
+     F*     32    NOMIMAL CCY HAS 2 DECIMAL PLACES
+     F*     33    NOMIMAL CCY HAS 3 DECIMAL PLACES
+     F*     40    EOF FOR FILE CLINTCB.
+     F*     41    USED FOR CHAINING TO FILES.
+     F*     42    EOF FOR READE USING CUSTOMER NUMBER ON ANY FILES
+     F*     43    EOF FOR READE ON FILE BKPHD
+     F*     60    EM LIMIT CCY HAS 0 DECIMAL PLACES
+     F*     61    EM LIMIT CCY HAS 1 DECIMAL PLACES
+     F*     62    EM LIMIT CCY HAS 2 DECIMAL PLACES
+     F*     63    EM LIMIT CCY HAS 3 DECIMAL PLACES
+     F*     65    CHAIN FAIL INDICATOR USED BY /COPY ROUTINE              S01332
+     F*   90 - 99 USED IN Z-SUBROUTINES.  (EXCEPT 97)
+     F*     97    CONDITIONS PRINTING OF STATUS FIELD ON DB ERROR REPORT
+     F*   U7 - U8 DB ERROR OCCURED.
+     F*
+     F* I N D E X   T O   S U B R O U T I N E S
+     F*
+     F*     FIRST    OBTAINS ICD INFORMATION
+     F******BOOK     EXTRACT THE ISSUER RISK                              S01176
+     F*     BOOK     EXTRACT RISK CUSTOMER RISK                           S01176
+     F*     TRADES   EXTRACT THE COUNTERPARTY RISK
+     F*     CLIENT   EXTRACT THE PORTFOLIO HOLDINGS
+     F*     DEPOT    EXTRACT THE DEALING OFFSET
+     F******ISSUER   CALCULATE THE ISSUER EXPOSURE                        S01176
+     F*     RSKCST   CALCULATE RISK CUSTOMER EXPOSURE                     S01176
+     F*     CPARTY   CALCULATE THE COUNTERPARTY RISK
+     F*     PFOLIO   CALCULATE THE PORTFOLIO OFFSET
+     F*     REPO     CALCULATE THE DEALING OFFSET
+     F*     AUDIT    PRINTS THE STD AUDIT REPORT AND ANY DB ERRORS
+     F*     INVTSR   CHAINS TO THE INVTPD FILE
+     F*     EMD1SR   ERROR SUBROUTINE FOR FILE EMXT6D1 IF FILE ERROR OCCURS
+     F*     EMT1SR   ERROR SUBROUTINE FOR FILE EMXT6T1 IF FILE ERROR OCCURS
+     F*     ZSYSTM   OBTAINS ICD INFO FROM TABTB10.
+     F*     ZICDSE   OBTAINS ICD INFO FROM TABTB36.
+     F*     SCALE    /COPY ROUTINE TO SCALE EXPOSURE AMOUNTS              S01332
+     F*
+     F**********************************************************************
+     E*
+     E                    CPY@    1   1 80
+     E                    POWER   1   7  7 3             POWER ARRAY
+     E                    POWER8  1   8  8 4             POWER8 ARRAY
+     E***********         POWERA  1   7  7 0             POWERS OF TEN    E16476
+     E*
+      * Arrays used by scaling /COPY source                               S01332
+      /COPY ZSRSRC,ZEXPSCLZ3                                              S01332
+     I*
+     I/COPY WNCPYSRC,EM0660I001
+      *                                                                   135004
+      ** RENAME FIELDS USED IN ANOTHER FILE TO ALLOW COMPILE              135004
+     IINVTPDF                                                             135004
+      *                                                                   135004
+     I              SFLG                            ISFLG
+     I* USE DATA STRUCTURE AS KEY TO BOOK POSITIONS DETAIL FILE
+     I*
+     IBKPHKY      DS
+     I                                        1  10 BHSC
+     I**********                             11  130BHBR                  S01117
+     I                                       11  13 BHBA                  S01117
+     I                                       14  15 BHBK
+     I                                       16  16 BHMK
+     I                                       17  17 BHTV
+     I                                       18  220LPSD
+     I*
+     I* USE DATA STRUCTURE AS ERROR KEY FOR EXTRACT FILE EMXT6D1
+     I*
+     IEMD1KY      DS
+     I**********                              1   60MCUN                                      CSD027
+     I                                        1   6 MCUN                                      CSD027
+     I                                        7   7 SEPT
+     I                                        8  200EXPA
+     I                                       21  22 MCNC
+     I**********                             23  250EMIND                                   BUG23967
+     I                                       23  25 EMLOIC                                  BUG23967
+     I*
+     I* USE DATA STRUCTURE AS ERROR KEY FOR EXTRACT AUDIT FILE EMXT6T1
+     I*
+     IEMT1KY      DS
+     I                                        1   60MCUN1
+     I                                        7   7 RECJ
+     I                                        8  120NONE
+     I*
+     I* INFORMATION DATA STRUCTURES FOR EMXT6D1 AND EMXT6T1 FILES IF A
+     I* FILE ERROR OCCURS.
+     I*
+     IEMD1DS      DS
+     I                                     *STATUS  EMD1ST
+     I*
+     IEMT1DS      DS
+     I                                     *STATUS  EMT1ST
+     I*
+     ILDA        UDS                            256
+     I                                      134 177 DBLOT
+     I**********                            134 138 DBFILE                S01117
+     I**********                            139 167 DBKEY                 S01117
+     I**********                            168 175 DBPGM                 S01117
+     I**********                            176 1770DBASE                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C********************************************************************
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* CLEAR LDA
+     C*
+     C                     MOVE *BLANK    DBLOT
+     C                     MOVE 'EM0660  'DBPGM
+     C*
+     C* SET UP KEY LISTS
+     C*
+     C           INVTPK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*                                                                   042594
+     C           INVTCH    KLIST                                          042594
+     C                     KFLD           CHNMCY                          042594
+     C                     KFLD           CHSITP                          042594
+     C*
+     C           BKPHDK    KLIST
+     C                     KFLD           BHSC
+     C***********          KFLD           BHBR                            S01117
+     C                     KFLD           BHBA                            S01117
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           LPSD
+     C/COPY WNCPYSRC,EM0660C002
+     C*
+     C* INITAILISE FIELDS.
+     C*
+     C                     Z-ADD0         NONE
+     C*
+     C* OBTAIN ICD INFO
+     C*
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C                     READ CLINTCBF                 40
+     C           *IN40     DOWEQ'0'
+     C*
+     C* MOVE CURRENT CUSTOMER NUMBER TO EXPOSURE DETAIL FIELD FOR OUTPUT
+     C*
+     C                     MOVE CNUM      MCUN
+     C*
+     C*
+     C* CALCULATE THE ISSUER RISK FOR BOOK POSITIONS FOR CURRENT CUSTOMER
+     C*
+     C                     EXSR BOOK
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* CALCULATE THE COLLATERAL OFFSET FOR DEPOT RECORDS FOR EACH CUSTOMER
+     C*
+     C                     EXSR DEPOT
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* OBTAIN CLINTSE RECORD FOR CURRENT CUSTOMER
+     C*
+     C           CNUM      CHAINCLINTSEF             41
+     C           *IN41     IFEQ '0'
+     C*
+     C* IF THE DISCRETIONARY INDICATOR = M CALCULATE THE COUNTERPARTY RISK
+     C*
+     C           C1DI      IFEQ 'M'
+     C                     EXSR TRADES
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* ELSE IF THE DISCRETIONARY INDICATOR = S OR D CALCULATE THE PORTFOLIO
+     C* EXTRACT FOR THE THE CURRENYT CUSTOMER
+     C*
+     C                     ELSE
+     C           C1DI      IFEQ 'S'
+     C           C1DI      OREQ 'D'
+     C*
+     C                     EXSR CLIENT
+     C           *INU7     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* READ NEXT CLIENT RECORD
+     C*
+     C                     READ CLINTCBF                 40
+     C                     END
+     C*
+     C* WRITE STD AUDIT REPORT, WRITE EXPOSURE TRAILER RECORD. ALSO PERFORM
+     C* AUDIT IF DB ERROR.
+     C*
+     C           EAUDIT    TAG
+     C                     EXSR AUDIT
+     C                     SETON                     LR
+      /EJECT
+     C**********************************************************************
+     C*
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C* ACCESS ICDS AND PERFORM STANDARD DB ERRORS IF NOT THERE
+     C*
+     C* ACCESS ICD 1 TABTB10
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C*                                                                   S01176
+     C* ACCESS ICD 2  TABTB11                                             S01176
+     C*                                                                   S01176
+     C                     ELSE                                           S01176
+     C                     MOVEL'01'      ZTABKY                          S01176
+     C                     MOVE '11'      ZTABKY                          S01176
+     C           ZTABKY    CHAINTABTB11F             41                   S01176
+     C           *IN41     IFEQ '1'                                       S01176
+     C                     SETON                     U7U8                 S01176
+     C                     MOVE 'TABLE'   DBFILE           ***************S01176
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 02 S01176
+     C                     Z-ADD2         DBASE            ***************S01176
+     C*
+     C* ACCESS ICD SE TABTB36
+     C*
+     C                     ELSE
+     C                     EXSR ZICDSE
+     C           *INU7     IFEQ '1'
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 03 S01176
+     C************         Z-ADD2         DBASE            ***************S01176
+     C                     Z-ADD3         DBASE                           S01176
+     C*
+     C* ACCESS ICD EM TABTB95
+     C*
+     C                     ELSE
+     C                     MOVEL'01'      ZTABKY
+     C                     MOVE '95'      ZTABKY
+     C           ZTABKY    CHAINTABTB95F             41
+     C           *IN41     IFEQ '1'
+     C                     SETON                     U7U8
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 04 S01176
+     C***********          Z-ADD3         DBASE            ***************S01176
+     C                     Z-ADD4         DBASE                           S01176
+     C*
+     C                     ELSE
+     C**
+     C** READ LIMITS BASE CURRENCY RECORD
+     C                     MOVEL'20'      ZTABKY
+     C                     MOVELLCCY      WORK1   4
+     C                     MOVE '1'       WORK1
+     C                     MOVE WORK1     ZTABKY
+     C           ZTABKY    CHAINTABTG10F             99    ON=NOT THERE
+     C  N99      RECI      COMP 'D'                  9999  ON=NOT LIVE REC
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 05 S01176
+     C***********          Z-ADD04        DBASE            ***************S01176
+     C                     Z-ADD5         DBASE                           S01176
+     C**
+     C                     ELSE
+     C**
+     C** STORE LIMITS CURRENCY SPOT RATE AND DECIMAL PLACES
+     C           MDIN      COMP 0                        20
+     C                     Z-ADDCDP       LCDP    10
+     C                     Z-ADDSPOT      LSPOT  138
+     C                     MOVE MDIN      LMDIN   10                      E16476
+     C***20******1         DIV  SPOT      LSPOT                           E16476
+     C*
+     C* Set indicator for number of decimal places for EM limit ccy
+     C*
+     C                     MOVEA'0000'    *IN,60
+     C           60        ADD  LCDP      V       20
+     C                     MOVEA'1'       *IN,V
+     C*
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C                     END                                            S01176
+     C*
+     C/COPY WNCPYSRC,EM0660C001
+     C                     ENDSR
+     C**********************************************************************
+      /EJECT
+      * Copy scaling subroutine                                           S01332
+      /COPY ZSRSRC,ZEXPSCLZ1                                              S01332
+      /EJECT                                                              S01332
+     C**********************************************************************
+     C*
+     C* BOOK  - SUBROUTINE TO EXTRACT ISSUER RISK FOR EACH CLIENT RECORD
+     C*         CALLS SR: RISKCUST                                        S01176
+     C*
+     C           BOOK      BEGSR                           ** BOOK  **
+     C*
+     C* USE CLINTCB CUSTOMER NUMBER TO SET LIMITS ON THE FILE SECIS, IF THE
+     C* FILE SET OK, READ FIRST SECIS RECORD EQUAL TO CUSTOMER NUMBER UNTIL
+     C* EOF.
+     C*
+     C           CNUM      SETLLSECIS
+     C           CNUM      READESECIS                    42
+     C           *IN42     IFEQ '0'
+     C**********           MOVE SIDY      CHKIDY  30                                        BUG23967
+     C                     MOVE LOIC      CHKIDY  3                                         BUG23967
+     C                     MOVE SCOR      CHKCOR  2
+     C                     MOVE SPBS      CHSPBS  1                       051790
+     C*
+     C           *IN42     DOWEQ'0'
+     C********** SIDY      COMP CHKIDY               0303                                   BUG23967
+     C           LOIC      COMP CHKIDY               0303                                   BUG23967
+     C  N03      SCOR      COMP CHKCOR               0303
+     C*
+     C* IF COUNTRY OF RISK AND/OR INDUSTRY CODE CHANGED,WRITE EXTRACT RECORD
+     C* AND ZEROISE THE RISK CUSTOMER RISK TOTAL (RCTOT)                  S01176
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'S'       RECI
+     C                     MOVE 'I'       SEPT
+     C***********          Z-ADDIRTOT     EXPA                            S01176
+     C                     Z-ADDRCTOT     EXPA                            S01176
+     C                     MOVE CHKCOR    MCNC
+     C**********           MOVE CHKIDY    EMIND                                             BUG23967
+     C                     MOVE CHKIDY    EMLOIC                                            BUG23967
+     C                     WRITEEMXT6D1F
+     C***********          Z-ADD0         IRTOT                           S01176
+     C                     Z-ADD0         RCTOT                           S01176
+     C                     ADD  1         NONE
+     C**********           MOVE SIDY      CHKIDY                                            BUG23967
+     C                     MOVE LOIC      CHKIDY                                            BUG23967
+     C                     MOVE SCOR      CHKCOR
+     C                     END
+     C*
+     C* SET LIMITS ON BOOK POSITION HEADER, IF OK READ FIRST RECORD EQUAL TO
+     C* THE SECURITY SHORTNAME.
+     C*
+     C           SESN      SETLLBKPHD                43
+     C  N43      SESN      READEBKPHD                    43
+     C           *IN43     DOWEQ'0'
+     C*
+     C* IF THE TRADE VALUE BASIS NE V PICK UP BOOK POSITION RECORD.
+     C*
+     C           BHTV      IFNE 'V'
+     C           BKPHDK    CHAINBKPOSDF              41
+     C*
+     C* IF RECORD NOT FOUND OR DELETED, PERFORM STD DB ERROR
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C*
+     C                     SETON                     U7U8
+     C                     MOVE 'BKPOS'   DBFILE           *****************
+     C                     MOVELBKPHKY    DBKEY            ** DB ERROR 06 S01176
+     C***********          Z-ADD5         DBASE            ***************S01176
+     C                     Z-ADD6         DBASE                           S01176
+     C                     GOTO EBOOK
+     C*
+     C*
+     C* WHEN BOOK POSITIONS RECORD READ, CALCULATE RISK CUSTOMER RISK     S01176
+     C* AND ADD THE AMOUNT TO THE TOTAL.                                  S01176
+     C*
+     C                     ELSE
+     C***********          EXSR ISSUER                                    S01176
+     C                     EXSR RSKCST                                    S01176
+     C           *INU7     IFEQ '1'
+     C                     GOTO EBOOK
+     C                     END
+     C***********          ADD  ISRISK    IRTOT  152                      S01176
+      *                                                                   S01332
+      * Calculate risk period (Mat Date of Security - Run Date)           S01332
+      * used as input for scaling routine                                 S01332
+     C           MATY      SUB  RUND      @TDATE  50                      S01332
+      *                                                                   S01332
+      * Set up deal type and amount to scale fields                       S01332
+     C                     Z-ADDRCRISK    @SCAMT 130                      S01332
+     C                     MOVE 'IS'      @DELTP  2                       S01332
+      *                                                                   S01332
+      * Scale risk amount                                                 S01332
+     C                     EXSR SCALE                                     S01332
+      *                                                                   S01332
+     C                     Z-ADD@SCAMT    RCRISK                          S01332
+      *                                                                   S01332
+     C                     ADD  RCRISK    RCTOT  152                      S01176
+     C/COPY WNCPYSRC,EM0660C011
+     C*
+     C                     END
+     C                     END
+     C/COPY WNCPYSRC,EM0660C012
+     C*
+     C* READ NEXT BOOK HEADER RECORD EQUAL TO THE SECURITY NAME
+     C*
+     C           SESN      READEBKPHD                    43
+     C                     END
+     C*
+     C* READ NEXT SECIS RECORD FOR THE CURRENT CUSTOMER.
+     C*
+     C**********           MOVE SPBS      CHSPBS  1                                    051790 207213
+     C           CNUM      READESECIS                    42
+     C                     MOVE SPBS      CHSPBS  1                                           207213
+     C                     END
+     C*
+     C* WRITE THE TOTAL OF RISK CUSTOMER RISK FOR LAST BOOK POSITIONS     S01176
+     C* RECORD                                                            S01176
+     C                     MOVE 'S'       RECI
+     C                     MOVE 'I'       SEPT
+     C***********          Z-ADDIRTOT     EXPA                            S01176
+     C                     Z-ADDRCTOT     EXPA                            S01176
+     C                     MOVE CHKCOR    MCNC
+     C**********           MOVE CHKIDY    EMIND                                             BUG23967
+     C                     MOVE CHKIDY    EMLOIC                                            BUG23967
+     C                     WRITEEMXT6D1F
+     C***********          Z-ADD0         IRTOT                           S01176
+     C                     Z-ADD0         RCTOT                           S01176
+     C                     ADD  1         NONE
+     C                     END
+     C*
+     C           EBOOK     ENDSR
+     C********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* DEPOT - SUBROUTINE TO CALCULATE COLLATERAL OFFSET FOR EACH CLIENT
+     C*         RECORD.  CALLS SR: REPO
+     C*
+     C           DEPOT     BEGSR                           ** DEPOT **
+     C*
+     C* USE THE CURRENT CUSTOMER RECORD TO SET LIMITS ON THE FILE DPTEM, IF
+     C* OK READ FIRST DPTEM RECORD AND LOOP UNTIL ALL DPTEM RECORDS FOR THIS
+     C* CUSTOMER HAVE BEEN PROCESSED
+     C*
+     C           CNUM      SETLLDPTEM
+     C           CNUM      READEDPTEM                    42
+     C           *IN42     IFEQ '0'
+     C**********           MOVE SIDY      CHKIDY                                            BUG23967
+     C                     MOVE LOIC      CHKIDY                                            BUG23967
+     C                     MOVE SCOR      CHKCOR
+     C                     MOVE SPBS      CHSPBS  1                       051790
+     C*
+     C           *IN42     DOWEQ'0'
+     C********** SIDY      COMP CHKIDY               0303                                   BUG23967
+     C           LOIC      COMP CHKIDY               0303                                   BUG23967
+     C  N03      SCOR      COMP CHKCOR               0303
+     C*
+     C* IF CHANGE IN COUNTRY OF RISK AND/OR INDUSTRY CODE, WRITE THE COLLAT-
+     C* ERAL OFFSET TOTAL FOR THIS CUSTOMER TO THE EXTRACT FILE
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'S'       RECI
+     C                     MOVE 'D'       SEPT
+     C                     Z-ADDCOLLT     EXPA
+     C                     MOVE CHKCOR    MCNC
+     C**********           MOVE CHKIDY    EMIND                                             BUG23967
+     C                     MOVE CHKIDY    EMLOIC                                            BUG23967
+     C                     WRITEEMXT6D1F
+     C*
+     C* ZEROISE THE COLLATERAL TOTAL AND ADD 1 TO THE COUNT OF RECORDS OUTPUT
+     C*
+     C                     Z-ADD0         COLLT
+     C                     ADD  1         NONE
+     C**********           MOVE SIDY      CHKIDY                                            BUG23967
+     C                     MOVE LOIC      CHKIDY                                            BUG23967
+     C                     MOVE SCOR      CHKCOR
+     C                     END
+     C/COPY WNCPYSRC,EM0660C004
+     C*
+     C* CALCULATE THE COLLATERAL OFFSET FOR THIS RECORD AND
+     C* ADD THE AMOUNT TO THE TOTAL
+     C*
+     C                     EXSR REPO
+     C           *INU7     IFEQ '1'
+     C                     GOTO EDEPOT
+     C                     END
+     C                     ADD  COLLOS    COLLT
+     C/COPY WNCPYSRC,EM0660C005
+     C*
+     C* READ NEXT DPTEM RECORD FOR THIS CUSTOMER
+     C*
+     C**********           MOVE SPBS      CHSPBS  1                                    051790 207213
+     C           CNUM      READEDPTEM                    42
+     C                     MOVE SPBS      CHSPBS  1                                           207213
+     C                     END
+     C*
+     C* WRITE RECORD FOR THE LAST DPTEM RECORD PROCESSED,ADD 1 TO REC. COUNT
+     C*
+     C                     MOVE 'S'       RECI
+     C                     MOVE 'D'       SEPT
+     C                     Z-ADDCOLLT     EXPA
+     C                     MOVE CHKCOR    MCNC
+     C**********           MOVE CHKIDY    EMIND                                             BUG23967
+     C                     MOVE CHKIDY    EMLOIC                                            BUG23967
+     C                     WRITEEMXT6D1F
+     C                     Z-ADD0         COLLT  150
+     C                     ADD  1         NONE
+     C                     END
+     C*
+     C           EDEPOT    ENDSR
+      /EJECT
+     C**********************************************************************
+     C*
+     C* TRADES - SUBROUTINE TO EXTRACT COUNTERPARTY RISK FOR EACH CLIENT
+     C*          RECORD.  CALLS SR: CPARTY
+     C*
+     C           TRADES    BEGSR                           ** TRADES **
+     C*
+     C* SET LIMITS ON FILE TRADEM USING CUSTOMER NUMBER,IF RECORDS EXIST ON
+     C* FILE, READ FIRST TRADEM RECORD,AND PROCESS
+     C*
+     C           CNUM      SETLLTRADEM
+     C           CNUM      READETRADEM                   42
+     C           *IN42     IFEQ '0'
+     C**********           MOVE LIND      CHKIDY                                            BUG23967
+     C                     MOVE LOIC      CHKIDY                                            BUG23967
+     C                     MOVE CCTZ      CHKCOR
+     C                     MOVE SPBS      CHSPBS  1                       051790
+     C*
+     C           *IN42     DOWEQ'0'
+     C********** LIND      COMP CHKIDY               0303                                   BUG23967
+     C           LOIC      COMP CHKIDY               0303                                   BUG23967
+     C  N03      CCTZ      COMP CHKCOR               0303
+     C*
+     C* IF THE DATE FULLY SETTLED IS 0, CONTINUE PROCESSING RECORD
+     C*
+     C           TDFS      IFEQ *ZEROS
+     C*
+     C* IF ANY OF THE FOLLOWING CONDITIONS ARE MET STOP PROCESSING RECORD
+     C*
+     C           TDVD      IFLE DNWD                                      S01176
+     C           AUTS      ANDEQ'Y'                                       S01176
+     C*                                                                   S01176
+     C           AFPC      IFEQ 'Y'
+     C           TDTP      IFEQ 'TS'
+     C           PCOD      ANDNE'0'
+     C           PCOD      ANDNE'2'
+     C           PCOD      ANDNE'3'
+     C           TDTP      OREQ 'TP'
+     C           PCOD      ANDNE'0'
+     C           PCOD      ANDNE'2'
+     C           PCOD      ANDNE'4'
+     C*
+     C* IF THERE IS A CHANGE IN COUNTRY OF RISK OR INDUSTRY CODE WRITE OUT
+     C* THE COUNTERPARTY RISK FOR THE MARKET TRADING CUSTOMER
+     C*
+     C                     ELSE
+     C                     SETON                     20
+     C                     END
+     C                     ELSE                                           S01176
+     C                     SETON                     20                   S01176
+     C                     END                                            S01176
+     C                     ELSE
+     C                     SETON                     20
+     C                     END
+     C           *IN20     IFEQ '1'
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'S'       RECI
+     C                     MOVE 'C'       SEPT
+     C                     Z-ADDCPRTOT    EXPA
+     C                     MOVE CHKCOR    MCNC
+     C**********           MOVE CHKIDY    EMIND                                             BUG23967
+     C                     MOVE CHKIDY    EMLOIC                                            BUG23967
+     C                     WRITEEMXT6D1F
+     C*
+     C* ZEROISE TOTAL AFTER RECORD WRITTEN, THEN ADD 1 TO COUNT OF RECORDS
+     C* WRITTEN.
+     C*
+     C                     Z-ADD0         CPRTOT
+     C                     ADD  1         NONE
+     C**********           MOVE LIND      CHKIDY                                            BUG23967
+     C                     MOVE LOIC      CHKIDY                                            BUG23967
+     C                     MOVE CCTZ      CHKCOR
+     C                     END
+     C*
+     C* CALCULATE THE COUNTERPARTY RISK,IF DB ERROR OCCURS,PERFORM DB ERROR
+     C* ROUTINE
+     C*
+     C                     EXSR CPARTY
+     C           *INU7     IFEQ '1'
+     C                     GOTO ETRADE
+     C                     END
+      *                                                                   S01332
+      * Access Securities file to get Maturity Date for this security     S01332
+      * type                                                              S01332
+     C           TDSS      CHAINSECTY                41                   S01332
+     C           *IN41     IFEQ '1'                                       S01332
+     C                     Z-ADD16        DBASE              *************S01332
+     C                     MOVELTDSS      DBKEY              *  DB ERROR *S01332
+     C                     MOVE 'SECTY'   DBFILE             *     16    *S01332
+     C                     SETON                     U7U8    *************S01332
+     C                     GOTO ETRADE                                    S01332
+     C                     END                                            S01332
+      *                                                                   S01332
+      * Set up input fields for scaling routine                           S01332
+      * To Date = Mat Date of Security - Run Date                         S01332
+     C           MATY      SUB  RUND      @TDATE                          S01332
+     C                     MOVE 'CP'      @DELTP                          S01332
+     C                     Z-ADDCPRISK    @SCAMT                          S01332
+      * Scale amount                                                      S01332
+     C                     EXSR SCALE                                     S01332
+     C                     Z-ADD@SCAMT    CPRISK                          S01332
+     C*
+     C* ADD THE COUNTERPARTY RISK FOR CURRENT CUSTOMER TO CUSTOMER TOTAL
+     C*
+     C                     ADD  CPRISK    CPRTOT 150
+     C/COPY WNCPYSRC,EM0660C013
+     C                     END
+     C                     SETOF                         20
+     C                     END
+     C*
+     C* READ THE NEXT TRADE CUSTOMER
+     C*
+     C**********           MOVE SPBS      CHSPBS  1                                    051790 207213
+     C           CNUM      READETRADEM                   42
+     C                     MOVE SPBS      CHSPBS  1                                           207213
+     C                     END
+     C*
+     C* ONCE ALL THE TRADE RECORDS PROCESSED FOR CURRENT CUSTOMER, WRITE OUT
+     C* THE LAST COUNTERPRATY RISK TO EXTRACT FILE EMXT6D1
+     C*
+     C                     MOVE 'S'       RECI
+     C                     MOVE 'C'       SEPT
+     C                     Z-ADDCPRTOT    EXPA
+     C                     MOVE CHKCOR    MCNC
+     C**********           MOVE CHKIDY    EMIND                                             BUG23967
+     C                     MOVE CHKIDY    EMLOIC                                            BUG23967
+     C                     WRITEEMXT6D1F
+     C                     Z-ADD0         CPRTOT
+     C                     ADD  1         NONE
+     C                     END
+     C*
+     C           ETRADE    ENDSR
+      /EJECT
+     C**********************************************************************
+     C*
+     C* CLIENT - SUBROUTINE TO EXTRACT PORTFOLIO OFFSET FOR EACH CLIENT
+     C*          RECORD.  CALLS SR: CPARTY
+     C*
+     C           CLIENT    BEGSR                           ** CLIENT **
+     C*                                                                   088428
+     C                     MOVE 'Y'       CLISR   1                       088428
+     C*
+     C* SET FILE POINTER TO FIRST CUSTOMER POSITION RECORD, AND READ THE
+     C* RECORD
+     C*
+     C           CNUM      SETLLCPOSEM
+     C           CNUM      READECPOSEM                   42
+     C           *IN42     IFEQ '0'
+     C**********           MOVE SIDY      CHKIDY                                            BUG23967
+     C                     MOVE LOIC      CHKIDY                                            BUG23967
+     C                     MOVE SCOR      CHKCOR
+     C                     MOVE CSSC      CHKSEC 10
+     C                     MOVE NMCY      CHNMCY  3                       042594
+     C                     MOVE SITP      CHSITP  3                       042594
+     C                     Z-ADDMKPR      CHMKPR 158                      042594
+     C                     Z-ADDNMDP      CHNMDP  10                      088428
+     C**********           MOVE *ZEROS    CHKBR   30                      S01117
+     C                     MOVE *BLANKS   CHKBR   3                       S01117
+     C                     Z-ADD*ZEROS    ACCPOS
+     C                     MOVE SPBS      CHSPBS  1                       051790
+     C*                                                                   E21677
+     C*  PROCESS ALL THE RECORDS IN CPOSEM FOR THE CURRENT CUSTOMER.      E21677
+     C*
+     C           *IN42     DOWEQ'0'
+     C********** SIDY      COMP CHKIDY               0303                                   BUG23967
+     C           LOIC      COMP CHKIDY               0303                                   BUG23967
+     C  N03      SCOR      COMP CHKCOR               0303
+     C***03****************SETON                     0201                 E21677
+     C   03                SETON                     02                   E21677
+     C  N02      CSSC      COMP CHKSEC               0202
+     C***02****************SETON                     01                   E21677
+     C**N01******CSBR      COMP CHKBR                0101
+     C**N01******CSBA      COMP CHKBR                0101           S01117E21677
+     C*                                                                   E21677
+     C* IF CHANGE IN SECURITY, CALCULATE THE PORTFOLIO OFFSET FOR THE     E21677
+     C* SECURITY ON THE ACCUMULATED POSITION                              E21677
+     C*                                                                   E21677
+     C           *IN02     IFEQ '1'                                       E21677
+     C                     EXSR PFOLIO                                    E21677
+     C           *INU7     IFEQ '1'                                       E21677
+     C                     GOTO ECLINT                                    E21677
+     C                     END                                            E21677
+     C                     ADD  PTFOFS    PORTFT 152                      E21677
+     C                     MOVE '0'       *IN02                           E21677
+     C                     Z-ADD*ZEROS    ACCPOS                          042594
+     C                     MOVE CSSC      CHKSEC                          077009
+     C                     MOVE NMCY      CHNMCY                          077009
+     C                     MOVE SITP      CHSITP                          077009
+     C                     Z-ADDMKPR      CHMKPR                          077009
+     C                     Z-ADDNMDP      CHNMDP  10                      088428
+     C                     END                                            E21677
+     C*                                                                   S01117
+     C*                                                                   S01117
+     C* IF CHANGE IN INDUSTRY CODE OR COUNTRY OF RISK, OUTPUT EXTRACT RECORD
+     C* AND ADD 1 TO THE COUNT OF RECORDS WRITTEN
+     C*
+     C           *IN03     IFEQ '1'
+     C                     MOVE 'S'       RECI
+     C                     MOVE 'P'       SEPT
+     C                     Z-ADDPORTFT    EXPA
+     C                     MOVE CHKCOR    MCNC
+     C**********           MOVE CHKIDY    EMIND                                             BUG23967
+     C                     MOVE CHKIDY    EMLOIC                                            BUG23967
+     C                     WRITEEMXT6D1F
+     C                     Z-ADD0         PORTFT
+     C*******              Z-ADD0         ACCPOS                   E21677 042594
+     C                     ADD  1         NONE
+     C**********           MOVE SIDY      CHKIDY                                            BUG23967
+     C                     MOVE LOIC      CHKIDY                                            BUG23967
+     C                     MOVE SCOR      CHKCOR
+     C*******              MOVE CSSC      CHKSEC                          077009
+     C***********          MOVE CSBR      CHKBR                           S01117
+     C*********************MOVE CSBA      CHKBR                     S01117E21677
+     C                     END
+     C*
+     C**IF*CHANGE*IN SECURITY,*CALCULATE*THE*PORTFOLIO*OFFSET*FOR*THE     E21677
+     C**SECURITY*ON*THE*ACCUMULATED POSITION                              E21677
+     C***********                                                         E21677
+     C************IN02     IFEQ '1'                                       E21677
+     C***********          EXSR PFOLIO                                    E21677
+     C************INU7     IFEQ '1'                                       E21677
+     C***********          GOTO ECLINT                                    E21677
+     C***********          END                                            E21677
+     C***********          ADD  PTFOFS    PORTFT 152                      E21677
+     C***********          END                                            E21677
+     C***********                                                         E21677
+     C**IF*CHANGE*IN*BRANCH*ADD*THE*NOMINAL*VALUE*DATE*BASIS*TO*THE*ACCUM E21677
+     C**ULATED*POSITION                                                   E21677
+     C***********                                                         E21677
+     C************IN01     IFEQ '1'                                       E21677
+     C***********          ADD  CSNV      ACCPOS 150                      E21677
+     C***********          END                                            E21677
+     C***********          SETOF                         0201             E21677
+     C*                                                                   E21677
+     C* ADD THE NOMINAL VALUE DATE BASIS TO THE ACCULMULATED POSITION     E21677
+     C* FOR THE CURRENT RECORD.                                           E21677
+     C*                                                                   E21677
+     C                     ADD  CSNV      ACCPOS 150                      E21677
+     C*
+     C* READ NEXT CUSTOMER POSITION RECORD
+     C*
+     C                     MOVE SPBS      CHSPBS  1                       051790
+     C           CNUM      READECPOSEM                   42
+     C                     END
+     C*
+     C* AFTER LAST RECORD READ, CALCULATE THE OFFSET FOR LAST SET OF
+     C* SECURITIES, THEN WRITE RECORD TO THE EXTRACT FILE. ADD 1 TO COUNT
+     C*
+     C* SETUP FIELD USED IN PFOLIO/CLCVAL WITH CURRENT VALUES             088428
+     C                     MOVE NMCY      CHNMCY                          088428
+     C                     MOVE SITP      CHSITP                          088428
+     C                     Z-ADDMKPR      CHMKPR                          088428
+     C                     Z-ADDNMDP      CHNMDP  10                      088428
+     C                     MOVE SPBS      CHSPBS  1                       088428
+     C                     EXSR PFOLIO
+     C           *INU7     IFEQ '1'
+     C                     GOTO ECLINT
+     C                     END
+     C                     ADD  PTFOFS    PORTFT
+     C*
+     C                     MOVE 'S'       RECI
+     C                     MOVE 'P'       SEPT
+     C                     Z-ADDPORTFT    EXPA
+     C                     MOVE CHKCOR    MCNC
+     C**********           MOVE CHKIDY    EMIND                                             BUG23967
+     C                     MOVE CHKIDY    EMLOIC                                            BUG23967
+     C                     WRITEEMXT6D1F
+     C*
+     C                     Z-ADD0         PORTFT
+     C                     ADD  1         NONE
+     C                     END
+     C*                                                                   088428
+     C                     MOVE ' '       CLISR                           088428
+     C*
+     C           ECLINT    ENDSR
+     C********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* RSKCUST- SUBROUTINE TO CALCULATE THE RISK CUSTOMER RISK FOR       S01176
+     C*          EACH BOOK HEADER RECORD.                                 S01176
+     C*
+     C***********ISSUER    BEGSR                           ** ISSUER **
+     C           RSKCST    BEGSR                           ** RSKCST **
+     C*
+     C* USE NOMINAL CURRENCY TO PICK UP THE NOM CCY DEC PLS. FROM TABTG10
+     C*
+     C                     MOVE *BLANKS   KEYF   12
+     C                     MOVEL'20'      KEYF
+     C                     MOVELNMCY      TEMP    4
+     C                     MOVE '1'       TEMP
+     C                     MOVE TEMP      KEYF
+     C           KEYF      CHAINTABTG10F             41
+     C*
+     C* IF RECORD NOT FOUND OR DELETED, PERFORM STD DB ERROR
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     SETON                     U7U8
+     C                     MOVE 'TABLE'   DBFILE           ***************S01332
+     C                     MOVELKEYF      DBKEY            * DB ERROR 15 *S01332
+     C                     Z-ADD15        DBASE            ***************S01332
+     C**********           MOVE 'TABLE'   DBFILE           ***************S01332
+     C**********           MOVELKEYF      DBKEY            ** DB ERROR 06 S01332
+     C**********           Z-ADD6         DBASE            ***************S01332
+     C                     ELSE
+     C*
+     C*  READ INVESTMENT TYPE FILE
+     C*
+     C                     EXSR INVTSR
+     C           *INU7     IFEQ '1'                        *****************
+     C                     Z-ADD7         DBASE            ** DB ERROR 07 **
+     C                     GOTO EISSR                      *****************
+     C                     END
+     C*
+     C* IF THE MARKET/BOOK EXPOSURE FIELD =M USE MARKET PRICE WHEN OBTAINING
+     C* MARKET VALUE, ELSE USE THE AVE PRICE TO OBTAIN THE BOOK VALUE
+     C*
+     C           MBEX      IFEQ 'M'
+     C                     Z-ADDMKPR      WPRIC  158
+      *                                                            START  135004
+      * If market price is zero, ZPRCCAL will fall over...                135004
+     C           MKPR      IFNE *ZEROS                                    135004
+     C           NPSN      ANDNE*ZEROS                                    135004
+      *                                                                   135004
+      * If Last Date Accrued is zero, use Last Change Date                135004
+     C                     Z-ADDDNWD      ZFDATE                          135004
+      *                                                                   135004
+      * Calculate price as a percentage                                   135004
+     C                     CALL 'ZPRCCAL'                                 135004
+     C                     PARM SESN      ZSECTY 10        Security       135004
+     C                     PARM MKPR      ZPRCIN 158       Market price   135004
+     C                     PARM           ZFDATE  50        See above..   135004
+     C                     PARM 'P'       ZMODE   1        Give me price% 135004
+     C                     PARM *ZEROS    ZPRCOT 158                      135004
+     C                     PARM *BLANKS   ZRTCDE 10                       135004
+     C                     PARM NPSN      ANOML  150       Nominal amount 153041
+     C                     PARM 'N'       DEBUG   1                       135004
+      *                                                                   135004
+     C           ZRTCDE    IFNE *BLANKS                                   135004
+     C                     MOVEL'ZPRCCAL 'DBFILE            ************* 135004
+     C                     Z-ADD017       DBASE             *DBERROR 017* 135004
+     C                     MOVELSESN      DBKEY             ************* 135004
+     C                     SETON                     U7U8                 135004
+     C                     GOTO EISSR                                     135004
+     C                     ENDIF                                          135004
+      *                                                                   135004
+     C                     Z-ADDZPRCOT    WPRIC                           135004
+      *                                                                   135004
+     C                     ENDIF                                          135004
+      *                                                              END  135004
+     C/COPY WNCPYSRC,EM0660C008
+     C                     ELSE
+     C                     Z-ADDAPPB      WPRIC
+     C                     END
+     C*
+     C                     Z-ADDNPSN      WNOML  110
+     C                     EXSR CLCVAL
+     C*
+     C* ONCE VALUE IN NOM CCY DEC PLS, CONVERT THE VALUE TO EQUIVALENT VALUE
+     C* IN EXPOSURE MANGEMENT LIMIT CCY.
+     C*
+     C           NMCY      IFNE LCCY                                      E16476
+     C                     Z-ADDZCONS     ZAMTCI                          E16476
+     C                     MOVE NMCY      ZCCYI                           E16476
+     C***********          Z-ADDZCONS     AMOUNT 130                      E16476
+     C***********          MOVE NMCY      CURR    3                       E16476
+     C                     EXSR CCYCON
+     C           *INU7     IFEQ '1'
+     C                     GOTO EISSR
+     C                     END
+     C*                                                                   E16476
+     C                     Z-ADDZAMTCO    EXPAMT 150                      E16476
+     C                     ELSE                                           E16476
+     C                     Z-ADDZCONS     EXPAMT                          E16476
+     C                     END                                            E16476
+     C*                                                                   E16476
+     C***********          Z-ADDCONBAL    EXPAMT 150                      E16476
+     C*
+     C* IF LONG/SHORT HOLDINGS NET/GROSS VALUE *EQ G AND EXPOSURE AMOUNT IS
+     C* LESS THEN 0 REVERSE SIGN OF  EXPOSURE AMOUNT.
+     C*
+     C           LSNG      IFEQ 'G'
+     C           EXPAMT    ANDLT0
+     C                     Z-SUBEXPAMT    EXPAMT
+     C                     END
+     C*
+     C* IF ISSUER RISK FACTORED VALUE *EQ Y MULTIPLY EXPOSURE AMOUNT BY THE
+     C* EXPOSURE PERCENTAGE DIVIDED BY 100
+     C*
+     C           IFTR      IFEQ 'Y'
+     C           *INU7     IFEQ '1'                        *****************
+     C                     Z-ADD8         DBASE            ** DB ERROR 08 **
+     C                     GOTO EISSR                      *****************
+     C                     END
+     C*
+     C           EXPC      DIV  100       DECS    32
+     C***********EXPAMT    MULT DECS      ISRISK 152                      S01176
+     C           EXPAMT    MULT DECS      RCRISK 152                      S01176
+     C*
+     C                     ELSE
+     C***********          Z-ADDEXPAMT    ISRISK                          S01176
+     C                     Z-ADDEXPAMT    RCRISK                          S01176
+     C                     END
+     C                     END
+     C*
+     C           EISSR     ENDSR
+     C********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* CPARTY - SUBROUTINE TO CALCULATE THE COUNTERPARTY RISK FOR EACH NON
+     C*          FULLY SETTLED TRADE FORM THE CURRENT CUSTOMER
+     C*
+     C           CPARTY    BEGSR                           ** CPARTY **
+     C*
+     C* USE THE OUSTANDING VALUE OF TRADE TO CONVERT TO EQUIVALENT VALUE
+     C* IN EXPOSURE MANGEMENT LIMIT CCY.
+     C*
+     C           SETC      IFNE LCCY                                      E16476
+     C                     MOVE *BLANKS   KEYF                            E16476
+     C                     MOVEL'20'      KEYF                            E16476
+     C                     MOVELSETC      TEMP                            E16476
+     C                     MOVE '1'       TEMP                            E16476
+     C                     MOVE TEMP      KEYF                            E16476
+     C           KEYF      CHAINTABTG10F             41                   E16476
+     C           *IN41     IFEQ '1'                                       E16476
+     C           RECI      OREQ '*'                                       E16476
+     C                     SETON                     U7U8                 E16476
+     C                     MOVE 'TABLE'   DBFILE                          E16476
+     C                     MOVELKEYF      DBKEY                           E16476
+     C***********          Z-ADD10        DBASE                     E16476E27919
+     C                     Z-ADD17        DBASE                           E27919
+     C                     GOTO ECPRTY                                    E16476
+     C                     END                                            E16476
+     C*                                                                   E16476
+     C                     Z-ADDTOSV      ZAMTCI                          E16476
+     C                     MOVE SETC      ZCCYI                           E16476
+     C***********          Z-ADDTOSV      AMOUNT                          E16476
+     C***********          MOVE SETC      CURR                            E16476
+     C                     EXSR CCYCON
+     C           *INU7     IFEQ '1'
+     C                     GOTO ECPRTY
+     C                     END
+     C*                                                                   E16476
+     C                     Z-ADDZAMTCO    CPRISK 150                      E16476
+     C                     ELSE                                           E16476
+     C                     Z-ADDTOSV      CPRISK                          E16476
+     C                     END                                            E16476
+     C*                                                                   E16476
+     C***********          Z-ADDCONBAL    CPRISK 150                      E16476
+     C*
+     C* IF COUNTERPARTY TAKEN GROSS VALUE *EQ G OR TRADE TYPE = SALE,
+     C* REVERSE THE SIGN OF EXP. AMOUNT
+     C*
+     C           CPTG      IFEQ 'N'
+     C           TDTP      ANDEQ'TP'
+     C                     Z-SUBCPRISK    CPRISK
+     C                     END
+     C*
+     C           ECPRTY    ENDSR
+     C********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* PFOLIO - SUBROUTINE TO CALCULATE THE PORTFOLIO OFFSET  FOR EACH
+     C*          CUSTOMER POSITIONS RECORD FOR THE CURRENT CUSTOMER
+     C*
+     C           PFOLIO    BEGSR                           ** PFOLIO **
+     C*
+     C* USE NOMINAL CURRENCY TO PICK UP THE NOM CCY DEC PLS. FROM TABTG10
+     C*
+     C                     MOVE *BLANKS   KEYF   12
+     C                     MOVEL'20'      KEYF
+     C*******              MOVELNMCY      TEMP    4                       042594
+     C                     MOVELCHNMCY    TEMP    4                       042594
+     C                     MOVE '1'       TEMP
+     C                     MOVE TEMP      KEYF
+     C           KEYF      CHAINTABTG10F             41
+     C*
+     C* IF RECORD NOT FOUND OR DELETED, PERFORM STD DB ERROR
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     SETON                     U7U8
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELKEYF      DBKEY            ** DB ERROR 09 **
+     C                     Z-ADD9         DBASE            *****************
+     C*
+     C                     ELSE
+     C*
+     C*  READ INVESTMENT TYPE FILE
+     C*
+     C*******              EXSR INVTSR                                    042594
+     C           INVTCH    CHAININVTPDF              41                   042594
+     C           *IN41     IFEQ '1'                                       042594
+     C           RECI      OREQ '*'                                       042594
+     C*                                                                   042594
+     C                     SETON                     U7U8                 042594
+     C                     MOVE 'INVTP'   DBFILE                          042594
+     C                     MOVELCHNMCY    TEMPK                           042594
+     C                     MOVE CHSITP    TEMPK                           042594
+     C                     MOVELTEMPK     DBKEY                           042594
+     C                     END                                            042594
+     C           *INU7     IFEQ '1'                        *****************
+     C                     Z-ADD010       DBASE            ** DB ERROR 10 **
+     C                     GOTO EPFOLI                     *****************
+     C                     END
+     C*
+     C* GET MARKET VALUE BY MULTIPLYING THE ACCUMULATED POSITION BY THE
+     C* MARKET PRICE.
+     C*
+     C*******              Z-ADDMKPR      WPRIC                           042594
+     C                     Z-ADDCHMKPR    WPRIC                           042594
+     C                     Z-ADDACCPOS    WNOML
+     C                     EXSR CLCVAL
+     C*
+     C* ONCE VALUE IN NOM CCY DEC PLS, CONVERT THE VALUE TO EQUIVALENT VALUE
+     C* IN EXPOSURE MANGEMENT LIMIT CCY.
+     C*
+     C*******    NMCY      IFNE LCCY                               E16476 042594
+     C           CHNMCY    IFNE LCCY                                      042594
+     C                     Z-ADDZCONS     ZAMTCI                          E16476
+     C*******              MOVE NMCY      ZCCYI                    E16476 042594
+     C                     MOVE CHNMCY    ZCCYI                           042594
+     C***********          Z-ADDZCONS     AMOUNT                          E16476
+     C***********          MOVE NMCY      CURR                            E16476
+     C                     EXSR CCYCON
+     C           *INU7     IFEQ '1'
+     C                     GOTO EPFOLI
+     C                     END
+     C*                                                                   E16476
+     C                     Z-ADDZAMTCO    PTFOFS 150                      E16476
+     C                     ELSE                                           E16676
+     C                     Z-ADDZCONS     PTFOFS                          E16476
+     C                     END                                            E16476
+     C*                                                                   E16476
+     C***********          Z-ADDCONBAL    PTFOFS 150                      E16476
+     C*
+     C* IF PORTFOLIO HOLDINGS FACTORED VALUE *EQ Y MULTIPLY EXPOSURE AMOUNT
+     C* BY THE EXPOSURE PERCENTAGE DIVIDED BY 100
+     C*
+     C           PFTR      IFEQ 'Y'
+     C           EXPC      DIV  100       DECS
+     C           PTFOFS    MULT DECS      PTFOFS    H
+     C                     END
+     C*
+     C* IF THE NOMINAL CCY NOT *EQ TO THE EXP. MANAGEMENT LIMIT CCY,
+     C* MULTIPLY THE EXP. AMOUNT BY THE COLLATERAL PERCENTAGE.
+     C*
+     C           NMCY      IFNE LCCY
+     C           CMGN      DIV  100       DECS
+     C           PTFOFS    MULT DECS      PTFOFS    H
+     C                     END
+     C*
+     C                     END
+     C*
+     C           EPFOLI    ENDSR
+     C********************************************************************
+      /EJECT
+     C/COPY WNCPYSRC,EM0660C006
+     C**********************************************************************
+     C*
+     C* REPO   - SUBROUTINE TO CALCULATE THE COLLATERAL OFFSET FOR EACH
+     C*          DEPOT  RECORD FOR THE CURRENT CUSTOMER
+     C*
+     C           REPO      BEGSR                           ** REPO   **
+     C*
+     C* USE NOMINAL CURRENCY TO PICK UP THE NOM CCY DEC PLS. FROM TABTG10
+     C*
+     C                     MOVE *BLANKS   KEYF   12
+     C                     MOVEL'20'      KEYF
+     C                     MOVELNMCY      TEMP    4
+     C                     MOVE '1'       TEMP
+     C                     MOVE TEMP      KEYF
+     C           KEYF      CHAINTABTG10F             41
+     C*
+     C* IF RECORD NOT FOUND OR DELETED, PERFORM STD DB ERROR
+     C*
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C                     SETON                     U7U8
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELKEYF      DBKEY            ** DB ERROR 11 **
+     C                     Z-ADD11        DBASE            *****************
+     C*
+     C                     ELSE
+     C*
+     C*  READ INVESTMENT TYPE FILE
+     C*
+     C                     EXSR INVTSR
+     C           *INU7     IFEQ '1'                        *****************
+     C                     Z-ADD12        DBASE            ** DB ERROR 12 **
+     C                     GOTO EREPO                      *****************
+     C                     END
+     C*
+     C* CALCULATE THE MARKET VALUE OF HOLDINGS BY NOMINAL TIMES MARKET
+     C* PRICE.
+     C*
+     C                     Z-ADDMKPR      WPRIC
+     C                     Z-ADDDPNA      WNOML
+     C                     EXSR CLCVAL
+     C*
+     C* ONCE VALUE IN NOM CCY DEC PLS, CONVERT THE VALUE TO EQUIVALENT VALUE
+     C* IN EXPOSURE MANGEMENT LIMIT CCY.
+     C*
+     C           NMCY      IFNE LCCY                                      E16476
+     C                     Z-ADDZCONS     ZAMTCI                          E16476
+     C                     MOVE NMCY      ZCCYI                           E16476
+     C***********          Z-ADDZCONS     AMOUNT                          E16476
+     C***********          MOVE NMCY      CURR                            E16476
+     C                     EXSR CCYCON
+     C           *INU7     IFEQ '1'
+     C                     GOTO EREPO
+     C                     END
+     C*                                                                   E16476
+     C                     Z-ADDZAMTCO    COLLOS 150                      E16476
+     C                     ELSE                                           E16476
+     C                     Z-ADDZCONS     COLLOS                          E16476
+     C                     END                                            E16476
+     C*                                                                   E16476
+     C***********          Z-ADDCONBAL    COLLOS 150                      E16476
+     C*
+     C* IF PORTFOLIO RISK FACTORED VALUE *EQ Y, MULTIPLY THE EXP. AMOUNT
+     C* BY THE EXPOSURE PERCENTAGE DIVIDED BY 100.
+     C*
+     C           PFTR      IFEQ 'Y'
+     C           EXPC      DIV  100       DECS
+     C           COLLOS    MULT DECS      COLLOS    H
+     C                     END
+     C*
+     C* IF NOMINAL CCY *NE TO THE EXP MANAGEMENT LIMIT CCY, MULTIPLY THE
+     C* EXP. AMOUNT BY THE COLLATERAL PERCENTAGE DIVIDED BY 100.
+     C*
+     C           NMCY      IFNE LCCY
+     C           CMGN      DIV  100       DECS
+     C           COLLOS    MULT DECS      COLLOS    H
+     C                     END
+     C                     END
+     C*
+     C           EREPO     ENDSR
+     C*
+     C**********************************************************************
+      /EJECT
+     C/COPY WNCPYSRC,EM0660C007
+     C**********************************************************************
+     C*
+     C* INVTSR - SUBROUTINE TO CHAIN TO THE INVESTMENT TYPE FILE
+     C*
+     C           INVTSR    BEGSR                           ** INVTSR **
+     C*
+     C           INVTPK    CHAININVTPDF              41
+     C           *IN41     IFEQ '1'
+     C           RECI      OREQ '*'
+     C*
+     C                     SETON                     U7U8
+     C                     MOVE 'INVTP'   DBFILE
+     C                     MOVELNMCY      TEMPK   6
+     C                     MOVE SITP      TEMPK
+     C                     MOVELTEMPK     DBKEY
+     C                     END
+     C*
+     C                     ENDSR
+     C**********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* EMD1SR - INFORMATION SUBROUTINE TO BE EXECUTED IF FILE ERROR ON
+     C*          EMXT6D1
+     C*
+     C           EMD1SR    BEGSR                           ** EMD1SR **
+     C*
+     C                     SETON                     U7U897
+     C                     MOVEL'EMXT6D1' DBFILE
+     C                     MOVELEMD1KY    DBKEY            *****************
+     C                     Z-ADD13        DBASE            ** DB ERROR 13 **
+     C                     MOVELEMD1ST    DBSTS   5        *****************
+     C*
+     C                     ENDSR
+     C**********************************************************************
+     C**********************************************************************
+     C*
+     C* EMT1SR - INFORMATION SUBROUTINE TO BE EXECUTED IF FILE ERROR ON
+     C*          EMXT6T1
+     C*
+     C           EMT1SR    BEGSR                           ** EMT1SR **
+     C*
+     C                     Z-ADD999999    MCUN1
+     C                     SETON                     U7U897
+     C                     MOVEL'EMXT6T1' DBFILE           *****************
+     C                     MOVELEMT1KY    DBKEY            ** DB ERROR 14 **
+     C                     Z-ADD14        DBASE            *****************
+     C                     MOVELEMT1ST    DBSTS   5
+     C*
+     C                     ENDSR
+     C**********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* AUDIT  - AUDIT SUBROUTINE TO PRITN ANY DB ERRORS THAT OCCUR DURING
+     C*          PROCESSING, TO PRITN STD AUDIT REPORT AT THE END OF
+     C*          PROCESSING AND UPDATING THE EXTRACT AUDIT RECORD.
+     C*
+     C           AUDIT     BEGSR                           ** AUDIT  **
+     C*
+     C* WRITE THE HEADER OF THE AUDIT REPORT, THEN EITHER AN ERROR OR THE
+     C* REPORT CONTROL DEPENDING ON IF A DB ERROR HAS OCCURED OR NOT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C           NONE      IFEQ 0
+     C                     WRITENORECS
+     C                     ELSE
+     C                     WRITECONTROL
+     C*
+     C* WRITE THE AUDIT RECORD FOR THE EXTRACT FILE ONLY IF NO DB ERROR
+     C*
+     C                     MOVE 'T'       RECI
+     C**********           Z-ADD999999    MCUN                                                CSD027
+     C                     MOVE '999999'  MCUN                                                CSD027
+     C                     MOVE 'S'       RECJ
+     C                     WRITEEMXT6T1F
+     C                     END
+     C                     END
+     C*
+     C* WRITE THE TRAILER RECORD TO THE REPORT.
+     C*
+     C                     WRITETRAILAU
+     C*
+     C                     ENDSR
+     C**********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*   CLCVAL - CALCULATES A VALUE FROM THE NOMINAL AMOUNT AND A
+     C*            GIVEN PRICE.
+     C*****************************************************************
+     C           CLCVAL    BEGSR
+     C*
+     C                     Z-ADD0         ZCONS  150
+     C                     Z-ADD0         ZCONS0 150
+     C                     Z-ADD0         ZCONS1 151
+     C                     Z-ADD0         ZCONS2 152
+     C                     Z-ADD0         ZCONS3 153
+     C/COPY WNCPYSRC,EM0660C010
+     C*
+     C* Set indicator for number of decimal places
+     C*
+     C                     MOVEA'0000'    *IN,30
+     C           30        ADD  CDP       V       20
+     C                     MOVEA'1'       *IN,V
+     C*
+     C* Calculate consideration = face value(=nominal) x trade price
+     C*     If price basis is P, divide consideration by 100
+     C*     If processing type is 8 , multiply cons'n by current factor
+     C*
+     C   30      WNOML     MULT WPRIC     ZCONS0    H
+     C   31      WNOML     MULT WPRIC     ZCONS1    H
+     C   32      WNOML     MULT WPRIC     ZCONS2    H
+     C   33      WNOML     MULT WPRIC     ZCONS3    H
+     C*
+     C           PROT      IFEQ '8'
+     C/COPY WNCPYSRC,EM0660C009
+     C   30      ZCONS0    MULT CFCT      ZCONS0
+     C   31      ZCONS1    MULT CFCT      ZCONS1
+     C   32      ZCONS2    MULT CFCT      ZCONS2
+     C   33      ZCONS3    MULT CFCT      ZCONS3
+     C                     END
+     C/COPY WNCPYSRC,EM0660C003
+     C*
+     C***        SPBS      IFEQ 'P'                                       051790
+     C           CHSPBS    IFEQ 'P'                                       051790
+     C   30      ZCONS0    DIV  100       ZCONS0    H
+     C   31      ZCONS1    DIV  100       ZCONS1    H
+     C   32      ZCONS2    DIV  100       ZCONS2    H
+     C   33      ZCONS3    DIV  100       ZCONS3    H
+     C                     END
+     C*
+     C   30                MOVE ZCONS0    ZCONS
+     C   31                MOVE ZCONS1    ZCONS
+     C   32                MOVE ZCONS2    ZCONS
+     C   33                MOVE ZCONS3    ZCONS
+     C*
+     C*  ALLOW FOR NOMINAL DECIMAL PLACES
+     C*
+     C           CLISR     IFEQ 'Y'                                       088428
+     C           5         SUB  CHNMDP    DC      10                      088428
+     C                     ELSE                                           088428
+     C           5         SUB  NMDP      DC      10
+     C                     END                                            088428
+     C           ZCONS     MULT POWER8,DC ZCONS     H
+     C*
+     C* TEST FOR PARTLY PAID SECURITY - ****** REMOVED 9/3/88 SDP
+     C***********PPDI      IFEQ 'Y'
+     C*********************MULT CPDP      ZCONS
+     C***********SFPP      IFEQ 0
+     C*********************Z-ADD0         ZCONS
+     C*********************ELSE
+     C*********************DIV  SFPP      ZCONS     H
+     C*********************END
+     C*********************END
+     C*
+     C                     ENDSR
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   CCYCON  S.R.  TO CALCULATE EVENT AMOUNT IN TERMS OF LIMIT CCY
+     C**              THE CONVERTED BALANCE IS IN CONBAL
+     C**                 CALLED FROM: CALC1, RETAIL
+     C**
+     C**     FIELDS USED - AMOUNT = EVENT AMTIN
+     C**                 - CURR = EVENT CURRENCY
+     C**     FIELD OUTPUT - CONBAL = CONVERTED AMOUNT                    E
+     C**
+     C           CCYCON    BEGSR                           ** CCYCON **
+     C*                                                                   E16476
+     C                     Z-ADDSPOT      ZRATE1 138                      E16476
+     C                     Z-ADDMDIN      ZMDI1   10                      E16476
+     C                     Z-ADDCDP       ZCDPI   10                      S01117
+     C                     Z-ADDLSPOT     ZRATE2 138                      E16476
+     C                     Z-ADDLMDIN     ZMDI2   10                      E16476
+     C                     Z-ADDLCDP      ZCDPO   10                      S01117
+     C                     EXSR ZXRATE                                    E16476
+     C                     MOVE LCCY      ZCCYO                           E16476
+     C                     Z-ADDZRATEX    ZEXCH                           E16476
+     C           ZMDIX     IFEQ '0'                                       E16476
+     C                     MOVE 'D'       ZMD                             E16476
+     C                     ELSE                                           E16476
+     C                     MOVE 'M'       ZMD                             E16476
+     C                     END                                            E16476
+     C                     EXSR ZCONV                                     E16476
+     C*                                                                   E16476
+     C           ECCY      ENDSR                                          E16476
+     C*                                                                   E16476
+     C** CCYCON NO LONGER REQUIRED                                        E16476
+     C*                                                                   E16476
+     C**                                                                  E16476
+     C***ACCESS*EVENT CURRENCY RECORD FOR SPOT RATE                       E16476
+     C***********          MOVE *BLANK    ZTABKY                          E16476
+     C***********          MOVEL'20'      ZTABKY                          E16476
+     C***********          MOVELCURR      WORK1                           E16476
+     C***********          MOVE '1'       WORK1                           E16476
+     C***********          MOVE WORK1     ZTABKY                          E16476
+     C***********ZTABKY    CHAINTABTG10F             99                   E16476
+     C**N99******RECI      COMP 'D'                  9999                 E16476
+     C***********                                                         E16476
+     C***IF*RECORD NOT FOUND, DATABASE ERROR                              E16476
+     C***99******          MOVE ZTABKY    DBKEY                           E16476
+     C***99******          Z-ADD15        DBASE            ** DBASE 15 ** E16476
+     C***99******          SETON                     U7U8                 E16476
+     C***99******          GOTO ENDCCY                                    E16476
+     C***********                                                         E16476
+     C***CALCULATE X RATE                                                 E16476
+     C***********                                                         E16476
+     C***********MDIN      COMP 0                        20               E16476
+     C***20******1         DIV  SPOT      SPOT                            E16476
+     C***********SPOT      DIV  LSPOT     XSPOT  138H                     E16476
+     C***********                                                         E16476
+     C***SET*UP*EXPONENT                                                  E16476
+     C***********                                                         E16476
+     C***********CDP       ADD  1         M       10                      E16476
+     C***********1         DIV  POWERA,M  DECP   138H                     E16476
+     C***CALCULATE AMOUNT TO BE OUTPUT/ACCUM.                             E16476
+     C***********                                                         E16476
+     C***********AMOUNT    MULT DECP      AMOUNT                          E16476
+     C***60******AMOUNT    MULT XSPOT     ZCONS0    H                     E16476
+     C***61******AMOUNT    MULT XSPOT     ZCONS1    H                     E16476
+     C***62******AMOUNT    MULT XSPOT     ZCONS2    H                     E16476
+     C***63******AMOUNT    MULT XSPOT     ZCONS3    H                     E16476
+     C***60******          MOVE ZCONS0    CONBAL 150                      E16476
+     C***61******          MOVE ZCONS1    CONBAL                          E16476
+     C***62******          MOVE ZCONS2    CONBAL                          E16476
+     C***63******          MOVE ZCONS3    CONBAL                          E16476
+     C***********                                                         E16476
+     C***********ENDCCY    ENDSR                                          E16476
+     C**
+      /COPY ZSRSRC,ZSYSTMZ1
+      /COPY ZSRSRC,ZICDSEZ1
+      /COPY ZSRSRC,ZCONVZ1
+      /COPY ZSRSRC,ZXRATEZ1                                               E16476
+**  CPY@
+(c) Finastra International Limited 2001
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

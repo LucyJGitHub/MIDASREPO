@@ -1,0 +1,299 @@
+      *****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas LE Loan activity enq (w/ repay freq & bal)')     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  DSPF/LE0212DF - Loan Activity with repay freq and cur balance*
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR816406           Date 14Oct12               *
+      *                 CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12918           Date 18Dec06               *
+      *                 BUG9267            Date 25Oct05               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 201343             Date 23Oct02               *
+      *                 190005             Date 23Oct02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204127             Date 24Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187261             Date 16Jan01               *
+      *                 187274             Date 15Jan01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 172540             Date 31Jan00               *
+      *                 169700             Date 05Nov99               *
+      *                 169696             Date 02Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158861             Date 14Apr99               *
+      *                 128954 *Create     Date 17Feb98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR816406 - Matured Loans Enquiry ends in Database error.     *
+      *             Change indicator *IN69 that partly enable and     *
+      *             display Past Due Enquiry. (Child: AR816407)       *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  BUG12918 - Column title should be value date not due date.   *
+      *  BUG9267- Display 'O/S Man. Int. Adjustment' to be specific   *
+      *  201343 - Display 'MATURED LOAN ACTIVITY ENQUIRY' heading.
+      *  190005 - Display 'MATURED LOANS ENQUIRY' heading.            *
+      *  204127 - Add screen field on header to reflect unprocessed   *
+      *           manual interest adjustment.                         *
+      *  187261 - Do not display fields linked to Syndications unless *
+      *           CLE006 is switched on.                              *
+      *  187274 - Do not display fields linked to Loan Manager unless *
+      *           CLE010 is switched on.                              *
+     A*  172540 - Fix 169700 caused screen title to disappear.        *
+     A*  169700 - If loan has been reversed, display a warning in the *
+     A*           top right hand corner of the screen.                *
+     A*  169696 - Currency is not displayed on screen, therefore      *
+     A*           changed currency field to display CCYCL instead     *
+     A*           of SCCY.                                            *
+      *  158861 - Change the title of the enquiry for processing type *
+      *           70 to 'Guarantees Issued Activity Enquiry'          *
+      *  128954 - Running total should show on a change of date and   *
+      *           only on a change of principal.  Also, include       *
+      *           date action was input if different from due date,   *
+      *           and any forward repayments                          *
+      *                                                               *
+      *****************************************************************
+     A                                      CHGINPDFT
+     A                                      PRINT(MPRINT)
+     A                                      INDARA
+     A                                      CA03
+     A*/COPY WNCPYSRC,LEH01368
+     A  15                                  CF01
+     A  15                                  CF12
+      **Start of change AR816406
+      **Start*of*change*CLE134*****************************************              CLE134 AR816406
+     A**45*69***                            CF21                                     CLE134 AR816406
+      **End*of*change*CLE134*******************************************              CLE134 AR816406
+     A  45 70                               CF21
+      **End of change AR816406
+     A  69                                  ROLLUP(08)
+     A  69                                  ROLLDOWN(09)
+      *
+      ** Header format
+      *
+     A          R LE0212F0                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                  1  6'LE0212'
+     A N69
+     A**Start of change 190005
+     A*O*16*****                         1 30'LOAN ACTIVITY ENQUIRY'
+     AO 16N77                           1 30'LOAN ACTIVITY ENQUIRY'
+     A**End of change 190005
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A**Start of change 201343
+     A  77                             01 30'MATURED LOAN ACTIVITY ENQUIRY'
+     A                                      DSPATR(UL)
+     A                                      DSPATR(HI)
+     A**End of change 201343
+     A  17                              1 20'PARTICIPATIONS PURCHASED ACTIVITY -
+     A                                      ENQUIRY'
+     A                                      DSPATR(UL HI)
+     A  18                              1 23'PARTICIPATIONS SOLD ACTIVITY -
+     A                                      ENQUIRY'
+     A                                      DSPATR(UL HI)
+      *                                              Begin /158861/
+     A**19*******                       1 24'GUARANTEES ISSUED DETAILS ENQUIRY'
+     A  19                              1 24'GUARANTEES ISSUED ACTIVITY ENQUIRY'
+      *                                              End   /158861/
+     A                                      DSPATR(UL HI)
+      *                                              Begin /172540/
+     A                                  1 61' Reversed '
+     A  29                                  DSPATR(HI)
+     A  29                                  DSPATR(RI)
+     A N29                                  DSPATR(ND)
+      *                                                End /172540/
+     A                                  1 72TIME
+     A                                      EDTWRD('  :  :  ')
+      *
+      ** Loan details
+      *
+     A          R LE0212F1                  OVERLAY
+     A                                  2  2'Customer'
+     A            SCNUM          6A  O  2 11DSPATR(HI)
+     A            SCRNM         20A  O  2 18DSPATR(HI)
+     A  57                              2 40'Orig.Borrow.'
+     A  57        SOLNO          6A  O  2 53DSPATR(HI)
+     A  57        SCSSN         20A  O  2 60DSPATR(HI)
+     A                                  3  2'Loan'
+     A            SLNRF          6A  O  3  7
+     A  29                                  DSPATR(RI)
+     A                                      DSPATR(HI)
+     A                                  3 17'Branch'
+     A  12                                  DSPATR(ND)
+     A            SBRCA          3A  O  3 24DSPATR(HI)
+     A  12                                  DSPATR(ND)
+     A                                  3 31'Transfer from'
+     A            STOLN          6A  O  3 45DSPATR(HI)
+     A                                  3 55'Activity from'
+     A            SACST          7A  O  3 69DSPATR(HI)
+     A                                  4  2'Facility reference'
+     A            SFCUS          6A  O  4 21DSPATR(HI)
+     A            SFTYP          6A  O  4 28DSPATR(HI)
+     A*/COPY WNCPYSRC,LEH01451
+     A                                  5  2'Participation'
+      *                                              Begin /187261/
+     A N25                                  DSPATR(ND)
+      *                                              End   /187261/
+     A                                  5 17'Linked to syndicate'
+      *                                              Begin /187261/
+     A N25                                  DSPATR(ND)
+      *                                              End   /187261/
+     A            SLNKS          3A  O  5 40DSPATR(HI)
+      *                                              Begin /187261/
+     A N25                                  DSPATR(ND)
+      *                                              End   /187261/
+     A                                  5 46'Automatic'
+      *                                              Begin /187274/
+     A N26                                  DSPATR(ND)
+      *                                              End   /187274/
+     A            SMNSG          3A  O  5 58DSPATR(HI)
+      *                                              Begin /187274/
+     A N26                                  DSPATR(ND)
+      *                                              End   /187274/
+     A                                  5 64'Assignment'
+      *                                              Begin /187261/
+     A N25                                  DSPATR(ND)
+      *                                              End   /187261/
+     A            SGASS          3A  O  5 77DSPATR(HI)
+      *                                              Begin /187261/
+     A N25                                  DSPATR(ND)
+      *                                              End   /187261/
+     A*/COPY WNCPYSRC,LEH01450
+     A                                  6  2'Amt outst'
+     A            SCPAM         18A  O  6 12DSPATR(HI)
+      *                                               Begin /*169696*  /
+     A************SCCY           3A  O  6 31DSPATR(HI)
+     A            CCYCL          3A  O  6 31DSPATR(HI)
+      *                                               End /*169696*/
+     A                                  6 35'Int outst'
+     A            SINOT         18A  O  6 45DSPATR(HI)
+     A                                  6 65'Round-down'
+     A            SRDFC          1A  O  6 76DSPATR(HI)
+     A                                  7  2'Repay'
+     A            SRAMT         17A  O  7  8DSPATR(HI)
+     A                                  7 26'Freq'
+     A            SRFRQ          1A  O  7 31DSPATR(HI)
+     A                                  7 33'On day'
+     A            SRDYN          2A  O  7 40DSPATR(HI)
+     A                                  7 44'Next'
+     A            SNRPD          7A  O  7 49DSPATR(HI)
+     A                                  7 57'Type'
+     A            SREPT          1A  O  7 62DSPATR(HI)
+     A                                  7 65'Accrue'
+     A            SADDI          1A  O  7 72DSPATR(HI)
+     A                                  8  2'Interest freq'
+     A            SIPFR          2A  O  8 16DSPATR(HI)
+     A                                  8 19'On day'
+     A            SIFDY          2A  O  8 26DSPATR(HI)
+     A                                  8 29'Next'
+     A            SNIDT          7A  O  8 34DSPATR(HI)
+     A                                  8 43'Capitalised'
+     A            SCAPI          3A  O  8 55DSPATR(HI)
+     A                                  8 60'Maturity'
+     A            SMDAT          7A  O  8 69DSPATR(HI)
+     A                                  9  2'W/O: -Prin'
+     A            SPWOD         17A  O  9 13DSPATR(HI)
+      **Start of change 204127
+     A**********                        9 30'-Int'                                            204127
+     A**********  SIWOD         17A  O  9 35DSPATR(HI)                                        204127
+     A                                  9 31'-Int'
+     A            SIWOD         17A  O  9 36DSPATR(HI)
+     A**********                        9 53'-W/H Tax'                                        204127
+     A**********  SWTWD         17A  O  9 62DSPATR(HI)                                        204127
+     A                                  9 54'-W/H Tax'
+     A            SWTWD         17A  O  9 63DSPATR(HI)
+      **End of change 204127
+     A                                 10  2'Next Rollover Date'
+     A            SNROD          7A  O 10 21DSPATR(HI)
+      **Start of change 204127
+      **Start of change BUG9267
+     A**********                       10 35'O/S Man. Adjustments'                           BUG9267
+     A                                 10 31'O/S Man. Int. Adjustments'
+      **End of change BUG9267
+     A            SAIMN         17A  O 10 58DSPATR(HI)
+      **End of change 204127
+      **Start of change BUG12918
+     A**********                       11  2'Due date'                                      BUG12918
+     A                                 11  2'Val date'
+      **End of change BUG12918
+     A                                 11 11'In date'
+     A                                 11 31'Narrative'
+     A                                 11 57'Amount'
+     A                                 11 74'Code'
+      *                                              Begin /169700/
+      *                                              Begin /172540/
+     A***********                       1 60' Reversed Loan '
+     A**29*******                           DSPATR(HI)
+     A**29*******                           DSPATR(RI)
+     A*N29*******                           DSPATR(ND)
+      *                                                End /172540/
+      *                                                End /169700/
+      *
+      ** Action details/running balance format
+      *
+     A          R LE0212F2                  OVERLAY
+     A                                      SLNO(*VAR)
+     A                                      CLRL(*END)
+     A    N68     SDUDT          7A  O  1  2DSPATR(HI)
+     A    N68     SINDT          7A  O  1 11DSPATR(HI)
+     A    N68     SNARR         30A  O  1 20DSPATR(HI)
+     A    N68     SAMNT         19A  O  1 51DSPATR(HI)
+     A    N68     SSMSG          2A  O  1 71DSPATR(HI)
+     A    N68     SSGAS          2A  O  1 74DSPATR(HI)
+     A    N68     SCODE          1A  O  1 77DSPATR(HI)
+     A     68                           1 32'Balance as of'
+     A                                      DSPATR(HI)
+     A     68     SBLDT          7A  O  1 46DSPATR(HI)
+     A     68                           1 54':'
+     A                                      DSPATR(HI)
+     A     68     SCUBL         19A  O  1 56DSPATR(HI)
+      *
+      ** Footer format
+      *
+     A          R LE0212F3                  OVERLAY
+     A            SEMSG         78A  O 21  2
+     A  31
+     AO 44                                  DSPATR(RI HI)
+     A  15                             22  3'F1=Initial Enquiry   F3=Exit   -
+     A                                      F12=Previous'
+      **Start of change AR816406
+      **Start*of*change*CLE134*****************************************              CLE134 AR816406
+     A**45*69***                       22 49'F21=Past Due Loans'                     CLE134 AR816406
+      **End*of*change*CLE134*******************************************              CLE134 AR816406
+     A  45 70                          22 49'F21=Past Due Loans'
+      **End of change AR816406
+     A N15 69                          22  3'F3=Exit'
+     A N15N69                          23  3'F3=Exit'
+     A*/COPY WNCPYSRC,LEH01369
+     A     69     SCMSG         41A  O 23  3
+     A                                 24  3'Or enter next Loan no'
+     A            SLNIN          6A  B 24 26DSPATR(PC)
+     A                                      DSPATR(HI)
+     A N41                                  DSPATR(UL)
+     A  41                                  DSPATR(RI)
+     A                                 24 34'and Date activity from'
+     A            SDTIN          6A  B 24 58
+     A                                      DSPATR(HI)
+     A N42                                  DSPATR(UL)
+     A  42                                  DSPATR(RI)
+     A                                 24 65'and Code'
+     A            SCDIN          1X  B 24 75
+     A                                      DSPATR(HI)
+     A N43                                  DSPATR(UL)
+     A  43                                  DSPATR(RI)
+     A                                      CHECK(FE)

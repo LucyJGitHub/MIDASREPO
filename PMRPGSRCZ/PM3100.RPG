@@ -1,0 +1,541 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Related Customer Numbers enquiry')            *
+     F********************************************************************
+     F*                                                                  *
+     F*  MIDAS - PORTFOLIO MANAGEMENT MODULE                             *
+     F*                                                                  *
+     F*  PM3100 - RELATED CUSTOMER NUMBERS ENQUIRY                       *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 101558             Date 09May96               *
+      *                 CPM005             Date 25Jul96               *
+     F*                 S01124             DATE 03JUN94                  *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  101558  -  SET UP KEY CORRECTLY TO READ SDRELCL1 FILE           *
+     F*  CPM005  -  Private Banking Phase 2                              *
+     F*             Focus Group Changes Upgraded To DBA                  *
+     F*  S01124  -  PBFG/6 - ADDITIONAL CUSTOMER DETAILS                 *
+     F*                                                                  *
+     F********************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*
+     F*   FUNCTION OF INDICATORS
+     F*   ----------------------
+     F*
+     F****37:*READ*ON*FILE*SDBANKL1************************************   CPM005
+     F****38:*READ*ON*FILE*SDCUSTL1************************************   CPM005
+     F****39:*READ*ON*FILE*SDRELCL1************************************   CPM005
+     F*   39: WORKING INDICATOR FOR SFLEND                                CPM005
+     F*   40: WORKING INDICATOR FOR SFLEND
+     F*   45: WORKING INDICATOR FOR VLDCMDKEY (ENTER)
+     F*   71: READ ON FILE PM3100S1
+     F*   78: LOKUP ON TABLE
+     F*   80: WORKING INDICATOR (ECRAN DE CONTROLE)
+     F*   81: WORKING INDICATOR (ECRAN DE CONTROLE)
+     F*   84: SFLNXTCHG
+     F*
+     F*
+     F*              *************************
+     F*              ** INDICATORS NOT USED **
+     F*              ** ------------------- **
+     F*              *************************
+     F*
+     F*       ***************************************************
+     F*       * 01   02   03   04   05   06   07   08   09   10 *
+     F*       * 11   12   13   14   15   16   17   18   19   20 *
+     F*       * 21   22   23   24   25   26   28   28   29   30 *
+     F*       * 31   32   33   34   35   36   ..   ..   ..   .. *
+     F*       * ..   42   43   44   ..   46   47   48   49   50 *
+     F*       * 51   52   53   54   55   56   57   58   59   60 *
+     F*       * 61   62   63   64   65   66   67   68   69   70 *
+     F*       * ..   72   73   74   75   76   77   ..   79   .. *
+     F*       * ..   82   83   ..   85   86   87   88   89   90 *
+     F*       * 91   92   93   94   95   96   97   98   99      *
+     F*       ***************************************************
+     F*
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*
+     F***SDRELCL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F***SDRELCL2IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F*********** SDRELCD0                          KRENAMESDRELCD2       CPM005
+     F***SDCUSTL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       CPM005
+     F***PM3100DDCF**E                    WORKSTN                         CPM005
+     FPM3100DFCF  E                    WORKSTN                            CPM005
+     F                                        RRN   KSFILE PM3100S1
+     F                                              KINFDS INFDS#
+     F*****************************************************************
+      /EJECT
+     E*****************************************************************
+     E                    CPY@    1   1 80
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     IPGMDS     ESDSY2PGDSP
+     I                                      254 263 USER                  CPM005
+      * Program data structure.
+      *
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure.
+     I**
+     I***WWGDA*****E DSPMGRDAPP                                           CPM005
+     I**
+     I***WWLDA*****E DSPMLDAPP                                            CPM005
+     IWWLDA     E DSPMLDAPD                                               CPM005
+     I*
+     ISDBANK    E DSSDBANKPD                                              CPM005
+     I* External DS for Bank Details                                      CPM005
+     I*                                                                   CPM005
+     ISDCUST    E DSSDCUSTPD                                              CPM005
+     I* External DS for Customer details                                  CPM005
+     I**                                                                  CPM005
+     ISDRELC    E DSSDRELCPD                                              CPM005
+     I* External DS for Related Customer details                          CPM005
+     I**                                                                  CPM005
+     IDSFDY     E DSDSFDY                                                 CPM005
+     I* First DS for Access Programs, Short Data Structure                CPM005
+     I**                                                                  CPM005
+     IDSSDY     E DSDSSDY                                                 CPM005
+     I* Second DS For Access Programs, Long Data Structure                CPM005
+     I*                                                                   CPM005
+     I**  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION:
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C* MAIN PROCESSING                                                        *
+     C**************************************************************************
+     C*
+     C**KLIST*FOR*SDRELCL1*********************************************   CPM005
+     C* KLIST FOR SDRELCPD                                                CPM005
+     C*
+     C********** DASELE    KLIST                                                              CSD027
+     C**********           KFLD           DACUID 20                                           CSD027
+     C**********           KFLD           DACNUM  60                                   CPM005 CSD027
+     C                     MOVE *BLANKS   DACUID 20                                           CSD027
+     C*
+     C* CALL INIT SUBROUTINE
+     C*
+     C                     EXSR INIT                       INITIATION
+     C*
+     C* WHEN PROGRAM IS CALLED FROM ENQUIRY MODE
+     C*
+     C                     EXSR SRENQ
+     C*
+     C* END OF PGM
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C* INITIAL ROUTINE                                                        *
+     C**************************************************************************
+     C*
+     C           INIT      BEGSR
+      *
+      ** Receive parameters from data area *LDA
+     C                     CALL 'PMC1003'
+     C                     PARM           WWLDA
+      *
+     C                     MOVEL##JOB     WSID
+     C***********          MOVELQMRUNA    DDRUNA                          CPM005
+      *
+      ***Enquire*data*area**GDA****************************************   CPM005
+     C***********          CALL 'PMC1004'                                 CPM005
+     C***********          PARM           WWGDA                           CPM005
+     C*
+     C**  Prepare LDA
+     C*
+     C                     MOVEL'PM3100'  QMPGM  10
+     C*
+     C*   Select the program MSGQ for error msg.
+     C                     MOVEL'*'       TOPQ   10
+     C                     MOVEL'*PRV'    TOPRQ   5
+     C                     MOVEL'*'       WWTPGQ 10
+     C                     MOVEL'*PRV'    WWPGQR  5
+     C                     MOVEL'*'       DDPGMQ
+     C                     MOVEL'PMUSRMSG'PMSGF  10
+     C*
+     C*   Fill in fields for subroutine ZASNMS
+     C                     MOVEL'PM3100'  ZAPGM  10        Message queue
+     C                     MOVEL'PMUSRMSG'ZAMSGF 10        Message file
+     C                     MOVEL*BLANK    ZAPGRL  5        Rel queue
+     C                     MOVEL*BLANK    ZAMSID  7        Message Id.
+     C                     MOVEL*BLANK    ZAMSDA132        Message data.
+     C                     MOVEL*BLANK    ZAMSTP  7        Message type.
+     C*
+     C** ACCESS ICD1 FROM LF/SDBANKL1
+     C**
+     C************LOVAL    SETLLSDBANKL1                                  CPM005
+     C***********          READ SDBANKL1                 37               CPM005
+     C*                                                                   CPM005
+     C                     CALL 'AOBANKR0'                                CPM005
+     C                     PARM '*DBERR ' @RTCD   7                       CPM005
+     C                     PARM '*FIRST ' @OPTN   7                       CPM005
+     C           SDBANK    PARM SDBANK    DSFDY                           CPM005
+     C*
+     C************IN37     IFEQ '1'                        B1             CPM005
+     C           @RTCD     IFNE *BLANKS                    B1             CPM005
+     C                     Z-ADD1         QMERRN           *****************
+     C***********          MOVEL'SDBANKL1'QMFILE           * DBERROR 001 *CPM005
+     C                     MOVE 'SDBANKL1'QMFILE           * DBERROR 001 *CPM005
+     C                     MOVEL*BLANKS   QMKEY            *****************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+     C*
+     C***********QMCNUM    CHAINSDRELCL2             41                   CPM005
+     C                     MOVELQMCNUM    RCUST   6                       CPM005
+     C                     CALL 'AORELCR0'                                CPM005
+     C                     PARM *BLANKS   RRTCD   7                       CPM005
+     C                     PARM '*KEY'    ROPTN   7                       CPM005
+     C                     PARM           RCUID  20                       CPM005
+     C                     PARM           RCUST                           CPM005
+     C           SDRELC    PARM SDRELC    DSFDY                           CPM005
+     C*
+     C************IN41     IFEQ '0'                        B1             CPM005
+     C***********          MOVELFDCUID    DDUSID                          CPM005
+     C           RRTCD     IFEQ *BLANKS                    B1             CPM005
+     C                     MOVELF4CRID    DDUSID                          CPM005
+     C                     ELSE                            X1
+     C                     MOVELQMCNUM    DDUSID
+     C                     ENDIF                           E1
+     C*
+     C***********          MOVELFDCUID    DACUID                          CPM005
+     C***********          MOVELF4CRID    DACUID                    CPM005101558
+     C                     MOVELDDUSID    DACUID                          101558
+     C**********           MOVE *ZEROS    DACNUM                                              CSD027
+     C*
+     C           F4CRID    IFNE RCUST                                     CPM005
+     C                     MOVE *ON       *IN39                           CPM005
+     C                     ENDIF                                          CPM005
+     C*                                                                   CPM005
+     C                     ENDSR
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C** SRENQ - SUBROUTINE FOR ENQUIRY
+     C**************************************************************************
+     C*
+     C           SRENQ     BEGSR
+     C*
+     C* SET UP PROTECT MODE
+     C*
+     C                     EXSR INISFL                     INIT. SUBFILE
+     C                     EXSR LOASFE                     LOAD SUBFILE ENQUIRY
+     C*
+     C                     Z-ADD1         RRN
+     C*
+     C*
+     C* DO WHILE NOT F3 AND NOT F12
+     C           *INKC     DOWNE'1'                        B1
+     C           *INKL     ANDNE'1'
+     C*
+     C** RESTORE ACTIVE PAGE FOR DISPLAY
+     C           @#SFRC    IFGT *ZERO
+     C                     Z-ADD@#SFRC    RRN
+     C                     END
+     C*
+     C* WRITE SUBFILE
+     C                     WRITEPM3100F1                   BOTTOM
+     C                     WRITEPM3100C0                   MESSAGE
+     C                     EXFMTPM3100C1                   SUBFILE
+     C*
+     C* WHICH KEY HAS BEEN PRESSED
+     C                     EXSR PRESS
+     C*
+     C* IF F03
+     C           WWAID     IFEQ '03'                       B2
+     C           QMENQT    OREQ 'Y'
+     C                     SETON                     03
+     C                     MOVE 'Y'       QMENQT
+     C***********          CALL 'PMC1002'                                 CPM005
+     C***********          PARM           WWGDA                           CPM005
+     C                     CALL 'PMC1001'                                 CPM005
+     C                     PARM           WWLDA                           CPM005
+     C                     END                             E2
+     C*
+     C* IF F12                                                            CPM005
+     C           WWAID     IFEQ '12'                       B2             CPM005
+     C           QMENQT    OREQ 'P'                                       CPM005
+     C                     MOVE 'P'       QMENQT                          CPM005
+     C                     CALL 'PMC1001'                                 CPM005
+     C                     PARM           WWLDA                           CPM005
+     C                     END                             E2             CPM005
+     C*                                                                   CPM005
+     C* IF ROLL UP                                                        CPM005
+     C           WWAID     IFEQ 'UP'                       B2             CPM005
+     C*          RRTCD     ANDEQ*BLANKS                                   CPM005
+     C                     Z-ADDWWRRN     RRN                             CPM005
+     C                     EXSR LOASFE                     LOAD SUB ENQ   CPM005
+     C                     END                             E2             CPM005
+     C*                                                                   CPM005
+     C                     END                             E1
+     C*
+     C                     ENDSR
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C* INITIALIZE SUBFILE
+     C**************************************************************************
+     C*
+     C           INISFL    BEGSR
+     C*
+     C                     MOVE *BLANKS   DDCUST
+     C                     MOVE *BLANKS   DDCSSN
+     C                     MOVE *BLANKS   DDCRNM
+     C*
+     C                     MOVE '0'       *IN80
+     C                     MOVE '0'       *IN81
+     C                     WRITEPM3100F1
+     C                     WRITEPM3100C1
+     C                     WRITEPM3100C0
+     C                     MOVE '1'       *IN80
+     C                     Z-ADD0         RRN
+     C*
+     C                     ENDSR
+     C*
+     C**************************************************************************
+     C* LOAD SUBFILE FOR ENQUIRY ONLY
+     C**************************************************************************
+     C*
+     C           LOASFE    BEGSR
+     C*
+     C***********DACUID    SETLLSDRELCL1                                  CPM005
+     C           WWAID     IFNE 'UP'                       B1             CPM005
+     C                     MOVEL*BLANKS   RCUST                           CPM005
+     C                     CALL 'AORELCR0'                                CPM005
+     C                     PARM *BLANKS   RRTCD   7                       CPM005
+     C                     PARM '*KEY'    ROPTN   7                       CPM005
+     C                     PARM DACUID    RCUID  20                       CPM005
+     C                     PARM           RCUST   6                       CPM005
+     C           SDRELC    PARM SDRELC    DSFDY                           CPM005
+     C                     ELSE                            X1             CPM005
+     C*
+     C* ROLL UP
+     C***********WWAID     IFEQ 'UP'                       B1             CPM005
+     C**********           MOVELWWSAVE    DACNUM                                              CSD027
+     C***********DASELE    SETLLSDRELCL1                                  CPM005
+     C                     CALL 'AORELCR0'                                CPM005
+     C                     PARM *BLANKS   RRTCD                           CPM005
+     C                     PARM '*NEXT'   ROPTN                           CPM005
+     C                     PARM           RCUID  20                       CPM005
+     C                     PARM           RCUST   6                       CPM005
+     C           SDRELC    PARM SDRELC    DSFDY                           CPM005
+     C                     END                             E1
+     C*
+     C***********          READ SDRELCL1                 39               CPM005
+     C*
+     C**   CLEAR MESSAGES FROM PROGRAM MESSAGE QUEUE.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           WWTPGQ 10
+     C                     PARM           WWPGQR  5
+     C*
+     C* LOAD SUBFILE
+     C************IN39     DOWEQ'0'                        B1             CPM005
+     C***********FDCUID    ANDEQDACUID                                    CPM005
+     C           RRTCD     DOWEQ*BLANKS                    B1             CPM005
+     C           F4CRID    ANDEQDACUID                                    CPM005
+     C*
+     C* LOAD FIELDS
+     C                     ADD  1         RRN        81
+     C*
+     C* SET UP SUBFILE FIELDS
+     C*
+     C***********          MOVE FDCUST    KEY     6                       CPM005
+     C                     MOVELF4CUST    PLCUS  10                       CPM005
+     C***********KEY       CHAINSDCUSTL1             38                   CPM005
+     C*                                                                   CPM005
+     C                     CALL 'AOCUSTR0'                                CPM005
+     C                     PARM *BLANKS   PRTCD   7                       CPM005
+     C                     PARM '*KEY'    POPTN   7                       CPM005
+     C                     PARM           PLCUS                           CPM005
+     C                     PARM *BLANKS   KEYST   7                       CPM005
+     C           SDCUST    PARM SDCUST    DSSDY                           CPM005
+     C*                                                                   CPM005
+     C************IN38     IFEQ '1'                        B1             CPM005
+     C           PRTCD     IFNE *BLANKS                    B1             CPM005
+     C                     Z-ADD4         QMERRN           *****************
+     C***********          MOVEL'SDCUSTL1'QMFILE           *  DBERROR 004*CPM005
+     C                     MOVE 'SDCUSTL1'QMFILE           *  DBERROR 004*CPM005
+     C                     MOVEL*BLANKS   QMKEY            *****************
+     C                     EXSR *PSSR
+     C                     ENDIF                           E1
+     C*
+     C***********          MOVELFDCUST    DDCUST                          CPM005
+     C                     MOVELF4CUST    DDCUST                          CPM005
+     C                     MOVELBBCSSN    DDCSSN
+     C                     MOVELBBCRNM    DDCRNM
+     C*
+     C* WRITE IN SUBFILE
+     C                     WRITEPM3100S1
+     C*
+     C* READ NEXT RECORD
+     C***********          READ SDRELCL1                 39               CPM005
+     C                     CALL 'AORELCR0'                                CPM005
+     C                     PARM *BLANKS   RRTCD                           CPM005
+     C                     PARM '*NEXT'   ROPTN                           CPM005
+     C                     PARM           RCUID  20                       CPM005
+     C                     PARM           RCUST   6                       CPM005
+     C           SDRELC    PARM SDRELC    DSFDY                           CPM005
+     C*
+     C***********          MOVE FDCUST    WWSAVE  60                      CPM005
+     C                     MOVE F4CUST    WWSAVE  60                      CPM005
+     C*
+     C                     END                             E1
+     C*
+     C***********DACUID    IFNE FDCUID                                    CPM005
+     C           DACUID    IFNE F4CRID                     - B1           CPM005
+     C           RRTCD     OREQ '*EOF'                                    CPM005
+     C                     MOVE *ON       *IN39            SFLEND         CPM005
+     C                     END                             - E1
+     C*
+     C                     Z-ADDRRN       WWRRN   40
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+      ** PRESS S/R TO MOVE THE APPROPRIATE VALUES INTO FIELD WWAID,
+      ** DEPENDING ON WHICH FUNCTION KEY HAS BEEN PRESSED.
+     C**************************************************************************
+     C*
+     C           PRESS     BEGSR                           ** PRESS BSR **
+     C*
+     C** If ENTER pressed, the VLDCMDKEY indicator will be off
+     C*
+     C                     MOVE '  '      WWAID
+     C*
+     C           *IN45     IFEQ '0'                        B1
+     C                     MOVE 'RA'      WWAID   2
+     C                     END                             E1
+     C*
+     C** If F3
+     C*
+     C           *INKC     IFEQ '1'                        B1
+     C                     MOVE '03'      WWAID
+     C                     END                             E1
+     C*
+     C** If F12
+     C*
+     C           *INKL     IFEQ '1'                        B1
+     C                     MOVE '12'      WWAID
+     C                     END                             E1
+     C*
+     C** If ROLLUP pressed
+     C*
+     C           *IN40     IFEQ '1'                        B1
+     C                     MOVE 'UP'      WWAID
+     C                     END                             E1
+     C*
+     C                     ENDSR                           ** PRESS ESR **
+     C*
+      **************************************************************************
+      /EJECT
+     C**************************************************************************
+     C*  ZASNMS : SEND MESSAGE TO PROGRAM'S MESSAGE QUEUE                      *
+     C**************************************************************************
+     C           ZASNMS    BEGSR
+     C*
+     C**   message file specified use PMSGF
+     C                     MOVELPMSGF     ZAMSGF
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C**
+     C**   Clear all fields for default mechanism next time.
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C                     MOVEL*BLANK    ZAMSGF           Message file
+     C                     MOVEL*BLANK    ZAMSID           Message id.
+     C**
+     C                     ENDSR
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROGRAM ERROR HANDLING ROUTINE                        *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #END     - PROGRAM TERMINATION ROUTINE                           *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #INIT    - PROGRAM INITIALIZATION ROUTINE                        *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'Y'       QMDBER
+     C                     MOVEL'PM3100'  QMPGM
+     C                     MOVEL'Y'       QMENQT
+      *
+      ** Update**GDA***************************************************   CPM005
+     C*  Update LDA                                                       CPM005
+     C***********          CALL 'PMC1002'                                 CPM005
+     C***********          PARM           WWGDA                           CPM005
+     C                     CALL 'PMC1001'                                 CPM005
+     C                     PARM           WWLDA                           CPMM05
+      *
+     C                     DUMP
+      *
+     C***********          CALL 'PMC1020'                                 CPM005
+     C                     CALL 'DBERRCTL'                                CPM005
+      *                                                                   CPM005
+     C                     RETRN                                          CPM005
+      *
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,1124 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE CLE023 Initialisation program')               *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  RPG/LE0012 - Midas LE CLE023 Initialisation Program          *
+      *                                                               *
+      *  Function:  This is a new program to run whenever switchable  *
+      *             feature CLE023 is installed. This will initialise *
+      *             new fields in the facility master file, facility  *
+      *             history actions file and customer lending ICD     *
+      *             file.                                             *
+      *                                                               *
+      *  (c) Finastra International Limited 2002                      *
+      *                                                               *
+      *  Last Amend No. CLE071             Date 18Jul18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 07Aug12               *
+      *                 CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 AR787620           Date 10Jun11               *
+      *                 CLE064             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 225591             Date 08Jul04               *
+      *                 CAS009             Date 16May05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 204082             Date 25Mar02               *
+      *                 203554             Date 19Feb02               *
+      *                 CLE023 *CREATE     Date 19Nov01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  AR787620 - Hooks Incorporation                               *
+      *             WNCPYSRC,LEH00169                                 *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CLE106 - Syndications Manager.                               *
+      *  225591 - Facility history changes for repayments due to      *
+      *           rollover (recompile)                                *
+      *  CAS009 - EIR/AC Accounting (Recompile)                       *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  204082 - Recalculate actual facility amount for prime        *
+      *           and participant facilities accordingly.             *
+      *  203554 - Actual Facility amount reduced by RE when CLE023    *
+      *           is switched on                                      *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *                                                               *
+      *****************************************************************
+      *
+     FFCLTYFM IF  E                    DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTYF0
+     FFCLTYL3 IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYFMF                          KRENAMEFCLTYF3
+     FLEHISFL2IF  E           K        DISK         KINFSR *PSSR                              203554
+     F            FACHISAF                          KRENAMELEHISF2                            203554
+     FLEFCLTL9IF  E           K        DISK         KINFSR *PSSR                              203554
+     F            FCLTYFMF                          KRENAMELEFCLT9                            203554
+     FFACHSAL1UF  E           K        DISK         KINFSR *PSSR
+     FSDCLNDPDUF  E           K        DISK         KINFSR *PSSR
+     FFCLTY   UF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYFMF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+     FCLOAN   UF  E           K        DISK         KINFSR *PSSR
+     F            CLOANCKF                          KRENAMECLOANCK1
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FMLOAN   UF  E           K        DISK         KINFSR *PSSR
+     F            CLOANCLF                          KRENAMEMCLONCLF
+     F            CLOANCKF                          KRENAMEMCLONCK1
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+     FCLOANCK IF  E           K        DISK         KINFSR *PSSR
+     FMCLONCK IF  E           K        DISK         KINFSR *PSSR
+     F            CLOANCKF                          KRENAMEMCLONCKF
+     FLEMNFUL1IF  E           K        DISK         KINFSR *PSSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  FUNCTION OF INDICATORS                                       *
+      *                                                               *
+      *  20     - End of file in Facility Details File                *
+      *  21     - End of file in Facility History File (FACHSAL1)     *
+      *  22     - End of file in Facility History File                *
+      *  23     - Record not found in Loans Detail File               *
+      *  25     - End of file in Lending ICD                          *
+      *  26     - Record not found in Facility Details File           *
+      *  27     - Record not found in Manual Util. Transaction File   *
+      *  28     - Record not found in FCLTY file                      *
+      *  31     - End of file in Loan Details B                       *
+      *  32     - End of file in Loan Details                         *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRFCLT - Facility processing                                 *
+      *  SRCAMT - Calculate Actual Facility Amount                    *
+      *  SRFACH - Facililty History processing                        *
+      *  SRCLND - Update new field BPDRTS in Lending ICD file         *
+      *  SRLNCK - Update Loans file (CLOANCK)                         *
+      *  SRCURR - Get currency details                                *
+      *  SRCALC - Actual Facility Amount processing                   *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E                    POWR    1   7  7 3             Ccy conversion
+      *
+     IFCLTYF0
+      ** Rename fields for Facility File
+      *
+     I              RECI                            FRECI
+     I              CNUM                            FCNUM
+     I              BRCA                            FBRCA
+     I              FCCY                            FCCYF
+     I              CACY                            FCACY
+     IFCLTYFNF
+      ** Rename fields for Facility File
+      *
+     I              RECI                            FRECI
+     I              RCTP                            FRCTP
+     I              CNUM                            FCNUM
+     I              BTIN                            FBTIN
+     I              BLDY                            FBLDY
+     I              PRFC                            FPRFC
+     I              ORED                            FORED
+     I              LCD                             FLCD
+     I              CHTP                            FCHTP
+     I              TNLU                            FTNLU
+     IFCLTYF3
+      ** Rename fields for Facility File
+      *
+     I              RECI                            XRECI
+     I              CNUM                            XCNUM
+     I              FACT                            XFACT
+     I              FCNO                            XFCNO
+     I              RCTP                            XRCTP
+     I              BRCA                            XBRCA
+     I              FCTI                            XFCTI
+     I              FCCY                            XFCCY
+     I              FAMT                            XFAMT
+     I              OVPC                            XOVPC
+     I              DTAP                            XDTAP
+     I              DTEX                            XDTEX
+     I              RVCR                            XRVCR
+     I              SECI                            XSECI
+     I              MCCY                            XMCCY
+     I              MCSI                            XMCSI
+     I              NACD                            XNACD
+     I              CRSK                            XCRSK
+     I              DLFS                            XDLFS
+     I              NOMR                            XNOMR
+     I              RVDT                            XRVDT
+     I              RVFR                            XRVFR
+     I              RVDY                            XRVDY
+     I              NAR1                            XNAR1
+     I              NAR2                            XNAR2
+     I              NAR3                            XNAR3
+     I              NAR4                            XNAR4
+     I              MTDH                            XMTDH
+     I              MTDL                            XMTDL
+     I              MTDA                            XMTDA
+     I              QTDA                            XQTDA
+     I              YTDA                            XYTDA
+     I              ACOF                            XACOF
+     I              ORBR                            XORBR
+     I              ZZ001                           XZZ001
+     I              RVCD                            XRVCD
+     I              ZZ002A                          XZZ02A
+     I              ORED                            XORED
+     I              LCD                             XLCD
+     I              CHTP                            XCHTP
+     I              TNLU                            XTNLU
+     I              SYIN                            XSYIN
+     I              ANUM                            XANUM
+     I              DTPS                            XDTPS
+     I              DICB                            XDICB
+     I              RTPS                            XRTPS
+     I              RLPD                            XRLPD
+     I              CSEL                            XCSEL
+     I              ALCY                            XALCY
+     I              COMD                            XCOMD
+     I              CDTE                            XCDTE
+     I              AVLD                            XAVLD
+     I              LPTP                            XLPTP
+     I              LPBR                            XLPBR
+     I              LPAM                            XLPAM
+     I              LPPS                            XLPPS
+     I              DFTP                            XDFTP
+     I              DFST                            XDFST
+     I              TRCA                            XTRCA
+     I              CANM                            XCANM
+     I              CAFT                            XCAFT
+     I              CAFN                            XCAFN
+     I              ACSQ                            XACSQ
+     I              FSTS                            XFSTS
+     I              IUSR                            XIUSR
+     I              AUSR                            XAUSR
+     I              XUSR                            XXUSR
+     I              SYCP                            XSYCP
+     I              PCRF                            XPCRF
+     I              PRTR                            XPRTR
+     I              PMFC                            XPMFC
+     I              PMFT                            XPMFT
+     I              PMFN                            XPMFN
+     I              INUM                            XINUM
+     I              JDTE                            XJDTE
+     I              SHTP                            XSHTP
+     I              SHPC                            XSHPC
+     I              RCSI                            XRCSI
+     I              SKIR                            XSKIR
+     I              SKIS                            XSKIS
+     I              SKFR                            XSKFR
+     I              SKFS                            XSKFS
+     I              VDTC                            XVDTC
+     I              OSDB                            XOSDB
+     I              OMDB                            XOMDB
+     I              RSTM                            XRSTM
+     I              RONS                            XRONS
+     I              RIBN                            XRIBN
+     I              RIBA                            XRIBA
+     I              ROBN                            XROBN
+     I              ROCN                            XROCN
+     I              PSTM                            XPSTM
+     I              PONS                            XPONS
+     I              PIBN                            XPIBN
+     I              PIBA                            XPIBA
+     I              POBN                            XPOBN
+     I              POCN                            XPOCN
+     I              RCRN                            XRCRN
+     I              RCRA                            XRCRA
+     I              RVNO                            XRVNO
+     I              AWBN                            XAWBN
+     I              AWBA                            XAWBA
+     I              BENN                            XBENN
+     I              BENA                            XBENA
+     I              DTP1                            XDTP1
+     I              DTP2                            XDTP2
+     I              DTP3                            XDTP3
+     I              DTP4                            XDTP4
+     I              DCHG                            XDCHG
+     I              BTB1                            XBTB1
+     I              BTB2                            XBTB2
+     I              BTB3                            XBTB3
+     I              BTB4                            XBTB4
+     I              BTB5                            XBTB5
+     I              BTB6                            XBTB6
+     I              CVMR                            XCVMR
+     I              PCOB                            XPCOB
+     I              CAXR                            XCAXR
+     I              CMDI                            XCMDI
+     I              CACY                            XCACY
+     I              PFTI                            XPFTI
+     I              SCCY                            XSCCY
+     I              ICCY                            XICCY
+     I              LAID                            XLAID
+     I              PASI                            XPASI
+     I              REPI                            XREPI
+     I              DFCL                            XDFCL                                     CLE042
+      *
+     IFACHISAF
+      ** Rename branch field for FACHISAF
+      *
+     I              BRCA                            FBRCA
+      *                                                                                       203554
+     ILEHISF2                                                                                 203554
+      ** Rename fields from LEHISFL2                                                          203554
+      *                                                                                       203554
+     I              FARECI                          L2RECI                                    203554
+     I              BRCA                            L2BRCA                                    203554
+     I              FACNUM                          L2CNUM                                    203554
+     I              FAFCTY                          L2FCTY                                    203554
+     I              FADATE                          L2DATE                                    203554
+     I              FAFSEQ                          L2FSEQ                                    203554
+     I              FALOAN                          L2LOAN                                    203554
+     I              FAACTN                          L2ACTN                                    203554
+     I              FAAAMT                          L2AAMT                                    203554
+     I              FAPART                          L2PART                                    203554
+     I              FARCIN                          L2RCIN                                    203554
+     I              FACFAM                          L2CFAM                                    203554
+     I              FADRAM                          L2DRAM                                    203554
+     I              FAUNDR                          L2UNDR                                    203554
+     I              FAREVI                          L2REVI                                    203554
+     I              FALCRF                          L2LCRF                                    203554
+     I              FAGNDT                          L2GNDT                                    203554
+     I              FASQNO                          L2SQNO                                    203554
+     I              FACFGI                          L2CFGI                                    203554
+     I              FAGASS                          L2GASS                                    203554
+     I              FATSEQ                          L2TSEQ                                    203554
+     I              FALUCY                          L2LUCY                                    203554
+     I              FALUAM                          L2LUAM                                    203554
+     I              FAEXRT                          L2EXRT                                    203554
+     I              FARTMD                          L2RTMD                                    203554
+     I              FAPTYP                          L2PTYP                                    203554
+     I              FARCSI                          L2RCSI                                    203554
+     I              FAORED                          L2ORED                                    203554
+     I              FAAFAM                          L2AFAM                                    203554
+     I              FAPAMT                          L2PAMT                                    203554
+     I              FALPFI                          L2LPFI                                    203554
+     I/COPY WNCPYSRC,LEH00169
+      *                                                                                       203554
+     ILEFCLT9                                                                                 203554
+      ** Rename fields for Facility File                                                      203554
+      *                                                                                       203554
+     I              CNUM                            L9CNUM                                    203554
+     I              FACT                            L9FACT                                    203554
+     I              FCNO                            L9FCNO                                    203554
+     I              TRCA                            L9TRCA                                    203554
+      *
+     ILDA         DS                            256
+      ** Local data area for database error details
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I            DS
+     I                                        1   50WFCTY
+     I                                        1   30FACT
+     I                                        4   50FCNO
+      *                                                                                       203554
+     I            DS                                                                          203554
+     I                                        1   50FAFCTY                                    203554
+     I                                        1   30FAFTYP                                    203554
+     I                                        4   50FAFCNO                                    203554
+      *                                                                                       203554
+     I            DS                                                                          203554
+     I                                        1   50L9FCTY                                    203554
+     I                                        1   30L9FACT                                    203554
+     I                                        4   50L9FCNO                                    203554
+      *                                                                                       203554
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Rundate data structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Currency Details
+      *
+     ISDCUST    E DSSDCUSTPD
+      ** Customer Details
+      *
+     IDSFDY     E DSDSFDY
+      ** Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      ** Long data structure for access objects
+      *
+      /EJECT
+     C/TITLE Main Processing
+      *
+      ** Program Initialisation
+      *
+     C                     EXSR SRINIT
+      *
+      ** Update Facility Files
+      *
+     C                     EXSR SRFCLT
+      *
+      ** Calculate Actual Facility Amount in FACHISA
+      *
+     C                     EXSR SRCAMT
+      *
+      ** Update Lending ICD File
+      *
+     C                     EXSR SRCLND
+      *
+      ** Update Loans File for multi-ccy rollover details.
+      *
+     C                     EXSR SRLNCK
+      *
+      ** End program
+      *
+     C                     MOVE *ON       *INLR
+      *
+      /EJECT
+      /TITLE SR/SRINIT
+      *****************************************************************
+      *  SRINIT  -  Initial Processing                                *
+      *  Called by: Main routine                                      *
+      *  Calls    : AOBANKR0                                          *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define RUNDAT
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      ** Define and initialise LDA.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+     C                     MOVEL'LE0012'  DBPGM
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     OUT  LDA
+      *
+      ** Key to access FACHISA
+      *
+     C           KFACH     KLIST
+     C                     KFLD           FCNUM
+     C                     KFLD           WFCTY
+      *
+      ** Key to access FCLTYFN
+      *
+     C           KEYFN     KLIST
+     C                     KFLD           FCNUM
+     C                     KFLD           FACT
+     C                     KFLD           FCNO
+      *
+      ** Key to access FCLTYFM
+      *
+     C           KEYTR     KLIST
+     C                     KFLD           FCUS
+     C                     KFLD           FTYP
+     C                     KFLD           FSEQ
+      *
+      ** Key to access LEMNFUL1
+      *
+     C           KLEMN     KLIST
+     C                     KFLD           FBRCA
+     C                     KFLD           FCNUM
+     C                     KFLD           FACT
+     C                     KFLD           FCNO
+      *                                                                                       203554
+      ** Key Lists  for LF/LEHISFL2                                                           203554
+      *                                                                                       203554
+     C           KFHIS     KLIST                                                              203554
+     C                     KFLD           L9CNUM                                              203554
+     C                     KFLD           L9FCTY                                              203554
+     C                     KFLD           FADATE                                              203554
+     C                     KFLD           FALOAN                                              203554
+     C                     KFLD           FAACTN                                              203554
+      *
+      ** Access Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           ************
+     C                     Z-ADD1         DBASE            * DBERR 01 *
+     C                     MOVELPOPTN     DBKEY            ************
+     C                     MOVEL'LE0012'  DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFCLT - Subroutine to update Facilities File                *
+      *  Called by: Main routine                                      *
+      *  Calls    : SRFACH - FACHISA processing                       *
+      *                                                               *
+      *****************************************************************
+     C           SRFCLT    BEGSR
+      *
+     C                     READ FCLTYFM                  20
+      *
+     C           *IN20     DOWEQ'0'
+      *
+      ** Chain to FCLTYFN for update of Current Exposure field later.
+      *
+     C           KEYFN     CHAINFCLTY                28
+     C           *IN28     IFEQ '0'
+      *
+      ** To update FACHISA fields
+      *
+     C           TRCA      IFEQ 'CA'
+      *
+      ** To update Facility Amount for Credit Agreement
+      *
+     C                     EXSR SRCAUP
+     C                     ELSE
+      *
+      ** To update Facility Amount for Tranche and normal Facility
+      *
+     C                     EXSR SRFACH
+     C                     ENDIF
+      *
+      ** To update Facility Current Exposure field
+      *
+     C                     Z-ADDCAMD      CEXP
+      *
+     C                     UPDATFCLTYFNF
+     C                     ENDIF
+      *
+     C                     READ FCLTYFM                  20
+     C                     ENDDO
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFACH - Subroutine to update new fields in FACHISA for      *
+      *           Tranches and normal facilities.                     *
+      *  Called by: SRFCLT - Facility processing                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRFACH    BEGSR
+      *
+     C           KFACH     SETLLFACHSAL1
+     C           KFACH     READEFACHSAL1                 21
+      *
+     C           *IN21     DOWEQ'0'
+      *
+      ** Initialise new fields in FACHISA
+      *
+     C                     MOVE *BLANKS   FALUCY
+     C                     Z-ADD0         FALUAM
+     C                     Z-ADD0         FAEXRT
+     C                     MOVE *BLANKS   FARTMD
+     C                     Z-ADD0         FAPTYP
+     C                     MOVE *BLANKS   FARCSI
+     C                     Z-ADD0         FAORED
+     C                     Z-ADD0         FAAFAM
+     C                     Z-ADD0         FAPAMT
+     C                     MOVE *BLANKS   FALPFI
+      *
+     C********** FALOAN    IFNE 0                                                             CLE148
+     C           FALOAN    IFNE *BLANKS                                                       CLE148
+     C           FALOAN    CHAINCLOANCLF             23
+      *
+     C           *IN23     IFEQ '1'
+     C           FALOAN    CHAINMCLONCLF             23
+     C                     ENDIF
+     C           *IN23     IFEQ '0'
+      *
+      ** If there is no multi-currency rollover, or there is multi-
+      ** currency rollover and action date is later than the last
+      ** multi-currency rollover date, or it is a multi-currency
+      ** rollover action and action date is equal to the last multi-
+      ** currency rollover date.
+      *
+     C           LMCD      IFEQ 0
+     C           LMCD      ORNE 0
+     C           FADATE    ANDGTLMCD
+     C           FAACTN    OREQ 'MC'
+     C           FADATE    ANDEQLMCD
+      *
+     C           CCY       IFNE FCCYF
+      *
+     C                     MOVE FCCY      PCURR
+     C                     Z-ADD02        WDBASE  30
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WFDCP   10
+     C                     MOVE CCY       PCURR
+     C                     Z-ADD03        WDBASE
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WLDCP   10
+      *
+     C           WLDCP     SUB  WFDCP     WCX     10
+     C                     ADD  4         WCX
+     C           FMDI      IFEQ 'M'
+     C           FCXR      DIV  POWR,WCX  WFCXRT    H
+     C           1         DIV  WFCXRT    WFCXRT
+     C                     ELSE
+     C           FCXR      MULT POWR,WCX  WFCXRT 159H
+     C                     ENDIF
+     C           FAAAMT    MULT WFCXRT    FALUAM    H
+      *
+     C                     MOVE CCY       FALUCY
+     C                     Z-ADDFCXR      FAEXRT
+     C                     MOVE FMDI      FARTMD
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDPTYP      FAPTYP
+     C                     MOVE RCSI      FARCSI
+     C                     MOVE LPFI      FALPFI
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           FASQNO    IFNE 0
+      *
+      ** Get manual utilisation record
+      *
+     C           KLEMN     CHAINLEMNFUL1             27
+      *
+     C           *IN27     IFEQ '0'
+     C           UCCY      IFNE FCCYF
+      *
+     C                     MOVE FCCYF     PCURR
+     C                     Z-ADD08        WDBASE
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WFDCP
+     C                     MOVELUCCY      PCURR
+     C                     Z-ADD04        WDBASE
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WUDCP   10
+      *
+     C           WUDCP     SUB  WFDCP     WCX
+     C                     ADD  4         WCX
+     C           UXID      IFEQ 'M'
+     C           UXRT      DIV  POWR,WCX  WFCXRT    H
+     C           1         DIV  WFCXRT    WFCXRT
+     C                     ELSE
+     C           UXRT      MULT POWR,WCX  WFCXRT    H
+     C                     ENDIF
+     C           FAAAMT    MULT WFCXRT    FALUAM    H
+      *
+     C                     MOVE UCCY      FALUCY
+     C                     Z-ADDUXRT      FAEXRT
+     C                     MOVE UXID      FARTMD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Update Facility History File
+      *
+     C                     UPDATFACHISAF
+      *
+     C           KFACH     READEFACHSAL1                 21
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCAUP - Subroutine to update new fields in FACHISA for      *
+      *           Credit Agreement Facility                           *
+      *  Called by: SRFCLT - Facility processing                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRCAUP    BEGSR
+      *
+     C           KFACH     SETLLFACHSAL1
+     C           KFACH     READEFACHSAL1                 22
+      *
+     C           *IN22     DOWEQ'0'
+      *
+      ** Initialise new fields in FACHISA
+      *
+     C                     MOVE *BLANKS   FALUCY
+     C                     Z-ADD0         FALUAM
+     C                     Z-ADD0         FAEXRT
+     C                     MOVE *BLANKS   FARTMD
+     C                     Z-ADD0         FAPTYP
+     C                     MOVE *BLANKS   FARCSI
+     C                     Z-ADD0         FAORED
+     C                     Z-ADD0         FAAFAM
+     C                     Z-ADD0         FAPAMT
+     C                     MOVE *BLANKS   FALPFI
+      *
+     C********** FALOAN    IFNE 0                                                             CLE148
+     C           FALOAN    IFNE *BLANKS                                                       CLE148
+     C           FALOAN    CHAINCLOANCLF             23
+      *
+     C           *IN23     IFEQ '1'
+     C           FALOAN    CHAINMCLONCLF             23
+     C                     ENDIF
+      *
+      ** If there is no multi-currency rollover, or there is multi-
+      ** currency rollover and action date is later than the last
+      ** multi-currency rollover date, or it is a multi-currency
+      ** rollover action and action date is equal to the last multi-
+      ** currency rollover date.
+      *
+     C           *IN23     IFEQ '0'
+     C           LMCD      IFEQ 0
+     C           LMCD      ORNE 0
+     C           FADATE    ANDGTLMCD
+     C           FAACTN    OREQ 'MC'
+     C           FADATE    ANDEQLMCD
+      *
+     C           KEYTR     CHAINFCLTYL3              26
+     C           *IN26     IFEQ '0'
+     C           XCACY     ANDNEXFCCY
+      *
+     C                     MOVE XCACY     PCURR
+     C                     Z-ADD09        WDBASE
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WFDCP
+     C                     MOVE XFCCY     PCURR
+     C                     Z-ADD10        WDBASE
+     C                     EXSR SRCURR
+     C                     Z-ADDA6NBDP    WLDCP
+      *
+     C           WLDCP     SUB  WFDCP     WCX
+     C                     ADD  4         WCX
+     C           XCMDI     IFEQ 'M'
+     C           XCAXR     DIV  POWR,WCX  WFCXRT    H
+     C           1         DIV  WFCXRT    WFCXRT
+     C                     ELSE
+     C           XCAXR     MULT POWR,WCX  WFCXRT    H
+     C                     ENDIF
+     C           FAAAMT    MULT WFCXRT    FALUAM    H
+      *
+     C                     MOVE XFCCY     FALUCY
+     C                     Z-ADDXCAXR     FAEXRT
+     C                     MOVE XCMDI     FARTMD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDPTYP      FAPTYP
+     C                     MOVE RCSI      FARCSI
+     C                     MOVE LPFI      FALPFI
+      *
+      ** Update Facility History File for Credit Agreement Facility
+      *
+     C                     UPDATFACHISAF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           KFACH     READEFACHSAL1                 22
+     C                     ENDDO
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCAMT - Subroutine to calculate Actual Facility Amount      *
+      *  Called by: SRFCLT - Facility processing                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRCAMT    BEGSR
+      *
+     C           1         CHAINFCLTYFM              20
+      *
+     C           *IN20     DOWEQ'0'
+      *
+     C                     Z-ADD0         WAFAM
+     C                     MOVE PRTR      WPRTR   1                                           204082
+      *
+      ** Caluculate Actual Facility Amount
+      *
+     C                     EXSR SRCALC
+      *
+     C                     READ FCLTYFM                  20
+     C                     ENDDO
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCALC - Actual Facility Amount Processing based on facility *
+      *           events                                              *
+      *  Called by: SRFCLT - Facility processing                      *
+      *             SRCAMT - CA processing of Actual Facility Amount  *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRCALC    BEGSR
+      *
+     C           KFACH     SETLLFACHSAL1
+     C           KFACH     READEFACHSAL1                 21
+      *
+     C           *IN21     DOWEQ'0'
+      *
+     C                     MOVE FARCIN    WARCIN  1
+     C                     MOVE 'N'       WPSOLD  1
+      *                                                                                       204082
+      ** Move action amount to work variable for calculation.                                 204082
+      *                                                                                       204082
+     C                     Z-ADDFAAAMT    WAAAMT 150                                          204082
+      *                                                                                       203554
+      ** If facility being processed is Credit Agreement and revolving                        203554
+      ** credit indicator is "T", access Facility Details File to get                         203554
+      ** it's Tranches and access FACHISA for the correct revolving                           203554
+      ** credit indicator                                                                     203554
+      *                                                                                       203554
+     C           TRCA      IFEQ 'CA'                                                          203554
+     C           FARCIN    ANDEQ'T'                                                           203554
+      *                                                                                       203554
+     C                     MOVE FACNUM    FCUS                                                203554
+     C                     MOVE FAFTYP    FTYP                                                203554
+     C                     MOVE FAFCNO    FSEQ                                                203554
+      *                                                                                       203554
+     C           KEYTR     SETLLLEFCLTL9                                                      203554
+     C           KEYTR     READELEFCLTL9                 29                                   203554
+      *                                                                                       203554
+     C           *IN29     DOWEQ*OFF                                                          203554
+      *                                                                                       203554
+      ** Access FACHISA for the revolving credit indicator                                    203554
+      *                                                                                       203554
+     C           KFHIS     CHAINLEHISFL2             30                                       203554
+      *                                                                                       203554
+      ** If record is found in FACHISA, save the indicator and leave                          203554
+      ** the loop                                                                             203554
+      *                                                                                       203554
+     C           *IN30     IFEQ *OFF                                                          203554
+     C                     MOVE L2RCIN    WARCIN                                              203554
+     C                     LEAVE                                                              203554
+     C                     ENDIF                                                              203554
+      *                                                                                       203554
+     C           KEYTR     READELEFCLTL9                 29                                   203554
+     C                     ENDDO                                                              203554
+      *                                                                                       203554
+     C                     ENDIF                                                              203554
+      *
+     C                     MOVE *BLANK    WNSYN   1                                           204082
+      *                                                                                       204082
+     C********** FALOAN    IFNE 0                                                             CLE148
+     C           FALOAN    IFNE *BLANKS                                                       CLE148
+     C           FALOAN    CHAINCLOANCLF             23
+      *
+     C           *IN23     IFEQ '1'
+     C           FALOAN    CHAINMCLONCLF             23
+     C                     ENDIF
+      *                                                                                       204082
+     C           *IN23     IFEQ '0'
+      *                                                                                       204082
+      ** If facility is not a participant facility and loan is                                204082
+      ** attached to participant facility (meaning, prime facility is                         204082
+      ** being processed), zeroise the action amount.                                         204082
+      *                                                                                       204082
+     C           WPRTR     IFNE 'P'                                                           204082
+     C           WPRTR     ANDNE'I'                                                           204082
+     C           WPRTR     ANDNE'S'                                                           CLE106
+     C           WPRTR     ANDNE'R'                                                           CLE106
+     C                     MOVE GASS      WNSYN                                               204082
+     C           LPFI      IFEQ 'P'                                                           204082
+     C           LPFI      OREQ 'I'                                                           204082
+     C           LPFI      OREQ 'S'                                                           CLE106
+     C           LPFI      OREQ 'R'                                                           CLE106
+     C                     Z-ADD0         WAAAMT                                              204082
+     C                     ENDIF                                                              204082
+     C                     ENDIF                                                              204082
+      *
+      ** Determine if parts sold
+      *
+     C           PTYP      IFEQ 66
+     C           PTYP      OREQ 67
+     C           PTYP      OREQ 69
+     C           PTYP      OREQ 72
+     C                     MOVE 'Y'       WPSOLD
+     C                     ELSE
+     C                     MOVE 'N'       WPSOLD
+     C                     ENDIF
+      **********                                                                              203554
+      ***If*facility*being*processed*is*Credit*Agreement*and*revolving*                       203554
+      ***credit*indicator*is*"T",*access*Facility*Details*File*to*get**                       203554
+      ***revolving*credit*of*Tranche*for*CA*facility*amount*update.****                       203554
+      **********                                                                              203554
+     C********** TRCA      IFEQ 'CA'                                                          203554
+     C********** RVCR      ANDEQ'T'                                                           203554
+     C********** KEYTR     CHAINFCLTYL3              26                                       203554
+     C********** *IN26     IFEQ '0'                                                           203554
+     C**********           MOVE XRVCR     WARCIN                                              203554
+     C**********           ENDIF                                                              203554
+     C**********           ENDIF                                                              203554
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           FAACTN    IFEQ 'FS'
+     C           FAACTN    OREQ 'FR'
+     C**********           Z-ADDFAAAMT    WAFAM  150                                          204082
+     C                     Z-ADDWAAAMT    WAFAM  150                                          204082
+     C                     ENDIF
+      *
+      ** For non-reversal actions
+      *
+     C           FAREVI    IFNE 'R'
+      *
+     C           FAACTN    IFEQ 'FI'
+     C           FAACTN    OREQ 'MC'
+     C           WARCIN    ANDNE'Y'
+     C           WNSYN     IFNE 'P'                                                           204082
+     C           WNSYN     OREQ 'P'                                                           204082
+     C           WPSOLD    ANDEQ'N'
+     C**********           ADD  FAAAMT    WAFAM                                               204082
+     C                     ADD  WAAAMT    WAFAM                                               204082
+     C                     ENDIF
+     C                     ENDIF                                                              204082
+      *
+     C           FAACTN    IFEQ 'FD'
+     C**********           SUB  FAAAMT    WAFAM                                               204082
+     C                     SUB  WAAAMT    WAFAM                                               204082
+     C                     ENDIF
+      *
+     C           WARCIN    IFNE 'Y'
+     C           FAACTN    IFEQ 'UE'
+     C**********           SUB  FAAAMT    WAFAM                                               204082
+     C                     SUB  WAAAMT    WAFAM                                               204082
+     C                     ENDIF
+      *                                                                                       203554
+     C           FAACTN    IFEQ 'UD'                                                          203554
+     C**********           SUB  FAAAMT    WAFAM                                        203554 204082
+     C                     SUB  WAAAMT    WAFAM                                               204082
+     C                     ENDIF                                                              203554
+      *
+     C           FAGASS    IFNE 'A'
+     C           WNSYN     IFNE 'P'                                                           204082
+     C           WNSYN     OREQ 'P'                                                           204082
+     C           WPSOLD    ANDEQ'N'
+     C           FAACTN    IFEQ 'WO'
+     C           FAACTN    OREQ 'RE'
+     C           FAACTN    OREQ 'MT'
+     C**********           SUB  FAAAMT    WAFAM                                               204082
+     C                     SUB  WAAAMT    WAFAM                                               204082
+     C                     ENDIF
+     C                     ENDIF                                                              204082
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     Z-ADDWAFAM     FAAFAM
+      *
+      ** Update Facility History File
+      *
+     C                     UPDATFACHISAF
+      *
+      *
+     C           KFACH     READEFACHSAL1                 21
+     C                     ENDDO
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLND - Subroutine to update new field in SDCLNDPD          *
+      *  Called by: Main process                                      *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+     C           SRCLND    BEGSR
+      *
+     C                     READ SDCLNDPD                 25
+      *
+     C           *IN25     IFEQ '0'
+     C                     MOVE 'N'       BPDRTS
+     C                     UPDATSDCLNDD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /TITLE SR/SRLNCK
+      *****************************************************************
+      *  SRLNCK - Subroutine to update of CLOANCK                     *
+      *  Called by: Main Processing                                   *
+      *  Calls    : None                                              *
+      *****************************************************************
+     C           SRLNCK    BEGSR
+      *
+     C                     Z-ADD1         WCTR    10
+      *
+     C           WCTR      DOWLE2
+      *
+     C           WCTR      IFEQ 1                          WCTR = 1
+     C                     READ CLOANCKF                 31
+     C                     ELSE
+     C                     READ MCLONCKF                 31
+     C                     ENDIF                           WCTR = 1
+      *
+      ** Read all PF/CLOANCK records
+      *
+     C           *IN31     DOWEQ'0'
+      *
+      ** New ccy is not blank, check if equal to loan ccy
+      *
+     C           NCCY      IFNE *BLANKS                    NCCY not blank
+      *
+     C           WCTR      IFEQ 1                          WCTR = 1
+     C           LNRF      CHAINCLOANCLF             32
+     C                     ELSE
+     C           LNRF      CHAINMCLONCLF             32
+     C                     ENDIF                           WCTR = 1
+      *
+     C           *IN32     IFEQ '0'                        *IN32 = 0
+     C           NCCY      ANDEQCCY                        & CCYs differ.
+      *
+     C           WCTR      IFEQ 1                          WCTR = 1
+     C           LNRF      CHAINCLOANCK1             32
+     C                     ELSE
+     C           LNRF      CHAINMCLONCK1             32
+     C                     ENDIF                           WCTR = 1
+      *
+      ** Blank out the fields for multi-ccy rollover details.
+      *
+     C           *IN32     IFEQ '0'                        *IN32 = 0
+     C                     MOVE *BLANKS   NCCY
+     C                     Z-ADD0         NCPA
+     C                     Z-ADD0         NFCE
+     C                     MOVE *BLANKS   NFMD
+     C                     Z-ADD0         NBCE
+     C                     MOVE *BLANKS   NBMD
+     C                     Z-ADD0         NLRA
+      *
+     C           WCTR      IFEQ 1                          WCTR = 1
+     C                     UPDATCLOANCK1
+     C                     ELSE
+     C                     UPDATMCLONCK1
+     C                     ENDIF                           WCTR = 1
+      *
+     C                     ENDIF                           *IN32 = 0
+      *
+     C                     ENDIF                           CCYs differ
+      *
+     C                     ENDIF                           NCCY non-blank
+      *
+     C           WCTR      IFEQ 1                          WCTR = 1
+     C                     READ CLOANCKF                 31
+     C                     ELSE
+     C                     READ MCLONCKF                 31
+     C                     ENDIF                           WCTR = 1
+      *
+     C                     ENDDO
+     C                     ADD  1         WCTR
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /TITLE SR/SRCURR
+      *****************************************************************
+      *  SRCURR  -  Get the number of decimal places                  *
+      *  Called by: SRFACH - Facility History processing              *
+      *  Calls    : None                                              *
+      *****************************************************************
+     C           SRCURR    BEGSR
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*BLANK  'PRTCD
+     C                     PARM '*KEY    'POPTN
+     C                     PARM           PCURR   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     Z-ADDWDBASE    DBASE
+     C                     MOVELPCURR     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     CALL 'DBERRCTL'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /TITLE SR/*PSSR
+      *****************************************************************
+** CPY@  OBJECT COPYRIGHT
+(c) Finastra International Limited 2002
+**  POWR -- USED IN CURRENCY CONVERSION(FACILITY)
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

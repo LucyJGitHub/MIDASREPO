@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE ACCNTAB backup copy creation')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC003761 - Midas RE ACCNTAB backup copy creation           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD025069           Date 07May14              */
+/*                      AR1097467          Date 02Apr13              */
+/*                      CRE083AD  *CREATE  Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD025069 - REC003761 to only copy Retail Accounts when      */
+/*                  copying records from ACCNTAB to EACCNTAB         */
+/*       AR1097467 - Expected 15% COB run optimization not met       */
+/*       CRE083AD - COB Restructure - RE COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+/**********  DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE(' ')   */                 /*AR1097467*/
+             DCLF       FILE(RECAPM)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+/**********  CALL       PGM(RE003761) PARM(&PRTCD)                  */                 /*AR1097467*/
+/********************************************************************/                 /*AR1097467*/
+/**********  IF         COND(&PRTCD *NE ' ') THEN(DO)               */                 /*AR1097467*/
+/**********    GOTO       CMDLBL(ABNOR)                             */                 /*AR1097467*/
+/**********  ENDDO                                                  */                 /*AR1097467*/
+                                                                                       /*AR1097467*/
+/**********  CPYF       FROMFILE(ACCNTAB) TOFILE(EACCNTAB) + */                         /*MD025069*/
+/**********               MBROPT(*REPLACE) FROMRCD(1) */                      /*AR1097467 MD025069*/
+             CPYF       FROMFILE(ACCNTAB) TOFILE(EACCNTAB) +
+                          MBROPT(*REPLACE) FROMRCD(1) INCREL((*IF +
+                          ATYP *EQ 'R'))                                                /*MD025069*/
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)                        /*AR1097467*/
+                CLRPFM     FILE(EACCNTAB)                                              /*AR1097467*/
+             ENDDO                                                                     /*AR1097467*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('REC003761 ACCNTAB backup copy creation +
+                          Terminated Abnormally') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

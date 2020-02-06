@@ -1,0 +1,401 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Display midas modules')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD9002X - Midas SD Midas Modules Background Processing       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSD003             Date 01Jul99               *
+      *                 S01459             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01117             Date 20FEB90               *
+      *                                                               *
+      *-------------------------------------------------------------- *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  S01459 - Addition of Midas Headerbox.                        *
+      *  S01117 - Release 10 Changes                                  *
+      *                                                               *
+      *****************************************************************
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+      * Outward parameters
+     IPARC        DS                             10
+      * KEY : Midas SD Midas module flags retrieval
+      * I : RST Modules
+     I                                        1  10 PAMODS
+      *
+      * Outward parameters
+     IPBRC        DS                             10
+      * KEY : Midas SD Midas module flags retrieval
+      * I : RST Modules
+     I                                        1  10 PBMODS
+      *
+      * Outward parameters
+     IPCRC        DS                             10
+      * KEY : Midas SD Midas module flags retrieval
+      * I : RST Modules
+     I                                        1  10 PCMODS
+      *
+      * Outward parameters
+     IPDRC        DS                             10
+      * KEY : Midas SD Midas module flags retrieval
+      * I : RST Modules
+     I                                        1  10 PDMODS
+      *
+      * Outward parameters
+     IPERC        DS                             10
+      * KEY : Midas SD Midas module flags retrieval
+      * I : RST Modules
+     I                                        1  10 PEMODS
+      *
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Display Midas Modules
+      * SD9002X PRECOMPILER - MIDAS Modules  *
+      * Copyright Statement 1988 - Standard Functions  *
+     C                     MOVEL'PGM01'   WUWRTC           Work Return cod
+      * DO WHILE: WRK.Work Return code is Normal
+     C           WUWRTC    DOWEQ'PGM01'                    *DO
+     C           WUWRTC    OREQ 'PGM04'
+     C           WUWRTC    OREQ 'PGM02'
+     C           WUWRTC    OREQ 'PGM03'
+      * CASE: WRK.Work Return code is First Program
+     C           WUWRTC    IFEQ 'PGM01'                    *IF
+      * Display treasury/cm/inv - MIDAS Modules  *
+     C                     CLEARPARC
+     C                     MOVEL'MMOD'    PAMODS           Modules
+      *
+     C                     CALL 'SD9004E'              90  Display treasur
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             KEY: MIDAS Modu
+     C           WUWRTC    PARM WUWRTC    WQ0001  5        Work Return cod
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD9004E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: WRK.Work Return code is First Program
+     C           WUWRTC    IFEQ 'PGM01'                    *IF
+     C                     MOVEL'PGM02'   WUWRTC           Work Return cod
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.Work Return code is Second Program
+     C           WUWRTC    IFEQ 'PGM02'                    *IF
+      * Display banking/lending - MIDAS Modules  *
+     C                     CLEARPBRC
+     C                     MOVEL'MMOD'    PBMODS           Modules
+      *
+     C                     CALL 'SD9001E'              90  Display banking
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PBRC             KEY: MIDAS Modu
+     C           WUWRTC    PARM WUWRTC    WQ0002  5        Work Return cod
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD9001E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: WRK.Work Return code is Second Program
+     C           WUWRTC    IFEQ 'PGM02'                    *IF
+     C                     MOVEL'PGM03'   WUWRTC           Work Return cod
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.Work Return code is Third Program
+     C           WUWRTC    IFEQ 'PGM03'                    *IF
+      * Display Payments/network - MIDAS Modules  *
+     C                     CLEARPCRC
+     C                     MOVEL'MMOD'    PCMODS           Modules
+      *
+     C                     CALL 'SD9003E'              90  Display Payment
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PCRC             KEY: MIDAS Modu
+     C           WUWRTC    PARM WUWRTC    WQ0003  5        Work Return cod
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD9003E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: WRK.Work Return code is Third Program
+     C           WUWRTC    IFEQ 'PGM03'                    *IF
+     C                     MOVEL'PGM04'   WUWRTC           Work Return cod
+     C                     END                             *FI
+     C                     END                             *FI
+      * CASE: WRK.Work Return code is Fourth Program
+     C           WUWRTC    IFEQ 'PGM04'                    *IF
+      * display Management/opctl - MIDAS Modules  *
+     C                     CLEARPDRC
+     C                     MOVEL'MMOD'    PDMODS           Modules
+      *
+     C                     CALL 'SD9002E'              90  Display Managem
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PDRC             KEY: MIDAS Modu
+     C           WUWRTC    PARM WUWRTC    WQ0004  5        Work Return cod
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD9002E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * Start of SAR S01117
+      * CASE: WRK.Work Return code is Fourth Program
+     C           WUWRTC    IFEQ 'PGM04'                    *IF
+     C                     MOVEL'PGM05'   WUWRTC           Work Return cod
+     C                     END                             *FI
+      * End of SAR S01117
+     C                     END                             *FI
+      * Start of SAR S01117
+      * CASE: WRK.Work Return code is Fifth Program
+     C           WUWRTC    IFEQ 'PGM05'                    *IF
+      * Display MB Indicator - MIDAS Modules  *
+     C                     CLEARPERC
+     C                     MOVEL'MMOD'    PEMODS           Modules
+      *
+     C                     CALL 'SD9009E'              90  Display MB Indi
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PERC             KEY: MIDAS Modu
+     C           WUWRTC    PARM WUWRTC    WQ0005  5        Work Return cod
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD9009E' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+      * CASE: WRK.Work Return code is Fifth Program
+     C           WUWRTC    IFEQ 'PGM05'                    *IF
+     C                     MOVEL*BLANK    WUWRTC           Work Return cod
+     C                     MOVEL'FIN'     WUWRTC           Work Return cod
+     C                     END                             *FI
+     C                     END                             *FI
+      * End of SAR S01117
+     C                     END                             *ITR
+      *----------------------------------------------------------------
+      * Exit program
+     C           AAEXIT    TAG
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Exit program: Normal
+      *================================================================
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Define work field Work Return code
+     C                     MOVEL*BLANK    WUWRTC  5
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+     C                     MOVEL'N'       W0PMT   1
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD9002XPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9002XPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRBCH
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD9002XPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

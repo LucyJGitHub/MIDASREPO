@@ -1,0 +1,546 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Trade Awaiting Authorisation Rpt.')           *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE0300 - TRADES AWAITING AUTHORISATION REPORT                *
+     F*                                                               *
+     F*  Function: This report show all trades awaiting               *
+     F*    (COB)   authorisation.                                     *
+     F*                                                               *
+     F*  Called by: SEC0612J - Trades Awaiting Authorisation Report.  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 10Jan94               *
+      *                 E37493             Date 2APr92                *
+     F*                 E34034             DATE  7JAN92               *
+     F*                 E29170             DATE 11OCT91               *
+     F*                 S01117             DATE 02MAY91               *
+     F*                 S01269             DATE 19JUN90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  E37493 - Recompiled over changed P1 printer file             *
+     F*  E34034 - Recompiled over changed printer files               *
+     F*  E29170 - Report Control Facility changes                     *
+     F*  S01117 - Release 10 Multibranching etc                       *
+     F*  S01269 - NEW PROGRAM FOR TRADE AUTHORISATION                 *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     F***TRADTA**IF**E           K        DISK                            E29170
+     FTRADTAB IF  E           K        DISK                               E29170
+     FTRAUT   IF  E           K        DISK
+     FSDBANKPDIF  E           K        DISK
+     FSDCURRL0IF  E           K        DISK
+     F***SE0300P1O***E             66     PRINTER                         E29170
+     FSE0300P1O   E             66     PRINTER                        UC  E29170
+     F                                              KINFDS SPOOL          E29170
+     FSE0300AUO   E                    PRINTER                        UC  E29170
+     F                                              KINFDS SPOOLU         E29170
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F****10**-*EOF*ON*TRADTA******************************************   E29170
+     F*   10  - EOF ON TRADTAB                                        *   E29170
+     F*   11  - EOF ON TRAUT                                          *
+     F*   37  - MULTIBRANCHING ON                                     *   E29170
+     F*   60  - DETAIL PRINTER FILE IS OPEN                           *   E29170
+     F*   66  - OVERFLOW INDICATOR FOR SE0300P1 PRINT FILE            *
+     F*   80  - READ FAILURE ON SDBANKPD                              *
+     F*   81  - CHAIN FAILURE ON SDCURRL0                             *
+     F*   98  - DATE FORMAT DDMMYY IF OFF.                            *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INSR   - CHANGE LAST ACTION TYPE TO INSERTION                *
+     F*  AMSR   - CHANGE LAST ACTION TYPE TO AMENDMENT                *
+     F*  CHSR   - CHANGE LAST ACTION TYPE TO CHANGE                   *
+     F*  DLSR   - CHANGE LAST ACTION TYPE TO DELETION                 *
+     F*  APSR   - CHANGE LAST ACTION TYPE TO APPROVAL                 *
+     F*  RVSR   - CHANGE LAST ACTION TYPE TO REVERSAL                 *
+     F*  ZDATE2 - FORMAT DATE                                         *
+     F*  ZSEDIT - FORMAT NUMERIC FIELDS FOR OUTPUT                    *
+     F*  *PSSR  - ERROR HANDLING                                      *   S01117
+     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZSEDITZ1
+      /EJECT
+     ICPYR@#      DS
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ILDA         DS                            256                       S01117
+     I*
+     I*      Local data area.
+     I** *LOCK IN LDA immediately before and OUT LDA immediately          S01117
+     I** after each database error handling.                              S01117
+     I*
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*                                                                   E29170
+     ISPOOL       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILE                 E29170
+     I                                    B 123 1240SFNUM                 E29170
+     I*                                                                   E29170
+     ISPOOLU      DS                                                      E29170
+     I*                                                                   E29170
+     I                                       83  92 SFILEU                E29170
+     I                                    B 123 1240SFNUMU                E29170
+     ISDBRCH    E DSSDBRCHPD                                              E29170
+     I*                                                                   E29170
+     I** Branch details                                                   E29170
+     I*                                                                   E29170
+     IDSFDY     E DSDSFDY                                                 E29170
+     I*                                                                   E29170
+     I** DS for access programs, short data structure                     E29170
+     I*                                                                   E29170
+     IRUNDT       DS                                                      E29170
+     I*                                                                   E29170
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+     I*                                                                   E29170
+     I                                        1   7 RUNA                  E29170
+     I                                    P   8  100RUND                  E29170
+     I                                       11  11 SSF                   E29170
+     I                                       12  12 DATF                  E29170
+     I                                       13  13 MBIN                  E29170
+     I*                                                                   E29170
+     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+     I*                                                                   E29170
+      **
+     I/COPY ZSRSRC,ZSEDITZ2
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     C/EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ** Main Processing
+      *
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C*                                                                   E29170
+     C** IN THE DATAAREA RUNDAT                                           E29170
+     C*                                                                   E29170
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+     C                     IN   RUNDT                                     E29170
+     C*                                                                   E29170
+     C**  TEST FOR MULTIBRANCHING                                         E29170
+     C*                                                                   E29170
+     C           MBIN      IFEQ 'Y'                                       E29170
+     C                     SETON                     37                   E29170
+     C                     END                                            E29170
+     C                     SETOF                     98
+     C                     MOVE '  '      TATYP   2
+     C                     READ SDBANKPD                 80
+     C           *IN80     IFEQ '1'
+      *
+      ** Database error on SDBANKPD
+      *
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SE0300'  DBPGM
+     C                     MOVE 'SDBAN'   DBFILE           ***************
+     C                     Z-ADD01        DBASE            * DB ERROR 01 *
+     C***********          WRITEERR                        ***************E29170
+     C                     OUT  LDA                                       S01117
+     C                     OPEN SE0300AU                                  E29170
+     C                     WRITEHEADAU                                    E29170
+     C                     WRITEERR                                       E29170
+     C                     EXSR RCFAU                                     E29170
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+      *
+     C***********          READ TRADTA                   10               E29170
+     C                     READ TRADTAB                  10               E29170
+      *
+     C           *IN10     IFEQ '1'
+      *
+      ** If no records are present
+      *
+     C                     OPEN SE0300AU                                  E29170
+     C                     WRITEHEADAU                                    E29170
+     C***********          WRITEW01                                       E29170
+     C                     WRITENONE
+     C                     EXSR RCFAU                                     E29170
+      *
+     C                     ELSE
+      ***********                                                         E29170
+     C***********          WRITEW01                                       E29170
+      *
+     C           *IN10     DOWEQ'0'
+     C*                                                                   E29170
+     C**  Open new printer file if necessary                              E29170
+     C*                                                                   E29170
+     C           TDBA      IFNE TDBASV                                    E29170
+     C*                                                                   E29170
+     C**  Access branch name if multibranching is on                      E29170
+     C*                                                                   E29170
+     C           *IN37     IFEQ '1'                                       E29170
+     C**********           CALL 'AOBRCHR0'                                E29170              CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7                       E29170
+     C                     PARM '*KEY   ' @OPTN   7                       E29170
+     C                     PARM TDBA      @BRKEY  3                       E29170
+     C********** SDBRCH    PARM SDBRCH    DSFDY                           E29170              CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*                                                                   E29170
+     C           @RTCD     IFNE *BLANKS                                   E29170
+     C           *LOCK     IN   LDA                                       E29170
+     C                     Z-ADD3         DBASE                           E29170
+     C                     MOVEL'SDBRCHPD'DBFILE                          E29170
+     C                     MOVELTDBA      DBKEY                           E29170
+     C                     OUT  LDA                                       E29170
+     C                     OPEN SE0300AU                                  E29170
+     C                     WRITEHEADAU                                    E29170
+     C                     WRITEERR                                       E29170
+     C                     EXSR RCFAU                                     E29170
+     C                     EXSR *PSSR                                     E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C           *IN60     IFEQ '1'                                       E29170
+     C                     WRITETRAIL                                     E29170
+     C                     CLOSESE0300P1                                  E29170
+     C                     SETOF                     6066                 E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     OPEN SE0300P1                                  E29170
+     C                     Z-ADD0         PAGE                            E29170
+     C                     SETON                     60                   E29170
+     C                     MOVE TDBA      TDBASV  3                       E29170
+     C                     WRITEW01                                       E29170
+     C*                                                                   E29170
+     C** RCF Processing for Detail Printer File                           E29170
+     C*                                                                   E29170
+     C                     EXSR RCFP1                                     E29170
+     C                     END                                            E29170
+      *
+     C           TDRF      SETGTTRAUT
+     C                     READPTRAUT                    11
+      *
+      **  Read SDCURRL0 file to obtain number of decimal places
+      *
+     C           TNMC      CHAINSDCURRL0             81
+     C           *IN81     IFEQ '1'
+      *
+      ** Database error on SDCURRL0
+      *
+     C                     SETON                     U7U8LR
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SE0300'  DBPGM
+     C                     MOVE 'SDCUR'   DBFILE           ***************
+     C                     Z-ADD02        DBASE            * DB ERROR 02 *
+     C***********          WRITEERR                        ***************E29170
+     C                     OUT  LDA                                       S01117
+     C                     OPEN SE0300AU                                  E29170
+     C                     WRITEHEADAU                                    E29170
+     C                     WRITEERR                                       E29170
+     C                     EXSR RCFAU                                     E29170
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN
+     C                     END
+      *
+      ** Edit countervalue and nominal using ZSEDIT
+      *
+     C                     Z-ADDTCTR      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    TCTR15 15
+     C                     Z-ADDNOML      ZFLD15
+     C                     Z-ADDTNMD      ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    NOML13 13
+      *
+      ** Convert value date and last action date format using ZDATE2
+      *
+     C                     MOVE TDVD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TDVDD   7
+     C                     MOVE TADT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    TADTD   7
+      *
+      ** Split time field in TRAUT to HH:MM:SS format
+      *
+     C                     MOVELTATM      HOUR    20
+     C                     MOVE TATM      MINS    40
+     C                     MOVELMINS      MINU    20
+     C                     MOVE MINS      SECO    20
+      *
+      ** Change last action type to full word
+      *
+     C           TATYP     CASEQ'IN'      INSR
+     C           TATYP     CASEQ'AM'      AMSR
+     C           TATYP     CASEQ'CH'      CHSR
+     C           TATYP     CASEQ'DL'      DLSR
+     C           TATYP     CASEQ'AP'      APSR
+     C           TATYP     CASEQ'RV'      RVSR
+     C                     END
+      *
+      ** Write header if overflow indicator is on
+      *
+     C           *IN66     IFEQ '1'
+     C                     WRITEW01
+     C                     SETOF                     66
+     C                     END
+      *
+      ** Write detail
+      *
+     C                     WRITEW02
+      *
+      ***Read*next*record*on*TRADTA***************************************E29170
+      ** Read next record on TRADTAB                                      E29170
+      *
+     C***********          READ TRADTA                   10               E29170
+     C                     READ TRADTAB                  10               E29170
+      *
+     C                     END
+      *
+      ** Write trailer for printout
+      *
+     C           *IN60     IFEQ '1'                                       E29170
+     C                     WRITETRAIL
+     C                     END                                            E29170
+      *
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INSR   - Subroutine to change last action type to insertion  *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSR      BEGSR
+      *
+     C                     MOVE *BLANK    TATYPL
+     C                     MOVEL'INSERT'  TATYPL  9
+     C                     MOVE 'ION'     TATYPL
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  AMSR   - Subroutine to change last action type to amendment  *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AMSR      BEGSR
+     C                     MOVE *BLANK    TATYPL
+     C                     MOVEL'AMENDM'  TATYPL  9
+     C                     MOVE 'ENT'     TATYPL
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  CHSR   - Subroutine to change last action type to change     *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHSR      BEGSR
+     C                     MOVE *BLANK    TATYPL
+     C                     MOVEL'CHANGE'  TATYPL  9
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DLSR   - Subroutine to change last action type to deletion   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DLSR      BEGSR
+     C                     MOVE *BLANK    TATYPL
+     C                     MOVEL'DELETION'TATYPL  9
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  APSR   - Subroutine to change last action type to approval   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           APSR      BEGSR
+     C                     MOVE *BLANK    TATYPL
+     C                     MOVEL'APPROVAL'TATYPL  9
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RVSR   - Subroutine to change last action type to reversal   *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           RVSR      BEGSR
+     C                     MOVE *BLANK    TATYPL
+     C                     MOVEL'REVERSAL'TATYPL  9
+     C                     ENDSR
+      *
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      ********************************************************************
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+     C*                                                                   E29170
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ     5                       E29170
+     C                     PARM TDBA      SENTY   3                       E29170
+     C                     PARM           SFILE                           E29170
+     C                     PARM           ZSNUM                           E29170
+     C                     PARM           ZSERR   1                       E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C/EJECT                                                              E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+     C*                                                                   E29170
+     C********************************************************************E29170
+     C*                                                                   E29170
+     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+     C*                                                                   E29170
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+     C*                                                                   E29170
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+     C**                                                                  E29170
+     C                     CALL 'ZSFILE'                                  E29170
+     C                     PARM           SEQ                             E29170
+     C                     PARM *BLANKS   SENTY                           E29170
+     C                     PARM           SFILEU                          E29170
+     C                     PARM           ZSNUMU                          E29170
+     C                     PARM *BLANK    ZSERR                           E29170
+     C*                                                                   E29170
+     C           ZSERR     IFEQ 'Y'                                       E29170
+     C*                                                                   E29170
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+     C*                                                                   E29170
+     C                     SETON                     U7U8LR               E29170
+     C                     RETRN                                          E29170
+     C                     END                                            E29170
+     C*                                                                   E29170
+     C                     ENDSR                                          E29170
+     C*                                                                   E29170
+     C*****************************************************************   E29170
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

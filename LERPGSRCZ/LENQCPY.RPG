@@ -1,0 +1,411 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Profitability extracts to PF/LENQ')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module
+     F*                                                               *
+     F*  LENQCPY - Extracts File                                      *
+     F*                                                               *
+     F*  Function:  This program produces a consolidated extract      *
+     F*             file PF/LENQ with records from LENQLFD, LENQFCD,  *
+     F*             LENQRED, LENQDFD                                  *
+     F*  (COB)                                                        *
+     F*                                                               *
+     F*  Called By: LERC465 - Merged Profitability Rpt/Enqiry Files   *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE075AL           Date 06Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 163668             Date 14Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 ALIEN1             Date 10Jul92               *
+      *                 BH3394             Date 30Jun92               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE075AL - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  163668 - Profitability showing on facility customer not on   *
+      *           agent customer                                      *
+     F*  ALIEN1 - Output A/C currency, A/C code, A/C Code narrative   *
+     F*           and A/C sequence number to LENQ. Used when          *
+     F*           reporting profitability for Other Charges/Fees by   *
+     F*           account rather than consolidated.                   *
+     F*  BH3394 - Changed to keep the loan account officer as well
+     F*           as the facility account officer for the reports
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*****************************************************************
+     FLENQLND IF  E                    DISK
+     FLENQFCD IF  E                    DISK
+     FLENQRED IF  E                    DISK
+     FLENQDFD IF  E                    DISK
+     FLENQ    O   E                    DISK         KINFSR *PSSR
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*  90 - Read of LENQXXD files                                   *
+     F*  LR - Last Record                                             *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  LNQ    - Addition of LENQLND records to PF/LENQ              *
+     F*  FCQ    - Addition of LENQFCD records to PF/LENQ              *
+     F*  REQ    - Addition of LENQRED records to PF/LENQ              *
+     F*  DFQ    - Addition of LENQDFD records to PF/LENQ              *
+      *  *INZSR - Initial Subroutine                                  *                     CLE075AL
+     F*  *PSSR  - Program exception error routine.                    *
+     F*                                                               *
+     F*****************************************************************
+     I*
+      ** Rename of branch fields
+     I*
+     ILENQLNDF
+     I              BRCA                            QLBRCA
+      *
+     ILENQFCDF
+     I              BRCA                            QFBRCA
+      *
+     ILENQREDF
+     I              BRCA                            QRBRCA
+      *
+     IPSDS       SDS
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     C/EJECT
+     C*****************************************************************
+     C/TITLE MAIN PROCESSING
+     C*****************************************************************
+      *                                                                                     CLE075AL
+      ** Begin copy file processing based on mode                                           CLE075AL
+      *                                                                                     CLE075AL
+     C           MODE      IFEQ '1'                                                         CLE075AL
+      *
+      ** Process LENQLND records (Profitability File for Loans)
+      *
+     C           *IN90     DOWEQ'0'
+     C                     READ LENQLND                  90
+     C           *IN90     IFEQ '0'
+     C                     EXSR LNQ
+     C                     END
+     C                     END
+      *
+      ** Process LENQFCD records (Profitability File for Facilities)
+      *
+     C                     MOVE '0'       *IN90
+     C           *IN90     DOWEQ'0'
+     C                     READ LENQFCD                  90
+     C           *IN90     IFEQ '0'
+     C                     EXSR FCQ
+     C                     END
+     C                     END
+     C                     ENDIF                                                            CLE075AL
+      *                                                                                     CLE075AL
+     C           MODE      IFEQ '2'                                                         CLE075AL
+      *
+      ** Process LENQRED records (Profitability File for Retail)
+      *
+     C                     MOVE '0'       *IN90
+     C           *IN90     DOWEQ'0'
+     C                     READ LENQRED                  90
+     C           *IN90     IFEQ '0'
+     C                     EXSR REQ
+     C                     END
+     C                     END
+     C                     ENDIF                                                            CLE075AL
+      *                                                                                     CLE075AL
+     C           MODE      IFEQ '1'                                                         CLE075AL
+      *
+      ** Process LENQDFD records (Profitability File for Dealing)
+      *
+     C                     MOVE '0'       *IN90
+     C           *IN90     DOWEQ'0'
+     C                     READ LENQDFD                  90
+     C           *IN90     IFEQ '0'
+     C                     EXSR DFQ
+     C                     END
+     C                     END
+     C                     ENDIF                                                            CLE075AL
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                                                               *
+      *  LNQ  -  Subroutine to put LENQLND records onto PF/LENQ.      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           LNQ       BEGSR
+      *
+     C                     MOVE QLRTYP    NQRTYP
+     C                     MOVE QLGPNA    NQGPNA
+     C                     MOVE QLDEPT    NQDEPT
+     C                     MOVE QLACOF    NQACOF
+     C                     MOVE QLLTYP    NQLTYP
+     C                     MOVE QLSUTP    NQSUTP
+     C                     MOVE QLCLAS    NQCLAS                                              CLE042
+     C                     MOVE QLMDAY    NQMDAY
+     C                     MOVE QLYDAY    NQYDAY
+     C                     Z-ADDQLRSEQ    NQRSEQ
+     C                     Z-ADDQLGPID    NQGPID
+     C**********           Z-ADDQLFCUS    NQCNUM                                              CSD027
+     C                     MOVE QLFCUS    NQCNUM                                              CSD027
+     C                     Z-ADDQLFTYP    NQFTYP
+     C                     Z-ADDQLFSEQ    NQFSEQ
+     C**********           Z-ADDQLCNUM    NQLCUS                                              CSD027
+     C                     MOVE QLCNUM    NQLCUS                                              CSD027
+     C**********           Z-ADDQLLNRF    NQLNRF                                              CLE148
+     C                     MOVELQLLNRF    NQLNRF                                              CLE148
+     C                     Z-ADDQLMAVB    NQMAVV
+     C                     Z-ADDQLMAGG    NQMAGG
+     C                     Z-ADDQLMFEE    NQMFEE
+     C                     Z-ADDQLMMGN    NQMMGN
+     C                     Z-ADDQLMAYR    NQMAYR
+     C                     Z-ADDQLMAMR    NQMAMR
+     C                     Z-ADDQLYAVB    NQYAVV
+     C                     Z-ADDQLYAGG    NQYAGG
+     C                     Z-ADDQLYFEE    NQYFEE
+     C                     Z-ADDQLYMGN    NQYMGN
+     C                     Z-ADDQLYAYR    NQYAYR
+     C                     Z-ADDQLYAMR    NQYAMR
+     C                     MOVE QLBRCA    BRCA
+     C                     MOVE *BLANKS   NQACCY                          ALIEN1
+     C                     MOVE *BLANKS   NQACOD                          ALIEN1
+     C                     MOVE *BLANKS   NQACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    NQACSQ                          ALIEN1
+     C                     MOVE QLOACO    NQOACO                          BH3394
+     C**********           Z-ADDQLFACL    NQFACL                                       163668 CSD027
+     C                     MOVE QLFACL    NQFACL                                              CSD027
+      *
+      ** Write record to LENQ
+      *
+     C                     WRITELENQF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  FCQ  -  Subroutine to put LENQFCD records onto PF/LENQ.      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           FCQ       BEGSR
+      *
+     C                     MOVE *BLANKS   NQLTYP
+     C                     MOVE *BLANKS   NQSUTP
+     C                     MOVE *BLANKS   NQCLAS                                              CLE042
+     C                     MOVE *BLANKS   NQGPNA
+     C                     MOVE *BLANKS   NQMDAY
+     C                     MOVE *BLANKS   NQYDAY
+     C                     Z-ADD0         NQGPID
+     C**********           Z-ADD0         NQLCUS                                              CSD027
+     C                     MOVE *BLANKS   NQLCUS                                              CSD027
+     C**********           Z-ADD0         NQLNRF                                              CLE148
+     C                     MOVEL*BLANKS   NQLNRF                                              CLE148
+     C                     Z-ADD0         NQMAGG
+     C                     Z-ADD0         NQMMGN
+     C                     Z-ADD0         NQMAMR
+     C                     Z-ADD0         NQYAGG
+     C                     Z-ADD0         NQYMGN
+     C                     Z-ADD0         NQYAMR
+     C                     MOVE QFRTYP    NQRTYP
+     C                     MOVE QFDEPT    NQDEPT
+     C                     MOVE QFACOF    NQACOF
+     C                     Z-ADDQFRSEQ    NQRSEQ
+     C**********           Z-ADDQFFCUS    NQCNUM                                              CSD027
+     C                     MOVE QFFCUS    NQCNUM                                              CSD027
+     C                     Z-ADDQFFTYP    NQFTYP
+     C                     Z-ADDQFFSEQ    NQFSEQ
+     C                     Z-ADDQFMAVB    NQMAVV
+     C                     Z-ADDQFMFEE    NQMFEE
+     C                     Z-ADDQFMAYR    NQMAYR
+     C                     Z-ADDQFYAVB    NQYAVV
+     C                     Z-ADDQFYFEE    NQYFEE
+     C                     Z-ADDQFYAYR    NQYAYR
+     C                     MOVE QFBRCA    BRCA
+     C                     MOVE *BLANKS   NQACCY                          ALIEN1
+     C                     MOVE *BLANKS   NQACOD                          ALIEN1
+     C                     MOVE *BLANKS   NQACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    NQACSQ                          ALIEN1
+     C**********           Z-ADDQFFACL    NQFACL                                       163668 CSD027
+     C                     MOVE QFFACL    NQFACL                                              CSD027
+      *
+      ** Write record to LENQ
+      *
+     C                     WRITELENQF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  REQ  -  Subroutine to put LENQRED records onto PF/LENQ.      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REQ       BEGSR
+      *
+     C                     Z-ADD0         NQFTYP
+     C                     Z-ADD0         NQFSEQ
+     C                     MOVE QRRTYP    NQRTYP
+     C                     MOVE QRDEPT    NQDEPT
+     C                     MOVE QRACOF    NQACOF
+     C                     Z-ADDQRRSEQ    NQRSEQ
+     C**********           Z-ADDQRCNUM    NQCNUM                                              CSD027
+     C                     MOVE QRCNUM    NQCNUM                                              CSD027
+     C                     Z-ADDQRMAVB    NQMAVV
+     C                     Z-ADDQRMFEE    NQMFEE
+     C                     Z-ADDQRMMGN    NQMMGN
+     C                     Z-ADDQRMAYR    NQMAYR
+     C                     Z-ADDQRMAMR    NQMAMR
+     C                     Z-ADDQRYAVB    NQYAVV
+     C                     Z-ADDQRYFEE    NQYFEE
+     C                     Z-ADDQRYMGN    NQYMGN
+     C                     Z-ADDQRYAYR    NQYAYR
+     C                     Z-ADDQRYAMR    NQYAMR
+     C                     MOVE QRBRCA    BRCA
+     C                     MOVE QRACCY    NQACCY                          ALIEN1
+     C                     MOVE QRACOD    NQACOD                          ALIEN1
+     C                     MOVE QRACNA    NQACNA                          ALIEN1
+     C                     Z-ADDQRACSQ    NQACSQ                          ALIEN1
+      *
+      ** Write record to LENQ
+      *
+     C                     WRITELENQF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  DFQ  -  Subroutine to put LENQDFD records onto PF/LENQ.      *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     Nothing                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DFQ       BEGSR
+      *
+     C                     Z-ADD0         NQMAVV
+     C                     Z-ADD0         NQMFEE
+     C                     Z-ADD0         NQMMGN
+     C                     Z-ADD0         NQMAYR
+     C                     Z-ADD0         NQMAMR
+     C                     Z-ADD0         NQYAVV
+     C                     Z-ADD0         NQYFEE
+     C                     Z-ADD0         NQYMGN
+     C                     Z-ADD0         NQYAYR
+     C                     Z-ADD0         NQYAMR
+     C                     MOVE QDRTYP    NQRTYP
+     C                     MOVE QDDEPT    NQDEPT
+     C                     MOVE QDACOF    NQACOF
+     C                     Z-ADDQDRSEQ    NQRSEQ
+     C**********           Z-ADDQDCNUM    NQCNUM                                              CSD027
+     C                     MOVE QDCNUM    NQCNUM                                              CSD027
+     C                     Z-ADDQDMAVA    NQMAVA
+     C                     Z-ADDQDMAVB    NQMAVB
+     C                     Z-ADDQDMAVC    NQMAVC
+     C                     Z-ADDQDMAVD    NQMAVD
+     C                     Z-ADDQDMAVE    NQMAVE
+     C                     Z-ADDQDMAVF    NQMAVF
+     C                     Z-ADDQDMAVG    NQMAVG
+     C                     Z-ADDQDMAVH    NQMAVH
+     C                     Z-ADDQDMAVI    NQMAVI
+     C                     Z-ADDQDYAVA    NQYAVA
+     C                     Z-ADDQDYAVB    NQYAVB
+     C                     Z-ADDQDYAVC    NQYAVC
+     C                     Z-ADDQDYAVD    NQYAVD
+     C                     Z-ADDQDYAVE    NQYAVE
+     C                     Z-ADDQDYAVF    NQYAVF
+     C                     Z-ADDQDYAVG    NQYAVG
+     C                     Z-ADDQDYAVH    NQYAVH
+     C                     Z-ADDQDYAVI    NQYAVI
+     C                     MOVE *BLANKS   BRCA
+     C                     MOVE *BLANKS   NQACCY                          ALIEN1
+     C                     MOVE *BLANKS   NQACOD                          ALIEN1
+     C                     MOVE *BLANKS   NQACNA                          ALIEN1
+     C                     Z-ADD*ZEROS    NQACSQ                          ALIEN1
+      *
+      ** Write record to LENQ
+      *
+     C                     WRITELENQF
+      *
+     C                     ENDSR
+      *
+      /EJECT                                                                                CLE075AL
+      *****************************************************************                     CLE075AL
+      *                                                               *                     CLE075AL
+      * *INZSR - Initial Subroutine                                   *                     CLE075AL
+      *                                                               *                     CLE075AL
+      *****************************************************************                     CLE075AL
+      *                                                                                     CLE075AL
+     C           *INZSR    BEGSR                                                            CLE075AL
+     C           *ENTRY    PLIST                                                            CLE075AL
+     C                     PARM           MODE    1                                         CLE075AL
+     C                     ENDSR                                                            CLE075AL
+      *                                                                                     CLE075AL
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by:  Any error situation.                              *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************

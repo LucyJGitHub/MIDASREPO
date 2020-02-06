@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT List start and end jobs from QHST log')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities                                           */
+/*                                                                   */
+/*       UTC001000 - Monitor machine activity via QHST log           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CPK030  *CREATE    Date 19Feb14              */
+/*                      XXXXXXXX           Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CPK030 - New utility to monitor start and end of jobs       */
+/*                over a specified period.                           */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Please note: this program checks what jobs started and      */
+/*       ended between two dates and times.  These are known as the  */
+/*       milestone start and end.  The utility also needs to have    */
+/*       limits as to when to start and end checking.  These are     */
+/*       known as the check start and end.                           */
+/*                                                                   */
+/*       For example, it sould be useful to know what jobs started   */
+/*       and ended around component mmCnnnnnn.  The component        */
+/*       started at 191205 and ended at 195036; these would the      */
+/*       milsetone start and end.  (For the purposes of this example */
+/*       dates are being ignored.)  It is decided to check the       */
+/*       period for an hour before after the milestones so the check */
+/*       start and end would be 181205 and 205036.  This would pick  */
+/*       up the following jobs                                       */
+/*        1. jobs that started after the check start and did not end */
+/*           before the milestone start                              */
+/*        2. jobs that ended before the check end and did not start  */
+/*           after the milestone end                                 */
+/*                                                                   */
+/*       Any jobs that started before the check start and ended      */
+/*       the check end will not be included.                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&SCHECKDATE &SCHECKTIME &ECHECKDATE +
+                          &ECHECKTIME &SMILESDATE &SMILESTIME +
+                          &EMILESDATE &EMILESTIME)
+ 
+             DCL        VAR(&SCHECKDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCHECKTIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ECHECKDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ECHECKTIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SMILESDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SMILESTIME) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&EMILESDATE) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&EMILESTIME) TYPE(*CHAR) LEN(6)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create temporary file to store spool file data. */
+             DLTF       FILE(QTEMP/UTC001000F)
+             MONMSG     MSGID(CPF0000)
+             CRTPF      FILE(QTEMP/UTC001000F) RCDLEN(132) +
+                          TEXT('Temporary file for UTC001000F')
+ 
+             CLRPFM     FILE(UTQHSTTD)
+ 
+/* Print out lob log for the check start and end; then copy to file. */
+             DSPLOG     PERIOD((&SCHECKTIME &SCHECKDATE) +
+                          (&ECHECKTIME &ECHECKDATE)) OUTPUT(*PRINT)
+             CPYSPLF    FILE(QPDSPLOG) TOFILE(QTEMP/UTC001000F) +
+                          SPLNBR(*LAST)
+ 
+/* Populate UTQHSTTD. */
+             CALL       PGM(UT001000) PARM(&SMILESDATE &SMILESTIME +
+                          &EMILESDATE &EMILESTIME)
+ 
+             RGZPFM     FILE(UTQHSTTD)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ ENDPGM:
+             ENDPGM

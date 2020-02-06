@@ -1,0 +1,1255 @@
+0001 H        1                                                           DL0640
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Current net trading position report')
+0002 F********************************************************************DL0640
+0004 F*                                                                  *DL0640
+     F*  Midas - Dealing Module
+0004 F*                                                                  *DL0640
+0005 F*       GL0640 - CURRENT NET TRADING POSITION REPORT               *DL0640
+0006 F*                                                                  *DL0640
+      *  (c) Finastra International Limited 2001                      *
+0008 F*                                                                  *DL0640
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL014             Date 29Jul03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 169210             Date 19Oct99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 25Jan99               *
+      *                 140987             Date 25Sep98               *
+      *                 CEU011             Date 11Mar98               *
+      *                 S01408             Date 13May96               *
+     F*                 S01314             Date 14Frb91               *
+     F*                     E22608            DATE 04OCT90               *
+     F*                     LN0846            DATE 10OCT90               *
+     F*                     LN0729            DATE 26SEP90               *
+     F*                     LN0644            DATE 18SEP90               *
+     F*                     LN0770            DATE 18SEP90               *
+     F*                     BHF133            DATE 20JUN90               *BHF133
+     F*                     E299              DATE 23MAR90               *  0018
+     F*                     S01117            DATE - 04/04/89            *S01117
+     F*                     S01194            DATE - 03/04/89            *S01194
+0004 F*                                                                  *DL0640
+0010 F********************************************************************DL0640
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *   CDL014 - Exclude Interest from Net Position.                  *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *   169210 - Duplicate hooks renamed from GL0640O001, GL0640O002  *
+      *            to GL0640OABC, GL0640OABD                            *
+      *   S01408 - Core hook GL0640C001 made redundant by fix 140987    *
+      *            Core hook GL0640CEUR added                           *
+      *   140987 - Euro + In ccy consolidation is incorrect under EXX,  *
+      *            readjust figures to be shown on report after         *
+      *            conversion to Euro ccy and not before .              *
+      *            Consolidated values should be reported for each ccy* *
+      *            once as a total, a different logical file is used .* *
+      *  CEU011 - EMU Position/Risk Reporting.                        *
+     F*   S01408 - Core hook GL0640CCP4 added
+     F*            Core hook GL0640CCP3 added
+     F*            Core hook GL0640CCP2 added
+     F*            Core hook GL0640CCP1 added
+     F*            Core hook GL0640OOP5 added
+     F*            Core hook GL0640OOP4 added
+     F*            Core hook GL0640OOP3 added
+     F*            Core hook GL0640OOP2 added
+     F*            Core hook GL0640OOP1 added
+     F*   S01314 - R10 PTF Incorporation changes: DL0640AU had not been  *
+     F*            renamed to GL0640AU.                                  *
+     F*   E22608 - PROGRAM RENAMED FROM DL0640                           *
+     F*   LN0846 - REVERSE LN0644 OLPOS3 NOT NEEDED                       LN0846
+     F*   LN0729 - TOTALS EXCLUDING BASE SHOULD INCLUDE THE LONG OR       LN0729
+     F*            SHORT POSITION FOR THE LAST RECORD READ                LN0729
+     F*   LN0644 - NEW OLPOS FILE                                        *
+     F*   LN0770 - CATCHALL IN WRONG PLACE                               *
+     F*   BHF133 - INDICATOR 20 NOT SET OFF BEFORE DECIMAL PLACES COMP.  *BHF133
+     F*   E299   - 'AU' REPORT SHOULD NOT WRITE 'END OF REPORT'          *
+     F*   S01117 - MULTI-BRANCHING                                       *S01117
+0010 F*   S01194 - NEW STANDING DATA - ADD ACCESS PROGRAMS               *S01194
+     F*                                                                  *S01117
+     F*   *** WARNING  THIS PROGRAM USES AN 'OPEN QUERY FILE' ***        *S01117
+0004 F*                                                                  *DL0640
+0010 F********************************************************************DL0640
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+0011 F*OLPOS***IP**F*****400  5AI     2 DISK                              LN0644
+0011 F* OLPOS3**IP**F*****400  5AI     2 DISK                       LN0644LN0846
+0011 F*OLPOS***IP**F*****400  5AI     2 DISK                       LN0846*140987
+     FOLPOS3  IP  F     400  5AI     2 DISK                               140987
+     FOLPOSOB IF  F     400            DISK                               S01117
+0012 F*****TABLE   IF  F      96 12AI     2 DISK                          DL0640
+0013 F*DL0640AUO***F*****132*****OV*****PRINTER      KINFDS SPOOLU  S01117E22608
+0013 F*L0640P1O***F*****132*****OF*****PRINTER**                    S01124S01117
+0013 F*DL0640P1O***F*****132*****OF*****PRINTER      KINFDS SPOOL   S01117E22608
+0013 FGL0640AUO   F     132     OV     PRINTER      KINFDS SPOOLU         E22608
+0013 FGL0640P1O   F     132     OF     PRINTER      KINFDS SPOOL          E22608
+0014 F* ID F  C  H  L    FUNCTION OF INDICATORS                           DL0640
+0015 F*01-03          OLPOS - DETAIL RECDS                                DL0640
+0016 F* 04                  - TRAILER                                     DL0640
+0017 F* 05                  - CATCHALL                                    DL0640
+0017 F*    06         OUTPUT REPORT HEADINGS FIRST TIME ROUND             S01194
+0018 F**06************TABLE*-*ICR1********                          DL0640S01194
+0019 F**07******************-*CURRENCIES**                          DL0640S01194
+0020 F**08******************-*ICR2********                          DL0640S01194
+0021 F**09******************-*CATCHALL****                          DL0640S01194
+     F*      N14     P1 NOT OPENED/WRITTEN TO SO 'NO DETAILS TO REPORT'   S01117
+0022 F*    20         CURRENCY DEC.POSNS.IS ZERO                          DL0640
+0023 F*       10      FIRST CYCLE INDICATOR                               DL0640
+0024 F********12******UNSUCCESSFUL*CHAIN*TO*TABLE*FILE**                  DL0640
+0025 F*       21      CCY DEC.POSNS. EQUAL 1                              DL0640
+0026 F*       22      CCY DEC.POSNS. EQUAL 2                              DL0640
+0027 F*       23      CCY DEC.POSNS. EQUAL 3                              DL0640
+0027 F*       24      EURO CCY DEC.POSNS. EQUAL 0                         140987
+0027 F*       25      EURO CCY DEC.POSNS. EQUAL 1                         140987
+0027 F*       26      EURO CCY DEC.POSNS. EQUAL 2                         140987
+0027 F*       27      EURO CCY DEC.POSNS. EQUAL 3                         140987
+0028 F*       30      POSITIVE NET POSN./BASE CCY EQUIVALENT              DL0640
+0029 F*       31      NEGATIVE NET POSN./BASE CCY EQUIVALENT              DL0640
+0030 F*       32      POSITIVE NET OPEN POSN.                             DL0640
+0031 F*       33      NEGATIVE NET OPEN POSN.                             DL0640
+0032 F*       34      CONTROL TOTALS DO NOT AGREE                         DL0640
+0033 F*       35      BASE POSITION IS ZERO                               DL0640
+0034 F*       40      ARRAY INDEX IS 1                                    DL0640
+0035 F*       41      ARRAY INDEX IS 2                                    DL0640
+0036 F*       42      ARRAY INDEX IS 3                                    DL0640
+0037 F*       50      ARRAY ELEMENT IS POSITIVE                           DL0640
+0038 F*       51      ARRAY ELEMENT IS NEGATIVE                           DL0640
+0039 F*     60-65     POS./NEG.ARRAY ELEMENTS                             DL0640
+0040 F*       66              ''                                          DL0640
+0041 F*       67              ''                                          DL0640
+0042 F*     70        DO NOT INCLUDE BASE CCY IN TOTAL                    DL0640
+      *       71      SAR CEU011 is switched ON.                          CEU011
+      *       80      CDL014 is switched ON.                                                  CDL014
+0043 F********87******RATE*IS*DIVIDE****                            DL0640S01194
+0044 F********99******USED*IN*ZSYSTM****                            DL0640S01194
+0045 F*          U8   FILE CONTROL TOTALS DO NOT AGREE                    DL0640
+0046 F*         U7&U8 DATABASE ERROR                                      DL0640
+     E                    CPY@    1   1 80
+     E/COPY WNCPYSRC,GL0640E001
+0047 E                    OAT         3 12 0                              S01117
+     E/COPY WNCPYSRC,GL0640E002
+0047 E                    TOT         3 12 0                              DL0640
+0048 E                    OFI        16 15 0                              DL0640
+0049 E                    OFO        16 15 0                              DL0640
+     E/COPY WNCPYSRC,GL0640E003
+0050 E                    OII        16 15 0                              DL0640
+0051 E                    OIO        16 15 0                              DL0640
+     E/COPY WNCPYSRC,GL0640E004
+0052 E                    OLI        16 15 0                              DL0640
+0053 E                    OLO        16 15 0                              DL0640
+0054 E                    ODT        16  5 0                              DL0640
+     E                    EUCP        6 12 0                              CEU011
+0047 E                    OAX         3 15 0                              140987
+      *                                                                   CEU011
+      ** Array for consolidated Euro position                             CEU011
+      *                                                                   CEU011
+0055 I*                                                                   DL0640
+0056 I*    ONLINE POSITIONS FILE - DETAIL RECORD.                         DL0640
+0057 I*                                                                   DL0640
+0058 I*OLPOS***NS**01***1 CD   5 C0   6 C1                                LN0644
+0058 I*OLPOS3**NS**01***1 CD   5 C0   6 C1                          LN0644LN0846
+0058 I*OLPOS***NS**01***1 CD   5 C0   6 C1                         LN0846*140987
+     IOLPOS3  NS  01   1 CD   5 C0   6 C1                                 140987
+0059 I       OR   02   1 CD   5 C0   6 C2                                 DL0640
+0060 I       OR   03   1 CD   5 C0   6 C3                                 DL0640
+0061 I                                        1   1 RECI                  DL0640
+0062 I                                        2   4 CCYO  L1              DL0640
+0063 I                                        5   60RECN                  DL0640
+0064 I                                    P   7  140PCOB                  DL0640
+0065 I                                    P  15  62 ODT                   DL0640
+0066 I*                                                                   DL0640
+0067 I*    FOREIGN EXCHANGE POSITION VALUES.                              DL0640
+0068 I                                    P  63 190 OFI                   DL0640
+0069 I                                    P 191 318 OFO                   DL0640
+0070 I*                                                                   DL0640
+     I/COPY WNCPYSRC,GL0640I001
+0071 I*    INTEREST POSITION VALUES.                                      DL0640
+0072 I                                    P  63 190 OII                   DL0640
+0073 I                                    P 191 318 OIO                   DL0640
+0074 I*                                                                   DL0640
+     I/COPY WNCPYSRC,GL0640I002
+0075 I*    LOANS/DEPOSITS POSITION VALUES.                                DL0640
+0076 I                                    P  63 190 OLI                   DL0640
+0077 I                                    P 191 318 OLO                   DL0640
+0078 I*                                                                   DL0640
+0079 I                                    P 398 4000TNLU                  DL0640
+0080 I*                                                                   DL0640
+0089 I* CATCHALL                                                          DL0640
+0090 I        NS  05                                                      LN0770
+0081 I*                                                                   DL0640
+0082 I*    ONLINE POSITIONS FILE - TRAILER RECORD.                        DL0640
+0083 I*                                                                   DL0640
+0084 I*****   NS  04   1 CT                                               S01117
+0084 IOLPOSOB NS  04   1 CT                                               S01117
+0085 I                                        1   1 RECI                  DL0640
+0086 I                                        2   4 CCY                   DL0640
+0087 I                                        5   60RECN                  DL0640
+0088 I                                    P   7   90NORE                  DL0640
+0089 I**CATCHALL****************                                          LN0770
+0090 I********NS**05                                                      LN0770
+     I*                                                                   S01194
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01194
+     I*                                                                   S01194
+     ISDCURR    E DSSDCURRPD                                              S01194
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01194
+     I*
+     ISDGELR    E DSSDGELRPD                                              CEU011
+      ** General ledger details                                           CEU011
+      *                                                                   CEU011
+     ISCSARD    E DSSCSARDPD                                              CEU011
+      ** SAR File Details accessed via access program AOSARDR0            CEU011
+      *                                                                   S01194
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01117
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     ISPOOL       DS                                                      S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 243 2460SWRIT                 S01117
+     I@BINRY      DS                                                      S01117
+     I** DEFINE A BLANK BINARY FIELD FOR USE WITH SWRIT                   S01117
+     I                                    B   1   40@BKBIN                S01117
+     ISPOOLU      DS                                                      S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I                                       83  92 SFILEU                S01117
+     I                                    B 123 1240SFNUMU                S01117
+0091 I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*1.**       DL0640S01194
+0092 I**********                                                    DL0640S01194
+0093 I***TABLE***NS**06***2 C0   3 C1  12 C1                        DL0640S01194
+0094 I*******AND******13 C0                                         DL0640S01194
+0095 I****************                        1   1 RECI            DL0640S01194
+0096 I****************                        2   30RECT            DL0640S01194
+0097 I****************                       12  130RCDE            DL0640S01194
+0098 I****************                       14  66 TITL            DL0640S01194
+0099 I****************                       67  67 DATF            DL0640S01194
+0100 I****************                       68  700DFBR            DL0640S01194
+0101 I****************                       74  74 MODI1           DL0640S01194
+0102 I****************                       75  75 MODI2           DL0640S01194
+0103 I****************                       76  76 MODI3           DL0640S01194
+0104 I****************                    P  77  790RUND            DL0640S01194
+0105 I****************                       80  86 RUNA            DL0640S01194
+0106 I****************                       87  870SFLG            DL0640S01194
+0107 I****************                    P  90  920LCD             DL0640S01194
+0108 I****************                       93  93 CHTP            DL0640S01194
+0109 I****************                    P  94  960TNLU            DL0640S01194
+0110 I****************                                              DL0640S01194
+0111 I*****TABLE*FILE*-*CURRENCIES*RECORD*1.**                      DL0640S01194
+0112 I****************                                              DL0640S01194
+0113 I********NS**07***1*CD   2 C2   3 C0                           DL0640S01194
+0114 I*******AND******13 C1                                         DL0640S01194
+0115 I****************                        1   1 RECI            DL0640S01194
+0116 I****************                        2   30RECT            DL0640S01194
+0117 I****************                       10  12 CCY             DL0640S01194
+0118 I****************                       13  130SREC            DL0640S01194
+0119 I****************                       14  27 CCNM            DL0640S01194
+0120 I****************                    P  28  348SPOT            DL0640S01194
+0121 I****************                       35  37 CCYS            DL0640S01194
+0122 I****************                       38  380CDP       20    DL0640S01194
+0123 I****************                       39  390TNOT            DL0640S01194
+0124 I****************                       40  40 DCCY            DL0640S01194
+0125 I****************                       41  44 SRC1            DL0640S01194
+0126 I****************                       45  48 SRC2            DL0640S01194
+0127 I****************                       49  520TACC            DL0640S01194
+0128 I****************                       53  560TEQV            DL0640S01194
+0129 I****************                       57  600SWQV            DL0640S01194
+0130 I****************                       61  640TAC4            DL0640S01194
+0131 I****************                       65  680TAC5            DL0640S01194
+0132 I****************                       69  69 HIND            DL0640S01194
+0133 I****************                    P  70  768PART            DL0640S01194
+0134 I****************                       77  780SSNO            DL0640S01194
+0135 I****************                    P  79  858ERLC            DL0640S01194
+0136 I****************                       86  860MDIN      87    DL0640S01194
+0137 I****************                    P  90  920LCD             DL0640S01194
+0138 I****************                       93  93 CHTP            DL0640S01194
+0139 I****************                    P  94  960TNLU            DL0640S01194
+0140 I****************                                              DL0640S01194
+0141 I*****TABLE*FILE*-*INSTALLATION*CONTROL*DATA*RECORD*2.***      DL0640S01194
+0142 I****************                                              DL0640S01194
+0143 I********NS**08***1*CD***2 C0   3 C1                           DL0640S01194
+0144 I*******AND******12*C1**13 C1                                  DL0640S01194
+0145 I****************                        1   1 RECI            DL0640S01194
+0146 I****************                        2   30RECT            DL0640S01194
+0147 I****************                       12  130RCDE            DL0640S01194
+0148 I****************                       14  16 BCCY            DL0640S01194
+0149 I****************                       17  19 BCYL            DL0640S01194
+0150 I****************                       20  22 HOCY            DL0640S01194
+0151 I****************                       23  280HEAD            DL0640S01194
+0152 I****************                    P  29  310APDA            DL0640S01194
+0153 I****************                       35  35 APFQ            DL0640S01194
+0154 I****************                    P  36  380LOGS            DL0640S01194
+0155 I****************                       39  40 CUZR            DL0640S01194
+0156 I****************                    P  41  430DNWD            DL0640S01194
+0157 I****************                       44  460BVLP            DL0640S01194
+0158 I****************                       47  49 LOCY            DL0640S01194
+0159 I****************                       50  510FDAY            DL0640S01194
+0160 I****************                       86  86 ISAV            DL0640S01194
+0161 I****************                    P  87  890LLOG            DL0640S01194
+0162 I****************                    P  90  920LCD             DL0640S01194
+0163 I****************                       93  93 CHTP            DL0640S01194
+0164 I****************                    P  94  960TNLU            DL0640S01194
+0165 I****************                                              DL0640S01194
+0166 I*****CATCHALL***                                              DL0640S01194
+0167 I********NS**09**                                              DL0640S01194
+     ISVAL1       DS                            200                                           CDL014
+     I                                        1   1 SVAL11                                    CDL014
+      ** DS for AOSVALR0                                                                      CDL014
+      *                                                                                       CDL014
+     I              'XcludeIntFrmNetPostn'C         SVALKK                                    CDL014
+      *                                                                                       CDL014
+     C                     MOVE '0'       *IN06
+0168 C** FIRST CYCLE PROCESSING                                           DL0640
+0169 C**                                                                  DL0640
+0170 C   10                GOTO START                                     DL0640
+0171 C  N10                SETON                     10                   DL0640
+     C                     MOVEACPY@      BIS@   80
+      *                                                                   S01117
+      * ENTRY PARAMETER REQUIRED BY RCF                                   S01117
+     C           *ENTRY    PLIST                                          S01117
+     C                     PARM           SEQ                             S01117
+      *                                                                   S01117
+     C*                                                                   S01117
+0172 C*********************EXSR ZSYSTM                                    DL0640
+0173 C***99****************SETON                     U7U8LR               DL0640
+0174 C***99****************GOTO ENDD                                      DL0640
+0175 C*********************MOVEL'01'      CCYKEY                          DL0640
+0176 C*********************MOVE '11'      CCYKEY                          DL0640
+0177 C***********CCYKEY****CHAINTABLE                99    FOR ICDR 2     DL0640
+0178 C***99****************                                               DL0640
+0179 C*R*09****************SETON                     U7U8LR               DL0640
+0180 C***U7****************GOTO ENDD                                      DL0640
+     C** READ BANK DETAILS VIA ACCESS PROGRAM                             S01194
+     C                     CALL 'AOBANKR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDBANKPD'DBFILE 10        ************   S01194
+     C                     MOVEL'01'      DBASE   2        * DBERR 01 *   S01194
+     C                     MOVEL@OPTN     DBOPTN  7        ************   S01194
+     C                     MOVEL@OPTN     DBKEY                           S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO ENDD                                      S01194
+     C                     END                                            S01194
+      *                                                                   CEU011
+      ** Call Access pgm AOSARDR0 to check if CEU011 is ON.               CEU011
+      *                                                                   CEU011
+     C                     MOVE 'N'       CEU011  1                       CEU011
+     C                     CALL 'AOSARDR0'                                CEU011
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*VERIFY' @OPTN                           CEU011
+     C                     PARM 'CEU011'  @SARD   6                       CEU011
+     C           SCSARD    PARM SCSARD    DSFDY                           CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFEQ *BLANKS                                   CEU011
+     C                     MOVE 'Y'       CEU011                          CEU011
+     C                     MOVE *ON       *IN71                           CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANKS                                   CEU011
+     C           @RTCD     ANDNE'*NRF   '                                 CEU011
+      *                                                                   CEU011
+      ** Call to program ended in error                                   CEU011
+      *                                                                   CEU011
+     C                     MOVEL'CEU011'  DBKEY            ************   CEU011
+     C                     MOVE 'SCSARDPD'DBFILE           * DBERR 03 *   CEU011
+     C                     MOVEL'03'      DBASE            ************   CEU011
+     C                     MOVEL@OPTN     DBOPTN                          CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     GOTO ENDD                                      CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+      ** Retrieve general ledger details                                  CEU011
+      *                                                                   CEU011
+     C**********           CALL 'AOGELRR0'                                CEU011              CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*FIRST ' @OPTN                           CEU011
+     C********** SDGELR    PARM SDGELR    DSFDY                           CEU011              CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANKS                                   CEU011
+     C                     MOVEL'SDGELRPD'DBFILE           ************   CEU011
+     C                     MOVEL'04'      DBASE            * DBERR 04 *   CEU011
+     C                     MOVEL'*FIRST'  DBKEY            ************   CEU011
+     C                     MOVEL@OPTN     DBOPTN                          CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     GOTO ENDD                                      CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+      ** Call access obj. AOCURRR0 to retrieve the spot rate and the      CEU011
+      ** multiply/divide indicator for the Euro currency code.            CEU011
+      *                                                                   CEU011
+     C           CEU011    IFEQ 'Y'                                       CEU011
+      *                                                                   CEU011
+     C                     CALL 'AOCURRR0'                                CEU011
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*KEY   ' @OPTN                           CEU011
+     C                     PARM BKEURO    @AJCD                           CEU011
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANK                                    CEU011
+     C                     MOVEL'SDCURRPD'DBFILE                          CEU011
+     C                     MOVEL'05'      DBASE            ************   CEU011
+     C                     MOVEL@OPTN     DBOPTN           * DBERR 05 *   CEU011
+     C                     MOVELBKEURO    DBKEY            ************   CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     GOTO ENDD                                      CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     Z-ADDA6SPRT    WSPRT  138                      CEU011
+     C                     MOVE A6MDIN    WMDIN   1                       CEU011
+     C                     MOVE A6NBDP    WNBDPE  10       EUR CCY DEC PLA140987
+      *                                                                   CEU011
+      ** Call access obj. AOCURRR0 to retrieve the 'In' Currency for      CEU011
+      ** EMU flag for the base currency code.                             CEU011
+      *                                                                   CEU011
+     C                     CALL 'AOCURRR0'                                CEU011
+     C                     PARM *BLANKS   @RTCD                           CEU011
+     C                     PARM '*KEY   ' @OPTN                           CEU011
+     C                     PARM BJCYCD    @AJCD                           CEU011
+     C           SDCURR    PARM SDCURR    DSSDY                           CEU011
+      *                                                                   CEU011
+     C           @RTCD     IFNE *BLANK                                    CEU011
+     C                     MOVEL'SDCURRPD'DBFILE                          CEU011
+     C                     MOVEL'06'      DBASE            ************   CEU011
+     C                     MOVEL@OPTN     DBOPTN           * DBERR 06 *   CEU011
+     C                     MOVELBJCYCD    DBKEY            ************   CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     GOTO ENDD                                      CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     MOVE A6INCY    WINCY   1                       CEU011
+     C                     Z-ADD*ZEROS    EUCP                            CEU011
+      *                                                                   CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C/COPY WNCPYSRC,GL0640C002
+     C*
+     C** SET ON *IN06 TO ALLOW OUTPUT OF HEADINGS FIRST TIME ROUND -
+     C** (SET OFF BEFORE 1ST CYCLE PROCESSING)
+     C*
+     C                     MOVE '1'       *IN06
+     C*                                                                   140987
+     C           WNBDPE    IFEQ *ZERO                                     140987
+     C                     MOVE *ON       *IN24                           140987
+     C                     END                                            140987
+     C  N24      WNBDPE    COMP 2                    272526               140987
+     C*
+0181 C** DETAIL PROCESSING                                                DL0640
+0182 C**                                                                  DL0640
+0183 C                     Z-ADD1         COUNT   50                      DL0640
+      *                                                                                       CDL014
+      ** Check if 'XcludeIntFrmNetPostn' is ON                                                CDL014
+     C                     CALL 'AOSVALR0'                                                    CDL014
+     C                     PARM           @RTCD                                               CDL014
+     C                     PARM SVALKK    SVALK1 20                                           CDL014
+     C                     PARM           SVAL1 200                                           CDL014
+     C                     PARM *BLANK    SVALK2 20                                           CDL014
+     C                     PARM           SVAL2 200                                           CDL014
+     C                     PARM *BLANK    SVALK3 20                                           CDL014
+     C                     PARM           SVAL3 200                                           CDL014
+     C                     PARM *BLANK    SVALK4 20                                           CDL014
+     C                     PARM           SVAL4 200                                           CDL014
+     C                     PARM *BLANK    SVALK5 20                                           CDL014
+     C                     PARM           SVAL5 200                                           CDL014
+     C                     PARM *BLANK    SVALK6 20                                           CDL014
+     C                     PARM           SVAL6 200                                           CDL014
+     C                     PARM *BLANK    SVALK7 20                                           CDL014
+     C                     PARM           SVAL7 200                                           CDL014
+     C                     PARM *BLANK    SVALK8 20                                           CDL014
+     C                     PARM           SVAL8 200                                           CDL014
+     C                     PARM *BLANK    SVALK9 20                                           CDL014
+     C                     PARM           SVAL9 200                                           CDL014
+     C                     PARM *BLANK    SVALK0 20                                           CDL014
+     C                     PARM           SVAL10200                                           CDL014
+     C           @RTCD     IFNE *BLANK                                                        CDL014
+     C                     MOVEL'SDSVALPD'DBFILE                                              CDL014
+     C                     MOVEL'07'      DBASE                                               CDL014
+     C                     MOVELSVALKK    DBKEY                                               CDL014
+     C                     SETON                     U7U8LR                                   CDL014
+     C                     EXSR *PSSR                                                         CDL014
+     C                     GOTO ENDD                                                          CDL014
+     C                     ENDIF                                                              CDL014
+      *                                                                                       CDL014
+     C           SVAL11    IFEQ 'Y'                                                           CDL014
+     C                     MOVE 'Y'       CDL014  1                                           CDL014
+     C                     MOVE *ON       *IN80                                               CDL014
+     C                     ELSE                                                               CDL014
+     C                     MOVE 'N'       CDL014                                              CDL014
+     C                     MOVE *OFF      *IN80                                               CDL014
+     C                     ENDIF                                                              CDL014
+      *                                                                                       CDL014
+     C/COPY WNCPYSRC,GL0640C004
+0184 C           START     TAG                                            DL0640
+0185 C**N01N02N03**********GOTO ENDD                               DL0640*140987
+     C  N01N02N03          GOTO FINAL                                     140987
+0186 C**                                                                  DL0640
+0187 C** INCREMENT COUNTS OF NUMBER OF RECORDS READ AND LISTED.           DL0640
+     C** ON CHANGE OF CURRENCY WRITE DETAIL RECORD AND CLEAR WORK         S01117
+     C** FIELDS                                                           S01117
+0188 C**                                                                  DL0640
+0189 C           COUNT     ADD  1         COUNT                           DL0640
+     C   L1 89             EXCPT                                          S01117
+      *                                                                   CEU011
+     C           FINAL     TAG                                            140987
+     C*                                                                   140987
+     C           CEU011    IFEQ 'Y'                                       CEU011
+     C           *INL1     ANDEQ*ON                                       CEU011
+     C           *IN06     ANDEQ*OFF                                      CEU011
+     C           CEU011    OREQ 'Y'                                       140987
+     C           *IN06     ANDEQ*OFF                                      140987
+     C           *IN01     ANDEQ*OFF                                      140987
+     C           *IN02     ANDEQ*OFF                                      140987
+     C           *IN03     ANDEQ*OFF                                      140987
+     C*                                                                   140987
+      *                                                                   CEU011
+      ** If currency being process is an 'In' currency.                   CEU011
+      *                                                                   CEU011
+     C***********A6INCY    IFEQ 'Y'                                CEU011*140987
+     C           KINCY     IFEQ 'Y'                                       140987
+      *                                                                   CEU011
+      ** Convert to Euro equivalent the Spot Position                     CEU011
+      *                                                                   CEU011
+     C***********          Z-ADDOAT,1     PFRAM                    CEU011*140987
+     C                     Z-ADDOAX,1     PFRAM                           140987
+     C                     MOVE CCYS      PFRCY                           CEU011
+     C                     MOVE '07'      ERRNO   2                       CEU011
+     C                     EXSR EUCONV                                    CEU011
+     C                     EXSR ADJEUR                                    140987
+     C                     ADD  POUTA     EUCP,1                          CEU011
+      *                                                                   CEU011
+      ** Convert to Euro equivalent the Forward Position                  CEU011
+      *                                                                   CEU011
+     C***********          Z-ADDOAT,2     PFRAM                    CEU011*140987
+     C                     Z-ADDOAX,2     PFRAM                           140987
+     C                     MOVE CCYS      PFRCY                           CEU011
+     C                     MOVE '08'      ERRNO                           CEU011
+     C                     EXSR EUCONV                                    CEU011
+     C                     EXSR ADJEUR                                    140987
+     C                     ADD  POUTA     EUCP,2                          CEU011
+      *                                                                   CEU011
+      ** Convert to Euro equivalent the Interest Cmmt.                    CEU011
+      *                                                                   CEU011
+     C***********          Z-ADDOAT,3     PFRAM                    CEU011*140987
+     C                     Z-ADDOAX,3     PFRAM                           140987
+     C                     MOVE CCYS      PFRCY                           CEU011
+     C                     MOVE '09'      ERRNO                           CEU011
+     C                     EXSR EUCONV                                    CEU011
+     C                     EXSR ADJEUR                                    140987
+     C                     ADD  POUTA     EUCP,3                          CEU011
+      *                                                                   CEU011
+      ** Convert to Euro equivalent the Net Position.                     CEU011
+      *                                                                   CEU011
+     C***********          Z-ADDNET       PFRAM                    CEU011*140987
+     C                     Z-ADDNETX      PFRAM                           140987
+     C                     MOVE CCYS      PFRCY                           CEU011
+     C                     MOVE '10'      ERRNO                           CEU011
+     C                     EXSR EUCONV                                    CEU011
+     C                     EXSR ADJEUR                                    140987
+     C                     ADD  POUTA     EUCP,4                          CEU011
+      *                                                                   CEU011
+      ** Convert the position in base currency (Long and Short)           CEU011
+      *                                                                   CEU011
+      ***If*base*currency*is*an*'In'*currency.                     CEU011*140987
+     C***********WINCY*****IFEQ*'Y'                                CEU011*140987
+      ****                                                         CEU011*140987
+     C***********          Z-ADDBASE      PFRAM                    CEU011*140987
+     C***********          MOVE BJCYCD    PFRCY                    CEU011*140987
+     C***********          MOVE '11'      ERRNO                    CEU011*140987
+     C***********          EXSR EUCONV                             CEU011*140987
+     C***********          Z-ADDPOUTA     WBASE  120               CEU011*140987
+      ****                                                         CEU011*140987
+     C***********          ELSE                                    CEU011*140987
+      ****                                                         CEU011*140987
+      ***Base*currency*is*not*an*'In'*currency*and*it*is*the       CEU011*140987
+      ***Euro*currency.***********************                     CEU011*140987
+      ****                                                         CEU011*140987
+     C***********BJCYCD    IFEQ BKEURO                             CEU011*140987
+     C***********          Z-ADDBASE      WBASE                    CEU011*140987
+      ****                                                         CEU011*140987
+      ***Base*currency*is*not*an*'In'*currency*and*not*the         CEU011*140987
+      ***Euro*currency.************************                    CEU011*140987
+      ****                                                         CEU011*140987
+     C***********          ELSE                                    CEU011*140987
+     C***********          SELEC                                   CEU011*140987
+     C***********WMDIN     WHEQ 'D'                                CEU011*140987
+     C***********BASE      DIV  WSPRT     WBASE                    CEU011*140987
+     C***********WMDIN     WHEQ 'M'                                CEU011*140987
+     C***********BASE      MULT WSPRT     WBASE                    CEU011*140987
+     C***********          ENDSL                                   CEU011*140987
+      ****                                                         CEU011*140987
+     C***********          ENDIF                                   CEU011*140987
+     C***********          ENDIF                                   CEU011*140987
+      ****                                                         CEU011*140987
+     C                     Z-ADDBASE      WBASE  120                      140987
+     C*                                                                   140987
+     C                     SELEC                                          CEU011
+     C           *IN30     WHEQ *ON                                       CEU011
+     C                     ADD  WBASE     EUCP,5                          CEU011
+     C           *IN31     WHEQ *ON                                       CEU011
+     C                     ADD  WBASE     EUCP,6                          CEU011
+     C                     ENDSL                                          CEU011
+      *                                                                   CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+      ** If currency being process is equal to Euro currency.             CEU011
+      *                                                                   CEU011
+     C           CCYS      IFEQ BKEURO                                    CEU011
+      *                                                                   CEU011
+     C                     ADD  OAT,1     EUCP,1                          CEU011
+     C                     ADD  OAT,2     EUCP,2                          CEU011
+     C                     ADD  OAT,3     EUCP,3                          CEU011
+     C                     ADD  NET       EUCP,4                          CEU011
+      *                                                                   CEU011
+      ***Currency*being*process*is*Euro*currency*and*base*currency CEU011*140987
+      ***is*an*'In'*currency.********************                  CEU011*140987
+      ****                                                         CEU011*140987
+     C***********WINCY     IFEQ 'Y'                                CEU011*140987
+      ****                                                         CEU011*140987
+     C***********          Z-ADDBASE      PFRAM                    CEU011*140987
+     C***********          MOVE BJCYCD    PFRCY                    CEU011*140987
+     C***********          MOVE '12'      ERRNO                    CEU011*140987
+     C***********          EXSR EUCONV                             CEU011*140987
+     C***********          Z-ADDPOUTA     WBASE                    CEU011*140987
+      ****                                                         CEU011*140987
+     C***********          ELSE                                    CEU011*140987
+      ****                                                         CEU011*140987
+      ***If*currency*being*process*is*the*Euro*currency*and*base   CEU011*140987
+      ***currency*is*the*Euro*currency.********                    CEU011*140987
+      ****                                                         CEU011*140987
+     C***********BJCYCD    IFEQ BKEURO                             CEU011*140987
+     C***********          Z-ADDBASE      WBASE                    CEU011*140987
+      ****                                                         CEU011*140987
+     C***********          ELSE                                    CEU011*140987
+     C***********          SELEC                                   CEU011*140987
+     C***********WMDIN     WHEQ 'D'                                CEU011*140987
+     C***********BASE      DIV  WSPRT     WBASE                    CEU011*140987
+     C***********WMDIN     WHEQ 'M'                                CEU011*140987
+     C***********BASE      MULT WSPRT     WBASE                    CEU011*140987
+     C***********          ENDSL                                   CEU011*140987
+     C***********          ENDIF                                   CEU011*140987
+     C***********          ENDIF                                   CEU011*140987
+      ****                                                         CEU011*140987
+     C                     Z-ADDBASE      WBASE                           140987
+     C*                                                                   140987
+     C                     SELEC                                          CEU011
+     C           *IN30     WHEQ *ON                                       CEU011
+     C                     ADD  WBASE     EUCP,5                          CEU011
+     C           *IN31     WHEQ *ON                                       CEU011
+     C                     ADD  WBASE     EUCP,6                          CEU011
+     C                     ENDSL                                          CEU011
+      *                                                                   CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C  N01N02N03          GOTO ENDD                                      140987
+      *                                                                   140987
+     C   L1                Z-ADD0         NETTMP 150                      140987
+     C   L1                Z-ADD0         NETX   150                      140987
+0207 C   L1                Z-ADD0         NET    120                      S01117
+0207 C   L1                Z-ADD0         NETI   150                      S01117
+     C   L1                Z-ADD0         WKTOT  150                      S01117
+     C   L1                Z-ADD0         OAT                             S01117
+     C   L1                Z-ADD0         OAX                             140987
+0251 C**                                                                  S01117
+0252 C** ACCUMULATE TOTALS OF LONG AND SHORT POSNS EXCEPT IF BCCY         S01117
+0254 C**                                                                  S01117
+0255 C   L1      A6CYCD    COMP BJCYCD                   70               S01117
+     C*                                                                   S01117
+0259 C   L1 30N70LONG      ADD  BASE      LONG   120                      S01117
+0260 C   L1 31N70SHORT     ADD  BASE      SHORT  120                      S01117
+     C*                                                                   S01117
+0190 C   L1      COUNTR    ADD  1         COUNTR  50                      DL0640
+0191 C***L1****************MOVEL'20'      CCYKEY 12                       DL0640
+0192 C***L1****************MOVELCCYO      CKEY    4                       DL0640
+0193 C***L1****************MOVE '1'       CKEY                            DL0640
+0194 C***L1****************MOVE CKEY      CCYKEY                          DL0640
+0195 C***L1******CCYKEY****CHAINTABLE                12                   DL0640
+0196 C***L1N07*************                                               DL0640
+0197 C*R*L1*12*************SETON                     U7U8LR               DL0640
+0198 C***L1N07*************                                               DL0640
+0199 C*R*L1*12*************GOTO ENDD                                      DL0640
+     C** READ CURRENCY DETAILS VIA ACCESS PROGRAM                         S01194
+     C           *INL1     IFEQ '1'
+     C                     CALL 'AOCURRR0'                                S01194
+     C                     PARM '*MSG   ' @RTCD                           S01194
+     C                     PARM '*KEY   ' @OPTN                           S01194
+     C                     PARM CCYO      @AJCD   3                       S01194
+     C           SDCURR    PARM SDCURR    DSSDY                           S01194
+     C           @RTCD     IFNE *BLANK                                    S01194
+     C                     MOVEL'SDCURRPD'DBFILE           ************   S01194
+     C                     MOVEL'02'      DBASE            * DBERR 02 *   S01194
+     C                     MOVELCCYO      DBKEY  29        ************   S01194
+     C                     MOVEL@OPTN     DBOPTN                          S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     EXSR *PSSR                                     S01194
+     C                     GOTO ENDD                                      S01194
+     C                     END                                            S01194
+     C                     MOVE '0'       *IN20                           BHF133
+     C                     MOVE A6INCY    KINCY   1                       140987
+     C           A6NBDP    IFEQ *ZERO                                     S01194
+     C                     MOVE '1'       *IN20                           S01194
+     C                     END                                            S01194
+     C                     END
+0200 C**                                                                  DL0640
+     C   L1                MOVE *BLANK    FLAG2                           140987
+     C   L1                MOVE *BLANK    FLAG3                           140987
+0201 C   L1                SETOF                     212223               DL0640
+0202 C***L1N20***CDP*******COMP 2                    232122         DL0640S01194
+0202 C   L1N20   A6NBDP    COMP 2                    232122               S01194
+     C   L1                MOVE CCYO      CCYS    3                       S01117
+     C   L1                SETOF                     606162               140987
+     C   L1                SETOF                     636465               140987
+     C   L1                SETOF                     35                   140987
+0203 C**N01*****           GOTO TAG01                              DL0640*140987
+0204 C***RESET*ARRAY*INDEX*TO*ZERO*AT*BEGINNING*OF*CYCLE,BLANK*NET*****   S01117
+0205 C***POSN.FIELDS*AND*SET*OFF*INDS.FOR*OUTPUTTING*SIGN*OF*AMT.FIELDS   S01117
+     C*********************                                               S01117
+0206 C*********************Z-ADD0         X       10                      S01117
+0207 C*********************Z-ADD0         NET    120                      S01117
+0208 C**                                                                  S01117
+     C** RESET WORK INDICATORS WHEN AN POSTIONS '01' RECORD READ.         S01117
+     C**                                                                  S01117
+0208 C**                                                                  DL0640
+0209 C***********          SETOF                     606162        DL0640*140987
+0210 C***********          SETOF                     636465        DL0640*140987
+0211 C***********          SETOF                     35                   140987
+0212 C**                                                                  DL0640
+0213 C***********CCY*******COMP BCCY                     70         DL0640S01194
+     C*                                                                   140987
+     C           *IN01     IFEQ *ON                                       140987
+0213 C           A6CYCD    COMP BJCYCD                   70               S01194
+0214 C***********X*********ADD  1         X                ** CALC.SPOT   S01117
+0214 C                     Z-ADD1         X       10       ** CALC.SPOT **S01117
+0215 C***********          Z-ADDPCOB      WKTOT  150       **POSN**DL0640*140987
+     C                     ADD  PCOB      OAX,1                           140987
+0216 C***********          EXSR DIVSR                              DL0640*140987
+0217 C*********************Z-ADDWKTOT     NETI   150                      S01117
+0217 C***********          ADD  WKTOT     NETI   150               S01117*140987
+0218 C**                                                                  DL0640
+0219 C                     XFOOTOFI       TOTFI  150                      DL0640
+0220 C                     XFOOTOFO       TOTFO  150       ** CALC.FWD. **DL0640
+0221 C           TOTFI     SUB  TOTFO     TOTF   150       **   POSN.   **DL0640
+0222 C***********X*********ADD  1         X                               S01117
+0222 C                     Z-ADD2         X                               S01117
+0223 C***********          Z-ADDTOTF      WKTOT                    DL0640*140987
+     C                     ADD  TOTF      OAX,2                           140987
+0224 C***********          EXSR DIVSR                              DL0640*140987
+0225 C***********NETI      ADD  WKTOT     NETI                     DL0640*140987
+0226 C**                                                           DL0640*140987
+0227 C***********TAG01     TAG                                     DL0640*140987
+0228 C**                                                                  DL0640
+     C                     END                                            140987
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0640CCP4                                           S01408
+     C*                                                                   S01408
+     C           *IN02     IFEQ *ON                                       140987
+     C*                                                                   140987
+     C           FLAG2     IFEQ 'Y'                                       140987
+     C                     ELSE                                           140987
+     C           OAX,1     ADD  OAX,2     NETI                            140987
+     C                     MOVE 'Y'       FLAG2   1                       140987
+     C                     END                                            140987
+     C*                                                                   140987
+     C                     XFOOTOII       TOTII  150                      140987
+     C                     XFOOTOIO       TOTIO  150       ** CALC.INT. **140987
+     C           TOTII     SUB  TOTIO     TOTI   150       **   CMMT.   **140987
+     C                     Z-ADD3         X                               140987
+     C                     ADD  TOTI      OAX,3                           140987
+     C                     END                                            140987
+     C/COPY WNCPYSRC,GL0640C001                                           140987
+     C*                                                                   140987
+     C*                                                                   140987
+0229 C***02******          XFOOTOII       TOTII  150               DL0640*140987
+0230 C***02******          XFOOTOIO       TOTIO  150 ** CALC.INT.**DL0640*140987
+0231 C***02******TOTII     SUB  TOTIO     TOTI   150 **   CMMT.  **DL0640*140987
+0232 C***02******X*********ADD  1         X                               S01117
+0232 C***02******          Z-ADD3         X                        S01117*140987
+0233 C***02******          Z-ADDTOTI      WKTOT                    DL0640*140987
+0234 C***02******          EXSR DIVSR                              DL0640*140987
+     C*/C*P* WNCPYSRC,GL0640C001                                          140987
+0235 C***02******NETI      ADD  WKTOT     NETI                     DL0640*140987
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0640CCP1                                           S01408
+     C*                                                                   S01408
+     C           *IN03     IFEQ *ON                                       140987
+     C*                                                                   140987
+     C           FLAG3     IFEQ 'Y'                                       140987
+     C                     ELSE                                           140987
+     C/COPY WNCPYSRC,GL0640C005
+      *                                                                                       CDL014
+      ** Add 'Interest Commitment' to Net Position only if                                    CDL014
+      ** the system values 'XcludeIntFrmNetPostn' is OFF.                                     CDL014
+     C           CDL014    IFNE 'Y'                                                           CDL014
+     C                     ADD  OAX,3     NETI                            140987
+     C                     ENDIF                                                              CDL014
+      *                                                                                       CDL014
+     C/COPY WNCPYSRC,GL0640C003
+     C                     EXSR DIVSR                                     140987
+     C/COPY WNCPYSRC,GL0640CEUR                                           S01408
+     C                     MOVE 'Y'       FLAG3   1                       140987
+0236 C**                                                                  DL0640
+0237 C** ADD SPOT POSN.,FORWARD POSN. AND INTEREST                        DL0640
+0238 C** COMMITMENT TO CALCULATE NET POSN.                                DL0640
+0239 C**                                                                  DL0640
+0240 C***********NETI      DIV  1000      NET       H6667          DL0640*140987
+0241 C***21******NET       DIV  10        NET       H6667          DL0640*140987
+0242 C***22******NET       DIV  100       NET       H6667          DL0640*140987
+0243 C***23******NET       DIV  1000      NET       H6667          DL0640*140987
+     C*                                                                   140987
+     C                     Z-ADDNETI      NETX                            140987
+     C                     Z-ADDNETI      NETTMP                          140987
+     C   21      NETTMP    DIV  10        NETTMP    H                     140987
+     C   22      NETTMP    DIV  100       NETTMP    H                     140987
+     C   23      NETTMP    DIV  1000      NETTMP    H                     140987
+0244 C**                                                                  DL0640
+0245 C***CALCULATE*BASE*CURRENCY*EQUIVALENT*OF*NET*POSN.                  S01117
+0246 C***EXCEPT*WHEN*CCY*IS*BCCY                                          S01117
+0247 C**                                                                  DL0640
+0248 C***87******NET*******DIV  SPOT      BASE   120H303135         DL0640S01194
+0249 C**N87******NET*******MULT SPOT      BASE      H303135         DL0640S01194
+     C           A6MDIN    IFEQ 'D'                                       S01194
+     C           NETTMP    DIV  A6SPRT    BASTMP 150H                     140987
+0248 C***********NET       DIV  A6SPRT    BASE   120H303135        S01194*140987
+     C                     ELSE                                           S01194
+     C           NETTMP    MULT A6SPRT    BASTMP    H                     140987
+0249 C***********NET       MULT A6SPRT    BASE      H303135        S01194*140987
+     C                     END                                            S01194
+     C*                                                                   140987
+     C** ADJUST AMOUNT TO 000'S .                                         140987
+     C           NETTMP    DIV  1000      NET       H6667                 140987
+0248 C           BASTMP    DIV  1000      BASE   120H303135               140987
+0250 C   35                SETON                     31                   DL0640
+     C                     END                                            140987
+     C*                                                                   140987
+     C                     END                                            140987
+     C*                                                                   140987
+     C   03                SETON                         89               S01117
+0251 C**                                                                  DL0640
+0252 C***ACCUMULATE*TOTALS*OF*LONG*AND*SHORT*POSNS.WHEN*3RD.              S01117
+0253 C***TYPE*OF*OLPOS*RECORD*READ*IN.                                    S01117
+0261 C*********************                                               S01117
+0255 C***********CCY*******COMP BCCY                     70               S01117
+0256 C***70****************                                               S01117
+0257 C*RN03****************GOTO ENDD                                      S01117
+0258 C*********************                                               S01117
+0259 C******30***LONG******ADD  BASE      LONG   120                      S01117
+0260 C******31***SHORT*****ADD  BASE      SHORT  120                      S01117
+0261 C**                                                                  DL0640
+0262 C           ENDD      TAG                                            DL0640
+0263 C***04****************SETON                     LR55                 S01117
+0264 C**                                                                  DL0640
+0265 C** LAST RECORD PROCESSING                                           DL0640
+     CLR 89      A6CYCD    COMP BJCYCD                   70               LN0729
+     C*                                                                   LN0729
+     CLR 89 30N70LONG      ADD  BASE      LONG   120                      LN0729
+     CLR 89 31N70SHORT     ADD  BASE      SHORT  120                      LN0729
+     C*                                                                   140987
+     CLR                   SETOF                     727374               140987
+     CLR                   SETOF                     757677               140987
+     CLR                   SETOF                     7879                 140987
+      *                                                                   CEU011
+     CLR         CEU011    IFEQ 'Y'                                       CEU011
+     CLR         EUCP,1    COMP 0                    7273                 CEU011
+     CLR         EUCP,2    COMP 0                    7475                 CEU011
+     CLR         EUCP,3    COMP 0                    7677                 CEU011
+     CLR         EUCP,4    COMP 0                    7879                 CEU011
+     CLR                   ENDIF                                          CEU011
+     C*                                                                   LN0729
+     CLR 89                EXCPT                                          S01117
+     CLR                   READ OLPOSOB                  55               S01117
+0266 C*RN55****************SETON                     U7U8                 S01117
+0266 CLRN04                SETON                     U7U8                 S01117
+0267 CLR U7 U8             GOTO ENDLR                                     DL0640
+0268 CLR         COUNT     ADD  1         COUNT                           DL0640
+0269 C** CALCULATE NET OPEN POSITIONS                                     DL0640
+0270 C**                                                                  DL0640
+0271 CLR         LONG      ADD  SHORT     OPEN   120 3233                 DL0640
+0272 C**                                                                  DL0640
+0273 C** COMPARE ACCUMULATED AND TRAILER TOTALS                           DL0640
+0274 C**                                                                  DL0640
+0275 CLR         COUNT     COMP NORE                 3434                 DL0640
+0276 CLR 34                SETON                     U8                   DL0640
+0277 C**                                                                  DL0640
+0278 CLR         ENDLR     TAG                                            DL0640
+     C*                                                                   S01117
+     C** ENSURE SPOOL FILE RECORDED BY RCF ONCE - ONLY IF P1 IS WRITTEN   S01117
+     C** TO AND THAT THE AU FILE REPORTS 'NO DETAILS' IF NOTHING IN THE   S01117
+     C** P1. SWRIT IS INCREMENTED FOR EVERY SUCCESSFUL WRITE TO THE       S01117
+     C** FILE - IF IT IS BLANK (OR 0) THEN NOTHING HAS BEEN WRITTEN TO    S01117
+     C** THE FILE. UNABLE TO COMPARE SWRIT TO *BLANKS SO USE @BKBIN -     S01117
+     C** AN UNITIALISED BINARY FIELD.                                     S01117
+     CLR                   MOVE '0'       *IN14                           S01117
+     CLR         SWRIT     IFNE 0                                         S01117
+     CLR         SWRIT     ANDNE@BKBIN                                    S01117
+     C*
+      ** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     CLR                   Z-ADDSFNUM     ZSNUM   60                      S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ     5                       S01117
+     CLR                   PARM *BLANK    @PARM   3                       S01117
+     CLR                   PARM           SFILE                           S01117
+     CLR                   PARM           ZSNUM                           S01117
+     CLR                   PARM *BLANK    ZSERR   1                       S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+     C*                                                                   S01117
+     CLR                   MOVE '1'       *IN14                           S01117
+     CLR                   END                                            S01117
+     C*                                                                   S01117
+     C** ENSURE TOTALS SPOOL FILE RECORDED BY RCF                         S01117
+     C*
+      ** TRANSFER BINARY DATA INTO NUMERIC FIELD                          S01117
+     CLR                   Z-ADDSFNUMU    ZSNUMU  60                      S01117
+     CLR                   CALL 'ZSFILE'                                  S01117
+     CLR                   PARM           SEQ                             S01117
+     CLR                   PARM *BLANKS   @PARM                           S01117
+     CLR                   PARM           SFILEU                          S01117
+     CLR                   PARM           ZSNUMU                          S01117
+     CLR                   PARM *BLANK    ZSERR                           S01117
+     C*                                                                   S01117
+     CLR         ZSERR     IFEQ 'Y'                                       S01117
+     CLR                   SETON                     U7U8                 S01117
+     CLR                   RETRN                                          S01117
+     CLR                   END                                            S01117
+      *                                                                   CEU011
+0279 C*****************************************************************   140987
+      *                                                                   140987
+0280 C** SUBROUTINE TO ADJUST AMOUNTS TO CORRECT NO. OF DECIMAL PLACES    140987
+0281 C** OF EURO CCY AND CONVERT AMOUNTS TO 000'S .                       140987
+     C**                                                                  140987
+0282 C           ADJEUR    BEGSR                                          140987
+0283 C*                                                                   140987
+0284 C           POUTA     DIV  1000      POUTA     H                     140987
+0285 C   25      POUTA     DIV  10        POUTA     H                     140987
+0286 C   26      POUTA     DIV  100       POUTA     H                     140987
+0287 C   27      POUTA     DIV  1000      POUTA     H                     140987
+     C*                                                                   140987
+     C                     ENDSR                                          140987
+     C**                                                                  140987
+      *****************************************************************   CEU011
+      *                                                               *   CEU011
+      *  EUCONV - Convert 'In' currency to Euro currency.             *   CEU011
+      *                                                               *   CEU011
+      *****************************************************************   CEU011
+      *                                                                   CEU011
+     C           EUCONV    BEGSR                                          CEU011
+      *                                                                   CEU011
+     C                     MOVE *BLANKS   PRTCD                           CEU011
+     C                     MOVE BKEURO    PTOCY                           CEU011
+     C                     Z-ADD0         POUTA                           CEU011
+     C                     Z-ADD0         PINTA                           CEU011
+     C                     Z-ADD0         PEXRT                           CEU011
+     C                     MOVE *BLANKS   PMDIN                           CEU011
+      *                                                                   CEU011
+     C                     CALL 'EU0200'               8383               CEU011
+     C                     PARM           PRTCD   7                       CEU011
+     C                     PARM           PFRAM  183                      CEU011
+     C                     PARM           PFRCY   3                       CEU011
+     C                     PARM           PTOCY   3                       CEU011
+     C                     PARM           POUTA  150                      CEU011
+     C                     PARM           PINTA  183                      CEU011
+     C                     PARM           PEXRT  159                      CEU011
+     C                     PARM           PMDIN   1                       CEU011
+      *                                                                   CEU011
+      ** Perform db error processing if return code is not equal to       CEU011
+      ** blanks.                                                          CEU011
+      *                                                                   CEU011
+     C           PRTCD     IFNE *BLANKS                                   CEU011
+     C                     MOVEL'*CALL   'DBFILE                          CEU011
+     C                     MOVEL'EU0200  'DBKEY                           CEU011
+     C                     MOVELERRNO     DBASE                           CEU011
+     C                     SETON                     U7U8LR               CEU011
+     C                     EXSR *PSSR                                     CEU011
+     C                     GOTO ENDD                                      CEU011
+     C                     ENDIF                                          CEU011
+      *                                                                   CEU011
+     C                     ENDSR                                          CEU011
+      *                                                                   CEU011
+      /EJECT                                                              CEU011
+0279 C********************************************************************DL0640
+0280 C** SUBROUTINE TO ADJUST AMOUNTS TO CORRECT NO. OF DECIMAL PLACES    DL0640
+0281 C** AND CONVERT TO 000'S.                                            DL0640
+0282 C           DIVSR     BEGSR                                          DL0640
+0283 C**                                                                  DL0640
+0284 C***********WKTOT     DIV  1000      TOT,X     H5051          DL0640*140987
+     C                     Z-ADD1         X                               140987
+     C                     DO   3         X                               140987
+0284 C           OAX,X     DIV  1000      TOT,X     H                     140987
+0285 C   21      TOT,X     DIV  10        TOT,X     H5051                 DL0640
+0286 C   22      TOT,X     DIV  100       TOT,X     H5051                 DL0640
+0287 C   23      TOT,X     DIV  1000      TOT,X     H5051                 DL0640
+     C                     ADD  TOT,X     OAT,X      5051                 S01117
+0288 C**                                                                  DL0640
+0289 C** SETON INDICATORS TO OUTPUT CORRECT SIGN OF ARRAY ELEMENTS        DL0640
+0290 C**                                                                  DL0640
+0291 C           X         COMP 2                    424041               DL0640
+0292 C   40 50             SETON                     60                   DL0640
+0293 C   40 51             SETON                     61                   DL0640
+0294 C   41 50             SETON                     62                   DL0640
+0295 C   41 51             SETON                     63                   DL0640
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0640CCP2                                           S01408
+     C*                                                                   S01408
+0296 C   42 50             SETON                     64                   DL0640
+0297 C   42 51             SETON                     65                   DL0640
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,GL0640CCP3                                           S01408
+     C*                                                                   S01408
+     C                     ENDDO                                          140987
+0298 C**                                                                  DL0640
+0299 C                     ENDSR                                          DL0640
+0300 C**                                                                  DL0640
+0301 C********************************************************************DL0640
+0302 C***********                                                   DL0640S01194
+0303 C*****ZSYSTM*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RE  DL0640S01194
+0304 C***********                                                   DL0640S01194
+0305 C***********ZSYSTM    BEGSR                           *** ZSYSTDL0640S01194
+0306 C***********                                                   DL0640S01194
+0307 C*****SET*UP*KEY*FOR*INSTALLATION*CONTROL*RECORD.***           DL0640S01194
+0308 C***********          MOVEL'01      'ZTABKY 12                 DL0640S01194
+0309 C***********          MOVE '  10'    ZTABKY                    DL0640S01194
+0310 C***********                                                   DL0640S01194
+0311 C***********ZTABKY    CHAINTABLE                99    ON NOT THDL0640S01194
+0312 C**N99******RECI      COMP 'D'                  9999  ON, IS DEDL0640S01194
+0313 C***********                                                   DL0640S01194
+0314 C*****CHECK*SYSTEM*DATE*FORMAT,*DDMMYY*OR*MMDDYY.**            DL0640S01194
+0315 C***********DATF      COMP 'M'                      98MMDDYY, 9DL0640S01194
+0316 C***********                                                   DL0640S01194
+0317 C***********          ENDSR                                    DL0640S01194
+0318 C***********                                                   DL0640S01194
+0319 C***********                                                   DL0640S01194
+0320 C**************************************************************DL0640S01194
+     C*                                                                   S01194
+     C           *PSSR     BEGSR                                          S01194
+     C*                                                                   S01194
+     C           @RUN      IFEQ *BLANK                                    S01194
+     C                     MOVE 'Y'       @RUN    1                       S01194
+     C                     DUMP                                           S01194
+     C                     END                                            S01194
+     C*                                                                   S01194
+     C                     ENDSR                                          S01194
+0597 C*****************************************************************   S01194
+0321 O*DL0640P1H**203***06NU7NU8********                            S01124E22608
+0321 OGL0640P1H  203   06NU7NU8                                           E22608
+0322 O       OR        OFNU7NU8                                           DL0640
+0323 O***********                        22 'REFERENCE DL0640'            S01117
+0323 O********************************** 22 'REFERENCE DL0640P1'    S01117E22608
+0323 O                                   22 'REFERENCE GL0640P1'          E22608
+0324 O*************************TITL      89                         DL0640S01194
+0324 O                         BJURPT    89                               S01194
+0325 O                                  104 'DATE'                        DL0640
+0326 O*************************RUNA     112                         DL0640S01194
+0326 O                         BJMRDT   112                               S01194
+0327 O                                  122 'PAGE'                        DL0640
+0328 O                         PAGE  Z  127                               DL0640
+0329 O        H  1     06NU7NU8                                           DL0640
+0330 O       OR        OFNU7NU8                                           DL0640
+     O/COPY WNCPYSRC,GL0640O007
+0331 O                                   67 'CURRENT NET TRADING POSI'    DL0640
+0332 O                                   80 'TION IN 000''S'              DL0640
+0333 O        H  2     06NU7NU8                                           DL0640
+0334 O       OR        OFNU7NU8                                           DL0640
+0335 O                                   67 '------------------------'    DL0640
+0336 O                                   80 '--------------'              DL0640
+     O/COPY WNCPYSRC,GL0640O008
+     O        H  1     06NU7NU8                                           S01117
+     O       OR        OFNU7NU8                                           S01117
+     O                                   18 'CONSOLIDATED'                S01117
+0337 O        H  1     06NU7NU8                                           DL0640
+0338 O       OR        OFNU7NU8                                           DL0640
+0339 O                                   27 'SPOT'                        DL0640
+0340 O                                   46 'FORWARD'                     DL0640
+     O/COPY WNCPYSRC,GL0640O003
+0341 O***********                        63 'INTEREST'                                 DL0640 CDL014
+      ** Print only if CDL014 is OFF                                                          CDL014
+     O                      N80          63 'INTEREST'                                        CDL014
+     O/COPY WNCPYSRC,GL0640O011
+0342 O                                   78 'NET'                         DL0640
+     O/COPY WNCPYSRC,GL0640O009
+0343 O                                  131 'POSITION IN BASE CURRENC'    DL0640
+0344 O                                  132 'Y'                           DL0640
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,GL0640OOP5                                           S01408
+     O*                                                                   S01408
+0345 O        H  2     06NU7NU8                                           DL0640
+0346 O       OR  2     OFNU7NU8                                           DL0640
+0347 O                                   12 'CURRENCY'                    DL0640
+0348 O                                   29 'POSITION'                    DL0640
+0349 O                                   46 'POSITION'                    DL0640
+     O/COPY WNCPYSRC,GL0640O004
+0350 O***********                        62 'CMMT.'                                    DL0640 CDL014
+      ** Print only if CDL014 is OFF                                                          CDL014
+     O                      N80          62 'CMMT.'                                           CDL014
+     O/COPY WNCPYSRC,GL0640O010
+0351 O                                   80 'POSITION'                    DL0640
+0352 O                                   90 'RATE'                        DL0640
+0353 O                                  112 'LONG'                        DL0640
+0354 O                                  130 'SHORT'                       DL0640
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,GL0640OOP1                                           S01408
+     O*                                                                   S01408
+0355 O*****   D  1     03                                                 S01117
+0355 O        E  1                                                        S01117
+0356 O*****                    CCYO       9                               S01117
+0356 O                         CCYS       9                               S01117
+0357 O*****                    TOT,1     29 '   ,   ,   , 0 '             S01117
+0357 O                         OAT,1     29 '   ,   ,   , 0 '             S01117
+0358 O                       60          30 '+'                           DL0640
+0359 O                       61          30 '-'                           DL0640
+0360 O*****                    TOT,2     46 '   ,   ,   , 0 '             S01117
+0360 O                         OAT,2     46 '   ,   ,   , 0 '             S01117
+0361 O                       62          47 '+'                           DL0640
+0362 O                       63          47 '-'                           DL0640
+0363 O*****                    TOT,3     63 '   ,   ,   , 0 '             S01117
+     O/COPY WNCPYSRC,GL0640O001
+0363 O***********              OAT,3     63 '   ,   ,   , 0 '                          S01117 CDL014
+0364 O***********            64          64 '+'                                        DL0640 CDL014
+0365 O***********            65          64 '-'                                        DL0640 CDL014
+      ** Print only if CDL014 is OFF                                                          CDL014
+     O                   N80   OAT,3     63 '   ,   ,   , 0 '                                 CDL014
+     O                   N80 64          64 '+'                                               CDL014
+     O                   N80 65          64 '-'                                               CDL014
+     O/COPY WNCPYSRC,GL0640O002
+0366 O                         NET       80 '   ,   ,   , 0 '             DL0640
+0367 O                       66          81 '+'                           DL0640
+0368 O                       67          81 '-'                           DL0640
+0369 O*************************SPOT  3   96                         DL0640S01194
+0369 O                         A6SPRT3   96                               S01194
+0370 O                       30BASE     113 '   ,   ,   , 0 '             DL0640
+0371 O                       31BASE     130 '   ,   ,   , 0 '             DL0640
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,GL0640OOP2                                           S01408
+      *                                                                   CEU011
+     O        T  1     LRNU7 71                                           CEU011
+     O                         BKEUCP     9                               CEU011
+     O                         EUCP,1    29 '   ,   ,   , 0 '             CEU011
+     O                       72          30 '+'                           CEU011
+     O                       73          30 '-'                           CEU011
+     O                         EUCP,2    46 '   ,   ,   , 0 '             CEU011
+     O                       74          47 '+'                           CEU011
+     O                       75          47 '-'                           CEU011
+     O*COP* WN*PYSRC*GL0640O001                                     CEU011169210
+     O/COPY WNCPYSRC,GL0640OABC                                           169210
+     O***********              EUCP,3    63 '   ,   ,   , 0 '                          CEU011 CDL014
+     O***********            76          64 '+'                                        CEU011 CDL014
+     O***********            77          64 '-'                                        CEU011 CDL014
+      ** Print only if CDL014 is OFF                                                          CDL014
+     O                   N80   EUCP,3    63 '   ,   ,   , 0 '                                 CDL014
+     O                   N80 76          64 '+'                                               CDL014
+     O                   N80 77          64 '-'                                               CDL014
+     O*COP* WN*PYSRC*GL0640O002                                     CEU011169210
+     O/COPY WNCPYSRC,GL0640OABD                                           169210
+     O                         EUCP,4    80 '   ,   ,   , 0 '             CEU011
+     O                       78          81 '+'                           CEU011
+     O                       79          81 '-'                           CEU011
+     O                         WSPRT 3   96                               CEU011
+     O                         EUCP,5   113 '   ,   ,   , 0 '             CEU011
+     O                         EUCP,6   130 '   ,   ,   , 0 '             CEU011
+     O*                                                                   S01408
+0372 O        T 22     LRNU7                                              DL0640
+0373 O                                   95 'TOTALS EXCLUDING BASE'       DL0640
+0374 O                         LONG     113 '   ,   ,   , 0 '             DL0640
+0375 O                         SHORT    130 '   ,   ,   , 0 '             DL0640
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,GL0640OOP3                                           S01408
+     O*                                                                   S01408
+0376 O        T  2     LRNU7                                              DL0640
+0377 O                                   95 'NET OPEN POSITION'           DL0640
+0378 O                       32OPEN     113 '   ,   ,   , 0 '             DL0640
+0379 O                       33OPEN     130 '   ,   ,   , 0 '             DL0640
+     O*                                                                   S01408
+     O/COPY WNCPYSRC,GL0640OOP4                                           S01408
+     O*                                                                   S01408
+0410 O        T        LRNU7                                              S01117
+0411 O                                   65 '***   END OF REPORT'         S01117
+0412 O                                   71 '***'                         S01117
+0380 O********T**203   LR                                                 S01117
+0380 O*DL0640AUT**203***LR**************                            S01117S01314
+0380 OGL0640AUT  203   LR                                                 S01314
+0381 O***********                        22 'REFERENCE DL0640'            S01117
+0381 O********************************** 22 'REFERENCE DL0640AU     S01117E22608
+0381 O                                   22 'REFERENCE GL0640AU'          E22608
+0382 O*************************TITL      89                         DL0640S01194
+0324 O                         BJURPT    89                               S01194
+0383 O                                  104 'DATE'                        DL0640
+0384 O*************************RUNA     112                         DL0640S01194
+0326 O                         BJMRDT   112                               S01194
+0385 O                                  122 'PAGE'                        DL0640
+0386 O***********              PAGE  Z  127                               S01117
+0386 O                         PAGE1 Z  127                               S01117
+0387 O        T  1     LR                                                 DL0640
+     O/COPY WNCPYSRC,GL0640O005
+0388 O                                   67 'CURRENT NET TRADING POSI'    DL0640
+0389 O                                   80 'TION IN 000''S'              DL0640
+0390 O        T  2     LR                                                 DL0640
+0391 O                                   67 '------------------------'    DL0640
+0392 O                                   80 '--------------'              DL0640
+     O/COPY WNCPYSRC,GL0640O006
+0393 O        T  236   LRNU7                                              DL0640
+0394 O                                   18 'RUN CONTROLS'                DL0640
+0395 O        T  2     LRNU7                                              DL0640
+0396 O                                   59 'NUMBER'                      DL0640
+0397 O        T  2     LRNU7                                              DL0640
+0398 O                                   30 'RECORDS LISTED IN THIS'      DL0640
+0399 O                                   37 'REPORT'                      DL0640
+0400 O                         COUNTRZ   59                               DL0640
+0401 O        T  2     LRNU7                                              DL0640
+0402 O                                   29 'RECORDS READ IN THIS '       DL0640
+0403 O                                   36 'REPORT'                      DL0640
+0404 O                         COUNT Z   59                               DL0640
+0405 O        T  3     LRNU7                                              DL0640
+0406 O                                   27 'FILE CONTROL TOTALS'         DL0640
+0407 O                         NORE  Z   59                               DL0640
+0408 O        T  3     LRNU7 U8                                           DL0640
+0409 O                                   71 '***   DIFFERENCE   ***'      DL0640
+     C*                                                                   S01117
+     O        T 3      LRNU7N14                                           S01117
+0564 O                                   63 '***   NO DETAILS TO REPO'    S01117
+0565 O                                   71 'RT   ***'                    S01117
+     C*                                                                   S01117
+     O        T 3      LR U7 U8                                           S01117
+     O                                   71 '*** PRINT TERMINATED ***'    S01117
+     O        T 1      LR U7 U8                                           S01117
+     O                                   57 'DATABASE ERROR'              S01117
+     O                         DBASE     61                               S01117
+     O                                   67 'FILE'                        S01117
+     O                         DBFILE    78                               S01117
+     O        T 13     LR U7 U8                                           S01117
+     O                                   46 'KEY'                         S01117
+     O                         DBKEY     76                               S01117
+0410 O*****   T        LRNU7                                              E299
+0411 O*****                              65 '***   END OF REPORT'         E299
+0412 O*****                              71 '***'                         E299
+0413 O********T   30   LR U7 U8                                           S01117
+0414 O********                           62 'PRINT TERMINATED'            S01117
+0415 O********                           80 'DATABASE IN ERROR'           S01117
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

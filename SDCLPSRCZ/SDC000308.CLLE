@@ -1,0 +1,97 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data                                       */
+/*                                                                   */
+/*       SDC000308 - Midas SD CRS Indicia Search Tool Enq and Rept   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2016                     */
+/*                                                                   */
+/*       Last Amend No. MD040627           Date 18Aug16              */
+/*       Prev Amend No. CGL177  *CREATE    Date 11Jan16              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD040627 - Changing CRS Type of the Customer/NAH will make  */
+/*                  it appear again in CRS Indicia Search tool       */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM        PARM(&MODE &PTYPE)
+
+             DCL        VAR(&MODE)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&PTYPE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2016')
+
+/** Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/** Determine full DPLIB library name */
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+
+             CHGJOB     SWS(00000000)
+
+             OVRDBF     FILE(SDCRDFL0) TOFILE(QTEMP/SDCRDFL0) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+             OVRDBF     FILE(SDCRNFL0) TOFILE(QTEMP/SDCRNFL0) OVRSCOPE(*JOB) +
+                          SHARE(*YES)
+
+/** Call Report Program */
+             CALL       PGM(SD000308) PARM(&MODE &PTYPE)
+
+             IF         COND(&MODE *NE 'I') THEN(DO)
+
+/*********      DLTOVR     FILE(SDCRSDL0) LVL(*JOB) */ /*MD040627*/
+/*********      DLTOVR     FILE(SDCRSDL1) LVL(*JOB) */ /*MD040627*/
+/*********      DLTOVR     FILE(SDCRSNL0) LVL(*JOB) */ /*MD040627*/
+/*********      DLTOVR     FILE(SDCRSNL1) LVL(*JOB) */ /*MD040627*/
+/*********      DLTOVR     FILE(SDCRSNL2) LVL(*JOB) */ /*MD040627*/
+
+                CPYF       FROMFILE(QTEMP/SDCRD2PD) TOFILE(&DMLIB/SDCRSDPD) +
+                             TOMBR(SDCRSDPD) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+                CPYF       FROMFILE(QTEMP/SDCRN2PD) TOFILE(&DMLIB/SDCRSNPD) +
+                             TOMBR(SDCRSNPD) MBROPT(*REPLACE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+
+                OVRDBF     FILE(SDCRSDL0) TOFILE(QTEMP/SDCRD2L0) OVRSCOPE(*JOB) +
+                             SHARE(*YES)
+                OVRDBF     FILE(SDCRSDL1) TOFILE(QTEMP/SDCRD2L1) OVRSCOPE(*JOB) +
+                             SHARE(*YES)
+                OVRDBF     FILE(SDCRSNL0) TOFILE(QTEMP/SDCRN2L0) OVRSCOPE(*JOB) +
+                             SHARE(*YES)
+                OVRDBF     FILE(SDCRSNL1) TOFILE(QTEMP/SDCRN2L1) OVRSCOPE(*JOB) +
+                             SHARE(*YES)
+                OVRDBF     FILE(SDCRSNL2) TOFILE(QTEMP/SDCRN2L2) OVRSCOPE(*JOB) +
+                             SHARE(*YES)
+
+                GOTO       CMDLBL(END)
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000308 Midas SD CRS Indicia Search Tool ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+
+ END:
+             DLTOVR     FILE(SDCRDFL0) LVL(*JOB)
+             DLTOVR     FILE(SDCRNFL0) LVL(*JOB)
+             ENDPGM

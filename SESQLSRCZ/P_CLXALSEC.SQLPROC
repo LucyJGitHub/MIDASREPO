@@ -1,0 +1,202 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Securities Trading Module                                     */
+/*                                                                             */
+/*       P_CLXALSEC - Securities that are part of a Customer's All Assets      */
+/*                    Pledged as Collateral and linked to SD used to identify  */
+/*                    DataFile trigger recalculation                           */
+/*                                                                             */
+/*       (c) Finastra International Limited 2004                               */
+/*                                                                             */
+/*       Last Amend No. CLE148             Date 23Jul12                        */
+/*       Prev Amend No. CRE073             Date 06Dec10                        */
+/* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
+/* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
+/*                      BG18886            Date 26May08                        */
+/* Midas Plus 1.4 Base --------------------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
+/*                      CSD031             Date 10Apr06                        */
+/*                      CSD027A            Date 08May06                        */
+/*                      CSE075             Date 17Nov05                        */
+/*                      CLE040             Date 05Jul04                        */
+/*                      CLE024  *CREATE    Date 20Oct03                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       CLE148 - Alpha Loan Reference (Recompile)                             */
+/*       CRE073 - Interest Rate Rounding (Recompile)                           */
+/*       BG18886 - Amend non-standard codes.                                   */
+/*       CSD031 - Enhanced Centralised Static Data (Recompile)                 */
+/*       CSD027A - Conversion Of Customer Number to Alpha                      */
+/*       CSE075 - US Enhanced Treasury Upgrade to MidasPlus (Recompile)        */
+/*       CLE040 - Collateralised Lending Phase 2 (Recompile)                   */
+/*       CLE024 - Collateralised Lending                                       */
+/*                                                                             */
+/*******************************************************************************/
+  CREATE PROCEDURE                                                              :
+  **********/**********                                                         :
+  (                                                                             :
+  IN STMT VARCHAR(1024) )                                                       :
+  DYNAMIC RESULT SETS 1                                                         :
+  LANGUAGE SQL                                                                  :
+  SPECIFIC                                                                      :
+  **********/**********                                                         :
+  NOT DETERMINISTIC                                                             :
+  MODIFIES SQL DATA                                                             :
+  CALLED ON NULL INPUT                                                          :
+  BEGIN                                                                         :
+  DECLARE SQLSTMT VARCHAR ( 5000 ) ;                                            :
+  DECLARE OPNCUR DYNAMIC SCROLL CURSOR WITH RETURN FOR PRSTMT ;                 :
+**********  SET SQLSTMT = 'SELECT * FROM(' ***                                  :            BG18886
+  SET SQLSTMT = 'SELECT * FROM(' CONCAT                                         :
+**********  'SELECT ' ***                                                       :            BG18886
+**********  'CDCREF,CDTSTP,CDCCY ' ***                                          :            BG18886
+  'SELECT ' CONCAT                                                              :
+  'CDCREF,CDTSTP,CDCCY ' CONCAT                                                 :
+  ',COLLCURR.A6NBDP AS CDNBDP,COLLCURR.A6SPRT AS CDSPRT,COLLCURR.A6MDIN         :
+**********  AS CDMDIN' **                                                       :            BG18886
+**********  ',CDPRTP,CDREVP,CDVDAT,CDEDAT,CDDEAL,CDCBRC,CDCCNM,CDCCCY' **       :            BG18886
+**********  ',CDCACD,CDCSEQ,CDCSBR,CDCSCN,CDPTFR' **                            :            BG18886
+**********  ',CDCSEC,CDGNSP,CDAPCT,CDPCNT,CDUPRC' **                            :            BG18886
+**********  ',CDNAMT,CDMNNA,CDMXNA,CDVAMT,CDLAMT' **                            :            BG18886
+**********  ',CDMARG,CDVPCH,CDPCTA,CDTOTA,CDMODS' **                            :            BG18886
+**********  ',CDFCUS,CDFTYP,CDFSEQ,CDLNLM,CDSBRC' **                            :            BG18886
+*********  ',CDSCNM,CDSCCY,CDSACD,CDSSEQ,CTCOLT' **                             :            BG18886
+*********  ',CTCOPT,CTRVLM,''A'' AS CATGRY' **                                  :            BG18886
+*********  ',T_ID,T_MOD,T_SMOD,T_CNUM,T_PTFR' **                                :            BG18886
+*********  ',T_BRCA,T_ACCY,T_ACOD,T_ACSQ,T_SESN' **                             :            BG18886
+*********  ',T_TREF,T_RCCY,'''' AS BBCUST,'''' AS BBCOLC,'''' AS DTPE11' **     :            BG18886
+*********  ','''' AS DLST11,'''' AS A5ACCD,'''' AS A5INNR,'''' AS PDINNR' **    :            BG18886
+**********  ',SECTYD.SESN,SECTYD.SCOR,SECTYD.NMDP' **                           :            BG18886
+**********  ',PRBDPR,PROFPR,PPRC' **                                            :            BG18886
+**********  ',SECCURR.A6CYCD,SECCURR.A6NBDP,SECCURR.A6SPRT,SECCURR.A6MDIN' **   :            BG18886
+**********  ',SECTYD.SCOR AS A4CNCD' **                                         :            BG18886
+**********  ',INST.WOWEIG AS INSTWC,INST.PDPERC AS INSTPC,INST.PDCUML AS INSTYN':            BG18886
+**********  ',CURR.WOWEIG AS CURRWC,CURR.PDPERC AS CURRPC,CURR.PDCUML AS CURRYN':            BG18886
+**********  ',CTRY.WOWEIG AS CTRYWC,CTRY.PDPERC AS CTRYPC ' **                  :            BG18886
+**********  'FROM ' **                                                          :            BG18886
+**********  'SDCOTPPD,GLCOLLPD,SDCURRPD COLLCURR' **                            :            BG18886
+**********  ',V_CLGPTRAP,SECTYD   SECTYD,PRICED P' **                           :            BG18886
+**********  ',SDCURRPD  SECCURR,V_CLINSCWO INST' **                             :            BG18886
+**********  ',V_CLCCYCWO CURR,V_CLCTYCWO CTRY ' **                              :            BG18886
+**********  'WHERE ' **                                                         :            BG18886
+**********  'CDCOPT = ''P'' AND CDSTAT = ''C'' AND CTCOLT = CDCOLT' **          :            BG18886
+**********  'AND CDCCY = COLLCURR.A6CYCD ' **                                   :            BG18886
+**********  'AND T_MOD  = ''SE'' AND T_SMOD = ''SCPS'' ' **                     :            BG18886
+**********  'AND TRIM(CDPTFR) = '''' AND TRIM(CDCSEC) = '''' ' **               :            BG18886
+**********  'AND T_BRCA = CDCSBR AND T_CNUM = CDCSCN AND T_SESN = SESN ' **     :            BG18886
+**********  'AND T_SESN = P.PSSN AND P.PPRT = ''V'' AND P.RECI = ''D'' ' **     :            BG18886
+**********  'AND T_RCCY = SECCURR.A6CYCD ' **                                   :            BG18886
+  AS CDMDIN' CONCAT                                                             :            BG18886
+  ',CDPRTP,CDREVP,CDVDAT,CDEDAT,CDDEAL,CDCBRC,CDCCNM,CDCCCY' CONCAT             :            BG18886
+  ',CDCACD,CDCSEQ,CDCSBR,CDCSCN,CDPTFR' CONCAT                                  :            BG18886
+  ',CDCSEC,CDGNSP,CDAPCT,CDPCNT,CDUPRC' CONCAT                                  :            BG18886
+  ',CDNAMT,CDMNNA,CDMXNA,CDVAMT,CDLAMT' CONCAT                                  :            BG18886
+  ',CDMARG,CDVPCH,CDPCTA,CDTOTA,CDMODS' CONCAT                                  :            BG18886
+  ',CDFCUS,CDFTYP,CDFSEQ,CDLNLM,CDSBRC' CONCAT                                  :            BG18886
+  ',CDSCNM,CDSCCY,CDSACD,CDSSEQ,CTCOLT' CONCAT                                  :            BG18886
+  ',CTCOPT,CTRVLM,''A'' AS CATGRY' CONCAT                                       :            BG18886
+  ',T_ID,T_MOD,T_SMOD,T_CNUM,T_PTFR' CONCAT                                     :            BG18886
+  ',T_BRCA,T_ACCY,T_ACOD,T_ACSQ,T_SESN' CONCAT                                  :            BG18886
+  ',T_TREF,T_RCCY,'''' AS BBCUST,'''' AS BBCOLC,'''' AS DTPE11' CONCAT          :            BG18886
+  ','''' AS DLST11,'''' AS A5ACCD,'''' AS A5INNR,'''' AS PDINNR' CONCAT         :            BG18886
+  ',SECTYD.SESN,SECTYD.SCOR,SECTYD.NMDP' CONCAT                                 :            BG18886
+  ',PRBDPR,PROFPR,PPRC' CONCAT                                                  :            BG18886
+  ',SECCURR.A6CYCD,SECCURR.A6NBDP,SECCURR.A6SPRT,SECCURR.A6MDIN' CONCAT         :            BG18886
+  ',SECTYD.SCOR AS A4CNCD' CONCAT                                               :            BG18886
+  ',INST.WOWEIG AS INSTWC,INST.PDPERC AS INSTPC,INST.PDCUML AS INSTYN' CONCAT   :            BG18886
+  ',CURR.WOWEIG AS CURRWC,CURR.PDPERC AS CURRPC,CURR.PDCUML AS CURRYN' CONCAT   :            BG18886
+  ',CTRY.WOWEIG AS CTRYWC,CTRY.PDPERC AS CTRYPC ' CONCAT                        :            BG18886
+  'FROM ' CONCAT                                                                :            BG18886
+  'SDCOTPPD,GLCOLLPD,SDCURRPD COLLCURR' CONCAT                                  :            BG18886
+  ',V_CLGPTRAP,SECTYD   SECTYD,PRICED P' CONCAT                                 :            BG18886
+  ',SDCURRPD  SECCURR,V_CLINSCWO INST' CONCAT                                   :            BG18886
+  ',V_CLCCYCWO CURR,V_CLCTYCWO CTRY ' CONCAT                                    :            BG18886
+  'WHERE ' CONCAT                                                               :            BG18886
+  'CDCOPT = ''P'' AND CDSTAT = ''C'' AND CTCOLT = CDCOLT' CONCAT                :            BG18886
+  'AND CDCCY = COLLCURR.A6CYCD ' CONCAT                                         :            BG18886
+  'AND T_MOD  = ''SE'' AND T_SMOD = ''SCPS'' ' CONCAT                           :            BG18886
+  'AND TRIM(CDPTFR) = '''' AND TRIM(CDCSEC) = '''' ' CONCAT                     :            BG18886
+  'AND T_BRCA = CDCSBR AND T_CNUM = CDCSCN AND T_SESN = SESN ' CONCAT           :            BG18886
+  'AND T_SESN = P.PSSN AND P.PPRT = ''V'' AND P.RECI = ''D'' ' CONCAT           :            BG18886
+  'AND T_RCCY = SECCURR.A6CYCD ' CONCAT                                         :            BG18886
+  'AND ((T_CNUM = INST.WOCNUM AND T_PTFR = INST.WOPTFR AND T_SESN =             :
+**********  INST.WOSESN) ' **                                                   :            BG18886
+  INST.WOSESN) ' CONCAT                                                         :            BG18886
+  'OR (T_CNUM = INST.WOCNUM AND T_PTFR = INST.WOPTFR AND INST.WOSESN =          :
+**********  '''') ' **                                                          :            BG18886
+**********  'OR (T_CNUM = INST.WOCNUM AND INST.WOPTFR = '''' AND INST.WOSESN = '''') ' **    BG18886
+  '''') ' CONCAT                                                                :            BG18886
+  'OR (T_CNUM = INST.WOCNUM AND INST.WOPTFR = '''' AND' CONCAT                  :            BG18886
+  ' INST.WOSESN = '''')' CONCAT                                                 :            BG18886
+**********'OR (INST.WOCNUM = 0 AND T_SESN = INST.WOSESN)) ' **                  :             CSD027
+**********  'OR (INST.WOCNUM = '''' AND T_SESN = INST.WOSESN)) ' **             :     CSD027 BG18886
+**********  'AND INST.PRIORY = (SELECT MIN(PRIORY) FROM V_CLINSCWO ' **         :            BG18886
+**********  'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND T_SESN = WOSESN) ' **:           BG18886
+**********  'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOSESN = '''') ' **    :            BG18886
+**********  'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOSESN = '''') ' **      :            BG18886
+  'OR (INST.WOCNUM = '''' AND T_SESN = INST.WOSESN)) ' CONCAT                   :     CSD027 BG18886
+  'AND INST.PRIORY = (SELECT MIN(PRIORY) FROM V_CLINSCWO ' CONCAT               :            BG18886
+  'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND T_SESN = WOSESN) ' CONCAT     :            BG18886
+  'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOSESN = '''') ' CONCAT          :            BG18886
+  'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOSESN = '''') ' CONCAT            :            BG18886
+**********'OR (WOCNUM = 0 AND T_SESN = WOSESN)) ' **                            :             CSD027
+**********  'OR (WOCNUM = '''' AND T_SESN = WOSESN)) ' **                       :     CSD027 BG18886
+  'OR (WOCNUM = '''' AND T_SESN = WOSESN)) ' CONCAT                             :     CSD027 BG18886
+  'AND ((T_CNUM = CURR.WOCNUM AND T_PTFR = CURR.WOPTFR AND T_RCCY =             :
+**********  CURR.WOCYCD) ' **                                                   :            BG18886
+  CURR.WOCYCD) ' CONCAT                                                         :            BG18886
+  'OR (T_CNUM = CURR.WOCNUM AND T_PTFR = CURR.WOPTFR AND CURR.WOCYCD =          :
+**********  '''') ' **                                                          :            BG18886
+**********  'OR (T_CNUM = CURR.WOCNUM AND CURR.WOPTFR = '''' AND CURR.WOCYCD = '''') ' ** :  BG18886
+  '''') ' CONCAT                                                                :            BG18886
+  'OR (T_CNUM = CURR.WOCNUM AND CURR.WOPTFR = '''' AND' CONCAT                  :            BG18886
+  ' CURR.WOCYCD = '''') ' CONCAT                                                :            BG18886
+**********'OR (CURR.WOCNUM = 0 AND T_RCCY = CURR.WOCYCD)) ' **                  :             CSD027
+**********  'OR (CURR.WOCNUM = '''' AND T_RCCY = CURR.WOCYCD)) ' **             :     CSD027 BG18886
+**********  'AND CURR.PRIORY = (SELECT MIN(PRIORY) FROM V_CLCCYCWO ' **         :            BG18886
+**********  'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND T_RCCY = WOCYCD) ' **:           BG18886
+**********  'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOCYCD = '''') ' **    :            BG18886
+**********  'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOCYCD = '''') ' **      :            BG18886
+  'OR (CURR.WOCNUM = '''' AND T_RCCY = CURR.WOCYCD)) ' CONCAT                   :     CSD027 BG18886
+  'AND CURR.PRIORY = (SELECT MIN(PRIORY) FROM V_CLCCYCWO ' CONCAT               :            BG18886
+  'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND T_RCCY = WOCYCD) ' CONCAT     :            BG18886
+  'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOCYCD = '''') ' CONCAT          :            BG18886
+  'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOCYCD = '''') ' CONCAT            :            BG18886
+**********'OR (WOCNUM = 0 AND T_RCCY = WOCYCD)) ' **                            :             CSD027
+**********  'OR (WOCNUM = '''' AND T_RCCY = WOCYCD)) ' **                       :     CSD027 BG18886
+  'OR (WOCNUM = '''' AND T_RCCY = WOCYCD)) ' CONCAT                             :     CSD027 BG18886
+  'AND ((T_CNUM = CTRY.WOCNUM AND T_PTFR = CTRY.WOPTFR AND SECTYD.SCOR =        :
+**********  CTRY.WOCNCD) ' **                                                   :            BG18886
+  CTRY.WOCNCD) ' CONCAT                                                         :            BG18886
+  'OR (T_CNUM = CTRY.WOCNUM AND T_PTFR = CTRY.WOPTFR AND CTRY.WOCNCD =          :
+**********  '''') ' **                                                          :            BG18886
+**********  'OR (T_CNUM = CTRY.WOCNUM AND CTRY.WOPTFR = '''' AND CTRY.WOCNCD = '''') ' ** :  BG18886
+  '''') ' CONCAT                                                                :            BG18886
+  'OR (T_CNUM = CTRY.WOCNUM AND CTRY.WOPTFR = '''' AND' CONCAT                  :            BG18886
+  ' CTRY.WOCNCD = '''') ' CONCAT                                                :            BG18886
+**********'OR (CTRY.WOCNUM = 0 AND SECTYD.SCOR = CTRY.WOCNCD)) ' **             :             CSD027
+**********  'OR (CTRY.WOCNUM = '''' AND SECTYD.SCOR = CTRY.WOCNCD)) ' **        :     CSD027 BG18886
+**********  'AND CTRY.PRIORY = (SELECT MIN(PRIORY) FROM V_CLCTYCWO ' **         :            BG18886
+**********  'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND SECTYD.SCOR = WOCNCD) ' ** :     BG18886
+**********  'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOCNCD = '''') ' **    :            BG18886
+**********  'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOCNCD = '''') ' **      :            BG18886
+  'OR (CTRY.WOCNUM = '''' AND SECTYD.SCOR = CTRY.WOCNCD)) ' CONCAT              :     CSD027 BG18886
+  'AND CTRY.PRIORY = (SELECT MIN(PRIORY) FROM V_CLCTYCWO ' CONCAT               :            BG18886
+  'WHERE (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND SECTYD.SCOR = WOCNCD) ' CONCAT:            BG18886
+  'OR (T_CNUM = WOCNUM AND T_PTFR = WOPTFR AND WOCNCD = '''') ' CONCAT          :            BG18886
+  'OR (T_CNUM = WOCNUM AND WOPTFR = '''' AND WOCNCD = '''') ' CONCAT            :            BG18886
+**********'OR (WOCNUM = 0 AND SECTYD.SCOR = WOCNCD))) AS CLXALSEC ' ;           :             CSD027
+  'OR (WOCNUM = '''' AND SECTYD.SCOR = WOCNCD))) AS CLXALSEC ' ;                :             CSD027
+  IF ( LENGTH ( TRIM ( STMT ) ) > 0 ) THEN                                      :
+**********  SET SQLSTMT = SQLSTMT ** 'WHERE ' ** STMT ;                         :            BG18886
+  SET SQLSTMT = SQLSTMT CONCAT 'WHERE ' CONCAT STMT ;                           :            BG18886
+  END IF ;                                                                      :
+  PREPARE PRSTMT FROM SQLSTMT ;                                                 :
+  OPEN OPNCUR ;                                                                 :
+  END  ;                                                                        :
+/*******************************************************************************/
+ ;                                                                              :
+  label on procedure **********/**********                                      :
+   is 'Midas SE Customer's All Assets Coll. Securities   ';                     :
+                                                                                :

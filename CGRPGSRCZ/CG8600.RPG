@@ -1,0 +1,2494 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Format selection.')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CG8600  - - - - Display formatting options for selection.    *
+     F*                                                               *
+     F*  Function:   - - This program displays a screen which lists   *
+     F*                   formatting options for an element.          *
+     F*                                                               *
+     F*  Called By: mmCnnnn - (program name)                          *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 115722             Date 12Feb98               *
+      *                 093613             Date 08Jul96               *
+     F*                 089687             DATE 27JUN95               *
+     F*                 084604             DATE 13MAR95               *
+     F*                 086185             DATE 01MAR95               *
+     F*                 084073             DATE 01MAR95               *
+     F*                 084005             DATE 27FEB95               *
+     F*                 083792             DATE 16FEB95               *
+     F*                 S01522             DATE 10DEC94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+     F*  115722 - Comment out references to CGUSRMSG/CGD1001          *
+     F*  093613 - Allow reset/delete of formating options for a field *
+     F*  089687 - Set up paths in data structure P2DATA before CG8800 *
+     F*  084604 - Replace numeric fields by character fields          *
+     F*  086185 - Use L1 logicals not L0                              *
+     F*  084073 - Allow entry of spacing digit with L or R            *
+     F*            justification entry                                *
+     F*  084005 - Show existing options as text descriptions;         *
+     F*            use selection entries of "1"; minor changes        *
+     F*  083792 - Correct Command Key Processing                      *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  03 -- F3 (Exit).                                             *
+     F*  09 -- F9 (Define formatting options).                        *
+     F*  12 -- F12 (Previous / cancel).                               *
+     F*  25 -- Display SFLEND in message subfile.                     *
+     F*  29 -- Valid command key.                                     *
+     F*  31 -- Invalid alignment value.                               *
+     F*  32 -- Invalid selection -- subfile 2.                        *
+     F*  33 -- Invalid selection -- subfile 3.                        *
+     F*  34 -- Invalid selection -- screen 1, option 1.               *   084005
+     F*  35 -- Invalid selection -- screen 1, option 2.               *   084005
+     F*  36 -- Invalid selection -- screen 1, option 3.               *   084005
+     F*  41 -- Show the first selection box.                          *
+     F*  42 -- Show the second selection box.                         *
+     F*  43 -- Show the third selection box.                          *
+     F*  45 -- Protect selection on a language-specific line.         *
+     F*  46 -- Blank line in the options list.                        *
+     F*  80 -- Clear subfile 2.                                       *
+     F*  81 -- Display subfile control record.                        *
+     F*  82 -- Display subfile record.                                *
+     F*  85 -- Clear subfile 3.                                       *
+     F*  86 -- Display subfile control record.                        *
+     F*  87 -- Display subfile record.                                *
+     F*  90 -- Error detected.                                        *
+     F*  91 -- EOF detected in file CGPDEFL0.                         *
+     F*  92 -- EOF detected in file CGFASCL0.                         *
+     F*  93 -- EOF detected in file CGFGRPL0.                         *
+     F*  94 -- EOF detected in file CGFOPTL0.                         *
+     F*  95 -- EOF detected in subfile.                               *
+     F*  96 -- EOF detected in file CGFLNGL0.                         *
+     F*  97 -- EOF detected in file CGWPRDE1.                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*  SRBLD1 -- Prepare the list of types.                         *
+     F*  SREXST -- Find descriptions for existing options.            *   084005
+     F*  SREXF1 -- Display the list of types.                         *
+     F*  SRCHK1 -- Validate the alignment type.                       *
+     F*  SRACT1 -- Select the appropriate action.                     *
+     F*  SRSEL1 -- Select the appropriate action.                     *   084005
+     F*  SRNFND -- Display the "No options found" screen.             *
+     F*  SR8500 -- Execute the format maintenance program.            *
+     F*  SRALEN -- Update only length and alignment values.           *
+     F*  SRIZS2 -- Initialise subfile 2.                              *
+     F*  SRLDS2 -- Load subfile 2.                                    *
+     F*  SREXF2 -- Display screen 2 showing format types.             *
+     F*  SRCHK2 -- Look for entries in the list of types.             *
+     F*  SRIZS3 -- Initialise subfile 3.                              *
+     F*  SRLDS3 -- Load subfile 3.                                    *
+     F*  SREXF3 -- Display screen 3 showing format options.           *
+     F*  SRCHK3 -- Look for entries in the list of options.           *
+     F*  SRTEXT -- Retrieve command keys text.                        *
+     F*  SRSNMS -- Send a message to the program's queue.             *
+     F*  SREXPG -- Program exit processing.                           *
+     F*  SRINIT -- Provide initialisation and definitions.            *
+     F*                                                               *
+     F*  Copied-in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,CG8600FPG
+     F*===================================================================
+     FCG8600DFCF  E                    WORKSTN
+     F                                        RRN2  KSFILE #SFLRCD2
+     F                                        RRN3  KSFILE #SFLRCD3
+     F                                              KINFDS INF1DS
+     F                                              KINFSR SRFILE
+     F* Window display file
+     F*-------------------------------------------------------------------
+     F*CGFLNGL0UF**E           K        DISK         KCOMIT       A       086185
+     FCGFLNGL1IF  E           K        DISK                               086185
+     F                                              KINFSR SRFILE
+     F* Format options by language
+     F*-------------------------------------------------------------------
+     F*CGFASCL0UF**E           K        DISK         KCOMIT       A       086185
+     FCGFASCL1IF  E           K        DISK                               086185
+     F*                                             KINFSR SRFILE
+     FCGFASCL0UF  E           K        DISK         KCOMIT       A        093613
+     FCGPDEFL3IF  E           K        DISK                               093613
+     F* Format options by RDE
+     F*-------------------------------------------------------------------
+     F*CGFGRPL0UF**E           K        DISK         KCOMIT       A       086185
+     FCGFGRPL1IF  E           K        DISK                               086185
+     F*                                             KINFSR SRFILE
+     F* Format options by type
+     F*-------------------------------------------------------------------
+     FCGPDEFL0UF  E           K        DISK         KCOMIT
+     F                                              KINFSR SRFILE
+     F* Plane definitions
+     F*-------------------------------------------------------------------
+     F*CGFOPTL0UF**E           K        DISK         KCOMIT       A       086185
+     FCGFOPTL1IF  E           K        DISK                               086185
+     F                                              KINFSR SRFILE
+     F* Format options
+     F*-------------------------------------------------------------------
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CG8600EPG
+     E*
+     E*-------------------------------------------------------------------
+     I/SPACE
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CG8600IPG
+     I*
+     I* Copied-in data structures
+     I*
+     I*...................................................................
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error processing data structures
+     I*
+     I*...................................................................
+     IBIGLDA    E DSCGLDA
+     I*
+     I* Local data area
+     I*...................................................................
+     IRUNDAT    E DSRUNDAT
+     I*
+     I* RUNDAT data area
+     I*
+     I*...................................................................
+     IINF1DS    E DSY2I#DSP
+     I*
+     I* Display file information data structure for CG8600DF
+     I*
+     I*...................................................................
+     I* Job date and time:
+     I*
+     IJBDTTM      DS
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     I*...................................................................084005
+     I* Formatting groups selection fields:                               084005
+     I*                                                                   084005
+     I#1FGRP      DS                                                      084005
+     I                                        1   1 #1OPT1                084005
+     I                                       11  40 #1TXT1                084005
+     I                                       41  70 #1FOP1                084005
+     I                                       71 100 #1TYP1                084005
+     I*                                                                   084005
+     I                                      101 101 #1OPT2                084005
+     I                                      111 140 #1TXT2                084005
+     I                                      141 170 #1FOP2                084005
+     I                                      171 200 #1TYP2                084005
+     I*                                                                   084005
+     I                                      201 201 #1OPT3                084005
+     I                                      211 240 #1TXT3                084005
+     I                                      241 270 #1FOP3                084005
+     I                                      271 300 #1TYP3                084005
+     I*...................................................................084005
+     I* "Current options" fields:                                         084005
+     I*                                                                   084005
+     I#2CURR      DS                                                      084005
+     I                                        1  10 #2CURO                084005
+     I                                       26  55 #2CURD                084005
+     I*...................................................................
+     I* "Current types" fields:
+     I*
+     I#3CURR      DS
+     I                                        1  10 #3CURO
+     I                                       11  25 #3CURT
+     I                                       26  55 #3CURD
+     I*...................................................................
+     I* "Format options" fields:
+     I*
+     I#3OPTS      DS
+     I                                        1  10 #3FOPT
+     I                                       11  25 #3FRMT
+     I                                       26  55 #3DESC
+     I*...................................................................
+     I* Saved "narrative options" fields:
+     I*
+     I#SOPTS      DS
+     I                                        1  10 #SFOPT
+     I                                       11  25 #SFRMT
+     I                                       26  55 #SDESC
+     I*...................................................................
+     I* Message translation fields:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     I*...................................................................
+     I* Data returned from CG8800:
+     I*
+     IP2DATA      DS                            100
+     I                                        1   6 P2UPPR
+     I                                        7  12 P2LOWR
+     I                                       13  22 P2RDE
+     I                                       23  28 P2RPTH
+     I                                       29  34 P2NPTH
+     I                                       35  40 P2ETYP
+     I                                       41  50 P2FOPT
+     I                                       51  75 P2ETXT
+     I                                       76  800P2LEN
+     I*...................................................................
+     I* Language-specific text:
+     I*
+     I#BYNAR      DS
+     I                                        1  64 BYNAR1
+     I                                       65 128 BYNAR2
+     I                                      129 192 BYNAR3
+     I                                      193 256 BYNAR4
+     I*...................................................................
+     I* Unspecific text:
+     I*
+     I#FONAR      DS
+     I                                        1  64 FONAR1
+     I                                       65 128 FONAR2
+     I                                      129 192 FONAR3
+     I                                      193 256 FONAR4
+     I*...................................................................
+     I* Alignment values:
+     I*
+     IDSMALN      DS
+     I                                        1   1 ##ALN1
+     I                                        2   2 ##ALN2
+     I*...................................................................
+     I* Named constant:
+     I*
+     I              '##LITERAL '          C         ##LIT
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0FLDN 10
+     C*
+     C* Add the subroutine name to the stack:
+     C*
+     C                     Z-ADD1         Q
+     C                     MOVEL'@Main@'  @STK,Q
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* Seek current formatting options for this field:
+     C*
+     C           KKPDEF    CHAINCGPDEFL0            N91
+     C*
+     C* Get the element type --
+     C*
+     C* A literal is always a code type:
+     C*
+     C           LRLITD    IFEQ 'L'
+     C           LRLITD    OREQ 'Y'
+     C                     MOVE '*CODE '  P2ETYP
+     C                     MOVEL##LIT     LRRDE
+     C                     ELSE
+     C*
+     C* For an RDE, use CG8800 to determine the type:
+     C*
+     C                     MOVEL#@RPTH    P2PTH1           Repeating path
+     C                     MOVEL#@LRPT    P2PTH2           Last repeating
+      *                                                                   089687
+      * Set RDE repeating and non-repeating paths                         089687
+      *                                                                   089687
+     C                     MOVELLRRPTH    P2RPTH           Repeating path 089687
+     C                     MOVELLRNPTH    P2NPTH           Non-Repeating  089687
+     C*
+     C                     MOVE LRRDE     P2RDE
+     C                     MOVE 'N'       ##ADD   1
+     C*
+     C                     CALL 'CG8800'               90
+     C                     PARM           P2RTN   7
+     C                     PARM           P2PTH1  6
+     C                     PARM           P2PTH2  6
+     C                     PARM           P2DATA
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Trap error:
+     C           P2RTN     IFNE *BLANKS
+     C           P2RTN     ANDNE'Y2U9999'
+     C           P2RTN     ANDNE'USR0790'
+     C           *IN90     OREQ *ON
+     C                     MOVEL'CG8800  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD1         W0ERNB           ** Database  **
+     C                     MOVEL'MEM5003' W0MSGD           ** error 1.  **
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C* If F3 was pressed in CG8800, exit this program:
+     C*
+     C           P2RTN     IFEQ 'Y2U9999'
+     C                     SETON                     03
+     C                     EXSR SREXPG
+     C                     RETRN
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* Build the list of types:
+     C*
+     C                     EXSR SRBLD1
+     C*
+     C* Show the list:
+     C                     EXSR SREXF1
+     C*
+     C* Exit the program:
+     C                     EXSR SREXPG
+     C*
+     C* Unwind the subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBLD1 prepares the list of types.                 **
+     C********************************************************************
+     C           SRBLD1    BEGSR                           * S R B L D 1 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBLD1'  @STK,Q
+     C* Header values:
+     C                     MOVE LRFLDN    #FMFLD
+     C                     Z-ADDLROLEN    #FMLEN
+     C                     Z-ADDLROLEN    ZFLD15                          084604
+     C*                                                                   084604
+     C* Edit for display:                                                 084604
+     C                     CALL 'ZSEDIT'                                  084604
+     C                     PARM           ZFLD15 150                      084604
+     C                     PARM *ZERO     ZDECS   10                      084604
+     C                     PARM *BLANKS   ZECODE  1                       084604
+     C                     PARM *BLANKS   ZOUT21 21                       084604
+     C*                                                                   084604
+     C                     MOVELZOUT21    ##20   20                       084604
+     C                     MOVE ##20      #FMLNA                          084604
+     C*                                                                   084604
+     C                     MOVE LRALGN    #FMALN
+     C           *LIKE     DEFN LRALGN    #@ALGN           Save alignment 084073
+     C                     MOVELLRALGN    #@ALGN           Save alignment 084073
+     C* Clear the list:
+     C***********          MOVE *BLANK    #1OPT1                          084005
+     C***********          MOVE *BLANK    #1OPT2                          084005
+     C***********          MOVE *BLANK    #1OPT3                          084005
+     C***********          MOVE *BLANK    #1OPT1                          084005
+     C***********          MOVE *BLANKS   #1TXT1                          084005
+     C***********          MOVE *BLANKS   #1TXT2                          084005
+     C***********          MOVE *BLANKS   #1TXT3                          084005
+     C***********          MOVE *BLANK    #1OPT1                          084005
+     C*                                                                   084005
+     C                     MOVE *BLANK    #1FGRP                          084005
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C                     SELEC
+     C* Type *CHAR:
+     C           P2ETYP    WHEQ '*CHAR '
+     C                     SETON                     41
+     C                     SETOF                     4243
+     C***********          MOVE 'X'       #1OPT1           Force selection084005
+     C                     MOVE '1'       #1OPT1           Force selection
+     C                     MOVEL#CHTXT    #1TXT1
+     C                     MOVE LRCFMO    #@OP10 10                       084005
+     C                     MOVE LRCFOP    #@TP15 15                       084005
+     C                     EXSR SREXST                                    084005
+     C                     MOVE #@OP30    #1FOP1            current option084005
+     C                     MOVE #@TP30    #1TYP1            current type  084005
+     C* Type *CODE:
+     C           P2ETYP    WHEQ '*CODE '
+     C                     SETON                     4142
+     C                     SETOF                     43
+     C                     MOVEL#CDTXT    #1TXT1
+     C                     MOVE LRCOPT    #@OP10                          084005
+     C                     MOVE LRCFTP    #@TP15                          084005
+     C                     EXSR SREXST                                    084005
+     C                     MOVE #@OP30    #1FOP1                          084005
+     C                     MOVE #@TP30    #1TYP1                          084005
+     C*                                                                   084005
+     C                     MOVEL#CHTXT    #1TXT2
+     C                     MOVE LRCFMO    #@OP10                          084005
+     C                     MOVE LRCFOP    #@TP15                          084005
+     C                     EXSR SREXST                                    084005
+     C                     MOVE #@OP30    #1FOP2                          084005
+     C                     MOVE #@TP30    #1TYP2                          084005
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Type *DEC:
+     C           P2ETYP    WHEQ '*DEC  '
+     C                     SETON                     414243
+     C                     MOVEL#NMTXT    #1TXT1
+     C                     MOVE LRNFMT    #@OP10                          084005
+     C                     MOVE LRNFOP    #@TP15                          084005
+     C                     EXSR SREXST                                    084005
+     C                     MOVE #@OP30    #1FOP1                          084005
+     C                     MOVE #@TP30    #1TYP1                          084005
+     C*                                                                   084005
+     C                     MOVEL#CDTXT    #1TXT2
+     C                     MOVE LRCOPT    #@OP10                          084005
+     C                     MOVE LRCFTP    #@TP15                          084005
+     C                     EXSR SREXST                                    084005
+     C                     MOVE #@OP30    #1FOP2                          084005
+     C                     MOVE #@TP30    #1TYP2                          084005
+     C*                                                                   084005
+     C                     MOVEL#CHTXT    #1TXT3
+     C                     MOVE LRCFMO    #@OP10                          084005
+     C                     MOVE LRCFOP    #@TP15                          084005
+     C                     EXSR SREXST                                    084005
+     C                     MOVE #@OP30    #1FOP3                          084005
+     C                     MOVE #@TP30    #1TYP3                          084005
+     C*
+     C* If the type is none of the above,
+     C*  treat the field (for the purposes of this program) as *CHAR:
+     C*
+     C                     OTHER
+     C                     MOVE '*CHAR '  P2ETYP
+     C                     SETON                     41
+     C                     SETOF                     4243
+     C                     MOVE 'X'       #1OPT1           Force selection
+     C                     MOVEL#CHTXT    #1TXT1
+     C                     MOVE LRCFMO    #@OP10                          084005
+     C                     MOVE LRCFOP    #@TP15                          084005
+     C                     EXSR SREXST                                    084005
+     C                     MOVE #@OP30    #1FOP1                          084005
+     C                     MOVE #@TP30    #1TYP1                          084005
+     C*
+     C                     ENDSL
+     C*
+     C           EXBLD1    TAG                             <<<=== EXBLD1
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT                                                              084005
+     C********************************************************************084005
+     C**  Subroutine SREXST retrieves the text of an existing           **084005
+     C**   format option and type.                                      **084005
+     C********************************************************************084005
+     C           SREXST    BEGSR                           * S R E X S T *084005
+     C*                                                                   084005
+     C* Add subroutine name to stack:                                     084005
+     C*                                                                   084005
+     C                     ADD  1         Q                               084005
+     C                     MOVEL'SREXST'  @STK,Q                          084005
+     C*                                                                   084005
+     C           KKEXST    KLIST                                          084005
+     C                     KFLD           #@OP10                          084005
+     C                     KFLD           #@TP15                          084005
+     C*                                                                   084005
+     C* Clear results:                                                    084005
+     C*                                                                   084005
+     C                     MOVE *BLANKS   #@OP30 30                       084005
+     C                     MOVE *BLANKS   #@TP30 30                       084005
+     C*                                                                   084005
+     C* Seek the group:                                                   084005
+     C*                                                                   084005
+     C***********#@OP10    CHAINCGFGRPL0            N93             084005086185
+     C           #@OP10    CHAINCGFGRPL1             93                   086185
+     C           *IN93     IFEQ *OFF                                      084005
+     C                     MOVE FGDESC    #@OP30                          084005
+     C                     ENDIF                                          084005
+     C*                                                                   084005
+     C* Seek the option:                                                  084005
+     C*                                                                   084005
+     C***********KKEXST    CHAINCGFOPTL0            N94             084005086185
+     C           KKEXST    CHAINCGFOPTL1             94                   086185
+     C           *IN94     IFEQ *OFF                                      084005
+     C                     MOVE FODESC    #@TP30                          084005
+     C                     ENDIF                                          084005
+     C*                                                                   084005
+     C           EXEXST    TAG                             <<<=== EXEXST  084005
+     C*                                                                   084005
+     C* Unwind subroutine stack:                                          084005
+     C*                                                                   084005
+     C                     MOVE *BLANKS   @STK,Q                          084005
+     C                     SUB  1         Q                               084005
+     C*                                                                   084005
+     C                     ENDSR                                          084005
+     C********************************************************************084005
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXF1 displays the list of types.                 **
+     C********************************************************************
+     C           SREXF1    BEGSR                           * S R E X F 1 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXF1'  @STK,Q
+     C*
+     C* Do until F3 (exit), F12 (previous) or Exit:
+     C*
+     C                     MOVE 'N'       ##EXIT  1
+     C*
+     C           *IN03     DOUEQ*ON
+     C           *IN12     OREQ *ON
+     C           ##EXIT    OREQ 'Y'
+     C*
+     C* Update the screen time and the job time:
+     C*
+     C                     TIME           ##TME
+     C                     Z-ADD##TME     ##JTM
+     C*
+     C                     WRITE#WINDOW
+     C                     WRITE#MSGCTL
+     C                     EXFMT#SELECT1
+     C*
+     C* Clear messages:
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C           *IN10     IFEQ *OFF                                      093613
+     C*
+     C* Check entries:
+     C                     EXSR SRCHK1
+     C                     ELSE                                           093613
+     C* Remove Format options:                                            093613
+     C                     EXSR SRFODL                                    093613
+     C                     ENDIF                                          093613
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C*********** Reset F12:                                              084005
+     C***********          SETOF                     12                   084005
+     C***********                                                         084005
+     C           EXEXF1    TAG                             <<<=== EXEXF1
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHK1 checks entries in the associations list.    **084073
+     C********************************************************************
+     C           SRCHK1    BEGSR                           * S R C H K 1 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHK1'  @STK,Q
+     C*
+     C                     SETOF                     31
+     C*
+     C* Validate the alignment value:
+     C*
+     C                     MOVEL#FMALN    DSMALN                          084073
+     C*                                                                   084073
+     C********** #FMALN    IFNE *BLANKS                                   084073
+     C********** #FMALN    ANDNE'L  '                                     084073
+     C********** #FMALN    ANDNE'C  '                                     084073
+     C********** #FMALN    ANDNE'R  '                                     084073
+     C           DSMALN    IFNE *BLANKS                                   084073
+     C*                                                                   084073
+     C* Alignment value must begin L (Left), C (Centre) or R (Right):     084073
+     C*                                                                   084073
+     C           ##ALN1    IFNE 'L'                                       084073
+     C           ##ALN1    ANDNE'C'                                       084073
+     C           ##ALN1    ANDNE'R'                                       084073
+     C                     SETON                     31                   084073
+     C                     MOVE 'CGD1634' ZAMSID                          084073
+     C                     MOVEL'CGUSRMSG'ZAMSGF                          084073
+     C                     EXSR SRSNMS                                    084073
+     C                     ENDIF                                          084073
+     C*                                                                   084073
+     C* Spacing value must be 0..9:                                       084073
+     C*                                                                   084073
+     C           ##ALN2    IFNE *BLANK                                    084073
+     C           ##ALN2    IFLT '0'                                       084073
+     C           ##ALN2    ORGT '9'                                       084073
+     C                     SETON                     31                   084073
+     C                     MOVE 'CGD1819' ZAMSID                          084073
+     C                     MOVEL'CGUSRMSG'ZAMSGF                          084073
+     C                     EXSR SRSNMS                                    084073
+     C                     ELSE                                           084073
+     C*...................................................................084073
+     C/EJECT
+     C*...................................................................084073
+     C* Spacing value is valid only for L or R (ie, not C and not blank): 084073
+     C*                                                                   084073
+     C           ##ALN1    IFNE 'L'                                       084073
+     C           ##ALN1    ANDNE'R'                                       084073
+     C                     SETON                     31                   084073
+     C                     MOVE 'CGD1820' ZAMSID                          084073
+     C                     MOVEL'CGUSRMSG'ZAMSGF                          084073
+     C                     EXSR SRSNMS                                    084073
+     C                     ENDIF                                          084073
+     C                     ENDIF                                          084073
+     C                     ENDIF                                          084073
+     C*                                                                   084073
+     C                     ENDIF
+     C*
+     C* If valid, take the appropriate action(s), as selected:
+     C*
+     C           *IN31     IFEQ *OFF
+     C                     EXSR SRACT1
+     C                     ENDIF
+     C*
+     C           EXCHK1    TAG                             <<<=== EXCHK1
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRACT1 selects the appropriate action.             **
+     C********************************************************************
+     C           SRACT1    BEGSR                           * S R A C T 1 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT1'  @STK,Q
+     C*
+     C                     MOVE 'N'       #FOUND  1
+     C*
+     C* Reset indicators:
+     C                     SETOF                     343536
+     C                     MOVE 'N'       ##ERR1  1
+     C*
+     C* Validate selections:
+     C*
+     C* Option 1:
+     C           #1OPT1    IFNE '1'
+     C           #1OPT1    ANDNE*BLANK
+     C           *IN41     ANDEQ*ON
+     C                     SETON                     34
+     C                     MOVE 'Y'       ##ERR1
+     C                     ENDIF
+     C*
+     C* Option 2:
+     C           #1OPT2    IFNE '1'
+     C           #1OPT2    ANDNE*BLANK
+     C           *IN42     ANDEQ*ON
+     C                     SETON                     35
+     C                     MOVE 'Y'       ##ERR1
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Option 3:
+     C           #1OPT3    IFNE '1'
+     C           #1OPT3    ANDNE*BLANK
+     C           *IN43     ANDEQ*ON
+     C                     SETON                     36
+     C                     MOVE 'Y'       ##ERR1
+     C                     ENDIF
+     C*
+     C           ##ERR1    IFEQ 'Y'
+     C                     MOVE 'CGD1002' ZAMSID
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     ELSE
+     C                     EXSR SRSEL1
+     C                     ENDIF
+     C*
+     C           EXACT1    TAG                             <<<=== EXACT1
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSEL1 handles valid selections on screen 1.       **
+     C********************************************************************
+     C           SRSEL1    BEGSR                           * S R S E L 1 *
+     C*
+     C* Add the subroutine name to the stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSEL1'  @STK,Q
+     C*                                                                   084604
+     C* Convert the length value:                                         084604
+     C*                                                                   084604
+     C           #FMLNA    IFEQ *BLANKS                                   084604
+     C                     Z-ADD*ZERO     #FMLEN                          084604
+     C                     ELSE                                           084604
+     C                     MOVE #FMLNA    ZFIELD    P                     084604
+     C*                                                                   084604
+     C                     CALL 'ZALIGN'                                  084604
+     C                     PARM *BLANKS   ZRTN    7                       084604
+     C                     PARM           ZFIELD 16                       084604
+     C                     PARM *ZERO     ZADEC   10                      084604
+     C                     PARM 5         ZADIG   20                      084604
+     C                     PARM           ZAFLD  16                       084604
+     C*                                                                   084604
+     C* Check the result code:                                            084604
+     C*                                                                   084604
+     C           ZRTN      IFEQ *BLANKS                                   084604
+     C                     MOVE ZAFLD     #FMLEN                          084604
+     C                     ENDIF                                          084604
+     C                     ENDIF                                          084604
+     C*
+     C*____________________________________________________
+     C* Element type:     *DEC      *CODE     *CHAR
+     C*                    ----      ----      ----
+     C* Options stack:     NUM       CODE      CHAR
+     C*                    CODE      CHAR
+     C*                    CHAR
+     C*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     C* Numeric:
+     C           P2ETYP    IFEQ '*DEC  '
+     C           #1OPT1    ANDNE*BLANK
+     C                     MOVE '*NUM  '  #OTYPE  6
+     C                     MOVEL#NMTXT    #PRTYP    P
+     C                     EXSR SRIZS2
+     C* Clear box:
+     C           *IN12     IFEQ *OFF
+     C                     MOVE *BLANK    #1OPT1
+     C                     ENDIF
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Code:
+     C           P2ETYP    IFEQ '*DEC  '
+     C           #1OPT2    ANDNE*BLANK
+     C           P2ETYP    OREQ '*CODE '
+     C           #1OPT1    ANDNE*BLANK
+     C                     MOVE '*CODE '  #OTYPE
+     C                     MOVEL#CDTXT    #PRTYP    P
+     C                     EXSR SRIZS2
+     C* Clear box:
+     C           *IN12     IFEQ *OFF
+     C           P2ETYP    IFEQ '*DEC  '
+     C                     MOVE *BLANK    #1OPT2
+     C                     ELSE
+     C                     MOVE *BLANK    #1OPT1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* Char:
+     C           P2ETYP    IFEQ '*DEC  '
+     C           #1OPT3    ANDNE*BLANK
+     C           P2ETYP    OREQ '*CODE '
+     C           #1OPT2    ANDNE*BLANK
+     C           P2ETYP    OREQ '*CHAR '
+     C           #1OPT1    ANDNE*BLANK
+     C                     MOVE '*CHAR '  #OTYPE
+     C                     MOVEL#CHTXT    #PRTYP    P
+     C                     EXSR SRIZS2
+     C* Clear box:
+     C           *IN12     IFEQ *OFF
+     C           P2ETYP    IFEQ '*DEC  '
+     C                     MOVE *BLANK    #1OPT3
+     C                     ELSE
+     C           P2ETYP    IFEQ '*CODE '
+     C                     MOVE *BLANK    #1OPT2
+     C                     ELSE
+     C                     MOVE *BLANK    #1OPT1
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* No options found --
+     C*  If changed length or alignment value, update and exit:
+     C*   otherwise, offer F9 (Define options):
+     C*
+     C********** #FOUND    IFEQ 'N'                                       084073
+     C********** #FMLEN    IFNE LROLEN                                    084073
+     C********** #FMALN    ORNE LRALGN                                    084073
+     C***********          EXSR SRALEN                                    084073
+     C***********          ELSE                                           084073
+     C***********          EXSR SRNFND                                    084073
+     C***********          ENDIF                                          084073
+     C***********          ENDIF                                          084073
+     C*                                                                   084073
+     C           #FOUND    IFEQ 'N'                                       084073
+     C           #FMLEN    ANDEQLROLEN                                    084073
+     C           #FMALN    ANDEQ#@ALGN                                    084073
+     C                     EXSR SRNFND                                    084073
+     C                     ENDIF                                          084073
+     C*                                                                   084073
+     C           #FMLEN    IFNE LROLEN                                    084073
+     C           #FMALN    ORNE #@ALGN                                    084073
+     C                     EXSR SRALEN                                    084073
+     C                     ENDIF                                          084073
+     C*                                                                   083792
+     C* F12:                                                              083792
+     C           *IN12     IFEQ *OFF                                      083792
+     C                     EXSR SRBLD1                                    083792
+     C                     ENDIF                                          083792
+     C                     SETOF                     12                   083792
+     C*                                                                   084073
+     C********** EXACT1    TAG                             <<<=== EXACT1  084073
+     C           EXSEL1    TAG                             <<<=== EXSEL1  084073
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRNFND displays the "No options found" screen,     **
+     C**  and handles F9 (Define formatting options).                   **
+     C********************************************************************
+     C           SRNFND    BEGSR                           * S R N F N D *
+     C*
+     C* Add the subroutine name to the stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRNFND'  @STK,Q
+     C*
+     C                     MOVE LRRDE     #NRDE
+     C                     WRITE#WINDOW
+     C                     WRITE#MSGCTL
+     C                     EXFMT#NOOPTS
+     C*
+     C* F9: Define formatting options:
+     C*
+     C           *IN09     IFEQ *ON
+     C                     EXSR SR8500
+     C                     ENDIF
+     C*
+     C**F12:********************************************************083792115722
+     C************IN12*****IFEQ *ON                                 083792115722
+     C*********************MOVE 'CGD1001' ZAMSID                    083792115722
+     C*********************MOVEL'CGUSRMSG'ZAMSGF                    083792115722
+     C*********************EXSR SRSNMS                              083792115722
+     C*********************ENDIF                                    083792115722
+     C*                                                             083792115722
+     C                     SETOF                     12                   083792
+     C*                                                                   083792
+     C           EXNFND    TAG                             <<<=== EXNFND
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SR8500 executes the formats maintenance program.   **
+     C********************************************************************
+     C           SR8500    BEGSR                           * S R 8 5 0 0 *
+     C*
+     C* Add the subroutine name to the stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SR8500'  @STK,Q
+     C*
+     C                     MOVE LRRDE     P1RDE
+     C*
+     C                     CALL 'CG8500'               9090
+     C                     PARM           P1RTN   7
+     C                     PARM           P1RDE  10
+     C* Trap error:
+     C           P1RTN     IFNE *BLANKS
+     C           P1RTN     ANDNE'Y2U9999'
+     C           P1RTN     ANDNE'USR0790'
+     C           *IN90     OREQ *ON
+     C                     MOVEL'CG8500  'W0FILE
+     C                     MOVEL'*CALL'   W0KEY            ***************
+     C                     Z-ADD2         W0ERNB           ** Database  **
+     C                     MOVEL'MEM5003' W0MSGD           ** error 2.  **
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C           EX8500    TAG                             <<<=== EX8500
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRALEN updates only length and alignment values.   **
+     C********************************************************************
+     C           SRALEN    BEGSR                           * S R A L E N *
+     C*
+     C* Add the subroutine name to the stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRALEN'  @STK,Q
+     C*
+     C           KKPDEF    CHAINCGPDEFL0             91
+     C           *IN91     IFEQ *OFF
+     C*
+     C* Formatted length:
+     C                     Z-ADD#FMLEN    LROLEN
+     C*
+     C* Alignment type:
+     C***********          MOVE #FMALN    LRALGN                          084073
+     C                     MOVEL#FMALN    LRALGN                          084073
+     C*
+     C                     UPDAT@PDEFL0                90
+     C* Trap error:
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGPDEFL0'W0FILE
+     C                     MOVEL'*UPDATE 'W0KEY            ***************
+     C                     Z-ADD3         W0ERNB           ** Database  **
+     C                     MOVE 'MEM5002' W0MSGD           ** error 3.  **
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     MOVE 'Y'       ##EXIT
+     C                     ENDIF
+     C*
+     C           EXALEN    TAG                             <<<=== EXALEN
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT                                                              093613
+     C********************************************************************093613
+     C**  Subroutine SRFODL refresh Format options                      **093613
+     C********************************************************************093613
+     C           SRFODL    BEGSR                           * S R F O D L *093613
+     C*                                                                   093613
+     C* Add the subroutine name to the stack:                             093613
+     C*                                                                   093613
+     C                     ADD  1         Q                               093613
+     C                     MOVEL'SRFODL'  @STK,Q                          093613
+     C*                                                                   093613
+     C                     WRITE#WINDOW                                   093613
+     C                     WRITE#MSGCTL                                   093613
+     C                     EXFMT#FMTDEL                                   093613
+     C*                                                                   093613
+     C* Confirmation of deletion                                          093613
+     C*                                                                   093613
+     C           *IN10     IFEQ *ON                                       093613
+     C*                                                                   093613
+     C           KKPDEF    CHAINCGPDEFL0             91                   093613
+     C           *IN91     IFEQ *OFF                                      093613
+     C*                                                                   093613
+     C* Format field  :                                                   093613
+     C                     MOVEL*BLANKS   LRCFMO                          093613
+     C                     MOVEL*BLANKS   LRCFOP                          093613
+     C                     MOVEL*BLANKS   LRCOPT                          093613
+     C                     MOVEL*BLANKS   LRCFTP                          093613
+     C                     MOVEL*BLANKS   LRNFMT                          093613
+     C                     MOVEL*BLANKS   LRNFOP                          093613
+     C*                                                                   093613
+     C* Screen field  :                                                   093613
+     C                     MOVEL*BLANKS   #1FOP1                          093613
+     C                     MOVEL*BLANKS   #1TYP1                          093613
+     C                     MOVEL*BLANKS   #1FOP2                          093613
+     C                     MOVEL*BLANKS   #1TYP2                          093613
+     C                     MOVEL*BLANKS   #1FOP3                          093613
+     C                     MOVEL*BLANKS   #1TYP3                          093613
+     C*                                                                   093613
+     C                     UPDAT@PDEFL0                90                 093613
+     C* Trap error:                                                       093613
+     C           *IN90     IFEQ *ON                                       093613
+     C                     MOVEL'CGPDEFL0'W0FILE                          093613
+     C                     MOVEL'*UPDATE 'W0KEY            ***************093613
+     C                     Z-ADD38        W0ERNB           ** Database  **093613
+     C                     MOVE 'MEM5002' W0MSGD           ** error 38  **093613
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************093613
+     C                     EXSR SRERR                                     093613
+     C                     ENDIF                                          093613
+     C*                                                                   093613
+     C                     ENDIF                                          093613
+     C*                                                                   093613
+     C                     MOVE 'Y'       ##EXIT                          096313
+     C*                                                                   093613
+     C                     ENDIF                                          093613
+     C*                                                                   093613
+     C           EXFODL    TAG                             <<<=== EXFODL  093613
+     C*                                                                   093613
+     C* Unwind subroutine stack:                                          093613
+     C*                                                                   093613
+     C                     MOVE *BLANKS   @STK,Q                          093613
+     C                     SUB  1         Q                               093613
+     C*                                                                   093613
+     C                     ENDSR                                          093613
+     C********************************************************************093613
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRIZS2 initialises the second subfile.             **
+     C********************************************************************
+     C           SRIZS2    BEGSR                           * S R I Z S 2 *
+     C*
+     C* Add the subroutine name to the stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRIZS2'  @STK,Q
+     C*
+     C* Clear the subfile:
+     C                     SETOF                     81
+     C                     SETON                     80
+     C                     WRITE#SFLCTL2
+     C                     SETOF                     80
+     C                     SETON                     81
+     C*
+     C* Reset the top RRN:
+     C                     Z-ADD*ZERO     #RRMX2  50
+     C                     Z-ADD*ZERO     RRN2    50
+     C*
+     C* /Copy point for subfile control initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8600DISC
+     C*
+     C* Clear the formatting option value:
+     C*
+     C                     MOVE *BLANKS   #2FOPT
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Display the current options (the description
+     C*  will be added later, in subroutine SRLDS2):
+     C*
+     C                     MOVE *BLANKS   #2CURR
+     C*
+     C                     SELEC
+     C           #OTYPE    WHEQ '*CHAR '                    Character
+     C                     MOVE LRCFMO    #2CURO
+     C*
+     C           #OTYPE    WHEQ '*NUM  '                    Numeric
+     C                     MOVE LRNFMT    #2CURO
+     C*
+     C           #OTYPE    WHEQ '*CODE '                    Code
+     C                     MOVE LRCOPT    #2CURO
+     C*
+     C                     OTHER
+     C*
+     C* The field does not have formatting defined;
+     C*  move appropriate text to this effect:
+     C*
+     C                     MOVE #NOOPT    #2CURR
+     C                     ENDSL
+     C*
+     C* Load the subfile with available options:
+     C*
+     C                     EXSR SRLDS2
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Select processing:
+     C                     SELEC
+     C*
+     C* A choice of options -- display the list:
+     C*
+     C           RRN2      WHGT 1
+     C                     MOVE 'Y'       #FOUND
+     C                     EXSR SREXF2
+     C**F12:********************************************************083792115722
+     C************IN12*****IFEQ *ON                                 083792115722
+     C*********************MOVE 'CGD1001' ZAMSID                    083792115722
+     C*********************MOVEL'CGUSRMSG'ZAMSGF                    083792115722
+     C*********************EXSR SRSNMS                              083792115722
+     C*********************ENDIF                                    083792115722
+     C*
+     C* A (single) specific format -- display its options:
+     C*
+     C                     OTHER
+     C           RRN2      IFEQ 1
+     C                     MOVE 'Y'       #FOUND
+     C           RRN2      CHAIN#SFLRCD2             95
+     C           *IN95     IFEQ *OFF
+     C                     EXSR SRIZS3                        show list
+     C**F12:********************************************************083792115722
+     C************IN12*****IFEQ *ON                                 083792115722
+     C*********************MOVE 'CGD1001' ZAMSID                    083792115722
+     C*********************MOVEL'CGUSRMSG'ZAMSGF                    083792115722
+     C*********************EXSR SRSNMS                              083792115722
+     C*********************ENDIF                                    083792115722
+     C*                                                             083792115722
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDSL
+     C*
+     C           EXIZS2    TAG                             <<<=== EXIZS2
+     C*
+     C* Unwind the subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRLDS2 loads the second subfile.                   **
+     C********************************************************************
+     C           SRLDS2    BEGSR                           * S R L D S 2 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRLDS2'  @STK,Q
+     C*
+     C* Read records from the RDE to format options association file:
+     C*
+     C***********LRRDE     SETLLCGFASCL0                                  086185
+     C           LRRDE     SETLLCGFASCL1                                  086185
+     C           *IN92     DOUEQ*ON
+     C***********LRRDE     READECGFASCL0            N    92               086185
+     C           LRRDE     READECGFASCL1                 92               086185
+     C           *IN92     IFEQ *OFF
+     C*
+     C* Look for the option in the group file;
+     C*  check that it is of the current type:
+     C*
+     C***********FAFOPT    SETLLCGFGRPL0                                  086185
+     C           FAFOPT    SETLLCGFGRPL1                                  086185
+     C           *IN93     DOUEQ*ON
+     C           FGELYP    OREQ #OTYPE
+     C***********FAFOPT    READECGFGRPL0            N    93               086185
+     C           FAFOPT    READECGFGRPL1                 93               086185
+     C                     ENDDO
+     C*
+     C* Write a line for the formatting option from association file:
+     C*
+     C           FGELYP    IFEQ #OTYPE
+     C                     SETOF                     32
+     C                     MOVE *BLANK    #2SEL
+     C                     MOVE FAFOPT    #2FOPT
+     C                     MOVELFADESC    #2TEXT    P
+     C*
+     C* If a match, move this description to the current options text:
+     C*
+     C           FAFOPT    IFEQ #2CURO
+     C                     MOVE #2TEXT    #2CURD
+     C                     ENDIF
+     C*
+     C* /Copy point for subfile record initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8600DISR
+     C*
+     C* Write the record:
+     C                     ADD  1         RRN2
+     C                     WRITE#SFLRCD2
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Set indicator 82 (display subfile):
+     C*
+     C                     SETOF                     82
+     C           RRN2      IFGT *ZERO
+     C                     SETON                     82
+     C                     ENDIF
+     C*
+     C* Save highest RRN:
+     C                     Z-ADDRRN2      #RRMX2
+     C*
+     C           EXLDS2    TAG                             <<<=== EXLDS2
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXF2 displays the list of formats by type.       **
+     C********************************************************************
+     C           SREXF2    BEGSR                           * S R E X F 2 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXF2'  @STK,Q
+     C*
+     C* Clear messages:
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C* Do until F3 (exit), F12 (previous) or Exit:
+     C*
+     C           *IN03     DOUEQ*ON
+     C           *IN12     OREQ *ON
+     C           ##EXIT    OREQ 'Y'
+     C*
+     C* Update the screen time and the job time:
+     C*
+     C                     TIME           ##TME
+     C                     Z-ADD##TME     ##JTM
+     C*
+     C                     WRITE#WINDOW
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#SFLCTL2
+     C*
+     C* Clear messages:
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C*
+     C                     SELEC
+     C*
+     C* Test for F5 (Refresh display:
+     C*
+     C           *IN05     WHEQ *ON
+     C*
+     C*********** - Clear the subfile:                                    084005
+     C***********          SETOF                     8182                 084005
+     C***********          SETON                     80                   084005
+     C***********          WRITE#SFLCTL2                                  084005
+     C***********          SETOF                     80                   084005
+     C***********          SETON                     81                   084005
+     C***********                                                         084005
+     C*********** - Reset the top RRN:                                    084005
+     C***********          Z-ADD*ZERO     #RRMX2                          084005
+     C***********          Z-ADD*ZERO     RRN2                            084005
+     C***********                                                         084005
+     C*********** - /Copy point for subfile control initialisation:       084005
+     C***********                                                         084005
+     C********** /COPY WNCPYSRC,CG8600DISC                                084005
+     C***********                                                         084005
+     C*********** - Clear the formatting option value:                    084005
+     C***********                                                         084005
+     C***********          MOVE *BLANKS   #2FOPT                          084005
+     C***********                                                         084005
+     C*********** - Load the subfile with available options:              084005
+     C***********                                                         084005
+     C***********          EXSR SRLDS2                                    084005
+     C*                                                                   084005
+     C                     EXSR SRFRSH                                    084005
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Test for F9 (Format maintenance):
+     C*
+     C           *IN09     WHEQ *ON
+     C                     EXSR SR8500
+     C*                                                                   084005
+     C*  -- If updated (not F3 or F12), refresh the display:              084005
+     C*                                                                   084005
+     C           P1RTN     IFEQ *BLANKS                                   084005
+     C                     EXSR SRFRSH                                    084005
+     C                     ENDIF                                          084005
+     C*
+     C* Test for Enter (Check for selections):
+     C*
+     C           RRN2      WHGT *ZERO
+     C                     EXSR SRCHK2
+     C*
+     C                     ENDSL
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C***********                                                         083792
+     C*********** Reset F12:                                              083792
+     C***********          SETOF                     12                   083792
+     C*                                                                   083792
+     C* F12:                                                              083792
+     C           *IN12     IFEQ *ON                                       083792
+     C*********************MOVE 'CGD1001' ZAMSID                    083792115722
+     C*********************MOVEL'CGUSRMSG'ZAMSGF                    083792115722
+     C*********************EXSR SRSNMS                              083792115722
+     C                     ELSE                                           083792
+     C                     EXSR SRBLD1                                    083792
+     C                     ENDIF                                          083792
+     C*
+     C           EXEXF2    TAG                             <<<=== EXEXF2
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************084005
+     C**  Subroutine SRFRSH refreshes the options list subfile.         **084005
+     C********************************************************************084005
+     C           SRFRSH    BEGSR                           * S R F R S H *084005
+     C*                                                                   084005
+     C* Add subroutine name to stack:                                     084005
+     C*                                                                   084005
+     C                     ADD  1         Q                               084005
+     C                     MOVEL'SRFRSH'  @STK,Q                          084005
+     C*                                                                   084005
+     C* - Clear the subfile:                                              084005
+     C                     SETOF                     8182                 084005
+     C                     SETON                     80                   084005
+     C                     WRITE#SFLCTL2                                  084005
+     C                     SETOF                     80                   084005
+     C                     SETON                     81                   084005
+     C*                                                                   084005
+     C* - Reset the top RRN:                                              084005
+     C                     Z-ADD*ZERO     #RRMX2                          084005
+     C                     Z-ADD*ZERO     RRN2                            084005
+     C*                                                                   084005
+     C* - /Copy point for subfile control initialisation:                 084005
+     C*                                                                   084005
+     C/COPY WNCPYSRC,CG8600DISC                                           084005
+     C*                                                                   084005
+     C* - Clear the formatting option value:                              084005
+     C*                                                                   084005
+     C                     MOVE *BLANKS   #2FOPT                          084005
+     C*                                                                   084005
+     C* - Load the subfile with available options:                        084005
+     C*                                                                   084005
+     C                     EXSR SRLDS2                                    084005
+     C*                                                                   084005
+     C           EXFRSH    TAG                             <<<=== EXFRSH  084005
+     C*                                                                   084005
+     C* Unwind subroutine stack:                                          084005
+     C*                                                                   084005
+     C                     MOVE *BLANKS   @STK,Q                          084005
+     C                     SUB  1         Q                               084005
+     C*                                                                   084005
+     C                     ENDSR                                          084005
+     C********************************************************************084005
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHK2 looks for an entry in the types list.       **
+     C********************************************************************
+     C           SRCHK2    BEGSR                           * S R C H K 2 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHK2'  @STK,Q
+     C*
+     C* Check selections:
+     C                     Z-ADD*ZERO     RRN2
+     C                     Z-ADD*ZERO     RRN2SV  40
+     C                     Z-ADD*ZERO     #NUM2   30
+     C*
+     C           RRN2      DOUEQ#RRMX2
+     C           *IN95     OREQ *ON
+     C                     ADD  1         RRN2
+     C           RRN2      CHAIN#SFLRCD2             95
+     C           *IN95     IFEQ *OFF
+     C                     SETOF                     32
+     C           #2SEL     IFNE *BLANK
+     C                     Z-ADDRRN2      RRN2SV
+     C                     ADD  1         #NUM2
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+     C*
+     C           #NUM2     IFGT 1
+     C***********          MOVE 'CGD1314' ZAMSID                          084005
+     C                     MOVE 'CGD1817' ZAMSID                          084005
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           #NUM2     IFEQ 1
+     C           RRN2SV    CHAIN#SFLRCD2             95
+     C           *IN95     IFEQ *OFF
+     C           #2SEL     IFEQ 'D'                        B1             093613
+     C           KKFASC    CHAINCGFASCL0             95                   093613
+     C           *IN95     IFEQ *OFF                       B2             093613
+     C* CONTROL DELETED OPTION IS NOT USED ANYWHERE ELSE                  093613
+     C           LRRDE     SETLLCGPDEFL3             95                   093613
+     C           LRRDE     READECGPDEFL3                 95               093613
+     C                     MOVE 'Y'       DEL     1                       093613
+     C           *IN95     DOWEQ'0'                        B3             093613
+     C           DEL       ANDEQ'Y'                         3             093613
+     C           #2FOPT    IFEQ LRCFMO                     B4             093613
+     C           #2FOPT    OREQ LRCOPT                      4             093613
+     C                     MOVE 'N'       DEL                             093613
+     C                     ENDIF                           E4             093613
+     C           LRRDE     READECGPDEFL3                 95               093613
+     C                     ENDDO                           E3             093613
+     C           DEL       IFEQ 'Y'                        B3             093613
+     C                     DELET@FASCL0                                   093613
+     C* TO PREVENT OPEN PROBLEM IN CG8500                                 093613
+     C           1         IFEQ 2                          B4             093613
+     C                     WRITE@FASCL0                                   093613
+     C                     ENDIF                           E4             093613
+     C                     ENDIF                           E3             093613
+     C                     ENDIF                           E2             093613
+     C                     ELSE                            X1             093613
+     C                     EXSR SRIZS3                        show list
+     C                     ENDIF                           E1             093613
+     C* F12:                                                              083792
+     C           *IN12     IFEQ *ON                                       083792
+     C*********************MOVE 'CGD1001' ZAMSID                    083792115722
+     C*********************MOVEL'CGUSRMSG'ZAMSGF                    083792115722
+     C*********************EXSR SRSNMS                              083792115722
+     C                     ELSE                                           083792
+     C                     EXSR SRFRSH                                    083792
+     C                     ENDIF                                          083792
+     C                     SETOF                     12                   083792
+     C*                                                                   083792
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     Z-ADD#RRMX2    RRN2
+     C*
+     C           EXCHK2    TAG                             <<<=== EXCHK2
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRIZS3 initialises the format options subfile.     **
+     C********************************************************************
+     C           SRIZS3    BEGSR                           * S R I Z S 3 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRIZS3'  @STK,Q
+     C*
+     C* Display the current options (the description
+     C*  will be added later, in subroutine SRLDS3):
+     C*
+     C                     MOVE *BLANKS   #3CURR
+     C*
+     C                     SELEC
+     C           #OTYPE    WHEQ '*CHAR '                    Character
+     C                     MOVE LRCFMO    #3CURO
+     C                     MOVE LRCFOP    #3CURT
+     C*
+     C           #OTYPE    WHEQ '*NUM  '                    Numeric
+     C                     MOVE LRNFMT    #3CURO
+     C                     MOVE LRNFOP    #3CURT
+     C*
+     C           #OTYPE    WHEQ '*CODE '                    Code
+     C                     MOVE LRCOPT    #3CURO
+     C                     MOVE LRCFTP    #3CURT
+     C*
+     C* If a narrative line, move the narrative description:
+     C*
+     C********** #3CURO    IFEQ #2FOPT                                    084005
+     C********** #3CURT    ANDEQ#SFRMT                                    084005
+     C***********          MOVE #3DESC    #3CURD                          084005
+     C***********          ENDIF                                          084005
+     C           #3CURO    IFEQ #SFOPT                                    084005
+     C           #3CURT    ANDEQ#SFRMT                                    084005
+     C                     MOVE #SDESC    #3CURD                          084005
+     C                     ENDIF                                          084005
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C                     OTHER
+     C*
+     C* The field does not have formatting defined;
+     C*  move appropriate text to this effect:
+     C*
+     C                     MOVE #NOOPT    #3CURR
+     C                     ENDSL
+     C*
+     C* Clear the subfile:
+     C                     SETOF                     86
+     C                     SETON                     85
+     C                     WRITE#SFLCTL3
+     C                     SETOF                     85
+     C                     SETON                     86
+     C*
+     C* Reset top RRN:
+     C                     Z-ADD*ZERO     #RRMX3  50
+     C                     Z-ADD*ZERO     RRN3    50
+     C*
+     C* /Copy point for subfile control initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8600DISC
+     C*
+     C* Reset language tag:
+     C                     MOVE 'N'       @@LANG  1
+     C*
+     C* Load subfile:
+     C                     EXSR SRLDS3
+     C*
+     C* Show subfile:
+     C                     EXSR SREXF3
+     C*
+     C           EXIZS3    TAG                             <<<=== EXIZS3
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRLDS3 loads the format options subfile.           **
+     C********************************************************************
+     C           SRLDS3    BEGSR                           * S R L D S 3 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRLDS3'  @STK,Q
+     C*
+     C* Start at previous highest record in subfile:
+     C*
+     C                     Z-ADD#RRMX3    RRN3
+     C*
+     C* Show the "Narrative" line (for codes):
+     C*
+     C           #OTYPE    IFEQ '*CODE '                    Code
+     C                     SETOF                     334546
+     C                     MOVE *BLANK    #3SEL
+     C                     MOVE #NAROP    #3OPTS
+     C                     MOVE #2FOPT    #3FOPT            Overwrite
+     C                     MOVE *BLANKS   #3LGID
+     C                     MOVE 'T'       #3LTYP            Text -- tag
+     C                     MOVE 'N'       #3RMV              "Narrative"
+     C                     MOVE *BLANKS   #3DATA
+     C                     ADD  1         RRN3
+     C                     WRITE#SFLRCD3
+     C*
+     C* Leave a blank line:
+     C*
+     C                     SETOF                     3345
+     C                     SETON                     46
+     C                     MOVE *BLANK    #3SEL
+     C                     MOVE *BLANKS   #3OPTS
+     C                     MOVE *BLANKS   #3LGID
+     C                     MOVE 'B'       #3LTYP            Blank
+     C                     MOVE *BLANKS   #3DATA
+     C                     ADD  1         RRN3
+     C                     WRITE#SFLRCD3
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Load subfile lines until end of file:
+     C*
+     C***********#2FOPT    SETLLCGFOPTL0                                  086185
+     C           #2FOPT    SETLLCGFOPTL1                                  086185
+     C           *IN94     DOUEQ*ON
+     C***********#2FOPT    READECGFOPTL0            N    94               086185
+     C           #2FOPT    READECGFOPTL1                 94               086185
+     C           *IN94     IFEQ *OFF
+     C                     SETOF                     334546
+     C                     MOVE *BLANK    #3SEL
+     C                     MOVELFOFOPT    #3FOPT
+     C                     MOVELFOFRMT    #3FRMT
+     C                     MOVELFODESC    #3DESC
+     C                     MOVE *BLANKS   #3LGID
+     C                     MOVE 'O'       #3LTYP            Option
+     C                     MOVE *BLANK    #3RMV            -- not "Remove"
+     C                     MOVE #FONAR    #3DATA
+     C*
+     C* If a match, move this description to the current options text:
+     C*
+     C           FOFOPT    IFEQ #3CURO
+     C           FOFRMT    ANDEQ#3CURT
+     C                     MOVE #3DESC    #3CURD
+     C                     ENDIF
+     C*
+     C* /Copy point for subfile record initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8600DISR
+     C*
+     C* Write the record:
+     C                     ADD  1         RRN3
+     C                     WRITE#SFLRCD3
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* For each format option / format type combination,
+     C*  there may be one or more translated versions.
+     C*  These are shown for information only:
+     C*
+     C***********KKFLN1    SETLLCGFLNGL0
+     C           KKFLN1    SETLLCGFLNGL1                                  086185
+     C           *IN96     DOUEQ*ON
+     C***********KKFLN1    READECGFLNGL0            N    96
+     C           KKFLN1    READECGFLNGL1                 96               086185
+     C           *IN96     IFEQ *OFF
+     C                     SETOF                     3346
+     C                     SETON                     45
+     C                     MOVE *BLANK    #3SEL
+     C                     MOVELBYDESC    #3DESC    P
+     C                     MOVELBYLGID    #3LGID
+     C                     MOVE 'L'       #3LTYP            Language
+     C                     MOVELBYFOPT    #3FOPT
+     C                     MOVE #BYNAR    #3DATA
+     C*
+     C* Set language flag:
+     C                     MOVE 'Y'       @@LANG
+     C*
+     C* /Copy point for subfile record initialisation:
+     C*
+     C/COPY WNCPYSRC,CG8600DISR
+     C*
+     C* Write the record:
+     C                     ADD  1         RRN3
+     C                     WRITE#SFLRCD3
+     C* Enddo language:
+     C                     ENDIF
+     C                     ENDDO
+     C* Enddo option:
+     C                     ENDIF
+     C                     ENDDO
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* If the field has a current option defined,
+     C*  provide the facility to remove it:
+     C*
+     C                     MOVEL#NOOPT    #EMPTY 10        -- "*NONE  " in
+     C           #3CURO    IFNE *BLANKS                        the current
+     C           #3CURO    ANDNE#EMPTY                         language
+     C*
+     C* Leave a blank line:
+     C*
+     C                     SETOF                     3345
+     C                     SETON                     46
+     C                     MOVE *BLANK    #3SEL
+     C                     MOVE *BLANKS   #3OPTS
+     C                     MOVE *BLANKS   #3LGID
+     C                     MOVE 'B'       #3LTYP            Blank
+     C                     MOVE *BLANKS   #3DATA
+     C                     ADD  1         RRN3
+     C                     WRITE#SFLRCD3
+     C*
+     C* Show the "Remove" line:
+     C*
+     C                     SETOF                     334546
+     C                     MOVE *BLANK    #3SEL
+     C                     MOVE #RMVOP    #3OPTS
+     C                     MOVE *BLANKS   #3LGID
+     C                     MOVE 'R'       #3LTYP            Remove
+     C                     MOVE 'X'       #3RMV            -- tag "Remove"
+     C                     MOVE *BLANKS   #3DATA
+     C                     ADD  1         RRN3
+     C                     WRITE#SFLRCD3
+     C                     ENDIF
+     C*
+     C* Set indicator 87 (display subfile):
+     C*
+     C                     SETOF                     87
+     C           RRN3      IFGT *ZERO
+     C                     SETON                     87
+     C                     ENDIF
+     C*
+     C* Save highest RRN:
+     C                     Z-ADDRRN3      #RRMX3
+     C*
+     C           EXLDS3    TAG                             <<<=== EXLDS3
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXF3 displays the list of format options.        **
+     C********************************************************************
+     C           SREXF3    BEGSR                           * S R E X F 3 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXF3'  @STK,Q
+     C*
+     C* Clear messages:
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+     C*
+     C* Select the heading:
+     C                     MOVE #FM5NL    #FMTX5
+     C           #OTYPE    IFEQ '*CODE '
+     C                     MOVE #FM5WL    #FMTX5
+     C                     ENDIF
+     C*
+     C* Do until F3 (exit), F12 (previous) or Exit:
+     C*
+     C           *IN03     DOUEQ*ON
+     C           *IN12     OREQ *ON
+     C           ##EXIT    OREQ 'Y'
+     C*
+     C* Update the screen time and the job time:
+     C*
+     C                     TIME           ##TME
+     C                     Z-ADD##TME     ##JTM
+     C*
+     C                     WRITE#WINDOW
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT3
+     C                     EXFMT#SFLCTL3
+     C*
+     C* Clear messages:
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ
+     C                     PARM '*SAME'   ZAPGRL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C           *IN03     IFEQ *OFF
+     C           *IN12     ANDEQ*OFF
+     C*
+     C* Test for F9    (Format maintenance); or
+     C*          Enter (Check for selections):
+     C*
+     C           *IN09     CASEQ*ON       SR8500
+     C           RRN3      CASGT*ZERO     SRCHK3
+     C                     ENDCS
+     C*
+     C                     ENDIF
+     C                     ENDDO
+     C*                                                                   083792
+     C*********** Reset F12:                                              083792
+     C***********          SETOF                     12                   083792
+     C*
+     C           EXEXF3    TAG                             <<<=== EXEXF3
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCHK3 looks for an entry in the list of options.  **
+     C********************************************************************
+     C           SRCHK3    BEGSR                           * S R C H K 3 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCHK3'  @STK,Q
+     C*
+     C* Check selections:
+     C                     Z-ADD*ZERO     RRN3
+     C                     Z-ADD*ZERO     RRN3SV  40
+     C                     Z-ADD*ZERO     #NUM3   30
+     C                     MOVE 'N'       ##ERR3  1
+     C***********          SETOF                     32
+     C*
+     C           RRN3      DOUEQ#RRMX3
+     C           *IN95     OREQ *ON
+     C                     ADD  1         RRN3
+     C           RRN3      CHAIN#SFLRCD3             95
+     C           *IN95     IFEQ *OFF
+     C           #3LTYP    ANDNE'B'                           (not blank)
+     C***********          SETOF                     31             084005083792
+     C********** #3SEL     IFNE *BLANK                              084005083792
+     C***********                                                   084005083792
+     C*********** Select value must be "1"                          084005083792
+     C***********                                                   084005083792
+     C********** #3SEL     IFNE '1'                                 084005083792
+     C***********          MOVE 'CGD2503' ZAMSID                    084005083792
+     C***********          MOVEL'CGUSRMSG'ZAMSGF                    084005083792
+     C***********          EXSR SRSNMS                              084005083792
+     C***********          MOVEL'N'       ##END3  1                 084005083792
+     C***********          GOTO EXCHK3                              084005083792
+     C***********          ENDIF                                    084005083792
+     C***********                                                   084005083792
+     C***********          Z-ADDRRN3      RRN3SV                    084005083792
+     C***********          ADD  1         #NUM3                     084005083792
+     C***********          ENDIF                                    084005083792
+     C*...................................................................084005
+     C/EJECT
+     C*...................................................................084005
+     C                     SETOF                     33                   084005
+     C           #3SEL     IFEQ '1'                                       084005
+     C                     Z-ADDRRN3      RRN3SV                          084005
+     C                     ADD  1         #NUM3                           084005
+     C                     ELSE                                           084005
+     C           #3SEL     IFNE *BLANK                                    084005
+     C                     SETON                     33                   084005
+     C                     MOVE 'Y'       ##ERR3                          084005
+     C                     ENDIF                                          084005
+     C                     ENDIF                                          084005
+     C*                                                                   084005
+     C                     ENDIF
+     C                     ENDDO
+     C*                                                                   084005
+     C           ##ERR3    IFEQ 'Y'                                       084005
+     C                     MOVE 'CGD1002' ZAMSID                          084005
+     C                     MOVEL'CGUSRMSG'ZAMSGF                          084005
+     C                     EXSR SRSNMS                                    084005
+     C                     ENDIF                                          084005
+     C*
+     C           #NUM3     IFGT 1
+     C***********          MOVE 'CGD1314' ZAMSID                          084005
+     C                     MOVE 'CGD1817' ZAMSID                          084005
+     C                     MOVEL'CGUSRMSG'ZAMSGF
+     C                     EXSR SRSNMS
+     C                     ENDIF
+     C*...................................................................084005
+     C/EJECT
+     C*...................................................................084005
+     C********** #NUM3     IFEQ 1                                         084005
+     C           ##ERR3    IFEQ 'N'                                       084005
+     C           #NUM3     ANDEQ1                                         084005
+     C           RRN3SV    CHAIN#SFLRCD3             95
+     C           *IN95     IFEQ *OFF
+     C*
+     C           KKPDEF    CHAINCGPDEFL0             91
+     C           *IN91     IFEQ *OFF
+     C***********          MOVE *BLANKS   LRD256                          084005
+     C* Maintain:
+     C           #3RMV     IFEQ *BLANK
+     C* Data:
+     C***********          MOVE #3DATA    LRD256                          084005
+     C* Select:
+     C                     SELEC
+     C           #OTYPE    WHEQ '*NUM '                     Numeric
+     C                     MOVE #3FOPT    LRNFMT
+     C                     MOVE #3FRMT    LRNFOP
+     C*
+     C           #OTYPE    WHEQ '*CODE'                     Code
+     C                     MOVE #3FOPT    LRCOPT
+     C                     MOVE #3FRMT    LRCFTP
+     C*
+     C                     OTHER                            Character
+     C                     MOVE #3FOPT    LRCFMO
+     C                     MOVE #3FRMT    LRCFOP
+     C                     ENDSL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Remove:
+     C                     ELSE
+     C* Narrative (Text):
+     C                     SELEC
+     C           #3LTYP    WHEQ 'T'
+     C                     MOVE #3FOPT    LRCOPT
+     C                     MOVE #3FRMT    LRCFTP
+     C* Remove:
+     C           #3LTYP    WHEQ 'R'
+     C* Data:
+     C***********          MOVE #3DATA    LRD256                          084005
+     C* Select:
+     C                     SELEC
+     C           #OTYPE    WHEQ '*NUM '                     Numeric
+     C                     MOVE *BLANKS   LRNFMT
+     C                     MOVE *BLANKS   LRNFOP
+     C*
+     C           #OTYPE    WHEQ '*CODE'                     Code
+     C                     MOVE *BLANKS   LRCOPT
+     C                     MOVE *BLANKS   LRCFTP
+     C*
+     C                     OTHER                            Character
+     C                     MOVE *BLANKS   LRCFMO
+     C                     MOVE *BLANKS   LRCFOP
+     C                     ENDSL
+     C*
+     C                     ENDSL
+     C*
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Formatted length:
+     C                     Z-ADD#FMLEN    LROLEN
+     C* Alignment type:
+     C***********          MOVE #FMALN    LRALGN                          084073
+     C                     MOVEL#FMALN    LRALGN                          084073
+     C*
+     C                     UPDAT@PDEFL0                90
+     C* Trap error:
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGPDEFL0'W0FILE
+     C                     MOVEL'*UPDATE 'W0KEY            ***************
+     C                     Z-ADD4         W0ERNB           ** Database  **
+     C                     MOVE 'MEM5002' W0MSGD           ** error 4.  **
+     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C                     ENDIF
+     C                     MOVE 'Y'       ##EXIT
+     C*                                                                   083792
+     C*********** Exit program as selection has been made                 083792
+     C***********                                                         083792
+     C***********          EXSR SREXPG                                    083792
+     C                     ENDIF
+     C*
+     C                     Z-ADD#RRMX3    RRN3
+     C*
+     C           EXCHK3    TAG                             <<<=== EXCHK3
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRTEXT retrieves displayed text strings.           **
+     C********************************************************************
+     C           SRTEXT    BEGSR                           * S R T E X T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRTEXT'  @STK,Q
+     C*
+     C* Label --- "Format options for field:":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1589' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #FMTX1
+     C*
+     C* Label -- "Character formatting":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1635' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #CHTXT 60
+     C*
+     C* Label -- "Numeric formatting":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1636' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #NMTXT 60
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Label -- "Codes formatting":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1637' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #CDTXT 60
+     C*
+     C* Label -- "Length:":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1628' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #FMTX2
+     C*
+     C* Label -- "Alignment:":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1633' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #FMTX3
+     C*                                                                   093613
+     C* Label -- "Confirm deletion" :                                     093613
+     C*                                                                   093613
+     C                     CALL 'CGC1000'              9090               093613
+     C                     PARM 'CGD1506' #MSGID                          093613
+     C                     PARM 'CGUSRMSG'#MSGF                           093613
+     C                     PARM           #MSDTA                          093613
+     C                     PARM *BLANKS   #MSTX1                          093613
+     C                     PARM *BLANKS   #MSTX2                          093613
+     C*                                                                   093613
+     C                     MOVEL#MSTX1    #DELX1                          093613
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Format types column headings:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1642' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #FMTX4
+     C*
+     C* Format options column headings:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1641' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #FM5WL 70
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1590' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #FM5NL 70
+     C*
+     C* Label -- "Currently":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1620' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #FMTX6
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Text -- "No options" -- for formatting options screen:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1621' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #NOOPT 55
+     C*
+     C* Text -- "Remove options" -- for formatting options screen:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1622' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #RMVOP 55
+     C*
+     C* Text -- "Narratives" -- for formatting options screen:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1768' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #NAROP 55
+     C* Save values:
+     C                     MOVE #NAROP    #SOPTS
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Instructions text on formatting options screen:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1591' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CMD1
+     C***********          MOVEL#MSTX1    ##CMD3                          093613
+     C                     MOVEL#MSTX1    ##CMD5
+     C*                                                                   093613
+     C                     CALL 'CGC1000'              9090               093613
+     C                     PARM 'CGD1703' #MSGID                          093613
+     C                     PARM 'CGUSRMSG'#MSGF                           093613
+     C                     PARM           #MSDTA                          093613
+     C                     PARM *BLANKS   #MSTX1                          093613
+     C                     PARM *BLANKS   #MSTX2                          093613
+     C                     MOVEL#MSTX1    ##CMD3                          093613
+     C*
+     C* Function keys text on formatting options types list screen:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C***********          PARM 'CGD1592' #MSGID                          093613
+     C                     PARM 'CGD1787' #MSGID                          093613
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CMD2
+     C*
+     C* Function keys text on formatting options list screen:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1695' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CMD4
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Function keys text on formatting options selection screen:
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1696' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    ##CMD6
+     C*
+     C* Text -- "No options have been found ...":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1686' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #NOTX1
+     C*
+     C* Text -- "Press F9 to define options ...":
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM 'CGD1687' #MSGID
+     C                     PARM 'CGUSRMSG'#MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C*
+     C                     MOVEL#MSTX1    #NOTX2
+     C*
+     C           EXITXT    TAG                             <<<=== EXITXT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSNMS sends a message to the program's queue.     **
+     C********************************************************************
+     C           SRSNMS    BEGSR                           * S R S N M S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSNMS'  @STK,Q
+     C*
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVE ##PGM     ZAPGMQ
+     C                     ENDIF
+     C*
+     C* If no message file specified, use default:
+     C*
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVE ZADFMF    ZAMSGF
+     C                     ENDIF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+     C*
+     C* Clear all fields after use:
+     C*
+     C                     MOVE *BLANKS   ZAPGMQ
+     C                     MOVE *BLANKS   ZAPGRL
+     C                     MOVE *BLANKS   ZAMSID
+     C                     MOVE *BLANKS   ZAMSGF
+     C                     MOVE *BLANKS   ZAMSDA
+     C                     MOVE *BLANKS   ZAMSTP
+     C*
+     C           EXSNMS    TAG                             <<<=== EXSNMS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SREXPG exits the program.                          **
+     C********************************************************************
+     C           SREXPG    BEGSR                           * S R E X P G *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SREXPG'  @STK,Q
+     C*
+     C* F3:
+     C           *IN03     IFEQ *ON
+     C                     MOVE 'Y2U9999' P0RTN
+     C                     ENDIF
+     C* F12:
+     C           *IN12     IFEQ *ON
+     C                     MOVE 'USR0790' P0RTN
+     C                     ENDIF
+     C*
+     C* /Copy point for exit processing:
+     C*
+     C/COPY WNCPYSRC,CG8600DEPP
+     C*
+     C* Copy any undisplayed messages to the caller:
+     C*
+     C                     CALL 'Y2CPMSC'
+     C                     PARM           ##PGM
+     C*
+     C                     OUT  BIGLDA
+     C*
+     C           EXEXPG    TAG                             <<<=== EXEXPG
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation.                    **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Define and clear error return code:
+     C*
+     C                     MOVE *BLANKS   P0RTN   7
+     C*
+     C* Get the local data area (*LDA):
+     C*
+     C           *NAMVAR   DEFN *LDA      BIGLDA
+     C                     IN   BIGLDA
+     C*
+     C* Set job date and time and the screen time:
+     C*
+     C                     Z-ADDUDATE     ##JDT
+     C                     TIME           ##JTM
+     C                     Z-ADD##JTM     ##TME   60
+     C*
+     C* Define the default message file:
+     C*
+     C                     MOVEL'CGUSRMSG'ZADFMF 10
+     C*
+     C* Define the current formatting option:
+     C*
+     C           *LIKE     DEFN BYFOPT    ##FOPT
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Move the copyright parameter:
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* Get the run-date:
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C                     MOVELAGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVELAGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C* CGPDEFL0:
+     C           KKPDEF    KLIST
+     C                     KFLD           #@LAYO
+     C                     KFLD           #@PLAN
+     C                     KFLD           P0FLDN
+     C* CGFLNGL0:
+     C           KKFLN1    KLIST
+     C                     KFLD           FOFOPT
+     C                     KFLD           FOFRMT
+     C* CGFASCL0:
+     C           KKFASC    KLIST
+     C                     KFLD           LRRDE
+     C                     KFLD           #2FOPT
+     C* CGFGRPL0:
+     C           KKFGRP    KLIST
+     C                     KFLD           FAFOPT
+     C                     KFLD           #OTYPE
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CG8600DCPG
+     C*
+     C* Get the text for the headings and command keys:
+     C*
+     C           @@TEXT    IFNE 'Y'
+     C                     EXSR SRTEXT
+     C                     MOVE 'Y'       @@TEXT  1
+     C                     ENDIF
+     C*
+     C* These operations are required by the compiler. These files
+     C*  are opened for update/add to match program CG8500:
+     C*
+      *********************                                               086185
+     C**N25*25*************UPDAT@FASCL0                                   086185
+     C**N25*25*************WRITE@FASCL0                                   086185
+     C*********************                                               086185
+     C**N25*25*************UPDAT@FGRPL0                                   086185
+     C**N25*25*************WRITE@FGRPL0                                   086185
+     C*********************                                               086185
+     C**N25*25*************UPDAT@FLNGL0                                   086185
+     C**N25*25*************WRITE@FLNGL0                                   086185
+     C*********************                                               086185
+     C**N25*25*************UPDAT@FOPTL0                                   086185
+     C**N25*25*************WRITE@FOPTL0                                   086185
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculation specifications:
+     C*
+     C/COPY WNCPYSRC,CG8600CPG
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     C* /Copy point for output:
+     C*
+     O/COPY WNCPYSRC,CG8600DOPG
+     C*
+     O********************************************************************
+** CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,287 @@
+.**********************************************************************
+.*STD    PNLBASE                                                      *
+.*EXI    TEXT('Midas UP Help panel group for Action Files')           *
+.**********************************************************************
+.*                                                                    *
+.*  Midas - Bridge                                                    *
+.*                                                                    *
+.*  ACTIONFILE - Action File help                                     *
+.*                                                                    *
+.*  (c) Finastra International Limited 2002                           *
+.*                                                                    *
+.*  Last Amend No. CUP040             Date 22Feb13                    *
+.*  Prev Amend No. A1084804           Date 30Jan13                    *
+.*                 CUP021  *REWRITE   Date 22Feb11                    *
+.* Bank Fusion Midas 1.4 Base -----------------------------------------
+.* Midas Plus 1.4 Base 04 ---------------------------------------------
+.* Midas Plus 1.4 Base ------------------------------------------------
+.* Midas Plus 1.3 ---------------- Base -------------------------------
+.* Midas Release 4.01.03 ----------------------------------------------
+.*                 CUP019 *CREATE     Date 30May02                    *
+.*                                                                    *
+.*--------------------------------------------------------------------*
+.*                                                                    *
+.*  CUP040 - New deliverable data methodology.                        *
+.*         - Add 'original file' parameter.                           *
+.*  A1084804 - New *MRG option.                                       *
+.*  CUP021 - Rewrite of Action File processing.                       *
+.*  CUP019 - Creation of new set of Action File utilities.            *
+.*                                                                    *
+.**********************************************************************
+:PNLGRP.
+.*
+:HELP name='ACTIONFILE'.
+:P.
+This command is used to make the delivery and maintenance of deliverable
+data more easy and more traceable.
+:P.
+It can be used for two different scenarios:
+:PC.
+a) upgrading a system between interim releases, patches, etc.
+:PC.
+b) comparing and marking changes between full releases.
+:P.
+The ACTIONFILE command runs in several modes which cover the full cycle of
+delivering changes for deliverable data and applying those changes to another
+system.  These modes are described below.
+:P.
+This utility is an important component of the Bridge and it is used within
+'shell' programs to perform the relevant steps (or modes) upon an entire interim
+release / patch or full release.
+:EHELP.
+.*
+:HELP name='ACTIONFILE/MODE'.
+:H3.
+Mode (MODE)
+:P.
+This describes the step that is to be performed in relation to the
+Action File.  There is no default but an entry is mandatory.
+:H3.
+*ADD
+:PC.
+This will add the necessary details for a file that has not had Action File
+processing enabled before.  If *ADD is specified then FILE, KEYF and LAYER
+must also be specified.
+:P.
+When run successfully a record will be added to UPACTFPD and one or more
+records will be added to UPAFFDPD.  A screen will then be displayed to allow
+the user to check that the keyed fields are correct and also to select fields
+that are to be ignored ('Last Changed Date' is a common example of this).
+:P.
+If this option is taken and details already exist for the entered file then the
+details may be overwritten.
+:H3.
+*BLD
+:PC.
+The BUILD mode creates the Action File records.  If *BLD is specified then
+FILE, OLDLIB, NEWLIB and MBROPT must also be specified.
+:P.
+This mode compares the FILE from the OLDLIB against a version in the NEWLIB
+and, if any differences are found, adds a record (or records) to the file
+UPAFCPPD.  Depending on the keys used (as defined in file UPAFFDPD) the
+differences are interpreted as 'Inserts', 'Deletes' or 'Amends'.
+:P.
+In addition a report (UP009006P1) is produced with user data of 'B <file name>'.
+If the file name is longer than 8 characters then it is truncated.
+:H3.
+*RVW
+:PC.
+The REVIEW mode simply reports the Actions for a file allowing the user to
+check the Action File contents at a later point than when the Actions (*BLD)
+were created.  If *RVW is specified then FILE and TKOOPT must also be specified.
+:P.
+The report (UP009006P1) is produced with user data of 'R <file name>'.  If the
+file name is longer than 8 characters then it is truncated.
+:H3.
+*CFT
+:PC.
+The CONFLICT mode is used when a user is preparing to update an existing system.
+If *CFT is specified then FILE must also be specified.  It compares the Actions
+from the Action File against the system or target version of the FILE and
+reports any potential clashes.  For instance, the Action may specify an Insert
+but the record with that key already exists on the target file.
+:P.
+Note that the *CFT mode can only be run after 'take on'.  See the TKOOPT
+parameter.
+:P.
+A report (UP009006P1) is produced with user data of 'X <file name>'.  If the
+file name is longer than 8 characters then it is truncated.
+:P.
+Where an Action is 'Amend' then the conflict report compares the 'After' image
+against the target version.  This means that they will normally appear as a
+conflict but, unless there are additional differences as those reported by the
+*RVW mode, they can usually be ignored.
+:H3.
+*UPD
+:PC.
+The UPDACTF mode is used to update the Action File and would be used in two
+particular situations which are explained below.  If *UPD is specified then
+TKOOPT must also be specified.
+:P.
+When this option is taken the whole Action File is displayed and the user can
+choose to either ignore records or delete records by putting 'Y' or 'D' into the
+option field respectively.  Note that Amend-Before records are automatically set
+to 'Y'.
+:P.
+The two situations mentioned before are when a user is delivering an Action
+File to core or when a user is updating a system and has encountered a
+conflict (when running the *CFT mode).
+:PC.
+In the first scenario the user may create an Action File to find that it has
+created additional records that should not be delivered (maybe some testing
+records).  TKOOPT(*PRETKO) should be specified and the records deleted.
+:PC.
+In the second scenario the user has found a conflict.  TKOOPT(*POSTTKO) should
+be specified and the record(s) set to be ignored ('Y').
+:P.
+For the use of the TKOOPT parameter see the relevant help.
+:H3.
+*PRC
+:PC.
+The PROCESS mode is used to update the system or target FILE according to the
+Actions specified in the Action File.  If *PRC is specified then FILE must
+also be specified.
+.* Start A1084804
+:H3.
+*MRG
+:PC.
+The MERGE process will combine two existing Action Files into one and report
+if there are any possible clashes.  For instance, an Insert and Delete has
+been delivered for the same record.
+:P.
+It also performs special processing for certain files where, for instance,
+unique numbers need adjusting.
+:P.
+.* Start CUP040
+.*The*report*can*be*found*xxxxxxxxxxxxxxxx*                                                   CUP040
+The report can be found in UP009006P1 with user data 'M UPAFCPPD'.
+.* End   CUP040
+:P.
+The Action Files must be in pre-take on form (UPAFCPPD).  The version in the
+library entered as OLDLIB will be the one updated but a temporary security
+copy is made first in QTEMP.  If any clashes are identified they will have to
+be resolved manually.
+.* End   A1084804
+:EHELP.
+.*
+:HELP name='ACTIONFILE/FILE'.
+:H3.
+File name (FILE)
+:P.
+Unless the mode is *UPD then a file must be specified.
+:P.
+If the mode is not *ADD then the file must already be configured for Action
+File processsing; a record should exist on UPACTFPD.
+:P.
+If the mode is *BLD then a version of the file must exist in the libraries
+specified on the OLDLIB and NEWLIB parameters.
+:P.
+If the mode is *CFT or *PRC then a version of the file must exist in the
+library list.
+:EHELP.
+.*
+:HELP name='ACTIONFILE/OLDLIB'.
+:H3.
+Old library (OLDLIB)
+:P.
+Specify the name of a library containing a version of the file specified in
+the FILE parameter.  The contents of this file wil lbe compared against a
+version of the same file in NEWLIB library.
+:P.
+This parameter is only required if the mode is *BLD.  The combination of
+FILE and OLDLIB must exist and OLDLIB must not be the same as NEWLIB.
+:EHELP.
+.*
+:HELP name='ACTIONFILE/NEWLIB'.
+:H3.
+New library (NEWLIB)
+:P.
+Specify the name of a library containing a version of the file specified in
+the FILE parameter.  The contents of this file wil lbe compared against a
+version of the same file in OLDLIB library.
+:P.
+This parameter is only required if the mode is *BLD.  The combination of
+FILE and NEWLIB must exist and NEWLIB must not be the same as OLDLIB.
+:EHELP.
+.*
+:HELP name='ACTIONFILE/MBROPT'.
+:H3.
+Member option (MBROPT)
+:P.
+This parameter is only relevant for mode *BLD.  When *BLD is specified records
+are added to the file UPAFCPPD and this option determines whether UPAFCPPD is
+cleared before the records are added.
+:H2.
+*ADD
+:PC.
+Newly generated Action records are added to the existing Action File (UPAFCPPD).
+:H3.
+*REPLACE
+:PC.
+The file UPAFCPPD is cleared before records are added.  Normally this would be
+specified when creating a 'new' Action File.
+:EHELP.
+.*
+:HELP name='ACTIONFILE/TKOOPT'.
+:H3.
+Pre or post take-on (TKOOPT)
+:P.
+This parameter is only relevant for modes *RVW and *UPD.  During the life-cycle
+of an Action File it will delivered as part of an upgrade.  When applied to a
+system the 'take on' option will be taken (this is part of the Bridge) and this
+copies the records from UPAFCPPD to UPAFDVPD *REPLACE.  The TKOOPT parameter
+determines which version of the Action File is worked upon.
+:H2.
+*POSTTKO
+:PC.
+The file UPAFDVPD is worked upon.
+:H3.
+*PRETKO
+:PC.
+The file UPAFCPPD is worked upon.
+:EHELP.
+.*
+:HELP name='ACTIONFILE/KEYF'.
+:H3.
+Keyed file (KEYF)
+:P.
+This parameter is only relevant for mode *ADD.
+:P.
+For Action File processing to work a unique key for the relevant delivered
+data must be identified.  The file containing this key should be entered here.
+It does not necessarily have to be a logical and can be the same as the
+file entered in FILE if a keyed physical.
+:P.
+The keyed file must exist and it should be related to the file entered in the
+FILE parameter although the second condition is not checked.
+:EHELP.
+.*
+:HELP name='ACTIONFILE/LAYER'.
+:H3.
+Layer (LAYER)
+:P.
+This parameter is only relevant for mode *ADD.
+:P.
+Specify the layer in which the physical file exists.
+:H2.
+*ZONE
+:PC.
+The physical file exists in the zone.
+:H3.
+*GLOBAL
+:PC.
+The physical file exists in the global layer.
+:EHELP.
+.*
+.* Start CUP040
+:HELP name='ACTIONFILE/ORIF'.
+:H3.
+Original file name (ORIF)
+:P.
+If the mode is *ADD then a value must be specified.  If the file being added
+is a replacement using the new methodology then enter the name of the file
+that is being replaced; the file must exist.  Otherwise enter *NONE.
+:EHELP.
+.* End   CUP040
+.*
+:EPNLGRP.

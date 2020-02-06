@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Copy Cust. No. changes for packed fields')   */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation Module                               */
+/*                                                                   */
+/*       SMC000048 - Copy Cust. No. changes for packed fields        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BG18595            Date 06May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK025  *CREATE    Date 09Aug06              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG18595 - Moved to global layer.                            */
+/*       CPK025 - MidasPlus 1.3 packaging.  New migration tool.      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FILE &TOLIB &MEMBER &RETURNCODE)
+ 
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(1)
+ 
+             DCLF       FILE(UPPREFTPD)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGVAR     VAR(&RETURNCODE) VALUE(' ')
+ 
+CHECKFILE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(&FILE *EQ &WHFNAM) THEN(DO)
+                CPYF       FROMFILE(QTEMP/&FILE) TOFILE(&TOLIB/&FILE) +
+                             FROMMBR(&MEMBER) TOMBR(&MEMBER) +
+                             MBROPT(*REPLACE) FMTOPT(*NOCHK)
+                OVRDBF     FILE(&FILE) TOFILE(&TOLIB/&FILE) +
+                             MBR(&MEMBER) OVRSCOPE(*JOB)
+                CALL       PGM(SM000043) PARM(&FILE)
+                DLTOVR     FILE(&FILE) LVL(*JOB)
+                CHGVAR     VAR(&RETURNCODE) VALUE('Y')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             GOTO       CMDLBL(CHECKFILE)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGVAR     VAR(&RETURNCODE) VALUE('E')
+ENDPGM:
+             ENDPGM

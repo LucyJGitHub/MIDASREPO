@@ -1,0 +1,125 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MQ Prod init interface for Cust. select')
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  Midas/Q
+     F*                                                                  *
+     F*    MQ0067  - SHORTNAMES REVIEW & SELECTION                       *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01182             Date 03May90               *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01182  -  NEW PGM INTRODUCED FOR MIS                           *
+     F*                                                                  *
+     F********************************************************************
+     F* INDICATOR USAGE
+     F* 01             ERROR ON DSPF OPEN
+     F* 02             CLEAR SUBFILE
+     F* 03             NO DETAILS INDICATOR
+     F* 04             HEADING TEXT INDICATOR
+     F* 88             PARENT
+     F* 89             END OF FILE FOR CUSTOMERS FILE
+     F* 89             END OF FILE FOR DISPLAY FILE
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FMQ0067DFCF  E                    WORKSTN                        UC
+     F                                        X     KSFILE MQ0067SF
+     FSNAME   IF  E           K        DISK
+     E                    CPY@    1   1 80
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I* MIDAS/Q SYSTEM DEFN DATA AREA
+     I*
+     IO#XA01      DS                           1000
+      *
+      ** Bring in the system definition block
+      /COPY O#XP04,O#SDBLOCKP
+      *
+     C*
+     C**  DEFINE PARM LIST
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           CSNM   10
+     C                     PARM           CNUM
+     C                     PARM           HEAD    1
+     C*
+     C* RETRIEVE MIDAS/Q SYSTEM DEFINITION BLOCK
+     C*
+     C           *NAMVAR   DEFN           O#XA01
+     C                     IN   O#XA01
+     C                     MOVELO#XA01    O#SDBK
+     C*
+     C* OPEN DISPLAY FILE
+     C                     OPEN MQ0067DF               01
+     C           *IN01     IFEQ '0'
+     C* MAIN PROCESSING
+     C                     Z-ADD1         X
+     C                     SETOF                       03
+     C* (1) CLEAR SUBFILE
+     C                     SETON                       02
+     C                     WRITEMQ0067SC
+     C                     SETOF                       02
+     C*
+     C* (2) FILL SUBFILE
+     C           KKEY      KLIST
+     C                     KFLD           CSNM
+     C           CSNM      SETLLSNAME
+     C                     READ SNAME                    89
+     C           *IN89     DOWEQ'0'
+     C*
+     C* IGNORE PARENTS AND NON-LIVE RECORDS
+     C           RECI      IFEQ 'D'
+     C                     TESTB'2'       CMIN           88
+     C           *IN88     IFEQ '0'
+     C                     ADD  1         X       50
+     C                     WRITEMQ0067SF
+     C                     END
+     C                     END
+     C*
+     C                     READ SNAME                    89
+     C                     END
+     C* (3) NO CUSTOMER SHORTNAME RECORDS FOUND
+     C           X         IFEQ 1
+     C                     SETON                     03    NO DETAIL
+     C                     END
+     C* (4) DISPLAY SUBFILE ONTO SCREEN
+     C           HEAD      IFEQ 'A'
+     C                     MOVE '1'       *IN04
+     C                     END
+     C                     WRITEMQ0067TP
+     C                     EXFMTMQ0067SC
+     C* (5) CHECK RECORD SELECTION IF RECORDS FOUND
+     C                     MOVEL*BLANKS   CSNM
+     C**********           MOVEL*ZEROS    CNUM                                                CSD027
+     C                     MOVEL*BLANKS   CNUM                                                CSD027
+     C           *IN03     IFEQ '0'
+     C           READC     TAG
+     C                     READCMQ0067SF                 99
+     C           *IN99     IFEQ '0'
+     C           ACTN      CABEQ*BLANK    READC
+     C                     END
+     C                     END
+     C                     END
+     C                     SETON                     LR
+     C                     RETRN
+**  CPY@
+(c) Finastra International Limited 2001

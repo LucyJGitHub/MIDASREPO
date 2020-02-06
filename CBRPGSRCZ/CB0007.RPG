@@ -1,0 +1,610 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas COB Objects locks control and cancel')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Module                             *
+      *                                                               *
+      *  CB0007 - Midas COB Objects locks control and cancel          *
+      *                                                               *
+      *  Function:  This program accepts information of the file as   *
+      *             the arguments referring to the file that this     *
+      *             this program should check for locks. It generates *
+      *             reports such as the program stack and the open    *
+      *             files reports of the jobs that are locking the    *
+      *             referred file.                                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CCB014  *CREATE    Date 25Apr05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CCB014 - Pre-Scheduled Batch Close Of Business               *
+      *                                                               *
+      *---------------------------------------------------------------*
+     FCB0007P1O   F     132     OV     PRINTER
+      *
+     E                    CPY@    1   1 80
+     E                    USR       200 56
+     E                    T          80  1
+     E                    STE     1   6 10   STE1   26
+     E                    STS     1   3  1   STS1   70
+     E                    TYP     1   4  1   TYP1   70
+     E                    SHR     1   4  2   SHR1   78
+     E                    CMD    80  80  1
+     E                    OVR    80  80  1
+     E                    DLT    80  80  1
+      *
+     IDATA        DS                             56
+     I                                        1  10 JOBNAM
+     I                                       11  20 USRNAM
+     I                                       21  26 JOBNBR
+     I                                       27  36 LCKSTE
+     I                                    B  37  400BLCSTS
+     I                                    B  41  440BLCTYP
+     I                                       45  54 MBRNAM
+     I                                       55  55 SHARE
+     I                                       56  56 RESERV
+      *
+     IUSRSPC      DS
+     I I            'CBLCKOBJ  '              1  10 USNM
+     I I            'QTEMP     '             11  20 USLB
+      *
+      ** Offset and Length of Header Data to be Retrieve
+      *
+     IHEADDS      DS
+     I I            117                   B   1   40STRH
+     I I            24                    B   5   80LENH
+      *
+     IUSRH        DS
+      *
+      ** Offset for Header Section
+      *
+     I                                    B   1   40HOFHED
+      *
+      ** Size Total for List Data
+      *
+     I                                    B   5   80HSZHED
+      *
+      ** Offset for List Data
+      *
+     I                                    B   9  120HOFDTA
+      *
+      ** Size Total for List Data
+      *
+     I                                    B  13  160HSZLST
+      *
+      ** NB Entry in List Data
+      *
+     I                                    B  17  200HNBENT
+      *
+      ** Size of Each Entry in List Data
+      *
+     I                                    B  21  240HSZENT
+      *
+      ** Size of Each Entry in List Data
+      *
+     IHEADSC      DS
+     I                                        1  10 USRN1
+     I                                       11  20 USRL1
+     I                                       21  30 OBJN1
+     I                                       31  40 OBJL1
+     I                                       41  50 OBJT1
+     I                                       51  60 OBJE1
+     I                                       61  70 SHRF1
+     I                                       71  80 SHRL1
+      *
+      ** Data Structure with Constant Parameter
+      ** for QWCLOBJL Convert to Upper Case
+      *
+     I              'ABCDEFGHIJKLMNOPQRS- C         UP
+     I              'TUVWXYZ'
+     I              'abcdefghijklmnopqrs- C         LO
+     I              'tuvwxyz'
+      *
+      ** Data Structure for Element not found in an Array
+      *
+     I##NFD       DS
+     I I            '*NOT FOUND'              1  10 #NFND1
+     I                                       11  20 #NFND2
+      *
+      ** Data Structure Dummy for Constant Parameter for QWCLOBJL
+      *
+     I##DMY       DS
+     I I            'OBJL0100'                1   8 ##DMY1
+     I I            '*FILE     '              9  18 ##DMY2
+     I I            '*ALL      '             19  28 ##DMY3
+     I I            ' '                      29  29 ##DMY4
+      *
+      ** External Data Structure for Access Object Format
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** First Data Structure for Access Objects,
+      ** Short Data Structure
+      *
+     IDSFDY     E DSDSFDY
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           LIBR   10
+     C                     PARM           FILE   10
+     C                     PARM           OTYP    7
+     C                     PARM           RTN     1
+     C                     PARM           RJOBN  10
+     C                     PARM           RUSRN  10
+     C                     PARM           RJOBR   6
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Force All Character to Upper Case (For API QWCLOBJL)
+      *
+     C                     MOVEL*BLANKS   OBJNAM 20
+     C           LO:UP     XLATELIBR      LIBR
+     C           LO:UP     XLATEFILE      FILE
+     C           LIBR      IFEQ *BLANKS
+     C                     MOVEL'*LIBL'   LIBR
+     C                     ENDIF
+     C                     MOVELFILE      OBJNAM
+     C                     MOVE LIBR      OBJNAM
+     C                     MOVELOTYP      ##DMY2
+     C           OTYP      IFNE '*FILE'
+     C                     MOVEL'*NONE'   ##DMY3
+     C                     ENDIF
+      *
+      ** Set Up Program Name for Database Errors
+      *
+     C                     MOVEL'XXXXX'   DBPGM  10
+     C                     MOVE *BLANKS   DBKEY  29
+      *
+      ** Use Access Object AOBANKR0 to Retrieve Header Information
+      ** for Report
+      *
+     C                     CALL 'AOBANKR0'             01
+     C                     PARM '*MSG   ' P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+      *
+      ** The Following Parameter must be Omitted for Release 10
+      *
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If Error Found by Access Object, Exit Program
+      ** via Database Error Subroutine
+      *
+      ** DB Error 01
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           *IN01     OREQ '1'
+     C                     MOVEL'AOBNK'   DBFILE  8
+     C                     Z-ADD1         DBASE   30
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      ** Fill User Space with Info on Lock
+      *
+     C                     CALL 'QWCLOBJL'             01
+     C                     PARM           USRSPC
+     C                     PARM           ##DMY1           'OBJL0100'
+     C                     PARM           OBJNAM
+     C                     PARM           ##DMY2           '*FILE'
+     C                     PARM           ##DMY3           '*ALL'
+     C                     PARM           ##DMY4           ERRCODE
+      *
+      ** DB Error 02
+      *
+     C           *IN01     IFEQ '1'
+     C                     MOVEL'QWCLOBJL'DBFILE
+     C                     Z-ADD2         DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      ** Retrieve Information of List
+      *
+     C                     CALL 'QUSRTVUS'             01
+     C                     PARM           USRSPC
+     C                     PARM           STRH
+     C                     PARM           LENH
+     C                     PARM           USRH
+      *
+      ** DB Error 03
+      *
+     C           *IN01     IFEQ '1'
+     C                     MOVEL'QUSRTVUS'DBFILE
+     C                     Z-ADD3         DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C                     Z-ADDHOFDTA    OFSET  100
+     C                     Z-ADDHOFHED    OFHED  100
+     C                     Z-ADDHSZLST    SZLST  100
+     C                     Z-ADDHSZHED    SZHED  100
+     C                     ADD  1         OFSET
+     C                     ADD  1         OFHED
+      *
+      ** Header Section
+      *
+     C                     Z-ADDOFHED     STRH
+     C                     Z-ADDSZHED     LENH
+      *
+     C                     CALL 'QUSRTVUS'             01
+     C                     PARM           USRSPC
+     C                     PARM           STRH
+     C                     PARM           LENH
+     C                     PARM           HEADSC
+      *
+      ** DB Error 04
+      *
+     C           *IN01     IFEQ '1'
+     C                     MOVEL'QUSRTVUS'DBFILE
+     C                     Z-ADD4         DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+     C   U5                EXCPTHEAD
+      *
+     C                     SETON                     99
+      *
+     C                     Z-ADDOFSET     STRH
+     C                     Z-ADDHSZLST    LENH
+      *
+      ** IF LIST IS EMPTY
+      *
+     C           SZLST     IFEQ 0
+     C                     MOVE 'L'       RTN
+     C   U5                EXCPTNLCK
+     C                     ELSE
+      *
+      ** Retrieve All Data in List
+      *
+     C                     MOVE ' '       RTN
+      *
+     C                     CALL 'QUSRTVUS'             01
+     C                     PARM           USRSPC
+     C                     PARM           STRH
+     C                     PARM           LENH
+     C                     PARM           USR
+      *
+      ** DB Error 05
+      *
+     C           *IN01     IFEQ '1'
+     C                     MOVEL'QUSRTVUS'DBFILE
+     C                     Z-ADD5         DBASE
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+      ** CMD
+      *
+     C                     Z-ADD80        LENC   155
+      *
+     C                     Z-ADDHNBENT    NBENT  100
+     C                     Z-ADD1         I       30
+     C           I         DOWLENBENT
+     C                     MOVEAUSR,I     DATA
+     C                     Z-ADDBLCSTS    LCKSTS 100
+     C                     Z-ADDBLCTYP    LCKTYP 100
+      *
+      ** State
+      *
+     C                     Z-ADD1         X       20
+     C           LCKSTE    LOKUPSTE,X                    98
+     C           *IN98     IFEQ '1'
+     C                     MOVEASTE1,X    STATE2 26
+     C                     MOVELLCKSTE    STATE1 10
+     C                     ELSE
+     C                     MOVELLCKSTE    STATE1
+     C                     MOVEL#NFND1    STATE2
+     C                     ENDIF
+      *
+      ** Status
+      *
+     C                     Z-ADD1         X
+     C                     MOVE LCKSTS    XA      1
+     C           XA        LOKUPSTS,X                    98
+     C           *IN98     IFEQ '1'
+     C                     MOVEASTS1,X    STATUS 70
+     C                     ELSE
+     C                     MOVELLCKSTS    #NFND2    P
+     C                     MOVEL##NFD     STATUS    P
+     C                     ENDIF
+      *
+      ** Type
+      *
+     C                     Z-ADD1         X
+     C                     MOVE LCKTYP    XA
+     C           XA        LOKUPTYP,X                    98
+     C           *IN98     IFEQ '1'
+     C                     MOVEATYP1,X    TYPE   70
+     C                     ELSE
+     C                     MOVELLCKTYP    #NFND2    P
+     C                     MOVEL##NFD     TYPE      P
+     C                     ENDIF
+      *
+      ** Share
+      *
+     C                     Z-ADD1         X
+     C                     MOVELSHARE     XB      2
+     C                     MOVE '1'       XB
+     C           XB        LOKUPSHR,X                    98
+      *
+     C           *IN98     IFEQ '1'
+     C                     MOVEASHR1,X    SHRA   78
+     C                     Z-ADD1         X
+     C                     MOVELSHARE     XB
+     C                     MOVE '2'       XB
+     C           XB        LOKUPSHR,X                    98
+     C                     MOVEASHR1,X    SHRB   30
+     C                     ELSE
+     C                     MOVELSHARE     #NFND2    P
+     C                     MOVEL##NFD     SHRA      P
+     C                     MOVEL*BLANKS   SHRB      P
+     C                     ENDIF
+      *
+     C   U5                EXCPTDETAIL
+     C   OV U5             EXCPTHEAD
+      *
+     C           JOBNAM    IFNE #JOBNM
+     C           JOBNBR    ORNE #JOBNB
+     C           USRNAM    ORNE #USRNM
+     C                     MOVELJOBNAM    #JOBNM 10
+     C                     MOVELJOBNBR    #JOBNB  6
+     C                     MOVELUSRNAM    #USRNM 10
+      *
+      ** DSPJOB JOB() OUTPUT(*PRINT) SELECT(*PGMSTK)
+      *
+     C                     MOVEACMD       T         P
+     C                     MOVEAJOBNBR    T,12      P
+     C                     Z-ADD12        X
+     C           ' '       LOKUPT,X                      99
+     C                     MOVEA'/'       T,X
+     C                     ADD  1         X
+     C                     MOVEAUSRNAM    T,X       P
+     C                     Z-ADD12        X
+     C           ' '       LOKUPT,X                      99
+     C                     MOVEA'/'       T,X
+     C                     ADD  1         X
+     C                     MOVEAJOBNAM    T,X       P
+     C                     Z-ADD12        X
+     C           ' '       LOKUPT,X                      99
+     C                     MOVEAT         TSAV   80
+     C                     MOVEA'*PGMSTK' CMD,36
+     C                     MOVEACMD,12    T,X
+      *
+      ** OVR
+      *
+     C                     MOVEAJOBNAM    OVR,39
+     C                     MOVEA'PGMSTK'  OVR,60
+     C                     MOVEAOVR       CMDE   80
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDE
+     C                     PARM           LENC
+      *
+      ** DSPJOB *PGMSTK
+      *
+     C                     MOVEAT         CMDE
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDE
+     C                     PARM           LENC
+      *
+     C                     MOVEATSAV      T
+     C                     MOVEA'*OPNF  ' CMD,36
+     C                     MOVEACMD,12    T,X
+      *
+      ** OVR
+      *
+     C                     MOVEAJOBNAM    OVR,39
+     C                     MOVEA'OPNFIL'  OVR,60
+     C                     MOVEAOVR       CMDE   80
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDE
+     C                     PARM           LENC
+      *
+      ** DSPJOB *OPNF
+      *
+     C                     MOVEAOVR       CMDE
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDE
+     C                     PARM           LENC
+      *
+     C                     MOVEAT         CMDE
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDE
+     C                     PARM           LENC
+      *
+     C                     ENDIF
+      *
+     C                     ADD  1         I
+     C                     ENDDO
+      *
+      ** DLTOVR
+      *
+     C                     MOVEADLT       CMDE
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMDE
+     C                     PARM           LENC
+      *
+     C   U5                EXCPTRPTEND
+     C                     ENDIF
+     C                     MOVELJOBNAM    RJOBN
+     C                     MOVELUSRNAM    RUSRN
+     C                     MOVELJOBNBR    RJOBR
+      *
+     C                     SETON                     LR
+      *
+     C           DBERR     BEGSR
+      *
+      ** Write Database Error on New Page
+      ** Output 'Data Base Error' Message to Printer File
+      *
+     C                     EXCPTDBELIN
+      *
+      ** Output 'End of Report' Message to Printer File
+      *
+     C                     EXCPTRPTEND
+      *
+      ** Set On Indicators U7, U8 and LR
+      ** and Return to Calling Program
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+     OCB0007P1E 11 1           HEAD
+     O                                   20 'REFERENCE CB0007'
+     O                         BJURPT    90
+     O                                  110 'DATE'
+     O                         BJMRDT    93
+     O                                  125 'PAGE'
+     O                         PAGE  4  130
+     OCB0007P1E 1              HEAD
+     O                                   57 'ALLOCATION OF FILE REPOR'
+     O                                 +000 'T LIST'
+     OCB0007P1E 11             HEAD
+     O                                   57 '------------------------'
+     O                                 +000 '------'
+     OCB0007P1E 1              HEAD
+     O                                   10 'LIBRARY   '
+     O                                   25 'FILE      '
+     OCB0007P1E 11             HEAD
+     O                         FILE      10
+     O                         LIBR      25
+     OCB0007P1E 1              HEAD
+     O                                   12 'Object    '
+     O                                   24 'Object    '
+     O                                   36 'Object    '
+     O                                   48 'ObjectType'
+     O                                   60 'Share     '
+     O                                   72 'Share     '
+     OCB0007P1E 1              HEAD
+     O                                   12 'Name      '
+     O                                   24 'Library   '
+     O                                   36 'Type      '
+     O                                   48 'Extension '
+     O                                   60 'File      '
+     O                                   72 'Library   '
+     OCB0007P1E 1              HEAD
+     O                                   12 '----------'
+     O                                   24 '----------'
+     O                                   36 '----------'
+     O                                   48 '----------'
+     O                                   60 '----------'
+     O                                   72 '----------'
+     OCB0007P1E 11             HEAD
+     O                         OBJN1     12
+     O                         OBJL1     24
+     O                         OBJT1     36
+     O                         OBJE1     48
+     O                         SHRF1     60
+     O                         SHRL1     72
+     OCB0007P1E 1              HEAD
+     O                                   12 'Job Name  '
+     O                                   24 'User Name '
+     O                                   36 'Job Number'
+     O                                   48 'Lock State'
+     O                                   60 'Mbr Name  '
+     OCB0007P1E 1              HEAD
+     O                                   12 '----------'
+     O                                   24 '----------'
+     O                                   36 '----------'
+     O                                   48 '----------'
+     O                                   60 '----------'
+      *
+     OCB0007P1E 1              DETAIL
+     O                         JOBNAM    12
+     O                         USRNAM    24
+     O                         JOBNBR    36
+     O                         LCKSTE    48
+     O                         MBRNAM    60
+     OCB0007P1E 1              DETAIL
+     O                                   15 'Lock state  :'
+     O                         STATE1    25
+     O                         STATE2    50
+     OCB0007P1E 1              DETAIL
+     O                                   15 'Lock status :'
+     O                         STATUS    85
+     OCB0007P1E 1              DETAIL
+     O                                   15 'Lock type   :'
+     O                         TYPE      85
+     OCB0007P1E 1              DETAIL
+     O                                   15 'Share       :'
+     O                         SHRA      93
+     O                         SHRB    +000
+      *
+     OCB0007P1E 11 1           DBELIN
+     O                                   20 'REFERENCE XXXXXX'
+     O                         BJURPT    90
+     O                                  110 'DATE'
+     O                         BJMRDT    93
+     O                                  125 'PAGE'
+     O                         PAGE  4  130
+     OCB0007P1E 1              DBELIN
+     O                                   57 'ALLOCATION OF FILE REPOR'
+     O                                 +000 'T LIST'
+     OCB0007P1E 1              DBELIN
+     O                                   57 '------------------------'
+     O                                 +000 '------'
+     OCB0007P1E 1              DBELIN
+     O                                   10 'LIBRARY   '
+     O                                   25 'FILE      '
+     OCB0007P1E 1              DBELIN
+     O                         FILE      10
+     O                         LIBR      25
+     OCB0007P1E 1              DBELIN
+     O                                   45 'DATABASE ERROR '
+     O                         DBASE     60
+     O                                   70 'IN PROGRAM '
+     O                         DBPGM     80
+     OCB0007P1E 11             DBELIN
+     O                                   35 'FILE '
+     O                         DBFILE    53
+     O                                   70 ', KEY      '
+     O                         DBKEY     99
+      *
+     OCB0007P1E 31             RPTEND
+     O                                   56 '*** END OF REPORT ***'
+      *
+     OCB0007P1E 3              NLCK
+     O                                   56 '****** NO LOCK ******'
+**  CPY@
+(c) Finastra International Limited 2005
+**
+*NONE     No lock exists.
+*SHRRD    Lock shared for read.
+*SHRUPD   Lock shared for update.
+*SHRNUP   Lock shared no update.
+*EXCLRD   Lock exclusive allow read.
+*EXCL     Lock exclusive no read.
+**      LOCK STATUS     (STS STS1)
+1The lock is currently held by the job.
+2The job is waiting for the lock (synchronous).
+3The job has a lock request outstanding for the object (asynchronous).
+**  LOCK TYPE    (TYP TYP1)
+1Lock on the object.
+2Lock on the member control block.
+3Lock on the access path used to access a member's data.
+4Lock on the actual data within the member.
+**  SHARE EXPLANATION (SHR1)
+01The file is not shared, the file is a physical file, or the field is not appli
+02cable to object type.
+11The file is shared.
+12
+** CMD
+DSPJOB JOB() OUTPUT(*PRINT) OPTION(*PGMSTK)
+** OVR
+OVRPRTF FILE(*PRTF) HOLD(*YES) USRDTA(0123456789) SPLFNAME(123456)
+** DLT
+DLTOVR FILE(*ALL)

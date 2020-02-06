@@ -1,0 +1,2827 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE CI store and forward transaction handler')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail Module                                        *
+      *                                                               *
+      *  RE4403 - CS Store and Forward Transaction Handler            *
+      *                                                               *
+      *  Function:  This program will be evoked by Cashier to start   *
+      *  (I/C)      at the AS/400 when store and forward transactions *
+      *             need to be sent to the host from the remote branch*
+      *             communications handlers.                          *
+      *                                                               *
+      *  Called By: REC4403 - CS Store and Forward Transaction Handler*
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 23Oct03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CRT005             Date 09Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 158642             Date 06Jul99               *
+      *                 164273             Date 29Jun99               *
+      *                 164276             Date 29Jun99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 122060             Date  3Jul97               *
+      *                 120880             Date  6Aug97               *
+      *                 CRT003  *CREATE    Date 22Jul96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  222373 - Parameter Mismatch                                  *
+      *  CRT005 - Cashier Enhancement for Cash In Cash Out            *
+      *  158642 - Ignore SP codes 101, 250, 251 and 252 as these are  *
+      *           not processed by Midas - code copied from RE4401    *
+      *  164273 - Change 'Cashier 8' reference to 'Cashier'           *
+      *  164276 - Missing array entry SFWFN                           *
+      *  122060 - Drafts Issuance.                                    *
+      *  120880 - Store and Forward Function.                         *
+      *  CRT003 - Branch Automation Interface.                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FREPLOGL9IF  E           K        DISK
+     F            REPLOGD0                          KRENAMEREPLOGD9
+      **  CS Communications Log keyed by Brch, Teller Id, Comms Seq No.
+      *
+     FREPLOGL0UF  E           K        DISK                      A
+      **  CS Communications Log keyed by CS Comms Seq No.
+      *
+     FTTRNM2L1UF  E           K        DISK
+      **  Teller Controls File
+      *
+     F***REPDRIPDO***E                    DISK                            122060
+     FREPDRIPDO   E                    DISK                           UC  122060
+      **  CS Draft Issuance Incoming Message
+      *
+     FREPDRIL1UF  E           K        DISK         KINFSR *PSSR      UC  122060
+     F            REPDRID0                          KRENAMEREPDRILF       122060
+      **  Draft Issuance Incoming Message key Draft No                    122060
+      *                                                                   122060
+     FRE4403CMCF  E                    WORKSTN
+     F                                              KNUM        1
+     F                                              KINFSR *PSSR
+     F                                              KINFDS FEEDBK
+     F                                              KID    PGMDEV
+      *
+     FRE4403P1O   E             40     PRINTER                        UC
+     F                                              KINFDS SPOOL
+      **  CS Store and Forward Transaction Details
+      *
+     FRE4403AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+      **  CS Store and Forward Transaction Audit
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *                  FUNCTION OF INDICATORS                       *
+      *                  ----------------------                       *
+      *                                                               *
+      *       20         End Of File for ICFF/RE4403CM.               *
+      *       21         'READ' error on device ICFF/RE4403CM.        *
+      *       22         'WRITE' error on device ICFF/RE4403CM.       *
+      *       23         'ACQUIRE' error on device ICFF/RE4403CM.     *
+      *       25         'RCVFAIL' on ICFF/RE4403CM.                  *
+      *       26         'RCVCONFIRM' on ICFF/RE4403CM.               *
+      *       27         'DETACH' on ICFF/RE4403CM.                   *
+      *                                                               *
+      *       30         'CHAIN' fail for LF/TTRNM2L1.                *
+      *       35         'CHAIN' fail for LF/REPLOGL0.                *
+      *                                                               *
+      *       40         Overflow indicator for detail report.        *
+      *                                                               *
+      *       60         LOKUP 'equal to' on Device Array (CDV)       *
+      *       62         LOKUP 'equal to' on Teller Array (TLR)       *
+      *       64         LOKUP 'equal to' on Transaction Type (TXP)   *
+      *       67         LOKUP 'equal to' on Msgs Require Ack(MTYP)   *
+      *                                                               *
+      *                                                               *
+      *       80-89      Standard RTS subroutines                     *
+      *                                                               *
+      *       90-99      Standard MIDAS subroutines                   *
+      *                                                               *
+      *       U7+U8      Database error occurs                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  COMMSG - Comms Message Processing.                           *
+      *  DBERR  - Database Error Handling.                            *
+      *  DIMSG  - Draft Issuance Message Processing.                  *
+      *  INIT   - Initialisation.                                     *
+      *  MESG   - Message Processing.                                 *
+      *  MSGVAL - Further Message Validation.                         *
+      *  RCVDTQ - Receive Dataqueue Processing.                       *
+      *  ROLLBK - Rollback Processing.                                *
+      *  RTVMSG - Retrieve Program Message Details.                   *
+      *  UPDLOG - Update Communications Log.                          *
+      *  WRTLOG - Write to Communications Log.                        *
+      *  WRTDRI - Write to PF/REPDRIPD.                               *
+      *  *PSSR  - Program Error.                                      *
+      *                                                               *
+      *  Standard MIDAS Subroutines                                   *
+      *                                                               *
+      *  ZFWDT  -  Calculate Working Days Forward.                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *
+     E                    CPY@    1   1 80
+      **  Array containing Copyright statement.
+      *
+     E                    DLY     1   1 13
+      *
+     E***********         MTYP    1  21  4   CONF    1                    CI01
+     E***********         MTYP    1  23  4   CONF    1               CI01 164276
+     E**********          MTYP    1  24  4   CONF    1                                 164276 CRT005
+     E                    MTYP    1  28  4   CONF    1                                        CRT005
+      **  Lookup Table to hold transactions that will receive ACK or NAK.
+      *
+     E/COPY ZSRSRC,ZDATE9Z1
+      *
+     E                    CDV       999 10  A
+      **  Authorised Devices array.
+      *
+     E                    TLR       999  3  ATST     3
+      **  Authorised Tellers array.
+      *
+     E                    TBR       999  3  A
+      **  Teller's Branch Code array.
+      *
+     E                    TXP       999 10  ADTL    36
+      **  Cashier Interface Transaction Types Array.
+      *
+      /COPY ZSRSRC,ZEDITZ1
+      *
+      /COPY ZSRSRC,ZHOLE
+      /EJECT
+      **
+     I/COPY ZSRSRC,ZDATE9Z2
+      *
+     I            DS
+     I*I************'CASHIER 8 '              1  10 W#ICDP                164273
+     I I            'CASHIER   '              1  10 W#ICDP                164273
+      *
+     ISPOOLU      DS
+      **  File Information Data Structure for RE4403AU.
+      *
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     ISPOOL       DS
+      **  File Information Data Structure for RE4403P1.
+      *
+     I                                       82  82 OPEN
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+      *
+     IFEEDBK      DS
+      **  File Informational Data Structure for error handling (RE4403CM).
+      *
+     I                                     *STATUS  STATUS
+     I                                       38  45 FMTNM
+     I                                      261 268 ICFREC
+     I                                      273 282 CMID
+     I                                    B 372 3750ACTLEN
+     I                                      401 404 MAJMIN
+     I                                      401 402 MAJCOD
+     I                                      403 404 MINCOD
+      *
+     IPSDS       SDS
+      **  Program status data structure.
+      *
+     I                                     *PROGRAM ZAPGM
+     I                                      244 246 WSID
+     I                                      245 246 WSID2
+     I                                      244 253 WSJOB
+     I                                      254 263 USRID
+     I                                      264 2690JNUMBR
+     I                                      264 269 JOBNUM
+      *
+     IMSGS        DS
+      **  Data structure for message data sent to RBA Dataqueue.
+      *
+     I                                        1 256 MSGS01
+     I                                      257 512 MSGS02
+     I                                      513 768 MSGS03
+     I                                      7691000 MSGS04
+     I                                       15  24 W#JBDQ
+     I                                       25  30 W#SEQN
+     I                                      113 113 W#FWST                120880
+     I                                      358 371 R#TRN1
+     I                                      461 474 R#TRN2
+     I                                      515 528 R#TRN3
+     I                                      529 542 R#TRN4
+      *
+     IMSGR        DS
+      **  Data structure for message data returned on Dataqueue from RBA.
+      *
+     I                                        1 256 MSGR01
+     I                                      257 512 MSGR02
+     I                                      513 768 MSGR03
+     I                                      7691024 MSGR04
+     I                                     10251280 MSGR05
+     I                                     12811536 MSGR06
+     I                                     15371792 MSGR07
+     I                                     17932048 MSGR08
+     I                                     20492304 MSGR09
+     I                                     23052560 MSGR10
+     I                                        1   4 M#MSTY                122060
+     I                                       29  29 M#HMSS
+     I                                      113 113 M#FWPE                122060
+     I                                      358 371 M#TRN1
+     I                                      431 431 M#FPSF                122060
+     I                                      461 474 M#TRN2
+     I                                      515 528 M#TRN3
+     I                                      529 542 M#TRN4
+      *
+     IFIELDI      DS                           1024
+      **  Data structure for message data read from ICF File.
+      *
+     I                                        1 256 FLDI1
+     I                                      257 512 FLDI2
+     I                                      513 768 FLDI3
+     I                                      7691024 FLDI4
+     I                                        1   4 I#MSTY
+     I                                        5   8 I#BRNO
+     I                                        5   7 W#BRCA
+     I                                        9  24 I#USER
+     I                                        9  11 W#TELD
+     I                                       25 113 I#FLR
+     I                                      114 1260I#EQAC
+     I                                      127 1290I#TCOD
+     I                                      130 132 I#CUR1
+     I                                      133 135 I#CUR2
+     I                                      136 149 I#FILR
+     I                                      140 1500I#TAMT
+     I                                      151 156 I#VDAT
+     I                                      157 174 I#REFL
+     I                                      175 209 I#NLN1
+     I                                      210 244 I#NLN2
+     I                                      245 279 I#NLN3
+     I                                      280 314 I#NLN4
+     I                                      315 316 I#SP
+     I                                      317 319 I#SPCD
+     I                                      315 319 W#TXP
+     I                                      478 479 I#SP2
+     I                                      480 482 I#SPC2
+     I                                      478 482 W#TX2
+     I                                      901 913 I#ACNO
+      *                                                                   122060
+      ** Message Format for Drafts Issuance (also from FIELDI).           122060
+      *                                                                   122060
+     I                                      114 116 D#ACDE                122060
+     I                                      130 135 D#NOST                122060
+     I                                      136 138 D#DCCY                122060
+     I                                      139 141 D#FCCY                122060
+     I                                      142 144 D#TRC1                122060
+     I                                      145 147 D#TRC2                122060
+     I                                      148 150 D#TXP                 122060
+     I                                      151 153 D#TXP2                122060
+     I                                      158 1680D#DRAM                122060
+     I                                      169 181 D#FDAC                122060
+     I                                      186 1960D#FDAM                122060
+     I                                      197 212 D#DRNO                122060
+     I                                      213 228 D#ODRN                122060
+     I                                      233 2430D#DPOS                122060
+     I                                      248 2580D#CPOS                122060
+     I                                      259 293 D#BENF                122060
+     I                                      294 299 D#VDAT                122060
+     I                                      300 305 D#TDAT                122060
+     I                                      306 319 D#TRF1                122060
+     I                                      320 333 D#TRF2                122060
+     I                                      334 347 D#TRF3                122060
+     I                                      348 361 D#TRF4                122060
+     I                                      538 550 D#SPAC                122060
+     I                                      551 552 D#SPTC                122060
+     I                                      553 553 D#AFAF                122060
+     I                                      554 573 D#AFBR                122060
+     I                                      557 573 D#AFAN                122060
+     I                                      574 574 D#ANAF                122060
+     I                                      575 594 D#ANAN                122060
+     I                                      578 587 D#NOSA                122060
+     I                                      596 598 D#CHCY                122060
+     I                                      599 629 D#CHRG                122060
+      *
+     IFIELDO      DS
+      **  Data structure for message data written to ICF File.
+      *
+     I                                        1 256 FLDO1
+     I                                      257 512 FLDO2
+     I                                      513 768 FLDO3
+     I                                      7691024 FLDO4
+     I                                     10251280 FLDO5
+     I                                     12811536 FLDO6
+     I                                     15371792 FLDO7
+     I                                     17932048 FLDO8
+     I                                     20492304 FLDO9
+     I                                     23052560 FLDO10
+      *
+     IOSTATD      DS                            111
+      **  Data structure for common outgoing message status.
+      *
+     I                                        1   4 O#MSTY
+     I                                        5   7 O#BRCA
+     I                                        9  11 O#TELD
+     I                                       25  28 O#WKID
+     I                                       29  29 O#HMSS
+     I                                       30  33 O#HMSI
+     I                                       34 111 O#HMSG
+      *
+     IRICMSG      DS
+      **  Incoming Message (for output to LF/REPLOGL0).
+      *
+     I                                        1 256 LOG01
+     I                                      257 512 LOG02
+     I                                      513 768 LOG03
+     I                                      769 900 LOG04
+     I                                        1   4 R#MSTY
+     I                                       25  28 R#WKID
+     I                                       29  29 R#HMSS
+     I                                       30  33 R#HMSI
+     I                                       34 111 R#HMSG
+      *
+     IDTLDS       DS
+      **  Break down of Transaction Type Details Array (DTL).
+      *
+     I                                        1   3 W#TTFC
+     I                                        4  13 W#DQNM
+     I                                       14  180W#DQLN
+     I                                       19  21 W#RVFN
+     I                                       22  31 W#RVDQ
+     I                                       32  360W#RVDL
+      *
+     IRUNDT       DS
+      **  Rundat data area.
+      *
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+      *
+     IFTIME       DS                              8
+      **  Setup Time.
+      *
+     I                                        1   2 WFHR
+     I I            ':'                       3   3 WFILR1
+     I                                        4   5 WFMN
+     I I            ':'                       6   6 WFILR2
+     I                                        7   8 WFSS
+      *
+     ITTIME       DS                              6
+      *
+     I                                        1   2 WTHR
+     I                                        3   4 WTMN
+     I                                        5   6 WTSS
+      *
+     IFDATE       DS                              8
+      **  Setup Date.
+      *
+     I                                        1   2 WFDD
+     I I            '/'                       3   3 WFILR3
+     I                                        4   5 WFMM
+     I I            '/'                       6   6 WFILR4
+     I                                        7   8 WFYY
+      *
+     ITDATE       DS                              6
+      *
+     I                                        1   2 WTDD
+     I                                        3   4 WTMM
+     I                                        5   6 WTYY
+      *
+     ICISTAT      DS                              6
+      **  CS Status Dataarea.
+      *
+     I                                        1   60WCSEQN
+      *
+     ILDA         DS                            256
+      **  Local Data Area to identify database errors.
+      *
+     I                                        1   3 PBRCA                 CI001
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I                                      134 183 DBLOT
+      *
+     I            DS
+      **  Data structure to hold key fields of LF/TTRNT for DBKEY in LDA.
+      *
+     I                                        1   5 @TTRNT
+     I                                        1   1 KTBRI
+     I                                        2   4 KTBID
+     I                                        5   5 KRCTP
+      *
+     ISDBANK    E DSSDBANKPD
+      **  Bank Details
+      *
+     ISCSARD    E DSSCSARDPD                                                                  CRT005
+      **  Bank Details                                                                        CRT005
+      *                                                                                       CRT005
+     ISDBAII    E DSSDBAIIPD
+      **  Cashier Interface ICD Details
+      *
+     ISDTELD    E DSSDTELDPD
+      **  Teller id
+      *
+     ISDBAIT    E DSSDBAITPD
+      **  Transaction types
+      *
+     ISDBAID    E DSSDBAIDPD
+      **  Authorised devices
+      *
+     ISDBRCH    E DSSDBRCHL1
+      **  Branch codes
+      *
+     ISDCURR    E DSSDCURRPD                                              122060
+      **  Currency Details                                                122060
+      *                                                                   122060
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data structure
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MAIN   - Main Control Processing.                  *
+      *                                                               *
+      * CALLS      COMMSG - Comms Message Processing.                 *
+      *            INIT   - Initial Processing.                       *
+      *            RCVDTQ - Receive Dataqueue Processing.             *
+      *                                                               *
+      *****************************************************************
+      *
+     C                     EXSR INIT
+      *
+     C           WACTIV    DOWEQ'Y'
+      *
+      **  Read ICF File if Read Required Flag is set to yes.
+      *
+     C                     EXSR COMMSG
+      *
+      **  Receive Data Queue if RCVDTAQ Required Flag is set to yes.
+      *
+     C           WRCVDQ    IFEQ 'Y'
+     C                     EXSR RCVDTQ
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           OPEN      IFEQ 'Y'
+     C                     WRITETRAILP1
+     C                     CLOSERE4403P1
+     C                     ENDIF
+      *
+     C                     EXSR AUDIT
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            COMMSG - Comms Message Processing.                 *
+      *                                                               *
+      * CALLS      *PSSR  - Progarm Error.                            *
+      *            RTVMSG - Retrieve Program Message Details.         *
+      *            WRTLOG - Write to Communications Log.              *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing.                  *
+      *                                                               *
+      *****************************************************************
+     C           COMMSG    BEGSR
+      *
+      **  Initialise the following workfields.
+      *
+      **         MSGS             input message data
+      **         WTRID            RBA trat id
+      **         WIDID            input device id
+      *
+      **  Reset the receive Data Queue Required Flag.
+      *
+     C                     MOVEL'N'       WRCVDQ  1
+      *
+     C                     MOVE *BLANKS   MSGS
+     C                     MOVE *BLANKS   WTRID  10
+     C                     MOVE *BLANKS   WIDID  10
+     C                     MOVE *BLANKS   WMDTA1
+     C                     MOVE *BLANKS   WMDTA2
+      *
+      **  Reset received comms file message field (incoming data).
+      *
+     C                     MOVE *BLANKS   FIELDI
+     C                     MOVE 'N'       WERROR  1
+      *
+      **  Read ICF file for incoming message data.
+      *
+     C                     READ DATAIN                 2120
+      *
+      ** Save Branch Code and Teller details.
+      *
+     C           W#BRCA    IFNE *BLANKS
+     C                     MOVELW#BRCA    @WBRCA  3
+     C                     END
+     C           W#TELD    IFNE *BLANKS
+     C                     MOVELW#TELD    @WTELD  3
+     C                     END
+      *
+     C           *IN27     IFEQ '1'
+      *
+      **  Restore Branch Code and Teller details.
+      *
+     C                     MOVEL@WBRCA    W#BRCA
+     C                     MOVEL@WTELD    W#TELD
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0060' @MSGID
+     C                     MOVELW#TELD    WMDTA1 10
+     C                     MOVEL*BLANKS   WMDTA2 10
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'C'       O#HMSS
+     C                     MOVE *BLANKS   O#HMSI
+      *
+     C                     MOVE 'Y'       WCSTAT  1
+     C                     MOVE 'CR'      WMSTAT  2
+     C                     EXSR WRTLOG
+      *
+      **  Sign off teller from Teller Totals and Controls File.
+      *
+     C                     MOVELW#TELD    KTBID
+     C           KTTRNT    CHAINTTRNM2L1             30
+      *
+     C           *IN30     IFEQ *ON
+     C           RECI      ORNE 'D'
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0055' @MSGID
+     C                     MOVELW#TELD    WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+     C                     MOVEL*BLANKS   @WRK4   4
+     C                     MOVEL*BLANKS   @WRK5   5
+     C           KTBRI     CAT  KTBID     @WRK4
+     C           @WRK4     CAT  KRCTP     @WRK5
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNM2L1'DBFILE
+     C                     MOVEL@WRK5     DBKEY
+     C                     Z-ADD20        DBASE
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANKS   TWID
+     C                     UPDATTTRNTM2F
+      *
+     C                     ENDIF
+      *
+      *
+      **  End the program.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDIF
+      *
+     C                     MOVE 'N'       WRLBCK  1
+      *
+      **  *IN20 indicates no data read from invited devices. (End Of File).
+      *
+     C           *IN20     IFEQ '1'
+      *
+     C                     Z-ADD13        LEN    155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           DLY    13
+     C                     PARM           LEN
+      *
+     C                     ELSE
+      *
+      **  For Major Code '03' - Input operation completed successfully, but
+      **  no data received, go to output section of logic.
+      *
+     C           MAJMIN    IFEQ '0300'
+     C                     WRITEINVITE                 22
+     C                     END
+     C           MAJMIN    CABEQ'0300'    END#03
+     C           MAJMIN    CABEQ'0301'    END#03
+     C           MAJMIN    CABEQ'0310'    END#03
+      *
+      **  If the wait time has been exceeded (WAITRCD value set on ICF File)
+      **  go to output section of logic.
+      *
+     C           STATUS    CABEQ01331     END#03
+      *
+      **  If End Of File Read on input. Delay for 1 second then go to
+      **  the output section of logic.
+      *
+     C           STATUS    IFEQ 00011
+     C                     Z-ADD13        LEN    155
+     C                     CALL 'QCMDEXC'
+     C                     PARM           DLY    13
+     C                     PARM           LEN
+     C                     END
+      *
+     C           STATUS    CABEQ00011     END#03
+      *
+      **  If a device error occurs (*IN21 is *ON).
+      *
+     C           *IN21     IFEQ '1'
+      *
+      **  If wait time has not been exceeded AND the PC application has not
+      **  requested a 'DETACH'.
+      *
+     C           STATUS    IFNE 01331
+     C           *IN27     ANDEQ'0'
+      *
+     C                     MOVEL'Y'       WERROR
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0053' @MSGID
+     C                     MOVEL*BLANKS   WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4401'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM MAJMIN    MMCODE
+     C                     PARM *BLANKS   P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM *BLANKS   @MSGDT
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CS'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     WRITESTATO
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C           WERROR    IFEQ 'N'
+      *
+      **  If the data format from the ICFF/RE4403CM has not been read or
+      **  the mesage itself is blank.
+      *
+     C           ICFREC    IFNE 'DATAIN'
+     C           FIELDI    OREQ *BLANKS
+      *
+     C                     MOVEL'Y'       WERROR
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0054' @MSGID
+     C                     MOVELICFREC    WMDTA1
+     C                     MOVEL'RE4403CM'WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM *BLANKS   P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CS'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     WRITESTATO
+      *
+     C                     ELSE
+      *
+      ****Check*Interface*ICD*to*see*if*product*is*'CASHIER*8'.***        164273
+      **  Check Interface ICD to see if product is 'CASHIER  '.           164273
+      *
+     C           FUPROD    IFNE W#ICDP
+      *
+      **  If message from invalid device.
+      *
+     C                     Z-ADDWCPOS     C
+     C           WIDID     LOKUPCDV,C                    60
+      *
+     C           *IN60     IFEQ '0'
+      *
+     C                     MOVEL'Y'       WERROR
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0001' @MSGID
+     C                     MOVELWIDID     WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     MOVE 'N'       WCSTAT  1
+     C                     MOVE 'CS'      WMSTAT  2
+     C                     EXSR WRTLOG
+      *
+     C                     WRITESTATO                  22
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ****ie*the*product*is*'CASHIER*8'.***************************       164273
+      **  ie the product is 'CASHIER  '.                                  164273
+      *
+     C                     Z-ADD1         E       30
+     C           I#MSTY    LOKUPMTYP,E                   67
+      *
+     C           *IN67     IFEQ '0'
+      *
+     C                     MOVEL'Y'       WERROR
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0066' @MSGID
+     C                     MOVELI#MSTY    WMDTA1
+     C                     MOVELFUPROD    WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CS'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+     C                     WRITESTATO                  22
+      *
+     C                     ELSE
+      *
+      ** If a valid message type set the confirmation required flag.
+      *
+     C                     MOVELCONF,E    CONFRQ  1
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           WERROR    IFEQ 'N'
+     C           I#MSTY    ANDNE'SFSO'                                    120880
+     C           I#MSTY    ANDNE'SFWF'                                    120880
+     C           I#MSTY    ANDNE'SFWA'                                    120880
+      *
+      **  If message from invalid teller.
+      *
+     C                     Z-ADDWAPOS     A
+     C           W#TELD    LOKUPTLR,A                    62
+      *
+     C           *IN62     IFEQ '0'
+      *
+     C                     MOVEL'Y'       WERROR
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0002' @MSGID
+     C                     MOVELW#TELD    WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CS'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+     C                     WRITESTATO                  22
+      *
+      **  Teller Valid.
+      *
+     C                     ELSE
+      *
+      **  Ensure that the Branch matches the Teller's branch Code (SDTELDPD).
+      *
+     C           W#BRCA    IFNE TBR,A
+      *
+     C                     MOVEL'Y'       WERROR
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0012' @MSGID
+     C                     MOVELW#TELD    WMDTA1
+     C                     MOVELW#BRCA    WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CS'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+     C                     WRITESTATO                  22
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  If device and teller are valid, perform further message validation.
+      *
+     C           WERROR    IFEQ 'N'
+      *                                                                   158642
+     C           W#TXP     IFEQ 'SP101'                                   158642
+     C           W#TXP     OREQ 'SP250'                                   158642
+     C           W#TXP     OREQ 'SP251'                                   158642
+     C           CRT005    ANDEQ'N'                                                           CRT005
+     C           W#TXP     OREQ 'SP252'                                   158642
+     C           I#MSTY    OREQ 'CSOV'                                                        CRT005
+     C           CRT005    ANDEQ'N'                                                           CRT005
+     C           I#MSTY    OREQ 'CSIV'                                                        CRT005
+     C           CRT005    ANDEQ'N'                                                           CRT005
+     C           I#MSTY    OREQ 'TLIN'                                                        CRT005
+     C           CRT005    ANDEQ'N'                                                           CRT005
+     C           I#MSTY    OREQ 'TLOU'                                                        CRT005
+     C           CRT005    ANDEQ'N'                                                           CRT005
+     C                     EXSR CLOPOS                                    158642
+     C                     ELSE                                           158642
+      *
+      **  Process incoming message depending on message type.
+      *
+     C                     EXSR MSGVAL
+      *
+     C                     ENDIF                                          158642
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           END#03    ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MSGVAL - Further Message Validation.               *
+      *                                                               *
+      * CALLS      DIMSG  - Draft Issuance Message Processing.        *
+      *            MESG   - Message Processing.                       *
+      *            RTVMSG - Retrieve Program Message Details.         *
+      *            WRTLOG - Write to Communications Log.              *
+      *            *PSSR  - Program Error.                            *
+      *                                                               *
+      * CALLED BY  COMMSG - Comms message Processing.                 *
+      *                                                               *
+      *****************************************************************
+     C           MSGVAL    BEGSR
+      *
+     C                     MOVELFLDI1     MSGS01
+     C                     MOVELFLDI2     MSGS02
+     C                     MOVELFLDI3     MSGS03
+     C                     MOVELFLDI4     MSGS04
+      *
+     C                     MOVELWJOBID    W#JBDQ
+     C                     MOVEL'Y'       W#FWST                          120880
+      *
+     C                     MOVELI#MSTY    O#MSTY
+     C                     MOVELW#BRCA    O#BRCA
+     C                     MOVELW#TELD    O#TELD
+      *
+     C                     MOVEL*BLANKS   @RTCD                           120880
+      *                                                                   120880
+     C           I#MSTY    IFNE 'SFSO'                                    120880
+     C           I#MSTY    ANDNE'SFWF'                                    120880
+     C           I#MSTY    ANDNE'SFWA'                                    120880
+      *                                                                   120880
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM W#BRCA    @BRCA
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      **  Branch not found.
+      *
+     C           @RTCD     IFNE *BLANKS
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0003' @MSGID
+     C                     MOVELW#BRCA    WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CS'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+     C                     WRITESTATO
+      *
+     C                     ELSE
+      *
+      ***********                                                         120880
+      ****Branch*is*found*but*not*open.**                                 120880
+      ***********                                                         120880
+     C***********A8BRST    IFNE 'O'                                       120880
+      ***********                                                         120880
+      ****Retrieve*error*message*data*to*send*in*host*message.**          120880
+      ***********                                                         120880
+     C***********          MOVEL'USR0004' @MSGID                          120880
+     C***********          MOVELW#BRCA    WMDTA1                          120880
+     C***********          MOVEL*BLANKS   WMDTA2                          120880
+     C***********WMDTA1    CAT  WMDTA2    @MSGDT                          120880
+     C***********          EXSR RTVMSG                                    120880
+     C***********          MOVEL@MSGTX    O#HMSG                          120880
+     C***********          MOVE 'E'       O#HMSS                          120880
+     C***********          MOVE @MSGID    O#HMSI                          120880
+      ***********                                                         120880
+      ****Report*error.**                                                 120880
+      ***********                                                         120880
+     C***********          CALL 'REC4411'                                 120880
+     C***********          PARM 'RE4403'  PROG                            120880
+     C***********          PARM           JOBNUM                          120880
+     C***********          PARM '0000'    MMCODE                          120880
+     C***********          PARM W#BRCA    P#BRCA                          120880
+     C***********          PARM           @MSGID                          120880
+     C***********          PARM           @MSGDT                          120880
+      ***********                                                         120880
+      ****Set*Off*Session*Active*Flag.**                                  120880
+      ***********                                                         120880
+     C***********          MOVEL'N'       WACTIV                          120880
+      ***********                                                         120880
+     C***********          MOVE 'N'       WCSTAT                          120880
+     C***********          MOVE 'CS'      WMSTAT                          120880
+     C***********          EXSR WRTLOG                                    120880
+      ***********                                                         120880
+     C***********          WRITESTATO                                     120880
+      ***********                                                         120880
+     C***********          ELSE                                           120880
+      *
+      **  Transaction processed requires an internal system parameter.
+      *
+     C                     SELEC
+      *
+     C           I#MSTY    WHEQ 'CQRH'
+     C                     MOVEL'SP910'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CQDS'
+     C                     MOVEL'SP911'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CSCD'
+     C                     MOVEL'SP920'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CSAD'
+     C                     MOVEL'SP921'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CSDM'
+     C                     MOVEL'SP922'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CSCW'
+     C                     MOVEL'SP923'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CSAW'
+     C                     MOVEL'SP924'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CSDE'
+     C                     MOVEL'SP925'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CSRV'
+     C                     MOVEL'SP926'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'PBCV'
+     C                     MOVEL'SP930'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'PBLN'
+     C                     MOVEL'SP931'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'RACB'
+     C                     MOVEL'SP958'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'CBRQ'
+     C                     MOVEL'SP960'   W#TXP
+      *
+     C           I#MSTY    WHEQ 'EQUI'
+     C                     MOVEL'SP961'   W#TXP
+      *
+     C                     ENDSL
+      *
+      ***********                                                         120880
+      ****If*teller*status*flag*array*element*is*off.**                   120880
+      ***********                                                         120880
+     C***********TST,A     IFEQ 'OFF'                                     120880
+      ***********                                                         120880
+      ****Retrieve*error*message*data*to*send*in*host*message.**          120880
+      ***********                                                         120880
+     C***********          MOVEL'USR0007' @MSGID                          120880
+     C***********          MOVELW#TELD    WMDTA1                          120880
+     C***********          MOVEL*BLANKS   WMDTA2                          120880
+     C***********WMDTA1    CAT  WMDTA2    @MSGDT                          120880
+     C***********          EXSR RTVMSG                                    120880
+     C***********          MOVEL@MSGTX    O#HMSG                          120880
+     C***********          MOVE 'E'       O#HMSS                          120880
+     C***********          MOVE @MSGID    O#HMSI                          120880
+      ***********                                                         120880
+     C***********          CALL 'REC4411'                                 120880
+     C***********          PARM 'RE4403'  PROG                            120880
+     C***********          PARM           JOBNUM                          120880
+     C***********          PARM '0000'    MMCODE                          120880
+     C***********          PARM W#BRCA    P#BRCA                          120880
+     C***********          PARM           @MSGID                          120880
+     C***********          PARM           @MSGDT                          120880
+      ***********                                                         120880
+     C***********          MOVE 'N'       WCSTAT                          120880
+     C***********          MOVE 'CS'      WMSTAT                          120880
+     C***********          EXSR WRTLOG                                    120880
+      ***********                                                         120880
+      ****Set*Off*Session*Active*Flag.**                                  120880
+      ***********                                                         120880
+     C***********          MOVEL'N'       WACTIV                          120880
+      ***********                                                         120880
+     C***********          WRITESTATO                                     120880
+      ***********                                                         120880
+      ****If*teller*status*flag*array*element*is*on.**                    120880
+      ***********                                                         120880
+     C***********          ELSE                                           120880
+      *
+      **  If the message received has an invalid transaction type.
+      *
+     C                     MOVELW#TXP     W#TX10 10
+      *
+      **  For DIRQ msg, use SP code 1 unless this is blank else use SP code 2.
+      *
+     C                     MOVEL*BLANKS   W#WRK5  5                       122060
+      *                                                                   122060
+     C           I#MSTY    IFEQ 'DIRQ'
+     C***********I#SPCD    ANDEQ*BLANK                                    122060
+     C***********          MOVELW#TX2     W#TX10                          122060
+     C                     MOVEL'SP'      W#WRK5                          122060
+     C                     MOVE D#TXP     W#WRK5                          122060
+     C                     MOVELW#WRK5    W#TX10                          122060
+     C                     ENDIF
+      *
+     C                     Z-ADDWBPOS     B
+      *                                                                                       CRT005
+      ** Set On *IN64 if Message Type is 'CSOV', 'CSIV', 'TLIN', or                           CRT005
+      ** 'TLOU'; otherwise, look up on table TXP                                              CRT005
+      *                                                                                       CRT005
+     C           I#MSTY    IFEQ 'CSOV'                                                        CRT005
+     C           I#MSTY    OREQ 'CSIV'                                                        CRT005
+     C           I#MSTY    OREQ 'TLIN'                                                        CRT005
+     C           I#MSTY    OREQ 'TLOU'                                                        CRT005
+     C                     MOVE *ON       *IN64                                               CRT005
+     C                     ELSE                                                               CRT005
+     C           W#TX10    LOKUPTXP,B                    64
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+      ** Populate data structure DTLDS when CRT005 is installed                               CRT005
+      *                                                                                       CRT005
+     C           *IN64     IFEQ *ON                                                           CRT005
+     C           I#MSTY    IFEQ 'CSOV'                                                        CRT005
+     C           I#MSTY    OREQ 'CSIV'                                                        CRT005
+     C           I#MSTY    OREQ 'TLIN'                                                        CRT005
+     C           I#MSTY    OREQ 'TLOU'                                                        CRT005
+     C           W#TX10    OREQ 'SP251'                                                       CRT005
+      *                                                                                       CRT005
+     C                     CLEARDTLDS                                                         CRT005
+     C                     MOVEL'RE4122'  W#DQNM                                              CRT005
+     C                     MOVEL'RE4122'  W#RVDQ                                              CRT005
+     C                     Z-ADD1004      W#DQLN                                              CRT005
+     C                     Z-ADD1004      W#RVDL                                              CRT005
+      *                                                                                       CRT005
+     C                     SELEC                                                              CRT005
+      *                                                                                       CRT005
+     C           I#MSTY    WHEQ 'CSIV'                                                        CRT005
+     C           W#TX10    OREQ 'SP251'                                                       CRT005
+     C           I#TCOD    ANDGE500                                                           CRT005
+     C           I#TCOD    ANDLE999                                                           CRT005
+     C                     MOVE '0JE '    W#DQNM                                              CRT005
+     C                     MOVE '0JF '    W#RVDQ                                              CRT005
+      *                                                                                       CRT005
+     C           I#MSTY    WHEQ 'CSOV'                                                        CRT005
+     C           W#TX10    OREQ 'SP251'                                                       CRT005
+     C           I#TCOD    ANDGE0                                                             CRT005
+     C           I#TCOD    ANDLE499                                                           CRT005
+     C                     MOVE '0JF '    W#DQNM                                              CRT005
+     C                     MOVE '0JE '    W#RVDQ                                              CRT005
+      *                                                                                       CRT005
+     C           I#MSTY    WHEQ 'TLIN'                                                        CRT005
+     C                     MOVE '00E '    W#DQNM                                              CRT005
+     C                     MOVE '00F '    W#RVDQ                                              CRT005
+      *                                                                                       CRT005
+     C           I#MSTY    WHEQ 'TLOU'                                                        CRT005
+     C                     MOVE '00F '    W#DQNM                                              CRT005
+     C                     MOVE '00E '    W#RVDQ                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDSL                                                              CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *
+     C           *IN64     IFEQ '0'
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0008' @MSGID
+     C                     MOVELW#TX10    WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CS'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+      **  Set up LDA DBERR.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNM2L1'DBFILE
+     C***********          MOVEL@TTRNT    DBKEY                           120880
+     C                     MOVELW#TX10    DBKEY                           120880
+     C                     Z-ADD21        DBASE
+     C                     EXSR DBERR
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     WRITESTATO
+      *
+      **  If the message received has a valid transaction type.
+      *
+     C                     ELSE
+      *
+      *
+     C           I#MSTY    IFNE 'CSOV'                                                        CRT005
+     C           I#MSTY    ANDNE'CSIV'                                                        CRT005
+     C           I#MSTY    ANDNE'TLIN'                                                        CRT005
+     C           I#MSTY    ANDNE'TLOU'                                                        CRT005
+     C           W#TX10    ANDNE'SP251'                                                       CRT005
+     C                     MOVELDTL,B     DTLDS
+     C                     ENDIF                                                              CRT005
+      *
+     C                     MOVE 'L'       WCSTAT
+     C                     MOVE 'CR'      WMSTAT
+      *
+     C                     SELEC
+      *
+     C***********I#MSTY    WHEQ 'SFSO'                                    120880
+     C***********          EXSR SOMSG                                     120880
+      ***********                                                         120880
+     C***********I#MSTY    WHEQ 'SFWF'                                    CI01
+     C***********I#MSTY    WHEQ 'SWSF'                              CI01  120880
+     C***********          EXSR WFMSG                                     120880
+      *
+     C           I#MSTY    WHEQ 'DIRQ'
+     C                     EXSR DIMSG
+      *
+     C                     OTHER
+     C                     EXSR MESG
+      *
+     C                     ENDSL
+      *
+     C                     ENDIF
+      ***********                                                         120880
+     C***********          ENDIF                                          120880
+      ***********                                                         120880
+     C***********          ENDIF                                          120880
+      *
+     C                     ENDIF                                            -off
+      *                                                                   120880
+     C                     ELSE                                           120880
+      *                                                                   120880
+     C                     SELEC                                          120880
+      *                                                                   120880
+     C           I#MSTY    WHEQ 'SFSO'                                    120880
+     C                     EXSR SOMSG                                     120880
+      *                                                                   120880
+     C           I#MSTY    WHEQ 'SFWF'                                    120880
+     C                     EXSR WFMSG                                     120880
+      *                                                                   120880
+     C                     ENDSL                                          120880
+      *                                                                   120880
+     C                     ENDIF                                          120880
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************   158642
+      *                                                               *   158642
+      *            CLOPOS - Postings Received At Branch Closure       *   158642
+      *                                                               *   158642
+      * CALLS      RTVMSG - Retrieve Program Message Details.         *   158642
+      *            UPDLOG - Update Communications Log.                *   158642
+      *                                                               *   158642
+      * CALLED BY  COMMSG - Comms Message Processing.                 *   158642
+      *                                                               *   158642
+      *****************************************************************   158642
+     C           CLOPOS    BEGSR                                          158642
+      *                                                                   158642
+      **  Ignore these messages as Midas has no use for these Equation    158642
+      **  based messages. Midas has already received or will generate this158642
+      **  information itself. Just answer the messages. As they are 'OITM'158642
+      **  message types they require a confirmation to be used.           158642
+      *                                                                   158642
+     C                     WRITESTATO                                     158642
+      *                                                                   158642
+      **  If Confirm not received from the remote branch controller,      158642
+      **  retrieve error message data to send in host message.            158642
+      *                                                                   158642
+     C           MAJMIN    IFNE '0001'                                    158642
+      *                                                                   158642
+     C                     MOVEL'USR0058' @MSGID                          158642
+     C                     MOVEL*BLANKS   WMDTA1                          158642
+     C                     MOVEL*BLANKS   WMDTA2                          158642
+     C                     EXSR RTVMSG                                    158642
+     C                     MOVEL@MSGTX    O#HMSG                          158642
+     C                     MOVE 'E'       O#HMSS                          158642
+     C                     MOVE @MSGID    O#HMSI                          158642
+      *                                                                   158642
+      **  Report error.                                                   158642
+      *                                                                   158642
+     C                     CALL 'REC4411'                                 158642
+     C                     PARM 'RE4401'  PROG                            158642
+     C                     PARM           JOBNUM                          158642
+     C                     PARM MAJMIN    MMCODE                          158642
+     C                     PARM W#BRCA    P#BRCA                          158642
+     C                     PARM           @MSGID                          158642
+     C                     PARM *BLANKS   @MSGDT                          158642
+      *                                                                   158642
+     C                     END                                            158642
+      *                                                                   158642
+     C                     ENDSR                                          158642
+      *****************************************************************   158642
+     C/EJECT                                                              158642
+      *****************************************************************
+      *                                                               *
+      *            SOMSG  - SFSO Message Processing.                  *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MSGVAL - Further Message Validation.               *
+      *                                                               *
+      *****************************************************************
+     C           SOMSG     BEGSR
+      *
+     C                     MOVEL'SFSO'    O#MSTY                          CI01
+      *
+     C                     MOVEL*BLANKS   O#HMSG                          CI01
+     C                     MOVE 'C'       O#HMSS                          CI01
+     C                     MOVE *BLANKS   O#HMSI                          CI01
+      *                                                                   CI01
+     C                     WRITESTATO                                     CI01
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            WFMSG  - SWSF Message Processing.                  *   CI01
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MSGVAL - Further Message Validation.               *
+      *                                                               *
+      *****************************************************************
+     C           WFMSG     BEGSR
+      *
+     C***********          MOVEL'SFWA'    R#MSTY                          CI01
+     C                     MOVEL'SFWA'    O#MSTY                          CI01
+      *
+     C***********TABACK    IFEQ 'Y'                                       CI01
+     C***********          WRITEOUTACK                 22                 CI01
+     C***********          ELSE                                           CI01
+     C***********          WRITEOUTNAK                 22                 CI01
+     C***********          ENDIF                                          CI01
+      *                                                                   CI01
+     C                     MOVEL*BLANKS   O#HMSG                          CI01
+     C                     MOVE 'C'       O#HMSS                          CI01
+     C                     MOVE *BLANKS   O#HMSI                          CI01
+      *                                                                   CI01
+     C                     WRITESTATO                                     CI01
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            DIMSG  - Draft Issuance Message Processing.        *
+      *                                                               *
+      * CALLS      WRTDRI - Write to PF/REPDRIPD.                     *
+      *            WRTLOG - Write to Communications Log.              *
+      *                                                               *
+      * CALLED BY  MSGVAL - Further Message Validation.               *
+      *                                                               *
+      *****************************************************************
+     C           DIMSG     BEGSR
+      *
+     C                     OPEN REPDRIL1                                  122060
+      *                                                                   122060
+     C                     Z-ADD553       LENR                            122060
+      *                                                                   122060
+     C                     MOVELD#DRNO    KDRNO                           122060
+     C                     MOVEL*BLANKS   KODRN                           122060
+     C                     MOVELD#ACDE    KACDE                           122060
+     C           KLPDRI    CHAINREPDRIL1            N24                   122060
+      *                                                                   122060
+     C           *IN24     IFEQ '1'                                       122060
+      *                                                                   122060
+     C                     CLOSEREPDRIL1                                  122060
+      *                                                                   122060
+     C                     MOVEL'C'       O#HMSS                          122060
+     C                     MOVE *BLANKS   O#HMSI                          122060
+     C                     MOVELFIELDI    O#HMSG                          122060
+      *                                                                   122060
+     C                     EXSR WRTLOG
+     C                     EXSR WRTDRI
+      *
+      ****Store*last*message*sent.**                                      122060
+     C                     MOVEL'Y'       WRCVDQ                          122060
+     C                     ENDIF                                          122060
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            MESG   - Message Processing.                       *
+      *                                                               *
+      * CALLS      WRTLOG - Write to Communications Log.              *
+      *                                                               *
+      * CALLED BY  MSGVAL - Further Message Validation.               *
+      *                                                               *
+      *****************************************************************
+     C           MESG      BEGSR
+      *
+      **  Retrieve details from array DTL.
+      *
+     C           WRLBCK    IFEQ 'N'
+      *
+     C           I#MSTY    IFEQ 'RVSE'
+      *
+     C                     MOVE W#RVDQ    WTRID
+     C                     Z-ADDW#RVDL    WDQLEN
+      *
+     C                     ELSE
+      *
+     C                     MOVE W#DQNM    WTRID
+     C                     Z-ADDW#DQLN    WDQLEN  50
+      *
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+     C                     MOVE W#RVDQ    WTRID
+     C                     Z-ADDW#RVDL    WDQLEN
+      *
+     C                     ENDIF
+      *
+     C                     MOVEL'C'       O#HMSS
+     C                     MOVE *BLANKS   O#HMSI
+     C                     MOVELFIELDI    O#HMSG
+      *
+     C                     EXSR WRTLOG
+      *
+     C                     MOVE 'N'       WDQROL  1
+      *
+      **  Set appropriate values for data queue send.
+      *
+     C                     MOVELWTRID     DTAQS
+     C                     MOVEL'*LIBL'   LIBS
+     C                     Z-ADDWDQLEN    LENS
+     C                     CALL 'QSNDDTAQ'DTQSND
+      *
+      **  Set Receive Data Queue required Flag.
+      *
+     C                     MOVEL'Y'       WRCVDQ
+     C                     Z-ADD2560      LENR                            122060
+     C                     MOVELWJOBID    DTAQR                           122060
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRTLOG - Write to Communications Log.              *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  COMMSG - Comms Message Processing.                 *
+      *            DIMSG  - Draft Issuance Message Processing.        *
+      *            MESG   - Message Processing.                       *
+      *            MSGVAL - Further Message Validation.               *
+      *                                                               *
+      *****************************************************************
+     C           WRTLOG    BEGSR
+      *
+      **  Update DTAARA/CISTAT.
+      *
+     C           *LOCK     IN   CISTAT
+     C                     ADD  1         WCSEQN
+     C                     OUT  CISTAT
+      *
+     C                     TIME           WTMDAT 120
+     C                     MOVE WTMDAT    TDATE
+     C                     MOVELWTMDAT    TTIME
+      *
+     C                     MOVE WTHR      WFHR
+     C                     MOVE WTMN      WFMN
+     C                     MOVE WTSS      WFSS
+     C                     MOVE WTDD      WFDD
+     C                     MOVE WTMM      WFMM
+     C                     MOVE WTYY      WFYY
+      *
+     C                     MOVELWCSEQN    RICMSQ
+     C                     MOVELW#BRCA    RIBRCA
+     C                     MOVELWTRID     RIDTQN
+     C                     MOVELWIDID     RIRMDN
+     C                     MOVELW#TELD    RITELD
+     C           I#MSTY    IFNE 'DIRQ'                                    122060
+     C                     MOVELW#TXP     RITXTP
+     C                     ELSE                                           122060
+     C           'SP'      CAT  D#TXP     RITXTP                          122060
+     C                     ENDIF                                          122060
+      *
+      **  Load the Received Date & Time Stamps
+      *
+     C                     MOVE FDATE     RIRCDT
+     C                     MOVE FTIME     RIRCTM
+      *
+      **  Load the Successful Completion flag
+      *
+     C                     MOVELWCSTAT    RISUCM
+      *
+      **  Load the Status & Status Time Stamp
+      *
+     C                     MOVELWMSTAT    RISTAT
+     C                     MOVE FTIME     RISTTM
+      *
+      **  Load RICMSG field.
+      *
+     C                     MOVELFLDI1     LOG01
+     C                     MOVELFLDI2     LOG02
+     C                     MOVELFLDI3     LOG03
+     C                     MOVELFLDI4     LOG04
+      *
+     C                     MOVELI#MSTY    R#MSTY
+     C                     MOVE I#USER    R#WKID
+     C                     MOVELO#HMSG    R#HMSG
+     C                     MOVE O#HMSS    R#HMSS
+     C                     MOVE O#HMSI    R#HMSI
+      *
+     C                     MOVELWCSEQN    W#SEQN
+      *
+      **  Write to the Comms Log File.
+      *
+     C                     WRITEREPLOGD0
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            WRTDRI - Write to PF/REPDRIPD.                     *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  DIMSG  - Draft Issuance Message Processing.        *
+      *                                                               *
+      *****************************************************************
+     C           WRTDRI    BEGSR
+      *
+     C                     OPEN REPDRIPD                                  122060
+      *                                                                   122060
+     C                     MOVE *BLANKS   RNIMMR
+     C                     MOVE *BLANKS   RNSTAT
+      *
+      **  Map fields from Draft Issue Request Message to fields in PF/REPDRIPD.
+      *
+     C                     MOVELI#MSTY    RNMSTY
+     C                     MOVELI#BRNO    RNBRNO
+     C                     MOVELI#USER    RNUSID
+     C***********          MOVELI#ACNO    RNNOSA                          122060
+     C***********          MOVELI#CUR1    RNDCCY                          122060
+     C***********          MOVELI#CUR2    RNFCCY                          122060
+     C***********          MOVELI#SPCD    RNSPC1                          122060
+     C***********          MOVELI#SPC2    RNSPC2                          122060
+     C***********          Z-ADDI#TAMT    RNDRAM                          122060
+     C***********          MOVELI#VDAT    RNVDAT                          122060
+      *                                                                   122060
+     C                     MOVEL'D'       RNRECI                          122060
+     C                     MOVELW#FWST    RNFWST                          122060
+     C                     MOVELD#ACDE    RNACDE                          122060
+     C                     MOVELD#NOSA    RNNOSA                          122060
+     C                     MOVELD#NOST    RNNOST                          122060
+     C                     MOVELD#DCCY    RNDCCY                          122060
+     C                     MOVELD#FCCY    RNFCCY                          122060
+     C                     MOVELD#TRC1    RNTRC1                          122060
+     C                     MOVELD#TRC2    RNTRC2                          122060
+     C                     MOVELD#TXP     RNSPC1                          122060
+     C                     MOVELD#TXP2    RNSPC2                          122060
+     C                     Z-ADDD#DRAM    RNDRAM                          122060
+     C                     MOVELD#AFAN    RNFDAC                          122060
+     C                     Z-ADDD#FDAM    RNFDAM                          122060
+     C                     MOVELD#DRNO    RNDRNO                          122060
+     C                     MOVELD#ODRN    RNODRN                          122060
+     C                     Z-ADDD#DPOS    RNDPOS                          122060
+     C                     Z-ADDD#CPOS    RNCPOS                          122060
+     C                     MOVELD#BENF    RNBENF                          122060
+     C                     MOVELD#VDAT    RNVDAT                          122060
+     C                     MOVELD#TDAT    RNTDAT                          122060
+     C                     MOVELD#TRF1    RNTRF1                          122060
+     C                     MOVELD#TRF2    RNTRF2                          122060
+     C                     MOVELD#TRF3    RNTRF3                          122060
+     C                     MOVELD#TRF4    RNTRF4                          122060
+     C                     MOVELD#SPAC    RNSPAC                          122060
+     C                     MOVELD#SPTC    RNSPTC                          122060
+     C                     MOVELD#AFAF    RNAFAF                          122060
+     C                     MOVELD#AFAN    RNAFAN                          122060
+     C                     MOVELD#ANAF    RNANAF                          122060
+     C                     MOVELD#ANAN    RNANAN                          122060
+     C                     MOVELWJOBID    RNCJDQ                          122060
+     C                     MOVELD#CHCY    RNCHCY                          122060
+      *                                                                   122060
+     C                     CALL 'AOCURRR0'                                122060
+     C                     PARM '*BLANK ' @RTCD   7                       122060
+     C                     PARM '*KEY   ' @OPTN   7                       122060
+     C                     PARM           D#CHCY                          122060
+     C           SDCURR    PARM SDCURR    DSSDY                           122060
+      *                                                                   122060
+     C           @RTCD     IFEQ *BLANK                                    122060
+     C                     MOVELA6NBDP    ZADEC                           122060
+     C           15        SUB  ZADEC     ZADIG                           122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVELD#CHRG    ZFIELD                          122060
+     C                     EXSR ZALIGN                                    122060
+      *                                                                   122060
+     C           *IN99     IFEQ '0'                                       122060
+     C           ZFIELD    ANDNE*ZERO                                     122060
+     C                     MOVE ZFIELD    RNCHAM                          122060
+     C                     ENDIF                                          122060
+      *
+     C                     WRITEREPDRID0
+      *
+     C                     CLOSEREPDRIPD                                  122060
+      *                                                                   122060
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            RCVDTQ - Receive Dataqueue Processing.             *
+      *                                                               *
+      * CALLS      ROLLBK - Rollback Processing.                      *
+      *            RTVMSG - Retrieve Program Message Details.         *
+      *            UPDLOG - Update Communications Log.                *
+      *            *PSSR  - Program Error.                            *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing.                  *
+      *                                                               *
+      *****************************************************************
+     C           RCVDTQ    BEGSR
+      ***********                                                         122060
+      ****Set*up*Data*Queue*Length*parm*for*receive*data*queue*(from*RBA).122060
+      ***********                                                         122060
+     C***********          Z-ADD2560      LENR                            122060
+      *
+     C                     CALL 'QRCVDTAQ'DTQRCV
+      *
+      **  If dataqueue is not empty.
+      *
+     C           LENR      IFGT 0
+      *
+      **  Set ICF File Read required Flag.
+      *
+     C                     MOVEL'Y'       WRDICF
+      *
+     C           M#MSTY    IFEQ 'DIRQ'                                    122060
+      *                                                                   122060
+     C                     SELEC                                          122060
+      *                                                                   122060
+     C           M#HMSS    WHEQ 'C'                                       122060
+     C                     MOVEL' '       M#HMSS                          122060
+     C                     MOVEL' '       M#FWPE                          122060
+     C                     MOVEL'Y'       M#FPSF                          122060
+      *                                                                   122060
+     C           M#HMSS    WHEQ 'W'                                       122060
+     C                     MOVEL' '       M#FWPE                          122060
+     C                     MOVEL'S'       M#FPSF                          122060
+      *                                                                   122060
+     C           M#HMSS    WHEQ 'E'                                       122060
+     C                     MOVEL'F'       M#FWPE                          122060
+     C                     MOVEL'E'       M#FPSF                          122060
+      *                                                                   122060
+     C                     ENDSL                                          122060
+      *                                                                   122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     MOVELMSGR01    FLDO1
+     C                     MOVELMSGR02    FLDO2
+     C                     MOVELMSGR03    FLDO3
+     C                     MOVELMSGR04    FLDO4
+     C                     MOVELMSGR05    FLDO5
+     C                     MOVELMSGR06    FLDO6
+     C                     MOVELMSGR07    FLDO7
+     C                     MOVELMSGR08    FLDO8
+     C                     MOVELMSGR09    FLDO9
+     C                     MOVELMSGR10    FLDO10
+      *
+      **  If dataqueue message is not due to rollback processing.
+      *
+     C***********WRLBCK    IFNE 'Y'
+      *
+      **  Determine if received message requires a confirmation.
+      *
+     C***********CONFRQ    IFEQ 'Y'
+     C***********M#HMSS    ANDEQ'C'
+     C***********CONFRQ    OREQ 'Y'
+     C***********M#HMSS    ANDEQ'W'
+     C***********          WRITEOUTACK                 22
+      *
+      **  If Confirm not received from the remote branch controller,
+      **  retrieve error message data to send in host message.
+      *
+     C***********MAJMIN    IFNE '0001'
+      *
+     C***********          MOVEL'USR0058' @MSGID
+     C***********          MOVEL*BLANKS   WMDTA1
+     C***********          MOVEL*BLANKS   WMDTA2
+     C***********          EXSR RTVMSG
+     C***********          MOVEL@MSGTX    O#HMSG
+     C***********          MOVE 'E'       O#HMSS
+     C***********          MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C***********          CALL 'REC4411'
+     C***********          PARM 'RE4403'  PROG
+     C***********          PARM           JOBNUM
+     C***********          PARM MAJMIN    MMCODE
+     C***********          PARM W#BRCA    P#BRCA
+     C***********          PARM           @MSGID
+     C***********          PARM *BLANKS   @MSGDT
+      *
+     C***********          EXSR ROLLBK
+      *
+     C***********          ELSE
+      *
+      **  If PC application has sent a confirm.
+      *
+     C***********          MOVE 'CS'      WMSTAT
+     C***********          EXSR UPDLOG
+     C***********          END
+      *
+      ** If No acknowledgement required
+     C***********          ELSE
+     C                     WRITEOUTNAK                 22
+      *
+      **  If DEVICE ERROR or any other error encountered on the WRITE.
+     C           *IN22     IFEQ *ON
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0056' @MSGID
+     C                     MOVEL*BLANKS   WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM MAJMIN    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CS'      WMSTAT
+     C                     EXSR UPDLOG
+      *
+     C                     WRITESTATO
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+     C                     ENDIF
+      *
+     C           M#HMSS    IFEQ 'E'                                       122060
+     C           M#MSTY    ANDEQ'DIRQ'                                    122060
+     C                     EXSR ROLLBK                                    122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C***********          ENDIF
+      *
+     C***********          ELSE
+      *
+     C***********          MOVE 'R'       WCSTAT
+     C***********          MOVE 'CS'      WMSTAT
+     C***********          EXSR UPDLOG
+     C***********          END
+      *
+     C***********          ELSE
+      *
+      **  Set ICF File Read required Flag.
+      *
+     C                     MOVEL'N'       WRDICF
+      *
+     C                     END
+      *
+      **  Generate detail report.
+      *
+     C***********R#HMSS    IFEQ 'W'                                       122060
+     C***********R#HMSS    OREQ 'E'                                       122060
+     C           M#HMSS    IFEQ 'W'                                       122060
+     C           M#HMSS    OREQ 'E'                                       122060
+      *
+     C                     MOVELWCSEQN    PCMSQ
+     C                     MOVELW#BRCA    PBRCA
+     C                     MOVELW#TELD    PTELD
+     C                     MOVELI#ACNO    PACNO
+     C***********          MOVELI#AMT1    PAMT1
+     C***********          MOVELI#CCY1    PCCY1
+     C***********          MOVELI#SPNO    PSPCD
+     C                     MOVELO#HMSS    PHMSS
+     C***********          MOVELO#HSMS    PHSMS                           RBA01
+     C                     MOVELO#HMSG    PHSMS                           RBA01
+      *
+     C           OPEN      IFEQ 'N'
+     C                     OPEN RE4403P1
+     C                     EXSR RCFP1
+     C                     WRITEHEADP1
+     C                     WRITEDTLHDR
+     C                     MOVEL'Y'       OPEN
+     C                     ENDIF
+      *
+     C           OPEN      IFEQ 'Y'
+     C           *IN40     ANDEQ'1'
+     C                     WRITEHEADP1
+     C                     WRITEDTLHDR
+     C                     MOVEL'0'       *IN40
+     C                     ENDIF
+      *
+     C                     WRITEDETAIL
+     C                     WRITEDETLS2
+      *
+     C                     ADD  1         WCNT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      /COPY ZSRSRC,RBRMSGC1                                               CI001
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            ROLLBK - Rollback Processing.                      *
+      *                                                               *
+      * CALLS      UPDLOG - Update Communications Log.                *
+      *                                                               *
+      * CALLED BY  RCVDTQ - Receive Dataqueue Processing.             *
+      *                                                               *
+      *****************************************************************
+     C           ROLLBK    BEGSR
+      *                                                                   122060
+     C           I#MSTY    IFNE 'DIRQ'                                    122060
+      *
+      **  Access LF/REPLOGL9 to retrieve last record for this teller.
+      *
+     C                     MOVELW#BRCA    @BRCA
+     C                     MOVELW#TELD    @TELD
+     C           KLLOG9    SETGTREPLOGL9             70
+      *
+      **  Check that neither BRCA not TELD are different from those in the
+      **  partial key. If so we have gone past our requiered teller.
+      *
+     C                     READPREPLOGL9                 70
+      *
+      **  Chain to REPLOGL0 to do the update to show that it has been rolled
+      **  back (or perhaps write a new record in REPLOGPD).
+      *
+      **  Set message type.
+      **
+      **  THIS IS WRONG SORT IT OUT . NOT THIS TYPE OF SETTING TO LAST
+      **  MESSAGE TYPE. NEED TO FIND LAST RECORD IN REPLOGL9 for this teller.
+      **
+      ** Set the ROLLBACK flag.
+      *
+     C                     MOVE 'Y'       WRLBCK
+      *
+     C                     MOVE 'Y'       WDQROL
+      *
+     C                     MOVE 'L'       WCSTAT
+     C                     MOVE 'CR'      WMSTAT
+      *
+     C                     MOVE W#RVDQ    WTRID
+      *
+      ** #### PERHAPS WE SHOULD WRITE A NEW LOG RECORD FOR THE ROLLBACK ####
+      *
+     C***********          EXSR UPDLOG                                    HUW
+     C                     EXSR WRTLOG                                    HUW
+      *
+     C                     MOVE W#RVDQ    DTAQS
+     C                     Z-ADDW#RVDL    LENS
+      *
+      **  Set transaction reference fields for Reversal
+      *
+     C                     MOVELM#TRN1    R#TRN1
+     C                     MOVELM#TRN2    R#TRN2
+     C                     MOVELM#TRN3    R#TRN3
+     C                     MOVELM#TRN4    R#TRN4
+      *
+     C                     CALL 'QSNDDTAQ'DTQSND
+      *
+      **  Set up Data Queue Length parm for receive data queue (from RBA).
+      *
+     C                     Z-ADD2560      LENR
+      *
+     C                     CALL 'QRCVDTAQ'DTQRCV
+      *
+     C                     ELSE                                           122060
+      *                                                                   122060
+     C                     OPEN REPDRIL1                                  122060
+      *                                                                   122060
+     C                     MOVELD#DRNO    KDRNO                           122060
+     C                     MOVEL*BLANKS   KODRN                           122060
+     C                     MOVELD#ACDE    KACDE                           122060
+     C           KLPDRI    CHAINREPDRIL1             24                   122060
+      *                                                                   122060
+     C           *IN24     IFEQ '0'                                       122060
+     C                     MOVEL'*'       RNRECI                          122060
+     C                     UPDATREPDRILF                                  122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     CLOSEREPDRIL1                                  122060
+      *                                                                   122060
+     C                     ENDIF                                          122060
+      *                                                                   122060
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            INIT   - Initial Processing.                       *
+      *                                                               *
+      * CALLS      DBERR  - Database Error Handling.                  *
+      *            ZDATE9 - Cvt day nbr to date format YYYYMMDD.      *
+      *            *PSSR  - Program Error.                            *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing.                  *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Define Keylist(s).
+      **  Set up key list for LF/TTRNM2L1.
+      *
+     C           KTTRNT    KLIST
+     C                     KFLD           KTBRI   1
+     C                     KFLD           KTBID   3
+     C                     KFLD           KRCTP   1
+      *
+      **  Set up parameters for key list KTTRNT.
+      *
+     C                     MOVEL'T'       KTBRI
+     C                     MOVEL*BLANKS   KTBID
+     C                     MOVEL'1'       KRCTP
+      *
+      **  Set up partial key list for Communications Log File LF/REPLOGL9.
+      *
+     C           KLLOG9    KLIST
+     C                     KFLD           @BRCA   3
+     C                     KFLD           @TELD  10
+      *                                                                   122060
+      ****Set*up*key list for accounts file ACCNTL0.                                   122060 CSD027
+      **********                                                                       122060 CSD027
+     C********** KACNT     KLIST                                                       122060 CSD027
+     C**********           KFLD           KCUST   60                                   122060 CSD027
+     C**********           KFLD           KCCY    3                                    122060 CSD027
+     C**********           KFLD           KACOD   40                                   122060 CGL029
+     C**********           KFLD           KACOD  100                                   CGL029 CSD027
+     C**********           KFLD           KACSQ   20                                   122060 CSD027
+     C**********           KFLD           KBRCD   3                                    122060 CSD027
+      *                                                                   122060
+      **  Set up key list for Drafs Incoming Msg REPDRIL1.                122060
+      *                                                                   122060
+     C           KLPDRI    KLIST                                          122060
+     C                     KFLD           KDRNO  16                       122060
+     C                     KFLD           KODRN  16                       122060
+     C                     KFLD           KACDE   3                       122060
+      *
+      **  Clear DB ERROR information in LDA.
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     OUT  LDA
+      *
+     C                     CALL 'SF0410'
+     C                     PARM *BLANKS   PGRP   50
+     C                     PARM USRID     PUSR   25
+     C                     PARM *ZEROS    PLVL    40
+     C                     PARM *ZEROS    PTIM    50
+     C                     PARM *ZEROS    PERR    10
+     C                     PARM *BLANKS   PMLT    2
+      *
+     C           PMLT      IFEQ *BLANK
+     C                     MOVEL'GB'      PMLT
+     C                     ENDIF
+      *
+     C           PMLT      CAT  'CIMSGF'  @MSGF
+      *
+     C                     Z-ADD0         DBASE
+      *
+      **  Define DTAARA CISTAT.
+      *
+     C           *NAMVAR   DEFN           CISTAT
+      *
+     C           'CASH'    CAT  JOBNUM    WJOBID 10
+      *
+      **  Set Session Active Flag.
+      *
+     C                     MOVEL'Y'       WACTIV
+      *
+      **  Define Parmlist(s).
+      **  Parameters for QRCVDTAQ (From RBA).
+      *
+     C           DTQRCV    PLIST
+     C                     PARM           DTAQR
+     C                     PARM           LIBR
+     C                     PARM           LENR
+     C                     PARM           MSGR
+     C                     PARM           WAITR
+      *
+      **  Parameters for QSNDDTAQ (To RBA).
+      *
+     C           DTQSND    PLIST
+     C                     PARM           DTAQS
+     C                     PARM           LIBS
+     C                     PARM           LENS
+     C                     PARM           MSGS
+      *
+      **  Set up parameters for receive data queue (from RBA).
+      *
+     C                     MOVELWJOBID    DTAQR  10
+     C                     MOVEL'*LIBL'   LIBR   10
+     C***********          Z-ADD2273      LENR    50
+     C***********          Z-ADD1714      LENR    50                      122060
+     C                     Z-ADD2560      LENR    50                      122060
+     C                     Z-ADD-1        WAITR   50                      SPLFIX
+      *
+      **  Set up parameters for send data queue (to RBA).
+      *
+     C                     MOVEL*BLANKS   DTAQS  10
+     C                     MOVEL'*LIBL'   LIBS   10
+     C                     MOVEL*BLANKS   LENS    50
+      *
+      **  Initialise detail records received from data queue counter to 0.
+      *
+     C                     Z-ADD0         WCNT    50
+     C                     MOVEL'N'       OPEN
+      *
+      **  RCF Processing for Audit File.
+      *
+     C                     EXSR RCFAU
+      *
+     C                     MOVEL'CIPGMD'  PGMDEV
+      *
+      **  Issue acquire operation.
+      *
+     C           PGMDEV    ACQ  RE4403CM               23
+      *
+      **  Unrecoverable error for "ACQ"  -> database error.
+      *
+     C           *IN23     IFEQ '1'
+     C           MAJCOD    ORGE '80'
+      *
+      **  Report error.
+      *
+     C                     MOVEL'USR0050' @MSGID
+     C                     MOVELPGMDEV    WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM MAJMIN    MMCODE
+     C                     PARM *BLANKS   P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CR'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     EXSR *PSSR
+      *
+     C                     END
+      *                                                                                       CRT005
+      ** Check if CRT005 is On                                                                CRT005
+      *                                                                                       CRT005
+     C                     CALL 'AOSARDR0'                                                    CRT005
+     C                     PARM *BLANKS   @RTCD                                               CRT005
+     C                     PARM '*VERIFY' @OPTN                                               CRT005
+     C                     PARM 'CRT005'  @SARD   6                                           CRT005
+     C           SCSARD    PARM SCSARD    DSFDY                                               CRT005
+      *                                                                                       CRT005
+     C           @RTCD     IFNE *BLANKS                                                       CRT005
+     C           @RTCD     ANDNE'*NRF   '                                                     CRT005
+      *                                                                                       CRT005
+      ** Report error                                                                         CRT005
+      *                                                                                       CRT005
+     C                     MOVEL'USR0094' @MSGID                                              CRT005
+     C                     MOVEL*BLANKS   WMDTA1                                              CRT005
+     C                     MOVEL*BLANKS   WMDTA2                                              CRT005
+     C                     EXSR RTVMSG                                                        CRT005
+     C                     MOVEL@MSGTX    O#HMSG                                              CRT005
+     C                     MOVE 'E'       O#HMSS                                              CRT005
+     C                     MOVE @MSGID    O#HMSI                                              CRT005
+     C                     MOVE 'SARD'    O#MSTY                                              CRT005
+     C                     MOVELW#BRCA    O#BRCA                                              CRT005
+     C                     MOVELW#TELD    O#TELD                                              CRT005
+      *                                                                                       CRT005
+     C                     CALL 'REC4411'                                                     CRT005
+     C                     PARM 'RE4403'  PROG   10                                           CRT005
+     C                     PARM           JOBNUM  6                                           CRT005
+     C                     PARM '0000'    MMCODE  4                                           CRT005
+     C                     PARM *BLANKS   P#BRCA  3                                           CRT005
+     C                     PARM           @MSGID  7                                           CRT005
+     C                     PARM *BLANKS   @MSGDT                                              CRT005
+      *                                                                                       CRT005
+     C                     MOVE 'N'       WCSTAT                                              CRT005
+     C                     MOVE 'CR'      WMSTAT                                              CRT005
+     C                     EXSR WRTLOG                                                        CRT005
+      *                                                                                       CRT005
+     C                     WRITESTATO                  22                                     CRT005
+      *                                                                                       CRT005
+      ** Set up LDA DBERR                                                                     CRT005
+      *                                                                                       CRT005
+     C           *LOCK     IN   LDA                                                           CRT005
+     C                     MOVEL'SCSARDPD'DBFILE                                              CRT005
+     C                     MOVEL@OPTN     DBKEY                                               CRT005
+     C                     Z-ADD22        DBASE                                               CRT005
+     C                     EXSR DBERR                                                         CRT005
+      *                                                                                       CRT005
+      ** Set Off Session Active Flag                                                          CRT005
+      *                                                                                       CRT005
+     C                     MOVEL'N'       WACTIV  1                                           CRT005
+      *                                                                                       CRT005
+     C                     EXSR *PSSR                                                         CRT005
+      *                                                                                       CRT005
+     C                     ENDIF                                                              CRT005
+      *                                                                                       CRT005
+     C           @RTCD     IFNE *BLANKS                                                       CRT005
+     C                     MOVEL'N'       CRT005  1                                           CRT005
+     C                     ELSE                                                               CRT005
+     C                     MOVEL'Y'       CRT005                                              CRT005
+     C                     ENDIF                                                              CRT005
+      *
+      **  Access Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*BLANK ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  If error on access to Bank Details.
+      *
+     C           @RTCD     IFNE *BLANKS
+      *
+      **  Report error.
+      *
+     C                     MOVEL'USR0051' @MSGID
+     C                     MOVEL*BLANKS   WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+     C                     MOVE 'BANK'    O#MSTY
+     C                     MOVELW#BRCA    O#BRCA
+     C                     MOVELW#TELD    O#TELD
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG   10
+     C                     PARM           JOBNUM  6
+     C                     PARM '0000'    MMCODE  4
+     C                     PARM *BLANKS   P#BRCA  3
+     C                     PARM           @MSGID  7
+     C                     PARM *BLANKS   @MSGDT
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CR'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+     C                     WRITESTATO                  22
+      *
+      *
+      **  Set up LDA DBERR.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR DBERR
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV  1
+      *
+     C                     EXSR *PSSR
+      *
+      **  Access to Bank Details OK.
+      *
+     C                     ELSE
+      *
+      **  Convert Date to 'YYYYMMDD' Format.
+      *
+     C                     Z-ADDBJRDNB    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     END
+      *
+      **  Access Cashier Interface ICD Details.
+      *
+     C**********           CALL 'AOBAIIR0'                                                    CRT005
+     C                     CALL 'AOBAIIR1'                                                    CRT005
+     C                     PARM '*BLANK ' @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C********** SDBAII    PARM SDBAII    DSFDY                                               CRT005
+     C           SDBAII    PARM SDBAII    DSSDY                                               CRT005
+      *
+      **  If error on access to Cashier Interface ICD Details.
+      *
+     C           @RTCD     IFNE *BLANK
+      *
+      **  Report error.
+      *
+     C                     MOVEL'USR0052' @MSGID
+     C                     MOVEL*BLANKS   WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+     C                     MOVE 'BAII'    O#MSTY
+     C                     MOVELW#BRCA    O#BRCA
+     C                     MOVELW#TELD    O#TELD
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM *BLANKS   P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM *BLANKS   @MSGDT
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CR'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+     C                     WRITESTATO                  22
+      *
+      **  Set up LDA DBERR.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBAIIPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY
+     C                     Z-ADD2         DBASE
+     C                     EXSR DBERR
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV  1
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+      **  Initiation of indices.
+      *
+     C                     Z-ADD999       A       30
+     C                     Z-ADD999       B       30
+     C                     Z-ADD999       C       30
+      *
+      **  Access Teller Id details.
+      *
+     C                     CALL 'AOTELDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C                     PARM *BLANKS   @TLR    3
+     C           SDTELD    PARM SDTELD    DSFDY
+      *
+      **  Load Valid Teller Arrays.
+      *
+     C           @RTCD     DOWEQ*BLANKS
+     C                     MOVELFRTLID    TLR,A
+     C                     MOVELFRTLBC    TBR,A
+      *
+      **  Check Teller Status.
+      *
+     C                     MOVELFRTLID    KTBID
+     C***********KTTRNT    CHAINTTRNM2L1             30                   120880
+     C           KTTRNT    CHAINTTRNM2L1            N30                   120880
+      *
+     C           *IN30     IFEQ *ON
+     C           RECI      ORNE 'D'
+      *
+      **  Report error.
+      *
+     C                     MOVEL'USR0055' @MSGID
+     C                     MOVELFRTLID    WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM *BLANKS   P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+     C                     MOVE 'N'       WCSTAT
+     C                     MOVE 'CR'      WMSTAT
+     C                     EXSR WRTLOG
+      *
+      **  Set up LDA DBERR.
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNM2L1'DBFILE
+     C                     MOVEL@TTRNT    DBKEY
+     C                     Z-ADD3         DBASE
+     C                     EXSR DBERR
+      *
+      **  Set Off Session Active Flag.
+      *
+     C                     MOVEL'N'       WACTIV
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+     C           TWID      IFEQ *BLANKS
+     C                     MOVE 'OFF'     TST,A
+     C                     ELSE
+     C                     MOVE ' ON'     TST,A
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     SUB  1         A
+      *
+     C                     CALL 'AOTELDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*NEXT  ' @OPTN
+     C                     PARM *BLANKS   @TLR
+     C           SDTELD    PARM SDTELD    DSFDY
+      *
+     C                     ENDDO
+      *
+     C                     ADD  1         A
+      *
+      **  Save Lowest Index to use as a Position pointer to start 'LOKUP'.
+      *
+     C                     Z-ADDA         WAPOS   30
+      *
+      **  Access transaction types details.
+      *
+     C                     CALL 'AOBAITR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C                     PARM *BLANKS   @BAIT  10
+     C                     PARM '*TTYP  ' @KYST   7
+     C           SDBAIT    PARM SDBAIT    DSFDY
+      *
+      **  Do while no errors found.
+      *
+     C           @RTCD     DOWEQ*BLANKS
+      *
+      **  Load Transaction Type Details.
+      *
+     C                     MOVELFXBAIT    TXP,B
+     C                     MOVELFXTTFC    W#TTFC
+     C                     MOVELFXDQNM    W#DQNM
+     C                     MOVELFXDQLN    W#DQLN
+     C                     MOVELFXRVFN    W#RVFN
+     C                     MOVELFXRVDQ    W#RVDQ
+     C                     MOVELFXRVDL    W#RVDL
+     C                     MOVELDTLDS     DTL,B
+     C                     SUB  1         B
+      *
+     C                     CALL 'AOBAITR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*NEXT  ' @OPTN
+     C                     PARM *BLANKS   @BAIT
+     C                     PARM '*TTYP  ' @KYST
+     C           SDBAIT    PARM SDBAIT    DSFDY
+      *
+     C                     ENDDO
+      *
+     C                     ADD  1         B
+      *
+      **  Save Lowest Index to use as a Position pointer to start 'LOKUP'.
+      *
+     C                     Z-ADDB         WBPOS   30
+      *
+      ****Check*Authorised*Devices*If*Product*In*Cashier*ICD*not*'CASHIER 8'.*                164273
+      **  Check Authorised Devices If Product In Cashier ICD not 'CASHIER  '.                 164273
+      *
+     C           FUPROD    IFNE W#ICDP
+      *
+      **  Access authorised devices.
+      *
+     C                     CALL 'AOBAIDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*FIRST ' @OPTN
+     C                     PARM *BLANKS   P@BRCA  3                                           222373
+     C                     PARM *BLANKS   @BAID  10
+     C           SDBAID    PARM SDBAID    DSFDY
+      *
+      **  If record not found.
+      *
+     C           @RTCD     DOWEQ*BLANKS
+     C                     MOVE FWBAID    CDV,C
+     C                     SUB  1         C
+      *
+     C                     CALL 'AOBAIDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*NEXT  ' @OPTN
+     C                     PARM *BLANKS   P@BRCA                                              222373
+     C                     PARM *BLANKS   @BAID
+     C           SDBAID    PARM SDBAID    DSFDY
+      *
+     C                     ENDDO
+      *
+     C                     ADD  1         C
+      *
+      **  Save Lowest Index to use as a Position pointer to start 'LOKUP'.
+      *
+     C                     Z-ADDC         WCPOS   30
+      *
+     C                     ENDIF
+      *
+      **  Set ICF File Read required Flag.
+      *
+     C                     MOVEL'Y'       WRDICF  1
+      *
+     C                     ENDSR
+      *
+     C/COPY ZSRSRC,ZDATE9Z3
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            UPDLOG - Update Communications Log.                *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  RCVDTQ - Receive Dataqueue Processing.             *
+      *            ROLLBK - Rollback Processing.                      *
+      *                                                               *
+      *****************************************************************
+     C           UPDLOG    BEGSR
+      *
+     C           RICMSQ    CHAINREPLOGL0             35
+      *
+     C           *IN35     IFEQ '0'
+      *
+     C                     TIME           WTMDAT 120
+     C                     MOVE WTMDAT    TDATE
+     C                     MOVELWTMDAT    TTIME
+      *
+     C                     MOVE WTHR      WFHR
+     C                     MOVE WTMN      WFMN
+     C                     MOVE WTSS      WFSS
+     C                     MOVE WTDD      WFDD
+     C                     MOVE WTMM      WFMM
+     C                     MOVE WTYY      WFYY
+      *
+     C           FUPROD    IFNE W#ICDP
+     C                     MOVE *BLANKS   RIRMDN
+     C                     END
+      *
+      **  Update the Successful Completion flag
+      *
+     C                     MOVELWCSTAT    RISUCM
+      *
+      **  Update the Status & Status Time Stamp
+      *
+     C                     MOVELWMSTAT    RISTAT
+     C                     MOVE FTIME     RISTTM
+      *
+      **  Update the Comms Log File.
+      *
+     C                     UPDATREPLOGD0
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *            AUDIT  - Audit Report Log.                         *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  MAIN   - Main Control Processing.                  *
+      *                                                               *
+      *****************************************************************
+     C           AUDIT     BEGSR
+      *
+     C                     WRITEHEADAU
+      *
+     C           WCNT      IFGT 0
+     C                     WRITECONTROL
+      *
+     C                     ELSE
+      *
+      **  Or, if no records read, Output "No Details" message.
+      *
+     C           WCNT      IFEQ 0
+     C           *INU7     ANDEQ*OFF
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      **  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RCFP1  - RCF Processing for Detail Processing.     *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  RCVDTQ - Receive Data Queue Processing.            *
+      *                                                               *
+      *****************************************************************
+     C           RCFP1     BEGSR                            *** RCFP1  ***
+      *
+      ***  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            RCFAU  - RCF Processing for Audit Report.          *
+      *                                                               *
+      * CALLS             -                                           *
+      *                                                               *
+      * CALLED BY  INIT   - Initial Processing.                       *
+      *                                                               *
+      *****************************************************************
+     C           RCFAU     BEGSR                            *** RCFAU  ***
+      *
+      ***  Ensure Audit Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM *BLANKS   SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANKS   ZSERR   1
+      *
+      ***  If Error occurs during ZSFILE processing, then return to the
+      ***  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            DBERR  - Database Error Handling.                  *
+      *                                                               *
+      * CALLS      *PSSR  - Program Error.                            *
+      *                                                               *
+      * CALLED BY  INIT   - Initial Processing.                       *
+      *                                                               *
+      *****************************************************************
+     C           DBERR     BEGSR
+      *
+     C                     MOVELPROG      DBPGM
+     C                     OUT  LDA
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *            *PSSR  - Program Error.                            *
+      *                                                               *
+      * CALLS                                                         *
+      *                                                               *
+      * CALLED BY  COMMSG - Comms Message Processing.                 *
+      *            DBERR  - Database Error Handling.                  *
+      *            INIT   - Initial Processing.                       *
+      *            MSGVAL - Further Message Validation.               *
+      *            RCVDTQ - Receive Dataqueue Processing.             *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      **  Restore Branch Code and Teller details.
+      *
+     C                     MOVEL@WBRCA    W#BRCA
+     C                     MOVEL@WTELD    W#TELD
+      *
+      **  Sign off teller from Teller Totals and Controls File.
+      *
+     C                     MOVELW#TELD    KTBID
+     C           KTTRNT    CHAINTTRNM2L1             30
+      *
+     C           *IN30     IFEQ *ON
+     C           RECI      ORNE 'D'
+      *
+      **  Retrieve error message data to send in host message.
+      *
+     C                     MOVEL'USR0055' @MSGID
+     C                     MOVELW#TELD    WMDTA1
+     C                     MOVEL*BLANKS   WMDTA2
+     C           WMDTA1    CAT  WMDTA2    @MSGDT
+     C                     EXSR RTVMSG
+     C                     MOVEL@MSGTX    O#HMSG
+     C                     MOVE 'E'       O#HMSS
+     C                     MOVE @MSGID    O#HMSI
+      *
+      **  Report error.
+      *
+     C                     CALL 'REC4411'
+     C                     PARM 'RE4403'  PROG
+     C                     PARM           JOBNUM
+     C                     PARM '0000'    MMCODE
+     C                     PARM W#BRCA    P#BRCA
+     C                     PARM           @MSGID
+     C                     PARM           @MSGDT
+      *
+     C                     MOVEL*BLANKS   @WRK4   4
+     C                     MOVEL*BLANKS   @WRK5   5
+     C           KTBRI     CAT  KTBID     @WRK4
+     C           @WRK4     CAT  KRCTP     @WRK5
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TTRNM2L1'DBFILE
+     C                     MOVEL@WRK5     DBKEY
+     C                     Z-ADD19        DBASE
+     C                     EXSR DBERR
+      *
+     C                     ELSE
+      *
+     C                     MOVE *BLANKS   TWID
+     C                     UPDATTTRNTM2F
+      *
+     C                     ENDIF
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /COPY ZSRSRC,ZALIGNZ2                                               122060
+      *                                                                   122060
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**  DLY      - DELAY JOB
+DLYJOB DLY(1)
+** MTYP Valid Messages and required ACK/NAK.
+BRCLN
+BROPN
+BSERN
+CDATN
+CDESN
+CPRRN
+CQDHY
+CQDIY
+DIRQY
+EQUIN
+EQUPN
+KSOFN
+KSONN
+MIDBN
+NOSTN
+OITMY
+PBCVN
+PBLNN
+RACBN
+RVSEY
+SFSON
+SPDTN
+SWSFN
+SFWFN
+CSOVY                                                                                         CRT005
+CSIVY                                                                                         CRT005
+TLINY                                                                                         CRT005
+TLOUY                                                                                         CRT005
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

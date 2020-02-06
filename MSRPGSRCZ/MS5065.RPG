@@ -1,0 +1,678 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Logical acknowledgements report')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - SWIFT DIRECT LINK                                *
+     F*                                                               *
+     F*  MS5065 - LOGICAL ACKNOWLEDGEMENTS REPORT                     *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. 145692             Date 07Dec06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             Date 21SEP98               *
+     F*                 124673             Date 04Jun98               *
+     F*                 113352             DATE 13FEB97               *
+     F*                 CSW095             DATE 10APR95               *
+     F*                 S01518             DATE 03OCT94               *
+     F*                 039478             DATE 05MAY92               *
+     F*                 E35324             DATE 03JUN92               *
+     F*                 S01310             DATE 06DEC90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  145692 - Execute validation before print record              *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  141572 - Recompile over changes in MGOREFPD                  *
+     F*  124673 - Add Century field to key list.                      *
+     F*  113352 - Recompile over changes in MGOREFPD                  *
+     F*  CSW095 - S.W.I.F.T 1995 Message Changes.                     *
+     F*           Increase arrays to handle a 10,000 character        *
+     F*           message.                                            *
+     F*  S01518 - BLI Lending Swift Enhancements.                     *
+     F*  039478 - RECOMPILED FOR CHANGE TO PRINTER FILE               *
+     F*  E35324 - i) ON LAST PAGE FOR BRANCH 059 (NEW YORK) THE HEAD- *
+     F*           ING SAYS "BRANCH 060 NEW YORK BRANCH".  BRANCH 060  *
+     F*           IS IBF.  THE DATA DISPLAYED IS FROM NEW YORK.       *
+     F*           ii) WHEN LAST DETAIL REPORTED FALLS ON LAST DETAIL  *
+     F*           LINE POSSIBLE, AN EXTRA BLANK PAGE IS GENERATED FOR *
+     F*           THE NEXT BRANCH REPORTED.                           *
+     F*         - i) USE @BRCA INSTEAD OF BRCA ON THE PRINTER FILE.   *
+     F*           ii) SET OVERFLOW INDICATOR OFF WHENEVER A NEW       *
+     F*           HEADING IS PRINTED.                                 *
+     F*  S01310 - RE WRITTEN FOR SWIFT RATIONALISATION                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDBANKPDIF  E                    DISK
+     FSDBRCHL0IF  E           K        DISK
+     FMSMSI2L4IF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI204
+     FMSMSI2LFIF  E           K        DISK
+     F            MSMSI2D0                          KRENAMEMSMSI20F
+     FMGOREFL0IF  E           K        DISK
+     FMS5065AUO   E                    PRINTER      KINFDS SPOOLA     UC
+     FMS5065P1O   E             50     PRINTER      KINFDS SPOOLP     UC
+      *
+      * ID C  F  H  L    Function of indicators
+      *    10            EOF MSMSI2PD
+      *    11            Record validation
+      *    12            EOF MGOREFL0
+      *    41            Multibranching on
+      *    50            MS5065P1 overflow
+      *    60            ALL BRANCH Indicator                             S01518
+     F*    70            Record included in MS5065P1.                     145692
+      *    88            EOF SDBRCHL0
+      *    89            EOF SDBANKPD
+      *    U7U8LR        DB error
+      *
+     E***********         IMSG     3072  1                                CSW095
+     E                    IMSG     9999  1                                CSW095
+     E                    LINE       80  1
+     E                    CPY@    1   1 80
+      *
+     IPARAM       DS
+     I                                        1   2 PMOD
+     I                                        3   8 POSD
+     I                                        9  12 POST
+     I                                       13  18 POED
+     I                                       19  22 POET
+     I                                       13  180@OED
+     I                                       19  220@OET
+      **  Parameters data structure
+      *
+     I            DS
+     I                                        1 256 MDTA
+     I                                        7  18 SEND
+     I                                       19  22 SESS
+     I                                       23  28 SEQ
+     I                                       38  43 DAT
+     I                                       44  47 TIM
+     I                                       54  54 @WK1
+     I                                       56  60 @WK5
+     I                                       61  63 @CDE
+     I                                       64  66 @TAG
+     I                                       68  72 @WL5
+      **  Message header data structure
+     I*                                                                   S01518
+     ISCSARD    E DSSCSARDPD                                              S01518
+     I**  SAR File Details Accessed via Access Program AOSARDR0           S01518
+     I*                                                                   S01518
+     IDSFDY     E DSDSFDY                                                 S01518
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01518
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      **  Local data area data structure
+      *
+     IDSRUN       DS                             13
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      **  RUNDAT data area
+      *
+     ISPOOLA      DS
+     I                                       83  92 AFILE
+     I                                    B 123 1240AFNUM
+     ISPOOLP      DS
+     I                                       83  92 PFILE
+     I                                    B 123 1240PFNUM
+      **  File information data structure
+      *
+     C           KEY4      KLIST
+     C                     KFLD           MODI
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+      *
+     C           KEYF      KLIST
+     C                     KFLD           BRCA
+     C                     KFLD           MODI
+     C                     KFLD           MODEC                           124673
+     C                     KFLD           MODE
+     C                     KFLD           MOTM
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           RSEQ    5
+     C                     PARM           RLEV    1
+     C                     PARM           RENT    3
+     C                     PARM           PARAM
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   MAIN  - Main process                                        *
+      *   INIT  - Initial process                                     *
+      *   REPT1 - Non multibranched report                            *
+      *   REPT2 - Single branch report                                *
+      *   REPT3 - ALL branch report                                   *
+      *   REPT  - Format message for report                           *
+      *   VRCD  - Validate record                                     *
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   MAIN - Main process                                         *
+      *   Calls -  INIT Initial process                               *
+      *            REPT1 - Non multibranched report                   *
+      *            REPT2 - Single branch report                       *
+      *            REPT3 - ALL branch report                          *
+      *****************************************************************
+      *
+      **  Perform initial process
+     C                     EXSR INIT
+      *
+      **  Set up key
+     C                     MOVE PMOD      MODI
+     C                     MOVE POSD      MODE
+     C                     MOVE POST      MOTM
+      *
+      **  Set up century field for key list using start date.             124673
+     C           POSD      IFEQ *BLANKS                                   124673
+     C                     MOVE *BLANKS   MODEC                           124673
+     C                     ELSE                                           124673
+      *                                                                   124673
+     C                     MOVELPOSD      @OSDC   2                       124673
+     C           @OSDC     IFLT '72'                                      124673
+     C                     MOVE '20'      MODEC                           124673
+     C                     MOVE '20'      @OSDC                           124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      MODEC                           124673
+     C                     MOVE '19'      @OSDC                           124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+      **  Set up century field for end date validation.                   124673
+     C           POED      IFEQ *BLANKS                                   124673
+     C                     MOVE *BLANKS   @OEDC   2                       124673
+     C                     ELSE                                           124673
+      *                                                                   124673
+     C                     MOVELPOED      @OEDC                           124673
+      *                                                                   124673
+     C           @OEDC     IFLT '72'                                      124673
+     C                     MOVE '20'      @OEDC                           124673
+     C                     ELSE                                           124673
+     C                     MOVE '19'      @OEDC                           124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     ENDIF                                          124673
+      *                                                                   124673
+      ** If multibranching on and not system level
+     C           MBIN      IFEQ 'Y'
+     C           RLEV      ANDNE'S'
+      *
+     C           RENT      IFEQ 'ALL'
+      *                                                                   S01518
+     C           S01518    IFEQ 'Y'                                       S01518
+     C                     MOVE '1'       *IN60                           S01518
+     C                     END                                            S01518
+      *                                                                   S01518
+     C                     EXSR REPT3
+     C                     Z-ADDACKTOT    ACK     30                      S01518
+     C                     Z-ADDNAKTOT    NAK     30                      S01518
+     C                     ELSE
+     C                     MOVE RENT      BRCA
+     C                     EXSR REPT2
+     C                     Z-ADDACKCNT    ACK     30                      S01518
+     C                     Z-ADDNAKCNT    NAK     30                      S01518
+     C                     END
+      *
+     C                     ELSE
+     C                     EXSR REPT1
+     C                     Z-ADDACKCNT    ACK     30                      S01518
+     C                     Z-ADDNAKCNT    NAK     30                      S01518
+     C                     END
+      *
+      **  Write report trailer
+     C                     WRITEEOREPT
+      *                                                                   S01518
+      **  Write audit report                                              S01518
+     C           S01518    IFEQ 'Y'                                       S01518
+     C                     OPEN MS5065AU                                  S01518
+     C                     MOVE AFILE     SFILE                           S01518
+     C                     Z-ADDAFNUM     ZSNUM                           S01518
+     C                     EXSR SPLF                                      S01518
+     C                     WRITEHEADERA                                   S01518
+     C                     WRITEACKREPT                                   S01518
+     C                     END                                            S01518
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - Inital process                                       *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL'MS5065'  DBPGM
+     C                     MOVE *BLANKS   DBASE
+     C                     OUT  LDA
+      *
+      **  Initialise 'CR' and 'LF' fields
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      *
+      **  Access SDBANKPD for report title
+     C                     READ SDBANKPD                 89
+      *
+     C           *IN89     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '01'      DBASE
+     C                     MOVE 'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     OUT  LDA
+     C                     OPEN MS5065AU
+     C                     MOVE AFILE     SFILE
+     C                     Z-ADDAFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADERA
+     C                     WRITEDBERROR
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+      *
+      ** If multibranching on and not system level display branch code
+     C           MBIN      IFEQ 'Y'
+     C           RLEV      ANDNE'S'
+     C                     MOVE '1'       *IN41
+     C                     END
+     C*                                                                   S01518
+     C**  Access SAR details file to see if S01518 is installed           S01518
+      *                                                                   S01518
+     C                     MOVE 'N'       S01518                          S01518
+     C                     CALL 'AOSARDR0'                                S01518
+     C                     PARM '       ' @RTCD   7                       S01518
+     C                     PARM '*VERIFY' @OPTN   7                       S01518
+     C                     PARM 'S01518'  @SARD   6                       S01518
+     C           SCSARD    PARM SCSARD    DSFDY                           S01518
+     C*                                                                   S01518
+     C           @RTCD     IFEQ *BLANK                                    S01518
+     C                     MOVE 'Y'       S01518  1                       S01518
+     C                     ELSE                                           S01518
+     C           @RTCD     IFNE '*NRF   '                                 S01518
+     C           *LOCK     IN   LDA                                       S01518
+     C                     MOVEL'SCSARDPD'DBFILE           ************   S01518
+     C                     MOVEL'*VERIFY' DBKEY            * DBERR 02 *   S01518
+     C                     Z-ADD02        DBASE            ************   S01518
+     C                     OUT  LDA                                       S01518
+     C                     OPEN MS5065AU                                  S01518
+     C                     MOVE AFILE     SFILE                           S01518
+     C                     Z-ADDAFNUM     ZSNUM                           S01518
+     C                     EXSR SPLF                                      S01518
+     C                     WRITEHEADERA                                   S01518
+     C                     WRITEDBERROR                                   S01518
+     C                     EXSR *PSSR                                     S01518
+     C                     END                                            S01518
+     C                     END                                            S01518
+      *                                                                   S01518
+     C                     Z-ADD0         ACKCNT  30                      S01518
+     C                     Z-ADD0         NAKCNT  30                      S01518
+     C                     Z-ADD0         ACKTOT  30                      S01518
+     C                     Z-ADD0         NAKTOT  30                      S01518
+     C                     MOVE '0'       *IN60                           S01518
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT1 - Non multibranched report                            *
+      *   Calls - REPT Format message for report                      *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           REPT1     BEGSR
+      *
+     C           KEY4      SETLLMSMSI2L4
+     C                     READ MSMSI2L4                 10
+      *
+     C                     OPEN MS5065P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C                     WRITEHEADER
+      *
+      **  Write 'NO MESSAGES TO REPORT'
+     C           *IN10     IFEQ '1'
+     C                     WRITENORECS
+      *
+      **  Process all messages which match parameters
+     C                     ELSE
+     C                     EXSR VRCD                                      145692
+     C           *IN10     DOWEQ'0'
+     C           *IN11     ANDEQ'0'
+      *
+      **  Write message & next report header
+     C                     EXSR REPT
+      *
+      **  Read next record
+     C                     READ MSMSI2L4                 10
+     C                     EXSR VRCD
+     C                     END
+      *                                                                   145692
+     C           *IN70     IFEQ '0'                                       145692
+     C                     WRITENORECS                                    145692
+     C                     ENDIF                                          145692
+      *                                                                   145692
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT2 - Single branch report                                *
+      *   Calls - REPT Format message for report                      *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           REPT2     BEGSR
+      *
+     C           KEYF      SETLLMSMSI2LF
+     C                     READ MSMSI2LF                 10
+      *                                                                   E35324
+      **  The BRCA field of the printer file was changed to @BRCA         E35324
+     C                     MOVE BRCA      @BRCA                           E35324
+      *
+     C                     OPEN MS5065P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C           BRCA      CHAINSDBRCHL0             88
+     C                     WRITEHEADER
+      *
+      **  Write 'NO MESSAGES TO REPORT'
+     C           *IN10     IFEQ '1'
+     C                     WRITENORECS
+      *
+      **  Process all messages which match parameters
+     C                     ELSE
+     C                     EXSR VRCD                                      145692
+     C           *IN10     DOWEQ'0'
+     C           *IN11     ANDEQ'0'
+      *
+      **  Write message & next report header
+     C                     EXSR REPT
+      *
+      **  Read next record
+     C                     READ MSMSI2LF                 10
+      *
+     C                     EXSR VRCD
+      *
+     C           RENT      IFNE BRCA
+     C                     SETON                     11
+     C                     END
+     C                     END
+      *                                                                   145692
+     C           *IN70     IFEQ '0'                                       145692
+     C                     WRITENORECS                                    145692
+     C                     ENDIF                                          145692
+      *                                                                   145692
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT3 - ALL branch report                                   *
+      *   Calls - REPT Format message for report                      *
+      *   Called by main process                                      *
+      *****************************************************************
+      *
+     C           REPT3     BEGSR
+      *
+      **  Read first record
+     C                     READ MSMSI2LF                 10
+     C                     MOVE BRCA      @BRCA   3
+      *
+     C                     OPEN MS5065P1
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C           BRCA      CHAINSDBRCHL0             88
+     C                     WRITEHEADER
+      *
+     C           *IN10     DOWEQ'0'
+     C                     EXSR VRCD
+      *
+      **  Write message & next report header
+     C           *IN11     IFEQ '0'
+     C                     EXSR REPT
+     C                     END
+      *
+     C                     READ MSMSI2LF                 10
+      *
+     C           *IN10     IFEQ '0'
+     C           BRCA      ANDNE@BRCA
+      *                                                                   S01518
+     C                     WRITEEOREPT
+     C                     CLOSEMS5065P1
+     C                     OPEN MS5065P1
+      *                                                                   145692
+     C                     MOVE '0'       *IN70                           145692
+      *                                                                   S01518
+     C                     Z-ADD0         ACKCNT                          S01518
+     C                     Z-ADD0         NAKCNT                          S01518
+     C                     MOVE PFILE     SFILE
+     C                     Z-ADDPFNUM     ZSNUM
+     C                     EXSR SPLF
+     C           BRCA      CHAINSDBRCHL0             88
+      *                                                                   E35324
+      **  The BRCA field of the printer file was changed to @BRCA         E35324
+     C                     MOVE BRCA      @BRCA                           E35324
+     C                     WRITEHEADER
+      *                                                                   E35324
+      **  Set off overflow indicator after header is printed              E35324
+     C                     SETOF                     50                   E35324
+     C                     END
+     C***********          MOVE BRCA      @BRCA                           E35324
+     C                     END
+      *                                                                   145692
+     C           *IN70     IFEQ '0'                                       145692
+     C                     WRITENORECS                                    145692
+     C                     ENDIF                                          145692
+      *                                                                   145692
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   REPT - Format message for report                            *
+      *   Called by - REPT1 Non multibranched report                  *
+      *               REPT2 Single branch report                      *
+      *               REPT3 ALL branch report                         *
+      *****************************************************************
+      *
+     C           REPT      BEGSR
+      *
+      **  Set up network field
+     C           @WK5      IFEQ '{311:'
+     C           @WL5      OREQ '{311:'
+     C                     MOVE 'STTX '   NTWK
+     C                     ELSE
+     C                     MOVE 'SWIFT'   NTWK
+     C                     END
+      *
+      **  Set up status field
+     C                     MOVE *BLANKS   CODE
+     C                     MOVE *BLANKS   TAG
+     C           @WK1      IFEQ '0'
+     C                     MOVE 'ACCEPTED'STAT
+     C                     ADD  1         ACKCNT                          S01518
+     C                     ADD  1         ACKTOT                          S01518
+     C                     ELSE
+     C                     MOVE 'REJECTED'STAT
+     C                     ADD  1         NAKCNT                          S01518
+     C                     ADD  1         NAKTOT                          S01518
+     C                     MOVE @CDE      CODE
+     C                     MOVE @TAG      TAG
+     C                     END
+      *
+      **  Obtain Message Type, Destination and
+      **  Message Priority from MGOREFL0
+     C                     MOVE *BLANKS   MSTYP
+     C                     MOVE *BLANKS   DEST
+     C                     MOVE *BLANKS   PRTY
+     C           TRNO      CHAINMGOREFL0             12
+     C           *IN12     IFEQ '0'
+     C                     MOVE MTPY      MSTYP
+     C                     MOVELNWDS      DEST
+     C           MPRY      IFEQ 'U'
+     C                     MOVE 'URGENT'  PRTY
+     C                     ELSE
+     C                     MOVE 'NORMAL'  PRTY
+     C                     END
+     C                     END
+      *
+      **  Write Details to Report
+     C           *IN50     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     50
+     C                     END
+      *
+     C                     WRITEDETAIL
+      *                                                                   145692
+     C                     MOVE '1'       *IN70                           145692
+      *
+      **  Set up fields for Telex Answerback, if present
+     C           @WK5      IFEQ '{311:'
+     C                     Z-ADD61        X
+     C                     END
+      *
+     C           @WL5      IFEQ '{311:'
+     C                     Z-ADD73        X
+     C                     END
+      *
+     C           @WK5      IFEQ '{311:'
+     C           @WL5      OREQ '{311:'
+     C                     MOVEAMDTA      IMSG
+     C                     Z-ADD1         Z
+      *
+     C           @WK2      DOUEQ'}}'
+      *
+     C           @WK2      DOUEQCRLF
+     C           @WK2      OREQ '}}'
+     C                     MOVE IMSG,X    LINE,Z
+     C***********          ADD  1         X       40                      CSW095
+     C                     ADD  1         X       50                      CSW095
+     C                     ADD  1         Z       30
+     C                     MOVEAIMSG,X    @WK2    2
+     C                     END
+      *
+     C           *IN50     IFEQ '1'
+     C                     WRITEHEADER
+     C                     SETOF                     50
+     C                     END
+      *
+     C                     MOVEALINE      RCD
+     C                     WRITEANSBACK
+     C                     ADD  2         X
+     C                     MOVE *BLANKS   LINE
+     C                     Z-ADD1         Z
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   VRCD - Validate record                                      *
+      *   Called by - REPT1 Non multibranched report                  *
+      *               REPT2 Single branch report                      *
+      *               REPT3 ALL branch report                         *
+      *****************************************************************
+      *
+     C           VRCD      BEGSR
+      *
+     C                     SETOF                     11
+      *
+     C           PMOD      IFNE *BLANKS
+     C           PMOD      ANDNEMODI
+     C                     SETON                     11
+     C                     END
+      *
+      **  If end date entered & less than message output date
+     C           POED      IFNE *BLANKS
+      *                                                                   124673
+     C           @OEDC     IFLT MODEC                                     124673
+     C           @OEDC     OREQ MODEC                                     124673
+     C           @OED      ANDLTMODE
+     C                     SETON                     11
+     C                     ENDIF                                          124673
+      *                                                                   124673
+     C                     END
+      *                                                                   145692
+      ** If startdate is greater than the message output date.            145692
+      *                                                                   145692
+     C                     MOVE POSD      @OSD    60                      145692
+     C           POSD      IFNE *BLANKS                                   145692
+     C           @OSD      ANDGTMODE                                      145692
+     C                     SETON                     11                   145692
+     C                     END                                            145692
+      *
+      **  If end date equal to message output date,
+      **  end time entered & less than message output time
+     C           @OED      IFEQ MODE
+     C           @OEDC     ANDEQMODEC                                     124673
+     C           POET      ANDNE*BLANKS
+     C           @OET      ANDLTMOTM
+     C                     SETON                     11
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SPLF - Spool file handling                                  *
+      *****************************************************************
+      *
+     C           SPLF      BEGSR
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           RSEQ
+     C                     PARM BRCA      @PARM   3
+     C                     PARM           SFILE  10
+     C                     PARM           ZSNUM   60
+     C                     PARM           ZSERR   1
+     C           ZSERR     IFEQ 'Y'
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

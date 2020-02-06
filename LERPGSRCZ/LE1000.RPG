@@ -1,0 +1,1689 @@
+0001 H        1                                                           S01117
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Extract loans and interest information')      *
+0002 F********************************************************************
+0004 F*                                                                  *
+     F*  Midas   Customer Lending Module
+0004 F*                                                                  *
+0005 F*     LE1000 - EXTRACT LOANS AND INTEREST RATE INFORMATION         *
+0006 F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+0008 F*                                                                  *
+      *  Last Amend No. MD052558           Date 10Jan19               *
+      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 CGL184             Date 07Dec16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 AR830785           Date 07May13               *
+      *                 AR996895           Date 25Nov12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CLE064             Date 06Dec10               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER016A            Date 19May08               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 246141             Date 26Mar07               *
+      *                 245082             Date 30Jan07               *
+      *                 164847             Date 30Nov06               *
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 242286             Date 25Sep06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CLE028             Date 27Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CLE011             Date 07Nov00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CIR004             Date 20Jan00               *
+      *                 179407             Date 23Jun00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     F*                 171883             Date 28Jan00               *
+      * Midas DBA 2.05 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 121768             Date 19Feb98               *
+     F*                 126017             DATE 17NOV97               *
+     F*                 CLE005             DATE 22MAY97               *
+     F*                 097885             DATE 31JAN97               *
+     F*                 S01408             DATE 11APR96               *
+     F*                 095244             DATE 01NOV95                  *
+     F*                 095238             DATE 31OCT95                  *
+     F*                 066550             DATE 04FEB94                  *
+     F*                 S01392             DATE 14SEP92                  *
+     F*                 S01339             DATE 29JUL91                  *
+     F*                 S01220             DATE 15MAR91                  *
+     F*                 S01194             DATE 18JAN90                  *
+     F*                 S01117             DATE 28/09/89                 *S01117
+     F*                 S01147             DATE 20/11/87                 *S01117
+     F*                 E86113             DATE 24/03/87                 *S01117
+     F*                 E86111             DATE 23/03/87                 *
+     F*                 E47241             DATE 23/10/86                 *
+     F*                 E80945             DATE 25/06/86                 *
+0008 F*                                                                  *
+0011 F*------------------------------------------------------------------*
+0011 F*                                                                  *
+      *  MD052558 - Reinstate deleted fixes MD-47993 and MD-35545     *
+      *  MD050139- AOSARDR0 called every time causing performance     *
+      *            issue. Recompile due to changes in /COPY           *
+      *            ZFREQ/ZFRQ*.                                       *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
+      *             on Last Day indicator.                            *
+      *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
+      *             Accrue on Last Day Indicator for method 6.        *
+      *  CGL184 - New Frequencies for Account Statements (Recompile)  *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  AR830785 - Recompiled due to changes in core hook RULE78Z1.  *
+      *             (Child: AR830786)                                 *
+      *  AR996895 - Incorrect acrrual interest calculation            *
+      *             (Child: AR996897) (Recompile)                     *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
+      *  263666 - Recompiled due to changes in ZINTDYZ2               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER016A - German Interest Calculation: Upgarde of FGE059     *
+      *            to Midas Plus (Recompile)                          *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus                                          *
+      *  246141 - Recompiled due to changes in ZINTDYZ2               *
+      *  245082 - Loans with first and last day accrual should be     *
+      *           treated as first day accruals until maturity        *
+      *           date.  Then add one day on the maturity date.       *
+      *           Applied fix 235784 from Release 4.                  *
+      *  164847 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  BUG12990 - Recompiled due to changes in ZINTDYZ2/ZINTDYZ2LE  *
+      *  242286 - Recompile over changes in /COPY ZINTDYZ2.           *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type                              *
+      *  CIR013 - Additional Calculation Method for FRA/IRS/CCF       *
+      *           Recompile over GLINTC and ZINTDY.                   *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  CIR004 - Dealing Calculation Method Change.                  *
+      *         - Recompiled due to GLINTC and ZINTDY changes         *
+      *  179407 - Included matured loans in calculating the no. of    *
+      *           records to avoid FCOOB in LE1000AU and LE1010AU.    *
+      *           Completed fix 178321.                               *
+     F*  171883 - Remove matured loans from report                    *
+     F*  121768 - Recompile over changed GLINTCZ1                     *
+     F*  126017 - Correction to interest calculation for calculation  *
+     F*           basis 6 in SR/GLINTC. Add SR/ZDAT10                 *
+     F*  CLE005 - Customer Lending Enhancements - Others (T3)         *
+     F*  097885 - Recompiled for wrong calculation of number of day   *
+     F*           interest (ZINTDYZ2).                                *
+     F*  S01408 - Addition of core hook LE1000FFP1                       *
+     F*           Addition of core hook LE1000IIP1                       *
+     F*           Addition of core hook LE1000CCP4                       *
+     F*           Addition of core hook LE1000CCP3                       *
+     F*           Addition of core hook LE1000CCP2                       *
+     F*           Addition of core hook LE1000CCP1                       *
+     F*  095244 - Recompiled for Calculation method 3                 *
+     F*  095238 - Recompiled for Calculation method 3                 *
+     F*    066550 - GLINTC has had historical problems and inaccuracies  *
+     F*             and is now externaly descibed and changed to use     *
+     F*             ZINTDYZ1. See document atached to error no on GEMS   *
+     F*     S01392  -  JAPANESE SUB MODULE ENHANCEMENTS                  *
+     F*     S01339  -  REMOVE SYNDICATED LOANS PROCESSING, DUE TO        *
+     F*                MODULE REDUNDANCY.                                *
+     F*     S01220  -  AMENDED FOR STRATEGIC RISK MANAGEMENT             *S01220
+     F*                RELEASE 10 TO ALLOW THE INPUT OF A BOOK           *S01220
+     F*                CODE AGAINST A LOAN.                              *S01220
+     F*     S01194  -  NEW STANDING DATA                                   *
+0008 F*     S01117  -  MULTIBRANCHING                                    *S01117
+     F*     S01147  -  RELEASE 22 (AMENDMENT TO GLINTC)                  *S01147
+0008 F*     S01117  -  MULTIBRANCHING                                    *S01117
+     F*     E86113  -  ONE EXTRA DAYS INTEREST WAS BEING ADDED FOR       *E86113
+     F*                LOANS MATURING AT MONTH END ON SYSTEM OF FIRST    *E86113
+     F*                DAY ACCRUALS.                                     *E86113
+     F*     E86111  -  CALCULATE INTEREST UP TO LAST CALENDAR DAY OF     *E86111
+     F*                MONTH.                                            *E86111
+0011 F*     E47241  -  FILE OUT OF BALANCE ARISES DUE TO CHANGES MADE    *E47241
+0011 F*                IN LE0450 BY PREVIOUS FIX E47212 WHENEVER LOAN    *E47241
+0011 F*                HAS MATURED WITH OUTSTANDING PARTS SOLD.          *E47241
+0011 F*     E80945  -  INDICATOR 98 SETTING IS SAVED AND RESTORED        *E80945
+0011 F*                WHEN S.R.GLINTC IS PERFORMED.                     *E80945
+0008 F*                                                                  *
+0011 F********************************************************************
+     F*
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+0012 F*CLOAN***IP**F*****400  7AI     2 DISK                              S01220
+0012 F*CLOAN***IP**F     436  7AI     2 DISK                       S01220 CLE011
+0012 F***CLOAN** IP  F    1310  7AI     2 DISK                                         CLE011 CLE028
+     F***CLOAN** IP  F    1375  7AI     2 DISK                                         CLE028 CGL029
+     F*CLOAN***IP**F****1461  7AI     2 DISK                                           CGL029 CLE042
+     F***CLOAN** IP  F    1773  7AI     2 DISK                                         CLE042 CER020
+     F***CLOAN** IP  F    1782  7AI     2 DISK                                         CER020 CLE134
+     FCLOAN   IP  F    1874  7AI     2 DISK                                                   CLE134
+0013 F*LOANS***IS**F*****400 13AI     2 DISK                           U1 S01339
+0014 F*TABLE***IF  F      96 12AI     2 DISK                              S01194
+     F*                                                                   S01408
+     F/COPY WNCPYSRC,LE1000FFP1                                           S01408
+     F*                                                                   S01408
+0015 FLNINTHH O   F      64            DISK
+0015 FLNINTLN O   F      64            DISK
+0015 FLNINTZZ O   F      64            DISK
+0016 F*E1000P1O** F     132            PRINTER                            S01117
+0016 FLE1000AUO   F     132     OA     PRINTER                            S01117
+0017 F*                                                                  *
+0018 F* ID F  C  H  L    FUNCTION OF INDICATORS
+0019 F* 01            CUSTOMER LENDING LOANS FILE - HEADER
+0020 F* 02            CUSTOMER LENDING DETAILS
+0021 F* 03            CUSTOMER LENDING TRAILER
+0022 F**04******      COMMERCIAL LOANS FILE - HEADER                      S01339
+0023 F**05******      COMMERCIAL LOANS - DRAWDOWN DETAIL                  S01339
+0024 F**06******      COMMERCIAL LOANS - TRAILER                          S01339
+0025 F**07******      TABLE FILE - ICD 1                                  S01194
+0026 F* 08            CUSTOMER LENDING DETAILS TYPE 2
+0027 F**09******      COMMERCIAL LOANS - COMMITMENT DETAIL                S01339
+0028 F**10******      TABLE ICD - 2                                       S01194
+0029 F* 11            CUSTOMER LENDING LOANS FILE D & M REC 'A'
+0030 F* 12            CUSTOMER LENDING LOANS FILE D & M REC 'B'
+     F*       13      ROUND DOWN FAC.IND. = 'Y'                           S01392
+0031 F*    40         FIRST CYCLE
+0032 F*    41         TYPE 'A' LENDING RECORD
+0033 F*    42         PROCESSING TYPE NOT '61' TO '67'
+0034 F*    43         WORK INDICATOR
+0035 F*    44         WORK INDICATOR
+0036 F*    45         CLOAN FILE OUT OF BALANCE
+0037 F*****48***      LOANS FILE OUT OF BALANCE                           S01339
+0038 F*    49         TYPE 'G' LOANS RECORD
+0039 F*    50         WORK INDICATOR
+0040 F*    51         USED IN INTEREST CALCULATIONS
+0041 F*    52         STOP ACCRUALS
+     F*    61         ACCRUAL PROFIT DATE LESS THAN DNWD                  E86111
+0042 F*****81***      TYPE 'G' LOANS TRAILER                              S01339
+     F**************U1COMM. LOANS - LOANS FILE IS PRESENT                 S01339
+0043 F*        U7+U8  DATABASE ERROR
+0044 F*        U8     FILE CONTROLS OUT OF BALANCE
+0045 F********************************************************************
+0046 E*                                                                  *
+      /COPY ZSRSRC,ZDATE2Z1                                               S01392
+     E*                                                                   E86111
+     E                    TABMN  12  12  3   TABDY   2   ZENDAT TABLE     E86111
+0050 E**
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE9Z1                                               066550
+     E/COPY ZSRSRC,ZFREQBZ1                                                                   CLE028
+     E/COPY ZSRSRC,ZHOLE                                                                      CLE028
+0051 E********************************************************************
+0052 I*
+0053 I**    CUST.LENDING LOANS FILE - HEADER
+0054 I*
+0055 ICLOAN   NS  01   1 CH
+0056 I                                        1   1 RECI
+0057 I**********                              2   70LNRF                                      CLE148
+     I                                        2   7 LNRF                                      CLE148
+0058 I                                        8   8 RCDT
+0059 I*
+0060 I**     DETAIL RECORDS
+0061 I*
+0062 I        NS  02   1 CD   8 CA
+0063 I*******OR***11***1*CM***8*CA                                        E47241
+0063 I*******OR***02***1*CM***8*CA                                  E47241171883
+0063 I       OR   04   1 CM   8 CA                                        171883
+0064 I       OR   11   1 CR   8 CA
+0065 I                                        1   1 RECI
+0066 I**********                              2   70LNRF                                      CLE148
+     I                                        2   7 LNRF                                      CLE148
+0067 I                                        8   8 RCDT
+0068 I                                        9   90MRIN
+0069 I                                       10  110PTYP
+0070 I**********                             12  170CNUM                                      CSD027
+0070 I                                       12  17 CNUM                                      CSD027
+0071 I***********                            18  200BRCD                  S01117
+0071 I                                       18  20 BRCA                  S01117
+0072 I                                       21  22 LTYP
+0073 I                                       23  24 SUTP
+0074 I                                    P  25  270DDAT
+0075 I                                    P  28  300VDAT
+0076 I                                    P  31  330MDAT
+0077 I                                       34  350LASQ
+0078 I**********                             36  410FCUS                                      CSD027
+0078 I                                       36  41 FCUS                                      CSD027
+0079 I                                       42  440FTYP
+0080 I                                       45  460FSEQ
+0081 I                                       47  49 CCY
+0082 I                                    P  50  560CPAM
+0083 I                                       57  57 INTC
+0084 I                                    P  58  637INTR
+0085 I                                       64  650BRTT
+0086 I                                    P  66  717BRTE
+0087 I                                    P  72  777RTSP
+0088 I                                    P  78  815MARG
+0089 I                                       82  82 SPIN
+0090 I                                       83  83 CHIN
+0091 I                                    P  84  897WTRT
+0092 I                                       90  90 WTIN
+0093 I                                       91  910REPT
+0094 I                                    P  92  980RAMT
+0095 I                                    P  99 1010NRPD
+0096 I                                      102 102 RFRQ
+0097 I                                      103 1040RDYN
+0098 I                                      105 107 FCCY
+0099 I                                      108 1100LIND
+0100 I                                      111 112 CRSK
+0101 I                                      113 114 ACOF
+0102 I                                      115 115 NACD
+0103 I                                      116 116 RELI
+0104 I                                      117 117 AUTO
+0105 I                                    P 118 1240PSAM
+0106 I                                    P 125 1318BCXR
+0107 I                                    P 132 1388FCXR
+0108 I                                      139 1400SDST
+0109 I**********                            141 152 OSDA                                      CGL029
+     I                                      141 152 QQOSDA                                    CGL029
+0110 I                                      153 162 TSTN
+0111 I                                      163 1640MDST
+0112 I**********                            165 176 OMDA                                      CGL029
+     I                                      165 176 QQOMDA                                    CGL029
+0113 I                                      177 186 TMAN
+0114 I                                      187 196 FACO
+0115 I                                    P 197 1990RLDT
+0116 I                                    P 200 2020NROD
+0117 I                                      203 203 RLFQ
+0118 I                                      204 2050RLDY
+     I                                      206 206 RDFC                  S01392
+0119 I                                      207 2080NBRA
+0120 I                                    P 209 2147NRTS
+0121 I                                      215 215 NSIN
+0122 I                                      216 2160NCAC
+0123 I                                    P 217 2230AWTP
+0124 I                                    P 224 2300WTRD
+0125 I                                    P 231 2370WTWD
+0126 I                                    P 238 2440IWOD
+0127 I                                    P 245 2510PWOD
+0128 I                                      252 252 BMDI
+0129 I                                      253 253 FMDI
+0130 I                                    P 254 2600PDIN
+0131 I                                      287 287 BTIN
+0132 I                                      288 2890BLDY
+0133 I**********                            290 2950OLNO                                      CSD027
+0133 I                                      290 295 OLNO                                      CSD027
+0134 I                                      296 296 RCSI
+0135 I                                      297 2970ICBS
+0136 I                                      298 298 IPFR
+0137 I                                    P 299 3050TOTI
+0138 I                                    P 306 3080NIDT
+0139 I                                    P 309 3110IBDT
+0140 I                                    P 312 3140SLID
+0141 I                                    P 315 3210AIPD
+0142 I                                    P 322 3240DLRC
+0143 I                                    P 325 3270IACD
+0144 I                                    P 328 3340AITC
+0145 I                                    P 335 3410TFEP
+0146 I                                    P 342 3480AIAP
+0147 I                                    P 349 3550IPRD
+0148 I                                    P 356 3620IPRM
+0149 I                                    P 363 3690ICTD
+0150 I                                    P 370 3760AIMN
+0151 I                                    P 377 3790RBDT
+0152 I                                      384 3850IFDY
+0153 I                                      386 386 LONI
+0154 I                                      387 387 CNFI
+0155 I                                      388 388 ACEI
+0156 I                                      389 389 TLXI
+0157 I                                      390 390 CBLI
+0158 I                                    P 391 3930ORED
+0159 I                                    P 394 3960LCD
+0160 I                                      397 397 CHTP
+0161 I                                    P 398 4000TNLU
+     I                                      401 401 ADDI                  S01392
+     I                                      435 436 BOKC                  S01220
+     I                                     13491349 ADIF                                      CLE028
+     I                                    P135913650FLTI                                      CLE028
+     I                                    P136613680FRPD                                      CLE028
+     I*************************************13901407 OSDA                               CGL029 CLE042
+     I*************************************14081425 OMDA                               CGL029 CLE042
+     I                                     15611578 OSDA                                      CLE042
+     I                                     15791596 OMDA                                      CLE042
+     I                                     17621765 CLAS                                      CLE042
+     I                                     17661769 DFCL                                      CER020
+     I                                     17701773 SLCL                                      CER020
+     I                                    P177417760ISDT                                      CER020
+     I                                    P177717790FMDT                                      CER020
+     I                                     17801782 LOIC                                      CER020
+      *                                                                                       CLE134
+     I                                     18301830 FAMU                                      CLE134
+     I                                     18311831 FPNR                                      CLE134
+     I                                    P183218340RIDT                                      CLE134
+     I                                    P183518360RIDC                                      CLE134
+     I                                     183718370RCAT                                      CLE134
+     I                                    P183818390RCAC                                      CLE134
+     I                                    P184018420RCSD                                      CLE134
+     I                                    P184318440RCDY                                      CLE134
+     I                                    P184518460RCCY                                      CLE134
+      *                                                                                       CLE134
+     I                                    P184718490BIDT                                      CLE134
+     I                                    P185018510BIDC                                      CLE134
+     I                                     185218520BCAT                                      CLE134
+     I                                    P185318540BCAC                                      CLE134
+     I                                    P185518570BCSD                                      CLE134
+     I                                    P185818590BCDY                                      CLE134
+     I                                    P186018610BICC                                      CLE134
+      *                                                                                       CLE134
+     I                                     18621864 XRFI                                      CLE134
+     I                                     186518740XRFN                                      CLE134
+      *                                                                                       CLE134
+0162 I*                                                                   S01339
+0163 I*    LOANS FILE - DETAIL 2
+0164 I*
+0165 I        NS  08   1 CD   8 CB
+0166 I*******OR***12***1*CM***8*CB                                        E47241
+0166 I*******OR***08***1*CM***8*CB                                  E47241171883
+0166 I       OR   09   1 CM   8 CB                                        171883
+0167 I       OR   12   1 CR   8 CB
+0168 I                                        1   1 RECI
+0169 I**********                              2   70LNRF                                      CLE148
+     I                                        2   7 LNRF                                      CLE148
+0170 I                                        8   8 RCDT
+0171 I                                        9   90MRIN
+0172 I                                       10  44 NAR1
+0173 I                                       45  79 NAR2
+0174 I                                       80 114 NAR3
+0175 I                                      115 149 NAR4
+0176 I                                    P 150 1560OPAM
+0177 I                                      157 1610FRBC
+0178 I                                    P 162 1680YPLN
+0179 I                                    P 169 1750YFLN
+0180 I                                    P 176 1820YILN
+0181 I                                    P 183 1890ABLN
+0182 I                                    P 190 1960YPLC
+0183 I                                    P 197 2030YFLC
+0184 I                                    P 204 2100YWLC
+0185 I                                    P 211 2170ABLC
+0186 I                                    P 218 2240WWLN
+0187 I                                    P 225 2310IWLN
+0188 I                                    P 232 2380PWLN
+0189 I                                      245 274 SPI1
+0190 I                                      275 304 SPI2
+0191 I                                      305 334 SPI3
+0192 I                                    P 391 3930ORED
+0193 I                                    P 394 3960LCD
+0194 I                                      397 397 CHTP
+0195 I                                    P 398 4000TNLU
+0196 I*
+0197 I**     TRAILER
+0198 I*
+0199 I        NS  03   1 CT
+0200 I                                        1   1 RECI
+0201 I**********                              2   70LNRF                                      CLE148
+     I                                        2   7 LNRF                                      CLE148
+0202 I                                        8   8 RCDT
+0203 I                                    P  17  190NORE
+0204 I                                    P  20  220FLSZ
+0205 I                                    P  23  250NLRB
+0206 I                                    P  26  280NINS
+0207 I                                    P  29  310NDEL
+0208 I                                    P  32  340NLRA
+0209 I                                    P  35  420VLBF
+0210 I                                    P  43  440VLBL
+0211 I                                    P  45  520VRIF
+0212 I                                    P  53  540VRIL
+0213 I                                    P  55  620VRDF
+0214 I                                    P  63  640VRDL
+0215 I                                    P  65  720VLAF
+0216 I                                    P  73  740VLAL
+0217 I                                    P  75  770DTMR
+0218 I                                    P  78  800ITMR
+0219 I                                    P 394 3960LCD
+0220 I                                      397 397 CHTP
+0221 I                                    P 398 4000TNLU
+0222 I*                                                                   S01339
+0223 I**     CATCHALL                                                     S01339
+0224 I*                                                                   S01339
+0225 I        NS                                                          S01339
+0226 I                                        1   1 RECI                  S01339
+0227 I**********                                                          S01339
+0228 I*******COMMERCIAL*LOANS*FILE*-*HEADER***                            S01339
+0229 I**********                                                          S01339
+0230 I*LOANS***NS**04***1*CH******                                        S01339
+0231 I**********                              1   1 RECI                  S01339
+0232 I**********                              2  22 KEY                   S01339
+0233 I**********                             23  270EVCD                  S01339
+0234 I**********                                                          S01339
+0235 I********DETAIL                                                      S01339
+0236 I**********                                                          S01339
+0237 I********NS  09   1 CD   8 CD                                        S01339
+0238 I**********                              1   1 RECI                  S01339
+0239 I**********                              2   70LNRF                  S01339
+0240 I**********                              8   8 RCDT                  S01339
+0241 I**********                              9  140DDRF                  S01339
+0242 I**********                             15  200BWCN                  S01339
+0243 I**********                             21  220TRID                  S01339
+0244 I**********                          P  23  290OACC                  S01339
+0245 I***********                            30  320BRCD            S01117S01339
+0245 I**********                             30  32 BRCA            S01117S01339
+0246 I**********                             33  35 CMCY                  S01339
+0247 I**********                             36  38 DDCY                  S01339
+0248 I**********                             39  39 MCYI                  S01339
+0249 I**********                             40  41 LNTP                  S01339
+0250 I**********                          P  42  440DELD                  S01339
+0251 I**********                          P  45  470STTD                  S01339
+0252 I**********                          P  48  500MATD                  S01339
+0253 I**********                          P  51  530LRPD                  S01339
+0254 I**********                             54  540RPYT                  S01339
+0255 I**********                          P  55  610RSAM                  S01339
+0256 I**********                          P  62  640RSBD                  S01339
+0257 I**********                          P  65  670RSDD                  S01339
+0258 I**********                             68  68 RSF                   S01339
+0259 I**********                          P  69  750RPHA                  S01339
+0260 I**********                             76  76 DPMI                  S01339
+0261 I**********                          P  77  830DPMA                  S01339
+0262 I**********                          P  84  900DPMP                  S01339
+0263 I**********                          P  91  970DPTA                  S01339
+0264 I**********                             98  98 ACCI                  S01339
+0265 I**********                          P  99 1050OADC                  S01339
+0266 I**********                          P 106 1120ODDA                  S01339
+0267 I**********                          P 113 1190ODCC                  S01339
+0268 I**********                          P 120 1260ODDC                  S01339
+0269 I**********                          P 127 1330PRLA                  S01339
+0270 I**********                          P 134 1400WTXP                  S01339
+0271 I**********                          P 141 1430RLBD                  S01339
+0272 I**********                          P 144 1460ROLD                  S01339
+0273 I**********                            147 147 ROLF                  S01339
+0274 I**********                            148 150 NCCY                  S01339
+0275 I**********                          P 151 1530NRLD                  S01339
+0276 I**********                          P 154 1619DXRT                  S01339
+0277 I**********                          P 162 1699NXRT                  S01339
+0278 I**********                          P 170 1757CINR                  S01339
+0279 I**********                          P 176 1817NINR                  S01339
+0280 I**********                          P 182 1877SPRD                  S01339
+0281 I**********                          P 188 1937EINR                  S01339
+0282 I**********                            194 194 IRLI                  S01339
+0283 I**********                          P 195 1970IIND                  S01339
+0284 I**********                            198 1980INCM                  S01339
+0285 I**********                          P 199 2010LIPD                  S01339
+0286 I**********                          P 202 2040ACTD                  S01339
+0287 I**********                          P 205 2110AITC                  S01339
+0288 I**********                          P 212 2180AIAN                  S01339
+0289 I**********                          P 219 2250AIAP                  S01339
+0290 I**********                          P 226 2320AIPD                  S01339
+0291 I**********                          P 233 2390IPRD                  S01339
+0292 I**********                            240 249 BSTN                  S01339
+0293 I**********                            250 259 BMRN                  S01339
+0294 I**********                            260 271 OSTN                  S01339
+0295 I**********                            272 283 OMRN                  S01339
+0296 I**********                            284 2850SDST                  S01339
+0297 I**********                            286 2870MRST                  S01339
+0298 I**********                            288 2890ACSQ                  S01339
+0299 I**********                          P 290 2957COFR                  S01339
+0300 I**********                            296 296 CONI                  S01339
+0301 I**********                            297 3020CDDR                  S01339
+0302 I**********                            343 343 MOIN                  S01339
+0303 I**********                          P 344 3500ASTC                  S01339
+0304 I**********                            351 3520RSDY                  S01339
+0305 I**********                            353 3540RLDY                  S01339
+0306 I**********                            355 355 DXRI                  S01339
+0307 I**********                            356 356 NXRI                  S01339
+0308 I**********                            357 3570NICM                  S01339
+0309 I**********                            358 358 LNAI                  S01339
+0310 I**********                            359 359 LNAT                  S01339
+0311 I**********                          P 383 3850LDCD                  S01339
+0312 I**********                            386 386 DCHT                  S01339
+0313 I**********                          P 387 3890LRCD                  S01339
+0314 I**********                            390 390 RCHT                  S01339
+0315 I**********                          P 391 3930ORED                  S01339
+0316 I**********                          P 394 3960LCD                   S01339
+0317 I**********                            397 397 CHTP                  S01339
+0318 I**********                          P 398 4000TNLU                  S01339
+0319 I**********                                                          S01339
+0320 I*****DRAWDOWN*FILE*-*DETAIL*RECORD.****                             S01339
+0321 I**********                                                          S01339
+0322 I*LOANS***NS**05***1*CD***8*CG*****                                  S01339
+0323 I**********                              1   1 RECI                  S01339
+0324 I**********                              2   70LNRF                  S01339
+0325 I**********                              8   8 RCDT                  S01339
+0326 I**********                              9  140DDRF                  S01339
+0327 I**********                             15  200BWCN                  S01339
+0328 I**********                             21  220TRID                  S01339
+0329 I**********                          P  23  290OACC                  S01339
+0330 I***********                            30  320BRCD            S01117S01339
+0330 I**********                             30  32 BRCA            S01117S01339
+0331 I**********                             33  35 CMCY                  S01339
+0332 I**********                             36  38 DDCY                  S01339
+0333 I**********                             39  39 MCYI                  S01339
+0334 I**********                             40  41 LNTP                  S01339
+0335 I**********                          P  42  440DELD                  S01339
+0336 I**********                          P  45  470STTD                  S01339
+0337 I**********                          P  48  500MATD                  S01339
+0338 I**********                          P  51  530LRPD                  S01339
+0339 I**********                             54  540RPYT                  S01339
+0340 I**********                          P  55  610RSAM                  S01339
+0341 I**********                          P  62  640RSBD                  S01339
+0342 I**********                          P  65  670RSDD                  S01339
+0343 I**********                             68  68 RSF                   S01339
+0344 I**********                          P  69  750RPHA                  S01339
+0345 I**********                             76  76 DPMI                  S01339
+0346 I**********                          P  77  830DPMA                  S01339
+0347 I**********                          P  84  900DPMP                  S01339
+0348 I**********                          P  91  970DPTA                  S01339
+0349 I**********                             98  98 ACCI                  S01339
+0350 I**********                          P  99 1050OADC                  S01339
+0351 I**********                          P 106 1120ODDA                  S01339
+0352 I**********                          P 113 1190ODCC                  S01339
+0353 I**********                          P 120 1260ODDC                  S01339
+0354 I**********                          P 127 1330PRLA                  S01339
+0355 I**********                          P 134 1400WTXP                  S01339
+0356 I**********                          P 141 1430RLBD                  S01339
+0357 I**********                          P 144 1460ROLD            18    S01339
+0358 I**********                            147 147 ROLF                  S01339
+0359 I**********                            148 150 NCCY                  S01339
+0360 I**********                          P 151 1530NRLD                  S01339
+0361 I**********                          P 154 1619DXRT                  S01339
+0362 I**********                          P 162 1699NXRT                  S01339
+0363 I**********                          P 170 1757CINR                  S01339
+0364 I**********                          P 176 1817NINR                  S01339
+0365 I**********                          P 182 1877SPRD                  S01339
+0366 I**********                          P 188 1937EINR                  S01339
+0367 I**********                            194 194 IRLI                  S01339
+0368 I**********                          P 195 1970IIND                  S01339
+0369 I**********                            198 1980INCM                  S01339
+0370 I**********                          P 199 2010LIPD                  S01339
+0371 I**********                          P 202 2040ACTD                  S01339
+0372 I**********                          P 205 2110AITC                  S01339
+0373 I**********                          P 212 2180AIAN                  S01339
+0374 I**********                          P 219 2250AIAP                  S01339
+0375 I**********                          P 226 2320AIPD                  S01339
+0376 I**********                          P 233 2390IPRD                  S01339
+0377 I**********                            240 249 BSTN                  S01339
+0378 I**********                            250 259 BMRN                  S01339
+0379 I**********                            260 271 OSTN                  S01339
+0380 I**********                            272 283 OMRN                  S01339
+0381 I**********                            284 2850SDST                  S01339
+0382 I**********                            286 2870MRST                  S01339
+0383 I**********                            288 2890ACSQ                  S01339
+0384 I**********                          P 290 2957COFR                  S01339
+0385 I**********                            296 296 CONI                  S01339
+0386 I**********                            297 3020CDDR                  S01339
+0387 I**********                          P 303 342 DDCR                  S01339
+0388 I**********                            343 343 MOIN                  S01339
+0389 I**********                          P 344 3500ASTC                  S01339
+0390 I**********                            351 3520RSDY                  S01339
+0391 I**********                            353 3540RLDY                  S01339
+0392 I**********                            355 355 DXRI                  S01339
+0393 I**********                            356 356 NXRI                  S01339
+0394 I**********                            357 3570NCLC                  S01339
+0395 I**********                            358 358 LNAI                  S01339
+0396 I**********                            379 3800BRAT                  S01339
+0397 I**********                            381 3820NBRC                  S01339
+0398 I**********                          P 383 3850LDCD                  S01339
+0399 I**********                            386 386 DCHT                  S01339
+0400 I**********                          P 387 3890LRCD                  S01339
+0401 I**********                            390 390 RCHT                  S01339
+0402 I**********                          P 391 3930ORED                  S01339
+0403 I**********                          P 394 3960LCD                   S01339
+0404 I**********                            397 397 CHTP                  S01339
+0405 I**********                          P 398 4000TNLU                  S01339
+0406 I**********                              1 256 LOTA                  S01339
+0407 I**********                            257 400 LOTB                  S01339
+0408 I**********                                                          S01339
+0409 I*******TRAILER                                                      S01339
+0410 I**********                                                          S01339
+0411 I********NS  06   1 CT                                               S01339
+0412 I**********                              1   1 RECI                  S01339
+0413 I**********                              2   7 KEY1                  S01339
+0414 I**********                              8   8 RCDT                  S01339
+0415 I**********                              9  22 KEY2                  S01339
+0416 I**********                          P  27  290NORE                  S01339
+0417 I**********                          P  30  370HRWN                  S01339
+0418 I**********                          P  38  390HRDC                  S01339
+0419 I**********                          P  40  420NLRB                  S01339
+0420 I**********                          P  43  500RBWN                  S01339
+0421 I**********                          P  51  520RBDC                  S01339
+0422 I**********                          P  53  550NINS                  S01339
+0423 I**********                          P  56  630INWN                  S01339
+0424 I**********                          P  64  650INDC                  S01339
+0425 I**********                          P  66  680NAMD                  S01339
+0426 I**********                          P  69  760AMWN                  S01339
+0427 I**********                          P  77  780AMDC                  S01339
+0428 I**********                          P  79  810NDEL                  S01339
+0429 I**********                          P  82  890DLWN                  S01339
+0430 I**********                          P  90  910DLDC                  S01339
+0431 I**********                             92  92 IRRI                  S01339
+0432 I**********                             93  93 IRR2                  S01339
+0433 I**********                          P  94  960NRAM                  S01339
+0434 I**********                          P 100 1020TNLU                  S01339
+0435 I**********                                                          S01339
+0436 I*******CATCHALL                                                     S01339
+0437 I**********                                                          S01339
+0438 I********NS                                                          S01339
+0439 I**********                              1   1 RECI                  S01339
+0440 I*
+0441 I*******TABLE*FILE***INSTALLATION*CONTROL*DATA*RECORD*1              S01194
+0442 I**********                                                          S01194
+0443 I*TABLE***NS  07   2 C0   3 C1  12 C1                                S01194
+0444 I*******AND      13 C0                                               S01194
+0445 I**********                              1   1 RECI                  S01194
+0446 I**********                              2   30RECT                  S01194
+0447 I**********                             12  130RCDE                  S01194
+0448 I**********                             14  66 TITL                  S01194
+0449 I**********                             67  67 DATF                  S01194
+0450 I***********                            68  700DFBR                  S01194
+0451 I**********                             74  74 MODI1                 S01194
+0452 I**********                             75  75 MODI2                 S01194
+0453 I**********                             76  76 MODI3                 S01194
+0454 I**********                          P  77  790RUND                  S01194
+0455 I**********                             80  86 RUNA                  S01194
+0456 I**********                             87  870SFLG                  S01194
+0457 I**********                          P  90  920LCD                   S01194
+0458 I**********                             93  93 CHTP                  S01194
+0459 I**********                          P  94  960TNLU                  S01194
+0460 I**********                                                          S01194
+0461 I*****TABLE*FILE***INSTALLATION*CONTROL*DATA*RECORD*2.               S01194
+0462 I**********                                                          S01194
+0463 I********NS  10   1 CD   2 C0   3 C1                                 S01194
+0464 I*******AND      12 C1  13 C1                                        S01194
+0465 I**********                              1   1 RECI                  S01194
+0466 I**********                              2   30RECT                  S01194
+0467 I**********                             12  130RCDE                  S01194
+0468 I**********                             14  16 BCCY                  S01194
+0469 I**********                             17  19 BCYL                  S01194
+0470 I**********                             20  22 HOCY                  S01194
+0471 I**********                             23  280HEAD                  S01194
+0472 I**********                          P  29  310APDA                  S01194
+0473 I**********                             35  35 APFQ                  S01194
+0474 I**********                          P  36  380LOGS                  S01194
+0475 I**********                             39  40 CUZR                  S01194
+0476 I**********                          P  41  430DNWD                  S01194
+0477 I**********                             44  460BVLP                  S01194
+0478 I**********                             47  49 LOCY                  S01194
+0479 I**********                             50  510FDAY                  S01194
+0480 I**********                             52  52 ACLD                  S01194
+0481 I**********                             53  53 MBIN                  S01194
+0482 I**********                             86  86 ISAV                  S01194
+0483 I**********                          P  87  890LLOG                  S01194
+0484 I**********                          P  90  920LCD                   S01194
+0485 I**********                             93  93 CHTP                  S01194
+0486 I**********                          P  94  960TNLU                  S01194
+0487 I**********                                                          S01194
+0488 I*******TABLE*FILE***CATCHALL                                        S01194
+0489 I**********                                                          S01194
+0490 I********NS                                                          S01194
+0491 I**********                              1   1 RECI                  S01194
+0492 I**********                              2   30RECT                  S01194
+     ISDBRCH    E DSSDBRCHPD                                              S01117
+      **  EXTERNAL DS FOR BRANCH CODE DETAILS                             S01117
+     I              A8CMCD                          CMPYM                 S01194
+     I*                                                                   S01408
+     I/COPY WNCPYSRC,LE1000IIP1                                           S01408
+     I*                                                                   S01408
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+     I*                                                                   S01194
+     IDSSDY     E DSDSSDY                                                 S01194
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
+     I*                                                                   S01194
+      **                                                                  S01117
+0493 I*
+0494 I*    LOCAL DATA AREA FOR DATABASE ERROR REFERENCES
+0495 I*
+0496 ILDA        UDS                            256
+0497 I***********                           134 138 DBFILE                S01117
+0498 I***********                           139 167 DBKEY                 S01117
+0499 I***********                           168 175 DBPGM                 S01117
+0500 I***********                           176 1770DBASE                 S01117
+0497 I                                      134 141 DBFILE                S01117
+0498 I                                      142 170 DBKEY                 S01117
+0499 I                                      171 180 DBPGM                 S01117
+0500 I                                      181 1830DBASE                 S01117
+     I**                                                                  S01117
+     ISDBANK    E DSSDBANKPD                                              S01194
+      ** BANK DETAILS                                                     S01194
+     I              BJURPT                          TITL                  S01194
+     I              BJCYCD                          BCCY                  S01194
+     I              BJDNWD                          DNWD                  S01194
+     I              BJDFIN                          DATF                  S01194
+     I              BJMRDT                          RUNA                  S01194
+     I              BJRDNB                          RUND                  S01194
+     ISDGELR    E DSSDGELRPD                                              S01194
+      ** GENERAL LEDGER DETAILS                                           S01194
+     I**************BKALDI                          ACLD            S01194S01392
+     I              BKAPDT                          APDA                  S01194
+     I**                                                                  CLE005
+     ISCSARD    E DSSCSARDPD                                              CLE005
+      **  External DS for SAR Details                                     CLE005
+     I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+0501 I*
+0502 I********************************************************************
+     I/COPY ZSRSRC,ZINTDYZ1                                               066550
+     I/COPY ZSRSRC,ZDATE9Z2                                               066550
+     I/COPY ZSRSRC,ZDAT10Z1                                               126017
+     I/COPY ZSRSRC,ZHOLI                                                                      CLE028
+0503 I/EJECT                                                              S01117
+     C** PARAMETER LIST FOR PROGRAM 'AOBANKR0'                            S01194
+     C           PLISTA    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C** PARAMETER LIST FOR PROGRAM 'AOGELRR0'                            S01194
+     C           PLISTB    PLIST                                          S01194
+     C                     PARM '*MSG   ' @RTCD   7                       S01194
+     C                     PARM '*FIRST ' @OPTN   7                       S01194
+     C********** SDGELR    PARM SDGELR    DSFDY                                        S01194 CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C                     MOVEACPY@      BIS@   80
+0504 C*
+0505 C**      FIRST CYCLE CALCULATIONS
+0506 C*
+0507 C   40                GOTO CYCLE1
+0508 C                     SETON                     40
+     C           *NAMVAR   DEFN           LDA                             S01194
+     C           *LOCK     IN   LDA                                       S01194
+0509 C*
+0510 C**      FOR DATABASE ERROR REFERENCE
+0511 C*
+0512 C                     MOVE 'LE1000  'DBPGM
+0513 C                     MOVE ' '       BLANKS 29
+0514 C                     MOVE BLANKS    DBKEY
+0515 C*
+0516 C**      ACCESS ICD-1.DATABASE ERROR IF NOT THERE
+0517 C*
+0267 C**********           EXSR ZSYSTM                                    S01194
+0268 C*********99          SETON                     U7U8LR               S01194
+0269 C*********99          MOVEL'TABLE'   DBFILE                          S01194
+0270 C*********99          MOVELZTABKY    DBKEY                           S01194
+0271 C*********99          MOVEL'01'      DBASE            ** DBASE  01 **S01194
+0272 C*********99          GOTO END                                       S01194
+     C                     CALL 'AOBANKR0'PLISTA                          S01194
+     C           @RTCD     IFNE *BLANKS                                   S01194
+0199 C                     SETON                     U7U8LR**DATABASE 01**S01194
+0200 C                     Z-ADD1         DBASE                           S01194
+0202 C                     MOVE 'SDBANKPD'DBFILE                          S01194
+0203 C                     GOTO END                                       S01194
+     C                     END                                            S01194
+0480 C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
+0481 C           DATF      COMP 'M'                      98MMDDYY, 98 ON  S01194
+0368 C**                                                                  S01194
+      *                                                                   CLE005
+      ** Check if SAR CLE005 is present                                   CLE005
+      *                                                                   CLE005
+     C                     MOVE 'N'       CLE005  1                       CLE005
+     C                     CALL 'AOSARDR0'                                CLE005
+     C                     PARM *BLANKS   P@RTCD  7                       CLE005
+     C                     PARM '*KEY   ' P@OPTN  7                       CLE005
+     C                     PARM 'CLE005'  P@SARD  6                       CLE005
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE005
+      *                                                                   CLE005
+     C           P@RTCD    IFEQ *BLANKS                                   CLE005
+     C                     MOVE 'Y'       CLE005  1                       CLE005
+     C                     ELSE                                           CLE005
+      *                                                                   CLE005
+      ** Handle Database Error                                            CLE005
+      *                                                                   CLE005
+     C           P@RTCD    IFNE '*NRF    '                                CLE005
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE005
+     C                     Z-ADD4         DBASE            * DBERR 04 *   CLE005
+     C                     MOVEL'CLE005'  DBKEY            ************   CLE005
+     C                     MOVE *ON       *INU7                           CLE005
+     C                     MOVE *ON       *INU8                           CLE005
+     C                     MOVE *ON       *INLR                           CLE005
+     C                     GOTO END                                       CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                                       CLE028
+      ** Check if Flat Rate Personal Loans (Rule of 78s) is installed.                        CLE028
+      *                                                                                       CLE028
+     C                     CALL 'AOSARDR0'                                                    CLE028
+     C                     PARM *BLANKS   P@RTCD                                              CLE028
+     C                     PARM '*KEY   ' P@OPTN                                              CLE028
+     C                     PARM 'CLE028'  P@SARD                                              CLE028
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE028
+      *                                                                                       CLE028
+     C           P@RTCD    IFEQ *BLANKS                                                       CLE028
+     C                     MOVE 'Y'       CLE028  1                                           CLE028
+     C                     ELSE                                                               CLE028
+     C                     MOVE 'N'       CLE028                                              CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+     C           P@RTCD    IFNE *BLANKS                                                       CLE028
+     C           P@RTCD    ANDNE'*NRF   '                                                     CLE028
+     C                     MOVE *ON       *INU7                                               CLE028
+     C                     MOVE *ON       *INU8                                               CLE028
+     C                     MOVE *ON       *INLR                                               CLE028
+     C           *LOCK     IN   LDA                                                           CLE028
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE028
+     C                     Z-ADD5         DBASE                                               CLE028
+     C                     MOVEL'CLE028'  DBKEY                                               CLE028
+     C                     MOVELP@OPTN    DBOPTN                                              CLE028
+     C                     MOVEL'LE1000  'DBPGM                                               CLE028
+     C                     OUT  LDA                                                           CLE028
+     C                     GOTO END                                                           CLE028
+     C                     ENDIF                                                              CLE028
+     C/COPY WNCPYSRC,LEH01321
+0524 C*
+0525 C**      ACCESS ICD-2.DATABASE ERROR IF NOT THERE
+0526 C*
+0527 C**********           MOVE '11'      ZTABKY                          S01194
+0528 C********** ZTABKY    CHAINTABLE                99                   S01194
+     C**********           CALL 'AOGELRR0'PLISTB                          S01194              CGL029
+     C                     CALL 'AOGELRR1'PLISTB                                              CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01194
+     C                     SETON                     U7U8LR               S01194
+     C                     Z-ADD2         DBASE                           S01194
+     C                     MOVE 'SDGELRPD'DBFILE                          S01194
+     C                     GOTO END                        ***************S01194
+     C                     END                                            S01194
+0529 C**N10*****           SETON                     U7U8LR               S01194
+0530 C**N10*****           Z-ADD2         DBASE                           S01194
+0531 C**N10*****           MOVE 'TABLE'   DBFILE                          S01194
+0532 C**N10*****           MOVELZTABKY    DBKEY                           S01194
+0533 C**N10*****           GOTO END                                       S01194
+      *                                                                                     MD035545
+      ** Retrieve system value setting.                                                     MD035545
+      *                                                                                     MD035545
+     C                     MOVELWPARML    P@OP01                                            MD035545
+     C                     CALL 'AOSVALR0'                                                  MD035545
+     C                     PARM *BLANKS   @RTCD                                             MD035545
+     C                     PARM           P@OP01 20                                         MD035545
+     C                     PARM           P@VL01200                                         MD035545
+     C                     PARM           P@OP02 20                                         MD035545
+     C                     PARM           P@VL02200                                         MD035545
+     C                     PARM           P@OP03 20                                         MD035545
+     C                     PARM           P@VL03200                                         MD035545
+     C                     PARM           P@OP04 20                                         MD035545
+     C                     PARM           P@VL04200                                         MD035545
+     C                     PARM           P@OP05 20                                         MD035545
+     C                     PARM           P@VL05200                                         MD035545
+     C                     PARM           P@OP06 20                                         MD035545
+     C                     PARM           P@VL06200                                         MD035545
+     C                     PARM           P@OP07 20                                         MD035545
+     C                     PARM           P@VL07200                                         MD035545
+     C                     PARM           P@OP08 20                                         MD035545
+     C                     PARM           P@VL08200                                         MD035545
+     C                     PARM           P@OP09 20                                         MD035545
+     C                     PARM           P@VL09200                                         MD035545
+     C                     PARM           P@OP10 20                                         MD035545
+     C                     PARM           P@VL10200                                         MD035545
+      *                                                                                     MD035545
+      ** If system value is not found then default value to 'N'.                            MD035545
+      *                                                                                     MD035545
+     C           @RTCD     IFNE '       '                                                   MD035545
+     C                     MOVE 'N'       WCALC6                                            MD035545
+     C                     ELSE                                                             MD035545
+     C                     MOVELP@VL01    WCALC6                                            MD035545
+     C********** WCALC6    IFEQ 'Y'                                                MD035545 MD047993
+     C********** BKALDI    ANDEQ'Y'                                                MD035545 MD047993
+     C**********           MOVE 'Y'       WCALC6                                   MD035545 MD047993
+     C**********           ELSE                                                    MD035545 MD047993
+     C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
+     C**********           ENDIF                                                   MD035545 MD047993
+     C                     ENDIF                                                            MD035545
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,LE1000CCP1                                           S01408
+     C*                                                                   S01408
+     C**                                                                  E86111
+     C**    FIND ENDDATE (FOR INTEREST CALCULATION) BY COMPARING          E86111
+     C**    DNWD AGAINST APDA. IF APDA LT DNWD, USE APDA AS ENDDATE,      E86111
+     C**    OTHERWISE USE MONTH END DATE.                                 E86111
+     C**                                                                  E86111
+     C           APDA      COMP DNWD                   61                 E86111
+     C   61                Z-ADDAPDA      ENDATE  50                      E86111
+     C  N61                EXSR ZENDAT                                    E86111
+     C**                                                                  E86111
+0534 C*     ZEROISE  HASH FIELDS
+0535 C                     Z-ADD0         OPAMI  150
+0536 C                     Z-ADD0         OPAMD   30
+0537 C                     Z-ADD0         CPAMI  150
+0538 C                     Z-ADD0         CPAMD   30
+0539 C                     Z-ADD0         OACCI  150
+0540 C                     Z-ADD0         OACCD   30
+0541 C                     Z-ADD0         ODDCI  150
+0542 C                     Z-ADD0         ODDCD   30
+0543 C*
+0544 C**        ADD 1 TO RECORD COUNT
+0545 C*
+0546 C                     Z-ADD1         NORR    50
+0547 C                     Z-ADD0         NORRE   50
+0548 C                     Z-ADD1         NRECS   50
+     C                     Z-ADD1         NREC    50
+0550 C                     Z-ADD0         NORESV  50
+0551 C           CYCLE1    TAG                             ** CYCLE1 TAG**
+0552 C*
+0553 C********************************************************************
+0554 C*         DETAIL PROCESSING
+0555 C***04******                                                         S01339
+0556 C*OR*05*****           GOTO QLOANS                                   S01339
+0557 C**N02N03***                                                  S01339 179407
+0557 C**N02N03N06                                                         S01339
+0558 C***ANN08N11N12          GOTO END                                    179407
+     C           *IN02     IFEQ '0'                                       179407
+     C           *IN03     ANDEQ'0'                                       179407
+     C           *IN04     ANDEQ'0'                                       179407
+     C           *IN08     ANDEQ'0'                                       179407
+     C           *IN09     ANDEQ'0'                                       179407
+     C           *IN11     ANDEQ'0'                                       179407
+     C           *IN12     ANDEQ'0'                                       179407
+     C                     GOTO END                                       179407
+     C                     ENDIF                                          179407
+0559 C***03******                                                         S01339
+0560 C*OR*06*****           GOTO TRAPRO                                   S01339
+0560 C   03                GOTO TRAPRO                                    S01339
+     C**                                                                  S01117
+     C** To get COMPANY CODE(ie CMPYM):                                   S01117
+     C**                                                                  S01117
+     C**********           CALL 'AOBRCHR0'                                             S01117 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*KEY   ' @OPTN   7                       S01117
+     C                     PARM BRCA      @DSNB   3                       S01117
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                        S01117 CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                                   S01117
+     C                     MOVEL@DSNB     DBKEY                           S01117
+     C                     MOVEL'SDBRCHPD'DBFILE           ************   S01117
+     C                     Z-ADD03        DBASE            * DBASE 03 *   S01117
+     C                     MOVEL@OPTN     DBOPTN  7        ************   S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     GOTO END                                       S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+0561 C**        KEEP A COUNT OF TYPE A AND TYPE B LIVE RECORDS
+0562 C*
+0563 C   11
+0564 COR 12                GOTO END
+0565 C           NORR      ADD  1         NORR
+0566 C           RCDT      COMP 'A'                      41
+0567 C*
+0568 C**      IF TYPE 'A'RECORD HASH TOTAL CURRENT  PRINCIPAL THEN GOTO
+0569 C**         END.EXTRACT INFORMATION HELD ON TYPE'A'RECORD.
+0570 C  N41                GOTO END
+0571 C           CPAM      DIV  1000      ZZAMT        30
+0572 C   30                Z-SUBZZAMT     ZZAMT
+0573 C                     Z-ADDOPAMI     ZZTOTI
+0574 C                     Z-ADDOPAMD     ZZTOTD
+0575 C                     EXSR GLZADD
+0576 C                     Z-ADDZZTOTI    OPAMI
+0577 C                     Z-ADDZZTOTD    OPAMD
+      *                                                                   179407
+     C           *IN04     IFEQ '1'                                       179407
+     C           *IN09     OREQ '1'                                       179407
+     C                     GOTO END                                       179407
+     C                     ENDIF                                          179407
+0578 C*
+0579 C**       PROCESSING TYPE'61'TO'67'ONLY REQUIRED FOR EXTRACT
+0580 C*
+0581 C           PTYP      COMP 61                     42
+0582 C  N42      PTYP      COMP 67                   42
+      *                                                                   CLE005
+      ** If SAR CLE005 is Present, inlcude PTYP 68 and 69 for Extract     CLE005
+      *                                                                   CLE005
+     C           CLE005    IFEQ 'Y'                                       CLE005
+      *                                                                   CLE005
+     C           PTYP      IFEQ 68                                        CLE005
+     C           PTYP      OREQ 69                                        CLE005
+     C                     MOVE *OFF      *IN42                           CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+     C                     ENDIF                                          CLE005
+      *                                                                   CLE005
+      ** If Flat Rate Personal Loans (Rule of 78s) CLE028 is                                  CLE028
+      ** installed, extract flat rate personal loans as well.                                 CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C                     MOVE *OFF      *IN42                                               CLE028
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+0583 C   42                GOTO END
+0584 C*
+0585 C**       CACULATE NO. OF RECORDS TO GO ON S/LNINT TRAILER
+0586 C*
+0587 C           NRECS     ADD  1         NRECS
+0588 C*
+0589 C**       MOVE 'L' INTO SYNDICATED/LENDING INDICATOR
+0590 C                     MOVE 'L'       SLIN    1
+0591 C*
+0592 C**       CHECK IF RUND AFTER MATURITY DATE
+0593 C*
+0594 C**  IF STOP ACCRUALS INDICATOR IS ON, BYPASS THESE CALCS.
+0595 C*
+0596 C                     TESTB'3'       LONI           52
+0597 C   52                GOTO STOPAC
+0598 C           MDAT      COMP 0                    4646
+0599 C***46******MDAT      COMP RUND                   4646               E86111
+     C   46      MDAT      COMP ENDATE                 4646               E86111
+0600 C   46                Z-ADDMDAT      INTDAT  50
+0601 C**N46******          Z-ADDRUND      INTDAT                          E86111
+0601 C  N46                Z-ADDENDATE    INTDAT                          E86111
+0602 C*
+0603 C**  CALCULATE INTEREST ACCRUED BETWEEN IACD AND RUND OR MAT.DATE
+0604 C**     IF SOONER.SET THIS TO ZERO IF IACD GREATER THAN EITHER
+0605 C*
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C           VDAT      IFLE INTDAT                                                        CLE028
+     C                     MOVE *ON       *IN44                                               CLE028
+     C                     Z-ADDVDAT      ZIBEG                                               CLE028
+     C                     Z-ADDINTDAT    ZIEND                                               CLE028
+     C                     ENDIF                                                              CLE028
+     C                     ELSE                                                               CLE028
+0606 C           IACD      COMP INTDAT                 4444
+0607 C   44                Z-ADDIACD      ZIBEG
+0608 C   44                Z-ADDINTDAT    ZIEND
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+      ** If Flat Rate Personal Loans (Rule of 78s) is installed,                              CLE028
+      ** derive the outstanding interest of flat rate personal                                CLE028
+      ** loans using the Rule of 78s.  Adjustment of end date                                 CLE028
+      ** does not apply to this type of loan.                                                 CLE028
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C           *IN44     ANDEQ*ON                                                           CLE028
+      *                                                                                       CLE028
+     C                     EXSR SRIN78                                                        CLE028
+      *                                                                                       CLE028
+     C                     ELSE                                                               CLE028
+0609 C*
+      ********************************************************************S01392
+0610 C****CHECK*IF*FIRST*DAY*ACCRUALS*************************************S01392
+0611 C****IF*SO,*ADD*EXTRA*DAYS*INTEREST**********************************S01392
+0612 C********************************************************************S01392
+0613 C***44      ACLD      COMP 'Y'                  5151                 S01392
+0614 C***44*51***ZIEND     ADD  1         ZIEND                     E86113S01392
+0614 C***44 51N46ZIEND     ADD  1         ZIEND                     E86113S01392
+      *                                                                   S01392
+      * adjust end date according to 'additional day indicator'           S01392
+     C   44                Z-ADDMDAT      ZMDAT                           S01392
+     C   44                EXSR ZFLDC                                     S01392
+      *                                                                   S01392
+     C***44*****           Z-ADDVDAT      ZVDAT                                        S01392 245082
+     C           *IN44     IFEQ '1'                                                           245082
+     C                     Z-ADDMDAT      ZMDAT                                               245082
+     C                     END                                                                245082
+     C   44                EXSR ZFLAC                                     S01392
+      *                                                                   S01392
+0615 C   44                MOVE ICBS      ZICALC
+0616 C   44                Z-ADDCPAM      ZIAMT
+0617 C   44                Z-ADDINTR      ZIRATE
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,LE1000CCP2                                           S01408
+     C*                                                                   S01408
+0618 C   44                EXSR GLINTC
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,LE1000CCP3                                           S01408
+     C*                                                                   S01408
+     C                     ENDIF                                                              CLE028
+     C**                                                                  S01392
+     C**   ROUND DOWN INTEREST IF RDFC = 'Y'                              S01392
+0619 C***44******          Z-ADDZINTR     ACINTR 130H                     S01392
+     C           RDFC      COMP 'Y'                      13               S01392
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C           *IN44     ANDEQ*ON                                                           CLE028
+     C                     MOVE *OFF      *IN13                                               CLE028
+     C                     ENDIF                                                              CLE028
+     C   44N13             Z-ADDZINTR     ACINTR 130H                     S01392
+     C   44 13             Z-ADDZINTR     ACINTR                          S01392
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,LE1000CCP4                                           S01408
+     C*                                                                   S01408
+     C**                                                                  S01392
+0620 C           MATURE    TAG                             ** MATURE TAG**
+0621 C  N44                Z-ADD0         ACINTR
+0622 C**        CALCULATE OUTSTANDING INTEREST
+0623 C*
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C           *IN44     ANDEQ*ON                                                           CLE028
+      *                                                                                       CLE028
+     C                     Z-ADD*ZERO     INTD                                                CLE028
+      *                                                                                       CLE028
+     C                     ELSE                                                               CLE028
+      *                                                                                       CLE028
+0624 C                     Z-ADDAITC      INTD   130
+     C                     ENDIF                                                              CLE028
+      *                                                                                       CLE028
+0625 C           INTD      ADD  AIMN      INTD
+0626 C           INTD      ADD  AIAP      INTD
+0627 C           INTD      ADD  ACINTR    INTD
+0628 C                     GOTO SUBTRT
+0629 C           STOPAC    TAG                             ** STOPAC TAG *
+0630 C           AIPD      ADD  AIMN      INTD
+0631 C           SUBTRT    TAG                             ** SUBTRT TAG *
+      *                                                                                       CLE028
+     C           CLE028    IFEQ 'N'                                                           CLE028
+     C           CLE028    OREQ 'Y'                                                           CLE028
+     C           PTYP      ANDNE80                                                            CLE028
+     C           CLE028    OREQ 'Y'                                                           CLE028
+     C           PTYP      ANDEQ80                                                            CLE028
+     C           ADIF      ANDNE'Y'                                                           CLE028
+0632 C           INTD      SUB  IPRD      INTD
+     C                     ENDIF                                                              CLE028
+0633 C           INTD      SUB  ICTD      INTD
+0634 C           INTD      SUB  IWOD      INTD
+0635 C*
+0636 C**       KEEP HASH TOTAL OF CURRENT PRINCIPAL
+0637 C           CPAM      DIV  1000      ZZAMT        30
+0638 C   30                Z-SUBZZAMT     ZZAMT
+0639 C                     Z-ADDCPAMI     ZZTOTI
+0640 C                     Z-ADDCPAMD     ZZTOTD
+0641 C                     EXSR GLZADD
+0642 C                     Z-ADDZZTOTI    CPAMI
+0643 C                     Z-ADDZZTOTD    CPAMD
+0644 C                     GOTO END
+0645 C********************************************************************
+0646 C**********S/LOAN*PROCESSING**************************               S01339
+0647 C***********                                                         S01339
+0648 C***********QLOANS    TAG                             **QLOANS TAG **S01339
+0649 C*********IF*S/LOANS*HEADER*ADD*1*TO*RECORD*COUNT*****               S01339
+0650 C***********                                                         S01339
+0651 C***04******          GOTO END                                       S01339
+0652 C***********                                                         S01339
+0653 C********ADD*EACH*S/LOAN*DETAIL*TO*LIVE*RECORD*COUNT.*               S01339
+0654 C***********                                                         S01339
+0655 C***05******RCDT      COMP 'G'                      49               S01339
+0656 C***05*49***NORRE     ADD  1         NORRE                           S01339
+0657 C**N49*05***          SETOF                     05                   S01339
+0658 C**N49******          GOTO END                                       S01339
+0659 C***********                                                         S01339
+0660 C*****CALCULATE*NO.*OF*LOANS*RECORDS*OUTPUT*TO*S/LNINT*              S01339
+0661 C***********                                                         S01339
+0662 C***********NREC      ADD  1         NREC                            S01339
+0663 C***********                                                         S01339
+0664 C********FOR*COMMERCIAL*LOANS,SET*BASE*CODE*AS*BLANK*                S01339
+0647 C*****NO*REASON*FOR*BASE*RATE*CODE*TO*BE*BLANK*******                S01339
+0665 C********MOVE*'S'*INTO*SYNDICATED/LENDING*INDICATOR**                S01339
+0666 C***********                                                         S01339
+0647 C***********          MOVE BRAT      BSCD    2                       S01339
+0668 C***********          MOVE 'S'       SLIN                            S01339
+0669 C***********                                                         S01339
+0670 C********CHECK*MATD*GREATER*THAN*RUND****************                S01339
+0671 C***********                                                         S01339
+0672 C***********MATD      COMP 0                    4646                 S01339
+0673 C***46******MATD      COMP RUND                   4646               S01339
+0674 C***46******          Z-ADDMATD      INTDAT                          S01339
+0675 C**N46******          Z-ADDRUND      INTDAT                          S01339
+0676 C***********                                                         S01339
+0677 C*****CALCULATE*INTEREST*ACCRUED*BETWEEN*ACTD*AND*RUND*OR*MAT.DATE** S01339
+0678 C*******IF*SOONER.SET*THIS*TO*ZERO*IF*ACTD*GREATER*THAN*EITHER****** S01339
+0679 C***********                                                         S01339
+0680 C***********ACTD      COMP INTDAT                 43                 S01339
+0681 C***43******          Z-ADDACTD      ZIBEG                           S01339
+0682 C***43******          Z-ADDINTDAT    ZIEND                           S01339
+0683 C***43******          MOVE INCM      ZICALC                          S01339
+0684 C***43******          Z-ADDOADC      ZIAMT                           S01339
+0685 C***43******          Z-ADDEINR      ZIRATE                          S01339
+0686 C***43******          EXSR GLINTC                                    S01339
+0687 C***43******          Z-ADDZINTR     ACINT  130H                     S01339
+0688 C***********MATURR    TAG                             ** MATURR TAG**S01339
+0689 C**N43******          Z-ADD0         ACINT                           S01339
+0690 C***********                                                         S01339
+0691 C**********CALCULATE*OUTSTANDING*INTEREST**********************      S01339
+0692 C***********                                                         S01339
+0693 C***********          Z-ADDAITC      INT    130                      S01339
+0694 C***********INT       ADD  AIAN      INT                             S01339
+0695 C***********INT       ADD  AIAP      INT                             S01339
+0696 C***********INT       ADD  ACINT     INT                             S01339
+0697 C***********INT       SUB  IPRD      INT                             S01339
+0698 C***********                                                         S01339
+0699 C******KEEP*HASH*TOTALS*OF*OUTSTANDING*AMOUNT*IN*COMMITMENT*CCY*     S01339
+0700 C***********                                                         S01339
+0701 C***********OACC      DIV  1000      ZZAMT        30                 S01339
+0702 C***30******          Z-SUBZZAMT     ZZAMT                           S01339
+0703 C***********          Z-ADDOACCI     ZZTOTI                          S01339
+0704 C***********          Z-ADDOACCD     ZZTOTD                          S01339
+0705 C***********          EXSR GLZADD                                    S01339
+0706 C***********          Z-ADDZZTOTI    OACCI                           S01339
+0707 C***********          Z-ADDZZTOTD    OACCD                           S01339
+0708 C***********                                                         S01339
+0709 C******KEEP*HASH*TOTALS*OF*PRINCIPAL*AMOUNT*************             S01339
+0710 C***********                                                         S01339
+0711 C***********ODDC      DIV  1000      ZZAMT        30                 S01339
+0712 C***30******          Z-SUBZZAMT     ZZAMT                           S01339
+0713 C***********          Z-ADDODDCI     ZZTOTI                          S01339
+0714 C***********          Z-ADDODDCD     ZZTOTD                          S01339
+0715 C***********          EXSR GLZADD                                    S01339
+0716 C***********          Z-ADDZZTOTI    ODDCI                           S01339
+0717 C***********          Z-ADDZZTOTD    ODDCD                           S01339
+0718 C***********          GOTO END                                       S01339
+0710 C***********                                                         S01339
+0719 C********************************************************************
+0720 C*
+0721 C**        TRAILER PROCESSING
+0722 C*
+0723 C           TRAPRO    TAG                             ** TRAPRO TAG**
+0724 C*
+0725 C**      ADD 1 TO RECORD COUNT FOR S/CLOAN TRAILER
+0726 C*
+0727 C   03      NORR      ADD  1         NORR
+0728 C*
+0729 C**      STORE NO.OF RECORDS ON S/CLOAN TRAILER
+0730 C*
+0731 C   03                Z-ADDNORE      NORES   50
+0732 C*
+0733 C**      COMPARE HASH TOTALS FOR S/CLOAN RECORDS
+0734 C*
+0735 C   03      NORR      COMP NORE                     45
+0736 C   03 45   OPAMI     COMP VLAF                     45
+0737 C   03 45   OPAMD     COMP VLAL                     45
+0738 C   03N45             SETON                     U8
+0739 C   03                GOTO END
+0740 C***********
+0741 C*********ADD*1*TO*RECORD*COUNT*FOR*S/LOANS*TRAILER******
+0742 C***********
+0743 C***********RCDT      COMP 'G'                      81               S01339
+0744 C*****N81***          SETOF                     06                   S01339
+0745 C*****N81***          GOTO END                                       S01339
+0746 C***********                                                         S01339
+0747 C*****IF*TYPE'G'TRAILER*STORE*TRAILER*TOTALS*TO*AVOID*OVERWRITING*** S01339
+0748 C***********                                                         S01339
+0749 C***81******          Z-ADDHRWN      HRWNS  150                      S01339
+0750 C***81******          Z-ADDHRDC      HRDCS   30                      S01339
+0751 C***81******          Z-ADDNORE      NORESV  50                      S01339
+0753 C           END       TAG                             ** END TAG **
+0754 C*
+0755 C**       COMPARE HASH TOTALS FOR S/LOANS RECORDS
+0756 C*
+0757 C*LR******** NORRE     COMP NORESV                   48              S01339
+0758 C*LR****48** OACCI     COMP HRWNS                    48              S01339
+0759 C*LR****48** OACCD     COMP HRDCS                    48              S01339
+0760 C*LR***N48**           SETON                     U8                  S01339
+0761 C*
+0762 C**      WRITE TRAILER FOR S/LOANS
+0763 C*
+0764 C*LR********NRECS     ADD  NREC      NORRR   50                      179407
+0765 C*LR********          Z-ADDNORRR     NORE                            179407
+     CLR                   ADD  1         NRECS                           179407
+0766 CLR         CPAMD     ADD  ODDCD     LAST    40
+0767 C**    IF LAST GREATER THAN 3,0 FIELD CARRY 1 INTO FIRST 15
+0768 CLR         LAST      COMP 1000                 50  50
+0769 CLR 50      LAST      SUB  1000      VLRL    30
+0770 CLRN50                Z-ADDLAST      VLRL
+0771 CLR         CPAMI     ADD  ODDCI     VLRF   150
+0772 CLR 50      VLRF      ADD  1         VLRF
+     C*                                                                   S01117
+     CLR U7 U8             EXSR *PSSR                                     S01117
+     C*                                                                   S01117
+0773 C*
+0774 C********************************************************************
+0775 C**
+0469 C*****ZSYSTM*SR.*TO*CHAIN TO THE INSTALLATION CONTROL DATA RECORD.   S01194
+0470 C**********                                                          S01194
+0471 C********** ZSYSTM    BEGSR                           *** ZSYSTM *** S01194
+0472 C**********                                                          S01194
+0473 C*****SET*UP*KEY*FOR*INSTALLATION CONTROL RECORD.                    S01194
+0474 C**********           MOVEL'01      'ZTABKY 12                       S01194
+0475 C**********           MOVE '  10'    ZTABKY                          S01194
+0476 C**********                                                          S01194
+0477 C********** ZTABKY    CHAINTABLE                99    ON NOT THERE   S01194
+0478 C**N99***** RECI      COMP 'D'                  9999  ON, IS DELETED S01194
+0479 C**********                                                          S01194
+0480 C*****CHECK*SYSTEM*DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
+0481 C********** DATF      COMP 'M'                      98MMDDYY, 98 ON  S01194
+0482 C**********                                                          S01194
+0483 C**********           ENDSR                                          S01194
+0791 C**
+0792 C**
+0793 C********************************************************************
+0794 C* SUBROUTINE TO ADD AN AMOUNT (ZZAMT) TO THE TOTAL (ZZTOTI,ZZTOTD)
+0795 C*   IND '99' IS SET BY AN OVERFLOW ERROR
+0796 C*
+0797 CSR         GLZADD    BEGSR                           *** GLZADD ****
+0798 C*
+0799 CSR                   Z-ADDZZAMT     ZZAMT  153     91-DEFINE ZZAMT
+0800 CSR 91                GOTO ZZAEND                     AMT = 0.BYPASS
+0801 C*
+0802 C* SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
+0803 CSR                   Z-ADDZZAMT     ZZAMTI 150       INTEGER FIELD
+0804 CSR                   MOVE ZZAMT     ZZAMTD  30       DECIMAL FIELD
+0805 C* BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
+0806 C*
+0807 CSR                   EXSR GLZSUM
+0808 CSR         ZZAEND    ENDSR                           ** ZZAEND TAG *
+0809 C*
+0810 C********************************************************************
+0811 C* SUBROUTINE TO CARRY OUT THE ADDITION FOR SUBROUTINES -
+0812 C*                        GLZADD, GLZSUB, GLZCMP.
+0813 C*          PARAMETERS PASSED -
+0814 C*                     I/P ZZAMTI ZZAMTD
+0815 C*                     O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
+0816 C*
+0817 CSR         GLZSUM    BEGSR                           *** GLZSUM ****
+0818 C*
+0819 CSR                   Z-ADDZZTOTI    ZZTOTI 150       DEFINE ZZTOTI
+0820 CSR                   Z-ADDZZTOTD    ZZTOTD  30       DEFINE ZZTOTD
+0821 CSR                   SETOF                     919293
+0822 CSR                   SETOF                     949599
+0823 C*
+0824 C*    DETERMINE SIGN OF ZZAMTI & D,   92 IF NEG
+0825 CSR         ZZAMTI    COMP 0                      9293
+0826 CSR 93      ZZAMTD    COMP 0                      9293
+0827 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0828 C*
+0829 C*    DETERMINE SIGN OF ZZTOTI & D, 91 IF NEG.
+0830 CSR         ZZTOTI    COMP 0                      9193
+0831 CSR 93      ZZTOTD    COMP 0                      9193
+0832 C*
+0833 C*    IF ZZTOTAL IS ZERO, RETURN ZZAMOUNT.
+0834 CSR 93                Z-ADDZZAMTI    ZZTOTI
+0835 CSR 93                Z-ADDZZAMTD    ZZTOTD
+0836 CSR 93                GOTO ZZSEND                     ZERO BYPASS
+0837 C*    IF SIGNS DIFFER BYPASS OVERFLOW CHECKS.
+0838 CSR 91N92
+0839 CORN91 92             GOTO ZZOFPS
+0840 C*
+0841 CSR         ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+0842 CSR         ZZWK2     COMP 999                  93    '93' = CARRY
+0843 CSRN93      ZZWK2     COMP -999                   93    INTO INTEGER.
+0844 C*
+0845 CSR 93N92   ZZAMTI    ADD  1         ZZWK3  150       ADD 'CARRY' +VE
+0846 CSR    93 92ZZAMTI    SUB  1         ZZWK3            SUB 'CARRY' -VE
+0847 CSR 93      ZZTOTI    ADD  ZZWK3     ZZWK3
+0848 CSRN93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+0849 C*
+0850 C* IF THE MODULUS OF ZZWK3 IS LT MOD. ZZTOTI THEN O/F HAS OCCURED
+0851 CSRN92      ZZWK3     COMP ZZTOTI                 99  -92 MEANS NOS.
+0852 CSR 92      ZZWK3     COMP ZZTOTI               99     NEGATIVE
+0853 CSRN99                Z-ADDZZWK2     ZZTOTD
+0854 CSRN99                Z-ADDZZWK3     ZZTOTI
+0855 C*
+0856 C* IF O/F ZEROIZE ZZAMT , IND '99' SET AND ZZTOT FIELDS LEFT INTACT.
+0857 CSR 99                Z-ADD0         ZZAMT  153
+0858 CSR                   GOTO ZZSEND
+0859 C*
+0860 C* THE 'SIGNS' ARE DIFFERENT
+0861 CSR         ZZOFPS    TAG                             ** ZZOFPS TAG**
+0862 C* IF ZZAMT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZTOT
+0863 C*
+0864 CSR 92                Z-SUBZZAMTI    ZZAMTI 150
+0865 CSR 92                Z-SUBZZAMTD    ZZAMTD  30
+0866 C*
+0867 C* IF ZZTOT WAS NEGATIVE, MAKE IT POS. TO COMP WITH ZZAMT.
+0868 C*
+0869 CSR 91                Z-SUBZZTOTI    ZZTOTI
+0870 CSR 91                Z-SUBZZTOTD    ZZTOTD
+0871 C* BOTH ZZAMT AND ZZTOT ARE NOW POSITIVE.
+0872 C*
+0873 CSR         ZZTOTI    COMP ZZAMTI               93  95
+0874 CSR 95      ZZTOTD    COMP ZZAMTD               93  95
+0875 C*
+0876 C* IF ZZTOT EQ. ZZAMT RETURN ZERO.
+0877 CSR 95                Z-ADD0         ZZTOTI
+0878 CSR 95                Z-ADD0         ZZTOTD
+0879 CSR 95                GOTO ZZSEND
+0880 C*
+0881 C* IF ZZTOT GT. ZZAMT.
+0882 CSR 93      ZZAMTD    COMP ZZTOTD               94
+0883 CSR 93 94   ZZTOTI    SUB  1         ZZTOTI
+0884 CSR 93 94   ZZTOTD    ADD  1000      ZZWK2
+0885 CSR 93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+0886 CSR 93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+0887 CSR 93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+0888 C*
+0889 C*
+0890 C* IF ZZAMT GT. ZZTOT.
+0891 CSRN93      ZZTOTD    COMP ZZAMTD               94
+0892 CSRN93 94   ZZAMTI    SUB  1         ZZWK3  150
+0893 CSRN93 94   ZZAMTD    ADD  1000      ZZWK2
+0894 CSRN93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+0895 CSRN93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+0896 CSRN93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+0897 CSRN93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+0898 C*
+0899 C* REVERSE SIGN OF ZZTOT IF LARGER I/P FIELDS WERE NEGATIVE
+0900 CSR                   SETOF                     94
+0901 CSR 93 91
+0902 CORN93 92             SETON                     94
+0903 CSR 94                Z-SUBZZTOTI    ZZTOTI
+0904 CSR 94                Z-SUBZZTOTD    ZZTOTD
+0905 C**
+0906 C**   RESTORE SIGN OF ZZAMTI & ZZAMTD IF IT WAS REVERSED.
+0907 CSR 92                Z-SUBZZAMTI    ZZAMTI
+0908 CSR 92                Z-SUBZZAMTD    ZZAMTD
+0909 CSR         ZZSEND    TAG                             ** ZZSEND TAG *
+0910 C**
+0911 C**   IF ZZTOTD IS ZERO, AND ZZTOTI IS NEG. SET UP ZZNEGD.
+0912 CSR                   SETOF                     96
+0913 CSR         ZZTOTD    COMP 0                        91
+0914 CSR 91      ZZTOTI    COMP 0                      96
+0915 CSR 96                MOVE '.000-'   ZZNEGD  5
+0916 CSR                   ENDSR                             ** ENDSR **
+0917 C********************************************************************
+      /COPY ZSRSRC,GLINTCZ1                                               S01392
+      /COPY ZSRSRC,ZSAVEZ1                                                S01392
+      /COPY ZSRSRC,ZRSTORZ1                                               S01392
+      /COPY ZSRSRC,ZDATE2Z4                                               S01392
+      /COPY ZSRSRC,ZFLACZ2                                                S01392
+1179 C********************************************************************E86111
+     C**                                                                  E86111
+     C**   ZENDAT SR. TO CALCULATE THE END DATE TO BE USED IN INTEREST    E86111
+     C**              CALCULATIONS.                                       E86111
+     C**                                                                  E86111
+     CSR         ZENDAT    BEGSR                           *** ZENDAT *** E86111
+     C**                                                                  E86111
+     C** SPLIT RUN DATE INTO ITS COMPONENTS                               E86111
+     C**                                                                  E86111
+     CSR                   MOVELRUNA      RDAY    20                      E86111
+     CSR                   MOVE RUNA      RMNYR   5                       E86111
+     CSR                   MOVELRMNYR     RMN     3                       E86111
+     CSR                   MOVE RMNYR     RYR     20                      E86111
+     C**                                                                  E86111
+     C** LOOK UP TABLE FOR NUMBER OF DAYS IN MONTH                        E86111
+     C**                                                                  E86111
+     CSR         RMN       LOKUPTABMN     TABDY          44               E86111
+     CSR                   MOVE TABDY     CALC1   20                      E86111
+     C**                                                                  E86111
+     C** CHECK IF FEBRUARY AND A LEAP YEAR                                E86111
+     C**                                                                  E86111
+     CSR         RMN       COMP 'FEB'                    44               E86111
+     CSR       44RYR       DIV  4         CALC2   20                      E86111
+     CSR       44          MVR            QUOT    20                      E86111
+     CSR       44QUOT      COMP 0                        43               E86111
+     CSR    43 44CALC1     ADD  1         CALC1                           E86111
+     C**                                                                  E86111
+     C** CALCULATE END DATE IN ABSOLUTE DAYS                              E86111
+     C**                                                                  E86111
+     CSR         CALC1     SUB  RDAY      CALC1                           E86111
+     CSR         RUND      ADD  CALC1     ENDATE                          E86111
+     CSR                   ENDSR                           * ZENDAT ENDSR*E86111
+0305 C**                                                                  S01117
+      *****************************************************************                       CLE028
+      /EJECT                                                                                  CLE028
+      *****************************************************************                       CLE028
+      *                                                               *                       CLE028
+      *  SRIN78 - Deriving Interest Amount for a given period using   *                       CLE028
+      *           the Rule of 78s                                     *                       CLE028
+      *                                                               *                       CLE028
+      *  Called By : Main Processing                                  *                       CLE028
+      *                                                               *                       CLE028
+      *  Calls     : RULE78                                           *                       CLE028
+      *                                                               *                       CLE028
+      *****************************************************************                       CLE028
+      *                                                                                       CLE028
+     C           SRIN78    BEGSR                                                              CLE028
+      *                                                                                       CLE028
+      ** Set up the appropriate input fields.                                                 CLE028
+      *                                                                                       CLE028
+     C                     Z-ADDVDAT      W78VDT                                              CLE028
+     C                     Z-ADDMDAT      W78MDT                                              CLE028
+     C                     Z-ADDFLTI      W78FLT                                              CLE028
+     C                     MOVE RFRQ      W78RPF                                              CLE028
+     C                     Z-ADDFRPD      W78FRD                                              CLE028
+     C                     Z-ADDRDYN      W78RPM                                              CLE028
+     C                     MOVE CCY       W78CCY                                              CLE028
+     C                     MOVE *BLANKS   W78LCN                                              CLE028
+     C                     Z-ADDZIBEG     W78BEG                                              CLE028
+     C                     Z-ADDZIEND     W78END                                              CLE028
+     C                     MOVE APDA      BKAPDT  50                                          CLE028
+     C                     MOVE 'A'       W78ROA                                              CLE028
+      *                                                                                       CLE028
+     C                     EXSR RULE78                                                        CLE028
+      *                                                                                       CLE028
+     C                     Z-ADDW78INT    ZINTR                                               CLE028
+      *                                                                                       CLE028
+     C                     ENDSR                                                              CLE028
+0306 C********************************************************************S01117
+     C/SPACE 3                                                            S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C*  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS         S01117
+     C*                                                                   S01117
+     C*  CALLED FROM: AFTER ABNORMAL OPERATION OCCURS                     S01117
+     C*                                                                   S01117
+     C*  CALLS: NOTHING                                                   S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+     C*                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C                     ENDSR                           ** *PSSR **    S01117
+     C*                                                                   S01117
+     C********************************************************************S01117
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZINTDYZ2                                               066550
+      /EJECT                                                              066550
+     C/COPY ZSRSRC,ZDATE9Z3                                               066550
+     C/COPY ZSRSRC,ZDAT10Z2                                               126017
+     C/COPY ZSRSRC,RULE78Z1                                                                   CLE028
+     C/COPY ZSRSRC,ZFREQBZ2                                                                   CLE028
+     C/COPY ZSRSRC,ZDATE1Z2                                                                   CLE028
+     C/COPY ZSRSRC,ZACCH                                                                      CLE028
+     C/COPY ZSRSRC,ZCHKH                                                                      CLE028
+     C/EJECT                                                              S01117
+1180 O*
+1181 OLNINTHH D        01
+1182 O                                    1 'H'
+1183 OLNINTLN D        02N42
+1184 O                                    1 'D'
+1185 O***********              BRCD       4                               S01117
+1185 O                         BRCA       4                               S01117
+1186 O                         CCY        7
+1187 O                         INTR      13P
+1188 O                         BRTT      15
+1189 O                         SLIN      16
+1190 O                         LNRF      22
+1191 O                         CPAM      29P
+1192 O                         INTD      36P
+     O                         CMPYM     39                               S01117
+     O***********                                                         S01339
+1193 O********D**      05                                                 S01339
+1194 O***********                         1 'D'                           S01339
+1195 O***********              BRCD       4                         S01117S01339
+1195 O***********              BRCA       4                         S01117S01339
+1196 O***********              DDCY       7                               S01339
+1197 O***********              EINR      13P                              S01339
+1198 O***********              BSCD      15                               S01339
+1199 O***********              SLIN      16                               S01339
+1200 O***********              DDRF      22                               S01339
+1201 O***********              ODDC      29P                              S01339
+1202 O***********              INT       36P                              S01339
+     O***********              CMPYM     39                         S01117S01339
+1203 OLNINTZZ T        LR
+1204 O                                    1 'T'
+1205 O***********              NORE       4P                              179407
+     O                         NRECS      4P                              179407
+1206 O                         VLRF      12P
+1207 O                         VLRL      14P
+1208 O*E1000P1T**203   LR                                                 S01117
+1208 OLE1000AUT  203   LR                                                 S01117
+1209 O***********                        22 'REFERENCE LE1000'            S01117
+1209 O                                   22 'REFERENCE LE1000AU'          S01117
+1210 O                         TITL      89
+1211 O                                  104 'DATE'
+1212 O                         RUNA     112
+1213 O                                  122 'PAGE'
+1214 O                         PAGE  Z  127
+1215 O        T  1     LR
+1216 O                                   45 'EXTRACT LOANS AND IN'
+1217 O                                   68 'TEREST RATE INFORMATI0N'
+1218 O                                   90 '- FILE CONTROL REPORT'
+1219 O        T        LR
+1220 O                                   46 '---------------------'
+1221 O                                   69 '------------------------'
+1222 O                                   90 '---------------------'
+     O***********                                                         S01339
+1233 O        T  109   LR
+1234 O                                   28 'S/CLOAN - RUN CONTROLS'
+1235 O                                   59 'NUMBER'
+1236 O                                   84 'VALUE'
+1237 O        T  2     LR
+1238 O                                   28 '----------------------'
+1239 O                                   59 'OF RECORDS'
+1240 O                                   84 'OF RECORDS'
+1241 O        T  2     LR
+1242 O                                   29 'TOTAL RECORDS ON FILE'
+1243 O                      NU7NORES 3   59
+1244 O                      NU7VLAF  Z   81
+1245 O                      NU7VLAL      84
+1246 O        T  3     LR
+1247 O                                   29 'TOTAL RECORDS ON FILE'
+1248 O                                   42 ' - CALCULATED'
+1249 O                         NORR  3   59
+1250 O                         OPAMI Z   81
+1251 O                         OPAMD     84
+1252 O                 U8N45NU7         111 '***   DIFFERENCE   ***'
+     O********T********LR*U1**                                            S01339
+1254 O***********                        28 'S/LOANS - RUN CONTROLS'      S01339
+     O********T**2*****LR*U1**                                            S01339
+1256 O***********                        28 '----------------------'      S01339
+     O********T**2*****LR*U1**                                            S01339
+1258 O***********                        29 'TOTAL RECORDS ON FILE'       S01339
+1259 O***********           NU7NORESV3   59                               S01339
+1260 O***********           NU7HRWNS Z   81                               S01339
+1261 O***********           NU7HRDCS     84                               S01339
+     O********T**3*****LR*U1**                                            S01339
+1263 O***********                        29 'TOTAL RECORDS ON FILE'       S01339
+1264 O***********                        42 '- CALCULATED'                S01339
+1265 O***********              NORRE 3   59                               S01339
+1266 O***********              OACCI Z   81                               S01339
+1267 O***********              OACCD     84                               S01339
+1268 O*****************U8N48NU7*        111 '***   DIFFERENCE   ***'      S01339
+1223 O        T 32     U7 U8 LR
+1224 O                                   42 '*** REFERENCE'
+1225 O***********              DBPGM     51                               S01117
+1225 O                         DBPGM     53                               S01117
+1226 O                                   71 '-DATABASE ERROR AT'
+1227 O***********              DBASE     74                               S01117
+1227 O                         DBASE     75                               S01117
+1228 O        T        U7 U8 LR
+1229 O***********                        37 'FILE NAME'                   S01117
+1230 O***********              DBFILE    43                               S01117
+1231 O***********                        48 'KEY'                         S01117
+1232 O***********              DBKEY     78                               S01117
+1229 O                                   39 'FILE NAME'                   S01117
+1230 O                         DBFILE    48                               S01117
+1231 O                                   52 'KEY'                         S01117
+1232 O                         DBKEY     82                               S01117
+1269 O********T*3      LR                                                 S01117
+1270 O***********                        76 '*** END OF REPORT ***'       S01117
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   TABMN - MONTH END TABLE
+JAN31FEB28MAR31APR30MAY31JUN30JUL31AUG31SEP30OCT31NOV30DEC31
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**   ZFMD  -  NUMBER OF DAYS IN THE MONTH                                                     CLE028
+312831303130313130313031                                                                      CLE028

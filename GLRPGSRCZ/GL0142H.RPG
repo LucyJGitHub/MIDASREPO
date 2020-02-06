@@ -1,0 +1,84 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL ZVACTBU Check on Historic JE Ccy File')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0142H - Midas GL ZVACTBU Check on Historic JE Ccy File     *
+      *                                                               *
+      *  Function:  Validate Branch codes within a batch against      *
+      *             a specific action code . If the user is auth-     *
+      *             orised to all of the branches within the batch    *
+      *             then a blank return code will be passed back.     *
+      *             Otherwise an error code will be passed back.      *
+      *             Created for checking historic batches.            *
+      *             GL0142H is patterned after GL0142U.               *
+      *                                                               *
+      *  (c) Finastra International Limited 2010                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 261299 *CREATE     Date 14Aug09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  261299 - User cannot print historical batches when there is  *
+      *           a live batch with the same batch number. GL0142H    *
+      *           was created so that the system could properly       *
+      *           retrieve entries of historical batches and allow    *
+      *           the user to print the batch.                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FGLJEHSL0IF  E           K        DISK
+      /EJECT
+     E                    CPY@    1   1 80
+      /EJECT
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTCD  10
+     C                     PARM           P@ANCD  1
+     C                     PARM           P@BTNO  3
+     C                     PARM           P@DATE  5
+      *
+      ** MAIN
+      *
+     C           HBATCH    KLIST
+     C                     KFLD           WUDATE
+     C                     KFLD           P@BTNO
+      *
+      ** Read all Currency records and for each record check the action
+      ** code and the branch code by calling the SPF program ZVACTBU.
+      ** Checks are only made on branches which change within the
+      ** batch in question.
+      *
+     C                     MOVE P@DATE    WUDATE  50
+     C           HBATCH    SETLL@BHREDG              010103
+      *
+     C           *IN03     IFEQ '1'
+     C           *IN01     DOUEQ'1'
+     C           HBATCH    READE@BHREDG                0101
+     C           *IN01     IFEQ '0'
+     C                     CALL 'ZVACTBU'
+     C                     PARM           P@ANCD
+     C                     PARM           HSBRCD
+     C                     PARM           P@RTCD
+     C           P@RTCD    IFNE 0
+     C                     SETON                     01
+     C                     Z-ADD3         P@RTCD
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+     C                     ENDIF
+      *
+      ** Return to caller :
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************
+      *ENDMAIN
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2010

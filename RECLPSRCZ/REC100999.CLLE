@@ -1,0 +1,350 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE CM COB Component Journalling End')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail module                                       */
+/*                                                                   */
+/*       REC100999 - CM COB Component Journalling End                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2002                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR796052           Date 29Jun11              */
+/*                      260134             Date 01May09              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      BG18886              Date 28May08            */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CRE008 *CREATE       Date 19Feb02            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR796052 - Apply fix AR738688                               */
+/*       AR738688 - Error in Cash Management COB recovery.Reset error*/
+/*                  flag and monitor for CPF70A7.(Child: AR738689)   */
+/*       260134 - Upgrade recovery to Midas Plus standards           */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       CRE008 - Cash Management                                    */
+/*                                                                   */
+/*********************************************************************/
+/**********  PGM        PARM(&JRNID &FAIL &CURPRV &FILE01 &FILE02 +
+                          &FILE03 &FILE04 &FILE05 &FILE06 &FILE07 +
+                          &FILE08 &FILE09 &FILE10 &ERROR)            */                   /*260134*/
+             PGM        PARM(&JRNID &FAIL &CURPRV &FILE01 &FILE02 +
+                          &FILE03 &FILE04 &FILE05 &FILE06 &FILE07 +
+                          &FILE08 &FILE09 &FILE10 &ERROR &CNAM &CSEQ)                     /*260134*/
+ 
+             DCL        VAR(&JRNID)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FAIL)   TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CURPRV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FILE01) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE02) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE03) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE04) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE05) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE06) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE07) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE08) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE09) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE10) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR)  TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&AOFMT)  TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CCB009JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CCB009USR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CCB009NBR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CB0180DA)  TYPE(*CHAR) LEN(26)
+             DCL        VAR(&START)     TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&FINISH)    TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&MEM)    TYPE(*CHAR) LEN(70)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                                    /*260134*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                                    /*260134*/
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2002')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&ERROR) VALUE(' ')                                          /*AR738688*/
+/** Check for Switchable feature CCB009 */
+ 
+             CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
+                          'CCB009' &AOFMT)
+ 
+/* If Feature CCB009 is 'on' (COB journaling) */
+/* ========================================== */
+ 
+             IF         COND(&CCB009 *EQ '       ') THEN(DO)
+ 
+/* If no failure then end */
+/***************IF         COND(&FAIL**= 'Y') THEN(DO)                                */ /*BG18886*/
+                IF         COND(&FAIL *NE 'Y') THEN(DO)
+                   GOTO       CMDLBL(NORMAL)
+                ENDDO
+ 
+/* If ending for CURRENT job */
+/* Retrieve attributes of current job. */
+ 
+                IF         COND(&CURPRV = 'C') THEN(DO)
+                   RTVJOBA    JOB(&CCB009JOB) USER(&CCB009USR) +
+                                NBR(&CCB009NBR)
+                ENDDO
+ 
+/* If ending for PREVIOUS job */
+/* Retrieve attributes of previous job from QTEMP/CB0180DA */
+ 
+                IF         COND(&CURPRV = 'P') THEN(DO)
+                   RTVDTAARA  DTAARA(QTEMP/CB0180DA) RTNVAR(&CB0180DA)
+                   IF         COND(&CB0180DA *NE ' ') THEN(DO)
+                      CHGVAR     VAR(&CCB009JOB) VALUE(%SST(&CB0180DA 1 10))
+                      CHGVAR     VAR(&CCB009USR) VALUE(%SST(&CB0180DA 11 10))
+                      CHGVAR     VAR(&CCB009NBR) VALUE(%SST(&CB0180DA 21 6))
+                   ENDDO
+                ENDDO
+ 
+/*  Retrieve the first journal entry sequence number */
+/*  for the specific job.                            */
+                RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*LAST) +
+                             TOENT(*FIRST) SEARCH(*DESCEND) +
+                             JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
+                             RTNSEQNBR(&START)
+                MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)
+                   CHGVAR     VAR(&START) VALUE(0)
+                ENDDO
+/****************************************************************************/            /*260134*/
+/***Retrieve*the*last*journal*entry*sequence*number**************************/            /*260134*/
+/***for*the*specific*job.****************************************************/            /*260134*/
+/**********     RTVJRNE    JRN(ICJRN) RCVRNG(*CURCHAIN) FROMENT(*FIRST) +
+                             TOENT(*LAST) SEARCH(*ASCEND) +
+                             JOB(&CCB009NBR/&CCB009USR/&CCB009JOB) +
+                             RTNSEQNBR(&FINISH)                             */            /*260134*/
+/**********     MONMSG     MSGID(CPF0000 MCH0000) EXEC(DO)                  */            /*260134*/
+/**********        CHGVAR     VAR(&FINISH) VALUE(0)                         */            /*260134*/
+/**********     ENDDO                                                       */            /*260134*/
+/*                                                                                        /*260134*/
+/*  Determine starting journal sequence number of job.                                    /*260134*/
+/*                                                                                        /*260134*/
+             SCRTVJCMP  COMP(&CNAM) CSEQ(&CSEQ) FLAG('S') +
+                          JOB(&CCB009JOB) USER(&CCB009USR) +
+                          NUMBER(&CCB009NBR) SEQ(&FINISH)                                 /*260134*/
+ 
+/*  Remove journalled changes. */
+                IF         COND((&START *NE 0) *AND (&FINISH *NE 0)) +
+                             THEN(DO)
+/******************IF         COND(&FILE01**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE01 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE01) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE02**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE02 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE((&FILE02)) FROMENT(&START) +
+                                   TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE03**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE03 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE03) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE04**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE04 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE04) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE05**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE05 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE05) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE06**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE06 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE06) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE07**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE07 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE07) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE08**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE08 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE08) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE09**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE09 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE09) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE10**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE10 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(ICJRN) FILE(&FILE10) +
+                      FROMENT(&START) TOENT(&FINISH)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+                ENDDO
+             ENDDO
+ 
+/* If Feature CCB009 is NOT 'on' */
+/* ==============================*/
+ 
+/************IF         COND(&CCB009**= '       ') THEN(DO)                           */ /*BG18886*/
+             IF         COND(&CCB009 *NE '       ') THEN(DO)                             /*BG18886*/
+/* If component has FAILED */
+/* Remove journal changes for journalled files */
+                IF         COND(&FAIL = 'Y') THEN(DO)
+ 
+/******************IF         COND(&FILE01**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE01 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE01)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE02**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE02 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE02)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE03**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE03 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE03)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE04**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE04 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE04)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE05**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE05 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE05)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE06**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE06 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE06)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE07**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE07 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE07)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE08**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE08 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE08)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE09**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE09 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE09)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+/******************IF         COND(&FILE10**= '          ') THEN(DO)                  */ /*BG18886*/
+                   IF         COND(&FILE10 *NE '          ') THEN(DO)                    /*BG18886*/
+                      RMVJRNCHG  JRN(&JRNID) FILE(&FILE10)
+/**********           MONMSG     MSGID(CPF7049 CPF7042 CPF9801 CPF7041) */              /*AR738688*/
+                      MONMSG     MSGID(CPF7049 CPF7042 CPF9801 +
+                                    CPF7041 CPF70A7)                                    /*AR738688*/
+                   ENDDO
+ 
+                ENDDO
+ 
+/* End journalling to journal */
+                ENDJRNPF   FILE(*ALL) JRN(&JRNID)
+                MONMSG     MSGID(CPF0000)
+ 
+/* Delete the journals and receivers */
+/* associated with this component */
+                DLTJRN     JRN(&JRNID)
+                MONMSG     MSGID(CPF0000)
+ 
+                CHGJOB     INQMSGRPY(*DFT)
+                MONMSG     MSGID(CPF0000)
+ 
+                DLTJRNRCV  JRNRCV(&JRNID)
+                MONMSG     MSGID(CPF0000)
+ 
+                CHGJOB     INQMSGRPY(*RQD)
+                MONMSG     MSGID(CPF0000)
+ 
+             ENDDO
+ 
+/* Normal ending: */
+/*================*/
+ 
+NORMAL:
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal ending: */
+/*==================*/
+ 
+ABNOR:
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+/* Report an error */
+ 
+             CHGVAR     VAR(&MEM) VALUE('CM COB Component +
+                          Journalling End FAILED')
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+             SNDPGMMSG  MSGID(MEM5052) MSGF(MIDAS) MSGDTA(&MEM) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+ 
+ENDPGM:
+             ENDPGM

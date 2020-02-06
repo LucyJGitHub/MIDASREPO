@@ -1,0 +1,1356 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Customer Portfolio Positions Report')
+/*OVRF*: OVRDBF FILE(CAPRALX) TOFILE(PMCAPRL0) SHARE(*NO)           : *   S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM1300 - PM Customer Portfolio Positions Report              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 094397             Date 25Oct95               *
+      *                 S01486             Date 11Aug94               *
+     F*                 059983             DATE 16NOV93               *
+     F*                 50593              DATE 10FEB93               *
+     F*                 49213              DATE 09FEB93               *
+     F*                 36529      DT      DATE 28FEB92               *
+     F*                 47616              DATE 20NOV92               *
+     F*                 R05597             DATE 04MAR91               *
+     F*                 R01119             DATE 04DEC90               *
+     F*                 R10014             DATE 16AUG90               *
+     F*                 EMFIX              DATE 06AUG90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  094397 - Should call ZSFILE once have spool file number      *
+     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+     F*  059983 - VALUE DATE POSITION HISTORY ENQUIRY DISPLAYS WRONG  *
+     F*  50593  - RECOMPILED OVER NEW VERSION OF SR/ZAVPRC            *
+     F*  49213  - RECOMPILED OVER NEW VERSION OF SR/ZFXAVP            *
+     F*  36529  - SPECIAL PORTFOLIO REFERENCE 9997 MUST NOT APPEAR    *
+     F*  47616  - Replace '9997' by reference and narrative           *
+     F*           from SDPORTPD.                                      *
+     F*  R05597 - IF YIELD IS ZERO OUTPUT TEXT N/A TO REPORT          *
+     F*  R01119 - ONLY DISPLAY AVERAGE PRICES TO FIVE DECIMALS TO     *
+     F*           AVOID ROUNDING ERRORS                               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*:*OVRDBF*FILE(CAPRALX)*TOFILE(CAPRALT)*SHARE(*NO)************:**   S01486
+     F*                                                               *
+     F*****************************************************************
+     F**  PREFIX OF PMPPOSLL IS 'QA'
+     FPMPPOSLLUF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F            PMCPOSP0                          KRENAMEPMPPOSL0
+     F**  PREFIX OF PMAPOSLL IS 'QA'
+     FPMAPOSLLIF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F**
+     FCLINT   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F**  PREFIX OF PMPORTPP IS 'PN'
+     F***PMPORTPPIF**E           K        DISK                            S01486
+     FPMPORTPDIF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     FSECTY   IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F****PREFIX*OF*SDCURRL0*IS*'A6'*****************************         S01486
+     F***SDCURRL0IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F****PREFIX*OF*SDBANKL1*IS*'BJ'*****************************         S01486
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F****PREFIX*OF*SDBANKL1*IS*'P9'*****************************  47616  S01486
+     F***SDPORTPDIF**E           K        DISK                     47616  S01486
+     F***********                                   KINFSR *PSSR   47616  S01486
+     F**  Prefix QA
+     FCAPRALX IF  E           K        DISK
+     F***PM1300P1O***E                    PRINTER                         S01486
+     FPM1300P1O   E                    PRINTER      KINFDS SPOOL      UC  S01486
+     F                                              KINFSR *PSSR          S01486
+     FPM1300AUO   E                    PRINTER      KINFDS SPOOLU         S01486
+     F                                              KINFSR *PSSR          S01486
+     F*
+      /EJECT
+     E*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       10         TRADE/VALUE DATE ACTION
+     F*       11         SUPPRESS HEADINGS ON REPORT
+     F*       60         END OF FILE ON LF/PMPPOSLL
+     F*       70         END OF FILE ON LF/CAPRALX
+     F*       71         RECORD NOT FOUND
+     F*       98         DATE FORMAT INDICATOR
+     F*
+     F*       U7, U8     DATABASE ERROR
+     F*       LR         END OF PROGRAM
+     F*
+     F**             *************************
+     F**             ** INDICATORS NOT USED **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   .. *
+     F**      * ..   ..   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   26   27   28   29   30 *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   .. *
+     F**      * 61   62   63   64   65   66   67   68   69   .. *
+     F**      * ..   72   73   74   75   76   77   78   79   80 *
+     F**      * 81   82   83   84   85   86   87   88   89   90 *
+     F**      * 91   92   93   94   95   96   97   ..   99      *
+     E*****************************************************************
+     E*
+      /COPY ZSRSRC,ZSEDITZ1
+      /COPY ZSRSRC,ZDATE2Z1
+      /COPY ZSRSRC,ZPOWER8Z1
+     E*
+     E                    CPY@    1   1 80               COPYRIGHT
+     E*
+     I*****************************************************************
+     IPMPPOSL0
+     I              QACNUM                          SVCNUM
+     I              QAPTFR                          SVPTFR
+     I              QATDSS                          SVTDSS
+     I              QAPDAT                          SVPDAT
+     I              QANOML                          SVNOML
+     I              QAAPNM                          SVAPNM
+     I              QAFXAP                          SVFXAP
+     I              QAAYNM                          SVAYNM
+     I              QATNMD                          SVTNMD
+     I              QAPCDP                          SVPCDP
+     I              QABVLD                          SVBVLD
+     I              QABRCD                          SVBRCD                S01486
+     I*
+     I** DS FOR PORTKO
+     IPORTKO      DS
+     I**********                              1   60SVCNUM                                    CSD027
+     I                                        1   6 SVCNUM                                    CSD027
+     I                                        7  10 SVPTFR
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I**********                            123 1240SFNUM           S01486094397
+     I                                    B 123 1240SFNUM                 094397
+     I*                                                                   S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I***********                           123 1240SFNUMU          S01486094397
+     I                                    B 123 1240SFNUMU                094397
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Midas  Bank details                                          S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I**  Midas  Portfoilio Management ICD details                     S01486
+     I*                                                                   S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I**  Midas  Currencies details                                    S01486
+     I*                                                                   S01486
+     ISDBRCH    E DSSDBRCHPD                                              S01486
+     I**  Midas  Branch details                                        S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure                                            S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I**  Long data structure                                             S01486
+     I*                                                                   S01486
+      ********************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* MAIN PROCESSING
+     C*****************************************************************
+     C           PORTKY    KLIST
+     C                     KFLD           SVCNUM
+     C                     KFLD           SVPTFR
+     C           POSKEY    KLIST
+     C                     KFLD           SVCNUM
+     C                     KFLD           SVPTFR
+     C                     KFLD           SVTDSS
+     C                     KFLD           WWTVDA
+     C                     KFLD           SVBVLD
+     C           POSKYP    KLIST
+     C                     KFLD           SVCNUM
+     C                     KFLD           SVPTFR
+     C                     KFLD           SVTDSS
+     C                     KFLD           WWTVDA
+     C           MOVKEY    KLIST
+     C                     KFLD           SVCNUM
+     C                     KFLD           SVPTFR
+     C                     KFLD           SVTDSS
+     C                     KFLD           SVBVLD
+     C           MOVKYP    KLIST
+     C                     KFLD           SVCNUM
+     C                     KFLD           SVPTFR
+     C                     KFLD           SVTDSS
+     C*
+     C** EXECUTE INIT - INITIAL PROCESSING
+     C                     EXSR INIT
+     C*
+     C** EXECUTE #P01 - PROCESS 'PROCESSED' POSITIONS
+     C                     EXSR #P01
+     C*                                                                   S01486
+     C**  Termination Processing                                          S01486
+     C*                                                                   S01486
+     C                     EXSR #TERM                                     S01486
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**   I N D E X   O F   S U B R O U T I N E S
+     C*****************************************************************
+     C**
+     C**   INIT    INITIAL PROCESSING
+     C**
+     C**   MAIN    MAIN PROCESSING
+     C**
+     C**   #P01    PROCESS 'PROCESSED' POSITIONS
+     C**
+     C**   #P02    GET CUSTOMER NAME
+     C**
+     C**   #P03    GET PORTFOLIO NAME
+     C**
+     C**   #P04    GET SECURITY DETAILS
+     C**
+     C**   #P05    PROCESS MOVEMENTS AGAINST 'PROCESSED' POSITIONS
+     C**
+     C**   #BRCD   GET BRANCH NAME AND WRITE TO ANOTHER PRINTER FILE      S01486
+     C**                                                                  S01486
+     C**   #TERM   TERMINATION PROCESSING                                 S01486
+     C**                                                                  S01486
+     C**   *PSSR   FILE EXCEPTION ERROR HANDLING SUBROUTINE
+     C**
+     C**   ZAVPRC  TO CALCULATE AVERAGE PRICE FOR A HOLDING
+     C**
+     C**   ZDATE2  TO CONVERT A DAY NUMBER TO A DATE FORMAT
+     C**
+     C**   ZFXAVP  TO CALCULATE AVERAGE FX RATE
+     C**
+     C**   ZAVYLD  TO CALCULATE AVERAGE YIELD FOR A HOLDING
+     C**
+     C**   ZSEDIT  TO EDIT A SIGNED NUMERIC FIELD
+     C**
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INIT     - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - FILE EXCEPTION ERROR HANDLING SUBROUTINE              *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           INIT      BEGSR                           ** INIT BEGSR *
+     C*
+     C**  TO INCLUDE COPYRIGHT INTO OBJECT
+     C                     MOVEACPY@      BIS@   80
+     C*                                                                   S01486
+     C**  Define local data area                                          S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C*
+     C**  INITIALIZE DATABASE ERROR FIELDS
+     C*                                                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVEL'PM1300'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*                                                                   S01486
+     C**  Ensure Audit Spool File recorded by RCF                         S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUM2  60                      S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM *BLANKS   SENTY   3                       S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUM2                          S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C**  If an error occurred during ZSFILE processing,                  S01486
+     C**  return to the calling program.                                  S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*
+     C****ACCESS*LF/SDBANKL1*FOR*BANK*DETAILS********************         S01486
+     C***********          READ SDBANKL1                 71               S01486
+     C***********                                                         S01486
+     C************IN71     IFEQ '1'                                       S01486
+     C***********          Z-ADD01        DBASE            ***************S01486
+     C***********          MOVEL'SDBANKL1'DBFILE           * DB ERROR 01 *S01486
+     C***********          MOVE *BLANKS   DBKEY            ***************S01486
+     C*                                                                   S01486
+     C**  Access bank details                                             S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST'  P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE           *DB ERROR 001 *S01486
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY or MMDDYY.
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+     C*                                                                   47616
+     C****ACCESS*PF/SDPORTPD*FOR*PM*ICD**************************  47616  S01486
+     C***********          READ SDPORTPD                 71        47616  S01486
+     C***********                                                  47616  S01486
+     C************IN71     IFEQ '1'                                47616  S01486
+     C***********          Z-ADD21        DBASE            ********47616  S01486
+     C***********          MOVEL'SDPORTPD'DBFILE           * DB ERR47616  S01486
+     C***********          MOVE *BLANKS   DBKEY            ********47616  S01486
+     C*                                                                   S01486
+     C**  Access Portfolio Management ICD                                 S01486
+     C*                                                                   S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD21        DBASE            ***************S01486
+     C                     MOVE 'SDPORTPD'DBFILE           *DB ERROR 021 *S01486
+     C                     MOVEL'*FIRST'  DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     47616
+     C                     END                                            47616
+     C*
+     C**  SET UP EDIT CODE FOR SR. ZSEDIT
+     C                     MOVE 'J'       ZECODE
+     C*
+     C                     Z-ADD0         LCOUNT
+     C                     Z-ADD0         RRNORE                          S01486
+     C*
+     C           *ENTRY    PLIST                           Entry parameters
+     C                     PARM           WWTVDA  1        Trade/value basis
+     C                     PARM           WWTRAN  1        Transfer (Y/N)
+     C*
+     C**  IF TRADE/VALUE DATE ACTION IS 'T', DISPLAY NARRATIVE 'TRADE'
+     C           WWTVDA    IFEQ 'T'
+     C                     MOVE '1'       *IN10
+     C*
+     C**  OTHERWISE, DISPLAY NARRATIVE 'VALUE'
+     C                     ELSE
+     C                     MOVE '0'       *IN10
+     C                     END
+     C*
+     C**  IF TRANSFER IS 'Y', DISPLAY NARRATIVE 'TRANSFERS'
+     C           WWTRAN    IFEQ 'Y'
+     C                     MOVE '1'       *IN12
+     C*
+     C**  OTHERWISE, DISPLAY NO NARRATIVE
+     C                     ELSE
+     C                     MOVE '0'       *IN12
+     C                     END
+     C*
+     C                     ENDSR                           *  INIT ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+      *                                                                  *
+      * #P01     - PROCESS 'PROCESSED' POSITIONS                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - FILE EXCEPTION ERROR HANDLING SUBROUTINE              *
+      * #P02     - GET CUSTOMER NAME                                     *
+      * #P03     - GET PORTFOLIO NAME                                    *
+      * #P04     - GET SECURITY DETAILS                                  *
+      * #P05     - PROCESS MOVEMENTS AGAINST 'PROCESSED' POSITIONS       *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           #P01      BEGSR                           ** #P01 BEGSR *
+     C*
+     C**  READ RECORD FROM LF/PMPPOSLL - 'PROCESSED' PORTFOLIO POSITIONS
+     C*
+     C                     READ PMPPOSLL                 60
+     C           *IN60     DOWEQ'0'
+     C           QATVDA    ANDNEWWTVDA
+     C           SVPTFR    ANDEQ'9997'                                    36529
+     C                     READ PMPPOSLL                 60
+     C                     END
+     C*                                                                   S01486
+     C           *IN60     IFEQ '0'                                       S01486
+     C                     OPEN PM1300P1                                  S01486
+     C                     MOVE 'Y'       WOPEN   1                       S01486
+     C*                                                                   094397
+     C**  Ensure Report Spool File recorded by RCF                        094397
+     C*                                                                   094397
+     C                     Z-ADDSFNUM     ZSNUM1  60                      094397
+     C                     CALL 'ZSFILE'                                  094397
+     C                     PARM           SEQ                             094397
+     C                     PARM *BLANKS   SENTY                           094397
+     C                     PARM           SFILE                           094397
+     C                     PARM           ZSNUM1                          094397
+     C                     PARM           ZSERR                           094397
+     C*                                                                   094397
+     C** If an error occurred during ZSFILE processing,                   094397
+     C** return to the calling program.                                   094397
+     C*                                                                   094397
+     C           ZSERR     IFEQ 'Y'                                       094397
+     C                     SETON                     U7U8LR               094397
+     C                     RETRN                                          094397
+     C                     ENDIF                                          094397
+     C                     ENDIF                                          S01486
+     C*
+     C**  DO UNTIL END OF FILE REACHED
+     C           *IN60     DOWEQ'0'
+     C*                                                                   S01486
+     C**  Increment record counter                                        S01486
+     C*                                                                   S01486
+     C                     ADD  1         RRNORE                          S01486
+     C*                                                                   S01486
+     C**  On change of Branch code, write to another printer file         S01486
+     C*                                                                   S01486
+     C                     EXSR #BRCD                                     S01486
+     C*
+     C**  ON CHANGE OF CUSTOMER OR PORTFOLIO,
+     C**  GET CUSTOMER & PORTFOLIO DETAILS & WRITE REPORT HEADING
+     C*
+     C           WWCNUM    IFNE SVCNUM
+     C           WWPTFR    ORNE SVPTFR
+     C                     EXSR #P02
+     C                     MOVEL*BLANK    PNPTFN
+     C           SVPTFR    IFNE '9997'
+     C           SVPTFR    ANDNE*BLANKS
+     C                     EXSR #P03
+     C                     END
+     C**********           Z-ADDSVCNUM    PPCNUM                                              CSD027
+     C                     MOVE SVCNUM    PPCNUM                                              CSD027
+     C           SVPTFR    IFNE '9997'                                    47616
+     C                     MOVELSVPTFR    PPPTFR
+     C                     ELSE                                           47616
+     C***********          MOVE P9R997    PPPTFR                   47616  S01486
+     C***********          MOVE P9N997    PNPTFR                   47616  S01486
+     C                     MOVE FCR997    PPPTFR                          S01486
+     C                     MOVE FCN997    PNPTFR                          S01486
+     C                     END                                            47616
+     C                     WRITEHEADER
+     C***********          Z-ADD13        LCOUNT  20                      S01486
+     C                     Z-ADD15        LCOUNT  20                      S01486
+     C                     END
+     C*
+     C**  ON CHANGE OF SECURITY,
+     C**  GET SECURITY DETAILS & WRITE SECURITY HEADING
+     C*
+     C           WWTDSS    IFNE SVTDSS
+     C***********LCOUNT    OREQ 13                                 R10014 S01486
+     C           LCOUNT    OREQ 15                                        S01486
+     C                     EXSR #P04
+     C                     MOVELSVTDSS    PPTDSS
+     C                     WRITESECHDR
+     C                     ADD  3         LCOUNT
+     C                     END
+     C*
+     C*   EXECUTE #P05 TO PROCESS MOVEMENTS AGAINST 'PROCESSED' POSITIONS
+     C                     EXSR #P05
+     C*
+     C**  STORE FIELDS FROM THIS RECORD
+     C**********           Z-ADDSVCNUM    WWCNUM  60                                          CSD027
+     C                     MOVE SVCNUM    WWCNUM  6                                           CSD027
+     C                     MOVE SVPTFR    WWPTFR  4
+     C                     MOVE SVTDSS    WWTDSS 10
+     C*
+     C**  UPDATE BACK VALUATION DATE ON PMCPOSPP
+     C                     Z-ADD*ZERO     SVBVLD
+     C                     EXCPTUPPOS
+     C*
+     C**  READ NEXT RECORD FROM LF/PMPPOSLL
+     C*
+     C                     READ PMPPOSLL                 60
+     C           *IN60     DOWEQ'0'
+     C           QATVDA    ANDNEWWTVDA
+     C                     READ PMPPOSLL                 60
+     C                     END
+     C                     END
+     C*
+     C**  WRITE END OF REPORT LINE TO REPORT
+     C*                                                                   S01486
+     C           WOPEN     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C           LCOUNT    IFEQ 0
+     C                     SETON                         11
+     C                     WRITEHEADER
+     C                     END
+     C                     WRITEEND
+     C*                                                                   S01486
+     C                     ENDIF                                          S01486
+     C*
+     C                     ENDSR                           * #P01  ENDSR *
+     C*
+     C**************************************************************************
+     C/EJECT
+     C**************************************************************************
+      *                                                                  *
+      * #P02     - GET CUSTOMER NAME                                     *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS 'PROCESSED' POSITIONS                         *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           #P02      BEGSR                           ** #P02 BEGSR *
+     C           SVCNUM    CHAINCLINT                71
+     C*
+     C           *IN71     IFEQ '1'
+     C                     Z-ADD02        DBASE            ***************
+     C***********          MOVEL'CLINT'   DBFILE           * DB ERROR 02 *S01486
+     C                     MOVE 'CLINT'   DBFILE           ***************S01486
+     C                     MOVELSVCNUM    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ENDSR                           * #P02  ENDSR *
+     C*
+     C**************************************************************************
+     C/EJECT
+     C**************************************************************************
+      *                                                                  *
+      * #P03     - GET PORTFOLIO NAME                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS 'PROCESSED' POSITIONS                         *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           #P03      BEGSR                           ** #P03 BEGSR *
+     C***********PORTKY    CHAINPMPORTPP             71                   S01486
+     C           PORTKY    CHAINPMPORTPD             71                   S01486
+     C*
+     C           *IN71     IFEQ '1'
+     C                     Z-ADD03        DBASE            ***************
+     C***********          MOVEL'PORT '   DBFILE           * DB ERROR 03 *S01486
+     C                     MOVE 'PMPORTPD'DBFILE           ***************S01486
+     C                     MOVELPORTKO    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     ENDSR                           * #P03  ENDSR *
+     C*
+     C**************************************************************************
+     C/EJECT
+     C**************************************************************************
+      *                                                                  *
+      * #P04     - GET SECURITY DETAILS                                  *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS 'PROCESSED' POSITIONS                         *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           #P04      BEGSR                           ** #P04 BEGSR *
+     C           SVTDSS    CHAINSECTY                71
+     C*
+     C           *IN71     IFEQ '1'
+     C                     Z-ADD04        DBASE            ***************
+     C***********          MOVEL'SECTY'   DBFILE           * DB ERROR 04 *S01486
+     C                     MOVE 'SECTY'   DBFILE           ***************S01486
+     C                     MOVELSVTDSS    DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C***ACCESS*SDCURRL0*FOR*NOMINAL*CURRENCY*DECIMAL*PLACES*****         S01486
+     C***********NMCY      CHAINSDCURRL0             71                   S01486
+     C***********                                                         S01486
+     C************IN71     IFEQ '1'                                       S01486
+     C***********          Z-ADD05        DBASE            ***************S01486
+     C***********          MOVEL'SDCURRL0'DBFILE           * DB ERROR 05 *S01486
+     C***********          MOVELNMCY      DBKEY            ***************S01486
+     C*                                                                   S01486
+     C**  Access Nominal currency details                                 S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY  '  P@OPTN                          S01486
+     C                     PARM NMCY      P@CYCD  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD5         DBASE            ***************S01486
+     C                     MOVE 'SDCURRPD'DBFILE           *DB ERROR 005 *S01486
+     C                     MOVELP@CYCD    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR                           * #P04  ENDSR *
+     C*
+     C**************************************************************************
+     C/EJECT
+     C**************************************************************************
+      *                                                                  *
+      * #P05     - PROCESS MOVEMENTS AGAINST 'PROCESSED' POSITIONS       *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS 'PROCESSED' POSITIONS                         *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           #P05      BEGSR                           ** #P05 BEGSR *
+     C*
+     C**  GET B/F POSITION,AS AT PRIOR TO BACK-VALUE DATE
+     C*
+     C           POSKEY    SETLLPMAPOSLL
+     C                     READPPMAPOSLL                 71*
+     C           *IN71     IFEQ '1'
+     C           QACNUM    ORNE SVCNUM
+     C           QAPTFR    ORNE SVPTFR
+     C           QATDSS    ORNE SVTDSS
+     C           QATVDA    ORNE WWTVDA
+     C           SVBVLD    SUB  1         QAPDAT
+     C                     Z-ADD*ZERO     QANOML
+     C                     Z-ADD*ZERO     QAAPNM
+     C                     Z-ADD*ZERO     QAFXAP
+     C                     Z-ADD*ZERO     QAAYNM
+     C                     Z-ADDSVTNMD    QATNMD
+     C                     Z-ADDSVPCDP    QAPCDP
+     C                     END
+     C*
+     C**  IF NEW PAGE REQUIRED, WRITE HEADING
+     C           LCOUNT    IFGE 55
+     C                     WRITEHEADER
+     C                     WRITESECHDR
+     C***********          Z-ADD16        LCOUNT                          S01486
+     C                     Z-ADD18        LCOUNT                          S01486
+     C                     END
+     C*
+     C**  FORMAT B/F POSITION DETAILS FOR OUTPUT & WRITE POSITION LINE
+     C*
+     C                     EXSR #P06
+     C                     MOVEL'B/F'     PPNAR
+     C                     WRITEPOSITN
+     C                     ADD  1         LCOUNT
+     C*
+     C*  START READING MOVEMENTS
+     C           MOVKEY    SETLLCAPRALX
+     C           MOVKYP    READECAPRALX                  70*
+     C           *IN70     DOWEQ'0'
+     C*
+     C**  IF NEW PAGE REQUIRED, WRITE HEADING
+     C           LCOUNT    IFGE 55
+     C                     WRITEHEADER
+     C                     WRITESECHDR
+     C***********          Z-ADD16        LCOUNT                          S01486
+     C                     Z-ADD18        LCOUNT                          S01486
+     C                     END
+     C*
+     C** FORMAT MOVEMENT DETAILS FOR OUTPUT & WRITE MOVEMENT
+     C*
+     C                     EXSR #P07
+     C                     WRITEMOVEMT
+     C                     ADD  1         LCOUNT
+     C*
+     C           MOVKYP    READECAPRALX                  70*
+     C                     END
+     C*
+     C**  RECOVER C/F POSITION DETAILS
+     C*
+     C                     Z-ADDSVPDAT    QAPDAT
+     C                     Z-ADDSVNOML    QANOML
+     C                     Z-ADDSVAPNM    QAAPNM
+     C                     Z-ADDSVFXAP    QAFXAP
+     C                     Z-ADDSVAYNM    QAAYNM
+     C                     Z-ADDSVTNMD    QATNMD
+     C                     Z-ADDSVPCDP    QAPCDP
+     C*
+     C**  IF NEW PAGE REQUIRED, WRITE HEADING
+     C           LCOUNT    IFGE 55
+     C                     WRITEHEADER
+     C                     WRITESECHDR
+     C***********          Z-ADD16        LCOUNT                          S01486
+     C                     Z-ADD18        LCOUNT                          S01486
+     C                     END
+     C*
+     C**  FORMAT C/F POSITION DETAILS FOR OUTPUT & WRITE POSITION LINE
+     C*
+     C                     EXSR #P06
+     C                     MOVEL'C/F'     PPNAR
+     C                     WRITEPOSITN
+     C                     ADD  1         LCOUNT
+     C*
+     C                     ENDSR                           * #P05  ENDSR *
+     C*
+     C**************************************************************************
+     C/EJECT
+     C**************************************************************************
+      *                                                                  *
+      * #P06     - FORMAT POSITION DETAILS FOR OUTPUT                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   - TO CONVERT A DAY NUMBER TO DATE FORMAT                *
+      * ZSEDIT   - TO EDIT A SIGNED NUMERIC FIELD                        *
+      * ZAVPRC   - TO CALCULATE AVERAGE PRICE FOR A HOLDING              *
+      * ZFXAVP   - TO CALCULATE AVERAGE FX RATE                          *
+      * ZAVYLD   - TO CALCULATE AVERAGE YIELD                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P05     - PROCESS MOVEMENTS AGAINST 'PROCESSED' POSITIONS       *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           #P06      BEGSR                           ** #P06 BEGSR *
+     C*
+     C**  POSITION DATE
+     C                     Z-ADDQAPDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PPDATE
+     C*
+     C**  NOMINAL
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE QANOML    ZFLD15
+     C                     Z-ADDQATNMD    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPNOML
+     C*
+     C**  AP NUMERATOR
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE QAAPNM    ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPAPNM
+     C*
+     C**  AVERAGE PRICE
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDQAAPNM    ZVALU
+     C                     Z-ADDQATNMD    ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     MOVELSPBS      ZPRCB
+     C                     EXSR ZAVPRC
+     C                     MOVE *BLANKS   ZFLD15
+     C*********************MOVE ZAVPR     ZFLD15                          R01119
+     C*********************Z-ADD8         ZDECS                           R01119
+     C                     Z-ADDZAVPR     WWORK5 155H                     R01119
+     C                     MOVE WWORK5    ZFLD15                          R01119
+     C                     Z-ADD5         ZDECS                           R01119
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPAVPR
+     C*
+     C**  FX AP NUMERATOR
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE QAFXAP    ZFLD15
+     C                     Z-ADDQAPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPFXAP
+     C*
+     C**  AVERAGE FX RATE
+     C                     Z-ADDQAAPNM    ZAPNM
+     C                     Z-ADDQAFXAP    ZFXAP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     Z-ADDQAPCDP    ZPTCD
+     C                     EXSR ZFXAVP
+     C                     MOVE *BLANKS   ZFLD15
+     C*********************MOVE ZAVFX     ZFLD15                          R01119
+     C*********************Z-ADD8         ZDECS                           R01119
+     C                     Z-ADDZAVFX     WWORK5                          R01119
+     C                     MOVE WWORK5    ZFLD15                          R01119
+     C                     Z-ADD5         ZDECS                           R01119
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPAFXR
+     C*
+     C**  AVERAGE YIELD
+     C           SPBS      IFEQ 'P'
+     C                     Z-ADDQANOML    ZNOML
+     C                     Z-ADDQAAYNM    ZVALU
+     C                     Z-ADDQATNMD    ZNMDP
+     C                     Z-ADDA6NBDP    ZNMCD
+     C                     EXSR ZAVYLD
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADDZAVYD     RNDYLD  63H
+     C                     MOVE RNDYLD    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPAYDR
+     C*                                                                   R05597
+     C** IF NOMINAL IS NOT ZERO AND POSITION YIELD RATE IS ZERO OUTPUT    R05597
+     C** TEXT NOT AVAILABLE                                               R05597
+     C           QANOML    IFNE 0                                         R05597
+     C           ZAVYD     ANDLE0.0001                                    R05597
+     C                     MOVE *BLANKS   PPAYDR                          R05597
+     C                     MOVE 'N/A '    PPAYDR                          R05597
+     C                     END                                            R05597
+     C*                                                                   R05597
+     C                     ELSE
+     C                     MOVE *BLANK    PPAYDR
+     C                     END
+     C                     ENDSR                           * #P06  ENDSR *
+     C*
+     C**************************************************************************
+     C/EJECT
+     C**************************************************************************
+      *                                                                  *
+      * #P07     - FORMAT MOVEMENT DETAILS FOR OUTPUT                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZDATE2   - TO CONVERT A DAY NUMBER TO DATE FORMAT                *
+      * ZSEDIT   - TO EDIT A SIGNED NUMERIC FIELD                        *
+      * ZAVPRC   - TO CALCULATE AVERAGE PRICE FOR A HOLDING              *
+      * ZFXAVP   - TO CALCULATE AVERAGE FX RATE                          *
+      * ZAVYLD   - TO CALCULATE AVERAGE YIELD                            *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P05     - PROCESS MOVEMENTS AGAINST 'PROCESSED' POSITIONS       *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           #P07      BEGSR                           ** #P07 BEGSR *
+     C*
+     C* SOURCE OF ACTION - PURCHASE,SALE,WALK-IN OR WALK-OUT
+     C*
+     C                     MOVEL*BLANK    PPCSOA
+     C           CSOA      IFEQ 'TS'
+     C                     MOVEL'PUR'     PPCSOA
+     C                     END
+     C           CSOA      IFEQ 'TP'
+     C                     MOVEL'SAL'     PPCSOA
+     C                     END
+     C           CSOA      IFEQ 'CI'
+     C                     MOVEL'WIN'     PPCSOA
+     C                     END
+     C           CSOA      IFEQ 'CO'
+     C                     MOVEL'WOU'     PPCSOA
+     C                     END
+     C                     MOVELCSRF      PPCSRF
+     C*                                                                   059983
+     C** OUTPUT CORRECT TEXT FOR PRICE CHANGE                             059983
+     C           CSOA      IFEQ 'XT'                                      059983
+     C           CSOA      OREQ 'XV'                                      059983
+     C                     MOVEL'PRC'     PPCSOA                          059983
+     C                     MOVEL'CHANGE'  PPCSRF                          059983
+     C                     END                                            059983
+     C*
+     C**  MOVEMENT DATE
+     C                     Z-ADDCSDA      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    PPDATE
+     C*
+     C**  NOMINAL
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE CSNL      ZFLD15
+     C                     Z-ADDQATNMD    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPNOML
+     C*
+     C**  AP NUMERATOR
+     C                     MOVE *BLANKS   ZFLD15
+     C   10                MOVE CSTB      ZFLD15
+     C  N10                MOVE CSVB      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPAPNM
+     C*
+     C**  AVERAGE PRICE
+     C           CSOA      IFEQ 'XT'                                      059983
+     C           CSOA      OREQ 'XV'                                      059983
+     C                     MOVE *BLANKS   ZFLD15                          059983
+     C                     Z-ADDCSAP      WWORK5                          059983
+     C                     ELSE                                           059983
+     C                     MOVE *BLANKS   ZFLD15
+     C*********************MOVE CSCP      ZFLD15                          R01119
+     C*********************Z-ADD8         ZDECS                           R01119
+     C                     Z-ADDCSCP      WWORK5                          R01119
+     C                     END                                            059983
+     C                     MOVE WWORK5    ZFLD15                          R01119
+     C                     Z-ADD5         ZDECS                           R01119
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPAVPR
+     C*
+     C**  FX AP NUMERATOR
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE CFAP      ZFLD15
+     C                     Z-ADDQAPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPFXAP
+     C*
+     C**  AVERAGE FX RATE
+     C           CSOA      IFEQ 'XT'                                      059983
+     C           CSOA      OREQ 'XV'                                      059983
+     C                     MOVE *BLANKS   ZFLD15                          059983
+     C                     Z-ADD5         ZDECS                           059983
+     C                     Z-ADDCAVR      WWORK5                          059983
+     C                     ELSE                                           059983
+     C                     MOVE *BLANKS   ZFLD15
+     C*********************MOVE CFXR      ZFLD15                          R01119
+     C*********************Z-ADD8         ZDECS                           R01119
+     C                     Z-ADD5         ZDECS                           R01119
+     C                     Z-ADDCFXR      WWORK5                          R01119
+     C                     END                                            059983
+     C                     MOVE WWORK5    ZFLD15                          R01119
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPAFXR
+     C*
+     C**  AVERAGE YIELD  RATE
+     C           SPBS      IFEQ 'P'
+     C                     MOVE *BLANKS   ZFLD15
+     C                     Z-ADDCYLD      RNDYLD  63H
+     C                     MOVE RNDYLD    ZFLD15
+     C                     Z-ADD3         ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PPCYRT
+     C*                                                                   R05597
+     C** IF NOMINAL IS NOT ZERO AND POSITION YIELD RATE IS ZERO OUTPUT    R05597
+     C** TEXT NOT AVAILABLE                                               R05597
+     C           CSNL      IFNE 0                                         R05597
+     C           CYLD      ANDLE0.0001                                    R05597
+     C                     MOVE *BLANKS   PPCYRT                          R05597
+     C                     MOVE 'N/A '    PPCYRT                          R05597
+     C                     END                                            R05597
+     C                     ELSE
+     C                     MOVE *BLANK    PPCYRT
+     C                     END
+     C*
+     C                     ENDSR                           * #P07  ENDSR *
+     C*
+      ********************************************************************
+     C/EJECT                                                              S01486
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C* #BRCD    - Get branch name and write to another printer file. *   S01486
+     C*                                                               *   S01486
+     C* SUBROUTINE CALLS:                                             *   S01486
+     C*                                                               *   S01486
+     C* SUBROUTINE CALLED FROM:                                       *   S01486
+     C* #P01     - Process 'Processed' Positions                      *   S01486
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C*                                                                   S01486
+     C           #BRCD     BEGSR                           ** #BRCD BEGSR*S01486
+     C*                                                                   S01486
+     C           WWBRCD    IFNE SVBRCD                                    S01486
+     C*                                                                   S01486
+     C**  Access branch details                                           S01486
+     C*                                                                   S01486
+     C**********           CALL 'AOBRCHR0'                                             S01486 CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM SVBRCD    P@BRCD  3                       S01486
+     C           SDBRCH    PARM SDBRCH    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD15        DBASE            ***************S01486
+     C                     MOVE 'SDBRCHPD'DBFILE           *DB ERROR 015 *S01486
+     C                     MOVELP@BRCD    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   S01486
+     C                     MOVE A8BRNM    WWBRNM                          S01486
+     C                     MOVE *BLANKS   WWCNUM                          S01486
+     C                     MOVE SVBRCD    WWBRCD                          S01486
+     C*                                                                   S01486
+     C**  Write to another printer file                                   S01486
+     C*                                                                   S01486
+     C           LCOUNT    IFNE *ZERO                                     S01486
+     C                     WRITEEND                                       S01486
+     C                     CLOSEPM1300P1                                  S01486
+     C                     OPEN PM1300P1                                  S01486
+     C*                                                                   094397
+     C**  Ensure Report Spool File recorded by RCF                        094397
+     C*                                                                   094397
+     C                     Z-ADDSFNUM     ZSNUM1  60                      094397
+     C                     CALL 'ZSFILE'                                  094397
+     C                     PARM           SEQ                             094397
+     C                     PARM *BLANKS   SENTY                           094397
+     C                     PARM           SFILE                           094397
+     C                     PARM           ZSNUM1                          094397
+     C                     PARM           ZSERR                           094397
+     C*                                                                   094397
+     C** If an error occurred during ZSFILE processing,                   094397
+     C** return to the calling program.                                   094397
+     C*                                                                   094397
+     C           ZSERR     IFEQ 'Y'                                       094397
+     C                     SETON                     U7U8LR               094397
+     C                     RETRN                                          094397
+     C                     ENDIF                                          094397
+     C                     ENDIF                                          S01486
+     C*                                                                   S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   S01486
+     C                     ENDSR                           ** #TERM ENDSR*S01486
+     C/EJECT                                                              S01486
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C* #TERM    - Termination Processing                             *   S01486
+     C*                                                               *   S01486
+     C* SUBROUTINE CALLS:                                             *   S01486
+     C*                                                               *   S01486
+     C* SUBROUTINE CALLED FROM:                                       *   S01486
+     C* MAIN     - Main Processing                                    *   S01486
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C*                                                                   S01486
+     C           #TERM     BEGSR                           ** #TERM BEGSR*S01486
+     C*                                                                   S01486
+     C**  Write Run Controls report                                       S01486
+     C*                                                                   S01486
+     C                     WRITECONTROL                                   S01486
+     C*                                                                   S01486
+     C           WOPEN     IFNE 'Y'                                       S01486
+     C                     WRITENODTLS                                    S01486
+     C*                                                                   S01486
+     C***********          ELSE                                     S01486094397
+     C***********                                                   S01486094397
+     C****Ensure*Report*Spool*File*recorded*by*RCF******************S01486094397
+     C***********                                                   S01486094397
+     C***********          Z-ADDSFNUM     ZSNUM1  60                S01486094397
+     C***********          CALL 'ZSFILE'                            S01486094397
+     C***********          PARM           SEQ                       S01486094397
+     C***********          PARM *BLANKS   SENTY                     S01486094397
+     C***********          PARM           SFILE                     S01486094397
+     C***********          PARM           ZSNUM1                    S01486094397
+     C***********          PARM           ZSERR                     S01486094397
+     C***********                                                   S01486094397
+     C***If*an*error*occurred*during*ZSFILE*processing,*************S01486094397
+     C***return*to*the*calling*program.*****************************S01486094397
+     C***********                                                   S01486094397
+     C***********ZSERR     IFEQ 'Y'                                 S01486094397
+     C***********          SETON                     U7U8LR         S01486094397
+     C***********          RETRN                                    S01486094397
+     C***********          ENDIF                                    S01486094397
+     C***********                                                   S01486094397
+     C****Close*printer*file*PM1300P1*******************************S01486094397
+     C***********                                                   S01486094397
+     C***********          CLOSEPM1300P1                            S01486094397
+     C***********          MOVE *BLANK    WOPEN                     S01486094397
+     C*                                                                   S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   S01486
+     C                     ENDSR                           ** #TERM ENDSR*S01486
+     C*                                                                   S01486
+     C*****************************************************************   S01486
+     C/EJECT
+     C**************************************************************************
+      *                                                                  *
+      * *PSSR    - FILE EXCEPTION ERROR HANDLING SUBROUTINE              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * INIT     - INITIAL PROCESSING                                    *
+      * #P01     - PROCESS CUSTOMER POSITIONS                            *
+      *                                                                  *
+      ********************************************************************
+     C*
+     C           *PSSR     BEGSR                           * *PSSR BEGSR *
+     C*
+     C           WWERRO    IFEQ ' '
+     C                     MOVE 'Y'       WWERRO  1
+     C*
+     C           DBASE     IFNE 0
+     C*
+     C**  PRINT ERROR MESSAGE:
+     C*                                                                   S01486
+     C           WOPEN     IFEQ 'Y'                                       S01486
+     C                     WRITEDBERROR                                   S01486
+     C                     CLOSEPM1300P1                                  S01486
+     C                     MOVE *BLANK    WOPEN                           S01486
+     C                     ENDIF                                          S01486
+     C*                                                                   S01486
+     C                     WRITEERRORAU
+     C                     ELSE
+     C                     Z-ADD999       DBASE
+     C                     END
+     C*
+     C                     DUMP
+     C                     END
+     C*
+     C                     MOVE '1'       *INLR
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     RETRN
+     C*
+     C                     ENDSR                           * *PSSR ENDSR *
+     C*
+     C**************************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /COPY ZSRSRC,ZAVPRC                                                 49213
+      /COPY ZSRSRC,ZFXAVP                                                 49213
+      /COPY PMCPYSRC,ZAVYLD                                               49213
+     C/EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZAVPRC  CALCULATE AVERAGE PRICE                                       *
+     C*                                                                        *
+     C*  PURPOSE : TO CALCULATE AN AVERAGE PRICE (BY DIVIDING THE              *
+     C*            VALUE OF A HOLDING BY THE NOMINAL)                          *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZNOML  11 0     NOMINAL                                          *
+     C*       ZVALU  15 0     VALUE                                            *
+     C*       ZNMDP   1 0     NOMINAL DECIMAL PLACES (0-4)                     *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3 )           *
+     C*       ZPRCB   1 A     PRICE BASIS (P/U)                                *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZAVPR  15 8     AVERAGE PRICE                                    *
+     C*                                                                        *
+     C*  ALSO REQUIRED                                                         *
+     C*       POWER8 ARRAY                                                     *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*       ZI      1 0 - INDEX TO POWER ARRAY                               *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C**************************************************************************
+     C********** ZAVPRC    BEGSR                           *** ZAVP       49213
+     C*
+     C** DEFINE ALL FIELDS
+     C*
+     C**********           Z-ADDZNOML     ZNOML  110                      49213
+     C**********           Z-ADDZVALU     ZVALU  150                      49213
+     C**********           Z-ADDZNMDP     ZNMDP   10                      49213
+     C**********           Z-ADDZNMCD     ZNMCD   10                      49213
+     C**********           MOVE ZPRCB     ZPRCB   1                       49213
+     C**********           Z-ADDZAVPR     ZAVPR  158                      49213
+     C*
+     C** IF NOMINAL = 0   END PROCESS
+     C********** ZNOML     IFEQ 0                                         49213
+     C**********           Z-ADD0         ZAVPR                           49213
+     C*
+     C** IF NOMINAL NOT = ZEROS
+     C**********           ELSE                                           49213
+     C*
+     C** DIVIDE VALUE BY NOMINAL   IN ZAVPR
+     C********** ZVALU     DIV  ZNOML     ZAVPR                           49213
+     C*
+     C** IF PRICE BASIS IS PERCENTAGE
+     C********** ZPRCB     IFEQ 'P'                                       49213
+     C********** 100       MULT ZAVPR     ZAVPR                           49213
+     C**********           END                                            49213
+     C*
+     C** SET POWER8 INDEX TO 5 - NBR NOMINAL DEC. PLACES + NBR CURRENCY DEC. PL.
+     C********** 5         SUB  ZNMDP     ZI      10                      49213
+     C**********           ADD  ZNMCD     ZI                              49213
+     C*
+     C** DIVIDE AVERAGE PRICE BY POWER
+     C********** ZAVPR     DIV  POWER8,ZI ZAVPR     H                     49213
+     C*
+     C** SET AVERAGE PRICE POSITIVE
+     C********** ZAVPR     IFLE 0                                         49213
+     C**********           Z-SUBZAVPR     ZAVPR                           49213
+     C**********           END                                            49213
+     C*
+     C** END CONDITION NOMINAL = ZERO
+     C**********           END                                            49213
+     C*
+     C**
+     C**********           ENDSR                                          49213
+     C**************************************************************************
+     C/EJECT
+     C*************************************************************************
+     C*                                                                       *
+     C*  ZFXAVP - CALCULATE AVERAGE FX RATE                                   *
+     C*                                                                       *
+     C*  PURPOSE : TO CALCULATE AN AVERAGE FX RATE (VALUE OF HOLDING IN       *
+     C*            PORTFOLIO CURRENCY DIVIDED BY VALUE IN NOMINAL CURRENCY)   *
+     C*                                                                       *
+     C*  INPUT  FIELDS                                                        *
+     C*       ZAPNM  15 0     AVERAGE PRICE NUMERATOR                         *
+     C*       ZFXAP  15 0     FX AVERAGE PRICE NUMERATOR                      *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3)           *
+     C*       ZPTCD   1 0     PORTFOLIO CURRENCY DECIMAL PLACES (0-3)         *
+     C*                                                                       *
+     C*  OUTPUT  FIELDS                                                       *
+     C*       ZAVFX  13 8     AVERAGE FX RATE                                 *
+     C*                                                                       *
+     C*  ALSO REQUIRED                                                        *
+     C*       POWER8 ARRAY    ARRAY FOR CURRENCY CONVERSIONS                  *
+     C*                                                                       *
+     C*  WORK FIELDS:                                                          *
+     C*       ZI      1 0     INDEX TO POWER ARRAY                            *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                       *
+     C*************************************************************************
+     C********** ZFXAVP    BEGSR                           *** ZFXA       49213
+     C*
+     C** DEFINE ALL FIELDS
+     C*
+     C**********           Z-ADDZAPNM     ZAPNM  150                      49213
+     C**********           Z-ADDZFXAP     ZFXAP  150                      49213
+     C**********           Z-ADDZNMCD     ZNMCD   10                      49213
+     C**********           Z-ADDZPTCD     ZPTCD   10                      49213
+     C**********           Z-ADDZAVFX     ZAVFX  138                      49213
+     C*
+     C** IF AP NUMERATOR = 0   END PROCESS
+     C********** ZAPNM     IFEQ 0                                         49213
+     C**********           Z-ADD0         ZAVFX                           49213
+     C*
+     C** IF AP NUMERATOR NOT = ZEROS
+     C**********           ELSE                                           49213
+     C*
+     C** DIVIDE FX AP NUMERATOR BY AP NUMERATOR
+     C********** ZFXAP     DIV  ZAPNM     ZAVFX     H                     49213
+     C*
+     C** SET POWER8 INDEX TO 5 - NBR NOM CCY DEC. PLACES + NBR PORT CCY DEC. PL.
+     C********** 5         SUB  ZNMCD     ZI      10                      49213
+     C**********           ADD  ZPTCD     ZI                              49213
+     C*
+     C** DIVIDE AVERAGE PRICE BY POWER
+     C********** ZAVFX     DIV  POWER8,ZI ZAVFX     H                     49213
+     C*
+     C** SET AVERAGE PRICE POSITIVE
+     C********** ZAVFX     IFLE 0                                         49213
+     C**********           Z-SUBZAVFX     ZAVFX                           49213
+     C**********           END                                            49213
+     C*
+     C** END CONDITION NOMINAL = ZERO
+     C**********           END                                            49213
+     C*
+     C********** ZXAVP9    ENDSR                                          49213
+      **************************************************************************
+     C/EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*  ZAVYLD  CALCULATE AVERAGE YIELD                                       *
+     C*                                                                        *
+     C*  PURPOSE : TO CALCULATE AN AVERAGE YIELD (BY DIVIDING THE              *
+     C*            YIELD VALUE OF A HOLDING BY THE NOMINAL)                    *
+     C*                                                                        *
+     C*  INPUT  FIELDS                                                         *
+     C*       ZNOML  11 0     NOMINAL                                          *
+     C*       ZVALU  15 0     VALUE                                            *
+     C*       ZNMDP   1 0     NOMINAL DECIMAL PLACES (0-4)                     *
+     C*       ZNMCD   1 0     NOMINAL CURRENCY DECIMAL PLACES (0-3 )           *
+     C*                                                                        *
+     C*  OUTPUT  FIELDS                                                        *
+     C*       ZAVYD  15 8     AVERAGE YIELD                                    *
+     C*                                                                        *
+     C*  ALSO REQUIRED                                                         *
+     C*       POWER8 ARRAY                                                     *
+     C*                                                                        *
+     C*  WORK FIELDS:                                                          *
+     C*       ZI      1 0 - INDEX TO POWER ARRAY                               *
+     C*                                                                        *
+     C*  CALLED FROM:                                                          *
+     C*                                                                        *
+     C**************************************************************************
+     C********** ZAVYLD    BEGSR                           *** ZAVY       49213
+     C*
+     C** DEFINE ALL FIELDS
+     C*
+     C**********           Z-ADDZNOML     ZNOML  110                      49213
+     C**********           Z-ADDZVALU     ZVALU  150                      49213
+     C**********           Z-ADDZNMDP     ZNMDP   10                      49213
+     C**********           Z-ADDZNMCD     ZNMCD   10                      49213
+     C**********           Z-ADDZAVYD     ZAVYD  117                      49213
+     C*
+     C** IF NOMINAL = 0   END PROCESS
+     C********** ZNOML     IFEQ 0                                         49213
+     C**********           Z-ADD0         ZAVYD                           49213
+     C*
+     C** IF NOMINAL NOT = ZEROS
+     C**********           ELSE                                           49213
+     C*
+     C** DIVIDE VALUE BY NOMINAL   IN ZAVYD
+     C********** ZVALU     DIV  ZNOML     ZAVYD                           49213
+     C*
+     C** SET POWER8 INDEX TO 5 - NBR NOMINAL DEC. PLACES + NBR CURRENCY DEC. PL.
+     C********** 5         SUB  ZNMDP     ZI      10                      49213
+     C**********           ADD  ZNMCD     ZI                              49213
+     C*
+     C** DIVIDE AVERAGE PRICE BY POWER
+     C********** ZAVYD     DIV  POWER8,ZI ZAVYD     H                     49213
+     C*
+     C** SET AVERAGE YIELD POSITIVE
+     C********** ZAVYD     IFLE 0                                         49213
+     C**********           Z-SUBZAVYD     ZAVYD                           49213
+     C**********           END                                            49213
+     C*
+     C** END CONDITION NOMINAL = ZERO
+     C**********           END                                            49213
+     C*
+     C**
+     C**********           ENDSR                                          49213
+     C**************************************************************************
+     C/EJECT
+     OPMPPOSL0E                UPPOS
+     O                         SVBVLD
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(c) Finastra International Limited 2001

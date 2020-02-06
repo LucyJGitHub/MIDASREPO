@@ -1,0 +1,2807 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD IRM extract filter maintenance')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0571R - Midas SD Edit IRM extract filter                   *
+      *                                                               *
+      *  Function:  This program allows the user to maintain details  *
+      *             on one IRM extract filter record at a time.       *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *  Prev Amend No. CSD003             Date 01Jul99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CRM001             Date 08Feb95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD003 - Synon Closedown Project (SD):                       *
+      *           - Program removed from SD model.                    *
+      *  CRM001 - New program for Interest Risk Management changes.   *
+      *                                                               *
+      *****************************************************************
+     F*IRM extract filter maint Initialise Program F-spec
+     F/COPY WNCPYSRC,SD0571RFPG
+     FSD0571R#CF  E                    WORKSTN                        UC
+     F                                              KINFDS INFDS#
+     F                                              KINFSR *PSSR
+      * DSP: Midas SD Edit IRM extract filter
+      *
+     FSDIRMFL1IF  E           K        DISK                           UC
+     F                                              KINFDS INFDS1
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD IRM extract filter retrieval
+      *
+     FSDIRMEL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0001
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD IRM filter entity retrieval
+      *
+     FSDMMODL1IF  E           K        DISK                           UC
+     F                                              KINFDS ID0002
+     F                                              KINFSR *PSSR
+      * RTV : Midas SD Midas module flags retrieval
+      *
+     FSDIRMFL0UF  E           K        DISK                      A    UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0003
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD IRM extract filter update
+      *
+     FSDFCTLL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFDS ID0004
+     F                                              KINFSR *PSSR
+      * UPD : Midas SD Standing data controls update
+      *
+     E* Description     : Copyright notice for inclusion in all programs
+     E*
+     E********************************************************************
+     E                    CPY@    1   1 80               Copyright array
+     E*IRM extract filter maint Initialise Program E-spec
+     E/COPY WNCPYSRC,SD0571REPG
+     I*
+     I* Description     : Copyright notice for inclusion in all programs
+     I*
+     I*                                                                   S01229
+     I/COPY QWINDSRC,SD0570GDTA                                           S01229
+     I*                                                                   S01229
+     I*IRM extract filter maint Initialise Program I-spec
+     I/COPY WNCPYSRC,SD0571RIPG
+      /EJECT
+      * Data structures:
+     IPGMDS     ESDSY2PGDSP
+      * Program data structure
+     IJBDTTM      DS
+      * Job date/time
+     I                                        1   70##JDT
+     I                                        1   10##JCC
+     I                                        2   30##JYY
+     I                                        4   50##JMM
+     I                                        6   70##JDD
+     I                                        8  130##JTM
+     I                                        8   90##JHH
+     I                                       10  110##JNN
+     I                                       12  130##JSS
+      * ABO DEFINE LARGE STRING FOR CL CMD
+     IYARTCM      DS                            512
+     I                                        1   1 DUMMY1
+     IINFDS#    E DSY2I#DSP
+      * Display file information data structure
+      *
+     IINFDS1    E DSY2I1DSP
+      * File information data structure
+      *
+     I@1DBRC    E DSSDIRMFL0
+      * UPD : Midas SD IRM extract filter update
+      * Current/previous master file format fields for change control
+      *
+     I#1DBRC      DS                             31
+      * Stored master file format fields
+     I                                        1   1 #1DB1
+      *
+     IWUDELR      DS
+     I                                        1 250 WUDR01
+     I                                      251 500 WUDR02
+     I                                      501 750 WUDR03
+     I                                      7511000 WUDR04
+     I                                     10011250 WUDR05
+     I                                     12511500 WUDR06
+     I                                     15011750 WUDR07
+     I                                     17512000 WUDR08
+     I                                     20012250 WUDR09
+     I                                     22512500 WUDR00
+     I                                     25012750 WUDR11
+     I                                     27513000 WUDR12
+      * Outward parameters
+     IPARC        DS                           3064
+      * RCD : Midas SD Deleted records file retrieval
+      * I :  File name
+     I                                        1  10 PAFNME
+      * I :  Long Key
+     I                                       11  60 PALKEY
+      * I :  Deleted Data Record Pt1
+     I                                       61 310 PADR01
+      * I :  Deleted Data Record Pt2
+     I                                      311 560 PADR02
+      * I :  Deleted Data Record Pt3
+     I                                      561 810 PADR03
+      * I :  Deleted Data Record Pt4
+     I                                      8111060 PADR04
+      * I :  Deleted Data Record Pt5
+     I                                     10611310 PADR05
+      * I :  Deleted Data Record Pt6
+     I                                     13111560 PADR06
+      * I :  Deleted Data Record Pt7
+     I                                     15611810 PADR07
+      * I :  Deleted Data Record Pt8
+     I                                     18112060 PADR08
+      * I :  Deleted Data Record Pt9
+     I                                     20612310 PADR09
+      * I :  Deleted Data Record Pt10
+     I                                     23112560 PADR00
+      * I :  Deleted Data Record Pt11
+     I                                     25612810 PADR11
+      * I :  Deleted Data Record Pt12
+     I                                     28113060 PADR12
+      * I :  Last Change Date
+     I                                    P306130630PALCD
+      * I :  Type of Last Change
+     I                                     30643064 PATYLC
+      *
+     IQSDFC1    E DSSDFCTLL0
+      * UPD : Midas SD Standing data controls update
+     IYARDCS      DS                             22
+     IYBRDCS      DS                             22
+     IYCRDCS      DS                             22
+     IYDRDCS      DS                             31
+     IYERDCS      DS                             22
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     IRUNDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     IYRSW0A      DS                           9999
+     IYRSW0B      DS                           9999
+     IYRSW0C      DS                           9999
+     IYRSW0D      DS                           9999
+     IID0001      DS                            528
+      * File information data structure
+      *
+     IID0002      DS                            528
+      * File information data structure
+      *
+     IID0003      DS                            528
+      * File information data structure
+      *
+     IID0004      DS                            528
+      * File information data structure
+      *
+      /EJECT
+      * Parameter declarations
+     IP1PARM      DS                             31
+      * RCD: Midas SD IRM extract filter retrieval
+      * I : MAP IRM Entity
+     I                                        1  15 P1IETY
+      * I : MAP Entity Filter Code
+     I                                       16  25 P1ETFC
+     IP2PARM      DS
+      * I :  Action Code
+     I                                        1   1 P2ANCD
+     I            DS
+     I                                        1 132 ZAMSDA
+      * Message data for 'Entity & Fltr code Exists'
+      * Entity Filter Code
+     I                                        1  10 ZA0001
+      * IRM Entity
+     I                                       11  25 ZA0002
+      * Message data for 'Entity cannot be used'
+      * IRM Entity
+     I                                        1  15 ZA0003
+      * Message data for 'Entity does not exist'
+      * IRM Entity
+     I                                        1  15 ZA0004
+      * Message data for 'Entity & Fltr code Exists'
+      * Entity Filter Code
+     I                                        1  10 ZA0005
+      * IRM Entity
+     I                                       11  25 ZA0006
+      * Message data for 'Entity cannot be used'
+      * IRM Entity
+     I                                        1  15 ZA0007
+      * Message data for 'Database Error (ICD)'
+      * Filename
+     I                                        1  10 ZA0008
+      /EJECT
+      *****************************************************************
+      * Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P1PARM           RCD: IRM Extrac
+     C           P2ANCD    PARM           WP0001  1        Action Code
+      *****************************************************************
+      * Initialize
+     C                     EXSR ZZINIT
+      *
+      * Check passed parameters
+     C                     EXSR FACKPM
+      * Perform once if all passed, else repeat
+     C           W0RPT     DOUEQ'N'
+      * Display and process key screen
+     C                     EXSR BADSKY
+     C                     END
+      * Terminate program
+     C                     EXSR ZXEXPG
+      *****************************************************************
+      /EJECT
+     CSR         BADSKY    BEGSR
+      *================================================================
+      * Display and process key screen
+      *================================================================
+      * Initialize key screen
+     C                     EXSR MDIZ#K
+      * Bypass first display of key screen is possible
+     C                     MOVEL'Y'       W0BYP   1
+      * Signal start of transaction
+     C                     MOVEL'Y'       W0TRN   1
+     C           W0TRN     DOWEQ'Y'
+     C           W0TRN     OREQ 'K'
+      * Ensure transaction continues (if reset)
+     C                     MOVEL'Y'       W0TRN   1
+      * Conduct screen conversation
+     C           W0TRN     DOWEQ'Y'
+      * Is bypass key screen still viable?
+     C           W0BYP     IFEQ 'Y'
+     C           #1IETY    IFEQ *BLANK                     IRM Entity
+     C           #1ETFC    OREQ *BLANK                     Entity Filter C
+      * One or more key fields is blank
+     C           *IN05     OREQ '1'
+      * HOME: Reset screen fields
+     C                     MOVEL'N'       W0BYP
+     C                     END
+     C                     END
+      * Bypass key screen
+     C           W0BYP     IFNE 'Y'
+      * Display key screen
+     C                     EXSR BBEXFM
+     C                     END
+      * Cancel key screen bypass
+     C                     MOVEL'N'       W0BYP
+      * Process response to key screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Switch between *ADD/*CHANGE modes
+     C   09                CAS            BCCHMD
+      * HOME: Reset screen fields
+     C   05                CAS            BDHMKY
+      * Process key screen input
+     C                     CAS            BEPRKY
+     C                     END
+     C           W0TRN     DOWEQ'R'
+     C                     MOVEL'Y'       W0TRN
+     C                     EXSR BEPRKY
+     C                     END
+      *
+     C                     END
+     C                     END
+      *================================================================
+     CSR         BAEXIT    ENDSR
+      /EJECT
+     CSR         BBEXFM    BEGSR
+      *================================================================
+      * Display key screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GADSAK
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE BBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     BBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y0SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT1
+     C                     EXFMT#RCDKEY
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         BBEXIT    ENDSR
+      /EJECT
+     CSR         BCCHMD    BEGSR
+      *================================================================
+      * Switch between *ADD/*CHANGE modes
+      *================================================================
+     C           W0PMD     IFEQ 'ADD'
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     ELSE
+     C                     MOVEL'ADD'     W0PMD
+     C                     END
+      *================================================================
+     CSR         BCEXIT    ENDSR
+      /EJECT
+     CSR         BDHMKY    BEGSR
+      *================================================================
+      * Process HOME key
+      *================================================================
+     C                     MOVEL'N'       W0TRN
+      *================================================================
+     CSR         BDEXIT    ENDSR
+      /EJECT
+     CSR         BEPRKY    BEGSR
+      *================================================================
+      * Process key screen input
+      *================================================================
+      * Initialise detail screen
+     C                     EXSR MAIZ#1
+      * Validate key fields
+     C                     EXSR BFVLKY
+     C           *IN99     CABEQ'1'       BEEXIT
+      * Check for existing record
+     C           KRTV      KLIST
+     C                     KFLD           FNIETY           IRM Entity
+     C                     KFLD           FNETFC           Entity Filter C
+      * Setup key
+     C                     MOVEL#1IETY    FNIETY           IRM Entity
+     C                     MOVEL#1ETFC    FNETFC           Entity Filter C
+     C           KRTV      CHAIN@IRMFL1              9091  *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     SETON                     993132*
+     C                     GOTO BEEXIT
+     C                     END                             FI 91
+      *
+      * Verify record existence against program mode
+     C           W0PMD     IFNE 'ADD'
+      * If record does not exist, error
+     C           *IN90     IFEQ '1'
+     C                     SETON                     993132*
+      * Send message 'IRM Extract Filter     NF'
+     C                     MOVEL'USR2644' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C                     EXSR MBFL#1
+      * CALC: Detail screen function fields
+      * 00/Copy member SD0571RSFF - IRM Extract Filter  *
+     C*IRM extract filter maint Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD0571RSFF
+      * USER: Initialize detail screen (existing record)
+      * Footer for DTL screen - IRM Extract Filter  *
+     C*
+     C*  DETAIL LINE COMMAND KEY TEXT
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C*  If Action Code is Delete :
+     C*
+     C           P2ANCD    IFEQ 'D'                                       S01229
+     C* Setup footer text:
+     C* F3=Main Menu   F10=Delete   F12=Previous
+     C                     MOVEL'USR3350' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C*  If Action Code is Insert or Amend:
+     C*
+     C           P2ANCD    IFEQ 'I'                                       S01229
+     C           P2ANCD    OREQ 'A'                                       S01229
+     C* Setup footer text:
+     C* Enter=Accept   F3=Main Menu   F12=Previous
+     C                     MOVEL'USR3365' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+      * 00/Copy member SD0571RISE - IRM Extract Filter  *
+     C*IRM extract filter maint Initialise Dtl Exist Rcd
+     C/COPY WNCPYSRC,SD0571RISE
+     C                     END
+      *
+     C                     ELSE
+      * If record already exists, error
+     C           *IN90     IFEQ '0'
+     C                     SETON                     993132*
+      * Send message 'IRM Extract Filter     EX'
+     C                     MOVEL'USR2645' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+      * USER: Initialize detail screen (new record)
+      * Footer for DTL screen - IRM Extract Filter  *
+     C*
+     C*  DETAIL LINE COMMAND KEY TEXT
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C*  If Action Code is Delete :
+     C*
+     C           P2ANCD    IFEQ 'D'                                       S01229
+     C* Setup footer text:
+     C* F3=Main Menu   F10=Delete   F12=Previous
+     C                     MOVEL'USR3350' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+     C*  If Action Code is Insert or Amend:
+     C*
+     C           P2ANCD    IFEQ 'I'                                       S01229
+     C           P2ANCD    OREQ 'A'                                       S01229
+     C* Setup footer text:
+     C* Enter=Accept   F3=Main Menu   F12=Previous
+     C                     MOVEL'USR3365' WUMSID           Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C                     END
+     C*
+      * 00/Copy member SD0571RISN - IRM Extract Filter  *
+     C*IRM extract filter maint Initialise Dtl New Rcd
+     C/COPY WNCPYSRC,SD0571RISN
+     C                     END
+     C                     END
+      *..................................................
+     C   99                GOTO BEEXIT
+      * No error: Display and process details
+     C                     EXSR CADSDA
+      *
+      *================================================================
+     CSR         BEEXIT    ENDSR
+      /EJECT
+     CSR         BFVLKY    BEGSR
+      *================================================================
+      * Validate key fields
+      *================================================================
+     C           W0PMD     IFNE 'ADD'
+     C                     END
+      * USER: Validate key screen
+      * CASE: PAR.Action Code is Insert
+     C           P2ANCD    IFEQ 'I'                        *IF
+      * CASE: KEY.IRM Entity is Entered
+     C           #1IETY    IFNE *BLANK                     *IF
+     C                     MOVEL#1IETY    WUTQKF           Test ? in Key F
+      * CASE: WRK.Test ? in Key Field is Question Mark
+     C           WUTQKF    IFEQ '?'                        *IF
+     C                     MOVEL*BLANK    WUIETY           IRM Entity
+      * Select IRM Filter Entity - IRM Filter Entity  *
+     C                     CALL 'SD0560S'              90  Select IRM Filt
+     C                     PARM *BLANK    W0RTN   7
+     C           WUIETY    PARM WUIETY    WQ0001 15        IRM Entity
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0560S' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     MOVELWUIETY    #1IETY           IRM Entity
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     MOVEL#1IETY    WUIETY           IRM Entity
+     C                     MOVEL#1ETFC    WUETFC           Entity Filter C
+      * Does record exist ? - IRM Extract Filter  *
+     C                     EXSR SARVGN
+      * CASE: PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ 'Y2U0003'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1ETFC    ZA0001           Entity Filter C
+     C                     MOVEL#1IETY    ZA0002           IRM Entity
+      * Send message 'Entity & Fltr code Exists'
+     C                     MOVEL'USR2647' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     993231*
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Retrieve Seq & Mod Postn - IRM Filter Entity  *
+     C                     EXSR SBRVGN
+      * Check 'Entity Module Position'
+      * CASE: WRK.Entity Module Position is Zero
+     C           WUETMP    IFEQ *ZERO                      *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check SDMMODPD flag - MIDAS Modules  *
+     C                     CALL 'SDC0571'              90  Check SDMMODPD
+     C                     PARM WUETMP    WQ0002  30       Entity Module P
+     C           WUUSRT    PARM WUUSRT    WQ0003  1        User return cod
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDC0571' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * CASE: WRK.User return code is YES
+     C           WUUSRT    IFEQ 'Y'                        *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1IETY    ZA0003           IRM Entity
+      * Send message 'Entity cannot be used'
+     C                     MOVEL'USR2649' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL#1IETY    WUIETY           IRM Entity
+     C                     MOVEL#1ETFC    WUETFC           Entity Filter C
+      * Retrieve Seq & Mod Postn - IRM Filter Entity  *
+     C                     EXSR SCRVGN
+      * CASE: PGM.*Return code is *Record does not exist
+     C           W0RTN     IFEQ 'Y2U0005'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1IETY    ZA0004           IRM Entity
+      * Send message 'Entity does not exist'
+     C                     MOVEL'USR2646' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Does record exist ? - IRM Extract Filter  *
+     C                     EXSR SDRVGN
+      * CASE: PGM.*Return code is *Record already exists
+     C           W0RTN     IFEQ 'Y2U0003'                  *IF
+      * Setup message data for message
+     C                     MOVEL#1ETFC    ZA0005           Entity Filter C
+     C                     MOVEL#1IETY    ZA0006           IRM Entity
+      * Send message 'Entity & Fltr code Exists'
+     C                     MOVEL'USR2647' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     993231*
+      *
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check 'Entity Module Position'
+      * CASE: WRK.Entity Module Position is Zero
+     C           WUETMP    IFEQ *ZERO                      *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Check SDMMODPD flag - MIDAS Modules  *
+     C                     CALL 'SDC0571'              90  Check SDMMODPD
+     C                     PARM WUETMP    WQ0004  30       Entity Module P
+     C           WUUSRT    PARM WUUSRT    WQ0005  1        User return cod
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDC0571' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * CASE: WRK.User return code is YES
+     C           WUUSRT    IFEQ 'Y'                        *IF
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Setup message data for message
+     C                     MOVEL#1IETY    ZA0007           IRM Entity
+      * Send message 'Entity cannot be used'
+     C                     MOVEL'USR2649' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     9931  *
+      *
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD0571RVKS - IRM Extract Filter  *
+     C*IRM extract filter maint Validate Key Screen
+     C/COPY WNCPYSRC,SD0571RVKS
+      * IRM Entity required
+     C           #1IETY    IFEQ *BLANK                     IF
+     C                     SETON                     9931  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      * Entity Filter Code required
+     C           #1ETFC    IFEQ *BLANK                     IF
+     C                     SETON                     9932  *
+      * Send message '*Value required'
+     C                     MOVEL'Y2U0001' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END                             FI
+      *================================================================
+     CSR         BFEXIT    ENDSR
+      /EJECT
+     CSR         CADSDA    BEGSR
+      *================================================================
+      * Display and process detail screen
+      *================================================================
+      * Conduct detail screen conversation
+      * - repeat until screen control flag is reset:
+     C           W0TRN     DOWEQ'Y'
+      * Display detail screen
+     C                     EXSR CBEXFM
+      * Process response to detail screen
+      * Cancel & exit program
+     C   03                CAS            ZXEXPG
+      * Redisplay previous screen
+     C   12                CAS            CCDSPV
+      * HOME: Reset screen fields
+     C   05                CAS            CCDSPV
+      * Process detail screen input
+     C                     CAS            CFPRSC
+     C                     END
+     C           W0TRN     IFEQ 'R'
+     C           W0PMD     IFEQ 'ADD'
+     C                     EXSR MAIZ#1
+     C                     END
+     C                     END
+      *
+     C                     END
+      *================================================================
+     CSR         CAEXIT    ENDSR
+      /EJECT
+     CSR         CBEXFM    BEGSR
+      *================================================================
+      * Display screen and process HELP requests
+      *================================================================
+      * Set screen conditioning indicators
+     C                     EXSR GBDSAD
+      * Update screen time
+     C                     TIME           ##TME
+     C           W0HLP     DOUEQ'N'
+     C                     MOVEL'N'       W0HLP   1
+     C                     MOVE *IN25     HELP25  1
+     C                     MOVE *ALL'0'   ##OFF  30
+     C                     MOVEA##OFF     *IN,1
+     C                     MOVE HELP25    *IN25
+      * PUTOVR unless conditioned fields change
+     C                     SETON                         86*
+     C           *IN89     IFNE CBIN89
+     C                     SETOF                         86*
+     C                     END
+     C                     MOVE *IN89     CBIN89  1
+      * Set cursor by *SET CURSOR data
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y1SET
+     C                     END
+     C                     WRITE#MSGCTL
+     C                     WRITE#CMDTXT2
+     C                     EXFMT#RCDDTL1
+      * Test cursor
+     C                     EXSR Y8TST
+      * Clear set cursor DDS indicator
+     C           WCSRLC    IFEQ 'OFF'
+     C                     SETOF                     94    *
+     C                     END
+     C                     MOVE *BLANK    WCSRLC
+      * If help requested, display help text
+     C   25                EXSR ZHHPKY
+     C                     END
+      * Update job time
+     C                     TIME           ##JTM
+      * Clear messages from program message queue
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      * Reset first message only flag
+     C                     MOVEL'Y'       ZAFSMS  1
+      * Reset global error indicator
+     C                     SETOF                         99*
+     C           YSETCS    IFEQ 'Y'
+     C                     EXSR Y9CLR
+     C                     END
+      *================================================================
+     CSR         CBEXIT    ENDSR
+      /EJECT
+     CSR         CCDSPV    BEGSR
+      *================================================================
+      * Redisplay previous screen
+      *================================================================
+      * USER: Process key screen request
+      * 00/Copy member SD0571RPKR - IRM Extract Filter  *
+     C*IRM extract filter maint Process Key Screen Rqst
+     C/COPY WNCPYSRC,SD0571RPKR
+      * CASE: PAR.Action Code is Insert
+     C           P2ANCD    IFEQ 'I'                        *IF
+      * Footer for KEY screen - IRM Extract Filter  *
+     C*
+     C* KEY LINE COMMAND KEY TEXT
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C* Setup footer text:
+     C* F3=Previous
+     C                     MOVEL'USR3345' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'USR0790' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C   05                MOVEL'R'       W0TRN
+     C   12                MOVEL'K'       W0TRN
+      *================================================================
+     CSR         CCEXIT    ENDSR
+      /EJECT
+     CSR         CFPRSC    BEGSR
+      *================================================================
+      * Validate record
+      *================================================================
+      * Confirm/update is not deferred
+     C                     MOVEL'N'       W0DCF   1
+      * If delete is not pending....
+      * Validate details
+     C  N10                CAS            DCVLDL
+     C                     END
+      * QUIT if error:
+     C   99                GOTO CFEXIT
+      * Defer confirm/update requested
+     C           W0DCF     CABEQ'Y'       CFEXIT
+      * No error: update record
+     C                     EXSR EBPR##
+      *================================================================
+     CSR         CFEXIT    ENDSR
+      /EJECT
+     CSR         DCVLDL    BEGSR
+      *================================================================
+      * Validate details
+      *================================================================
+      * USER: Validate detail screen fields
+      * Disable ENTER in delete mode
+      * CASE: PAR.Action Code is Delete
+     C           P2ANCD    IFEQ 'D'                        *IF
+      * Send message 'F3/F10/F12 only valid opt'
+     C                     MOVEL'USR0536' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO DCEXIT                     *QUIT
+     C                     END                             *FI
+      * 00/Copy member SD0571RVSF - IRM Extract Filter  *
+     C*IRM extract filter maint Validate Detail Screen
+     C/COPY WNCPYSRC,SD0571RVSF
+      * CALC: Detail screen function fields
+      * 00/Copy member SD0571RSFF - IRM Extract Filter  *
+     C*IRM extract filter maint Calc Detail Function Flds
+     C/COPY WNCPYSRC,SD0571RSFF
+      * USER: Validate detail screen relations
+      * 00/Copy member SD0571RVSR - IRM Extract Filter  *
+     C*IRM extract filter maint Validate Screen Relns
+     C/COPY WNCPYSRC,SD0571RVSR
+      *================================================================
+     CSR         DCEXIT    ENDSR
+      /EJECT
+     CSR         EBPR##    BEGSR
+      *================================================================
+      * Process record:
+      *================================================================
+      * Process delete request
+     C   10                CAS            EDDLRQ
+      * Process add request
+     C           W0PMD     CASEQ'ADD'     ECADRQ
+      * Process update request
+     C           W0PMD     CASNE'ADD'     EECHRQ
+     C                     END
+     C           W0RTN     IFNE *BLANK
+      * Error: ROLLBACK any DBF changes
+     C                     ROLBK
+     C                     GOTO EBEXIT
+     C                     ELSE
+      * Otherwise COMMIT any DBF changes
+     C                     COMIT
+     C                     END
+     C           W0RTN     IFEQ *BLANK
+      * USER: Process command keys
+      * 00/Copy member SD0571RPCK - IRM Extract Filter  *
+     C*IRM extract filter maint Process Command Keys
+     C/COPY WNCPYSRC,SD0571RPCK
+      * CASE: DTL.*CMD key is CF10
+     C           *IN10     IFEQ '1'                        *IF
+      * Delete IRM Extract Filter - IRM Extract Filter  *
+     C                     EXSR SEDLRC
+     C                     END                             *FI
+      * CASE: DTL.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C           W0PMD     IFEQ 'ADD'
+      * Exit after successful add
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      * Restart program for next record
+     C                     MOVEL'N'       W0TRN
+     C                     END
+      *================================================================
+     CSR         EBEXIT    ENDSR
+      /EJECT
+     CSR         ECADRQ    BEGSR
+      *================================================================
+      * Process add request
+      *================================================================
+      * USER: Create DBF record
+      * Create IRM Extract Filter - IRM Extract Filter  *
+     C                     EXSR SGCRRC
+     C           W0RTN     IFEQ *BLANK
+      * Send message '*Record added'
+     C                     MOVEL'Y2U0011' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         ECEXIT    ENDSR
+      /EJECT
+     CSR         EDDLRQ    BEGSR
+      *================================================================
+      * Process delete request
+      *================================================================
+      * USER: Delete DBF record
+      * Delete IRM Extract Filter - IRM Extract Filter  *
+     C                     EXSR SIDLRC
+     C           W0RTN     IFEQ *BLANK
+      * Send message '*Record deleted'
+     C                     MOVEL'Y2U0013' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EDEXIT    ENDSR
+      /EJECT
+     CSR         EECHRQ    BEGSR
+      *================================================================
+      * Process update request
+      *================================================================
+      * USER: Change DBF record
+      * Change IRM Extract Filter - IRM Extract Filter  *
+     C                     EXSR SKCHRC
+     C           W0RTN     IFNE *BLANK
+      * Data update error
+      * Reset screen fields if changed record
+     C           W0RTN     CASEQ'Y2U0007' MBFL#1
+     C                     END
+     C                     ELSE
+      * Send message '*Record changed'
+     C                     MOVEL'Y2U0012' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     END
+      *================================================================
+     CSR         EEEXIT    ENDSR
+      /EJECT
+     CSR         FACKPM    BEGSR
+      *================================================================
+      * Check passed parameters
+      *================================================================
+      * Is full key present?
+     C           P1IETY    IFEQ *BLANK                     IRM Entity
+     C           P1ETFC    OREQ *BLANK                     Entity Filter C
+      * Not every key field passed - loop program
+     C                     MOVEL'Y'       W0RPT   1
+     C                     ELSE
+      * Full key passed, so single shot program
+     C                     MOVEL'N'       W0RPT
+     C                     END
+      *================================================================
+     CSR         FAEXIT    ENDSR
+      /EJECT
+     CSR         GADSAK    BEGSR
+      *================================================================
+      * Set key screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      *================================================================
+     CSR         GAEXIT    ENDSR
+      /EJECT
+     CSR         GBDSAD    BEGSR
+      *================================================================
+      * Set detail screen conditioning indicators
+      *================================================================
+     C           W0PMD     COMP 'ADD'                    89*
+      * Protect key fields on detail screen
+     C                     SETON                     88    *
+      * Enable key screen
+     C                     SETON                     87    *
+      *================================================================
+     CSR         GBEXIT    ENDSR
+      /EJECT
+     CSR         MAIZ#1    BEGSR
+      *================================================================
+      * Initialise record - except for key fields and "neither" paramete
+      *================================================================
+     C                     Z-ADD*ZERO     #1LCD            Last Change Dat
+     C                     MOVEL*BLANK    #1TYLC           Type of Last Ch
+     C                     Z-ADD*ZERO     #1DSSQ           Display Sequenc
+      *================================================================
+     CSR         MAEXIT    ENDSR
+      /EJECT
+     CSR         MBFL#1    BEGSR
+      *================================================================
+      * Move @IRMFL1 fields to screen
+      *================================================================
+     C                     Z-ADDFNLCD     #1LCD            Last Change Dat
+     C                     MOVELFNTYLC    #1TYLC           Type of Last Ch
+     C                     Z-ADDFNDSSQ    #1DSSQ           Display Sequenc
+     C                     MOVELFNIETY    #1IETY           IRM Entity
+     C                     MOVELFNETFC    #1ETFC           Entity Filter C
+      * Hold existing record image
+     C                     MOVEL@1DBRC    #1DBRC
+      *================================================================
+     CSR         MBEXIT    ENDSR
+      /EJECT
+     CSR         MDIZ#K    BEGSR
+      *================================================================
+      * Initialize key screen
+      *================================================================
+     C                     MOVELP1IETY    #1IETY           IRM Entity
+     C                     MOVELP1ETFC    #1ETFC           Entity Filter C
+      * USER: Initialize key screen
+      * Footer for KEY screen - IRM Extract Filter  *
+     C*
+     C* KEY LINE COMMAND KEY TEXT
+     C*
+     C                     MOVEL'SDUSRMSG'WUMSGF 10
+     C                     MOVE *BLANKS   WUMTXT 80
+     C*
+     C* Setup footer text:
+     C* F3=Previous
+     C                     MOVEL'USR3345' WUMSID  7        Message Identifier
+     C                     CALL 'SDRTVTXT'             90  Retrieve MSGF message
+     C           WUMSID    PARM WUMSID    WQ0286  7        Message Identifier
+     C           WUMSGF    PARM WUMSGF    WQ0287 10        Message File Name
+     C           WUMTXT    PARM WUMTXT    WQ0288 80        Message Text
+     C                     MOVELWUMTXT    ##CTX1
+     C*
+     C           *IN90     IFEQ '1'
+     C* Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SDRTVTXT'W0CLPG
+     C* Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+     C*
+      * 00/Copy member SD0571RIKS - IRM Extract Filter  *
+     C*IRM extract filter maint Initialise Key Screen
+     C/COPY WNCPYSRC,SD0571RIKS
+      *================================================================
+     CSR         MDEXIT    ENDSR
+      /EJECT
+     CSR         SARVGN    BEGSR
+      *================================================================
+      * Does record exist ? - IRM Extract Filter  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSA     KLIST
+     C                     KFLD           FNIETY           IRM Entity
+     C                     KFLD           FNETFC           Entity Filter C
+      * Move fields to key list
+     C                     MOVELWUIETY    FNIETY           IRM Entity
+     C                     MOVELWUETFC    FNETFC           Entity Filter C
+     C           KRSSA     CHAIN@IRMFL1              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR2644' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SAEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C                     END
+      *================================================================
+     CSR         SAEXIT    ENDSR
+      /EJECT
+     CSR         SBRVGN    BEGSR
+      *================================================================
+      * Retrieve Seq & Mod Postn - IRM Filter Entity  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSB     KLIST
+     C                     KFLD           FMIETY           IRM Entity
+      * Move fields to key list
+     C                     MOVEL#1IETY    FMIETY           IRM Entity
+     C           KRSSB     CHAIN@IRMEL1              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR2642' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SBEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     Z-ADDFMDSSQ    WUDSSQ           Display Sequenc
+     C                     Z-ADDFMETMP    WUETMP           Entity Module P
+     C                     END
+      *================================================================
+     CSR         SBEXIT    ENDSR
+      /EJECT
+     CSR         SCRVGN    BEGSR
+      *================================================================
+      * Retrieve Seq & Mod Postn - IRM Filter Entity  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSC     KLIST
+     C                     KFLD           FMIETY           IRM Entity
+      * Move fields to key list
+     C                     MOVEL#1IETY    FMIETY           IRM Entity
+     C           KRSSC     CHAIN@IRMEL1              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR2642' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SCEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+      * PAR = DB1 By name
+     C                     Z-ADDFMDSSQ    WUDSSQ           Display Sequenc
+     C                     Z-ADDFMETMP    WUETMP           Entity Module P
+     C                     END
+      *================================================================
+     CSR         SCEXIT    ENDSR
+      /EJECT
+     CSR         SDRVGN    BEGSR
+      *================================================================
+      * Does record exist ? - IRM Extract Filter  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSD     KLIST
+     C                     KFLD           FNIETY           IRM Entity
+     C                     KFLD           FNETFC           Entity Filter C
+      * Move fields to key list
+     C                     MOVELWUIETY    FNIETY           IRM Entity
+     C                     MOVELWUETFC    FNETFC           Entity Filter C
+     C           KRSSD     CHAIN@IRMFL1              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR2644' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+     C                     GOTO SDEXIT
+     C                     END
+      *
+     C           *IN90     IFEQ '0'
+      * USER: Process Data record
+     C                     MOVEL'Y2U0003' W0RTN            *Return code
+     C                     END
+      *================================================================
+     CSR         SDEXIT    ENDSR
+      /EJECT
+     CSR         SEDLRC    BEGSR
+      *================================================================
+      * Delete IRM Extract Filter - IRM Extract Filter  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * USER: Processing before Data update
+      * CASE: PAR.Action Code is Delete
+     C           'D'       IFEQ 'D'                        *IF
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'D'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SEEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SEEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SEEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD0571RDBW - IRM Extract Filter  *
+     C*IRM extract filter maint Proc Before Delete - WN
+     C/COPY WNCPYSRC,SD0571RDBW
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Send message 'Function key not allowed'
+     C                     MOVEL'USR0533' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y2U0004' W0RTN            *Return code
+     C                     END                             *FI
+      * 00/Copy member SD0571RDBU - IRM Extract Filter  *
+     C*IRM extract filter maint Processing Before Delete
+     C/COPY WNCPYSRC,SD0571RDBU
+      * Move key fields to @IRMFL0
+     C                     MOVEL#1IETY    FNIETY           IRM Entity
+     C                     MOVEL#1ETFC    FNETFC           Entity Filter C
+      *
+     C           KLDLSE    KLIST
+     C                     KFLD           FNIETY           IRM Entity
+     C                     KFLD           FNETFC           Entity Filter C
+     C           KLDLSE    CHAIN@IRMFL0              9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SEEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SEEXIT
+     C                     END
+      *
+      *................................................................
+     C                     DELET@IRMFL0                91  *
+     C           *IN91     IFEQ '1'
+      * Delete error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF delete successful
+      * USER: Processing after Data update
+      * WUDELR Data Structure - SD Deleted Records File  *
+     C                     MOVEL@1DBRC    WUDELR
+      * Concat the two part key into one field
+     C           #1IETY    CAT  #1ETFC    WULKEY    P      Long Key
+      * Write Deleted Record - SD Deleted Records File  *
+     C                     CLEARPARC
+     C                     MOVEL'SDIRMFPD'PAFNME           File name
+     C                     MOVELWULKEY    PALKEY           Long Key
+     C                     MOVELWUDR01    PADR01           Deleted Data Re
+     C                     MOVELWUDR02    PADR02           Deleted Data Re
+     C                     MOVELWUDR03    PADR03           Deleted Data Re
+     C                     MOVELWUDR04    PADR04           Deleted Data Re
+     C                     MOVELWUDR05    PADR05           Deleted Data Re
+     C                     MOVELWUDR06    PADR06           Deleted Data Re
+     C                     MOVELWUDR07    PADR07           Deleted Data Re
+     C                     MOVELWUDR08    PADR08           Deleted Data Re
+     C                     MOVELWUDR09    PADR09           Deleted Data Re
+     C                     MOVELWUDR00    PADR00           Deleted Data Re
+     C                     MOVELWUDR11    PADR11           Deleted Data Re
+     C                     MOVELWUDR12    PADR12           Deleted Data Re
+     C                     Z-ADDWURDNB    PALCD            Last Change Dat
+     C                     MOVEL'D'       PATYLC           Type of Last Ch
+      *
+     C                     CALL 'SD0520X'              90  Write Deleted R
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             RCD: SD Deleted
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0520X' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     Z-ADD-1        WUNORC           No. of Records
+     C                     Z-ADD1         WUNODL           No. of Deletes
+     C                     Z-ADD*ZERO     WUNOAM           No. of Amends
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SFCHRC
+      * 00/Copy member SD0571RDAU - IRM Extract Filter  *
+     C*IRM extract filter maint Processing After Delete
+     C/COPY WNCPYSRC,SD0571RDAU
+     C                     END
+      *================================================================
+     CSR         SEEXIT    ENDSR
+      /EJECT
+     CSR         SFCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YARDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDIRMFPD'AHFLNM           Filename
+      *
+     C           KLCHSF    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSF    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SFEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SFEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YARDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YARDCS
+     C                     MOVE 'Y'       YARDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YARDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SFEXIT    ENDSR
+      /EJECT
+     CSR         SGCRRC    BEGSR
+      *================================================================
+      * Create IRM Extract Filter - IRM Extract Filter  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Move all fields to @IRMFL0
+     C                     MOVEL#1IETY    FNIETY           IRM Entity
+     C                     MOVEL#1ETFC    FNETFC           Entity Filter C
+     C                     Z-ADDWURDNB    FNLCD            Last Change Dat
+     C                     MOVEL'I'       FNTYLC           Type of Last Ch
+     C                     Z-ADDWUDSSQ    FNDSSQ           Display Sequenc
+      *
+      * USER: Processing before Data update
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'I'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SGEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SGEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SGEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD0571RCBW - IRM Extract Filter  *
+     C*IRM extract filter maint Proc Before Create - WN
+     C/COPY WNCPYSRC,SD0571RCBW
+     C                     END                             *FI
+      * 00/Copy member SD0571RCBU - IRM Extract Filter  *
+     C*IRM extract filter maint Processing Before Create
+     C/COPY WNCPYSRC,SD0571RCBU
+     C           KLCRSG    KLIST
+     C                     KFLD           FNIETY           IRM Entity
+     C                     KFLD           FNETFC           Entity Filter C
+      * Check for duplicate primary key
+     C           KLCRSG    SETLL@IRMFL0                  90*
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'USR2645' W0RTN   7
+      * Send message 'IRM Extract Filter     EX'
+     C                     MOVEL'USR2645' ZAMSID
+     C                     EXSR ZASNMS
+     C                     GOTO SGEXIT
+     C                     END
+      *
+     C                     WRITE@IRMFL0                91  *
+      *
+     C           *IN91     IFEQ '1'
+      * Write error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * USER: Processing after Data update
+     C                     Z-ADD1         WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes
+     C                     Z-ADD*ZERO     WUNOAM           No. of Amends
+     C                     Z-ADD1         WUNOIN           No. of Inserts
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SHCHRC
+      * 00/Copy member SD0571RCAU - IRM Extract Filter  *
+     C*IRM extract filter maint Processing After Create
+     C/COPY WNCPYSRC,SD0571RCAU
+     C                     END
+      *================================================================
+     CSR         SGEXIT    ENDSR
+      /EJECT
+     CSR         SHCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YBRDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDIRMFPD'AHFLNM           Filename
+      *
+     C           KLCHSH    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSH    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SHEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SHEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YBRDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YBRDCS
+     C                     MOVE 'Y'       YBRDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YBRDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SHEXIT    ENDSR
+      /EJECT
+     CSR         SIDLRC    BEGSR
+      *================================================================
+      * Delete IRM Extract Filter - IRM Extract Filter  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * USER: Processing before Data update
+      * CASE: PAR.Action Code is Delete
+     C           P2ANCD    IFEQ 'D'                        *IF
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'D'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SIEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SIEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SIEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD0571RDBW - IRM Extract Filter  *
+     C*IRM extract filter maint Proc Before Delete - WN
+     C/COPY WNCPYSRC,SD0571RDBW
+     C                     END                             *FI
+     C                     ELSE
+      * CASE: *OTHERWISE
+      * Send message 'Function key not allowed'
+     C                     MOVEL'USR0533' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y2U0004' W0RTN            *Return code
+     C                     END                             *FI
+      * 00/Copy member SD0571RDBU - IRM Extract Filter  *
+     C*IRM extract filter maint Processing Before Delete
+     C/COPY WNCPYSRC,SD0571RDBU
+      * Move key fields to @IRMFL0
+     C                     MOVEL#1IETY    FNIETY           IRM Entity
+     C                     MOVEL#1ETFC    FNETFC           Entity Filter C
+      *
+     C           KLDLSI    KLIST
+     C                     KFLD           FNIETY           IRM Entity
+     C                     KFLD           FNETFC           Entity Filter C
+     C           KLDLSI    CHAIN@IRMFL0              9091  *
+     C           *IN90     IFEQ '1'
+      * Record already deleted
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SIEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+      * Send message '*Database operation error'
+     C                     MOVEL'Y2U0004' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SIEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Release record lock
+     C           KLDLSI    SETLL@IRMFL0              9091  *
+     C                     GOTO SIEXIT
+     C                     END                             FI #1DBRC
+      *................................................................
+     C                     DELET@IRMFL0                91  *
+     C           *IN91     IFEQ '1'
+      * Delete error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      * DBF delete successful
+      * USER: Processing after Data update
+      * WUDELR Data Structure - SD Deleted Records File  *
+     C                     MOVEL@1DBRC    WUDELR
+      * Concat the two part key into one field
+     C           #1IETY    CAT  #1ETFC    WULKEY    P      Long Key
+      * Write Deleted Record - SD Deleted Records File  *
+     C                     CLEARPARC
+     C                     MOVEL'SDIRMFPD'PAFNME           File name
+     C                     MOVELWULKEY    PALKEY           Long Key
+     C                     MOVELWUDR01    PADR01           Deleted Data Re
+     C                     MOVELWUDR02    PADR02           Deleted Data Re
+     C                     MOVELWUDR03    PADR03           Deleted Data Re
+     C                     MOVELWUDR04    PADR04           Deleted Data Re
+     C                     MOVELWUDR05    PADR05           Deleted Data Re
+     C                     MOVELWUDR06    PADR06           Deleted Data Re
+     C                     MOVELWUDR07    PADR07           Deleted Data Re
+     C                     MOVELWUDR08    PADR08           Deleted Data Re
+     C                     MOVELWUDR09    PADR09           Deleted Data Re
+     C                     MOVELWUDR00    PADR00           Deleted Data Re
+     C                     MOVELWUDR11    PADR11           Deleted Data Re
+     C                     MOVELWUDR12    PADR12           Deleted Data Re
+     C                     Z-ADDWURDNB    PALCD            Last Change Dat
+     C                     MOVEL'D'       PATYLC           Type of Last Ch
+      *
+     C                     CALL 'SD0520X'              90  Write Deleted R
+     C                     PARM *BLANK    W0RTN   7
+     C                     PARM           PARC             RCD: SD Deleted
+      *
+     C           *IN90     IFEQ '1'
+      * Call to program ended in error
+     C                     MOVEL'Y2U0032' W0RTN
+     C                     MOVEL*BLANKS   W0CLPG 10
+     C                     MOVEL'SD0520X' W0CLPG
+      * Send message '*Error occured on CALL...'
+     C                     MOVEL'Y2U0032' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     MOVELW0CLPG    ZAMSDA           Message data
+     C                     EXSR ZASNMS
+     C                     END
+      *
+      * Error detected?
+     C           W0RTN     IFNE *BLANK
+     C                     SETON                     99    *
+     C                     END
+     C                     Z-ADD-1        WUNORC           No. of Records
+     C                     Z-ADD1         WUNODL           No. of Deletes
+     C                     Z-ADD*ZERO     WUNOAM           No. of Amends
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SJCHRC
+      * 00/Copy member SD0571RDAU - IRM Extract Filter  *
+     C*IRM extract filter maint Processing After Delete
+     C/COPY WNCPYSRC,SD0571RDAU
+     C                     END
+      *================================================================
+     CSR         SIEXIT    ENDSR
+      /EJECT
+     CSR         SJCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YCRDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDIRMFPD'AHFLNM           Filename
+      *
+     C           KLCHSJ    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSJ    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SJEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SJEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YCRDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YCRDCS
+     C                     MOVE 'Y'       YCRDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YCRDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SJEXIT    ENDSR
+      /EJECT
+     CSR         SKCHRC    BEGSR
+      *================================================================
+      * Change IRM Extract Filter - IRM Extract Filter  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YDRDC   1
+      *
+      * Move key fields to @IRMFL0
+     C                     MOVEL#1IETY    FNIETY           IRM Entity
+     C                     MOVEL#1ETFC    FNETFC           Entity Filter C
+      *
+     C           KLCHSK    KLIST
+     C                     KFLD           FNIETY           IRM Entity
+     C                     KFLD           FNETFC           Entity Filter C
+     C           KLCHSK    CHAIN@IRMFL0              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SKEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SKEXIT
+     C                     END
+      *
+      * Check for changed record
+     C           #1DBRC    IFNE @1DBRC                     IF
+     C                     MOVEL'Y2U0007' W0RTN   7
+      * Send message '*Update not accepted'
+     C                     MOVEL'Y2U0007' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+      * Release record lock
+     C                     UNLCKSDIRMFL0               91  *
+     C                     GOTO SKEXIT
+     C                     END                             FI #1DBRC
+      * Store record data for null update check
+     C                     MOVE @1DBRC    YDRDCS
+      * Move non-key fields to @IRMFL0
+     C                     Z-ADDWURDNB    FNLCD            Last Change Dat
+     C                     MOVEL'A'       FNTYLC           Type of Last Ch
+     C                     Z-ADD#1DSSQ    FNDSSQ           Display Sequenc
+      *
+      * Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YDRDCS
+     C                     MOVE 'Y'       YDRDC
+     C                     END
+      * USER: Processing before Data update
+      * CASE: WRK.Window processing requir. is Yes
+     C           WUWDPR    IFEQ 'Y'                        *IF
+      * WM call Window Manager - Window manager  *
+     C/COPY WNCPYSRC,WN0481CCP1                                           S01408
+     C***********          CALL 'WIND01'                                  S01212
+     C                     CALL 'WN0010'                                  S01212
+     C*********************PARM           ##PGM            Program        S01212
+     C                     PARM ##PGM     UPGM   10        Program        S01212
+     C*********************PARM *BLANK    FKEY    2        Function Key   S01212
+     C                     PARM *BLANK    UFKEY   2        Function Key   S01212
+     C*********************PARM           WUMEST           Action  S01212 S01229
+     C*********************PARM           WUWMAC           Action  S01212 S01229
+     C                     PARM 'A'       UACTCD  1        Action  S01212 S01229
+     C                     PARM           DATA             Trans Data     S01212
+     C                     PARM *BLANK    W0RTN            Return Code    S01212
+     C                     PARM           SPARE 256        Spare Field    LN0355
+      * WM Check Return
+      * CASE: PAR.*Return code is *User QUIT requested
+     C           W0RTN     IFEQ 'Y2U9999'                  *IF
+     C                     MOVELW0RTN     P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     ELSE
+      * CASE: PAR.*Return code is WN Window Error
+     C           W0RTN     IFEQ 'USR0563'                  *IF
+      * Send message 'WN Window Error'
+     C                     MOVEL'USR0563' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SKEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *DBF update error
+     C           W0RTN     IFEQ 'Y2U0004'                  *IF
+      * Send message 'WN Database Error'
+     C                     MOVEL'USR0567' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SKEXIT                     *QUIT
+     C                     ELSE
+      * CASE: PAR.*Return code is *Previous Screen
+     C           W0RTN     IFEQ 'USR0790'                  *IF
+     C                     MOVEL'Y'       W0DCF            *Defer confirm
+     C                     GOTO SKEXIT                     *QUIT
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+     C                     END                             *FI
+      * 00/Copy member SD0571RBUW - IRM Extract Filter  *
+     C*IRM extract filter maint Before Update, Window on
+     C/COPY WNCPYSRC,SD0571RBUW
+     C                     END                             *FI
+      * 00/Copy member SD0571RBDU - IRM Extract Filter  *
+     C*IRM extract filter maint Processing Before Update
+     C/COPY WNCPYSRC,SD0571RBDU
+      * Set PGM.*Record Data Changed flag
+     C           @1DBRC    IFNE YDRDCS
+     C                     MOVE 'Y'       YDRDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YDRDC     IFEQ 'Y'
+     C                     UPDAT@IRMFL0                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDIRMFL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * Update saved record image
+     C                     MOVEL@1DBRC    #1DBRC
+      * DBF change successful
+      * USER: Processing after Data update
+     C                     Z-ADD*ZERO     WUNORC           No. of Records
+     C                     Z-ADD*ZERO     WUNODL           No. of Deletes
+     C                     Z-ADD1         WUNOAM           No. of Amends
+     C                     Z-ADD*ZERO     WUNOIN           No. of Inserts
+      * Change Standing Data Cont - Standing Data Controls  *
+     C                     EXSR SLCHRC
+      * 00/Copy member SD0571RADU - IRM Extract Filter  *
+     C*IRM extract filter maint Processing After Update
+     C/COPY WNCPYSRC,SD0571RADU
+     C                     END
+      *================================================================
+     CSR         SKEXIT    ENDSR
+      /EJECT
+     CSR         SLCHRC    BEGSR
+      *================================================================
+      * Change Standing Data Cont - Standing Data Controls  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Set PGM.*Record Data Changed flag
+     C                     MOVE 'N'       YERDC   1
+      *
+      * Move key fields to @AHREAU
+     C                     MOVE *BLANK    AHFLNM           Filename
+     C                     MOVEL'SDIRMFPD'AHFLNM           Filename
+      *
+     C           KLCHSL    KLIST
+     C                     KFLD           AHFLNM           Filename
+     C           KLCHSL    CHAIN@AHREAU              9091  *
+      *
+     C           *IN90     IFEQ '1'
+      * Record not found
+     C                     MOVEL'Y2U0009' W0RTN   7
+      * Send message '*Record no longer on file'
+     C                     MOVEL'Y2U0009' ZAMSID
+     C                     MOVEL'Y2USRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     GOTO SLEXIT
+     C                     END
+      *
+     C           *IN91     IFEQ '1'
+      * Record locked
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     GOTO SLEXIT
+     C                     END
+      *
+      * Store record data for null update check
+     C                     MOVE QSDFC1    YERDCS
+      * USER: Processing after Data read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      * Move non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADDWUNOIN    AHNOIN           No. of Inserts
+     C                     Z-ADDWUNOAM    AHNOAM           No. of Amends
+     C                     Z-ADDWUNODL    AHNODL           No. of Deletes
+      *
+      * Set PGM.*Record Data Changed flag
+     C           QSDFC1    IFNE YERDCS
+     C                     MOVE 'Y'       YERDC
+     C                     END
+      * If changed update record otherwise release record
+     C           YERDC     IFEQ 'Y'
+     C                     UPDAT@AHREAU                91  *
+     C                     ELSE
+      * Release record lock
+     C                     UNLCKSDFCTLL0               91  *
+     C                     END
+     C           *IN91     IFEQ '1'
+      * Change error detected
+     C                     MOVEL'Y2U0004' W0RTN   7
+     C                     ELSE
+      *
+      * DBF change successful
+     C                     END
+      *================================================================
+     CSR         SLEXIT    ENDSR
+      /EJECT
+     CSR         SMRVGN    BEGSR
+      *================================================================
+      * Get all Midas Modules - MIDAS Modules  *
+      *================================================================
+     C                     MOVEL*BLANK    W0RTN   7
+      * Define keylist
+     C           KRSSM     KLIST
+     C                     KFLD           BGMODS           Modules
+      * Move fields to key list
+     C                     MOVE *BLANK    BGMODS           Modules
+     C                     MOVEL'MMOD'    BGMODS           Modules
+     C           KRSSM     CHAIN@BGREC8              90    *
+     C           *IN90     IFEQ '1'
+      * Data record not found
+     C                     MOVEL'USR0096' W0RTN   7
+      * USER: Processing if Data record not found
+     C                     MOVEL'Y2U0005' W0RTN            *Return code
+      * Setup message data for message
+     C                     MOVEL'SDMMODPD'ZA0008           Filename
+      * Send message 'Database Error (ICD)'
+     C                     MOVEL'USR0377' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99    *
+      *
+     C                     GOTO SMEXIT                     *QUIT
+     C                     GOTO SMEXIT
+     C                     END
+      *
+      * USER: Exit processing
+      * PAR = DB1 By name
+     C                     MOVELBGMTMI    WUMTMI           Midas/Telex Mod
+     C                     MOVELBGSWFT    WUSWFT           SWIFT Funds Tra
+     C                     MOVELBGSWST    WUSWST           SWIFT Securitie
+     C                     MOVELBGSWCL    WUSWCL           SWIFT Customer
+     C                     MOVELBGSWSL    WUSWSL           SWIFT Synd Loan
+     C                     MOVELBGSWSM    WUSWSM           SWIFT Statement
+     C                     MOVELBGSWDL    WUSWDL           SWIFT Dealing
+     C                     MOVELBGSDGL    WUSDGL           Standing data/G
+     C                     MOVELBGDLFX    WUDLFX           Dealing: FX
+     C                     MOVELBGSYLN    WUSYLN           Syndicated Loan
+     C                     MOVELBGEXMG    WUEXMG           Exposure Manage
+     C                     MOVELBGFNMO    WUFNMO           Financial Model
+     C                     MOVELBGSTRT    WUSTRT           Statutory Retur
+     C                     MOVELBGCSLN    WUCSLN           Customer Lendin
+     C                     MOVELBGRTBN    WURTBN           Retail Banking
+     C                     MOVELBGMSDL    WUMSDL           Midas/Swift dir
+     C                     MOVELBGSECS    WUSECS           Securities
+     C                     MOVELBGAURC    WUAURC           Auto-reconcilia
+     C                     MOVELBGBDLI    WUBDLI           Bond Dealers In
+     C                     MOVELBGDRSD    WUDRSD           DRS Standing Da
+     C                     MOVELBGDRCM    WUDRCM           DRS Control mod
+     C                     MOVELBGDRFE    WUDRFE           DRS Foreign Exc
+     C                     MOVELBGDRMM    WUDRMM           DRS Money Marke
+     C                     MOVELBGDRAR    WUDRAR           DRS Arbitrage
+     C                     MOVELBGFDTR    WUFDTR           Funds Transfer
+     C                     MOVELBGDRCA    WUDRCA           DRS Common Appl
+     C                     MOVELBGFUOP    WUFUOP           Futures & Optio
+     C                     MOVELBGMTSL    WUMTSL           Midas/Telex Syn
+     C                     MOVELBGMTDL    WUMTDL           Midas/Telex Dea
+     C                     MOVELBGMTGL    WUMTGL           Midas/Telex Gen
+     C                     MOVELBGMTCL    WUMTCL           Midas/Telex Cus
+     C                     MOVELBGNWMI    WUNWMI           Message Managem
+     C                     MOVELBGFIIN    WUFIIN           FRA/IRS Indicat
+     C                     MOVELBGDLMM    WUDLMM           Dealing: MM
+     C                     MOVELBGINCN    WUINCN           Internal Contra
+     C                     MOVELBGTRMG    WUTRMG           Treasury Manage
+     C                     MOVELBGRKMG    WURKMG           Interest Risk M
+     C                     MOVELBGTSKY    WUTSKY           Testkey
+     C                     MOVELBGMIDQ    WUMIDQ           Midas/Q
+     C                     MOVELBGMFIC    WUMFIC           Microfiche
+     C                     MOVELBGIOAC    WUIOAC           Interest on acc
+     C                     MOVELBGWDPR    WUWDPR           Window processi
+     C                     MOVELBGSARP    WUSARP           SAR's processin
+     C                     MOVELBGFRIN    WUFRIN           French return i
+     C                     MOVELBGLRIN    WULRIN           Lux return indi
+     C                     MOVELBGDRIN    WUDRIN           Dutch return in
+     C                     MOVELBGGRIN    WUGRIN           German return i
+     C                     MOVELBGBRIN    WUBRIN           Belgian return
+     C                     MOVELBGIRIN    WUIRIN           Italian return
+     C                     MOVELBGSWEI    WUSWEI           Swift External
+     C                     MOVELBGPFMG    WUPFMG           Portfolio Manag
+     C                     MOVELBGCRMG    WUCRMG           Credit Manageme
+     C                     MOVELBGHORP    WUHORP           Head Office Rep
+     C                     MOVELBGAVBL    WUAVBL           Average Balance
+     C                     MOVELBGMARG    WUMARG           Margins
+     C                     MOVELBGCFMT    WUCFMT           Confirmation Ma
+     C                     MOVELBGMIMX    WUMIMX           Mimix
+     C                     MOVELBGRCFI    WURCFI           Report Control
+     C                     MOVELBGAMIN    WUAMIN           Amps Int
+     C                     MOVELBGSWRT    WUSWRT           Swiss Returns
+     C                     MOVELBGFLND    WUFLND           Fiduciary Loans
+     C                     MOVELBGLMCR    WULMCR           Portfolio Lendi
+     C                     MOVELBGCNTX    WUCNTX           Cantonal Tax
+     C                     MOVELBGSTDU    WUSTDU           Stamp Duty
+     C                     MOVELBGUDRS    WUUDRS           Use DRS Shortna
+     C                     MOVELBGCHDL    WUCHDL           Chips Dealing
+     C                     MOVELBGCHLN    WUCHLN           Chips Lending
+     C                     MOVELBGCHOB    WUCHOB           Chips Opening B
+     C                     MOVELBGCHIP    WUCHIP           CHIPS
+     C                     MOVELBGCHDI    WUCHDI           Chips Direct Li
+     C                     MOVELBGOPDK    WUOPDK           Optical Disk
+     C                     MOVELBGMBIN    WUMBIN           Multi-branching
+     C                     MOVELBGNNST    WUNNST           Leo Data Nucleu
+     C                     MOVELBGNOST    WUNOST           Leo Letters of
+     C                     MOVELBGNPST    WUNPST           Leo Collections
+     C                     MOVELBGNQST    WUNQST           Leo Bills/Finan
+     C                     MOVELBGNRST    WUNRST           Leo Bankers Acc
+     C                     MOVELBGNSST    WUNSST           Leo Reimburseme
+     C                     MOVELBGNTST    WUNTST           Taxes
+     C                     MOVELBGNUST    WUNUST           History & Audit
+     C                     MOVELBGNVST    WUNVST           Management Acco
+     C                     MOVELBGNWST    WUNWST           IBLC Returns
+     C                     MOVELBGNXST    WUNXST           Retail 3
+     C                     MOVELBGNYST    WUNYST           Interest on Acc
+     C                     MOVELBGNZST    WUNZST           Midas Export Da
+     C                     MOVELBGN0ST    WUN0ST           Analytical Acco
+     C                     MOVELBGN1ST    WUN1ST           User Defined Co
+     C                     MOVELBGN2ST    WUN2ST           Midas-Plato Int
+     C                     MOVELBGN3ST    WUN3ST           Midas-Trade Inn
+     C                     MOVELBGN4ST    WUN4ST           Reserved for La
+     C                     MOVELBGN5ST    WUN5ST           Reserved for La
+     C                     MOVELBGN6ST    WUN6ST           Reserved for La
+     C                     MOVELBGN7ST    WUN7ST           Reserved for La
+     C                     MOVELBGN8ST    WUN8ST           Reserved for La
+     C                     MOVELBGN9ST    WUN9ST           Reserved for La
+     C                     MOVELBGOAST    WUOAST           Reserved for La
+     C                     MOVELBGOBST    WUOBST           Reserved for La
+     C                     MOVELBGOCST    WUOCST           Reserved for La
+     C                     MOVELBGODST    WUODST           Reserved for La
+     C                     MOVELBGOEST    WUOEST           Reserved for La
+     C                     MOVELBGOFST    WUOFST           Reserved for La
+     C                     MOVELBGOGST    WUOGST           Reserved for La
+     C                     MOVELBGOHST    WUOHST           Reserved for La
+     C                     MOVELBGOIST    WUOIST           Reserved for La
+     C                     MOVELBGOJST    WUOJST           Reserved for La
+     C                     MOVELBGOKST    WUOKST           Reserved for La
+     C                     MOVELBGOLST    WUOLST           Reserved for La
+     C                     MOVELBGOMST    WUOMST           Reserved for La
+     C                     MOVELBGONST    WUONST           Reserved for La
+     C                     MOVELBGOOST    WUOOST           Reserved for La
+     C                     MOVELBGOPST    WUOPST           Reserved for La
+     C                     MOVELBGOQST    WUOQST           Reserved for La
+     C                     MOVELBGORST    WUORST           Reserved for La
+     C                     MOVELBGOSST    WUOSST           Reserved for La
+      *================================================================
+     CSR         SMEXIT    ENDSR
+      /EJECT
+     CSR         Y0SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y0EXIT    ENDSR
+      /EJECT
+     CSR         Y1SET     BEGSR
+      *================================================================
+      * Set cursor by *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y1EXIT    ENDSR
+      /EJECT
+     CSR         Y8TST     BEGSR
+      *================================================================
+      * Test cursor
+      *================================================================
+     C           @#DFMT    IFEQ '#RCDKEY'
+      * KEY Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+     C           @#DFMT    IFEQ '#RCDDTL1'
+      * DETAIL Screen
+     C                     Z-ADD@#RWCL    ZINPOS  50
+     C           ZINPOS    DIV  256       W0CRW
+     C                     MVR            W0CCL
+     C                     END
+      *================================================================
+     CSR         Y8EXIT    ENDSR
+      /EJECT
+     CSR         Y9CLR     BEGSR
+      *================================================================
+      * Clear *SET CURSOR data
+      *================================================================
+      *================================================================
+     CSR         Y9EXIT    ENDSR
+      /EJECT
+     CSR         ZASNMS    BEGSR
+      *================================================================
+      * Send message to program's message queue
+      *================================================================
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message ID
+     C                     PARM           ZAMSGF 10        Message file
+     C                     PARM           ZAMSDA132        Message data
+     C                     PARM           ZAMSTP  7        Message type
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+      *================================================================
+     CSR         ZAEXIT    ENDSR
+      /EJECT
+     CSR         ZHHPKY    BEGSR
+      *================================================================
+      * Display HELP text
+      *================================================================
+      * Signal help request
+     C                     MOVEL'Y'       W0HLP   1
+      *
+      * Extract cursor row and column
+     C           @#RWCL    DIV  256       ZHCSRW  50       Row
+     C                     MVR            ZHCSCL  50       Column
+      *
+      * Save cursor position for redisplay
+     C                     Z-ADDZHCSRW    ZZCSRW  30       Row
+     C                     Z-ADDZHCSCL    ZZCSCL  30       Column
+      *
+      *
+     C                     CALL 'YDDSHPR'
+     C                     PARM ##PGM     W0HPMB 10        Help text sourc
+     C                     PARM *BLANK    YYHPFL 10        Help text file
+     C                     PARM *BLANK    YYHPLB 10        Help text libra
+     C                     PARM           W0RTN   7
+     C                     PARM '*START'  YYHLVN 10        Help label
+     C                     PARM '*NORMAL' YYUSOP 10        Options
+     C                     PARM ZHCSRW    YYRW    50       Row
+     C                     PARM ZHCSCL    YYCL    50       Column
+     C                     PARM 1         YYLGCT  50       # of grps
+     C                     PARM W0GRP     YYLGVN 10        Label grps
+      *
+      * Clear set cursor DDS indicator
+     C  N94                MOVEL'OFF'     WCSRLC
+     C  N94                SETON                     94    *
+      *================================================================
+     CSR         ZHEXIT    ENDSR
+      /EJECT
+     CSR         ZXEXPG    BEGSR
+      *================================================================
+      * Cancel and exit from key screen
+      *================================================================
+      * USER: Exit program processing
+      * 00/Copy member SD0571REPP - IRM Extract Filter  *
+     C*IRM extract filter maint Exit Program Processing
+     C/COPY WNCPYSRC,SD0571REPP
+      * CASE: KEY.*CMD key is *Exit
+     C           *IN03     IFEQ '1'                        *IF
+     C                     MOVEL'Y2U9999' P0RTN            *Return code
+     C                     EXSR ZYEXPG
+     C                     END                             *FI
+     C                     MOVEL*BLANK    P0RTN
+     C                     EXSR ZYEXPG
+      *================================================================
+     CSR         ZXEXIT    ENDSR
+      /EJECT
+     CSR         ZYEXPG    BEGSR
+      *================================================================
+      * Exit program: Direct
+      *================================================================
+      * ROLLBACK any uncommitted DBF changes
+     C                     ROLBK                       90
+      *
+      * Terminate program
+     C                     SETON                     LR
+      *
+      * Exit program
+     C                     RETRN
+      *
+      *================================================================
+     CSR         ZYEXIT    ENDSR
+      /EJECT
+     CSR         ZZINIT    BEGSR
+      *================================================================
+      * Initialisation
+      *================================================================
+     C           W0ICL     IFEQ *BLANK
+     C                     MOVEL'Y'       W0ICL   1        *Initial call
+     C                     ELSE
+     C                     MOVEL'N'       W0ICL
+     C                     END
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+     C                     MOVEL*BLANK    W0RSL   1
+     C                     MOVEL*BLANK    W0RSF   1
+     C                     MOVEL*ZEROS    W0RTW   90
+     C                     MOVEL'400'     W0ENV   3
+      * Setup job date/time
+      *
+     C                     Z-ADDUDATE     ##JDT
+      * Set century digit (If YY prior to 1940 treat as 20YY)
+     C           ##JYY     IFLT 40
+     C                     Z-ADD1         ##JCC
+     C                     ELSE
+     C                     Z-ADD0         ##JCC
+     C                     END
+     C                     TIME           ##JTM
+      * Update screen time
+     C                     TIME           ##TME   60
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      * Define work field Test ? in Key Field
+     C                     MOVEL*BLANK    WUTQKF  1
+      * Define work field IRM Entity
+     C                     MOVEL*BLANK    WUIETY 15
+      * Define work field Entity Filter Code
+     C                     MOVEL*BLANK    WUETFC 10
+      * Define work field Display Sequence
+     C                     Z-ADD*ZERO     WUDSSQ  20
+      * Define work field Entity Module Position
+     C                     Z-ADD*ZERO     WUETMP  30
+      * Define work field User return code
+     C                     MOVEL*BLANK    WUUSRT  1
+      * Define work field Window processing requir.
+     C                     MOVEL*BLANK    WUWDPR  1
+      * Define work field Long Key
+     C                     MOVEL*BLANK    WULKEY 50
+      * Define work field Deleted Data Record Pt1
+     C                     MOVEL*BLANK    WUDR01250
+      * Define work field Deleted Data Record Pt2
+     C                     MOVEL*BLANK    WUDR02250
+      * Define work field Deleted Data Record Pt3
+     C                     MOVEL*BLANK    WUDR03250
+      * Define work field Deleted Data Record Pt4
+     C                     MOVEL*BLANK    WUDR04250
+      * Define work field Deleted Data Record Pt5
+     C                     MOVEL*BLANK    WUDR05250
+      * Define work field Deleted Data Record Pt6
+     C                     MOVEL*BLANK    WUDR06250
+      * Define work field Deleted Data Record Pt7
+     C                     MOVEL*BLANK    WUDR07250
+      * Define work field Deleted Data Record Pt8
+     C                     MOVEL*BLANK    WUDR08250
+      * Define work field Deleted Data Record Pt9
+     C                     MOVEL*BLANK    WUDR09250
+      * Define work field Deleted Data Record Pt10
+     C                     MOVEL*BLANK    WUDR00250
+      * Define work field Deleted Data Record Pt11
+     C                     MOVEL*BLANK    WUDR11250
+      * Define work field Deleted Data Record Pt12
+     C                     MOVEL*BLANK    WUDR12250
+      * Define work field Run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      * Define work field No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      * Define work field No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      * Define work field No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      * Define work field No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      * Define work field Midas Run Date
+     C                     MOVEL*BLANK    WUMRDT  7
+      * Define work field Set Up Complete
+     C                     MOVEL*BLANK    WUSUC   1
+      * Define work field Date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      * Define work field Multi-branching Indicator
+     C                     MOVEL*BLANK    WUMBIN  1
+      * Define work field Midas/Telex Module Ind.
+     C                     MOVEL*BLANK    WUMTMI  1
+      * Define work field SWIFT Funds Transfer
+     C                     MOVEL*BLANK    WUSWFT  1
+      * Define work field SWIFT Securities Trading
+     C                     MOVEL*BLANK    WUSWST  1
+      * Define work field SWIFT Customer Lending
+     C                     MOVEL*BLANK    WUSWCL  1
+      * Define work field SWIFT Synd Loans (REDUN)
+     C                     MOVEL*BLANK    WUSWSL  1
+      * Define work field SWIFT Statements
+     C                     MOVEL*BLANK    WUSWSM  1
+      * Define work field SWIFT Dealing
+     C                     MOVEL*BLANK    WUSWDL  1
+      * Define work field Standing data/Gen.Ledger
+     C                     MOVEL*BLANK    WUSDGL  1
+      * Define work field Dealing: FX
+     C                     MOVEL*BLANK    WUDLFX  1
+      * Define work field Syndicated Loans (REDUN)
+     C                     MOVEL*BLANK    WUSYLN  1
+      * Define work field Exposure Management
+     C                     MOVEL*BLANK    WUEXMG  1
+      * Define work field Financial Modeller
+     C                     MOVEL*BLANK    WUFNMO  1
+      * Define work field Statutory Returns
+     C                     MOVEL*BLANK    WUSTRT  1
+      * Define work field Customer Lending
+     C                     MOVEL*BLANK    WUCSLN  1
+      * Define work field Retail Banking
+     C                     MOVEL*BLANK    WURTBN  1
+      * Define work field Midas/Swift direct link
+     C                     MOVEL*BLANK    WUMSDL  1
+      * Define work field Securities
+     C                     MOVEL*BLANK    WUSECS  1
+      * Define work field Auto-reconciliations
+     C                     MOVEL*BLANK    WUAURC  1
+      * Define work field Bond Dealers Interface
+     C                     MOVEL*BLANK    WUBDLI  1
+      * Define work field DRS Standing Data
+     C                     MOVEL*BLANK    WUDRSD  1
+      * Define work field DRS Control module
+     C                     MOVEL*BLANK    WUDRCM  1
+      * Define work field DRS Foreign Exchange
+     C                     MOVEL*BLANK    WUDRFE  1
+      * Define work field DRS Money Market
+     C                     MOVEL*BLANK    WUDRMM  1
+      * Define work field DRS Arbitrage
+     C                     MOVEL*BLANK    WUDRAR  1
+      * Define work field Funds Transfer
+     C                     MOVEL*BLANK    WUFDTR  1
+      * Define work field DRS Common Applications
+     C                     MOVEL*BLANK    WUDRCA  1
+      * Define work field Futures & Options
+     C                     MOVEL*BLANK    WUFUOP  1
+      * Define work field Midas/Telex Synd. Loans
+     C                     MOVEL*BLANK    WUMTSL  1
+      * Define work field Midas/Telex Dealing
+     C                     MOVEL*BLANK    WUMTDL  1
+      * Define work field Midas/Telex Gen. Ledger
+     C                     MOVEL*BLANK    WUMTGL  1
+      * Define work field Midas/Telex Cust. Lending
+     C                     MOVEL*BLANK    WUMTCL  1
+      * Define work field Message Management
+     C                     MOVEL*BLANK    WUNWMI  1
+      * Define work field FRA/IRS Indicator
+     C                     MOVEL*BLANK    WUFIIN  1
+      * Define work field Dealing: MM
+     C                     MOVEL*BLANK    WUDLMM  1
+      * Define work field Internal Contracts
+     C                     MOVEL*BLANK    WUINCN  1
+      * Define work field Treasury Management
+     C                     MOVEL*BLANK    WUTRMG  1
+      * Define work field Interest Risk Management
+     C                     MOVEL*BLANK    WURKMG  1
+      * Define work field Testkey
+     C                     MOVEL*BLANK    WUTSKY  1
+      * Define work field Midas/Q
+     C                     MOVEL*BLANK    WUMIDQ  1
+      * Define work field Microfiche
+     C                     MOVEL*BLANK    WUMFIC  1
+      * Define work field Interest on accounts
+     C                     MOVEL*BLANK    WUIOAC  1
+      * Define work field SAR's processing required
+     C                     MOVEL*BLANK    WUSARP  1
+      * Define work field French return indicator
+     C                     MOVEL*BLANK    WUFRIN  1
+      * Define work field Lux return indicator
+     C                     MOVEL*BLANK    WULRIN  1
+      * Define work field Dutch return indicator
+     C                     MOVEL*BLANK    WUDRIN  1
+      * Define work field German return indicator
+     C                     MOVEL*BLANK    WUGRIN  1
+      * Define work field Belgian return indicator
+     C                     MOVEL*BLANK    WUBRIN  1
+      * Define work field Italian return indicator
+     C                     MOVEL*BLANK    WUIRIN  1
+      * Define work field Swift External Interface
+     C                     MOVEL*BLANK    WUSWEI  1
+      * Define work field Portfolio Management
+     C                     MOVEL*BLANK    WUPFMG  1
+      * Define work field Credit Management.
+     C                     MOVEL*BLANK    WUCRMG  1
+      * Define work field Head Office Reporting
+     C                     MOVEL*BLANK    WUHORP  1
+      * Define work field Average Balances
+     C                     MOVEL*BLANK    WUAVBL  1
+      * Define work field Margins
+     C                     MOVEL*BLANK    WUMARG  1
+      * Define work field Confirmation Matching
+     C                     MOVEL*BLANK    WUCFMT  1
+      * Define work field Mimix
+     C                     MOVEL*BLANK    WUMIMX  1
+      * Define work field Report Control Facility
+     C                     MOVEL*BLANK    WURCFI  1
+      * Define work field Amps Int
+     C                     MOVEL*BLANK    WUAMIN  1
+      * Define work field Swiss Returns
+     C                     MOVEL*BLANK    WUSWRT  1
+      * Define work field Fiduciary Loans & Deposit
+     C                     MOVEL*BLANK    WUFLND  1
+      * Define work field Portfolio Lending
+     C                     MOVEL*BLANK    WULMCR  1
+      * Define work field Cantonal Tax
+     C                     MOVEL*BLANK    WUCNTX  1
+      * Define work field Stamp Duty
+     C                     MOVEL*BLANK    WUSTDU  1
+      * Define work field Use DRS Shortnames
+     C                     MOVEL*BLANK    WUUDRS  1
+      * Define work field Chips Dealing
+     C                     MOVEL*BLANK    WUCHDL  1
+      * Define work field Chips Lending
+     C                     MOVEL*BLANK    WUCHLN  1
+      * Define work field Chips Opening Balance
+     C                     MOVEL*BLANK    WUCHOB  1
+      * Define work field CHIPS
+     C                     MOVEL*BLANK    WUCHIP  1
+      * Define work field Chips Direct Link
+     C                     MOVEL*BLANK    WUCHDI  1
+      * Define work field Optical Disk
+     C                     MOVEL*BLANK    WUOPDK  1
+      * Define work field Leo Data Nucleus
+     C                     MOVEL*BLANK    WUNNST  1
+      * Define work field Leo Letters of Credit
+     C                     MOVEL*BLANK    WUNOST  1
+      * Define work field Leo Collections
+     C                     MOVEL*BLANK    WUNPST  1
+      * Define work field Leo Bills/Financing
+     C                     MOVEL*BLANK    WUNQST  1
+      * Define work field Leo Bankers Acceptances
+     C                     MOVEL*BLANK    WUNRST  1
+      * Define work field Leo Reimbursements
+     C                     MOVEL*BLANK    WUNSST  1
+      * Define work field Taxes
+     C                     MOVEL*BLANK    WUNTST  1
+      * Define work field History & Audit Facility
+     C                     MOVEL*BLANK    WUNUST  1
+      * Define work field Management Accounts
+     C                     MOVEL*BLANK    WUNVST  1
+      * Define work field IBLC Returns
+     C                     MOVEL*BLANK    WUNWST  1
+      * Define work field Retail 3
+     C                     MOVEL*BLANK    WUNXST  1
+      * Define work field Interest on Accounts 3
+     C                     MOVEL*BLANK    WUNYST  1
+      * Define work field Midas Export Data Module
+     C                     MOVEL*BLANK    WUNZST  1
+      * Define work field Analytical Accounting
+     C                     MOVEL*BLANK    WUN0ST  1
+      * Define work field User Defined Correspondnc
+     C                     MOVEL*BLANK    WUN1ST  1
+      * Define work field Midas-Plato Interface
+     C                     MOVEL*BLANK    WUN2ST  1
+      * Define work field Midas-Trade Innovation If
+     C                     MOVEL*BLANK    WUN3ST  1
+      * Define work field Reserved for Later Use 41
+     C                     MOVEL*BLANK    WUN4ST  1
+      * Define work field Reserved for Later Use 42
+     C                     MOVEL*BLANK    WUN5ST  1
+      * Define work field Reserved for Later Use 43
+     C                     MOVEL*BLANK    WUN6ST  1
+      * Define work field Reserved for Later Use 44
+     C                     MOVEL*BLANK    WUN7ST  1
+      * Define work field Reserved for Later Use 45
+     C                     MOVEL*BLANK    WUN8ST  1
+      * Define work field Reserved for Later Use 46
+     C                     MOVEL*BLANK    WUN9ST  1
+      * Define work field Reserved for Later Use 47
+     C                     MOVEL*BLANK    WUOAST  1
+      * Define work field Reserved for Later Use 48
+     C                     MOVEL*BLANK    WUOBST  1
+      * Define work field Reserved for Later Use 49
+     C                     MOVEL*BLANK    WUOCST  1
+      * Define work field Reserved for Later Use 50
+     C                     MOVEL*BLANK    WUODST  1
+      * Define work field Reserved for Later Use 51
+     C                     MOVEL*BLANK    WUOEST  1
+      * Define work field Reserved for Later Use 52
+     C                     MOVEL*BLANK    WUOFST  1
+      * Define work field Reserved for Later Use 53
+     C                     MOVEL*BLANK    WUOGST  1
+      * Define work field Reserved for Later Use 54
+     C                     MOVEL*BLANK    WUOHST  1
+      * Define work field Reserved for Later Use 55
+     C                     MOVEL*BLANK    WUOIST  1
+      * Define work field Reserved for Later Use 56
+     C                     MOVEL*BLANK    WUOJST  1
+      * Define work field Reserved for Later Use 57
+     C                     MOVEL*BLANK    WUOKST  1
+      * Define work field Reserved for Later Use 58
+     C                     MOVEL*BLANK    WUOLST  1
+      * Define work field Reserved for Later Use 59
+     C                     MOVEL*BLANK    WUOMST  1
+      * Define work field Reserved for Later Use 60
+     C                     MOVEL*BLANK    WUONST  1
+      * Define work field Reserved for Later Use 61
+     C                     MOVEL*BLANK    WUOOST  1
+      * Define work field Reserved for Later Use 62
+     C                     MOVEL*BLANK    WUOPST  1
+      * Define work field Reserved for Later Use 63
+     C                     MOVEL*BLANK    WUOQST  1
+      * Define work field Reserved for Later Use 64
+     C                     MOVEL*BLANK    WUORST  1
+      * Define work field Reserved for Later Use 65
+     C                     MOVEL*BLANK    WUOSST  1
+      * Flag no *SET CURSOR in the program
+     C                     MOVE 'N'       YSETCS  1
+     C                     MOVE *BLANK    WCSRLC  3
+      * Open files
+      * Begin commit control
+     C                     CALL 'Y2BGCMC'
+     C                     PARM           W0RTN   7
+     C           W0RTN     IFNE *BLANK
+     C           W0RTN     ANDNE'CPF8351'
+     C                     EXSR ZYEXPG
+     C                     END
+      * Define *Synon program work fields
+     C                     Z-ADD*ZEROS    YRSW00  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW01  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW02  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW03  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW04  50       *Synon (5,0) wo
+     C                     Z-ADD*ZEROS    YRSW05  50       *Synon (5,0) wo
+     C                     MOVEL*BLANKS   YRSW06  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW07  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW08  7        *Return code
+     C                     MOVEL*BLANKS   YRSW09  1        *String work fi
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0A           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0B           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0C           *Synon (9999) w
+      * *Synon (9999) work field
+     C                     MOVEL*BLANKS   YRSW0D           *Synon (9999) w
+     C                     MOVEL*BLANKS   YRSW0E  1        *String work fi
+     C                     MOVEL*BLANKS   YRSW0F  1        *String work fi
+     C                     MOVEL*BLANKS   W0CFL  10        *Cursor field
+     C                     Z-ADD*ZEROS    W0CRW   50       *Cursor row
+     C                     Z-ADD*ZEROS    W0CCL   50       *Cursor column
+      * Move main file information to JOB context
+     C                     MOVE @1FFL     ZZFFL  10        Main file name
+     C                     MOVE @1FLB     ZZFLB  10        Main file lib
+     C                     MOVE @1FMB     ZZFMB  10        Main file mbr
+     C                     MOVE ZZFFL     @1FFL  10
+     C                     MOVE ZZFLB     @1FLB  10
+     C                     MOVE ZZFMB     @1FMB  10
+     C                     CALL 'Y2QLVNR'
+     C                     PARM           ZZFFL  10
+     C                     PARM           ZZFLB  10
+     C                     PARM           ZZFQL  21        LIBRARY/FILE
+     C                     OPEN SD0571R#
+     C                     OPEN SDIRMFL1
+     C                     OPEN SDIRMEL1
+     C                     OPEN SDMMODL1
+     C                     OPEN SDIRMFL0
+     C                     OPEN SDFCTLL0
+     C                     MOVEL'N'       W0PMT   1
+     C                     MOVEL'CHG'     W0PMD   3
+     C                     MOVEL*BLANK    W0GRP   1
+      * USER: Initialize program
+      * SD0571R precompiler - IRM Extract Filter  *
+      * Copyright Statement 1995 - Standard Functions  *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT  7        RUN DATE
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB           RUNDAY NO.
+     C                     MOVE SUC       WUSUC            SET UP COMPLT
+     C                     MOVE DFF       WUDFF            DTE FMT FLAG
+     C                     MOVE MBIN      WUMBIN           MULTI BR. IND
+      * Get all Midas Modules - MIDAS Modules  *
+     C                     EXSR SMRVGN
+      * File  DATA  DS - IRM Extract Filter  *
+      * Mode Processing
+      * CASE: PAR.Action Code is Insert
+     C           P2ANCD    IFEQ 'I'                        *IF
+     C                     MOVEL'ADD'     W0PMD            *Program mode
+     C                     ELSE
+      * CASE: *OTHERWISE
+     C                     MOVEL'CHG'     W0PMD            *Program mode
+     C                     END                             *FI
+      * 00/Copy member SD0571RFPG - IRM Extract Filter  *
+      * 00/Copy member SD0571REPG - IRM Extract Filter  *
+      * 00/Copy member SD0571RIPG - IRM Extract Filter  *
+      * 00/Copy member SD0571RCPG - IRM Extract Filter  *
+     C*IRM extract filter maint Initialise Program C-spec
+     C/COPY WNCPYSRC,SD0571RCPG
+      * 00/Copy member SD0571ROPG - IRM Extract Filter  *
+      *================================================================
+     CSR         ZZEXIT    ENDSR
+      /EJECT
+     CSR         *PSSR     BEGSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+      * Core function specific processing.
+      *
+     C/COPY WNCPYSRC,SD0571RPSC
+      *
+      * Start of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0571RPS1
+      *
+      * Standard Midas PSSR processing.
+      *
+     C/COPY SDCPYSRC,SDPSSRINT
+      *
+      * End of PSSR user point.
+      *
+     C/COPY WNCPYSRC,SD0571RPS2
+      *
+      *================================================================
+     CSR                   ENDSR
+      *================================================================
+     O*IRM extract filter maint Initialise Program O-spec
+     O/COPY WNCPYSRC,SD0571ROPG
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

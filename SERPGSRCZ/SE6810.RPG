@@ -1,0 +1,492 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE ER Early Redemption Summary List')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module                        *
+     F*                                                               *
+     F*  SE6810 - SE Early Redemption Summary List                    *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01496             Date 03Oct94               *
+      *                 S10978             Date 25Mar93               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  S01496 - Incorporation of Jyske Enhancements (S10978)        *
+     F*  S10978 - JYSZRH: EARLY REDEMPTIONS                           *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*
+     F*****BJ*-*Bank*Details*-*Rtv*Idx*********************************   S01496
+     F***SDBANKL1IF**E           K        DISK                            S01496
+     F***********                                   KINFSR *PSSR          S01496
+     F*
+     F**   VB - SE Early References
+     FSEERRFL1IF  E           K        DISK
+     F                                              KINFSR *PSSR
+     F*
+     F**   Display file
+     F*SE6610DFCF  E                    WORKSTN
+     F*                                              KINFSR *PSSR
+     F*
+     F**   Printer file
+     F***SE6810P1O***E                    PRINTER                         S01496
+     FSE6810P1O   E                    PRINTER      KINFDS SPOOL      UC  S01496
+     F                                              KINFSR *PSSR
+     F**   Audit printer file                                             S01496
+     FSE6810AUO   E                    PRINTER      KINFDS SPOOLU     UC  S01496
+     F                                              KINFSR *PSSR          S01496
+     F/COPY WNCPYSRC,SE6810F001
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     F** INDICATORS
+     *********************************************************************
+     F*                                                                   S01496
+     F*       55 - Multibranching indicator                               S01496
+     F*                                                                   S01496
+     F*       KC         F3 =EXIT INDICATOR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     E*
+     E**   FOR COMPILATION - COPYRIGHT INSERTION
+     E                    CPY@    1   1 80
+     E** EXTERNALS
+     *********************************************************************
+      /COPY ZSRSRC,ZDATE2Z1
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     I** INPUT
+     *********************************************************************
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     I*
+     IPGMDS     ESDSY2PGDSP
+     I                                      244 253 WSID
+     I                                      254 263 USIDXX
+     I*
+     I**   FILE INFORMATION DATA STRUCTURE
+     I*
+     IINFDS1    E DSY2I1DSP
+     I*
+     IFIELD     E DSSEERRFPD
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR
+     I*
+     ILDA         DS                            256
+     I                                      132 183 WWLOT
+     I                                      132 141 WWFILE
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     ISPOOL       DS                                                      S01496
+     I**  File Information Data Structure - P1 report                     S01496
+     I*                                                                   S01496
+     I                                       83  92 SFILE1                S01496
+     I                                    B 123 1240SFNUM1                S01496
+     ISPOOLU      DS                                                      S01496
+     I**  File Information Data Structure - AU report                     S01496
+     I*                                                                   S01496
+     I                                       83  92 SFILEU                S01496
+     I                                    B 123 1240SFNUMU                S01496
+     I*                                                                   S01496
+     IRUNDAT    E DS                                                      S01496
+     I**  Standard Data Area Layout for System flags and Run Date         S01496
+     I*                                                                   S01496
+     ISDBANK    E DSSDBANKPD                                              S01496
+     I**  Data structure for bank details                                 S01496
+     I*                                                                   S01496
+     IDSFDY     E DSDSFDY                                                 S01496
+     I**  Short data structure for access objects                         S01496
+     I*                                                                   S01496
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**
+     C** PROCESSES
+     C**  P001 - INITIAL PROCESSING
+     C**  P002 - MAIN PROCESSING
+     C**  P003 - TERMINATING PROCESSING
+     C**
+     C**  R001 - OUTPUT TITLE TO PRINTER FILE
+     C**  R002 - OUTPUT DETAILS TO PRINTER FILE
+     C**  R003 - OUTPUT EMPTY REPORT TO PRINTER FILE
+     C**  R004 - OUTPUT END OF REPORT TO PRINTER FILE
+     C**  R009 - DATABASE ERROR ON AUDIT REPORT
+     C**
+     C**  #LZSFL - CALL ZSFILE                                            S01496
+     C**                                                                  S01496
+     C** *PSSR - STANDARD DATA BASE ERROR PROCESSING
+     C**
+     C*
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  MAIN - MAIN PROGRAM
+     *********************************************************************
+     C*
+     C**  INITIAL PROCESSING
+     C                     EXSR P001
+     C*
+     C**  MAIN PROCESSING
+     C                     EXSR P002
+     C*
+     C           ENDPGM    TAG
+     C/COPY WNCPYSRC,SE6810C007
+     C                     MOVE '1'       *INLR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  P001 - INITIAL PROCESSING
+     *********************************************************************
+     C           P001      BEGSR
+     C*                                                                   S01496
+     C**  Copyright statement                                             S01496
+     C*                                                                   S01496
+     C                     MOVEACPY@      ACT@   80                       S01496
+     C*
+     C** ENTRY PARAMETERS
+     C           *ENTRY    PLIST
+     C                     PARM           WRTCD   1
+     C                     PARM           WSTAT   1
+     C                     PARM           WFIND   1
+     C                     PARM           @SEQ    5                       S01496
+     C*                                                                   S01496
+     C**  Read in DTAARA/RUNDAT to get multibranching indicator           S01496
+     C*                                                                   S01496
+     C           *NAMVAR   DEFN           RUNDAT                          S01496
+     C                     IN   RUNDAT                                    S01496
+     C           AGMBIN    IFEQ 'Y'                                       S01496
+     C                     MOVE '1'       *IN55                           S01496
+     C                     END                                            S01496
+     C*
+     C** INITIALISE KEY AND WORKING FIELDS
+     C                     MOVE WSTAT     PPSTAT
+     C                     MOVE WFIND     PPFIND
+     C                     MOVE *OFF      #FLAG1  1
+     C                     MOVE *BLANKS   WWLOT
+     C                     MOVEL'SE6810'  DBPGM  10
+     C*
+     C** ACCESS TO BANK DETAILS LF/BANKL1 TO RETRIEVE THE MIDAS
+     C** RUN DATE, BANK REPORT NAME AND DATE FORMAT INDICATOR
+     C************LOVAL    SETLLSDBANKL1                                  S01496
+     C***********          READ SDBANKL1                 89               S01496
+     C*                                                                   S01496
+     C                     CALL 'AOBANKR0'                                S01496
+     C                     PARM *BLANKS   WLRTCD  7                       S01496
+     C                     PARM '*FIRST'  WLOPTN  7                       S01496
+     C           SDBANK    PARM SDBANK    DSFDY                           S01496
+     C*
+     C** IF NO REPORT ID FOUND, PRODUCE A STANDARD DATABASE ERROR
+     C************IN89     IFEQ '1'                        B*1            S01496
+     C           WLRTCD    IFNE *BLANKS                                   S01496
+     C                     MOVEL'001'     DBASE   30       *****************
+     C***********          MOVEL'SDBANKL1'DBFILE 10        ** DB ERROR 01 S01496
+     C                     MOVE 'SDBANKPD'DBFILE 10        * DB ERROR 01 *S01496
+     C                     MOVEL*BLANKS   DBKEY  29        *****************
+     C                     EXSR R001
+     C                     EXSR *PSSR
+     C                     END                             E*1
+     C*
+     C           BJDFIN    IFEQ 'M'                        B*1
+     C                     MOVE '1'       *IN98
+     C                     ENDIF                           E*1
+     C*
+     C***OUTPUT*TITLE*TO*REPORT****************************************   S01496
+     C***********          EXSR R001                                      S01496
+     C/COPY WNCPYSRC,SE6810C001
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  P002 - MAIN PROCESSING
+     *********************************************************************
+     C           P002      BEGSR
+     C*
+     C** READ FIRST RECORD IN LF/SEERRFL1
+     C                     READ SEERRFL1                 89
+     C*
+     C** DO WHILE END OF FILE IS NOT REACHED
+     C           *IN89     IFEQ '0'                        B*1
+     C*                                                                   S01496
+     C**  Open printer file and ensure report file is recorded by RCF     S01496
+     C*                                                                   S01496
+     C                     OPEN SE6810P1                                  S01496
+     C                     MOVE 'Y'       WLOPN                           S01496
+     C                     Z-ADDSFNUM1    ZSNUM                           S01496
+     C                     MOVELSFILE1    SFILE                           S01496
+     C                     EXSR #LZSFL                                    S01496
+     C*                                                                   S01496
+     C**  Output title to report                                          S01496
+     C*                                                                   S01496
+     C                     EXSR R001                                      S01496
+     C*                                                                   S01496
+     C           *IN89     DOWEQ'0'                        B*2
+     C*
+     C** IF THE OVERFLOW INDICATOR IS SET ON
+     C           *IN88     IFEQ '1'                        B*3
+     C*
+     C** OUTPUT TITLE TO REPORT
+     C                     EXSR R001
+     C                     ENDIF                           E*3
+     C*
+     C** OUTPUT A DETAIL LINE
+     C                     EXSR R002
+     C*
+     C** READ NEXT RECORD IN LF/SEERRFL1
+     C                     READ SEERRFL1                 89
+     C                     ENDDO                           E*2
+     C*
+     C** TERMINATION PROCESSING
+     C                     EXSR P003
+     C*
+     C                     ELSE                            X*1
+     C*
+     C** TERMINATION PROCESSING
+     C                     EXSR P003
+     C                     ENDIF                           E*1
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  P003 - TERMINATING PROCESSING
+     *********************************************************************
+     C           P003      BEGSR
+     C*
+     C** IF NO RECORDS ARE PRINTED DURING DETAIL PROCESSING
+     C           #FLAG1    IFEQ *OFF                       B*1
+     C*
+     C** WRITE EMPTY RECORD
+     C                     EXSR R003
+     C                     ENDIF                           E*1
+     C*
+     C** WRITE END OF REPORT
+     C           WLOPN     IFEQ 'Y'                                       S01496
+     C                     EXSR R004
+     C                     END                                            S01496
+     C*
+     C** MOVE '1' TO LR
+     C** RETURN OF THE PROGRAM
+     C                     GOTO ENDPGM
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  R001 - OUTPUT TITLE TO PRINTER FILE
+     *********************************************************************
+     C           R001      BEGSR
+     C*
+     C** WRITE RECORD INTO THE PRINTER FILE
+     C                     WRITESE6810H1
+     C                     WRITESE6810H2
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  R002 - OUTPUT DETAILS TO PRINTER FILE
+     *********************************************************************
+     C           R002      BEGSR
+     C*
+     C** ER REFERENCE
+     C                     MOVELVAERRF    PPERRF
+     C*
+     C** SECURITY
+     C                     MOVELVASESN    PPSESN
+     C*
+     C** EX-DATE
+     C                     MOVE VAEREX    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PPEXDT
+     C*
+     C** REDEMPTION DATE
+     C                     MOVE VAERRD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PPREDT
+     C*
+     C** PAYMENT DATE
+     C                     MOVE VAERPD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PPPADT
+     C*
+     C** LAST ALLOCATION DATE
+     C                     MOVE VAERAD    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    PPLSTA
+     C*
+     C** FINAL ALLOCATION
+     C                     MOVELVAFAID    PPFINA
+     C*
+     C** STATUS
+     C                     MOVELVAERST    PPFINS
+     C*
+     C** CORRECTION REFERENCE
+     C                     MOVELVACORF    PPCORR
+     C*
+     C** REDEMPTION PRICE
+     C                     Z-ADDVAREDP    PPREDP
+     C*
+     C** NARRATIVE
+     C                     MOVELVARNAR    PPNARR
+     C/COPY WNCPYSRC,SE6810C002
+     C*
+     C** WRITE RECORD INTO THE PRINTER FILE
+     C                     WRITESE6810D1               88
+     C                     MOVE '1'       #FLAG1  1
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  R003 - OUTPUT EMPTY REPORT TO PRINTER FILE
+     *********************************************************************
+     C           R003      BEGSR
+     C*
+     C***IF*NO*DATA*WAS*PRINTED*THEN*PRINT*"NO*DATA*TO*PRINT"**********   S01496
+     C***********          WRITESE6810D2                                  S01496
+     C*                                                                   S01496
+     C**  Open audit printer file and output "NO DETAILS TO REPORT"       S01496
+     C*                                                                   S01496
+     C                     OPEN SE6810AU                                  S01496
+     C                     WRITEHEADAU                                    S01496
+     C                     WRITENODTLS                                    S01496
+     C*                                                                   S01496
+     C**  Ensure audit report is recorded by RCF                          S01496
+     C*                                                                   S01496
+     C                     Z-ADDSFNUMU    ZSNUM                           S01496
+     C                     MOVELSFILEU    SFILE                           S01496
+     C                     EXSR #LZSFL                                    S01496
+     C                     CLOSESE6810AU                                  S01496
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  R004 - OUTPUT END OF REPORT TO PRINTER FILE
+     *********************************************************************
+     C           R004      BEGSR
+     C*
+     C                     WRITESE6810E1
+     C                     CLOSESE6810P1                                  S01496
+     C                     MOVE *BLANK    WLOPN   1                       S01496
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     *********************************************************************
+     C**  R009 - DATABASE ERROR ON AUDIT REPORT
+     *********************************************************************
+     C           R009      BEGSR
+     C*
+     C** WRITE RECORD INTO THE PRINTER FILE
+     C           WLOPN     IFEQ 'Y'                                       S01496
+     C                     WRITESE6810E2
+     C                     END                                            S01496
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+     C*****************************************************************   S01496
+     C* #LZSFL - Subroutine to call ZSFILE                            *   S01496
+     C*****************************************************************   S01496
+     C*                                                                   S01496
+     C           #LZSFL    BEGSR                                          S01496
+     C*                                                                   S01496
+     C                     CALL 'ZSFILE'                                  S01496
+     C                     PARM           @SEQ                            S01496
+     C                     PARM *BLANK    SENTY   3                       S01496
+     C                     PARM           SFILE  10                       S01496
+     C                     PARM           ZSNUM   60                      S01496
+     C                     PARM           ZSERR   1                       S01496
+     C*                                                                   S01496
+     C** If an error occurred during ZSFILE processing,                   S01496
+     C** return to the calling program.                                   S01496
+     C*                                                                   S01496
+     C           ZSERR     IFEQ 'Y'                                       S01496
+     C                     SETON                     U7U8LR               S01496
+     C                     RETRN                                          S01496
+     C                     END                                            S01496
+     C*                                                                   S01496
+     C                     ENDSR                                          S01496
+     C*****************************************************************   S01496
+     C/EJECT                                                              S01496
+     *********************************************************************
+     C**  *PSSR  - STANDARD DATA BASE ERROR PROCESSING
+     *********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C***********          MOVELDBFILE    WWFILE                          S01496
+     C                     MOVE DBFILE    WWFILE                          S01496
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*
+     C                     EXSR R009
+     C*                                                                   S01496
+     C**  Output database error details in audit printer file             S01496
+     C*                                                                   S01496
+     C                     OPEN SE6810AU                                  S01496
+     C                     WRITEHEADAU                                    S01496
+     C                     WRITEDBERROR                                   S01496
+     C*                                                                   S01496
+     C**  Ensure audit report is recorded by RCF                          S01496
+     C*                                                                   S01496
+     C                     Z-ADDSFNUMU    ZSNUM                           S01496
+     C                     MOVELSFILEU    SFILE                           S01496
+     C                     EXSR #LZSFL                                    S01496
+     C                     CLOSESE6810AU                                  S01496
+     C                     DUMP
+     C*
+     C                     MOVE 'E'       WRTCD
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     *********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+     C*****************************************************************
+      /EJECT
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

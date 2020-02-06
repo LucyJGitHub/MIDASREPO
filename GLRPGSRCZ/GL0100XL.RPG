@@ -1,0 +1,265 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Set Up Journal Entry Ext. File')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/GL0100XL  - SET UP IBLC JOURNAL ENTRY EXTENTION FILE     *
+      *                                                               *
+      *  Function:  This program set up IBLC Journal Entry Extension  *
+      *             file with default values.                         *
+      *                                                               *
+      *  (phase(s)) Installation                                      *
+      *                                                               *
+      *  Called By: ILC0000 - IBLC MODULE INSTALLATION                *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX043             Date 06Jul01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLJENPPDIF  E                    DISK
+      ***  Journal Entry Posting       Master file         Prefix BT
+      *
+     F***SDBRCHYLIF  E           K        DISK                                                CER001
+     FSDBRX1L0IF  E           K        DISK                                                   CER001
+      ***  Branch code                 Retrieval index     Prefix BR
+      *
+     F***SDCURRYLIF  E           K        DISK                                                CER001
+     FSDCYX1L0IF  E           K        DISK                                                   CER001
+      ***  Currency code ext. details  Retrieval index     Prefix CY
+      *
+     F***SDACODYLIF  E           K        DISK                                                CER001
+     FSDACX1L0IF  E           K        DISK                                                   CER001
+      ***  Account Code Ext details    Retrieval index     Prefix AC
+      *
+     F***GLJENPXLUF  E           K        DISK                      A                         CER001
+     FGLJPX1PDUF  E           K        DISK                      A                            CER001
+      ***  Batch items - Ext details Entry posting         Prefix JE
+      *
+      /EJECT
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      *
+      /EJECT
+      *
+     ILDA       E DSLDA
+      ***  Local data area
+      *
+      ***  Working DS
+      *
+     ISDCUST    E DSSDCUSTPD
+      ***  Customer details
+      *
+     IDSSDY     E DSDSSDY
+      ***  Secondary DS for Access Programs , Long  DS
+      *
+      /EJECT
+      *****************************************************************
+      *                       M A I N L I N E S                       *
+      *****************************************************************
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ***  Key list
+      *
+     C           BATKEY    KLIST
+     C                     KFLD           BTBTNB
+     C                     KFLD           BTBINB
+      *
+      ***  First read
+      *
+     C                     READ @BTREMG                  LR
+      *
+     C           *INLR     DOWEQ*OFF
+      *
+      ***  Check if record exists in the extension file
+      *
+     C           BATKEY    CHAINGLJENPDL             89
+      *
+     C           *IN89     IFEQ *ON                        Not Found
+      *
+      ***  Check if it must be inserted in extension file.
+      ***  Branch to be reported
+      ***  Currency to be reported
+      ***  Account code To be Reported
+      ***  counterpart not Resident
+      *
+     C           BTIBCA    IFNE PREVBR
+     C                     MOVE BTIBCA    PREVBR  3
+     C********** BTIBCA    CHAINSDBRCHYL             99    Branch ?                           CER001
+     C           BTIBCA    CHAINSDBRX1L0             99    Branch ?                           CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ****************
+     C**********           MOVEL'SDBRCHYL'DBFILE    P      * DB ERROR 001 *                   CER001
+     C                     MOVEL'SDBRX1L0'DBFILE    P      * DB ERROR 001 *                   CER001
+     C                     MOVELBTIBCA    DBKEY     P      ****************
+     C                     MOVEL'GL0100XL'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BTCYCD    IFNE PREVCY
+     C                     MOVE BTCYCD    PREVCY  3
+     C********** BTCYCD    CHAINSDCURRYL             99    Currency ?                         CER001
+     C           BTCYCD    CHAINSDCYX1L0             99    Currency ?                         CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ****************
+     C**********           MOVEL'SDCURRYL'DBFILE    P      * DB ERROR 002 *                   CER001
+     C                     MOVEL'SDCYX1L0'DBFILE    P      * DB ERROR 002 *                   CER001
+     C                     MOVELBTCYCD    DBKEY     P      ****************
+     C                     MOVEL'GL0100XL'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BTACCD    IFNE PREVAC
+     C**********           MOVE BTACCD    PREVAC  4                                           CER001
+     C                     MOVE BTACCD    PREVAC 10                                           CER001
+     C********** BTACCD    CHAINSDACODYL             99    Account Code  ?                    CER001
+     C           BTACCD    CHAINSDACX1L0             99    Account Code  ?                    CER001
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     Z-ADD3         DBASE            ****************
+     C                     MOVEL'SDACODXL'DBFILE    P      * DB ERROR 003 *
+     C                     MOVELBTACCD    DBKEY     P      ****************
+     C                     MOVEL'GL0100XL'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           BTCUST    IFNE PREVCU
+     C                     MOVELBTCUST    PREVCU  6
+     C                     MOVELBTCUST    PCUST  10 P
+     C                     CALL 'AOCUSTR0'             99
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*KEY   ' POPTN   7
+     C                     PARM           PCUST
+     C                     PARM           DUMMY7  7
+     C           SDCUST    PARM SDCUST    DSSDY
+      *
+     C           *IN99     IFEQ *ON                        Error
+     C           PRTCD     ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD4         DBASE            ****************
+     C                     MOVEL'SDCURRPD'DBFILE    P      * DB ERROR 004 *
+     C                     MOVELPCUST     DBKEY     P      ****************
+     C                     MOVEL'GL0100XL'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ***  Check reporting indicators
+      *
+     C           BRREPT    IFEQ 'Y'                        Branch
+     C           CYREPT    ANDEQ'Y'                        Currency
+     C           ACDRPT    ANDEQ'Y'                        A/C Code
+     C           BBCOLC    ANDNE'LU'                       Cust. not Resident
+     C                     MOVE BTBTNB    JEBTNB
+     C                     Z-ADDBTBINB    JEBINB
+     C                     Z-ADD071       JEOPC1           at least one ?
+     C                     MOVE BBCOLC    JECOC1
+     C                     MOVE BRBKCO    JEIDC1
+     C                     MOVE *ALL'0'   JEIDE1
+     C                     MOVE BRBKNB    JEIDE1
+     C                     Z-ADD*ZEROS    JEOPC2
+     C                     MOVE *BLANKS   JECOC2
+     C                     MOVE *BLANKS   JEIDC2
+     C                     MOVE *BLANKS   JEIDE2
+     C                     Z-ADD*ZEROS    JEOPC3
+     C                     MOVE *BLANKS   JECOC3
+     C                     MOVE *BLANKS   JEIDC3
+     C                     MOVE *BLANKS   JEIDE3
+     C                     Z-ADDBTPTAM    JEPTA1
+     C                     Z-ADD*ZEROS    JEPTA2
+     C                     Z-ADD*ZEROS    JEPTA3
+     C                     MOVE BTDCIN    JEDCI1
+     C                     MOVE *BLANKS   JEDCI2
+     C                     MOVE *BLANKS   JEDCI3
+     C                     WRITEGLJENPDL
+     C                     ENDIF
+      *
+      *** When Found, Setup with posting amount if necessary
+      *
+     C                     ELSE                            *IN89
+      *
+     C           JEOPC1    IFNE *ZERO
+     C           JEPTA1    ANDEQ*ZERO
+     C                     Z-ADDBTPTAM    JEPTA1
+     C                     MOVE BTDCIN    JEDCI1
+     C                     ENDIF
+      *
+     C           JEOPC2    IFNE *ZERO
+     C           JEPTA2    ANDEQ*ZERO
+     C                     Z-ADDBTPTAM    JEPTA2
+     C                     MOVE BTDCIN    JEDCI2
+     C                     ENDIF
+      *
+     C           JEOPC3    IFNE *ZERO
+     C           JEPTA3    ANDEQ*ZERO
+     C                     Z-ADDBTPTAM    JEPTA3
+     C                     MOVE BTDCIN    JEDCI3
+     C                     ENDIF
+      *
+     C                     UPDATGLJENPDL
+      *
+     C                     ENDIF
+      *
+      ***  Main file read
+      *
+     C                     READ @BTREMG                  LR
+      *
+     C                     ENDDO
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      *               E N D    O F    M A I N L I N E S               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - DB error Handling subroutine                        *
+      *  ------                                                       *
+      *  Called by : When Database Error occurs                       *
+      *  Calls     : DBERRCTL Std Subroutine                          *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      ***  Update data area LDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+      ***  Call standard DB error handler
+      *
+     C                     CALL 'DBERRCTL'             81
+      *
+     C                     ENDSR
+      /EJECT
+** CPY@  COPYRIGHT
+(c) Finastra International Limited 2005

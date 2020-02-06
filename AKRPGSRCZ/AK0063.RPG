@@ -1,0 +1,1046 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AK SE A/C Key Gen. - Amend work file')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Account Key Generator
+     F*                                                               *
+     F*  AK0063 - SE A/c Key Generation - Generated Keys Maintenance  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 01Mar99               *
+      *                                    Date                       *
+     F*                 101299            Date 16APR96                *
+     F*                 081884            Date 17JAN95                *
+     F*                 S01315            Date 01MAR91                *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  101299 - On addition of A/C key to template, do not check if *
+     F*           the key exists in the live file already.            *
+     F*  081884 - NARRATIVE CODE IS NOW ALPHA - AMEND PGM AND         *
+     F*           RECOMPILE OVER AMENDED FILE                         *
+     F*  S01315 - Program rewritten for upgrade to Release 10         *
+     F*           standards.                                          *
+     F*           Program name changed from SE4030 to AK0063.         *
+     F*                                                               *
+     F*****************************************************************
+     F*****************************************************************
+     FAK0063DFCF  E                    WORKSTN
+     FSDACODL0IF  E           K        DISK
+     FSDNARRL1IF  E           K        DISK
+     FXSEACKD UF  E           K        DISK                      A
+     FSEACKD  IF  E           K        DISK
+     F*****************************************************************
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      * 01  Insert required
+      * 02  Amend required
+      * 03  Delete required
+      * 04  Enquire required
+      * 05  F3 pressed
+      * 06  F12 pressed
+      * 07  F10 pressed
+      * 20  Invalid Account Key entered
+      * 21  Invalid Account Code entered - general error indicator
+      * 24  Invalid Narrative Code entered - general error indicator
+      * 46  Narrative Code 1 invalid
+      * 47  Narrative Code 2 invalid
+      * 48  Narrative Code 3 invalid
+      * 49  Narrative Code 4 invalid
+      * 50  Narrative Code 5 invalid
+      * 51  Narrative Code 6 invalid
+      * 52  Chain to SDNARRPD failed
+      * 65  Account Code 1 invalid
+      * 68  Chain to SEACKD failed (inserted rec doesn't already exist)
+      * 69  Chain to XSEACKD failed (inserted rec doesn't already exist)
+      * 70  Account Code 2 invalid
+      * 74  Account Code 3 invalid
+      * 75  Account Code 4 invalid
+      * 76  Chain to SDACODPD failed
+      * 77  Account Code 5 invalid
+      * 78  Account Code 6 invalid
+      * 80  Posting Reference invalid - general error indicator
+      * 89  Valid character in account key
+      * 90  Posting Reference 1 invalid
+      * 91  Posting Reference 2 invalid
+      * 92  Posting Reference 3 invalid
+      * 93  Posting Reference 4 invalid
+      * 94  Posting Reference 5 invalid
+      * 95  Posting Reference 6 invalid
+      * 99  General error indicator
+      * U7  Database error
+      * U8  Database error
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * SUBROUTINE INDEX
+      *
+      * INIT   - Initialise fields, access ICDs etc
+      * MAIN   - Main processing
+      * INSAMD - Insert/Amend processing
+      * DELENQ - Delete/Enquiry processing
+      * UPDTE  - Update ZSEACKD
+      * ACODBL - Validation of screen when Account Code not entered
+      * ACODNB - Validation of screen when Account Code entered
+      * NARVAL - Validation of Narrative Code
+      * DBERR  - Database error handling
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80
+     E                    CHAR   37  37  1               A-Z, 0-9, & BLANK
+     E                    ACKY       20  1               ARRAY FOR A/C KEY
+     E**********          SACD        6  4               ACCOUNT CODES                        CGL029
+     E                    SACD        6 10               ACCOUNT CODES                        CGL029
+     E                    SNCD        6  2               NARRATIVE CODES
+     E                    SPRF        6  1               POSTING REFRENCES
+     I*
+     I** Data Structures
+     I*
+     ISCRAC       DS
+     I**********                              1   4 SACD1                                     CGL029
+     I**********                              5   8 SACD2                                     CGL029
+     I**********                              9  12 SACD3                                     CGL029
+     I**********                             13  16 SACD4                                     CGL029
+     I**********                             17  20 SACD5                                     CGL029
+     I**********                             21  24 SACD6                                     CGL029
+     I                                        1  10 SACD1                                     CGL029
+     I                                       11  20 SACD2                                     CGL029
+     I                                       21  30 SACD3                                     CGL029
+     I                                       31  40 SACD4                                     CGL029
+     I                                       41  50 SACD5                                     CGL029
+     I                                       51  60 SACD6                                     CGL029
+     I*
+     I** Data Structure to retrieve Account Codes entered on screen.
+     I*
+     ISCRNC       DS
+     I                                        1   2 SNCD1
+     I                                        3   4 SNCD2
+     I                                        5   6 SNCD3
+     I                                        7   8 SNCD4
+     I                                        9  10 SNCD5
+     I                                       11  12 SNCD6
+     I*
+     I** Data Structure to retrieve Narrative Codes entered on screen.
+     I*
+     ISCRPR       DS
+     I                                        1   1 SPRF1
+     I                                        2   2 SPRF2
+     I                                        3   3 SPRF3
+     I                                        4   4 SPRF4
+     I                                        5   5 SPRF5
+     I                                        6   6 SPRF6
+     I*
+     I** Data Structure to retrieve Posting References entered on screen.
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      245 246 WSID2
+     I                                      254 263 USRID
+     I*
+     I** Data Structure to retrieve User and Workstation ID.
+     I*
+     IRUNDAT      DS                             13
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 @MBIN
+     I*
+     I** Rundate Data Area
+     I*
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** LDA for database errors
+     I*
+     ISDBANK    E DSSDBANKPD
+     I*
+     I** Bank Details
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** Data structure for compilation - Copyright insertion
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** First DS for Access Programs, Short Data Structure
+     I*
+     C*****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           SAKEY            A/c Key
+     C                     PARM           ACTCD            Action Code
+     C                     PARM           FKEY4   1        Return code
+     C*****************************************************************
+     C                     EXSR INIT
+     C*
+     C                     EXSR MAIN
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  MAIN - Main Processing
+     C*
+     C*  Calls - INSAMD - Insert/Amend subroutine
+     C*          UPDTE  - Update ZSEACKD
+     C*          DELENQ - Delete/Enquire subroutine
+     C*          MOVES  - Move file fields into screen fields
+     C*          Y2CLMSC to clear program message queue
+     C*
+     C********************************************************************
+     C           MAIN      BEGSR
+     C*
+     C** Process Action Code
+     C*
+     C           ACTCD     IFEQ 'I'
+     C                     MOVE *BLANKS   SAKEY            Blanks into key
+     C                     SETON                     01
+     C                     END
+     C*
+     C           ACTCD     IFEQ 'A'
+     C                     EXSR MOVES
+     C                     SETON                     02
+     C                     END
+     C*
+     C           ACTCD     IFEQ 'D'
+     C                     EXSR MOVES
+     C                     SETON                     03
+     C                     END
+     C*
+     C           ACTCD     IFEQ 'E'
+     C                     EXSR MOVES
+     C                     SETON                     04
+     C                     END
+     C*
+     C** Output screen until F3, F10, F12 pressed or screen valid.
+     C*
+     C           *IN05     DOUEQ'1'
+     C           *IN06     OREQ '1'
+     C           *IN99     OREQ '0'
+     C*
+     C** Write Screen
+     C*
+     C                     WRITE#MSGCTL
+     C                     EXFMTAK0063F1
+     C**
+     C** Clear messages from program message queue.
+     C**
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C* If F3 and F12 not pressed, validate screens
+     C*
+     C           *IN05     IFEQ '0'
+     C           *IN06     ANDEQ'0'
+     C*
+     C** Set off error indicators
+     C*
+     C                     SETOF                     992021
+     C                     SETOF                     244647
+     C                     SETOF                     484950
+     C                     SETOF                     515265
+     C                     SETOF                     697074
+     C                     SETOF                     757677
+     C                     SETOF                     788089
+     C                     SETOF                     909192
+     C                     SETOF                     939495
+     C*
+     C* If Action Code is A or I, validate fields
+     C*
+     C           *IN01     IFEQ '1'
+     C           *IN02     OREQ '1'
+     C*
+     C* Set off indicators for Insert/Amend
+     C*
+     C                     EXSR INSAMD
+     C           *IN99     IFEQ '0'
+     C                     EXSR UPDTE
+     C                     END
+     C                     END
+     C*
+     C* If Action Code is D or E
+     C*
+     C           *IN03     IFEQ '1'
+     C           *IN04     OREQ '1'
+     C*
+     C* Set off indicators for Delete/Enquire
+     C*
+     C                     EXSR DELENQ
+     C                     END
+     C*
+     C                     END                             F3
+     C*
+     C                     END                             F3
+     C*
+     C**If F3 pressed, set up return code
+     C*
+     C           *IN05     IFEQ '1'
+     C                     MOVE '1'       FKEY4
+     C                     END
+     C*
+     C**If F12 pressed, set up return code
+     C*
+     C           *IN06     IFEQ '1'
+     C                     MOVE '2'       FKEY4
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  INSAMD - Insert/Amend Requested
+     C*
+     C*  Calls -  ZASNMS to send message to program message queue.
+     C*           ACODBL - validate screen fields, Account Code blank
+     C*           ACODNB - validate screen fields, Account Code entered
+     C*
+     C********************************************************************
+     C           INSAMD    BEGSR
+     C*
+     C* If F10 pressed, send error message
+     C*
+     C           *IN07     IFEQ '1'                        F10 pressed
+     C                     MOVEL'USR4238' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99
+     C                     ELSE
+     C*
+     C** If Insert, ensure account key is not blank....
+     C*
+     C           *IN01     IFEQ '1'                        Insert
+     C*
+     C           SAKEY     IFEQ *BLANKS                    blanks
+     C                     SETON                     2099  Invalid key
+     C                     ELSE
+     C*
+     C** ...and contains no invalid characters...
+     C*
+     C                     MOVEASAKEY     ACKY
+     C                     Z-ADD0         C       20
+     C*
+     C           C         DOWLT20
+     C           C         ADD  1         C
+     C           ACKY,C    LOKUPCHAR                     89
+     C           *IN89     IFEQ '0'                        Invalid char
+     C                     SETON                     2099  Invalid key
+     C                     END                             Invalid char
+     C                     END                             Until 20 chars
+     C*
+     C                     END                             blank
+     C*
+     C           *IN20     IFEQ '1'
+     C                     MOVEL'USR0033' ZAMSID
+     C                     EXSR ZASNMS
+     C                     ELSE
+     C*
+     C** ...and does not already exist on file
+     C*
+     C           SAKEY     CHAINXSEACKD              69    Key not found
+     C           SAKEY     CHAINSEACKD               68    Key not found
+     C           *IN69     IFEQ '1'
+     C           *IN68     ANDEQ'1'
+     C                     ELSE                            Key found - error
+     C           *IN30     IFEQ '0'                                       101299
+     C                     MOVEL'USR0039' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2099
+     C                     END                                            101299
+     C                     END
+     C*
+     C                     END                             Key check
+     C*
+     C                     END                             Insert
+     C*
+     C** Validate non-key fields, move screen fields into arrays.
+     C*
+     C                     MOVEASCRAC     SACD
+     C                     MOVEASCRNC     SNCD
+     C                     MOVEASCRPR     SPRF
+     C*
+     C                     Z-ADD0         C
+     C*
+     C           C         DOWLT6
+     C           C         ADD  1         C
+     C                     SETOF                     212452
+     C                     SETOF                     80
+     C*
+     C** Validate screen fields (non-key) when Account Code is blank.
+     C*
+     C           SACD,C    IFEQ *BLANKS
+     C                     EXSR ACODBL
+     C*
+     C** Validate screen fields when Account Code is entered.
+     C*
+     C                     ELSE
+     C                     EXSR ACODNB
+     C                     END
+     C*
+     C** Seton screen error indicators by checking general Account Code
+     C** error indicator.
+     C*
+     C           *IN21     IFEQ '1'
+     C           C         IFEQ 1
+     C                     SETON                     65
+     C                     END
+     C           C         IFEQ 2
+     C                     SETON                     70
+     C                     END
+     C           C         IFEQ 3
+     C                     SETON                     74
+     C                     END
+     C           C         IFEQ 4
+     C                     SETON                     75
+     C                     END
+     C           C         IFEQ 5
+     C                     SETON                     77
+     C                     END
+     C           C         IFEQ 6
+     C                     SETON                     78
+     C                     END
+     C                     END
+     C*
+     C** Seton screen error indicators by checking general Narrative
+     C** Code error indicator.
+     C*
+     C           *IN24     IFEQ '1'
+     C           C         IFEQ 1
+     C                     SETON                     46
+     C                     END
+     C           C         IFEQ 2
+     C                     SETON                     47
+     C                     END
+     C           C         IFEQ 3
+     C                     SETON                     48
+     C                     END
+     C           C         IFEQ 4
+     C                     SETON                     49
+     C                     END
+     C           C         IFEQ 5
+     C                     SETON                     50
+     C                     END
+     C           C         IFEQ 6
+     C                     SETON                     51
+     C                     END
+     C                     END
+     C*
+     C** Seton screen error indicators by checking general Posting
+     C** Reference error indicator.
+     C*
+     C           *IN80     IFEQ '1'
+     C           C         IFEQ 1
+     C                     SETON                     90
+     C                     END
+     C           C         IFEQ 2
+     C                     SETON                     91
+     C                     END
+     C           C         IFEQ 3
+     C                     SETON                     92
+     C                     END
+     C           C         IFEQ 4
+     C                     SETON                     93
+     C                     END
+     C           C         IFEQ 5
+     C                     SETON                     94
+     C                     END
+     C           C         IFEQ 6
+     C                     SETON                     95
+     C                     END
+     C                     END
+     C*
+     C                     END                             End DOWLT
+     C*
+     C                     END                             F10 pressed
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  DELENQ - Delete/Enquiry Requested
+     C*
+     C*  Calls -  ZASNMS to send message to program message queue.
+     C*
+     C********************************************************************
+     C           DELENQ    BEGSR
+     C*
+     C**If F10 pressed in Enquiry mode, send error message
+     C*
+     C           *IN04     IFEQ '1'                        Enquire
+     C           *IN07     IFEQ '1'                        F10
+     C                     MOVEL'USR4238' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     99
+     C                     SETOF                     07
+     C                     END                             F10
+     C                     ELSE                            Delete
+     C*
+     C** If F10 pressed in Delete mode, record deleted & return code
+     C** set up & F12 indicator set on (therefore return to subfile)
+     C*
+     C           *IN07     IFEQ '1'
+     C                     MOVE '3'       FKEY4
+     C                     SETON                     06
+     C                     EXSR UPDTE                                  d
+     C*
+     C** If ENTER pressed, send message
+     C*
+     C                     ELSE
+     C*
+     C           *IN05     IFEQ '0'                        Not F3
+     C           *IN06     ANDEQ'0'                        Not F12
+     C                     SETON                     99
+     C                     MOVEL'USR4269' ZAMSID
+     C                     EXSR ZASNMS
+     C                     END                             Not F3/F12
+     C                     END                             Not F10
+     C                     END                             Enquire
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  UPDTE  - Update XSEACKD
+     C*
+     C*
+     C*
+     C********************************************************************
+     C           UPDTE     BEGSR
+     C*
+     C** Set up file fields from screen, Record ID, Change Type, Last
+     C** Change Date.
+     C*
+     C** Delete Mode
+     C*
+     C           *IN07     IFEQ '1'                        Deletion
+     C           SAKEY     CHAINXSEACKD              69
+     C*
+     C           *IN69     IFEQ '0'                        Chain succesful
+     C                     MOVE '*'       RECI
+     C                     MOVE 'D'       CHTP
+     C                     END
+     C*
+     C** Amend Mode
+     C*
+     C                     ELSE
+     C           *IN02     IFEQ '1'                        Amend
+     C           SAKEY     CHAINXSEACKD              69
+     C                     MOVE 'A'       CHTP
+     C*
+     C** Insert Mode
+     C*
+     C                     ELSE
+     C                     MOVE 'I'       CHTP             Insert
+     C                     END
+     C*
+     C** Move screen fields to file fields for Amend and Insert Modes.
+     C*
+     C                     MOVE SAKEY     ACKE
+     C                     MOVE SACD,1    ACD1
+     C************         MOVE SNCD,1    NCD1                   081884
+     C                     MOVE SNCD,1    NCDA1                  081884
+     C                     MOVE SPRF,1    PRF1
+     C                     MOVE SACD,2    ACD2
+     C************         MOVE SNCD,2    NCD2                   081884
+     C                     MOVE SNCD,2    NCDA2                  081884
+     C                     MOVE SPRF,2    PRF2
+     C                     MOVE SACD,3    ACD3
+     C************         MOVE SNCD,3    NCD3                   081884
+     C                     MOVE SNCD,3    NCDA3                  081884
+     C                     MOVE SPRF,3    PRF3
+     C                     MOVE SACD,4    ACD4
+     C************         MOVE SNCD,4    NCD4                   081884
+     C                     MOVE SNCD,4    NCDA4                  081884
+     C                     MOVE SPRF,4    PRF4
+     C                     MOVE SACD,5    ACD5
+     C************         MOVE SNCD,5    NCD5                   081884
+     C                     MOVE SNCD,5    NCDA5                  081884
+     C                     MOVE SPRF,5    PRF5
+     C                     MOVE SACD,6    ACD6
+     C************         MOVE SNCD,6    NCD6                   081884
+     C                     MOVE SNCD,6    NCDA6                  081884
+     C                     MOVE SPRF,6    PRF6
+     C                     MOVE 'D'       RECI
+     C                     END
+     C                     Z-ADDRUND      LCD              Last Change Date
+     C*
+     C           *IN69     IFEQ '1'                        Key not found
+     C************         WRITEXSEACKDF                                  081884
+     C                     WRITETSEACKDF                                  081884
+     C                     ELSE
+     C************         UPDATXSEACKDF                                  081884
+     C                     UPDATTSEACKDF                                  081884
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  ACODBL - Validate Narrative code and Posting Reference when
+     C*           Account code is blank.
+     C*
+     C*  Called by - INSAMD subroutine.
+     C*
+     C*  Calls -  ZASNMS to send message to program message queue.
+     C*           NARVAL to validate Narrative Code.
+     C*
+     C********************************************************************
+     C*
+     C           ACODBL    BEGSR
+     C*
+     C** Account Code is blank.
+     C** If Posting Ref blank, Narrative may not be entered.
+     C*
+     C           SPRF,C    IFEQ *BLANKS
+     C           SNCD,C    IFEQ *BLANKS
+     C                     ELSE
+     C                     MOVEL'USR4262' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2499  Narrative error
+     C                     END
+     C*
+     C** If Posting Reference entered:
+     C*
+     C                     ELSE
+     C*
+     C** If Posting Reference is 2, Narrative may not be blank.
+     C*
+     C           SPRF,C    IFEQ '2'
+     C           SNCD,C    IFEQ *BLANKS
+     C                     MOVEL'USR4260' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2499  Narrative error
+     C*
+     C** Check Narrative is valid.
+     C*
+     C                     ELSE
+     C                     EXSR NARVAL
+     C                     END
+     C*
+     C** Posting Reference (not 2) cannot be entered when both Account
+     C** code and Narrative code blank.
+     C*
+     C                     ELSE
+     C           SNCD,C    IFEQ *BLANKS
+     C                     MOVEL'USR4259' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     8099  Narrative error
+     C*
+     C** Check Narrative is valid.
+     C*
+     C                     ELSE
+     C                     EXSR NARVAL
+     C                     END
+     C*
+     C** Check Posting Reference is valid.
+     C*
+     C           SPRF,C    IFEQ '1'
+     C           SPRF,C    OREQ '3'
+     C           SPRF,C    OREQ '4'
+     C           SPRF,C    OREQ '5'
+     C*
+     C** Account Code cannot be blank when both Narrative and Posting
+     C** Reference entered.
+     C*
+     C           SNCD,C    IFNE *BLANKS
+     C                     EXSR NARVAL
+     C                     MOVEL'USR4270' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2199  Account Code error
+     C                     END
+     C*
+     C                     ELSE
+     C                     MOVEL'USR4264' ZAMSID           Inval P Ref
+     C                     EXSR ZASNMS
+     C                     SETON                     8099  Posting Ref error
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  ACODNB - Validate Narrative code and Posting Reference when
+     C*           Account code has been entered.
+     C*
+     C*  Called by - INSAMD subroutine.
+     C*
+     C*  Calls -  ZASNMS to send message to program message queue.
+     C*           NARVAL to validate Narrative Code.
+     C*
+     C********************************************************************
+     C*
+     C           ACODNB    BEGSR
+     C*
+     C** Check Account Code is valid.
+     C*
+     C**********           MOVELSACD,C    ACODKY  4                                           CGL029
+     C                     MOVELSACD,C    ACODKY 10                                           CGL029
+     C           ACODKY    CHAINSDACODL0             76
+     C*
+     C** If chain does not fail, check for non-title account code
+     C*
+     C           *IN76     IFEQ '0'                        Chain OK
+     C*
+     C           A5TOIN    IFEQ 'Y'
+     C                     MOVEL'USR4230' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2199  Error
+     C                     END                             Title-only
+     C*
+     C                     ELSE                            Chain fail
+     C                     MOVEL'USR4230' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2199  Error
+     C                     END
+     C*
+     C** Whether Account code has been entered correctly or not,
+     C** validate Narrative Code and Posting Reference.
+     C*
+     C** If Narrative Code is blank - error message sent.
+     C*
+     C           SNCD,C    IFEQ *BLANKS
+     C                     MOVEL'USR4266' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2499  Narrative error
+     C                     ELSE
+     C*
+     C** Check Narrative is valid
+     C*
+     C                     EXSR NARVAL
+     C                     END
+     C*
+     C** If Posting Reference is blank, error message sent.
+     C*
+     C           SPRF,C    IFEQ *BLANKS
+     C                     MOVEL'USR4267' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     8099  Posting Ref error
+     C*
+     C** Check Posting Reference is valid.
+     C*
+     C                     ELSE
+     C           SPRF,C    IFEQ '2'                        P Ref=2 error
+     C                     MOVEL'USR4258' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     8099  Posting Ref error
+     C*
+     C                     ELSE
+     C           SPRF,C    IFEQ '1'
+     C           SPRF,C    OREQ '3'
+     C           SPRF,C    OREQ '4'
+     C           SPRF,C    OREQ '5'
+     C                     ELSE                            P Ref invalid
+     C                     MOVEL'USR4264' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     8099  Posting Ref error
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  NARVAL - Validate Narrative code entered
+     C*
+     C*  Called by - ACODBL subroutine.
+     C*            - ACODNB subroutine.
+     C*
+     C*  Calls -  ZASNMS to send message to program message queue.
+     C*
+     C********************************************************************
+     C*
+     C           NARVAL    BEGSR
+     C*
+     C** Check if Narrative Code exists on SDNARRPD.
+     C*
+     C                     MOVELSNCD,C    NARRKY  2
+     C           NARRKY    CHAINSDNARRL1             52
+     C           *IN52     IFEQ '1'
+     C                     MOVEL'USR4261' ZAMSID
+     C                     EXSR ZASNMS
+     C                     SETON                     2499
+     C***********          ELSE                                           081884
+     C***********SNCD,C    IFGT '50'                                      081884
+     C***********          MOVEL'USR4268' ZAMSID                          081884
+     C***********          EXSR ZASNMS                                    081884
+     C***********          SETON                     2499                 081884
+     C***********          END                                            081884
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  ZASNMS - Send message to program message queue
+     C*
+     C*  Calls - Y2SNMGC - Send message to queue (external)
+     C*
+     C********************************************************************
+     C           ZASNMS    BEGSR
+     C**
+     C** Declare message file name
+     C**
+     C                     MOVEL'SDUSRMSG'ZAMSGF
+     C*
+     C                     CALL 'Y2SNMGC'
+     C                     PARM SPGMQ     ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  INIT - Initialise fields, access ICDs etc
+     C*
+     C*  Calls - Y2CLMSC to clear program message queue
+     C*
+     C********************************************************************
+     C           MOVES     BEGSR
+     C*
+     C** Load file fields into screen fields
+     C*
+     C           SAKEY     CHAINXSEACKD              69    Key not found
+     C                     MOVE ACKE      SAKEY
+     C           ACD1      IFEQ *ZERO
+     C                     MOVE *BLANKS   SACD1
+     C                     ELSE
+     C                     MOVE ACD1      SACD1
+     C                     END
+     C***********NCD1      IFEQ *ZERO                                     081884
+     C************         MOVE *BLANKS   SNCD1                           081884
+     C************         ELSE                                           081884
+     C************         MOVE NCD1      SNCD1                           081884
+     C************         END                                            081884
+     C                     MOVE NCDA1     SNCD1                           081884
+     C           PRF1      IFEQ *ZERO
+     C                     MOVE *BLANKS   SPRF1
+     C                     ELSE
+     C                     MOVE PRF1      SPRF1
+     C                     END
+     C*
+     C           ACD2      IFEQ *ZERO
+     C                     MOVE *BLANKS   SACD2
+     C                     ELSE
+     C                     MOVE ACD2      SACD2
+     C                     END
+     C                     MOVE NCDA2     SNCD2                           081884
+     C***********NCD2      IFEQ *ZERO                                     081884
+     C************         MOVE *BLANKS   SNCD2                           081884
+     C************         ELSE                                           081884
+     C************         MOVE NCD2      SNCD2                           081884
+     C************         END                                            081884
+     C           PRF2      IFEQ *ZERO
+     C                     MOVE *BLANKS   SPRF2
+     C                     ELSE
+     C                     MOVE PRF2      SPRF2
+     C                     END
+     C*
+     C           ACD3      IFEQ *ZERO
+     C                     MOVE *BLANKS   SACD3
+     C                     ELSE
+     C                     MOVE ACD3      SACD3
+     C                     END
+     C                     MOVE NCDA3     SNCD3                           081884
+     C***********NCD3      IFEQ *ZERO                                     081884
+     C************         MOVE *BLANKS   SNCD3                           081884
+     C************         ELSE                                           081884
+     C************         MOVE NCD3      SNCD3                           081884
+     C************         END                                            081884
+     C           PRF3      IFEQ *ZERO
+     C                     MOVE *BLANKS   SPRF3
+     C                     ELSE
+     C                     MOVE PRF3      SPRF3
+     C                     END
+     C*
+     C           ACD4      IFEQ *ZERO
+     C                     MOVE *BLANKS   SACD4
+     C                     ELSE
+     C                     MOVE ACD4      SACD4
+     C                     END
+     C                     MOVE NCDA4     SNCD4                           081884
+     C***********NCD4      IFEQ *ZERO                                     081884
+     C************         MOVE *BLANKS   SNCD4                           081884
+     C************         ELSE                                           081884
+     C************         MOVE NCD4      SNCD4                           081884
+     C************         END                                            081884
+     C           PRF4      IFEQ *ZERO
+     C                     MOVE *BLANKS   SPRF4
+     C                     ELSE
+     C                     MOVE PRF4      SPRF4
+     C                     END
+     C*
+     C           ACD5      IFEQ *ZERO
+     C                     MOVE *BLANKS   SACD5
+     C                     ELSE
+     C                     MOVE ACD5      SACD5
+     C                     END
+     C                     MOVE NCDA5     SNCD5                           081884
+     C***********NCD5      IFEQ *ZERO                                     081884
+     C************         MOVE *BLANKS   SNCD5                           081884
+     C************         ELSE                                           081884
+     C************         MOVE NCD5      SNCD5                           081884
+     C************         END                                            081884
+     C           PRF5      IFEQ *ZERO
+     C                     MOVE *BLANKS   SPRF5
+     C                     ELSE
+     C                     MOVE PRF5      SPRF5
+     C                     END
+     C*
+     C           ACD6      IFEQ *ZERO
+     C                     MOVE *BLANKS   SACD6
+     C                     ELSE
+     C                     MOVE ACD6      SACD6
+     C                     END
+     C                     MOVE NCDA6     SNCD6                           081884
+     C***********NCD6      IFEQ *ZERO                                     081884
+     C************         MOVE *BLANKS   SNCD6                           081884
+     C************         ELSE                                           081884
+     C************         MOVE NCD6      SNCD6                           081884
+     C************         END                                            081884
+     C           PRF6      IFEQ *ZERO
+     C                     MOVE *BLANKS   SPRF6
+     C                     ELSE
+     C                     MOVE PRF6      SPRF6
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C*  INIT - Initialise fields, access ICDs etc
+     C*
+     C*  Calls - Y2CLMSC to clear program message queue
+     C*
+     C********************************************************************
+     C           INIT      BEGSR
+     C*
+     C                     SETOF                     010203
+     C                     SETOF                     04
+     C*
+     C** Clear all fields to send messages to message queue.
+     C*
+     C                     MOVEL*BLANK    ZAPGM            Program queue
+     C                     MOVEL*BLANK    ZAPGRL           Rel queue
+     C                     MOVEL*BLANK    ZAMSID           Message Id.
+     C                     MOVEL*BLANK    ZAMSGF           Message file.
+     C                     MOVEL*BLANK    ZAMSDA           Message data.
+     C                     MOVEL*BLANK    ZAMSTP           Message type.
+     C*
+     C                     MOVE *BLANKS   SPGMQ            Program queue
+     C                     MOVEL'AK0063'  SPGMQ            Program queue
+     C*                                                                   101299
+     C** Check if program is called by template maintenance               101299
+     C*                                                                   101299
+     C           FKEY4     IFEQ 'T'                                       101299
+     C                     MOVE '1'       *IN30                           101299
+     C                     ELSE                                           101299
+     C                     MOVE '0'       *IN30                           101299
+     C                     END                                            101299
+     C*
+     C                     MOVE '0'       FKEY4
+     C*
+     C** Define LDA Data Area
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C**
+     C** Setup LDA field DBPGM
+     C**
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'AK0063'  DBPGM
+     C*
+     C** Define Rundat Data Area
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C** Clear messages from program message queue.
+     C*
+     C                     CALL 'Y2CLMSC'
+     C                     PARM SPGMQ     ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C*
+     C** Use access program AOBANKR0 to retrieve SDBANKPD Details
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C** If error in access program, exit via DBERR subroutine
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE           **************
+     C                     Z-ADD001       DBASE            **DBERR 001 **
+     C                     EXSR DBERR                      **************
+     C                     END
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*
+     C* DBERR - Database error processing
+     C*
+     C********************************************************************
+     C           DBERR     BEGSR
+     C*
+     C                     SETON                     U7U8LR
+     C                     OUT  LDA
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001
+**   CHAR - PERMITTED CHARACTERS IN ACCOUNT KEY
+ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789

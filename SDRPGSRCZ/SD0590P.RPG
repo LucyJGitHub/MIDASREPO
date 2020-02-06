@@ -1,0 +1,772 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Bank codes aud/req report')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD0590P -   RTS Bank Codes Listing.                          *
+      *                                                               *
+      *  Function:  This program prints the records on the RTS        *
+      *             Bank Codes File.                                  *
+      *                                                               *
+      *  Called By:-                                                  *
+      *              FCC0202 Input Cycle On Request                   *
+      *              FCC0204 COB On Request                           *
+      *              SD0541X COB Audit                                *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 095626             Date 8NOv95                *
+      *                 091241             Date 17Jul95               *
+      *                 CRT001             Date 31Mar95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  095626 - RCF will not work as the spool file number was      *
+      *           initialised before the spool file was opened.       *
+      *  091241 - ATM Interface.  Recompile.                          *
+      *  CRT001 - New program for Retail Teller System.               *
+      *                                                               *
+      *****************************************************************
+      *
+     F/COPY WNCPYSRC,SD0590PFPG
+      *
+     FSDBNCDL1IF  E           K        DISK
+      ** Bank Codes by sort seq number
+      *
+     FSDBANKL1IF  E           K        DISK
+      ** Bank Details              Retrieval index
+      *
+     FSDFCTLL0UF  E           K        DISK
+      ** Standing Data Controls    Update index
+      *
+     FSDFCTLL1IF  E           K        DISK
+      ** Standing Data Controls    Retrieval Index
+      *
+     FSD0590PMO   E             97     PRINTER                        UC
+     F                                              KINFDS INFDS$
+      * Bank Codes Aud/Req Print file
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      * 70-72 - Governs Printing of Window Function Fields            *
+      *    85 - Updat Lo Indicator - No Record Held For Update        *
+      *    90 - Call Lo Indicator - Called Program Terminates In Error*
+      *         Chain Hi Indicator - Record Not Found                 *
+      *    97 - Overflow Indicator                                    *
+      *    99 - Lokup Indicator                                       *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  ZZINIT - Define Work Fields, gets Rundate, report titles and *
+      *           checks for DB Error on SDBANKL1                     *
+      *  WTRERR - DB Error handling routine. Calls SDC540P using parm *
+      *           WUWFLG containing 'E' to indicate Error             *
+      *  WRTDTL - Print Header and Details                            *
+      *  SBCHRC - Retrieves Audit Details from SDFCTLL1 and checks    *
+      *           for DB Errors whilst Chaining and Updating.         *
+      *  WTRERR - Program database error routine                      *
+      *  *PSSR  - Program exception error routine                     *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    UAR        53  1               Audit/Request Tit
+     E                    ULN        53  1               Underline
+     E                    UARRAY  1   2 26               Report Title
+      *
+     E/COPY WNCPYSRC,SD0590PEPG
+      *
+     E                    @CN     1  10 25               Long constants.
+      *
+     I/COPY WNCPYSRC,SD0590PIPG
+      *
+      /EJECT
+      ** Data structures:-
+     IPGMDS     ESDSY2PGDSP
+      ** Program data structure.
+     IJBDTTM      DS
+      ** Job date/time.
+     I                                        1   60##JDT
+     I                                        1   20##JYY
+     I                                        3   40##JMM
+     I                                        5   60##JDD
+     I                                        7  120##JTM
+     I                                        7   80##JHH
+     I                                        9  100##JNN
+     I                                       11  120##JSS
+     IINFDS$    E DSY2I$DSP
+      ** Printer file information data structure.
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area holding Some Instalation Control Details.
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       12  12 DFF
+      /EJECT
+      *
+      ** Parameter declarations.
+     IP1PARM      DS
+      ** I:    Audit/Request Status Ind
+     I                                        1   1 P1ARSI
+      *
+     IP2PARM      DS
+      ** I:    Sequence number
+     I                                        1   5 P2RSQN
+      *
+     IP3PARM      DS
+      ** I:    Entity
+     I                                        1   3 P3ENTY
+      *
+     I            DS
+      *                                       1 132 ZAMSDA
+      ** Message data for 'Database Error (ICD)'
+      ** Filename
+     I                                        1  10 ZA0001
+      *
+      ** Local data area for database error details
+      *
+     ILDA       E DSLDA
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      *****************************************************************
+     C           *ENTRY    PLIST                           Entry parameter
+     C                     PARM           P0RTN   7        Return code
+     C           P1ARSI    PARM           WP0001  1        Audit/Request S
+     C           P2RSQN    PARM           WP0002  5        Sequence number
+     C                     PARM           @@PARM  1        Dummy Parm
+     C           P3ENTY    PARM           WP0003  3        Entity
+      *****************************************************************
+      ** Initialise
+     C                     EXSR ZZINIT
+      *
+      ** Establish starting position.
+     C           *LOVAL    SETLL@BNCDL1
+      *
+      ** Read first record
+     C                     READ @BNCDL1                  80
+      *
+     C/COPY WNCPYSRC,SD0590PRSP
+      *
+      ** Initialise no of Calculated Records
+     C                     Z-ADD*ZERO     ZTNCRC
+      *
+      * Print report body.
+     C           *IN80     DOWEQ'0'
+      ** Print report detail line.
+     C                     EXSR WRTDTL
+      *
+      ** Read next record
+     C                     READ @BNCDL1                  80
+      *
+     C/COPY WNCPYSRC,SD0590PRSP
+      *
+     C                     ENDDO
+      *
+      ** If Audit/Request Status Ind is Audit Mode (Parm = A)
+      ** or if No Details to Report on SD0590PM
+     C           P1ARSI    IFEQ @CN,01
+     C           ZTNCRC    OREQ *ZERO
+      *
+      ** Retrieve Audit Details from  Standing Data Controls
+     C           KRSSA     KLIST
+     C                     KFLD           AHFLNM           Filename
+      ** Move fields to key list.
+     C                     MOVEL@CN,05    AHFLNM           Filename
+     C           KRSSA     CHAIN@AHREAV              90
+      *
+      ** If SD control file record not found
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SD0590P' DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CN,05    DBKEY
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDFCTLL1'DBFILE           *  DBERR 002  *
+     C                     OUT  LDA                        ***************
+      *
+      ** Write header(s).
+     C                     MOVE WUMRDT    ##MRDT
+     C                     MOVEL'SD0590P' ##PGM
+      *
+     C                     EXSR WRTERR
+     C                     EXSR *PSSR
+      *
+      ** Else SD control file record found
+     C                     ELSE
+      *
+      ** Load No. of Records On File, No Inserts, Amends & Deletes
+     C                     Z-ADDAHNORC    WUNORF
+     C                     Z-ADDAHNOIN    WUNOIN
+     C                     Z-ADDAHNOAM    WUNOAM
+     C                     Z-ADDAHNODL    WUNODL
+     C                     ENDIF
+      *
+      ** Check whether Calculated of Records equal to No of Records on file
+     C           WUWKNB    IFNE WUNORF
+     C                     MOVEL@CN,02    WUWFLG
+     C                     ELSE
+      ** Check whether Number of Records Printed is zero ( No details on AU)
+     C           ZTNCRC    IFEQ 0
+     C                     MOVEL'Z'       WUWFLG
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Audit printfile override - Standing Data Controls
+     C                     CALL 'SDC540P'              90  Audit printfile
+     C                     PARM @CN,07    WQ0009 10        *PROGRAM
+     C                     PARM WUWFLG    WQ0010  1        Work flag
+     C                     PARM WUNOIN    WQ0011  50       No of Records I
+     C                     PARM WUNOAM    WQ0012  50       No of Records A
+     C                     PARM WUNODL    WQ0013  50       No of records D
+     C                     PARM WUWKNB    WQ0014  50       work number
+     C                     PARM WUNORF    WQ0015  50       No of Records o
+     C                     PARM WUARTL    WQ0016 53        Audit/Request T
+     C                     PARM WUUNDL    WQ0017 53        Underline
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Work flag is Incorrect
+     C           WUWFLG    IFEQ @CN,02
+      *
+      * File Control Error U8 - Standing Data Controls  *
+     C                     MOVE *ON       *INU8
+      *
+     C                     ELSE
+      *
+     C                     EXSR SBCHRC
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,SD0590PPER
+      *
+      ** Print Page Header & Final Totals  if details to report on SD0 590PM
+     C           FLAGP1    IFEQ 'Y'
+      *
+      ** Print Page Header & Final Totals if Page Overflow Ind On.
+     C           *IN97     IFEQ *ON
+     C                     WRITEZZPAGHDR
+     C                     MOVE *OFF      *IN97
+     C                     ENDIF
+     C                     WRITEZZFINTTL
+      *
+      ** Print Page Header & 'End Of Report' if Page Overflow Ind On.
+     C           *IN97     IFEQ *ON
+     C                     WRITEZZPAGHDR
+     C                     ENDIF
+     C                     WRITEZZENDRPT
+      *
+     C                     ENDIF
+      *
+      ** Exit program & Return
+     C                     MOVEL*BLANK    P0RTN
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      */TITLE SR/WRTDTL                                               *
+      *****************************************************************
+      *                                                               *
+      *  WRTDTL - Print Header and Details                            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Pgm Calls: ZDATE2 - Check File Date                          *
+      *             Y2RVCNR- Retrieve Alpha of Last Change            *
+      *   SR Calls: *PSSR  - Program Exception Error Routine          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTDTL    BEGSR
+      *
+      ** Load detail line.
+     C                     Z-ADDFPLCD     XRLCD            Last Change Dat
+     C                     MOVE FPTYLC    XRTYLC           Type of Last Ch
+     C                     MOVE FPRBCD    XRRBCD           Bank Code
+     C                     MOVELFPRBNM    XRRBNM           Bank Name
+     C                     MOVE FPRBII    XRRBII           Bank Itself Ind
+      *
+     C                     MOVEL*BLANK    XRWFFR           Window Function
+     C                     MOVEL*BLANK    XRWF1R           Window Function
+     C                     MOVEL*BLANK    XRWF2R           Window Function
+      *
+      ** Set Print Record flag To 'Y'
+     C                     MOVEL'Y'       PRTFLG
+      *
+      ** Count Detail Records
+     C                     ADD  1         WUWKNB           Work number
+      *
+      ** If Audit/Request Status Ind is Audit Mode (Parm = 'A')
+      ** AND Last Change Date *NE run day number
+     C           WUARSI    IFEQ @CN,01
+     C           XRLCD     ANDNEWURDNB
+      *
+      ** Set print record flag  = 'N'
+     C                     MOVEL'N'       PRTFLG
+     C                     ENDIF
+      *
+      ** If record is to be printed add 1 to No Of Calculated Records
+     C           PRTFLG    IFEQ 'Y'
+     C                     ADD  1         ZTNCRC
+      *
+      ** Set FLAGP1 Details Print File Flag (SD0590PM)
+     C                     MOVEL'Y'       FLAGP1
+     C                     ENDIF
+      *
+      ** Check File Date - Rundate
+     C                     CALL 'ZDATE2'               90  Check File Date
+     C                     PARM XRLCD     WQ0005  50       Work Midas Date
+     C                     PARM WUDFF     WQ0006  1        date format fla
+     C           WUWCDT    PARM *ZERO     WQ0007  60       Work Converted
+     C           XRACDT    PARM *BLANK    WQ0008  7        Work Alpha Date
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** PAR.alpha of last change = Condition name of PAR.Type of Last Change
+     C                     CALL 'Y2RVCNR'              90
+     C                     PARM           W0RTN   7        Return code
+     C                     PARM 1100584   Y2LSNO  70       List number
+     C                     PARM XRTYLC    W0INVL 20        Type of Last Ch
+     C                     PARM ' '       W0VLMP  1        Value mapped?
+     C           XRALCH    PARM           W0CNNM 25        Alpha of last c
+      *
+     C           *IN90     IFEQ '1'
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C/COPY WNCPYSRC,SD0590PPDR
+      *
+     C           PRTFLG    IFEQ 'Y'
+      *
+      ** Convert fields to external form.
+     C                     MOVEL'0'       *IN72
+     C           XRWFFR    IFEQ *BLANK
+     C                     MOVEL'1'       *IN72
+     C                     ENDIF
+      *
+     C                     MOVEL'0'       *IN71
+     C           XRWF1R    IFEQ *BLANK
+     C                     MOVEL'1'       *IN71
+     C                     ENDIF
+      *
+     C                     MOVEL'0'       *IN70
+     C           XRWF2R    IFEQ *BLANK
+     C                     MOVEL'1'       *IN70
+     C                     ENDIF
+      *
+      * For First Record that is to be written to the details printer file.
+     C           FLAGP1    IFEQ 'Y'
+     C           ZTNCRC    ANDEQ1
+     C                     OPEN SD0590PM
+      *
+      ** ZSFILE - write report rqs - Standard functions *
+      *
+     C                     Z-ADD@$FNB     WUSFNB  60                      095626
+      *                                                                   095626
+     C                     CALL 'ZSFILE'               90
+     C                     PARM P2RSQN    UURSQN  5        RCF seq no.
+     C                     PARM P3ENTY    UUENTY  3        Entity
+     C                     PARM @$FVN     UUSFNM 10        Spool file name
+     C                     PARM WUSFNB    UUSFNB  60       Spool file no.
+     C           WUZSER    PARM *BLANK    UUZSER  1        ZSFILE error
+      *
+      ** Call to program ended in error
+     C           *IN90     IFEQ '1'
+     C           WUZSER    OREQ 'Y'
+      *
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+      *
+      ** Print page and detail header if first details page.
+     C                     WRITEZZPAGHDR
+     C                     WRITEZZDTLHDR
+     C                     ENDIF
+      *
+      ** Print page and detail header if new page.
+     C           *IN97     IFEQ *ON
+     C                     WRITEZZPAGHDR
+     C                     WRITEZZDTLHDR
+     C                     MOVE *OFF      *IN97
+     C                     ENDIF
+      ** Print detail line.
+     C                     WRITEZZDTLRCD
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      */TITLE SR/SBCHRC                                               *
+      *****************************************************************
+      *                                                               *
+      *  SBCHRC - Retrieves Audit Details from SDFCTLL1 and checks    *
+      *           for DB Errors whilst Chaining and Updating.         *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Pgm Calls: None                                              *
+      *   SR Calls: *PSSR  - Program Exception Error Routine          *
+      *             WRTERR - Program Database Error Routine           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SBCHRC    BEGSR
+      *
+      ** If Audit/Request Status Ind is Audit Mode
+     C           WUARSI    IFEQ @CN,01
+      * Define Keylist.
+     C           KLCHSB    KLIST
+     C                     KFLD           AHFLNM           Filename
+      ** Move fields to key list.
+     C                     MOVEL@CN,05    AHFLNM           Filename
+      ** Check that a record for SDBNCDPD exists on the standing data
+      ** controls file.
+     C           KLCHSB    CHAIN@AHREAU              90
+      *
+     C           *IN90     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SD0590P' DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CN,05    DBKEY
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'SDFCTLL1'DBFILE           *  DBERR 003  *
+     C                     OUT  LDA                        ***************
+      *
+      ** Write header(s).
+      *
+     C                     MOVE WUMRDT    ##MRDT
+     C                     MOVEL'SD0590P' ##PGM
+      *
+     C                     EXSR WRTERR
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Processing after DBF read
+     C                     ADD  AHNORC    WUNORC           No. of Records
+     C                     ADD  AHNOIN    WUNOIN           No. of Inserts
+     C                     ADD  AHNOAM    WUNOAM           No. of Amends
+     C                     ADD  AHNODL    WUNODL           No. of Deletes
+      *
+      ** If Audit/Request Status Ind is Audit Mode (Parm = A)
+     C           P1ARSI    IFEQ @CN,01
+      *
+      ** Move Non-key fields to @AHREAU
+     C                     Z-ADDWUNORC    AHNORC           No. of Records
+     C                     Z-ADD*ZERO     AHNOIN           No. of Inserts
+     C                     Z-ADD*ZERO     AHNOAM           No. of Amends
+     C                     Z-ADD*ZERO     AHNODL           No. of Deletes
+      *
+     C                     UPDAT@AHREAU                85
+      *
+      ** If SD control file record update not successful
+     C           *IN85     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SD0590P' DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CN,05    DBKEY
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SDFCTLL0'DBFILE           *  DBERR 004  *
+     C                     OUT  LDA                        ***************
+      *
+      ** Write header(s).
+      *
+     C                     MOVE WUMRDT    ##MRDT
+     C                     MOVEL'SD0590P' ##PGM
+      *
+     C                     EXSR WRTERR
+     C                     EXSR *PSSR
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      */TITLE SR/ZZINIT                                               *
+      *****************************************************************
+      *                                                               *
+      *  ZZINIT - Define Work Fields. Gets Rundate, report titles and *
+      *           Bank details (checks for DB Error).                 *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Pgm Calls: ZSFILE - Spool File Numbers File                  *
+      *   SR Calls: *PSSR  - Program Exception Error Routine          *
+      *             WRTERR - Program Database Error Routine           *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZZINIT    BEGSR
+      *
+     C                     MOVE *BLANK    P0RTN
+     C                     MOVE *BLANK    W0RTN   7
+      ** Setup job date/time.
+     C                     Z-ADDUDATE     ##JDT            Job date.
+     C                     TIME           ##JTM            Job time.
+     C                     TIME           ##TME   60       Screen time.
+      ** Define Audit/Request Status Ind
+     C                     MOVEL*BLANK    WUARSI  1
+      ** Move Audit/Request Status Ind to Work Field
+     C                     MOVELP1ARSI    WUARSI           Audit/Request S
+      ** Define work number
+     C                     Z-ADD*ZERO     WUWKNB  50
+      ** Define run day number
+     C                     Z-ADD*ZERO     WURDNB  50
+      ** Define date format flag
+     C                     MOVEL*BLANK    WUDFF   1
+      ** Define Work Converted Date
+     C                     Z-ADD*ZERO     WUWCDT  60
+      ** Define No of Records on file
+     C                     Z-ADD*ZERO     WUNORF  50
+      ** Define No. of Inserts
+     C                     Z-ADD*ZERO     WUNOIN  50
+      ** Define No. of Amends
+     C                     Z-ADD*ZERO     WUNOAM  50
+      ** Define No. of Deletes
+     C                     Z-ADD*ZERO     WUNODL  50
+      ** Define Field Work Flag
+     C                     MOVEL*BLANK    WUWFLG  1
+      ** Define Audit/Request Title
+     C                     MOVEL*BLANK    WUARTL 53
+      ** Define Underline
+     C                     MOVEL*BLANK    WUUNDL 53
+      ** Define No. of Records
+     C                     Z-ADD*ZERO     WUNORC  50
+      ** Define Midas Rundate
+     C                     MOVEL*BLANK    WUMRDT  7
+      ** Define ZSFILE error
+     C                     MOVEL*BLANK    WUZSER  1
+      ** Define PRTFLG Print Record Flag
+     C                     MOVEL*BLANK    PRTFLG  1
+      ** Define FLAGP1 Details Print File Flag (SD0590PM)
+     C                     MOVEL'N'       FLAGP1  1
+      *
+      ** Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      *
+      ** Define SD Local Data Area
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Obtain Midas Rundate
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE MRDT      ##MRDT
+     C                     MOVE MRDT      WUMRDT
+     C                     MOVE RDNB      WURDNB
+     C                     MOVE DFF       WUDFF
+      *
+      ** Calculate End of Text Point
+     C                     Z-ADD1         U       20
+     C                     MOVEA@CN,10    UAR,U
+      *
+     C           *IN99     DOWEQ'0'
+     C           ' '       LOKUPUAR,U                    99
+     C                     ADD  1         U
+     C           UAR,U     COMP ' '                      99
+     C                     ENDDO
+      *
+     C           P1ARSI    IFEQ 'A'
+     C                     MOVELUARRAY,1  UTEMP  26
+     C                     MOVEAUTEMP     UAR,U
+     C                     ADD  26        U
+     C                     ELSE
+      *
+     C                     MOVEAUARRAY,2  UAR,U            * IF A THIRD
+     C                     ADD  7         U                OPTION TO ARRAY
+     C                     ENDIF                           IS ADDED A
+      *                                                    TEMP STORAGE
+      *                                                    * IS REQUIRED.
+      **  Store Text in USTORE Field
+      *
+     C                     MOVEAUAR       USTORE 53
+     C                     MOVE *BLANKS   UAR
+      *
+     C           53        SUB  U         UB      20
+     C           UB        DIV  2         UB
+     C                     MVR            UR      10
+     C           UB        ADD  U         U
+     C           U         SUB  1         U
+      *
+      **  Insert Underline to Array
+      **
+     C                     MOVEA*ALL'-'   ULN,UB
+     C                     MOVEA*BLANKS   ULN,U
+      *
+     C           UB        IFGT 0
+     C                     MOVEAUSTORE    UAR,UB
+     C                     ELSE
+     C                     MOVEAUSTORE    UAR
+     C                     ENDIF
+      *
+      **  Move Array VAlue To Printfile Text Field
+      *
+     C                     MOVEAUAR       ##ARTL 53
+     C                     MOVEAUAR       WUARTL
+     C                     MOVEAULN       ##UNDL 53
+     C                     MOVEAULN       WUUNDL
+      *
+      ** Get Bank Title - Bank Details
+     C           KRSSC     KLIST
+     C                     KFLD           BJBANK           Bank
+      *
+     C                     MOVEL@CN,09    BJBANK           Bank
+      *
+     C           KRSSC     CHAIN@BJREEF              90
+      *
+      ** Chain To SDBANKPD Unsuccesful
+     C           *IN90     IFEQ '1'
+      *
+     C           *LOCK     IN   LDA
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVEL'SD0590P' DBPGM
+     C                     MOVE *BLANKS   DBKEY
+     C                     MOVEL@CN,09    DBKEY
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           *  DBERR 001  *
+     C                     OUT  LDA                        ***************
+      *
+      ** Write header(s).
+     C                     MOVE WUMRDT    ##MRDT
+     C                     MOVEL'SD0590P' ##PGM
+      *
+     C                     EXSR WRTERR
+     C                     EXSR *PSSR
+      *
+      ** Chain To SDBANKPD Succesful
+     C                     ELSE
+      *
+      ** Load User Report Title
+     C                     MOVELBJURPT    ##URPT           User Report Tit
+     C                     ENDIF
+      *
+      ** Set up spool file number - Standard functions *
+      *
+     C***********          Z-ADD@$FNB     WUSFNB  60                      095626
+      *
+     C/COPY WNCPYSRC,SD0590PCPG
+      *
+     C           ZZEXIT    ENDSR
+      *
+      *****************************************************************
+     C/TITLE SR/WTRERR
+      *****************************************************************
+      *                                                               *
+      * WTRERR - Program database error routine.                      *
+      *                                                               *
+      * Called by: Main Processing, SBCHRC and ZZINIT.                *
+      *                                                               *
+      *  Pgm Calls:*SDC540P- Audit Print File Override                *
+      *   SR Calls: *PSSR  - Program Exception Error Routine          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WRTERR    BEGSR
+      *
+      ** Audit printfile override - Standing Data Controls
+     C                     CALL 'SDC540P'              90  Audit printfile
+     C                     PARM @CN,07    WQ0009 10        *PROGRAM
+     C                     PARM 'E'       WQ0010  1        Error Flag
+     C                     PARM *ZERO     WQ0011  50       Dummy Parm.
+     C                     PARM *ZERO     WQ0012  50       Dummy Parm.
+     C                     PARM *ZERO     WQ0013  50       Dummy Parm.
+     C                     PARM *ZERO     WQ0014  50       Dummy Parm.
+     C                     PARM *ZERO     WQ0015  50       Dummy Parm.
+     C                     PARM WUARTL    WQ0016 53        Audit/Request T
+     C                     PARM WUUNDL    WQ0017 53        Underline
+      *
+     C           *IN90     IFEQ '1'
+      ** Call to program ended in error.
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: Main Processing, WRTDTL, SBCHRC and ZZINIT.        *
+      *                                                               *
+      *  Pgm Calls: None                                              *
+      *   SR Calls: None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     O*
+     O/COPY WNCPYSRC,SD0590POPG
+     O*
+**   Array Entries For Report Title
+MAINTENANCE - AUDIT REPORT
+LISTING
+** @CN Long constants used in program.
+A
+N
+Y
+0
+SDBNCDPD
+Y2U0005
+SD0590AU
+Y2U0021
+BANK
+BANK CODES

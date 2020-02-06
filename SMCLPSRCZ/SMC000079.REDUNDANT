@@ -1,0 +1,93 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                 /*AR690511*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000079 - Midas SM Update MX files                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. AR690511*REDUNDANT Date 31Jan11              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG25875           Date 03Sep09              */
+/*                      CER045  *CREATE    Date 20Jul09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       AR690511 - Rename from SMC000079 to ERC000079               */
+/*                  (Child: AR690512)                                */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG25875 - Error calling prompt program                     */
+/*       CER045 - German Features - Reporting Bundesbank             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PRTCD &PMODE)                                             /*BUG25875*/
+ 
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                  /*BUG25875*/
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)                                  /*BUG25875*/
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2009')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Create Midas Info Screen data area in QTEMP */
+ 
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG MSGID(CPF2105)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          TEXT('Midas Info Screen Data Area')
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Setup system prefix variable from SDSTAT data area. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+ 
+/* Set up library list. */
+ 
+             CALL       PGM(UPC0014) PARM(&SYSID)
+ 
+             IF         COND((&PMODE) *NE '3') THEN(DO)                                 /*BUG25875*/
+                                                                                        /*BUG25875*/
+/* Call program to update fields on MXEXFDPD and MXCOMDPD. */
+ 
+             CALL       PGM(SM000059)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ENDDO                                                                      /*BUG25875*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* Abnormal program end. */
+ 
+ABNOR:
+             DMPCLPGM
+             MONMSG     MSGID(CPF0000)
+ 
+/* Set up messages for Midas Information Screen  */
+ 
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000079') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC000079' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000)
+ 
+ENDPGM:
+             ENDPGM

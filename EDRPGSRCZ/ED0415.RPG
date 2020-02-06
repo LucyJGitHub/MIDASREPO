@@ -1,0 +1,347 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Historic balances special processing')
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0415 - Bulk Transfer : Historic Balances special processing*
+      *                                                               *
+      *  Function: This program reads through the Historic Balances   *
+      *            file and the Historic Average Balances file and    *
+      *            writes each GLHIBLPD record to EDBULKPD followed   *
+      *            by the related GLAVBLPD record which contains the  *
+      *            end of period date from the related GLHIBL record. *
+      *                                                               *
+      *  Called By: EDC0415 - Special Processing Component for        *
+      *                       Historic Balances                       *
+      *                                                               *
+      *  Calls:     ED0410  - Write Drip Formatted Records to EDBULKPD*
+      *                                                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 130866             Date 23Feb98               *
+      *                 CED002 *CREATE     Date 25JUN97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  130866 - CORRECT FILENAME WRITTEN TO EDBULKPD                *
+      *  CED002 - ED Enhancements                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLHIBLL1IF  E                    DISK         KINFSR *PSSR
+      * Historic Balances
+      *
+     FGLAVBLL1IF  E                    DISK         KINFSR *PSSR
+      * Historic Average Balances
+      *
+     FED0415AUO   E                    PRINTER                        UC
+      *   Audit Report
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    88  - Not Found on Historic Average Balances               *
+      *    89  - EOF on Historic Balances                             *
+      *                                                               *
+      *  90-99 - Used by Standard Subroutines                         *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      * Array for Object Copyright Statement.
+      *
+      *****************************************************************
+      *
+     IPSDS       SDS
+      **  Program status data structure.
+     I                                      244 253 WJOBNM
+     I                                      254 263 WUSER
+     I                                      264 2690WJOBNO
+     I                                     *PROGRAM ##PGM
+      *
+     IGLHIBL    E DSGLHIBLPD
+     I                                        1  52 W#HB
+      *
+     IGLAVBL    E DSGLAVBLPD
+     I              QQACCD                          #ACCD1                                    CGL029
+      *
+     IW#DATA      DS                           3971
+      *
+     IDBERR     E DSLDA
+      * Data structure for data-base error processing.
+      *
+     IW#KEY       DS
+      * Data structure for key of GLHIBLL1/GLAVBLL1
+     I                                        1   2 W#CGCD
+     I                                        3   5 W#BRCD
+     I                                        6   8 W#CYCD
+     I**********                              9  12 W#ACCD                                    CGL029
+     I**********                             13  18 W#CUST                                    CGL029
+     I**********                             19  20 W#ACSN                                    CGL029
+     I**********                             21  24 W#PCCD                                    CGL029
+     I**********                             25  26 W#BKCD                                    CGL029
+     I**********                             27  36 W#OTTP                                    CGL029
+     I**********                             37  46 W#TSTY                                    CGL029
+     I**********                             47  52 W#ACNB                                    CGL029
+     I**********                             53  54 W#PDCT                                    CGL029
+     I**********                             55  56 W#PDYR                                    CGL029
+     I**********                             57  58 W#PDNY                                    CGL029
+     I                                        9  18 W#ACCD                                    CGL029
+     I                                       19  24 W#CUST                                    CGL029
+     I                                       25  26 W#ACSN                                    CGL029
+     I                                       27  30 W#PCCD                                    CGL029
+     I                                       31  32 W#BKCD                                    CGL029
+     I                                       33  42 W#OTTP                                    CGL029
+     I                                       43  52 W#TSTY                                    CGL029
+     I                                       53  58 W#ACNB                                    CGL029
+     I                                       59  60 W#PDCT                                    CGL029
+     I                                       61  62 W#PDYR                                    CGL029
+     I                                       63  64 W#PDNY                                    CGL029
+      *****************************************************************
+      *  P R O G R A M     S T A R T                                  *
+      *****************************************************************
+      *
+      *
+      * Program entry
+     C           *ENTRY    PLIST
+     C                     PARM           USVLIB  7
+     C                     PARM           UFILEN 10                       CED001
+     C                     PARM           UMEMBN 10                       CED001
+     C                     PARM           USQCD   3                       CED001
+     C                     PARM           USTREM  1
+      *
+     C                     EXSR #INIT
+      *
+      * Perform Detail Processing.
+     C                     EXSR #DETL
+      *
+     C                     EXSR #LAST
+      *
+      *
+      *****************************************************************
+      *                                                               *
+      *  #DETL    - Subroutine to do the Detail Processing.           *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    :                                                   *
+      *                                                               *
+      *****************************************************************
+     C           #DETL     BEGSR
+      *
+      *
+     C                     MOVEL'*UPDATE' W#MODE
+     C                     MOVE 'PT'      W#ACTI
+     C                     MOVE UMEMBN    W#MEMB
+     C                     MOVEL'GLHIBLPD'W#HIBL
+     C                     MOVEL'GLAVBLPD'W#AVBL                          130866
+     C                     CLEARW#RTCD
+      *
+      * Get Historic Balance
+     C                     READ GLHIBLL1                 89
+      * Get Historic Average Balance
+     C                     READ GLAVBLL1                 88
+      *
+      * Process till end of file
+     C           *IN89     DOWEQ*OFF
+      *
+      * Set Last Movement date on first balance on new account to zero
+     C           W#HB      IFNE W#L1
+     C                     CLEARHBLMDT
+     C                     MOVE W#HB      W#L1
+     C                     ENDIF
+      *
+      * Write Drip Format to EDBULKPD
+     C                     CALL 'ED0410'
+     C                     PARM           W#MODE  7
+     C                     PARM           W#HIBL 10
+     C                     PARM           W#MEMB 10
+     C                     PARM           ##PGM
+     C                     PARM           W#ACTI  2
+     C                     PARM GLHIBL    W#DATA
+     C                     PARM           W#RTCD  1
+      * Error?
+     C           W#RTCD    IFNE *BLANK
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'GLHIBLL1'DBFILE           * DB ERROR 01 *
+     C                     MOVE HBCGCD    W#CGCD           ***************
+     C                     MOVE HBBRCD    W#BRCD
+     C                     MOVE HBCYCD    W#CYCD
+     C                     MOVE HBACCD    W#ACCD
+     C                     MOVE HBCUST    W#CUST
+     C                     MOVE HBACSN    W#ACSN
+     C                     MOVE HBPCCD    W#PCCD
+     C                     MOVE HBBKCD    W#BKCD
+     C                     MOVE HBOTTP    W#OTTP
+     C                     MOVE HBTSTY    W#TSTY
+     C                     MOVE HBACNB    W#ACNB
+     C                     MOVE HBPDCT    W#PDCT
+     C                     MOVE HBPDYR    W#PDYR
+     C                     MOVE HBPDNY    W#PDNY
+     C                     MOVELW#KEY     DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *
+      * Get Historic Average Balance
+     C           *IN88     IFEQ *OFF
+     C           HBCGCD    ANDEQABCGCD
+     C           HBBRCD    ANDEQABBRCD
+     C           HBCYCD    ANDEQABCYCD
+     C           HBACCD    ANDEQABACCD
+     C           HBCUST    ANDEQABCUST
+     C           HBACSN    ANDEQABACSN
+     C           HBPCCD    ANDEQABPCCD
+     C           HBBKCD    ANDEQABBKCD
+     C           HBOTTP    ANDEQABOTTP
+     C           HBTSTY    ANDEQABTSTY
+     C           HBACNB    ANDEQABACNB
+     C           HBPDCT    ANDEQABPDCT
+     C           HBPDYR    ANDEQABPDYR
+     C           HBPDNY    ANDEQABPDNY
+      *
+      * Write Drip Format to EDBULKPD
+     C                     CALL 'ED0410'
+     C                     PARM           W#MODE  7
+     C***********          PARM           W#HIBL 10                       130866
+     C                     PARM           W#AVBL 10                       130866
+     C                     PARM           W#MEMB 10
+     C                     PARM           ##PGM
+     C                     PARM           W#ACTI  2
+     C                     PARM GLAVBL    W#DATA
+     C                     PARM           W#RTCD  1
+      * Error?
+     C           W#RTCD    IFNE *BLANK
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'GLAVBLL1'DBFILE           * DB ERROR 02 *
+     C                     MOVE ABCGCD    W#CGCD           ***************
+     C                     MOVE ABBRCD    W#BRCD
+     C                     MOVE ABCYCD    W#CYCD
+     C                     MOVE ABACCD    W#ACCD
+     C                     MOVE ABCUST    W#CUST
+     C                     MOVE ABACSN    W#ACSN
+     C                     MOVE ABPCCD    W#PCCD
+     C                     MOVE ABBKCD    W#BKCD
+     C                     MOVE ABOTTP    W#OTTP
+     C                     MOVE ABTSTY    W#TSTY
+     C                     MOVE ABACNB    W#ACNB
+     C                     MOVE ABPDCT    W#PDCT
+     C                     MOVE ABPDYR    W#PDYR
+     C                     MOVE ABPDNY    W#PDNY
+     C                     MOVELW#KEY     DBKEY
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      * Get Historic Average Balance
+     C                     READ GLAVBLL1                 88
+     C                     ENDIF
+      *
+      * Get Historic Balance
+     C                     READ GLHIBLL1                 89
+     C                     ENDDO
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  #INIT  - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+     C           #INIT     BEGSR
+      *
+      *
+      *
+      * Copyright Statement.
+     C                     MOVEACPY@      MKI@   80
+      *
+     C           *LIKE     DEFN W#HB      W#L1
+     C                     CLEARW#L1
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  #LAST  - Subroutine to do End Processing.                    *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+     C           #LAST     BEGSR
+      *
+      *
+      *
+      * Close ED0410
+     C                     CALL 'ED0410'
+     C                     PARM '*CLOSE ' W#MODE  7
+     C                     PARM UFILEN    W#FILE 10
+     C                     PARM UMEMBN    W#MEMB 10
+     C                     PARM           ##PGM
+     C                     PARM 'PT'      W#ACTI  2
+     C                     PARM *BLANKS   W#DATA
+     C                     PARM *BLANK    W#RTCD  1
+      *
+      * End
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      * Database error report
+     C                     OPEN ED0415AU
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     CLOSEED0415AU
+      *
+     C                     DUMP
+     C                     ENDIF
+      *
+      ** Exit program
+     C                     RETRN
+      *
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

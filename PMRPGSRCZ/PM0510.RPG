@@ -1,0 +1,2301 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM T/O by Currency per Customer')
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM0510  - TURNOVER BY CURRENCY PER CUSTOMER                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01486             Date 11Oct94               *
+      *                 047719             Date 19Jan93               *
+     F*                 049467             DATE 28JAN93               *
+     F*                 33615              DATE 15NOV91               *
+     F*                 R05781             DATE 03APR91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  S01486 - PORTFOLIO MANAGEMENT UPGRADE TO R10                 *
+     F*  047719 - USE EXTERNAL SUBROUTINE ZCCYXR INSTEAD              *
+     F*           OF INCORRECT ONCE INTERNALLY DESCRIBED.             *
+     F*  049467 - RECOMPILED FOR RELEASE 3 PTF 02                     *
+     F*  33615  - SUNDRY CORRECTIONS TO TURNOVER REPORTS              *
+     F*  R05781 - ONLY OUTPUT DETAILS IF TURNOVER EXISTS FOR PORTFOLIO*
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F******PREFIX*:*BJ************************************************   S01486
+     F***********                                      KINFSR *PSSR       S01486
+     F***SDCURRL0IF**E           K        DISK                            S01486
+     F******PREFIX*:*A6************************************************   S01486
+     F***********                                      KINFSR *PSSR       S01486
+     F***PMHSEXPPIF**E           K        DISK                            S01486
+     FPMHSEXPDIF  E           K        DISK                               S01486
+     F** PREFIX : Q8
+     F                                              KINFSR *PSSR
+     F***SDACOFL1IF**E           K        DISK                            S01486
+     F******PREFIX*:*AZ************************************************   S01486
+     F***********                                      KINFSR *PSSR       S01486
+     F***PMPORTPPIF**E           K        DISK                            S01486
+     FPMPORTPDIF  E           K        DISK                               S01486
+     F** PREFIX : PN
+     F                                              KINFSR *PSSR
+     F***SDCUSTL1IF**E           K        DISK                            S01486
+     F******PREFIX*:*BB************************************************   S01486
+     F***********                                      KINFSR *PSSR       S01486
+     F***SDPORTL1IF**E           K        DISK                            S01486
+     F******PREFIX*:*P9************************************************   S01486
+     F***********                                      KINFSR *PSSR       S01486
+     F***PMTUR2POIF**E           K        DISK                            S01486
+     FPMTUR2Q0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     FPMTUR5LLIF  E           K        DISK
+     F** PREFIX : SB
+     F                                              KINFSR *PSSR
+     FPMTUR6LLIF  E           K        DISK
+     F** PREFIX : SB
+     F            PMCUTVP0                          KRENAMEPMCUTVP6
+     F                                              KINFSR *PSSR
+     F***PM0510P1O***E                    PRINTER                     UC  S01486
+     FPM0510P1O   E                    PRINTER      KINFDS SPOOL      UC  S01486
+     F** PREFIX : RR
+     FPM0510AUO   E                    PRINTER      KINFDS SPOOLU         S01486
+     F*
+     F*
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*
+     F*       31         AMOUNT 1 IS GREATER THAN 0
+     F*       32         AMOUNT 2 IS GREATER THAN 0
+     F*       33         AMOUNT 3 IS GREATER THAN 0
+     F*       34         AMOUNT 4 IS GREATER THAN 0
+     F*       35         AMOUNT 5 IS GREATER THAN 0
+     F*       36         END OF AMOUNTS: SEPARATOR LINES MAY BE PRINTED
+     F*       40         TOTAL AMOUNT 1 IS GREATER THAN 0
+     F*       41         TOTAL AMOUNT 2 IS GREATER THAN 0
+     F*       42         TOTAL AMOUNT 3 IS GREATER THAN 0
+     F*       43         TOTAL AMOUNT 4 IS GREATER THAN 0
+     F*       44         TOTAL AMOUNT 5 IS GREATER THAN 0
+     F*
+     F*       71         NEW CURRENCY
+     F*       72         FIRST RECORD HAS BEEN READ
+     F*       79         SAVE OVERFLOW INDICATOR
+     F********80*********FILE*OPERATIONS*INDICATOR*-*SDACOFL0*/*SDCUSTL1  S01486
+     F********81*********FILE*OPERATIONS*INDICATOR*-*SDCURRL0*********    S01486
+     F********82*********FILE*OPERATIONS*INDICATOR*-*SDBANKL1*********    S01486
+     F********84*********FILE*OPERATIONS*INDICATOR*-*PMPORTPP*********    S01486
+     F********85*********FILE*OPERATIONS*INDICATOR*-*PMTUR2PO*********    S01486
+     F*       84         FILE OPERATIONS INDICATOR - PMPORTPD             S01486
+     F*       85         FILE OPERATIONS INDICATOR - PMTUR2Q0             S01486
+     F*       86         FILE OPERATIONS INDICATOR - PM0510P1
+     F*       87         FILE OPERATIONS INDICATOR - PMTUR5LL
+     F*       88         FILE OPERATIONS INDICATOR - PMTUR6LL
+     F********89*********FILE*OPERATIONS*INDICATOR*-*SDPORTPD*********    S01486
+     F*
+     F*       98         DATE IN FORMAT MMDDYY
+     F*       99         WORK
+     F*
+     F*                Unused indicators
+     F*                -----------------
+     F*       01  02  03  04  05  06  07  08  09  10
+     F*       11  12  13  14  15  16  17  18  19  20
+     F*       21  22  23  24  25  26  27  28  29  30
+     F*       ..  ..  ..  ..  ..  ..  37  38  39  ..
+     F*       ..  ..  ..  ..  45  46  47  48  49  50
+     F*       51  52  53  54  55  56  57  58  59  60
+     F*       61  62  63  64  65  66  67  68  69  70
+     F*       ..  ..  73  74  75  76  77  78  79  80
+     F*       81  82  ..  ..  ..  ..  ..  ..  89  90
+     F*       91  92  93  94  95  96  97  ..  ..
+     F*
+     F*
+     F*       U7         DATABASE ERROR
+     F*       U8         PROGRAM  ERROR
+     F*
+     E*=========================================================================
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E*
+     E                    CPY@    1   1 80
+     E****                                                                33615
+     E****RRAY TO STORE CURRENCIES                                        33615
+     E****                                                                33615
+     E****                WWC       200  3                                33615
+     E*
+     E***ARRAY*FOR QCMDEXC - IBM COMMAND                                  S01486
+     E***********                                                         S01486
+     E***********         CMD     1   1 39                                S01486
+     E* ARRAY CONTENTS LINE DELETED AT BOTTOM OF THE PGM , CONTAINING :   S01486
+     E* OVRPRTF FILE(PM0510P1) SPLFNAME(PM0510P                           S01486
+     E*
+     E** ARRAYS FOR S/R ZSEDIT
+     E*
+      /COPY ZSRSRC,ZSEDITZ1
+     E*
+     E** ARRAYS FOR S/R ZDATE2
+     E*
+      /COPY ZSRSRC,ZDATE2Z1
+     E*
+     E** ARRAY FOR S/R ZCCYXR
+     E*
+      /COPY ZSRSRC,ZPOWERZ1
+     E*
+     E** ARRAY FOR PRINTER FILE
+     E*
+     E                    NARR    1   3 38
+     E*
+     E** ARRAY FOR TEXT TO BE OUTPUT
+     E*
+     E                    TXT     1   5 20
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA         DS                            256
+     I**************************************132 141 WWFILE                S01486
+     I                                      134 141 WWFILE                S01486
+     I                                      142 170 WWKEY
+     I                                      171 180 WWPGM
+     I                                      181 1830WWASE
+     I*
+     I** DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I** DATA STRUCTURE TO F0RMAT DATES
+     I*
+     IZDATDS      DS
+     I                                        1   60ZDATE
+     I****                                    1   20MMTDAY                33615
+     I****                                    5   60YYTDAY                33615
+     I                                        1   20MMTDY1                33615
+     I                                        5   60YYTDY1                33615
+      /COPY ZSRSRC,ZSEDITZ2
+     I*
+     I** DATA STRUCTURE TO F0RMAT AMOUNTS
+     I*
+     IZOUT21      DS                             21
+     I                                        1  16 WFIELD
+      *                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** EXTERNAL DS FOR CUSTOMER DETAILS                                 S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** EXTERNAL DS FOR CURRENCY DETAILS                                 S01486
+     ISDPORT    E DSSDPORTPD                                              S01486
+     I** EXTERNAL DS FOR PM ICD                                           S01486
+     ISDACOF    E DSSDACOFPD                                              S01486
+     I** EXTERNAL DS FOR ACCOUNT OFFICER DETAILS                          S01486
+      *                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01486
+      *                                                                   S01486
+     ISPOOL       DS                                                      S01486
+     I                                       83  92 SFILE                 S01486
+     I                                    B 123 1240SFNUM                 S01486
+     I                                    B 367 3680LINE                  S01486
+     ISPOOLU      DS                                                      S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     I                                    B 367 3680LINE1                 S01486
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * INDEX OF SUBROUTINES                                                   *
+      * MAIN     -                                                             *
+      * #INIT    - INITIALIZE STANDARD FIELDS, ACCESS STANDING DATA            *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR2PO               *
+      * #PA011   - OUTPUT NO DETAILS TO REPORT                                 *
+      * #PR01    - PROCESS HEADER PRINTING                                     *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      * #PR08    - PROCESS AND PRINT FX DETAILS                                *
+      * #CCYD    - STORE CURRENCY DETAILS                                      *
+      * #FAMT    - CONVERT AND FORMAT AMOUNTS                                  *
+      * #FTOT    - FORMAT TOTALS                                               *
+      * #INDT    - SET INDICATORS FOR TOTALS                                   *
+      * #NEWP    - START NEW PAGE                                              *
+      * #OVRP    - OVERRIDE WITH PRINTER FILE                                  *
+      * #RIDP    - PROCESS TO REMOVE IMPLIED DECIMAL PLACES                    *
+      * #RTOT    - RESET TOTALS                                                *
+      * #W08     - PRINT PORTFOLIO HEADER DETAILS                              *
+      * #WCUST   - PRINT CUSTOMER TOTALS                                       *
+      * #WINPO   - PRINT CURRENCY AMOUNTS FOR PORTFOLIO                        *
+      * #WINST   - PRINT CURRENCY AMOUNTS                                      *
+      * #WPORT   - PRINT PORTFOLIO TOTALS                                      *
+      * *PSSR    - FILE ERROR HANDLING                                         *
+      * ZCCYXR   - CONVERT AMOUNT FROM ONE CURRENCY TO ANOTHER                 *
+      * ZDATE2   - CONVERT MIDAS DAY NUMBER TO DDMMYY                          *
+      * ZEDIT    - EDIT AMOUNT FOR PRINTING                                    *
+      * ZZTUR    - CALCULATE RUNNING TOTALS                                    *
+      *                                                                        *
+      * EXTERNAL ROUTINES CALLED                                               *
+      * QCMDEXC  -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C*
+     C**  DEFINE KEY FIELDS
+     C*
+     C           WWKKA2    KLIST
+     C                     KFLD           BBCUST
+     C                     KFLD           WWPTFR
+     C*
+     C           WWKKN2    KLIST
+     C                     KFLD           PNCNUM
+     C                     KFLD           SBPTFR
+     C*
+     C**  DEFINE WORK FIELDS
+     C*
+     C           *LIKE     DEFN MMTDAY    MMPREV
+     C           *LIKE     DEFN YYTDAY    YYPREV
+     C           *LIKE     DEFN SBMTHN    ZZMM
+     C           *LIKE     DEFN SBYRNO    ZZYY
+     C           *LIKE     DEFN ZAMTT     WWAMNT
+     C           *LIKE     DEFN ZAMTT     ZZAMT
+     C           *LIKE     DEFN ZAMTT     ZAMT1
+     C           *LIKE     DEFN ZAMTT     ZAMT2
+     C           *LIKE     DEFN ZAMTT     ZAMT3
+     C           *LIKE     DEFN ZAMTT     ZAMT4
+     C           *LIKE     DEFN ZAMTT     ZAMT5
+     C           *LIKE     DEFN ZAMTT     WWAM21
+     C           *LIKE     DEFN ZAMTT     WWAM22
+     C           *LIKE     DEFN ZAMTT     WWAM23
+     C           *LIKE     DEFN ZAMTT     WWAM24
+     C           *LIKE     DEFN ZAMTT     WWAM25
+     C           *LIKE     DEFN ZAMTT     WWTO21
+     C           *LIKE     DEFN ZAMTT     WWTO22
+     C           *LIKE     DEFN ZAMTT     WWTO23
+     C           *LIKE     DEFN ZAMTT     WWTO24
+     C           *LIKE     DEFN ZAMTT     WWTO25
+     C****       *LIKE     DEFN TT        XX                              33615
+     C*================================================================
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C** PERFORM SETUP OF STANDARD FIELDS
+     C*
+     C                     EXSR #INIT
+     C                     EXSR #PA01
+     C****                                                                33615
+     C****ROCESS FX DETAILS                                               33615
+     C****                                                                33615
+     C****       *IN72     IFEQ '1'                                       33615
+     C****                 EXSR #PR08                                     33615
+     C****                 END                                            33615
+     C*
+     C           WWNDET    IFEQ 'N'                                       R05781
+     C                     EXSR #PA011                                    R05781
+     C                     ELSE                                           R05781
+     C           WWPRCL    IFEQ 'N'                                       S01486
+     C                     WRITEENDRE                  86
+     C                     ENDIF                                          S01486
+     C                     END                                            R05781
+     C*
+     C** TERMINATE PROGRAM
+     C*
+     C                     MOVE '1'       *INLR
+     C*================================================================
+     C*  P R O G R A M     E N D
+     C*================================================================
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #INIT    - INITIALIZE STANDARD FIELDS, ACCESS STANDING DATA            *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - FILE ERROR HANDLING                                         *
+      * ZDATE2   -                                                             *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     -                                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWACOF   -                                                             *
+      * WWCUST   -                                                             *
+      * WWPTFR   -                                                             *
+      * WWCMD    -                                                             *
+      * WWPRTL   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #INIT     BEGSR                           ** #INIT  BSR *
+     C*
+     C                     MOVEL'J'       ZECODE
+     C                     MOVEL'N'       WWNDET  1                       R05781
+     C                     MOVE 'Y'       WWPRCL  1                       R05781
+     C*
+     C** RECEIVE INPUT PARAMETERS
+     C           *ENTRY    PLIST
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM           WWACOF  4
+     C                     PARM           WWPNP8  6
+     C                     PARM           WWPTFR  4
+     C*
+     C** PREPARE LDA
+     C*
+     C                     MOVEL'PM0510'  DBPGM  10
+     C*
+     C** GET INSTALLATION CONTROL DATA RECORD 1
+     C*
+     C***********          READ SDBANKL1                 82               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*
+     C************IN82     IFEQ '1'                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C                     Z-ADD1         DBASE   30       **DB ERROR 01**
+     C***********          MOVEL'SDBANKL1'DBFILE 10                       S01486
+     C                     MOVEL'SDBANKPD'DBFILE                          S01486
+     C                     MOVE *BLANKS   DBKEY  29
+     C                     WRITEPM0510F1                                  S01486
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*                                                                   S01486
+     C**  WRITE AUDIT FILE HEADER                                         S01486
+     C*                                                                   S01486
+     C                     MOVE BJURPT    TITL                            S01486
+     C                     MOVE BJMRDT    RUNA                            S01486
+     C                     WRITEPM0510F0                                  S01486
+     C*                                                                   S01486
+     C**  ENSURE AUDIT SPOOL FILE RECORDED BY RCF                         S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUMU    ZSNUMU  60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ                             S01486
+     C                     PARM *BLANKS   SENTY                           S01486
+     C                     PARM           SFILEU                          S01486
+     C                     PARM           ZSNUMU                          S01486
+     C                     PARM *BLANK    ZSERR                           S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*
+     C** GET BASE CURRENCY
+     C*
+     C***********BJCYCD    CHAINSDCURRL0             81                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM BJCYCD    P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*
+     C************IN81     IFEQ '1'                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C***********          MOVEL'SDCURRL0'DBFILE                          S01486
+     C                     MOVEL'SDCURRPD'DBFILE                          S01486
+     C                     MOVELBJCYCD    DBKEY                           S01486
+     C                     WRITEPM0510F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C** GET PORTFOLIO MANAGEMENT INSTALLATION CONTROL DATA RECORD
+     C*
+     C***********          READ SDPORTL1                 89               S01486
+     C                     CALL 'AOPORTR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*FIRST'  P@OPTN                          S01486
+     C           SDPORT    PARM SDPORT    DSFDY                           S01486
+     C*
+     C************IN89     IFEQ '1'                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C                     Z-ADD3         DBASE            **DB ERROR 03**
+     C***********          MOVEL'SDPORTL1'DBFILE                          S01486
+     C                     MOVEL'SDPORTPD'DBFILE                          S01486
+     C                     WRITEPM0510F1                                  S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** INITIALIZE '1ST RECORD' INDICATOR
+     C*
+     C                     MOVE '0'       *IN72
+     C*
+     C****BUILD*COMMAND EXPRESSION FOR QCMDEXC                            S01486
+     C***********                                                         S01486
+     C***********          MOVELCMD,1     WWCMD  43                       S01486
+     C***********          MOVE ')'       WWPRTL  4                       S01486
+     C*
+     C** SAVE NO. OF DECIMAL PLACES FOR BASE CURRENCY
+     C*
+     C                     Z-ADDA6NBDP    WWBASE  10
+     C                     MOVELA6NBDP    ZCDPT
+     C*
+     C** CALCULATE DATES TO BE USED IN SUBROUTINE ZZTUR
+     C*
+     C                     MOVE '1'       *IN98
+     C                     MOVELBJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C*
+     C                     Z-ADDMMTDY1    MMTDAY  20
+     C                     Z-ADDYYTDY1    YYTDAY  20
+     C*
+     C           YYTDAY    IFEQ 0
+     C                     Z-ADD99        YYPREV
+     C                     ELSE
+     C                     MOVE YYTDAY    YYPREV
+     C                     SUB  1         YYPREV
+     C                     END
+     C*
+     C           MMTDAY    IFEQ 1
+     C                     Z-ADD12        MMPREV
+     C                     ELSE
+     C                     MOVE MMTDAY    MMPREV
+     C                     SUB  1         MMPREV
+     C                     END
+     C*
+     C                     ENDSR                           ** #INIT  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR2PO               *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #PR01    - PROCESS HEADER PRINTING                                     *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     -                                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPRTL   -                                                             *
+      * WWPTFR   -                                                             *
+      * WWOPER   -                                                             *
+      * TT       -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #PA01     BEGSR                           ** #PA01  BSR *
+     C*
+     C** READ FIRST SET OF CUSTOMER DETAILS
+     C***********          READ PMTUR2PO                 85               S01486
+     C                     READ PMTUR2Q0                 85               S01486
+     C*
+     C** OPEN PRINTER FILE AT FIRST RECORD
+     C*
+     C*****                EXSR #OVRP                                     R05781
+     C*
+     C***IF*NO*DETAILS FOUND FOR CUSTOMER PERFORM SUBROUTINE TO OUTPUT    S01486
+     C***NO*DETAILS TEXT                                                  S01486
+     C***********                                                         S01486
+     C************IN85     IFEQ '1'                        - B1           S01486
+     C***********          EXSR #PA011                                    S01486
+     C***********          END                                            S01486
+     C*
+     C** PERFROM PROCESSING WHILE RECORD STILL READ FROM PMTUR2PO
+     C*
+     C           *IN85     DOWEQ'0'
+     C*
+     C** ON CHANGE OF ACCOUNT OFFICER CODE WRITE FX TOTALS
+     C*
+     C           AZACOC    IFNE WWACSV
+     C                     EXSR #PR01
+     C                     END
+     C*
+     C** SET UP COMMON HEADING FIELD DETAILS
+     C*
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C*
+     C** IF PORTFOLIO REFERENCE PASSED TO PROGRAM IS *ALL REPORT DETAILS
+     C** FOR '9999' PORTFOLIO, '9998' PORTFOLIO IF REQUIRED AND ANY
+     C** PORTFOLIOS DEFINED FOR THE CUSTOMER
+     C*
+     C           WWPTFR    IFEQ '*ALL'
+     C*
+     C** REPORT DETAILS FOR '9999' PORTFOLIO
+     C** SET UP PAGE HEADING
+     C*
+     C*************        MOVELP9R999    RRPTFR                          S01486
+     C*************        MOVELP9N999    RRPTFN                          S01486
+     C                     MOVELFCR999    RRPTFR                          S01486
+     C                     MOVELFCN999    RRPTFN                          S01486
+     C*
+     C** WRITE PAGE HEADING INFORMATION
+     C*************        EXSR #NEWP                                     R05781
+     C*
+     C** CALCULATE DETAILS FOR '9999' PORTFOLIO
+     C*
+     C                     MOVE '1'       WWOPER  1
+     C                     EXSR #PR02
+     C*
+     C** IF '9998' PORTFOLIO TO BE REPORTED PERFORM SR/#PR01 A
+     C** SECOND TIME TO SET UP DETAILS
+     C*
+     C***********P9DP98    IFEQ 'Y'                                       S01486
+     C***********          MOVELP9R998    RRPTFR                          S01486
+     C***********          MOVELP9N998    RRPTFN                          S01486
+     C           FCDP98    IFEQ 'Y'                                       S01486
+     C                     MOVELFCR998    RRPTFR                          S01486
+     C                     MOVELFCN998    RRPTFN                          S01486
+     C****                                                                R05781
+     C***IF PAGE OVERFLOW START NEW PAGE WITH NEW TITLES                  R05781
+     C****                                                                R05781
+     C****       *IN86     IFEQ '1'                                       R05781
+     C****       *IN79     OREQ '1'                                       R05781
+     C****                 EXSR #NEWP                                     R05781
+     C****                 MOVE '0'       *IN79                           R05781
+     C****                 ELSE                                           R05781
+     C****                                                                R05781
+     C***WRITE PORTFOLIO TITLE                                            R05781
+     C****                                                                R05781
+     C****                 WRITEPTFRD                  86                 R05781
+     C****                 END                                            R05781
+     C****                 MOVE *IN86     *IN79                           R05781
+     C*
+     C** CALCULATE DETAILS FOR '9998' PORTFOLIO
+     C*
+     C                     MOVE '2'       WWOPER
+     C                     EXSR #PR02
+     C                     END
+     C*
+     C** PERFORM PROCESSING FOR ALL OTHER PORTFOLIOS
+     C*
+     C                     EXSR #PR05
+     C                     END
+     C*
+     C** IF PORTFOLIO REFERENCE PASSED TO PROGRAM IS '9999' REPORT DETAILS
+     C** FOR '9999' PORTFOLIO.
+     C*
+     C           WWPTFR    IFEQ '9999'
+     C*
+     C** REPORT DETAILS FOR '9999' PORTFOLIO
+     C** SET UP PAGE HEADING
+     C*
+     C***********          MOVELP9R999    RRPTFR                          S01486
+     C***********          MOVELP9N999    RRPTFN                          S01486
+     C                     MOVELFCR999    RRPTFR                          S01486
+     C                     MOVELFCN999    RRPTFN                          S01486
+     C***************                                                     R05781
+     C***WRITE*PAGE*HEADING INFORMATION                                   R05781
+     C***************      EXSR #NEWP                                     R05781
+     C*
+     C** CALCULATE DETAILS FOR '9999' PORTFOLIO
+     C*
+     C                     MOVE '1'       WWOPER  1
+     C                     EXSR #PR02
+     C                     END
+     C*
+     C** IF PORTFOLIO REFERENCE PASSED TO PROGRAM IS '9998' REPORT DETAILS
+     C** FOR '9998' PORTFOLIO.
+     C*
+     C           WWPTFR    IFEQ '9998'
+     C***********          MOVELP9R998    RRPTFR                          S01486
+     C***********          MOVELP9N998    RRPTFN                          S01486
+     C                     MOVELFCR998    RRPTFR                          S01486
+     C                     MOVELFCN998    RRPTFN                          S01486
+     C*************                                                       R05781
+     C***WRITE*PAGE HEADING INFORMATION                                   R05781
+     C*************        EXSR #NEWP                                     R05781
+     C*
+     C** CALCULATE DETAILS FOR '9998' PORTFOLIO
+     C*
+     C                     MOVE '2'       WWOPER
+     C                     EXSR #PR02
+     C                     END
+     C*
+     C** IF PORTFOLIO REFERENCE PASSED TO PROGRAM IS '9997' OR DEFINED
+     C** PORTFOLIO FOR THE CUSTOMER OUTPUT DETAILS
+     C*
+     C           WWPTFR    IFNE '*ALL'
+     C           WWPTFR    ANDNE'9998'
+     C           WWPTFR    ANDNE'9999'
+     C                     EXSR #PR05
+     C                     END
+     C*
+     C** SAVE ACCOUNT OFFICER CODE AND PRINTER LOCATION CODE AND READ NEXT
+     C** RECORD FROM PMTUR2PO
+     C*
+     C                     MOVE AZACOC    WWACSV  2
+     C***********          MOVE AZPRTL    WWPREF  3                       S01486
+     C***********          READ PMTUR2PO                 85               S01486
+     C                     READ PMTUR2Q0                 85               S01486
+     C                     END
+     C*
+     C                     ENDSR                           ** #PA01  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PA011   - OUTPUT NO DETAILS TO REPORT ON REPORT                       *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR2PO               *
+      * #PR05    - REPORT ON INDIVIDUAL PORTFOLIOS                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPTFR   -                                                             *
+      * WWACOF   -                                                             *
+      * WWAVSV   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #PA011    BEGSR
+     C*
+     C***IF*ACCOUNT OFFICER PASSED TO PROGRAM OUTPUT ACCOUNT OFFICER      S01486
+     C***DETAILS*OTHERWISE OUT PUT TEXT 'ALL ACCOUNT OFFICERS'            S01486
+     C***********                                                         S01486
+     C***********WWACOF    IFNE '*ALL'                     - B1           S01486
+     C***********                                                         S01486
+     C***********          MOVELWWACOF    WWAVSV  2                       S01486
+     C***********          MOVELWWAVSV    RRACOC                          S01486
+     C***********WWAVSV    CHAINSDACOFL1             80                   S01486
+     C***********          MOVELAZACON    RRACON                          S01486
+     C***********                                                         S01486
+     C***OTHERWISE OUTPUT ALL + TEXT                                      S01486
+     C***********          ELSE                            - X1           S01486
+     C***********          MOVEL'*ALL'    RRACOC                          S01486
+     C***********          MOVE *BLANKS   RRACON                          S01486
+     C***********          MOVELTXT,1     RRACON                          S01486
+     C***********          END                             - E1           S01486
+     C***********                                                         S01486
+     C***IF*CUSTOMER PASSED TO PROGRAM OUTPUT CUSTOMER DETAILS            S01486
+     C***OTHERWISE OUTPUT TEXT 'ALL CUSTOMERS'                            S01486
+     C***********                                                         S01486
+     C***********WWPNP8    IFNE '*ALL'                     - B1           S01486
+     C***********WWPNP8    CHAINSDCUSTL1             80                   S01486
+     C***********          MOVELWWPNP8    RRCUST                          S01486
+     C***********          MOVELBBCRNM    RRCRNM                          S01486
+     C***********                                                         S01486
+     C***OTHERWISE OUTPUT ALL + TEXT                                      S01486
+     C***********          ELSE                            - X1           S01486
+     C***********          MOVEL'*ALL  '  RRCUST                          S01486
+     C***********          MOVE TXT,2     RRCRNM                          S01486
+     C***********          END                             - E1           S01486
+     C***********                                                         S01486
+     C***IF*PORTFOLIO PASSED TO PROGRAM OUTPUT PORTFOLIO DETAILS          S01486
+     C***OTHERWISE OUTPUT TEXT 'ALL PORTFOLIOS'                           S01486
+     C***********                                                         S01486
+     C***********WWPTFR    IFNE '*ALL'                     - B1           S01486
+     C***********                                                         S01486
+     C***********WWPTFR    IFEQ '9997'                     - B2           S01486
+     C***********          MOVELP9R997    RRPTFR                          S01486
+     C***********          MOVELP9N997    RRPTFN                          S01486
+     C***********          ELSE                            - X2     R05781S01486
+     C***********                                                   R05781S01486
+     C***********WWPTFR    IFEQ '9998'                     - B3     R05781S01486
+     C***********          MOVELP9R998    RRPTFR                    R05781S01486
+     C***********          MOVELP9N998    RRPTFN                    R05781S01486
+     C***********          ELSE                            - X3     R05781S01486
+     C***********                                                   R05781S01486
+     C***********WWPTFR    IFEQ '9999'                     - B4     R05781S01486
+     C***********          MOVELP9R999    RRPTFR                    R05781S01486
+     C***********          MOVELP9N999    RRPTFN                    R05781S01486
+     C***********          ELSE                            - X4     R05781S01486
+     C***********                                                   R05781S01486
+     C***********          MOVE WWPNP8    PNCNUM                          S01486
+     C***********          MOVE WWPTFR    SBPTFR                          S01486
+     C***********WWKKN2    CHAINPMPORTPP             80                   S01486
+     C***********          MOVELWWPTFR    RRPTFR                          S01486
+     C***********          MOVELPNPTFN    RRPTFN                          S01486
+     C***********          END                             - E4     R05781S01486
+     C***********          END                             - E3     R05781S01486
+     C***********          END                             - E2           S01486
+     C***********                                                         S01486
+     C***OTHERWISE OUTPUT ALL + TEXT                                      S01486
+     C***********          ELSE                            - X1           S01486
+     C***********          MOVEL'*ALL'    RRPTFR                          S01486
+     C***********          MOVE TXT,3     RRPTFN                          S01486
+     C***********          END                             - E1           S01486
+     C***********                                                         S01486
+     C***WRITE*REPORT DETAILS                                             S01486
+     C***********                                                         S01486
+     C***********WWPRCL    IFEQ 'Y'                                 R05781S01486
+     C***********          EXSR #OVRP                               R05781S01486
+     C***********          END                                      R05781S01486
+     C***********                                                   R05781S01486
+     C***********          WRITEHEADRE                                    S01486
+     C***********                                                         S01486
+     C***********          WRITEACOFF                                     S01486
+     C***********                                                         S01486
+     C***********          WRITETRNVR                                     S01486
+     C***********                                                         S01486
+     C***********          WRITENODET                                     S01486
+     C                     WRITEPM0510F2                                  S01486
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PR01    - PROCESS HEADER PRINTING                                     *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #NEWP    - START NEW PAGE                                              *
+      * #OVRP    - OVERRIDE WITH PRINTER FILE                                  *
+      * #PR08    - PROCESS FX DETAILS                                          *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR2PO               *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPREF   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #PR01     BEGSR                           ** #PR01  BSR *
+     C*
+     C           *IN72     IFEQ '0'
+     C                     MOVE '1'       *IN72
+     C                     ELSE
+     C****                                                                33615
+     C****ROCESS FX DETAILS                                               33615
+     C****                                                                33615
+     C****                 EXSR #PR08                                     33615
+     C*
+     C** OPEN NEW PRINTER FILE IF NEW PRINTER LOCATION CODE IS READ
+     C*
+     C***********AZPRTL    IFNE WWPREF                                    S01486
+     C***********W1PRTL    ANDEQWWPREF                              R05781S01486
+     C           WWPRCL    IFEQ 'N'                                       S01486
+     C                     WRITEENDRE                  86
+     C                     CLOSEPM0510P1
+     C****                 EXSR #OVRP                                     R05781
+     C                     MOVE 'Y'       WWPRCL  1                       R05781
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           ** #PR01  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #CCYD    - STORE CURRENCY DETAILS                                      *
+      * *PSSR    - FILE ERROR HANDLING                                         *
+      * ZZTUR    - CALCULATE RUNNING TOTALS                                    *
+      * #RTOT    - RESET TOTALS                                                *
+      * #WCUST   - PRINT CUSTOMER TOTALS                                       *
+      * #FTOT    - FORMAT TOTALS                                               *
+      * #FAMT    - CONVERT AND FORMAT AMOUNTS                                  *
+      * #INDT    - SET INDICATORS FOR TOTALS                                   *
+      * #WINST   - PRINT CURRENCY AMOUNTS                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR2PO               *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWOPER   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #PR02     BEGSR                           ** #PR02  BSR *
+     C*
+     C** ZEROISE TOTALS
+     C*
+     C                     EXSR #RTOT
+     C*
+     C                     MOVE *BLANKS   RRTEX2
+     C           BBCUST    SETLLPMTUR5LL
+     C                     READ PMTUR5LL                 87
+     C*
+     C** DO WHILE SAME CUSTOMER
+     C*
+     C           BBCUST    DOWEQSBCNUM                     - B1
+     C           *IN87     ANDEQ'0'
+     C*
+     C** ZEROISE CURRENCY AMOUNTS
+     C*
+     C                     Z-ADD0         ZAMT1
+     C                     Z-ADD0         ZAMT2
+     C                     Z-ADD0         ZAMT3
+     C                     Z-ADD0         ZAMT4
+     C                     Z-ADD0         ZAMT5
+     C                     Z-ADD0         ZAMT1A
+     C                     Z-ADD0         ZAMT2A
+     C                     Z-ADD0         ZAMT3A
+     C                     Z-ADD0         ZAMT4A
+     C                     Z-ADD0         ZAMT5A
+     C                     MOVE SBICCY    RRICCY
+     C*
+     C** ADD CURRENCY AMOUNTS
+     C*
+     C           BBCUST    DOWEQSBCNUM                     - B2
+     C           RRICCY    ANDEQSBICCY
+     C           *IN87     ANDEQ'0'
+     C*
+     C           SBPTFR    IFNE '9997'                     - B3
+     C           WWOPER    OREQ '1'
+     C                     Z-ADD0         ZZAMT
+     C                     Z-ADDSBTNVR    ZZAMT
+     C*
+     C** CALCULATE RUNNING TOTALS
+     C*
+     C                     Z-ADDSBYRNO    ZZYY
+     C                     Z-ADDSBMTHN    ZZMM
+     C                     EXSR ZZTUR
+     C*                                                                   33615
+     C** OBTAIN FX RATES FROM PMHSEXPP                                    33615
+     C*                                                                   33615
+     C           SBICCY    IFNE W1ICCY                                    33615
+     C           SBYRNO    ORNE W1YRNO                                    33615
+     C           SBMTHN    ORNE W1MTHN                                    33615
+     C*                                                                   33615
+     C** DETERMINE FX RATE TO BASE WHEN TRANSACTION DONE USING SR/ZHRATE  33615
+     C                     Z-ADDSBMTHN    ZMTHN                           33615
+     C                     Z-ADDSBYRNO    ZYEARN                          33615
+     C                     MOVE SBICCY    ZCCY                            33615
+     C                     EXSR ZHRATE                                    33615
+     C*                                                                   33615
+     C** NO RATE FOUND - TERMINATE WITH DATABASE ERROR                    33615
+     C           *IN99     IFEQ '1'                                       33615
+     C***********          Z-ADD19        DBASE   30       **DB ERRO336156S01486
+     C***********          MOVEL'PMHSEXPP'DBFILE 10                 336156S01486
+     C***********          Z-ADD19        DBASE      **DB ERROR 01**33615 S01486
+     C                     Z-ADD19        DBASE            **DB ERROR 19**S01486
+     C                     MOVEL'PMHSEXPD'DBFILE                          S01486
+     C                     MOVE ZCCY      DBKEY  29                       33615
+     C                     WRITEPM0510F1                                  S01486
+     C                     EXSR *PSSR                                     33615
+     C                     END                                            33615
+     C*                                                                   33615
+     C** SET UP DETAILS                                                   33615
+     C                     MOVELSBICCY    W1ICCY  3                       33615
+     C                     Z-ADDSBYRNO    W1YRNO  20                      33615
+     C                     Z-ADDSBMTHN    W1MTHN  20                      33615
+     C                     Z-ADDZFXRT     ZCRSRT                          33615
+     C                     MOVELZMDIN     ZCRSMD                          33615
+     C                     Z-ADDZCDP      ZCDPF                           33615
+     C                     END                                            33615
+     C*
+     C** CONVERT AMOUNT FROM INSTRUMENT CURRENCY TO BASE CURRENCY
+     C*
+     C                     Z-ADDWWBASE    ZCDPT                           33615
+     C                     Z-ADDSBTNVR    ZAMTF
+     C                     EXSR ZCCYXR
+     C*
+     C** CALCULATE RUNNING TOTALS
+     C*
+     C                     Z-ADDZAMTT     ZZAMT
+     C                     Z-ADDSBYRNO    ZZYY
+     C                     Z-ADDSBMTHN    ZZMM
+     C                     EXSR ZZTURN
+     C                     END                             - E3
+     C*
+     C                     READ PMTUR5LL                 87
+     C                     END                             - E2
+     C*
+     C           ZAMT1     IFNE 0                          - B2
+     C           ZAMT2     ORNE 0
+     C           ZAMT3     ORNE 0
+     C           ZAMT4     ORNE 0
+     C           ZAMT5     ORNE 0
+     C*
+     C** STORE CURRENCY DETAILS
+     C*
+     C****                 EXSR #CCYD                                     33615
+     C*
+     C** CONVERT AND FORMAT AMOUNTS IN BASE CURRENCY
+     C*
+     C                     EXSR #FAMT
+     C*
+     C** SET INDICATORS FOR SEPARATOR LINES
+     C*
+     C                     EXSR #INDT
+     C*
+     C           BBCUST    IFNE SBCNUM
+     C           *IN87     OREQ '1'
+     C                     MOVE '1'       *IN36
+     C                     END
+     C*
+     C** PRINT CURRENCY AMOUNTS
+     C*
+     C                     EXSR #WINST
+     C                     MOVE '0'       *IN36
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C** FORMAT TOTALS
+     C*
+     C                     EXSR #FTOT
+     C*
+     C** PRINT CUSTOMER TOTALS
+     C*
+     C           *IN31     IFNE '0'                                       R05781
+     C           *IN32     ORNE '0'                                       R05781
+     C           *IN33     ORNE '0'                                       R05781
+     C           *IN34     ORNE '0'                                       R05781
+     C           *IN35     ORNE '0'                                       R05781
+     C                     EXSR #WPNP8
+     C                     END                                            R05781
+     C                     MOVE SBICCY    RRICCY
+     C                     MOVELAZACOC    RRACOC
+     C*
+     C                     ENDSR                           ** #PR02  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #FAMT    - CONVERT AND FORMAT AMOUNTS                                  *
+      * #W08     - PRINT PORTFOLIO HEADER DETAILS                              *
+      * #CCYD    - STORE CURRENCY DETAILS                                      *
+      * #WINPO   - PRINT CURRENCY AMOUNTS FOR PORTFOLIO                        *
+      * #INDT    - SET INDICATORS FOR TOTALS                                   *
+      * #WPORT   - PRINT PORTFOLIO TOTALS                                      *
+      * #RTOT    - RESET TOTALS                                                *
+      * #FTOT    - FORMAT TOTALS                                               *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PA01    - INITIALIZE PRINTER FILE FIELDS, READ PMTUR2PO               *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPTFR   -                                                             *
+      * WWKKA2   -                                                             *
+      * WWACOF   -                                                             *
+      * WWCUST   -                                                             *
+      * WWKKN2   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #PR05     BEGSR                           ** #PR05  BSR *
+     C*
+     C           WWPTFR    IFEQ '*ALL'                     - B1
+     C           BBCUST    SETLLPMTUR6LL                 88
+     C                     ELSE                            - X1
+     C           WWKKA2    SETLLPMTUR6LL                 88
+     C                     END                             - E1
+     C*
+     C           *IN88     IFEQ '0'                        - B1
+     C                     MOVE '1'       *IN88
+     C                     ELSE                            - X1
+     C                     READ PMTUR6LL                 88
+     C*
+     C** PREPARE KEY FOR CHAINING TO PMPORTPP
+     C*
+     C                     MOVE BBCUST    PNCNUM
+     C                     END                             - E1
+     C*
+     C***IF*NO*DETAILS FOUND FOR CUSTOMER PERFORM SUBROUTINE TO OUTPUT    S01486
+     C***NO*DETAILS TEXT                                                  S01486
+     C***********                                                         S01486
+     C************IN88     IFEQ '1'                        - B1           S01486
+     C***********WWACOF    ANDNE'*ALL'                     - B1           S01486
+     C***********WWPNP8    ANDNE'*ALL  '                   - B1           S01486
+     C***********WWPTFR    ANDNE'*ALL'                     - B1           S01486
+     C***********          EXSR #PA011                                    S01486
+     C***********          END                                            S01486
+     C*
+     C           SBCNUM    DOWEQBBCUST                     - B1
+     C           *IN88     ANDEQ'0'
+     C           SBPTFR    ANDEQWWPTFR
+     C           SBCNUM    OREQ BBCUST
+     C           *IN88     ANDEQ'0'
+     C           WWPTFR    ANDEQ'*ALL'
+     C*
+     C** IF '*ALL' REQUESTED AND '9997' PORTFOLIO  HAS BEEN READ EXIT LOOP
+     C*
+     C           WWPTFR    IFEQ '*ALL'                     - B2
+     C           SBPTFR    ANDEQ'9997'
+     C***********P9DP97    ANDEQ'N'                                       S01486
+     C           FCDP97    ANDEQ'N'                                       S01486
+     C                     GOTO #PR059
+     C                     END                             - E2
+     C*
+     C           SBPTFR    IFNE '9997'                     - B2
+     C           SBPTFR    OREQ '9997'
+     C***********P9DP97    ANDEQ'Y'                                       S01486
+     C           FCDP97    ANDEQ'Y'                                       S01486
+     C*
+     C** RESET TOTALS
+     C*
+     C                     EXSR #RTOT
+     C*
+     C** PRINT PORTFOLIOS TITLE
+     C*
+     C                     EXSR #W08
+     C*
+     C           SBPTFR    DOWEQWWPTSV                     - B3
+     C           SBCNUM    ANDEQBBCUST
+     C           *IN88     ANDEQ'0'
+     C                     Z-ADD0         ZAMT1
+     C                     Z-ADD0         ZAMT2
+     C                     Z-ADD0         ZAMT3
+     C                     Z-ADD0         ZAMT4
+     C                     Z-ADD0         ZAMT5
+     C                     Z-ADD0         ZAMT1A
+     C                     Z-ADD0         ZAMT2A
+     C                     Z-ADD0         ZAMT3A
+     C                     Z-ADD0         ZAMT4A
+     C                     Z-ADD0         ZAMT5A
+     C                     MOVE SBICCY    RRICCY
+     C*
+     C           SBICCY    DOWEQRRICCY                     - B4
+     C           SBPTFR    ANDEQWWPTSV
+     C           SBCNUM    ANDEQBBCUST
+     C           *IN88     ANDEQ'0'
+     C*
+     C** CALCULATE RUNNING TOTALS
+     C*
+     C                     Z-ADD0         ZZAMT
+     C                     Z-ADDSBTNVR    ZZAMT
+     C                     Z-ADDSBYRNO    ZZYY
+     C                     Z-ADDSBMTHN    ZZMM
+     C                     EXSR ZZTUR
+     C*                                                                   33615
+     C** OBTAIN FX RATES FROM PMHSEXPP                                    33615
+     C*                                                                   33615
+     C           SBICCY    IFNE W1ICCY                     B5             33615
+     C           SBYRNO    ORNE W1YRNO                                    33615
+     C           SBMTHN    ORNE W1MTHN                                    33615
+     C*                                                                   33615
+     C** DETERMINE FX RATE TO BASE WHEN TRANSACTION DONE USING SR/ZHRATE  33615
+     C                     Z-ADDSBMTHN    ZMTHN                           33615
+     C                     Z-ADDSBYRNO    ZYEARN                          33615
+     C                     MOVE SBICCY    ZCCY                            33615
+     C                     EXSR ZHRATE                                    33615
+     C*                                                                   33615
+     C** NO RATE FOUND - TERMINATE WITH DATABASE ERROR                    33615
+     C           *IN99     IFEQ '1'                        B6             33615
+     C***********          Z-ADD19        DBASE   30       **DB ERRO336156S01486
+     C***********          MOVEL'PMHSEXPP'DBFILE 10                 336156S01486
+     C                     Z-ADD29        DBASE            **DB ERROR 29**S01486
+     C                     MOVEL'PMHSEXPD'DBFILE                          S01486
+     C                     MOVE ZCCY      DBKEY  29                       33615
+     C                     WRITEPM0510F1                                  S01486
+     C                     EXSR *PSSR                                     33615
+     C                     END                             E6             33615
+     C*                                                                   33615
+     C** SET UP DETAILS                                                   33615
+     C                     MOVELSBICCY    W1ICCY  3                       33615
+     C                     Z-ADDSBYRNO    W1YRNO  20                      33615
+     C                     Z-ADDSBMTHN    W1MTHN  20                      33615
+     C                     Z-ADDZFXRT     ZCRSRT                          33615
+     C                     MOVELZMDIN     ZCRSMD                          33615
+     C                     Z-ADDZCDP      ZCDPF                           33615
+     C                     END                             E5             33615
+     C*
+     C** CONVERT AMOUNT FROM INSTRUMENT CURRENCY TO BASE CURRENCY
+     C*
+     C                     Z-ADDWWBASE    ZCDPT                           33615
+     C                     Z-ADDSBTNVR    ZAMTF
+     C                     EXSR ZCCYXR
+     C*
+     C** CALCULATE RUNNING TOTALS
+     C*
+     C                     Z-ADDZAMTT     ZZAMT
+     C                     Z-ADDSBYRNO    ZZYY
+     C                     Z-ADDSBMTHN    ZZMM
+     C                     EXSR ZZTURN
+     C*
+     C                     READ PMTUR6LL                 88
+     C                     END                             - E4
+     C*
+     C           ZAMT1     IFNE 0                          B4
+     C           ZAMT2     ORNE 0
+     C           ZAMT3     ORNE 0
+     C           ZAMT4     ORNE 0
+     C           ZAMT5     ORNE 0
+     C****                                                                33615
+     C****TORE CURRENCY DETAILS                                           33615
+     C****                                                                33615
+     C****                 EXSR #CCYD                                     33615
+     C*
+     C** CONVERT AMOUNT TO BASE CURRENCY
+     C*
+     C                     EXSR #FAMT
+     C*
+     C** SET INDICATORS FOR SEPARATOR LINES
+     C*
+     C                     EXSR #INDT
+     C                     END                             E4
+     C*
+     C           SBPTFR    IFNE WWPTSV                     - B4
+     C           SBCNUM    ORNE BBCUST
+     C           *IN88     OREQ '1'
+     C                     MOVE '1'       *IN36
+     C                     END                             - E4
+     C*
+     C** PRINT CURRENCY AMOUNTS FOR PORTFOLIO IF
+     C** ANY OF AMOUNTS ARE NON ZERO
+     C*
+     C****       RRAM11    IFNE *BLANKS                                   R05781
+     C****       RRAM12    ORNE *BLANKS                                   R05781
+     C****       RRAM13    ORNE *BLANKS                                   R05781
+     C****       RRAM14    ORNE *BLANKS                                   R05781
+     C****       RRAM15    ORNE *BLANKS                                   R05781
+     C           ZAMT1     IFNE 0                                         R05781
+     C           ZAMT2     ORNE 0                                         R05781
+     C           ZAMT3     ORNE 0                                         R05781
+     C           ZAMT4     ORNE 0                                         R05781
+     C           ZAMT5     ORNE 0                                         R05781
+     C                     EXSR #WINPO
+     C                     END
+     C*
+     C                     MOVE '0'       *IN36
+     C                     END                             - E3
+     C*
+     C** FORMAT TOTALS
+     C*
+     C                     EXSR #FTOT
+     C*
+     C** PRINT PORTFOLIO TOTALS
+     C*
+     C           *IN31     IFEQ '1'                                       R05781
+     C           *IN32     OREQ '1'                                       R05781
+     C           *IN33     OREQ '1'                                       R05781
+     C           *IN34     OREQ '1'                                       R05781
+     C           *IN35     OREQ '1'                                       R05781
+     C                     EXSR #WPORT
+     C                     END                                            R05781
+     C                     END                             - E2
+     C*
+     C                     END                             - E1
+     C*
+     C           #PR059    ENDSR                           ** #PR05  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #FAMT    - CONVERT AND FORMAT AMOUNTS                                  *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * ZCCYXR   - CONVERT AMOUNT FROM ONE CURRENCY TO ANOTHER                 *
+      * #RIDP    - PROCESS TO REMOVE IMPLIED DECIMAL PLACES                    *
+      * ZEDIT    - EDIT AMOUNT FOR PRINTING                                    *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWAMNT                                                                 *
+      * WWAM21                                                                 *
+      * WWAM22                                                                 *
+      * WWAM23                                                                 *
+      * WWAM24                                                                 *
+      * WWAM25                                                                 *
+      * WWTO21                                                                 *
+      * WWTO22                                                                 *
+      * WWTO23                                                                 *
+      * WWTO24                                                                 *
+      * WWTO25                                                                 *
+      *                                                                        *
+      **************************************************************************
+     C           #FAMT     BEGSR                           ** #FAMT  BSR *
+     C*
+     C** GET CURRENCY DETAILS
+     C*
+     C***********RRICCY    CHAINSDCURRL0             81                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY'    P@OPTN                          S01486
+     C                     PARM RRICCY    P@KEY3  3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C                     MOVELA6CYNM    RRCYNM
+     C*
+     C** FORMAT AMOUNTS
+     C*
+     C                     Z-ADDWWBASE    ZCDPT
+     C                     Z-ADD0         ZDECS
+     C                     Z-ADDZAMT1A    WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWTO21
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM21
+     C*
+     C                     Z-ADDWWBASE    ZCDPT
+     C                     Z-ADDZAMT2A    WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWTO22
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM22
+     C*
+     C                     Z-ADDWWBASE    ZCDPT
+     C                     Z-ADDZAMT3A    WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWTO23
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM23
+     C*
+     C                     Z-ADDWWBASE    ZCDPT
+     C                     Z-ADDZAMT4A    WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWTO24
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM24
+     C*
+     C                     Z-ADDWWBASE    ZCDPT
+     C                     Z-ADDZAMT5A    WWAMNT
+     C                     EXSR #RIDP
+     C                     ADD  WWAMNT    WWTO25
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM25
+     C*
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     Z-ADDZAMT1     WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM11
+     C*
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     Z-ADDZAMT2     WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM12
+     C*
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     Z-ADDZAMT3     WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM13
+     C*
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     Z-ADDZAMT4     WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM14
+     C*
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     Z-ADDZAMT5     WWAMNT
+     C                     EXSR #RIDP
+     C                     MOVE WWAMNT    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRAM15
+     C*
+     C                     ENDSR                           ** #FAMT  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #FTOT    - FORMAT TOTALS                                               *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * ZEDIT    - EDIT AMOUNT FOR PRINTING                                    *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWTO21                                                                 *
+      * WWTO22                                                                 *
+      * WWTO23                                                                 *
+      * WWTO24                                                                 *
+      * WWTO25                                                                 *
+      *                                                                        *
+      **************************************************************************
+     C           #FTOT     BEGSR                           ** #FTOT  BSR *
+     C*
+     C                     MOVE WWTO21    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRTO21
+     C                     MOVE WWTO22    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRTO22
+     C                     MOVE WWTO23    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRTO23
+     C                     MOVE WWTO24    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRTO24
+     C                     MOVE WWTO25    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE WFIELD    RRTO25
+     C*
+     C                     ENDSR                           ** #FTOT  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #INDT    - SET INDICATORS FOR TOTALS                                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #INDT     BEGSR                           ** #INDT  BSR *
+     C*
+     C           RRAM11    IFNE *BLANKS
+     C           RRAM21    ORNE *BLANKS
+     C                     MOVE '1'       *IN31
+     C                     END
+     C*
+     C           RRAM12    IFNE *BLANKS
+     C           RRAM22    ORNE *BLANKS
+     C                     MOVE '1'       *IN32
+     C                     END
+     C*
+     C           RRAM13    IFNE *BLANKS
+     C           RRAM23    ORNE *BLANKS
+     C                     MOVE '1'       *IN33
+     C                     END
+     C*
+     C           RRAM14    IFNE *BLANKS
+     C           RRAM24    ORNE *BLANKS
+     C                     MOVE '1'       *IN34
+     C                     END
+     C*
+     C           RRAM15    IFNE *BLANKS
+     C           RRAM25    ORNE *BLANKS
+     C                     MOVE '1'       *IN35
+     C                     END
+     C*
+     C                     ENDSR                           ** #INDT  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #NEWP    - START NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR01    - PROCESS HEADER PRINTING                                     *
+      * #WINST   - PRINT CURRENCY AMOUNTS                                      *
+      * #WCUST   - PRINT CUSTOMER TOTALS                                       *
+      * #W08     - PRINT PORTFOLIO HEADER DETAILS                              *
+      * #WINPO   - PRINT CURRENCY AMOUNTS FOR PORTFOLIO                        *
+      * #WPORT   - PRINT PORTFOLIO TOTALS                                      *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #NEWP     BEGSR                           ** #NEWP  BSR *
+     C*
+     C           WWPRCL    IFEQ 'Y'                                       R05781
+     C                     EXSR #OVRP                                     R05781
+     C                     END                                            R05781
+     C*
+     C                     WRITEHEADRE                 86
+     C                     WRITEACOFF                  86
+     C                     WRITETRNVR                  86
+     C*
+     C                     ENDSR                           ** #NEWP  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #OVRP    - OVERRIDE WITH PRINTER FILE                                  *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * QCMDEXC  -                                                             *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR01    - PROCESS HEADER PRINTING                                     *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPRTL   -                                                             *
+      * WWPREF   -                                                             *
+      * WWCMD    -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #OVRP     BEGSR                           ** #OVRP  BSR *
+     C***********                                                         S01486
+     C****OVRPRTF TO PRINTER FILE PM0510PXXX (XXX = PRINTER LOCATION CODE)S01486
+     C***********                                                         S01486
+     C***********WWNDET    IFEQ 'N'                                 R05781S01486
+     C***********          MOVE *BLANKS   AZPRTL                    R05781S01486
+     C***********          END                                      R05781S01486
+     C***********                                                         S01486
+     C***********          MOVELAZPRTL    WWPRTL                          S01486
+     C***********          MOVE AZPRTL    WWPREF                          S01486
+     C***********          MOVE WWPRTL    WWCMD                           S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA   43                       S01486
+     C***********          PARM 43        QCAN   155                      S01486
+     C                     OPEN PM0510P1
+     C                     MOVE 'N'       WWPRCL                          R05781
+     C                     MOVE 'Y'       WWNDET                          S01486
+     C                     MOVE AZACOC    RRACOF                          S01486
+     C                     MOVE AZACON    RRACNM                          S01486
+     C*
+     C**  ENSURE REPORT SPOOL FILE RECORDED BY RCF                        S01486
+     C*                                                                   S01486
+     C                     Z-ADDSFNUM     ZSNUM   60                      S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           SEQ     5                       S01486
+     C                     PARM AZACOC    SENTY   3                       S01486
+     C                     PARM           SFILE                           S01486
+     C                     PARM           ZSNUM                           S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C*                                                                   S01486
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       S01486
+     C*                                                                   S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     Z-ADD0         PAGE                            S01486
+     C*                                                                   S01486
+     C                     ENDSR                           ** #OVRP  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #RIDP    - PROCESS TO REMOVE IMPLIED DECIMAL PLACES                    *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #FAMT    - FORMAT AMOUNTS                                              *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWAMNT   -                                                             *
+      * YY       -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #RIDP     BEGSR                           ** #RIDP  BSR *
+     C*
+     C                     Z-ADD1         YY      10
+     C*
+     C           YY        DOWLEZCDPT
+     C                     DIV  10        WWAMNT    H
+     C                     ADD  1         YY
+     C                     END
+     C*
+     C                     ENDSR                           ** #RIDP  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #RTOT    - RESET TOTALS                                                *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWTO21                                                                 *
+      * WWTO22                                                                 *
+      * WWTO23                                                                 *
+      * WWTO24                                                                 *
+      * WWTO25                                                                 *
+      *                                                                        *
+      **************************************************************************
+     C           #RTOT     BEGSR                           ** #RTOT  BSR *
+     C*
+     C                     Z-ADD0         WWTO21
+     C                     Z-ADD0         WWTO22
+     C                     Z-ADD0         WWTO23
+     C                     Z-ADD0         WWTO24
+     C                     Z-ADD0         WWTO25
+     C                     MOVE '0'       *IN31
+     C                     MOVE '0'       *IN32
+     C                     MOVE '0'       *IN33
+     C                     MOVE '0'       *IN34
+     C                     MOVE '0'       *IN35
+     C                     MOVE '0'       *IN36
+     C*
+     C                     ENDSR                           ** #RTOT  ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #W08     - PRINT PORTFOLIO HEADER DETAILS                              *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #NEWP    - START NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPTFR   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #W08      BEGSR                           ** #W08   BSR *
+     C*
+     C                     MOVE *BLANKS   RRTEX2
+     C           SBPTFR    IFNE '9997'
+     C***********WWKKN2    CHAINPMPORTPP             84                   S01486
+     C           WWKKN2    CHAINPMPORTPD             84                   S01486
+     C*
+     C** IF PORTFOLIO HAS BEEN DELETED OUTPUT 'DELETED' TEXT
+     C*
+     C           *IN84     IFEQ '1'
+     C                     MOVELSBPTFR    RRPTFR
+     C                     MOVELSBPTFR    WWPTSV  4
+     C                     MOVELTXT,4     RRPTFN
+     C                     MOVE TXT,5     RRTEX2
+     C                     ELSE
+     C*
+     C** SET UP SCREEN TITLE PARAMETERS
+     C*
+     C                     MOVELPNPTFR    RRPTFR
+     C                     MOVELPNPTFR    WWPTSV  4
+     C                     MOVELPNPTFN    RRPTFN
+     C*
+     C** IF PORTFOLIO HAS BEEN DELETED OUTPUT DELETED TEXT
+     C*
+     C           PNRECI    IFEQ '*'
+     C                     MOVE TXT,5     RRTEX2
+     C                     END
+     C*
+     C                     END
+     C                     ELSE
+     C***********          MOVELP9R997    RRPTFR                          S01486
+     C                     MOVELFCR997    RRPTFR                          S01486
+     C                     MOVEL'9997'    WWPTSV
+     C***********          MOVELP9N997    RRPTFN                          S01486
+     C                     MOVELFCN997    RRPTFN                          S01486
+     C                     END
+     C*
+     C** SAVE CUSTOMER NUMBER AND PORTFOLIO REFERENCE FOR LATER USE
+     C*
+     C**********           Z-ADDPNCNUM    WWCNUM  60                                          CSD027
+     C                     MOVE PNCNUM    WWCNUM  6                                           CSD027
+     C*
+     C** IF OVERFLOW INDICATOR ON WRITE NEW PAGE OTHERWISE IF CUSTOMER
+     C** NUMBER CHANGED OUTPUT CUSTOMER AND PORTFOLIO TITLE OTHERWISE
+     C** OUTPUT PORTFOLIO TITLE
+     C*
+     C****       WWPTFR    IFEQ '*ALL'                     - B1           R05781
+     C****       *IN86     IFEQ '1'                        - B2           R05781
+     C****       *IN79     OREQ '1'                                       R05781
+     C****                 EXSR #NEWP                                     R05781
+     C****                 MOVE '0'       *IN79                           R05781
+     C****                 ELSE                            - X2           R05781
+     C****                                                                R05781
+     C****       PNCNUM    IFEQ WWCNUM                     - B3           R05781
+     C****                 WRITEPTFRD                  86                 R05781
+     C****                 ELSE                            - X3           R05781
+     C****                 WRITECUSTD                  86                 R05781
+     C****                 END                             - E3           R05781
+     C****                 END                             - E2           R05781
+     C****                 END                             - E1           R05781
+     C****                 MOVE *IN86     *IN79                           R05781
+     C****                                                                R05781
+     C***FOR SPECIFIC PORTFOLIO REQUESTED                                 R05781
+     C****                                                                R05781
+     C****       WWPTFR    IFNE '*ALL'                                    R05781
+     C****                 EXSR #NEWP                                     R05781
+     C****                 END                                            R05781
+     C*
+     C                     ENDSR                           ** #W08   ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #WCUST   - PRINT CUSTOMER TOTALS                                       *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #NEWP    - START NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWOPER   -                                                             *
+      *                                                                        *
+      **************************************************************************
+     C           #WPNP8    BEGSR                           ** #WCUST BSR *
+     C*
+     C****       *IN31     IFEQ '0'                                       R05781
+     C****       *IN32     ANDEQ'0'                                       R05781
+     C****       *IN33     ANDEQ'0'                                       R05781
+     C****       *IN34     ANDEQ'0'                                       R05781
+     C****       *IN35     ANDEQ'0'                                       R05781
+     C****                 WRITENOTRN                  86                 R05781
+     C*
+     C           WWOPER    IFEQ '1'
+     C                     MOVELNARR,1    RRNARR
+     C                     ELSE
+     C                     MOVELNARR,2    RRNARR
+     C                     END
+     C*
+     C** SET UP INDICATORS FOR UNDERLINE
+     C*
+     C           RRTO21    IFNE *BLANKS
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C           RRTO22    IFNE *BLANKS
+     C                     MOVE '1'       *IN41
+     C                     END
+     C*
+     C           RRTO23    IFNE *BLANKS
+     C                     MOVE '1'       *IN42
+     C                     END
+     C*
+     C           RRTO24    IFNE *BLANKS
+     C                     MOVE '1'       *IN43
+     C                     END
+     C*
+     C           RRTO25    IFNE *BLANKS
+     C                     MOVE '1'       *IN44
+     C                     END
+     C*
+     C                     WRITETOTLS                  86
+     C                     MOVE *BLANKS   RRNARR
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN41
+     C                     MOVE '0'       *IN42
+     C                     MOVE '0'       *IN43
+     C                     MOVE '0'       *IN44
+     C*****                END                                            R05781
+     C*
+     C                     ENDSR                           ** #WCUST ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #WINPO   - PRINT CURRENCY AMOUNTS FOR PORTFOLIO                        *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #NEWP    - START NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #WINPO    BEGSR                           ** #WINPO BSR *
+     C*
+     C           WWPRCL    IFEQ 'Y'                                       R05781
+     C                     EXSR #OVRP                                     R05781
+     C                     END                                            R05781
+     C*                                                                   R05781
+     C** IF CHANGE OF CUSTOMER START NEW PAGE                             R05781
+     C           RRCUST    IFNE WWRCUS                                    R05781
+     C                     EXSR #NEWP                                     R05781
+     C                     END                                            R05781
+     C*                                                                   R05781
+     C** IF OVERFLOW INDICATOR ON WRITE NEW PAGE OTHERWISE IF CUSTOMER    R05781
+     C** NUMBER CHANGED OUTPUT CUSTOMER AND PORTFOLIO TITLE OTHERWISE     R05781
+     C** OUTPUT PORTFOLIO TITLE                                           R05781
+     C*                                                                   R05781
+     C           RRCUST    IFEQ WWRCUS                     - B1           R05781
+     C           RRPTFR    ANDNEWWRPTF                     - B1           R05781
+     C           WWPTFR    IFEQ '*ALL'                     - B2           R05781
+     C           *IN86     IFEQ '1'                        - B3           R05781
+     C           *IN79     OREQ '1'                                       R05781
+     C                     EXSR #NEWP                                     R05781
+     C                     MOVE '0'       *IN79                           R05781
+     C                     ELSE                            - X3           R05781
+     C*                                                                   R05781
+     C                     WRITEPTFRD                  86                 R05781
+     C                     END                             - E3           R05781
+     C                     END                             - E2           R05781
+     C                     MOVE *IN86     *IN79                           R05781
+     C*                                                                   R05781
+     C** FOR SPECIFIC PORTFOLIO REQUESTED                                 R05781
+     C*                                                                   R05781
+     C           WWPTFR    IFNE '*ALL'                                    R05781
+     C                     EXSR #NEWP                                     R05781
+     C                     END                                            R05781
+     C                     END                             - E1           R05781
+     C                     MOVE RRPTFR    WWRPTF  4                       R05781
+     C                     MOVE RRCUST    WWRCUS  6                       R05781
+     C*
+     C                     WRITEAMNTS                  86
+     C                     MOVE *BLANKS   RRCYNM
+     C*
+     C           *IN86     IFEQ '1'
+     C           *IN79     OREQ '1'
+     C                     EXSR #NEWP
+     C                     MOVE '0'       *IN79
+     C                     END
+     C*
+     C                     ENDSR                           ** #WINPO ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #WINST   - PRINT CURRENCY AMOUNTS                                      *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #NEWP    - START NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #WINST    BEGSR                           ** #WINST BSR *
+     C*
+     C           WWPRCL    IFEQ 'Y'                                       R05781
+     C                     EXSR #OVRP                                     R05781
+     C                     END                                            R05781
+     C*                                                                   R05781
+     C** IF CHANGE OF CUSTOMER START NEW PAGE                             R05781
+     C           RRCUST    IFNE WWRCUS                                    R05781
+     C                     EXSR #NEWP                                     R05781
+     C                     END                                            R05781
+     C*                                                                   R05781
+     C** IF OVERFLOW INDICATOR ON WRITE NEW PAGE OTHERWISE IF CUSTOMER    R05781
+     C** NUMBER CHANGED OUTPUT CUSTOMER AND PORTFOLIO TITLE OTHERWISE     R05781
+     C** OUTPUT PORTFOLIO TITLE                                           R05781
+     C*                                                                   R05781
+     C           RRCUST    IFEQ WWRCUS                     - B1           R05781
+     C           RRPTFR    ANDNEWWRPTF                     - B1           R05781
+     C           WWPTFR    IFEQ '*ALL'                     - B2           R05781
+     C           *IN86     IFEQ '1'                        - B3           R05781
+     C           *IN79     OREQ '1'                                       R05781
+     C                     EXSR #NEWP                                     R05781
+     C                     MOVE '0'       *IN79                           R05781
+     C                     ELSE                            - X3           R05781
+     C*                                                                   R05781
+     C                     WRITEPTFRD                  86                 R05781
+     C                     END                             - E3           R05781
+     C                     END                             - E2           R05781
+     C                     MOVE *IN86     *IN79                           R05781
+     C*                                                                   R05781
+     C** FOR SPECIFIC PORTFOLIO REQUESTED                                 R05781
+     C*                                                                   R05781
+     C           WWPTFR    IFNE '*ALL'                                    R05781
+     C                     EXSR #NEWP                                     R05781
+     C                     END                                            R05781
+     C                     END                             - E1           R05781
+     C                     MOVE RRPTFR    WWRPTF  4                       R05781
+     C                     MOVE RRCUST    WWRCUS  6                       R05781
+     C*
+     C                     WRITEAMNTS                  86
+     C                     MOVE *BLANKS   RRCYNM
+     C*
+     C           *IN86     IFEQ '1'
+     C           *IN79     OREQ '1'
+     C                     EXSR #NEWP
+     C                     MOVE '0'       *IN79
+     C                     END
+     C*
+     C                     ENDSR                           ** #WINST ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * #WPORT   - PRINT PORTFOLIO TOTALS                                      *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * #NEWP    - START NEW PAGE                                              *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR05    - PROCESS PORTFOLIO DETAILS                                   *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           #WPORT    BEGSR                           ** #WPORT BSR *
+     C*
+     C****       *IN31     IFEQ '0'                                       R05781
+     C****       *IN32     ANDEQ'0'                                       R05781
+     C****       *IN33     ANDEQ'0'                                       R05781
+     C****       *IN34     ANDEQ'0'                                       R05781
+     C****       *IN35     ANDEQ'0'                                       R05781
+     C****                 WRITENOTRN                  86                 R05781
+     C****                 ELSE                                           R05781
+     C                     MOVELNARR,3    RRNARR
+     C*
+     C** SET UP INDICATORS FOR UNDERLINE
+     C*
+     C           RRTO21    IFNE *BLANKS
+     C                     MOVE '1'       *IN40
+     C                     END
+     C*
+     C           RRTO22    IFNE *BLANKS
+     C                     MOVE '1'       *IN41
+     C                     END
+     C*
+     C           RRTO23    IFNE *BLANKS
+     C                     MOVE '1'       *IN42
+     C                     END
+     C*
+     C           RRTO24    IFNE *BLANKS
+     C                     MOVE '1'       *IN43
+     C                     END
+     C*
+     C           RRTO25    IFNE *BLANKS
+     C                     MOVE '1'       *IN44
+     C                     END
+     C*
+     C                     WRITETOTLS                  86
+     C                     MOVE *BLANKS   RRNARR
+     C                     MOVE '0'       *IN40
+     C                     MOVE '0'       *IN41
+     C                     MOVE '0'       *IN42
+     C                     MOVE '0'       *IN43
+     C                     MOVE '0'       *IN44
+     C****                 END                                            R05781
+     C*
+     C                     ENDSR                           ** #WPORT ESR *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * *PSSR    - FILE ERROR HANDLING                                         *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #INIT    - INITIALIZE STANDARD FIELDS, ACCESS STANDING DATA            *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           *PSSR     BEGSR                           ** *PSRR  BSR *
+     C*
+     C** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+     C*
+     C                     SETON                     LRU7U8
+     C                     DUMP
+     C*
+     C** UPDATE LDA WITH ERROR INFORMATION
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVELDBFILE    WWFILE
+     C                     MOVELDBKEY     WWKEY
+     C                     MOVELDBPGM     WWPGM
+     C                     MOVELDBASE     WWASE
+     C                     OUT  LDA
+     C*                                                                   S01486
+     C**  If printer file not closed, output database error reference     S01486
+     C*                                                                   S01486
+     C           WWPRCL    IFEQ 'N'                                       S01486
+     C                     WRITEDBERROR                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     RETRN
+     C*
+     C                     ENDSR                            ** *PSRR ESR**
+     C**************************************************************************
+      /EJECT
+     C**************************************************************************
+     C*                                                                        *
+     C*    ZCCYXR SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER          *
+     C*    CURRENCY USING AN EXCHANGE RATE BETWEEN THE TWO CURRENCIES          *
+     C*                                                                        *
+     C*   INPUT  FIELDS                                                        *
+     C*       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                         *
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                               *
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR              *
+     C*                      NOTE: FIELD EITHER SET UP IN SR/ZCCYCN OR IF ONE  *
+     C*                      M / D INDICATOR FOR NON-BASE CURRENCY             *
+     C*       ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CURRENCY       *
+     C*       ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CURRENCY         *
+     C*                                                                        *
+     C*   OUTPUT  FIELDS                                                       *
+     C*       ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED AMOUNT)    *
+     C*                                                                        *
+     C*   WORK FIELDS                                                          *
+     C*       ZWKPX   20     POWER INDEX                                       *
+     C*       ZWK153 153                                                       *
+     C*                                                                        *
+     C*   ALSO REQUIRED                                                        *
+     C*       POWER ARRAY                                                      *
+     C*                                                                        *
+     C*   CALLED BY:                                                           *
+     C*                                                                        *
+     C**************************************************************************
+     C*
+     C***********ZCCYXR    BEGSR                           *** ZCCYXR *** 047719
+     C*
+     C**   DEFINE ALL FIELDS
+     C***********          Z-ADDZAMTF     ZAMTF  150                      047719
+     C***********          Z-ADDZCDPF     ZCDPF   10                      047719
+     C***********          Z-ADDZCDPT     ZCDPT   10                      047719
+     C***********          Z-ADDZAMTT     ZAMTT  150                      047719
+     C***********          Z-ADDZCRSRT    ZCRSRT 138                      047719
+     C***********          MOVE ZCRSMD    ZCRSMD  1                       047719
+     C***********          Z-ADDZWKPX     ZWKPX   20                      047719
+     C***********          Z-ADDZWK153    ZWK153 153                      047719
+     C*
+     C** IF CROSS EXCHANGE RATE IS EQUAL TO ZERO
+     C** SET ZAMTT  TO *ZERO  & EXIT
+     C***********ZCRSRT    IFEQ 0                                         047719
+     C***********          Z-ADD*ZEROS    ZAMTT                           047719
+     C***********          GOTO ZCCEND                                    047719
+     C***********          END                                            047719
+     C*
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF) EQUALS DECIMAL
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY
+     C***********ZCDPF     IFEQ ZCDPT                                     047719
+     C*
+     C** IF CROSS RATE MULTIPLY/DIVIDE INDICATOR EQUALS 'D'
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN FROM CURRENCY (ZAMTF)
+     C** DIVIDED BY CROSS EXCHANGE RATE
+     C***********ZCRSMD    IFEQ 'D'                                       047719
+     C***********          Z-ADDZAMTF     ZAMTT                           047719
+     C***********ZAMTT     DIV  ZCRSRT    ZAMTT     H                     047719
+     C***********          END                                            047719
+     C*
+     C** IF CROSS RATE MULTIPLY/DIVIDE INDICATOR EQUALS 'M'
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN FROM CURRENCY (ZAMTF)
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C***********ZCRSMD    IFEQ 'M'                                       047719
+     C***********          Z-ADDZAMTF     ZAMTT                           047719
+     C***********ZAMTT     MULT ZCRSRT    ZAMTT     H                     047719
+     C***********          END                                            047719
+     C***********          END                                            047719
+     C*
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF)  NOT EQUALS DECIMAL
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY
+     C***********ZCDPF     IFNE ZCDPT                                     047719
+     C*
+     C** SUBTRACT DECIMAL PLACES 'FROM' FROM DECIMAL PLACES 'TO' IN POWER INDEX
+     C***********ZCDPT     SUB  ZCDPF     ZWKPX                           047719
+     C***********ZWKPX     ADD  4         Z       20                      047719
+     C*
+     C** IF POWER ELEMENT (8,4) LESS THAN 1
+     C***********POWER,Z   IFLT 1                                         047719
+     C*
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY
+     C***********POWER,Z   MULT ZAMTF     ZWK153                          047719
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT WORK FIELD ZWK153
+     C** DIVIDED    BY CROSS EXCHANGE RATE
+     C***********ZCRSMD    IFEQ 'D'                                       047719
+     C***********ZWK153    DIV  ZCRSRT    ZAMTT     H                     047719
+     C***********          END                                            047719
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT WORK FIELD ZWK153
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C***********ZCRSMD    IFEQ 'M'                                       047719
+     C***********ZWK153    MULT ZCRSRT    ZAMTT     H                     047719
+     C***********          END                                            047719
+     C***********          END                                            047719
+     C*
+     C** IF POWER ELEMENT (8,4) GREATER OR EQUAL TO 1
+     C***********POWER,Z   IFGE 1                                         047719
+     C*
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY
+     C***********ZAMTF     MULT POWER,Z   ZAMTF                           047719
+     C*
+     C** TEST CROSS MULT/DIV INDICATOR
+     C***********ZCRSMD    IFEQ 'D'                                       047719
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C** DIVIDED    BY CROSS EXCHANGE RATE
+     C***********ZAMTF     DIV  ZCRSRT    ZAMTT     H                     047719
+     C***********          END                                            047719
+     C*
+     C** TEST CROSS MULT/DIV INDICATOR
+     C***********ZCRSMD    IFEQ 'M'                                       047719
+     C*
+     C** SET AMOUNT IN 'TO' EQUAL TO AMOUNT IN 'FROM' CURRENCY
+     C** MULTIPLIED BY CROSS EXCHANGE RATE
+     C***********ZAMTF     MULT ZCRSRT    ZAMTT     H                     047719
+     C***********          END                                            047719
+     C***********          END                                            047719
+     C***********          END                                            047719
+     C***********ZCCEND    ENDSR                                          047719
+     C**************************************************************************
+     C*                                                                        *
+     C*    ZHRATE SR. TO DETERMINE FX RATE TO BASE CURRENCY AT EOM             *
+     C*                                                                        *
+     C*   INPUT  FIELDS                                                        *
+     C*       ZMTHN   20     NUMBER OF MONTH FOR WHICH RATE REQUIRED           *
+     C*       ZYEARN  20     NUMBER OF YEAR FOR WHICH RATE REQUIRED            *
+     C*       ZCCY    3      CURRENCY FOR WHICH RATE REQUIRED                  *
+     C*                                                                        *
+     C*   OUTPUT  FIELDS                                                       *
+     C*       ZFXRT  138     FX RATE TO BASE CURRENCY                          *
+     C*       ZMDIN   1      MULTIPLY/DIVIDE IND TO BASE CURRENCY              *
+     C*       ZCDP    10     CURRENCY DECIMAL PLACES                           *
+     C*                                                                        *
+     C**************************************************************************
+     C*
+     C           ZHRATE    BEGSR                           *** ZHRATE ***
+     C*
+     C**   DEFINE ALL FIELDS
+     C                     Z-ADDZMTHN     ZMTHN   20
+     C                     Z-ADDZYEARN    ZYEARN  20
+     C                     MOVE ZCCY      ZCCY    3
+     C                     Z-ADDZFXRT     ZFXRT  138
+     C                     MOVE ZMDIN     ZMDIN   1
+     C                     Z-ADDZCDP      ZCDP    10
+     C*
+     C** DEFINE KEY LIST USED TO ACCESS PF/PMHSEXPP
+     C           HSEXKY    KLIST
+     C                     KFLD           ZCCY
+     C                     KFLD           ZDAYNO
+     C*
+     C** DETERMINE END OF MONTH DATE
+     C                     MOVELZMTHN     WWWRK4  4
+     C                     MOVE ZYEARN    WWWRK4
+     C                     MOVE WWWRK4    ZDATE
+     C*
+     C                     MOVEL'31'      ZDATE
+     C*
+     C           ZMTHN     IFEQ 4                              B1
+     C           ZMTHN     OREQ 6
+     C           ZMTHN     OREQ 9
+     C           ZMTHN     OREQ 11
+     C                     MOVEL'30'      ZDATE
+     C                     END                             E1
+     C*
+     C** FOR MONTH 2 (FEBRUARY DETERMINE IF LEAP YEAR AND IF SO SET TO 29
+     C           ZMTHN     IFEQ 2                          B1
+     C                     MOVEL'28'      ZDATE
+     C*
+     C           ZYEARN    DIV  4         WWWRK3  30
+     C                     MVR            WWWRK1  10
+     C*
+     C           WWWRK1    IFEQ 0                          B2
+     C                     MOVEL'29'      ZDATE
+     C                     END                             E2
+     C                     END                             E1
+     C*
+     C** CONVERT END OF MONTH DATE TO DAY NUMBER FORMAT
+     C                     MOVE *IN98     WIND98  1
+     C                     MOVE '0'       *IN98
+     C                     EXSR ZDATE1
+     C                     MOVE WIND98    *IN98
+     C*
+     C** DETERMINE RATE APPLYING ON THAT DATE FROM PF/PMHSEXPP
+     C           *IN99     IFEQ '0'                        B1
+     C***********HSEXKY    SETGTPMHSEXPP                                  S01486
+     C***********          READPPMHSEXPP                 90               S01486
+     C           HSEXKY    SETGTPMHSEXPD                                  S01486
+     C                     READPPMHSEXPD                 90               S01486
+     C*
+     C** IF RATE NOT FOUND FOR CURRENCY USE EARLIEST HISTORICAL RATE
+     C           *IN90     IFEQ '1'                            B2
+     C           Q8CCY     ORNE ZCCY
+     C***********HSEXKY    SETLLPMHSEXPP                                  S01486
+     C***********          READ PMHSEXPP                 90               S01486
+     C           HSEXKY    SETLLPMHSEXPD                                  S01486
+     C                     READ PMHSEXPD                 90               S01486
+     C*
+     C** IF NO RATE FOUND FOR CURRENCY TERMINATE PROGRAM WITH ERROR
+     C           *IN90     IFEQ '1'                            B3
+     C           Q8CCY     ORNE ZCCY
+     C                     MOVE '1'       *IN99
+     C                     END                                 E3
+     C                     END                                 E2
+     C                     END                                 E1
+     C*
+     C** IF CROSS RATE FOUND FOR CURRENCY SET UP OUTPUT PARAMETERS
+     C           *IN99     IFEQ '0'                            B1
+     C                     Z-ADDQ8SPOT    ZFXRT
+     C                     MOVE Q8MDV1    ZMDIN
+     C                     Z-ADDQ8CDP     ZCDP
+     C                     END                                 E1
+     C*
+     C                     ENDSR
+     C**************************************************************************
+     C**************************************************************************
+      /EJECT                                                              047719
+      /COPY ZSRSRC,ZCCYXR                                                 047719
+      /EJECT
+      /COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * ZZTUR    - CALCULATE RUNNING TOTALS                                    *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * #PR02    - PROCESS CUSTOMER DETAILS & CONSOL.PORTF. DETAILS            *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           ZZTUR     BEGSR                           *** ZZTUR  ***
+     C*                                                                   R05781
+     C***IF*TURNOVER DETAILS TO BE OUTPUT SET ON DETAIL FLAG        R05781S01486
+     C***********ZZYY      IFGE YYPREV                              R05781S01486
+     C***********          MOVE 'Y'       WWNDET                    R05781S01486
+     C***********          MOVE AZPRTL    W1PRTL  3                 R05781S01486
+     C***********          END                                      R05781S01486
+     C*
+     C** CALCULATE TOTAL TURNOVER FOR PREVIOUS YEAR
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C                     ADD  ZZAMT     ZAMT1
+     C                     END
+     C*
+     C** IF PRESENT MONTH IS JANUARY, PREVIOUS MONTH IS DECEMBER
+     C*
+     C           MMTDAY    IFEQ 1
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C           ZZMM      ANDEQ12
+     C                     ADD  ZZAMT     ZAMT2
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C           ZZMM      ANDEQMMPREV
+     C                     ADD  ZZAMT     ZAMT2
+     C                     END
+     C*
+     C                     END
+     C*
+     C** CALCULATE RUNNING YEAR TO DATE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C                     ADD  ZZAMT     ZAMT3
+     C                     END
+     C*
+     C** CALCULATE RUNNING MONTH LAST YEAR
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C           ZZMM      ANDEQMMTDAY
+     C                     ADD  ZZAMT     ZAMT4
+     C                     END
+     C*
+     C** CALCULATE RUNNING MONTH TO DATE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C           ZZMM      ANDEQMMTDAY
+     C                     ADD  ZZAMT     ZAMT5
+     C                     END
+     C*
+     C           ZZTEND    ENDSR
+     C*=========================================================================
+      **************************************************************************
+      *                                                                  *
+      * ZZTURN   - CALCULATE RUNNING TOTALS                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #PR02    - PROCESS DEPARTMENT DETAILS                            *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           ZZTURN    BEGSR                           *** ZZTUR  ***
+     C*
+     C** CALCULATE TOTAL TURNOVER FOR PREVIOUS YEAR
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C                     ADD  ZZAMT     ZAMT1A 150
+     C                     END
+     C*
+     C** IF PRESENT MONTH IS JANUARY, PREVIOUS MONTH IS DECEMBER
+     C*
+     C           MMTDAY    IFEQ 1
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C           ZZMM      ANDEQ12
+     C                     ADD  ZZAMT     ZAMT2A 150
+     C                     END
+     C*
+     C                     ELSE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C           ZZMM      ANDEQMMPREV
+     C                     ADD  ZZAMT     ZAMT2A 150
+     C                     END
+     C*
+     C                     END
+     C*
+     C** CALCULATE RUNNING YEAR TO DATE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C                     ADD  ZZAMT     ZAMT3A 150
+     C                     END
+     C*
+     C** CALCULATE RUNNING MONTH LAST YEAR
+     C*
+     C           ZZYY      IFEQ YYPREV
+     C           ZZMM      ANDEQMMTDAY
+     C                     ADD  ZZAMT     ZAMT4A 150
+     C                     END
+     C*
+     C** CALCULATE RUNNING MONTH TO DATE
+     C*
+     C           ZZYY      IFEQ YYTDAY
+     C           ZZMM      ANDEQMMTDAY
+     C                     ADD  ZZAMT     ZAMT5A 150
+     C                     END
+     C*
+     C                     ENDSR
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   NARR - ARRAY OF NARRATIVES TO PRINT
+          TOTAL TURNOVER FOR CUSTOMER
+TOTAL TURNOVER FOR DEFINED PORTFOLIOS
+         TOTAL TURNOVER FOR PORTFOLIO
+**  TXT  - TEXT FOR REPORTING CURRENCY INFORMATION
+ALL ACCOUNT OFFICERS
+ALL CUSTOMERS
+ALL PORTFOLIOS
+PORTFOLIO DELETED
+*** DELETED ***

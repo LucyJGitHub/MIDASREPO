@@ -1,0 +1,1110 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Standard formatting (miscellaneous).')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                          *
+     F*                                                               *
+     F*  CGZ1800 - - - - Format values for display or printing.       *
+     F*                                                               *
+     F*  Function:   - - This program formats various values.         *
+     F*                  It will handle formatting not applied        *
+     F*                   by one of the type-specific programs.       *
+     F*                                                               *
+     F*  Called by:  - - CGxxxx.                                      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSC022             Date 24Feb04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 085359             Date 28Mar95               *
+      *                 085316             Date 27Mar95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     F*  085359 - Add P0FOPT values LONG_TIME, SHORT_TIME,            *
+     F*            HOURS, MINUTES and SECONDS                         *
+     F*  085316 - Auto-detect the incoming accounts format; add       *
+     F*            P0FOPT values MONTH, YEAR2 and YEAR4; change       *
+     F*            DAYS to DAY and change the resulting action        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Parameters: - - P0RTN  --   7    -- Return code;             *
+     F*                  P0VIN  -- 256    -- Input value;             *
+     F*                  P0VOUT -- 256    -- Output value;            *
+     F*                  P0VLEN --   3(0) -- Output value length;     *
+     F*                  P0FTYP --  10    -- Format type;             *
+     F*                  P0FOPT --  15    -- Format option.           *
+     F*                                                               *
+     F*  Parameter P0FOPT contains the value to be decoded. This      *
+     F*   value is used to determine the formatting involved.         *
+     F*                                                               *
+     F*  Valid values are:                                            *
+     F*                                                               *
+     F*    ACCOUNTS - STD  -- Format accounts such as                 *
+     F**************************789000125DEM109401*********************                       CGL029
+     F*                         789000125DEM000000109401              *                       CGL029
+     F*     (Notes 1, 2)       with hyphens, resulting in             *
+     F**************************789-000125-DEM-1094-01*****************                       CGL029
+     F*                         789-000125-DEM-0000001094-01          *                       CGL029
+     F*                                                               *
+     F*    ACCOUNTS - RET  -- Format accounts such as                 *
+     F**************************000125DEM109401789*********************                       CGL029
+     F*                         000125DEM000000109401789              *                       CGL029
+     F*     (Notes 1, 2)       with hyphens, resulting in             *
+     F**************************000125-DEM-1094-01-789*****************                       CGL029
+     F*                         000125-DEM-0000001094-01-789          *                       CGL029
+     F*                                                               *
+     F*    ZERO SUP      L -- Zero-suppression (left-adjust)          *
+     F*                                                               *
+     F*    ZERO SUP      R -- Zero-suppression (right-adjust)         *
+     F*                                                               *
+     F*    PADDING       L -- Asterisk-suppression (left-adjust)      *
+     F*                                                               *
+     F*    PADDING       R -- Asterisk-suppression (right-adjust)     *
+     F*                                                               *
+     F*    BRACKETS        -- Enclose within <... and ...>            *
+     F*                                                               *
+     F*...............................................................*
+     F/EJECT
+     F*...............................................................*   085316
+     F* Dates group:                                                  *   085316
+     F* ~~~~~~~~~~~                                                   *   085316
+     F*    DAY             -- Extract the day number from a date      *   085316
+     F*                        (for example, 19940630 --> 30)         *   085316
+     F*                                                               *   085316
+     F*    MONTH           -- Extract the month number from a date    *   085316
+     F*                        (for example, 19940630 --> 06)         *   085316
+     F*                                                               *   085316
+     F*    YEAR2           -- Extract the two-digit year number       *   085316
+     F*                        from a date (eg, 19940630 --> 94)      *   085316
+     F*                                                               *   085316
+     F*    YEAR4           -- Extract the four-digit year number      *   085316
+     F*                        from a date (eg, 19940630 --> 1994)    *   085316
+     F*                                                               *   085316
+     F* Times group:                                                  *   085359
+     F* ~~~~~~~~~~~                                                   *   085359
+     F*    All of these extract the time from a value in the format   *   085359
+     F*                                                               *   085359
+     F*          ccyymmdd.hhmmss                                      *   085359
+     F*                                                               *   085359
+     F*    LONG_TIME       -- Format the time as hh:mm:ss             *   085359
+     F*                                                               *   085359
+     F*    SHORT_TIME      -- Format the time as hh:mm                *   085359
+     F*                                                               *   085359
+     F*    HOURS           -- Format the time as hh     s             *   085359
+     F*                                                               *   085359
+     F*    MINUTES         -- Format the time as mm                   *   085359
+     F*                                                               *   085359
+     F*    SECONDS         -- Format the time as ss                   *   085359
+     F*                                                               *   085359
+     F*                                                               *
+     F*  In this program, invalid format options are ignored.         *
+     F*                                                               *
+     F*  Notes                                                        *
+     F*  ~~~~~                                                        *
+     F*    1: The program will automatically detect the format        *
+     F*        actually used for the input, and produce the           *
+     F*        desired output format according to P0FOPT.             *
+     F*                                                               *
+     F*    2: The branch code ("789" in the examples above) is        *
+     F*        output only if the multi-branch indicator              *
+     F*        (AGMBIN in data area RUNDAT) is on ("Y").              *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  80 -- Character found in account number not 0..9.            *
+     F*  81 -- Suffix found.                                          *
+     F*  90 -- Error detected.                                        *
+     F*  91 -- Record not found.                                      *
+     F*  92 -- Last non-blank character found.                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F***SRACCT*--*Edit*an*account*value.                             *   085316
+     F*  SRATYP -- Select an incoming account type.                   *
+     F*  SRACCS -- Edit an account value (standard format).           *
+     F*  SRACCR -- Edit an account value (retail format).             *
+     F*  SRZERO -- Zero-suppress a number.                            *
+     F*  SRBRAK -- Enclose a value within angle-brackets.             *
+     F*  SRBRK2 -- Process a valid value for bracketing.              *
+     F*  SRDAYS -- Determine a day number's suffix.                   *
+     F*  SRDAY  -- Determine a day number.                            *   085316
+     F*  SRMNTH -- Determine a month number.                          *   085316
+     F*  SRYR2  -- Determine a two-digit year number.                 *   085316
+     F*  SRYR4  -- Determine a four-digit year number.                *   085316
+     F*  SRTIME -- Provide time formatting.                           *   085359
+     F*  SRINIT -- Provide initialisation and definitions.            *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    INP       256  1               Input value.
+     E                    OUT       256  1               Output value.
+     E****************    TABDAY  1  40  2   TABSUF  2   Days and suffixes085316
+     E                    TABDAY  1  31  2   TABSUF  2   Days and suffixes085316
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,CGZ1800EPG
+     E*
+     E*-------------------------------------------------------------------
+     I/SPACE
+     I*-------------------------------------------------------------------
+     I/COPY WNCPYSRC,CGZ1800IPG
+     I*
+     I* Copied-in data structures
+     I*
+     I*...................................................................
+     I/COPY CGCPYSRC,SRERRI
+     I*
+     I* Error processing data structures
+     I*
+     I*...................................................................
+     IRUNDAT    E DSRUNDAT
+     I*
+     I* Runtime data area
+     I*
+     I*...................................................................
+     IACCTDS      DS
+     I*
+     I* Account-number incoming value -- standard segments:
+     I*
+     I                                        1   3 ACCT01
+     I                                        4   9 ACCT02
+     I                                       10  12 ACCT03
+     I                                       13  22 ACCT04                                    CGL029
+     I                                       23  24 ACCT05                                    CGL029
+     I**********                             13  16 ACCT04                                    CGL029
+     I**********                             17  18 ACCT05                                    CGL029
+     I*
+     I* Account-number incoming value -- retail segments:
+     I*
+     I                                        1   6 ACCT11
+     I                                        7   9 ACCT12
+     I                                       10  19 ACCT13                                    CGL029
+     I                                       20  21 ACCT14                                    CGL029
+     I                                       22  24 ACCT15                                    CGL029
+     I**********                             10  13 ACCT13                                    CGL029
+     I**********                             14  15 ACCT14                                    CGL029
+     I**********                             16  18 ACCT15                             085316 CGL029
+     I*                                                                   085316
+     I* Account-number incoming value -- common format:                   085316
+     I*                                                                   085316
+     I            DS                                                                          CGL029
+     I                                        1   6 ACCT21                                    CGL029
+     I                                        7   9 ACCT22                                    CGL029
+     I                                       10  19 ACCT23                                    CGL029
+     I                                       20  21 ACCT24                                    CGL029
+     I                                       22  24 ACCT25                                    CGL029
+     I**********                             21  26 ACCT21                             085316 CGL029
+     I**********                             27  29 ACCT22                             085316 CGL029
+     I**********                             30  33 ACCT23                             085316 CGL029
+     I**********                             34  35 ACCT24                             085316 CGL029
+     I**********                             36  38 ACCT25                             085316 CGL029
+     I*...................................................................
+     IINPDS       DS
+     I*
+     I* Incoming value:
+     I*
+     I                                        1 256 INP
+     I*...................................................................085316
+     IDATEDS      DS                                                      085316
+     I*                                                                   085316
+     I* Incoming date split into various parts:                           085316
+     I*                                                                   085316
+     I                                        1   4 #YR4NM                085316
+     I                                        3   4 #YR2NM                085316
+     I                                        5   6 #MONNM                085316
+     I                                        7   8 #DAYNM                085316
+     I*...................................................................085359
+     ITIMEDS      DS                                                      085359
+     I*                                                                   085359
+     I* Incoming date/time stamp split into various parts:                085359
+     I*                                                                   085359
+     I                                        1   8 ##DATE                085359
+     I                                       10  11 ##HOUR                085359
+     I                                       12  13 ##MIN                 085359
+     I                                       14  15 ##SEC                 085359
+     I*...................................................................
+     IOUTDS       DS
+     I*
+     I* Outgoing value:
+     I*
+     I                                        1 256 OUT
+     I*...................................................................
+     I* Named constants:
+     I*
+     I              'ACCOUNTS - STD '     C         #ACCTS
+     I              'ACCOUNTS - RET '     C         #ACCTR
+     I              'ZERO-SUP'            C         #ZERO
+     I              'PADDING '            C         #STAR
+     I              'BRACKETS'            C         #ANGLE
+     I              'DAYS    '            C         #DAYS
+     I              'DAY     '            C         #DAY                  085316
+     I              'MONTH   '            C         #MONTH                085316
+     I              'YEAR2   '            C         #YEAR2                085316
+     I              'YEAR4   '            C         #YEAR4                085316
+     I              'LONG_TIME '          C         #LONGT                085359
+     I              'SHORT_TIME'          C         #SHRTT                085359
+     I              'HOURS   '            C         #HOURT                085359
+     I              'MINUTES '            C         #MINST                085359
+     I              'SECONDS '            C         #SECST                085359
+     I*                                                                   085316
+     I              '0123456789'          C         ##DGTS                085316
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           P0VIN 256
+     C                     PARM           P0VOUT256
+     C                     PARM           P0VLEN  30
+     C                     PARM           P0FTYP 10
+     C                     PARM           P0FOPT 15
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     Z-ADD1         Q       50
+     C                     MOVEL'@Main@'  @STK,Q
+     C*
+     C* Initialise:
+     C                     EXSR SRINIT
+     C*
+     C* If an input value, execute the appropriate formatting:
+     C*
+     C           P0VIN     IFNE *BLANKS
+     C*
+     C* Format:
+     C********** P0FOPT    CASEQ#ACCTS    SRACCS           Standard acct  085316
+     C********** P0FOPT    CASEQ#ACCTR    SRACCR           Retail acct    085316
+     C           P0FOPT    CASEQ#ACCTS    SRATYP           Standard acct
+     C           P0FOPT    CASEQ#ACCTR    SRATYP           Retail acct
+     C           #ETYPE    CASEQ#ZERO     SRZERO           Zero-suppress
+     C           #ETYPE    CASEQ#STAR     SRSTAR           Star-suppress
+     C           P0FOPT    CASEQ#ANGLE    SRBRAK           Bracket value
+     C           P0FOPT    CASEQ#DAYS     SRDAYS           Day suffixes
+     C           P0FOPT    CASEQ#DAY      SRDAY            Day number     085316
+     C           P0FOPT    CASEQ#MONTH    SRMNTH           Month number   085316
+     C           P0FOPT    CASEQ#YEAR2    SRYR2            Year (yy) num  085316
+     C           P0FOPT    CASEQ#YEAR4    SRYR4            Year (yyyy) num085316
+     C           P0FOPT    CASEQ#LONGT    SRTIME           Time: hh:mm:ss 085359
+     C           P0FOPT    CASEQ#SHRTT    SRTIME           Time: hh:mm    085359
+     C           P0FOPT    CASEQ#HOURT    SRTIME           Time: hh       085359
+     C           P0FOPT    CASEQ#MINST    SRTIME           Time: mm       085359
+     C           P0FOPT    CASEQ#SECST    SRTIME           Time: ss       085359
+     C/COPY WNCPYSRC,CGZ1800C01
+     C                     ENDCS
+     C*
+     C                     ENDIF
+     C*
+     C           EXMAIN    TAG                             <<<=== EXMAIN
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************085316
+     C**  Subroutine SRATYP determines the incoming account type by     **085316
+     C**   reference to the position of the currency value.             **085316
+     C**                                                                **085316
+     C**  Note: The currency field is assumed to contain at least       **085316
+     C**         one alphabetic character. If this is not the case,     **085316
+     C**         the program defaults to retail segments format.        **085316
+     C********************************************************************085316
+     C           SRATYP    BEGSR                           * S R A T Y P *085316
+     C*                                                                   085316
+     C* Add subroutine name to stack:                                     085316
+     C*                                                                   085316
+     C                     ADD  1         Q                               085316
+     C                     MOVEL'SRATYP'  @STK,Q                          085316
+     C*                                                                   085316
+     C                     MOVELP0VIN     ACCTDS                          085316
+     C*                                                                   085316
+     C* Check the currency field in the standard segments format:         085316
+     C*                                                                   085316
+     C           ##DGTS    CHECKACCT03                   80               085316
+     C           *IN80     IFEQ *ON                         standard      085316
+     C                     MOVE ACCT02    ACCT21                          085316
+     C                     MOVE ACCT03    ACCT22                          085316
+     C                     MOVE ACCT04    ACCT23                          085316
+     C                     MOVE ACCT05    ACCT24                          085316
+     C                     MOVE ACCT01    ACCT25                          085316
+     C                     ELSE                             retail        085316
+     C                     MOVE ACCT11    ACCT21                          085316
+     C                     MOVE ACCT12    ACCT22                          085316
+     C                     MOVE ACCT13    ACCT23                          085316
+     C                     MOVE ACCT14    ACCT24                          085316
+     C                     MOVE ACCT15    ACCT25                          085316
+     C                     ENDIF                                          085316
+     C*                                                                   085316
+     C* Execute the appropriate subroutine:                               085316
+     C*                                                                   085316
+     C           P0FOPT    IFEQ #ACCTS                                    085316
+     C                     EXSR SRACCS                                    085316
+     C                     ELSE                                           085316
+     C                     EXSR SRACCR                                    085316
+     C                     ENDIF                                          085316
+     C*                                                                   085316
+     C           EXATYP    TAG                             <<<=== EXATYP  085316
+     C*                                                                   085316
+     C* Unwind subroutine stack:                                          085316
+     C*                                                                   085316
+     C                     MOVE *BLANKS   @STK,Q                          085316
+     C                     SUB  1         Q                               085316
+     C*                                                                   085316
+     C                     ENDSR                                          085316
+     C********************************************************************085316
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRACCS formats standard account numbers such as    **085316
+     C**   001000125DEM109401     with hyphens, resulting in            **085316
+     C**   001-000125-DEM-1094-01                                       **085316
+     C********************************************************************
+     C           SRACCS    BEGSR                           * S R A C C S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRACCS'  @STK,Q
+     C*
+     C* Clear the output length:
+     C*
+     C                     Z-ADD*ZERO     P0VLEN
+     C*
+     C**********           MOVELP0VIN     ACCTDS                          085316
+     C********** ACCT01    CAT  '-':0     P0VOUT    P      001-           085316
+     C********** P0VOUT    CAT  ACCT02:0  P0VOUT           001-000125     085316
+     C********** P0VOUT    CAT  '-':0     P0VOUT           001-000125-    085316
+     C********** P0VOUT    CAT  ACCT03:0  P0VOUT           ..000125-DEM   085316
+     C********** P0VOUT    CAT  '-':0     P0VOUT           ..DEM-         085316
+     C********** P0VOUT    CAT  ACCT04:0  P0VOUT           ..DEM-1094     085316
+     C********** P0VOUT    CAT  '-':0     P0VOUT           ..1094-        085316
+     C********** P0VOUT    CAT  ACCT05:0  P0VOUT           ..1094-01      085316
+     C**********                                                          085316
+     C                     MOVE *BLANKS   P0VOUT    P                     085316
+     C           AGMBIN    IFEQ 'Y'                                       085316
+     C           ACCT25    CAT  '-':0     P0VOUT           001-           085316
+     C           P0VOUT    CAT  ACCT21:0  P0VOUT           001-000125     085316
+     C                     ELSE                                           085316
+     C                     MOVELACCT21    P0VOUT    P                     085316
+     C                     ENDIF                                          085316
+     C*                                                                   085316
+     C           P0VOUT    CAT  '-':0     P0VOUT           001-000125-    085316
+     C           P0VOUT    CAT  ACCT22:0  P0VOUT             ..000125-DEM 085316
+     C           P0VOUT    CAT  '-':0     P0VOUT             ..DEM-       085316
+     C           P0VOUT    CAT  ACCT23:0  P0VOUT             ..DEM-1094   085316
+     C           P0VOUT    CAT  '-':0     P0VOUT             ..1094-      085316
+     C           P0VOUT    CAT  ACCT24:0  P0VOUT             ..1094-01    085316
+     C*
+     C* Set the length:
+     C**********           Z-ADD18        P0VLEN                                       085316 CGL029
+     C                     Z-ADD24        P0VLEN                                              CGL029
+     C           AGMBIN    IFEQ 'Y'                                       085316
+     C**********           Z-ADD22        P0VLEN                                              CGL029
+     C                     Z-ADD28        P0VLEN                                              CGL029
+     C                     ENDIF                                          085316
+     C*
+     C           EXACCS    TAG                             <<<=== EXACCS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRACCR formats retail account numbers such as      **084316
+     C**   000125DEM109401001    with hyphens, resulting in             **084316
+     C**   000125-DEM-1094-01-001                                       **084316
+     C********************************************************************
+     C           SRACCR    BEGSR                           * S R A C C R *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRACCR'  @STK,Q
+     C*
+     C* Clear the output length:
+     C*
+     C                     Z-ADD*ZERO     P0VLEN
+     C*
+     C**********           MOVELP0VIN     ACCTDS                          085316
+     C********** ACCT11    CAT  '-':0     P0VOUT    P      000125-        085316
+     C********** P0VOUT    CAT  ACCT12:0  P0VOUT           000125-DEM     085316
+     C********** P0VOUT    CAT  '-':0     P0VOUT           000125-DEM-    085316
+     C********** P0VOUT    CAT  ACCT13:0  P0VOUT           ..DEM-1094     085316
+     C********** P0VOUT    CAT  '-':0     P0VOUT           ..1094-        085316
+     C********** P0VOUT    CAT  ACCT14:0  P0VOUT           ..1094-01      085316
+     C**********                                                          085316
+     C           ACCT21    CAT  '-':0     P0VOUT    P      000125-        085316
+     C           P0VOUT    CAT  ACCT22:0  P0VOUT           000125-DEM     085316
+     C           P0VOUT    CAT  '-':0     P0VOUT           000125-DEM-    085316
+     C           P0VOUT    CAT  ACCT23:0  P0VOUT           ..DEM-1094     085316
+     C           P0VOUT    CAT  '-':0     P0VOUT           ..1094-        085316
+     C           P0VOUT    CAT  ACCT24:0  P0VOUT           ..1094-01      085316
+     C           AGMBIN    IFEQ 'Y'                                       085316
+     C           P0VOUT    CAT  '-':0     P0VOUT           ..1094-01-     085316
+     C           P0VOUT    CAT  ACCT25:0  P0VOUT           ..1094-01-001  085316
+     C                     ENDIF                                          085316
+     C*
+     C* Set the length:
+     C**********           Z-ADD18        P0VLEN                                       085316 CGL029
+     C                     Z-ADD24        P0VLEN                                              CGL029
+     C           AGMBIN    IFEQ 'Y'                                       085316
+     C**********           Z-ADD22        P0VLEN                                       085316 CGL029
+     C                     Z-ADD28        P0VLEN                                              CGL029
+     C                     ENDIF                                          085316
+     C*
+     C           EXACCR    TAG                             <<<=== EXACCR
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRZERO handles zero-suppression.                   **
+     C********************************************************************
+     C           SRZERO    BEGSR                           * S R Z E R O *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRZERO'  @STK,Q
+     C*
+     C* Clear the output length:
+     C*
+     C                     Z-ADD*ZERO     P0VLEN
+     C*
+     C* Move the input value:
+     C*
+     C                     MOVE P0VIN     INPDS
+     C                     MOVE *BLANKS   OUTDS
+     C                     MOVE 'N'       #FLAG   1
+     C*
+     C                     Z-ADD*ZERO     #N      30
+     C                     Z-ADD*ZERO     #O      30
+     C*
+     C* Find the first non-blank character:
+     C*
+     C           #N        DOUEQ256
+     C           #CHAR     ORNE *BLANK
+     C                     ADD  1         #N
+     C                     MOVE INP,#N    #CHAR   1
+     C                     ENDDO
+     C*
+     C* If not at end, consider all subsequent characters:
+     C*
+     C           #N        IFLT 256
+     C                     SUB  1         #N
+     C           #N        DOUEQ256
+     C                     ADD  1         #N
+     C                     MOVE INP,#N    #CHAR
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Select:
+     C                     SELEC
+     C*
+     C* A leading zero (flag not set) and right justification:
+     C*
+     C           #CHAR     WHEQ '0'
+     C           #JUST     ANDEQ'R'
+     C           #FLAG     ANDEQ'N'
+     C                     ADD  1         #O
+     C                     MOVE *BLANK    OUT,#O
+     C*
+     C* A trailing zero (flag set):
+     C*
+     C           #CHAR     WHEQ '0'
+     C           #FLAG     ANDEQ'Y'
+     C                     ADD  1         #O
+     C                     MOVE #CHAR     OUT,#O
+     C*
+     C* A significant digit (set the flag):
+     C*
+     C           #CHAR     WHGE '1'
+     C           #CHAR     ANDLE'9'
+     C                     ADD  1         #O
+     C                     MOVE #CHAR     OUT,#O
+     C                     MOVE 'Y'       #FLAG
+     C                     ENDSL
+     C*
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Determine the length and move the result:
+     C*
+     C           ' '       CHEKROUTDS     P0VLEN
+     C                     MOVE OUTDS     P0VOUT
+     C*
+     C           EXZERO    TAG                             <<<=== EXZERO
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSTAR handles asterisk-suppression.               **
+     C********************************************************************
+     C           SRSTAR    BEGSR                           * S R S T A R *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSTAR'  @STK,Q
+     C*
+     C* Clear the output length:
+     C*
+     C                     Z-ADD*ZERO     P0VLEN
+     C*
+     C* Move the input value:
+     C*
+     C                     MOVE P0VIN     INPDS
+     C                     MOVE *BLANKS   OUTDS
+     C                     MOVE 'N'       #FLAG
+     C*
+     C                     Z-ADD*ZERO     #N
+     C                     Z-ADD*ZERO     #O
+     C*
+     C* Find the first non-blank character:
+     C*
+     C           #N        DOUEQ256
+     C           #CHAR     ORNE *BLANK
+     C                     ADD  1         #N
+     C                     MOVE INP,#N    #CHAR   1
+     C                     ENDDO
+     C*
+     C* If not at end, consider all subsequent characters:
+     C*
+     C           #N        IFLT 256
+     C                     SUB  1         #N
+     C           #N        DOUEQ256
+     C                     ADD  1         #N
+     C                     MOVE INP,#N    #CHAR
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Select:
+     C                     SELEC
+     C*
+     C* A leading zero (flag not set) and right justification:
+     C*
+     C           #CHAR     WHEQ '0'
+     C           #JUST     ANDEQ'R'
+     C           #FLAG     ANDEQ'N'
+     C                     ADD  1         #O
+     C                     MOVE '*'       OUT,#O
+     C*
+     C* A trailing zero (flag already set):
+     C*
+     C           #CHAR     WHEQ '0'
+     C           #FLAG     ANDEQ'Y'
+     C                     ADD  1         #O
+     C                     MOVE #CHAR     OUT,#O
+     C*
+     C* A significant digit (set the flag):
+     C*
+     C           #CHAR     WHGE '1'
+     C           #CHAR     ANDLE'9'
+     C                     ADD  1         #O
+     C                     MOVE #CHAR     OUT,#O
+     C                     MOVE 'Y'       #FLAG
+     C                     ENDSL
+     C*
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Determine the length and move the result:
+     C*
+     C           ' '       CHEKROUTDS     P0VLEN
+     C                     MOVE OUTDS     P0VOUT
+     C*
+     C           EXSTAR    TAG                             <<<=== EXSTAR
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBRAK encloses the incoming value within          **
+     C**   angle brackets and periods. For example, a value of          **
+     C**   "      12345.00   " becomes "<.....12345.00..>".             **
+     C********************************************************************
+     C           SRBRAK    BEGSR                           * S R B R A K *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBRAK'  @STK,Q
+     C*
+     C* Move the input value and declared length:
+     C*
+     C                     MOVE P0VIN     INPDS
+     C                     Z-ADDP0VLEN    #P      30
+     C*
+     C* Handle an increased length (eg, deal type {2} --> text {30}:
+     C*
+     C           ' '       CHEKRINPDS     #M      30
+     C           #P        IFLT #M
+     C                     Z-ADD#M        #P
+     C                     ENDIF
+     C*
+     C* Handle a blank input value:
+     C*
+     C           INPDS     IFEQ *BLANKS
+     C           INPDS     OREQ *LOVAL
+     C           #P        IFGT *ZERO
+     C                     DO   #P        #Q      30
+     C                     MOVE '.'       INP,#Q
+     C                     ENDDO
+     C                     MOVE '<'       INP,1
+     C                     MOVE '>'       INP,#P
+     C                     ENDIF
+     C                     ELSE
+     C*
+     C* Handle a non-blank input value:
+     C*
+     C                     EXSR SRBRK2
+     C                     ENDIF
+     C*
+     C* Move the result:
+     C                     MOVE INPDS     P0VOUT
+     C*
+     C           EXBRAK    TAG                             <<<=== EXBRAK
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRBRK2 handles a valid incoming value.             **
+     C********************************************************************
+     C           SRBRK2    BEGSR                           * S R B R K 2 *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRBRK2'  @STK,Q
+     C*
+     C* Find the first and last non-blank character within the input,
+     C*  scanning from character 1 to character #P (P0VLEN):
+     C*
+     C           ' '       CHECKINPDS     #L      30
+     C           ' '       CHEKRINPDS:#P  #R      30
+     C*
+     C* Set #L to be the last blank at the start:
+     C*
+     C           #L        IFNE *ZERO
+     C                     SUB  1         #L
+     C           #L        IFGT #P
+     C           #P        SUB  1         #L
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C* Set #R to be the first blank at the end:
+     C*
+     C                     ADD  1         #R
+     C           #R        IFLT #L
+     C           #L        ADD  1         #R
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Leading formatting:
+     C*
+     C           #L        IFGE 1
+     C                     MOVE '<'       INP,1
+     C                     ENDIF
+     C*
+     C           #L        IFGT 1
+     C           2         DO   #L        #Q
+     C                     MOVE '.'       INP,#Q
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C* Trailing formatting:
+     C*
+     C           #R        IFLT #P
+     C           #R        DO   #P        #Q
+     C                     MOVE '.'       INP,#Q
+     C                     ENDDO
+     C                     ENDIF
+     C*
+     C           #R        IFLE #P
+     C                     MOVE '>'       INP,#P
+     C                     ENDIF
+     C*
+     C           EXBRK2    TAG                             <<<=== EXBRK2
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRDAYS formats day numbers.                        **
+     C**                                                                **085316
+     C**  Note: This formatting option is no longer used, having been   **085316
+     C**         replaced by a codes formatting option table.           **085316
+     C********************************************************************
+     C           SRDAYS    BEGSR                           * S R D A Y S *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRDAYS'  @STK,Q
+     C*
+     C* Clear the output length:
+     C*
+     C                     Z-ADD*ZERO     P0VLEN
+     C*
+     C* Get the incoming value, then convert nb and 0n to bn
+     C*  (eg, change "1 " or "01" to " 1");
+     C*   move the result to a work field:
+     C*
+     C                     MOVELP0VIN     #DAYNO  2
+     C                     MOVEL#DAYNO    #DAY4   4 P
+     C*
+     C* Seek the suffix; if found, append to the output value:
+     C*
+     C           #DAYNO    LOKUPTABDAY    TABSUF         81
+     C           *IN81     IFEQ *ON
+     C                     MOVE TABSUF    #DAY4
+     C                     ENDIF
+     C*
+     C* Move the end result:
+     C                     MOVEL#DAY4     P0VOUT    P
+     C*
+     C* Set the length:
+     C                     Z-ADD4         P0VLEN
+     C*
+     C           EXDAYS    TAG                             <<<=== EXDAYS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************085316
+     C**  Subroutine SRDAY extracts day numbers.                        **085316
+     C********************************************************************085316
+     C           SRDAY     BEGSR                           * S R D A Y   *085316
+     C*                                                                   085316
+     C* Add subroutine name to stack:                                     085316
+     C*                                                                   085316
+     C                     ADD  1         Q                               085316
+     C                     MOVEL'SRDAY '  @STK,Q                          085316
+     C*                                                                   085316
+     C                     MOVELP0VIN     DATEDS                          085316
+     C                     MOVEL#DAYNM    P0VOUT    P                     085316
+     C                     Z-ADD2         P0VLEN                          085316
+     C*                                                                   085316
+     C           EXDAY     TAG                             <<<=== EXDAY   085316
+     C*                                                                   085316
+     C* Unwind subroutine stack:                                          085316
+     C*                                                                   085316
+     C                     MOVE *BLANKS   @STK,Q                          085316
+     C                     SUB  1         Q                               085316
+     C*                                                                   085316
+     C                     ENDSR                                          085316
+     C********************************************************************085316
+     C/SPACE                                                              085316
+     C********************************************************************085316
+     C**  Subroutine SRMNTH extracts month numbers.                     **085316
+     C********************************************************************085316
+     C           SRMNTH    BEGSR                           * S R M N T H *085316
+     C*                                                                   085316
+     C* Add subroutine name to stack:                                     085316
+     C*                                                                   085316
+     C                     ADD  1         Q                               085316
+     C                     MOVEL'SRMNTH'  @STK,Q                          085316
+     C*                                                                   085316
+     C                     MOVELP0VIN     DATEDS                          085316
+     C                     MOVEL#MONNM    P0VOUT    P                     085316
+     C                     Z-ADD2         P0VLEN                          085316
+     C*                                                                   085316
+     C           EXMNTH    TAG                             <<<=== EXMNTH  085316
+     C*                                                                   085316
+     C* Unwind subroutine stack:                                          085316
+     C*                                                                   085316
+     C                     MOVE *BLANKS   @STK,Q                          085316
+     C                     SUB  1         Q                               085316
+     C*                                                                   085316
+     C                     ENDSR                                          085316
+     C********************************************************************085316
+     C/EJECT                                                              085316
+     C********************************************************************085316
+     C**  Subroutine SRYR2 extracts two-digit year numbers.             **085316
+     C********************************************************************085316
+     C           SRYR2     BEGSR                           * S R Y R 2   *085316
+     C*                                                                   085316
+     C* Add subroutine name to stack:                                     085316
+     C*                                                                   085316
+     C                     ADD  1         Q                               085316
+     C                     MOVEL'SRYR2 '  @STK,Q                          085316
+     C*                                                                   085316
+     C                     MOVELP0VIN     DATEDS                          085316
+     C                     MOVEL#YR2NM    P0VOUT    P                     085316
+     C                     Z-ADD2         P0VLEN                          085316
+     C*                                                                   085316
+     C           EXYR2     TAG                             <<<=== EXYR2   085316
+     C*                                                                   085316
+     C* Unwind subroutine stack:                                          085316
+     C*                                                                   085316
+     C                     MOVE *BLANKS   @STK,Q                          085316
+     C                     SUB  1         Q                               085316
+     C*                                                                   085316
+     C                     ENDSR                                          085316
+     C********************************************************************085316
+     C/SPACE                                                              085316
+     C********************************************************************085316
+     C**  Subroutine SRYR4 extracts four-digit year numbers.            **085316
+     C********************************************************************085316
+     C           SRYR4     BEGSR                           * S R Y R 4   *085316
+     C*                                                                   085316
+     C* Add subroutine name to stack:                                     085316
+     C*                                                                   085316
+     C                     ADD  1         Q                               085316
+     C                     MOVEL'SRYR4 '  @STK,Q                          085316
+     C*                                                                   085316
+     C                     MOVELP0VIN     DATEDS                          085316
+     C                     MOVEL#YR4NM    P0VOUT    P                     085316
+     C                     Z-ADD4         P0VLEN                          085316
+     C*                                                                   085316
+     C           EXYR4     TAG                             <<<=== EXYR4   085316
+     C*                                                                   085316
+     C* Unwind subroutine stack:                                          085316
+     C*                                                                   085316
+     C                     MOVE *BLANKS   @STK,Q                          085316
+     C                     SUB  1         Q                               085316
+     C*                                                                   085316
+     C                     ENDSR                                          085316
+     C********************************************************************085316
+     C/EJECT                                                              085359
+     C********************************************************************085359
+     C**  Subroutine SRTIME handles time formatting requests.           **085359
+     C********************************************************************085359
+     C           SRTIME    BEGSR                           * S R T I M E *085359
+     C*                                                                   085359
+     C* Add subroutine name to stack:                                     085359
+     C*                                                                   085359
+     C                     ADD  1         Q                               085359
+     C                     MOVEL'SRTIME'  @STK,Q                          085359
+     C*                                                                   085359
+     C                     MOVELP0VIN     TIMEDS                          085359
+     C*                                                                   085359
+     C                     SELEC                                          085359
+     C* LONG_TIME:                                                        085359
+     C           P0FOPT    WHEQ #LONGT                                    085359
+     C           ##HOUR    CAT  ':':0     #8CHAR  8 P                     085359
+     C           #8CHAR    CAT  ##MIN:0   #8CHAR                          085359
+     C           #8CHAR    CAT  ':':0     #8CHAR                          085359
+     C           #8CHAR    CAT  ##SEC:0   #8CHAR                          085359
+     C                     MOVEL#8CHAR    P0VOUT    P                     085359
+     C                     Z-ADD8         P0VLEN                          085359
+     C*                                                                   085359
+     C* SHORT_TIME:                                                       085359
+     C           P0FOPT    WHEQ #SHRTT                                    085359
+     C           ##HOUR    CAT  ':':0     #8CHAR    P                     085359
+     C           #8CHAR    CAT  ##MIN:0   #8CHAR                          085359
+     C                     MOVEL#8CHAR    P0VOUT    P                     085359
+     C                     Z-ADD6         P0VLEN                          085359
+     C*...................................................................085359
+     C/EJECT                                                              085359
+     C*...................................................................085359
+     C* HOURS:                                                            085359
+     C           P0FOPT    WHEQ #HOURT                                    085359
+     C                     MOVEL##HOUR    P0VOUT    P                     085359
+     C                     Z-ADD2         P0VLEN                          085359
+     C*                                                                   085359
+     C* MINUTES:                                                          085359
+     C           P0FOPT    WHEQ #MINST                                    085359
+     C                     MOVEL##MIN     P0VOUT    P                     085359
+     C                     Z-ADD2         P0VLEN                          085359
+     C*                                                                   085359
+     C* SECONDS:                                                          085359
+     C           P0FOPT    WHEQ #SECST                                    085359
+     C                     MOVEL##SEC     P0VOUT    P                     085359
+     C                     Z-ADD2         P0VLEN                          085359
+     C*                                                                   085359
+     C                     ENDSL                                          085359
+     C*                                                                   085359
+     C           EXTIME    TAG                             <<<=== EXTIME  085359
+     C*                                                                   085359
+     C* Unwind subroutine stack:                                          085359
+     C*                                                                   085359
+     C                     MOVE *BLANKS   @STK,Q                          085359
+     C                     SUB  1         Q                               085359
+     C*                                                                   085359
+     C                     ENDSR                                          085359
+     C********************************************************************085359
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation.                    **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine name to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Define and clear error return code:
+     C*
+     C                     MOVE *BLANKS   P0RTN
+     C*
+     C* Move the copyright parameter:
+     C*
+     C                     MOVEACPY@      ACT@   80
+     C*
+     C* Get the run date data area (for the multi-branch indicator):
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C*
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,CGZ1800CPG
+     C/COPY WNCPYSRC,CGZ1800C02
+     C*
+     C* Clear output data -- NOT the length (this is used by SRBRAK):
+     C*
+     C                     MOVE *BLANKS   P0VOUT
+     C*
+     C* Split the options value:
+     C*
+     C                     MOVELP0FOPT    #ETYPE  8        Edit type
+     C                     MOVE P0FOPT    #JUST   1        Justification
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** Subroutine *PSSR handles program errors.                       **
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* File and Program Error Processing
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculation specifications:
+     C*
+     C/COPY WNCPYSRC,CGZ1800CPG
+     C/COPY WNCPYSRC,CGZ1800C03
+     C*
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     C* /Copy point for output:
+     C*
+     O/COPY WNCPYSRC,CGZ1800OPG
+     C*
+     O********************************************************************
+** CPY@
+(c) Finastra International Limited 2001
+** TABDAY / TABSUF -- Table of day numbers and suffixes.
+ 1st
+ 2nd
+ 3rd
+ 4th
+ 5th
+ 6th
+ 7th
+ 8th
+ 9th
+10th
+11th
+12th
+13th
+14th
+15th
+16th
+17th
+18th
+19th
+20th
+21st
+22nd
+23rd
+24th
+25th
+26th
+27th
+28th
+29th
+30th
+31st

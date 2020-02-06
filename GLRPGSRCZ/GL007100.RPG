@@ -1,0 +1,539 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Account Transfer Update CUSEXCE')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL007100 - Midas GL Account Transfer Update CUSEXCE          *
+      *                                                               *
+      *  Function:  This program updates the Midas RE Customer Exch.  *
+      *             Details File with the new account detail from the *
+      *             Account Transfer Selected Accounts File, GLSLACPD.*
+      *             It also will write an audit trail record for each *
+      *             update of CUSEXEL4, CUSEXEL5, CUSEXEL6 and        *
+      *             CUSEXEL7.                                         *
+      *                                                               *
+      *  Called By: GL003600                                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2010                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE041             Date 28Sep12               *
+      *                 BUG27769           Date 09Jun10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CGL114  *CREATE    Date 04Jan10               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE041 - Enhancements to Customer Exchanges (Recompile)      *
+      *  BUG27769 - Incorrect error code                              *
+      *  CGL114 - Account Transfer Utility                            *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *****************************************************************
+      *
+     FCUSEXEL4UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            CUSEXCEF                          KRENAMECUSEXEF4
+     FCUSEXEL6UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            CUSEXCEF                          KRENAMECUSEXEF6
+     FCUSEXEL7UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            CUSEXCEF                          KRENAMECUSEXEF7
+     FCUSEXEL5UF  E           K        DISK         KINFSR *PSSR A
+     F                                              KCOMIT
+     F            CUSEXCEF                          KRENAMECUSEXEF5
+     FGLAUTFPDO   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+     IDSFDY     E DSDSFDY
+      *
+     IDSFRAC      DS
+     I                                        1   6 DSFCNU
+     I                                        7   9 DSFCCY
+     I                                       10  19 DSFACO
+     I                                       20  21 DSFACS
+     I                                       22  24 DSFBRC
+      *
+     IDSTOAC      DS
+     I                                        1   6 DSTCNU
+     I                                        7   9 DSTCCY
+     I                                       10  19 DSTACO
+     I                                       20  21 DSTACS
+     I                                       22  24 DSTBRC
+      *
+     IDSKITE      DS                             90
+     I                                        1   3 KBRCA
+     I                                        4   9 KCNUM
+     I                                       10  12 KCCY
+     I                                       13  220KACOD
+     I                                       23  240KACSQ
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      *
+     I            DS
+     I                                        1   80CHQN
+     I                                        1   8 WKCHQN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P@PRCD  4
+     C                     PARM           P@RFNO 10
+     C           DSFRAC    PARM           P@FRAC 24
+     C           DSTOAC    PARM           P@TOAC 24
+     C                     PARM           P@RTCD  1
+      *
+     C                     EXSR SRINIT
+      *
+     C           P@PRCD    IFEQ '*LR '
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     EXSR XSIV01
+     C                     EXSR XMCUSX
+      *
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XMCUSX - Maintain RE Customer Exchange Detail                *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     XSAUDT                                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XMCUSX    BEGSR
+      *
+     C           KCUSX     SETLLCUSEXEF4
+     C           KCUSX     READECUSEXEF4               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE
+     C                     MOVEL'CUSEXEL4'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Delete and Write Records until End of File for Selected Account
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETCUSEXEF4               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE
+     C                     MOVEL'CUSEXEL4'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELDSTBRC    DRBR
+     C                     MOVELDSTCNU    DCUS
+     C                     MOVELDSTCCY    DRCY
+     C                     MOVELDSTACO    DCOD
+     C                     MOVELDSTACS    DACS
+      *
+     C                     WRITECUSEXEF4               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE
+     C                     MOVEL'CUSEXEL4'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'CUSEXEL4'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KCUSX     READECUSEXEF4               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE
+     C                     MOVEL'CUSEXEL4'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KCUSX     SETLLCUSEXEF6
+     C           KCUSX     READECUSEXEF6               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'005'     DBASE
+     C                     MOVEL'CUSEXEL6'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETCUSEXEF6               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'006'     DBASE
+     C                     MOVEL'CUSEXEL6'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELDSTBRC    CBRC
+     C                     MOVELDSTCNU    CCUS
+     C                     MOVELDSTCCY    CRCY
+     C                     MOVELDSTACO    CCOD
+     C                     MOVELDSTACS    CACS
+      *
+     C                     WRITECUSEXEF6               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'007'     DBASE
+     C                     MOVEL'CUSEXEL6'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'CUSEXEL6'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KCUSX     READECUSEXEF6               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'008'     DBASE
+     C                     MOVEL'CUSEXEL6'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KCUSX     SETLLCUSEXEF7
+     C           KCUSX     READECUSEXEF7               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'009'     DBASE
+     C                     MOVEL'CUSEXEL7'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETCUSEXEF7               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'010'     DBASE
+     C                     MOVEL'CUSEXEL7'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELDSTBRC    DRBR
+     C                     MOVELDSTCNU    HCUS
+     C                     MOVELDSTCCY    DRCY
+     C                     MOVELDSTACO    HACD
+     C                     MOVELDSTACS    HASQ
+      *
+     C                     WRITECUSEXEF7               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'011'     DBASE
+     C                     MOVEL'CUSEXEL7'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'CUSEXEL7'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KCUSX     READECUSEXEF7               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'012'     DBASE
+     C                     MOVEL'CUSEXEL7'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           KCUSX     SETLLCUSEXEF5
+     C           KCUSX     READECUSEXEF5               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'013'     DBASE
+     C                     MOVEL'CUSEXEL5'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           *IN22     DOWEQ*OFF
+     C                     DELETCUSEXEF5               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'014'     DBASE
+     C                     MOVEL'CUSEXEL5'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELDSTBRC    CBRC
+     C                     MOVELDSTCNU    HCUS
+     C                     MOVELDSTCCY    CRCY
+     C                     MOVELDSTACO    HACD
+     C                     MOVELDSTACS    HASQ
+      *
+     C                     WRITECUSEXEF5               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'015'     DBASE
+     C                     MOVEL'CUSEXEL5'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     CLEARGLAUTFD0
+     C                     MOVEL'CUSEXEL5'AULFIL
+     C                     EXSR XSAUDT
+      *
+     C           KCUSX     READECUSEXEF5               2122
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'016'     DBASE
+     C                     MOVEL'CUSEXEL5'DBFILE
+     C                     MOVELDSKITE    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSAUDT - Set Audit records                                   *
+      *                                                               *
+      *  Called By: XMCUSX                                            *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XSAUDT    BEGSR
+      *
+     C                     MOVELP@RFNO    AURFNO
+     C                     MOVEL'CUSEXCE 'AUFILE
+     C                     MOVELDSFBRC    AUFBRC
+     C                     MOVELDSFCNU    AUFCNU
+     C                     MOVELDSFACO    AUFACO
+     C                     MOVELDSFACS    AUFACS
+     C                     MOVELDSTBRC    AUTBRC
+     C                     MOVELDSTCNU    AUTCNU
+     C                     MOVELDSTACO    AUTACO
+     C                     MOVELDSTACS    AUTACS
+     C           IPDN      CAT  WKCHQN:1  AUTEXT 50 P
+     C                     CAT  DRNA:1    AUTEXT
+     C                     MOVELWKDFMT    AUCRTD
+     C                     WRITEGLAUTFD0               21
+      *
+     C           *IN21     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'017'     DBASE
+     C                     MOVEL'GLAUTFPD'DBFILE
+     C                     MOVELAURFNO    DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  XSIV01 - Set up initial values                               *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           XSIV01    BEGSR
+      *
+     C                     MOVELDSFBRC    KBRCA
+     C                     MOVELDSFCNU    KCNUM
+     C                     MOVELDSFCCY    KCCY
+     C                     MOVELDSFACO    KACOD
+     C                     MOVELDSFACS    KACSQ
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Initialise and define fields                        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *  Calls:     None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** Retrieve Run Date.
+      *
+     C                     CALL 'AOBANKR0'             9090
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If return with an error (LR seton in called program) then
+      ** process for database error.
+      *
+     C           *IN90     IFEQ '1'
+     C********** @RTCD     OREQ '*ERROR*'                                                   BUG27769
+     C           @RTCD     ORNE *BLANKS                                                     BUG27769
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOBANKR0'DBFILE
+     C                     MOVEL'*FIRST'  DBKEY
+     C                     Z-ADD018       DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBJMRDT    WKDFMT  9
+     C                     MOVE BJMRDT    WKYEAR  20
+      *
+     C           WKYEAR    IFLT 72
+     C           WKYEAR    ADD  2000      WKCCYY  40
+     C                     ELSE
+     C           WKYEAR    ADD  1900      WKCCYY
+     C                     ENDIF
+      *
+     C                     MOVE WKCCYY    WKDFMT  9
+      *
+     C           KCUSX     KLIST
+     C                     KFLD           KBRCA
+     C                     KFLD           KCNUM
+     C                     KFLD           KCCY
+     C                     KFLD           KACOD
+     C                     KFLD           KACSQ
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE 'F'       P@RTCD
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2010

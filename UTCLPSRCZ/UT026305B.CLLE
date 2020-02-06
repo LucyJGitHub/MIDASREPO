@@ -1,0 +1,155 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Util. to initialise KESTAT position 66-82')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utility Module                                      */
+/*                                                                   */
+/*       UT026305B - Utility that will update data area KESTAT       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG26305B *CREATE  Date 25Nov09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG26305B - L5 COB re-open failed                           */
+/*                                                                   */
+/*********************************************************************/
+/**  Start Program */
+             PGM
+ 
+/** Declare variables */
+ 
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7) VALUE('*KEY')
+             DCL        VAR(&PRTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&PFMT) TYPE(*CHAR) LEN(200) VALUE(' ')
+             DCL        VAR(&PDateIn) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&ZDateIn) TYPE(*DEC) LEN(6)
+             DCL        VAR(&PDayNo) TYPE(*DEC) LEN(5)
+             DCL        VAR(&YY) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&WTxEndt) TYPE(*DEC) LEN(6)
+             DCL        VAR(&WTxEndC) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&WMmYy) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&NxYrC) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PCTRY) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PDAYNOC) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PRunDtD) TYPE(*DEC) LEN(5)
+             DCL        VAR(&PRunDtC) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&PDayNo) TYPE(*DEC) LEN(5)
+ 
+/** Declare file */
+             DCLF       FILE(SDBANKPD) RCDFMT(SDBANKD0)
+ 
+/** Monitor for Error Messages from System */
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 RPG0000)
+ 
+             CHGJOB     SWS(00000000)
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ID)
+             CHGVAR     VAR(&DMLIB) VALUE(&ID *CAT 'DMLIB')
+ 
+/** Check if Data Area LDA exists in QTEMP */
+             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+ 
+/** If LDA does not exists in QTEMP then create */
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256))
+ 
+/** Check if Data Area KESTAT exists in QTEMP */
+             CHKOBJ     OBJ(QTEMP/KESTAT) OBJTYPE(*DTAARA)
+ 
+/** If LDA does not exists in QTEMP then create - to serve as backup */
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/KESTAT) TYPE(*CHAR) LEN(256))
+ 
+/** Copy KESTAT to QTEMP */
+             CPYDTAARA  FMDTAARA(&DMLIB/KESTAT) TODTAARA(QTEMP/KESTAT)
+ 
+/** Read SDBANKPD to retrieve Country Code,Runday number, Date of  */
+/** Next Working Day & Date Format Indicator                       */
+ 
+             RCVF      RCDFMT(SDBANKD0)
+ 
+             CHGVAR     VAR(&PRTNCODE) VALUE(' ')
+             CHGVAR     VAR(&POPTN)    VALUE('*KEY')
+             CHGVAR     VAR(&PFMT)     VALUE(' ')
+ 
+             CHGVAR     VAR(&PRUNDTD) VALUE(&BJRDNB)
+             CHGVAR     VAR(&PRUNDTC) VALUE(&PRUNDTD)
+             CHGVAR     VAR(&NXYRC) VALUE(&BJDNWD)
+             CHGVAR     VAR(&YY) VALUE(%SST(&BJMRDT 6 2))
+ 
+/** Call AOLOCNR0 (Access Location codes to retrieve Country Code) */
+ 
+             CALL      PGM(AOLOCNR0) PARM(&PRTNCODE &POPTN +
+                         &BJSLCD &PFMT)
+             IF         COND(&PRTNCODE *NE ' ') THEN(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/** Call AOCTRYR0 (Access Country code to retrieve End of TaxYear Date) */
+ 
+             CHGVAR     VAR(&PCTRY) VALUE(%SST(&PFMT 4 2))
+             CHGVAR     VAR(&PFMT)     VALUE(' ')
+             CALL      PGM(AOCTRYR0) PARM(&PRTNCODE &POPTN +
+                         &PCTRY &PFMT)
+             IF         COND(&PRTNCODE *NE ' ') THEN(GOTO +
+                           CMDLBL(ABNOR))
+             CHGVAR     VAR(&WTxEndC) VALUE(%SST(&PFMT 74 4))
+             CHGVAR     VAR(&WTxEndT) VALUE(&WTxEndC)
+ 
+             IF         COND(&WTxEndt *EQ 0) THEN(DO)
+ 
+             IF         COND(&BJDFIN *EQ 'D') THEN(DO)
+             CHGVAR     VAR(&WMmYy) VALUE('3112')
+             CHGVAR     VAR(&PDATEIN) VALUE(&WMmYy  *TCAT +
+                          (%SST(&BJMRDT 6 2)))
+             ENDDO
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&WMmYy) VALUE('1231')
+             CHGVAR     VAR(&PDATEIN) VALUE(&WMmYy  *TCAT +
+                          (%SST(&BJMRDT 6 2)))
+             ENDDO
+ 
+             ENDDO
+ 
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&PDATEIN) VALUE(&WTxEndC *TCAT +
+                          (%SST(&BJMRDT 6 2)))
+ 
+             ENDDO
+ 
+/** Call ZDATE1 (Convert to day number) */
+ 
+             CHGVAR     VAR(&PRTNCODE) VALUE(*BLANKS)
+             CHGVAR     VAR(&ZDateIn) VALUE(&PDateIn)
+             CALL      PGM(ZDATE1) PARM(&PRTNCODE &ZDateIn +
+                                     &BJDFIN &PDayNo)
+ 
+             IF         COND(&PRTNCODE *NE ' ') THEN(GOTO +
+                        CMDLBL(ABNOR))
+ 
+              CHGVAR     VAR(&PDAYNOC) VALUE(&PDAYNO)
+ 
+/** Flag DTAARA KESTAT: 66-67: End of TaxYear Year                   */
+/**                     68-72: Next Working Date                     */
+/**                     73-77: End of TaxYear Date                   */
+/**                     78-82: Current Rundate                       */
+ 
+             CHGDTAARA  DTAARA(KESTAT (66 2)) VALUE(&YY)
+             CHGDTAARA  DTAARA(KESTAT (68 5)) VALUE(&NXYRC)
+             CHGDTAARA  DTAARA(KESTAT (73 5)) VALUE(&PDAYNOC)
+             CHGDTAARA  DTAARA(KESTAT (78 5)) VALUE(&PRUNDTC)
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:      DMPCLPGM
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+ ENDPGM:     ENDPGM

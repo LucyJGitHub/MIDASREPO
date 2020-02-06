@@ -1,0 +1,122 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Payment Amounts Collection')                 */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000612 - Midas GL Payment Amounts Collection             */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PCNAM &PCSEQ)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2014')
+ 
+             DCL        VAR(&PCNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PCSEQ) TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&LDA)   TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&PSTAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+ 
+/* Monitor for any errors and send appropriate message to MOPERQ */
+ 
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Send Pgm Message */
+ 
+             CHGVAR     VAR(&MEM) VALUE('GLC000612 - FATCA Payment Amounts +
+                          Collection')
+             SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ)
+ 
+/* Clear switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Get system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Call program CB0160 to get value of restart indicator. */
+ 
+             CALL       PGM(CB0160) PARM(&PCNAM &PCSEQ &PSTAT)
+ 
+/* If it is NOT a restart. */
+ 
+             IF         COND(&PSTAT *NE 'Y') THEN(DO)
+/* Delete backup file XGLCAPAPD */
+ 
+                  DLTF       FILE(XGLCAPAPD)
+                  MONMSG     MSGID(CPF0000)
+ 
+/* Create backup file XGLCAPAPD to xxDPLIB */
+                  CPYF       FROMFILE(GLCAPAPD) TOFILE(&DPLIB/XGLCAPAPD) +
+                             CRTFILE(*YES)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             ENDDO
+ 
+                  CHGVAR     VAR(&PSTAT) VALUE('Y')
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CALL       PGM(CB0150) PARM(&PCNAM &PCSEQ &PSTAT)
+ 
+/* Call COB program Midas GL Payment Amounts Collection */
+ 
+             CALL       PGM(GL000612)
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* Call CB0150 to update restart indicator. */
+ 
+               CHGVAR     VAR(&PSTAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&PCNAM &PCSEQ &PSTAT)
+ 
+             ENDDO
+ 
+/* If error is encountered in GL000612 */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+ 
+/* Restore backup file XGLCAPAPD to xxDMLIB */
+ 
+                  CPYF       FROMFILE(XGLCAPAPD) TOFILE(GLCAPAPD) +
+                             MBROPT(*REPLACE)
+                  MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                               EXEC(CLRPFM FILE(GLCAPAPD))
+ 
+/* Recover data from LDA for database error */
+ 
+                  RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                  CHGVAR     VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 50))
+                  SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM)-
+                             TOMSGQ(MOPERQ MRUNQ)
+                  CHGVAR     VAR(&MEM) VALUE('GLC000612 - Job Terminated, +
+                             Database in Error')
+                  SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             SNDMSG     MSG('Midas GL Payment Amounts Collection has +
+                        terminated abnormally.') TOMSGQ(MOPERQ MRUNQ)
+ 
+END:
+             ENDPGM

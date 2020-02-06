@@ -1,0 +1,159 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Alpha Loan - Packed Fields Conversion')      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00252 - SM Alpha Loan - Packed Fields Conversion        */
+/*                                                                   */
+/*       Function:  This program will do the database upgrade for    */
+/*                  different files then call SMU00252 and SMU00253  */
+/*                  to update the files.                             */
+/*                  The Bridge utility cannot upgrade this file      */
+/*                  due to Duplicate Key issue.                      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1078292          Date 31Jan13              */
+/*                      CLE134             Date 01Aug12              */
+/*                      CLE148   *CREATE   Date 23Jul12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1078292 - Replace SMU006PD as driving file for alpha loan */
+/*                   reference migration tool.                       */
+/*       CLE134 - Past Due Call Loan Processing                      */
+/*       CLE148 - Alpha Loan Reference                               */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SYS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BTMPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BSRCLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BDTALIB) TYPE(*CHAR) LEN(10)                                 /*CLE134*/
+             DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DLIB) TYPE(*CHAR) LEN(10)                                    /*CLE134*/
+             DCL        VAR(&OWN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&AUTH) TYPE(*CHAR) LEN(10)
+ 
+/* Define parameters used in AOSVALR0 to retrieve system value */
+/*/COPY SDCPYSRC,SDSVALDCL                                     */
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2012')
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Call AOSVALR0 to get system values for 'BrgDeliveredSrcLib' */
+/* and 'BrgDeliveredDtaLib' */                                                            /*CLE134*/
+/**********  CALL       PGM(AOSVALR0) PARM(&RSVALRTNC  +
+                          'BrgDeliveredSrcLib' &SVAL1 &SVALK2 +
+                          &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                          &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                          &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                          &SVALK10 &SVAL10) */                                            /*CLE134*/
+             CALL       PGM(AOSVALR0) PARM(&RSVALRTNC +
+                          'BrgDeliveredSrcLib' &SVAL1 +
+                          'BrgDeliveredDtaLib' &SVAL2 +
+                          'BrgMidasSystemPrefix' &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 +
+                          &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
+                          &SVAL8 &SVALK9 &SVAL9 &SVALK10 &SVAL10)
+ 
+/* If there is an error finding any system value then end abnormally */
+             IF         COND(&RSVALRTNC *NE '       ') THEN(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Set value of BrgDeliveredSrcLib */
+             CHGVAR     VAR(&BSRCLIB) VALUE(%SST(&SVAL1 1 10))
+ 
+/* Set value of BrgDeliveredDtaLib */                                                     /*CLE134*/
+             CHGVAR     VAR(&BDTALIB) VALUE(%SST(&SVAL2 1 10))                            /*CLE134*/
+ 
+/* Retrieve system prefix */
+             CHGVAR     VAR(&SYS) VALUE(%SST(&SVAL3 1 2))
+ 
+/* Delete logical over SDLENOPD */
+             DLTF       FILE(SDLENOL0)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(SDLENOL1)
+             MONMSG     MSGID(CPF0000)
+             DLTF       FILE(SDLENOL2)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Move existing SDLENOPD to Bridge temporary library & compile new PF */
+             CHGVAR     VAR(&BTMPLIB) VALUE('#.' *CAT (&SYS) *CAT +
+                          'DMLIB')
+             CHGVAR     VAR(&PLIB) VALUE(&SYS *CAT 'DMLIB')
+             CHGVAR     VAR(&OWN) VALUE(&SYS *CAT 'OWNER')
+             CHGVAR     VAR(&AUTH) VALUE(&SYS *CAT 'DATABASE')
+ 
+             MOVOBJ     OBJ(SDLENOPD) OBJTYPE(*FILE) TOLIB(&BTMPLIB)
+             MONMSG     MSGID(CPF2105 CPF0602)
+ 
+             CRTOBJ     SRCMBR(SDLENOPD) +
+                          SRCFILE(&BSRCLIB/SDDDSSRCDM) OBJ(&PLIB/SDLENOPD) +
+                          OWNER(&OWN) AUTL(&AUTH)
+ 
+/* Start journalling and copy data back from the existing version */
+             STRJRNPF   FILE(SDLENOPD) JRN(ICJRN) IMAGES(*BOTH) +
+                          OMTJRNE(*OPNCLO)
+ 
+             CPYF       FROMFILE(&BTMPLIB/SDLENOPD) +
+                          TOFILE(&PLIB/SDLENOPD) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)
+             MONMSG     MSGID(CPF2869 CPF2870 CPF2817)
+ 
+/* Call SMU00252 to update SDLENOPD */
+             CALL       PGM(SMU00252)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Create logicals */
+             CHGVAR     VAR(&VLIB) VALUE(&SYS *CAT 'DVLIB')
+ 
+             CRTOBJ     SRCMBR(SDLENOL0) +
+                          SRCFILE(&BSRCLIB/SDDDSSRCDV) OBJ(&VLIB/SDLENOL0) +
+                          OWNER(&OWN) AUTL(&AUTH)
+ 
+             CRTOBJ     SRCMBR(SDLENOL1) +
+                          SRCFILE(&BSRCLIB/SDDDSSRCDV) OBJ(&VLIB/SDLENOL1) +
+                          OWNER(&OWN) AUTL(&AUTH)
+ 
+             CRTOBJ     SRCMBR(SDLENOL2) +
+                          SRCFILE(&BSRCLIB/SDDDSSRCDV) OBJ(&VLIB/SDLENOL2) +
+                          OWNER(&OWN) AUTL(&AUTH)
+ 
+             CHGVAR     VAR(&DLIB) VALUE(&SYS *CAT 'DPLIB')                               /*CLE134*/
+ 
+/**********  DLTF       FILE(&DLIB/SMU006PD) */                                 /*CLE134 AR1078292*/
+/**********  MONMSG     MSGID(CPF2105)       */                                 /*CLE134 AR1078292*/
+ 
+/**********  CPYF       FROMFILE(&BDTALIB/SMU006PD) + */                               /*AR1078292*/
+/**********               TOFILE(&DLIB/SMU006PD) MBROPT(*REPLACE) + */                 /*AR1078292*/
+/**********               CRTFILE(*YES) */                                      /*CLE134 AR1078292*/
+/**********  MONMSG     MSGID(CPF2817 CPF2869 CPF2870) */                       /*CLE134 AR1078292*/
+ 
+             CALL       PGM(SMU00253)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/**********  DLTF       FILE(&DLIB/SMU006PD) */                                 /*CLE134 AR1078292*/
+/**********  MONMSG     MSGID(CPF2105)       */                                 /*CLE134 AR1078292*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

@@ -1,0 +1,75 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas GL Forward Account Transfer Job')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       GLC004605 - Midas GL Forward Account Transfer Jobs          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27831A *CREATE  Date 03Aug10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG27831A - Forward Account Transfer Processing             */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/** Global monitor message. */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GLC004605 - Submit Forward Account +
+                          Transfer Jobs') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Check if Forward Account Transfer job is running */
+ 
+             ALCOBJ     OBJ((GLFRATMLCK *DTAARA *EXCL)) WAIT(0)
+             MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF0000)
+ 
+             CALL       PGM(GL004605)
+ 
+/** Database error processing */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             CHGDTAARA  DTAARA(GLFRATMSTS (1 1)) VALUE('C')
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             ROLLBACK
+             MONMSG     MSGID(CPF0000 MCH0000)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC004605 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDCMTCTL
+             MONMSG     MSGID(CPF0000)
+             ENDPGM

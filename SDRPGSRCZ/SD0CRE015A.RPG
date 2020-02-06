@@ -1,0 +1,85 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas RE T&N Accounts - Initialisation Program')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Retail T&N Accounts                                  *
+      *                                                               *
+      *  SD0CRE015A - Initialisation Program                          *
+      *                                                               *
+      *  Function:  This program will remove duplicate records in the *
+      *             period and penalties file of an existing Term &   *
+      *             Notice client.                                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CRE015  *CREATE    Date 18Dec09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CRE015 - Retail Term and Notice Accounts                     *
+      *                                                               *
+      *****************************************************************
+      *  Function of Indicators                                       *
+      *                                                               *
+      *  01 - 19      Input Control.                                  *
+      *  20 - 29      I/O Conditioning (ie. CHAIN, LOKUP etc...)      *
+      *   20          Record Not Found                                *
+      *   21          File Error Occurred                             *
+      *   22          Start/End Of File Reached                       *
+      *   25          Lookup/Scan.                                    *
+      *  30 - 39      Program Work Indicators                         *
+      *  40 - 49      Output Control.                                 *
+      *  50 - 89      Output Conditioning (ie. Cursor Positioning)    *
+      *  90 - 99      Error Control.                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     FREPRPNPDUF  E           K        DISK
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+     C                     MOVEL'999999'  PVCNUM  6
+     C                     MOVE 'XYZ'     PVCCY   3
+     C                     Z-ADD9999999999PVACOD 100
+     C                     Z-ADD99        PVACSQ  20
+     C                     MOVE 'ZXY'     PVBRCA  3
+     C                     MOVE 'X'       PVEVNT  1
+      *
+     C           *LOVAL    SETLLREPRPNPD
+     C                     READ REPRPNPD                 90
+      *
+     C           *IN90     DOWEQ'0'
+      *
+      ** If record the same as previous record then delete it
+      *
+     C           E2CNUM    IFEQ PVCNUM
+     C           E2CCY     ANDEQPVCCY
+     C           E2ACOD    ANDEQPVACOD
+     C           E2ACSQ    ANDEQPVACSQ
+     C           E2BRCA    ANDEQPVBRCA
+     C           E2EVNT    ANDEQPVEVNT
+     C                     DELETREPRPND0
+     C                     ENDIF
+      *
+     C                     MOVELE2CNUM    PVCNUM
+     C                     MOVE E2CCY     PVCCY
+     C                     Z-ADDE2ACOD    PVACOD
+     C                     Z-ADDE2ACSQ    PVACSQ
+     C                     MOVE E2BRCA    PVBRCA
+     C                     MOVE E2EVNT    PVEVNT
+      *
+     C                     READ REPRPNPD                 90
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************

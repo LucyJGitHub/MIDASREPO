@@ -1,0 +1,2133 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Outstanding facilities by cust enq')          *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Customer Lending Module
+     F*                                                                  *
+     F*     LE0161 - OUTSTANDING FACILITIES BY CUSTOMER ENQUIRY          *
+     F*                                                                  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 260453             Date 03Jun09               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 14Mar05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 194829             Date 09Dec02               *
+      *                 209384             Date 28Sep02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 204670             Date 25Apr02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 185905             Date 30Jan01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 175394             Date 02Nov00               *
+     F*                 171784             Date 01Aug00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 172234             Date 25Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 170605             Date 10Nov99               *
+      *                 170100             Date 08Nov99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 158949             Date 08Apr99               *
+      *                 157383 (BT1018)    Date 18Mar99               *
+      *                 155147             Date 23Feb99               *
+      *                 152137             Date 23Feb99               *
+      *                 150215             Date 23Feb99               *
+      *                 147221             Date 23Feb99               *
+     F*                 CLE004             Date 02DEC96               *
+     F*                 S01473             DATE 29JUL94                  *
+     F*                 S01311             DATE 30JAN91                  *
+     F*                                                                  *
+     F*------------------------------------------------------------------*
+     F*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  260453 - Discrepancy in exposure. Introduce system value     *
+      *           'CLE023OnUseSpot' to enable selection between CEXP  *
+      *           or CAMD for display of exposure.  When value is 'N',*
+      *           show facility exchange rate else use spot rates     *
+      *           computation. DSPF LE0161FM also changed to effect   *
+      *           switchability on screen controls.                   *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager.                                *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  194829 - Correct error messages when option is invalid. Only *
+      *           allow option 4 if CLE006 is on.  Change option 5    *
+      *           to 'TR by CA'. Add messages to MSG array.           *
+      *  209384 - Available amount for facilities displayed in        *
+      *           subfile is not 0 when rundate is equal to expiry    *
+      *           date.                                               *
+      *  204670 - F12 returns to menu from second screen whereas it   *
+      *           should return to the first screen. The program      *
+      *           should not end when F12 is pressed. (for LE0170)    *
+      *           Applied fix 194860.                                 *
+      *  CLE023 - Lending Facility History Improvements.              *
+      *  185905 - Remove fix 170605 such that the facility amount     *
+      *           should not be shown as zero for expired facility.   *
+      *           Instead current available amount should be shown as *
+      *           zero for expired facility.                          *
+     F*  175394 - Amendment to 172234:- Available amount should only  *
+     F*           be calculated using CAMD, instead of OAM2, if the   *
+     F*           facility is Revolving Credit = Y.                   *
+     F*  171784 - Negative current available amounts displayed with a *
+     F*           '-' instead of 'CR'.                                *
+      *  172234 - Ensure that facility amount minus current exposure  *
+      *           equals current available amount.                    *
+     F*  170605 - The facility amount should be shown as zero if the  *
+     F*           facility is no longer active.                       *
+     F*  170100 - If CLE006 (Syndications) is switched off, change       *
+     F*           column heading, and use 'TR' for tranches.
+     F*  158949 - Incorrect msg displayed when S01473 on on rejected
+     F*           entry of Option 5
+     F*  157383 - 136625 incomplete.                                  *
+      *  155147 - 'Prime' should be set to 'Prmry' to avoid confusion.*
+      *  152137 - Override not correct for option 1 - Facility. As    *
+      *           LEFCLTL3 only holds Syndicated facilities.          *
+      *  150215 - Include drilldown for Manual Facility Utilisation.  *
+     F*  147221 - Credit Agreement extra processing                   *
+     F*  CLE004 - Customer Lending Enhancements - Syndications.       *
+     F*     S01473 - Leo Midas Integration. Call additional linked       *
+     F*              function, number 3, CLCD42, for LCs.                *
+     F*     S01311  -  EXPOSURE MANAGEMENT ENQUIRIES                     *
+     F*                New program created to replace LE0160             *
+     F*                                                                  *
+     F********************************************************************
+     FLE0161FMCF  E                    WORKSTN
+     F                                        RRN   KSFILE LE0161S1
+     FFCLTY   IF  E           K        DISK         KINFSR *PSSR
+     F            FCLTYHHF                          KIGNORE
+     F            FCLTYZZF                          KIGNORE
+     FSDCURRPDIF  E                    DISK         KINFSR *PSSR      UC
+     F/COPY WNCPYSRC,LEH00907
+      /EJECT
+     F********************************************************************
+     F*                                                                  *
+     F* INDICATORS                                                       *
+     F*                                                                  *
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*       06      LINKED ENQUIRY                                     *
+     F*       18      ROLLUP                                             *
+     F*       19      ROLLDOWN                                           *
+     F*       20      MULTI-BRANCHING (DISPLAYS BRANCH ON SCREEN)        *
+     F*       21      NON-DISPLAY ALL FIELDS ON SCREEN                   *
+     F*       30      GENERAL ERROR IN VALIDATION                        *
+     F*       31      ERROR IN VALIDATION OF CUSTOMER                    *
+     F*       32      ERROR IN VALIDATION OF BRANCH                      *
+     F*       33      ERROR IN VALIDATION OF COMPANY                     *
+     F*       34      MIDAS/LEO INTEGRATION FEATURE PRESENT              *S01473
+     F*       41-43   SUBFILE INDICATORS                                 *
+     F*       45      ROLLUP ENABLED                                     *
+     F*       46      ROLLDOWN ENABLED                                   *
+     F*       50      SYNDICATED LENDING ENHANCEMENT IND.                *CLE004
+     F*       51      DATABASE ERROR ON SDCURRPD                         *
+     F*       52      CLE006 (SYNDICATIONS) IND.                         *170100
+     F*       60      END OF FILE ON FCLTY                               *
+     F*       61      READC INDICATOR ON SUBFILE                         *
+     F*       70      FCLTY 'B' RECORD NOT FOUND                         *
+      *       71      CLE023 is installed                                *                    CLE023
+      *       72      Display Current Exposure at Spot Rate              *                    260453
+     F*       98      DATE FORMAT                                        *
+     F*                                                                  *
+     F********************************************************************
+     F*                                                                  *
+     F* SUBROUTINES                                                      *
+     F*                                                                  *
+     F*    CCYARR - SET UP CURRENCY ARRAYS                               *
+     F*    CCYDEP - ACCESS CURRENCY DECIMAL PLACES                       *
+     F*    CMDSR  - PROCESS COMMAND KEYS                                 *
+     F*    DKLIST - SET UP KEY LISTS                                     *
+     F*    FILLSF - FILL SUBFILE                                         *
+     F*    INIT   - INITIAL PROCESSING                                   *
+     F*    PROINP - PROCESS SCREEN INPUT                                 *
+     F*    PROSEL - PROCESS SELECTION                                    *
+     F*    READLV - READ LIVE RECORD FROM FCLTY                          *
+     F*    RETSR  - END OF PROGRAM PROCESSING                            *
+     F*    ROLDWN - PROCESS ROLLDOWN                                     *
+     F*    SELECT - DETERMINE IF RECORD TO BE SELECTED                   *
+     F*    SFREC  - SET UP SUBFILE RECORD                                *
+     F*    VALID  - VALIDATE SCREEN INPUT                                *
+     F*    ZVACTU - Menu item authority validation                       *147221
+     F*    ZVACTBU- Menu item and Branch authority validation            *147221
+     F*    *PSSR  - ERROR PROCESSING                                     *
+     F*                                                                  *
+     F*    ZFRPED - EDIT NUMERIC FIELD FOR OUTPUT                        *
+     F*                                                                  *
+     F********************************************************************
+     E                    XCYA      150  3               CURRENCY CODES
+     E                    XDPA      150  1 0             CURRENCY DP
+     E                    @WRK       21  1                                S01473
+     E*
+      /COPY ZSRSRC,ZFRPEDZ1
+     E***********         MES     1  12 76               MESSAGES         S01473
+     E***********         MES     1  13 76               MESSAGES  S01473 CLE004
+     E***********         MES     1  16 76               MESSAGES   CLE004147221
+     E***********         MES     1  17 76               MESSAGES  147221 150215
+     E**********          MES     1  19 76               MESSAGES                      150215 194829
+     E                    MES     1  23 76               MESSAGES                             194829
+     E                    BRTTLA  1   2 40               BRANCH TITLE
+     E***********         CMD     1   4 60               qcommands CLE004 150215
+     E                    CMD     1   5 60               qcommands        150215
+     E                    CPY@    1   1 80
+     I*
+     IFCLTYFMF
+     I* FACILITY DETAILS
+     I              RECI                            RECIF
+     I/COPY WNCPYSRC,LEH01218
+     I*
+     ILDA        UDS                            256
+     I* LOCAL DATA AREA
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01473
+     I           UDS                                                      S01473
+     I***************************************61  70 LIB                   S01473
+     I                                       81  90 LIB                   S01473
+     I*
+     IRUNDT       DS
+     I* DATA AREA RUNDAT
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     I*
+     IZMUSER      DS                             17
+     I* DATA AREA OF MENU USER
+     I                                       11  13 DFTBR
+     I                                       17  17 BNKAUT
+     I*
+     ISDBRCH    E DSSDBRCHPD
+     I*  EXTERNAL DS FOR BRANCH CODE DETAILS
+     I*
+     ISDCOMP    E DSSDCOMPPD
+     I*  EXTERNAL DS FOR COMPANY CODE DETAILS
+     I*
+     ISDCUST    E DSSDCUSTPD
+     I              QQDFAC                          #DFAC1                                    CGL029
+     I* CUSTOMER DETAILS
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* BANK DETAILS
+     I*
+     ISCSAR     E DSSCSARDPD                                              S01473
+     I* SWITCHABLE FEATURE DETAILS                                        S01473
+     I*                                                                   S01473
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     IEMSDS     E DSEMDTA
+     I* LINK ENQUIRY DATA AREA
+     I                                      141 146 CUSTNO
+     I                                      147 149 BRANCH
+     I                                      150 152 COMPNY
+     I*
+     IPARMS1      DS                             11
+     I* PARAMETERS TO PASS TO LE0170
+     I                                        1   6 P1CNUM
+     I                                        7   9 P1FACT
+     I                                       10  11 P1FCNO
+     I*
+     IPARMS2      DS                             14
+     I* PARAMETERS TO PASS TO LE0181
+     I                                        1   6 P2CNUM
+     I                                        7   9 P2BRCD
+     I                                       10  12 P2FACT
+     I                                       13  14 P2FCNO
+     I*                                                                   147221
+     IPARMS3      DS                             15                       147221
+     I* PARAMETERS TO PASS TO LE3140                                      147221
+     I                                        1   6 P3CNUM                147221
+     I                                        7   9 P3FACT                147221
+     I                                       10  11 P3FCNO                147221
+     I                                       12  14 P3BRCD                147221
+     I                                       15  15 P3RTCD                147221
+     I*                                                                   147221
+     IPARMS4      DS                             15                       147221
+     I* PARAMETERS TO PASS TO LE3145                                      147221
+     I                                        1   6 P4CNUM                147221
+     I                                        7   9 P4FACT                147221
+     I                                       10  11 P4FCNO                147221
+     I                                       12  14 P4BRCD                147221
+     I                                       15  15 P4RTCD                147221
+     I*
+     IFCLTYD      DS                             12
+     I* KEY FIELDS TO FCLTY
+     I                                        1   6 DCNUM
+     I                                        7   9 DFACT
+     I                                       10  11 DFCNO
+     I                                       12  12 DRECT
+     I*
+      ** Data structure for AOSVALR0.                                                         260453
+      *                                                                                       260453
+     ISVAL1       DS                            200                                           260453
+     I                                        1   1 SVAL11                                    260453
+      *                                                                                       260453
+     I              'CLE023OnUseSpot'     C         SVALKK                                    260453
+     I/COPY WNCPYSRC,LEH00908
+      *                                                                                       260453
+      /COPY ZSRSRC,ZFRPEDZ2
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    MAIN - MAIN PROCESSING                                        *
+     C*                                                                  *
+     C*    CALLS: INIT   - INITIAL PROCESSING                            *
+     C*           VALID  - VALIDATE SCREEN INPUT                         *
+     C*           FILLSF - FILL SUBFILE                                  *
+     C*           PROINP - PROCESS SCREEN INPUT                          *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C* FIRST CYCLE
+     C*
+     C           FIRSTC    IFNE 'Y'
+     C                     EXSR INIT
+     C                     END
+     C*
+     C* WRITE HEADINGS (21 ON TO NON-DISPLAY CUSTOMER ETC)
+     C*
+     C                     SETON                     21
+     C                     WRITELE0161F0
+     C*
+     C* CLEAR SUBFILE IN PREPARATION FOR NEW CUSTOMER/BRANCH ETC
+     C*
+     C                     MOVEA'001'     *IN,41
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITELE0161C1
+     C                     MOVEA'011'     *IN,41
+     C*
+     C* RESET TOP OF THIS PAGE FACILITY TYPE AND NUMBER
+     C*
+     C                     Z-ADD*ZERO     #FACT
+     C                     Z-ADD*ZERO     #FCNO
+     C*
+     C* IF FIRST CYCLE AND PROGRAM REQUESTED FROM MENU, DISPLAY SCREEN
+     C* PROMPTS
+     C*
+     C           FIRSTC    IFNE 'Y'
+     C           MODID     ANDNE'LE'
+     C                     EXFMTLE0161C1
+     C                     END
+     C*
+     C                     MOVE 'Y'       FIRSTC  1
+     C*
+     C* VALIDATE INPUT
+     C*
+     C                     EXSR VALID
+     C*
+     C* DO WHILE INPUT INVALID
+     C*
+     C           *IN30     DOWEQ'1'
+     C*
+     C* WRITE SUBFILE SCREEN
+     C*
+     C                     EXFMTLE0161C1
+     C*
+     C* VALIDATE INPUT
+     C*
+     C                     EXSR VALID
+     C*
+     C                     END
+     C*
+     C* SAVE SCREEN INPUT FIELDS
+     C*
+     C                     MOVE SCUST     SSCUST 10
+     C                     MOVE SBRCD     SSBRCD  3
+     C                     MOVE SCOMP     SSCOMP  3
+     C*
+     C* WRITE HEADINGS (21 SET OFF TO DISPLAY CUSTOMER ETC)
+     C*
+     C                     SETOF                     21
+     C                     WRITELE0161F0
+     C*
+     C* FILL NEXT PAGE OF SUBFILE
+     C*
+     C                     EXSR FILLSF
+     C*
+     C* DO WHILE F1, F3, F12 NOT TAKEN
+     C*
+     C           RTNDWF    DOWEQ*BLANK
+     C*
+     C* WRITE SUBFILE SCREEN
+     C*
+     C                     EXFMTLE0161C1
+     C                     SETOF                     30
+     C*
+     C* PROCESS SCREEN INPUT
+     C*
+     C                     EXSR PROINP
+     C*
+     C                     END
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    INIT - INITIAL PROCESSING                                     *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*    CALLS:     DKLIST - SET UP KEY LISTS                          *
+     C*               CCYARR - SET UP CURRENCY ARRAYS                    *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C* KEY LISTS
+     C*
+     C                     EXSR DKLIST
+     C*
+     C                     Z-ADD12        #COUNT  20
+     C*
+     C* ACCESS THE DATA AREAS RUNDAT & ZMUSER
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   RUNDT
+     C                     IN   ZMUSER
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     20
+     C                     END
+     C*
+     C* SETUP CURRENCY ARRAYS
+     C*
+     C                     EXSR CCYARR
+     C*
+     C* ACCESS BANK DETAILS
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*                                                                   S01473
+     C* ACCESS MIDAS/LEO INTEGRATION SWITCHABLE FEATURE DETAILS           S01473
+     C*                                                                   S01473
+     C                     CALL 'AOSARDR0'                                S01473
+     C                     PARM '*BLANKS' @RTCD   7                       S01473
+     C                     PARM '*VERIFY' @OPTN   7                       S01473
+     C                     PARM 'S01473'  @SARD   6                       S01473
+     C           SCSAR     PARM SCSAR     DSFDY                           S01473
+     C*                                                                   S01473
+     C           @RTCD     IFEQ *BLANKS                                   S01473
+     C                     SETON                     34                   S01473
+     C                     END                                            S01473
+      *                                                                   CLE004
+      **  Determine if Customer Lending Enhancements - Syndications       CLE004
+      **  feature is installed                                            CLE004
+      *                                                                   CLE004
+     C                     CALL 'AOSARDR0'                                CLE004
+     C                     PARM *BLANKS   @RTCD                           CLE004
+     C                     PARM '*KEY   ' @OPTN                           CLE004
+     C                     PARM 'CLE004'  @SARD                           CLE004
+     C           SCSAR     PARM SCSAR     DSFDY                           CLE004
+     C           @RTCD     IFEQ *BLANKS                                   CLE004
+     C                     MOVE 'Y'       CLE004  1                       CLE004
+     C                     MOVE *ON       *IN50                           CLE004
+     C                     ELSE                                           CLE004
+     C                     MOVE 'N'       CLE004                          CLE004
+     C                     MOVE *OFF      *IN50                           CLE004
+     C           @RTCD     IFNE '*NRF    '                                CLE004
+     C           *LOCK     IN   LDA                                       CLE004
+     C                     MOVEL'SCSARDPD'DBFILE           ************   CLE004
+     C                     Z-ADD5         DBASE            * DBERR 05 *   CLE004
+     C                     MOVEL'CLE004'  DBKEY            ************   CLE004
+     C                     OUT  LDA                                       CLE004
+     C                     EXSR *PSSR                                     CLE004
+     C                     ENDIF                                          CLE004
+     C                     ENDIF                                          CLE004
+     C*
+      **  Determine if Customer Lending Enhancements - Tranche 3                              194829
+      **  feature is installed                                                                194829
+      *                                                                                       194829
+     C                     CALL 'AOSARDR0'                                                    194829
+     C                     PARM *BLANKS   @RTCD                                               194829
+     C                     PARM '*KEY   ' @OPTN                                               194829
+     C                     PARM 'CLE005'  @SARD                                               194829
+     C           SCSAR     PARM SCSAR     DSFDY                                               194829
+     C           @RTCD     IFEQ *BLANKS                                                       194829
+     C                     MOVE 'Y'       CLE005  1                                           194829
+     C                     MOVE *ON       *IN53                                               194829
+     C                     ELSE                                                               194829
+     C                     MOVE 'N'       CLE005                                              194829
+     C                     MOVE *OFF      *IN53                                               194829
+     C           @RTCD     IFNE '*NRF    '                                                    194829
+     C           *LOCK     IN   LDA                                                           194829
+     C                     MOVEL'SCSARDPD'DBFILE           ************                       194829
+     C                     Z-ADD7         DBASE            * DBERR 07 *                       194829
+     C                     MOVEL'CLE005'  DBKEY            ************                       194829
+     C                     OUT  LDA                                                           194829
+     C                     EXSR *PSSR                                                         194829
+     C                     ENDIF                                                              194829
+     C                     ENDIF                                                              194829
+     C*                                                                                       194829
+      **  Determine whether Customer Lending Enhancements                 170100
+      **  Syndication feature, CLE006, is installed.                      170100
+      *                                                                   170100
+     C                     CALL 'AOSARDR0'                                170100
+     C                     PARM *BLANKS   @RTCD                           170100
+     C                     PARM '*KEY   ' @OPTN                           170100
+     C                     PARM 'CLE006'  @SARD                           170100
+     C           SCSAR     PARM SCSAR     DSFDY                           170100
+     C           @RTCD     IFEQ *BLANKS                                   170100
+     C                     MOVE 'Y'       CLE006  1                       170100
+     C                     MOVE *ON       *IN52                           170100
+     C                     ELSE                                           170100
+     C                     MOVE 'N'       CLE006                          170100
+     C                     MOVE *OFF      *IN52                           170100
+     C           @RTCD     IFNE '*NRF    '                                170100
+     C           *LOCK     IN   LDA                                       170100
+     C                     MOVEL'SCSARDPD'DBFILE           ************   170100
+     C                     Z-ADD6         DBASE            * DBERR 06 *   170100
+     C                     MOVEL'CLE006'  DBKEY            ************   170100
+     C                     OUT  LDA                                       170100
+     C                     EXSR *PSSR                                     170100
+     C                     ENDIF                                          170100
+     C                     ENDIF                                          170100
+      *                                                                                       CLE023
+      ** Check if CLE023 is installed.                                                        CLE023
+      *                                                                                       CLE023
+     C                     CALL 'AOSARDR0'                                                    CLE023
+     C                     PARM *BLANKS   @RTCD                                               CLE023
+     C                     PARM '*KEY   ' @OPTN                                               CLE023
+     C                     PARM 'CLE023'  @SARD                                               CLE023
+     C           SCSAR     PARM SCSAR     DSFDY                                               CLE023
+     C           @RTCD     IFEQ *BLANKS                                                       CLE023
+     C                     MOVE 'Y'       CLE023  1                                           CLE023
+     C                     MOVE '1'       *IN71                                               CLE023
+     C                     ELSE                                                               CLE023
+     C                     MOVE 'N'       CLE023                                              CLE023
+     C                     MOVE '0'       *IN71                                               CLE023
+     C           @RTCD     IFNE '*NRF    '                                                    CLE023
+     C           *LOCK     IN   LDA                                                           CLE023
+     C                     MOVEL'SCSARDPD'DBFILE           ************                       CLE023
+     C                     Z-ADD7         DBASE            * DBERR 07 *                       CLE023
+     C                     MOVEL'CLE023'  DBKEY            ************                       CLE023
+     C                     OUT  LDA                                                           CLE023
+     C                     EXSR *PSSR                                                         CLE023
+     C                     ENDIF                                                              CLE023
+     C                     ENDIF                                                              CLE023
+      *                                                                                       CLE023
+      ** Check current setting of system value.                                               260453
+      *                                                                                       260453
+     C                     CALL 'AOSVALR0'                                                    260453
+     C                     PARM           @RTCD                                               260453
+     C                     PARM SVALKK    SVALK1 20                                           260453
+     C                     PARM           SVAL1 200                                           260453
+     C                     PARM *BLANK    SVALK2 20                                           260453
+     C                     PARM           SVAL2 200                                           260453
+     C                     PARM *BLANK    SVALK3 20                                           260453
+     C                     PARM           SVAL3 200                                           260453
+     C                     PARM *BLANK    SVALK4 20                                           260453
+     C                     PARM           SVAL4 200                                           260453
+     C                     PARM *BLANK    SVALK5 20                                           260453
+     C                     PARM           SVAL5 200                                           260453
+     C                     PARM *BLANK    SVALK6 20                                           260453
+     C                     PARM           SVAL6 200                                           260453
+     C                     PARM *BLANK    SVALK7 20                                           260453
+     C                     PARM           SVAL7 200                                           260453
+     C                     PARM *BLANK    SVALK8 20                                           260453
+     C                     PARM           SVAL8 200                                           260453
+     C                     PARM *BLANK    SVALK9 20                                           260453
+     C                     PARM           SVAL9 200                                           260453
+     C                     PARM *BLANK    SVALK0 20                                           260453
+     C                     PARM           SVAL10200                                           260453
+      *                                                                                       260453
+     C           @RTCD     IFNE *BLANK                                                        260453
+     C           *LOCK     IN   LDA                                                           260453
+     C                     MOVEL'*KEY    'DBKEY                                               260453
+     C                     MOVEL'SDSVALPD'DBFILE           ************                       260453
+     C                     Z-ADD8         DBASE            * DBERR 08 *                       260453
+     C                     OUT  LDA                        ************                       260453
+     C                     EXSR *PSSR                                                         260453
+     C                     ENDIF                                                              260453
+     C                     MOVE SVAL11    WFLD    1                                           260453
+      *                                                                                       260453
+      ** Determine if Current Exposure at Spot Rate should be                                 260453
+      ** displayed.                                                                           260453
+      *                                                                                       260453
+     C           WFLD      IFEQ 'Y'                                                           260453
+     C           CLE023    ANDEQ'Y'                                                           260453
+     C                     MOVE '1'       *IN72                                               260453
+     C                     ELSE                                                               260453
+     C                     MOVE '0'       *IN72                                               260453
+     C                     ENDIF                                                              260453
+     C*
+     C/COPY WNCPYSRC,LE0161C003
+     C* CHECK SYSTEM DATE FORMAT
+     C*
+     C           DATF      COMP 'M'                      98
+     C*
+     C* ACCESS EM DATA AREA AND LDA
+     C*
+     C           *NAMVAR   DEFN           EMSDS
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C           *LOCK     IN   EMSDS
+     C                     MOVE RQDTD     MODID   2
+     C/COPY WNCPYSRC,LEH01276
+     C                     OUT  EMSDS
+     C*
+     C* INITIALIZE RETURN CODE AND FIRST RECORD READ FLAG
+     C*
+     C                     MOVE *BLANK    RTNDWF
+     C                     MOVE *BLANK    FIRSTR  1
+     C*
+     C* IF PROGRAM HAS BEEN CALLED AS A LINKED ENQUIRY, SET UP CUSTOMER
+     C* NUMBER AND BRANCH SCREEN FIELDS                                S
+     C*
+     C           MODID     IFEQ 'LE'
+     C                     MOVELCUSTNO    SCUST
+     C                     MOVELBRANCH    SBRCD
+     C                     MOVELCOMPNY    SCOMP
+     C                     SETON                     06
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    DKLIST - SET UP KEY LISTS                                     *
+     C*                                                                  *
+     C*    CALLED BY: INIT - INITIAL PROCESSING                          *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           DKLIST    BEGSR
+     C*
+     C* PARAMETER LIST FOR PROGRAM 'AOCUSTR0'
+     C*
+     C           PLIST1    PLIST
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM           CKEY   10
+     C                     PARM           KEYSTS  7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C* KEY LISTS FOR FCLTY
+     C*
+     C           FCLTYA    KLIST
+     C**********           KFLD           #CNUM   60                                          CSD027
+     C                     KFLD           #CNUM   6                                           CSD027
+     C                     KFLD           #FACT   30
+     C                     KFLD           #FCNO   20
+     C                     KFLD           RECTA   1
+     C                     MOVE 'A'       RECTA
+     C*
+     C           FCLTYB    KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           FACT
+     C                     KFLD           FCNO
+     C                     KFLD           RECTB   1
+     C                     MOVE 'B'       RECTB
+     C*
+     C           FCLTYP    KLIST
+     C                     KFLD           #CNUM
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    VALID - VALIDATE SCREEN INPUT                                 *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*    CALLS:     CMDSR  - PROCESS COMMAND KEYS                      *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           VALID     BEGSR
+     C*
+     C* SETOF OFF ERROR INDICATORS
+     C*
+     C                     SETOF                     30
+     C                     SETOF                     313233
+     C*
+     C* BLANK MESSAGE FIELD
+     C*
+     C                     MOVE *BLANKS   MSG
+     C*
+     C* CHECK COMMAND KEYS
+     C*
+     C                     EXSR CMDSR
+     C*
+     C* VALIDATE CUSTOMER
+     C*
+     C* CUSTOMER NOT ENTERED
+     C*
+     C           SCUST     IFEQ *BLANKS
+     C                     MOVE MES,1     MSG
+     C                     SETON                       3031
+     C                     ELSE
+     C*
+     C* CUSTOMER OR SHORTNAME ENTERED
+     C*
+     C                     MOVELSCUST     CKEY
+     C                     CALL 'AOCUSTR0'PLIST1
+     C*
+     C* INVALID CUSTOMER
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C/COPY WNCPYSRC,LEH01332
+     C*
+     C* IF CUSTOMER NUMBER ENTERED, DISPLAY 'CUSTOMER NOT ON FILE'
+     C* MESSAGE
+     C*
+     C           KEYSTS    IFEQ '*CNUM'
+     C                     MOVE MES,2     MSG
+     C*
+     C* OTHERWISE, DISPLAY 'SHORTNAME NOT ON SHORTNAMES FILE' MESSAGE
+     C*
+     C                     ELSE
+     C                     MOVE MES,3     MSG
+     C                     END
+     C                     SETON                       3031
+     C*
+     C* OTHERWISE, VALID CUSTOMER ENTERED
+     C*
+     C                     ELSE
+     C                     MOVE *BLANKS   SCUST
+     C                     MOVELBBCUST    SCUST
+     C                     MOVELBBCUST    #CNUM
+     C                     END
+     C                     END
+     C*
+     C* IF CUSTOMER VALID, VALIDATE BRANCH
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C* IF MULTIBRANCHING = Y, VALIDATE THAT BOTH BRANCH AND COMPANY
+     C* NOT ENTERED
+     C*
+     C           MBIN      IFEQ 'Y'
+     C*
+     C           SBRCD     IFNE *BLANKS
+     C           SCOMP     ANDNE*BLANKS
+     C                     MOVE MES,4     MSG
+     C                     SETON                     303233
+     C                     END
+     C*
+     C* IF EVERYTHING STILL VALID
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C* IF BOTH BRANCH AND COMPANY ARE LEFT BLANK, USE DEFAULT BRANCH
+     C*
+     C           SBRCD     IFEQ *BLANKS
+     C           SCOMP     ANDEQ*BLANKS
+     C                     MOVE DFTBR     SBRCD
+     C                     END
+     C*
+     C* VALIDATE USER'S BANK LEVEL AUTHORITY
+     C*
+     C           SBRCD     IFEQ 'ALL'
+     C           SCOMP     OREQ 'ALL'
+     C*
+     C           BNKAUT    IFNE 'Y'
+     C                     MOVE MES,5     MSG
+     C           SBRCD     IFEQ 'ALL'
+     C                     SETON                     3032
+     C                     ELSE
+     C                     SETON                     3033
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* IF EVERYTHING STILL VALID
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C* VALIDATE BRANCH
+     C*
+     C           SBRCD     IFNE *BLANKS
+     C           SBRCD     ANDNE'ALL'
+     C*
+     C* DETERMINE IF BRANCH CODE EXISTS ON SD
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM SBRCD     @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE MES,6     MSG
+     C                     SETON                     3032
+     C                     ELSE
+     C                     MOVELA8BRCD    SBRCD
+     C*
+     C* CHECK USER'S ACCESS TO SELECTED BRANCH
+     C*
+     C***********          CALL 'ZVBBU'                                   147221
+     C                     CALL 'ZVACTBU'                                 147221
+     C                     PARM 'E'       ZACTN   1                       147221
+     C                     PARM SBRCD     @ZBR    3
+     C                     PARM           @ERR    10
+     C           @ERR      IFNE *ZERO
+     C                     MOVE MES,7     MSG
+     C                     SETON                     3032
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* IF EVERYTHING STILL VALID
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C* FORMAT SCREEN HEADER
+     C*
+     C           SBRCD     IFEQ 'ALL'
+     C                     MOVEABRTTLA,1  BRTTL  40
+     C                     ELSE
+     C           SBRCD     IFNE *BLANKS
+     C                     MOVE *BLANKS   BRTTL
+     C                     MOVE *BLANKS   WRK9    9
+     C                     MOVEL' Br -   'WRK9
+     C                     MOVE SBRCD     WRK9
+     C                     MOVELWRK9      BRTTL
+     C                     MOVE A8BRNM    BRTTL
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* IF CUSTOMER AND BRANCH VALID, VALIDATE COMPANY
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C           SCOMP     IFNE *BLANKS
+     C           SCOMP     ANDNE'ALL'
+     C*
+     C* DETERMINE IF COMPANY CODE EXISTS ON SD
+     C*
+     C                     CALL 'AOCOMPR0'
+     C                     PARM '*BLANKS' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM SCOMP     @CENB   3
+     C           SDCOMP    PARM SDCOMP    DSFDY
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE MES,8     MSG
+     C                     SETON                     3033
+     C                     ELSE
+     C                     MOVE APCMCD    SCOMP
+     C*
+     C* CHECK USER'S ACCESS TO SELECTED COMPANY
+     C*
+     C                     CALL 'ZVCOU'
+     C                     PARM SCOMP     @ZBR
+     C                     PARM           @ERR
+     C           @ERR      IFNE *ZERO
+     C                     MOVE MES,9     MSG
+     C                     SETON                     3033
+     C                     END
+     C*
+     C* IF EVERYTHING STILL VALID
+     C*
+     C           MSG       IFEQ *BLANKS
+     C*
+     C* FORMAT SCREEN HEADER
+     C*
+     C                     MOVE *BLANKS   BRTTL
+     C                     MOVE *BLANKS   WRK9
+     C                     MOVEL' Co -   'WRK9
+     C                     MOVE SCOMP     WRK9
+     C                     MOVELWRK9      BRTTL
+     C                     MOVE APCMNM    BRTTL
+     C                     END
+     C                     END
+     C*
+     C* OTHERWISE, IF ALL COMPANIES REQUESTED, SET UP SCREEN HEADER FOR
+     C* ALL COMPANIES
+     C*
+     C                     ELSE
+     C           SCOMP     IFEQ 'ALL'
+     C                     MOVEABRTTLA,2  BRTTL
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C/COPY WNCPYSRC,LEH00909
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    PROINP - PROCESS SCREEN INPUT                                 *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*    CALLS:     CMDSR  - PROCESS COMMAND KEYS                      *
+     C*               ROLDWN - PROCESS ROLLDOWN                          *
+     C*               FILLSF - FILL SUBFILE                              *
+     C*               PROSEL - PROCESS SELECTION                         *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           PROINP    BEGSR
+     C*
+     C* CHECK COMMAND KEYS
+     C*
+     C                     EXSR CMDSR
+     C*
+     C* CHECK FOR INPUT OF SCREEN FIELDS (CUSTOMER ETC)
+     C*
+     C           SCUST     IFNE SSCUST
+     C           SBRCD     ORNE SSBRCD
+     C           SCOMP     ORNE SSCOMP
+     C                     MOVE 'R'       RTNDWF
+     C                     MOVE *BLANK    FIRSTR
+     C                     END
+     C*
+     C* CHECK FOR ROLLDOWN
+     C*
+     C           *IN19     IFEQ '1'
+     C                     EXSR ROLDWN
+     C*
+     C* OTHERWISE, CHECK FOR ROLLUP
+     C*
+     C                     ELSE
+     C           *IN18     IFEQ '1'
+     C                     EXSR FILLSF
+     C*
+     C* OTHERWISE, IF RECORDS ARE DISPLAYED ON SUBFILE, CHECK IF ANY
+     C* OPTIONS HAVE BEEN INPUT
+     C*
+     C                     ELSE
+     C           *IN43     IFEQ '0'
+     C                     MOVE *BLANK    RETND
+     C           *IN61     DOUEQ'1'
+     C           RETND     OREQ 'U'
+     C           RETND     OREQ 'S'
+     C                     READCLE0161S1                 61
+     C           *IN61     IFEQ '0'
+     C/COPY WNCPYSRC,LEH01219
+     C*
+     C* IF SWITCHABLE FEATURE S01473 NOT PRESENT                          S01473
+     C*                                                                   S01473
+     C           *IN34     IFEQ '0'                                       S01473
+     C*                                                                   S01473
+     C* IF OPTION ENTERED IS NOT '1' OR '2', DISPLAY ERROR MESSAGE
+     C*
+      **  If Syndication feature is on, allow options 4 and 5.            CLE004
+      *                                                                   CLE004
+     C           OPTN      IFNE '1'
+     C           OPTN      ANDNE'2'
+     C           CLE004    ANDEQ'N'                                       CLE004
+     C           CLE004    OREQ 'Y'                                       CLE004
+     C           OPTN      ANDNE'1'                                       CLE004
+     C           OPTN      ANDNE'2'                                       CLE004
+     C           OPTN      ANDNE'4'                                       CLE004
+     C           OPTN      ANDNE'5'                                       CLE004
+     C           OPTN      ANDNE'6'                                       150215
+     C           CLE004    OREQ 'Y'                                                           194829
+     C           CLE006    ANDEQ'N'                                                           194829
+     C           OPTN      ANDEQ'4'                                                           194829
+     C           CLE004    OREQ 'Y'                                                           194829
+     C           CLE005    ANDEQ'N'                                                           194829
+     C           OPTN      ANDEQ'6'                                                           194829
+     C                     MOVE *BLANK    OPTN
+     C                     UPDATLE0161S1
+      *                                                                                       194829
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C***********          MOVE MES,14    MSG                      CLE004 150215
+     C           CLE005    IFEQ 'Y'                                                           194829
+      *                                                                                       194829
+      ** If CLE006 is on, allow options 1, 2, 4, 5, and 6.                                    194829
+      *                                                                                       194829
+     C           CLE006    IFEQ 'Y'                                                           194829
+     C                     MOVE MES,18    MSG                             150215
+      *                                                                                       194829
+      ** CLE006 is off, do not allow option 4                                                 194829
+     C                     ELSE                                                               194829
+     C                     MOVE MES,20    MSG                                                 194829
+      ** End for CLE006                                                                       194829
+     C                     ENDIF                                                              194829
+      *                                                                                       194829
+      ** Else for CLE005                                                                      194829
+     C                     ELSE                                                               194829
+      *                                                                                       194829
+     C           CLE006    IFEQ 'N'                                                           194829
+     C                     MOVE MES,22    MSG                                                 194829
+     C                     ENDIF                                                              194829
+      *                                                                                       194829
+     C                     ENDIF                                                              194829
+      *                                                                                       194829
+     C                     ELSE                                           CLE004
+      *                                                                                       194829
+      ** If CLE004 is off, allow options 1 and 2 only                                         194829
+      *                                                                                       194829
+     C                     MOVE MES,12    MSG
+     C                     ENDIF                                          CLE004
+     C                     SETON                     30
+     C*
+     C* OTHERWISE, PROCESS OPTION ENTERED
+     C*
+     C                     ELSE
+      *                                                                   CLE004
+      **  For options 4 and 5, participant facility indicator             CLE004
+      ****must*be*either*'PART.'*(PRTR='P')*or*'PRIME'*(PRTR='A').*CLE004 155147
+      **  must be either 'PART.' (PRTR='P') or 'PRMRY' (PRTR='A').        155147
+     C           OPTN      IFEQ '4'                                       CLE004
+     C***********SPRTR     ANDNE'PART.'                             CLE004147221
+     C***********SPRTR     ANDNE'PRIME'                            CLE004 155147
+     C           SPRTR     ANDNE'PRMRY'                                   155147
+     C***********SPRTR     ANDNE'INTNL'                             CLE004147221
+     C           SPRTR     ANDNE'CA-Pr'                                   147221
+     C           OPTN      OREQ '5'                                       CLE004
+     C***********SPRTR     ANDNE'PART.'                             CLE004147221
+     C***********SPRTR     ANDNE'PRIME'                             CLE004147221
+     C***********SPRTR     ANDNE'INTNL'                             CLE004147221
+     C           SPRTR     ANDNE'CA'                                      147221
+     C           SPRTR     ANDNE'CA-Pr'                                   147221
+     C********** SPRTR     ANDNE'CA-Pt'                                                194829 CLE106
+     C           SPRTR     ANDNE'CA-FP'                                                       CLE106
+     C           SPRTR     ANDNE'CA-RP'                                                       CLE106
+     C           SPRTR     ANDNE'CA-SP'                                                       CLE106
+     C           SPRTR     ANDNE'CA-In'                                                       194829
+     C           SPRTR     ANDNE'CA-In'                                                       194829
+     C           OPTN      IFEQ '4'                                       147221
+     C                     MOVE MES,16    MSG                             147221
+     C                     ELSE                                           147221
+     C                     MOVE MES,17    MSG                             147221
+     C                     ENDIF                                          147221
+     C                     MOVE *BLANK    OPTN                            CLE004
+     C                     UPDATLE0161S1                                  CLE004
+     C***********          MOVE MES,16    MSG                       CLE004147221
+     C                     MOVE *ON       *IN30                           CLE004
+     C                     ELSE                                           CLE004
+     C                     EXSR PROSEL
+     C                     MOVE *BLANK    OPTN
+     C                     UPDATLE0161S1
+     C                     ENDIF                                          CLE004
+     C                     END
+     C*                                                                   S01473
+     C* IF SWITCHABLE FEATURE S01473 IS PRESENT                           S01473
+     C*                                                                   S01473
+     C                     ELSE                                           S01473
+     C*                                                                   S01473
+     C* IF OPTION ENTERED IS NOT '1', '2' OR 3, DISPLAY ERROR MESSAGE     S01473
+     C*                                                                   S01473
+      **  If Syndication feature is on, allow options 4 and 5.            CLE004
+      **  and option 6.                                                   150215
+      *                                                                   CLE004
+     C           OPTN      IFNE '1'                                       S01473
+     C           OPTN      ANDNE'2'                                       S01473
+     C           OPTN      ANDNE'3'                                       S01473
+     C           CLE004    ANDEQ'N'                                       CLE004
+     C           CLE004    OREQ 'Y'                                       CLE004
+     C           OPTN      ANDNE'1'                                       CLE004
+     C           OPTN      ANDNE'2'                                       CLE004
+     C           OPTN      ANDNE'3'                                       CLE004
+     C           OPTN      ANDNE'4'                                       CLE004
+     C           OPTN      ANDNE'5'                                       CLE004
+     C           OPTN      ANDNE'6'                                       150215
+     C           CLE004    OREQ 'Y'                                                           194829
+     C           CLE006    ANDEQ'N'                                                           194829
+     C           OPTN      ANDEQ'4'                                                           194829
+     C           CLE004    OREQ 'Y'                                                           194829
+     C           CLE005    ANDEQ'N'                                                           194829
+     C           OPTN      ANDEQ'6'                                                           194829
+     C                     MOVE *BLANK    OPTN                            S01473
+     C                     UPDATLE0161S1                                  S01473
+      *                                                                                       194829
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C***********          MOVE MES,15    MSG                      CLE004 150215
+      *                                                                                       194829
+      ** If CLE005 is on                                                                      194829
+      *                                                                                       194829
+     C           CLE005    IFEQ 'Y'                                                           194829
+      *                                                                                       194829
+      ** If CLE006 is on, allow options 1, 2, 3, 4, 5, and 6.                                 194829
+     C           CLE006    IFEQ 'Y'                                                           194829
+     C                     MOVE MES,21    MSG                                                 194829
+     C                     ELSE                                                               194829
+     C                     MOVE MES,19    MSG                             150215
+     C                     ENDIF                                                              194829
+      *                                                                                       194829
+     C                     ELSE                                                               194829
+      *                                                                                       194829
+      ** If CLE005 and CLE006 are off, do not allow                                           194829
+      ** options 4 and 6                                                                      194829
+      *                                                                                       194829
+     C           CLE006    IFEQ 'N'                                                           194829
+     C                     MOVE MES,23    MSG                                                 194829
+     C                     ENDIF                                                              194829
+      *                                                                                       194829
+     C                     ENDIF                                                              194829
+      *                                                                                       194829
+     C                     ELSE                                           CLE004
+      *                                                                                       194829
+      ** If CLE004 is off, allow options 1, 2, and 3 only                                     194829
+      *                                                                                       194829
+     C                     MOVE MES,13    MSG                             S01473
+     C                     ENDIF                                          CLE004
+     C                     SETON                     30                   S01473
+     C*                                                                   S01473
+     C* OTHERWISE, PROCESS OPTION ENTERED                                 S01473
+     C*                                                                   S01473
+     C                     ELSE                                           S01473
+      *                                                                   CLE004
+      **  For options 4 and 5, participant facility indicator             CLE004
+      ****must*be*either*'PART.'*(PRTR='P')*or*'PRIME'*(PRTR='A').*CLE004 155147
+      **  must be either 'PART.' (PRTR='P') or 'PRMRY' (PRTR='A').        155147
+     C           OPTN      IFEQ '4'                                       CLE004
+     C***********SPRTR     ANDNE'PART.'                            CLE004 158949
+     C***********SPRTR     ANDNE'PRIME'                            CLE004 155147
+     C           SPRTR     ANDNE'CA-Pr'                                   158949
+     C           SPRTR     ANDNE'PRMRY'                                   155147
+     C           OPTN      OREQ '5'                                       CLE004
+     C***********SPRTR     ANDNE'PART.'                             CLE004147221
+     C***********SPRTR     ANDNE'PRIME'                             CLE004147221
+     C           SPRTR     ANDNE'CA'                                      147221
+     C           SPRTR     ANDNE'CA-Pr'                                   147221
+     C********** SPRTR     ANDNE'CA-Pt'                                                194829 CLE106
+     C           SPRTR     ANDNE'CA-FP'                                                       CLE106
+     C           SPRTR     ANDNE'CA-RP'                                                       CLE106
+     C           SPRTR     ANDNE'CA-SP'                                                       CLE106
+     C           SPRTR     ANDNE'CA-In'                                                       194829
+     C***********          MOVE *BLANK    OPTN                     CLE004 158949
+     C***********          UPDATLE0161S1                           CLE004 158949
+     C           OPTN      IFEQ '4'                                       158949
+     C                     MOVE MES,16    MSG                             CLE004
+     C                     ELSE                                           158949
+     C                     MOVE MES,17    MSG                             158949
+     C                     ENDIF                                          158949
+     C                     MOVE *BLANK    OPTN                            158949
+     C                     UPDATLE0161S1                                  158949
+     C                     MOVE *ON       *IN30                           CLE004
+     C                     ELSE                                           CLE004
+     C                     EXSR PROSEL                                    S01473
+     C                     MOVE *BLANK    OPTN                            S01473
+     C                     UPDATLE0161S1                                  S01473
+     C                     ENDIF                                          CLE004
+     C                     END                                            S01473
+     C*                                                                   S01473
+     C                     END                                            S01473
+     C/COPY WNCPYSRC,LEH01237
+     C                     END
+     C/COPY WNCPYSRC,LEH01220
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    PROSEL - PROCESS SELECTION                                    *
+     C*                                                                  *
+     C*    CALLED BY: PROINP - PROCESS SCREEN INPUT                      *
+     C*    CALLS:     LE0170 - FACILITY DETAILS ENQUIRY                  *
+     C*               LE0181 - OUTSTANDING LOANS BY FACILITY ENQUIRY     *
+     C*               RETSR  - END OF PROGRAM PROCESSING                 *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           PROSEL    BEGSR
+     C*
+     C* ACCESS DATA AREA EMSDS AND SET UP CUSTOMER NUMBER, FACILITY
+     C* TYPE AND NUMBER AS PARAMETERS TO PASS TO LOWER LEVEL PROGRAMS
+     C*
+     C           *LOCK     IN   EMSDS
+     C*
+     C                     MOVE *BLANKS   RQDTD
+     C                     MOVE *BLANKS   PARMS1
+     C                     MOVE *BLANKS   PARMS2
+     C                     MOVE *BLANKS   PARMS3                          147221
+     C                     MOVE *BLANKS   PARMS4                          147221
+      *                                                                   CLE004
+      **  Set-up overrides for Syndication options.                       CLE004
+      *                                                                   CLE004
+     C           OPTN      IFEQ '4'                                       CLE004
+     C***********OPTN      OREQ '1'                                 147221152137
+     C***********OPTN      OREQ '5'                                 CLE004147221
+     C                     Z-ADD56        MSGLEN 155                      CLE004
+     C                     MOVEACMD,1     PCMD   60                       CLE004
+     C                     CALL 'QCMDEXC'                                 CLE004
+     C                     PARM           PCMD                            CLE004
+     C                     PARM           MSGLEN                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   150215
+      **  Set-up overrides for Manual utilisations.                       150215
+      *                                                                   150215
+     C           OPTN      IFEQ '6'                                       150215
+     C                     Z-ADD53        MSGLEN 155                      150215
+     C                     MOVEACMD,5     PCMD   60                       150215
+     C                     CALL 'QCMDEXC'                                 150215
+     C                     PARM           PCMD                            150215
+     C                     PARM           MSGLEN                          150215
+     C                     ENDIF                                          150215
+      *                                                                   CLE004
+     C***********OPTN      IFEQ '5'                                 CLE004147221
+     C***********          Z-ADD56        MSGLEN                    CLE004147221
+     C***********          MOVEACMD,2     PCMD                      CLE004147221
+     C***********          CALL 'QCMDEXC'                           CLE004147221
+     C***********          PARM           PCMD                      CLE004147221
+     C***********          PARM           MSGLEN                    CLE004147221
+     C***********          ENDIF                                    CLE004147221
+     C*
+     C           OPTN      IFEQ '1'
+     C           OPTN      OREQ '4'                                       CLE004
+     C           OPTN      OREQ '6'                                       150215
+     C                     MOVELHCUST     P1CNUM
+     C                     MOVELHCUST     P3CNUM                          147221
+     C                     MOVELSFAC      P1FACT
+     C                     MOVELSFAC      P3FACT                          147221
+     C                     MOVE SFAC      P1FCNO
+     C                     MOVE SFAC      P3FCNO                          147221
+     C                     MOVELHBRCD     P3BRCD                          147221
+     C                     MOVELPARMS1    RQDTD
+     C/COPY WNCPYSRC,LEH01273
+     C                     END
+     C*
+     C           OPTN      IFEQ '2'
+     C           OPTN      OREQ '5'                                       CLE004
+     C                     MOVELHCUST     P2CNUM
+     C                     MOVELHCUST     P4CNUM                          147221
+     C           SCOMP     IFNE *BLANK
+     C                     MOVEL'ALL'     P2BRCD
+     C                     ELSE
+     C                     MOVELHBRCD     P2BRCD
+     C/COPY WNCPYSRC,LEH01274
+     C                     END
+     C                     MOVELSFAC      P2FACT
+     C                     MOVELSFAC      P4FACT                          147221
+     C                     MOVE SFAC      P2FCNO
+     C                     MOVE SFAC      P4FCNO                          147221
+     C                     MOVELHBRCD     P4BRCD                          147221
+     C                     MOVELPARMS2    RQDTD
+     C/COPY WNCPYSRC,LEH01275
+     C                     END
+     C*                                                                   S01473
+     C* IF OPTION ENTERED IS '3' AND SWITCHABLE FEATURE S01473 PRESENT    S01473
+     C* THEN SETUP PARAMETERS AND CALL CLCD42                             S01473
+     C*
+     C           *IN34     IFEQ '1'                                       S01473
+     C           OPTN      ANDEQ'3'                                       S01473
+     C*                                                                   S01473
+     C*** Set up variables to call CLCD42                                 S01473
+     C*                                                                   S01473
+     C                     MOVELHCUST     P3CNUM  6                       S01473
+     C                     MOVELSFAC      P3FACT  3                       S01473
+     C                     MOVE SFAC      P3FCNO  2                       S01473
+     C                     MOVEA*BLANKS   @WRK                            S01473
+     C                     MOVEALIB       @WRK                            S01473
+     C                     Z-ADD1         H                               S01473
+     C*                                                                   S01473
+     C           *BLANK    LOKUP@WRK,H                   10               S01473
+     C                     MOVEA'/'       @WRK,H                          S01473
+     C                     ADD  1         H       20                      S01473
+     C                     MOVEA'CLCD42'  @WRK,H                          S01473
+     C*                                                                   S01473
+     C                     MOVEA@WRK      VARI   21                       S01473
+     C                     CALL VARI                                      S01473
+     C                     PARM *BLANKS   @RTCD                           S01473
+     C                     PARM           P3CNUM                          S01473
+     C                     PARM           P3FACT                          S01473
+     C                     PARM           P3FCNO                          S01473
+     C           @RTCD     IFNE *BLANKS                                   S01473
+     C                     MOVEL'CLCD42'  DBFILE                          S01473
+     C                     MOVE @DSNB     DBKEY                           S01473
+     C                     Z-ADD4         DBASE                           S01473
+     C                     EXSR *PSSR                                     S01473
+     C                     END                                            S01473
+     C*                                                                   S01473
+     C                     ELSE                                           S01473
+     C*                                                                   S01473
+     C                     MOVE 'LE'      RQDTD
+     C                     MOVE *BLANK    RETND
+     C                     OUT  EMSDS
+     C*
+     C* IF OPTION ENTERED IS '1', CALL LE0170 - FACILITY DETAILS
+     C* ENQUIRY
+     C*
+     C                     OUT  LDA
+     C           OPTN      IFEQ '1'
+     C***********OPTN      OREQ '4'                                 CLE004147221
+     C                     CALL 'LE0170'
+     C                     PARM 'I'       PFCDT   1                                           204670
+      *                                                                   150215
+     C                     ELSE                                           150215
+      *                                                                   150215
+     C           OPTN      IFEQ '6'                                       150215
+     C                     CALL 'LE2140'                                  150215
+     C                     PARM 'I'       PMODE   1                       150215
+     C*
+     C**OTHERWISE,*OPTION*ENTERED*IS*'2',*CALL*LE0181*-*OUTSTANDING****   147221
+     C**LOANS*BY*FACILITY*ENQUIRY**************************************   147221
+     C* OTHERWISE, OPTION ENTERED IS '2'OR '4', CALL LE0181-OUTSTANDING   147221
+     C* LOANS BY FACILITY ENQ. OR LE3140-PART FACILITIES BY PRIME ENQ.    147221
+      **  Option 5 is also processed here.                                CLE004
+     C*
+     C                     ELSE
+     C           OPTN      IFEQ '4'                                       147221
+     C                     CALL 'LE3140'                                  147221
+     C                     PARM           P3CNUM                          147221
+     C                     PARM           P3FACT                          147221
+     C                     PARM           P3FCNO                          147221
+     C                     PARM           P3BRCD                          147221
+     C                     PARM           P3RTCD                          147221
+     C                     ELSE                                           147221
+     C           OPTN      IFEQ '2'                                       147221
+     C/COPY WNCPYSRC,LEH01221
+     C                     CALL 'LE0181'
+     C                     PARM 'OSLF'    PTYPE   4                       157383
+     C/COPY WNCPYSRC,LEH01222
+     C                     ELSE                                           147221
+     C           OPTN      IFEQ '5'                                       147221
+     C                     CALL 'LE3145'                                  147221
+     C                     PARM           P4CNUM                          147221
+     C                     PARM           P4FACT                          147221
+     C                     PARM           P4FCNO                          147221
+     C                     PARM           P4BRCD                          147221
+     C                     PARM           P4RTCD                          147221
+     C                     ENDIF                                          147221
+     C                     ENDIF                                          147221
+     C                     ENDIF                                          147221
+     C                     ENDIF                                          150215
+     C                     END
+     C                     END                                            S01473
+     C           *LOCK     IN   LDA
+     C*
+     C* CHECK DATA AREA EMSDS FOR COMMAND KEY TAKEN IN LOWER LEVEL
+     C* PROGRAMS
+     C*
+     C           *LOCK     IN   EMSDS
+     C*
+     C* IF F1 TAKEN IN LOWER LEVEL PROGRAM (RETURN CODE = 'S') AND THIS
+     C* PROGRAM CALLED AS A LINKED ENQUIRY (MODID = 'LE')
+     C* OR F3 TAKEN IN LOWER LEVEL PROGRAM (RETURN CODE = 'Q')
+     C* OR DATABASE ERROR HAS OCCURRED IN LOWER LEVEL PROGRAM (RETURN
+     C* CODE = 'E')
+     C*
+     C           OPTN      IFEQ '4'                                       147221
+     C           P3RTCD    ANDEQ'P'                                       147221
+     C           OPTN      OREQ '5'                                       147221
+     C           P4RTCD    ANDEQ'P'                                       147221
+     C                     MOVE 'U'       RETND                           147221
+     C                     ELSE                                           147221
+     C           OPTN      IFEQ '4'                                       147221
+     C           P3RTCD    ANDEQ'T'                                       147221
+     C           OPTN      OREQ '5'                                       147221
+     C           P4RTCD    ANDEQ'T'                                       147221
+     C                     MOVE 'Q'       RETND                           147221
+     C                     ENDIF                                          147221
+     C                     ENDIF                                          147221
+     C           RETND     IFEQ 'S'
+     C           MODID     ANDEQ'LE'
+     C           RETND     OREQ 'Q'
+     C           RETND     OREQ 'E'
+     C*
+     C* STORE RETURN CODE TO PASS TO HIGHER LEVEL PROGRAM AND EXIT THIS
+     C* PROGRAM
+     C*
+     C                     MOVE RETND     RTNDWF
+     C                     MOVE MODID     RQDTD
+     C                     EXSR RETSR
+     C                     END
+     C                     OUT  EMSDS
+      *                                                                   CLE004
+      **  Delete overrides for Syndication options.                       CLE004
+      *                                                                   CLE004
+     C           OPTN      IFEQ '4'                                       CLE004
+     C           OPTN      OREQ '6'                                       150215
+     C***********OPTN      OREQ '5'                                 CLE004147221
+     C                     Z-ADD18        MSGLEN                          CLE004
+     C                     MOVEACMD,3     PCMD                            CLE004
+     C                     CALL 'QCMDEXC'                                 CLE004
+     C                     PARM           PCMD                            CLE004
+     C                     PARM           MSGLEN                          CLE004
+     C                     ENDIF                                          CLE004
+      *                                                                   CLE004
+     C***********OPTN      IFEQ '5'                                 CLE004147221
+     C***********          Z-ADD18        MSGLEN                    CLE004147221
+     C***********          MOVEACMD,4     PCMD                      CLE004147221
+     C***********          CALL 'QCMDEXC'                           CLE004147221
+     C***********          PARM           PCMD                      CLE004147221
+     C***********          PARM           MSGLEN                    CLE004147221
+     C***********          ENDIF                                    CLE004147221
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    FILLSF - FILL SUBFILE                                         *
+     C*                                                                  *
+     C*    CALLED BY: MAIN   - MAIN PROCESSING                           *
+     C*               PROINP - PROCESS SCREEN INPUT                      *
+     C*               ROLDWN - PROCESS ROLLDOWN                          *
+     C*    CALLS:     READLV - READ LIVE RECORD FROM FCLTY               *
+     C*               SFREC  - SET UP SUBFILE RECORD                     *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           FILLSF    BEGSR
+     C*
+     C* SETOF INDICATOR TO DISPLAY HEADINGS
+     C*
+     C                     SETOF                     21
+     C*
+     C* SETON ROLLUP/ROLLDOWN INDICATORS
+     C*
+     C                     SETON                     4546
+     C*
+     C* SET SUBFILE INDICATORS
+     C*
+     C                     MOVEA'001'     *IN,41
+     C                     Z-ADD*ZERO     RRN
+     C                     Z-ADD*ZERO     $FACT   30
+     C                     Z-ADD*ZERO     $FCNO   20
+     C*
+     C* IF TOP OF THIS PAGE FACILITY TYPE AND NUMBER ARE EQUAL TO ZERO
+     C* OR EQUAL TO THOSE ON FIRST RECORD READ FROM FCLTY, DISABLE
+     C* ROLLDOWN
+     C*
+     C           #FACT     IFEQ *ZERO
+     C           #FCNO     ANDEQ*ZERO
+     C           #FACT     OREQ FFACT
+     C           #FCNO     ANDEQFFCNO
+     C                     SETOF                     46
+     C                     END
+     C*
+     C                     WRITELE0161C1
+     C/COPY WNCPYSRC,LEH01223
+     C           FCLTYA    SETLLFCLTY
+     C/COPY WNCPYSRC,LEH01224
+     C*
+     C* READ FIRST LIVE RECORD FROM FCLTY
+     C*
+     C                     EXSR READLV
+     C  N60                Z-ADDFACT      $FACT            *TOP OF THIS PAGE
+     C   60                Z-ADD*ZERO     #FACT
+     C  N60                Z-ADDFCNO      $FCNO            *TOP OF THIS PAGE
+     C   60                Z-ADD*ZERO     #FCNO
+     C*
+     C           *IN60     DOWEQ'0'
+     C           RRN       ANDNE#COUNT
+     C*
+     C* FORMAT SUBFILE RECORD
+     C*
+     C                     EXSR SFREC
+     C*
+     C* OUTPUT RECORD TO SUBFILE
+     C*
+     C                     ADD  1         RRN     40     43*
+     C                     WRITELE0161S1
+     C*
+     C* IF THIS IS FIRST RECORD READ FROM FCLTY, STORE FACILITY TYPE
+     C* AND NUMBER OF THIS RECORD
+     C*
+     C           FIRSTR    IFNE 'Y'
+     C           *IN60     ANDEQ'0'
+     C                     Z-ADDFACT      FFACT   30
+     C                     Z-ADDFCNO      FFCNO   20
+     C                     MOVE 'Y'       FIRSTR
+     C                     END
+     C*
+     C* AT END OF PAGE READ NEXT LIVE RECORD FROM FCLTY
+     C*
+     C           RRN       IFEQ #COUNT
+     C                     EXSR READLV
+     C  N60                Z-ADDFACT      #FACT            *TOP OF NEXT PAGE
+     C   60                Z-ADD*ZERO     #FACT
+     C  N60                Z-ADDFCNO      #FCNO            *TOP OF NEXT PAGE
+     C   60                Z-ADD*ZERO     #FCNO
+     C*
+     C* OTHERWISE, NOT END OF PAGE READ NEXT LIVE RECORD FROM FCLTY
+     C*
+     C                     ELSE
+     C                     EXSR READLV
+     C   60                Z-ADD*ZERO     #FACT
+     C   60                Z-ADD*ZERO     #FCNO
+     C                     END
+     C                     END
+     C*
+     C* IF TOP OF NEXT PAGE FACILITY TYPE AND NUMBER IS ZERO,
+     C* DISABLE ROLLUP
+     C*
+     C           #FACT     IFEQ *ZERO
+     C           #FCNO     ANDEQ*ZERO
+     C                     SETOF                     45
+     C                     END
+     C*
+     C* 43 ON - NO RECORDS ON SUBFILE
+     C*
+     C           *IN43     IFEQ '1'
+     C                     MOVEA'01'      *IN,41
+     C*
+     C* IF MULTI-BRANCHING ON, DISPLAY 'NO FACILITIES IN THE BRANCH/
+     C* COMPANY' MESSAGE
+     C*
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE MES,10    MSG
+     C*
+     C* OTHERWISE, DISPLAY 'NO FACILITIES ARE HELD FOR THIS CUSTOMER'
+     C* MESSAGE
+     C*
+     C                     ELSE
+     C                     MOVE MES,11    MSG
+     C                     END
+     C*
+     C                     SETON                     30
+     C                     ELSE
+     C                     MOVEA'11'      *IN,41
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    READLV - READ LIVE RECORD FROM FCLTY                          *
+     C*                                                                  *
+     C*    CALLED BY: FILLSF - FILL SUBFILE                              *
+     C*    CALLS:     SELECT - DETERMINE IF RECORD TO BE SELECTED        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           READLV    BEGSR
+     C*
+     C* READ A LIVE RECORD FROM FCLTY
+     C*
+     C                     MOVE '0'       *IN60
+     C                     MOVE 'N'       SELCT   1
+     C*
+     C           *IN60     DOWEQ'0'
+     C           SELCT     ANDEQ'N'
+     C/COPY WNCPYSRC,LEH01225
+     C           FCLTYP    READEFCLTY                    60*
+     C/COPY WNCPYSRC,LEH01226
+     C           *IN60     IFEQ '0'
+     C                     EXSR SELECT
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    SFREC - SET UP SUBFILE RECORD                                 *
+     C*                                                                  *
+     C*    CALLED BY: FILLSF - FILL SUBFILE                              *
+     C*    CALLS:     CCYDEP - ACCESS CURRENCY DECIMAL PLACES            *
+     C*               ZFRPED - EDIT NUMERIC FIELD FOR OUTPUT             *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           SFREC     BEGSR
+     C*
+     C* SET UP FACILITY DETAILS FOR OUTPUT
+     C*
+     C                     MOVELFACT      SFAC
+     C                     MOVEL'/'       WFAC    3
+     C                     MOVE FCNO      WFAC
+     C                     MOVE WFAC      SFAC
+     C*
+     C* SET UP CUSTOMER NUMBER AND BRANCH CODE IN HIDDEN FIELDS FOR USE
+     C* AS PARAMETERS TO PASS TO LOWER LEVEL PROGRAM IF REQUIRED
+     C* (THIS IS IN CASE USER ENTERS NEW CUSTOMER OR BRANCH AND THEN
+     C* ENTERS OPTION; THE PROGRAM WILL PROCESS THE OPTION FIRST)
+     C*
+     C                     MOVELBBCUST    HCUST
+     C                     MOVELSBRCD     HBRCD
+     C*
+     C* ACCESS CURRENCY ARRAYS TO PICK UP DECIMAL PLACES.
+     C*
+     C                     EXSR CCYDEP
+     C*
+     C* INITIALIZE SCREEN AMOUNT FIELDS
+     C*
+     C                     MOVE *BLANKS   SFAMT
+     C                     MOVE *BLANKS   SCAMD
+     C                     MOVE *BLANKS   SCAVL
+     C*
+     C* EDIT FACILITY AMOUNT FOR OUTPUT TO SCREEN
+     C*
+     C                     Z-ADD*ZERO     ZFLD15
+      **The*facility*amount*should*be*shown*as*zero*if*the******** 170605 185905
+      **facility*is*not*active.*********************************** 170605 185905
+     C********** RECI      IFEQ 'D'                                170605 185905
+     C                     MOVE FAMT      ZFLD15
+     C**********           ENDIF                                   170605 185905
+     C                     Z-ADDXDECP     ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    SFAMT
+     C*
+     C* EDIT CURRENT EXPOSURE AMOUNT DRAWN FOR OUTPUT TO SCREEN
+     C*
+     C                     Z-ADD*ZERO     ZFLD15
+      *                                                                                       CLE023
+      ** If CLE023 is installed, move CEXP value to Current Exposure                          CLE023
+      ** display field instead of CAMD.                                                       CLE023
+      *                                                                                       CLE023
+     C           CLE023    IFEQ 'Y'                                                           CLE023
+     C           WFLD      ANDEQ'Y'                                                           260453
+     C                     MOVE CEXP      ZFLD15                                              CLE023
+     C                     ELSE                                                               CLE023
+     C                     MOVE CAMD      ZFLD15
+     C                     ENDIF                                                              CLE023
+     C***********          MOVE 'A'       ZECODE                          171784
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    SCAMD
+      *                                                                   185905
+     C           RECIF     IFEQ 'D'                                       185905
+     C           DTEX      ANDGTRUND                                                          209384
+     C*
+     C* CALCULATE CURRENT AVAILABLE AMOUNT AS:
+     C*   FACILITY AMOUNT MINUS DRAWN AMOUNT DAY 2
+     C*
+     C/COPY WNCPYSRC,LE0161C001
+     C***********FAMT      SUB  OAM2      CAVL   130                      172234
+      *   The available amount of Revolving Credit facilities should      175394
+      *       be calculated using the current amount drawn.               175394
+     C           RVCR      IFEQ 'Y'                                       175394
+     C           FAMT      SUB  CAMD      CAVL   130                      172234
+     C                     ELSE                                           175394
+     C           FAMT      SUB  OAM2      CAVL   130                      175394
+     C                     ENDIF                                          175394
+      *                                                                   185905
+      ** If facility is expired, current available amount should          185905
+      ** be shown as zero.                                                185905
+      *                                                                   185905
+     C                     ELSE                                           185905
+     C                     Z-ADD0         CAVL                            185905
+     C                     ENDIF                                          185905
+     C*
+     C/COPY WNCPYSRC,LE0161C002
+     C* EDIT CURRENT AVAILABLE AMOUNT FOR OUTPUT TO SCREEN
+     C*
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE CAVL      ZFLD15
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT22    SCAVL
+      *                                                                   CLE004
+      **  Display participant facility indicator if                       CLE004
+      **  Syndication feature is switched on.                             CLE004
+      *                                                                   CLE004
+     C                     MOVE *BLANKS   SPRTR                           CLE004
+     C           CLE004    IFEQ 'Y'                                       CLE004
+     C           SYIN      ANDEQ'Y'                                       CLE004
+     C           PRTR      ANDNE*BLANKS                                                       194829
+     C                     SELEC                                          CLE004
+     C           PRTR      WHEQ 'P'                                       CLE004
+     C           TRCA      IFEQ 'CA'                                      147221
+     C**********           MOVEL'CA-Pt'   SPRTR                                        147221 CLE106
+     C                     MOVEL'CA-FP'   SPRTR                                               CLE106
+     C                     ELSE                                           147221
+     C**********           MOVEL'PART.'   SPRTR                                        CLE004 CLE106
+     C                     MOVEL'FUNDP'   SPRTR                                               CLE106
+     C                     ENDIF                                          147221
+     C           PRTR      WHEQ 'A'                                       CLE004
+     C           TRCA      IFEQ 'CA'                                      147221
+     C                     MOVEL'CA-Pr'   SPRTR                           147221
+     C                     ELSE                                           147221
+     C***********          MOVEL'PRIME'   SPRTR                    CLE004 155147
+     C                     MOVEL'PRMRY'   SPRTR                           155147
+     C                     ENDIF                                          147221
+     C           PRTR      WHEQ 'I'                                       CLE004
+     C           TRCA      IFEQ 'CA'                                      147221
+     C                     MOVEL'CA-In'   SPRTR                           147221
+     C                     ELSE                                           147221
+     C**********           MOVEL'INTNL'   SPRTR                                        CLE004 CLE106
+     C                     MOVEL'INT-P'   SPRTR                                               CLE106
+     C                     ENDIF                                          147221
+     C           PRTR      WHEQ 'R'                                                           CLE106
+     C           TRCA      IFEQ 'CA'                                                          CLE106
+     C                     MOVEL'CA-RP'   SPRTR                                               CLE106
+     C                     ELSE                                                               CLE106
+     C                     MOVEL'RISKP'   SPRTR                                               CLE106
+     C                     ENDIF                                                              CLE106
+     C           PRTR      WHEQ 'S'                                                           CLE106
+     C           TRCA      IFEQ 'CA'                                                          CLE106
+     C                     MOVEL'CA-SP'   SPRTR                                               CLE106
+     C                     ELSE                                                               CLE106
+     C                     MOVEL'SUB-P'   SPRTR                                               CLE106
+     C                     ENDIF                                                              CLE106
+     C                     ENDSL                                          CLE004
+     C                     ELSE                                           147221
+     C           TRCA      IFEQ 'CA'                                      147221
+     C                     MOVEL'CA'      SPRTR                           147221
+     C                     ENDIF                                          147221
+      * If Syndication (CLE006) is off, show 'TR' in                      170100
+      * 'Credit Agreement' column for Tranches.                           170100
+     C           TRCA      IFEQ 'TR'                                      170100
+     C********** CLE006    ANDEQ'N'                                                    170100 194829
+     C                     MOVEL'TR'      SPRTR                           170100
+     C                     ENDIF                                          170100
+     C                     ENDIF                                          CLE004
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    ROLDWN - PROCESS ROLLDOWN                                     *
+     C*                                                                  *
+     C*    CALLED BY: PROINP - PROCESS SCREEN INPUT                      *
+     C*    CALLS:     SELECT - DETERMINE IF RECORD TO BE SELECTED        *
+     C*               FILLSF - FILL SUBFILE                              *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           ROLDWN    BEGSR
+     C*
+     C                     Z-ADD*ZERO     RRN
+     C                     Z-ADD$FACT     #FACT
+     C                     Z-ADD$FCNO     #FCNO
+     C*
+     C* SET FILE POINTER AFTER TOP OF THIS PAGE FACILITY TYPE AND
+     C* NUMBER AND READ PREVIOUS RECORD
+     C*
+     C/COPY WNCPYSRC,LEH01227
+     C           FCLTYA    SETGTFCLTY
+     C                     READPFCLTY                    60*
+     C/COPY WNCPYSRC,LEH01228
+     C*
+     C* DO WHILE NOT START OF FILE AND SUBFILE PAGE NOT FULL
+     C*
+     C           *IN60     DOWEQ'0'
+     C           RRN       ANDLT#COUNT
+     C*
+     C* IF CUSTOMER NUMBER HAS CHANGED, TREAT AS START OF FILE
+     C*
+     C           CNUM      IFNE #CNUM
+     C                     SETON                         60*
+     C*
+     C* OTHERWISE, CONTINUE READING BACKWARDS THROUGH FILE
+     C*
+     C                     ELSE
+     C/COPY WNCPYSRC,LEH01229
+     C                     READPFCLTY                    60*
+     C/COPY WNCPYSRC,LEH01230
+     C*
+     C* IF TYPE 'A' RECORD BEING PROCESSED, STORE CUSTOMER NUMBER,
+     C* FACILITY TYPE AND NUMBER FROM THIS RECORD
+     C*
+     C           RCTP      IFEQ 'A'
+     C**********           Z-ADDCNUM      #CNUM                                               CSD027
+     C                     MOVE CNUM      #CNUM                                               CSD027
+     C                     Z-ADDFACT      #FACT
+     C                     Z-ADDFCNO      #FCNO
+     C                     END
+     C*
+     C                     MOVE RCTP      #RCTP   1
+     C*
+     C* DETERMINE IF RECORD TO BE SELECTED
+     C*
+     C                     EXSR SELECT
+     C*
+     C* IF TYPE 'A' RECORD BEING PROCESSED, RESET FILE POINTER ON FCLTY
+     C* TO THE TYPE 'A' RECORD, SINCE FCLTY MAY HAVE BEEN ACCESSED IN
+     C* SR. SELECT FOR TYPE 'B' RECORD
+     C*
+     C           #RCTP     IFEQ 'A'
+     C/COPY WNCPYSRC,LEH01231
+     C           FCLTYA    SETGTFCLTY
+     C                     READPFCLTY                    70
+     C/COPY WNCPYSRC,LEH01232
+     C                     END
+     C*
+     C* IF RECORD SELECTED FOR OUTPUT
+     C*
+     C           SELCT     IFEQ 'Y'
+     C*
+     C* ADD 1 TO COUNT OF RECORDS READ
+     C*
+     C                     ADD  1         RRN
+     C                     END
+     C                     END
+     C*
+     C                     END
+     C*
+     C* RESET TOP OF THIS PAGE FACILITY TYPE AND NUMBER
+     C*
+     C  N60                Z-ADDFACT      #FACT            *TOP OF PAGE
+     C   60                Z-ADD*ZERO     #FACT
+     C  N60                Z-ADDFCNO      #FCNO            *TOP OF PAGE
+     C   60                Z-ADD*ZERO     #FCNO
+     C*
+     C* FILL NEXT PAGE OF SUBFILE
+     C*
+     C                     EXSR FILLSF
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    SELECT - DETERMINE IF RECORD TO BE SELECTED                   *
+     C*                                                                  *
+     C*    CALLED BY: READLV - READ LIVE RECORD FROM FCLTY               *
+     C*               ROLDWN - PROCESS ROLLDOWN                          *
+     C*    CALLS:     *PSSR  - ERROR PROCESSING                          *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           SELECT    BEGSR
+     C*
+     C* ONLY SELECT FACILITY RECORDS WITH RECORD TYPE 'A'
+     C*
+     C           RCTP      IFNE 'A'
+     C                     MOVE 'N'       SELCT
+     C                     ELSE
+     C                     MOVE 'Y'       SELCT
+     C                     END
+     C*
+     C* ONLY SELECT FACILITY RECORDS WITH RECORD ID 'D' OR 'E'
+     C*
+     C           SELCT     IFEQ 'Y'
+     C           RECIF     IFNE 'D'
+     C           RECIF     ANDNE'E'
+     C                     MOVE 'N'       SELCT
+     C                     END
+     C                     END
+     C*
+     C* SELECT FACILITY RECORDS BY BRANCH CODE FOR BRANCH REPORT
+     C*
+     C           SELCT     IFEQ 'Y'
+     C           MBIN      IFEQ 'Y'
+     C           SBRCD     ANDNE*BLANKS
+     C           SBRCD     ANDNE'ALL'
+     C           SBRCD     ANDNEBRCA
+     C                     MOVE 'N'       SELCT
+     C                     END
+     C                     END
+     C*
+     C* SELECT FACILITY RECORDS BY COMPANY FOR COMPANY REPORT
+     C*
+     C           SELCT     IFEQ 'Y'
+     C           MBIN      IFEQ 'Y'
+     C           SCOMP     ANDNE*BLANKS
+     C           SCOMP     ANDNE'ALL'
+     C*
+     C* ACCESS SDBRCHPD TO DETERMINE COMPANY FOR BRANCH OF FACILITY
+     C*
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG    '@RTCD
+     C                     PARM '*KEY    '@OPTN
+     C                     PARM BRCA      @DSNB
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C*
+     C* DATABASE ERROR PROCESSING
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVEL@DSNB     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     MOVEL@OPTN     DBOPTN  7
+     C                     EXSR *PSSR
+     C*
+     C* OTHERWISE, COMPARE COMPANY INPUT ON SCREEN WITH COMPANY ON
+     C* BRANCH CODE RECORD
+     C*
+     C                     ELSE
+     C           SCOMP     IFNE A8CMCD
+     C                     MOVE 'N'       SELCT
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C* ONLY SELECT FACILITY TYPE 'A' RECORDS IF 'B' RECORD ALSO FOUND
+     C*
+     C           SELCT     IFEQ 'Y'
+     C/COPY WNCPYSRC,LEH01233
+     C           FCLTYB    CHAINFCLTY                70
+     C/COPY WNCPYSRC,LEH01234
+     C           *IN70     IFEQ '1'
+     C           RECI      ORNE 'D'
+     C           RECI      ANDNE'E'
+     C                     MOVE 'N'       SELCT
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    CCYARR - SET UP CURRENCY ARRAYS                               *
+     C*                                                                  *
+     C*    CALLED BY: INIT - INITIAL PROCESSING                          *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CCYARR    BEGSR
+     C*
+     C* READ ALL RECORDS FROM CURRENCY DETAILS FILE AND SET UP CURRENCY
+     C* CODE AND CURRENCY DECIMAL PLACES ARRAYS
+     C*
+     C                     OPEN SDCURRPD
+     C*
+     C                     Z-ADD1         X       30
+     C                     READ SDCURRPD                 51
+     C*
+     C           *IN51     DOWEQ'0'
+     C                     MOVE A6CYCD    XCYA,X
+     C                     MOVE A6NBDP    XDPA,X
+     C                     ADD  1         X
+     C                     READ SDCURRPD                 51
+     C                     END
+     C*
+     C                     CLOSESDCURRPD
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    CCYDEP - ACCESS CURRENCY DECIMAL PLACES                       *
+     C*                                                                  *
+     C*    CALLED BY: SFREC - SET UP SUBFILE RECORD                      *
+     C*    CALLS:     *PSSR - ERROR PROCESSING                           *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CCYDEP    BEGSR
+     C*
+     C* IF FACILITY CURRENCY IS BLANK, IT IS A DATABASE ERROR ON FCLTY
+     C*
+     C           FCCY      IFEQ *BLANKS
+     C/COPY WNCPYSRC,LEH01235
+     C                     MOVEL'FCLTY'   DBFILE
+     C/COPY WNCPYSRC,LEH01236
+     C                     MOVE #CNUM     DCNUM
+     C                     MOVE #FACT     DFACT
+     C                     MOVE #FCNO     DFCNO
+     C                     MOVE RECTA     DRECT
+     C                     MOVELFCLTYD    DBKEY
+     C                     Z-ADD2         DBASE
+     C                     EXSR *PSSR
+     C*
+     C* OTHERWISE, LOOK UP FACILITY CURRENCY IN CURRENCY ARRAY
+     C*
+     C                     ELSE
+     C                     Z-ADD1         X
+     C           FCCY      LOKUPXCYA,X                   51
+     C*
+     C* ARRAY XCYA HAS BEEN FILLED WITH RECORDS FROM SDCURRPD IN
+     C* SR. CCYARR; THEREFORE, IF A CURRENCY IS NOT FOUND IN THE ARRAY,
+     C* IT IS A DATABASE ERROR ON SDCURRPD
+     C*
+     C           *IN51     IFEQ '0'
+     C                     MOVEL'SDCURRPD'DBFILE
+     C                     MOVELFCCY      DBKEY
+     C                     Z-ADD3         DBASE
+     C                     EXSR *PSSR
+     C*
+     C* OTHERWISE, STORE CURRENCY DECIMAL PLACES
+     C                     ELSE
+     C                     Z-ADDXDPA,X    XDECP   10
+     C                     END
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    CMDSR - PROCESS COMMAND KEYS                                  *
+     C*                                                                  *
+     C*    CALLED BY: VALID  - VALIDATE SCREEN INPUT                     *
+     C*               PROINP - PROCESS SCREEN INPUT                      *
+     C*    CALLS:     RETSR  - END OF PROGRAM PROCESSING                 *
+     C*                                                                  *
+     C*    THIS IS A STANDARD LINK ENQUIRY SUBROUTINE FOR PROCESSING     *
+     C*    THE COMMAND KEYS                                              *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           CMDSR     BEGSR
+     C*
+     C* SET DATA AREA WORK FIELD RTNDWF TO BLANKS
+     C*
+     C                     MOVE *BLANK    RTNDWF  1
+     C*
+     C* IF F3 PRESSED, RETURN TO MENU
+     C*
+     C           *INKC     IFEQ '1'
+     C                     MOVE 'Q'       RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C* IF F1 PRESSED, RETURN TO INITIAL ENQUIRY
+     C*
+     C           *INKA     IFEQ '1'
+     C                     MOVE 'S'       RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C* IF F12 PRESSED, RETURN TO PREVIOUS ENQUIRY
+     C*
+     C           *INKL     IFEQ '1'
+     C                     MOVE 'U'       RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    RETSR - END OF PROGRAM PROCESSING                             *
+     C*                                                                  *
+     C*    CALLED BY: PROSEL - PROCESS SELECTION                         *
+     C*               CMDSR  - PROCESS COMMAND KEYS                      *
+     C*               *PSSR  - ERROR PROCESSING                          *
+     C*    CALLS:                                                        *
+     C*                                                                  *
+     C*    THIS IS A STANDARD LINK ENQUIRY SUBROUTINE FOR ENDING THE     *
+     C*    PROGRAM                                                       *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           RETSR     BEGSR
+     C*
+     C* SET ON LR
+     C*
+     C                     SETON                     LR
+     C*
+     C* ACCESS EM DATA AREA
+     C*
+     C           *LOCK     IN   EMSDS
+     C                     MOVE RTNDWF    RETND
+     C                     OUT  EMSDS
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C********************************************************************
+      /EJECT
+     C********************************************************************
+     C*                                                                  *
+     C*    *PSSR - ERROR PROCESSING                                      *
+     C*                                                                  *
+     C*    CALLED BY: SELECT - DETERMINE IF RECORD TO BE SELECTED        *
+     C*               CCYDEP - ACCESS CURRENCY DECIMAL PLACES            *
+     C*    CALLS:     RETSR  - END OF PROGRAM PROCESSING                 *
+     C*                                                                  *
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'LE0161'  DBPGM
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C*
+     C           MODID     IFEQ 'LE'
+     C                     MOVE 'E'       RTNDWF
+     C                     EXSR RETSR
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*                                                                  *
+     C********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZFRPEDZ3
+      * Amended text of message MES,16 as option 4 not valid for Participant Facilities.      CLE106
+**   MES - SCREEN MESSAGES
+ENTER CUSTOMER NUMBER OR SHORTNAME
+CUSTOMER NOT ON FILE
+SHORTNAME NOT ON SHORTNAMES FILE
+ENTER EITHER BRANCH OR COMPANY
+NO BANK AUTHORIZATION FOR USER
+INVALID BRANCH CODE
+BRANCH INVALID FOR USER
+INVALID COMPANY CODE
+COMPANY INVALID FOR USER
+NO FACILITIES IN THE BRANCH/COMPANY
+NO FACILITIES ARE HELD FOR THIS CUSTOMER
+ENTER '1' FOR FACILITY DETAILS, '2' FOR OUTSTANDING LOANS
+ENTER '1' FOR FACILITY, '2' FOR OUTSTANDING LOAN, '3' FOR LC DETAILS
+Enter 1-Facility 2-Outstanding Loans 4-Synd. Facility 5-Synd. Loans
+Enter 1-Fclty. 2-Outstanding Loans 3-LC Details 4-Synd. Fclty. 5-Synd. Loans
+Option 4 is only allowed for Prime Facility 'PRMRY' or 'CA-Pr'                         194829 CLE106
+Option 5 is only allowed for Credit Agreement facility                                        194829
+Enter 1-Facility 2-Outs. Loans 4-Synd. Facility 5-TR by CA 6-MFUs                             194829
+Enter 1-Facility, 2-Outs. Loans, 3-LC Details, 5-TR by CA, 6-MFUs.                            194829
+Enter 1-Facility, 2-Outstanding Loans, 5-TR by CA, 6-MFUs.                                    194829
+Enter 1-Facility 2-Outs. Loans 3-LC Details 4-Synd. Faclty 5-TR by CA 6-MFUs                  194829
+Enter 1-Facility, 2-Outstanding Loans,  5-TR by CA.                                           194829
+Enter 1-Facility, 2-Outs. Loans, 3-LC Details, 5-TR by CA.                                    194829
+**   BRTTLA - BRANCH TITLE
+             All Branches
+             All Companies
+** CMD ** System commands
+OVRDBF FILE(FCLTY) TOFILE(LEFCLTL3) MBR(*ALL) SHARE(*NO)
+OVRDBF FILE(CLOAN) TOFILE(LELOANL6) MBR(*ALL) SHARE(*NO)
+DLTOVR FILE(FCLTY)
+DLTOVR FILE(CLOAN)
+OVRDBF FILE(FCLTY) TOFILE(FCLTY) MBR(*ALL) SHARE(*NO)
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

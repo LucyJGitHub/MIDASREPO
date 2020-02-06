@@ -1,0 +1,157 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas IBLC 2002 Access Branch Code Extended file')
+      *****************************************************************
+      *                                                               *
+      *  Midas - IBLC 2002 Module                                     *
+      *                                                               *
+      *  RPG/IL0453    - ACCESS IBLC BRANCH CODE EXTENDED FILE        *
+      *                                                               *
+      *  Function:  This program access to IBLC branch codes          *
+      *             Extended file and return on BLLINE parameter      *
+      *             the extended informations to be printed           *
+      *                                                               *
+      *  (phase(s)) *all                                              *
+      *                                                               *
+      *  Called By: SD0060P - Branch Codes Aud/Req report             *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CER001             Date 25Apr05               *
+      *                 ULX043             Date 20Aug01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  ULX043 - IBLC 2002 Reporting                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     F***SDBRCHYLIF  E           K        DISK                                                CER001
+     FSDBRX1L0IF  E           K        DISK                                                   CER001
+      ***  BCL Branch Extension        Retrieval index     Prefix BR.
+      *
+      /EJECT
+      *****************************************************************
+     E                    CPY@    1   1 80               COPYRIGHT  ARRAY
+      ***  Copyright array
+      *
+      /EJECT
+      *****************************************************************
+      ***  Narratives
+      *
+     I            DS
+     I              'IBLC 2002         :' C         FN00
+     I              'BCL Branch to Report-C         FN01
+     I              ' Flag         :'
+     I              'BCL Branch for Conso-C         FN02
+     I              'lidation Flag :'
+     I              'BCL Consolidation Br-C         FN03
+     I              'anch          :'
+     I              'BCL Country code    -C         FN04
+     I              '              :'
+     I              'BCL Country Number  -C         FN05
+     I              '              :'
+      *
+      /EJECT
+      **************************************************************************
+     IILLINE      DS                            660
+      ***  Extended informations from IBLC 2002
+     I                                        1 132 ILLIN1
+     I                                      133 264 ILLIN2
+     I                                      265 396 ILLIN3
+     I                                      397 528 ILLIN4
+     I                                      529 660 ILLIN5
+      *
+      ***  Output 3 lines for Branch IBLC 2002 Reporting
+      *
+     ILINE1       DS                            132
+     I                                        9  27 L1DS01
+     I                                       42  76 L1DS02
+     I                                       78  78 BRREPT
+      *
+     ILINE2       DS
+     I                                       42  76 L2DS01
+     I                                       78  78 BRBRCO
+     I                                       86 120 L2DS02
+     I                                      122 124 BRCONS
+      *
+     ILINE3       DS                            132
+     I                                       42  76 L3DS01
+     I                                       78  790BRBKCO
+     I                                       86 120 L3DS02
+     I                                      122 1240BRBKNB
+      *****************************************************************
+      /EJECT
+      *
+      *****************************************************************
+      * Main processing
+      *****************************************************************
+      *
+      ***  Access extended Branch Record
+      *
+     C********** PBRCH     CHAINSDBRCHYL             89                                       CER001
+     C           PBRCH     CHAINSDBRX1L0             89                                       CER001
+      *
+     C           *IN89     IFEQ *OFF
+      *
+      ***  Set up extended line(s)
+      *
+     C                     MOVELFN00      L1DS01    P
+     C                     MOVELFN01      L1DS02    P
+     C                     MOVELFN02      L2DS01    P
+     C                     MOVELFN03      L2DS02    P
+     C                     MOVELFN04      L3DS01    P
+     C                     MOVELFN05      L3DS02    P
+      *
+     C                     MOVELLINE1     ILLIN1    P
+     C                     MOVELLINE2     ILLIN2    P
+     C                     MOVELLINE3     ILLIN3    P
+      *
+     C                     MOVEL*BLANKS   ILLIN4           Not used
+     C                     MOVEL*BLANKS   ILLIN5
+      ***  Setup return parameter
+     C                     MOVE '0'       PFAIL
+      *
+     C                     ELSE
+     C                     MOVE '1'       PFAIL
+     C                     ENDIF
+      *
+      *****************************************************************
+      * End of processing
+      *****************************************************************
+      *
+      **  Return to caller program
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *****************************************************************
+      * Initial subroutine
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ***  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ***  Define parameters list
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PBRCH   3
+     C                     PARM           ILLINE
+     C                     PARM           PFAIL   1
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2005

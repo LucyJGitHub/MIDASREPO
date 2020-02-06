@@ -1,0 +1,230 @@
+      *****************************************************************
+      *                                                               *
+      *  Midas - /COPY Member of DL0280RCTI                           *
+      *                                                               *
+      *  Last Amend No. MD031631           Date 23Jun15               *
+      *  Prev Amend No. MD031123A          Date 24Nov14               *
+      *                 MD031123           Date 03Nov14               *
+      *                 MD023740           Date 13Dec13               *
+      *                 MD023042           Date 13Dec13               *
+      *                 AR755195           Date 13Dec13               *
+      *                 MD022399A          Date 13Dec13               *
+      *                 AR866124 *CREATE   Date 16Sep13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD031631 - Backdated MM deal with base rate: the backdated   *
+      *             interest due/capitalized amounts are wrong        *
+      *  MD031123A - DEAM BC(Base Rate change) not reflected on time  *
+      *             deposit                                           *
+      *           - use the new base rate for BC amendment            *
+      *  MD031123 - DEAM BC(Base Rate change) not reflected on time   *
+      *             deposit                                           *
+      *           - use the new base rate for BC amendment            *
+      *  MD023740 - Reconciliation: Total Interest field difference   *
+      *           - Applied for MD024110                              *
+      *  MD023042 - Wrong base and interest rate                     *
+      *           - Applied for MD024110                              *
+      *  AR755195 -  Wrong total interest calculated                  *
+      *           - Applied for MD-23042                              *
+      *           - Applied for MD024110                              *
+      *  MD022399A - BankFusion_Dealing - MM: incorrect calculation   *
+      *              of the rate of EM                                *
+      *           - Applied for MD024110                              *
+      *  AR866124 - Field TOTI is not computed after base rate is     *
+      *             changed. Added SR to recalculate TOTI when base   *
+      *             rate is changed.                                  *
+      *           - TOTI becomes 0 after BC amendment. Error happen   *
+      *             when CDL020 is off. Retrieved rate when CDL020    *
+      *             is switched off.                                  *
+      *           - Applied for MD022399                              *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  RCALTOTI - To re-calculate total interest when base rate     *
+      *             change occurred.                                  *
+      *                                                               *
+      *****************************************************************
+     C     RCALTOTI      BEGSR
+      *
+      ** If a base rate change occurs for a deal, re-compute
+      ** for the total interest field.
+      *
+     C     *IN08         IFEQ      '1'
+     C     *IN03         ANDEQ     '1'
+     C*****CDL033        ANDEQ     ' '                                             AR755195 MD023740
+     C*****CDL033        OREQ      'Y'                                             AR755195 MD023740
+     C*****XKRCDT        ANDEQ     0                                               AR755195 MD023740
+     C                   Z-ADD     VDATDM        ZIBEG
+      *                                                                                    MD022399A
+     C     AMTP          IFEQ      'EM'                                                    MD022399A
+     C                   Z-ADD     EMDAT         ZIEND                                     MD022399A
+     C                   ELSE                                                              MD022399A
+     C                   Z-ADD     MDAT          ZIEND
+     C                   ENDIF                                                             MD022399A
+      *                                                                                    MD022399A
+     C                   Z-ADD     PAMT          ZIAMT
+     C                   Z-ADD     ICBS          ZICALC
+      *
+     C     MDAT          IFEQ      0
+     C     NOTD          IFEQ      0
+     C     ZIBEG         ADD       1             ZIEND
+     C                   ELSE
+     C     NOTD          IFNE      -999                                                     AR755195
+     C     ZIBEG         ADD       NOTD          ZIEND
+     C                   ELSE                                                               AR755195
+     C                   Z-ADD     MDAT          ZIEND                                      AR755195
+     C                   ENDIF                                                              AR755195
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   Z-ADD     INTR          ZIRATE
+      *
+     C     AMTP          IFEQ      'BC'
+     C     CDL020        IFNE      'Y'
+     C**********         MOVE      BRTTDM        @@BSRC                                     MD023042
+     C**********         CALL      'AOBSHSR0'                                               MD023042
+     C                   MOVE      BRTTDM        @BSRC             2                        MD023042
+     C                   CALL      'AOBSRTR0'                                               MD023042
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM      PCCY          @@CYCD            3
+     C                   PARM                    @BSRC                                      MD023042
+     C     SDBSRT        PARM      SDBSRT        DSFDY                                      MD023042
+     C**********         PARM                    @@BSRC                                     MD023042
+     C**********         PARM      VDATDM        @HSTDT            5 0                      MD023042
+     C*****SDBSHS        PARM      SDBSHS        DSFDY                                      MD023042
+     C     @RTCD         IFNE      *BLANK
+     C**********         MOVE      @@BSRC        @BSRC                                      MD023042
+     C**********         CALL      'AOBSRTR0'                                               MD023042
+     C                   MOVE      @BSRC         @@BSRC            2 0                      MD023042
+     C                   CALL      'AOBSHSR0'                                               MD023042
+     C                   PARM      *BLANKS       @RTCD
+     C                   PARM      '*KEY   '     @OPTN
+     C                   PARM      PCCY          @@CYCD            3
+     C                   PARM                    @@BSRC                                     MD023042
+     C                   PARM      VDATDM        @HSTDT            5 0                      MD023042
+     C     SDBSHS        PARM      SDBSHS        DSFDY                                      MD023042
+     C**********         PARM                    @BSRC                                      MD023042
+     C*****SDBSRT        PARM      SDBSRT        DSFDY                                      MD023042
+     C     @RTCD         IFNE      *BLANK
+     C                   MOVEL     'BASERATE'    DBFILE
+     C                   MOVEL     '53'          DBASE             3
+     C                   MOVEL     @@BSRC        DBKEY
+     C                   SETON                                        U7U8LR
+     C                   EXSR      *PSSR
+     C                   GOTO      EOJ
+     C                   ELSE
+     C**********         Z-ADD     BANBRT        BRTEDM                                     MD023042
+     C                   Z-ADD     G0CBSR        BRTEDM                                     MD023042
+     C                   ENDIF
+     C                   ELSE
+     C**********         Z-ADD     G0CBSR        BRTEDM                                     MD023042
+     C                   Z-ADD     BANBRT        BRTEDM                                     MD023042
+     C                   ENDIF
+     C                   ENDIF
+     C     RTSPDM        IFNE      0
+     C     BRTEDM        ADD       RTSPDM        ZIRATE
+     C                   ELSE
+     C     BRTEDM        ADD       RTSP          ZIRATE
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C     AMTP          IFEQ      'EM'                                                    MD022399A
+     C     INTR          SUB       RTSP          ZIRATE                                    MD022399A
+     C                   ADD       RTSPDM        ZIRATE                                    MD022399A
+     C                   ENDIF                                                             MD022399A
+      *                                                                                    MD022399A
+     C     AMTP          IFEQ      'SC'
+     C     BRTE          ADD       RTSPDM        ZIRATE
+     C                   ENDIF
+      *
+     C     AMTP          IFEQ      'BR'
+     C*****BRTT*         IFEQ      BRTTDM                                         MD031123 MD031123A
+     C     RTSPDM        ADD       RTSP          ZIRATE
+     C**********         ELSE                                                     MD031123 MD031123A
+     C*****BRTEDM        ADD       RTSP          ZIRATE                           MD031123 MD031123A
+     C**********         ENDIF                                                    MD031123 MD031123A
+     C                   ENDIF
+      *
+     C     AMTP          IFEQ      'PD'
+     C     PAMT          SUB       DAAM          ZIAMT
+     C                   ENDIF
+      *
+     C     AMTP          IFEQ      'PI'
+     C     DAAM          ADD       PAMT          ZIAMT
+     C                   ENDIF
+      *
+     C                   EXSR      GLINTC
+      *
+     C     *IN02         IFEQ      '1'
+     C     ZIRDFC        ANDEQ     'Y'
+     C     *IN03         OREQ      '1'
+     C     JRDFC         ANDEQ     'Y'
+     C     *IN04         OREQ      '1'
+     C     JRDFC         ANDEQ     'Y'
+     C                   Z-ADD     ZINTR         WKINT
+     C                   ELSE
+     C                   Z-ADD (H) ZINTR         WKINT            13 0
+     C                   ENDIF
+      *
+      ** Added validation for backvalued deal amendment
+      *
+     C                   Z-ADD     0             WKINT2
+     C*****VDATDM        IFLE      EVCD                                                     MD023042
+     C     VDATDM        IFLE      EVCD                                                     MD023740
+     C*****VDATDM        IFLT      EVCD                                            AR755195 MD023740
+     C*****ORED*         OREQ      EVCD                                            AR755195 MD023740
+     C*****IACD*         ANDLT     EVCD                                            AR755195 MD023740
+     C                   Z-ADD     IACD          ZIBEG
+     C                   Z-ADD     VDATDM        ZIEND
+     C                   Z-ADD     INTR          ZIRATE
+     C                   Z-ADD     PAMT          ZIAMT
+     C                   EXSR      GLINTC
+      *
+     C     *IN02         IFEQ      '1'
+     C     ZIRDFC        ANDEQ     'Y'
+     C     *IN03         OREQ      '1'
+     C     JRDFC         ANDEQ     'Y'
+     C     *IN04         OREQ      '1'
+     C     JRDFC         ANDEQ     'Y'
+     C                   Z-ADD     ZINTR         WKINT2
+     C                   ELSE
+     C                   Z-ADD (H) ZINTR         WKINT2           13 0
+     C                   ENDIF
+     C                   ENDIF
+      *                                                                                     MD031631
+      ** If 'UseHistRateforBVDeal' is Y and multiple base rate change                       MD031631
+      ** detected then use the historic base rate for backdated MM deals                    MD031631
+      *                                                                                     MD031631
+     C                   IF        HSTRAT = 'Y' AND                                         MD031631
+     C                             CtrBV  > 0                                               MD031631
+     C                   Z-ADD     WKINT         WKINTSV          13 0                      MD031631
+     C                   EXSR      DLBRCP                                                   MD031631
+     C                   Z-ADD     WKINT         WKINT2                                     MD031631
+     C                   Z-ADD     WKINTSV       WKINT                                      MD031631
+     C                   ENDIF                                                              MD031631
+      *
+     C*****VDATDM        IFLE      EVCD                                                     MD023042
+     C     VDATDM        IFLE      EVCD                                                     MD023740
+     C*****VDATDM        IFLT      EVCD                                            AR755195 MD023740
+     C*****WSORED        OREQ      EVCD                                            AR755195 MD023740
+     C*****IACD*         ANDLT     EVCD                                            AR755195 MD023740
+     C     WKINT         ADD       WKINT2        WORKTI
+     C                   ADD       AITC          WORKTI
+     C                   ELSE
+     C     WKINT         ADD       AIPD          WORKTI           13 0
+     C                   ENDIF
+      *
+     C                   Z-ADD     WORKTI        TOTI
+     C                   MOVE      '1'           *IN15
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * End of /COPY DL0280RCTI                                       *
+      *****************************************************************

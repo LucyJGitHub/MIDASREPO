@@ -1,0 +1,519 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/                   /*CGL120*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas General Ledger Module                         */
+/*                                                                   */
+/*       GLC33 - ACCOUNTS POST DAILY                                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CGL120  *REDUNDANT Date 06Aug12              */
+/*       Prev Amend No. BUG27417A          Date 19May10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      CAP204             Date 03Mar10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CER001             Date 25Apr05              */
+/*                      CRE023             Date 29Jul05              */
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.02 ---------------------------------------------------*/
+/*                      CFT004             Date 05Sep99              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      S01408             Date 06Feb96              */
+/*                      S01408             DATE 24JAN96              */
+/*                      S01408             DATE 08DEC95              */
+/*                      053724             DATE 21NIV954            */
+/*                      091789             DATE 28SEP95              */
+/*                      S01408             DATE 05SEP95              */
+/*                      S01408             DATE 05JUN95              */
+/*                      082439             DATE 31JAN95              */
+/*                      S01413                  13APR93              */
+/*                      E22151                  22MAY90              */
+/*                      BHF982                  19FEB91              */
+/*                      S01189                  03APR89              */
+/*                      S01197                  01MAY89              */
+/*                      S01194                  16MAR89              */
+/*                      S03220                  09MAY88              */
+/*                      E10366                  15APR87              */
+/*                      S01098                  08JUL86              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL120 - GL COB Components Task Split                       */
+/*       BUG27417A - Initialise merged posting files before merging. */
+/*       CAP204 -  Retail Account Transfer                           */
+/*       CER001 -  LUX Upgrade to MidasPlus                          */
+/*       CRE023 - 2 O'clock Flag Upgrade to MidasPlus                */
+/*       CFT004 -  Create IBAN Number for new Accounts               */
+/*       S01408 -  CORE HOOK ADDED GLC33011                          */
+/*       S01408 -  CORE HOOK ADDED GLC33009                          */
+/*                 CORE HOOK ADDED GLC33010                          */
+/*       S01408 -  CORE HOOK ADDED GLC33007                          */
+/*                 CORE HOOK ADDED GLC33008                          */
+/*       053724  - ADD GLOBAL MONITOR MESSAGE PROCESSING             */
+/*       091789 -  OVRDBF REIAC2 REIAC SHARE(*NO) instead of (*YES)  */
+/*       S01408 -  CORE HOOK ADDED GLC33001                          */
+/*                 CORE HOOK ADDED GLC33002                          */
+/*                 CORE HOOK ADDED GLC33003                          */
+/*                 CORE HOOK ADDED GLC33004                          */
+/*                 CORE HOOK ADDED GLC33005                          */
+/*                 CORE HOOK ADDED GLC33006                          */
+/*                                                                   */
+/*       S01408 -  CORE HOOK ADDED GLC33MPS                          */
+/*              -  CORE HOOK ADDED GLC33MP1                          */
+/*              -  CORE HOOK ADDED GLC33MP2                          */
+/*              -  CORE HOOK ADDED GLC33MP3                          */
+/*              -  CORE HOOK ADDED GLC33MP4                          */
+/*       082439  -  No Posting Update with Retail OFF, and RESTART   */
+/*                  not working                                      */
+/*       S01413  -  Retail 3 Incorporation                           */
+/*       E22151  -  ADD CALL TO GL0349 TO UPDATE START OF DAY        */
+/*                  LEDGER AND CLEARED BALANCES FROM ACCNT.          */
+/*       BHF982  -  ADDLFM SHOULD BE SHARE(*YES)                     */
+/*       S01189  -  CLOSE OF BUSINESS IMPROVEMENTS                   */
+/*       S01197  -  RE-->GL REPLACEMENT/AMENDMENT                    */
+/*       S01194  -  NEW STANDING DATA                                */
+/*       S03220  -  FUNDS TRANSFER SPLITS TRAILERS FROM SACPO        */
+/*                  INTO FILE SACPOZ                                 */
+/*       E10366  -  RETAIL 1 IS NO LONGER SUPPORTED AS FROM          */
+/*                  RELEASE 21.                                      */
+/*       S01098  -  AMENDMENT REPLACES DATA IN COPIED FILES,         */
+/*                  INSTEAD OF CLEARING AND ADDING.                  */
+/*                  FROM AND TO FILES ARE NOW 'BLOCKED'              */
+/*                  AMENDMENT BLOCKS SELECTED LARGE FILES            */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+/*           PGM        PARM(&ACCR)                                   /*S01189*/
+             PGM                                                      /*S01189*/
+/**/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+             DCL        VAR(&ACCR) TYPE(*CHAR) LEN(5)
+/**/
+/************DCL        VAR(&MEM)     TYPE(*CHAR) LEN(44)       */    /*S01194*/
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)             /*S01194*/
+/************DCL        VAR(&MMOD)    TYPE(*CHAR) LEN(256)         */ /*S01413*/
+/************DCL        VAR(&GLSTAT)  TYPE(*CHAR) LEN(256)         */ /*S01189*/
+             DCL        VAR(&LDA)     TYPE(*CHAR) LEN(256)
+/**/
+             DCL       VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('GLC30')  /*S01189*/
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0) VALUE(00001)   /*S01189*/
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')      /*S01189*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6) +
+                          VALUE('CFT004')                             /*CFT004*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*CFT004*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
+                          VALUE('*VERIFY')                            /*CFT004*/
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)              /*CFT004*/
+             DCL        VAR(&CRE023) TYPE(*CHAR) LEN(1)                                   /*CRE023*/
+             DCL        VAR(&ULX004) TYPE(*CHAR) LEN(1) +
+                          VALUE('N')                                                      /*CER001*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,GLC33MPS                                            */
+                                                                      /*S01408*/
+             DCLF       FILE(SDMMODPD)                                /*S01413*/
+/**/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))                              /*053724*/
+/**/                                                                  /*053724*/
+/** Check to see if the delay COB Feature is set ON (ULX004) */                           /*CER001*/
+                                                                                          /*CER001*/
+             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CER001*/
+             CHGVAR     VAR(&SARD) VALUE('ULX004')                                        /*CER001*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD +
+                          &DSFDY)                                                         /*CER001*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
+                          VAR(&ULX004) VALUE('Y'))                                        /*CER001*/
+             RCVF                                                     /*S01413*/
+             RTVDTAARA  DTAARA(CBSTAT (46 5)) RTNVAR(&ACCR)           /*S01189*/
+/**/
+             SNDPGMMSG  MSG('GLC33 - Accounts Post Daily') +
+                          TOMSGQ(MRUNQ)
+/*/COPY WNCPYSRC,GLC33012                                            */
+/*                                                                                        /*CRE023*/
+/** Determine if 2 O'clock Flag SAR switch is on                                          /*CRE023*/
+/*                                                                                        /*CRE023*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CRE023*/
+             CHGVAR     VAR(&SARD) VALUE('CRE023')                                        /*CRE023*/
+             CHGVAR     VAR(&CRE023) VALUE('N')                                           /*CRE023*/
+             CALL PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)                            /*CRE023*/
+             IF COND(&RTCD *EQ '       ') THEN(DO)                                        /*CRE023*/
+                CHGVAR     VAR(&CRE023) VALUE('Y')                                        /*CRE023*/
+             ENDDO                                                                        /*CRE023*/
+             IF COND(&RTCD *NE '       ' *AND &RTCD *NE '*NRF   ') THEN(DO)               /*CRE023*/
+                SNDPGMMSG MSG('AOSARDR0 - Program error') TOMSGQ(MOPERQ)                  /*CRE023*/
+                MONMSG MSGID(CPF0000 MCH0000)                                             /*CRE023*/
+                GOTO       CMDLBL(ABNOR)                                                  /*CRE023*/
+             ENDDO                                                                        /*CRE023*/
+/************RTVDTAARA  DTAARA(MMOD)   RTNVAR(&MMOD)               */ /*S01413*/
+/*           RTVDTAARA  DTAARA(GLSTAT) RTNVAR(&GLSTAT)             */ /*S01189*/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)           /*S01189*/
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,GLC33MP1                                            */
+                                                                      /*S01408*/
+/**/
+             CHGJOB     SWS(10000000)
+/**/
+/*           IF         COND(%SUBSTRING(&GLSTAT 54 3)= 'OLD')THEN(DO //*S01189*/
+/*********** IF         COND(&STAT *EQ 'N') +
+                        THEN(DO)                        */ /*S01189*/ /*S01413*/
+             IF         COND(&STAT *EQ 'N') +
+                        THEN(DO)                                      /*082439*/
+/**/
+/***************IF         COND(%SUBSTRING(&MMOD 16 1) = 'Y') THEN(DO)**S01413*/
+                IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ 'Y')) +
+                           THEN(DO)                                   /*S01413*/
+/*   RETAIL 2 ONLY  */
+                   CHGJOB     SWS(XXXX1XXX)
+/**/
+/*/COPY WNCPYSRC,GLC33013                                            */
+/*                                                                                        /*CRE023*/
+/** 2 O'clock Flag SAR switch ON                                                          /*CRE023*/
+/*                                                                                        /*CRE023*/
+             IF         COND(&CRE023 *EQ 'Y') THEN(DO)                                    /*CRE023*/
+                CHGJOB SWS(XXX1XXXX)                                                      /*CRE023*/
+             ENDDO                                                                        /*CRE023*/
+                   IF         COND(&ACCR = 'THREE') THEN(DO)
+/**/
+                      CLRPFM     FILE(CLEAR2HH)
+                      CLRPFM     FILE(CLEAR2PD)
+                      CLRPFM     FILE(CLEAR2ZZ)
+/*/COPY WNCPYSRC,GLC33015                                            */
+/**/
+                      OVRDBF     FILE(CLEARHH) TOFILE(CLEAR2HH)
+                      OVRDBF     FILE(CLEARPD) TOFILE(CLEAR2PD)
+                      OVRDBF     FILE(CLEARZZ) TOFILE(CLEAR2ZZ)
+/*/COPY WNCPYSRC,GLC33016                                            */
+/**/
+                   ENDDO
+/**/
+                   ELSE CMD(DO)
+/**/
+                      OVRDBF     FILE(CLEARHH) TOFILE(CLEAROHH)
+                      OVRDBF     FILE(CLEARPD) TOFILE(CLEAROPD)
+                      OVRDBF     FILE(CLEARZZ) TOFILE(CLEAROZZ)
+/*/COPY WNCPYSRC,GLC33017                                            */
+/**/
+                      CLRPFM     FILE(CLEAROHH)
+                      CLRPFM     FILE(CLEAROPD)
+                      CLRPFM     FILE(CLEAROZZ)
+/*/COPY WNCPYSRC,GLC33018                                            */
+/**/
+                   ENDDO
+/**/
+/***********    ENDDO                                              */ /*S01413*/
+                ENDDO                                                 /*082439*/
+/***********    ELSE                                     +          *  *E10366*/
+/***********    IF       COND(%SUBSTRING(&MMOD 3 1) = 'Y') THEN(DO) *  *E10366*/
+/**/  /* RETAIL 1 ONLY */
+/***********       CHGJOB     SWS(X0111XXX)                         *  *E10366*/
+/***********       CLRPFM     FILE(INTACAH)                         *  *E10366*/
+/***********       CLRPFM     FILE(INTACZ1)                         *  *E10366*/
+/**/
+/***********       CLRPFM     FILE(VALUEHH)                         *  *E10366*/
+/***********       CLRPFM     FILE(VALUEPD)                         *  *E10366*/
+/***********       CLRPFM     FILE(VALUERA)                         *  *E10366*/
+/***********       CLRPFM     FILE(VALUEZZ)                         *  *E10366*/
+/**/
+/***********       IF         COND(&ACCR = 'THREE') THEN(DO)        *  *E10366*/
+/**/
+/***********          CLRPFM     FILE(CLEAR2HH)                     *  *E10366*/
+/***********          CLRPFM     FILE(CLEAR2PD)                     *  *E10366*/
+/***********          CLRPFM     FILE(CLEAR2ZZ)                     *  *E10366*/
+/**/
+/***********          OVRDBF     FILE(CLEAROHH) TOFILE(CLEAR2HH)    *  *E10366*/
+/***********          OVRDBF     FILE(CLEAROPD) TOFILE(CLEAR2PD)    *  *E10366*/
+/***********          OVRDBF     FILE(CLEAROZZ) TOFILE(CLEAR2ZZ)    *  *E10366*/
+/**/
+/***********       ENDDO                                            *  *E10366*/
+/**/
+/***********       ELSE CMD(DO)                                     *  *E10366*/
+/**/
+/***********          CLRPFM     FILE(CLEAROHH)                     *  *E10366*/
+/***********          CLRPFM     FILE(CLEAROPD)                     *  *E10366*/
+/***********          CLRPFM     FILE(CLEAROZZ)                     *  *E10366*/
+/**/
+/***********       ENDDO                                            *  *E10366*/
+/**/
+/***********    ENDDO                                               *  *E10366*/
+/**/
+    /* CODING FOR NO RETAIL, RETAIL 1 & RETAIL 2                    */
+/**/
+                CLRPFM     FILE(STMTHH)
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33009                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+                CLRPFM     FILE(STMTAH)
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33010                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+                CLRPFM     FILE(STMTZX)
+                CLRPFM     FILE(ACORDAA)
+                CLRPFM     FILE(ACORDAB)
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33001                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+                IF         COND(&ULX004 = 'Y') THEN(DO)                                   /*CER001*/
+                CLRPFM     FILE(REANX1PD)                                                 /*CER001*/
+                ENDDO                                                                     /*CER001*/
+                CLRPFM     FILE(ACORDAC)
+                CLRPFM     FILE(SYSOPHH)
+                CLRPFM     FILE(SYSOPAJ)
+                CLRPFM     FILE(SYSOPZX)
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,GLC33MP2                                            */
+/*                                                                                        /*CRE023*/
+/** 2 O'clock Flag SAR switch ON                                                          /*CRE023*/
+/*                                                                                        /*CRE023*/
+             IF         COND(&CRE023 *EQ 'Y') THEN(DO)                                    /*CRE023*/
+                CLRPFM     FILE(REOUTLPA)                                                 /*CRE023*/
+                CLRPFM     FILE(REOUTLPD)                                                 /*CRE023*/
+                CLRPFM     FILE(REOUTLPT)                                                 /*CRE023*/
+             ENDDO                                                                        /*CRE023*/
+                                                                      /*S01408*/
+/**/
+                OVRDBF     FILE(SACPO) TOFILE(ACPO1)
+/*/COPY WNCPYSRC,GLC33019                                            */
+/*SAR 3220*/
+                OVRDBF     FILE(SACPOZ) TOFILE(ACPO1Z)                /*S03220*/
+                CHGJOB     SWS(XXXXX1XX)                              /*S03220*/
+/*SAR 3220*/
+/**/                                                                  /*E22151*/
+/*  UPDATE SACPO START OF DAY LEDGER AND CLEARED BALANCES             /*E22151*/
+/*  WITH VALUES FROM ACCNT.                                           /*E22151*/
+/**/                                                                  /*E22151*/
+                CALL       PGM(GL0349)                                /*E22151*/
+                                                                                          /*CAP204*/
+/**  Include additional postings data from GLACPOL0 in GL0349 updates */                  /*CAP204*/
+                                                                                          /*CAP204*/
+                OVRDBF     FILE(SACPO) TOFILE(GLACPOL0)                                   /*CAP204*/
+                CALL       PGM(GL0349)                                                    /*CAP204*/
+                                                                                          /*CAP204*/
+/** Merge all postings from ACPO1 and GLACPOL0 to single file GLACPML0 */                 /*CAP204*/
+                                                                                          /*CAP204*/
+             CLRPFM     FILE(GLACPMPD)                                                 /*BUG27417A*/
+             CLRPFM     FILE(GLACRMPD)                                                 /*BUG27417A*/
+             CPYF       FROMFILE(ACPO1) TOFILE(GLACPMPD) +
+                          MBROPT(*REPLACE) RCDFMT(APOSTPDF)                               /*CAP204*/
+             MONMSG    (CPF2817) CMPDTA(CPF2869)                                          /*CAP204*/
+                                                                                          /*CAP204*/
+             CPYF       FROMFILE(GLACPOL0) TOFILE(GLACPMPD) +
+                          MBROPT(*ADD) RCDFMT(APOSTPDF)                                   /*CAP204*/
+             MONMSG    (CPF2817) CMPDTA(CPF2869)                                          /*CAP204*/
+                                                                                          /*CAP204*/
+             CPYF       FROMFILE(ACPO1) TOFILE(GLACRMPD) +
+                          MBROPT(*REPLACE) RCDFMT(APOSTRAF)                               /*CAP204*/
+             MONMSG    (CPF2817) CMPDTA(CPF2869)                                          /*CAP204*/
+                                                                                          /*CAP204*/
+/** Override SACPO by GLACPML0 */                                                         /*CAP204*/
+                                                                                          /*CAP204*/
+             OVRDBF     FILE(SACPO) TOFILE(GLACPML0)                                      /*CAP204*/
+                                                                                          /*CAP204*/
+/**/
+/***********    IF         COND(%SST(&MMOD 16 1) *EQ 'Y')  THEN(DO)   /*S01197*/
+/***********       OVRDBF     FILE(TABLE) TOFILE(TABRE2)*/            /*S01194*/
+/**/                                                                  /*S01098*/
+/*                BLOCK LARGE FILES                                 *  *S01098*/
+/**/                                                                  /*S01098*/
+                   OVRDBF     FILE(ACORDAB) SEQONLY(*YES 100)         /*S01098*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33002                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+                   IF         COND(&ULX004 = 'Y') THEN(DO)                                /*CER001*/
+                   OVRDBF     FILE(REANX1PD) SEQONLY(*YES 100)                            /*CER001*/
+                   ENDDO                                                                  /*CER001*/
+                   OVRDBF     FILE(STMTAH) SEQONLY(*YES 100)          /*S01098*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33011                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+/*******           OVRDBF     FILE(REIAC2) TOFILE(REIAC)   /*S01413*/ /*091789*/
+                   OVRDBF     FILE(REIAC2) TOFILE(REIAC) SHARE(*NO)   /*091789*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33007                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+/***********       CALL PGM(RE0600)*/                                 /*S01197*/
+                   CALL PGM(GL0600)                                   /*S01197*/
+                   DLTOVR     FILE(ACORDAB)                           /*S01098*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33003                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+                   IF         COND(&ULX004 = 'Y') THEN(DO)                                /*CER001*/
+                   DLTOVR     FILE(REANX1PD)                                              /*CER001*/
+                   ENDDO                                                                  /*CER001*/
+/***********    ENDDO                                                 /*S01197*/
+/***********    ELSE  CMD(DO)                                         /*S01197*/
+/***********       OVRDBF     FILE(TABLE) TOFILE(TABGL)*/             /*S01194*/
+/***********    CALL       PGM(GL0350)                                /*S01197*/
+/***********    ENDDO                                                 /*S01197*/
+/**/
+                DLTOVR     FILE(*ALL)
+/**/
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/***************ALCOBJ     OBJ((GLSTAT *DTAARA *EXCLRD))             //*S01189*/
+/***************CHGVAR     VAR(%SUBSTRING(&GLSTAT 54 3)) VALUE('NEW' //*S01189*/
+/***************SNDDTAARA  DTAARA(GLSTAT)                            //*S01189*/
+/***************DLCOBJ     OBJ((GLSTAT *DTAARA *EXCLRD))             //*S01189*/
+                   CHGVAR     VAR(&STAT) VALUE('Y')                   /*S01189*/
+                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)     /*S01189*/
+                ENDDO
+/**/
+             ENDDO
+/**/
+             IF         COND(%SWITCH(XXXXXXX0)) THEN(DO)
+/**/
+/************IF         COND(%SUBSTRING(&GLSTAT 54 3)= 'NEW')THEN(DO //*S01189*/
+             IF         COND(&STAT *EQ 'Y') +
+                        THEN(DO)                                      /*S01189*/
+/**/
+/***************ALCOBJ     OBJ((GLSTAT *DTAARA *EXCLRD))           */ /*S01189*/
+/**/
+                   RMVM       FILE(ACCNT) MBR(ACCNT)
+                   MONMSG     MSGID(CPF0000)
+                   RMVM       FILE(ACNUM) MBR(ACNUM)
+                   MONMSG     MSGID(CPF0000)
+                   RMVM       FILE(SAIR) MBR(SAIR)
+                   MONMSG     MSGID(CPF0000)
+                   RMVM       FILE(SADETC) MBR(SADETC)
+                   MONMSG     MSGID(CPF0000)
+/**/
+/*********         CLRPFM     FILE(ACCNTAA)      ********************  *S01098*/
+/*********         CLRPFM     FILE(ACCNTAB)      ********************  *S01098*/
+/*********         CLRPFM     FILE(ACCNTAC)      ********************  *S01098*/
+/**/                                                                  /*S01098*/
+                   OVRDBF     FILE(ACORDAB) SEQONLY(*YES 100)         /*S01098*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33004                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+                   IF         COND(&ULX004 = 'Y') THEN(DO)                                /*CER001*/
+                   OVRDBF     FILE(REANX1PD) SEQONLY(*YES 100)                            /*CER001*/
+                   OVRDBF     FILE(REACX1PD) SEQONLY(*YES 100)                            /*CER001*/
+                   ENDDO                                                                  /*CER001*/
+                   OVRDBF     FILE(ACCNTAB) SEQONLY(*YES 100)         /*S01098*/
+/**/                                                                  /*S01098*/
+/******************CPYF       FROMFILE(ACORDAA) TOFILE(ACCNTAA) +****  *S01098*/
+/**************************** MBROPT(*ADD) FMTOPT(*NOCHK) ***********  *S01098*/
+                   CPYF       FROMFILE(ACORDAA) TOFILE(ACCNTAA) +
+                              MBROPT(*REPLACE) FMTOPT(*NONE)          /*S01098*/
+                   MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                              EXEC(CLRPFM ACCNTAA)                    /*S01098*/
+/******************CPYF       FROMFILE(ACORDAB) TOFILE(ACCNTAB) +****  *S01098*/
+/**************************** MBROPT(*ADD) FMTOPT(*NOCHK) ***********  *S01098*/
+/******************MONMSG     MSGID(CPF2817)              ***********  *S01098*/
+                   CPYF       FROMFILE(ACORDAB) TOFILE(ACCNTAB) +
+                              MBROPT(*REPLACE) FMTOPT(*NONE)          /*S01098*/
+                   MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                              EXEC(CLRPFM ACCNTAB)                    /*S01098*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33005                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+                   IF         COND(&ULX004 = 'Y') THEN(DO)                                /*CER001*/
+                   CPYF       FROMFILE(REANX1PD) TOFILE(REACX1PD) +
+                              MBROPT(*REPLACE) FMTOPT(*NONE)                              /*CER001*/
+                   MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                              EXEC(CLRPFM REACX1PD)                                       /*CER001*/
+                   ENDDO                                                                  /*CER001*/
+/******************CPYF       FROMFILE(ACORDAC) TOFILE(ACCNTAC) +****  *S01098*/
+/**************************** MBROPT(*ADD) FMTOPT(*NOCHK) ***********  *S01098*/
+                   CPYF       FROMFILE(ACORDAC) TOFILE(ACCNTAC) +
+                              MBROPT(*REPLACE) FMTOPT(*NONE)          /*S01098*/
+                   MONMSG     (CPF2817) CMPDTA(CPF2869) +
+                              EXEC(CLRPFM ACCNTAC)                    /*S01098*/
+/*/COPY WNCPYSRC,GLC33014                                            */
+/**/                                                                  /*S01098*/
+                   DLTOVR     FILE(ACORDAB)                           /*S01098*/
+                   DLTOVR     FILE(ACCNTAB)                           /*S01098*/
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33006                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+/**/                                                                  /*S01098*/
+                   IF         COND(&ULX004 = 'Y') THEN(DO)                                /*CER001*/
+                   DLTOVR     FILE(REANX1PD)                                              /*CER001*/
+                   DLTOVR     FILE(REACX1PD)                                              /*CER001*/
+                   CLRPFM     FILE(REANX1PD)                                              /*CER001*/
+                   ENDDO                                                                  /*CER001*/
+                   CLRPFM     FILE(ACORDAA)
+                   CLRPFM     FILE(ACORDAB)
+                   CLRPFM     FILE(ACORDAC)
+/**/                                                                  /*S01408*/
+/*/COPY WNCPYSRC,GLC33008                                     */      /*S01408*/
+/**/                                                                  /*S01408*/
+/**/
+/******************CHGVAR     VAR(%SUBSTRING(&GLSTAT 54 3)) VALUE('OLD')*/
+                                                                      /*S01189*/
+/******************CHGDTAARA  DTAARA(GLSTAT) VALUE(&GLSTAT)        */ /*S01189*/
+/******************DLCOBJ     OBJ((GLSTAT *DTAARA *EXCLRD))        */ /*S01189*/
+                   CHGVAR     VAR(&STAT) VALUE('N')                   /*S01189*/
+ 
+                   CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)     /*S01189*/
+/**/
+                ENDDO
+/**/
+                   CHGVAR     VAR(&RTCD) VALUE('       ')                                 /*CER001*/
+                   CHGVAR     VAR(&SARD) VALUE('CFT004')                                  /*CER001*/
+                   CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)    /*CFT004*/
+                   IF        COND(&RTCD *EQ '       ') THEN(DO)               /*CFT004*/
+                       /* Create IBAN Numbers */                              /*CFT004*/
+                      CALL       PGM(GL3280) PARM(&RTCD)                      /*CFT004*/
+                   ENDDO                                                      /*CFT004*/
+             ENDDO
+/**/
+/************IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)           */ /*S01194*/
+             IF         COND(%SWITCH(XXXXXX01)) THEN(DO)              /*S01194*/
+/**/
+                SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT +
+                           OF BALANCE') TOMSGQ(MRUNQ)
+                SNDPGMMSG  MSG('JOB TERMINATED - FILE CONTROLS OUT +
+                           OF BALANCE') TOMSGQ(MOPERQ)
+/**/
+             ENDDO
+/**/
+/****************IF COND(%SWITCH(XXXXXX1X)) THEN(DO)               */ /*S01194*/
+                 IF COND(%SWITCH(XXXXXX11)) THEN(DO)                  /*S01194*/
+                    RTVDTAARA DTAARA(LDA) RTNVAR(&LDA)
+/*******************CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 44))      */ /*S01194*/
+                    CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))         /*S01194*/
+                    SNDPGMMSG MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                              TOMSGQ(MOPERQ MRUNQ)
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,GLC33MP3                                            */
+                                                                      /*S01408*/
+                 ENDDO
+                                                                      /*S01408*/
+/*/COPY WNCPYSRC,GLC33MP4                                            */
+                                                                      /*S01408*/
+/**/
+/************ADDLFM     FILE(ACCNT) MBR(ACCNT) */                     /*BHF982*/
+             ADDLFM     FILE(ACCNT) MBR(ACCNT) SHARE(*YES)            /*BHF982*/
+             MONMSG     MSGID(CPF0000)
+/************ADDLFM     FILE(ACNUM) MBR(ACNUM) */                     /*BHF982*/
+             ADDLFM     FILE(ACNUM) MBR(ACNUM) SHARE(*YES)            /*BHF982*/
+             MONMSG     MSGID(CPF0000)
+/************ADDLFM     FILE(SAIR) MBR(SAIR) */                       /*BHF982*/
+             ADDLFM     FILE(SAIR) MBR(SAIR) SHARE(*YES)              /*BHF982*/
+             MONMSG     MSGID(CPF0000)
+/************ADDLFM     FILE(SADETC) MBR(SADETC) */                   /*BHF982*/
+             ADDLFM     FILE(SADETC) MBR(SADETC) SHARE(*YES)          /*BHF982*/
+             MONMSG     MSGID(CPF0000)
+/**/                                                                  /*053724*/
+             GOTO       CMDLBL(ENDPGM)                                /*053724*/
+/**/                                                                  /*053724*/
+ ABNOR:                                                               /*053724*/
+             CHGJOB     SWS(XXXXXX11)                                 /*053724*/
+             DMPCLPGM                                                 /*053724*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*053724*/
+             SNDPGMMSG  MSG('GLC33 - Accounts Post Daily TERMINATED +
+                          ABNORMALLY') TOMSGQ(MRUNQ MOPERQ)           /*053724*/
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*053724*/
+ ENDPGM:                                                              /*053724*/
+/**/
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+             ENDPGM

@@ -1,0 +1,94 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas - Leo Update of LEOACTPD')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Customer Lending Module                          *
+     F*                                                               *
+     F*  LER038 - Update of PF/LEOACTPD (Leo LC Actions) with         *
+     F*           the details from Leo LCNEGS and LCLOG files         *
+     F*                                                               *
+     F*  Function:  This program was created for the Leo Midas        *
+     F*             Integration project. The PF/LEOACTPD is used      *
+     F*             by the Midas program LER035 to update the files   *
+     F*             PF/HISACT and PF/FACACT. This program is called   *
+     F*             by the Leo program CMIU35. CMIU35 takes the Leo   *
+     F*             Actions from the LCNEGS,LCLOGD and LCLOGS files   *
+     F*             and passes them to this program as a parameter    *
+     F*             string. This program splits the string into the   *
+     F*             fields and outputs them to the PF/LEOACTPD.       *
+     F*             If an error occurs on the write, a return code    *
+     F*             will be passed back to CMIU35.                    *
+     F*                                                               *
+     F*  Phases - Leo CoB / Midas Input Cycle                         *
+     F*                                                               *
+     F*  Called By: CMIU35 - Generate Leo LE Actions                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01473             Date 28Jul94               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  S01473 - Created for Leo Midas Integration                   *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FLEOACTPDO   E           K        DISK
+      ********************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *       10         Fail of write operation
+      *       U7U8       Database Error
+     F********************************************************************
+     E                    CPY@    1   1 80               Copyright
+     IDETL        DS
+     I                                        1   3 ACBRCA
+     I**********                              4   90ACFCUS                                    CSD027
+     I                                        4   9 ACFCUS                                    CSD027
+     I                                       10  140ACFCTY
+     I                                    P  15  170ACEDAT
+     I                                       18  19 ACACTN
+     I                                    P  20  260ACAAMT
+     I                                       27  32 ACLCRF
+      *
+      /EJECT
+      *****************************************************************
+      *   MAIN - main process                                         *
+      *   Called by -                                                 *
+      *****************************************************************
+      *
+      **  Parameter Entry
+     C           *ENTRY    PLIST
+     C                     PARM           @ERR    7
+     C                     PARM           DATA   32
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Write the record to the PF/LEOACTPD.
+     C                     MOVE DATA      DETL
+     C                     WRITELEOACTD0               10
+      *
+      ** If there is an error on the write command, *IN10 will be
+      ** set on. Move 'Y' to the @ERR return code, and dump the data.
+     C           *IN10     IFEQ '1'
+     C                     MOVE '*ERROR ' @ERR
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     LR
+      *
+      *****************************************************************
+** CPY@   Object Copyright
+(c) Finastra International Limited 2001

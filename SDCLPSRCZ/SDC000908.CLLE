@@ -1,0 +1,113 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Compliance Watch List API Program')          */
+/*********************************************************************/
+/*                                                                   */
+/*      Midas - Standing Data Module                                 */
+/*                                                                   */
+/*      SDC000908 - Midas SD Compliance Watch List API Program       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
+/*                      CSD083  *CREATE    Date 27May10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
+/*       CSD083 - Watch List Compliance Upgrade                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&APICOD &ACTION &HEAD  &BUFFER +
+                          &MULT &IDEN &MSGARR &APIRETC)
+ 
+/*/COPY MLCPYSRC,MLCOVRDCL                                           */
+ 
+/*/COPY WNCPYSRC,MLCOVRRC1                                           */
+ 
+/*/COPY WNCPYSRC,MLCOVRRC2                                           */
+ 
+             DCL        VAR(&APICOD)     TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ACTION)     TYPE(*CHAR) LEN(1)
+             DCL        VAR(&HEAD)       TYPE(*CHAR) LEN(200)
+             DCL        VAR(&BUFFER)     TYPE(*CHAR) LEN(10000)
+             DCL        VAR(&IDEN)       TYPE(*CHAR) LEN(40)
+             DCL        VAR(&INUSER)     TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGARR)     TYPE(*CHAR) LEN(9999)
+             DCL        VAR(&APIRETC)    TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MPHAS)      TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MBIN)       TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SYSID)      TYPE(*CHAR) LEN(2)
+ 
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/** Global monitor */
+ 
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** Get System Prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+ 
+/** Set flag to bypass MUSER (ie language is determined by input parm) */
+ 
+             CHGVAR     VAR(&IGNMUSER) VALUE('Y')
+ 
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000)
+             CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
+ 
+             RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+/**********  IF         COND(&MPHAS *NE 'A') THEN(DO)                                  */ /*CCB020*/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'G')) +
+                          THEN(DO)                                                        /*CCB020*/
+                CHGVAR     VAR(&MSGARR) VALUE(' : : :Midas not in input +
+                             cycle. Entry prohibited:')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/** Set up Library List  */
+ 
+             CALL       PGM(SD000907) PARM(&MSGARR &APIRETC &SYSID)
+ 
+             IF         COND(&APIRETC *EQ '0' *AND &MSGARR *NE *BLANK) +
+                          THEN(DO)
+             GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             OVRDBF     FILE(SDCWDFL1) TOFILE(SDCWDFL1) +
+                          OVRSCOPE(*JOB) SHARE(*NO)
+ 
+/** If multi-branching, set up data areas                            */
+ 
+             RTVDTAARA  DTAARA(RUNDAT (13 1)) RTNVAR(&MBIN)
+             IF         COND(&MBIN *EQ 'Y') THEN(CALL PGM(SFC0400))
+ 
+/*/COPY MLCPYSRC,MLCOVROVR                                           */
+ 
+/*/COPY WNCPYSRC,MLCOVRRC3                                           */
+ 
+/*/COPY WNCPYSRC,MLCOVRRC4                                           */
+ 
+/** Call the program name as passed to this program                  */
+ 
+             CALL       PGM(SD000908) PARM(&APICOD &ACTION &HEAD +
+                          &BUFFER &IDEN &MSGARR &APIRETC)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ABNOR:
+             SNDMSG     MSG('Compliance Watch List API Program +
+                          terminated abnormally') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&APIRETC) VALUE('0')
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000)
+ 
+ ENDPGM:
+             ENDPGM

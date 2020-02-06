@@ -1,0 +1,463 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Initial. of CSW003 MT5xx Mat. Date Mess.')    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE1800 - Initialise Mt5xx Maturity Date Messages for CSW003  *
+      *           switchable feature                                  *
+      *                                                               *
+      *  Function:  This program inserts/amends/deletes records on    *
+      *  (I/C)      TRADSDY1,2 and DPTMVDY1 + 2.                      *
+      *                                                               *
+      *  Called By: SEC1800                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 222727             Date 05Nov03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE028             Date 06Jun01               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE015             Date 06Dec99               *
+      *                 CSE017             Date 20Oct99               *
+      *                 CSE012             Date 16Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAP003             Date 30Jul98               *
+      *                 CSW003   *CREATE   Date 15MAY96               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  CSE028 - Standing Settlement Instructions Enhancement.       *
+      *           (Recompiled).                                       *
+      *  CSE015 - Forward Valued Depot Movements (Recompile)          *
+      *  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+      *  CSE012 - SE Depot Movement Narratives (Recompiled).          *
+      *  CAP003 - Conversion of Midas inputs to modular API structure *
+      *           Phase 2.  Program recompiled over changed files.    *
+      *  CSW003 - MT5XX Message Generation - Phase 2.                 *
+      *                                                               *
+      *****************************************************************
+      *
+     FDPTMV   IF  E           K        DISK
+     FDPTMVDY1UF  E           K        DISK                      A
+     FDPTMVDY2UF  E           K        DISK                      A
+     FTRADS   IF  E           K        DISK
+     FTRADSDY1UF  E           K        DISK                      A
+     FTRADSDY2UF  E           K        DISK                      A
+     F*
+      /EJECT
+     F*****************************************************************
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*****************************************************************
+     F*                                                               *
+     F*    79  - CHAIN failure/success.                               *
+     F*    80  - READ EOF                                             *
+     F*                                                               *
+     F*****************************************************************
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*****************************************************************
+     F*                                                               *
+     F*  SRINIT - Routine to handle initial processing                *
+     F*  INSDPT - Insert/amend records in DPTMVDY1 + DPTMVDY2.        *
+     F*  INSTRD - Insert/amend records in TRADSDY1 + TRADSDY2.        *
+     F*  DLT2ND - Delete/amend records in DPTMVDY1,2 + TRADSDY1,2.    *
+     F*  SRINST - Gen. Instruction Type for 2nd Depot Movement Record.*
+     F*  *PSSR  - Routine to handle database errors                   *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      ** DS for instruction type
+     I            DS
+     I                                        1   3 DPINST
+     I                                        1   2 IN2
+      *
+     ISDSECS    E DSSDSECSPD
+      ** Security Customer details
+      *
+     IDSSDY     E DSDSSDY
+      *
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ** Initialisation routine
+     C                     EXSR SRINIT
+      *
+      ** Either Insert second record or delete second record.
+     C                     SELEC
+     C           MODE      WHEQ '1'
+     C           MODE      OREQ '2'
+     C                     EXSR INSDPT
+     C                     EXSR INSTRD
+     C           MODE      WHEQ '3'
+     C                     EXSR DLT2ND
+     C                     ENDSL
+      *
+     C                     MOVE *ON       *INLR
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT - Routine to handle initial processing.               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      ** Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Get parameters from calling program
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+      ** Security Shortname/Reference Keylist
+     C           SSREF     KLIST
+     C                     KFLD           DPSS
+     C                     KFLD           DPRN
+      *
+      ** Security Shortname/Reference/Maturity Date Keylist
+     C           SSREFM    KLIST
+     C                     KFLD           DPSS
+     C                     KFLD           DPRN
+     C                     KFLD           WHEN    1
+      *
+      ** Reference/Maturity Date Keylist
+     C           REFMAT    KLIST
+     C                     KFLD           TDRF
+     C                     KFLD           WHEN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INSDPT - Routine to insert second depot movement record in   *
+      *           DPTMVDY1 + 2.                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSDPT    BEGSR
+      *
+     C                     READ DPTMV                    80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+     C                     MOVE *BLANKS   RCDG    1
+     C                     MOVE *BLANKS   CONG    1
+      *
+     C           DPMV      IFEQ 'DT'
+     C           DPMV      OREQ 'RP'
+     C           DPMV      OREQ 'RR'
+     C           DPMV      OREQ 'BB'
+     C           DPMV      OREQ 'BL'
+     C           DPMV      OREQ 'PD'
+     C           DPMV      OREQ 'PL'
+      ** Second record processing required.
+     C                     MOVE 'Y'       SECREC  1
+     C                     MOVE 'M'       WHEN
+     C                     ELSE
+     C                     MOVE *BLANKS   SECREC
+     C                     MOVE *BLANKS   WHEN
+     C                     ENDIF
+      *
+      ** First Logical.
+     C           SSREF     CHAINDPTMVDY1             79
+     C           *IN79     IFEQ *OFF
+     C           DPWHEN    ANDEQ*BLANK
+     C                     MOVE DPCONG    CONG
+     C           DPCONG    IFEQ 'A'
+     C                     MOVE 'Y'       DPCONG
+     C                     END
+     C                     MOVE DPRCDG    RCDG
+     C           DPRCDG    IFEQ 'A'
+     C                     MOVE 'Y'       DPRCDG
+     C                     END
+     C                     MOVE 'S'       DPWHEN
+     C                     UPDATDPTMVDD1
+     C                     ENDIF
+      ** Second Record.
+     C           SECREC    IFEQ 'Y'
+     C           DPMV      IFNE 'DT'
+     C           DPINST    ANDNE*BLANKS
+     C                     EXSR SRINST
+     C                     ENDIF
+     C           SSREFM    CHAINDPTMVDY1             79
+     C           *IN79     IFEQ *ON
+     C           CONG      IFEQ 'N'
+     C           CONG      OREQ 'A'
+     C                     MOVE 'N'       DPCONG
+     C                     END
+     C           CONG      IFEQ 'Y'
+     C                     MOVE 'Y'       DPCONG
+     C                     END
+     C           RCDG      IFEQ 'N'
+     C           RCDG      OREQ 'A'
+     C                     MOVE 'N'       DPRCDG
+     C                     END
+     C           RCDG      IFEQ 'Y'
+     C                     MOVE 'Y'       DPRCDG
+     C                     END
+     C                     MOVE 'M'       DPWHEN
+     C                     WRITEDPTMVDD1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Second Logical.
+     C           SSREF     CHAINDPTMVDY2             79
+     C           *IN79     IFEQ *OFF
+     C           D2WHEN    ANDEQ*BLANK
+     C                     MOVE 'S'       D2WHEN
+     C                     UPDATDPTMVDD2
+      ** Second Record.
+     C           SECREC    IFEQ 'Y'
+     C           SSREFM    CHAINDPTMVDY2             79
+     C           *IN79     IFEQ *ON
+     C                     MOVE 'M'       D2WHEN
+     C                     WRITEDPTMVDD2
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ DPTMV                    80
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  INSTRD - Routine to insert second trade record in TRADSDY1+2 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INSTRD    BEGSR
+      *
+     C                     READ TRADS                    80
+      *
+     C           *IN80     DOWEQ*OFF
+      *
+      ** Retrieve Securities Trading info for Counterparty (TCNR).
+     C                     MOVELTCNR      WCUST
+     C                     CALL 'AOSECSR0'
+     C                     PARM '*BLANKS' WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM           WCUST   6
+     C           SDSECS    PARM SDSECS    DSSDY
+      *
+      ** AND determine whether second record processing required.
+     C           WRTCD     IFEQ *BLANKS
+     C           BFCLAS    IFEQ 'S'
+     C           BFCLAS    OREQ 'D'
+     C                     MOVE 'Y'       SECREC
+     C                     MOVE 'B'       WHEN
+     C                     ELSE
+     C                     MOVE *BLANKS   SECREC
+     C                     MOVE *BLANKS   WHEN
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE *BLANKS   SECREC
+     C                     MOVE *BLANKS   WHEN
+     C                     ENDIF
+      *
+      ** First Logical.
+     C           TDRF      CHAINTRADSDY1             79
+     C           *IN79     IFEQ *OFF
+     C           T1WHEN    ANDEQ*BLANK
+     C                     MOVE 'A'       T1WHEN
+     C                     UPDATTRADSDD1
+     C                     ENDIF
+      ** Second Record.
+     C           SECREC    IFEQ 'Y'
+     C           REFMAT    CHAINTRADSDY1             79
+     C           *IN79     IFEQ *ON
+     C                     MOVE 'B'       T1WHEN
+     C                     MOVE 'N'       T1CONG
+     C                     MOVE 'N'       T1GMEC
+     C                     WRITETRADSDD1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Second Logical.
+     C           TDRF      CHAINTRADSDY2             79
+     C           *IN79     IFEQ *OFF
+     C           T2WHEN    ANDEQ*BLANK
+     C                     MOVE 'A'       T2WHEN
+     C                     UPDATTRADSDD2
+      ** Second Record.
+     C           SECREC    IFEQ 'Y'
+     C           REFMAT    CHAINTRADSDY2             79
+     C           *IN79     IFEQ *ON
+     C                     MOVE 'B'       T2WHEN
+     C                     WRITETRADSDD2
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ TRADS                    80
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DLT2ND - Routine to delete second record.                    *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DLT2ND    BEGSR
+      *
+     C                     READ DPTMVDY1                 80
+     C           *IN80     DOWEQ*OFF
+     C                     SELEC
+     C           DPWHEN    WHEQ 'M'
+     C                     MOVE DPCONG    CONG
+     C                     MOVE DPRCDG    RCDG
+     C                     DELETDPTMVDD1
+     C           DPWHEN    WHEQ 'S'
+     C           CONG      IFEQ 'N'
+     C           DPCONG    ANDEQ'Y'
+     C                     MOVE 'A'       DPCONG
+     C                     END
+     C           RCDG      IFEQ 'N'
+     C           DPRCDG    ANDEQ'Y'
+     C                     MOVE 'A'       DPRCDG
+     C                     END
+     C                     MOVE *BLANKS   DPWHEN
+     C                     UPDATDPTMVDD1
+     C                     MOVE *BLANKS   CONG
+     C                     MOVE *BLANKS   RCDG
+     C                     ENDSL
+     C                     READ DPTMVDY1                 80
+     C                     ENDDO
+      *
+     C                     READ DPTMVDY2                 80
+     C           *IN80     DOWEQ*OFF
+     C                     SELEC
+     C           D2WHEN    WHEQ 'S'
+     C                     MOVE *BLANKS   D2WHEN
+     C                     UPDATDPTMVDD2
+     C           D2WHEN    WHEQ 'M'
+     C                     DELETDPTMVDD2
+     C                     ENDSL
+     C                     READ DPTMVDY2                 80
+     C                     ENDDO
+      *
+     C                     READ TRADSDY1                 80
+     C           *IN80     DOWEQ*OFF
+     C                     SELEC
+     C           T1WHEN    WHEQ 'A'
+     C                     MOVE *BLANKS   T1WHEN
+     C                     UPDATTRADSDD1
+     C           T1WHEN    WHEQ 'B'
+     C                     DELETTRADSDD1
+     C                     ENDSL
+     C                     READ TRADSDY1                 80
+     C                     ENDDO
+      *
+     C                     READ TRADSDY2                 80
+     C           *IN80     DOWEQ*OFF
+     C                     SELEC
+     C           T2WHEN    WHEQ 'A'
+     C                     MOVE *BLANKS   T2WHEN
+     C                     UPDATTRADSDD2
+     C           T2WHEN    WHEQ 'B'
+     C                     DELETTRADSDD2
+     C                     ENDSL
+     C                     READ TRADSDY2                 80
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRINST - For RP, RR, PD, PL, BB or BL Depot Movements        *
+      *           genenerate corresponding Instruction Type for       *
+      *           second record.                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINST    BEGSR
+      *
+     C                     MOVE *BLANKS   OUT2    2
+      *
+     C                     SELEC
+     C           IN2       WHEQ '01'
+     C                     MOVE '02'      OUT2
+     C           IN2       WHEQ '02'
+     C                     MOVE '01'      OUT2
+     C           IN2       WHEQ '03'
+     C                     MOVE '07'      OUT2
+     C           IN2       WHEQ '07'
+     C                     MOVE '03'      OUT2
+     C           IN2       WHEQ '4F'
+     C                     MOVE '5F'      OUT2
+     C           IN2       WHEQ '5F'
+     C                     MOVE '4F'      OUT2
+     C           IN2       WHEQ '41'
+     C                     MOVE '51'      OUT2
+     C           IN2       WHEQ '51'
+     C                     MOVE '41'      OUT2
+     C                     ENDSL
+      *
+     C           OUT2      IFNE *BLANKS
+     C                     MOVE OUT2      IN2
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *                                                               *
+      ********************************************************************
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ********************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

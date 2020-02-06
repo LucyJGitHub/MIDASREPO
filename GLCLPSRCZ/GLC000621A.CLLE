@@ -1,0 +1,156 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL FATCA Archiving')                            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger Module                               */
+/*                                                                   */
+/*       GLC000621A - Midas GL FATCA Archiving                       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2015                     */
+/*                                                                   */
+/*       Last Amend No. CGL177             Date 11Jan16              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL154  *CREATE    Date 13Oct14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CGL177 - CRS Reporting Phase 2                              */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CGL154 - FATCA Reporting                                    */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&PYRNO &PYRNO1)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2015')
+ 
+             DCL        VAR(&PYRNO) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PYRNO1) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&LDA)   TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DALIB) TYPE(*CHAR) LEN(7) VALUE('  DALIB')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
+             DCL        VAR(&GLCAPAPD) TYPE(*CHAR) LEN(10) VALUE('GLCAPAPD  ')
+             DCL        VAR(&GLCSBAPD) TYPE(*CHAR) LEN(10) VALUE('GLCSBAPD  ')
+             DCL        VAR(&GLRMDTPD) TYPE(*CHAR) LEN(10) VALUE('GLRMDTPD  ')
+             DCL        VAR(&GLRMIEPD) TYPE(*CHAR) LEN(10) VALUE('GLRMIEPD  ')
+             DCL        VAR(&GLRPMGPD) TYPE(*CHAR) LEN(10) VALUE('GLRPMGPD  ')
+             DCL        VAR(&GLCRMDPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMDPD  ')           /*CGL177*/
+             DCL        VAR(&GLCRMGPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMGPD  ')           /*CGL177*/
+             DCL        VAR(&GLCRMIPD) TYPE(*CHAR) LEN(10) VALUE('GLCRMIPD  ')           /*CGL177*/
+             DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)                                 /*CGL177*/
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')                   /*CGL177*/
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                    /*CGL177*/
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                    /*CGL177*/
+             DCL        VAR(&CGL154) TYPE(*CHAR) LEN(1) VALUE('N')                       /*CGL177*/
+             DCL        VAR(&CGL177) TYPE(*CHAR) LEN(1) VALUE('N')                       /*CGL177*/
+ 
+/* Monitor for any errors and send appropriate message to MOPERQ */
+ 
+             MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Send Pgm Message */
+ 
+             CHGVAR     VAR(&MEM) VALUE('GLC000621A - FATCA Housekeeping')
+             SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ)
+ 
+/* Clear switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Get system prefix */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DALIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DMLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&GLCAPAPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLCSBAPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLRMDTPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLRMIEPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLRPMGPD 9 2)) VALUE(&PYRNO)
+             CHGVAR     VAR(%SUBSTRING(&GLCRMDPD 9 2)) VALUE(&PYRNO) /*CGL177*/
+             CHGVAR     VAR(%SUBSTRING(&GLCRMGPD 9 2)) VALUE(&PYRNO) /*CGL177*/
+             CHGVAR     VAR(%SUBSTRING(&GLCRMIPD 9 2)) VALUE(&PYRNO) /*CGL177*/
+             CHGVAR     VAR(&CGL154) VALUE(' ') /*CGL177*/
+             CHGVAR     VAR(&CGL177) VALUE(' ') /*CGL177*/
+ 
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY') /*CGL177*/
+             CHGVAR     VAR(&SARD) VALUE('CGL154') /*CGL177*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &AOFMT) /*CGL177*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CGL154) +
+                          VALUE('Y')) /*CGL177*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY') /*CGL177*/
+             CHGVAR     VAR(&SARD) VALUE('CGL177') /*CGL177*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &AOFMT) /*CGL177*/
+             IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&CGL177) +
+                          VALUE('Y')) /*CGL177*/
+
+             CPYF       FROMFILE(&DMLIB/GLCAPAPD) MBROPT(*REPLACE) +
+                          TOFILE(&DALIB/&GLCAPAPD) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(&DMLIB/GLCSBAPD) MBROPT(*REPLACE) +
+                          TOFILE(&DALIB/&GLCSBAPD) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             IF         COND(&CGL154 *EQ 'Y') THEN(DO) /*CGL177*/
+             CPYF       FROMFILE(&DMLIB/GLRMDTPD) MBROPT(*REPLACE) +
+                          TOFILE(&DALIB/&GLRMDTPD) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(&DMLIB/GLRMIEPD) MBROPT(*REPLACE) +
+                          TOFILE(&DALIB/&GLRMIEPD) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+             CPYF       FROMFILE(&DMLIB/GLRPMGPD) MBROPT(*REPLACE) +
+                          TOFILE(&DALIB/&GLRPMGPD) CRTFILE(*YES)
+             MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO      /*CGL177*/
+
+             IF         COND(&CGL177 *EQ 'Y') THEN(DO) /*CGL177*/
+                CPYF       FROMFILE(&DMLIB/GLCRMDPD) TOFILE(&DALIB/&GLCRMDPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) /*CGL177*/
+
+                CPYF       FROMFILE(&DMLIB/GLCRMGPD) TOFILE(&DALIB/&GLCRMGPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) /*CGL177*/
+
+                CPYF       FROMFILE(&DMLIB/GLCRMIPD) TOFILE(&DALIB/&GLCRMIPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) /*CGL177*/
+             ENDDO      /*CGL177*/
+ 
+/** Clear all files after back up */
+             CLRPFM     FILE(&DMLIB/GLCAPAPD)
+             CLRPFM     FILE(&DMLIB/GLCSBAPD)
+             CLRPFM     FILE(&DMLIB/GLFCABPD)
+             IF         COND(&CGL154 *EQ 'Y') THEN(DO) /*CGL177*/
+             CLRPFM     FILE(&DMLIB/GLRMDTPD)
+             CLRPFM     FILE(&DMLIB/GLRMIEPD)
+             CLRPFM     FILE(&DMLIB/GLRPMGPD)
+             ENDDO      /*CGL177*/
+             IF         COND(&CGL177 *EQ 'Y') THEN(DO) /*CGL177*/
+                CLRPFM     FILE(&DMLIB/GLCRMDPD) /*CGL177*/
+                CLRPFM     FILE(&DMLIB/GLCRMGPD) /*CGL177*/
+                CLRPFM     FILE(&DMLIB/GLCRMIPD) /*CGL177*/
+             ENDDO      /*CGL177*/
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC000621 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+ 
+             ENDPGM
+ 

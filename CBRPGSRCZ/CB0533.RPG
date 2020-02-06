@@ -1,0 +1,199 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CB Check Lock and Control')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business Processing                         *
+      *                                                               *
+      *  CB0533  - CHECK LOCK AND CONTROL                             *
+      *                                                               *
+      *  Function:  This program is in charge to check the status     *
+      *             of the CoB before the user leave the CoB.         *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01420             Date 03May95               *
+      *                                    Date DDMmmYY               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  S01420 - CoB Enhancements                                    *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FCB0533DFCF  E                    WORKSTN
+      * DSP: COB Prompt Lock and/or control
+      *
+     FCBUSERL0IF  E           K        DISK                           UC
+     F                                              KINFDS INFD1
+      *
+     FCBUSERL3IF  E                    DISK                           UC
+     F            CBUSERD0                          KRENAMECBUSERD3
+     F                                              KINFDS INFD3
+      * COB: Active Users
+      ************************************************************
+      *   I N D I C A T O R S   U S E D
+      *-----------------------------------------------------------
+      ************************************************************
+      *
+      *              *************************
+      *              ** INDICATORS NOT USED **
+      *              ** ------------------- **
+      *              *************************
+      *
+      *       ***************************************************
+      *       * 01   02   03   04   05   06   07   08   09   10 *
+      *       * 11   12   13   14   15   16   17   18   19   20 *
+      *       * 21   22   23   24   25   26   27   28   29   30 *
+      *       * 31   32   33   34   35   36   37   38   39   40 *
+      *       * 41   42   43   44   45   46   47   48   49   .. *
+      *       * ..   52   53   54   55   56   57   58   59   60 *
+      *       * 61   62   63   64   65   66   67   68   69   70 *
+      *       * 71   72   73   74   75   76   77   78   79   80 *
+      *       * 81   82   83   84   85   86   87   88   89   90 *
+      *       * 91   92   93   94   95   96   97   98   99      *
+      *       ***************************************************
+      ***********************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+      * Data structures:-
+     IPSDS       SDS
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     IINFD1       DS
+     I                                    B 156 1590WWRCD1
+     IINFD3       DS
+     I                                    B 156 1590WWRCD3
+     I            DS
+     I                                        1  10 WWUSSP
+     I                                       11  20 WWLIBL
+     I                                        1  20 WWQUAL
+     I            DS
+     I                                        1  26 WWLUSR
+     I                                        1   6 WWJBNR
+     I                                        7  16 WWJOBL
+     I                                       17  26 WWUSRL
+     I            DS
+     I                                    B   1   40WWSTRT
+     I                                    B   5   80WWLENG
+      *
+     ICURDAT      DS
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+      /EJECT
+      *****************************************************************
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           WWUSER
+     C                     PARM           WWJOB
+     C                     PARM           WWNBR
+      *
+     C           WWKEY     KLIST
+     C                     KFLD           WWJOB  10
+     C                     KFLD           WWUSER 10
+     C                     KFLD           WWNBR   6
+      *
+     C           *NAMVAR   DEFN RUNDAT    CURDAT
+      *
+     C                     IN   CURDAT                 99
+     C                     MOVE MRDT      SRUNA
+     C                     MOVE USER      SUSER
+     C                     MOVE WSID      SWSID
+     C                     MOVEL*BLANKS   WWCODE 10
+     C                     MOVEACPY@      ACT@   80
+      *
+     C                     EXSR #VRFY
+      *
+     C           *IN50     IFEQ '1'
+     C           *IN51     OREQ '1'
+     C                     EXSR #SCRN
+     C                     END
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      *
+     C           #VRFY     BEGSR
+      *
+     C                     OPEN CBUSERL0
+     C*
+     C           WWKEY     CHAINCBUSERL0             80
+     C*
+     C                     CLOSECBUSERL0
+     C           *IN80     IFEQ '0'
+     C*
+     C** VERIFY*LOCK MODE
+     C*
+     C           USMAST    IFEQ 'MASTER'
+     C                     MOVE '1'       *IN50
+     C                     END
+      *
+      ** VERIFY CONTROL MODE
+      *
+     C           USCTRL    IFEQ 'C'
+      *
+     C                     OPEN CBUSERL3
+     C                     Z-ADD0         X       30
+     C           *IN81     DOWEQ'0'
+     C                     READ CBUSERL3                 81
+     C  N81                ADD  1         X
+     C                     END
+     C           X         IFEQ 1
+     C           WWRCD1    ANDGT1
+     C                     MOVE '1'       *IN51
+     C                     END
+     C                     CLOSECBUSERL3
+      *
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           #SCRN     BEGSR
+      *
+     C   50                MOVE 'Y'       DDLOCK
+     C   51                MOVE 'Y'       DDCTRL
+      *
+     C                     EXFMTCB0533F1
+      *
+     C           *IN50     IFEQ '1'
+     C           DDLOCK    ANDEQ'Y'
+     C                     MOVEL'USERLOCK'WWUSSP
+     C                     MOVEL'*LIBL  ' WWLIBL
+     C                     Z-ADD1         WWSTRT
+     C                     Z-ADD26        WWLENG
+     C                     MOVEL*BLANKS   WWFILL 26
+     C                     MOVEL'0'       WWZERO  1
+     C                     CALL 'QUSCHGUS'             99
+     C                     PARM           WWQUAL
+     C                     PARM           WWSTRT
+     C                     PARM           WWLENG
+     C                     PARM           WWFILL
+     C                     PARM           WWZERO
+     C                     END
+      *
+     C           *IN51     IFEQ '1'
+     C           DDCTRL    ANDEQ'Y'
+     C                     CALL 'CBC0532'
+     C                     PARM           WWCODE
+     C                     END
+      *
+     C                     ENDSR
+      *================================================================
+**  CPY@
+(c) Finastra International Limited 2001

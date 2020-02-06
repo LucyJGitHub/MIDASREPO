@@ -1,0 +1,252 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Audit Letter Reprint')                        *
+      *****************************************************************
+      *                                                               *
+      *  Midas - User Defined Correspondence                          *
+      *                                                               *
+      *  CG7105 - CG Audit Letter Reprint                             *
+      *                                                               *
+      *  Function: This is a subprogram of CG7100 (Audit  letter      *
+      *            History maintenance)                               *
+      *            It starts a print process request for a single     *
+      *            Audit Letter extract item (patterned after core    *
+      *            program CG5000 for selection "P"=Print)            *
+      *                                                               *
+      *  Called By: CG7100  - CG Audit Letter History Maintenance     *
+      *                                                               *
+      *  (c) Finastra International Limited 2009                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 BUG23252 *CREATE   Date 20Mar09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23252 - The Re-Print Function is not Available            *
+      *                                                               *
+      *****************************************************************
+      /COPY WNCPYSRC,CG5000DFPG
+      *
+      ** UDC Data Reference (current) by Correspondent
+      *
+     FCGUDCRL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      ** UDC Data Reference (Archive) By Correspondent
+      *
+     FCGXDCRL1IF  E           K        DISK
+     F                                              KINFSR SRFILE
+      *
+      **  Array containing Copyright statement
+      *
+     E                    CPY@    1   1 80
+      *
+      **  Array of QCMDEXC commands
+      *
+     E                    CMD@    1   3 80
+      *
+      **  Copysource for error processing
+      *
+      /COPY CGCPYSRC,SRERRE
+      *
+      ** DSPRCD: Cpysrc Templates Initialise Program E-Spec
+      *
+      /COPY WNCPYSRC,CG5000DEPG
+      /EJECT
+      *
+      ** End of Program Error Processing copysource
+      *
+      /COPY CGCPYSRC,SRERRI
+      *
+      ** DSPRCD: Cpysrc Templates Initialise Program I-Spec
+      *
+      /COPY WNCPYSRC,CG5000DIPG
+      *
+      ** Data structures:
+      *
+      ** Definition of CGDTA (Controlling UDC data area)
+      *
+     ICGDTA     E DSCGDTA
+      *
+      ** Get Rundate - Rundate
+      *
+     IRUNDTA    E DSRUNDAT
+      *
+      ** Modules Data Structure
+      *
+     IMMODDS    E DSSDMMODPD
+      *
+      ** Data Structures used by Access Programs
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Data Structures used by Access Programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Parameter for print request
+      *
+     I#WPARM      DS                            100
+     I                                        1   80#WITEM
+     I                                        9  18 #WDCOR
+     I                                       64  71 #WGPTR
+     I                                       93  93 #WFINL
+     I                                       94  94 #WARCH
+      *================================================================
+      /EJECT
+      *================================================================
+      ** Entry parameters
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           P0ITMN  80       extract item
+     C                     PARM           P0CORR 10        Correspondent
+     C                     PARM           P0RTN   7        Returncode
+      *================================================================
+      *
+      ** Initialize
+      *
+     C                     EXSR SRINIT
+     C                     EXSR SRPRNT
+     C                     RETRN
+      *================================================================
+      /EJECT
+      *================================================================
+      * Subroutine  :  SRPRNT                                         *
+      * Purpose     :  Submit print job via RCF                       *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  FC0040X                                        *
+      *================================================================
+     C           SRPRNT    BEGSR
+      *
+      ** Get CGDTA set up
+      *
+     C           *NAMVAR   DEFN           CGDTA
+     C                     IN   CGDTA
+      *
+      ** De-allocate RDE Association Table (CGRASCPD)
+      *
+     C                     MOVEACMD@,3    DLCOBJ 80
+     C                     Z-ADD80        CMDLEN 155
+     C                     CALL 'QCMDEXC'              9090
+     C                     PARM           DLCOBJ
+     C                     PARM           CMDLEN
+      *
+      ** Set up RPARM (standard RCF parameter) for selection (set
+      ** final print indicator #WFINL to "N")
+      *
+     C                     CLEAR#WPARM
+     C           UDCKEY    KLIST
+     C                     KFLD           P0ITMN           Item#
+     C                     KFLD           P0CORR           Correspondent
+      *
+     C           UDCKEY    CHAIN@UDCRL1              88    look in "current"
+     C           *IN88     IFEQ *ON
+     C           UDCKEY    CHAIN@XDCRL1              89    look in "archive"
+     C                     ENDIF
+      *
+      ** If both *IN88 and *IN89 are on, the extract has been deleted
+      ** and there is no point in proceeding Set Return Code
+      ** to Msg Id 'CGD1790 - UDC Data Reference record not found'
+      *
+     C           *IN88     IFEQ *ON
+     C           *IN89     ANDEQ*ON
+     C                     MOVEL'CGD1790' P0RTN
+     C                     GOTO EXPRNT
+     C                     ENDIF
+      *
+     C                     MOVELP0CORR    #WDCOR
+     C                     Z-ADDP0ITMN    #WITEM
+      *
+      ** No Final, but only Re-Print
+      *
+     C                     MOVEL'N'       #WFINL
+      *
+      ** Set up Archive indicator
+      *
+     C           *IN88     IFEQ '0'
+     C                     MOVEL'C'       #WARCH
+     C                     ENDIF
+     C           *IN88     IFEQ '1'
+     C           *IN89     ANDEQ'0'
+     C                     MOVEL'A'       #WARCH
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   #WGPTR
+      *
+     C                     MOVEL#WPARM    O#PARM
+      *
+      ** Call FC0040X to submit RCF report job
+      ** CGC5220 = Print process for single selection
+      *
+     C                     CALL 'FC0040X'              90
+     C                     PARM *BLANKS   O#RTN   7
+     C                     PARM 'CG3000'  O#PRG  10        Report name
+     C                     PARM 'CGC5220' O#CPRG 10        CL Controlling
+     C                     PARM '10001'   O#CSEQ  5        CL Sequence Num
+     C                     PARM           O#PARM100        Calling Parm
+     C                     PARM AGMBIN    O#MBIN  1        Multi-Branching
+     C                     PARM 'B'       O#LVL   1        Level
+     C                     PARM '   '     O#ENTY  3        Entity
+      *
+     C           *IN90     IFEQ '1'
+     C           O#RTN     ORNE *BLANKS
+     C                     MOVEL'CGD1000' P0RTN   7         Option ended in error
+     C                     MOVEL*BLANKS   R#RTN   7
+     C                     ENDIF
+      *
+     C           EXPRNT    TAG
+      *================================================================
+     C                     ENDSR
+      /EJECT
+      *================================================================
+      * SR SRINIT - Initialisation
+      *================================================================
+     C           SRINIT    BEGSR
+     C                     MOVE *BLANK    P0RTN   7
+      *
+     C                     MOVE '0'       *IN
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      ACT@   80
+      *
+      * Get Rundate - Rundate  *
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN71
+     C                     ENDIF
+     CSR         ZZEXIT    ENDSR
+      *================================================================
+      /EJECT
+      *================================================================
+      ** PSSR Processing
+      *
+      /COPY CGCPYSRC,SRERRPSSR
+      *
+      ** File and Program Error Processing
+      *
+      /COPY CGCPYSRC,SRERRC
+      /EJECT
+      *
+      ** DSPRCD: Cpysrc Templates Initialise Program O-Spec
+      *
+      /COPY WNCPYSRC,CG5000DOPG
+      *================================================================
+**  CPY@
+(C) COPYRIGHT Finastra International Limited 2009
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)
+ALCOBJ     OBJ((CGRASCPD *FILE *EXCL)) WAIT(1)
+DLCOBJ     OBJ((CGRASCPD *FILE *EXCL))

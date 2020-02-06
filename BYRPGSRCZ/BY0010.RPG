@@ -1,0 +1,425 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Bank of England ICD Maintenance')                *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Bank of England                                      *
+      *                                                               *
+      *  BY0010 - ICD Maintenance                                     *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  (c) Finastra International Limited 1999                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *  Prev Amend No. LLN018             Date 17Apr01               *
+      *                 LLN014             Date 19Jan00               *
+      *                 LLN012   *CREATE   Date 20Apr99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Amendment History                                            *
+      *  -----------------                                            *
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  LLN018 - Upgrade BoE to APIs and addition of 2 new fields    *
+      *           on ICD.
+      *  LLN014 - Negotiable Assets Face Value Required               *
+      *  LLN012 - Financial Services Authority - Liquidity Report     *
+      *                                                               *
+      *****************************************************************
+      *
+      *  Indicator Usage                                              *
+      *  ---------------                                              *
+      *                                                               *
+      *  03 - F3,  exit program                                       *
+      *  05 - F5,  refresh screen                                     *
+      *  49 - position cursor                                         *
+      *  50,51 - Error highlighter for screen fields                  *
+      *****************************************************************
+      *
+     FBY0010DFCF  E                    WORKSTN      KINFSR *PSSR
+     F                                              KINFDS INFDS#
+      *
+      /EJECT
+      *
+      *  Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      /SPACE 3
+      *
+      *  Constant name for message file
+     I              'GBBYUSRMSG'          C         ULMGFN
+      *
+      ** Local data area for database error details
+     ILDA       E DSLDA                         256
+      *
+      ** Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ULPGM
+     I                                      244 253 ULWSID
+     I                                      254 263 ULUSER
+      *
+      * File information data structure (for database files only)
+     IINFDS1    E DSY2I1DSP
+      *
+      * Display file information data structure  (for display files only)
+     IINFDS#    E DSY2I#DSP
+      *
+      * DS to define layout of data area BYSTAT
+     IBYSTAT    E DSBYSTATPP
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * Main Processing                                               *
+      *                                                               *
+      * Calls: SR/#LMAIN - Detail Processing                          *
+      *        SR/#LTERM - Termination Processing                     *
+      *                                                               *
+      *****************************************************************
+      *
+      *
+      *  Main Processing
+     C                     EXSR #LMAIN
+      *
+      *
+      *  Termination Processing
+     C                     EXSR #LTERM
+      *
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LMAIN - Main Detail Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LMAIN    BEGSR                           ** SR/#LMAIN**
+      *
+      *  Process screen until CF03 is pressed
+     C           *IN03     DOWEQ*OFF
+      *
+      *  If no errors, position cursor at first field
+     C           *IN,50    IFEQ '00'
+     C           *IN52     ANDEQ*OFF                                      LLN018
+     C           *IN53     ANDEQ*OFF                                      LLN018
+     C           *IN54     ANDEQ*OFF                                      LLN018
+     C                     MOVE *ON       *IN49
+     C                     ELSE
+     C                     MOVE *OFF      *IN49
+     C                     ENDIF
+      *
+      *   Display screen
+     C                     WRITE#MSGCTL
+     C                     EXFMTBY0010F1
+      *
+      *   Clear message subfile
+     C                     EXSR #LCLMG
+      *
+      *   Reset error indicators
+     C                     MOVEA'00'      *IN,50
+     C                     SETOF                     525354               LLN018
+      *
+      *   CF03 - Exit program
+     C           *IN03     IFEQ *ON
+     C                     EXSR #LTERM
+     C                     ENDIF
+      *
+      *
+      **  CF05 - Redisplay initial values
+     C           *IN05     IFEQ *ON
+     C                     MOVE I#CLLD    L#CLLD
+     C                     MOVE I#BTEX    L#BTEX
+     C                     MOVE I#FACE    L#FACE                          LLN014
+     C                     MOVE I#DICD    L#DICD                          LLN018
+     C                     MOVE I#DINC    L#DINC                          LLN018
+     C                     ITER
+     C                     ENDIF
+      *
+      *   Validate screen details
+     C                     EXSR #LVALD
+      *
+      *   If ENTER hit and valid screen fields, update BYSTAT data area
+     C           ULVALD    IFEQ 'Y'
+     C           *LOCK     IN   BYSTAT
+     C                     MOVE L#CLLD    LCLLD
+     C                     MOVE L#BTEX    LBTEX
+     C                     MOVE L#FACE    LFACE                           LLN014
+     C                     MOVE L#DICD    LDICD                           LLN018
+     C                     MOVE L#DINC    LDINC                           LLN018
+     C                     OUT  BYSTAT
+     C                     MOVE 'BYM0207' ULMSID
+     C                     EXSR #LSNMG
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LVALD - Validate Screen                                      *
+      *                                                               *
+      * Called by:  SR/#LDETL - Display Screen                        *
+      *                                                               *
+      * Calls: #LSNMG                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LVALD    BEGSR                           ** SR/#LVALD**
+      *
+      *   Reset work fields and indicators
+     C                     MOVE 'Y'       ULVALD
+     C                     MOVEA'00'      *IN,50
+     C                     MOVE *OFF      *IN52                           LLN014
+     C                     SETOF                     5354                 LLN018
+      *
+      *
+      ** Validate 'Extract Cleared Balances' flag
+     C           L#CLLD    IFNE 'Y'
+     C           L#CLLD    ANDNE'N'
+     C                     MOVE 'BYM0201' ULMSID
+     C                     EXSR #LSNMG
+     C                     MOVE *ON       *IN50
+     C                     MOVE 'N'       ULVALD
+     C                     ENDIF
+      *
+      *
+      ** Validate 'Create BT Extract File Daily' flag
+     C           L#BTEX    IFNE 'Y'
+     C           L#BTEX    ANDNE'N'
+     C                     MOVE 'BYM0202' ULMSID
+     C                     EXSR #LSNMG
+     C                     MOVE *ON       *IN51
+     C                     MOVE 'N'       ULVALD
+     C                     ENDIF
+      *                                                                   LLN014
+      ** Validate 'Negotiable Assets Face Value Required ' flag           LLN014
+     C           L#FACE    IFNE 'Y'                                       LLN014
+     C           L#FACE    ANDNE'N'                                       LLN014
+     C                     MOVE 'BYM0210' ULMSID                          LLN014
+     C                     EXSR #LSNMG                                    LLN014
+     C                     MOVE *ON       *IN52                           LLN014
+     C                     MOVE 'N'       ULVALD                          LLN014
+     C                     ENDIF                                          LLN014
+      *
+      ** Validate 'Use Standard Industry Code field in Bank of England'   LLN018
+      ** flag                                                             LLN018
+     C           L#DICD    IFNE 'Y'                                       LLN018
+     C           L#DICD    ANDNE'N'                                       LLN018
+     C                     MOVE 'BYM0250' ULMSID                          LLN018
+     C                     EXSR #LSNMG                                    LLN018
+     C                     MOVE *ON       *IN53                           LLN018
+     C                     MOVE 'N'       ULVALD                          LLN018
+     C                     ENDIF                                          LLN018
+      *                                                                   LLN018
+      ** Validate 'Use Standard Institution Code field in Bank of England'LLN018
+      ** flag                                                             LLN018
+     C           L#DINC    IFNE 'Y'                                       LLN018
+     C           L#DINC    ANDNE'N'                                       LLN018
+     C                     MOVE 'BYM0251' ULMSID                          LLN018
+     C                     EXSR #LSNMG                                    LLN018
+     C                     MOVE *ON       *IN54                           LLN018
+     C                     MOVE 'N'       ULVALD                          LLN018
+     C                     ENDIF                                          LLN018
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LTERM - Termination Processing                               *
+      *                                                               *
+      * Called by:  Main Processing                                   *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LTERM    BEGSR                           ** SR/#LTERM**
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      /EJECT
+      **************************************************************************
+      *                                                               *
+      * #LSNMG - Send Message to Program Message Queue                *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      **************************************************************************
+      *
+     C           #LSNMG    BEGSR
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ULPGNM
+     C                     PARM '*SAME'   ULPGRL
+     C                     PARM           ULMSID
+     C                     PARM           ULMSGF
+     C                     PARM           ULMSDA
+     C                     PARM           ULMSTP
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      **************************************************************************
+      *                                                               *
+      * #LCLMG - Clear Program Message Queue                          *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls:                                                        *
+      *                                                               *
+      **************************************************************************
+     C           #LCLMG    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM           ULPGNM
+     C                     PARM '*SAME'   ULPGRL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * #LDEFN - Field Definition Routine                             *
+      *                                                               *
+      * Called by:  None - Contains definitions only                  *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           #LDEFN    BEGSR                           ** SR/#LDEFN**
+      *
+      ** Define external data areas
+     C           *NAMVAR   DEFN           LDA
+     C           *NAMVAR   DEFN           BYSTAT
+      *
+      ** Define and initialise work fields
+     C                     MOVE *BLANK    ULRTCD  7        Return code
+     C                     MOVE *BLANK    ULERRI  1        Pgm error indicator
+     C                     MOVE *BLANK    P@RTCD  7
+     C                     MOVE *BLANK    P@OPTN  7
+     C                     MOVELULPGM     ULPGNM 10        PGM Q Name
+     C                     MOVE *BLANKS   ULPGRL  5
+     C                     MOVE ULMGFN    ULMSGF 10        Message File
+     C                     MOVE *BLANKS   ULMSID  7        Message Id
+     C                     MOVE *BLANKS   ULMSDA132        Message Data
+     C                     MOVE *BLANKS   ULMSTP  7        Message Type
+     C                     MOVE 'N'       ULVALD  1        Detail screen valid?
+     C                     MOVE 'N'       ULUPDI  1        Valid for update?
+     C                     MOVEACPY@      ULCPY@ 80        Copyright
+     C           *LIKE     DEFN LCLLD     I#CLLD           Init value
+     C           *LIKE     DEFN LBTEX     I#BTEX           Init value
+     C           *LIKE     DEFN LFACE     I#FACE                          LLN014
+     C           *LIKE     DEFN LDICD     I#DICD                          LLN018
+     C           *LIKE     DEFN LDINC     I#DINC                          LLN018
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+      *  Check if error has previously been reported
+     C           ULERRI    IFEQ *BLANK
+     C                     MOVE 'Y'       ULERRI
+     C                     MOVE 'Y'       ULRTCD
+     C                     DUMP
+     C                     ENDIF
+      *
+      *  Set on external indicators
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+      *
+      *  Terminate program
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *INZSR - Program Initialisation Routine                       *
+      *                                                               *
+      * Called by:  At program initialisation                         *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR                           ** *INZSR SR**
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ULRTCD
+      *
+      *  Get initial values from BYSTAT data area
+     C                     IN   BYSTAT
+      *    If blank, default in 'N'
+     C           LCLLD     IFEQ *BLANK
+     C                     MOVE 'N'       L#CLLD
+     C                     ELSE
+     C                     MOVE LCLLD     L#CLLD
+     C                     ENDIF
+      *
+      *    If blank, default in 'N'
+     C           LBTEX     IFEQ *BLANK
+     C                     MOVE 'N'       L#BTEX
+     C                     ELSE
+     C                     MOVE LBTEX     L#BTEX
+     C                     ENDIF
+      *                                                                   LLN014
+      *    Face Value Required for Negotiable Assets                      LLN014
+     C           LFACE     IFEQ *BLANK                                    LLN014
+     C                     MOVE 'N'       L#FACE                          LLN014
+     C                     ELSE                                           LLN014
+     C                     MOVE LFACE     L#FACE                          LLN014
+     C                     ENDIF                                          LLN014
+      *
+     C                     MOVE LDICD     L#DICD                          LLN018
+     C                     MOVE LDINC     L#DINC                          LLN018
+      *
+      *  Save initial values for redisplay when requested
+     C                     MOVE L#CLLD    I#CLLD
+     C                     MOVE L#BTEX    I#BTEX
+     C                     MOVE L#FACE    I#FACE                          LLN014
+     C                     MOVE L#DICD    I#DICD                          LLN018
+     C                     MOVE L#DINC    I#DINC                          LLN018
+      *
+      *  Initialise work fields
+     C                     EXSR #LDEFN
+      *
+      *  Initial fields for display file
+     C                     MOVELULPGM     L#PGMQ 10
+     C                     MOVELULPGM     L#PGM
+     C                     MOVELULWSID    L#WSID
+      *
+     C                     ENDSR
+      /EJECT
+      ********************************************************************
+**  CPY@
+(c) Finastra International Limited 1999

@@ -1,0 +1,2109 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM DL performance analysis update')              *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM1520 - PM DL Performance Cash Analysis Update              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 BUG3122            Date 17Jul04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.01 -----------------------------------------------*
+      *                 CDL006             Date 26Apr99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CPM005             Date 16Jul96               *
+      *                 081367             Date 24Jun96               *
+     F*                 099814             DATE 15FEB96               *
+     F*                 CPM004             DATE 04MAR96               *
+     F*                 094693             DATE 18OCT95               *
+     F*                 092961             DATE 03OCT95               *
+     F*                 085862             DATE 15MAR95               *
+     F*                 081348             DATE 21DEC94               *
+     F*                 072814             DATE 25NOV94               *
+     F*                 053103             DATE 25NOV94               *
+     F*                 S01486             DATE 11AUG94               *
+     F*                 059474             DATE 11/08/93              *
+     F*                 056460             DATE 07JUN93               *
+     F*                  50406             DATE 01/02/93              *
+     F*                  47719             DATE 19JAN93               *
+     F*                  46910             DATE 11/11/92              *
+     F*                  46386             DATE 28/10/92              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  BUG3122 - Recompiled due to changes in SDSECSPD.             *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CDL006 - Dealing Fiduciary.                                  *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/2 - CALCULATE & REPORT PERF. FOR ALL CUST.PORT *
+     F*  081367 - CORRECT SETUP OF ROLLOVER DEALS                     *
+     F*  099814 - Pool Trades should use CQQ001 feature               *
+     F*  CPM004 - Bank Portfolios                                     *
+     F*  094693 - ACCNT's key is now split due to branch so use       *
+     F*           external file description                           *
+     F*  092961 - Recompile over amended ZSETAC - part of 085862      *
+     F*  085862 - CORRECT TO INCLUDE BRANCH IN  ACCOUNT CODE          *
+     F*  081348 - Amend for ZSETAC subroutine changes                 *
+     F*  072814 - Extract 'TI' records for taxable interest           *
+     F*  053103 - Add Perf. event reference and related reference     *
+     F*           + Module                                            *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  059474 - IF SETTLEMENT NOT IN RETAIL ACCOUNT TREAT AS CROSS  *
+     F*           PORTFOLIO SETTLEMENT                                *
+     F*  056460 - OUTPUT DUPLICATE RECORDS FOR POOL PORTFOLIO         *
+     F*  50406  - ALTER TO OUTPUT DOUBLE PRECISION FX RATE            *
+     F*  47719  - USE EXTERNAL SUBROUTINES ZCCYCN AND ZCCYXR INSTEAD  *
+     F*           OF INCORRECT ONCE INTERNALLY DESCRIBED.             *
+     F*           FIX 41644 IS REPLACED BY THIS NEW FIX.              *
+     F*  46910  - EVENT DATE SHOULD BE RUN DATE RATHER THAN ECD       *
+     F*  46386  - ALLOW CROSS PORTFOLIO SETTLEMENTS                   *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F**
+     F**      FILE DEFINITIONS
+     F**     ------------------
+     F*
+     F**   PORTFOLIO MANAGEMENT DL GENERATED ACCOUNT KEYS
+     F***PMDKEYS**F  E           K        DISK         KINFSR *PSSR       S01486
+     FPMDKEYL0IF  E           K        DISK         KINFSR *PSSR          S01486
+     F*
+     F*****BANK*DETAILS*FILE************************-*Prefix*BJ********   S01486
+     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F*****CURRENCY*CODES*FILE**********************-*Prefix*A6********   S01486
+     F***SDCURRL0IF**E           K        DISK         KINFSR *PSSR       S01486
+     F*
+     F**   DEAL TYPES/SUB-TYPES                     - Prefix P7
+     F***SDDTSTPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FFDDTSTL0IF  E           K        DISK         KINFSR *PSSR          S01486
+     F*
+     F**   PORTFOLIO DEFINITION DETAILS             - Prefix PN
+     F***PMPORTPPIF**E           K        DISK         KINFSR *PSSR       S01486
+     FPMPORTPDIF  E           K        DISK         KINFSR *PSSR          S01486
+     F*                                                                   056460
+     F* POOL PORTFOLIO MEMBERS - PREFIX OS                                056460
+     FPMPPTML1IF  E           K        DISK         KINFSR *PSSR          056460
+     F*                                                                   46386
+     F** ACCOUNT DETAILS BY 15A ACCOUNT CODE. NO PREFIX                   46386
+     F***ACCNT***IF  F     416 15AI     2 DISK         KINFSR *PSSR 46386 S01486
+     F***ACCNT***IF**F     416 18AI     2 DISK         KINFSR *PSSR S01486085862
+     F***ACCNT***IF**F     437 18AI     2 DISK         KINFSR *PSSR 085862094693
+     FACCNT   IF  E           K        DISK         KINFSR *PSSR          094693
+     F            ACCNTAAF                          KIGNORE               094693
+     F            ACCNTABF                          KRENAMEACCNTB1F       094693
+     F            ACCNTACF                          KIGNORE               094693
+     F*                                                                   46386
+     F** ACCOUNT DETAILS BY 15N ACCOUNT NUMBER. NO PREFIX                 46386
+     F***ACNUM***IF**F      47 10AI     2 DISK         KINFSR *PSSR  46386094693
+     FACNUM   IF  E           K        DISK         KINFSR *PSSR          094693
+     F            ACCNTABF                          KRENAMEACCNTB2F       094693
+     F*                                                                   46386
+     F***RETAIL*ICD*-**PREFIX*BM************************************46386 S01486
+     F***SDRETLL0IF**E           K        DISK         KINFSR *PSSR 46386 S01486
+     F*                                                                   46386
+     F***SD*CUSTOMER*DETAILS*-**PREFIX*BB***************************46386 S01486
+     F***SDCUSTL0IF**E           K        DISK         KINFSR *PSSR 46386 S01486
+     F*                                                                   46386
+     F***SE*CUSTOMER*DETAILS*-**PREFIX*BF***************************46386 S01486
+     F***SDSECSL0IF**E           K        DISK         KINFSR *PSSR 46386 S01486
+     F*                                                                   46386
+     F***BRANCH*CODES*-**PREFIX*A8**********************************46386 S01486
+     F***SDBRCHL0IF**E           K        DISK         KINFSR *PSSR 46386 S01486
+      *                                                                   CPM005
+      **  Prefix of PMCNSDLL is 'PN'                                      CPM005
+     FPMCNSDLLIF  E           K        DISK         KINFSR *PSSR          CPM005
+     F*
+     F**   PERFORMANCE TRANSACTION ANALYSIS         - Prefix RB
+     F***PMPTRAPPO***E           K        DISK         KINFSR *PSSR A     S01486
+     FPMPTRAPDO   E           K        DISK         KINFSR *PSSR A        S01486
+     F            PMPTRAP0                          KRENAMEPMPTRAP1
+     F*
+     F**   DL PERFORMANCE ANALYSIS UPDATE REPORT
+     FPM1520AUO   E             21     PRINTER      KINFSR *PSSR
+     F*
+     F/EJECT
+     F*****************************************************************
+     F**                                                              *
+     F** ID F  C  H  L    FUNCTION OF INDICATORS                      *
+     F**                 ------------------------                     *
+     F**                                                              *
+     F**    21         - OVERFLOW ON PRINTER FILE PM1520AU.           *
+     F*********50******-*CHAIN*ON*SDCURRL0.****************************   S01486
+     F*********51******-*CHAIN*ON*SDDTSTPP.****************************   S01486
+     F**       51      - CHAIN ON FDDTSTL0.                           *   S01486
+     F*********53******-*CHAIN*ON*PMPORTPP.****************************   S01486
+     F**       53      - CHAIN ON PMPORTPD.                           *   S01486
+     F**       60      - SEARCH OF ARRAY WWARR1.                      *
+     F**       61      - SEARCH OF ARRAY WWARR2.                      *
+     F*********70******-*EOF*ON*READ*OF*FILE*SDBANKL1.*****************   S01486
+     F*********72******-*EOF*ON*READ*OF*FILE*PMDKEYS.******************   S01486
+     F**       72      - EOF ON READ OF FILE PMDKEYL0.                *   S01486
+     F**       80      - FLAG TO EXIT SR #BEAB.                       *
+     F**                                                              *
+     F*****************************************************************
+     F/EJECT
+     E*****************************************************************
+     E*
+     E**   ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E**   ARRAY FOR SELECTION PROCESS
+     E****                WWARR1 14  14  3                                50406
+     E                    WWARR1 16  16  3                                50406
+     E*
+     E**   ARRAY USED IN CURRENCY AMOUNT CONVERSION
+     E                    POWER   1   7  7 3
+     E*
+     E**   ARRAY FOR DEAL TYPE CHECKING
+     E***********         WWARR2 13  13  2                                CDL006
+     E                    WWARR2 16  16  2                                CDL006
+     E*
+     E*****************************************************************
+     E/EJECT
+     E*****************************************************************
+     I*                                                                   46386
+     I***ACCNT***NS**                                                46386094693
+     I***********                             2   70ZRCNUM           46386094693
+     I***********                             8  10 ZRCCY            46386094693
+     I***********                            11  140ZRACOD           46386094693
+     I***********                            15  160ZRACSQ           46386094693
+     I***********                            23  25 ZRBRCA          085862094693
+     I***********                           433 436 ZRPTFR          085862094693
+     I***********                           401 404 ZRPTFR           46386085862
+     I***********                                                    46386094693
+     I***ACNUM***NS*                                                 46386094693
+     I***********                            12  170ZRCNUM           46386094693
+     I***********                            18  20 ZRCCY            46386094693
+     I***********                            21  240ZRACOD           46386094693
+     I***********                            25  260ZRACSQ           46386094693
+     I***********                            29  31 ZRBRCA          081348094693
+     I***********                            41  44 ZRPTFR           46386094693
+     I*                                                                   094693
+     IACCNTB1F                                                            094693
+     I              CNUM                            ZRCNUM                094693
+     I              CCY                             ZRCCY                 094693
+     I              ACOD                            ZRACOD                094693
+     I              ACSQ                            ZRACSQ                094693
+     I              BRCA                            ZRBRCA                094693
+     I              PTFR                            ZRPTFR                094693
+     I*                                                                   094693
+     IACCNTB2F                                                            094693
+     I              CNUM                            ZRCNUM                094693
+     I              CCY                             ZRCCY                 094693
+     I              ACOD                            ZRACOD                094693
+     I              ACSQ                            ZRACSQ                094693
+     I              BRCA                            ZRBRCA                094693
+     I              PTFR                            ZRPTFR                094693
+      *                                                                   CPM005
+     IPMCNSDD0                                                            CPM005
+     I              PNPTCY                          RNPTCY                CPM005
+     I              PNPCDP                          RNPCDP                CPM005
+     I*                                                                   46386
+     I* 15 A SETTLEMENT ACCOUNT RETURNED                                  46386
+     I            DS                            256                       46386
+     I**********                              1   60ZWCNUM                              46386 CSD027
+     I                                        1   6 ZWCNUM                                    CSD027
+     I                                        7   9 ZWCCY                 46386
+     I**********                             10  130ZWACOD                              46386 CGL029
+     I**********                             14  150ZWACSQ                              46386 CGL029
+     I**********                             16  18 ZWBRCA                             S01486 CGL029
+     I                                       10  190ZWACOD                                    CGL029
+     I                                       20  210ZWACSQ                                    CGL029
+     I                                       22  24 ZWBRCA                                    CGL029
+     I***********                             1  15 ZWACCN          46386 S01486
+     I***********                             1  18 ZWACCN          S01486094693
+     I**********                              1  18 ZKACCN                             081348 CGL029
+     I                                        1  24 ZKACCN                                    CGL029
+     I*
+     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     ICPYR@$      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@$$
+     I*
+     I**   PROGRAM STATUS DATA STRUCTURE
+     IPSDS       SDS
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     IPMSTAT    E DS
+     I                                        1   50WWECD
+     I*************                          35  35 WWPPRQ         056460 099814
+     I                                        1 256 WWSTAT
+     I*
+     I**   LOCAL DATA AREA
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I**   DATA STRUCTURE FOR ACCOUNT KEY
+     IAKEY        DS
+     I                                        1   2 AKEY1
+     I                                        3   3 AKEY2
+     I                                        4   5 AKEY3
+     I                                        9  10 AKEY4
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR 004
+     IDBEK1       DS
+     I                                        1   4 DBKEY1
+     I                                        1   2 WWDB1
+     I                                        3   4 WWDB2
+     I*
+     I**   DATA STRUCTURE FOR DATABASE ERROR 006
+     IDBEK2       DS
+     I                                        1  10 DBKEY2
+     I****************************************1   60CNUM                  CPM004
+     I**********                              1   60#CNUM                              CPM004 CSD027
+     I                                        1   6 #CNUM                                     CSD027
+     I                                        7  10 PTFR
+     I*                                                                   CPM004
+     I** Input parameters on call to AOPLCSR1                             CPM004
+     II@PARM      DS                            256                       CPM004
+     I                                        1   1 I#PORS                CPM004
+     I                                        2   5 I#R997                CPM004
+     I                                        6  15 I#CUST                CPM004
+     I                                       16  18 I#BRCA                CPM004
+     I                                       19  20 I#BOOK                CPM004
+     I                                       21  24 I#PTFR                CPM004
+     I                                       25  34 I#CPGM                CPM004
+     I*                                                                   CPM004
+     I** Output parameters on call to AOPLCSR1                            CPM004
+     IO@PARM      DS                            256                       CPM004
+     I                                        1   2 O#BOOK                CPM004
+     I                                        3   6 O#PTFR                CPM004
+     I                                        7  12 O#BICN                CPM004
+     I                                       13  22 O#CRNM                CPM004
+     I                                       23  24 O#ACOF                CPM004
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I**  Data structure for bank details                                 S01486
+     I*                                                                   S01486
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I**  Data structure for currency details                             S01486
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              CPM004
+     I**  Data structure for modules                                      CPM004
+     I*                                                                   CPM004
+     ISDRETL    E DSSDRETLPD                                              S01486
+     I**  Data structure for Retail ICD                                   S01486
+     I*                                                                   S01486
+     ISDPORT    E DSSDPORTPD                                              CPM004
+     I**  Data structure for Portfolio Management ICD                     CPM004
+     I*                                                                   CPM004
+     ISDSECS    E DSSDSECSPD                                              S01486
+     I              QQACCD                          QQACC1                                    CGL029
+     I**  Data structure for Security Customer details                    S01486
+     I*                                                                   S01486
+     ISDPLCS    E DSSDPLCSPD                                              CPM004
+     I**  Portfolio Management Customer details                           CPM004
+     I*                                                                   CPM004
+     ISDNOST    E DSSDNOSTPD                                              CPM004
+     I              QQACCD                          QQACC2                                    CGL029
+     I**  Data structure for nostro details                               CPM004
+     I*                                                                   CPM004
+     ISCSARD    E DSSCSARDPD                                              CDL006
+      ** External data structure for switchable features                  CDL006
+      *                                                                   CDL006
+     IDSFDY     E DSDSFDY                                                 S01486
+     I**  Short data structure for access objects                         S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I**  Long data structure for access programs                         S01486
+     I*
+     C*****************************************************************
+     C*
+     C***KEY*LIST*TO*ACCESS*FILE*SDDTSTPP******************************   S01486
+     C** KEY LIST TO ACCESS FILE FDDTSTL0                                 S01486
+     C           WWKEY1    KLIST
+     C                     KFLD           AKEY1
+     C                     KFLD           AKEY3
+     C*
+     C***KEY*LIST*TO*ACCESS*FILE*PMPORTPP******************************   S01486
+     C** KEY LIST TO ACCESS FILE PMPORTPD                                 S01486
+     C           WWKEY2    KLIST
+     C*********************KFLD           CNUM                            CPM004
+     C**********           KFLD           #CNUM   60                                   CPM004 CSD027
+     C                     KFLD           #CNUM   6                                           CSD027
+     C                     KFLD           PTFR
+      *                                                                   CPM005
+      **  Key list to access file PMCNSDPD                                CPM005
+      *                                                                   CPM005
+     C           WWKEY3    KLIST                                          CPM005
+     C                     KFLD           CNUM                            CPM005
+     C                     KFLD           KPTFR   4                       CPM005
+     C*                                                                   094693
+     C** Klist for ACCNT                                                  094693
+     C*                                                                   094693
+     C           ZWACCN    KLIST                                          094693
+     C                     KFLD           ZWCNUM                          094693
+     C                     KFLD           ZWCCY                           094693
+     C                     KFLD           ZWACOD                          094693
+     C                     KFLD           ZWACSQ                          094693
+     C                     KFLD           ZWBRCA                          094693
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*
+     C**              START MAINLINE
+     C**             ----------------
+     C*
+     C**   INITIAL PROCESSING
+     C                     EXSR #A
+     C*
+     C**   MAIN PROCESSING
+     C                     EXSR #B
+     C*
+     C**   PRODUCE DL PERFORMANCE ANALYSIS UPDATE REPORT
+     C                     EXSR #C
+     C*
+     C**   END PROGRAM
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    INDEX TO SUBROUTINES                                      *
+     C**   ----------------------                                     *
+     C**                                                              *
+     C**   #A      - INITIAL PROCESSING                               *
+     C**   #B      - MAIN PROCESSING                                  *
+     C**   #C      - PRODUCE DL PERFORMANCE ANALYSIS UPDATE REPORT    *
+     C**   #BA     - ACCESS CURRENCY DETAILS                          *
+     C**   #BB     - ACCESS DEAL TYPE/SUB-TYPE DETAILS                *
+     C**   #BD     - ACCESS PORTFOLIO DETAILS                         *
+     C**   #BE     - EXTRACT PERFORMANCE DATA                         *
+     C*****#BEA****-*PROCESS*RECORDS*FROM*LF/PMDKEYS*******************   S01486
+     C**   #BEA    - PROCESS RECORDS FROM LF/PMDKEYL0                 *   S01486
+     C**   #BEAA   - CALCULATE EXCHANGE RATE                          *
+     C**   #BEAB   - WRITE PRINCIPAL PERFORMANCE DATA                 *
+     C**   #BEAC   - WRITE INTEREST PERFORMANCE DATA                  *
+     C**   #BEAD   - WRITE TAX PERFORMANCE DATA                       *
+     C**   #BEAE   - SET UP RELATED REFERENCE AND MODULE ID.          *   53103
+     C**   #BEAAA  - DETERMINE SPOT RATES                             *
+     C**   #ZCCYCN - CONVERSION BETWEEN CURRENCIES USING A            *
+     C**             SPOT RATE                                        *
+     C**   #ZCCYXR - CONVERSION BETWEEN CURRENCIES USING AN           *
+     C**             EXCHANGE RATE                                    *
+     C*****#ZB*****-*WRITE*RECORD*TO*PF/PMPTRAPP***********************   S01486
+     C**   #ZB     - WRITE RECORD TO PF/PMPTRAPD                      *   S01486
+     C**   ZEVRF   - SET PERFORMANCE EVENT REFERENCE                  *   53103
+     C**   *PSSR   - PROGRAM ERROR HANDLING SUBROUINE                 *
+     C**                                                              *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #A        - INITIAL PROCESSING                             *
+     C**                                                              *
+     C**   CALLS     - *PSSR                                          *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #A        BEGSR
+     C*                                                                   S01486
+     C                     MOVEACPY@      CPY2@  80                       S01486
+     C*
+     C** INITIALISE INDICATORS
+     C                     SETOF                     215051
+     C                     SETOF                     525354
+     C                     SETOF                     607071
+     C                     SETOF                     7273
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*
+     C** INITIALISE DB ERROR FIELDS AND STORE PROGRAM NAME FOR DB
+     C** ERROR FIELD
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVEL'PM1520'  DBPGM
+     C                     OUT  LDA                                       S01486
+     C*
+     C** DEFINE DATA AREA PMSTAT
+     C           *NAMVAR   DEFN           PMSTAT
+     C                     IN   PMSTAT
+     C*
+     C** ACCESS LF/SDBANKL1 TO OBTAIN BANK DETAILS
+     C***********          READ SDBANKL1                 70               S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST'  P@OPTN  7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+     C*
+     C** IF RECORD NOT FOUND OR LAST CHANGE TYPE = 'D' THEN DB ERROR
+     C************IN70     IFEQ '1'                                       S01486
+     C           P@RTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE            ****************
+     C***********          MOVEL'SDBANKL1'DBFILE           * DBERROR  001*S01486
+     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR  001*S01486
+     C                     MOVE *BLANKS   DBKEY            ****************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   CPM004
+     C* Access Modules                                                    CPM004
+     C*                                                                   CPM004
+     C                     CALL 'AOMMODR0'                                CPM004
+     C                     PARM *BLANKS   P@RTCD                          CPM004
+     C                     PARM '*FIRST ' P@OPTN                          CPM004
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPM004
+     C           P@RTCD    IFNE *BLANK                                    CPM004
+     C           *LOCK     IN   LDA                                       CPM004
+     C                     Z-ADD50        DBASE                           CPM004
+     C                     MOVE *BLANKS   DBFILE           ***************CPM004
+     C                     MOVE 'SDMMODPD'DBFILE           * DBERROR 050 *CPM004
+     C                     MOVE *BLANKS   DBKEY            ***************CPM004
+     C                     OUT  LDA                                       CPM004
+     C                     EXSR *PSSR                                     CPM004
+     C                     END                                            CPM004
+     C*                                                                   CPM004
+     C* If retail installed                                               CPM004
+     C*                                                                   CPM004
+     C           BGNXST    IFEQ 'Y'                                       CPM004
+     C*                                                                   46386
+     C* Access ICD File SDRETLL0.                                         46386
+     C*                                                                   46386
+     C************LOVAL    SETLLSDRETLL0                            46386 S01486
+     C***********          READ SDRETLL0                 70         46386 S01486
+     C                     CALL 'AORETLR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*FIRST'  P@OPTN  7                       S01486
+     C           SDRETL    PARM SDRETL    DSFDY                           S01486
+     C*                                                                   46386
+     C* If Record not found - Database Error.                             46386
+     C*                                                                   46386
+     C************IN99     IFEQ '1'                                 46386 S01486
+     C           P@RTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD1         DBASE                           46386
+     C                     MOVE *BLANKS   DBFILE           ***************46386
+     C***********          MOVEL'SDRETLL0'DBFILE     * DBERROR 001 *46386 S01486
+     C                     MOVE 'SDRETLPD'DBFILE           * DBERROR 001 *S01486
+     C                     MOVE *BLANKS   DBKEY            ***************46386
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     46386
+     C                     END                                            46386
+     C                     END                                            CPM004
+     C*                                                                   CPM004
+     C** Get Portfolio Management ICD details using access object         CPM004
+     C*                                                                   CPM004
+     C                     CALL 'AOPORTR0'                                CPM004
+     C                     PARM *BLANKS   P@RTCD                          CPM004
+     C                     PARM '*FIRST ' P@OPTN                          CPM004
+     C           SDPORT    PARM SDPORT    DSFDY                           CPM004
+     C*                                                                   CPM004
+     C** Check if an error occurred                                       CPM004
+     C*                                                                   CPM004
+     C           P@RTCD    IFNE *BLANKS                                   CPM004
+     C           *LOCK     IN   LDA                                       CPM004
+     C                     Z-ADD51        DBASE            ***************CPM004
+     C                     MOVE 'SDPORTPD'DBFILE           * DBERROR  051 CPM004
+     C                     MOVE *BLANKS   DBKEY            ***************CPM004
+     C                     OUT  LDA                                       CPM004
+     C                     EXSR *PSSR                                     CPM004
+     C                     END                                            CPM004
+     C*                                                                   099814
+     C* Access Switchable features for Pool portfolios                    099814
+     C*                                                                   099814
+     C                     CALL 'AOSARDR0'                                099814
+     C                     PARM *BLANKS   P@RTCD                          099814
+     C                     PARM '*KEY   ' P@OPTN                          099814
+     C                     PARM 'CQQ001'  P@SARD                          099814
+     C                     PARM           DSFDY                           099814
+     C*                                                                   099814
+     C           P@RTCD    IFEQ *BLANK                                    099814
+     C                     MOVE 'Y'       WWPPRQ  1                       099814
+     C                     END                                            099814
+     C*                                                                   099814
+     C                     CALL 'AOSARDR0'                                099814
+     C                     PARM '       ' P@RTCD                          099814
+     C                     PARM '*VERIFY' P@OPTN                          099814
+     C                     PARM 'S01460'  P@SARD  6                       099814
+     C*                                                                   099814
+     C           P@RTCD    IFEQ *BLANK                                    099814
+     C                     MOVE 'Y'       S01460  1                       099814
+     C                     ELSE                                           099814
+     C                     MOVE 'N'       S01460                          099814
+     C                     END                                            099814
+      *                                                                   CDL006
+      ** Access Switchable Features file to check if Dealing Fiducia      CDL006
+      ** ry is installed.                                                 CDL006
+      *                                                                   CDL006
+     C                     MOVE 'N'       CDL006  1                       CDL006
+     C                     CALL 'AOSARDR0'                                CDL006
+     C                     PARM *BLANKS   WRTCD   7                       CDL006
+     C                     PARM '*VERIFY' WOPTN   7                       CDL006
+     C                     PARM 'CDL006'  WSARD   6                       CDL006
+     C           SCSARD    PARM SCSARD    DSFDY                           CDL006
+      *                                                                   CDL006
+     C           WRTCD     IFNE *BLANKS                                   CDL006
+     C           WRTCD     ANDNE'*NRF   '                                 CDL006
+     C           *LOCK     IN   LDA                                       CDL006
+     C                     Z-ADD052       DBASE             ************* CDL006
+     C                     MOVEL'SCSARDPD'DBFILE            * DBERR 052 * CDL006
+     C                     MOVELWRTCD     DBKEY             ************* CDL006
+     C                     OUT  LDA                                       CDL006
+     C                     EXSR *PSSR                                     CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C           WRTCD     IFEQ *BLANK                                    CDL006
+     C                     MOVEL'Y'       CDL006                          CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,PM1520C001
+     C*
+     C** SET UP FIELDS INDEPENDENT OF ACCOUNT KEY
+     C                     MOVE *BLANKS   QUTDSS
+     C                     MOVE *BLANKS   QUPFMS
+     C*                                                                   46386
+     C                     MOVELAKEY      WAKEY2  2                       46386
+     C           WAKEY2    IFEQ 'IP'                                      46386
+     C           WAKEY2    OREQ 'TI'                                      46386
+     C           WAKEY2    OREQ 'CL'                                      46386
+     C           WAKEY2    OREQ 'LN'                                      46386
+     C           WAKEY2    OREQ 'DL'                                      46386
+     C                     MOVE 'ML'      QUMODI                          46386
+     C                     ELSE                                           46386
+     C                     MOVE 'MD'      QUMODI                          46386
+     C                     END                                            46386
+     C*                                                                   46386
+     C                     MOVE 'N'       QUCPTC
+     C                     MOVE 'C'       QUACIN
+     C                     MOVE 'N'       QUPPYT
+     C****                 Z-ADDWWECD     QUPDAT                          46910
+     C                     Z-ADDBJRDNB    QUPDAT                          46910
+     C                     Z-ADD1         QUMPRC
+     C*
+     C** INITIALISE DETAIL RECORD FIELDS IN PM1520AU
+     C** COUNT OF ACCOUNT KEYS READ RRACKR
+     C** COUNT OF PERFORMANCE RECORDS WRITTEN RRPERW
+     C                     Z-ADD0         RRACKR
+     C                     Z-ADD0         RRPERW
+     C*
+     C** DEFINE WORK FIELDS
+     C           *LIKE     DEFN ECCY      WWECCY
+     C           *LIKE     DEFN A6NBDP    WWECDP
+     C           *LIKE     DEFN CNUM      WWCNUM
+     C           *LIKE     DEFN PTFR      WWPTFR
+     C           *LIKE     DEFN PNPTCY    WWPTCY
+     C           *LIKE     DEFN PNPCDP    WWPCDP
+     C           *LIKE     DEFN QUTRNB    WWTRNB
+     C           *LIKE     DEFN QUTTYP    WWTTYP
+     C           *LIKE     DEFN QUPFMC    WWPFMC
+     C           *LIKE     DEFN QUTAMT    WWTAMT
+     C           *LIKE     DEFN QUMFXR    WWMFXR
+     C           *LIKE     DEFN QUINIO    WWINIO
+     C           *LIKE     DEFN QUPFMS    WWPFMS                          CDL006
+     C/COPY WNCPYSRC,PM1520C002
+     C*
+     C** INITIALISE WORK FIELDS
+     C                     MOVE *BLANKS   WWECCY
+     C                     Z-ADD0         WWECDP
+     C**********           Z-ADD0         WWCNUM                                              CSD027
+     C                     MOVE *BLANKS   WWCNUM                                              CSD027
+     C                     MOVE *BLANKS   WWPTFR
+     C                     MOVE *BLANKS   WWPTCY
+     C                     Z-ADD0         WWPCDP
+     C                     MOVE *BLANKS   WWDLTY  2
+     C                     MOVE *BLANKS   WWDSTY  2
+     C**********           Z-ADD0         WWTRNB                                              CLE148
+     C                     MOVEL*BLANKS   WWTRNB                                              CLE148
+     C                     MOVE *BLANKS   WWTTYP
+     C                     MOVE *BLANKS   WWPFMC
+     C                     Z-ADD0         WWTAMT
+     C                     Z-ADD0         WWMFXR
+     C                     MOVE *BLANKS   WWINIO
+     C                     MOVE *BLANKS   WWNUM   6
+     C                     MOVE *BLANKS   WWPFMS                          CDL006
+     C/COPY WNCPYSRC,PM1520C003
+     C*
+     C** INITIALISE KEY WWKEY USED TO SEARCH WWARR1
+     C                     MOVE *BLANKS   WWKEY   3
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #B        - MAIN PROCESSING                                *
+     C**                                                              *
+     C**   CALLS     - #BA,#BB,#BD,#BE                                *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C***********          READ PMDKEYS                  72               S01486
+     C                     READ PMDKEYL0                 72               S01486
+     C*
+     C** WHILE RECORDS PRESENT
+     C           *IN72     DOWEQ'0'
+     C*
+     C** ADD 1 TO COUNT OF ACCOUNT KEYS READ
+     C                     ADD  1         RRACKR
+     C*
+     C** SEARCH ARRAY WWARR2 FOR DEAL TYPE
+     C           AKEY1     LOKUPWWARR2                   61
+     C*
+     C** IF SEARCH IS SUCCESSFUL
+     C           *IN61     IFEQ '1'
+     C*
+     C** EXTRACT PERFORMANCE DATA
+     C                     EXSR #BE
+     C                     END
+     C*
+     C***********          READ PMDKEYS                  72               S01486
+     C                     READ PMDKEYL0                 72               S01486
+     C*
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #C        - PRODUCE DL PERFORMANCE ANALYSIS UPDATE REPORT  *
+     C**                                                              *
+     C**   CALLS     - NONE                                           *
+     C**                                                              *
+     C**   CALLED BY - MAINLINE                                       *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #C        BEGSR
+     C*
+     C** WRITE HEADER RECORD
+     C                     WRITEHEADER
+     C*
+     C** WRITE DETAILS RECORD
+     C                     WRITEDETAIL
+     C*
+     C***WRITE*FOOTING*************************************************   S01486
+     C***********          WRITEFOOTING                                   S01486
+     C*                                                                   S01486
+     C** Write No details format                                          S01486
+     C*                                                                   S01486
+     C           RRPERW    IFEQ 0                                         S01486
+     C                     WRITENODTLS                                    S01486
+     C                     END                                            S01486
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BA       - ACCESS CURRENCY DETAILS                        *
+     C**                                                              *
+     C**   CALLS     - *PSSR                                          *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BA       BEGSR
+     C*
+     C***ACCESS*LF/SDCURRL0*USING*EVENT*CURRENCY*FROM*LF/PMDKEYS*******   S01486
+     C** ACCESS LF/SDCURRL0 USING EVENT CURRENCY FROM LF/PMDKEYL0         S01486
+     C***********ECCY      CHAINSDCURRL0             50                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY   ' P@OPTN                          S01486
+     C                     PARM ECCY      P@CCY   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*
+     C** IF RECORD WITH REQUIRED KEY IS NOT FOUND THEN DB ERROR
+     C************IN50     IFEQ '1'                                       S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*
+     C                     Z-ADD3         DBASE            ****************
+     C***********          MOVEL'SDCURRL0'DBFILE           * DBERROR  003*S01486
+     C                     MOVE 'SDCURRPD'DBFILE           * DBERROR  003*S01486
+     C                     MOVELECCY      DBKEY            ****************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BB       - ACCESS DEAL TYPE/SUB-TYPE DETAILS              *
+     C**                                                              *
+     C**   CALLS     - *PSSR                                          *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BB       BEGSR
+     C*
+     C***ACCESS*PF/SDDTSTPP*USING*DEAL*TYPE*AND*SUB-TYPE*FROM*LF/PMDKEYS  S01486
+     C** ACCESS PF/FDDTSTL0 USING DEAL TYPE AND SUB-TYPE FROM LF/PMDKEYL0 S01486
+     C***********WWKEY1    CHAINSDDTSTPP             51                   S01486
+     C           WWKEY1    CHAINFDDTSTL0             51                   S01486
+     C*
+     C** IF RECORD WITH REQUIRED KEY IS NOT FOUND THEN DB ERROR
+     C           *IN51     IFEQ '1'
+     C*
+     C** SET UP DBKEY TO REPORT
+     C                     MOVE AKEY1     WWDB1
+     C                     MOVE AKEY3     WWDB2
+     C*
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD4         DBASE            ****************
+     C***********          MOVEL'SDDTSTPP'DBFILE           * DBERROR  004*S01486
+     C                     MOVE 'FDDTSTL0'DBFILE           * DBERROR  004*S01486
+     C                     MOVELDBKEY1    DBKEY            ****************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BD       - ACCESS PORTFOLIO DETAILS                       *
+     C**                                                              *
+     C**   CALLS     - *PSSR                                          *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BD       BEGSR
+      *                                                                   CPM005
+     C                     MOVEL'N'       WWPORT                          CPM005
+     C                     MOVEL'N'       WW9998  1                       CPM005
+     C                     MOVEL'N'       WW9999  1                       CPM005
+     C           PTFR      IFEQ '9997'                     B1             CPM005
+      *                                                                   CPM005
+     C           WWKEY2    CHAINPMCNSDLL             80                   CPM005
+      *                                                                   CPM005
+     C           *IN80     IFEQ '0'                        B2             CPM005
+     C           PNPSDT    ANDLTWWECD                                     CPM005
+     C                     MOVEL'Y'       WWPORT                          CPM005
+     C                     MOVE RNPTCY    PNPTCY                          CPM005
+     C                     Z-ADDRNPCDP    PNPCDP                          CPM005
+     C                     END                             E2             CPM005
+      *                                                                   CPM005
+     C                     MOVEL'9999'    KPTFR                           CPM005
+     C           WWKEY3    CHAINPMCNSDLL             80                   CPM005
+      *                                                                   CPM005
+     C           *IN80     IFEQ '0'                        B2             CPM005
+     C           PNPSDT    ANDLTWWECD                                     CPM005
+     C                     MOVEL'Y'       WW9999                          CPM005
+     C                     MOVE RNPTCY    PNPTCY                          CPM005
+     C                     Z-ADDRNPCDP    PNPCDP                          CPM005
+     C                     END                             E2             CPM005
+     C                     ELSE                            X1             CPM005
+     C*
+     C***ACCESS*PF/PMPORTPP*USING*CUSTOMER*NUMBER*AND*PORTFOLIO********   S01486
+     C***REFERENCE*FROM*LF/PMDKEYS*************************************   S01486
+     C** ACCESS PF/PMPORTPD USING CUSTOMER NUMBER AND PORTFOLIO           S01486
+     C** REFERENCE FROM LF/PMDKEYL0                                       S01486
+     C***********WWKEY2    CHAINPMPORTPP             53                   S01486
+     C           WWKEY2    CHAINPMPORTPD             53                   S01486
+     C*
+     C** IF RECORD WITH REQUIRED KEY IS NOT FOUND THEN DB ERROR
+     C           *IN53     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01486
+     C*
+     C                     Z-ADD6         DBASE            ****************
+     C***********          MOVEL'PMPORTPP'DBFILE           * DBERROR  006*S01486
+     C                     MOVE 'PMPORTPD'DBFILE           * DBERROR  006*S01486
+     C                     MOVELDBKEY2    DBKEY            ****************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*                                                                   056460
+     C** SET ON FLAG INDICATING WHETHER PERFORMANCE CALCULATIONS          056460
+     C** STARTED FOR PORTFOLIO                                            056460
+     C                     MOVE 'N'       WWPORT  1                       056460
+     C***********PNPSDT    IFLE WWECD                              056460 CPM005
+     C           PNPSDT    IFLT WWECD                                     CPM005
+     C           PNRECI    ANDEQ'D'                                       056460
+     C                     MOVE 'Y'       WWPORT                          056460
+     C                     END                                            056460
+      *                                                                   CPM005
+     C                     MOVEL'9998'    KPTFR                           CPM005
+     C           WWKEY3    CHAINPMCNSDLL             80                   CPM005
+      *                                                                   CPM005
+     C           *IN80     IFEQ '0'                                       CPM005
+     C           PNPSDT    ANDLTWWECD                                     CPM005
+     C                     MOVEL'Y'       WW9998                          CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C                     MOVEL'9999'    KPTFR                           CPM005
+     C           WWKEY3    CHAINPMCNSDLL             80                   CPM005
+      *                                                                   CPM005
+     C           *IN80     IFEQ '0'                                       CPM005
+     C           PNPSDT    ANDLTWWECD                                     CPM005
+     C                     MOVEL'Y'       WW9999                          CPM005
+     C                     END                                            CPM005
+     C                     END                             E1             CPM005
+     C*                                                                   056460
+     C** CHECK WHETHER PORTFOLIO IS MEMBER OF POOL                        056460
+     C                     MOVE 'N'       WWPOOL  1                       056460
+     C**********           Z-ADD0         WSPCNU  60                                   056460 CSD027
+     C                     MOVE *BLANKS   WSPCNU  6                                           CSD027
+     C                     MOVE *BLANKS   WSPPTF  4                       056460
+     C           WWPPRQ    IFEQ 'Y'                                       056460
+     C           WWKEY2    CHAINPMPPTML1             75                   056460
+     C*                                                                   056460
+     C** IF THE PORTFOLIO IS A POOL MEMBER CHECK WHETHER PERFORMANCE ON   056460
+     C** THE POOL                                                         056460
+     C           *IN75     IFEQ '0'                                       056460
+     C*                                                                   056460
+     C**********           Z-ADDOSPCNU    WSPCNU  60                                   056460 CSD027
+     C                     MOVE OSPCNU    WSPCNU  6                                           CSD027
+     C                     MOVE OSPPTF    WSPPTF  4                       056460
+     C*                                                                   056460
+     C* Access POOL Portfolio Definition details.                         056460
+     C           POOLKY    KLIST                                          056460
+     C                     KFLD           OSPCNU                          056460
+     C                     KFLD           OSPPTF                          056460
+     C*                                                                   056460
+     C***********POOLKY    CHAINPMPORTPP             75             056460S01486
+     C           POOLKY    CHAINPMPORTPD             75                   S01486
+     C*                                                                   056460
+     C           *IN75     IFEQ '1'                                       056460
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD44        DBASE                           056460
+     C                     MOVE *BLANKS   DBFILE           ***************056460
+     C***********          MOVEL'PMPORTPP'DBFILE     * DBERROR 044 *056460S01486
+     C                     MOVE 'PMPORTPD'DBFILE           * DBERROR 044 *S01486
+     C                     MOVELOSPCNU    DBKEY            ***************056460
+     C                     MOVE OSPPTF    DBKEY                           056460
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     056460
+     C                     END                                            056460
+     C*                                                                   056460
+     C** SET ON FLAG INDICATING PERFORMANCE CALCULATIONS REQUIRED FOR     056460
+     C** POOL                                                             056460
+     C***********PNPSDT    IFLE WWECD                              056460 CPM005
+     C           PNPSDT    IFLT WWECD                                     CPM005
+     C           PNRECI    ANDEQ'D'                                       056460
+     C                     MOVE 'Y'       WWPOOL                          056460
+     C                     END                                            056460
+     C                     END                                            056460
+     C                     END                                            056460
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BE       - EXTRACT PERFORMANCE DATA                       *
+     C**                                                              *
+     C**   CALLS     - #BEA                                           *
+     C**                                                              *
+     C**   CALLED BY - #B                                             *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BE       BEGSR
+     C*
+     C** SELECT RECORDS TO BE PROCESSED IF THE REQUIRED
+     C** CONDITIONS ARE SATISFIED
+     C           AKEY2     IFEQ 'V'
+     C           AKEY4     ANDEQ' A'
+     C           AKEY2     OREQ 'V'                                       081367
+     C           AKEY4     ANDEQ' R'                                      081367
+     C           AKEY2     OREQ 'M'                                       081367
+     C           AKEY4     ANDEQ' R'                                      081367
+     C*
+     C***PROCESS*RECORDS*FROM*LF/PMDKEYS*******************************   S01486
+     C** PROCESS RECORDS FROM LF/PMDKEYL0                                 S01486
+     C                     EXSR #BEA
+     C                     END
+     C*
+     C** FORMAT KEY TO BE USED TO SEARCH ARRAY WWARR1
+     C                     MOVELAKEY2     WWKEY
+     C                     MOVE AKEY4     WWKEY
+     C*
+     C           WWKEY     LOKUPWWARR1                   60
+     C*
+     C***IF*SEARCH*IS*SUCCESSFUL*PROCESS*RECORDS*FROM*LF/PMDKEYS*******   S01486
+     C** IF SEARCH IS SUCCESSFUL PROCESS RECORDS FROM LF/PMDKEYL0         S01486
+     C           *IN60     IFEQ '1'
+     C*
+     C***PROCESS*RECORDS*FROM*LF/PMDKEYS*******************************   S01486
+     C** PROCESS RECORDS FROM LF/PMDKEYL0                                 S01486
+     C                     EXSR #BEA
+     C                     END
+      *                                                                   CDL006
+      ** If dealing fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+      ** If Fiduciary                                                     CDL006
+      *                                                                   CDL006
+     C           AKEY1     IFEQ 'FT'                                      CDL006
+     C           AKEY1     OREQ 'DT'                                      CDL006
+     C           AKEY1     OREQ 'LT'                                      CDL006
+      *                                                                   CDL006
+      ** Select Charge at Value Date or Balance change.                   CDL006
+      *                                                                   CDL006
+     C           AKEY2     IFEQ 'V'                                       CDL006
+     C           AKEY4     ANDEQ' X'                                      CDL006
+     C                     EXSR #BEA                                      CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+      ** Select Commissions at Interim Interest Date.                     CDL006
+      *                                                                   CDL006
+     C           AKEY2     IFEQ 'I'                                       CDL006
+     C           AKEY4     IFEQ 'OC'                                      CDL006
+     C           AKEY4     OREQ 'AC'                                      CDL006
+     C                     EXSR #BEA                                      CDL006
+     C                     ENDIF                                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+      ** Select Commissions at Maturity Date.                             CDL006
+      *                                                                   CDL006
+     C           AKEY2     IFEQ 'M'                                       CDL006
+     C           AKEY4     IFEQ 'OC'                                      CDL006
+     C           AKEY4     OREQ 'AC'                                      CDL006
+     C                     EXSR #BEA                                      CDL006
+     C                     ENDIF                                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+      ** Select Charge on Balance Change.                                 CDL006
+      *                                                                   CDL006
+     C           AKEY2     IFEQ 'M'                                       CDL006
+     C           AKEY4     ANDEQ' X'                                      CDL006
+     C                     EXSR #BEA                                      CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,PM1520C004
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C*****#BEA******-*PROCESS*RECORDS*FROM*LF/PMDKEYS*****************   S01486
+     C**   #BEA      - PROCESS RECORDS FROM LF/PMDKEYL0               *   S01486
+     C**                                                              *
+     C*****CALLS*****- #BEAA,#BEAB,#BEAC,#BEAD*************************   CDL006
+      *  Calls:    - #BEAA,#BEAB,#BEAC,#BEAD,SRBEAF,SRBEAG            *   CDL006
+     C**                                                              *
+     C**   CALLED BY - #BE                                            *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BEA      BEGSR
+     C**                                                                  72814
+     C***********                 '                                72814  099814
+     C***********          CALL 'AOSARDR0'                         72814  099814
+     C***********          PARM '       ' @RTCD                    72814  099814
+     C***********          PARM '*VERIFY' @OPTN                    72814  099814
+     C***********          PARM 'S01460'  @SARD   6                72814  099814
+     C***********@RTCD     IFEQ *BLANKS                            72814  099814
+     C           S01460    IFEQ 'Y'                                       099814
+     C*                                                                   72814
+     C** SETUP MODULE ID                                                  72814
+     C                     MOVELAKEY      WCKEY2  2                       72814
+     C           WCKEY2    IFEQ 'IP'                                      72814
+     C           WCKEY2    OREQ 'TI'                                      72814
+     C           WCKEY2    OREQ 'CL'                                      72814
+     C           WCKEY2    OREQ 'LN'                                      72814
+     C           WCKEY2    OREQ 'DL'                                      72814
+     C                     MOVE 'ML'      QUMODI                          72814
+     C                     ELSE                                           72814
+     C                     MOVE 'MD'      QUMODI                          72814
+     C                     END                                            72814
+     C                     END                                            72814
+     C*
+     C** IF EVENT CURRENCY ECCY CHANGES
+     C           WWECCY    IFNE ECCY
+     C*
+     C** ACCESS CURRENCY DETAILS
+     C                     EXSR #BA
+     C                     Z-ADDA6NBDP    WWECDP
+     C                     Z-ADDA6SPRT    WWESPR 138
+     C                     MOVE A6MDIN    WWEMDI  1
+     C                     MOVE ECCY      WWECCY
+     C                     END
+     C*
+     C** IF DEAL TYPE OR DEAL SUB-TYPE CHANGES
+     C           WWDLTY    IFNE AKEY1
+     C           WWDSTY    ORNE AKEY3
+     C*
+     C** ACCESS DEAL TYPE/SUB-TYPE DETAILS
+     C                     EXSR #BB
+     C                     MOVE AKEY1     WWDLTY
+     C                     MOVE AKEY3     WWDSTY
+     C                     END
+      *                                                                   CPM004
+      *  IF BANK PORTFOLIOS SUPPORTED                                     CPM004
+      *                                                                   CPM004
+     C           FCPORS    IFEQ 'B'                                       CPM004
+     C           BRCA      IFNE WWBRCA                                    CPM004
+     C                     EXSR BRANCH                                    CPM004
+     C                     MOVE BRCA      WWBRCA  3                       CPM004
+     C                     ENDIF                                          CPM004
+     C                     MOVE O#BICN    #CNUM                           CPM004
+     C                     ENDIF                                          CPM004
+      *                                                                   CPM004
+      *  IF CUSTOMER PORTFOLIOS SUPPORTED                                 CPM004
+      *                                                                   CPM004
+     C           FCPORS    IFNE 'B'                                       CPM004
+     C                     MOVE CNUM      #CNUM                           CPM004
+     C                     ENDIF                                          CPM004
+     C*
+     C** IF CUSTOMER NUMBER OR PORTFOLIO REFERENCE CHANGES ACCESS
+     C** PORTFOLIO DEFINITION DETAILS
+     C***********WWCNUM    IFNE CNUM                                      CPM004
+     C           WWCNUM    IFNE #CNUM                                     CPM004
+     C           WWPTFR    ORNE PTFR
+     C                     EXSR #BD
+     C                     MOVE PNPTCY    WWPTCY
+     C                     Z-ADDPNPCDP    WWPCDP
+     C*********************Z-ADDCNUM      WWCNUM                          CPM004
+     C**********           Z-ADD#CNUM     WWCNUM                                       CPM004 CSD027
+     C                     MOVE #CNUM     WWCNUM                                              CSD027
+     C                     MOVE PTFR      WWPTFR
+     C                     END
+     C****                                                                056460
+     C***IF PERFORMANCE START DATE IS *GT EVENT CONTROL DATE DO NOT       056460
+     C***EXTRACT DETAILS FOR ACCOUNT KEY                                  056460
+     C****       PNPSDT    CABGTWWECD     #BEA1                           056460
+     C*                                                                   056460
+     C** TERMINATE PROCESSING IF PORTFOLIO PERFORMANCE REQUIRED FOR       056460
+     C** FOR NEITHER OF PORTFOLIO AND POOL PORTFOLIO                      056460
+     C           WWPORT    IFEQ 'N'                                       056460
+     C           WWPOOL    ANDEQ'N'                                       056460
+     C           WW9998    ANDEQ'N'                                       CPM005
+     C           WW9999    ANDEQ'N'                                       CPM005
+     C                     GOTO #BEA1                                     056460
+     C                     END                                            056460
+     C*
+     C***SET*TRANSACTION*REFERENCE*WWTRNB*FOR*PF/PMPTRAPP*EQUAL*TO*****   S01486
+     C***DEAL*NUMBER*DLNO*FROM*LF/PMDKEYS******************************   S01486
+     C** SET TRANSACTION REFERENCE WWTRNB FOR PF/PMPTRAPD EQUAL TO        S01486
+     C** DEAL NUMBER DLNO FROM LF/PMDKEYL0                                S01486
+     C**********           Z-ADDDLNO      WWTRNB                                              CLE148
+     C                     MOVELDLNO      WWTRNB                                              CLE148
+     C*
+     C***SET*TRANSACTION*TYPE*WWTTYP*FOR*PF/PMPTRAPP*EQUAL*TO**********   S01486
+     C***DEAL*TYPE*AKEY1*FROM*LF/PMDKEYS*******************************   S01486
+     C** SET TRANSACTION TYPE WWTTYP FOR PF/PMPTRAPD EQUAL TO             S01486
+     C** DEAL TYPE AKEY1 FROM LF/PMDKEYL0                                 S01486
+     C                     MOVE AKEY1     WWTTYP
+     C*
+     C** CALCULATE EXCHANGE RATE
+     C                     EXSR #BEAA
+     C*                                                                   46386
+     C** CHECK THAT SETTLEMENT ACCOUNT IN SAME PORTFOLIO AS DEAL          46386
+     C                     MOVE 'N'       QUCPTC                          46386
+     C                     Z-ADDSETP      ZMETH                           46386
+     C                     MOVE OSAC      ZSETI                           46386
+     C**********           Z-ADDCNUM      ZCNUM                                         46386 CSD027
+     C                     MOVE CNUM      ZCNUM                                               CSD027
+     C                     MOVE ECCY      ZCCY                            46386
+     C                     MOVE OSBR      ZBRCA   3                       085862
+     C                     EXSR ZSETAC                                    46386
+     C                     EXSR #BEAE                                     53103
+     C*                                                                   CPM004
+     C* IF BANK PORTFOLIOS SUPPORTED                                      CPM004
+     C*                                                                   CPM004
+     C           FCPORS    IFEQ 'B'                                       CPM004
+     C           ZRPTFR    IFNE PTFR                                      CPM004
+     C                     MOVE 'Y'       QUCPTC                          CPM004
+     C                     END                                            CPM004
+     C                     END                                            CPM004
+     C*                                                                   CPM004
+     C* IF CUSTOMER PORTFOLIOS SUPPORTED                                  CPM004
+     C*                                                                   CPM004
+     C           FCPORS    IFNE 'B'                                       CPM004
+     C*                                                                   46386
+     C           ZMETH     IFEQ 4                                         059474
+     C           ZMETH     OREQ 5                                         059474
+     C           ZMETH     OREQ 14                                        059474
+     C           ZMETH     OREQ 15                                        059474
+     C                     MOVE 'Y'       WSRETL  1                       059474
+     C                     ELSE                                           059474
+     C                     MOVE 'N'       WSRETL                          059474
+     C                     END                                            059474
+     C*                                                                   46386
+     C           ZRPTFR    IFNE PTFR                                      46386
+     C           ZRCNUM    ORNE CNUM                                      081367
+     C           WSRETL    OREQ 'N'                                       059474
+     C                     MOVE 'Y'       QUCPTC                          46386
+     C                     END                                            46386
+     C                     END                                            CPM004
+     C*
+     C** IF AMOUNT CODE IS NOT ' I',' T','TT','PI','RI'
+     C           AKEY4     IFNE ' I'
+     C           AKEY4     ANDNE' C'
+     C           AKEY4     ANDNE' T'
+     C           AKEY4     ANDNE'TT'
+     C           AKEY4     ANDNE'PI'
+     C           AKEY4     ANDNE'RI'
+     C           AKEY4     ANDNE'TI'                                      50406
+     C*
+     C** WRITE PRINCIPAL PERFORMANCE DATA
+     C                     EXSR #BEAB
+     C*
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C** IF AMOUNT CODE IS ' I','PI','RI'
+     C           AKEY4     IFEQ ' I'
+     C           AKEY4     OREQ 'PI'
+     C           AKEY4     OREQ 'RI'
+     C           AKEY4     OREQ ' C'
+     C           AKEY4     OREQ 'TI'                                      50406
+     C*
+     C** WRITE INTEREST PERFORMANCE DATA
+     C                     EXSR #BEAC
+     C                     END
+      *                                                                   CDL006
+      ** If dealing fiduciary is installed.                               CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+      ** If Fiduciary                                                     CDL006
+      *                                                                   CDL006
+     C           AKEY1     IFEQ 'FT'                                      CDL006
+     C           AKEY1     OREQ 'DT'                                      CDL006
+     C           AKEY1     OREQ 'LT'                                      CDL006
+      *                                                                   CDL006
+      ** If Commission amount.                                            CDL006
+      *                                                                   CDL006
+     C           AKEY4     IFEQ 'OC'                                      CDL006
+     C           AKEY4     OREQ 'AC'                                      CDL006
+      *                                                                   CDL006
+      ** Write Commission Performance Data.                               CDL006
+      *                                                                   CDL006
+     C                     EXSR SRBEAF                                    CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+      ** If Charge amount.                                                CDL006
+      *                                                                   CDL006
+     C           AKEY4     IFEQ ' X'                                      CDL006
+      *                                                                   CDL006
+      ** Write Charge Performance Data.                                   CDL006
+      *                                                                   CDL006
+     C                     EXSR SRBEAG                                    CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,PM1520C005
+     C*
+     C** IF AMOUNT CODE IS ' T' OR 'TT'
+     C           AKEY4     IFEQ ' T'
+     C           AKEY4     OREQ 'TT'
+     C*
+     C** WRITE TAX PERFORMANCE DATA
+     C                     EXSR #BEAD
+     C                     END
+     C           #BEA1     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BEAA     - CALCULATE EXCHANGE RATE                        *
+     C**                                                              *
+     C**   CALLS     - #BEAAA,ZCCYCN                                  *
+     C**                                                              *
+     C**   CALLED BY - #BEA                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BEAA     BEGSR
+     C*
+     C** SET UP CURRENCY CONVERSION DETAILS FOR EVENT CURRENCY
+     C***FROM*LF/PMDKEYS***********************************************   S01486
+     C** FROM LF/PMDKEYL0                                                 S01486
+     C                     Z-ADD0         ZAMTF
+     C                     MOVE ECCY      ZCCYF
+     C                     Z-ADDWWECDP    ZCDPF
+     C                     Z-ADDWWESPR    ZRATEF
+     C                     MOVE WWEMDI    ZMDINF
+     C*
+     C** SET UP CURRENCY CONVERSION DETAILS FOR EVENT CURRENCY
+     C***FROM*LF/PMDKEYS***********************************************   S01486
+     C** FROM LF/PMDKEYL0                                                 S01486
+     C***********PNPTCY    CHAINSDCURRL0             50                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD                          S01486
+     C                     PARM '*KEY   ' P@OPTN                          S01486
+     C                     PARM PNPTCY    P@CCY   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C*
+     C** IF RECORD WITH REQUIRED KEY IS NOT FOUND THEN DB ERROR
+     C************IN50     IFEQ '1'                        B1             S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C*
+     C                     Z-ADD7         DBASE            ****************
+     C***********          MOVEL'SDCURRL0'DBFILE           * DBERROR  007*S01486
+     C                     MOVE 'SDCURRPD'DBFILE           * DBERROR  007*S01486
+     C                     MOVELPNPTCY    DBKEY            ****************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C*
+     C                     ELSE                            X1
+     C*
+     C                     MOVE PNPTCY    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVE A6MDIN    ZMDINT
+     C                     MOVE A6NBDP    ZCDPT
+     C                     END                             E1
+     C*
+     C** CALCULATE THE CROSS RATE USING SR ZCCYCN
+     C****                 EXSR ZCCYCN                                    50406
+     C                     EXSR ZCCYCD                                    50406
+     C           ZCRSMD    IFEQ 'M'
+     C****                 Z-ADDZCRSRT    WWMFXR                          50406
+     C                     Z-ADDZCRSRN    WWMFXR                          50406
+     C*
+     C                     ELSE
+     C*
+     C           ZCRSRT    IFEQ 0
+     C                     Z-ADD0         WWMFXR
+     C*
+     C                     ELSE
+     C*
+     C           1         DIV  ZCRSRT    WWMFXR
+     C                     END
+     C*
+     C                     END
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BEAB     - WRITE PRINCIPAL PERFORMANCE DATA               *
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #BEA                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BEAB     BEGSR
+     C*
+     C***SET*UP*FIELDS*FOR*OUTPUT*OF*A*NOMINAL*RECORD*TO*PF/PMPTRAPP***   S01486
+     C** SET UP FIELDS FOR OUTPUT OF A NOMINAL RECORD TO PF/PMPTRAPD      S01486
+     C                     MOVE ' N'      WWPFMC
+     C*
+     C                     Z-ADDEAMT      WWTAMT
+     C                     Z-ADDEAMT      WWRAMT 150
+     C*
+     C** PROCESS DEAL START DATE
+     C           AKEY2     IFEQ 'D'                        B1
+     C           AKEY2     OREQ 'V'
+     C*
+     C** SET UP INCOMING / OUTGOING INDICATOR ACCORDING TO DEAL TYPE
+     C           AKEY1     IFEQ 'IP'                       B2
+     C           AKEY1     OREQ 'TI'
+     C           AKEY1     OREQ 'CL'
+     C           AKEY1     OREQ 'LN'
+     C           AKEY1     OREQ 'DL'
+     C           AKEY1     OREQ 'PL'
+     C                     MOVE 'O'       WWINIO
+     C                     ELSE                            X2
+     C                     MOVE 'I'       WWINIO
+     C                     END                             E2
+     C*                                                                   CPM004
+     C                     EXSR SWINIO                                    CPM004
+     C*
+     C                     END                             E1
+     C*
+     C** PROCESS DEAL MATURITY DATE
+     C           AKEY2     IFEQ 'M'                        B1
+     C*
+     C** SET UP INCOMING / OUTGOING INDICATOR ACCORDING TO DEAL TYPE
+     C           AKEY1     IFEQ 'IP'                       B2
+     C           AKEY1     OREQ 'TI'
+     C           AKEY1     OREQ 'CL'
+     C           AKEY1     OREQ 'LN'
+     C           AKEY1     OREQ 'DL'
+     C           AKEY1     OREQ 'PL'
+     C                     MOVE 'I'       WWINIO
+     C                     ELSE                            X2
+     C                     MOVE 'O'       WWINIO
+     C                     END                             E2
+     C*                                                                   CPM004
+     C                     EXSR SWINIO                                    CPM004
+     C*                                                                   CPM004
+     C                     END                             E1
+     C*
+     C** SET UP REVERSAL INDICATOR
+     C           REVI      IFEQ 1                          B1
+     C                     MOVE 'Y'       WWREVI  1
+     C                     ELSE
+     C                     MOVE 'N'       WWREVI
+     C                     END
+     C*
+     C***WRITE*RECORD*TO*PF/PMPTRAPP***********************************   S01486
+     C** WRITE RECORD TO PF/PMPTRAPD                                      S01486
+     C                     EXSR #ZB
+     C*
+     C** ADD 1 TO COUNT OF PERFORMANCE RECORDS WRITTEN
+     C****                 ADD  1         RRPERW                          056460
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BEAC     - WRITE INTEREST PERFORMANCE DATA                *
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #BEA                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BEAC     BEGSR
+     C*
+     C***SET*UP*FIELDS*FOR*OUTPUT*OF*AN*INTEREST*RECORD*TO*PF/PMPTRAPP*   S01486
+     C** SET UP FIELDS FOR OUTPUT OF AN INTEREST RECORD TO PF/PMPTRAPD    S01486
+     C                     MOVE 'IR'      WWPFMC
+     C*
+     C** FOR LOAN MAKE CAPITAL INFLOW NEGATIVE
+     C           EAMT      IFLT 0                          B1
+     C                     Z-SUBEAMT      WWTAMT
+     C                     Z-SUBEAMT      WWRAMT
+     C                     ELSE                            X1
+     C                     Z-ADDEAMT      WWTAMT
+     C                     Z-ADDEAMT      WWRAMT
+     C                     END                             E1
+     C*
+     C** SET THE INCOMING/OUTGOING INDICATOR WWINIO TO 'I' FOR LOAN AND
+     C** 'O' FOR DEPOSIT
+     C           AKEY1     IFEQ 'IP'                       B1
+     C           AKEY1     OREQ 'TI'
+     C           AKEY1     OREQ 'CL'
+     C           AKEY1     OREQ 'LN'
+     C           AKEY1     OREQ 'DL'
+     C           AKEY1     OREQ 'PL'
+     C                     MOVE 'I'       WWINIO
+     C                     ELSE                            X1
+     C                     MOVE 'O'       WWINIO
+     C                     END                             E1
+     C*                                                                   CPM004
+     C                     EXSR SWINIO                                    CPM004
+     C*
+     C** SET UP REVERSAL INDICATOR
+     C           REVI      IFEQ 1                          B1
+     C                     MOVE 'Y'       WWREVI  1
+     C                     ELSE
+     C                     MOVE 'N'       WWREVI
+     C                     END
+     C*
+     C***WRITE*RECORD*TO*PF/PMPTRAPP***********************************   S01486
+     C** WRITE RECORD TO PF/PMPTRAPD                                      S01486
+     C                     EXSR #ZB
+     C*
+     C** ADD 1 TO THE COUNT OF PERFORMANCE RECORDS WRITTEN
+     C****                 ADD  1         RRPERW                          056460
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   #BEAD     - WRITE TAX PERFORMANCE DATA                     *
+     C**                                                              *
+     C**   CALLS     - #ZB                                            *
+     C**                                                              *
+     C**   CALLED BY - #BEA                                           *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #BEAD     BEGSR
+     C*
+     C***SET*UP*FIELDS*FOR*OUTPUT*OF*AN*TAX*RECORD*TO*PF/PMPTRAPP******   S01486
+     C** SET UP FIELDS FOR OUTPUT OF AN TAX RECORD TO PF/PMPTRAPD         S01486
+     C*
+     C** SET PERFORMANCE CATEGORY EQUAL TO 'T '
+     C                     MOVE 'T '      WWPFMC
+     C*
+     C***SET*TRANSACTION*AMOUNT*WWTAMT*EQUAL*TO*EAMT*FROM*PF/PMDKEYS***   S01486
+     C** SET TRANSACTION AMOUNT WWTAMT EQUAL TO EAMT FROM PF/PMDKEYL0     S01486
+     C           EAMT      IFLT 0
+     C                     Z-SUBEAMT      WWTAMT
+     C                     Z-SUBEAMT      WWRAMT
+     C                     ELSE
+     C                     Z-ADDEAMT      WWTAMT
+     C                     Z-ADDEAMT      WWRAMT
+     C                     END
+     C*
+     C                     MOVE 'I'       WWINIO
+     C*                                                                   CPM004
+     C                     EXSR SWINIO                                    CPM004
+     C*
+     C           REVI      IFEQ 1
+     C                     MOVE 'Y'       WWREVI  1
+     C                     ELSE
+     C                     MOVE 'N'       WWREVI
+     C                     END
+     C*
+     C***WRITE*RECORD*TO*PF/PMPTRAPP***********************************   S01486
+     C** WRITE RECORD TO PF/PMPTRAPD                                      S01486
+     C                     EXSR #ZB
+     C*
+     C** ADD 1 TO THE COUNT OF PERFORMANCE RECORDS WRITTEN
+     C****                 ADD  1         RRPERW                          056460
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT                                                              53103
+      ********************************************************************53103
+      *                                                                  *53103
+      * #BEAE    - SET UP RELATED REFERENCE AND MODULE ID.               *53103
+      *                                                                  *53103
+      * SUBROUTINE CALLS:                                                *53103
+      *                                                                  *53103
+      * SUBROUTINE CALLED FROM:                                          *53103
+      * #BEA     -                                                       *53103
+      *                                                                  *53103
+      *                                                                  *53103
+      ********************************************************************53103
+     C           #BEAE     BEGSR                                          53103
+     C*                                                                   53103
+     C***If*Settl**methode 4,5,14,15 then reformat ZSETO            53103 CPM004
+     C***********ZMETH     IFEQ 4                                   53103 CPM004
+     C***********ZMETH     OREQ 5                                   53103 CPM004
+     C***********ZMETH     OREQ 14                                  53103 CPM004
+     C***********ZMETH     OREQ 15                                  53103 CPM004
+     C*  If Settl. methods 1, 2, 4, 5, 7, 8, 12, 14, 15 reformat ZSETO    CPM004
+     C           ZMETH     IFEQ 01                         B1             CPM004
+     C           ZMETH     OREQ 02                                        CPM004
+     C           ZMETH     OREQ 04                                        CPM004
+     C           ZMETH     OREQ 05                                        CPM004
+     C           ZMETH     OREQ 07                                        CPM004
+     C           ZMETH     OREQ 08                                        CPM004
+     C           ZMETH     OREQ 12                                        CPM004
+     C           ZMETH     OREQ 14                                        CPM004
+     C           ZMETH     OREQ 15                                        CPM004
+     C*                                                                   53103
+     C*    - Reformat Customer and Ccy from ZSETO to QUREPS               53103
+     C                     MOVELZSETO     WW6     6                       53103
+     C           3         SUBSTZSETO:7   WW3     3                       53103
+     C                     MOVELWW6       QUREPS    P                     53103
+     C           QUREPS    CAT  WW3:1     QUREPS                          53103
+     C*                                                                   53103
+     C*    - For non pool customer add A/c code & seq.                    53103
+     C***********WWPOOL    IFNE 'Y'                                 53103 CPM005
+     C***********4         SUBSTZSETO:10  WW4     4                  53103085862
+     C***********          MOVE ZSETO     WW2     2                  53103085862
+     C***********QUREPS    CAT  WW4:1     QUREPS                     53103085862
+     C***********QUREPS    CAT  WW2:1     QUREPS                     53103085862
+     C                     MOVE *BLANKS   QUREPS                          085862
+     C                     MOVELZSETO     QUREPS                          085862
+     C***********          ENDIF                                    53103 CPM005
+     C*    -                                                              53103
+     C                     MOVE 'RE'      QUREMI                          53103
+     C*                                                                   53103
+     C*  Else blanks                                                      53103
+     C                     ELSE                                           53103
+     C                     MOVE *BLANKS   QUREPS                          53103
+     C                     MOVE *BLANKS   QUREMI                          53103
+     C                     ENDIF                                          53103
+     C*                                                                   53103
+     C                     ENDSR                                          53103
+      ********************************************************************53103
+      /EJECT                                                              CDL006
+      *****************************************************************   CDL006
+      *                                                               *   CDL006
+      *  SRBEAF - Write Commission Performance Data                   *   CDL006
+      *                                                               *   CDL006
+      *  Called By: #BEA Subroutine                                   *   CDL006
+      *                                                               *   CDL006
+      *  Calls:                                                       *   CDL006
+      *  SWINIO   - Sets up WWINIO field                              *   CDL006
+      *  #ZB      - Write record to PF/PMPTRAPD                       *   CDL006
+      *                                                               *   CDL006
+      *****************************************************************   CDL006
+      *                                                                   CDL006
+     C           SRBEAF    BEGSR                                          CDL006
+      *                                                                   CDL006
+      ** Set up fields for output of a charge record to PF/PMPTRAPD.      CDL006
+      ** Set Performance Category equal to 'F '.                          CDL006
+      *                                                                   CDL006
+     C                     MOVE 'F '      WWPFMC                          CDL006
+     C                     MOVE 'IR'      WWPFMS                          CDL006
+      *                                                                   CDL006
+      ** Set transaction amount WWTAMT equal to EAMT from PF/PMDKEYL0.    CDL006
+      *                                                                   CDL006
+     C           EAMT      IFLT 0                                         CDL006
+     C                     Z-SUBEAMT      WWTAMT                          CDL006
+     C                     Z-SUBEAMT      WWRAMT                          CDL006
+     C                     ELSE                                           CDL006
+     C                     Z-ADDEAMT      WWTAMT                          CDL006
+     C                     Z-ADDEAMT      WWRAMT                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     MOVE 'I'       WWINIO                          CDL006
+      *                                                                   CDL006
+     C                     EXSR SWINIO                                    CDL006
+      *                                                                   CDL006
+     C           REVI      IFEQ 1                                         CDL006
+     C                     MOVE 'Y'       WWREVI  1                       CDL006
+     C                     ELSE                                           CDL006
+     C                     MOVE 'N'       WWREVI                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+      ** Write record to PF/PMPTRAPD.                                     CDL006
+      *                                                                   CDL006
+     C                     EXSR #ZB                                       CDL006
+      *                                                                   CDL006
+     C                     ENDSR                                          CDL006
+      *                                                                   CDL006
+      *****************************************************************   CDL006
+      /EJECT                                                              CDL006
+      *****************************************************************   CDL006
+      *                                                               *   CDL006
+      *  SRBEAG - Write Charge Performance Data                       *   CDL006
+      *                                                               *   CDL006
+      *  Called By: #BEA Subroutine                                   *   CDL006
+      *                                                               *   CDL006
+      *  Calls:                                                       *   CDL006
+      *  SWINIO   - Sets up WWINIO field                              *   CDL006
+      *  #ZB      - Write record to PF/PMPTRAPD                       *   CDL006
+      *                                                               *   CDL006
+      *****************************************************************   CDL006
+      *                                                                   CDL006
+     C           SRBEAG    BEGSR                                          CDL006
+      *                                                                   CDL006
+      ** Set up fields for output of a charge record to PF/PMPTRAPD.      CDL006
+      ** Set Performance Category equal to 'C '                           CDL006
+      *                                                                   CDL006
+     C                     MOVE 'C '      WWPFMC                          CDL006
+     C                     MOVE 'IR'      WWPFMS                          CDL006
+      *                                                                   CDL006
+      ** Set transaction amount WWTAMT equal to EAMT from PF/PMDKEYL0.    CDL006
+      *                                                                   CDL006
+     C           EAMT      IFLT 0                                         CDL006
+     C                     Z-SUBEAMT      WWTAMT                          CDL006
+     C                     Z-SUBEAMT      WWRAMT                          CDL006
+     C                     ELSE                                           CDL006
+     C                     Z-ADDEAMT      WWTAMT                          CDL006
+     C                     Z-ADDEAMT      WWRAMT                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     MOVE 'I'       WWINIO                          CDL006
+      *                                                                   CDL006
+     C                     EXSR SWINIO                                    CDL006
+      *                                                                   CDL006
+     C           REVI      IFEQ 1                                         CDL006
+     C                     MOVE 'Y'       WWREVI  1                       CDL006
+     C                     ELSE                                           CDL006
+     C                     MOVE 'N'       WWREVI                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+      ** Write record to PF/PMPTRAPD.                                     CDL006
+      *                                                                   CDL006
+     C                     EXSR #ZB                                       CDL006
+      *                                                                   CDL006
+     C                     ENDSR                                          CDL006
+      *                                                                   CDL006
+      *****************************************************************   CDL006
+     C/COPY WNCPYSRC,PM1520C006
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C*****#ZB*******-*WRITE*RECORD*TO*PF/PMPTRAPP*********************   S01486
+     C**   #ZB       - WRITE RECORD TO PF/PMPTRAPD                    *   S01486
+     C**                                                              *
+     C**   CALLS     -                                                *
+     C**                                                              *
+     C**   CALLED BY - #BEAB,#BEAC,#BEAD                              *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           #ZB       BEGSR
+     C*
+     C** FORMAT RECORD TO BE WRITTEN
+     C*********************Z-ADDCNUM      QUCNUM                          CPM004
+     C**********           Z-ADD#CNUM     QUCNUM                                       CPM004 CSD027
+     C                     MOVE #CNUM     QUCNUM                                              CSD027
+     C                     MOVE PTFR      QUPTFR
+     C***********          MOVE P7INNR    QUINNR                          S01486
+     C                     MOVE INNR      QUINNR                          S01486
+     C                     MOVE ECCY      QUCCY
+     C**********           Z-ADDWWTRNB    QUTRNB                                              CLE148
+     C                     MOVELWWTRNB    QUTRNB                                              CLE148
+     C                     MOVE WWTTYP    QUTTYP
+     C                     MOVE WWPFMC    QUPFMC
+     C                     Z-ADDWWTAMT    QUTAMT
+     C                     Z-ADDWWMFXR    QUMFXR
+     C                     MOVE WWINIO    QUINIO
+     C                     Z-ADDWWRAMT    QURAMT
+     C                     MOVE WWREVI    QUREVI
+      *                                                                   CDL006
+      ** If CDL006 is installed.                                          CDL006
+      *                                                                   CDL006
+     C           CDL006    IFEQ 'Y'                                       CDL006
+      *                                                                   CDL006
+      ** If Fiduciary                                                     CDL006
+      *                                                                   CDL006
+     C           AKEY1     IFEQ 'FT'                                      CDL006
+     C           AKEY1     OREQ 'DT'                                      CDL006
+     C           AKEY1     OREQ 'LT'                                      CDL006
+     C                     MOVE WWPFMS    QUPFMS                          CDL006
+     C                     MOVE *BLANKS   WWPFMS                          CDL006
+     C                     ENDIF                                          CDL006
+      *                                                                   CDL006
+     C                     ENDIF                                          CDL006
+     C/COPY WNCPYSRC,PM1520C007
+     C*
+     C** IF PORTFOLIO HAS PERFORMANCE WRITE RECORD FOR PORTFOLIO          056460
+     C           WWPORT    IFEQ 'Y'                                       056460
+     C                     EXSR ZEVRF                                     53103
+     C                     Z-ADDZZEVRF    QUEVRF                          53103
+     C                     WRITEPMPTRAP1
+     C                     ADD  1         RRPERW                          056460
+     C                     END                                            056460
+      *                                                                   CPM005
+      **  If record required for '9998' or '9999' portfolio, calculate    CPM005
+      **  FX cross rate                                                   CPM005
+      *                                                                   CPM005
+     C           WW9998    IFEQ 'Y'                                       CPM005
+     C           WW9999    OREQ 'Y'                                       CPM005
+      *                                                                   CPM005
+      **  Access PF/SDCURRPD using currency of 9998 / 9999 portfolio      CPM005
+      *                                                                   CPM005
+     C                     CALL 'AOCURRR0'                                CPM005
+     C                     PARM *BLANKS   P@RTCD                          CPM005
+     C                     PARM '*KEY'    P@OPTN                          CPM005
+     C                     PARM RNPTCY    P@CCY                           CPM005
+     C           SDCURR    PARM SDCURR    DSSDY                           CPM005
+      *                                                                   CPM005
+      **  If record with required key is not found then DB error          CPM005
+      *                                                                   CPM005
+     C           P@RTCD    IFNE *BLANKS                                   CPM005
+     C           *LOCK     IN   LDA                                       CPM005
+     C                     Z-ADD23        DBASE            ***************CPM005
+     C                     MOVE 'SDCURRPD'DBFILE           * DBERROR  023 CPM005
+     C                     MOVELRNPTCY    DBKEY            ***************CPM005
+     C                     OUT  LDA                                       CPM005
+     C                     EXSR *PSSR                                     CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+      **  Calculate rate from event currency to portfolio currency        CPM005
+      *                                                                   CPM005
+     C                     Z-ADD1         ZAMTF                           CPM005
+     C                     Z-ADDWWESPR    ZRATEF                          CPM005
+     C                     Z-ADDWWECDP    ZCDPF                           CPM005
+     C                     MOVE WWEMDI    ZMDINF                          CPM005
+     C                     MOVE WWECCY    ZCCYF                           CPM005
+     C                     Z-ADDA6SPRT    ZRATET                          CPM005
+     C                     Z-ADDA6NBDP    ZCDPT                           CPM005
+     C                     MOVE A6MDIN    ZMDINT                          CPM005
+     C                     MOVE RNPTCY    ZCCYT                           CPM005
+     C                     EXSR ZCCYCD                                    CPM005
+     C                     Z-ADDZCRSRN    WWMFX9 308                      CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+      **  Output record for '9998' portfolio                              CPM005
+      *                                                                   CPM005
+     C           WW9998    IFEQ 'Y'                                       CPM005
+     C                     MOVELQUPTFR    WSPTFR                          CPM005
+     C                     MOVELQUCPTC    WSCPTC  1                       CPM005
+     C                     MOVELQUMFXR    WSMFXR 308                      CPM005
+     C                     MOVEL'9998'    QUPTFR                          CPM005
+     C                     Z-ADDWWMFX9    QUMFXR                          CPM005
+     C                     EXSR ZEVRF                                     CPM005
+     C                     Z-ADDZZEVRF    QUEVRF                          CPM005
+      *                                                                   CPM005
+      **  Check whether settlement is within '9998' portfolio             CPM005
+      *                                                                   CPM005
+     C           QUCPTC    IFEQ 'Y'                                       CPM005
+     C           WSRETL    ANDEQ'Y'                                       CPM005
+     C           ZRCNUM    ANDEQCNUM                                      CPM005
+     C           ZRPTFR    ANDNE'9997'                                    CPM005
+     C                     MOVE 'N'       QUCPTC                          CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C                     WRITEPMPTRAP1                                  CPM005
+     C                     MOVELWSPTFR    QUPTFR                          CPM005
+     C                     MOVELWSCPTC    QUCPTC                          CPM005
+     C                     Z-ADDWSMFXR    QUMFXR                          CPM005
+     C                     ADD  1         RRPERW                          CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C           WW9999    IFEQ 'Y'                                       CPM005
+     C                     MOVELQUPTFR    WSPTFR                          CPM005
+     C                     MOVELQUCPTC    WSCPTC  1                       CPM005
+     C                     MOVELQUMFXR    WSMFXR 308                      CPM005
+     C                     MOVEL'9999'    QUPTFR                          CPM005
+     C                     Z-ADDWWMFX9    QUMFXR                          CPM005
+     C                     EXSR ZEVRF                                     CPM005
+     C                     Z-ADDZZEVRF    QUEVRF                          CPM005
+      *                                                                   CPM005
+      **  Check whether settlement is within '9998' portfolio             CPM005
+      *                                                                   CPM005
+     C           QUCPTC    IFEQ 'Y'                                       CPM005
+     C           WSRETL    ANDEQ'Y'                                       CPM005
+     C           ZRCNUM    ANDEQCNUM                                      CPM005
+     C                     MOVE 'N'       QUCPTC                          CPM005
+     C                     END                                            CPM005
+      *                                                                   CPM005
+     C                     WRITEPMPTRAP1                                  CPM005
+     C                     MOVELWSPTFR    QUPTFR                          CPM005
+     C                     MOVELWSCPTC    QUCPTC                          CPM005
+     C                     Z-ADDWSMFXR    QUMFXR                          CPM005
+     C                     ADD  1         RRPERW                          CPM005
+     C                     END                                            CPM005
+     C*                                                                   056460
+     C** IF POOL HAS PERFORMANCE WRITE RECORD TO CASH ANALYSIS FILE       056460
+     C           WWPOOL    IFEQ 'Y'                                       056460
+     C**********           Z-ADDQUCNUM    WSCNUM  60                                   056460 CSD027
+     C                     MOVE QUCNUM    WSCNUM  6                                           CSD027
+     C                     MOVE QUPTFR    WSPTFR  4                       056460
+     C                     MOVE QUCPTC    WSCPTC  1                       056460
+     C                     MOVE QUREPS    WSREPS 20                       CPM005
+     C**********           Z-ADDWSPCNU    QUCNUM                                       056460 CSD027
+     C                     MOVE WSPCNU    QUCNUM                                              CSD027
+     C                     MOVE WSPPTF    QUPTFR                          056460
+      *                                                                   CPM005
+      **  For pool portfolio, set account code and sequence to zero       CPM005
+      *                                                                   CPM005
+     C                     MOVEL' 0000 00'WDRK10 10                       CPM005
+     C                     MOVE WDRK10    QUREPS                          CPM005
+     C                     MOVELWSPCNU    QUREPS                          CPM005
+     C*                                                                   056460
+     C** IF CHANGE TO PORTFOLIO CAPITAL IS YES, IF THE TRANSACTION        056460
+     C** AND SETTLEMENT ACCOUNT ARE IN THE SAME POOL RESET CPTC TO 'N'    056460
+     C           QUCPTC    IFEQ 'Y'                                       056460
+     C           WSRETL    ANDEQ'Y'                                       059474
+     C           FCPORS    ANDNE'B'                                       CPM004
+     C*                                                                   056460
+     C           TPPOOL    KLIST                                          056460
+     C                     KFLD           ZCNUM                           056460
+     C                     KFLD           ZPTFR                           056460
+     C*                                                                   056460
+     C** OBTAIN POOL PORTFOLIO REFERENCE FOR SETTLEMENT PORTFOLIO         056460
+     C           TPPOOL    CHAINPMPPTML1             75                   056460
+     C*                                                                   056460
+     C** IF WHETHER SETTLEMENT ACCOUNT AND TRADE IN SAME POOL RESET       056460
+     C** CHANGE TO PORTFOLIO CAPITAL INDICATOR                            056460
+     C           *IN75     IFEQ '0'                                       056460
+     C           OSRECI    ANDEQ'D'                                       056460
+     C           WSPCNU    ANDEQOSPCNU                                    056460
+     C           WSPPTF    ANDEQOSPPTF                                    056460
+     C                     MOVE 'N'       QUCPTC                          056460
+     C                     END                                            056460
+     C                     END                                            056460
+     C*                                                                   056460
+     C                     EXSR ZEVRF                                     53103
+     C                     Z-ADDZZEVRF    QUEVRF                          53103
+     C                     WRITEPMPTRAP1                                  056460
+     C**********           Z-ADDWSCNUM    QUCNUM                                       056460 CSD027
+     C                     MOVE WSCNUM    QUCNUM                                              CSD027
+     C                     MOVE WSPTFR    QUPTFR                          056460
+     C                     MOVE WSCPTC    QUCPTC                          056460
+     C                     MOVE WSREPS    QUREPS                          CPM005
+     C                     ADD  1         RRPERW                          056460
+     C                     END                                            056460
+     C*                                                                   056460
+     C                     ENDSR
+     C********************************************************************CPM004
+      *                                                                   CPM004
+      * BRANCH   - RETRIEVE BRANCH'S CUSTOMER DETAILS                     CPM004
+      *                                                                   CPM004
+      * SUBROUTINE CALLS:                                                 CPM004
+      * *PSSR    - DB ERROR SUB-ROUTINE                                   CPM004
+      * AOPLCSR1 - PORTFOLIO MANAGEMENT CUSTOMER DETAILS                  CPM004
+      *                                                                   CPM004
+      * SUBROUTINE CALLED FROM:                                           CPM004
+      * #BEA     - PROCESS RECORDS FROM LF/PMDKEYL0                       CPM004
+      *                                                                   CPM004
+      * ROUTINE USES VARIABLES:                                           CPM004
+      *                                                                   CPM004
+      ********************************************************************CPM004
+     C           BRANCH    BEGSR                                          CPM004
+     C**                                                                  CPM004
+     C                     MOVE 'B'       I#PORS                          CPM004
+     C                     MOVE FCR997    I#R997                          CPM004
+     C                     MOVE BRCA      I#BRCA                          CPM004
+     C**                                                                  CPM004
+     C                     CALL 'AOPLCSR1'                                CPM004
+     C                     PARM *BLANKS   P@RTCD  7        B:Return code  CPM004
+     C                     PARM '*KEY   ' P@OPTN  7        I:Option       CPM004
+     C                     PARM           I@PARM           I:Parameters   CPM004
+     C                     PARM *BLANKS   O@PARM           O:Parameters   CPM004
+     C           SDPLCS    PARM SDPLCS    DSFDY            O:Format       CPM004
+     C*                                                                   CPM004
+     C** ERROR                                                            CPM004
+     C           P@RTCD    IFNE *BLANK                                    CPM004
+     C           *LOCK     IN   LDA                                       CPM004
+     C                     Z-ADD40        DBASE            ***************CPM004
+     C                     MOVEL'SDBRCHPD'DBFILE           * DB ERROR 40 *CPM004
+     C                     MOVELI#BRCA    DBKEY            ***************CPM004
+     C                     OUT  LDA                                       CPM004
+     C                     EXSR *PSSR                                     CPM004
+     C                     END                                            CPM004
+      *                                                                   CPM004
+     C                     ENDSR                                          CPM004
+      ********************************************************************CPM004
+     C           SWINIO    BEGSR                                          CPM004
+     C*                                                                   CPM004
+     C*  IF BANK PORTFOLIOS SUPPORTED                                     CPM004
+     C*                                                                   CPM004
+     C           FCPORS    IFEQ 'B'                                       CPM004
+     C           WWINIO    IFEQ 'I'                                       CPM004
+     C                     MOVE 'O'       WWINIO                          CPM004
+     C                     ELSE                                           CPM004
+     C                     MOVE 'I'       WWINIO                          CPM004
+     C                     END                                            CPM004
+     C                     END                                            CPM004
+     C                     ENDSR                                          CPM004
+     C*
+     C********************************************************************50406
+     C*                                                                   50406
+     C*  ZCCYCN SR. TO CONVERT AN AMOUNT IN ONE CURRENCY TO ANOTHER       50406
+     C*  CURRENCY USING THE SPOT RATES FOR THE TWO CURRENCIES             50406
+     C*                                                                   50406
+     C*  INPUT  FIELDS                                                    50406
+     C*       ZAMTF  150     AMOUNT IN 'FROM' CURRENCY                    50406
+     C*       ZCCYF   3A     FROM CURRENCY                                50406
+     C*       ZCCYT   3A     TO CURRENCY                                  50406
+     C*       ZRATEF 138     SPOT RATE FOR 'FROM' CURRENCY                50406
+     C*       ZRATET 138     SPOT RATE FOR 'TO' CURRENCY                  50406
+     C*       ZMDINF  1A     MULTIPLY/DIVIDE INDICATOR FOR 'FROM' CURRENCY50406
+     C*       ZMDINT  1A     MULTIPLY/DIVIDE INDICATOR FOR 'TO' CURRENCY  50406
+     C*       ZCDPF   10     CURRENCY DECIMAL PLACES FOR 'FROM' CURRENCY  50406
+     C*       ZCDPT   10     CURRENCY DECIMAL PLACES FOR 'TO' CURRENCY    50406
+     C*                                                                   50406
+     C*  OUTPUT  FIELDS                                                   50406
+     C*       ZAMTT  150     AMOUNT IN 'TO' CURRENCY (IE. CONVERTED AMOUNT50406
+     C*       ZCRSRT 138     CROSS EXCHANGE RATE                          50406
+     C*       ZCRSMD  1A     CROSS RATE MULTIPLY/DIVIDE INDICATOR         50406
+     C*                                                                   50406
+     C*                                                                   50406
+     C*  CALLS:                                                           50406
+     C*       ZCCYCA - CONVERT AMOUNT                                     50406
+     C********************************************************************50406
+     C*                                                                   50406
+     C           ZCCYCD    BEGSR                           *** ZCCYCN *** 50406
+     C*                                                                   50406
+     C** DEFINE ALL FIELDS                                                50406
+     C                     Z-ADDZAMTF     ZAMTF  150                      50406
+     C                     MOVE ZCCYF     ZCCYF   3                       50406
+     C                     MOVE ZCCYT     ZCCYT   3                       50406
+     C                     Z-ADDZRATEF    ZRATEF 138                      50406
+     C                     Z-ADDZRATET    ZRATET 138                      50406
+     C                     MOVE ZMDINF    ZMDINF  1                       50406
+     C                     MOVE ZMDINT    ZMDINT  1                       50406
+     C                     Z-ADDZCDPF     ZCDPF   10                      50406
+     C                     Z-ADDZCDPT     ZCDPT   10                      50406
+     C                     Z-ADDZAMTT     ZAMTT  150                      50406
+     C                     Z-ADDZCRSRT    ZCRSRT 138                      50406
+     C                     MOVE ZCRSMD    ZCRSMD  1                       50406
+     C*                                                                   50406
+     C** IF 'FROM' CURRENCY EQUAL TO 'TO' CURRENCY SET AMOUNT IN 'TO' CURR50406
+     C** EQUAL TO AMOUNT IN 'FROM' CURRENCY                               50406
+     C           ZCCYF     IFEQ ZCCYT                                     50406
+     C                     Z-ADDZAMTF     ZAMTT                           50406
+     C                     Z-ADD1         ZCRSRT                          50406
+     C                     MOVE 'M'       ZCRSMD                          50406
+     C           1000000000MULT 1000000   ZCRSRN                          50406
+     C                     GOTO CCYEN1                                    50406
+     C                     END                                            50406
+     C*                                                                   50406
+     C** INITIALIZE CROSS EXCHANGE RATE (ZCRSSRT) TO ZERO                 50406
+     C                     Z-ADD*ZEROS    ZCRSRT                          50406
+     C*                                                                   50406
+     C** CONVERT 'FROM' RATE TO MULTIPLY RATE                             50406
+     C           ZMDINF    IFEQ 'M'                                       50406
+     C                     Z-ADDZRATEF    ZRATF1 138                      50406
+     C           1000000000MULT ZRATEF    ZRATF2 308                      50406
+     C           10        MULT ZRATF2    ZRATF2                          50406
+     C                     ELSE                                           50406
+     C           1         DIV  ZRATEF    ZRATF1                          50406
+     C           1000000000MULT 10        ZRWORK 200                      50406
+     C           ZRWORK    DIV  ZRATEF    ZRATF2    H                     50406
+     C                     END                                            50406
+     C*                                                                   50406
+     C** CONVERT 'TO' RATE TO MULTIPLY RATE                               50406
+     C           ZMDINT    IFEQ 'M'                                       50406
+     C                     Z-ADDZRATET    ZRATT1 138                      50406
+     C           1000000000MULT ZRATET    ZRATT2 308                      50406
+     C           10        MULT ZRATT2    ZRATT2                          50406
+     C                     ELSE                                           50406
+     C           1         DIV  ZRATET    ZRATT1                          50406
+     C           1000000000MULT 10        ZRWORK                          50406
+     C           ZRWORK    DIV  ZRATET    ZRATT2    H                     50406
+     C                     END                                            50406
+     C*                                                                   50406
+     C** NOW CALCULATE CROSS RATE                                         50406
+     C           ZRATT1    IFNE *ZEROS                                    50406
+     C           ZRATF1    DIV  ZRATT1    ZCRSRT                          50406
+     C*                                                                   50406
+     C** CALCULATE DOUBLE PRECISION FX RATE                               50406
+     C** FIRST SPLIT FIGURE INTO TWO PARTS                                50406
+     C           1000000000MULT 1000000   ZRWORK                          50406
+     C           ZRATF2    MULT ZRWORK    ZRATBF 300                      50406
+     C                     Z-ADDZRATF2    ZRATSF 158                      50406
+     C*                                                                   50406
+     C** DIVIDE BOTH BIG AND SMALL PARTS BY TO FX RATE AND ADD TO CROSS RA50406
+     C** TO BE USED IN CALCULATIONS                                       50406
+     C           ZRATBF    DIV  ZRATT2    ZCRSRN 309H                     50406
+     C           ZRATSF    DIV  ZRATT2    ZCRSR1 309H                     50406
+     C                     ADD  ZCRSR1    ZCRSRN                          50406
+     C                     END                                            50406
+     C*                                                                   50406
+     C** MOVE MULT/DIV INDIC FOR 'FROM' CURRENCY TO CROSS RATE MULT/DIV   50406
+     C** INDICATOR (ZCRSMD)                                               50406
+     C                     MOVE 'M'       ZCRSMD                          50406
+     C*                                                                   50406
+     C** IF CROSS EXCHANGE RATE IS EQUAL TO ZERO                          50406
+     C** SET ZAMTT  TO *ZERO  & EXIT                                      50406
+     C           ZCRSRN    IFEQ 0                                         50406
+     C                     Z-ADD*ZEROS    ZAMTT                           50406
+     C                     GOTO CCYEN1                                    50406
+     C                     END                                            50406
+     C*                                                                   50406
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF) EQUALS DECIMAL    50406
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY CONVERT AMOUNT BY SIMPLE       50406
+     C** MULTIPLICATION                                                   50406
+     C           ZCDPF     IFEQ ZCDPT                      B1             50406
+     C           ZAMTF     MULT ZCRSRN    ZAMTO  300H                     50406
+     C                     END                             E1             50406
+     C*                                                                   50406
+     C** IF DECIMAL PLACES  FOR 'FROM' CURRENCY (ZCDPF)  NOT EQUALS DECIMA50406
+     C** DECIMAL PLACES  FOR 'TO' CURRENCY ADJUST AMOUNT FOR DIFFERENT DP 50406
+     C           ZCDPF     IFNE ZCDPT                      B1             50406
+     C*                                                                   50406
+     C** SUBTRACT DECIMAL PLACES 'FROM' FROM DECIMAL PLACES 'TO' IN POWER 50406
+     C           ZCDPT     SUB  ZCDPF     ZWKPX   10                      50406
+     C           ZWKPX     ADD  4         B       30                      50406
+     C*                                                                   50406
+     C** IF POWER ELEMENT (8,4) LESS THAN 1                               50406
+     C           POWER,B   IFLT 1                          B2             50406
+     C*                                                                   50406
+     C** MULTIPLY AMOUNT IN FROM CURRENCY BY ELEMENT IN POWER ARRAY       50406
+     C           POWER,B   MULT ZAMTF     ZWK153 153                      50406
+     C*                                                                   50406
+     C           ZWK153    MULT ZCRSRN    ZAMTO     H                     50406
+     C                     END                             E2             50406
+     C*                                                                   50406
+     C** IF POWER ELEMENT (8,4) GREATER OR EQUAL TO 1                     50406
+     C           POWER,B   IFGE 1                          B2             50406
+     C           ZAMTF     MULT POWER,B   ZAMTO                           50406
+     C           ZAMTO     MULT ZCRSRN    ZAMTO     H                     50406
+     C                     END                             E2             50406
+     C                     END                             E1             50406
+     C*                                                                   50406
+     C           ZAMTO     DIV  ZRWORK    ZAMTT     H                     50406
+     C*                                                                   50406
+     C           CCYEN1    ENDSR                                          50406
+     C*****************************************************************
+      /EJECT                                                              53103
+      ********************************************************************53103
+      *                                                                  *53103
+      * ZEVRF    - SET PERFORMANCE EVENT REFERENCE                       *53103
+      *                                                                  *53103
+      *   out : ZZEVRF                                                   *53103
+      ********************************************************************53103
+     C           ZEVRF     BEGSR                                          53103
+     C*                                                                   53103
+     C           *LOCK     IN   PMSTAT                                    53103
+     C                     MOVE DAEVRF    WWEVRF  70                      53103
+     C                     Z-ADDWWEVRF    ZZEVRF  70                      53103
+     C                     ADD  1         WWEVRF                          53103
+     C                     MOVE WWEVRF    DAEVRF                          53103
+     C                     OUT  PMSTAT                                    53103
+     C*                                                                   53103
+     C                     ENDSR                                          53103
+      ********************************************************************53103
+     C/EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**   *PSSR     - Program error handling routine                 *
+     C**                                                              *
+     C*****************************************************************
+     C*
+     C           *PSSR     BEGSR
+     C*                                                                   S01486
+     C** Output header and database error record format                   S01486
+     C*                                                                   S01486
+     C                     WRITEHEADER                                    S01486
+     C                     WRITEFCDBERR                                   S01486
+     C*                                                                   S01486
+     C                     DUMP
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     ****/COPY ZSRSRC,ZCCYCN                                         47719 50406
+      /COPY ZSRSRC,ZCCYXR                                                  47719
+      /COPY ZSRSRC,ZSETAC                                                  46386
+**  CPY@
+(c) Finastra International Limited 2001
+**  WWARR1
+VIAMDAI II CM AM II TITTM TMTTVPIVRIIPIIRI
+** ARRAY OF POWERS OF 10 FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  WWARR2
+IPITTDTILNCICDCLDLFRRSRLRXFTDTLT                                          CDL006

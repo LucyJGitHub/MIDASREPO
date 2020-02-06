@@ -1,0 +1,317 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SM Database cross reference')
+/*OVR *  OVRDBF FILE(UPFDAPOF) TOFILE(QAFDACCP)                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Implementation module                                *
+      *                                                               *
+      *  SM0108 - Produce report of database mismatches               *
+      *                                                               *
+      *  Called By: SMC0108                                           *
+      *                                                               *
+      *  (c) Finastra International Limited 2003                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CUP016 *CREATE     Date 01Apr03               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CUP016 - Add implementation software to core.                *
+      *                                                               *
+      *****************************************************************
+     FUPFDAPOFIF  E                    DISK
+     FUP0108P1O   E             37     PRINTER
+      /EJECT
+      * Array containing Copyright statement
+     E                    CPY@    1   1 80
+      *
+      * Data structure for user space name
+     I            DS
+     I                                        1  20 QUS
+     I                                        1  10 US
+     I                                       11  20 USLIB
+      *
+      * Data structure for qualified file name
+     I            DS
+     I                                        1  20 QFILE
+     I                                        1  10 QFILEN
+     I                                       11  20 QFILEL
+      * Data structure for error handling
+     I            DS
+     I                                        1  26 ERRP
+     I                                    B   1   40ERR1
+     I                                    B   5   80ERR2
+     I                                        9  16 ERR3
+     I                                       17  17 ERR4
+     I                                       18  26 ERR5
+      *
+      * Parameters for retrieval of user space header
+     IUSHEAD      DS
+     I                                        1 140 ALLDTA
+     I                                    B 125 1280OFFLST
+     I                                    B 133 1360NOENTS
+     I                                    B 137 1400ENTSIZ
+      * Parameters for retrieval of user space data
+     IUSLIST      DS
+     I                                        1  10 PFILE
+     I                                       11  20 PFILEL
+     I                                       21  30 LFILE
+     I                                       31  40 LFILEL
+     I                                       41  41 DTYPE
+     I                                       42  44 RES
+     I                                    B  45  480REFNO
+      * Parameters for user space retrieval API
+     I            DS
+     I                                    B   1   40USSTRT
+     I                                    B   5   80USLEN
+     I                                        9 158 USDTA
+     IPSDS       SDS
+      * Program Status Data Structure
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      /SPACE 3
+      * Set up copyright parameter
+     C                     MOVEACPY@      CPY2@  80
+      * Parameters passed to program
+     C           *ENTRY    PLIST
+     C                     PARM           SYSID   2
+     C                     PARM           ERR     1
+      *
+      * Set up library names
+     C           SYSID     CAT  'DVLIB':0 DVLIB  10
+     C           SYSID     CAT  'DPLIB':0 DPLIB  10
+     C           SYSID     CAT  'DMLIB':0 DMLIB  10
+     C           SYSID     CAT  'DTALIB':0DTALIB 10
+      *
+      * Write first header for report
+     C                     WRITEHEADH                  69
+     C                     WRITEPHEAD                  69
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * Process physical files which have logicals built over them
+      *  in a non-standard Midas library
+      * Set up parameters for retrieval from user space
+     C                     MOVEL'DBR'     US
+     C                     MOVEL'QTEMP'   USLIB
+     C                     MOVEL'*ALL'    QFILEN
+      *
+     C                     MOVELDMLIB     QFILEL
+     C                     MOVELDVLIB     LOGLIB 10
+     C                     EXSR BDBR
+      *
+     C                     MOVELDPLIB     QFILEL
+     C                     EXSR BDBR
+      *
+     C                     MOVELDTALIB    QFILEL
+     C                     MOVELDTALIB    LOGLIB
+     C                     EXSR BDBR
+      *
+     C           PFLAG     IFNE 'Y'
+     C                     WRITENORECS                 69
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     WRITEHEADH                  69
+     C                     WRITELHEAD                  69
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+      * Process logical files which are built over physicals in a
+      *  non-standard Midas library
+     C           1         SETLLUPFDAPOF
+     C                     READ UPFDAPOF               6920
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           *IN20     DOUEQ*ON
+      *
+      * Only check logicals
+     C           APFTYP    IFEQ 'L'
+      *
+      * Check logical/physical relation is not duplicate
+     C           APFILE    IFNE SPFILE
+     C           APBOF     ORNE SAPBOF
+      *
+     C           APLIB     IFEQ DVLIB
+     C           APBOL     IFNE DMLIB
+     C           APBOL     ANDNEDPLIB
+     C                     EXSR WFDR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           APLIB     IFEQ DTALIB
+     C           APBOL     IFNE DTALIB
+     C                     EXSR WFDR
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVELAPFILE    SPFILE 10
+     C                     MOVELAPBOF     SAPBOF 10
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     READ UPFDAPOF               6920
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C           LFLAG     IFNE 'Y'
+     C                     WRITENORECS                 69
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     ENDIF
+     C                     WRITETRAILP                 69
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           ENDPGM    TAG
+     C                     SETON                     LR
+     C                     RETRN
+      *****************************************************************
+     C           BDBR      BEGSR
+      * Use API to build list of database relations for DMLIB
+     C                     CALL 'QDBLDBR'
+     C                     PARM           QUS
+     C                     PARM 'DBRL0100'FMT     8
+     C                     PARM           QFILE
+     C                     PARM *BLANKS   MBR    10
+     C                     PARM *BLANKS   RFMT   10
+     C                     PARM           ERRP
+      *
+      * Use API to retrieve list data from user space; first call gets
+      *    user space header information (See I specs for DS)
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           QUS
+     C                     PARM 1         USSTRT
+     C                     PARM 140       USLEN
+     C           USHEAD    PARM           USDTA
+      *
+      * If no entries then set on indicator and skip further processing
+     C           NOENTS    IFEQ 0                          B01
+     C                     SETON                     71
+     C                     ENDIF                           E01
+      * Execute SR to loop through list data from user space if entrie
+     C  N71                EXSR RDBR
+      *
+     C           EBDBR     ENDSR
+      *****************************************************************
+     C           RDBR      BEGSR
+      * Use API to retrieve list data from user space; set up control
+     C                     Z-ADD1         A       50
+     C                     Z-ADDENTSIZ    USLEN
+     C           OFFLST    ADD  1         USSTRT
+      *
+     C           A         DOWLENOENTS                     D01
+     C                     CLEARUSDTA
+      *
+      * Call API to retrieve database relations
+     C                     CALL 'QUSRTVUS'
+     C                     PARM           QUS
+     C                     PARM           USSTRT
+     C                     PARM           USLEN
+     C           USLIST    PARM           USDTA
+      *
+      * If database dependency does not match then write to report
+     C           DTYPE     IFNE *BLANKS
+     C           LFILEL    ANDNELOGLIB
+     C                     MOVE 'Y'       PFLAG   1
+     C                     EXSR WDBR
+     C                     ENDIF
+      *
+     C                     ADD  1         A
+     C                     ADD  ENTSIZ    USSTRT
+     C                     ENDDO                           ED01
+      *
+     C           ERDBR     ENDSR
+      *****************************************************************
+     C           WDBR      BEGSR
+      *
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C                     WRITEPHEAD                  69
+     C                     MOVEL*BLANKS   SPFILL 10
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETOF                     37
+     C                     ENDIF
+      *
+     C                     MOVELPFILE     @PFIL
+     C           PFILEL    IFEQ SPFILL
+     C                     MOVEL*BLANKS   @PFILL
+     C                     ELSE
+     C                     MOVELPFILEL    @PFILL
+     C                     MOVELPFILEL    SPFILL
+     C                     ENDIF
+     C                     MOVELLFILE     @LFIL
+     C                     MOVELLFILEL    @LFILL
+     C                     WRITEPDTL                   69
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           EWDBR     ENDSR
+      *****************************************************************
+     C           WFDR      BEGSR
+      *
+     C                     MOVE 'Y'       LFLAG   1
+      *
+     C           *IN37     IFEQ *ON
+     C                     WRITEHEADH                  69
+     C                     WRITELHEAD                  69
+     C                     MOVEL*BLANKS   SAPLIB 10
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+     C                     SETOF                     37
+     C                     ENDIF
+      *
+     C                     MOVELAPFILE    @LFIL
+     C           APLIB     IFEQ SAPLIB
+     C                     MOVEL*BLANKS   @LFILL
+     C                     ELSE
+     C                     MOVELAPLIB     @LFILL
+     C                     MOVELAPLIB     SAPLIB
+     C                     ENDIF
+     C                     MOVELAPBOF     @PFIL
+     C                     MOVELAPBOL     @PFILL
+     C                     WRITELDTL                   69
+     C           *IN69     IFEQ *ON
+     C                     MOVE 'Y'       ERR
+     C                     GOTO ENDPGM
+     C                     ENDIF
+      *
+     C           EFDBR     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2003

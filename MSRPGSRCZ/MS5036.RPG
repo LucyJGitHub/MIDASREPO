@@ -1,0 +1,465 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MS Incoming Messages Linked function')
+      *****************************************************************
+      *                                                               *
+      *  Midas - SWIFT DIRECT LINK                               *
+      *                                                               *
+      *   MS5036 - INCOMING MESSAGES LINKED FUNCTION                  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CSW095             Date 10Apr95               *
+      *                 060108             Date 01Jul93               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *   CSW095 - S.W.I.F.T 1995 Message Changes.                    *
+      *            Increase arrays to handle a 10,000 character       *
+      *            message.                                           *
+      *   060108 - Apply S01428                                       *
+      *   S01428 - Create program to allow enquiry into message       *
+      *            details by MOR.                                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *****************************************************************
+     FMS5036DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE MS5036F2
+     FMSMSI2LAIF  E           K        DISK
+      *
+      *****************************************************************
+      **  ID C  F  H  L    Function of indicators
+      *
+      *      10            EOF MSMSI2LA
+      *      20            SFLDSP
+      *      21            SFLDSPCTL
+      *      22            SFL END
+      *      KL            F12
+      *      U7U8LR        DB error
+      *
+      *****************************************************************
+      *
+     E***********         IMSG     3072  1                                CSW095
+     E                    IMSG     9999  1                                CSW095
+     E                    LINE      130  1
+     E                    HDGA    1   9 78
+     E                    CPY@    1   1 80
+      *
+     ILDA         DS                            256
+      **  Local data area data structure
+      *
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+     I           SDS
+      **  Workstation ID
+      *
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+      *
+     IDSRUN       DS                             13
+      **  RUNDAT data area
+      *
+     I                                        1   7 RUNA
+     I                                       13  13 MBIN
+      *
+     I            DS
+      **  Subdivide message header
+      *
+     I                                        1 114 @HDR
+     I                                        7  18 @RAD
+     I                                       19  22 @SNN
+     I                                       23  28 @SQN
+     I                                       34  36 @MTP
+     I                                       37  40 @ITM
+     I                                       41  68 @MIR
+     I                                       69  74 @ODT
+     I                                       75  78 @OTM
+     I                                       79  79 @MPY
+     I                                       81  83 @WK3
+      *
+     I            DS
+      **  Format basic header data
+      *
+     I                                        1  78 RCD1
+     I                                        1  12 ORAD
+     I                                       14  17 OSNN
+     I                                       26  31 OSQN
+     I                                       72  74 BRCA
+      *
+     I            DS
+      **  Format application header data
+      *
+     I                                        1  78 RCD2
+     I                                        1   3 OMTP
+     I                                       11  14 OITM
+     I                                       23  50 OMIR
+     I                                       53  58 OODT
+     I                                       66  69 OOTM
+     I                                       72  78 OPTY
+      *
+     I            DS
+      **  Format user header data
+      *
+     I                                        1  78 RCD3
+     I                                        1   4 OBPY
+     I                                       24  39 OMUR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MOR
+      *
+      *****************************************************************
+      *                   Index to subroutines                        *
+      *   main process                                                *
+      *   INIT  - initial process                                     *
+      *   SFLE  - format message for display                          *
+      *   *PSSR - error handling                                      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *   main process                                                *
+      *   Calls - INIT initial process                                *
+      *           SFLE format message for display                     *
+      *           *PSSR error handling                                *
+      *****************************************************************
+      *
+      **  Perform initialisation
+      *
+     C                     EXSR INIT
+      *
+      **  Chain to LF/MSMSI2LA using MOR
+      *
+     C           MOR       CHAINMSMSI2LA             10
+      *
+      **  If no record found then perform Database Error
+      *
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE '02'      DBASE
+     C                     MOVELMOR       DBKEY
+     C                     MOVE 'MSMSI2LA'DBFILE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **  Clear subfile
+      *
+     C                     SETOF                     2021
+     C                     WRITEMS5036F3
+     C                     SETON                     2021
+      *
+      **  Move all records which match key into array
+      *
+     C***********          Z-ADD1         X       40                      CSW095
+     C                     Z-ADD1         X       50                      CSW095
+     C                     MOVE MOR       @MOR   28
+      *
+     C           *IN11     DOWEQ'0'
+     C           MOR       ANDEQ@MOR
+     C                     MOVEAMDTA      IMSG,X
+     C                     READ MSMSI2LA                 11
+     C                     ADD  256       X
+     C                     END
+      *
+     C                     SETOF                     11
+      *
+      **  Display Incoming Message until F12 pressed
+      *
+     C                     EXSR SFLE
+      *
+     C           *INKL     DOWEQ'0'
+     C                     WRITEMS5036F1
+     C                     EXFMTMS5036F3
+     C                     END
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   INIT - inital process                                       *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      **  Set up LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE 'MS5036  'DBPGM
+     C                     OUT  LDA
+      *
+      **  Initialise 'CR' and 'LF' fields
+      *
+     C                     MOVE *LOVAL    CR      1
+     C                     BITON'457'     CR
+     C                     MOVE *LOVAL    LF      1
+     C                     BITON'257'     LF
+     C                     MOVELCR        CRLF    2
+     C                     MOVE LF        CRLF
+      *
+      **  Access RUNDAT to find run date & multibranching indicator
+      *
+     C           *NAMVAR   DEFN RUNDAT    DSRUN
+     C                     IN   DSRUN
+      *
+     C                     Z-ADD1         RRN
+     C                     SETON                     22
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SFLE - format message for display                           *
+      *   Called by - main process                                    *
+      *****************************************************************
+      *
+     C           SFLE      BEGSR
+      *
+      **  Analyse message headers using data structure
+      *
+     C                     MOVEAIMSG,1    @HDR  114
+     C                     Z-ADD86        X
+      *
+      **  Write basic header (block 1)
+      *
+     C                     MOVE HDGA,1    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,2    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN     40
+      *
+     C                     MOVE @RAD      ORAD
+     C                     MOVE @SNN      OSNN
+     C                     MOVE @SQN      OSQN
+     C                     MOVE RCD1      RCD
+     C                     WRITEMS5036F2
+     C                     ADD  2         RRN
+      *
+      **  Write application header (block 2)
+      *
+     C                     MOVE HDGA,3    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,4    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+      *
+     C                     MOVE @MTP      OMTP
+     C                     MOVE @ITM      OITM
+     C                     MOVE @MIR      OMIR
+     C                     MOVE @ODT      OODT
+     C                     MOVE @OTM      OOTM
+      *
+     C           @MPY      IFEQ 'N'
+     C                     MOVEL'NORMAL'  OPTY
+     C                     ELSE
+     C                     MOVEL'URGENT'  OPTY
+     C                     END
+      *
+     C                     MOVE RCD2      RCD
+     C                     WRITEMS5036F2
+     C                     ADD  2         RRN
+      *
+      **  If user header present
+      *
+     C           @WK3      IFEQ '{3:'
+     C                     MOVE *BLANKS   OBPY
+     C                     MOVE *BLANKS   OMUR
+     C                     Z-ADD84        X
+      *
+      **  Write user header (block 3)
+      *
+     C                     MOVE HDGA,5    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,6    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+      *
+      **  If banking priority present
+      *
+     C                     MOVEAIMSG,X    @WK5    5
+     C           @WK5      IFEQ '{113:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z       30
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C***********          ADD  1         X       40                      CSW095
+     C                     ADD  1         X                               CSW095
+     C                     ADD  1         Z
+     C                     END
+     C                     MOVEALINE      OBPY
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+      *
+      **  If message user reference (MUR) present
+      *
+     C                     MOVEAIMSG,X    @WK5
+     C           @WK5      IFEQ '{108:'
+     C                     ADD  5         X
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     END
+      *
+     C                     MOVEALINE      OMUR
+     C                     MOVEA*BLANKS   LINE
+     C                     ADD  1         X
+     C                     END
+      *
+     C                     MOVE RCD3      RCD
+     C                     WRITEMS5036F2
+     C                     ADD  2         RRN
+     C                     ADD  6         X
+     C                     END
+      *
+      **  Write message text (block 4) headings
+      *
+     C                     MOVE HDGA,7    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+      *
+      **  Do until end of message
+      *
+     C           @WK2      DOUEQ'-}'
+     C                     Z-ADD5         Z
+      *
+      **  If tag is present indent by 5 characters
+      *
+     C           IMSG,X    IFEQ ':'
+     C                     Z-ADD1         Z
+     C                     END
+      *
+      **  Do until Carriage return/Line feed
+      *
+     C           @WK2      DOUEQCRLF
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         X
+     C                     ADD  1         Z
+     C                     MOVEAIMSG,X    @WK2    2
+     C                     END
+      *
+      **  Write out detail line
+      *
+     C                     MOVEALINE      RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     ADD  2         X
+     C                     MOVEAIMSG,X    @WK2
+     C                     END
+      *
+     C                     ADD  2         X
+     C                     MOVEAIMSG,X    @WL3    3
+      *
+      **  If message trailer present
+      *
+     C           @WL3      IFEQ '{5:'
+     C                     ADD  4         X
+      **  Write trailer (block 5)
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,8    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+      *
+     C           @WK2      DOUEQ'}}'
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         Z
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write out detail line
+      *
+     C                     MOVEALINE      RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     MOVEAIMSG,X    @WK2
+     C                     ADD  2         X
+     C                     END
+     C                     END
+      *
+     C                     MOVEAIMSG,X    @WL3
+      *
+      **  If STS trailer present
+      *
+     C           @WL3      IFEQ '{S:'
+     C                     ADD  4         X
+      **  Write STS trailer (S block)
+     C                     ADD  1         RRN
+     C                     MOVE HDGA,9    RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+      *
+     C           @WK2      DOUEQ'}}'
+     C                     Z-ADD1         Z
+      *
+     C           IMSG,X    DOUEQ'}'
+     C                     MOVE IMSG,X    LINE,Z
+     C                     ADD  1         Z
+     C                     ADD  1         X
+     C                     END
+      *
+      **  Write out detail line
+      *
+     C                     MOVEALINE      RCD
+     C                     WRITEMS5036F2
+     C                     ADD  1         RRN
+     C                     MOVEA*BLANKS   LINE
+      *
+     C                     MOVEAIMSG,X    @WK2
+     C                     ADD  2         X
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - error handling                                      *
+      *   Called by - INIT initial process                            *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+**  Headings
+Basic header  (block 1)
+Recipient    Session no  Sequence number                               Branch
+Application header  (block 2)
+Msg type  Input time  MIR                           Output date  Time  Pty
+User header  (block 3)
+Banking priority 113:  M.U.R. 108:
+Text  (block 4)
+Trailer  (block 5)
+STS trailer  (block 6)
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

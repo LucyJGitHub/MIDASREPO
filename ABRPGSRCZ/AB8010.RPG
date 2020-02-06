@@ -1,0 +1,741 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AB Daily deal update & str of day reorg')        *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas  -  Internal Contracts & Arbitrage Dealing
+     F*                                                               *
+     F*  AB8010 - DAILY DEALS UPDATE AND START OF DAY REORGANISATION  *
+     F*                                                               *
+     F*     Function: This program updates the Money Market TM enquiry*
+     F*     (I/C INT)  files to reflect internal contracts. Note      *
+     F*     that FX files do not need updating because they are       *
+     F*     rolled forward and not cleared and rebuilt each night     *
+     F*                                                               *
+     F*     Called by: DLC6030 - Start of day reorganisation.         *
+     F*                                                               *
+     F*     Calls    : AB0270  - Update MM forward book files.        *
+     F*                AB0280  - Update MM positions and profits files*
+     F*                AB0290  - Update MM liquidity file.            *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *     
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 BUG27892           Date 19Jul10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 04Jul06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAC001             Date 01Feb96               *
+      *                 S01453             Date 13Dec93               *
+     F*                 S01319             Date 03Sep91               *
+     F*                 DT0166             DATE 04JUN91               *
+     F*                 E20774             DATE 15MAR90               *
+     F*                 E20992             DATE 07FEB90               *
+     F*                 E18515             DATE 18JUL89               *
+     F*                 S01117             DATE 20/04/89              *
+     F*                 E17654             DATE 03/04/89              *
+     F*                 AB0149             DATE 13/04/88              *
+     F*                 AB0154             DATE 12/04/88              *
+     F*                 AB0148             DATE 12/04/88              *
+     F*                                                               *
+     F*  NB. JOURNALLING IS ENDED IN INITIALISATION AND RESTARTED IN  *
+     F*      FINAL PROCESSING TO ALLOW PROCESSING TO PROCEED QUICKER  *
+     F*                                                               *
+      *---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *     
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance Receive Settlement Instructions             *
+      *           (Recompiled)                                        *
+      *  BUG27892 - Loan Number already exists error                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+     F*  CAC001 - Profit Centre Accounting Development:               *
+     F*           Recompiled only.                                    *
+     F* S01453  - Margin and FX Positions/Points and Base currency    *
+     F*           Positions/Points added to FX input (Recompiled)     *
+     F*  S01319 - Deal tickets processing removed.                    *
+     F*                                                               *
+     F*  DT0166 - Dealing Release 10b System Test error fix:          *
+     F*           fields JPMBCD & JUMBCD redundant at release 10 -    *
+     F*           replaced by JPMBCA & JUMBCA>                        *
+     F*           (this is part of the fix which renames CM0220 to    *
+     F*           DLC6030 and removes various pieces of redundant AH  *
+     F*           processing.                                         *
+     F*                                                               *
+     F*  E20774 - REPLACE QCAEXEC WITH QCMDEXC                        *   E20774
+     F*                                                               *
+     F*  E20992 - Program no longer submitted to batch as it cannot   *
+     F*           run in paralell with MM8010.                        *
+     F*                                                               *
+     F*  E18515 - Program not suitable for Batch as required by       *
+     F*           Performance Enhancement E14042.                     *
+     F*                                                               *
+     F*  S01117 - RECOMPILE DUE TO LENGTHENED ABDEALPP RECORD         *
+     F*                                                               *
+     F*  E17654 - GET RID OF STOPPING JOURNALLING                     *   E17654
+     F*                                                               *   E17654
+     F*  AB0148 - NEED TO CALL AB0270, AB0280, AB0290 WITH @TERM = T  *
+     F*           TO FREE PROGRAMS FROM STACK.                        *
+     F*                                                               *
+     F*  AB0154 - @TERM MISSING FROM CALL TO AB0120                   *
+     F*                                                               *
+     F*  AB0149 - @TERM = 'T' NOT CHECK FOR                           *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  CREATION PARAMETERS                                          *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS
+     F*       60         END OF FILE INDICATOR FOR ABDEALLL
+     F*       61         CHAIN TO DEALS FILE FAILED
+     F*       62         CHAIN TO ABDEALL2 FILE
+     F*       U6         PROGRAM ERROR - *PSSR EXECUTED
+     F*       U7         DATA BASE ERROR
+     F*       U8         DATA BASE ERROR
+     F*
+     FABDEALLLUF  E           K        DISK         KINFSR INFSR      UC
+     F            ABDEALP1                          KIGNORE
+     FABDEALL2UF  E           K        DISK         KINFSR INFSR      UC                    BUG27892
+     FDEALS   IF  E           K        DISK         KINFSR INFSR      UC
+     F            DEALSDAF                          KIGNORE
+     F            DEALSDCF                          KIGNORE
+     F            DEALSDDF                          KIGNORE
+     F            DEALSDEF                          KIGNORE
+     F            DEALSDGF                          KIGNORE
+     F            DEALSDFF                          KIGNORE
+     E*
+     E**  ARRAY TO HOLD COPYRIGHT STATEMENT
+     E                    CPY@    1   1 80
+     E*
+     E****ARRAY*TO*HOLD*COMMAND*FOR*QCAEXEC*PROGRAM                       E20774
+     E**  ARRAY TO HOLD COMMAND FOR QCMDEXC PROGRAM                       E20774
+     E*****               @CMD   37  37  1                                E17654
+     E                    @CMD    1   1 63                                E18515
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZA0680 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+     E*
+     I@CPYRT      DS
+     I*
+     I**  DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     I**  PROGRAM STATUS DATA STRUCTURE.
+     IPSDS       SDS
+     I**  FIELD CONTAINING FILE IN USE
+     I                                      201 208 @FILE
+     I*
+     I**  DATA STRUCTURE FOR SR. ZA0680 - DATE INPUT TO SUBROUTINE
+     I@DATI       DS
+     I                                        1   80@@DTIN
+     I                                        1   40@@YYYY
+     I                                        3   40@@YY
+     I                                        1   20@@CC
+     I                                        5   60@@MTH
+     I                                        7   80@@DAY
+     I*
+     I**  DATA STRUCTURE FOR SDSTAT TO OBTAIN LIBRARY PREFIX
+     I*@SDS        DS                            256                      E20992
+     I****************************************6   7 @LIBPX                E18515
+     I***************************************100 100 @SUBMN       E18515  E20992
+     I***************************************101 101 @STRM1       E18515  E20992
+     I*
+     I**  DEAL DONE DATE
+     I@DDDDS      DS
+     I                                        1   80@JUDDT
+     I                                        1   40@JUDDY
+     I                                        5   60@JUDDM
+     I                                        7   80@JUDDD
+     I*
+     I**  NEAR DATE
+     I@NRDDS      DS
+     I                                        1   80@JUNRD
+     I                                        1   40@JUNDY
+     I                                        5   60@JUNDM
+     I                                        7   80@JUNDD
+     I*
+     I**  FAR DATE
+     I@FRDDS      DS
+     I                                        1   80@JUFRD
+     I                                        1   40@JUFDY
+     I                                        5   60@JUFDM
+     I                                        7   80@JUFDD
+     I*
+     I**  LAST ACTION DATE
+     I@LADDS      DS
+     I                                        1   80@JULDT
+     I                                        1   40@JULAY
+     I                                        5   60@JULAM
+     I                                        7   80@JULAD
+     I*
+     I**  DATA STRUCTURE TO HOLD INFORMATION ON DATABASE ERROR.
+     I           UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 183 DBASE
+     I*
+     I**  EXTERNALLY DESCRIBED DATA STRUCTURE FOR STANDARD DEAL FORMAT
+     I@STDL     E DSABSTDDPP
+     I*
+     C** UPDATE AB DATABASE
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C* SUBROUTINES USED                                              *
+     C*                                                               *
+     C*  01  #B       - Main pocessing                                *
+     C*  49  ZA0680   - Calculate midas day no                        *
+     C*  55  #A       - Initialisation                                *
+     C*  54  #C       - Termination                                   *
+     C*  59  INFSR    - File error subroutine                         *
+     C*  58  *PSSR    - Program error subroutine                      *
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* MAIN     - Control process                                    *
+     C*                                                               *
+     C* CALLS    #A       - initialization                            *
+     C*          #B       - main processing                           *
+     C*          #C       - final processing                          *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C                     EXSR #A
+     C*                                                               *
+     C           @TERM     IFNE 'T'                                       AB0149
+     C*                                                               *   AB0149
+     C                     EXSR #B
+     C*                                                               *   AB0149
+     C                     END                                            AB0149
+     C*                                                               *
+     C                     EXSR #C
+     C*                                                               *
+     C*****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #B MAIN PROCESSING                                       *
+     C*        CALLED BY  : MAIN PROGRAM                             *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS: @TERM    - TERMINATION INPUT PARAMETER   *
+     C*                   : @STDL    - STANDARD DEAL DATA STRUCTURE  *
+     C*                   : @DTIN    - INPUT FIELD FOR ZA0680        *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           #B        BEGSR
+     C*
+     C**  DO WHILE NOT END OF FILE
+     C           *IN60     DOWEQ'0'                         B1
+     C           @ERR      ANDEQ' '                         *1
+     C*
+     C**  READ ARBITRAGE DEALS FILE
+     C                     READ ABDEALLL                 60 *1
+     C*
+     C**  IF END OF FILE REACHED, SKIP FOLLOWING PROCESSING
+     C           *IN60     IFEQ '1'                         B*2
+     C                     GOTO #B9                         **2
+     C                     END                              E*2
+     C*
+     C**  IF RECORD FOUND, ACCESS MIDAS DEALS FILE
+     C           JPSD38    CHAINDEALS                61     *1
+     C*
+     C**  IF RECORD FOUND, CHECK RECORD ID
+     C           *IN61     IFEQ '0'                         B*2
+     C*
+     C           RECI      IFEQ 'M'                         B**3
+     C                     MOVE 'M'       JPDSTS            ***3
+     C                     UPDATABDEALP0                    ***3
+     C                     END                              E**3
+     C*
+     C**  IF DEAL DELETED FLAG ON ABDEALLL IS NOT 'D' AND RECORD
+     C**  IS NOT LOGICALLY DELETED AND DEAL STATUS IS NOT 'M', SET
+     C**  UP RECORD ON ABDEALLL
+     C           JPDDLT    IFNE 'D'                         B**3
+     C           JPDLTF    ANDNE'*'                         ***3
+     C           JPDSTS    ANDNE'M'                         ***3
+     C                     MOVE 'I'       JULACT            ***3
+     C                     MOVE 'I'       JUMACT            ***3
+     C*
+     C**  SET UP FIELDS NOT ALREADY COVERED ABOVE EXCEPT FOR
+     C**  BRANCH NAME WHICH IS NOT NEEDED
+     C**  SET UP MIDAS DEAL DONE DATE
+     C                     Z-ADDJPDDYY    @JUDDY            ***3
+     C                     Z-ADDJPDDMM    @JUDDM            ***3
+     C                     Z-ADDJPDDDD    @JUDDD            ***3
+     C*
+     C           @JUDDT    IFNE *ZERO                       B***4
+     C                     Z-ADD@JUDDT    @@DTIN            ****4
+     C                     EXSR ZA0680                      ****4
+     C                     Z-ADD@@MDNO    JUDDAT            ****4
+     C                     END                              E***4
+     C*
+     C**  SET UP DEAL NEAR DATE
+     C                     Z-ADDJPNDYY    @JUNDY            ***3
+     C                     Z-ADDJPNDMM    @JUNDM            ***3
+     C                     Z-ADDJPNDDD    @JUNDD            ***3
+     C*
+     C           @JUNRD    IFNE *ZERO                       B***4
+     C                     Z-ADD@JUNRD    @@DTIN            ****4
+     C                     EXSR ZA0680                      ****4
+     C                     Z-ADD@@MDNO    JUNDAT            ****4
+     C                     END                              E***4
+     C*
+     C**  SET UP DEAL FAR DATE
+     C                     Z-ADDJPFDYY    @JUFDY            ***3
+     C                     Z-ADDJPFDMM    @JUFDM            ***3
+     C                     Z-ADDJPFDDD    @JUFDD            ***3
+     C*
+     C           @JUFRD    IFNE *ZERO                       B***4
+     C                     Z-ADD@JUFRD    @@DTIN            ****4
+     C                     EXSR ZA0680                      ****4
+     C                     Z-ADD@@MDNO    JUFDAT            ****4
+     C                     END                              E***4
+     C*
+     C**  SET UP DEAL LAST ACTION DATE
+     C                     Z-ADDJPLAYY    @JULAY            ***3
+     C                     Z-ADDJPLAMM    @JULAM            ***3
+     C                     Z-ADDJPLADD    @JULAD            ***3
+     C*
+     C           @JULDT    IFNE *ZERO                       B***4
+     C                     Z-ADD@JULDT    @@DTIN            ****4
+     C                     EXSR ZA0680                      ****4
+     C                     Z-ADD@@MDNO    JUDLAD            ****4
+     C                     END                              E***4
+     C*
+     C                     MOVE JPRCID    JURCID            ***3
+     C                     MOVE JPDLTF    JUDLTF            ***3
+     C                     Z-ADDJPDLUP    JUDLUP            ***3
+     C                     MOVE JPMLUP    JUMLUP            ***3
+     C                     Z-ADDJPYLUP    JUYLUP            ***3
+     C                     Z-ADDJPTLUP    JUTLUP            ***3
+     C                     MOVE JPCHTP    JUCHTP            ***3
+     C                     Z-ADDJPLCD     JULCD             ***3
+     C                     MOVE JPLUID    JULUID            ***3
+     C                     MOVE JPPCDN    JUPCDN            ***3
+     C                     Z-ADDJPFD38    JUFD38            ***3
+     C                     Z-ADDJPSD38    JUSD38            ***3
+     C                     Z-ADDJPDTYY    JUDTYY            ***3
+     C                     Z-ADDJPDTMM    JUDTMM            ***3
+     C                     Z-ADDJPDTDD    JUDTDD            ***3
+     C                     Z-ADDJPPCTN    JUPCTN            ***3
+     C                     MOVE JPDSTS    JUDSTS            ***3
+     C                     MOVE JPDDLT    JUDDLT            ***3
+     C                     MOVE JPDUSC    JUDUSC            ***3
+     C                     Z-ADDJPLAYY    JULAYY            ***3
+     C                     Z-ADDJPLAMM    JULAMM            ***3
+     C                     Z-ADDJPLADD    JULADD            ***3
+     C                     Z-ADDJPDDTM    JUDDTM            ***3
+     C                     MOVE JPDFCY    JUDFCY            ***3
+     C                     Z-ADDJPCDPF    JUCDPF            ***3
+     C                     MOVE JPDMD1    JUDMD1            ***3
+     C                     Z-ADDJPNDA1    JUNDA1            ***3
+     C                     Z-ADDJPNDXR    JUNDXR            ***3
+     C                     MOVE JPDSCY    JUDSCY            ***3
+     C                     Z-ADDJPCDPS    JUCDPS            ***3
+     C                     Z-ADDJPNDA2    JUNDA2            ***3
+     C                     MOVE JPDBRC    JUDBRC            ***3
+     C*********************Z-ADDJPMBCD    JUMBCD            ***3          DT0166
+     C                     MOVE JPMBCA    JUMBCA            ***3          DT0166
+     C                     Z-ADDJPDDYY    JUDDYY            ***3
+     C                     Z-ADDJPDDMM    JUDDMM            ***3
+     C                     Z-ADDJPDDDD    JUDDDD            ***3
+     C                     Z-ADDJPICM1    JUICM1            ***3
+     C                     Z-ADDJPIRT1    JUIRT1            ***3
+     C                     Z-ADDJPINA1    JUINA1            ***3
+     C                     Z-ADDJPICM2    JUICM2            ***3
+     C                     Z-ADDJPIRT2    JUIRT2            ***3
+     C                     Z-ADDJPINA2    JUINA2            ***3
+     C                     Z-ADDJPFWPP    JUFWPP            ***3
+     C                     Z-ADDJPNBCA    JUNBCA            ***3
+     C                     Z-ADDJPFBCA    JUFBCA            ***3
+     C                     Z-ADDJPNDYY    JUNDYY            ***3
+     C                     Z-ADDJPNDMM    JUNDMM            ***3
+     C                     Z-ADDJPNDDD    JUNDDD            ***3
+     C                     Z-ADDJPFDYY    JUFDYY            ***3
+     C                     Z-ADDJPFDMM    JUFDMM            ***3
+     C                     Z-ADDJPFDDD    JUFDDD            ***3
+     C                     Z-ADDJPFDA1    JUFDA1            ***3
+     C                     Z-ADDJPFDA2    JUFDA2            ***3
+     C                     Z-ADDJPFDXR    JUFDXR            ***3
+     C                     MOVE JPMDTY    JUMDTY            ***3
+     C                     MOVE JPSTYP    JUSTYP            ***3
+     C**********           Z-ADDJPDCNO    JUDCNO            ***3                              CSD027
+     C                     MOVELJPDCNO    JUDCNO            ***3                              CSD027
+     C                     Z-ADDJPNBCD    JUNBCD            ***3
+     C                     Z-ADDJPFBCD    JUFBCD            ***3
+     C                     Z-ADDJPNSBC    JUNSBC            ***3
+     C                     Z-ADDJPFSBC    JUFSBC            ***3
+     C                     Z-ADDJPNDBA    JUNDBA            ***3
+     C                     Z-ADDJPNDSA    JUNDSA            ***3
+     C                     Z-ADDJPFDBA    JUFDBA            ***3
+     C                     Z-ADDJPFDSA    JUFDSA            ***3
+     C*
+     C**  UPDATE MM ENQUIRY FILES
+     C*
+     C                     CALL 'AB0270'                    ***3
+     C*
+     C                     PARM ' '       @ERR    1         ***3
+     C                     PARM           @STDL             ***3
+     C                     PARM 'Y'       @CMT    1         ***3
+     C*
+     C           @ERR      IFEQ ' '                         B***4
+     C                     CALL 'AB0280'                    ****4
+     C*
+     C                     PARM ' '       @ERR              ****4
+     C                     PARM           @STDL             ****4
+     C                     PARM 'Y'       @CMT              ****4
+     C                     END                              E***4
+     C*
+     C           @ERR      IFEQ ' '                         B***4
+     C                     CALL 'AB0290'                    ****4
+     C*
+     C                     PARM ' '       @ERR              ****4
+     C                     PARM           @STDL             ****4
+     C                     PARM 'Y'       @CMT              ****4
+     C                     END                              E***4
+     C*
+     C                     END                              E**3
+     C*
+     C                     ELSE                             X*2
+     C*
+     C**  RECORD HAS BEEN DROPPED FROM MIDAS DEALS FILE BY C.O.B.
+     C**  SO DROP FROM ARBITRAGE DEALS FILE
+     C*
+     C                     DELETABDEALLL                    **2
+      *                                                                                     BUG27892
+      ** Delete extension record                                                            BUG27892
+      *                                                                                     BUG27892
+     C                     Z-ADDJPFD38    KFD38                                             BUG27892
+     C                     Z-ADDJPSD38    KSD38                                             BUG27892
+     C           DLKEY     CHAINABDEALL2             62                                     BUG27892
+     C  N62                DELETABDELQD0                                                    BUG27892
+     C*
+     C                     END                              E*2
+     C*
+     C                     END                              E1
+     C*
+     C           #B9       ENDSR                           ***#B9***
+     C*****************************************************************
+     C/EJECT
+     C*******************************************************************
+     C*
+     C* ZA0680 - THIS SUBROUTINE CONVERTS YYYYMMDD FORMAT DATE TO
+     C*          MIDAS DAY NUMBER FORMAT (NO. DAYS FROM 31/12/71)
+     C*
+     C* CALLED BY : #B
+     C*
+     C* CALLS :
+     C*
+     C* INPUT  : @@DTIN DATE (YYYYMMDD) - IN DATA STRUCTURE (SIZE : 8N)
+     C*
+     C* OUTPUT : @@MDNO MIDAS DAY NUMBER  (SIZE : 5N)
+     C*
+     C* USES :   @@CC   NUMBER OF CENTURIES IN DATE
+     C*          @@DAY  DAY NUMBER
+     C*          @@REM  REMAINDER FROM DIVIDE
+     C*          @@MTH  MONTH NUMBER
+     C*          @MD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+     C*                 MONTH
+     C*          @@WK2  WORK FIELD (2,0)
+     C*          @@WK5  WORK FIELD (5,0)
+     C*          @@YYYY YEAR (4 CHARACTER)
+     C*          @@YY   YEAR (2 CHARACTER)
+     C*          @YD    COMPILATION TIME ARRAY FOR CUMULATIVE DAYS IN
+     C*                 A FOUR YEAR PERIOD
+     C*
+     C*******************************************************************
+     C*
+     C           ZA0680    BEGSR
+     C*
+     C**  CLEAR OUT ANY 'OLD' DATA IN FIELD
+     C                     Z-ADD0         @@MDNO  50
+     C*
+     C**   IF DATE GREATER THAN 31/12/2071 NEED EXTRA PROCESSING
+     C           @@YYYY    IFGE 2072                       B1
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN CENTURY (SINCE 1971)
+     C           @@CC      SUB  19        @@WK2   20       *1
+     C           @@WK2     MULT 36524     @@MDNO           *1
+     C*
+     C**  YEAR 2000 IS A LEAP YEAR MUST ALLOW EXTRA DAY
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C           @@YYYY    ADD  28        @@WK2
+     C*
+     C           @@WK2     DIV  4         @@WK2
+     C                     MVR            @@REM   10
+     C*
+     C**    MULTIPLY BY NUMBER OF DAYS IN FOUR YEAR PERIOD
+     C           @@WK2     MULT 1461      @@WK5   50
+     C                     ADD  @@WK5     @@MDNO
+     C*
+     C**  CHECK REMAINDER AND MONTH NUMBER
+     C           @@REM     IFEQ 0                          B1
+     C           @@MTH     ANDGT2                          *1
+     C                     ADD  1         @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  YEAR NOT LEAP YEAR,  ADD CUMULATIVE DAYS FOR YEAR
+     C           @@REM     IFNE 0                          B1
+     C                     ADD  @YD,@@REM @@MDNO           *1
+     C                     END                             E1
+     C*
+     C**  ADD MONTHS THIS YEAR
+     C                     ADD  @MD,@@MTH @@MDNO
+     C*
+     C**  ADD DAYS THIS MONTH
+     C                     ADD  @@DAY     @@MDNO
+     C*
+     C           ZA0689    ENDSR                           **ZA0689 TAG**
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*     #A CARRIES OUT INITIALISATION PROCESSING.                *
+     C*        CALLED BY  : MAIN PROGRAM                             *
+     C*        CALLS      :                                          *
+     C*                                                              *
+     C*        WORK FIELDS: @TERM    - TERMINATION INPUT PARAMETER   *
+     C*                   : @STDL    - STANDARD DEAL DATA STRUCTURE  *
+     C********************:*@LIBPX***-*LIBRARY*PREFIX*FOR*'QCAEXEC'  *    E20774
+     C*                   : @LIBPX   - LIBRARY PREFIX FOR 'QCMDEXC'  *    E20774
+     C********************:*@CMD*****-*CONTAINS*COMMAND*FOR*'QCAEXEC'*    E20774
+     C*                   : @CMD     - CONTAINS COMMAND FOR 'QCMDEXC'*    E20774
+     C*                   : @LEN     - LENGTH OF COMMAND             *
+     C*                                                              *
+     C****************************************************************
+     C           #A        BEGSR
+     C*
+     C**  RECEIVE INPUT PARAMETERS
+     C           *ENTRY    PLIST
+     C                     PARM           @TERM   1
+      *                                                                                     BUG27892
+     C           DLKEY     KLIST                                                            BUG27892
+     C                     KFLD           KFD38   60                                        BUG27892
+     C                     KFLD           KSD38   60                                        BUG27892
+     C*                                                                   AB0149
+     C           @TERM     CABEQ'T'       #A9                             AB0149
+     C*
+     C**  DATA AREA NAMES
+     C********** *NAMVAR   DEFN SDSTAT    @SDS                            E20992
+     C*
+     C**  ACCESS DATA AREA FOR LIBRARY PREFIX
+     C*********************IN   @SDS                                      E18515
+     C*
+     C**  SET UP LIBRARY NAME FIELD
+     C*********************Z-ADD31        N       20                      E18515
+     C******               MOVEA@LIBPX    @CMD,N                   E17654 S01319
+     C*
+     C****CALL*QCAEXEC*TO*END*JOURNALLING*OF*FILES                        E20774
+     C****CALL*QCMDEXC TO END JOURNALLING OF FILES                        E20774
+     C****TO*ALLOW QUICKER UPDATE OF ENQUIRY FILE
+     C*********************CALL 'QCAEXEC'                           E17654E20774
+     C******               CALL 'QCMDEXC'                                 E20774
+     C******               PARM           @CMD                            E17654
+     C******               PARM 37        @LEN   155                      E17654
+     C*
+     C**  OPEN ALL FILES
+     C                     OPEN ABDEALL2                                                    BUG27892
+     C                     OPEN ABDEALLL
+     C                     OPEN DEALS
+     C*
+     C           #A9       ENDSR                           ***#A9***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* #C       - Final processing                                   *
+     C*                                                               *
+     C* CALLS             - SD1730 - restart journalling              *
+     C**********************AB0120 - print deal ticket                *   S01319
+     C*                                                               *
+     C* CALLED BY  MAIN   - Controls program                          *
+     C*                                                               *
+     C* FLDS USED         -                                           *
+     C*                     @T CONTAINS VALUE T                       *
+     C*                                                               *
+     C*****************************************************************
+     C           #C        BEGSR
+     C*
+     C** IF TERMINATE SET ON LR                                           AB0149
+     C           @TERM     CABEQ'T'       #C8                             AB0149
+     C*                                                                   AB0149
+     C** FREE PROGRAMS FROM STACK                                         AB0148
+     C*                                                                   AB0148
+     C**  CLOSE ALL FILES                                                 AB0148
+     C                     CLOSEABDEALL2                                                    BUG27892
+     C                     CLOSEABDEALLL                                  AB0148
+     C                     CLOSEDEALS                                     AB0148
+     C*                                                                   AB0148
+     C                     MOVE 'T'       @T      1                       AB0148
+     C*                                                                   AB0148
+     C                     CALL 'AB0270'                                  AB0148
+     C                     PARM           @T                              AB0148
+     C*                                                                   AB0148
+     C                     CALL 'AB0280'                                  AB0148
+     C                     PARM           @T                              AB0148
+     C*                                                                   AB0148
+     C                     CALL 'AB0290'                                  AB0148
+     C                     PARM           @T                              AB0148
+     C*                                                                   AB0148
+     C***RESTART JOURNALLING                                              AB0148
+     C*****                                                               AB0148
+     C*****                CALL 'SDC1730'                                 E17654
+     C*****
+     C***ACTIVATE THE DEAL TICKET PRINT                                   S01319
+     C*****                CALL 'AB0120'                                  S01319
+     C*****                PARM           @TERM                    AB0154 S01319
+     C*
+     C******OSE ALL FILES                                                 AB0148
+     C******               CLOSEABDEALLL                                  AB0148
+     C******               CLOSEDEALS                                     AB0148
+     C*
+     C** TERMINATE PROGRAM
+     C           #C8       TAG                                            AB0149
+     C*                                                                   AB0149
+     C********** *LOCK     IN   @SDS                               E18515 E20992
+     C**********           MOVE @SUBMN    @SUBM1  10               E18515 E20992
+     C**********           SUB  1         @SUBM1                   E18515 E20992
+     C**********           MOVE @SUBM1    @SUBMN                   E18515 E20992
+     C           @TERM     IFEQ 'E'                                       E18515
+     C**********           MOVE 'X'       @STRM1           B1      E18515 E20992
+     C*********************CALL 'QCAEXEC'                  *1       E18515E20774
+     C                     CALL 'QCMDEXC'                  *1             E20774
+     C                     PARM           @CMD,1           *1             E81515
+     C                     PARM 63        @LEN   155       *1             E18515
+     C                     END                             E1             E18515
+     C**********           OUT  @SDS                               E18515 E20992
+     C                     MOVE '1'       *INLR
+     C*
+     C           @ERR      IFNE ' '                         B1
+     C                     MOVE '1'       *INU7             *1
+     C                     MOVE '1'       *INU8             *1
+     C                     END                              E1
+     C*
+     C           #C9       ENDSR                           ***#C9***
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* INFSR    - Unmonitored file error                             *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  @ERR2  - Error routine performed indicator         *
+     C*            @TERM  - Termination parameter                     *
+     C*            @FILE  - File in error                             *
+     C*                                                               *
+     C*****************************************************************
+     C           INFSR     BEGSR
+     C*
+     C**  Set @ERR2 to 'Y' to prevent looping if further errors occur.
+     C           @ERR2     IFNE 'Y'                        B1
+     C*
+     C                     MOVE 'Y'       @ERR2   1        *1
+     C                     MOVE '1'       *INU7            *1
+     C                     MOVE '1'       *INU8            *1
+     C                     MOVE 'E'       @TERM            *1
+     C*
+     C**  Set up fields in local data area.
+     C                     MOVEL@FILE     DBFILE           *1
+     C                     MOVEL'AB8010'  DBPGM            *1
+     C                     MOVEL'992'     DBASE            *1
+     C                     DUMP                            *1
+     C*
+     C                     END                             E1
+     C*
+     C**  Terminate processing immediately.
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C           INFSR9    ENDSR                           **INFSR9**
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* *PSSR    - Unmonitored program error                          *
+     C*                                                               *
+     C* CALLS             -                                           *
+     C*                                                               *
+     C* CALLED BY         -                                           *
+     C*                                                               *
+     C* FLDS USED  @ERR1  - Error routine performed indicator         *
+     C*            @TERM  - Termination parameter                     *
+     C*                                                               *
+     C*****************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C**  Set @ERR1 to 'Y' to prevent looping if further errors occur.
+     C           @ERR1     IFNE 'Y'                        B1
+     C*
+     C                     MOVE 'Y'       @ERR1   1        *1
+     C                     MOVE '1'       *INU6            *1
+     C                     MOVE 'E'       @TERM            *1
+     C*
+     C**  Set up fields in local data area.
+     C                     MOVEL'AB8010'  DBPGM            *1
+     C                     MOVEL'991'     DBASE            *1
+     C                     DUMP                            *1
+     C*
+     C                     END                             E1
+     C*
+     C**  Terminate processing immediately.
+     C                     MOVE '1'       *INLR
+     C*
+     C                     RETRN
+     C*
+     C           #PSSR9    ENDSR                            ***PSSR9**
+     C*
+     C/EJECT
+     C****@CMD - ARRAY DATA FOR PARAMETER TO QCAEXEC                      E17654
+     C****ENDJRNPF FILE(*ALL) JRN(ICJRN.NNJLIB)                           E17654
+**   CPY@ - COPYRIGHT STATEMENT                                           E17654
+(c) Finastra International Limited 2001
+**   @CMD - ARRAY DATA FOR PARAMETER TO QCMDEXC                     E18515E20774
+SNDMSG ('AB8010 has ended abnormally in batch.') TOMSGQ(MOPERQ)           E18515
+** @YD  USED BY SR. ZA0680 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZA0680 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365

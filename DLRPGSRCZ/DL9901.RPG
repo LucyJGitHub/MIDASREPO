@@ -1,0 +1,225 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas DL *INIT.- forward rate points')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Dealing Module
+     F*                                                               *
+     F*   DL9901 - To initialise the forward rate points              *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029222           Date 08Aug14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 15May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 105746             DATE 26FEB97               *
+     F*                 089129             DATE 28JUL95               *
+     F*                 088301             DATE 26MAY95               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD029222 - Increase normal quoted decimals from 8 to 9       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+     F*  CSD006 - Market Data Feeds.                                  *
+     F*  105746 - Normal quoted decimals can be from 0 to 8.          *
+     F*  089129 - Allow up to 5 digits as well as up to 8 decimals    *
+     F*           as per instruction manual; use new field PNF for    *
+     F*           Forward Points in FWDRTFE. Field PFW is redundant.  *
+     F*  088301 - Allow input of forward with same number of dccimals *
+     F*           as spot                                             *
+     F*  S01432 - Forward Rates by means of Forward Points            *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FSDCURRL0IF  E           K        DISK
+     F*FWDRT***UF**F     436  3AI     2 DISK                              089129
+     F*FWDRTFE*IP**F     436            DISK                              089129
+     F******FWDRT   UF  F     611  3AI     2 DISK                         CSD006089129
+     FFWDRT   UF  F     719  3AI     2 DISK                               CSD006
+     F******FWDRTFE IP  F     611            DISK                         CSD006089129
+     FFWDRTFE IP  F     719            DISK                               CSD006
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+      *
+      **   ID F  C  H  L    Function of indicators
+      *
+      **   01 - Detail forward rate record input
+      **   02 - Detail forward rate record update
+      **   81 - Currency details access
+      **   82 - Detail forward rate record access
+      *
+     E*****************************************************************
+     E                    DFW        25  5 0             NO. DAYS - FWDRT
+     E                    RFW        25 12 8             RATE - FWDRT
+     E*********           PFW        25 10 6             POINTS - FWDRT   088301
+     E*********           PFW        25 10 8             POINTS - F088301 089129
+     E                    SFW        25  1               SIGN - FWDRT
+     E                    PNF        25 13 8             POINTS - FWDRT   089129
+     E***********         NQD     1   6  6 0             SIGN - FWDRT     105746
+     E***********         NQD     1   8  8 0             SIGN - FWDRT                105746 MD029222
+     E                    NQD     1   9  9 0             SIGN - FWDRT                       MD029222
+     E                    CPY@    1   1 80               Copyright     arrS01432
+     E*****************************************************************
+      /EJECT
+     I*****************************************************************
+     IFWDRTFE NS  01
+     I                                        1   1 RECI
+     I                                        2   4 CCY
+     I                                    P   5  79 DFW
+     I                                    P  80 254 RFW
+     IFWDRT   NS  02   1 CD
+     I       OR   02   1 C*
+     I                                        1   1 RECI
+     I                                        2   4 FCCY
+     I*                                                                   S01432
+     IA@CPY       DS                                                      S01432
+      * Copyright array                                                   S01432
+     I                                        1  80 CPY@                  S01432
+     I*                                                                   S01432
+     ILDA         DS                            256                       S01432
+     I                                      134 143 DBFILE                S01432
+     I                                      142 170 DBKEY                 S01432
+     I                                      171 180 DBPGM                 S01432
+     I                                      181 183 DBASE                 S01432
+     I*                                                                   S01432
+     I**  Local data area                                                 S01432
+     I*                                                                   S01432
+     C*****************************************************************
+     C           *NAMVAR   DEFN           LDA                             S01432
+     C*
+     C**   Access currency details to obtain the normally decimal
+     C**   quoted places indicator
+     C           CCY       CHAINSDCURRL0             81
+     C*
+     C**   Perform processing if record found
+     C           *IN81     IFEQ '0'                        B1
+     C*
+     C************         Z-ADD*ZEROS    PFW                             089129
+     C                     Z-ADD*ZEROS    PNF                             089129
+     C                     MOVE *BLANKS   SFW
+     C                     Z-ADD2         N       20
+     C*
+     C           N         DOWLE25                         B2
+     C*
+     C**   Terminate processing if number of days is zero
+     C           DFW,N     IFEQ *ZERO                      B3
+     C                     Z-ADD26        N
+     C                     ELSE                            X3
+     C*
+     C**   Calculate forward rate points
+     C           RFW,N     IFLT RFW,1                      B4
+     C***********RFW,1     SUB  RFW,N     WWPFW  128                      089129
+     C           RFW,1     SUB  RFW,N     WWPNF  138                      089129
+     C                     MOVE '-'       SFW,N
+     C                     ELSE                            X4
+     C***********RFW,N     SUB  RFW,1     WWPFW                           089129
+     C           RFW,N     SUB  RFW,1     WWPNF                           089129
+     C                     MOVE '+'       SFW,N
+     C                     END                             E4
+     C*
+     C           A6NQDP    ADD  1         I       20
+     C***********NQD,I     MULT WWPFW     PFW,N                           089129
+     C           NQD,I     MULT WWPNF     PNF,N                           089129
+     C                     END                             E3
+     C*
+     C                     ADD  1         N
+     C                     END                             E2
+     C*
+     C***********          END                             E1             S01432
+     C*
+     C**   Access record to be updated
+     C           CCY       CHAINFWDRT                82
+     C           *IN82     IFEQ '1'                                       S01432
+     C           *LOCK     IN   LDA                                       S01432
+     C                     MOVEL'FWDRTFE' DBFILE           ************   S01432
+     C                     MOVEL'001'     DBASE            * DBERR 01 *   S01432
+     C                     MOVEL'DL9901'  DBPGM            ************   S01432
+     C                     MOVELCCY       DBKEY                           S01432
+     C                     OUT  LDA                                       S01432
+     C                     SETON                     U7U8LR               S01432
+     C                     EXSR *PSSR                                     S01432
+     C                     END                                            S01432
+     C*                                                                   S01432
+     C                     ELSE                                           S01432
+     C           *LOCK     IN   LDA                                       S01432
+     C                     MOVEL'SDCURRPD'DBFILE           ************   S01432
+     C                     MOVEL'001'     DBASE            * DBERR 02 *   S01432
+     C                     MOVEL'DL9901'  DBPGM            ************   S01432
+     C                     MOVELCCY       DBKEY                           S01432
+     C                     OUT  LDA                                       S01432
+     C                     SETON                     U7U8LR               S01432
+     C                     EXSR *PSSR                                     S01432
+     C*                                                                   S01432
+     C                     END                                            S01432
+     C*****************************************************************
+     C*****************************************************************   S01432
+     C*                                                               *   S01432
+     C* *PSSR    - PROGRAM ERROR DUMP                                 *   S01432
+     C*                                                               *   S01432
+     C* CALLS             -                                           *   S01432
+     C*                                                               *   S01432
+     C* CALLED BY         -                                           *   S01432
+     C*                                                               *   S01432
+     C* FLDS USED         -                                           *   S01432
+     C*                                                               *   S01432
+     C*****************************************************************   S01432
+     C           *PSSR     BEGSR                                          S01432
+     C*                                                                   S01432
+     C           @DUMP     IFEQ *BLANKS                                   S01432
+     C                     MOVE 'Y'       @DUMP   1                       S01432
+     C                     DUMP                                           S01432
+     C                     END                                            S01432
+     C*                                                                   S01432
+     C                     ENDSR                                          S01432
+     C****************************************************************    S01432
+      /EJECT
+     O*****************************************************************
+     OFWDRT   D       N81N82 02
+     O***********              PFW      411P                              089129
+     O                         SFW      436
+     O                         PNF      611P                              089129
+     O*****************************************************************
+      ***   NQD - Normally quoted decimal places divisors                 105746
+      *000001                                                             105746
+      *000010                                                             105746
+      *000100                                                             105746
+      *001000                                                             105746
+      *010000                                                             105746
+      *100000                                                             105746
+      **   NQD - Normally quoted decimal places divisors                             105746 MD029222
+      *00000001                                                                      105746 MD029222
+      *00000010                                                                      105746 MD029222
+      *00000100                                                                      105746 MD029222
+      *00001000                                                                      105746 MD029222
+      *00010000                                                                      105746 MD029222
+      *00100000                                                                      105746 MD029222
+      *01000000                                                                      105746 MD029222
+      *10000000                                                                      105746 MD029222
+**   NQD - Normally quoted decimal places divisors                                          MD029222
+000000001                                                                                   MD029222
+000000010                                                                                   MD029222
+000000100                                                                                   MD029222
+000001000                                                                                   MD029222
+000010000                                                                                   MD029222
+000100000                                                                                   MD029222
+001000000                                                                                   MD029222
+010000000                                                                                   MD029222
+100000000                                                                                   MD029222
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

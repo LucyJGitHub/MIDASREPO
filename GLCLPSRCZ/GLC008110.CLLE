@@ -1,0 +1,122 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Create Extra Stamp Tax Postings')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - General Ledger                                      */
+/*                                                                   */
+/*       GLC008110 - Create Extra Keys for Stamp Tax Postings        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER049  *CREATE    Date 06Dec10              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER049 - Stamp Tax                                          */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+/**/
+             DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited 2010')
+/**/
+/** DB error defintion */
+/**/
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
+/**/
+/** Global monitor message */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+/** Copy in keys */
+/**/
+             CLRPFM     FILE(GLSTGEPD)
+/**/
+             CLRPFM     FILE(GLVCLSPD) MBR(GLVCLSPD)
+             CLRPFM     FILE(GLVCPSPD) MBR(GLVCPSPD)
+             CLRPFM     FILE(GLPSUMPD) MBR(GLPSUMPD)
+/**/
+             CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(LENDING1)
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(NEXT))
+             CPYF       FROMFILE(GLVCLSPD) TOFILE(GLVCLSPD) +
+                          FROMMBR(LENDING1) TOMBR(GLVCLSPD) +
+                          MBROPT(*ADD)
+/**/
+ NEXT:       CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(DEALING1)
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(NEXT1))
+             CPYF       FROMFILE(GLVCLSPD) TOFILE(GLVCLSPD) +
+                          FROMMBR(DEALING1) TOMBR(GLVCLSPD) +
+                          MBROPT(*ADD)
+ 
+ NEXT1:      CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(RESMAT1 )
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(NEXT2))
+             CPYF       FROMFILE(GLVCLSPD) TOFILE(GLVCLSPD) +
+                          FROMMBR(RESMAT1) TOMBR(GLVCLSPD) +
+                          MBROPT(*ADD)
+ 
+ NEXT2:      CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(FACIL1)
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(NEXT3))
+             CPYF       FROMFILE(GLVCLSPD) TOFILE(GLVCLSPD) +
+                          FROMMBR(FACIL1) TOMBR(GLVCLSPD) +
+                          MBROPT(*ADD)
+ 
+ NEXT3:      CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(POSTINT)
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(NEXT4))
+             CPYF       FROMFILE(GLVCLSPD) TOFILE(GLVCLSPD) +
+                          FROMMBR(POSTINT) TOMBR(GLVCLSPD) +
+                          MBROPT(*ADD)
+ 
+ NEXT4:      CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPRE )
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(NEXT5))
+             CPYF       FROMFILE(GLVCLSPD) TOFILE(GLVCLSPD) +
+                          FROMMBR(STAMPRE ) TOMBR(GLVCLSPD) +
+                          MBROPT(*ADD)
+ 
+ NEXT5:      CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPDL )
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(NEXT6))
+             CPYF       FROMFILE(GLVCLSPD) TOFILE(GLVCLSPD) +
+                          FROMMBR(STAMPDL ) TOMBR(GLVCLSPD) +
+                          MBROPT(*ADD)
+ 
+ NEXT6:      CHKOBJ     OBJ(GLVCLSPD) OBJTYPE(*FILE) MBR(STAMPLE )
+             MONMSG     MSGID(CPF9815) EXEC(GOTO CMDLBL(NEXT7))
+             CPYF       FROMFILE(GLVCLSPD) TOFILE(GLVCLSPD) +
+                          FROMMBR(STAMPLE ) TOMBR(GLVCLSPD) +
+                          MBROPT(*ADD)
+ NEXT7:
+/**/
+/** Override to block and call program */
+/**/
+             OVRDBF     FILE(GLVCLSL0) SEQONLY(*YES 1000)
+             OVRDBF     FILE(GLVCPSPD) SEQONLY(*YES 1000)
+             OVRDBF     FILE(GLPSUMPD) SEQONLY(*YES 1000)
+             CALL       PGM(GL008110) PARM('N' 'Y')
+             CALL       PGM(GL008112)
+/**/
+/** DB error  */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+             SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                          TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(ABNOR)
+             ENDDO
+/**/
+/** Call summary Processing */
+/**/
+             CALL       PGM(GLC008111) PARM('GLPSUMPD' 'GLVCPSPD')
+/**/
+             GOTO       CMDLBL(END)
+/**/
+ ABNOR:
+/**/
+             CHGJOB     SWS(XXXXXX11)
+/**/
+ END:
+             CHGVAR     VAR(&MKICPY) VALUE('(c) Finastra International +
+                          Banking Systems Ltd. 2010')
+             ENDPGM

@@ -1,0 +1,291 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas¦ABS Validate User Against Account Code')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility                            *
+      *                                                               *
+      *  SF0930 - VALIDATE USER AGAINST ACCOUNT CODE                  *
+      *                                                               *
+      *  Function:  This program checks whether the user is           *
+      *             authorised to the account code passed as a        *
+      *             parameter to the program.                         *
+      *             The first time (CRE024 blank), the switchable     *
+      *             features files is accessed to see if the feature  *
+      *             is on. This is passed back to the calling program *
+      *             The user is authorised if:                        *
+      *           - Access to the account code is not restricted.     *
+      *           - The user has authority *ALL to all accounts.      *
+      *           - The user is authorised to the particular account  *
+      *             code range of the account code.                   *
+      *             If the user is not authorised, the parameter 'N'  *
+      *             is returned.                                      *
+      *             If the option parameter is *REPT, the attempt     *
+      *             is also written to the Restricted Accounts        *
+      *             Unauthorised Access file SFRAUAPA.                *
+      *                                                               *
+      *  Called By: GL0061 - GL Customer Account Balances Enquiry     *
+      *             GL3271 - GL Account Maintenance/Enquiry           *
+      *             GL4441 - GL Account and Statement Details Enquiry *
+      *             GL4442 - GL A/c movmt to start of business Enqy   *
+      *             GL4443 - GL Projected Ledger Movements Enquiry    *
+      *             GL4444 - GL Items in Clearing Enquiry             *
+      *             GL4610 - GL Account Code Balance Enquiry          *
+      *             RE3360 - RE Outstanding Interest/Charges Enquiry  *
+      *                                                               *
+      *             RE0790 - RE Accounts Excess Report                *
+      *             RE3772 - RE Account Balances Report               *
+      *                                                               *
+      *  (C) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD018447           Date 30Sep13               *
+      *                 CRE024A            Date 12Sep12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CRE024   *CREATE   Date 07Oct05               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD018447 - Wrong balance shown for account                   *
+      *  CRE024A - Security Features for Restricted Accounts          *
+      *            Enhancement                                        *
+      *  CRE024 - COUNTRY LEVEL SWITCHABLE FEATURE :                  *
+      *           SECURITY FEATURES FOR RESTRICTED ACCOUNTS           *
+      *                                                               *
+      *****************************************************************
+     FSFRACRPAIF  E           K        DISK         KINFSR *PSSR
+     FSFRAAUPAIF  E           K        DISK         KINFSR *PSSR
+     FSFRAUAPAO   E                    DISK         KINFSR *PSSR
+      *-------------------------------------------------------------------
+      *
+      *  F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *   90 - General Purpose Indicator
+      *
+      *--------------------------------------------------------------------
+     E                    CPY@    1   1 80               MKI Copyright array
+     E                    ERR     1   2 50               Error Message
+      *--------------------------------------------------------------------
+      *
+      * Program Status Data Structure
+     IPSDS       SDS
+     I                                      244 253 JNAM
+     I                                      254 263 JUSR
+     I                                      264 2690JNOM
+      *
+      * Data Structure to pass parameters to Access programs
+     IAOFMTS    E DSDSFDY
+      *
+      * Data Structure to receive SDACODPD details
+     IAOACOD    E DSSDACODPD
+      *
+      * External Data Area of Menu Item requested
+     I******ZMITEM      DS
+     I******                                        1   1 ZID
+     I******                                        2   50ZMGRP
+     I******                                        6   9 ZICDE
+      *
+      * Data Structure for program name
+     I*********   DS
+     I*********                               3   8 MPGNM
+     I*********                               1   4 MICDE
+     I*********                               5   80MMGRP
+      *
+      *--------------------------------------------------------------------
+      *
+     C           *ENTRY    PLIST
+     C                     PARM CRE024    P0U001  1
+     C                     PARM           P0AUTH
+     C                     PARM           P0ACOD 100
+     C                     PARM           P0CNUM
+     C                     PARM           P0CCY
+     C                     PARM           P0ACSQ
+     C                     PARM           P0BRCA
+     C                     PARM           P0PGM  10
+     C                     PARM           P0OPTN  5
+     C                     PARM           P0EMSG
+      *
+     C                     MOVEL*BLANKS   USERID                                             CRE024A
+      *                                                                                      CRE024A
+      ** P0EMSG was used to store the user ID to accommodate reports running via a submit    CRE024A
+      ** job                                                                                 CRE024A
+     C           P0EMSG    IFNE *BLANKS                                                      CRE024A
+     C                     MOVELP0EMSG    USERID    P                                        CRE024A
+     C                     MOVEL*BLANKS   P0EMSG    P                                        CRE024A
+     C                     ELSE                                                              CRE024A
+     C                     MOVELJUSR      USERID    P                                        CRE024A
+     C                     ENDIF                                                             CRE024A
+      *                                                                                      CRE024A
+     C           FIRST     IFNE 'N'                        B1
+     C                     EXSR #INIT
+     C                     END                             E1
+      *
+      * Validate user authority if feature is on
+     C           CRE024    IFEQ 'Y'                        B1
+     C                     CLEARSFRAUAP0
+     C                     MOVE 'N'       P0AUTH
+     C                     MOVE P0ACOD    X0ACOD
+      *
+      * Check if  Retail account
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   P2RTCD  7
+     C                     PARM '*KEY'    P2OPTN  7
+     C                     PARM X0ACOD    P2ACOD  4
+     C           AOACOD    PARM *BLANK    AOFMTS
+      *
+      **If*not*Retail, set authority to 'Y'                               CRE024
+     C********** A5ACTY    IFNE 'R'                        B2             CRE024
+     C**********           MOVE 'Y'       P0AUTH                          CRE024
+     C**********           ELSE                            X2             CRE024
+      *
+      * If user has authority *ALL, set authority to 'Y'
+     C           K0RAAU    SETLLSFRAAUP0                 90
+      *
+     C           *IN90     IFEQ '1'                        B3
+     C                     MOVEL'Y'       P0AUTH
+     C                     ELSE                            X3
+      *
+      * If not, see if access to account code is restricted
+     C           X0ACOD    SETGTSFRACRP0
+     C                     READPSFRACRP0                 90
+      *
+      * If account code within a restricted range, see if user has authority
+      * to that range
+     C           *IN90     IFEQ '0'                        B4
+     C           X0ACOD    ANDLEMTOAC
+      *
+     C           K1RAAU    SETLLSFRAAUP0                 90
+     C           *IN90     IFEQ '1'                        B5
+     C                     MOVEL'Y'       P0AUTH
+     C                     END                             E5
+      *
+     C                     ELSE                            X4
+     C                     MOVEL'Y'       P0AUTH
+     C                     END                             E4
+     C                     END                             E3
+      *
+      * If user not authorised and option is report, output details
+      * to unauthorised access audit file
+     C           P0AUTH    IFEQ 'N'                        B3
+     C           P0OPTN    IFEQ '*REPT'                    B4
+      *
+     C                     MOVE P0BRCA    MBRCA
+     C                     MOVE P0CNUM    MCNUM
+     C                     MOVE P0ACOD    MACOD
+     C                     MOVE P0CCY     MCCY
+     C                     MOVE P0ACSQ    MACSQ
+     C**********           MOVE JUSR      MJUSR                                              CRE024A
+     C                     MOVE USERID    MJUSR                                              CRE024A
+     C                     MOVE JNAM      MJNAM
+     C                     MOVE JNOM      MJNOM
+      *
+     C*********  P0PGM     IFEQ *BLANKS
+     C*********            MOVE ZMGRP     MMGRP
+     C*********            MOVE ZICDE     MICDE
+     C*********            ELSE
+     C                     MOVE P0PGM     MPGNM
+     C*********            END
+      *
+     C                     TIME           MTIME
+     C                     WRITESFRAUAP0
+     C                     MOVE ERR,1     P0EMSG
+     C                     ELSE                            X4
+     C                     MOVE ERR,2     P0EMSG
+     C                     END                             E4
+      *
+     C                     END                             E3
+     C**********           END                             E2             CRE024
+     C                     END                             E1
+      *
+     C                     RETRN
+      *
+      *********************************************************************
+      *                                                                   *
+      * #INIT - Initial Program Subroutine                                *
+      *                                                                   *
+      *********************************************************************
+      *
+     C           #INIT     BEGSR
+      *
+      * Define key lists
+     C           K0RAAU    KLIST
+     C                     KFLD           JUSR
+     C                     KFLD           K0ACOD
+      *
+     C           K1RAAU    KLIST
+     C                     KFLD           JUSR
+     C                     KFLD           MFRAC
+      *
+      * Define all program work fields
+     C           *LIKE     DEFN MCNUM     P0CNUM
+     C           *LIKE     DEFN MCCY      P0CCY
+     C           *LIKE     DEFN MACSQ     P0ACSQ
+     C           *LIKE     DEFN MBRCA     P0BRCA
+     C           *LIKE     DEFN MFRAC     K0ACOD
+     C           *LIKE     DEFN MFRAC     X0ACOD
+     C           *LIKE     DEFN JUSR      USERID                                             CRE024A
+      *
+     C                     MOVE *BLANKS   P0AUTH  1
+     C                     MOVE *BLANKS   P0EMSG 50
+      *
+      * Set up copyright
+     C                     MOVEACPY@      MKI@   80
+      *
+     C                     MOVE 'N'       FIRST   1
+     C**********           MOVE '*ALL'    K0ACOD                                            MD018447
+     C                     MOVEL'*ALL'    K0ACOD                                            MD018447
+      *
+      * Access SAR file to see if feature is on
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   P1RTCD  7
+     C                     PARM '*VERIFY' P1OPTN  7
+     C                     PARM 'CRE024'  P1KEY   6
+     C                     PARM *BLANKS   AOFMTS
+      *
+     C           P1RTCD    IFEQ *BLANKS
+     C                     MOVE 'Y'       CRE024  1
+     C                     ELSE
+     C                     MOVE 'N'       CRE024
+     C                     MOVE 'Y'       P0AUTH
+     C                     END
+      *
+      **Access*menu*details if program parameter not passed
+     C********** P0PGM     IFEQ *BLANKS
+     C********** CRE024    ANDEQ'Y'
+     C********** *NAMVAR   DEFN           ZMITEM
+     C**********           IN   ZMITEM
+     C**********           UNLCKZMITEM
+     C**********           END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program Exception Error Routine                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     CALL 'DBERRCTL'
+     C                     DUMP
+     C                     END
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+**  CPY@
+(C) Finastra International Limited 2005
+**  ERR
+ACCESS TO THIS ACCOUNT IS RESTRICTED
+DETAILS FOR RESTRICTED ACCOUNTS NOT SHOWN

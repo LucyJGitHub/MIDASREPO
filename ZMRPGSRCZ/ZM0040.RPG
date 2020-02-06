@@ -1,0 +1,382 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Convert MIDAS amount to SWIFT format.')          *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - MESSAGE MANAGEMENT UTILITIES.                        *
+     F*                                                               *
+     F*  ZM0040 - AMOUNT CONVERSION.                                  *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE075BO           Date 06Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSW020             Date 04Jan00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 S01408             Date 19Nov96               *
+     F*                 S01408             Date 10JUN96               *
+     F*                 088425             DATE 30MAY95               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE075BO - COB Restructure - LE COB Optimisation Phase 1     *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+     F*  CSW020 - SWIFT Decimal Places                                *
+     F*           Adjust the amount if the Swift decimal places       *
+     F*           differs from the currency decimal places            *
+     F*  S01408 - Addition of core hook ZM0040CCP4                    *
+     F*           Addition of core hook ZM0040CCP3                    *
+     F*           Addition of core hook ZM0040CCP2                    *
+     F*  S01408 - Core hook ZM0040CCP1 added.                         *
+     F*  088425 - ',' Added before for 1 digit amount and CDP 0       *
+     F*                                                               *
+     F*****************************************************************
+     F* PURPOSE.                                                     *
+     F*                                                              *
+     F*  To convert an  amount (ZAMNT) (13,0) to SWIFT               *
+     F*  input format (ZSAMNT) (17A).                                *
+     F*                                                              *
+     F*  1.A decimal comma is inserted dependant on the number of    *
+     F*    decimal places returned from the access to sdcurrpd.      *
+     F*  2.Leading zeros must be dropped.                            *
+     F*  3.The decimal comma must have at least one leading digit.   *
+     F*                                                              *
+     F****************************************************************
+     F*                                                              *
+     F* FUNCTION OF INDICATORS.                                      *
+     F*                                                              *
+     F* 90  -  0 Decimal places from sdcurrpd.                       *
+     F* 91  -  1 Decimal place from sdcurrpd.                        *
+     F* 92  -  2 Decimal places from sdcurrpd.                       *
+     F* 93  -  3 Decimal places from sdcurrpd.                       *
+     F* 94  -  Used in the blank of leading zeros.                   *
+     F* 95  -  Used to end the blank of leading zeros.               *
+     F*                                                              *
+     F****************************************************************
+     F/COPY WNCPYSRC,ZM0040F001
+     E*
+     E** COPYRIGHT STATEMENT ARRAY.
+     E*
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY USED IN CONVERSION.
+     E*
+     E                    ZAA        17  1
+      /EJECT
+     E****************************************************************
+     I*
+     I** DSTS STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I* Program data structure( to check the number of parameters)        CSW020
+     I           SDS                                                      CSW020
+     I                                     *PARMS   WPARM                 CSW020
+     IRUNDAT      DS                                                      CSW020
+     I                                        1   7 MRDT                  CSW020
+     I                                    P   8  100RDNB                  CSW020
+     I                                       11  11 SUC                   CSW020
+     I                                       12  12 DFF                   CSW020
+     I                                       13  13 MBIN                  CSW020
+     I*
+     I** External Data structure for Currency Details.
+     I*
+     I/COPY WNCPYSRC,ZM0040I001
+     ISDCURR    E DSSDCURRPD
+     I*
+     I** 1st DS for access program , short data structure.
+     I*
+     IDSFDY     E DSDSFDY
+     I*
+     I** 2nd DS for access program , long data structure.
+     I*
+     IDSSDY     E DSDSSDY
+     I*
+     I****************************************************************
+     C*
+     C**  Entry of currency and amount
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           ZAMNT  130
+     C                     PARM           ZCCY    3
+     C                     PARM           ZSAMNT 17
+     C                     PARM           ZSCCY   3
+     C                     PARM           ZERR    1
+     C                     PARM           ZSWDPC  1                       CSW020
+     C*
+     C                     SETOF                     909192
+     C                     SETOF                     939495
+     C                     MOVE *BLANKS   ZSAMNT
+     C                     MOVE *BLANKS   ZSCCY
+     C                     MOVE *BLANKS   ZERR
+      *****************************************************************              CSW020 CLE075BO
+      **Get*Rundate*-*Rundate******************************************              CSW020 CLE075BO
+     C********** *NAMVAR   DEFN           RUNDAT                                     CSW020 CLE075BO
+     C**********           IN   RUNDAT                                               CSW020 CLE075BO
+      *****************************************************************              CSW020 CLE075BO
+      **Control*if*feature*'Swift*decimal*places'*is*on.***************              CSW020 CLE075BO
+     C**********           CALL 'AOSARDR0'                                           CSW020 CLE075BO
+     C**********           PARM '       ' @RTCD   7                                  CSW020 CLE075BO
+     C**********           PARM '*VERIFY' @OPTN   7                                  CSW020 CLE075BO
+     C**********           PARM 'CSW020'  @SARD   6                                  CSW020 CLE075BO
+     C********** @RTCD     IFEQ *BLANK                                               CSW020 CLE075BO
+     C**********           MOVE 'Y'       CSW020  1                                  CSW020 CLE075BO
+     C**********           ENDIF                                                     CSW020 CLE075BO
+     C*****************************************************************              CSW020 CLE075BO
+     C*
+     C** To determine the number of decimal places for the currency and
+     C** to obtain the swift currency by accessing sdcurrpd (the currency)
+     C** details file), using the midas currency as a key and handling any
+     C** database errors in the program.
+     C*
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY'    @OPTN   7
+     C                     PARM ZCCY      @CCY    3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C*
+     C** To deal with data base errors.
+     C*
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE '1'       ZERR
+     C                     END
+     C*
+     C** Only do the following processing if there has not been a
+     C** database error.
+     C*
+     C           @RTCD     IFEQ *BLANKS
+     C*
+     C*
+     C** To move the currency field names.
+     C*
+     C                     MOVE A6SWCY    ZSCCY
+     C                     MOVE A6NBDP    ZCDP    10
+     C*                                                                   CSW020
+     C** Need to adjust amount if the Swift Decimal Places is             CSW020
+     C** different to the normal number of Decimal Places and the         CSW020
+     C** effective date has been reached.                                 CSW020
+     C*                                                                   CSW020
+     C           CSW020    IFEQ 'Y'                                       CSW020
+     C           A6NBDP    ANDNEA6SWDP                                    CSW020
+     C           A6SWDT    ANDLERDNB                                      CSW020
+     C*                                                                   CSW020
+     C           WPARM     IFEQ 6                                         CSW020
+     C           ZSWDPC    ANDNE'N'                                       CSW020
+     C           WPARM     OREQ 5                                         CSW020
+      *                                                                   CSW020
+     C* CHECK THE DIFFERENCE OF DECIMAL TO HAVE THE CORRECT AMOUNT        CSW020
+      *                                                                   CSW020
+     C           A6SWDP    IFLT ZCDP                                      CSW020
+     C           ZCDP      SUB  A6SWDP    X       10                      CSW020
+     C                     ELSE                                           CSW020
+     C           A6SWDP    SUB  ZCDP      X                               CSW020
+     C                     ENDIF                                          CSW020
+      *                                                                   CSW020
+     C           X         IFEQ 1                                         CSW020
+     C                     Z-ADD10        Y       40                      CSW020
+     C                     ENDIF                                          CSW020
+     C           X         IFEQ 2                                         CSW020
+     C                     Z-ADD100       Y                               CSW020
+     C                     ENDIF                                          CSW020
+     C           X         IFEQ 3                                         CSW020
+     C                     Z-ADD1000      Y                               CSW020
+     C                     ENDIF                                          CSW020
+     C           X         IFEQ 4                                         CSW020
+     C                     Z-ADD10000     Y                               CSW020
+     C                     ENDIF                                          CSW020
+      *                                                                   CSW020
+     C           A6SWDP    IFLT ZCDP                                      CSW020
+     C           ZAMNT     DIV  Y         ZAMNT                           CSW020
+     C                     ELSE                                           CSW020
+     C           ZAMNT     MULT Y         ZAMNT                           CSW020
+     C                     ENDIF                                          CSW020
+      *                                                                   CSW020
+     C                     Z-ADDA6SWDP    ZCDP                            CSW020
+     C*                                                                   CSW020
+     C                     ENDIF                                          CSW020
+     C                     ENDIF                                          CSW020
+     C/COPY WNCPYSRC,ZM0040C001
+     C*
+     C** To obtain the number of currency decimal places.
+     C*  No decimal places.
+     C           ZCDP      IFEQ 0
+     C                     MOVE '1'       *IN90
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,ZM0040CCP2                                           S01408
+     C*                                                                   S01408
+     C                     END
+     C*  One decimal place.
+     C           ZCDP      IFEQ 1
+     C                     MOVE '1'       *IN91
+     C                     END
+     C*  Two decimal places.
+     C           ZCDP      IFEQ 2
+     C                     MOVE '1'       *IN92
+     C                     END
+     C*  Three decimal places.
+     C           ZCDP      IFEQ 3
+     C                     MOVE '1'       *IN93
+     C                     END
+     C*                                                                   S01048
+     C/COPY WNCPYSRC,ZM0040CCP1                                           S01048
+     C*                                                                   S01048
+     C*
+     C** Ensure amount field is positive before processing
+     C*
+     C           ZAMNT     IFLT 0
+     C           ZAMNT     MULT -1        ZAMNT
+     C                     END
+     C*
+     C** To move the midas amount to the 17A field including the decimal
+     C** comma. H16 is a holding field for the amount.
+     C*
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,ZM0040CCP3                                           S01408
+     C*                                                                   S01408
+     C                     MOVE ZAMNT     H16    16
+     C*                                                                   S01408
+     C/COPY WNCPYSRC,ZM0040CCP4                                           S01408
+     C*                                                                   S01408
+     C*
+     C** For no decimal places. *in90 =1. The decimal comma is placed at
+     C** the end of the amount.
+     C*
+     C           *IN90     IFEQ '1'
+     C                     MOVELH16       ZAAL   17
+     C                     MOVE ','       ZAAL
+     C                     END
+     C*
+     C** For one decimal place. *in91 = 1. The amount field is split
+     C** to enable the comma to be inserted one digit before the end.
+     C** H1 is a holding field.
+     C*
+     C           *IN91     IFEQ '1'
+     C                     MOVE H16       H1      1
+     C                     MOVE ','       H16
+     C                     MOVELH16       ZAAL
+     C                     MOVE H1        ZAAL
+     C                     END
+     C*
+     C** For two decimal places. *in92 = 1. The amount field is split
+     C** to enable the comma to be inserted two digits before the end.
+     C** H2 and H3 are holding fields.
+     C*
+     C           *IN92     IFEQ '1'
+     C                     MOVE H16       H2      2
+     C                     MOVELH16       H14    14
+     C                     MOVE H2        H3      3
+     C                     MOVEL','       H3
+     C                     MOVELH14       ZAAL
+     C                     MOVE H3        ZAAL
+     C                     END
+     C*
+     C** For three decimal places. *in93 = 1. The amount field is split
+     C** to enable the comma to be inserted three digits before the end.
+     C** H2 , H3 and H4 are holding fields.
+     C*
+     C           *IN93     IFEQ '1'
+     C                     MOVE H16       H3
+     C                     MOVELH16       H13    13
+     C                     MOVE H3        H4      4
+     C                     MOVEL','       H4
+     C                     MOVELH13       ZAAL
+     C                     MOVE H4        ZAAL
+     C                     END
+     C*
+     C** Blank out all leading zeros leaving at least one leading
+     C** integer.  Any remaining leading zeros are dropped,except
+     C** if there is one directly proceeding the decimal comma.
+     C** This is retained.
+     C*
+     C                     MOVEAZAAL      ZAA
+     C                     Z-ADD1         ZA      20
+     C                     SETOF                     95
+     C                     MOVE '1'       *IN94
+     C*
+     C           *IN94     DOUEQ'0'
+     C*
+     C           ZAA,ZA    IFEQ '0'
+     C           ZAA,ZA    OREQ ' '
+     C                     MOVE '1'       *IN94
+     C                     ELSE
+     C                     MOVE '0'       *IN94
+     C                     END
+     C*
+     C           *IN94     IFEQ '1'
+     C                     MOVE ' '       ZAA,ZA
+     C                     ADD  1         ZA
+     C                     END
+     C*
+     C           *IN94     IFEQ '0'
+     C           ZAA,ZA    ANDEQ','
+     C                     MOVE '1'       *IN95
+     C                     END
+     C*
+     C           ZA        IFEQ 16
+     C           ZCDP      ANDNE0                                         088425
+     C           ZAA,ZA    IFEQ ','                                       CSW020
+     C           ZCDP      ANDEQ1                                         CSW020
+     C                     ELSE                                           CSW020
+     C                     MOVE '0'       *IN94
+     C                     SUB  1         ZA
+     C                     MOVE ','       ZAA,ZA
+     C                     END                                            CSW020
+     C                     END
+     C*
+     C                     END
+     C*
+     C           *IN95     IFEQ '1'
+     C           ZA        SUB  1         ZA
+     C                     MOVE '0'       ZAA,ZA
+     C                     END
+     C*
+     C** Move to a 15A SWIFT format field for output.
+     C*
+     C                     MOVEAZAA,ZA    ZSAMNT 17
+     C*
+     C** 'End' for the database error.
+     C*
+     C/COPY WNCPYSRC,ZM0040C002
+     C                     END
+     C*
+     C** Termination Processing.
+     C*
+     C**********           SETON                     LR                                     CLE075BO
+     C                     RETRN
+     C*
+     C*****************************************************************
+      *                                                               *                     CLE075BO
+      *  INZSR - Initial Subroutine.                                  *                     CLE075BO
+      *                                                               *                     CLE075BO
+      *****************************************************************                     CLE075BO
+     C           *INZSR    BEGSR                                                            CLE075BO
+      *                                                                                     CLE075BO
+      ** Get Rundate                                                                        CLE075BO
+      *                                                                                     CLE075BO
+     C           *NAMVAR   DEFN           RUNDAT                                            CLE075BO
+     C                     IN   RUNDAT                                                      CLE075BO
+      *                                                                                     CLE075BO
+      ** Control if feature 'Swift decimal places' is on.                                   CLE075BO
+      *                                                                                     CLE075BO
+     C                     CALL 'AOSARDR0'                                                  CLE075BO
+     C                     PARM '       ' @RTCD   7                                         CLE075BO
+     C                     PARM '*VERIFY' @OPTN   7                                         CLE075BO
+     C                     PARM 'CSW020'  @SARD   6                                         CLE075BO
+     C           @RTCD     IFEQ *BLANK                                                      CLE075BO
+     C                     MOVE 'Y'       CSW020  1                                         CLE075BO
+     C                     ENDIF                                                            CLE075BO
+      *                                                                                     CLE075BO
+     C                     ENDSR                                                            CLE075BO
+      *****************************************************************                     CLE075BO
+** CPY@
+(c) Finastra International Limited 2001

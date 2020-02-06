@@ -1,0 +1,149 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SM Pass parameters for MIGRATEZ')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000049 - Pass parameters to MIGRATEZ                     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2007                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27793           Date 04Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BG26993            Date 26Jan10              */
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      B18595             Date 06May08              */
+/*                      CUP038  *CREATE    Date 12Sep07              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG27793 - Make migration multi-streamed.                   */
+/*       BG26993 - Delivery of upgrade programs to core.             */
+/*               - Migration of MEMOS is now handled differently.    */
+/*       B18595 - Wrong System Value used.                           */
+/*       CUP038 - Reorganisation of migration.                       */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFXSVAL &OPFXSVAL &ORLVLSVAL)
+ 
+             DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&ORLVLSVAL) TYPE(*CHAR) LEN(20)
+ 
+             DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&OLDSBSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&FMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ORLVL) TYPE(*CHAR) LEN(22)
+ 
+             DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+ 
+             DCLF       FILE(UPSVALJ0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2007')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area MIDASMSG in QTEMP. */
+             DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ')
+ 
+VALIDATE:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(CHECK)
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&SBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             IF         COND(&GISVAL *EQ &ORLVLSVAL) THEN(DO)
+                IF         COND(&GIVAL *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
+                ENDDO
+                ELSE       CMD(DO)
+                   CHGVAR     VAR(&ORLVL) VALUE(&GIVAL)
+                ENDDO
+             ENDDO
+ 
+             GOTO       CMDLBL(VALIDATE)
+ 
+ CHECK:
+             IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
+/* Set up messages for Midas Information Screen  */
+                RTVMSG     MSGID(UPM0003) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+                RTVMSG     MSGID(UPM0004) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (151 50)) VALUE(&MESSAGE)
+                CALL       PGM(SCC0010) PARM('SMC000049' 'ENTER' ' ')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+/* Set up library list. */
+             CALL       PGM(UPC0014) PARM(&SBSID)
+ 
+/* Set up library names. */
+             CHGVAR     VAR(&FMLIB) VALUE(&OLDSBSID *TCAT 'DMLIB')
+             CHGVAR     VAR(&TOLIB) VALUE(&SBSID *TCAT 'DMLIB')
+ 
+/* Store release information in temporary data area .*/
+             DLTDTAARA  DTAARA(&FMLIB/SMBRGMIGDA)
+             MONMSG     MSGID(CPF0000)
+             CRTDTAARA  DTAARA(&FMLIB/SMBRGMIGDA) TYPE(*CHAR) +
+                          LEN(100) TEXT('Temporary data area for +
+                          database migration')
+             CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (1 10)) +
+                          VALUE(%SST(&ORLVL 1 10))
+             CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (11 10)) +
+                          VALUE(%SST(&ORLVL 11 10))
+             CHGDTAARA  DTAARA(&FMLIB/SMBRGMIGDA (21 2)) +
+                          VALUE(%SST(&ORLVL 21 2))
+ 
+             ?          MIGRATEZ ?*FROMLIB(&FMLIB) ?*TOLIB(&TOLIB) +
+                          ?-CRTFILE(*N) ??RERUN(*NO) ?-SYSPFX(*YES) +
+                          ??EXCEPTION(*N) ??THRESHOLD(*N) ??JUMP(*N)
+             MONMSG     MSGID(CPF6801) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ ERROR:
+             RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
+                          MSGDTA('SMC000049') MSG(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
+                          joblog for details.')
+             MONMSG     MSGID(CPF0000)
+             CALL       PGM(SCC0010) PARM('SMC000049' 'JOBLOG' 'Y')
+             MONMSG     MSGID(CPF0000 MCH0000)
+ ENDPGM:
+             ENDPGM

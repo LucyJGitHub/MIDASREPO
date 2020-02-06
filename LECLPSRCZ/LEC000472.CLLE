@@ -1,0 +1,111 @@
+/*******************************************************************/
+/*STD    CLPBASEBND                                                */
+/*EXI    TEXT('Midas LE Merge Postings to GELEPD')                   */
+/*******************************************************************/
+/*                                                                 */
+/*     Midas    - Customer Lending Module                          */
+/*                                                                 */
+/*     LEC000472 - Merge Postings to GELEPD                        */
+/*                                                                 */
+/*       (c) Finastra International Limited 2012                   */
+/*                                                                 */
+/*       Last Amend No. MD046248           Date 27Oct17            */
+/*       Prev Amend No. CLE134 *CREATE     Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       MD046248 - Finastra Rebranding                            */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+             PGM        PARM(&NAM &SEQ &POST)
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Finastra International Limited +
+                           2012')
+ 
+             DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
+             DCL        VAR(&LDA)     TYPE(*CHAR) LEN(256)
+             DCL        VAR(&CMTCTL)  TYPE(*CHAR) LEN(1)
+             DCL        VAR(&POST)    TYPE(*CHAR) LEN(1)
+             DCL        VAR(&NAM)    TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SEQ)    TYPE(*DEC)  LEN(5 0)
+             DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/** Check if component needs to run today */
+             RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)
+             IF         COND(%SUBSTRING(&LEPDCL 1 1) *EQ 'N') +
+                           THEN(GOTO CMDLBL(ENDPGM))
+ 
+             RTVJOBA    TYPE(&JOBTYPE)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+             CHGDTAARA  DTAARA(LDA) VALUE(' ')
+             CHGJOB     SWS(00000000)
+ 
+             IF         COND(&POST = '5') THEN(DO)
+               OVRDBF     FILE(GELEPD) TOFILE(GELE2PD)
+               OVRDBF     FILE(GELEZZ) TOFILE(GELE2ZZ)
+             ENDDO
+ 
+/** Start commitment control for batch jobs with file updates */
+             STRCMTCTL  LCKLVL(*CHG) NFYOBJ(MNTYF (*FILE)) +
+                           CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351) EXEC(CHGVAR VAR(&CMTCTL) +
+                           VALUE('Y'))
+ 
+/** Call Copy of generated postings */
+ 
+             CALL       PGM(LE000472)
+ 
+/** For Database Errors Recover Data from LDA */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+               CHGVAR     VAR(&MEM) VALUE(%SST(&LDA 134 50))
+               SNDPGMMSG  MSGID(MEM0001) MSGF(GBMIDAS) +
+                             MSGDTA(&MEM) TOPGMQ(*EXT) +
+                              TOMSGQ(MOPERQ)
+               ROLLBACK
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** In case of successful processing - Commit */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+               COMMIT
+             ENDDO
+ 
+             IF         COND(&CMTCTL *NE 'Y') THEN(DO)
+               ENDCMTCTL
+             ENDDO
+ 
+/** Go to End - Successful Processing  */
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+ 
+/** Abnormal termination - Batch job */
+ 
+             IF         COND(&JOBTYPE = '0') THEN(DO)
+               SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) +
+                  MSGDTA('Program LEC0000472 ended abnormally +
+                  - see job log') TOMSGQ(MOPERQ)
+               MONMSG     MSGID(CPF0000 MCH0000)
+             ENDDO
+ 
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                           Finastra International Limited')
+ 
+ ENDPGM:     ENDPGM

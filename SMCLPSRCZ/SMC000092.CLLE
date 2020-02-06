@@ -1,0 +1,150 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Set up initial Retail')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000092 - Set up initial Retail                           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD031950           Date 17Jun15              */
+/*                      MD030959           Date 17Jun15              */
+/*                      CUP004  *CREATE    Date 06Oct10              */
+/*                                                                   */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD031950 - Recompiled due to changed PF/CUSEXZ1.            */
+/*       MD030959 - Recompiled due to changed PF/HELDIHC.            */
+/*       CUP004 - New utility to replace SCBEGIN.                    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PFX &ERRPGM)
+ 
+             DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ERRPGM) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SQLSTR) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&QUOTE) TYPE(*CHAR) LEN(1) VALUE('''')
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RTNERR) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+/* Check if Retail is switched on - data area MMOD and file SDMMODPD. */
+             RTVDTAARA  DTAARA(MMOD (3 1)) RTNVAR(&RE)
+             CALL       PGM(AOMMODR0) PARM(&RTNCODE '*FIRST' &FMT)
+             IF         COND(&RTNCODE *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('AOMMODR0')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+             IF         COND(&RE *NE 'Y' *OR %SST(&FMT 29 1) *NE +
+                          'Y') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('*NOT ON')
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             CHGVAR     VAR(&DTALIB) VALUE(&PFX *TCAT 'DTALIB')
+ 
+/* Clear the relevant files. */
+             CLRPFM     FILE(RTHH)
+             CLRPFM     FILE(REINTA)
+             CLRPFM     FILE(REINTD)
+             CLRPFM     FILE(REINTZ)
+             CLRPFM     FILE(RETRGA)
+             CLRPFM     FILE(RETRGD)
+             CLRPFM     FILE(RETRGZ)
+             CLRPFM     FILE(RECRGA)
+             CLRPFM     FILE(RECRGD)
+             CLRPFM     FILE(RECRGZ)
+             CLRPFM     FILE(RECCYA)
+             CLRPFM     FILE(RECCYD)
+             CLRPFM     FILE(RECCYZ)
+             CLRPFM     FILE(REDEFA)
+             CLRPFM     FILE(REDEFD)
+             CLRPFM     FILE(REDEFZ)
+             CLRPFM     FILE(REACRA)
+             CLRPFM     FILE(REACRD)
+             CLRPFM     FILE(REACRZ)
+             CLRPFM     FILE(REIACA)
+             CLRPFM     FILE(REIACD)
+             CLRPFM     FILE(REIACZ)
+             CLRPFM     FILE(SRECA)
+             CLRPFM     FILE(SRECS)
+             CLRPFM     FILE(SRECZ)
+             CLRPFM     FILE(GEICHH)
+             CLRPFM     FILE(GEICPD)
+             CLRPFM     FILE(GEICZZ)
+             CLRPFM     FILE(CLEARHH)
+             CLRPFM     FILE(CLEARPD)
+             CLRPFM     FILE(CLEARZZ)
+             CLRPFM     FILE(HELDIHA)
+             CLRPFM     FILE(HELDIHB)
+             CLRPFM     FILE(HELDIHC)
+             CLRPFM     FILE(CUSEXH1)
+             CLRPFM     FILE(CUSEXCE)
+             CLRPFM     FILE(CUSEXZ1)
+             CLRPFM     FILE(STOPCSC)
+             CLRPFM     FILE(STOPCSD)
+             CLRPFM     FILE(STOPCSE)
+             CLRPFM     FILE(STANDSA)
+             CLRPFM     FILE(STANDSB)
+             CLRPFM     FILE(STANDSC)
+             CLRPFM     FILE(MEMOS)
+             CLRPFM     FILE(RSACMTPD)
+ 
+/* Update data areas. */
+             CHGDTAARA  DTAARA(RESTAT) VALUE('001000NNNNNOLDNNONE  NN')
+             CHGDTAARA  DTAARA(CEXNO) VALUE('0000')
+ 
+/* Update Retail headers and trailers. */
+             OVRDBF     FILE(TABLE) TOFILE(TABRE2)
+             CALL       PGM(RE0005)
+             DLTOVR     FILE(TABLE)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('RE0005')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+/* Delete record from SCSARDPD for S01413 (Retail 3). */
+             CHGVAR     VAR(&SQLSTR) VALUE('delete from SCSARDPD +
+                          where SARN =' *BCAT &QUOTE *TCAT 'S01413' +
+                          *TCAT &QUOTE)
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTR '*CLEAR')
+             OVRDBF     FILE(SCSARDPD) TOFILE(&DTALIB/SCSARDPD)
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)
+             MONMSG     MSGID(SQL9010)
+/* Update Retail TAB* files and SARD. */
+             CALL       PGM(RETSETUP) PARM(&RTNERR)
+             DLTOVR     FILE(SCSARDPD)
+             IF         COND(&RTNERR *NE ' ') THEN(DO)
+                CHGVAR     VAR(&ERRPGM) VALUE('RETSETUP')
+                GOTO       CMDLBL(ERROR)
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             IF         COND(&RECURSIVE *NE 'Y') THEN(DO)
+                CHGVAR     VAR(&RECURSIVE) VALUE('Y')
+                IF         COND(&ERRPGM *EQ ' ') THEN(DO)
+                   CHGVAR     VAR(&ERRPGM) VALUE('SMC000092')
+                ENDDO
+             ENDDO
+ 
+ENDPGM:
+             ENDPGM

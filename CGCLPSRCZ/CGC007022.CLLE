@@ -1,0 +1,95 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas CG Int Scale Extract - Header & Detls in COB')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Correspondence Manager                              */
+/*                                                                   */
+/*       CGC007022 - CG Interest Scale Extract - Header and          */
+/*                   Details during COB run                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR797795 *CREATE   Date 19Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR797795 - Interest Scale Report Enquiry is missing in      */
+/*                   BFMidas                                         */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2011')
+             DCL        VAR(&LOOP_NO) TYPE(*DEC) LEN(1 0)
+ 
+/** Global Monitor Message */
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Create LDA if it does not exist */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                          DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                          VALUE(' ') TEXT('Midas Local Date Area'))
+ 
+/** Set-off Database Error Switches */
+ 
+             CHGJOB     SWS(XXXXXX00)
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+                        MONMSG     MSGID(CPF1023)
+ 
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+ 
+             CLRPFM     FILE(CGISHXPD)
+             MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CLRPFM     FILE(CGISDXPD)
+             MONMSG     MSGID(CPF3142 CPF3156) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/** Looping (Delay time) will occur if file CGXDCRPD is still locked with other job */
+/**  If the loop exceeds 3 times, the COB component will fail                       */
+             CHGVAR     VAR(&LOOP_NO) VALUE(0)
+ RETRY:      ALCOBJ     OBJ((CGXDCRPD *FILE *EXCL))
+                        MONMSG  MSGID(CPF0000) EXEC(DO)
+             IF         COND(&LOOP_NO *EQ 3) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+             ELSE       CMD(DO)
+             CHGVAR     VAR(&LOOP_NO) VALUE(&LOOP_NO + 1)
+             DLYJOB     DLY(60)
+                        GOTO    RETRY
+             ENDDO
+             ENDDO
+ 
+/** CG Interest Scale Extract */
+             CALL       PGM(CG007022)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+/** Abnormal termination */
+ 
+ ABNOR:      CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Program CGC007022 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+ 
+/** Normal termination */
+ 
+ END:
+             DLCOBJ     OBJ((CGXDCRPD *FILE *EXCL))
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
+             ENDPGM

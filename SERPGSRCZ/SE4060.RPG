@@ -1,0 +1,1393 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Buy-sell back holdings enquiry')              *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE4060 - BUY-SELL SECURITIES HOLDINGS ENQUIRY                *
+      *                                                               *
+      *  Function:  This program displays each security on one screen *
+      *  with nominal being shown for each Buy-Sell reference         *
+      *  (I/C)                                                        *
+      *  Called By: SEC04   - CL Component to control SE Enquiries    *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      *                 MD034776           Date 09Jul15               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183A         Date 20Nov12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10219           Date 10Feb06               *
+      *                 CSE071             Date 19Jul05               *
+      *                 229857             Date 07Oct04               *
+      *                 226570             Date 27Jun04               *
+      *                 CGL029             Date 01Sep03               *
+      *                 194370             Date 12Jul01               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun01               *
+      *                 198191             Date 30Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 176647             Date 20Mar00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE006  *CREATE    Date 18Jun99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG10219-add ? processing for Security field (CSE003)        *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  229857 - Recompiled due to change in ZYLDZ2.                 *
+      *  226570 - Recompiled due to change in ZYLDZ2.                 *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed ZYLDZ2.                      *
+      *  198191 - Set-up the branch if system is not multibranching.  *
+      *  176647 - Remove purchased interest from value field          *
+      *  CSE006 - Repurchase Agreements (REPOs) enhancement           *
+      *                                                               *
+      *****************************************************************
+     FSE4060DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SE4060S0
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FTRADS   IF  E           K        DISK
+     FBSPOSD  IF  E                    DISK
+     FCPPRIC  IF  E           K        DISK
+     FPRICT   IF  E           K        DISK
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+     FSDBKPCL5IF  E           K        DISK
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   03  - Function key                                          *
+      *   05  - Function key                                          *
+      *   07  - Multibranching on                                     *
+      *   12  - Function key                                          *
+      *   13  - SFLCLR                                                *
+      *   14  - No records found                                      *
+      *   15  - Branch code in error                                  *
+      *   16  - Book code in error                                    *
+      *   17  - Security shortname in error                           *
+      *   18  - SFLDSP                                                *
+      *   20  - Chain SECTY                                           *
+      *   21  - Chain INVTP                                           *
+      *   22  - Read BSPOSD                                           *
+      *   23  - Chain TRADS                                           *
+      *   25  - Message subfile                                       *
+      *   26  - Chain CPPRIC                                          *
+      *   27  - Reade PRICT                                           *
+      *   28  - Read SEDEV                                            *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *  SRCLR  - Subroutine to clear screen                          *
+      *  SRENTR - Subroutine to validate entry                        *
+      *  PROCES - Subroutine to process valid entry                   *
+      *  SUBFIL - Subroutine to process subfile records               *
+      *  MKPRC  - Subroutine to calculate market price and market     *
+      *           value                                               *
+      *  YPRICE - Subroutine to calculate yield price                 *
+      *  ZASNMS - Send Message on subfile message queue               *
+      *  CLRMSG - Clear message subfile                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZYMTXZ1
+     E/COPY ZSRSRC,ZNCDZ1
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZYLDZ1
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                        1  10 ##PGM
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IZMUSER      DS                             17
+     I                                       11  13 DFTBRC
+     I                                       17  17 BANKAU
+      *
+      ** Menu user data area
+      *
+     I            DS
+     I                                        1  74 LIN1
+     I                                        2   7 STDRF
+     I                                       16  16 STYP
+     I                                       19  29 SNOML
+     I                                       33  39 SVDAT
+     I                                       43  57 S1PRIC
+     I                                       58  58 SP1
+     I                                       60  74 S1VAL
+     I            DS
+     I                                        1  74 LIN2
+     I                                        2   7 STDRF2
+     I                                       16  16 STYP2
+     I                                       33  39 SVDAT2
+     I                                       43  57 S2PRIC
+     I                                       58  58 SP2
+     I                                       60  74 S2VAL
+     I            DS
+     I                                        1  74 LIN3
+     I                                       43  57 S3PRIC
+     I                                       58  58 SP3
+     I                                       60  74 S3VAL
+      *
+      **  Data structures for setting up SFL lines
+      *
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Bank Details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      *
+      ** Book Details
+      *
+     ISDCURR    E DSSDCURRPD
+      *
+      ** Currency Details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      *
+      ** Branch Details
+      *
+     ISDGELR    E DSSDGELRPD
+      *
+      ** General Ledger Details
+      *
+     ISDPRFC    E DSSDPRFCPD
+      *
+      ** Profit Centre Details
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short data structure for access programs
+      *
+     IDSSDY     E DSDSSDY
+      *
+      ** Long data structure for access programs
+      *                                                                                    BUG10219
+     ISESDS     E DS                                                                       BUG10219
+      ** SE Linked Enquiry Data Area                                                       BUG10219
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+     C                     MOVE 'Y'       W#FMT   1
+      *
+      *** Do until F3 is pressed
+      *
+     C           W#FMT     DOWNE*BLANKS
+      *
+      *** Write error messages
+      *
+     C                     WRITE#MSGCTL
+      *
+      *** Display header
+      *
+     C                     WRITESE4060F0
+      *
+      *** Display main screen
+      *
+     C                     EXFMTSE4060C0
+      *
+      *** Clear message subfile
+      *
+     C                     EXSR CLRMSG
+     C                     SELEC
+      *
+      *** F3 pressed, exit
+      *
+     C           *IN03     WHEQ *ON
+     C                     MOVE *BLANKS   W#FMT
+      *
+      *** F5 pressed, clear screen
+      *
+     C           *IN05     WHEQ *ON
+     C                     EXSR SRCLR
+      *
+      *** F12 or enter pressed
+      *
+     C                     OTHER
+     C                     EXSR SRCLR
+     C                     EXSR SRENTR
+     C                     ENDSL
+      *
+     C                     ENDDO
+      *
+     C                     SETON                     LR
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  INIT - Subroutine to do Program Initialisation.              *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *                                                                                    BUG10219
+     C           *NAMVAR   DEFN           SESDS                                            BUG10219
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *
+      ** Read in ZMUSER data area
+      *
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Access General Ledger details
+      *
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+      *
+      ** Determine if Multibranch
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN07
+     C                     ELSE
+     C                     MOVE *OFF      *IN07
+     C                     ENDIF
+      *
+      ***  Check if CAC005 is on
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*VERIFY' POPTN   7
+     C                     PARM 'CAC005'  PSARD   6
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CAC005  1
+     C                     MOVE *ON       *IN28
+     C                     ELSE
+     C                     MOVE 'N'       CAC005
+     C                     ENDIF
+      *                                                                                    BUG10219
+      **  Access SAR details file to see if ? allowed for security                         BUG10219
+     C                     CALL 'AOSARDR0'                                                 BUG10219
+     C                     PARM *BLANKS   PRTCD                                            BUG10219
+     C                     PARM '*VERIFY' POPTN                                            BUG10219
+     C                     PARM 'CSE003'  PSARD                                            BUG10219
+      *                                                                                    BUG10219
+     C           PRTCD     IFEQ *BLANK                                                     BUG10219
+     C                     MOVE 'Y'       CSE003  1                                        BUG10219
+     C                     ELSE                                                            BUG10219
+     C                     MOVE 'N'       CSE003                                           BUG10219
+     C                     ENDIF                                                           BUG10219
+     C*
+      *
+      **  Key list
+      *
+     C           PRKEY     KLIST
+     C                     KFLD           SITP
+     C                     KFLD           NMCY
+      *
+     C           KEYPT     KLIST
+     C                     KFLD           PTYP    2
+     C                     KFLD           SESN
+     C                     KFLD           PDAT    50
+     C**********           KFLD           PCST    60                                          CSD027
+     C                     KFLD           PCST    6                                           CSD027
+      *
+     C           KEYPTP    KLIST
+     C                     KFLD           PTYP
+     C                     KFLD           SESN
+     C*
+     C           KEYSED    KLIST
+     C                     KFLD           SDSN
+     C                     KFLD           SDED
+     C                     KFLD           SDET
+      *
+     C           KEYPBK    KLIST
+     C                     KFLD           P#BK    2
+     C                     KFLD           P#PC    4
+      *
+      *** Clear message subfile
+      *
+     C                     EXSR CLRMSG
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCLR - Subroutine to clear screen                           *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           SRCLR     BEGSR
+      *
+     C                     MOVE *BLANKS   SLINE
+      *
+     C           *IN05     IFEQ *ON
+     C           *IN12     OREQ *ON
+     C                     MOVE *BLANKS   SIBRCA
+     C                     MOVE *BLANKS   SIBOOK
+     C                     MOVE *BLANKS   SISCTY
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   SDBRCA
+     C                     MOVE *BLANKS   SDBOK
+     C                     MOVE *BLANKS   SDCCY
+     C                     MOVE *BLANKS   SDSCTY
+     C                     MOVE *BLANKS   W#MARK  1
+     C                     MOVE *BLANKS   W#ERR   1
+     C                     MOVE *OFF      *IN14
+     C                     MOVE *OFF      *IN15
+     C                     MOVE *OFF      *IN16
+     C                     MOVE *OFF      *IN17
+      *
+     C                     MOVE *ON       *IN13
+     C                     WRITESE4060C0
+     C                     MOVE *OFF      *IN13
+      *
+      *** If there are records displayed on screen, display blank
+      *** screen to clear screen
+      *
+     C           *IN18     IFEQ *ON
+     C                     MOVE *OFF      *IN18
+     C                     WRITESE4060F1
+     C                     ENDIF
+      *
+     C                     Z-ADD0         RRN     30
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRENTR - Subroutine to validate entry                        *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           SRENTR    BEGSR
+      *
+      *** If F12 pressed, restore values
+      *
+     C           *IN12     IFEQ *ON
+     C                     MOVE SAVBOK    SIBOOK
+     C                     MOVE SAVSEC    SISCTY
+     C                     MOVE SAVBRC    SIBRCA
+     C                     MOVE SAVPRF    SIPRFC
+     C                     ENDIF
+      *
+      *** Validate branch code, if bank is multi-branched
+      *
+     C           *IN07     IFEQ *ON
+      *
+     C           SIBRCA    IFEQ '?'
+     C                     MOVE 'Y'       W#MARK
+     C                     ENDIF
+      *
+      *** If branch code is blank, default user branch from data area
+      *** ZMUSER
+      *
+     C           SIBRCA    IFEQ *BLANKS
+     C                     MOVE DFTBRC    SIBRCA
+     C                     ELSE
+      *
+      *** Access branch codes file
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SIBRCA    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+     C           @RTCD     IFNE '*NOSEL'
+      *
+      *** If branch code not found, error
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SE06006' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN15
+      *
+     C                     ELSE
+     C                     MOVE A8BRCD    SIBRCA
+      *
+      *** Check if user is authorised to branch
+      *
+     C                     CALL 'ZVBBU'
+     C                     PARM SIBRCA    @ZBR    3
+     C                     PARM           @ERR    10
+      *
+      *** If not authorised, error
+      *
+     C           @ERR      IFNE 0
+     C                     MOVE 'SE06007' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN15
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ELSE                                          198191
+      *                                                                  198191
+      *** If branch code blank, default user branch from dtaara ZMUSER   198191
+      *                                                                  198191
+     C           SIBRCA    IFEQ *BLANKS                                  198191
+     C                     MOVE DFTBRC    SIBRCA                         198191
+     C                     END                                           198191
+      *                                                                  198191
+     C                     ENDIF
+      *
+      *** Validate book code
+      *
+     C           SIBOOK    IFEQ '?'
+     C                     MOVE 'Y'       W#MARK
+     C                     ENDIF
+      *
+      *** If book code is blank, error
+      *
+     C           SIBOOK    IFEQ *BLANKS
+     C                     MOVE 'SE06001' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN16
+     C                     ELSE
+      *
+     C           CAC005    IFEQ 'Y'
+      *
+      ** Call SRPBVL to check for validity of the profit centre - book
+      ** combination
+      *
+     C                     EXSR SRPBVL
+      *
+     C                     ELSE
+      *
+      *** Access book codes file
+      *
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SIBOOK    @BKCD   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+      *
+     C           @RTCD     IFNE '*NOSEL'
+      *
+      *** If book code not found, error
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SE06002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN16
+      *
+     C                     ELSE
+     C                     MOVE BDBKCD    SIBOOK
+      *
+      *** If book code is not a buy-sell book code, error
+      *
+     C           BDBYSL    IFNE 'Y'
+     C                     MOVE 'SE06003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN16
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *** Validate security shortname
+      *
+      * If ? processing available and ? entered                                            BUG10219
+     C           CSE003    IFEQ 'Y'                                                        BUG10219
+     C           SISCTY    ANDEQ'?'                                                        BUG10219
+     C           *LOCK     IN   SESDS                                                      BUG10219
+     C                     MOVE '6'       RTNC                                             BUG10219
+     C                     MOVE *BLANKS   RQSESN                                           BUG10219
+     C                     OUT  SESDS                                                      BUG10219
+     C                     CALL 'SE0240'                                                   BUG10219
+     C                     IN   SESDS                                                      BUG10219
+     C           RTNC      IFNE '0'                                                        BUG10219
+     C           RTNC      ANDNE'1'                                                        BUG10219
+     C                     MOVE RQSESN    SISCTY                                           BUG10219
+     C                     ENDIF                                                           BUG10219
+     C                     ENDIF                                                           BUG10219
+      *                                                                                    BUG10219
+      *
+      *** If security shortname is blank, error
+      *
+     C           SISCTY    IFEQ *BLANKS
+     C                     MOVE 'SE06004' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN17
+      *
+     C                     ELSE
+     C           SISCTY    CHAINSECTY                20
+      *
+      *** If security shortname not found, error
+      *
+     C           *IN20     IFEQ *ON
+     C                     MOVE 'SE06005' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN17
+     C                     ELSE
+      *
+      *** Chain to INVTP io gain processing type for later processing
+      *
+     C           PRKEY     CHAININVTP                21
+      *
+      *** Access currency codes file to obtain currency details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM NMCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C                     ENDIF
+     C                     ENDIF
+      *
+      *** If there are no errors or question marks, continue processing
+      *
+     C           W#ERR     IFNE 'Y'
+     C           W#MARK    ANDNE'Y'
+     C                     MOVE SIBRCA    SAVBRC  3
+     C                     MOVE SIBOOK    SAVBOK  2
+     C                     MOVE SISCTY    SAVSEC 10
+     C                     MOVE SIBRCA    SDBRCA
+     C                     MOVE SIPRFC    SAVPRF  4
+     C           CAC005    IFNE 'Y'
+     C                     MOVE SIBOOK    SDBOK
+     C                     ELSE
+     C                     MOVE W#PSBK    SDBOK
+     C                     ENDIF
+     C                     MOVE NMCY      SDCCY
+     C                     MOVE SRPN      SDSCTY
+     C                     MOVE *BLANKS   SIBRCA
+     C                     MOVE *BLANKS   SIBOOK
+     C                     MOVE *BLANKS   SISCTY
+     C                     EXSR PROCES
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to process valid entry                   *
+      *                                                               *
+      *  Called By: SRENTR                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           PROCES    BEGSR
+     C           1         SETLLBSPOSD
+     C                     READ BSPOSD                   22
+      *
+      *** Do while a record found on BSPOSD
+      *
+     C           *IN22     DOWEQ*OFF
+      *
+     C           CAC005    IFEQ 'Y'
+     C           SIPRFC    ANDEQ*BLANKS
+     C           SDBOK     SETLLSDBKPCD0
+     C                     READESDBKPCD0                 29
+     C           *IN29     DOWEQ*OFF
+     C           BSBOK     ANDNEPSPSBK
+     C                     READESDBKPCD0                 29
+     C                     ENDDO
+     C                     ENDIF
+      *
+     C           CAC005    IFEQ 'Y'
+     C           SIPRFC    ANDNE*BLANKS
+     C                     MOVE W#PSBK    PSPSBK
+     C                     MOVE PMBKCD    SDBOK
+     C                     ENDIF
+      *
+     C           CAC005    IFEQ 'Y'
+     C           BSBOK     ANDEQPSPSBK
+     C           CAC005    ORNE 'Y'
+     C           BSBOK     ANDEQSDBOK
+      *
+     C           BSBCH     IFEQ SDBRCA
+     C           BSSEN     ANDEQSESN
+     C           BSVD2     ANDGEAGRDNB
+     C           BSRECI    ANDEQ'D'
+      *
+      *** Chain to TRADS using Buy/Sell Trade Reference
+      *
+     C           BSPRF     CHAINTRADS                23
+      *
+      *** Handle database error if record not found
+      *
+     C           *IN23     IFEQ *ON
+     C           RECI      OREQ '*'
+     C                     MOVEL'SE4060'  DBPGM
+     C                     MOVELBSPRF     DBKEY            ***************
+     C                     MOVE 'TRADS'   DBFILE           * DB ERROR 01 *
+     C                     Z-ADD01        DBASE            ***************
+     C                     SETON                       U7U8
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      *** Fill in first line of record in subfile
+      *
+     C                     EXSR SUBFIL
+      *
+      *** Chain to TRADS using Link Reference
+      *
+     C           LKRF      CHAINTRADS                23
+      *
+      *** Handle database error if record not found
+      *
+     C           *IN23     IFEQ *ON
+     C           RECI      OREQ '*'
+     C                     MOVEL'SE4060'  DBPGM
+     C                     MOVELLKRF      DBKEY            ***************
+     C                     MOVE 'TRADS'   DBFILE           * DB ERROR 02 *
+     C                     Z-ADD02        DBASE            ***************
+     C                     SETON                       U7U8
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *IN18
+      *
+      *** Fill in second line of record in subfile
+      *
+     C                     EXSR SUBFIL
+      *
+      *** Calculate market price and market value
+      *
+     C                     EXSR MKPRC
+      *
+      *** Fill in third line of record in subfile
+      *
+     C                     EXSR SUBFIL
+      *
+      *** Fill in fourth line of record in subfile
+      *
+     C                     EXSR SUBFIL
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     READ BSPOSD                   22
+     C                     ENDDO
+      *
+      *** If no records found, display message
+      *
+     C           RRN       IFEQ 0
+     C                     MOVE *ON       *IN14
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  SUBFIL - Subroutine to process subfile records               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           SUBFIL    BEGSR
+      *
+      *** Add 1 to subfile line count
+      *
+     C                     ADD  1         RRN
+      *
+      *** Add 1 to line count of record (4 lines)
+      *
+     C                     ADD  1         W#RECN
+      *
+      *** First line
+      *
+     C           W#RECN    IFEQ 1
+      *
+      *** Reference
+      *
+     C                     MOVE TDRF      STDRF
+      *
+      *** Buy-Sell indicator
+      *
+     C           TDTP      IFEQ 'TP'
+     C                     MOVE 'B'       STYP
+     C                     ELSE
+     C                     MOVE 'S'       STYP
+     C                     ENDIF
+      *
+      ***  Edit nominal
+      *
+     C                     Z-ADDTNMD      ZDECS   10
+     C                     MOVE 'L'       ZECODE
+     C                     Z-ADDNOML      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    SNOML
+      *
+      *** First trade price
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE PRIC      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    S1PRIC
+      *
+      *** Format as percentage or actual amount according to price
+      *** basis field
+      *
+     C           SPBS      IFEQ 'U'
+     C                     MOVE *BLANKS   SP1
+     C                     ELSE
+     C                     MOVE '%'       SP1
+     C                     ENDIF
+      *
+      *** Value
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'L'       ZECODE
+     C***********          MOVE TCTR      ZFLD15                          176647
+     C                     MOVE TCSR      ZFLD15                          176647
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    S1VAL
+      *
+      *** Value date
+      *
+     C                     MOVE BSVD1     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SVDAT
+      *
+     C                     MOVE LIN1      SLINE
+     C                     CLEARLIN1
+     C                     ENDIF
+      *
+      *** Second line
+      *
+     C           W#RECN    IFEQ 2
+      *
+      *** Reference
+      *
+     C                     MOVE TDRF      STDRF2
+      *
+      *** Buy-Sell indicator
+      *
+     C           TDTP      IFEQ 'TP'
+     C                     MOVE 'B'       STYP2
+     C                     ELSE
+     C                     MOVE 'S'       STYP2
+     C                     ENDIF
+      *
+      *** Second trade price
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE PRIC      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    S2PRIC
+      *
+      *** Format as percentage or actual amount according to price
+      *** basis field
+      *
+     C           SPBS      IFEQ 'U'
+     C                     MOVE *BLANKS   SP2
+     C                     ELSE
+     C                     MOVE '%'       SP2
+     C                     ENDIF
+      *
+      *** Value
+      *
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'L'       ZECODE
+     C***********          MOVE TCTR      ZFLD15                          176647
+     C                     MOVE TCSR      ZFLD15                          176647
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    S2VAL
+      *
+      *** Value date
+      *
+     C                     MOVE BSVD2     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    SVDAT2
+      *
+     C                     MOVE LIN2      SLINE
+     C                     CLEARLIN2
+     C                     ENDIF
+      *
+      *** Third line, use value for market price and market value
+      *** calculated in SR/MKPRC
+      *
+     C           W#RECN    IFEQ 3
+     C                     MOVE LIN3      SLINE
+     C                     CLEARLIN3
+     C                     ENDIF
+      *
+      *** Fourth line (blank line)
+      *
+     C           W#RECN    IFEQ 4
+     C                     MOVE *BLANKS   SLINE
+     C                     Z-ADD0         W#RECN  10
+     C                     ENDIF
+      *
+      *** Write subfile record
+      *
+     C                     WRITESE4060S0
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  MKPRC  - Subroutine to calculate market price and market     *
+      *           value                                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           MKPRC     BEGSR
+      *
+      *** Determine if a price record exists on LF/CPPRIC for the
+      *** current combination of nominal currency and investment type
+      *
+     C           PRKEY     CHAINCPPRIDF              26
+      *
+      *** If the processing type is equal to 9 , the trade basis on
+      *** LF/SECTY is 'Y' (for yield) and a live price record exists on
+      *** LF/CPPRIC then set the market price to the yield calculated
+      *** by the standard subroutine ZYMTX
+      *
+     C           PROT      IFEQ '9'
+     C           STBS      ANDEQ'Y'
+     C           *IN26     ANDEQ*OFF
+     C           RECI      ANDEQ'D'
+      *
+      *** Output field is YPROP
+      *
+     C                     EXSR YPRICE
+     C                     Z-ADDYPROP     MKPRSV 158
+      *
+      *** Convert market price in yield format to price format via
+      *** std SR/ZPRCI in order to claculate market value
+      *
+     C                     Z-ADDYPROP     ZPRCIN
+     C                     Z-ADDAGRDNB    ZFDATE
+     C           ZPRCIN    IFNE *ZEROS
+      *
+      *** Set up input parameter to ZCALCD
+      *
+     C                     Z-ADDNOML      ZNOML
+     C                     Z-ADDZNOML     ZNOMLS 150
+      *
+     C           ZNOML     IFLT 0
+     C                     Z-SUBZNOML     ZNOML
+     C                     ENDIF
+      *
+     C                     EXSR ZPRCI
+     C                     Z-ADDZNOMLS    ZNOML
+     C                     ELSE
+     C                     Z-ADD*ZEROS    ZPRCOT
+     C                     ENDIF
+      *
+     C                     Z-ADDZPRCOT    WMPRIC 158
+     C                     ELSE
+      *
+      *** Access Price file for Security and Type 'V' for Price
+      *** - if not found, use Market Price from Security
+      *
+     C                     MOVE 'V '      PTYP
+     C**********           MOVE *ZEROS    PCST                                                CSD027
+     C                     MOVE *BLANKS   PCST                                                CSD027
+     C                     Z-ADD0         PDAT
+      *
+     C           KEYPT     SETLLPRICT
+     C           KEYPTP    READEPRICT                    27
+      *
+     C           *IN27     IFEQ *ON
+     C           RECI      ORNE 'D'
+     C                     Z-ADDMKPR      MKPRSV
+     C                     Z-ADDMKPR      ZPRCIN
+     C                     ELSE
+     C                     Z-ADDPPRC      ZPRCIN
+     C                     Z-ADDPPRC      MKPRSV
+     C                     ENDIF
+      *
+     C                     Z-ADDAGRDNB    ZFDATE
+     C           ZPRCIN    IFNE *ZEROS
+      *
+      *** Set up input parameter to ZCALCD
+      *
+     C                     Z-ADDNOML      ZNOML
+     C                     Z-ADDZNOML     ZNOMLS 150
+      *
+     C           ZNOML     IFLT 0
+     C                     Z-SUBZNOML     ZNOML
+     C                     ENDIF
+      *
+     C                     EXSR ZPRCI
+     C                     Z-ADDZNOMLS    ZNOML
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    ZPRCOT
+     C                     ENDIF
+      *
+      *** Save price for market value calculation
+      *
+     C                     Z-ADDZPRCOT    WMPRIC
+      *
+     C                     ENDIF
+      *
+      *** Market Price
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     MOVE MKPRSV    ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    S3PRIC
+      *
+      *** Format as percentage or actual amount according to price
+      *** basis field
+      *
+     C           SPBS      IFEQ 'P'
+     C                     MOVE '%'       SP3
+     C                     ELSE
+     C                     MOVE *BLANKS   SP3
+     C                     ENDIF
+      *
+      *** Calculate and format market value
+      *
+     C                     Z-ADDNOML      ZNOML
+     C                     Z-ADDWMPRIC    ZPRC
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     EXSR ZCNSD
+      *
+     C           PROT      IFEQ '8'
+     C                     MOVE SESN      SDSN
+     C                     MOVE 'MP'      SDET
+     C                     Z-ADDAGRDNB    SDED
+      *
+     C           KEYSED    SETLLSEDEVDF
+     C                     READ SEDEVDF                  28
+      *
+     C           *IN28     IFEQ *OFF
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'MP'
+     C                     Z-ADDSDCP      CURF   109
+     C                     ELSE
+     C                     Z-ADDCFCT      CURF
+     C                     ENDIF
+      *
+     C                     MULT CURF      ZCONS     H
+     C                     ENDIF
+      *
+      *** Market Value
+      *
+     C                     Z-ADDZCONS     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    S3VAL
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  YPRICE - Subroutine to calculate yield price                 *
+      *                                                               *
+      *  Called By: MKPRC                                             *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+     C           YPRICE    BEGSR
+      *
+      *** Load array of no. of days to maturity using values on
+      *** record read from LF/CPPRIC
+      *
+     C                     MOVE ND01      ZND,1
+     C                     MOVE ND02      ZND,2
+     C                     MOVE ND03      ZND,3
+     C                     MOVE ND04      ZND,4
+     C                     MOVE ND05      ZND,5
+     C                     MOVE ND06      ZND,6
+     C                     MOVE ND07      ZND,7
+     C                     MOVE ND08      ZND,8
+     C                     MOVE ND09      ZND,9
+     C                     MOVE ND10      ZND,10
+     C                     MOVE ND11      ZND,11
+     C                     MOVE ND12      ZND,12
+     C                     MOVE ND13      ZND,13
+     C                     MOVE ND14      ZND,14
+     C                     MOVE ND15      ZND,15
+     C                     MOVE ND16      ZND,16
+     C                     MOVE ND17      ZND,17
+     C                     MOVE ND18      ZND,18
+     C                     MOVE ND19      ZND,19
+     C                     MOVE ND20      ZND,20
+     C                     MOVE ND21      ZND,21
+     C                     MOVE ND22      ZND,22
+     C                     MOVE ND23      ZND,23
+     C                     MOVE ND24      ZND,24
+     C                     MOVE ND25      ZND,25
+      *
+      *** Load array of corredponding yield rates as defined on the
+      *** record read from LF/CPPRIC
+      *
+     C                     MOVE YR01      ZRT,1
+     C                     MOVE YR02      ZRT,2
+     C                     MOVE YR03      ZRT,3
+     C                     MOVE YR04      ZRT,4
+     C                     MOVE YR05      ZRT,5
+     C                     MOVE YR06      ZRT,6
+     C                     MOVE YR07      ZRT,7
+     C                     MOVE YR08      ZRT,8
+     C                     MOVE YR09      ZRT,9
+     C                     MOVE YR10      ZRT,10
+     C                     MOVE YR11      ZRT,11
+     C                     MOVE YR12      ZRT,12
+     C                     MOVE YR13      ZRT,13
+     C                     MOVE YR14      ZRT,14
+     C                     MOVE YR15      ZRT,15
+     C                     MOVE YR16      ZRT,16
+     C                     MOVE YR17      ZRT,17
+     C                     MOVE YR18      ZRT,18
+     C                     MOVE YR19      ZRT,19
+     C                     MOVE YR20      ZRT,20
+     C                     MOVE YR21      ZRT,21
+     C                     MOVE YR22      ZRT,22
+     C                     MOVE YR23      ZRT,23
+     C                     MOVE YR24      ZRT,24
+     C                     MOVE YR25      ZRT,25
+      *
+     C                     Z-ADDAGRDNB    ZBASD
+     C                     Z-ADDMATY      ZMDAT
+     C                     EXSR ZYMTX
+     C                     Z-ADDZY1       YPROP  158
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      * SRPBVL  - Book and Profit Centre Validation Subroutine        *
+      *                                                               *
+      * Called by:       subroutine                                   *
+      *                                                               *
+      * Calls:                                                        *
+      * AOBOOKR0 - Access Program for book details                    *
+      * AOPRFCR0 - Access Program for profit centre details           *
+      * AOBKPCR0 - Access Program for book-profit centre combination  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPBVL    BEGSR
+      *
+     C           SIBOOK    IFEQ *BLANKS
+     C           SIPRFC    ANDEQ*BLANKS
+     C                     MOVE 'SE06008' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN16
+     C                     MOVE *ON       *IN29
+     C                     ENDIF
+      *
+      ** Check if combination of book and profit centre exists.
+      *
+     C           SIBOOK    IFNE *BLANKS
+     C           SIPRFC    ANDNE*BLANKS
+     C                     CALL 'AOBKPCR0'
+     C                     PARM           PRTCD   7
+     C                     PARM '*PSEUDO' POPTN   7
+     C           PMBKCD    PARM SIBOOK    PMBKCD  2
+     C           PMPRFC    PARM SIPRFC    PMPRFC  4
+     C                     PARM *BLANKS   PMPSBK  2
+      *
+     C           PRTCD     IFNE *BLANKS
+     C                     MOVE 'SE06009' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN16
+     C                     MOVE *ON       *IN29
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SIBOOK    IFNE *BLANKS
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SIBOOK    @BKCD   2
+     C           SDBOOK    PARM SDBOOK    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SE06002' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN16
+     C                     ELSE
+     C           BDBYSL    IFNE 'Y'
+     C                     MOVE 'SE06003' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN16
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           SIPRFC    IFNE *BLANKS
+      *
+      ** Check If Profit Centre exists via access program AOPRFCR0
+      *
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM SIPRFC    @PCCD   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+      *
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVE 'SE06010' ZAMSID
+     C                     EXSR ZASNMS
+     C                     MOVE 'Y'       W#ERR
+     C                     MOVE *ON       *IN29
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           W#ERR     IFNE 'Y'
+     C                     MOVE PMPSBK    W#PSBK  2
+     C           CAC005    IFEQ 'Y'
+     C           SIPRFC    ANDEQ*BLANKS
+     C                     MOVE SIBOOK    W#PSBK  2
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *
+      * ZASNMS - Send Message on subfile message queue                *
+      *                                                               *
+      * Called by:                                                    *
+      *                                                               *
+      * Calls: Y2SNMGC                                                *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C                     MOVEL'SEUSRMSG'ZAMSGF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM           ZAPGRL  5
+     C                     PARM           ZAMSID  7
+     C                     PARM           ZAMSGF 10
+     C                     PARM           ZAMSDA132
+     C                     PARM           ZAMSTP  7
+      *
+     C                     ENDSR
+      *****************************************************************
+      *****************************************************************
+      *                                                               *
+      *  CLRMSG     : Clear message subfile                           *
+      *                                                               *
+      *  Called by  :                                                 *
+      *                                                               *
+      *  Calls      : Y2CLMSC                                         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CLRMSG    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZCALCD
+     C/COPY ZSRSRC,ZAVPRZ1
+     C/COPY ZSRSRC,ZACCZZ1
+     C/COPY ZSRSRC,ZACCRZ1
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZYMTXZ2
+     C/COPY ZSRSRC,ZCNSDZ1
+     C/COPY ZSRSRC,ZPRCIZ1
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z4
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/COPY ZSRSRC,ZDYYRZ3
+     C/COPY ZSRSRC,ZLCDZ1
+     C/COPY ZSRSRC,ZNCDZ3
+     C/COPY ZSRSRC,ZYLDIZ1
+     C/COPY ZSRSRC,ZEVCDZ1
+     C/COPY ZSRSRC,ZYLDZ2
+     C/COPY ZSRSRC,ZCONVZ1
+     C/COPY ZSRSRC,ZPRCOZ1
+     C/COPY ZSRSRC,ZRATEZ1
+     C/COPY ZSRSRC,ZYLDOZ1
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  CPY@
+(c) Finastra International Limited 2001

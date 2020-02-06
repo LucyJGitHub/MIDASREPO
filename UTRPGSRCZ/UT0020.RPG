@@ -1,0 +1,153 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Write source')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas Utilities Module                                   *
+     F*                                                               *
+     F*  UT0020  - Write source record                                *
+     F*                                                               *
+     F*  Called By: UTC0020 - Write source main program               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. S01516             Date 18Jul94               *
+      *                                    Date DDMmmYY               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+     F*  S01516 - Incorporation of enhanced CRTOBJ into core          *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     FQCLSRC  UF  F      92            DISK                      A
+     E                    STM        80  1               Statement
+     E                    WRK        30  1               Work
+     IQCLSRC  AA  01
+     I                                        1   60SRCSEQ
+     I                                        7  120CHGDAT
+     I                                       13  92 SRCDTA
+     C           *ENTRY    PLIST                           Parm list
+     C                     PARM           RELRCD  30       Rel rcd
+     C                     PARM           ACTION  4        Action code
+     C                     PARM           STMT   80        Statement
+     C                     PARM           POS1    20       Pos 1
+     C                     PARM           TXT1   25        Text 1
+     C                     PARM           POS2    20       Pos 2
+     C                     PARM           TXT2   25        Text 2
+     C                     PARM           POS3    20       Pos 3
+     C                     PARM           TXT3   25        Text 3
+     C                     PARM           POS4    20       Pos 4
+     C                     PARM           TXT4   25        Text 4
+     C                     PARM           RTNCDE  8        Return code
+     C* If not *END and first time, access last record in file for seq
+     C           ACTION    IFNE '*END'                     Not *END
+     C           FSTTIM    ANDEQ' '                        First time
+     C           *HIVAL    SETGTQCLSRC                     Set GT end
+     C                     READPQCLSRC                   20 Read last
+     C   20                Z-ADD100       NXTSEQ  60       If found
+     C  N20      100       ADD  SRCSEQ    NXTSEQ           If not found
+     C                     MOVE 'X'       FSTTIM  1        Set first tm
+     C                     END                             Not *END
+     C* ADD type of action
+     C           ACTION    IFEQ '*ADD'                     *ADD type
+     C                     MOVEASTMT      STM,1            Move STMT
+     C                     EXSR BUILD                      Exsr BUILD
+     C                     EXCPTADD                        Add record
+     C                     ADD  100       NXTSEQ           Bump seq
+     C                     MOVE 'GOOD    'RTNCDE           Set return
+     C                     RETRN                           Return
+     C                     END                             *ADD type
+     C* Replace or Update type of action
+     C           ACTION    IFEQ '*RPL'                     *RPL
+     C           ACTION    OREQ '*UPD'                      or *UPD
+     C           RELRCD    CHAINQCLSRC               20    Chain
+     C   20                DO                              Not found
+     C                     MOVE 'NOTFOUND'RTNCDE           Set error
+     C                     SETON                     LR    Set LR
+     C                     RETRN                           Return
+     C                     END                             Not found
+     C                     MOVEASTMT      STM,1            Move STMT
+     C           ACTION    IFEQ '*UPD'                     *UPD type
+     C                     MOVEASRCDTA    STM,1            Move src
+     C                     END                             *UPD TYPE
+     C                     EXSR BUILD                      Exsr BUILD
+     C                     EXCPTUPDATE                     Update rcd
+     C                     MOVE 'GOOD    'RTNCDE           Set good
+     C                     RETRN                           Return
+     C                     END                             *UPD or *RPL
+     C* End type of action
+     C           ACTION    IFEQ '*END'                     *END type
+     C                     MOVE 'GOOD    'RTNCDE           Set good
+     C                     SETON                     LR    Set LR
+     C                     RETRN                           Return
+     C                     END                             *END TYPE
+     C* Bad action code - Set H1 and end via RPG cycle
+     C                     SETON                     H1    Set H1
+     C* Build up statement routine
+     C           BUILD     BEGSR                           BUILD subr
+     C           POS1      IFGT 0                          If Pos 1
+     C                     Z-ADDPOS1      SX      30       Start pos
+     C                     MOVEATXT1      WRK,1            Move to work
+     C                     EXSR MOVWRK                     Exsr MOVWRK
+     C                     END                             If Pos 1
+     C           POS2      IFGT 0                          If Pos 2
+     C                     Z-ADDPOS2      SX               Start pos
+     C                     MOVEATXT2      WRK,1            Move to work
+     C                     EXSR MOVWRK                     Exsr MOVWRK
+     C                     END                             If Pos 2
+     C           POS3      IFGT 0                          If Pos 3
+     C                     Z-ADDPOS3      SX               Start pos
+     C                     MOVEATXT3      WRK,1            Move to work
+     C                     EXSR MOVWRK                     Exsr MOVWRK
+     C                     END                             If Pos 3
+     C           POS4      IFGT 0                          If Pos 4
+     C                     Z-ADDPOS4      SX               Start pos
+     C                     MOVEATXT4      WRK,1            Move to work
+     C                     EXSR MOVWRK                     Exsr MOVWRK
+     C                     END                             If Pos 4
+     C                     MOVEASTM,1     SRCDTA           Move to src
+     C                     ENDSR                           BUILD subr
+     C* Move work area on top of source statement
+     C           MOVWRK    BEGSR                           MOVWRK subr
+     C                     Z-ADD1         LX      30       Left index
+     C                     Z-ADD26        RX      30       Right index
+     C* Scan from right for the last non-blank
+     C           SCNRGT    TAG                             SCNRGT tag
+     C                     SUB  1         RX             20 Decrmnt RX
+     C  N20      WRK,RX    CABEQ*BLANK    SCNRGT           CAB EQ blank
+     C   20                GOTO MOVEND                     If zero
+     C           MOVTAG    TAG                             MOVTAG tag
+     C                     MOVE WRK,LX    STM,SX           Move a byte
+     C                     ADD  1         LX               Bump left
+     C                     ADD  1         SX               Bump start
+     C           SX        IFLE 80                         LE 80
+     C           LX        ANDLERX                         LE right inx
+     C                     GOTO MOVTAG                     Goto MOVTAG
+     C                     END                             LE 80
+     C           SX        IFGT 80                         GT 80
+     C                     MOVE 'OVERFLOW'RTNCDE           Set error
+     C                     SETON                     LR    Set LR
+     C                     RETRN                           Return
+     C                     END                             GT 80
+     C           MOVEND    ENDSR                           MOVWRK subr
+     OQCLSRC  EADD             ADD
+     O                         NXTSEQ     6
+     O                         CHGDAT    12
+     O                         SRCDTA    92
+     O        E                UPDATE
+     O                         SRCDTA    92

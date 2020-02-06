@@ -1,0 +1,251 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Retail accounts extract')
+     F********************************************************************
+     F*                                                               *  *
+     F*  Midas - Retail Module
+     F*                                                               *  *
+     F*  RE5312 - RETAIL ACCOUNT EXTRACT                              *  *
+     F*                                                               *  *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *  *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 213047             Date 09Dec02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CDE002             Date 21Dec99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 060822             Date 07Mar94               *  *
+     F*                 S01413 *CREATE     DATE 13APR93               *  *
+     F*                                                               *  *
+     F********************************************************************
+     F*                                                               *  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  213047 - REC5312 on msgw, attempt to write duplicate record  *
+      *           on REACCNPD.  Amend file definition.                *
+      *  CDE002 - Revenue Analysis - Recompiled due to changes in     *
+      *           PF/REACCJL0.                                        *
+     F*  060822 - Statement charges posted with various value dates      *
+     F*  S01413 - Retail 3 Incorporation                              *  *
+     F*                                                               *  *
+     F********************************************************************
+     FRE5312AUO   E                    PRINTER
+     F***REACCNPDO*E           K        DISK                     A                            213047
+     FREACCNPDO   E                    DISK                      A                            213047
+     FREACCJL0IF  E           K        DISK
+     F/COPY WNCPYSRC,RE5312F001
+     F*
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   20 : First bit of field GLBT General Ledger on              *
+     F*   50 : End of input file REACCJL0                             *
+     F*                                                               *
+     F*   U7&U8 : Database error                                      *
+     F*                                                               *
+     F*   LR :  end of program                                        *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*    #INIT  - Data base error subroutine                        *
+     F*    #P01   - To determine if a statement is due today          *
+     F*                                                               *
+     F*****************************************************************
+     E*
+     E**   For compilation  - copyright insertion
+     E                    CPY@    1   1 80
+     I********************************************************************
+     I*
+     I**   Local data area for data base errors:
+     ILDA       EUDS
+     I*
+     I**   Data structure for compilation  - Copyright insertion
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*
+     ISDBANK    E DSSDBANKPD
+     I** Bank Details
+     I*
+     ISDGELR    E DSSDGELRPD
+     I** General Ledger Details
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I/COPY WNCPYSRC,RE5312I001
+      *                                                                                       CGL029
+     IDSSDY     E DSDSSDY                                                                     CGL029
+      *                                                                                       CGL029
+     I*
+     I********************************************************************
+     C/EJECT
+     C*
+     C**   Initial processing
+     C                     EXSR #INIT
+     C*
+     C**   Initialisation the number of records
+     C                     Z-ADD0         NUMREC  50
+     C*
+     C**   Reading input file
+     C                     READ REACCJL0                 50
+     C*
+     C**   Detail processing if end of file not reached
+     C           *IN50     DOWEQ'0'                        *B1
+     C*
+     C                     MOVE 'N'       WWSTDI  1
+     C*
+     C**   Determine if a statement is due today
+     C                     EXSR #P01
+     C*
+     C**   If a statement is due today, write a record
+     C           WWSTDI    IFEQ 'Y'                        *B2
+     C*
+     C**   If the next debit capitalisation date is equal to zero,
+     C**   use the run date
+     C***********NDID      IFEQ *ZEROS                                    060822
+     C                     Z-ADDBJRDNB    NDID
+     C***********          END                                            060822
+     C*
+     C                     WRITEREACCND0
+     C*
+     C**   Number of records written
+     C                     ADD  1         NUMREC
+     C*
+     C                     END                             *E2
+     C*
+     C                     READ REACCJL0                 50
+     C*
+     C                     END                             *E1
+     C*
+     C**   Perform audit processing
+     C                     WRITEHEADLI
+     C                     WRITECONTROL
+     C*
+     C                     MOVE 1         *INLR
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C**   #P01  - Subroutine to determine if a statement is du today
+     C*
+     C**   Called by Main processing
+     C*
+     C**   Calls -
+     C*
+     C*===================================================================
+     C           #P01      BEGSR                           **#P01 BEGSR *
+     C*
+     C           NSTD      IFNE *ZEROS                     *B1
+     C           NSTD      ANDLTBJDNWD
+     C                     MOVE 'Y'       WWSTDI
+     C                     END                             *E1
+     C*
+     C           WWSTDI    IFNE 'Y'                        *B1
+     C           STFQ      ANDEQ'A'
+     C           BKAPDT    ANDLTBJDNWD
+     C                     MOVE 'Y'       WWSTDI
+     C                     END                             *E1
+     C*
+     C           WWSTDI    IFNE 'Y'                        *B1
+     C                     TESTB'1'       GLBT           20
+     C           *IN20     IFEQ '1'                        *B2
+     C                     MOVE 'Y'       WWSTDI
+     C                     END                             *E2
+     C                     END                             *E1
+     C/COPY WNCPYSRC,RE5312C001
+     C*
+     C                     ENDSR                           **#P01 ENDSR *
+     C*
+     C********************************************************************
+     C*
+     C**   #INIT - Data base error subroutine
+     C*
+     C**   Called by Main processing
+     C*
+     C**   Calls -
+     C*
+     C*===================================================================
+     C           #INIT     BEGSR                           **#INIT BEGSR
+     C*
+     C**   Prepare LDA:
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZERO     DBASE
+     C                     MOVEL'RE5312'  DBPGM
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C**   If record not found:
+     C           @RTCD     IFNE *BLANKS
+     C*
+     C**   DB error:
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVEL'BANK'    DBKEY            ***************
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     DUMP
+     C*
+     C                     WRITEHEADLI
+     C                     WRITEERROR
+     C                     RETRN
+     C*
+     C                     END
+     C*
+     C**********           CALL 'AOGELRR0'                                                    CGL029
+     C                     CALL 'AOGELRR1'                                                    CGL029
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C********** SDGELR    PARM SDGELR    DSFDY                                               CGL029
+     C           SDGELR    PARM SDGELR    DSSDY                                               CGL029
+     C*
+     C**   If record not found:
+     C           @RTCD     IFNE *BLANKS
+     C*
+     C**   DB error:
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDGELRL0'DBFILE           * DB ERROR 02 *
+     C                     MOVEL'BKGNLG'  DBKEY            ***************
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C*
+     C                     WRITEHEADLI
+     C                     WRITEERROR
+     C                     DUMP
+     C*
+     C                     RETRN
+     C*
+     C                     END
+     C/COPY WNCPYSRC,RE5312C002
+     C*
+     C                     ENDSR                           ** #INIT ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

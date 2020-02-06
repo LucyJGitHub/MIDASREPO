@@ -1,0 +1,318 @@
+/*********************************************************************/
+/*S*D****CLPBASE******************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Upgrade Module                                      */
+/*                                                                   */
+/*       UPC0111 - Merge with Country Library                        */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*                                                                   */
+/*       Last Amend No. CUP041  *REDUNDANT Date 04Jun14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.03 ---------------------------------------------------*/
+/*       Prev Amend No. CUP008             Date 14Jun00              */
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*                      CUP001 *CREATE     Date 25Aug98              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       CUP008 - Fix problem with CHKOBJ when member is blank.      */
+/*              - Cope better with modules and programs of same name */
+/*       CUP001 - Introduction of BRIDGE                             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&PTFSRC &PTFUPG &CPLIB &CPLIBL &CPLIBS +
+                          &JOBD &RETURN)
+ 
+             DCL        VAR(&PTFSRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PTFUPG) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPLIBL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPLIBS) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPOBJCOMP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&TGTMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&USTS) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2001')
+ 
+             DCLF       FILE(UPDLVCL4)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&RETURN) VALUE(' ')
+             CHGVAR     VAR(&USTS) VALUE('C')
+ 
+/* Create temporary message queue for program */
+             DLTMSGQ    MSGQ(QTEMP/UPC0111)
+             MONMSG     MSGID(CPF0000)
+             CRTMSGQ    MSGQ(QTEMP/UPC0111)
+ 
+READNEXT:
+             IF         COND(&AUMBNM *NE ' ') THEN(DO)
+/*/COPY UPCPYSRC,C_UP0020A                                           */
+ 
+/* DIsplay screen to see if user wishes to continue */
+                RTVMSG     MSGID(UPM0019) MSGF(UTMSGF) MSG(&MESSAGE)
+                CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE(&MESSAGE)
+                CALL      PGM(SCC0010) PARM('UPC0111' 'OPTION' &REPLY1)
+                IF         COND(&REPLY1 *EQ 'N') THEN(DO)
+/* Set RETURN value so that error processing in UPC2001 is ignored */
+                   CHGVAR     VAR(&RETURN) VALUE('I')
+                   GOTO       CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+              GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* For certain types just read next record */
+             IF         COND(&AUMBTP *EQ 'EXE' *OR &AUMBTP *EQ +
+                          'MSGF' *OR &AUMBTP *EQ 'DATA' *OR &AUMBTP +
+                          *EQ 'DOC') THEN(DO)
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+/* Member types = FILES */
+/* Check if object exists first and try to retrieve source */
+             IF         COND((&AUMBTP *EQ 'DSPF      ') *OR +
+                             (&AUMBTP *EQ 'PRTF      ')) THEN(DO)
+/* Check CP library */
+                RTVOBJD    OBJ(&CPLIBL/&AUMBNM) OBJTYPE(*FILE) +
+                          SRCF(&SRCF) SRCFLIB(&SRCFLIB) SRCMBR(&SRCM)
+                MONMSG     MSGID(CPF9812) EXEC(GOTO CMDLBL(SOURCECHK))
+/* If retrieved data is blank then skip */                                                /*CUP008*/
+                IF         COND(&SRCF *EQ ' ' *OR &SRCFLIB *EQ ' ' *OR +
+                          &SRCM *EQ ' ') THEN(GOTO CMDLBL(SOURCECHK))                     /*CUP008*/
+/* If object found then check if it matches where source is expected */
+                IF         COND(&SRCM *EQ &AUMBNM *AND &SRCF *EQ +
+                          &AUSRCF *AND &SRCFLIB *EQ &CPLIBS) +
+                          THEN(GOTO CMDLBL(SOURCECHK))
+/*If it does not match then check if retrieved source exists */
+                CHKOBJ    OBJ(&SRCFLIB/&SRCF) OBJTYPE(*FILE) MBR(&SRCM)
+/*If it is not found then report and continue */
+                MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                   SNDMSG     MSG('CP Source and object mismatch for' +
+                          *BCAT &AUMBNM *BCAT 'in' *BCAT +
+                          &AUSRCF) TOMSGQ(UPC0111)
+                   GOTO       CMDLBL(SOURCECHK)
+                ENDDO
+/* Otherwise set on flag that compare is possible */
+                CHGVAR     VAR(&CPOBJCOMP) VALUE('Y')
+             ENDDO
+ 
+/* Member types = PROGRAMS */
+/* Check if object exists first and try to retrieve source */
+             IF         COND((&AUMBTP *EQ 'CLP       ') *OR +
+                             (&AUMBTP *EQ 'RPG       ') *OR +
+                             (&AUMBTP *EQ 'PGM       ') *OR +
+                             (&AUMBTP *EQ 'PLI       ')) THEN(DO)
+/* Check CP library */
+                RTVOBJD    OBJ(&CPLIBL/&AUMBNM) OBJTYPE(*PGM) +
+                          SRCF(&SRCF) SRCFLIB(&SRCFLIB) SRCMBR(&SRCM)
+                MONMSG     MSGID(CPF9811) EXEC(GOTO CMDLBL(SOURCECHK))
+/* If retrieved data is blank then skip */                                                /*CUP008*/
+                IF         COND(&SRCF *EQ ' ' *OR &SRCFLIB *EQ ' ' *OR +
+                          &SRCM *EQ ' ') THEN(GOTO CMDLBL(SOURCECHK))                     /*CUP008*/
+/* If object found then check if it matches where source is expected */
+                IF         COND(&SRCM *EQ &AUMBNM *AND &SRCF *EQ +
+                          &AUSRCF *AND &SRCFLIB *EQ &CPLIBS) +
+                          THEN(GOTO CMDLBL(SOURCECHK))
+/*If it does not match then check if retrieved source exists */
+                CHKOBJ    OBJ(&SRCFLIB/&SRCF) OBJTYPE(*FILE) MBR(&SRCM)
+/*If it is not found then report and continue */
+                MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                   SNDMSG     MSG('UP Source and object mismatch for' +
+                          *BCAT &AUMBNM *BCAT 'in' *BCAT +
+                          &AUSRCF) TOMSGQ(UPC0111)
+                   GOTO       CMDLBL(SOURCECHK)
+                ENDDO
+/* Otherwise set on flag that compare is possible */
+                CHGVAR     VAR(&CPOBJCOMP) VALUE('Y')
+             ENDDO
+ 
+/* Member types = PROGRAMS or MODULES */
+/* Check if object exists first and try to retrieve source */
+             IF         COND((&AUMBTP *EQ 'CLLE      ') *OR +
+                             (&AUMBTP *EQ 'RPGLE     ') *OR +
+                             (&AUMBTP *EQ 'CLE       ')) THEN(DO)
+/* Check CP library */
+                RTVOBJD    OBJ(&CPLIBL/&AUMBNM) OBJTYPE(*PGM) +
+                          SRCF(&SRCF) SRCFLIB(&SRCFLIB) SRCMBR(&SRCM)
+                MONMSG     MSGID(CPF9811) EXEC(DO)
+                   RTVOBJD    OBJ(&CPLIBL/&AUMBNM) OBJTYPE(*MODULE) +
+                          SRCF(&SRCF) SRCFLIB(&SRCFLIB) SRCMBR(&SRCM)
+                   MONMSG MSGID(CPF9801) EXEC(GOTO CMDLBL(SOURCECHK))
+                ENDDO
+/* Special processing if program found but it may be ILE program of */                    /*CUP008*/
+/*  same name as module.                                            */                    /*CUP008*/
+                IF         COND(%SST(&SRCF 3 3) *EQ 'PGM') THEN(DO)                       /*CUP008*/
+                   RTVOBJD    OBJ(&CPLIBL/&AUMBNM) OBJTYPE(*MODULE) +
+                          SRCF(&SRCF) SRCFLIB(&SRCFLIB) SRCMBR(&SRCM)                     /*CUP008*/
+                   MONMSG MSGID(CPF9801) EXEC(GOTO CMDLBL(SOURCECHK))                     /*CUP008*/
+                ENDDO                                                                     /*CUP008*/
+                                                                                          /*CUP008*/
+/* If retrieved data is blank then skip */                                                /*CUP008*/
+                IF         COND(&SRCF *EQ ' ' *OR &SRCFLIB *EQ ' ' *OR +
+                          &SRCM *EQ ' ') THEN(GOTO CMDLBL(SOURCECHK))                     /*CUP008*/
+/* If object found then check if it matches where source is expected */
+                IF         COND(&SRCM *EQ &AUMBNM *AND &SRCF *EQ +
+                          &AUSRCF *AND &SRCFLIB *EQ &CPLIBS) +
+                          THEN(GOTO CMDLBL(SOURCECHK))
+/*If it does not match then check if retrieved source exists */
+                CHKOBJ    OBJ(&SRCFLIB/&SRCF) OBJTYPE(*FILE) MBR(&SRCM)
+/*If it is not found then report and continue */
+                MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                   SNDMSG     MSG('UP Source and object mismatch for' +
+                          *BCAT &AUMBNM *BCAT 'in' *BCAT +
+                          &AUSRCF) TOMSGQ(UPC0111)
+                   GOTO       CMDLBL(SOURCECHK)
+                ENDDO
+/* Otherwise set on flag that compare is possible */
+                CHGVAR     VAR(&CPOBJCOMP) VALUE('Y')
+             ENDDO
+ 
+/* Member types = COMMANDS */
+/* Check if object exists first and try to retrieve source */
+             IF         COND(&AUMBTP *EQ 'CMD       ') THEN(DO)
+/* Check CP library */
+                RTVOBJD    OBJ(&CPLIBL/&AUMBNM) OBJTYPE(*CMD) +
+                          SRCF(&SRCF) SRCFLIB(&SRCFLIB) SRCMBR(&SRCM)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(SOURCECHK))
+/* If retrieved data is blank then skip */                                                /*CUP008*/
+                IF         COND(&SRCF *EQ ' ' *OR &SRCFLIB *EQ ' ' *OR +
+                          &SRCM *EQ ' ') THEN(GOTO CMDLBL(SOURCECHK))                     /*CUP008*/
+/* If object found then check if it matches where source is expected */
+                IF         COND(&SRCM *EQ &AUMBNM *AND &SRCF *EQ +
+                          &AUSRCF *AND &SRCFLIB *EQ &CPLIBS) +
+                          THEN(GOTO CMDLBL(SOURCECHK))
+/*If it does not match then check if retrieved source exists */
+                CHKOBJ    OBJ(&SRCFLIB/&SRCF) OBJTYPE(*FILE) MBR(&SRCM)
+/*If it is not found then report and continue */
+                MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                   SNDMSG     MSG('UP Source and object mismatch for' +
+                          *BCAT &AUMBNM *BCAT 'in' *BCAT +
+                          &AUSRCF) TOMSGQ(UPC0111)
+                   GOTO       CMDLBL(SOURCECHK)
+                ENDDO
+/* Otherwise set on flag that compare is possible */
+                CHGVAR     VAR(&CPOBJCOMP) VALUE('Y')
+             ENDDO
+ 
+/* Member types = PANEL GROUPS */
+/* Check if object exists first and try to retrieve source */
+             IF         COND(&AUMBTP *EQ 'PNLGRP    ') THEN(DO)
+/* Check CP library */
+                RTVOBJD    OBJ(&CPLIBL/&AUMBNM) OBJTYPE(*PNLGRP) +
+                          SRCF(&SRCF) SRCFLIB(&SRCFLIB) SRCMBR(&SRCM)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(SOURCECHK))
+/* If retrieved data is blank then skip */                                                /*CUP008*/
+                IF         COND(&SRCF *EQ ' ' *OR &SRCFLIB *EQ ' ' *OR +
+                          &SRCM *EQ ' ') THEN(GOTO CMDLBL(SOURCECHK))                     /*CUP008*/
+/* If object found then check if it matches where source is expected */
+                IF         COND(&SRCM *EQ &AUMBNM *AND &SRCF *EQ +
+                          &AUSRCF *AND &SRCFLIB *EQ &CPLIBS) +
+                          THEN(GOTO CMDLBL(SOURCECHK))
+/*If it does not match then check if retrieved source exists */
+                CHKOBJ    OBJ(&SRCFLIB/&SRCF) OBJTYPE(*FILE) MBR(&SRCM)
+/*If it is not found then report and continue */
+                MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                   SNDMSG     MSG('UP Source and object mismatch for' +
+                          *BCAT &AUMBNM *BCAT 'in' *BCAT +
+                          &AUSRCF) TOMSGQ(UPC0111)
+                   GOTO       CMDLBL(SOURCECHK)
+                ENDDO
+/* Otherwise set on flag that compare is possible */
+                CHGVAR     VAR(&CPOBJCOMP) VALUE('Y')
+             ENDDO
+ 
+/* All other object types do not have retrievable source information */
+/*  so just source is attempted for compare */
+/* First try source from object compare if flagged */
+ 
+             IF         COND(&CPOBJCOMP *EQ 'Y') THEN(DO)
+                CHGVAR     VAR(&CPOBJCOMP) VALUE('N')
+/* Change target source member name so that is is not confused with */
+/*  compare of source check */
+                CHGVAR     VAR(&TGTMBR) VALUE('@' *TCAT &SRCM)
+                CPYF       FROMFILE(&PTFSRC/&AUSRCF) +
+                          TOFILE(&CPLIB/&SRCF) FROMMBR(&SRCM) +
+                          TOMBR(&TGTMBR) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+                MRGSRC     TGTFILE(&CPLIB/&SRCF) TGTMBR(&TGTMBR) +
+                          MAINTFILE(&SRCFLIB/&SRCF) MAINTMBR(&SRCM) +
+                          ROOTFILE(&PTFSRC/&AUSRCF) ROOTMBR(&AUMBNM)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   CHGVAR     VAR(&USTS) VALUE('F')
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+             ENDDO
+SOURCECHK:
+/* See if source exists in expected place */
+             CHKOBJ     OBJ(&CPLIBS/&AUSRCF) OBJTYPE(*FILE) +
+                          MBR(&AUMBNM)
+             MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+/* If not try object library if this is not the same as source */
+                IF         COND(&CPLIBS *NE &CPLIBL) THEN(DO)
+                   CHKOBJ     OBJ(&CPLIBL/&AUSRCF) OBJTYPE(*FILE) +
+                          MBR(&AUMBNM)
+                   MONMSG     MSGID(CPF9801 CPF9810 CPF9815) EXEC(DO)
+                      GOTO       CMDLBL(READNEXT)
+                   ENDDO
+                   CPYF       FROMFILE(&PTFSRC/&AUSRCF) +
+                          TOFILE(&CPLIB/&AUSRCF) FROMMBR(&SRCM) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+                   MRGSRC     TGTFILE(&CPLIB/&AUSRCF) TGTMBR(&AUMBNM) +
+                         MAINTFILE(&CPLIBL/&AUSRCF) MAINTMBR(&AUMBNM) +
+                          ROOTFILE(&PTFSRC/&AUSRCF) ROOTMBR(&AUMBNM)
+                   MONMSG     MSGID(CPF0000) EXEC(DO)
+                      CHGVAR     VAR(&USTS) VALUE('F')
+                      GOTO       CMDLBL(READNEXT)
+                   ENDDO
+                ENDDO
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+             CPYF       FROMFILE(&PTFSRC/&AUSRCF) +
+                          TOFILE(&CPLIB/&AUSRCF) FROMMBR(&AUMBNM) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)
+             MRGSRC     TGTFILE(&CPLIB/&AUSRCF) TGTMBR(&AUMBNM) +
+                         MAINTFILE(&CPLIBS/&AUSRCF) MAINTMBR(&AUMBNM) +
+                          ROOTFILE(&PTFSRC/&AUSRCF) ROOTMBR(&AUMBNM)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                CHGVAR     VAR(&USTS) VALUE('F')
+                GOTO       CMDLBL(READNEXT)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ABNOR:
+             CHGVAR     VAR(&RETURN) VALUE('F')
+END:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             DSPMSG     MSGQ(QTEMP/UPC0111) OUTPUT(*PRINT)
+             MONMSG     MSGID(CPF0000)
+             DLTOVR     FILE(UPJOBEPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

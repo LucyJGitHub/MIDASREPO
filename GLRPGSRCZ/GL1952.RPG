@@ -1,0 +1,2164 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas GL Cust. Serv. Fees - HM Fees Accruals Gen.')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL1952 - Hold Mail Fees Accruals Generation                  *
+      *                                                               *
+      *  Function:  This Program will calculate HM fees to Accrue     *
+      *  (COB)      if asked at Customer level (Window)               *
+      *             REM : Minimim and maximum of charge are taken     *
+      *             for the period involved.                          *
+      *                                                               *
+      *  Called by: GLC1952- Cust. Serv. Fees - Hold Mail Fees Accr.  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 226449             Date 24Jun15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CGL020             Date 12Dec02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 197076             Date 07Mar02               *
+      *                 192176             Date 07Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSD008  *CREATE    Date 05Feb01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Wrong interest calculated due to wrong number of    *
+      *           days in interest used for divisor basis 3. Fix is to*
+      *           avoid comparing month of next coupon date to month  *
+      *           of maturity date. Applied fix 211867.               *
+      *         - Applied for MD034387.                               *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CGL020 - Midas Compliance Watch - Additional A/C Postings    *
+      *           Information (Recompile)                             *
+      *  197076 - Account section and profit centre are blank. PTIM   *
+      *           also must be 235959 for management accounts.        *
+      *  192176 - Use fee amount if it exists in place of default     *
+      *           from rate codes table. Accrue for non-bullet fees   *
+      *           & accrue according to the days between settlements. *
+      *           Charging currency not appearing on report GL1982    *
+      *           for Hold Mail accruals because holding records are  *
+      *           no longer necessary. Output F2CCCY to accrual       *
+      *           (Type '3') record on SETAHIPP.                      *
+      *  CSD008 - Customer Service Fees Enhancement                   *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+     FGLCUFEL3IF  E           K        DISK         KINFSR *PSSR
+      ** Customer/Hold Mail fees to process              Prefix - F0
+      *
+     FGLHOLDL0IF  E           K        DISK         KINFSR *PSSR
+      ** Extract Holding Details (Source of Holding)     Prefix - F8
+      *
+     FGLHOLDL1IF  E           K        DISK         KINFSR *PSSR
+      ** Extract Holding Details                         Prefix - F8
+     F            GLHOLDD0                          KRENAMEGLHOLDD1
+      *
+     FSDRTCDL0IF  E           K        DISK         KINFSR *PSSR
+      ** Fee rate code file                              Prefix - F3
+      *
+     FSDCGFRL1IF  E           K        DISK         KINFSR *PSSR
+      ** Fee Charge Groups/Fee Rates File.               Prefix - F4
+     F            SDCGFRD0                          KRENAMESDCGFRD1
+      *
+     FGLFEACL0UF  E           K        DISK         KINFSR *PSSR A
+      ** Fees Accrued File                               Prefix - F6
+      *
+     FGLTAHIPDO   E                    DISK         KINFSR *PSSR A
+      ** Today Accruals on Holding Items file            Prefix - F2
+      *
+     FGEFEPD  O   E           K        DISK         KINFSR *PSSR A
+      ** Customer Fees Posting file
+      *
+     FGEFEZZ  UF  E           K        DISK         KINFSR *PSSR A
+      ** Customer Fees Posting File Trailer
+      *
+     FGL1952AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Hold Mail Fees Accrued Today Run Control Report
+     F                                              KINFSR *PSSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   44  - End of file on GLCUFEL3                               *
+      *   46  - No record found on file GLFEACL0                      *
+      *   47  - No record found on file GLHOLDL1                      *
+      *   49  - No record found on file SDRTCDL0                      *
+      *   51  - No record found on file SDCGFRPD                      *
+      *   60  - No record found on file GLHOLDL0                      *
+      *   80  - End of file on GEFEZZ                                 *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *   LR  - Terminate Program                                     *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRFEEP - Calculate Fees to accrue today                      *
+      *  SRTAHI - Write GLTAHIPD details                              *
+      *  SRHOFE - Calculate holding fees using rate codes table       *
+      *  SRRATE - Subroutine to determine rate code                   *
+      *  SRPOST - Generate posting entries                            *
+      *  SRACOD - Subroutine to access account code details           *
+      *  SRUPTR - Write trailer record for 'fees posting file'        *
+      *  SRFCHG - Subroutine to calculate charges                     *
+      *  SRAMNT - Retrieves amount to calculate the accruals          *
+      *  SRBRCA - Subroutine to access branch details                 *
+      *  SRCCYC - Subroutine to access currency details               *
+      *                                                               *
+      *  *INZSR - Initialisation routine                              *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      ****************************************************************
+      *
+      ** Copyright Array
+     E                    CPY@    1   1 80
+      *
+      ** Arrays used for fees calculation
+     E                    ZRA        14 15 0
+     E                    ZRB        15 15 0
+     E                    ZPC        15 11 7
+     E                    ZCG        15 15 0
+      *
+      ** Define Standard Subroutine Arrays
+      *
+      /COPY ZSRSRC,ZDAYSZ1
+      *
+     E                    ZYDY    4   4  4 0
+     E                    ZMDY   13  13  3 0
+     E                    ZMNM   12  12  3
+      *
+      /COPY ZSRSRC,ZPOWERZ1
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     IGLCUFED0                                                                                CGL029
+     I              QQACAC                          QQACAX                                    CGL029
+      *
+     ILDA       E DSLDA
+      ** Local data area for database error details
+      *
+     IPSDS       SDS
+      ** Program status data structure
+     I                                      244 253 JOB
+     I                                      254 263 USER
+      *
+     ISPOOLU      DS
+      ** File information data structure
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      *
+     IPNART       DS
+      ** Data Structure for 'Posting Narrative' on PF/GEFEPD
+     I                                        1  30 WWPNAR
+     I                                       15  16 WWSPAC
+     I                                       18  23 WWCUSN
+     I                                       25  25 WWLBRK
+     I                                       26  29 WWPORT
+     I                                       30  30 WWRBRK
+      *
+     I***DSACNT*     DS                             18                                        CGL029
+     IDSACNT      DS                             24                                           CGL029
+      ** Data structure For Account format :
+     I                                        1   3 F0BRCA
+     I                                        4   9 WWBICN
+     I                                       10  12 F0CCCY
+     I**********                             13  160F0ACAC                                    CGL029
+     I**********                             17  180DSACSQ                                    CGL029
+     I                                       13  220F0ACAC                                    CGL029
+     I                                       23  240DSACSQ                                    CGL029
+      *
+     IDNATN       DS                              5
+      ** Midas 'Next Available Transaction No.' Data Area DNATN .
+     I                                        1   50FNATN
+      *
+     IDSXFER      DS
+      ** Working DS Containing Details to fill Total DS
+     I                                        1   3 F8CCY
+     I                                    P   4  110F8ASNV
+     I                                    P  12  190F8LINV
+     I                                    P  20  270F8ASMV
+     I                                    P  28  350F8LIMV
+     I                                    P  36  430F8ASFX
+     I                                    P  44  510F8LIFX
+     I                                    P  52  590F8ASAC
+     I                                    P  60  670F8LIAC
+     IDSTOTP      DS
+      ** Working DS Containing Portfolio Total amounts
+     I                                        1   3 WSPOCY
+     I                                    P   4  110WSPASN
+     I                                    P  12  190WSPLIN
+     I                                    P  20  270WSPASM
+     I                                    P  28  350WSPLIM
+     I                                    P  36  430WSPASF
+     I                                    P  44  510WSPLIF
+     I                                    P  52  590WSPASA
+     I                                    P  60  670WSPLIA
+      *
+     IDSTOTC      DS
+      ** Working DS Containing Customer Total amounts
+     I                                        1   3 WSCUCY
+     I                                    P   4  110WSCASN
+     I                                    P  12  190WSCLIN
+     I                                    P  20  270WSCASM
+     I                                    P  28  350WSCLIM
+     I                                    P  36  430WSCASF
+     I                                    P  44  510WSCLIF
+     I                                    P  52  590WSCASA
+     I                                    P  60  670WSCLIA
+      *
+      ** Access object data structures
+      *
+     ISDACOD    E DSSDACODPD
+      ** Midas  SD Account Codes details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Midas  Bank details
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** Midas  Branch details
+      *
+     ISDCURR    E DSSDCURRPD
+      ** Midas  Currencies details
+      *
+     IDSFDY     E DSDSFDY
+      ** First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      ** DS for access programs, long data structure
+      *
+     I              'HOLD MAIL FEE .. ...-C         PNARR
+     I              '... (....)'
+      ** Posting narrative Array --> GEFEPD/PF
+      *
+     C/EJECT
+      *****************************************************************
+      *                M A I N     P R O C E S S I N G                *
+      *****************************************************************
+      *
+      **  Reset working fields
+      *
+     C                     MOVE 'N'       WWDATA  1
+     C                     Z-ADD0         RCOUNT
+     C                     MOVE *BLANKS   WPCNUM
+     C                     MOVE *BLANKS   WPBRCA
+     C                     MOVE *BLANKS   WPPTFR
+     C                     MOVE *BLANKS   WPFETP
+      *
+      **  Customer Service Fee to process Extract File :
+      *
+     C           *LOVAL    SETLLGLCUFEL3
+     C                     READ GLCUFEL3                 44
+      *
+      **  Do while records exist on GLCUFEL3
+      *
+     C           *IN44     DOWEQ*OFF
+      *
+     C                     MOVE 'Y'       WWDATA
+      *
+      ** Setup looping Details
+      *
+     C                     MOVE F0CNUM    WPCNUM
+     C                     MOVE F0CNUM    WPCUST  60
+     C                     MOVE F0PTFR    WPPTFR
+      *
+      **  Retrieve Branch internal Customer (WWBICN)
+      *
+     C           F0BRCA    IFNE WPBRCA
+     C                     EXSR SRBRCA
+     C                     MOVE F0BRCA    WPBRCA
+     C                     ENDIF
+      *
+     C                     MOVE F0FETP    WPFETP
+      *
+      ** Save for Accruals calculation subroutine : From date-To Date
+      *
+     C                     Z-ADDF0LADT    ZFMDAT
+     C                     Z-ADDF0CADT    ZTODAT
+      *
+      ** Save Fee Charging currency for CROSS CCY subroutine (TO Ccy)
+      *
+     C                     MOVE F0CCCY    ZCCYT
+      *
+      ** Access Currency Details
+      *
+     C                     MOVE F0CCCY    WWCCY
+     C                     EXSR SRCCYC
+      *
+      ** Keep Details for Cross Currency validation
+      **      Spot rate , mult/div Indi and CCY Decimal places
+      *
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVE A6MDIN    ZMDINT
+     C                     MOVE A6NBDP    ZCDPT
+      *
+      ** Calculate Fee Amount to Date -
+      *
+     C                     EXSR SRFEEP
+      *
+      ** Read New fee to accrue
+      *
+     C                     ADD  1         RCOUNT
+      *
+     C                     READ GLCUFEL3                 44
+      *
+     C                     ENDDO
+      *
+      ** Update Trailer/ print Audit
+      *
+     C           WWDATA    IFNE 'N'
+     C                     Z-ADDWWNUMR    RNOREC
+     C                     EXSR SRUPTR
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+     C                     ELSE
+     C                     WRITEHEADAU
+     C                     WRITENODTLS
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+      *****************************************************************
+      *                     E N D    P R O G R A M                    *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *  SRFEEP -  Fees Process : Calcul of Fees to accrue today      *
+      *                                                               *
+      *            1) Adjustment posting for Fee type                 *
+      *            2) Posting for Customer/portfolio Holdings fees    *
+      *            3) Write/update Fee Accrued File                   *
+      *                                                               *
+      *  Called by : Main processing                                  *
+      *                                                               *
+      *  Calls     : SRPOST, SRTAHI, SRRATE, SRAMNT, SRHOFE, ZTNLU1   *
+      *****************************************************************
+      *
+     C           SRFEEP    BEGSR
+      *
+     C                     Z-ADD*ZEROS    WWFACT 185
+      *
+      ** PART 1 )
+      ** A) Access LF/GLFEACL0 with branch code, customer number,
+      **    Portfolio reference and fee type.
+      **       KFEAC = KPBRCA + KPCNUM + KPPTFR + KPFETP
+      *
+     C                     MOVE WPBRCA    KPBRCA
+     C                     MOVE WPCNUM    KPCNUM
+     C                     MOVE WPPTFR    KPPTFR
+     C                     MOVE WPFETP    KPFETP
+      *
+     C           KFEAC     CHAINGLFEACL0            N46
+     C           *IN46     IFEQ *ON
+      *
+      ** Reset working Fields 'Fees Accrued To Date', Outstanding Adj
+      *
+     C                     Z-ADD*ZEROS    WWCFAC
+     C                     Z-ADD*ZEROS    WWOSAJ
+     C                     MOVE *BLANKS   WWOSAS
+     C                     Z-ADD*ZERO     WWMACP 150
+     C                     Z-ADD*ZERO     WWCACD
+     C                     ELSE
+      *
+      ** Set up Work fields with Values from file to post adjustment
+      *
+     C                     Z-ADDF6ACDT    WWCFAC
+     C                     Z-ADDF6OTAJ    WWOSAJ
+     C                     MOVE F6OTSG    WWOSAS
+     C                     Z-ADDF6MACP    WWMACP
+     C                     Z-ADDF6CACD    WWCACD
+     C                     ENDIF
+      *
+      ** Post outstanding Accruals for Fee Type :
+      *
+     C           WWOSAS    IFEQ '+'
+     C                     Z-ADDWWOSAJ    WWFACT
+     C                     EXSR SRPOST
+     C                     ELSE
+     C           WWOSAS    IFEQ '-'
+     C                     Z-SUBWWOSAJ    WWFACT
+     C                     EXSR SRPOST
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Write GLTAHIPD details
+      *
+     C                     MOVEL'2'       F2RECI
+     C                     EXSR SRTAHI
+      *
+      ** Update Manual Accruals Posted field
+      *
+     C           WWOSAS    IFEQ '+'
+     C                     ADD  WWOSAJ    WWMACP
+     C                     ELSE
+     C           WWOSAS    IFEQ '-'
+     C                     SUB  WWOSAJ    WWMACP
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Reset Outstanding Adjustment field to Zero
+      *
+     C                     Z-ADD*ZEROS    WWOSAJ
+     C                     MOVE *BLANKS   WWOSAS
+      *
+      ** Reset Fees accrued today to zero after having posted these
+      *
+     C                     Z-ADD*ZEROS    WWFACT
+      *
+      ** PART 2)
+      ** Evaluate Customer/Portfolio/fee type Accruals to post
+      ** Read Holding File With Customer and Portfolio reference
+      *
+     C                     MOVELWPCNUM    KCNUM
+     C                     MOVEL*BLANKS   KPTFR
+      *
+     C                     CLEARDSTOTP
+     C                     CLEARDSTOTC
+      *
+      ** Retrieve Total of Customer
+      *
+     C                     MOVE 'CT'      KSRHO
+     C           KCFHD0    CHAINGLHOLDL0             60
+     C           *IN60     IFEQ *OFF
+     C                     MOVELDSXFER    DSTOTC
+     C                     ENDIF
+      *
+      ** Retrieve Total of Portfolio
+      *
+     C                     MOVE 'PT'      KSRHO
+     C                     MOVELWPPTFR    KPTFR
+     C           KCFHD0    CHAINGLHOLDL0             60
+     C           *IN60     IFEQ *OFF
+      *
+     C                     MOVELDSXFER    DSTOTP
+     C                     ENDIF
+      *
+     C           WPPTFR    IFEQ *BLANKS
+     C           KCFHD1    CHAINGLHOLDL1             47
+     C                     ELSE
+     C           KCFHD2    CHAINGLHOLDL1             47
+     C                     ENDIF
+      *
+      ** Do while records on LF/GLHOLDL1 for Customer/portfolio holdings
+      *
+     C           *IN47     DOWEQ*OFF
+      *
+      ** Don't treat Customer total Record (Source of Posting is 'CT'  ) and
+      ** Don't treat Portfolio Total Record (Source of Posting is 'PT  ').
+      *
+     C           F8SRHO    IFNE 'CT'
+     C           F8SRHO    ANDNE'PT'
+      *
+      ** Retrieve Fee Rate Code
+      *
+     C                     EXSR SRRATE
+      *
+      ** Calculate Holding Amount
+      *
+     C                     EXSR SRAMNT
+     C                     Z-ADDWTOTAL    WWHOLA 150
+     C                     MOVE F8CCY     WSHCCY  3
+      *
+      ** Keep Details coming from Holdings file (GLHOLDPD) for GLTAHIPD
+      *
+     C                     MOVE F8INST    F2INST
+     C                     MOVE F8SRHO    F2SRHO
+     C                     MOVE F8DPRF    F2HORF
+     C                     MOVE F8CCY     F2HCCY
+     C                     Z-ADDWWHOLA    F2HOAM
+      *
+      ** Evaluate fees amount to accrue depending on F4PCHO (SDCGFRPD)
+      *
+     C                     SELEC
+      *
+      ** 'H' means that Holding amount is Base amount in rate table
+      *
+     C           F4PCHO    WHEQ 'H'
+     C                     Z-ADDWWHOLA    WWAMEV 150
+     C                     MOVE WSHCCY    WWEVCY  3
+      *
+      ** 'P' means that Portfolio amount is Base Amount in rate table
+      *
+     C           F4PCHO    WHEQ 'P'
+      *
+      ** Restore PT details
+      *
+     C                     MOVELDSTOTP    DSXFER
+     C                     EXSR SRAMNT
+     C                     Z-ADDWTOTAL    WWAMEV
+      *
+     C                     MOVE WSPOCY    WWEVCY
+      *
+      ** 'C' means that Customer amount is Base Amount in rate table
+      *
+     C           F4PCHO    WHEQ 'C'
+      *
+      ** Restore CT details
+      *
+     C                     MOVELDSTOTC    DSXFER
+     C                     EXSR SRAMNT
+     C                     Z-ADDWTOTAL    WWAMEV
+      *
+     C                     MOVE WSCUCY    WWEVCY
+      *
+     C                     ENDSL
+      *
+      ** Calcul of fees for this holding
+      *
+     C                     EXSR SRHOFE
+      *
+      ** IF rate code exist, add Charge for holding
+      *
+     C           WWRATE    IFNE *BLANKS
+      *
+      ** Add fee accrued in SRHOFE to 'Fees Accrued to Date' and to
+      ** 'Fees Accrued Today'
+      *
+     C           WWCACD    ADD  WWAAFH    WWCACD
+     C           WWCACD    SUB  WWCFAC    WWFACT
+     C           WWCFAC    ADD  WWFACT    WWCFAC
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Read next record on LF/GLHOLDL1 With correct key
+      *
+     C           F0PTFR    IFEQ *BLANKS
+     C           KCFHD1    READEGLHOLDL1                 47
+     C                     ELSE
+     C           KCFHD2    READEGLHOLDL1                 47
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** 3) Access PF/GLFEACL0 to update Fee Accrued To date
+      **          KPBRCA+KPCNUM+KPPTFR+KPFETP
+      *
+     C                     MOVE WPBRCA    KPBRCA
+     C                     MOVE WPCNUM    KPCNUM
+     C                     MOVE WPPTFR    KPPTFR
+     C                     MOVE WPFETP    KPFETP
+      *
+     C           KFEAC     CHAINGLFEACL0             4699
+      *
+      ** F0FAMT is flat fee amount extracted from SECHRGPD by SEU932                          192176
+      *                                                                                       192176
+     C           F0FAMT    IFNE *ZEROS                                                        192176
+      *                                                                                       192176
+      ** Reset WWCFAC - Accruals already posted this period(ignoring                          192176
+      **                previous use of this field because F0FAMT<>0).                        192176
+      *                                                                                       192176
+     C           *IN46     IFEQ *OFF                       Record exists                      192176
+     C                     Z-ADDF6ACDT    WWCFAC           Stored accrual                     192176
+     C                     Z-ADDF6FRPE    WWFRDT  50       Accrual From Date                  192176
+     C                     ELSE                            Record not found                   192176
+     C                     Z-ADD0         WWCFAC           Accrual to date                    192176
+     C                     Z-ADDZFMDAT    WWFRDT           Accrual From Date                  192176
+     C                     ENDIF                           *IN46 = *OFF                       192176
+      *                                                                                       192176
+      ** Total Days(WWSPRD) between last settlement and next settlement                       192176
+      ** If they are the same then it is final settlement day so no accrual                   192176
+      *                                                                                       192176
+     C           F0STDT    IFNE WWFRDT                     Not Final Day?                     192176
+     C           F0STDT    SUB  WWFRDT    WWSPRD  50       Settle Period Days                 192176
+      *                                                                                       192176
+      ** Number of days to accrue(WWACD) so far in this period.                               192176
+      *                                                                                       192176
+     C           ZTODAT    SUB  WWFRDT    WWACD   50       Accrual Days                       192176
+      *                                                                                       192176
+      ** Calculate Accrual amount since last settlement date(WWACT)                           192176
+      *                                                                                       192176
+     C           WWACD     MULT F0FAMT    WWACT  210                                          192176
+     C           WWACT     DIV  WWSPRD    WWACT            Accrual Total                      192176
+     C           WWACT     SUB  WWCFAC    WWFACT           Today's accrual                    192176
+     C                     Z-ADDWWACT     WWCFAC           New Accrual Total                  192176
+     C                     ELSE                            Final Day                          192176
+     C                     Z-ADD0         WWFACT           No accrual                         192176
+     C                     ENDIF                           Not Final Day?                     192176
+     C                     ENDIF                           F0FAMT<>0                          192176
+      *                                                                                       192176
+     C           *IN46     IFEQ *OFF
+     C                     MOVE 'A'       F6CHTP
+     C                     Z-ADDWWCFAC    F6ACDT
+     C                     Z-ADD*ZEROS    F6OTAJ
+     C                     MOVE *BLANKS   F6OTSG
+     C                     Z-ADDWWMACP    F6MACP
+     C                     Z-ADDZTODAT    F6TOPE
+     C                     MOVE F4RTCD    F6RTCD
+     C                     Z-ADDWWCACD    F6CACD
+     C                     UPDATGLFEACD0
+     C                     ELSE
+     C                     MOVE 'D'       F6RECI
+     C                     Z-ADDBJRDNB    F6LCD
+     C                     TIME           F6LCTM
+     C                     MOVE 'I'       F6CHTP
+      *
+      ** Retrieve transaction number
+      *
+     C                     EXSR ZTNLU1
+     C                     MOVELNATN      F6TNLU
+      *
+      ** Create record
+      *
+     C                     MOVE WPBRCA    F6BRCA
+     C                     MOVELWPCNUM    F6CNUM
+     C                     MOVE WPPTFR    F6PTFR
+     C                     MOVE WPFETP    F6FETP
+     C                     MOVE F0PRTP    F6PRTP
+     C                     MOVE F0CHGR    F6CHGR
+     C                     MOVE F4RTCD    F6RTCD
+     C                     MOVE F0CCCY    F6ACCY
+     C                     Z-ADDWWCFAC    F6ACDT
+     C                     Z-ADD*ZEROS    F6OTAJ
+     C                     MOVE *BLANKS   F6OTSG
+     C                     Z-ADDWWMACP    F6MACP
+     C                     Z-ADDWWCACD    F6CACD
+      *
+     C                     Z-ADDZFMDAT    F6FRPE
+     C                     Z-ADDZTODAT    F6TOPE
+      *
+     C                     MOVE F0PFTC    F6PFTC
+     C                     MOVE F3CALC    F6CALC
+      *
+      ** Write record to PF/GLFEACPD
+      ** only if 'Fee Accrued' is not *zeros.
+      *
+     C           WWCFAC    IFNE *ZERO
+     C                     WRITEGLFEACD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** (If 'Fee Accrued Today'),  call SRPOST only if 'Fee Accrued'
+      ** is not *Zeros
+      *
+     C           WWCFAC    CASNE*ZERO     SRPOST
+     C                     ENDCS
+      *
+     C                     MOVE '3'       F2RECI
+     C                     EXSR SRTAHI
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRTAHI - Write GLTAHIPD details (Today Accrued holding items)*
+      *                                                               *
+      *  Called by : SRFEEP, SRFCHG                                   *
+      *                                                               *
+      *  Calls     : None                                             *
+      *****************************************************************
+      *
+     C           SRTAHI    BEGSR
+      *
+      ** Fill key details for GLTAHIPD file
+      *
+     C                     Z-ADDBJRDNB    F2PSTD
+      *
+      ** Details coming from Fee to process file (GLCUFEPD)
+      *
+     C                     MOVE F0BRCA    F2BRCA
+     C                     MOVE F0PRTP    F2FEPT
+     C                     MOVE F0FETP    F2FETP
+     C                     MOVE F0CNUM    F2CNUM
+     C                     MOVE F0PTFR    F2PTFR
+     C                     MOVE F0CHGR    F2CHGR
+      *
+      ** Fill next details depending on F2RECI
+      *
+     C                     SELEC
+     C           F2RECI    WHEQ '1'
+      *
+      ** F2RECI = 1 : Write Holding details
+      *
+      ** HM Fees are flat charges, thus F2FRAT Still 0
+      *
+     C           SFCGBS    IFEQ 'P'
+     C                     Z-ADDZCGRT     F2FRAT
+     C                     ELSE
+     C                     Z-ADD0         F2FRAT
+     C                     ENDIF
+     C                     MOVE F0CCCY    F2CCCY
+     C                     Z-ADDWWCHAG    F2CHAM
+      *
+      ** B)    Details coming from Fee Charge group / Fee rate Table
+      *
+     C                     MOVE *BLANKS   F2DPRF
+     C                     MOVE *BLANKS   F2SHSN
+     C                     MOVE *BLANKS   F2INVT
+     C                     MOVE *BLANKS   F2SCCY
+     C                     MOVE *BLANKS   F2NORM
+     C                     MOVE *BLANKS   F2CPHI
+     C                     MOVE F4RTCD    F2FERC
+      *
+      ** C)    Details coming from Fee rate table (SDRTCDPD)
+      *
+     C                     MOVE F3CHMT    F2THTI
+      *
+     C                     Z-ADDZMINC     F2MINA
+     C                     Z-ADDZMAXI     F2MAXA
+      *
+     C           F2RECI    WHEQ '2'
+      *
+      ** F2RECI = 2 : Write Fee Outstanding Accruals to post details
+      *
+     C                     MOVELDSACNT    F2ADAC           Adjustement Account
+     C                     Z-ADDWWFACT    F2ADAM           Adjustement Amount
+      *
+      ** F2RECI = 3 : Write Fee Accruals to post details
+      *
+     C           F2RECI    WHEQ '3'
+     C                     MOVE F0CCCY    F2CCCY           Charge Currency                    192176
+     C                     MOVELDSACNT    F2ACAC           Accruals Account
+     C                     Z-ADDWWFACT    F2ACAM           Accruals Amount
+     C                     Z-ADDZFMDAT    F2FRPE           Accruals Period - Sta
+     C                     Z-ADDZTODAT    F2TOPE                           - End
+     C                     ENDSL
+      *
+     C                     WRITEGLTAHID0
+      *
+     C                     CLEARGLTAHID0
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRHOFE -  Calcul holding fees using Rate codes tables        *
+      *                                                               *
+      *  Called by : SRFEEP                                           *
+      *                                                               *
+      *  Calls     : SRFCHG, SRCCYC, *PSSR, ZCCYCN                    *
+      *****************************************************************
+      *
+     C           SRHOFE    BEGSR
+      *
+      ** Initialise Work field For 'Amount Accrued for Account'
+      *
+     C                     Z-ADD*ZEROS    WWAAFH 205
+     C                     Z-ADD*ZEROS    ZCGRT
+     C                     Z-ADD*ZEROS    ZZ
+      *
+      ** If no rate charge - nothing to process
+      *
+     C           WWRATE    IFNE *BLANKS
+      *
+     C                     MOVE WWRATE    KRTRAT
+     C                     MOVE F0CCCY    KRTCCY
+      *
+     C           KRTCD     CHAINSDRTCDL0             49
+      *
+     C           *IN49     IFEQ *ON
+     C           F3CHTP    OREQ 'D'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD02        DBASE
+     C                     MOVE *BLANKS   DBFILE           ************
+     C                     MOVEL'SDRTCDL0'DBFILE           * DBERR 02 *
+     C                     MOVE *BLANKS   DBKEY            ************
+     C           WWRATE    CAT  F0CCCY:0  DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access LF/SDCURRL0 with Holding Currency of Search Amount
+      *
+     C                     MOVE WWEVCY    WWCCY
+     C                     EXSR SRCCYC
+      *
+      ** Convert Amount for Search in Rate Table to fee charging ccy
+      *
+     C                     Z-ADDWWAMEV    ZAMTF
+     C                     MOVE WWEVCY    ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WWSEAR 150
+      *
+      ** Access LF/SDCURRL0 with Account Ccy from HOLDING-File (WWHOLA)
+      *
+     C                     MOVE WSHCCY    WWCCY
+     C                     EXSR SRCCYC
+      *
+      ** Convert Holding Amount to fee charging Currency using SR/ZCCYCN
+      *
+     C                     Z-ADDWWHOLA    ZAMTF
+     C                     MOVE WSHCCY    ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     WWCOMP 150       Compute amo
+      *
+      ** Keep Holding amount in Charging ccy equivalent into F2HACH fld
+      *
+     C                     Z-ADDWWCOMP    F2HACH
+      *
+      ** Calculate fees to be charged for account using SRFCHG based on
+      ** SR/ZFECRG but taking in Account Searching amount (WWSEAR)
+      *
+     C                     Z-ADDF3RG01    ZRA,1
+     C                     Z-ADDF3RG02    ZRA,2
+     C                     Z-ADDF3RG03    ZRA,3
+     C                     Z-ADDF3RG04    ZRA,4
+     C                     Z-ADDF3RG05    ZRA,5
+     C                     Z-ADDF3RG06    ZRA,6
+     C                     Z-ADDF3RG07    ZRA,7
+     C                     Z-ADDF3RG08    ZRA,8
+     C                     Z-ADDF3RG09    ZRA,9
+     C                     Z-ADDF3RG10    ZRA,10
+     C                     Z-ADDF3RG11    ZRA,11
+     C                     Z-ADDF3RG12    ZRA,12
+     C                     Z-ADDF3RG13    ZRA,13
+     C                     Z-ADDF3RG14    ZRA,14
+     C                     Z-ADDF3PC01    ZPC,1
+     C                     Z-ADDF3PC02    ZPC,2
+     C                     Z-ADDF3PC03    ZPC,3
+     C                     Z-ADDF3PC04    ZPC,4
+     C                     Z-ADDF3PC05    ZPC,5
+     C                     Z-ADDF3PC06    ZPC,6
+     C                     Z-ADDF3PC07    ZPC,7
+     C                     Z-ADDF3PC08    ZPC,8
+     C                     Z-ADDF3PC09    ZPC,9
+     C                     Z-ADDF3PC10    ZPC,10
+     C                     Z-ADDF3PC11    ZPC,11
+     C                     Z-ADDF3PC12    ZPC,12
+     C                     Z-ADDF3PC13    ZPC,13
+     C                     Z-ADDF3PC14    ZPC,14
+     C                     Z-ADDF3PC15    ZPC,15
+     C                     Z-ADDF3FL01    ZCG,1
+     C                     Z-ADDF3FL02    ZCG,2
+     C                     Z-ADDF3FL03    ZCG,3
+     C                     Z-ADDF3FL04    ZCG,4
+     C                     Z-ADDF3FL05    ZCG,5
+     C                     Z-ADDF3FL06    ZCG,6
+     C                     Z-ADDF3FL07    ZCG,7
+     C                     Z-ADDF3FL08    ZCG,8
+     C                     Z-ADDF3FL09    ZCG,9
+     C                     Z-ADDF3FL10    ZCG,10
+     C                     Z-ADDF3FL11    ZCG,11
+     C                     Z-ADDF3FL12    ZCG,12
+     C                     Z-ADDF3FL13    ZCG,13
+     C                     Z-ADDF3FL14    ZCG,14
+     C                     Z-ADDF3FL15    ZCG,15
+      *
+      ** Work out, if Percentage or flat
+      *
+     C                     XFOOTZPC       W#PC   117
+     C                     XFOOTZCG       W#FL   150
+     C                     SELEC
+     C           W#PC      WHGT *ZERO
+     C                     MOVE 'P'       SFCGBS  1
+     C           W#FL      WHGT *ZERO
+     C                     MOVE 'F'       SFCGBS
+     C                     ENDSL
+      *
+      ** Calculate Fee to be charged for account using SR/SRFCHG
+      *
+     C                     Z-ADDWWSEAR    WZAMTS 150
+     C                     Z-ADDWWCOMP    WZAMTC 150
+      *
+     C                     SELEC
+      *
+     C           F3CALC    WHEQ 1
+     C                     Z-ADD3         ZDYBS
+     C                     Z-ADD2         ZDVBS
+      *
+     C           F3CALC    WHEQ 2
+     C                     Z-ADD3         ZDYBS
+     C                     Z-ADD1         ZDVBS
+      *
+     C           F3CALC    WHEQ 3
+     C                     Z-ADD5         ZDYBS
+     C                     Z-ADD1         ZDVBS
+      *
+     C           F3CALC    WHEQ 4
+     C                     Z-ADD2         ZDYBS
+     C                     Z-ADD2         ZDVBS
+      *
+     C           F3CALC    WHEQ 5
+     C                     Z-ADD2         ZDYBS
+     C                     Z-ADD1         ZDVBS
+      *
+     C           F3CALC    WHEQ 6
+     C           F3CALC    OREQ 0
+     C                     Z-ADD3         ZDYBS
+     C                     Z-ADD3         ZDVBS
+      *
+     C                     ENDSL
+      *
+     C                     Z-ADD*ZEROS    ZSPRD
+     C                     MOVE *BLANKS   ZSPRI
+     C                     MOVE SFCGBS    ZCGBS
+     C                     MOVE F3CHMT    ZCGMT
+     C                     Z-ADDF3MINA    ZMINC
+     C                     Z-ADDF3MAXA    ZMAXI
+      *
+      ** Only perform routine SR/SRFCHG for CR account balances
+      *
+     C           WZAMTC    IFGT 0
+     C                     EXSR SRFCHG
+     C                     ELSE
+     C                     Z-ADD0         ZCHGA
+     C                     ENDIF
+      *
+     C                     Z-ADDZCHGA     WWAAFH
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRRATE - Routine to determine Rate Code                      *
+      *                                                               *
+      *  Called by : SRFEEP                                           *
+      *                                                               *
+      *  Calls     : None                                             *
+      *****************************************************************
+      *
+     C           SRRATE    BEGSR
+      *
+      ** Detail from Customer's fees to process
+      *
+     C                     MOVELF0FETP    KFETP
+     C                     MOVELF0CHGR    KCHGR
+      *
+      ** Detail from Holding to treat
+      *
+     C                     MOVE *BLANKS   WWRATE
+      *
+      ** Retrieval order on SDCGFRPD
+      *
+      ** 1) Fee-type + Chg group
+      ** 2) Fee-type + *Blanks
+      *
+     C           KCGFR1    SETLLSDCGFRL1                 51
+     C           *IN51     IFEQ *ON
+     C           KCGFR1    CHAINSDCGFRL1             51
+     C                     MOVE F4RTCD    WWRATE
+     C                     GOTO ENDRT
+     C                     ENDIF
+      *
+      ** Move Blanks to Charge Group and Try All the key(s) Again.
+      *
+     C                     MOVE *BLANKS   KCHGR
+      *
+     C           KCGFR1    SETLLSDCGFRL1                 51
+     C           *IN51     IFEQ *ON
+     C           KCGFR1    CHAINSDCGFRL1             51
+     C                     MOVE F4RTCD    WWRATE
+     C                     GOTO ENDRT
+     C                     ENDIF
+      *
+     C           ENDRT     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRPOST - Subroutine to generate Posting Entries              *
+      *                                                               *
+      *             1) Accruals                                       *
+      *             2) Incomes                                        *
+      *                                                               *
+      *  Called By : SRFEEP                                           *
+      *                                                               *
+      *  Calls     : SRACOD                                           *
+      *****************************************************************
+      *
+     C           SRPOST    BEGSR
+      *
+      ** Set up fields for update of PF/GEFEPD  1) Post Accruals
+      *
+      ** Record ID
+      *
+     C                     MOVE 'P'       RECI
+      *
+      ** Customer number
+      *
+     C                     MOVE WWBICN    CNUM
+      *
+      ** Currency
+      *
+     C                     MOVE F0CCCY    CCY
+      *
+      ** Account code
+      *
+     C                     Z-ADDF0ACAC    ACOD
+      *
+      ** Account sequence
+      *
+     C                     Z-ADD1         ACSQ
+      *
+      ** Retail account number
+      *
+     C                     Z-ADD*ZEROS    ACNO
+      *
+      ** Posting date
+      *
+     C                     Z-ADDBJRDNB    PSTD
+      *
+      ** Value date = Current_accrual_date
+      *
+     C                     Z-ADDF0CADT    VALD
+      *
+      ** Transaction type
+      *
+     C                     Z-ADD*ZEROS    TRAT
+      *
+      ** Posting narrative (build)
+      *
+     C                     MOVELPNARR     WWPNAR
+     C                     MOVE F0FETP    WWSPAC
+     C                     MOVE WPCNUM    WWCUSN
+     C           F0FECP    IFEQ 'C'
+     C                     MOVE *BLANKS   WWLBRK
+     C                     MOVE *BLANKS   WWPORT
+     C                     MOVE *BLANKS   WWRBRK
+     C                     ELSE
+     C           F0FECP    IFEQ 'P'
+     C                     MOVE '('       WWLBRK
+     C                     MOVE WPPTFR    WWPORT
+     C                     MOVE ')'       WWRBRK
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     MOVE WWPNAR    PNAR
+      *
+      ** Posting amount
+      *
+     C                     Z-ADDWWFACT    PSTA
+      *
+      ** Debit/Credit indicator
+      *
+     C           PSTA      IFGT *ZEROS
+     C                     Z-ADD*ZEROS    DRCR
+     C                     ELSE
+     C           PSTA      IFLT *ZEROS
+     C                     Z-ADD1         DRCR
+     C                     Z-SUBPSTA      PSTA
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Associated customer
+      *
+     C                     MOVE WPCNUM    ASOC
+      *
+      ** Cheque number
+      *
+     C                     Z-ADD*ZEROS    CHQN
+      *
+      ** Source of posting
+      *
+     C                     MOVE 'GE-HM'   SPOS
+      *
+      ** Branch code
+      *
+     C                     MOVE F0BRCA    BRCA
+      *
+      ** Retail indicator
+      *
+     C                     Z-ADD*ZEROS    RIND
+      *
+      ** Reject code
+      *
+     C                     Z-ADD*ZEROS    REJC
+      *
+      ** Department code
+      *
+     C                     MOVE *BLANKS   DPMT
+      *
+      ** Relative record number
+      *
+     C                     Z-ADD*ZEROS    RRNM
+      *
+      ** Account type
+      *
+     C                     EXSR SRACOD
+      *
+      ** Extract indicator
+      *
+     C                     MOVE *BLANKS   EXIN
+      *
+      ** Posting record indicator
+      *
+     C                     BITOF'01234567'PRIN
+      *
+      ** Generated entry type
+      *
+     C                     MOVE 'B'       GETP
+      *
+      ** Accumulator
+      *
+     C                     Z-ADD*ZEROS    ACUM
+      *
+      ** Profit centre
+      *
+     C                     MOVE F0PFTC    PRFC
+      *
+      ** Swift common reference
+      *
+     C                     MOVE *BLANKS   SWCR
+      *
+      ** Deal/Loan Reference
+      *
+     C                     MOVE *BLANKS   DLREF
+      *
+      ** For account of
+      *
+     C                     MOVE *BLANKS   FACO
+      *
+      ** Dealt/Borrower customer
+      *
+     C**********           Z-ADD*ZEROS    DBCNUM                                              CSD027
+     C                     MOVE *BLANKS   DBCNUM                                              CSD027
+      *
+      ** Payment reference
+      *
+     C                     MOVE *BLANKS   PREF
+      *
+      ** Original transaction reference
+      *
+     C                     MOVELWWPNAR    OTRF
+      *
+      ** Original transaction sub-type
+      *
+     C                     MOVE *BLANKS   OTST
+      *
+      ** Original transaction type
+      *
+     C                     MOVE *BLANKS   OTTP
+      *
+      ** Start of day cleared balance
+      *
+     C                     Z-ADD*ZEROS    SDCB
+      *
+      ** Start of day ledger balance
+      *
+     C                     Z-ADD*ZEROS    SDLB
+      *
+      ** Book code
+      *
+     C                     MOVE *BLANKS   BOKC
+      *
+      ** Write a record to PF/GEFEPD (Accruals)
+      *
+     C           PSTA      IFNE 0
+     C                     WRITEAPOSTPDF
+      *
+      ** Total posting amount
+      *
+     C                     ADD  PSTA      WWTOTP
+      *
+      ** Increment number of records written to PF/GEFEPD
+      *
+     C                     ADD  1         WWNUMR
+     C                     ENDIF
+      *
+      ** Set up fields for update of PF/GEFEPD  1) Post Incomes Amount
+      *
+      ** Set account code = Income_Account
+      *
+     C                     Z-ADDF0INAC    ACOD
+      *
+      ** --------------------------------- **
+      **  Reverse DB/CR (incomes posting)  **
+      ** --------------------------------- **
+      *
+     C           DRCR      IFEQ *ZEROS
+     C                     Z-ADD1         DRCR
+     C                     ELSE
+     C           DRCR      IFEQ 1
+     C                     Z-ADD*ZEROS    DRCR
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Reset account type
+      *
+     C                     EXSR SRACOD
+      *
+      ** Reset Retail account number transaction type and Retauk ind.
+      *
+     C                     Z-ADD*ZEROS    ACNO
+     C                     Z-ADD*ZEROS    TRAT
+     C                     Z-ADD*ZEROS    RIND
+      *
+      ** Write another record to PF/GEFEPD
+      *
+     C           PSTA      IFNE 0
+     C                     WRITEAPOSTPDF
+      *
+      ** Total posting amount
+      *
+     C                     ADD  PSTA      WWTOTP
+      *
+      ** Increment number of records written to PF/GEFEPD
+      *
+     C                     ADD  1         WWNUMR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRACOD - Subroutine to access account code details           *
+      *                                                               *
+      *  Called by : SRPOST                                           *
+      *                                                               *
+      *  Calls     : AOACODR0, *PSSR                                 *
+      *****************************************************************
+      *
+     C           SRACOD    BEGSR
+      *
+     C**********           MOVE ACOD      KKACOD  4                                           CGL029
+     C                     MOVE ACOD      KKACOD 10                                           CGL029
+      *
+      ** Access account codes details
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY'    POPTN
+     C**********           PARM KKACOD    PACCD   4                                           CGL029
+     C                     PARM KKACOD    PACCD  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD03        DBASE            ************
+     C                     MOVE 'SDACODPD'DBFILE    P      * DBERR 03 *
+     C                     MOVEL*BLANKS   DBKEY            ************
+     C                     MOVELPACCD     DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVE A5ACTY    ATYP
+     C                     MOVE A5ACSC    ACSC                                                197076
+     C                     Z-ADD235959    PTIM                                                197076
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRUPTR - Write trailer record for "fees posting file"        *
+      *                                                               *
+      *  Called by : Main Processing                                  *
+      *                                                               *
+      *  Calls     : None                                             *
+      *****************************************************************
+      *
+     C           SRUPTR    BEGSR
+      *
+      ** Set up fields for output to GEFEZZ
+      *
+     C           WWTOTP    DIV  1000      WWHRWN 150
+     C                     MVR            WWHRDC  40
+      *
+     C                     READ GEFEZZ                   80
+      *
+     C           *IN80     IFEQ *OFF
+     C                     ADD  WWNUMR    NORE1
+     C                     ADD  WWHRWN    HRWN
+     C           HRDC      ADD  WWHRDC    WWHRDC
+      *
+     C           WWHRDC    IFGT 1000
+     C           WWHRDC    SUB  1000      HRDC
+     C                     ADD  1         HRWN
+     C                     ELSE
+     C                     Z-ADDWWHRDC    HRDC
+     C                     ENDIF
+      *
+      ** Update Trailer GEFEZZ
+      *
+     C                     UPDATAPOSTZZF
+     C                     ELSE
+      *
+     C                     MOVE 'T'       RECI
+     C                     Z-ADDWWNUMR    NORE1
+     C                     ADD  2         NORE1
+     C                     Z-ADDWWHRWN    HRWN
+     C                     Z-ADDWWHRDC    HRDC
+      *
+      ** Write Trailer GEFEZZ
+      *
+     C                     WRITEAPOSTZZF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRFCHG - Routine to calculate charges                        *
+      *                                                               *
+      *  Process :                                                    *
+      *  1) Calculate period in number of days for Charge             *
+      *  2) Calculate Year number of days for Charges                 *
+      *  3) A) Flat charging method                                   *
+      *     B) Percentage/Threshold method (with min/MAX charges)     *
+      *     C) Percentage/Tiered method (with min/MAX charges)        *
+      *  4) Write GLTAHIPD record for each calculated charges         *
+      *                                                               *
+      *  Called by : SRHOFE                                           *
+      *                                                               *
+      *  Calls : ZDAYS, ZDATE2, SRTAHI                                *
+      *****************************************************************
+      *
+     C           SRFCHG    BEGSR
+      *
+      ** If fees amount is existing, this amount must be settled
+      ** and not calculated for any period, if settlement freq is '1'
+      *
+     C           F0FAMT    IFNE *ZEROS
+     C           F0STFR    ANDEQ'1'
+     C                     Z-ADDF0FAMT    ZCHGA
+     C                     ELSE
+      *
+      ** Define working fields
+      *
+     C                     Z-ADD0         CPNR   117
+     C                     Z-ADD*ZEROS    NCD     50
+     C                     MOVE *BLANKS   DVBS    1
+     C                     MOVE *BLANKS   DYBS    1
+     C                     Z-ADD*ZEROS    MATY    50
+     C                     Z-ADD*ZEROS    LCPN    50
+     C                     Z-ADD*ZEROS    ITLD    50
+     C                     Z-ADD*ZEROS    IADJ    50
+     C                     Z-ADDWZAMTS    WZAMTS
+     C                     Z-ADDWZAMTC    WZAMTC
+     C                     Z-ADDZDYBS     ZDYBS   10
+     C                     Z-ADDZDVBS     ZDVBS   10
+     C                     Z-ADDZFMDAT    ZFMDAT  50
+     C                     Z-ADDZTODAT    ZTODAT  50
+     C                     Z-ADDZSPRD     ZSPRD  130
+     C                     MOVE ZSPRI     ZSPRI   1
+     C                     MOVE ZCGBS     ZCGBS   1
+     C                     MOVE ZCGMT     ZCGMT   1
+     C                     Z-ADDZMINC     ZMINC  150
+     C                     Z-ADDZMAXI     ZMAXI  150
+     C                     Z-ADD*ZEROS    ZCHGA  205
+     C                     Z-ADD*ZEROS    ZZ      20
+     C                     MOVEAZRA       ZRB
+     C                     Z-ADD*HIVAL    ZRB,15
+     C                     MOVE *BLANKS   ZFLAG   1
+      *
+      ** 1) Determine the number of charge days
+      *
+     C                     Z-ADDZFMDAT    ZSDATE
+     C                     Z-ADDZTODAT    ZEDATE
+     C                     MOVE ZDYBS     DYBS
+      *
+      ** Process subroutine ZDAYS
+      *
+     C                     EXSR ZDAYS
+      *
+     C                     Z-ADDZDDAYS    ZNOCD   50
+      *
+      ** 2) Determine the number of days in the charge year
+      *
+     C                     Z-ADDZFMDAT    NCD
+     C                     MOVE ZDVBS     DVBS
+     C                     Z-ADDZTODAT    MATY
+     C                     Z-ADD*ZEROS    LCPN
+     C                     Z-ADD*ZEROS    ITLD
+      *
+      ** As we won't read SECTY file need for DVBS = 5 processing,
+      ** retrieve DVBS = 1,2,3 processing from standard SR/ZDYYR
+      *
+     C                     SELEC
+     C           DVBS      WHEQ '1'
+     C                     Z-ADD360       ZINTDD  50
+      *
+      ** Divisor basis 2
+      *
+     C           DVBS      WHEQ '2'
+     C                     Z-ADD365       ZINTDD
+      *
+      ** Divisor basis 3
+      *
+     C           DVBS      WHEQ '3'
+     C                     Z-ADDNCD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     ZNCDY   20
+      *
+      ** Check format DD/MM/YY or MM/DD/YY
+      *
+     C********** *IN98     IFEQ '0'                                                           226449
+     C**********           MOVE ZDATE     ZNCDMD  40                                          226449
+     C**********           MOVELZDATE     ZNCDD   20                                          226449
+     C**********           MOVE ZNCDD     ZNCDMD                                              226449
+     C**********           ELSE                                                               226449
+     C**********           MOVELZDATE     ZNCDMD                                              226449
+     C**********           ENDIF                                                              226449
+      *
+     C**********           Z-ADDMATY      ZDAYNO                                              226449
+     C**********           EXSR ZDATE2                                                        226449
+      *
+      ** Check format DD/MM/YY or MM/DD/YY
+      *
+     C           *IN98     IFEQ '0'
+     C                     MOVE ZDATE     ZMATMD  40
+     C                     MOVELZDATE     ZMATD   20
+     C                     MOVE ZMATD     ZMATMD
+     C                     MOVELZMATMD    ZMATM   20
+     C                     ELSE
+     C                     MOVELZDATE     ZMATMD
+     C                     MOVELZWRK4     ZMATM
+     C                     ENDIF
+      *
+      ** Establish start of year, end of year, in w/c next coupon date
+      ** falls (year nos only needed)
+      *
+     C********** ZNCDMD    IFGT ZMATMD                                                        226449
+     C**********           Z-ADDZNCDY     ZSOY    20                                          226449
+     C********** ZNCDY     ADD  1         ZEOY    20                                          226449
+     C**********           ELSE                                                               226449
+     C********** ZNCDY     SUB  1         ZSOY                                                226449
+     C**********           Z-ADDZNCDY     ZEOY                                                226449
+     C**********           ENDIF                                                              226449
+      *
+      ** Does this year also contain Feb29, ie, is it a leap year?
+      *
+      ** Mat month GT Feb
+      *
+     C           ZMATM     IFGT 02
+     C                     Z-ADDZNCDY     ZEOY                                                226449
+     C                     ELSE                                                               226449
+     C           ZNCDY     SUB  1         ZEOY    20                                          226449
+     C                     ENDIF                                                              226449
+     C           ZEOY      DIV  4         ZWK     20
+     C                     MVR            ZREM    10
+     C           ZREM      IFNE 0
+     C                     Z-ADD365       ZINTDD
+     C                     ELSE
+     C                     Z-ADD366       ZINTDD  50
+     C                     ENDIF
+     C**********           ELSE                                                               226449
+      *
+      ** Mat month is Jan or Feb
+      *
+     C********** ZSOY      DIV  4         ZWK                                                 226449
+     C**********           MVR            ZREM                                                226449
+     C********** ZREM      IFNE 0                                                             226449
+     C**********           Z-ADD365       ZINTDD                                              226449
+     C**********           ELSE                                                               226449
+     C**********           Z-ADD366       ZINTDD                                              226449
+     C**********           ENDIF                                                              226449
+     C**********           ENDIF                                                              226449
+      *
+     C                     ENDSL
+      *
+     C                     Z-ADDZINTDD    ZNOCY   50
+      *
+      ** Calcul Minimum charges for Period
+      ** ---------------------------------
+      *
+     C           ZMINC     IFNE 0
+     C           ZMINC     MULT ZNOCD     ZMINC
+     C           ZMINC     DIV  ZNOCY     ZMINC     H
+     C                     ENDIF
+      *
+      ** Calcul Maximum charges for Period
+      ** ---------------------------------
+      *
+     C           ZMAXI     IFNE 0
+     C           ZMAXI     MULT ZNOCD     ZMAXI
+     C           ZMAXI     DIV  ZNOCY     ZMAXI     H
+     C                     ENDIF
+      *
+      ** --------------------------------------------- **
+      **  3) A) When Fee Rate is Flat : (ZCGBS = 'F')  **
+      ** --------------------------------------------- **
+      *
+     C           ZCGBS     IFEQ 'F'
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Scanning Amount is less or Equal the range upper limits
+      *
+     C           WZAMTS    IFLE ZRB,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Range upper limit is zero
+      *
+     C           ZRB,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** Take Charge amount in table (FLAT)
+      *
+     C                     Z-ADDZCG,ZZ    ZCHGA
+      *
+      ** Check if the charge spread indicator is '+' or '-'
+      *
+     C           ZSPRI     IFEQ '+'
+     C                     ADD  ZSPRD     ZCHGA
+     C                     ELSE
+     C                     SUB  ZSPRD     ZCHGA
+     C                     ENDIF
+      *
+      ** Evaluate Charge for period : Multiply amt by No of Accrual days
+      **                              divide by Year Accrual days
+      *
+     C           ZCHGA     MULT ZNOCD     ZCHGA
+     C           ZCHGA     DIV  ZNOCY     ZCHGA     H
+      *
+      ** Write OUtput detail of Charge calculation
+      *
+     C                     MOVE '1'       F2RECI
+     C                     Z-ADDZCHGA     WWCHAG 150
+     C                     Z-ADDWZAMTS    F2RANG
+     C**********           EXSR SRTAHI                                                        192176
+      *
+     C                     ENDIF
+      *
+      ** ------------------------------------------------------ **
+      **  3) B) When If Fee Rate is Percentage : (ZCGBS = 'P')  **
+      **          and method is Threshold (ZCGMT = 'Y')         **
+      ** ------------------------------------------------------ **
+      *
+     C           ZCGBS     IFEQ 'P'
+     C           ZCGMT     ANDEQ'Y'
+      *
+      ** Don't loop upper than range limit
+      *
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Scanning Amount is less or Equal the range upper limits
+      *
+     C           WZAMTS    IFLE ZRB,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Range upper limit is zero
+      *
+     C           ZRB,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+      ** take %age rate charge
+      *
+     C                     Z-ADDZPC,ZZ    ZCGRT  117
+      *
+      ** Move the effective charge spread (ZSPRD) into the adjusted
+      ** charge spread (ZACSD)
+      *
+     C                     MOVE ZSPRD     ZACSD  117
+      *
+      ** Check if the charge spread indicator is '+' or '-'
+      *
+     C           ZSPRI     IFEQ '+'
+     C                     ADD  ZACSD     ZCGRT
+     C                     ELSE
+     C                     SUB  ZACSD     ZCGRT
+     C                     ENDIF
+      *
+      ** Evaluate Charges with Calculation amt, NOT with Scanning amt.
+      ** Divide by 100, multiply by No.of Accruals days, divide By Year
+      ** accrual, then multiply by rate (ZCGRT)
+      *
+     C           WZAMTC    DIV  100       ZZ152  152H
+     C           ZZ152     MULT ZNOCD     ZZ154  154
+     C           ZZ154     DIV  ZNOCY     ZZ154     H
+     C           ZZ154     MULT ZCGRT     ZCHGA
+      *
+      ** If Charges:-
+      **    Less_than  Minimum_Amount - Use the Minimum_Fee_Amt
+      **    Greater_than Maximum_Amount - Use the Maximum_Fee_Amt
+      *
+     C                     SELEC
+     C           ZCHGA     WHLT ZMINC
+     C                     Z-ADDZMINC     ZCHGA
+      *
+     C           ZCHGA     WHGT ZMAXI
+     C           ZMAXI     ANDNE0
+     C                     Z-ADDZMAXI     ZCHGA
+     C                     ENDSL
+      *
+      ** Write Output detail of Charge calculations
+      *
+     C                     MOVE '1'       F2RECI
+     C                     Z-ADDZCHGA     WWCHAG
+     C                     Z-ADDWZAMTS    F2RANG
+     C**********           EXSR SRTAHI                                                        192176
+      *
+     C                     ENDIF
+      *
+      ** --------------------------------------------------- **
+      **  3) C) When Fee Rate is Percentage : (ZCGBS = 'P')  **
+      **          and method is Tiered (ZCGMT <> 'Y')        **
+      ** --------------------------------------------------- **
+      *
+     C           ZCGBS     IFEQ 'P'
+     C           ZCGMT     ANDNE'Y'
+      *
+      ** Tiered %age only used when Holding Calculation method  'H'
+      ** Thus, WZAMTS is equal to WZAMTC
+      *
+      ** Don't loop upper than range limit
+      *
+     C           ZFLAG     DOUEQ'Y'
+     C                     ADD  1         ZZ
+     C           ZZ        IFEQ 15
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Scanning Amount is less or Equal the range upper limits
+      *
+     C           WZAMTS    IFLE ZRB,ZZ
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Range upper limit is zero
+      *
+     C           ZRB,ZZ    IFEQ *ZEROS
+     C                     MOVE 'Y'       ZFLAG
+     C                     ENDIF
+      *
+      ** Take %age as charge rate
+      *
+     C                     Z-ADDZPC,ZZ    ZCGRT
+      *
+      ** Move the effective charge spread (ZSPRD) into the adjusted
+      ** charge spread (ZACSD)
+      *
+     C                     MOVE ZSPRD     ZACSD
+      *
+      ** Check if the charge spread indicator is '+' or '-'
+      *
+     C           ZSPRI     IFEQ '+'
+     C                     ADD  ZACSD     ZCGRT
+     C                     ELSE
+     C                     SUB  ZACSD     ZCGRT
+     C                     ENDIF
+      *
+      ** Evaluate this loop charge amount
+      *
+      ** Use Calculation amount to compute fees amount
+      ** WZAMTS is equal to WZAMTC
+      *
+     C           WZAMTS    IFGT ZRB,ZZ
+     C           ZRB,ZZ    ANDNE*ZEROS
+     C           ZZ        IFEQ 1
+      *
+      ** If index is 1 put the range upper limits in a work field ZZ152
+      *
+     C                     Z-ADDZRB,ZZ    ZZ152  152
+      *
+     C                     ELSE
+      *
+      ** Else Difference between current range - Previous range
+      *
+     C           ZZ        SUB  1         Z2      20
+     C           ZRB,ZZ    SUB  ZRB,Z2    ZZ152
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Else Calculation amount is less than limit
+      *
+     C           ZZ        IFEQ 1
+     C                     Z-ADDWZAMTC    ZZ152
+     C                     ELSE
+      *
+      ** Else Difference between Calc. Amount - Previous range
+      *
+     C           ZZ        SUB  1         Z2      20
+     C           WZAMTC    SUB  ZRB,Z2    ZZ152
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Evaluate charge based on LOOP Amount (ZZ152) :
+      ** multiply by range %age
+      *
+      ** Keep Amount used for Charge Calculation
+      *
+     C                     Z-ADDZZ152     F2RANG
+     C           ZZ152     DIV  100       ZZ152     H
+     C           ZZ152     MULT ZNOCD     ZZ154  154
+     C           ZZ154     DIV  ZNOCY     ZZ154     H
+     C           ZZ154     MULT ZCGRT     ZZ154
+      *
+      ** Add range charges to Total Charge Amount (ZCHGA)
+      *
+     C                     ADD  ZZ154     ZCHGA     H
+      *
+      ** Write Output detail of Charge calculation for this loop
+      *
+     C                     MOVE '1'       F2RECI
+     C                     Z-ADDZZ154     WWCHAG    H
+     C**********           EXSR SRTAHI                                                        192176
+      *
+     C                     ENDDO
+      *
+      ** If Charges:-
+      **  Less_than  Minimum_Amount - Use the Minimum_Fee_Amt
+      **  Greater_than Maximum_Amount - Use the Maximum_Fee_Amt
+      *
+     C                     SELEC
+     C           ZCHGA     WHLT ZMINC
+     C                     Z-ADDZMINC     ZCHGA
+      *
+     C           ZCHGA     WHGT ZMAXI
+     C           ZMAXI     ANDNE0
+     C                     Z-ADDZMAXI     ZCHGA
+     C                     ENDSL
+      *
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  SRAMNT -  Subroutine to retrieve amount to calculate the     *
+      *            Accruals                                           *
+      *                                                               *
+      *  Called by : SRFEEP                                           *
+      *                                                               *
+      *  Calls     : None                                             *
+      *****************************************************************
+      *
+     C           SRAMNT    BEGSR
+      *
+      ** Holding Total Amount Field
+      *
+     C                     Z-ADD*ZEROS    WTOTAL 150
+      *
+      ** 1) Nominal or Market value depends on SDCGFRPD details F4NOMA
+      *
+     C                     SELEC
+      *
+      ** Nominal  Amounts
+      *
+     C           F4NOMA    WHEQ 'N'
+      *
+     C                     SELEC
+      *
+      ** If F0ANLB flag is 'Assets', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'A'
+     C                     Z-ADDF8ASNV    WTOTAL
+      *
+      ** If F0ANLB flag is 'Liabilities', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'L'
+     C                     Z-ADDF8LINV    WTOTAL
+      *
+      ** If F0ANLB flag is 'Both', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'B'
+     C           F8ASNV    ADD  F8LINV    WTOTAL
+      *
+      ** If F0ANLB flag is 'Net', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'N'
+     C           F8ASNV    SUB  F8LINV    WTOTAL
+     C                     ENDSL
+      *
+      ** Market amounts
+      *
+     C           F4NOMA    WHEQ 'M'
+     C           F4NOMA    OREQ ' '
+      *
+     C                     SELEC
+      *
+      ** If F0ANLB flag is 'Assets', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'A'
+     C                     Z-ADDF8ASMV    WTOTAL
+      *
+      ** If F0ANLB flag is 'Liabilities', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'L'
+     C                     Z-ADDF8LIMV    WTOTAL
+      *
+      ** If F0ANLB flag is 'Both', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'B'
+     C           F8ASMV    ADD  F8LIMV    WTOTAL
+      *
+      ** If F0ANLB flag is 'Net', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'N'
+     C           F8ASMV    SUB  F8LIMV    WTOTAL
+     C                     ENDSL
+      *
+      ** 2) Add Accrued on amounts if required
+      *
+     C                     Z-ADD0         WWACON 150
+      *
+      ** If Include Accrual flag is 'Y', do
+      *
+     C           F0IACC    IFEQ 'Y'
+     C                     SELEC
+      *
+      ** If F0ANLB flag is 'Assets', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'A'
+     C                     Z-ADDF8ASAC    WWACON
+      *
+      ** If F0ANLB flag is 'Liabilities', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'L'
+     C                     Z-ADDF8LIAC    WWACON
+      *
+      ** If F0ANLB flag is 'Both', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'B'
+     C           F8ASAC    ADD  F8LIAC    WWACON
+      *
+      ** If F0ANLB flag is 'Net', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'N'
+     C           F8ASAC    SUB  F8LIAC    WWACON
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C           WTOTAL    ADD  WWACON    WTOTAL
+      *
+      ** 2) Add Forward FX amounts if required
+      *
+     C                     Z-ADD0         WWFOFX 150
+      *
+      ** If Include Forward FX is 'Y', do
+      *
+     C           F0INFF    IFEQ 'Y'
+     C                     SELEC
+      *
+      ** If F0ANLB flag is 'Assets', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'A'
+     C                     Z-ADDF8ASFX    WWFOFX
+      *
+      ** If F0ANLB flag is 'Liabilities', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'L'
+     C                     Z-ADDF8LIFX    WWFOFX
+      *
+      ** If F0ANLB flag is 'Both', only MG/SC Fee proc type
+      *
+     C           F0ALNB    WHEQ 'B'
+     C           F8ASFX    ADD  F8LIFX    WWFOFX
+      *
+      ** If F0ANLB flag is 'Net'
+      *
+     C           F0ALNB    WHEQ 'N'
+     C           F8ASFX    SUB  F8LIFX    WWFOFX
+     C                     ENDSL
+      *
+     C                     ENDIF
+      *
+     C           WTOTAL    ADD  WWFOFX    WTOTAL
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *  SRBRCA - Subroutine to access branch details                 *
+      *                                                               *
+      *  Called By : Main Processing                                  *
+      *                                                               *
+      *  Calls     : AOBRCHR0, *PSSR                                  *
+      *****************************************************************
+      *
+     C           SRBRCA    BEGSR
+      *
+      ** Access Branch code details if there is a change of
+      ** branch or if it is the first record read
+      *
+     C**********           CALL 'AOBRCHR0'             80                                     CGL029
+     C                     CALL 'AOBRCHR1'             80                                     CGL029
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM F0BRCA    PDSNB   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+     C           *IN80     IFEQ '1'
+     C           PRTCD     ORNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD04        DBASE            ************
+     C                     MOVEL'SDBRCHL0'DBFILE    P      * DBERR 04 *
+     C                     MOVELF0BRCA    DBKEY     P      ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Save branch internal customer number for accruals posting acct
+      *
+     C                     MOVE A8BICN    WWBICN  6
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *  SRCCYC - Access Currency details                             *
+      *                                                               *
+      *  Called by : Main processing, SRHOFE                          *
+      *                                                               *
+      *  Calls     : AOCURRR0, *PSSR                                  *
+      *****************************************************************
+     C           SRCCYC    BEGSR
+      *
+     C                     MOVE *BLANKS   WFOUND  3
+     C                     CALL 'AOCURRR0'             99
+     C                     PARM '*MSG   ' PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM WWCCY     PAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *IN99     OREQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDCURRPD'DBFILE    P      ************
+     C                     Z-ADD05        DBASE            * DBERR 05 *
+     C                     MOVELWWCCY     DBKEY     P      ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZTNLU1Z2
+     C/COPY ZSRSRC,ZCCYCN
+      /EJECT
+      *****************************************************************
+      *   *INZSR : Program initialisation Subroutine                  *
+      *                                                               *
+      *  Called by : Automatically at pgm start                       *
+      *                                                               *
+      *  Calls     : ZSFILE, *PSSR, AOBANKR0,                         *
+      *****************************************************************
+      *
+     C           *INZSR    BEGSR
+      *
+      ** Move the copyright statement
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  LDA initialization
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVE *BLANKS   DBFILE
+     C                     MOVE *BLANKS   DBKEY
+     C                     Z-ADD*ZEROS    DBASE
+     C                     MOVE *BLANKS   DBPGM
+     C                     MOVEL'GL1952'  DBPGM
+     C                     OUT  LDA
+      *
+     C                     MOVE 'N'       WWOPEN  1
+      *
+      ** Call ZSFILE for Audit printer file GL1952AU
+      *
+     C                     Z-ADDSFNUMU    PSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   PSEQ    5
+     C                     PARM *BLANKS   PSENTY  3
+     C                     PARM           SFILEU
+     C                     PARM           PSNUM
+     C                     PARM           PSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           PSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       WWOPEN  1
+      *
+      ** Define work fields
+      *
+     C           *LIKE     DEFN F4RTCD    WWRATE
+     C           *LIKE     DEFN F0CCCY    WWCCY
+     C           *LIKE     DEFN F0CNUM    WPCNUM
+     C           *LIKE     DEFN F0PTFR    WPPTFR
+     C           *LIKE     DEFN F0FETP    WPFETP
+     C           *LIKE     DEFN F0BRCA    WPBRCA
+     C           *LIKE     DEFN F6OTAJ    WWCFAC
+     C           *LIKE     DEFN F6OTAJ    WWOSAJ
+     C           *LIKE     DEFN F6OTSG    WWOSAS
+     C           *LIKE     DEFN F6CACD    WWCACD
+      *
+      ** Define Working field for access of SDCGFRPD
+      *
+     C           *LIKE     DEFN F4FETP    KFETP
+     C           *LIKE     DEFN F4CHGR    KCHGR
+     C           *LIKE     DEFN F4DDPT    KDPRF
+     C           *LIKE     DEFN F4SESN    KSESN
+     C           *LIKE     DEFN F4INVT    KINVT
+     C           *LIKE     DEFN F4CCY     KCCY
+     C           *LIKE     DEFN F4INST    KINST
+     C           *LIKE     DEFN F0PTFR    KPTFR
+     C           *LIKE     DEFN F0CNUM    KCNUM
+      *
+      ** Define Working field for access of SDRTCDPD
+      *
+     C           *LIKE     DEFN F3RTCD    KRTRAT
+     C           *LIKE     DEFN F3CCY     KRTCCY
+      *
+      ** Key lists used in program
+      ** -------------------------
+      *
+      ** Key list for PF/GLFEACL0 : Accrued Fees File
+      *
+     C           KFEAC     KLIST
+     C                     KFLD           KPBRCA  3
+     C                     KFLD           KPCNUM  6
+     C                     KFLD           KPPTFR  4
+     C                     KFLD           KPFETP  2
+      *
+      ** Key list for PF/SDCGFRPD : Fee rate code details
+      *
+     C           KCGFR1    KLIST
+     C                     KFLD           KFETP
+     C                     KFLD           KCHGR
+      *
+      ** Key Lists to Access GLHOLDPD : Holdings File
+      *
+     C           KCFHD0    KLIST
+     C                     KFLD           KSRHO   2
+     C                     KFLD           KCNUM
+     C                     KFLD           KPTFR
+      *
+     C           KCFHD1    KLIST
+     C                     KFLD           KCNUM
+      *
+     C           KCFHD2    KLIST
+     C                     KFLD           KCNUM
+     C                     KFLD           KPTFR
+      *
+      ** Key list for PF/SDRTCDPD : Rate code details
+      *
+     C           KRTCD     KLIST
+     C                     KFLD           KRTRAT
+     C                     KFLD           KRTCCY
+      *
+      ** Initialise Work fields
+      *
+     C                     MOVE *BLANKS   WPPTFR
+     C                     MOVE *BLANKS   WWRATE
+     C                     MOVE *BLANKS   WWOSAS
+     C                     Z-ADD*ZEROS    WWCFAC
+     C                     Z-ADD*ZEROS    WWOSAJ
+     C                     Z-ADD*ZEROS    WWTOTP 180
+     C                     Z-ADD*ZEROS    WWNUMR  50
+     C                     Z-ADD*ZERO     WWCACD
+     C                     MOVE 'N'       DADJN
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   PRTCD   7
+     C                     PARM '*FIRST'  POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     Z-ADD01        DBASE            ************
+     C                     MOVE 'SDBANKPD'DBFILE    P      * DBERR 01 *
+     C                     MOVEL'*FIRST'  DBKEY     P      ************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Test date format for SR/ZDATE2
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     ENDIF
+      *
+      ** Clear Today Accrued Holding Items Format
+      *
+     C                     CLEARGLTAHID0
+      *
+     C                     Z-ADD0         RCOUNT
+     C                     Z-ADD01        DSACSQ
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *  *PSSR  - Dump routine in case of error                       *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           WWRUN     IFNE 'Y'
+     C                     DUMP
+     C                     MOVE 'Y'       WWRUN   1
+     C                     ENDIF
+      *
+      ** Audit
+      *
+     C           WWOPEN    IFEQ 'Y'
+     C                     WRITEHEADAU
+     C                     WRITEDBERROR
+     C                     ENDIF
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

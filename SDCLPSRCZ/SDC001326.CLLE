@@ -1,0 +1,68 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Dealing/Standing Data Drop Process 7')       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC001326 - Midas SD Dealing/Standing Data Drop Process 7   */
+/*                                                                   */
+/*       (c) Finastra International Limited 2014                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSW214  *CREATE    Date 25Nov14              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSW214 - SWIFT Changes 2014                                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+             2014')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Determine if CSW213 is on. Call SD001326 if on */
+ 
+             CALL       PGM(SWIF2013) PARM(&RTCD)
+ 
+             IF         COND(&RTCD *EQ 'CSW2013') THEN(DO)
+             CALL       PGM(SD001326)
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                             TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             ENDDO
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Abnormal Termination */
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/** Send the error message */
+ 
+             SNDPGMMSG  MSG('Program SDC001326 ended abnormally - +
+                          see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000)
+ 
+/** Program End */
+ 
+ENDPGM:
+             ENDPGM

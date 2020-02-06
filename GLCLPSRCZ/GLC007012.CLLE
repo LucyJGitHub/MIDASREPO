@@ -1,0 +1,126 @@
+/******************************************************************************/
+/*STD    CLPBASEBND                                                           */
+/*EXI    DFTACTGRP(*NO) ACTGRP(GLC007012)                                     */
+/*EXI    TEXT('Midas GL Background Update of ABC files')             */
+/******************************************************************************/
+/*                                                                            */
+/*       Midas - General Ledger Module                                        */
+/*                                                                            */
+/*       GLC007012 - Background update of ABC files                           */
+/*                                                                            */
+/*       (c) Finastra International Limited 2018                              */
+/*                                                                            */
+/*       Last Amend No. MD022132 *CREATE   Date 09Mar18                       */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/*                                                                            */
+/*       MD022132 - Triggers don't pick up Rollback deletes of ABC files.     */
+/*                - Applied for MD-35969.                                     */
+/*                                                                            */
+/******************************************************************************/
+             PGM
+
+             DCL        VAR(&JRCVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JSEQA) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&JSEQN) TYPE(*DEC) LEN(10 0)
+
+             DCL        VAR(&CMTRTN) TYPE(*CHAR) LEN(10)
+             DCLF       FILE(GLABJSTD)
+
+             COPYRIGHT  TEXT('(c) Finastra International Limited 2018')
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             CHGJOB SWS(00000000)
+
+             ALCOBJ     OBJ((GLABJSTD *FILE *EXCLRD)) WAIT(0)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(DO)
+             SNDPGMMSG  MSG('Attempt to start background update of +
+                          ABC files mgr has failed. Probable cause: +
+                          process is active already.') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             GOTO       CMDLBL(END)
+             ENDDO
+
+             CALL       PGM(SCCMTCTL) PARM('S' &CMTRTN)
+
+             OVRDBF     FILE(GLABJSTD) SHARE(*NO)
+             OVRDBF     FILE(GLACNTL4) SHARE(*NO)
+
+             SCRTVJEVT  EVENT(NDSUJR) RECEIVER(&JRCVR) SEQ(&JSEQN)
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+/* Check if journal sequence exists. */
+/* If journal sequence does not exist, set to restart at first entry */
+
+             RCVF
+             MONMSG     MSGID(CPF0864)
+
+             IF         COND(&JRCVR *LE &ABJRCV) THEN(DO)
+                CHGVAR     VAR(&JRCVR) VALUE(&ABJRCV)
+                CHGVAR     VAR(&JSEQA) VALUE(&ABJSEQ)
+             ENDDO
+             ELSE       CMD(DO)
+                IF         COND(&JRCVR *EQ *BLANKS) THEN(DO)
+                   CHGVAR     VAR(&JRCVR) VALUE('*CURCHAIN')
+                ENDDO
+                CHGVAR     VAR(&JSEQA) VALUE('*FIRST')
+             ENDDO
+
+RERUN:
+             RTVJRNE    JRN(ICJRN) RCVRNG(&JRCVR) FROMENTLRG(&JSEQA) +
+                          RTNRCV(&JRCVR) RTNSEQLRG(&JSEQA)
+
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+                CHGVAR     VAR(&JRCVR) VALUE('*CURCHAIN')
+                CHGVAR     VAR(&JSEQA) VALUE('*FIRST')
+                GOTO       CMDLBL(RERUN)
+             ENDDO
+
+             CALL       PGM(GL007012) PARM(&JSEQA &JRCVR 'INCREMENT')
+
+/* Receive journal entries*/
+
+             RCVJRNE    JRN(ICJRN) EXITPGM(GL007011) FILE((HELDIHB) +
+                          (RSACMTPD) (ACCNTAB) (GLCOLLPD)) +
+                          RCVRNG(&JRCVR) FROMENTLRG(&JSEQA) TOENTLRG(*NONE) +
+                          JRNCDE((R) (U *IGNFILSLT) (J *IGNFILSLT)) +
+                          ENTTYP(DR UR BR AB NR) +
+                          ENTFMT(*JRNENTFMT) DELAY(*NEXTENT) BLKLEN(*NONE) +
+                          JRNENTFMT(RJNE0200) RTNPTR(*SYSMNG)
+
+/* Receiver has changed - get new starting details for RCVJRNE command */
+
+             IF COND(%SWITCH(XXXXX100)) THEN(DO)
+                CALL       PGM(GL007012) PARM(&JSEQA &JRCVR 'JRNDTL')
+                CHGJOB     SWS(00000000)
+                GOTO       CMDLBL(RERUN)
+             ENDDO
+
+             IF COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/* Abnormal termination */
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC007012 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+END:
+             DLTOVR     FILE(*ALL)
+
+             RCLACTGRP  ACTGRP(*ELIGIBLE)
+             MONMSG     MSGID(CPF0000)
+
+             ENDPGM

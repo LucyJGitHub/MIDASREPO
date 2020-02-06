@@ -1,0 +1,73 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE Initialisation program for CRE072')          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas RE - Retail Module                                    */
+/*                                                                   */
+/*       REC004248 - Midas RE Initialisation program for CRE072      */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE072  *CREATE    Date 30Jun11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE072 - BankFusion Midas Teller Related Changes            */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*ALL   ')
+             DCL        VAR(&CNUM) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&CURR) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&ACOD) TYPE(*DEC)  LEN(10 0)
+             DCL        VAR(&ACSQ) TYPE(*DEC)  LEN(2 0)
+             DCL        VAR(&BRCA) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+/** Global monitor message. */
+ 
+/**          MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))                            */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/** Call program: Midas RE Create Passbook Update Control Detail Rec */
+ 
+             CALL       PGM(RE004248) PARM(&OPTN &CNUM &CURR &ACOD +
+                          &ACSQ &BRCA &RTCD)
+ 
+/** Database error processing. */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/** Call program: Midas RE Initialise Passbk Printing Journal Seq No */
+ 
+             CALL       PGM(RE004249)
+ 
+/** Database error processing. */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+/** Abnormal termination */
+ 
+             SNDUSRMSG  MSG('Program RE004248 ended abnormally - see +
+                          job log') MSGTYPE(*INFO)
+ 
+END:
+             ENDPGM

@@ -1,0 +1,1169 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas Manual Take-on of Int.Pay.History')              *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas - Retail Module
+     F*                                                                  *
+     F*    RE2191 - MANUAL TAKE-ON OF INTEREST PAYMENT HISTORY           *
+     F*                                                                  *
+      *  (c)Finastra International Limited 2001                          *
+     F*                                                                  *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
+      *                 CDL094             Date 11Jun14               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER054             Date 07Apr09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 11May06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
+      *                 CDL028             Date 07Feb05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 192085             Date 10Apr01               *
+      *                 CRE007             Date 01Mar01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02MAR99               *
+      *                 CTI002             DATE 09Sep98               *
+     F*                          S01453              DATE 14DEC93        *
+     F*                          S01383              DATE 27APR92        *
+     F*                                                                  *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+      *  CDL096 - Business Day Conventions on MM Deals                *
+      *           (Recompile)                                         *
+      *  CDL094 - Enhance  Receive Settlement Instructions            *
+      *           (Recompiled)                                        *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER054 - German Features - Church Tax (Recompile)            *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+      *  CDL028 - Automatic Rate Interpolations (Recompile)           *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  192085 - It should be possible to do a manual take-on of     *  *
+      *           interest payment history even if the system setup   *  *
+      *           flag is on.                                         *  *
+      *  CRE007 - Base Rate Tax 2001.                                 *  *
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*       S01453 - MARGIN AND FX POSITIONS/POINTS AND BASE CURRENCY  *
+     F*                 POSITIONS/POINTS ADDED TO FX INPUT (RECOMPILED)  *
+     F*       S01383 - BASIC RATE TAX INCORPORATION                      *
+     F*                NEW PROGRAM                                       *
+     F*                                                                  *
+     F********************************************************************
+     FSDBRTDL1IF  E           K        DISK
+     FSDCBRTL1IF  E           K        DISK
+     FACCNT   IF  E           K        DISK
+     FDEALS   IF  E           K        DISK
+     FINTPSDD O   E                    DISK         KCOMIT
+     FCOINTDD O   E                    DISK         KCOMIT
+      * Display File
+     FRE2191FMCF  E                    WORKSTN
+     F*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *    F U N C T I O N    O F   I N D I C A T O R S               *
+      *    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~               *
+      *         03         CMD/3 PRESSED                              *
+      *         12         CMD/12 PRESSED                             *
+      *         30         ERROR FOUND                                *
+      *         31         CUSTOMER NUMBER IN ERROR                   *
+      *         32         DEAL NUMBER IN ERROR                       *
+      *         33         CURRENCY CODE IN ERROR                     *
+      *         34         ACCOUNT CODE IN ERROR                      *
+      *         35         ACCOUNT SEQUENCE IN ERROR                  *
+      *         36         GROSS INTEREST IN ERROR                    *
+      *         37         BRT AMOUNT IN ERROR                        *
+      *         38         INTEREST PAYMENT DATE IN ERROR             *
+      *         39         S352 INDICATOR IN ERROR                    *
+      *         40         'CONFIRM' FIELD IN ERROR                   *
+      *         41         BRANCH CODE IN ERROR                       *
+      *         42         SYSTEM IS MULTI-BRANCHING                  *
+      *         50         'CONFIRM' LINE TO APPEAR ON SCREEN         *
+      *         60         PROTECT ALL FIELDS WHEN CONFIRMING         *
+      *         85         CHAIN FAIL INDICATOR                       *
+      *         90 - 99    USED IN STANDARD SUBROUTINES               *
+      *         U1         SYSTEM SET-UP FLAG IS ON                   *
+      *         U7U8       DATABASE ERROR                             *
+      *         LR         END OF PROGRAM                             *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *          I N D E X   O F   S U B R O U T I N E S              *
+      *          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~              *
+      *          INIT   -  INITIAL PROCESSING                         *
+      *          INPUT  -  MAIN INPUT PROCESSING                      *
+      *          VALID1 -  INPUT VALIDATION                           *
+      *          VALID2 -  CONFIRMATION VALIDATION                    *
+      *          CLEAR  -  CLEAR INPUT SCREEN                         *
+      *          SETUP  -  SET UP DETAILS FOR PF/INTPSDD              *
+      *          WRITE  -  WRITE RECORD TO INTPSDD OR COINTDD         *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZALIGNZ1
+     E*
+     E                    ERNO       38  4               ERROR CODES
+     E*
+     E*****************************************************************
+     I*
+     I* Data structure for program status data area
+     I*
+     IPSDS       SDS
+     I                                      244 253 WID
+     I                                      254 263 USRID
+     I*
+     I** Data structure for error messages
+     I*
+     ISCRMSG      DS
+     I                                        1 152 ERNO
+     I                                        1  76 ERCD
+     I                                       77 152 ERMSG
+     I**
+     I**   DATA AREA RUNDAT
+     I**
+     IRUNDAT      DS
+     I                                       13  13 MBIN
+     I**
+     I** DATA AREA OF MENU USER
+     I**
+     IZMUSER      DS                             17
+     I                                       11  13 USRBCH
+     ILDA        UDS
+     I                                        1 256 DBLDA
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** Data structure to update last transaction no. DTAARA
+     I*
+     IDNATN       DS                              5
+     I                                        1   50FNATN
+     I*
+     I** Data structure to provide text on COMIT entry in journal
+     I*
+     ICMTTXT      DS
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  34 USIDX
+     I*
+     I** Data structure for date of start of tax year
+     I*
+     ITAXDAT      DS
+     I                                        1   20DD
+     I                                        3   40MM
+     I                                        5   60YY
+     I*
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     ISDCUST    E DSSDCUSTPD
+     I** EXTERNAL DS FOR CUSTOMER DETAILS
+     ISDCURR    E DSSDCURRPD
+     I**  EXTERNAL DS FOR CURRENCY CODES
+     ISDACOD    E DSSDACODPD
+     I**  EXTERNAL DS FOR ACCOUNT CODES
+     ISDBRCH    E DSSDBRCHPD
+     I              QQDFAC                          QQDFA1                                    CGL029
+     I**  EXTERNAL DS FOR BRANCH CODES
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C*
+     C**   MAIN PROCESSING
+     C**   ~~~~~~~~~~~~~~~
+     C*
+     C** Set up key list to access file ACCNT
+     C*
+     C           ACCKEY    KLIST
+     C**********           KFLD           CUST    60                                          CSD027
+     C                     KFLD           CUST    6                                           CSD027
+     C                     KFLD           CURR
+     C**********           KFLD           CODE    40                                          CGL029
+     C                     KFLD           CODE   100                                          CGL029
+     C                     KFLD           SEQ     20
+     C                     KFLD           BRANCH  3
+     C*
+     C                     EXSR INIT
+     C*
+     C************INU1     IFEQ '0'                                                        192085
+     C************INU7     ANDEQ'0'                                                        192085
+     C           *INU7     IFEQ '0'                                                        192085
+     C                     EXSR INPUT
+     C                     END
+     C*
+     C                     SETON                     LR
+     C*
+     C****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  INIT       :  INITIAL PROCESSING                            *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INIT      BEGSR
+     C*
+     C** Prepare COMIT text
+     C*
+     C                     MOVEL'RE'      MDID
+     C                     MOVEL'RE2191'  PGMN
+     C                     MOVEL'RE2191'  DBPGM
+     C                     MOVELWID       WSIDX
+     C                     MOVELUSRID     USIDX
+     C*
+     C** OBTAIN BANK DETAILS VIA ACCESS PROGRAM
+     C*
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*DBERR ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           BJDFIN    COMP 'M'                      98*
+     C*
+     C***If*System Set-up Flag is on, exit program                                          192085
+     C***********                                                                           192085
+     C***********BJSUC     IFEQ 'Y'                        B0001                            192085
+     C***********          MOVE '1'       *INU1                                             192085
+     C***********          ELSE                            X0001                            192085
+     C*
+     C** Access SDBRTDPD for the Include Banks This Year field BTHY
+     C*
+     C                     MOVE 'D'       KEY     1
+     C           KEY       CHAINSDBRTDD0             85
+     C           *IN85     IFEQ '1'                        B0002
+     C                     MOVELKEY       DBKEY            *************
+     C                     MOVEL'SDBRTDPD'DBFILE           * DBERR 001 *
+     C                     MOVEL'001'     DBASE            *************
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ELSE                            X0002
+     C*
+     C* CHECK IF SYSTEM IS MULTI-BRANCHING
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE '1'       *IN42
+     C                     END
+     C*
+     C* GET DEFAULT BRANCH
+     C*
+     C           *NAMVAR   DEFN           ZMUSER
+     C                     IN   ZMUSER
+     C*
+     C** UNPROTECT ALL FIELDS AND DISPLAY SCREEN
+     C*
+     C                     SETOF                     60
+     C                     EXFMTRE2191F1
+     C                     END                             E0002
+     C***********          END                             E0001                          192085
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  INPUT      :  INPUT PROCESSING                              *
+     C*   CALLED BY  :  MAIN PROCESS                                  *
+     C*   CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           INPUT     BEGSR
+     C*
+     C** Process while Cmd/3 not pressed
+     C*
+     C           *IN03     DOWEQ'0'                        B0001
+     C*
+     C** Perform initial validation of data input from screen
+     C*
+     C                     EXSR VALID1
+     C*
+     C** Process while there are errors (*IN30 is on) and neither
+     C** Cmd/3 nor Cmd/12 are pressed
+     C*
+     C           *IN30     DOWEQ'1'                        B0002
+     C           *IN03     ANDEQ'0'
+     C           *IN12     ANDEQ'0'
+     C*
+     C                     EXFMTRE2191F1
+     C*
+     C** If neither Cmd/3 nor Cmd/12 are pressed
+     C*
+     C           *IN03     IFEQ '0'
+     C           *IN12     ANDEQ'0'
+     C                     EXSR VALID1
+     C                     END
+     C*
+     C                     END                             E0002
+     C*
+     C** If neither Cmd/3 nor Cmd/12 are pressed
+     C*
+     C           *IN03     IFEQ '0'                        B0002
+     C           *IN12     ANDEQ'0'
+     C*
+     C** Set on *IN50 to display confirmation line on screen, then
+     C** allow input and validate confirmation
+     C** Protect all fields except the confirmation field
+     C*
+     C                     SETON                     60
+     C                     SETON                     50
+     C                     MOVE ' '       CONF
+     C                     EXFMTRE2191F1
+     C                     EXSR VALID2
+     C*
+     C** If screen is confirmed
+     C*
+     C           CONF      IFEQ 'Y'                        B0003
+     C*
+     C                     EXSR SETUP
+     C*
+     C           *INU7     IFEQ '0'
+     C                     EXSR WRITE
+     C                     EXSR CLEAR
+     C                     EXFMTRE2191F1
+     C                     END
+     C*
+     C                     ELSE                            X0003
+     C*
+     C                     SETOF                     60
+     C                     SETOF                     50
+     C                     EXFMTRE2191F1
+     C*
+     C                     END                             E0003
+     C*
+     C                     END                             E0002
+     C*
+     C** If Cmd/12 is pressed
+     C*
+     C           *IN12     IFEQ '1'                        B0002
+     C*
+     C                     EXSR CLEAR
+     C                     EXFMTRE2191F1
+     C*
+     C                     END                             E0002
+     C*
+     C                     END                             E0001
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  VALID1     :  INPUT VALIDATION                              *
+     C*   CALLED BY  :  INPUT                                         *
+     C*   CALLS      :  ZALIGN                                        *
+     C*                 ZDATE1                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALID1    BEGSR
+     C*
+     C** Initialise data structure  ERNO
+     C*
+     C                     MOVE *BLANKS   ERNO
+     C*
+     C** Set off all error indicators
+     C*
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     363738
+     C                     SETOF                     3941
+     C*
+     C** Initialise array index X
+     C*
+     C                     Z-ADD0         X       20
+     C*
+     C** Check that customer number (mandatory field) is not blank
+     C*
+     C           CUSNO     IFEQ ' '                        B0001
+     C*
+     C                     ADD  1         X
+     C                     MOVE '001'     ERNO,X
+     C                     SETON                     3031
+     C                     ELSE                            X0001
+     C*
+     C** Using input customer number as key, access SDCUSTPD
+     C*
+     C                     CALL 'AOCUSTR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CUSNO     @KEY1  10
+     C                     PARM *BLANKS   @KYST   7
+     C           SDCUST    PARM SDCUST    DSSDY
+     C*
+     C* If record not found
+     C*
+     C           @RTCD     IFNE *BLANKS                    B0002
+     C           @KYST     OREQ '*ERROR'
+     C*
+     C                     ADD  1         X
+     C                     MOVE '001'     ERNO,X
+     C                     SETON                     3031
+     C*
+     C                     ELSE                            X0002
+     C                     MOVEL*BLANK    CUSNO
+     C                     MOVELBBCUST    CUSNO
+     C**********           MOVELBBCUST    CLKEY   60                                          CSD027
+     C                     MOVELBBCUST    CLKEY   6                                           CSD027
+     C*
+     C           CLKEY     CHAINSDCBRTL1             85
+     C*
+     C* If record not found
+     C*
+     C           *IN85     IFEQ '1'                        B0003
+     C                     MOVELCLKEY     DBKEY            *************
+     C                     MOVEL'SDCBRTPD'DBFILE           * DBERR 002 *
+     C                     MOVEL'002'     DBASE            *************
+     C                     SETON                     U7U8LR
+     C                     SETON                     03
+     C                     DUMP
+     C                     END                             E0003
+     C                     END                             E0002
+     C                     END                             E0001
+     C*
+     C** Check that currency, a/c code, a/c sequence, branch,
+     C** and deal number not ALL blank
+     C*
+     C           DEAL      IFEQ ' '                        B0001
+     C           CURR      ANDEQ' '
+     C           ACODE     ANDEQ' '
+     C           ACSEQ     ANDEQ' '
+     C           BRANCH    ANDEQ' '
+     C*
+     C                     ADD  1         X
+     C                     MOVE '002'     ERNO,X
+     C                     SETON                     303233
+     C                     SETON                     343541
+     C*
+     C                     END                             E0001
+     C*
+     C** If deal number is blank, then currency, a/c code, a/c
+     C** sequence and branch must all be entered
+     C*
+     C           DEAL      IFEQ ' '                        B0001
+     C*
+     C*  DEFAULT USER BRANCH IF BRANCH NOT SPECIFIED
+     C*
+     C           BRANCH    IFEQ ' '
+     C                     MOVE USRBCH    BRANCH
+     C                     END
+     C*
+     C           CURR      IFEQ ' '                        B0002
+     C           ACODE     OREQ ' '
+     C           ACSEQ     OREQ ' '
+     C           BRANCH    OREQ ' '
+     C*
+     C                     ADD  1         X
+     C                     MOVE '016'     ERNO,X
+     C                     SETON                     303334
+     C                     SETON                     3541
+     C*
+     C                     END                             E0002
+     C*
+     C                     END                             E0001
+     C*
+     C*
+     C** If deal number is entered, then currency, a/c code, a/c
+     C** sequence and branch code should be left blank
+     C*
+     C           DEAL      IFNE ' '                        B0001
+     C*
+     C           CURR      IFNE ' '                        B0002
+     C           ACODE     ORNE ' '
+     C           ACSEQ     ORNE ' '
+     C           BRANCH    ORNE ' '
+     C*
+     C                     ADD  1         X
+     C                     MOVE '016'     ERNO,X
+     C                     SETON                     303334
+     C                     SETON                     3541
+     C*
+     C                     END                             E0002
+     C*
+     C                     END                             E0001
+     C*
+     C*  VALIDATE CURRENCY
+     C*
+     C           CURR      IFNE ' '                        B0001
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM CURR      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANK
+     C                     ADD  1         X
+     C                     MOVE '020'     ERNO,X
+     C                     SETON                     3033
+     C                     ELSE
+     C                     MOVELA6CYCD    CURR
+     C                     END
+     C                     END                             E0001
+     C*
+     C*  VALIDATE ACCOUNT CODE
+     C*
+     C           ACODE     IFNE ' '                        B0001
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C**********           PARM ACODE     @AFNB   4                                           CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                               CGL029
+     C                     PARM ACODE     @AFNB  10                                           CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANK
+     C                     ADD  1         X
+     C                     MOVE '021'     ERNO,X
+     C                     SETON                     3034
+     C                     ELSE
+     C                     MOVELA5ACCD    ACODE
+     C                     END
+     C                     END                             E0001
+     C*
+     C*  IF SYSTEM IS MULTI-BRANCHING
+     C*  VALIDATE BRANCH
+     C*
+     C           *IN42     IFEQ '1'                        B0001
+     C           BRANCH    ANDNE' '
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM *BLANK    @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM BRANCH    @DSNB   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+     C           @RTCD     IFNE *BLANKS                    B0002
+     C                     ADD  1         X
+     C                     MOVE '022'     ERNO,X
+     C                     SETON                     3041
+     C                     ELSE
+     C                     MOVELA8BRCD    BRANCH
+     C                     END                             E0002
+     C*
+     C* IF NO ERRORS, CHECK AUTHORITY TO BRANCH
+     C*
+     C           *IN41     IFNE '1'                        B0002
+     C                     CALL 'ZVBBU'
+     C                     PARM BRANCH    @BRCX   3
+     C                     PARM           @OTCD   10
+     C           @OTCD     IFNE 0                          B0003
+     C                     ADD  1         X
+     C                     MOVE '023'     ERNO,X
+     C                     SETON                     3041
+     C                     END                             E0003
+     C                     END                             E0002
+     C                     END                             E0001
+     C*
+     C* CHECK AUTHORITY TO ACTION CODE ('INSERT')
+     C*
+     C* - IF MULTI-BRANCHING
+     C*
+     C                     Z-ADD*ZERO     @OTCD
+     C           *IN42     IFEQ '1'                        B0001
+     C           BRANCH    IFNE ' '
+     C           *IN41     ANDNE'1'
+     C                     CALL 'ZVACTBU'
+     C                     PARM 'I'       @ACTN   1
+     C                     PARM BRANCH    @BRCX   3
+     C                     PARM           @OTCD
+     C                     END
+     C                     ELSE
+     C*
+     C* - IF NOT MULTI-BRANCHING
+     C*
+     C                     CALL 'ZVACTU'
+     C                     PARM 'I'       @ACTN   1
+     C                     PARM           @OTCD
+     C                     END                             E0001
+     C*
+     C* NO AUTHORITY TO DO THIS TRANSACTION
+     C*
+     C           @OTCD     IFNE 0                          B0001
+     C                     ADD  1         X
+     C                     MOVE '024'     ERNO,X
+     C                     SETON                     303132
+     C                     SETON                     333435
+     C                     SETON                     41
+     C                     END                             E0001
+     C*
+     C** If deal number is blank, set up keylist ACCKEY to chain to ACCNT
+     C*
+     C           DEAL      IFEQ ' '                        B0001
+     C*
+     C                     MOVELCUSNO     CUST
+     C                     MOVE ACODE     CODE
+     C                     MOVE ACSEQ     SEQ
+     C*
+     C           ACCKEY    CHAINACCNTABF             85
+     C*
+     C** If record not found, indicate error
+     C*
+     C           *IN85     IFEQ '1'                        B0002
+     C*
+     C                     ADD  1         X
+     C                     MOVE '003'     ERNO,X
+     C                     SETON                     303133
+     C                     SETON                     343541
+     C*
+     C                     ELSE                            X0002
+     C*
+     C** Check for BRT category
+     C*
+     C           BRTCA     IFNE 'L'                        B0003
+     C           BRTCA     ANDNE'N'
+     C           BRTCA     ANDNE'P'
+     C           BRTCA     ANDNE'C'
+     C           BRTCA     ANDNE'B'
+     C           BRTCA     ANDNE'R'                                                           CRE007
+     C           BRTCA     OREQ 'B'
+     C           BTHY      ANDNE'Y'
+     C*
+     C                     ADD  1         X
+     C                     MOVE '004'     ERNO,X
+     C                     SETON                     303133
+     C                     SETON                     3435
+     C*
+     C                     END                             E0003
+     C*
+     C                     END                             E0002
+     C*
+     C                     ELSE                            X0001
+     C*
+     C** If deal number not blank, use it to access DEALS
+     C*
+     C                     MOVE DEAL      WRKFLD  60
+     C           WRKFLD    CHAINDEALS                85
+     C*
+     C** If record not found, indicate error
+     C*
+     C           *IN85     IFEQ '1'                        B0002
+     C*
+     C                     ADD  1         X
+     C                     MOVE '005'     ERNO,X
+     C                     SETON                     3032
+     C*
+     C                     ELSE                            X0002
+     C*
+     C** Store branch code
+     C*
+     C                     MOVE BRCA      BRCAX   3
+     C*
+     C** Check for deal type
+     C*
+     C           DTYP      IFNE 'IT'                       B0003
+     C           DTYP      ANDNE'TD'
+     C           DTYP      ANDNE'CD'
+     C*
+     C                     ADD  1         X
+     C                     MOVE '006'     ERNO,X
+     C                     SETON                     3032
+     C*
+     C                     END                             E0003
+     C*
+     C** Check input customer mumber against cust. no. of deal
+     C*
+     C                     MOVELCUSNO     CUST
+     C           CUSNO     IFNE ' '                        B0003
+     C           CUST      ANDNECNUM
+     C*
+     C                     ADD  1         X
+     C                     MOVE '008'     ERNO,X
+     C                     SETON                     3031
+     C*
+     C                     ELSE                            X0003
+     C*
+     C** Check for account holder type
+     C*
+     C           ACHLRT    IFNE 'I'                        B0004
+     C           ACHLRT    ANDNE'J'
+     C           ACHLRT    ANDNE'R'                                                           CRE007
+     C           ACHLRT    ANDNE'C'
+     C           ACHLRT    ANDNE'B'
+     C           ACHLRT    OREQ 'B'
+     C           BTHY      ANDNE'Y'
+     C*
+     C                     ADD  1         X
+     C                     MOVE '009'     ERNO,X
+     C                     SETON                     3032
+     C*
+     C                     END                             E0004
+     C*
+     C** Check for BRT tax indicator
+     C*
+     C           TAXIND    IFEQ 'X'                        B0004
+     C*
+     C                     ADD  1         X
+     C                     MOVE '017'     ERNO,X
+     C                     SETON                     3032
+     C*
+     C                     END                             E0004
+     C*
+     C                     END                             E0003
+     C*
+     C                     END                             E0002
+     C*
+     C                     END                             E0001
+     C*
+     C** Check that Interest Payment Date (mandatory field) is not
+     C** Blank
+     C*
+     C           INTDT     IFEQ ' '                        B0001
+     C                     ADD  1         X
+     C                     MOVE '012'     ERNO,X
+     C                     SETON                     3038
+     C*
+     C                     ELSE                            X0001
+     C*
+     C** Use run date to calculate current tax year
+     C*
+     C                     MOVE BJRDNB    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZDATE     TAXDAT
+     C*
+     C** TAXDAT now contains BJRDNB in DDMMYY format. Use DDMM part
+     C** to calculate current tax year
+     C*
+     C           MM        IFGE 01
+     C           MM        ANDLE03
+     C*
+     C           MM        OREQ 04
+     C           DD        ANDLE05
+     C*
+     C           YY        SUB  1         YY
+     C*
+     C                     END
+     C*
+     C                     Z-ADD6         DD
+     C                     Z-ADD4         MM
+     C*
+     C** TAXDAT now contains the date for the start of the current tax
+     C** year, i.e. 06/04/YY. This must now be converted into a Midas
+     C** number
+     C*
+     C                     MOVE TAXDAT    ZDATE
+     C                     EXSR ZDATE1
+     C                     MOVE ZDAYNO    TAXDT   50
+     C*
+     C** Convert interest payment sdate to Midas date
+     C** (Set off *IN98 - tells S/R ZDATE1 to convert from DDMMYY
+     C** format)
+     C*
+     C                     SETOF                     98
+     C                     MOVE INTDT     ZDATE
+     C                     EXSR ZDATE1
+     C           BJDFIN    COMP 'M'                      98*
+     C*
+     C** Field ZDAYNO now contains the interest payment date as a Midas
+     C** number.
+     C** Interest Payment Date must fall between: 6th April of current
+     C** tax year and (BJRDNB - 1).
+     C*
+     C           BJRDNB    SUB  1         RUNDT   50
+     C*
+     C           ZDAYNO    IFGE TAXDT                      B0002
+     C           ZDAYNO    ANDLERUNDT
+     C*
+     C                     ELSE                            X0002
+     C*
+     C                     ADD  1         X
+     C                     MOVE '013'     ERNO,X
+     C                     SETON                     3038
+     C                     END                             E0002
+     C*
+     C                     END                             E0001
+     C*
+     C** Check that S352 indicator (mandatory field) is either 'Y' or 'N'
+     C** This field must be blank if the Account Holder Type is 'C' or 'B'
+     C*
+     C           ACHLRT    IFEQ 'B'                        B0001
+     C           ACHLRT    OREQ 'C'
+     C           IND352    IFNE *BLANKS                    B0002
+     C                     ADD  1         X
+     C                     MOVE '018'     ERNO,X
+     C                     SETON                     3039
+     C                     END                             E0002
+     C                     ELSE                            X0001
+     C*
+     C           IND352    IFNE 'Y'                        B0002
+     C           IND352    ANDNE'N'
+     C                     ADD  1         X
+     C                     MOVE '014'     ERNO,X
+     C                     SETON                     3039
+     C                     END                             E0002
+     C                     END                             E0001
+     C*
+     C** If the Account Holder Type is 'C' or 'B' the BRT Deducted
+     C** field must be blank.
+     C*
+     C           ACHLRT    IFEQ 'B'                        B0001
+     C           ACHLRT    OREQ 'C'
+     C           BRT       IFNE ' '                        B0002
+     C                     ADD  1         X
+     C                     MOVE '019'     ERNO,X
+     C                     SETON                     3037
+     C                     END                             E0002
+     C                     END                             E0001
+     C*
+     C** Check that Gross Interest (mandatory field) is not blank
+     C*
+     C           GINT      IFEQ ' '                        B0001
+     C                     ADD  1         X
+     C                     MOVE '010'     ERNO,X
+     C                     SETON                     3036
+     C*
+     C                     ELSE                            X0001
+     C*
+     C** Perform ZALIGN & ZEDIT to re-display amounts GINT and BRT
+     C** ONLY IF there are no other errors (i.e *IN30 is off).
+     C** This validation is performed last so that amounts remain
+     C** on screen until screen is ready for confirmation.
+     C*
+     C           *IN30     IFEQ '0'                        B0002
+     C*
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE GINT      ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     Z-ADD13        ZADIG
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    GROSS  150
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    GINT
+     C*
+     C           BRT       IFNE ' '                        B0003
+     C                     MOVE *BLANKS   ZFIELD
+     C                     MOVE BRT       ZFIELD
+     C                     Z-ADD2         ZADEC
+     C                     Z-ADD13        ZADIG
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    TAX    150
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    BRT
+     C                     END                             E0003
+     C*
+     C** Calculate net interest
+     C*
+     C           GROSS     SUB  TAX       RES    130
+     C*
+     C           RES       IFLT 0
+     C                     ADD  1         X
+     C                     MOVE '011'     ERNO,X
+     C                     SETON                     3037
+     C                     END
+     C*
+     C                     END                             E0002
+     C*
+     C                     END                             E0001
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  VALID2     :  CONFIRMATION VALIDATION                       *
+     C*   CALLED BY  :  INPUT                                         *
+     C*   CALLS      :
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           VALID2    BEGSR
+     C*
+     C** Check that field CONF is either Y or N
+     C*
+     C           CONF      IFNE 'Y'                        B0001
+     C           CONF      ANDNE'N'
+     C*
+     C                     SETON                     3040
+     C*
+     C           *IN40     DOWEQ'1'                        B0002
+     C*
+     C                     Z-ADD1         X
+     C                     MOVE '015'     ERNO,X
+     C*
+     C                     EXFMTRE2191F1
+     C*
+     C           CONF      IFEQ 'Y'
+     C           CONF      OREQ 'N'
+     C                     SETOF                     3040
+     C                     END
+     C*
+     C                     END                             E0002
+     C*
+     C                     END                             E0001
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  SETUP      :  SET UP DETAILS FOR PF/INTPSDD                 *
+     C*   CALLED BY  :  INPUT                                         *
+     C*   CALLS      :
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SETUP     BEGSR
+     C*
+     C** Initialise field RECI
+     C*
+     C                     MOVE 'D'       RECI
+     C*
+     C** If details are being entered for a deal,
+     C** move BRT tax indicator from SDCBRTL1 into BRT category
+     C*
+     C           DEAL      IFNE ' '
+     C                     MOVE TAXIND    BRTCAT
+     C*
+     C                     ELSE
+     C*
+     C** If details are being entered for an account number,
+     C** move BRTCA from ACCNT into BRT category
+     C*
+     C                     MOVE BRTCA     BRTCAT
+     C                     END
+     C*
+     C** Check BRT category
+     C*
+     C           BRTCAT    IFEQ 'P'                        B0002
+     C*
+     C** Check Holder 1 & 2 for liability and set liability party
+     C*
+     C           H1BRTL    IFEQ 'Y'                        B0003
+     C                     MOVE H1SEQN    LIAPTY
+     C*
+     C                     ELSE                            X0003
+     C*
+     C           H2BRTL    IFEQ 'Y'                        B0004
+     C                     MOVE H2SEQN    LIAPTY
+     C                     END                             E0004
+     C*
+     C                     END                             E0003
+     C*
+     C** If BRT category is not 'P'
+     C*
+     C                     ELSE                            X0002
+     C*
+     C                     Z-ADD0         LIAPTY
+     C*
+     C                     END                             E0002
+     C*
+     C**If*Account*Holder*Type*is*NOT*'B'*or*'C'*set*Record*Type*to*'A'***                    CRE007
+     C* If Account Holder Type is NOT 'B','C' or 'R' set Record Type to 'A'                   CRE007
+     C*
+     C           ACHLRT    IFNE 'B'
+     C           ACHLRT    ANDNE'C'
+     C           ACHLRT    ANDNE'R'                                                           CRE007
+     C                     MOVE 'A'       RTYP
+     C                     END
+     C*                                                                                       CRE007
+     C* If Account Holder Type is 'R' set Record Type to 'R'.                                 CRE007
+     C*                                                                                       CRE007
+     C           ACHLRT    IFEQ 'R'                                                           CRE007
+     C                     MOVE 'R'       RTYP                                                CRE007
+     C                     MOVE PSTR      PSTR1                                               CRE007
+     C                     ENDIF                                                              CRE007
+     C*
+     C* If Account Holder Type is 'B' set Record Type to 'B'.
+     C*
+     C           ACHLRT    IFEQ 'B'
+     C                     MOVE 'B'       RTYP
+     C                     END
+     C*
+     C* If Account Holder Type is 'C' set Record Type to 'C'.
+     C*
+     C           ACHLRT    IFEQ 'C'
+     C                     MOVE 'C'       RTYP
+     C                     END
+     C*
+     C** Obtain last transaction No. and prepare standard
+     C** information for CMTTXT Data Structure
+     C*
+     C                     EXSR ZTNLU1
+     C*
+     C                     TIME           MTIME   60
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  WRITE      :  WRITE INTEREST HISTORY DETAIL                 *
+     C**  CALLED BY  :  INPUT                                         *
+     C**  CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           WRITE     BEGSR
+     C*
+     C** Move fields into relevant fields for output
+     C*
+     C                     MOVELBBCRNM    CRNM
+     C                     MOVE DEAL      DLNO
+     C                     MOVELCUSNO     CNUM
+     C*
+     C** If account, use input currency code (else deal currency is used)
+     C*
+     C           DEAL      IFEQ ' '
+     C                     MOVE CURR      CCY
+     C                     END
+     C*
+     C                     MOVE ACODE     ACOD
+     C                     MOVE ACSEQ     ACSQ
+     C                     MOVE ZDAYNO    IPDT
+     C*
+     C** BRT category is set in subroutine SETUP
+     C*
+     C                     MOVE BRTCAT    BRTCAT
+     C*
+     C                     MOVE GROSS     STGGRI
+     C                     MOVE TAX       STGBRT
+     C*
+     C           BRT       IFEQ ' '
+     C                     MOVE GROSS     STGNTI
+     C                     ELSE
+     C                     MOVE RES       STGNTI
+     C                     END
+     C*
+     C                     MOVE IND352    S352RI
+     C*
+     C** If account, use branch code as input;
+     C** otherwise use previously stored value from DEALSDC
+     C*
+     C           DEAL      IFEQ ' '
+     C                     MOVE BRANCH    BRCA
+     C                     ELSE
+     C                     MOVE BRCAX     BRCA
+     C                     END
+     C*
+     C** Write details to history file
+     C*
+     C           RTYP      IFEQ 'B'
+     C           RTYP      OREQ 'C'
+     C                     WRITECOINTDDF
+     C                     ELSE
+     C                     WRITEINTPSDDF
+     C                     END
+     C*
+     C** End of commitment cycle
+     C*
+     C           CMTTXT    COMIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C**  CLEAR      :  CLEAR INPUT SCREEN                            *
+     C**  CALLED BY  :  INPUT                                         *
+     C**  CALLS      :                                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CLEAR     BEGSR
+     C*
+     C** Set off all error/conditioning indicators
+     C*
+     C                     SETOF                     303132
+     C                     SETOF                     333435
+     C                     SETOF                     363738
+     C                     SETOF                     394041
+     C                     SETOF                     5060
+     C*
+     C** Initialise all input fields
+     C*
+     C                     MOVE *BLANKS   CUSNO
+     C                     MOVE *BLANKS   DEAL
+     C                     MOVE *BLANKS   CURR
+     C                     MOVE *BLANKS   ACODE
+     C                     MOVE *BLANKS   ACSEQ
+     C                     MOVE *BLANK    BRANCH
+     C                     MOVE *BLANKS   GINT
+     C                     MOVE *BLANKS   BRT
+     C                     MOVE *BLANKS   INTDT
+     C                     MOVE ' '       IND352
+     C                     MOVE ' '       CONF
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C** ZTNLU1 SR: OBTAIN LAST TRANSACTION NUMBER
+     C*
+     C********************************************************************
+     C*
+     C           ZTNLU1    BEGSR
+     C*
+     C* GO TO DATA AREA FOR NEXT AVAILABLE TRANSACTION NUMBER
+     C*
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C                     OUT  DNATN
+     C                     ENDSR
+     C*
+     C****************************************************************
+      /EJECT
+     C****************************************************************
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZEDITZ2
+      /EJECT
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

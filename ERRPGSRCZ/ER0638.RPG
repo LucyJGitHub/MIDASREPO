@@ -1,0 +1,688 @@
+     H        1   Y
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ER Extract program - TI Trade Innovation')       *
+      *****************************************************************
+      *                                                               *
+      *  Midas - European Reporting Module                            *
+      *                                                               *
+      *  ER0638 - Midas ER Extract program - TI Trade Innovation      *
+      *                                                               *
+      *  Function:  This program extracts TI records based on the     *
+      *             ERTITRPD uploaded from the Departmental server    *
+      *             at the beginning of the COB                       *
+      *                                                               *
+      *  Called By: ERC0638 - Midas European Reporting - TI Extract   *
+      *                                                               *
+      *  (c) Finastra International Limited 2005                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      *                 225555             Date 01Nov06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027A            Date 12May06               *
+      *                 CER001             Date 25Apr05               *
+      *                 UPG402             Date 04Oct04               *
+      *                 ULX046             Date 31Oct02               *
+      *                 ULX024  *CREATE    Date 03Sep99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+      *           (Recompile)                                         *
+      *  225555 - Add discount/premium amount, amount to amortize     *
+      *           and 'Prix d'Acquisition'. Recompile over changed    *
+      *           EREXTRPD.                                           *
+      *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
+      *  CER001 - LUX Upgrade to MidasPlus                            *
+      *  UPG402 - Recompile due to R4.02 upgrade                      *
+      *  ULX046 - Circulars 2002/170-174-175 Integration              *
+      *           Recompiled due to changes in file layout            *
+      *  ULX024 - Trade Innovation/CSSF Reporting Interface           *
+      *                                                               *
+      *****************************************************************
+     FERTITRPDIF  E                    DISK
+     F* Midas TI Transaction Uploaded File
+     FSDBANKL1IF  E           K        DISK
+     F* Bank Details file
+     FSDTIINL1IF  E           K        DISK
+     F* TI ICD detail File
+     FSDBRCHL2IF  E           K        DISK
+     F* Branch Code master file (Access A8TIBR)
+     F***SDCURRV0IF  E           K        DISK                                                CER001
+     FSDCCYXL2IF  E           K        DISK                                                   CER001
+     F* Currency Codes file (Access A6SWCY)
+     FSDCUSTL1IF  E           K        DISK
+     F* Client Details file
+     FSDSECSL1IF  E           K        DISK
+     F* SE Client Details file
+     F*
+     FEREXTRPDO   E                    DISK
+     F* ER Production Extract
+     F*
+     FER0638AUO   E                    PRINTER
+     F* ER Audit report for NAP deals extract
+     F*
+     F*
+     F* ID F  C  H  L    Function of Indicators
+     F*
+     F*
+     F*
+     F*       U7         Database Error
+     F*       U8         Program  Error
+     F*
+     F**             *************************
+     F**             ** Indicators Not Used **
+     F**             ** ------------------- **
+     F**             *************************
+     F**
+     F**      ***************************************************
+     F**      * 01   02   03   04   05   06   07   08   09   10 *
+     F**      * 11   12   13   14   15   16   17   18   19   20 *
+     F**      * 21   22   23   24   25   ..   27   28   29   .. *
+     F**      * 31   32   33   34   35   36   37   38   39   40 *
+     F**      * 41   42   43   44   45   46   47   48   49   50 *
+     F**      * 51   52   53   54   55   56   57   58   59   60 *
+     F**      * 61   62   63   64   65   66   67   68   69   70 *
+     F**      * 71   72   73   74   75   76   77   78   79   .. *
+     F**      * ..   82   83   84   85   86   87   ..   89   .. *
+     F**      * ..   ..   ..   94   95   96   97   ..   ..      *
+     F**      ***************************************************
+     E*
+     E**  ARRAY FOR SR. ZDATE9 - CUMULATIVE DAYS IN YEAR FOR 4 YEAR PERIOD
+     E                    @YD     4   4  5 0A
+     E*
+     E**  ARRAY FOR SR. ZDATE9 - CUMULATIVE DAYS IN YEAR PER MONTH
+     E                    @MD    13  13  5 0A
+     E*
+     E** ARRAY FOR COPYRIGHT
+     E                    CPY@    1   1 80
+     E*
+     E** ARRAY FOR ZDATE1
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR.ARRAY
+     E                    TNDM   12  12  2 0             NUMBER/DAY/MONTH
+     I*
+     I** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+     I*
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+     I**
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I**
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I***
+     I**  DATA STRUCTURE FOR SR. ZDATE9 - FIELD IS @@Z71Y
+     I            DS
+     I                                        1   40@@Z71Y
+     I                                        1   10@@SSY1
+     I                                        2   20@@SSY2
+     I                                        3   30@@SSY3
+     I                                        4   40@@SSY4
+     I**  DATA STRUCTURE FOR SR. ZDATE9 - FIELD IS @@VDT
+     I            DS
+     I                                        1   80@@VDT
+     I                                        1   40@@YR
+     I                                        5   60@@Z71M
+     I                                        7   80@@Z71D
+     I**  MIDAS RUN DATE
+     I            DS
+     I                                        1   7 BJMRDT
+     I                                        1   20WWBJD
+     I                                        3   5 WWBJM
+     I                                        6   70WWBJY
+     I**  DEFINE A DATE
+     I            DS
+     I                                        1   60WWDATE
+     I                                        1   20WWD
+     I                                        3   40WWM
+     I                                        5   60WWY
+     I*
+      /EJECT
+     C*================================================================
+     C* Setup Key
+      *
+      *
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*                    M A I N
+     C*****************************************************************
+      *
+      ** Initial Processing
+      *
+     C                     EXSR #INIT
+      *
+      ** Main Processing
+      *
+     C           1         SETLLERTITRPD
+     C                     READ ERTITRPD                 30
+      *
+     C           *IN30     DOWEQ'0'                          B1
+      *
+     C                     EXSR P003
+      *
+     C                     READ ERTITRPD                 30
+      *
+     C                     END                             - E1
+      *
+      ** Termination Processing
+      *
+     C                     WRITEDETAIL
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C*
+     C/EJECT
+     C**************************************************************************
+     C* P003 - Detail Processing Sub-Routine
+     C**************************************************************************
+     C*
+     C           P003      BEGSR
+      *
+      * Initialisation of Fields to extract.
+      *
+     C                     Z-ADD001       EXRECT
+     C                     MOVE 'TID'     EXLOTD
+     C                     MOVE 'TIDL'    EXRIND
+     C                     Z-ADDWWREPD    EXREPD
+      *
+      * Access Branch details equivalent
+      *
+     C           TIBRCA    CHAINSDBRCHL2             88
+     C           *IN88     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'003'     DBASE            *****************
+     C                     MOVEL'SDBRCHL2'DBFILE           ** DB ERROR 03 **
+     C                     MOVELTIBRCA    DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C                     MOVELA8BRCD    EXBRCD
+     C                     MOVELA8BICN    EXBICN
+      *
+      * Access Internal Customer details for the branch
+      *
+     C           A8BICN    CHAINSDCUSTL1             88
+     C           *IN88     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'004'     DBASE            *****************
+     C                     MOVEL'SDCUSTL1'DBFILE           ** DB ERROR 04 **
+     C                     MOVELA8BICN    DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C                     MOVE BBCOLC    EXORCC
+      *
+     C                     MOVELTITREF    EXTREF
+     C           TIPCDE    CAT  TICSSF    EXDECK
+      *
+      * Access Currency Details via Swift ISO code
+      *
+     C********** TICCY     CHAINSDCURRV0             88                                       CER001
+     C           TICCY     CHAINSDCCYXL2             88                                       CER001
+     C           *IN88     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'005'     DBASE            *****************
+     C**********           MOVEL'SDCURRV0'DBFILE           ** DB ERROR 05 **                  CER001
+     C                     MOVEL'SDCCYXL2'DBFILE           ** DB ERROR 05 **                  CER001
+     C                     MOVELTICCY     DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C                     MOVELA6CYCD    EXCCYC
+      *
+      * Access Transaction Customer details
+      *
+     C           TICUST    CHAINSDCUSTL1             88
+     C           *IN88     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'006'     DBASE            *****************
+     C                     MOVEL'SDCUSTL1'DBFILE           ** DB ERROR 06 **
+     C                     MOVELTICUST    DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C                     MOVELBBCUST    EXCUST
+     C                     MOVELBBCSSN    EXCSSN
+     C                     MOVELBBCRNM    EXCRNM
+     C                     MOVELBBCOLC    EXCUCC
+     C                     MOVELBBCNCZ    EXCNCZ
+     C                     MOVELBBBSIN    EXBSIN
+     C                     MOVELBBBNBI    EXBNBI
+     C                     MOVELBBPCNB    EXPCNB
+      *
+      * Access Parent Customer details
+      *
+     C           BBPCNB    IFNE *BLANKS                    - B1
+     C           BBPCNB    CHAINSDCUSTL1             88
+     C           *IN88     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA
+     C                     MOVEL'007'     DBASE            *****************
+     C                     MOVEL'SDCUSTL1'DBFILE           ** DB ERROR 07 **
+     C                     MOVELBBPCNB    DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C                     MOVELBBCOLC    EXPRCC
+     C                     ELSE                            - X1
+     C                     MOVEL*BLANKS   EXPRCC
+     C                     END                             - E1
+      *
+     C                     MOVELTISTRD    EXSTRD
+     C                     MOVELTIENDD    EXENDD
+      *
+      * Check decimal places transmitted with the Midas Definition
+      *
+     C                     Z-ADDTIAMNT    WKAMNT 223
+     C                     MOVELTICDP     WKCDP   10
+     C           WKCDP     IFNE A6NBDP                     - B1
+      *
+     C           1         DO   WKCDP     X                - B2
+     C                     DIV  10        WKAMNT
+     C                     ENDDO                           - E2
+      *
+     C           1         DO   A6NBDP                     - B2
+     C                     MULT 10        WKAMNT
+     C                     ENDDO                           - E2
+      *
+     C                     ENDIF                           - E1
+      * Amount should be expressed in ???
+     C                     SELEC                           - B1
+     C           A6NBDP    WHEQ 0
+     C           WKAMNT    MULT 1000      EXAMNT
+     C           A6NBDP    WHEQ 1
+     C           WKAMNT    MULT 100       EXAMNT
+     C           A6NBDP    WHEQ 2
+     C           WKAMNT    MULT 10        EXAMNT
+     C           A6NBDP    WHEQ 3
+     C                     Z-ADDWKAMNT    EXAMNT
+     C                     ENDSL                           - E1
+      *
+     C                     MOVELTIDRCR    EXDRCR
+      *
+      * Access Securities details for TICUST
+      *
+     C           TICUST    CHAINSDSECSL1             88
+     C           *IN88     IFEQ '0'                        - B1
+     C                     MOVELBFCLAS    EXCLAS
+     C                     MOVELBFPLAG    EXPLAG
+     C                     ELSE                            - X1
+     C                     MOVEL*BLANKS   EXCLAS
+     C                     MOVEL*BLANKS   EXPLAG
+     C                     END                             - E1
+      *
+     C                     MOVELTIBOOK    EXBKCD
+      *
+     C                     MOVELBJSLCD    EXSDLO
+     C                     MOVELBJSLCD    EXRDLO
+     C                     MOVELBJSLCD    EXEDLO
+      *
+     C                     MOVELEXCCYC    EXSDCU
+     C                     MOVELEXCCYC    EXRDCU
+     C                     MOVELEXCCYC    EXEDCU
+      * Convert Risk Code received from TI
+     C*******              SELEC                           - B1
+     C*******    TIRISK    WHEQ 'RC0'
+     C*******              Z-ADD0         EXREVL
+     C*******    TIRISK    WHEQ 'RC1'
+     C*******              Z-ADD1         EXREVL
+     C*******    TIRISK    WHEQ 'RC2'
+     C*******              Z-ADD2         EXREVL
+     C*******    TIRISK    WHEQ 'RC3'
+     C*******              Z-ADD3         EXREVL
+     C*******    TIRISK    WHEQ 'RC4'
+     C*******              Z-ADD4         EXREVL
+     C*******              OTHER
+     C*******              Z-ADD0         EXREVL
+     C*******              ENDSL                           - E1
+      *
+     C                     MOVELTIRISK    EXREVL
+      *
+      ** Write Record in Output File
+      *
+     C                     EXSR W001
+      *
+     C                     ENDSR
+     C**************************************************************************
+     C* W001 - Subroutine to Write a Record in EREXTRPD Output File
+     C**************************************************************************
+     C*
+     C           W001      BEGSR
+     C*
+      *
+      ** Add 1 to Number of Extracted Records
+      *
+     C                     ADD  1         NREC    30
+      *
+      * Write a Record
+      *
+     C                     WRITEEREXTRF0
+      *
+      ** Reset File ReordD Format
+      *
+     C                     RESETEREXTRF0
+      *
+     C                     ENDSR
+      ********************************************************************
+      **                                                                 *
+      **  #INIT       Subroutine to initialize static fields and access  *
+      **              standing data called once at Start of program from *
+      **              Main Line                                          *
+      **     CALLED BY PROGRAM                                           *
+      **     CALLS     *PSSR                                             *
+      **                                                                 *
+      ********************************************************************
+     C**                                                   *****************
+     C           #INIT     BEGSR                           ** #INIT BEGSR **
+     C**                                                   *****************
+     C**  PREPARE LDA:
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'ER0638'  DBPGM
+     C*
+     C** INITIALIZE WORK FIELD FOR NUMBER OF EXTRACTED RECORDS
+     C                     Z-ADD0         NREC
+     C*
+     C**  INITIALIZE INDICATORS:
+     C                     MOVE '0'       *IN
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD 1:
+     C                     READ SDBANKL1                 81
+     C**
+     C**  IF RECORD NOT FOUND:
+     C           *IN81     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'001'     DBASE            *****************
+     C                     MOVEL'SDBANKL1'DBFILE           ** DB ERROR 01 **
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C**
+     C**  GET INSTALLATION CONTROL DATA RECORD TI
+     C                     READ SDTIINL1                 81
+     C**
+     C**  IF RECORD NOT FOUND:
+     C           *IN81     IFEQ '1'                        - B1
+     C           *LOCK     IN   LDA
+     C                     MOVEL'002'     DBASE            *****************
+     C                     MOVEL'SDTIINL1'DBFILE           ** DB ERROR 02 **
+     C                     MOVEL' NONE '  DBKEY            *****************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C*
+     C** CHECK FOR END OF MONTH
+     C                     CALL 'SD2000'
+     C                     PARM 'N'       EOM     1
+     C                     PARM 'N'       EOY     1
+     C*
+     C           EOM       IFEQ 'Y'
+     C                     EXSR #DATE                      RUN DATE
+     C                     EXSR #EOMD                      END OF MONTH
+     C                     ELSE
+     C                     Z-ADDBJRDNB    EREOMD
+     C                     END
+     C*
+     C** GET REPORTING DATE IN FORMAT YYYYMMDD
+     C                     Z-ADDEREOMD    @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     Z-ADD@@VDT     WWREPD  80
+     C*
+     C                     WRITEHEADAU
+     C*
+     C                     ENDSR
+      ********************************************************************
+      **                                                                 *
+      **  #DATE      - SUBROUTINE TO RUN DATE                            *
+      **                                                                 *
+      **  CALLS      -                                                   *
+      **                                                                 *
+      **  CALLED BY  - MAINLINE                                          *
+      **                                                                 *
+      ********************************************************************
+     C**
+     C           #DATE     BEGSR
+     C**
+     C**   DAY
+     C                     Z-ADDWWBJD     ERDADD  20       DAY
+     C**   MONTH
+     C                     Z-ADD1         X       20       X : INDEX
+     C           WWBJM     LOKUPZMNM,X                   2626 : EQUAL
+     C           *IN26     IFEQ '1'
+     C                     Z-ADDX         ERDAMM  20       MONTH
+     C                     END
+     C**   YEAR
+     C                     Z-ADDWWBJY     ERDAYY  20       YEAR
+     C**
+     C                     ENDSR
+      ********************************************************************
+      **                                                                 *
+      **  #EOMD      - SUBROUTINE TO COMPUTE END OF MONTH                *
+      **                                                                 *
+      **  CALLS      - ZDATE1                                            *
+      **                                                                 *
+      **  CALLED BY  - MAINLINE                                          *
+      **                                                                 *
+      ********************************************************************
+     C**
+     C           #EOMD     BEGSR
+     C**
+     C                     Z-ADDERDAYY    WWY              YEAR
+     C                     Z-ADDERDAMM    WWM              MONTH
+     C                     Z-ADDTNDM,WWM  WWD              DAY
+     C**
+     C           *IN99     DOUEQ'0'                        - B1
+     C                     Z-ADDWWDATE    ZDATE
+     C                     EXSR ZDATE1
+     C                     SUB  1         WWD
+     C                     END                             - E1
+     C**
+     C                     Z-ADDZDAYNO    EREOMD  50       END OF MONTH
+     C**
+     C                     ENDSR
+     C********************************************************************
+     C** *PSSR  S/R
+     C********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     WRITEERROR
+     C*
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C                     MOVE '1'       *INLR
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C********************************************************************
+     C*
+     C           ZDATE9    BEGSR
+     C*
+     C                     SETOF                     8081
+     C                     MOVE '0'       @@RTN   1
+     C                     Z-ADD0         @@VDT
+     C                     Z-ADD1         @@I     20
+     C                     Z-ADD1         @@J     20
+     C                     Z-ADD1         @@LEAP  10
+     C*
+     C           @@DAYN    IFLT 1
+     C                     MOVE '1'       @@RTN
+     C                     GOTO ZDAT79
+     C                     END
+     C*
+     C* DIVISION TO DETERMINE WETHER LEAP YEAR.
+     C*
+     C           @@DAYN    DIV  1461      @@Z71Y
+     C                     MVR            @@RDAY  50
+     C*
+     C* CALCULATING YEAR.
+     C*
+     C           @@Z71Y    MULT 4         @@Z71Y
+     C                     ADD  1972      @@Z71Y
+     C*
+     C* CHECKING IF YEAR IS GREATER THAN OR EQUAL TO 2100
+     C*
+     C           @@Z71Y    IFGE 2100
+     C                     ADD  @@SSY2    @@RDAY
+     C                     END
+     C*
+     C* LOKUP ARRAY @YD TO SEE HOW MANY YEARS OF A FOUR YEAR CYCLE
+     C* HAVE PASSED.
+     C*
+     C           @@RDAY    LOKUP@YD,@@I                8080
+     C*
+     C* IF YEAR IS A LEAP YEAR SSLEAP IS SET TO ZERO.
+     C*
+     C           *IN80     IFEQ '0'
+     C                     Z-ADD0         @@LEAP
+     C                     END
+     C*
+     C* ADD INDEX TO YEAR TO GIVE CORRECT YEAR AND ADJUST '@@RDAY'.
+     C*
+     C           @@LEAP    IFEQ 1
+     C           @@RDAY    SUB  @YD,@@I   @@RDAY
+     C                     ADD  @@I       @@Z71Y
+     C                     END
+     C*
+     C* PROCESSING FOR A LEAP YEAR.
+     C*
+     C           @@LEAP    IFEQ 0
+     C*
+     C* IF '@@RDAY' = 60 DATE MUST BE 29TH OF FEBRUARY.
+     C*
+     C           @@RDAY    IFEQ 60
+     C                     Z-ADD29        @@Z71D
+     C                     Z-ADD2         @@Z71M
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* IF '@@RDAY' > 60 DATE IS AFTER 29TH OF FEBRUARY,CONVERSION CAN
+     C* PROCEED AS USUAL AFTER SUBTRACTING THE EXTRA DAY FOR THE LEAP
+     C* YEAR. NOTE : '@@RDAY' < 60 CONVERSION PROCEEDS AS USUAL.
+     C*
+     C           @@RDAY    IFGT 60
+     C           @@RDAY    SUB  1         @@RDAY
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF DAY '@@DAYN' IS EXACTLY DIVISIBLE BY 1461 (NUMBER OF DAYS
+     C* IN 4 YEARS) THEN DATE MUST BE LAST DAY OF PREVIOUS FOUR YEAR
+     C* GROUP.
+     C*
+     C           @@RDAY    IFEQ 0
+     C                     Z-ADD31        @@Z71D
+     C                     Z-ADD12        @@Z71M
+     C                     SUB  1         @@Z71Y
+     C                     GOTO ZA0711
+     C                     END
+     C*
+     C* LOOK UP ARRAY ARRAY @MD TO DETERMINE WHICH MONTH '@@RDAY'
+     C* OCCURS IN
+     C*
+     C           @@RDAY    LOKUP@MD,@@J                81
+     C                     Z-ADD@@J       @@Z71M
+     C           @@RDAY    SUB  @MD,@@J   @@Z71D
+     C*
+     C* DS @@VDT  IS RETURNED IN YYYYMMDD FORMAT
+     C*
+     C           ZA0711    TAG
+     C*
+     C                     MOVE @@Z71Y    @@YR
+     C*
+     C           ZDAT79    ENDSR
+     C********************************************************************
+     C**                                                                 *
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND                    *
+     C**              CONVERT TO A NUMBER OF DAYS.                       *
+     C**                                                                 *
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.        *
+     C**                                                                 *
+     C********************************************************************
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER.
+     C                     Z-ADD0         ZDAYNO  50
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID.
+     C           ZMTH      COMP 0                      9999
+     C  N99      ZMTH      COMP 12                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR 30 DAY MONTHS.
+     C           ZMTH      COMP 4                        90IF 90 ON, 30
+     C  N90      ZMTH      COMP 6                        90DAY MONTH.
+     C  N90      ZMTH      COMP 9                        90
+     C  N90      ZMTH      COMP 11                       90
+     C**
+     C**   ENSURE DAY IS VALID.
+     C           ZDAY      COMP 0                      9999
+     C   90N99   ZDAY      COMP 30                   99
+     C  N90N99   ZDAY      COMP 31                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     91LEAP YR, 91 ON
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON
+     C**                                                   PAST FEB, 93 ON
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C  N91 92   ZDAY      COMP 28                   99
+     C   91 92   ZDAY      COMP 29                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+     C**
+     C**
+     C********************************************************************
+** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
+00366007310109601461
+** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+00000000310005900090001200015100181002120024300273003040033400365
+**  CPY@
+(c) Finastra International Limited 2005
+**   ZYDY - YEARS IN DAYS CUMULATIVE IN FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   TNDM - NUMBER OF DAYS PER MONTH
+312931303130313130313031

@@ -1,0 +1,90 @@
+/*********************************************************************/
+/*STD    CLPBASE                                                     */
+/*EXI *  TEXT('Midas SE POSETD Field Set-up')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas     - Security Trading Module                         */
+/*                                                                   */
+/*       SEC8020   - BLI SE4 POSETD Field Set-up for S01512          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.00 ---------------- Base -----------------------------*/
+/*       PREV AMEND NO. S01512 *CREATE     DATE 10AUG94              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       S01512 - Add value date to Position Settlements             */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       C R E A T I O N     P A R A M E T E R S                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RTCDE &PMODE)
+ 
+             DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SWS) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
+ 
+/**/
+/* Global Monitor Message */
+/**/
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
+ 
+/**/
+/* Mode 1 - First call */
+/**/
+             IF         COND(&PMODE *EQ '1') THEN(DO)
+                CALL       PGM(SE8020) PARM(&PMODE)
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                    GOTO  CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/**/
+/* Mode 2 - Second call */
+/**/
+             IF         COND(&PMODE *EQ '2') THEN(DO)
+                CALL       PGM(SE8020) PARM(&PMODE)
+                IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+                    GOTO   CMDLBL(END)
+                ENDDO
+             ENDDO
+ 
+/**/
+/* Mode 3 - Deletion */
+/**/
+             IF         COND(&PMODE *EQ '3') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+ /**/
+/* Abnormal Processing */
+ /**/
+ ABNOR:      CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
+ 
+ /**/
+ /* Set off the indicators */
+ /**/
+             CHGJOB     SWS(XXXXXX00)
+ 
+ /**/
+ /* Send the error message */
+ /**/
+             SNDPGMMSG  MSG('Program SEC8020 ended abnormally') +
+                          TOMSGQ(MOPERQ)
+ 
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
+             ENDPGM

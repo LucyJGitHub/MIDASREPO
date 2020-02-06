@@ -1,0 +1,374 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MG Inc. seq. no. for re-used trans.')            *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Message Generation Module                            *
+      *                                                               *
+      *   MG5002 - increment message sequence number for re-used      *
+      *            transaction                                        *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022348           Date 12Sep13               *
+      *                 CSW213             Date 03Jun13               *
+      *                 MD021143           Date 05Jul13               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSW201             Date 02May01               *
+      *                 183583             Date 29Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 190127             Date 28Feb01               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CDL008             Date 02May00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                   141572           DATE 21SEP98               *
+      *                   113352           DATE 13FEB97               *
+      *                   E40242           DATE 00XXX00               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD022348 - DLC0606B failed in COB                            *
+      *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
+      *  MD021143 - Multiple file opening/closing and decimal data    *
+      *             error in DLC0606B                                 *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW201 - SWIFT 2001 Standards Update (Recompiled)            *
+      *  183583 - Add extension file MGOEXTPD to store customer no.   *
+      *           of field with SWIFT address.                        *
+      *   190127 - Related reference should contain tansaction        *
+      *            reference of previous message of same type         *
+      *   CDL008 -  Continuous Linked Settlement (Recompiled MGOREFPD)*
+      *   141572  - Recompile over changes in MGOREFPD                *
+      *   113352  - Recompile over changes in MGOREFPD                *
+      *   E40242  - RE-COMPILED FOR CHANGE TO ASEQ                    *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * Purpose of program                                            *
+      * ------------------                                            *
+      * If a transaction is input and reversed on the same day its    *
+      * reference number may be re-used. To prevent messages          *
+      * generated for the first transaction interfering with those    *
+      * generated for the new transaction, this program increments    *
+      * the first digit of the sequence no. part of the old           *
+      * transaction's messages' TRNOs. eg. DL123456001 -> DL123456101 *
+      *                                                               *
+      *                                                               *
+      * Errors                                                        *
+      * ------                                                        *
+      * If a deal has been input and reversed over 9 times (unlikely) *
+      * this program cannot increment the sequence, and hence issues  *
+      * a db error. If this happens the CoB can continue, but the     *
+      * user should be instructed NOT TO RE-USE THE TRANSACTION       *
+      * NUMBER until all related messages have been dropped. This     *
+      * program can be disabled by setting on switch U3.              *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *****************************************************************
+     FMGOREFL0UF  E           K        DISK
+     F            MGOREFD0                          KRENAMEBYTRNO
+     FMGOREFA1UF  E           K        DISK
+     F            MGOREFD0                          KRENAMEBYTRNM
+     FMGOREFA2UF  E           K        DISK
+     F            MGOREFD0                          KRENAMEBYTRNF
+     FMGOMSGPDUF  E           K        DISK
+     FMGOEXTPDUF  E           K        DISK                               183583
+     FMGOMSGLXUF  E           K        DISK
+     F            MGOMSGD0                          KRENAMEBYMFLD
+      *
+      ** MG Transaction history file                                                          190127
+     FMGHISTL0UF  E           K        DISK                                                   190127
+      *
+     E                    DTAA       50  1
+      ** Array to hold message data
+      *
+     IREFKEY      DS                             16
+     I                                        1   2 PMODID
+     I                                        3   8 PTRANS
+     I                                        1   8 CHECK
+     I                                        9  16 HIVAL
+      ** Data structure for key to reference file
+      *
+     I            DS
+     I                                        1  16 TRNO
+     I                                        1   8 TRNOC
+     I                                        9   90TRNON
+     I                                       15  15 TRNNSQ                                  MD022348
+      ** DS used in s/r SRTRNO
+      *
+     I            DS
+     I                                        1  16 TRNM
+     I                                        1   8 TRNMC
+     I                                        9   90TRNMN
+      ** DS used in s/r SRTRNM
+      *
+     I            DS
+     I                                        1  16 TRNF
+     I                                        1   8 TRNFC
+     I                                        9   90TRNFN
+      ** DS used in s/r SRTRNF
+      *
+     I@HREF       DS                         16                                               190127
+     I                                        1   2 HSMODI                                    190127
+     I                                        3   8 HSTRAN                                    190127
+     I                                        9  11 HSSEQ                                     190127
+      **  Data structure for related reference                                                190127
+      *                                                                                       190127
+      /EJECT
+      *
+      ** Entry parameters:
+      **  o Module i/d
+      **  o Transaction number
+      **  o Return code (blank => OK, 'E' => error)
+     C           *ENTRY    PLIST
+     C                     PARM           @MODID  2
+     C                     PARM           @TRANS  6
+     C                     PARM           @RTRN   1
+      *
+      **  Transaction history key                                                             190127
+     C           HSKEY     KLIST                                                              190127
+     C                     KFLD           HSMODI                                              190127
+     C                     KFLD           HSTRAN                                              190127
+     C                     KFLD           HSMTPY                                              190127
+      ** If U3 is ON, do nothing
+     C           *INU3     IFEQ '0'
+      *
+      ** Move parameteres to data-structure fields
+     C                     MOVE @MODID    PMODID
+     C                     MOVE @TRANS    PTRANS
+      *
+      ** Set up key to access message reference file
+     C                     MOVE *HIVAL    HIVAL
+      *
+      ** Process message files (the message reference file is processed
+      ** by each of the 3 fields which can contain a SWIFT transaction
+      ** reference number: TRNO, TRNM and TRNF. Messages are processed
+      ** in descending order of TRN to prevent duplicate keys)
+     C                     EXSR SRTRNO
+     C                     EXSR SRTRNM
+     C                     EXSR SRTRNF
+      *
+      **  Delete transaction history                                                          190127
+     C                     MOVE @MODID    HSMODI                                              190127
+     C                     MOVE @TRANS    HSTRAN                                              190127
+      *                                                                                       190127
+     C           HSKEY     SETLLMGHISTL0                                                      190127
+     C                     READ MGHISTL0                 56                                   190127
+      *                                                                                       190127
+     C           *IN56     DOWEQ'0'                                                           190127
+     C           HSMODI    ANDEQ@MODID                                                        190127
+     C           HSTRAN    ANDEQ@TRANS                                                        190127
+     C                     DELETMGHISTD0                                                      190127
+     C                     READ MGHISTL0                 56                                   190127
+     C                     END                                                                190127
+      *                                                                                       190127
+     C                     END                             IF
+      *
+     C**********           SETON                     LR                                     MD021143
+     C                     RETRN                                                            MD021143
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRTRNO - Process Message reference by TRNO     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  PRDTA - Process Message Data                   *
+      *                *PSSR - db error processing                    *
+      *****************************************************************
+      *
+     C           SRTRNO    BEGSR
+      *
+     C           REFKEY    SETGTMGOREFL0
+      *
+     C                     READPMGOREFL0                 50
+      *
+      ** While records exist for this transaction
+     C           *IN50     DOWEQ'0'
+     C           CHECK     ANDEQTRNOC
+      *
+      ** If sequence already 9 cannot increment - do db error s/r
+     C           TRNON     IFEQ 9
+     C           TRNNSQ    ANDEQ*BLANK                                                      MD022348
+     C           TRNNSQ    OREQ '9'                                                         MD022348
+     C                     EXSR *PSSR
+      *
+      ** Increment sequence and update
+     C                     ELSE
+     C                     MOVE TRNO      OLDTRN 16
+     C           TRNNSQ    IFEQ *BLANK                                                      MD022348
+     C                     ADD  1         TRNON
+     C                     ELSE                                                             MD022348
+     C                     MOVE TRNNSQ    TRNCSQ  10                                        MD022348
+     C                     ADD  1         TRNCSQ                                            MD022348
+     C                     MOVE TRNCSQ    TRNNSQ                                            MD022348
+     C                     ENDIF                                                            MD022348
+     C                     MOVE TRNO      NEWTRN 16
+     C                     UPDATBYTRNO
+      *
+      ** Process message data
+     C                     EXSR PRDTA
+     C                     END                             IF-ELSE
+      *
+     C                     READPMGOREFL0                 50
+      *
+     C                     END                             DOW
+      *
+      ** If not EOF, UPDAT to release this record
+     C           *IN50     IFEQ '0'
+     C                     UPDATBYTRNO
+     C                     END                             IF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRTRNM - Process Message reference by TRNM     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  *PSSR - db error processing                    *
+      *****************************************************************
+      *
+     C           SRTRNM    BEGSR
+      *
+     C           REFKEY    SETGTMGOREFA1
+      *
+     C                     READPMGOREFA1                 50
+      *
+      ** While records exist for this transaction
+     C           *IN50     DOWEQ'0'
+     C           CHECK     ANDEQTRNMC
+      *
+      ** If sequence already 9 cannot increment - do db error s/r
+     C           TRNMN     IFEQ 9
+     C                     EXSR *PSSR
+      *
+      ** Increment sequence and update
+     C                     ELSE
+     C                     ADD  1         TRNMN
+     C                     UPDATBYTRNM
+     C                     END                             IF-ELSE
+      *
+     C                     READPMGOREFA1                 50
+      *
+     C                     END                             DOW
+      *
+      ** If not EOF, UPDAT to release this record
+     C           *IN50     IFEQ '0'
+     C                     UPDATBYTRNM
+     C                     END                             IF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  SRTRNF - Process Message reference by TRNF     *
+      *                                                               *
+      * Called by   :  Main process                                   *
+      * Calls       :  *PSSR - db error processing                    *
+      *****************************************************************
+      *
+     C           SRTRNF    BEGSR
+      *
+     C           REFKEY    SETGTMGOREFA2
+      *
+     C                     READPMGOREFA2                 50
+      *
+      ** While records exist for this transaction
+     C           *IN50     DOWEQ'0'
+     C           CHECK     ANDEQTRNFC
+      *
+      ** If sequence already 9 cannot increment - do db error s/r
+     C           TRNFN     IFEQ 9
+     C                     EXSR *PSSR
+      *
+      ** Increment sequence and update
+     C                     ELSE
+     C                     ADD  1         TRNFN
+     C                     UPDATBYTRNF
+     C                     END                             IF-ELSE
+      *
+     C                     READPMGOREFA2                 50
+      *
+     C                     END                             DOW
+      *
+      ** If not EOF, UPDAT to release this record
+     C           *IN50     IFEQ '0'
+     C                     UPDATBYTRNF
+     C                     END                             IF
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      * Subroutine  :  PRDTA  - Process Message data file             *
+      *                                                               *
+      * Called by   :  SRTRNO                                         *
+      * Calls       :  *PSSR - db error processing                    *
+      * Parameters  :  OLDTRN, NEWTRN both from SRTRNO                *
+      *****************************************************************
+      *
+     C           PRDTA     BEGSR
+      *
+      ** LOOP 1 - Change message data fields from old TRNO to new TRNO
+     C           *LOVAL    SETLLMGOMSGLX
+     C                     READ MGOMSGLX                 51
+      *
+     C           *IN51     DOWEQ'0'
+      *
+      ** Scan for data relating to this transaction reference
+     C           OLDTRN    SCAN MFLD      P       30     60
+      *
+      ** If found, change OLDTRN to NEWTRN and update
+     C           *IN60     IFEQ '1'
+     C                     MOVEAMFLD      DTAA
+     C                     MOVEANEWTRN    DTAA,P
+     C                     MOVEADTAA      MFLD
+     C                     UPDATBYMFLD
+     C                     END                             IF
+      *
+     C                     READ MGOMSGLX                 51
+      *
+     C                     END                             DOW
+      *
+      ** LOOP 2 - Change TRNO field on message file from old TRNO to
+      ** new TRNO
+     C           OLDTRN    CHAINMGOMSGPD             51
+      *
+     C           *IN51     DOWEQ'0'
+      *
+     C                     MOVE NEWTRN    TRNO
+     C                     UPDATMGOMSGD0
+      *
+     C           OLDTRN    READEMGOMSGPD                 51
+      *
+     C                     END                             DOW
+      *                                                                   183583
+      ** LOOP 3 - Change TRNO field on MGOEXTPD file from old TRNO to     183583
+      ** new TRNO                                                         183583
+      *                                                                   183583
+     C           OLDTRN    CHAINMGOEXTPD             51                   183583
+     C           *IN51     DOWEQ'0'                                       183583
+     C                     MOVE NEWTRN    TRNO                            183583
+     C                     UPDATMGOEXTD0                                  183583
+     C           OLDTRN    READEMGOEXTPD                 51               183583
+     C                     ENDDO                                          183583
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      * Subroutine  :  *PSSR - error handling                         *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     MOVE 'E'       @RTRN
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR

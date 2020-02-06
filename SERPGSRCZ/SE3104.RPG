@@ -1,0 +1,1395 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE EXTEL automatic prices update')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE3104  -  Automatic Prices Update                           *
+     F*                                                               *
+     F*  Function: The prices which EXTEL supply for a Security may   *
+     F*            take one of two forms.                             *
+     F*            - A spread consisting of Bid and Offer prices      *
+     F*            - A single price which may be one of a variety of  *
+     F*              price types depending on source.                 *
+     F*            In the case of a spread being provided, a Mid-     *
+     F*            market price will be calculated and used to        *
+     F*            update the security.                               *
+     F*            The price will be validated according to standard  *
+     F*            Midas technique.  In addition upper and lower limit*
+     F*            boundary and permissible percentage change         *
+     F*            validation as defined on securities maintenance    *
+     F*            will be performed.                                 *
+     F*                                                               *
+     F*  Called by: SEC3104 - EXTEL Daily Changes Update Control      *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSE075             Date 17Nov05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS006             Date 21Jan03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 01Jul02               *
+      *                 CSD010             Date 03May02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 052254             Date 11JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E34034             DATE 07JAN92               *
+     F*                 S01117             DATE 10JUN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+      *           (Recompile)                                         *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *  CSD010 - Collateralised Lending (Securities and FX Pricing)  *
+      *           (Recompile)                                         *
+     F*  CSD006 - Market Data Feed (Recompiled)                       *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E34034 - Recompiled over changed printer file                *
+     F*  S01117 - Multibranching.                                     *
+     F*                                                               *
+     F*****************************************************************
+     FTABTB10 IF  E                    DISK
+     F**
+     FMIPRC   IF  E                    DISK
+     F**
+     FSECTY   IF  E           K        DISK
+     F                                              KINFDS SECDS
+     F                                              KINFSR SECSR
+     F**
+     FEXCCYD  IF  E           K        DISK
+     F**
+     FTABTG10 IF  E                    DISK
+     F**
+     FPRICEA  UF  E                    DISK
+     F                                              KINFDS PRADS
+     F                                              KINFSR PRASR
+     F**
+     FPRICED  UF  E           K        DISK         KCOMIT       A
+     F                                              KINFDS PRDDS
+     F                                              KINFSR PRDSR
+     F**
+     FEXPRCD  O   E                    DISK
+     F                                              KINFDS EXDDS
+     F                                              KINFSR EXDSR
+     F**
+     FEXPRCZ  UF  E                    DISK
+     F                                              KINFDS EXZDS
+     F                                              KINFSR EXZSR
+     F**
+     FSE3104AUO   E                    PRINTER
+     F                                              KINFSR *PSSR
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   82 - ERROR ON UPDATE OF PF/PRICEA & D                       *
+     F*   83 - SECURITY NOT ON PF/PRICED                              *
+     F*   84 - SECURITY NOT ON LF/SECTY                               *
+     F*   86 - END OF FILE IN JLF/MIPRC                               *
+     F*   87 - DATABASE ERROR IN REPORT SE3104AU                      *
+     F*   88 - DATE FORMAT IS MMDDYY                                  *
+     F*   89 - FILE ERROR                                             *
+     F*90-99 - SUBROUTINES                                            *
+     F*U7-U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   ICDR1  - Access TABTB10 for ICD 1                           *
+     F*   CONVP  - Convert EXTEL prices to numeric amounts            *
+     F*   EX0001 - Convert EXTEL prices calculation                   *
+     F*   MIDPR  - Calc average of prices                             *
+     F*   VALDP  - Validate the price                                 *
+     F*   ZTNLU1 - To obtain next available transacton no.            *
+     F*   PRCEX  - If price already exists on PF/PRICED               *
+     F*   NEWPR  - If price does not exist on PF/PRICED               *
+     F*   OEXPR  - Output to PF/EXPRCD & PF/EXPRCZ                    *
+     F*   UPDERR - Update error of PF/PRICEA & PF/PRICED              *
+     F*   SECSR  - File Error Handling for SECTY                      *
+     F*   PRASR  - File Error Handling for PRICEA                     *
+     F*   PRDSR  - File Error Handling for PRICED                     *
+     F*   EXDSR  - File Error Handling for EXPRCD                     *
+     F*   EXZSR  - File Error Handling for EXPRCZ                     *
+     F*   *PSSR  - Program Exception/Error Handling                   *
+     F*   DBERR  - Database Error Handling                            *
+     F*                                                               *
+     F*****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E                    ERR        19  4
+     E**      Error codes for output to PF/EXPRCD
+     E                    NARR    1   2 35
+     E**      Narratives for output to prices files
+     E                    STAMP   1   1 26                                                    CPK015
+      ** Array containing dummy timestamp                                                     CPK015
+     E                    ZUR       150  3   ZEC     1 0
+     E**      MIDAS currencies and decimal places
+     E                    ZXVAL       8  1
+     E**      EXTEL format values
+     E                    ZA          8  1
+     E                    ZB          8  1
+     E**      Work arrays
+     E                    XCY       150  3 0
+     E**      EXTEL currency codes
+     E                    XDT       150  8
+     E**      Data from PF/EXCCYD
+     E**
+      /EJECT
+     I*LDA******* UDS                            256                      S01117
+     ILDA         DS                            256                       S01117
+     I**     Local Data Area
+     I**
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I**
+     IDNATN       DS                              5
+     I**
+     I**     Data Structure for next available transaction number
+     I**
+     I                                        1   50FNATN
+     ICMTTXT      DS
+     I**
+     I**     Data Structure set up of commitment text
+     I**
+     I                                        1   50NATN
+     I                                        6   7 MDID
+     I                                        8  15 PGMN
+     I                                       16  18 WSIDX
+     I                                       19  240MTIME
+     I                                       25  25 ACTCDX
+     I                                       26  35 USRIDX
+     I                                       51 121 CMTDET
+     I**
+     ISECDS       DS                            366
+     I**      File information data structure for SECTY
+     I**
+     I                                     *STATUS  SECSTS
+     I**
+     IPRADS       DS                            366
+     I**      File information data structure for PRICEA
+     I**
+     I                                     *STATUS  PRASTS
+     I**
+     IPRDDS       DS                            366
+     I**      File information data structure for PRICED
+     I**
+     I                                     *STATUS  PRDSTS
+     I**
+     IEXDDS       DS                            366
+     I**      File information data structure for EXPRCD
+     I**
+     I                                     *STATUS  EXDSTS
+     I**
+     IEXZDS       DS                            366
+     I**      File information data structure for EXPRCZ
+     I**
+     I                                     *STATUS  EXZSTS
+     IEPFDS       DS
+     I**      File information data structure used by error processing
+     I**
+     I                                        1 256 EPFDS1
+     I                                      257 366 EPFDS2
+     IEPPDS      SDS
+     I**      Program status data structure used by error processing
+     I**
+     I                                        1  10 EPPP
+     I                                       81  90 EPPPL
+     I                                        1 253 EPPDS1
+     I                                      254 429 EPPDS2
+     I**
+     I                                     *PROGRAM #PGM
+     I                                      201 208 #FILE
+     I                                      244 253 WSID
+     I                                      254 263 USRID
+     IFMT         DS
+     I**      Data Structure for format values
+     I**
+     I                                        1   8 ZA
+     I                                        1   8 ZAA
+     I                                        9  16 ZB
+     I                                        9  16 ZBA
+     I**
+     IXDATA       DS                              8
+     I**      Data Structure for data from EXCCY
+     I**
+     I                                        1   3 CCY
+     I                                        4   40XINC
+     I                                        5   50XUNC
+     I                                        6   60XDCC
+     I                                        7   70XNMC
+     I                                        8   80XDNC
+     I**
+     IDETCMT      DS                             66
+     I**      Data Structure for details for commitment text from MIPRC
+     I**
+     I                                    P   1   40F1SCP
+     I                                        5   6 F1RCIP
+     I                                    P   7  120F1P
+     I                                       13  13 F2P
+     I                                       14  14 F11P
+     I                                       15  15 F3P
+     I                                    P  16  210F4P
+     I                                    P  22  270F5P
+     I                                       28  28 F6P
+     I                                       29  29 F7P
+     I                                       30  30 F8P
+     I                                       31  31 F9P
+     I                                    P  32  330F10P
+     I                                       34  34 RECI
+     I                                       35  44 SESN
+     I                                       45  45 EXAP
+     I                                    P  46  538UPBD
+     I                                    P  54  618LPBD
+     I                                    P  62  666PMOV
+     I*
+     ICPYR@#      DS
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /EJECT
+     C*****************************************************************
+     C**      Set Up LDA
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL#PGM      DBPGM
+     C                     OUT  LDA                                       S01117
+     C**
+     C**      Prepare COMIT text
+     C**
+     C                     MOVEL#PGM      MDID
+     C                     MOVEL#PGM      PGMN
+     C                     MOVELWSID      WSIDX
+     C                     MOVELUSRID     USRIDX
+     C                     TIME           MTIME
+     C**
+     C**      Set Up Fields on PF/EXPRCZ
+     C**
+     C           1         CHAINEXPRCZF              89
+     C**
+     C**     DB Error process.
+     C**
+     C           *IN89     IFEQ '1'                        B1
+     C***********          MOVE '16'      #BASE            *************  S01117
+     C                     Z-ADD16        #BASE            *************  S01117
+     C                     MOVEL'EXPRC'   #FILE            * DBERR  16 *
+     C                     MOVEL'Z'       #KEY             *************
+     C**
+     C                     EXSR DBERR                      *1
+     C**
+     C                     END                             E1
+     C**
+     C                     MOVE 'Z'       RECI
+     C                     Z-ADD0         NORE
+     C                     Z-ADD0         NORR
+     C                     Z-ADD0         NORA
+     C**
+     C                     UPDATEXPRCZF                89
+     C**
+     C**     Error process.
+     C**
+     C           *IN89     IFEQ '1'                        *************
+     C                     EXSR EXZSR                      * F.ERR  15 *
+     C                     END                             *************
+     C**
+     C**      Set Up Number of records count fields
+     C**
+     C                     Z-ADD0         NOREJ   50
+     C                     Z-ADD0         NOACC   50
+     C                     Z-ADD0         NOREC   50
+     C**
+     C**      Set Up Key list for chain to PF/PRICED
+     C**
+     C           PRCKEY    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           PTYP
+     C**
+     C**     GET INSTALLATION CONTROL DATA RECORD 1
+     C**
+     C                     EXSR ICDR1
+     C**
+     C**     DB Error process.
+     C**
+     C           *IN89     IFEQ '1'                        B1
+     C***********          MOVE '01'      #BASE            *************  S01117
+     C                     Z-ADD1         #BASE            *************  S01117
+     C                     MOVEL'TABLE'   #FILE            * DBERR  01 *
+     C                     MOVEL'TABTB10' #KEY             *************
+     C**
+     C                     EXSR DBERR                      *1
+     C**
+     C                     END                             E1
+     C*
+     C**   DETAIL PROCESSING - for each record on JLF/MIPRC.
+     C*
+     C           *IN86     DOUEQ'1'                        B1
+     C**
+     C                     READ MIPRCF                 8986*1
+     C*
+     C**   DB Error process.
+     C*
+     C           *IN86     IFEQ '1'                        B*2
+     C           NOREC     ANDEQ0                          B*2
+     C           *IN89     OREQ '1'                        B*2
+     C***********          MOVE '02'      #BASE            *************  S01117
+     C                     Z-ADD2         #BASE            *************  S01117
+     C                     MOVEL'MIPRC'   #FILE            * DBERR  02 *
+     C                     MOVEL'1'       #KEY             *************
+     C**
+     C                     EXSR DBERR                      **2
+     C**
+     C                     END                             E*2
+     C**
+     C                     ADD  1         NOREC            *1
+     C**
+     C**     Set action code for commitment text.
+     C**
+     C                     MOVE 'I'       ACTCDX           *1
+     C**
+     C**     If end of file drop to end.
+     C**
+     C           *IN86     IFEQ '0'                        B*2
+     C**
+     C**     Convert the BID & OFFER prices (from 11A to 15,8 & 13,0)
+     C**
+     C                     EXSR CONVP                      **2
+     C**
+     C**     Calculate the MID PRICE of the bid & offer prices
+     C**
+     C                     EXSR MIDPR                      **2
+     C**
+     C**     Validate the PRICE
+     C**
+     C                     EXSR VALDP                      **2
+     C**
+     C**     Obtain the next available transaction number
+     C**
+     C                     EXSR ZTNLU1                     **2
+     C**
+     C**     Check if the PRICE exists on PF/PRICED
+     C**
+     C                     MOVE 'V '      PTYP    2        **2
+     C           PRCKEY    CHAINPRICEDF              8389  **2
+     C**
+     C           *IN89     IFEQ '1'                        *************
+     C                     EXSR PRDSR                      * F.ERR  14 *
+     C                     END                             *************
+     C**
+     C**     Execute a subroutine depending on whether PRICE exists
+     C**
+     C           *IN83     IFEQ '0'                        B*3
+     C                     EXSR PRCEX                      **3
+     C                     ELSE                            X*3
+     C                     EXSR NEWPR                      **3
+     C                     END                             E*3
+     C**
+     C**     Output to the EXPRC files
+     C**
+     C                     EXSR OEXPR                      **2
+     C**
+     C                     END                             E*2
+     C**
+     C**     Comit the details to journal.
+     C**
+     C                     MOVELDETCMT    CMTDET           *1
+     C           CMTTXT    COMIT                           *1
+     C**
+     C                     END                             E1
+     C**
+     C**     Write the Audit Report
+     C**
+     C                     WRITESE3104A1               87
+     C  N87                WRITESE3104A2               87
+     C**
+     C           *IN87     IFEQ '1'                        B1
+     C***********          MOVE '13'      #BASE            *************  S01117
+     C                     Z-ADD13        #BASE            *************  S01117
+     C                     MOVEL'PRTF/'   #FILE            * DBERR  13 *
+     C                     MOVEL'SE3104AU'#KEY             *************
+     C**
+     C                     EXSR DBERR                      *1
+     C**
+     C                     END                             E1
+     C**
+     C**
+     C                     SETON                     LR
+     C                     RETRN
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ICDR1 - ACCESS TABTB10                                    *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ICDR1     BEGSR
+     C**
+     C           1         CHAINTABTB10              89
+     C           *IN89     IFEQ '0'                        B1
+     C           RECI      ANDEQ'D'                        B1
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C**
+     C           DATF      IFEQ 'M'                        B*2
+     C                     MOVE '1'       *IN88            **2
+     C                     END                             E*2
+     C**
+     C                     ELSE                            X1
+     C                     MOVE '1'       *IN89            *1
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    CONVP - CONVERT EXTEL PRICES TO NUMERIC AMOUNTS           *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        EX0001                                      *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           CONVP     BEGSR
+     C**
+     C**     Convert the BID & OFFER prices (from 11A to 15,8 & 13,0)
+     C**
+     C                     Z-ADD0         BNMAMT 158
+     C                     Z-ADD0         BMDAMT 130
+     C                     Z-ADD0         ONMAMT 158
+     C                     Z-ADD0         OMDAMT 130
+     C**
+     C**     Convert the BID/SINGLE price if on file
+     C**
+     C           F4P       IFNE 0                          B1
+     C                     MOVE *BLANKS   ZEXERR  3        *1
+     C                     Z-ADD0         ZNMAMT 158       *1
+     C                     Z-ADD0         ZMDAMT 130       *1
+     C                     MOVE F4P       ZEXAMT 11        *1
+     C**
+     C                     EXSR EX0001                     *1
+     C**
+     C**     Output dberr if error returned
+     C**
+     C           ZEXERR    IFNE *BLANKS                    B*2
+     C***********          MOVE '03'      #BASE            *************  S01117
+     C                     Z-ADD3         #BASE            *************  S01117
+     C                     MOVEL'PGM/ '   #FILE            * DBERR  03 *
+     C                     MOVEL'EX0001/' WKEY   10        *************
+     C                     MOVE ZEXERR    WKEY             **2
+     C                     MOVELWKEY      #KEY             **2
+     C**
+     C                     EXSR DBERR                      **2
+     C**
+     C                     END                             E*2
+     C**
+     C**     Store amounts returned
+     C**
+     C                     Z-ADDZNMAMT    BNMAMT           *1
+     C                     Z-ADDZMDAMT    BMDAMT           *1
+     C**
+     C                     END                             E1
+     C**
+     C**     Convert the OFFER price if on file
+     C**
+     C           F5P       IFNE 0                          B1
+     C                     MOVE *BLANKS   ZEXERR           *1
+     C                     Z-ADD0         ZNMAMT           *1
+     C                     Z-ADD0         ZMDAMT           *1
+     C                     MOVE F5P       ZEXAMT           *1
+     C**
+     C                     EXSR EX0001                     *1
+     C**
+     C**     Output dberr if error returned
+     C**
+     C           ZEXERR    IFNE *BLANKS                    B*2
+     C***********          MOVE '04'      #BASE            *************  S01117
+     C                     Z-ADD4         #BASE            *************  S01117
+     C                     MOVEL'PGM/ '   #FILE            * DBERR  04 *
+     C                     MOVEL'EX0001/' WKEY             *************
+     C                     MOVE ZEXERR    WKEY             **2
+     C                     MOVELWKEY      #KEY             **2
+     C**
+     C                     EXSR DBERR                      **2
+     C**
+     C                     END                             E*2
+     C**
+     C**     Store amounts returned
+     C**
+     C                     Z-ADDZNMAMT    ONMAMT           *1
+     C                     Z-ADDZMDAMT    OMDAMT           *1
+     C**
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    EX0001 - CONVERT EXTEL PRICES TO NUMERIC AMOUNTS          *
+     C**             CALCULATION                                      *
+     C**                                                              *
+     C**    CALLED FROM:  CONVP                                       *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           EX0001    BEGSR
+     C**
+     C**      Set up Midas currencies array
+     C**
+     C                     Z-ADD0         ZC      30
+     C**
+     C           *IN90     DOUEQ'1'                        B1
+     C                     ADD  1         ZC
+     C                     READ TABTG10                  90
+     C           *IN90     IFEQ '0'                        B2
+     C           RECI      ANDEQ'D'
+     C                     MOVE CCY       ZUR,ZC
+     C                     Z-ADDCDP       ZEC,ZC
+     C                     END                             E2
+     C                     END                             E1
+     C**
+     C                     MOVELZEXAMT    ZXCCY   30
+     C                     MOVE ZEXAMT    ZXAMT   8
+     C**
+     C**    Lokup EXTEL currencies array. If not there access file
+     C**    and place data in array.
+     C**
+     C                     Z-ADD1         ZCY     30
+     C           ZXCCY     LOKUPXCY,ZCY                  95
+     C**
+     C**      If not found access the EXTEL currencies file
+     C**
+     C           *IN95     IFEQ '0'                        B1
+     C           ZXCCY     CHAINEXCCYD               91    *1
+     C**
+     C**      Database error if not found
+     C**
+     C           *IN91     IFEQ '1'                        B*2
+     C           RECI      ORNE 'D'                        **2
+     C                     MOVE '001'     ZEXERR  3        **2
+     C                     GOTO ZENDSR                     **2
+     C                     END                             E*2
+     C**
+     C**      Place data from EXCCY into arrays XCY & XDT
+     C**
+     C                     ADD  1         ZD      30       *1
+     C                     MOVE EXCN      XCY,ZD           *1
+     C                     MOVE XDATA     XDT,ZD           *1
+     C**
+     C                     ELSE                            X1
+     C**
+     C**      If found move data from XDT into data structure XDATA
+     C**
+     C                     MOVEAXDT,ZCY   XDATA            *1
+     C**
+     C                     END                             E1
+     C**
+     C**      Convert value into a numeric amount(15,8)
+     C**
+     C                     MOVEA*BLANK    ZA
+     C                     MOVEA*BLANK    ZB
+     C                     Z-ADD*ZERO     ZNMAMT
+     C                     Z-ADD*ZERO     ZMDAMT
+     C**
+     C**   If numerators and denominators present convert to decimals
+     C**
+     C           XNMC      IFNE 0                          B1
+     C           XDNC      ANDNE0
+     C                     MOVEAZXAMT     ZXVAL
+     C                     Z-ADD8         ZX      10
+     C                     Z-ADD8         ZW      10
+     C**
+     C**      Denominator - work field ZA
+     C**
+     C                     DO   XDNC                       B2
+     C                     MOVE ZXVAL,ZX  ZA,ZW
+     C                     SUB  1         ZX
+     C                     SUB  1         ZW
+     C                     END                             E2
+     C**
+     C                     Z-ADD8         ZW      10
+     C**
+     C**      Numerator - work field ZB
+     C**
+     C                     DO   XNMC                       B2
+     C                     MOVE ZXVAL,ZX  ZB,ZW
+     C                     SUB  1         ZX
+     C                     SUB  1         ZW
+     C                     END                             E2
+     C**
+     C                     MOVE ZAA       ZAN     80
+     C                     MOVE ZBA       ZBN     80
+     C**
+     C**      Both numerator and denominator must have a value
+     C**      or both be zero
+     C**
+     C           ZAN       IFNE 0
+     C           ZBN       ANDEQ0
+     C           ZBN       ORNE 0
+     C           ZAN       ANDEQ0                          B2
+     C                     MOVE '002'     ZEXERR
+     C                     GOTO ZENDSR
+     C                     END                             E2
+     C**
+     C**      Convert fractions to decimals and put in result field
+     C**
+     C           ZAN       IFNE 0                          B2
+     C           ZBN       ANDNE0
+     C           ZBN       DIV  ZAN       ZNMAMT 158
+     C                     END                             E2
+     C**
+     C                     Z-ADD0         ZAN
+     C                     Z-ADD0         ZBN
+     C**
+     C                     END                             E1
+     C**
+     C**      If format already decimal ie.decimal counter not zero
+     C**      correct value to decimal places
+     C**
+     C           XDCC      IFNE 0                          B1
+     C                     MOVELZXAMT     ZNMAMT
+     C**
+     C           XDCC      IFGT 1                          B2
+     C           XDCC      SUB  1         XDCC1   10
+     C                     DO   XDCC1                      B3
+     C           ZNMAMT    DIV  10        ZNMAMT
+     C                     END                             E3
+     C                     END                             E2
+     C**
+     C                     ELSE                            X1
+     C**
+     C**      Correct value for integer or undercurrency
+     C**
+     C                     MOVE 0         ZA
+     C                     MOVE 0         ZB
+     C                     Z-ADD1         ZW
+     C**
+     C**      Integer - work field ZA
+     C**
+     C           XINC      IFNE 0                          B2
+     C                     MOVEAZXAMT     ZXVAL
+     C                     Z-ADD1         ZX
+     C**
+     C                     DO   XINC                       B3
+     C                     MOVE ZXVAL,ZX  ZA,ZW
+     C                     ADD  1         ZX
+     C                     ADD  1         ZW
+     C                     END                             E3
+     C**
+     C                     MOVE ZAA       ZAN
+     C**
+     C**       Ensure only valid figures in field, delete blanks
+     C**       carried as trailing zeros
+     C**
+     C           8         SUB  XINC      ZPARE   10
+     C**
+     C                     DO   ZPARE
+     C           ZAN       DIV  10        ZAN
+     C                     END
+     C**
+     C                     ADD  ZAN       ZNMAMT
+     C**
+     C                     END                             E2
+     C**
+     C**       Undercurrency - work field ZB
+     C**
+     C           XUNC      IFNE 0                          B2
+     C                     MOVEAZXAMT     ZXVAL
+     C                     Z-ADD1         ZX
+     C**
+     C                     DO   XUNC                       B3
+     C                     MOVE ZXVAL,ZX  ZB,ZW
+     C                     ADD  1         ZX
+     C                     ADD  1         ZW
+     C                     END                             E3
+     C**
+     C                     MOVE ZBA       ZBN
+     C**
+     C**      Ensure only valid figures in field, delete blanks
+     C**      carried as trailing zeros
+     C**
+     C           8         SUB  XUNC      ZPARE
+     C**
+     C                     DO   ZPARE
+     C           ZBN       DIV  10        ZBN
+     C                     END
+     C**
+     C                     ADD  ZBN       ZNMAMT
+     C                     END                             E2
+     C                     END                             E1
+     C**
+     C**     If undercurrency used correct decimal places for MIDAS
+     C**
+     C           XUNC      IFNE 0                          B1
+     C           ZXCCY     CHAINEXCCYD               91
+     C**
+     C                     Z-ADD1         ZC
+     C           CCY       LOKUPZUR,ZC                   90
+     C**
+     C**      Error if no MIDAS currency
+     C**
+     C           *IN90     IFEQ '0'                        B2
+     C                     MOVE '003'     ZEXERR
+     C                     Z-ADD*ZERO     ZNMAMT
+     C                     GOTO ZENDSR
+     C                     END                             E2
+     C**
+     C                     DO   ZEC,ZC                     B2
+     C           ZNMAMT    DIV  10        ZNMAMT
+     C                     END                             E2
+     C**
+     C                     END                             E1
+     C**
+     C**      If MIDAS ccy then convert amount to MIDAS numeric format
+     C**
+     C           ZXCCY     CHAINEXCCYD               91
+     C                     Z-ADD1         ZC
+     C**
+     C                     SETOF                     90
+     C           CCY       IFNE *BLANK
+     C           CCY       LOKUPZUR,ZC                   90
+     C                     END
+     C           *IN90     IFEQ '0'                        B1
+     C                     Z-ADD0         ZMD
+     C                     ELSE                            X1
+     C                     Z-ADDZNMAMT    ZMD    152
+     C                     DO   ZEC,ZC                     B2
+     C           ZMD       MULT 10        ZMD
+     C                     END                             E2
+     C**
+     C                     Z-ADDZMD       ZMDAMT 130
+     C                     END                             E1
+     C**
+     C           ZENDSR    ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    MIDPR - CALCULATE MID PRICE OF BID & OFFER PRICES         *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           MIDPR     BEGSR
+     C**
+     C                     Z-ADD0         MIDPRC 158
+     C                     Z-ADD0         WK1PRC 158
+     C                     Z-ADD0         WK2PRC 158
+     C**
+     C           BNMAMT    IFNE 0                          B1
+     C           ONMAMT    ANDNE0                          B1
+     C           BNMAMT    DIV  2         WK1PRC           *1
+     C           ONMAMT    DIV  2         WK2PRC           *1
+     C           WK1PRC    ADD  WK2PRC    MIDPRC           *1
+     C**
+     C                     ELSE                            X1
+     C                     Z-ADDBNMAMT    MIDPRC           *1
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    VALDP - VALIDATE PRICE                                    *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           VALDP     BEGSR
+     C**
+     C**     Set up array index
+     C**
+     C                     Z-ADD0         X       20
+     C                     MOVE *BLANKS   PBWARN  1
+     C                     MOVE *BLANKS   PPWARN  1
+     C                     MOVE *BLANKS   ERR
+     C                     MOVE *BLANKS   STAT
+     C**
+     C**     Check if security from MIPRC exists on LF/SECTY
+     C**
+     C           SESN      CHAINSECTY                8489
+     C**
+     C           *IN89     IFEQ '1'                        *************
+     C                     EXSR SECSR                      * F.ERR  05 *
+     C                     END                             *************
+     C**
+     C**     If security not on LF/SECTY
+     C**
+     C           *IN84     IFEQ '1'                        B1
+     C                     ADD  1         X                *1
+     C                     MOVE '101 '    ERR,X            *1
+     C                     MOVE 'R'       STAT             *1
+     C                     END                             E1
+     C**
+     C**     If price not greater than zero
+     C**
+     C           MIDPRC    IFLE 0                          B1
+     C                     ADD  1         X                *1
+     C                     MOVE '102 '    ERR,X            *1
+     C                     MOVE 'R'       STAT             *1
+     C**
+     C                     ELSE                            X1
+     C**
+     C**     Check price is within boundaries if they exist
+     C**
+     C           LPBD      IFNE 0                          B*2
+     C           UPBD      ANDNE0                          B*2
+     C**
+     C           MIDPRC    IFLT LPBD                       B**3
+     C           MIDPRC    ORGT UPBD                       B**3
+     C                     ADD  1         X                ***3
+     C                     MOVE 'W01 '    ERR,X            ***3
+     C                     MOVE 'Y'       PBWARN           ***3
+     C                     MOVE 'R'       STAT             ***3
+     C                     END                             E**3
+     C**
+     C                     END                             E*2
+     C**
+     C**     If price not on LF/SECTY skip remaining validation
+     C**
+     C           *IN84     IFEQ '0'                        B*2
+     C**
+     C**     Check price is within % allowable movement if it exists
+     C**
+     C           PMOV      IFGT 0                          B**3
+     C**
+     C           MKPR      DIV  100       WRK1   138H      ***3
+     C           PMOV      MULT WRK1      PRCNT1 156       ***3
+     C           MKPR      ADD  PRCNT1    UPPERC 155       ***3
+     C           MKPR      SUB  PRCNT1    LWPERC 155       ***3
+     C**
+     C           MIDPRC    IFLT LWPERC                     B***4
+     C           MIDPRC    ORGT UPPERC                     B***4
+     C                     ADD  1         X                ****4
+     C                     MOVE 'W02 '    ERR,X            ****4
+     C                     MOVE 'Y'       PPWARN           ****4
+     C                     MOVE 'R'       STAT             ****4
+     C                     END                             E***4
+     C**
+     C                     END                             E**3
+     C**
+     C**     Check price is within 10% of current market price
+     C**      if boundaries or percentage have not been input
+     C**
+     C           LPBD      IFEQ 0                          B**3
+     C           UPBD      ANDEQ0                          B**3
+     C           PMOV      ANDEQ0                          B**3
+     C**
+     C           MKPR      DIV  10        PRCNT2 158H      ***3
+     C           MKPR      ADD  PRCNT2    UPPERC           ***3
+     C           MKPR      SUB  PRCNT2    LWPERC           ***3
+     C**
+     C           MIDPRC    IFLT LWPERC                     B***4
+     C           MIDPRC    ORGT UPPERC                     B***4
+     C                     ADD  1         X                ****4
+     C                     MOVE 'W03 '    ERR,X            ****4
+     C                     MOVE 'R'       STAT             ****4
+     C                     END                             E***4
+     C**
+     C                     END                             E**3
+     C**
+     C                     END                             E*2
+     C**
+     C                     END                             E1
+     C**
+     C**     Increment number of rejected (in error) & accepted records
+     C**
+     C           ERR,1     IFNE *BLANKS                    B1
+     C                     Z-ADD0         NOACC            *1
+     C                     Z-ADD1         NOREJ            *1
+     C                     ELSE                            X1
+     C                     Z-ADD1         NOACC            *1
+     C                     Z-ADD0         NOREJ            *1
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    ZTNLU1 - OBTAIN NEXT AVAILABLE TRANSACTION NUMBER         *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           ZTNLU1    BEGSR
+     C**
+     C**      Go to Data Area for next number
+     C**
+     C           *NAMVAR   DEFN MNATN     DNATN
+     C           *LOCK     IN   DNATN
+     C**
+     C                     MOVE FNATN     NATN    50
+     C                     MOVE FNATN     ZZWK05  50
+     C                     ADD  1         ZZWK05
+     C                     MOVE ZZWK05    FNATN
+     C**
+     C                     OUT  DNATN
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    PRCEX - IF PRICE ALREADY EXISTS ON PF/PRICED              *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        UPDERR                                      *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           PRCEX     BEGSR
+     C**
+     C**      Set up fields for Update of PRICED
+     C**
+     C                     MOVE RUND      PVDT
+     C                     Z-ADDMIDPRC    PPRC
+     C                     MOVELNARR,1    PNTV
+     C                     MOVE RUND      LCD
+     C                     MOVE 'A'       CHTP
+     C                     Z-ADDNATN      TNLU
+     C                     MOVE 'E'       PSRC
+     C                     MOVE PBWARN    PBWN
+     C                     MOVE PPWARN    PPWN
+     C**
+     C                     UPDATPRICEDF                82
+     C**
+     C           *IN82     IFEQ '1'                        B1
+     C                     EXSR UPDERR                     *1
+     C                     ELSE                            X1
+     C**
+     C           1         CHAINPRICEAF              89    *1
+     C**
+     C**     DB Error process.
+     C**
+     C           *IN89     IFEQ '1'                        B*2
+     C***********          MOVE '07'      #BASE            *************  S01117
+     C                     Z-ADD7         #BASE            *************  S01117
+     C                     MOVEL'PRICE'   #FILE            * DBERR  07 *
+     C                     MOVEL'A'       #KEY             *************
+     C**
+     C                     EXSR DBERR                      **2
+     C**
+     C                     END                             E*2
+     C**
+     C**     Increment no of amendments
+     C**
+     C                     ADD  1         SAMD
+     C**
+     C                     UPDATPRICEAF                82
+     C**
+     C           *IN82     IFEQ '1'                        B*2
+     C                     EXSR UPDERR                     **2
+     C                     END                             E*2
+     C**
+     C                     END                             E1
+     C**
+     C**     Set details for commitment text.
+     C**
+     C                     MOVE 'A'       ACTCDX
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    NEWPR - IF PRICE DOES NOT EXIST ON PF/PRICED              *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           NEWPR     BEGSR
+     C**
+     C**      Set up fields for Write to PRICED
+     C**
+     C                     MOVE 'D'       RECI
+     C                     MOVE SESN      PSSN
+     C                     MOVE 'V '      PPRT
+     C                     MOVE RUND      PVDT
+     C**********           Z-ADD0         PCNM                                                CSD027
+     C                     MOVE *BLANKS   PCNM                                                CSD027
+     C                     MOVE *BLANK    PMKT
+     C***********          Z-ADD0         PBRC                            S01117
+     C                     MOVE *BLANKS   PBRA                            S01117
+     C                     MOVE *BLANKS   PBOK
+     C                     Z-ADDMIDPRC    PPRC
+     C                     MOVELNARR,1    PNTV
+     C                     MOVE RUND      LCD
+     C                     MOVE 'A'       CHTP
+     C                     Z-ADDNATN      TNLU
+     C                     MOVE 'E'       PSRC
+     C                     MOVE PBWARN    PBWN
+     C                     MOVE PPWARN    PPWN
+     C**
+     C                     MOVEASTAMP,1   PRTMST           Default Timestamp                  CPK015
+     C                     WRITEPRICEDF                89
+     C**
+     C**     Error process.
+     C**
+     C           *IN89     IFEQ '1'                        *************
+     C                     EXSR PRDSR                      * F.ERR  08 *
+     C                     END                             *************
+     C**
+     C           1         CHAINPRICEAF              89
+     C**
+     C**     DB Error process.
+     C**
+     C           *IN89     IFEQ '1'                        B1
+     C***********          MOVE '09'      #BASE            *************  S01117
+     C                     Z-ADD9         #BASE            *************  S01117
+     C                     MOVEL'PRICE'   #FILE            * DBERR  09 *
+     C                     MOVEL'A'       #KEY             *************
+     C**
+     C                     EXSR DBERR                      *1
+     C**
+     C                     END                             E1
+     C**
+     C**     Increment no of inserts & recs on file
+     C**
+     C                     ADD  1         SINS             *1
+     C                     ADD  1         NORE             *1
+     C**
+     C                     UPDATPRICEAF                82
+     C**
+     C           *IN82     IFEQ '1'                        B1
+     C                     EXSR UPDERR                     *1
+     C                     END                             E1
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    OEXPR - OUTPUT TO PF/EXPRCD & PF/EXPRCZ                   *
+     C**                                                              *
+     C**    CALLED FROM:  MAIN                                        *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           OEXPR     BEGSR
+     C**
+     C**      Set up fields for Write to EXPRCD
+     C**
+     C                     MOVE 'D'       RECI
+     C                     Z-ADDMIDPRC    XPRC
+     C                     MOVEAERR       EXER
+     C           STAT      IFNE 'R'
+     C                     MOVE 'A'       STAT
+     C                     END
+     C**
+     C**     Only write narr if no error on update of MIDAS price files
+     C**
+     C           *IN82     IFEQ '0'
+     C                     MOVELNARR,1    PRNR
+     C                     END
+     C**
+     C**      If security not on PF/SECTYD replace field with blanks
+     C**
+     C           *IN84     IFEQ '1'                        B1
+     C                     MOVE *BLANKS   SFN1             *1
+     C                     END                             E1
+     C**
+     C                     WRITEEXPRCDF                89
+     C**
+     C**     Error process.
+     C**
+     C           *IN89     IFEQ '1'                        *************
+     C                     EXSR EXDSR                      * F.ERR  10 *
+     C                     END                             *************
+     C**
+     C           1         CHAINEXPRCZF              89
+     C**
+     C**     DB Error process.
+     C**
+     C           *IN89     IFEQ '1'                        B1
+     C***********          MOVE '11'      #BASE            *************  S01117
+     C                     Z-ADD11        #BASE            *************  S01117
+     C                     MOVEL'EXPRC'   #FILE            * DBERR  11 *
+     C                     MOVEL'Z'       #KEY             *************
+     C**
+     C                     EXSR DBERR                      *1
+     C**
+     C                     END                             E1
+     C**
+     C**     Increment no of records writen to file counts
+     C**
+     C                     ADD  1         NORE
+     C                     ADD  NOREJ     NORR
+     C                     ADD  NOACC     NORA
+     C**
+     C                     UPDATEXPRCZF                89
+     C**
+     C**     Error process.
+     C**
+     C           *IN89     IFEQ '1'                        *************
+     C                     EXSR EXZSR                      * F.ERR  12 *
+     C                     END                             *************
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C**                                                              *
+     C**    UPDERR - ERROR ON UPDATE OF PF/PRICEA & PF/PRICED         *
+     C**                                                              *
+     C**    CALLED FROM:  PRCEX                                       *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           UPDERR    BEGSR
+     C**
+     C                     ROLBK
+     C                     MOVE 'R'       STAT
+     C                     MOVELNARR,2    PRNR
+     C                     ADD  1         NOREJ
+     C                     SUB  1         NOACC
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    SECSR - FILE EXCEPTION/ERROR HANDLING FOR SECTY           *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        *PSSR                                       *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           SECSR     BEGSR                                       ***
+     C**
+     C                     MOVE SECDS     EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C                     EXSR *PSSR
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    PRASR - FILE EXCEPTION/ERROR HANDLING FOR PRICEA          *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        *PSSR                                       *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           PRASR     BEGSR                                       ***
+     C**
+     C                     MOVE PRADS     EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C                     EXSR *PSSR
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    PRDSR - FILE EXCEPTION/ERROR HANDLING FOR PRICED          *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        *PSSR                                       *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           PRDSR     BEGSR                                       ***
+     C**
+     C                     MOVE PRDDS     EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C                     EXSR *PSSR
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    EXDSR - FILE EXCEPTION/ERROR HANDLING FOR EXPRCD          *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        *PSSR                                       *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           EXDSR     BEGSR                                       ***
+     C**
+     C                     MOVE EXDDS     EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C                     EXSR *PSSR
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    EXZSR - FILE EXCEPTION/ERROR HANDLING FOR EXPRCZ          *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        *PSSR                                       *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           EXZSR     BEGSR                                       ***
+     C**
+     C                     MOVE EXZDS     EPFDS
+     C                     MOVE 'F'       EPFLAG  1
+     C                     EXSR *PSSR
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    *PSSR - PROGRAM EXCEPTION/ERROR HANDLING                  *
+     C**                                                              *
+     C**    CALLED FROM:  SECSR, PRASR, PRDSR, EXDSR, EXZSR           *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           *PSSR     BEGSR
+     C**
+     C           EPSW      IFNE '1'
+     C                     MOVE '1'       EPSW    1
+     C**
+     C***********EPFLAG    IFNE 'F'                                       S01117
+     C***********                                                         S01117
+     C***********          CALL 'SDC2505'                                 S01117
+     C***********          PARM           EPPDS1                          S01117
+     C***********          PARM           EPPDS2                          S01117
+     C***********                                                         S01117
+     C***********          ELSE                                           S01117
+     C***********                                                         S01117
+     C***********          CALL 'SDC2500'                                 S01117
+     C***********          PARM           EPFDS1                          S01117
+     C***********          PARM           EPFDS2                          S01117
+     C***********          PARM           EPPP                            S01117
+     C***********          PARM           EPPPL                           S01117
+     C***********                                                         S01117
+     C***********          END                                            S01117
+     C**
+     C                     DUMP
+     C                     END
+     C**
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C**                                                              *
+     C**    DBERR - DATABASE ERROR HANDLING                           *
+     C**                                                              *
+     C**    CALLED FROM:  anywhere                                    *
+     C**    CALLS:        returns.                                    *
+     C**                                                              *
+     C*****************************************************************
+     C**
+     C           DBERR     BEGSR
+     C**
+     C           WERROR    IFNE 'Y'
+     C                     MOVE 'Y'       WERROR  1
+     C***********          DUMP                                           S01117
+     C                     EXSR *PSSR                                     S01117
+     C        NU8          SETON                       U7U8
+     C**
+     C           *NAMVAR   DEFN           LDA
+     C           *LIKE     DEFN DBKEY     #KEY
+     C           *LIKE     DEFN DBASE     #BASE
+     C**
+     C                     MOVEL#PGM      DBPGM
+     C                     MOVEL#KEY      DBKEY
+     C                     MOVEL#FILE     DBFILE
+     C***********          MOVEL#BASE     DBASE                           S01117
+     C                     Z-ADD#BASE     DBASE                           S01117
+     C**
+     C**    Produce data base error report  (if dberr not in report)
+     C**
+     C           *IN87     IFEQ '0'
+     C                     WRITESE3104A1
+     C                     WRITESE3104A3
+     C                     END
+     C**
+     C                     END
+     C**
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C**
+     C*****************************************************************
+      /EJECT
+     C*
+**  CPY@
+(c) Finastra International Limited 2001
+**  NARR --  NARRATIVES FOR PRICES FILES
+EXTEL MKT PRICE
+ERROR ON OUTPUT
+** STAMP - Dummy timestamp                                                                    CPK015
+0001-01-01-00.00.00.000000                                                                    CPK015

@@ -1,0 +1,580 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Control audit list programs')                 *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas SD STANDING DATA                                       *
+     F*                                                               *
+     F*  SD0541X - CONTROL AUDIT REPORT LISTS                         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR988376           Date 11Feb13               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CFT045             Date 04Aug11               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG26779           Date 27Nov09               *
+      *                 CER045             Date 20Jul09               *
+      *                 CER054             Date 07Apr09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP204             Date 11Jan10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG4119            Date 03Sep04               *
+      *                 CGL013             Date 29Mar02               *
+      *                 CGL011             Date 05Dec02               *
+      *                 CGL018             Date 09Oct02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAS002             Date 14Jan02               *
+      *                 CAS001             Date 23Nov01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 183145             Date 29Dec00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 CSE023             Date 12Jul00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 135060             Date 12Oct98               *
+      *                 CDL002             Date 01Jul97               *
+     F*                 CRT003             Date 22Jul96               *
+     F*                 075253             Date 10Oct95               *
+     F*                094109               DATE 04OCT95              *
+     F*                CRT001               DATE 28FEB95              *
+     F*                S01421               DATE 19AUG93              *
+     F*                S01333               DATE 26MAR91              *
+     F*                LN1106               DATE 23JAN91              *
+     F*                LN1000               DATE 22NOV90              *
+     F*                LN0519               DATE 17AUG90              *
+     F*                BHF371               DATE 10AUG90              *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR988376 - Component SDC0602 ended in error (Child:AR988377) *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CFT045 - Outgoing Payments - Extended Settlement Instructions*
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG26779 - Change request on GSART table                     *
+      *  CER045 - German Features - Reporting Bundesbank              *
+      *  CER054 - German Features - Church Tax                        *
+      *  CAP204 - Retail Account Transfer                             *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  BUG4119 - Client limit report not generated. Applied fix     *
+      *            117774.                                            *
+      *  CGL013 - MT94x Messages Generation                           *
+      *  CGL011 - Collateral Processing for Midas                     *
+      *           Add reports SD0721P and SD0731P                     *
+      *  CGL018 - Risk Weighted Assets                                *
+      *  CAS002 - Hedge Strategy/Linkage                              *
+      *  CAS001 - Net Present Value (NPV) Accounting                  *
+      *  183145 - Audit report for TI Customer details should be      *
+      *           generated.                                          *
+      *  CSE023 - Treaty Withholding Tax                              *
+     F*  135060 - Apply preventative fix 116172 for database error 02 *
+     F*           in ZSFILE, file FCRSFXL0.                           *
+     F*  CDL002 - FX Netting                                          *
+     F*  CRT003 - Branch Automation Interface.                        *
+     F*           Include programs SD1200P, SD1210P & SD1220P for     *
+     F*           file SDBAICPD, SDBAIDPD & SDBAITPD respectively, in *
+     F*           the table, to produce the audit reports.            *
+     F*  075253 _ Include program SD2030P & SD2040P for file          *
+     F*           SDMTPYPD & SDMTAGPD respectively, in the table so   *
+     F*           that the audit reports will be produced.            *
+     F*  094109 - FILE SDBSPLPD HAS BEEN REPLACED BY SDREPCPD AND     *
+     F*           SDACRCPD AT R10, REMOVE PROCESSING FOR THIS FILE.   *
+     F*  CRT001 - RETAIL TELLER SYSTEM (SDBNCDPD SDFNCDPD SDTELDPD)   *
+     F*  S01421 - ADD CALL TO SD0360P IF ANY INS.AMDS.DELTS.          *
+     F*           BLI DEVELOPMENT STEP 1                              *
+     F*  S01333 - MIS RELEASE 10 - ADD NEW AUDIT REPORTS              *
+     F*  LN1106 - ENSURE THAT NO ERROR IS REPORTED IF AN ELEMENT      *
+     F*           IS NOT FOUND IN TABLE FOR A FILE WHERE THERE IS     *
+     F*           NO AUDIT REPORT                                     *
+     F*  LN1000 - REMOVE ELEMENTS FROM TABLE WITH NO REPORTS          *
+     F*  LN0519 - RECOMPILE OVER NEW REPORT LAYOUT                    *
+     F*  BHF371 - ICD AUDIT REPORT NAME HAS CHANGED FROM SD0560 TO    *
+     F*           SD9000P                                             *
+     F********************************************************************
+     F*  INDICATOR USAGE                                              *
+     F*                                                               *
+     F*  30    LOOK UP ON TABLE FAILED                                *
+     F*  40    CALL TO AUDIT REPORT PROGRAM FAILED                    *
+     F*  41    CALL TO SDC0310 FAILED                                 *
+     F*  50    CHAIN TO SDFCTLL0 FAILED                               *
+     F***51****CHAIN TO SDFCTLL1 FAILED                               *                      BUG4119
+     F*  51    CHAIN TO SDFCTLL2 FAILED                               *                      BUG4119
+     F*  52    CHAIN TO SDBANKL1 FAILED                               *
+     F*  60    OVERFLOW FOR REPORT                                    *
+     F*****************************************************************
+     FSD0541AUO   E             60     PRINTER
+     F***SDFCTLL1IF  E           K        DISK                                               BUG4119
+     FSDFCTLL2IF  E           K        DISK                                                  BUG4119
+     FSDFCTLL0UF  E           K        DISK
+     FSDBANKL1IF  E           K        DISK
+      /EJECT
+     E*ESTART
+     E******************* TABFIL  1  53 10   TABPGM 10                    LN1000
+     E******************* TABFIL  1  45 10   TABPGM 10              S01333LN1000
+     E******************* TABFIL  1  51 10   TABPGM 10              S01333S01421
+     E***********         TABFIL  1  52 10   TABPGM 10              S01421CRT001
+     E******************* TABFIL  1  55 10   TABPGM 10              CRT001094109
+     E********************TABFIL  1  54 10   TABPGM 10              094109075253
+     E********************TABFIL  1  56 10   TABPGM 10              075253CRT003
+     E********************TABFIL  1  59 10   TABPGM 10              CRT003CDL002
+     E***********         TABFIL  1  60 10   TABPGM 10             CDL002 CSE023
+     E**********          TABFIL  1  68 10   TABPGM 10             CSE023 183145
+     E**********          TABFIL  1  69 10   TABPGM 10                                 183145 CAS001
+     E**********          TABFIL  1  71 10   TABPGM 10                                 CAS001 CAS002
+     E**********          TABFIL  1  73 10   TABPGM 10                                 CAS002 CGL018
+     E**********          TABFIL  1  75 10   TABPGM 10                                 CGL018 CGL011
+     E**********          TABFIL  1  77 10   TABPGM 10                                 CGL011 CGL013
+     E**********          TABFIL  1  78 10   TABPGM 10                                 CGL013 CAP204
+     E**********          TABFIL  1  79 10   TABPGM 10                                 CAP204 CER054
+     E**********          TABFIL  1  81 10   TABPGM 10                                 CER054 CER045
+     E**********          TABFIL  1  86 10   TABPGM 10                               CER045 BUG26779
+     E**********          TABFIL  1  87 10   TABPGM 10                             BUG26779   CFT045
+     E                    TABFIL  1  88 10   TABPGM 10                                        CFT045
+     E********************MSG     1   4 23                                LN1106
+     E**********          MSG     1   3 23                                LN1106             BUG4119
+     E                    MSG     1   4 23                                                   BUG4119
+      ************************************************************
+     E* Description     : Copyright notice for inclusion in all programs  S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright array  S01230
+      ************************************************************        S01230
+      /EJECT
+     I*ISTART
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     IMESSAG      DS
+     I                                        1   5 TEXT
+     I                                        6  23 FILE
+     I*
+     I** LDA FOR ERRORS
+     I*
+     ILDA        UDS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE                 S01194
+      ************************************************************
+      /EJECT
+     C*CSTART
+     C*****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7
+     C                     PARM           SEQNO   5
+     C                     PARM           LEVEL   1
+     C                     PARM           ENTTY   3
+     C*****************************************************************
+     C* MAIN PROCESSING
+     C*****************************************************************
+     C*
+     C** DEFINE THE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C                     OUT  LDA
+     C*
+     C                     MOVEL'FILE'    TEXT
+     C*
+     C** OBTAIN THE BANK'S TITLE AND THE DATE
+     C*
+     C                     MOVEL'BANK'    BNKEY  10
+     C           BNKEY     CHAIN@BJREEF              52
+     C           *IN52     IFEQ '1'
+     C                     MOVE *BLANKS   FILE
+     C                     MOVEL'SDBANKL1'FILE
+     C                     MOVE *BLANKS   DBCAUS
+     C                     MOVE MESSAG    DBCAUS
+     C                     MOVEL'SDBANKL1'SAFILE  8
+     C                     Z-ADD1         SAASE   30
+     C                     MOVELBNKEY     SAKEY  29
+     C                     EXSR DBERR
+     C                     ELSE
+     C                     MOVE BJURPT    BANKT
+     C                     MOVE BJMRDT    DATEA
+     C                     END
+     C                     WRITETITLE
+     C*
+     C********** *LOVAL    SETLLSDFCTLL1               51                                    BUG4119
+     C           *LOVAL    SETLLSDFCTLL2               51                                    BUG4119
+     C           *IN51     IFEQ '1'
+     C**********           MOVE MSG,1     DBCAUS                                             BUG4119
+     C**********           MOVEL'SDFCTLL1'SAFILE                                             BUG4119
+     C                     MOVE MSG,4     DBCAUS                                             BUG4119
+     C                     MOVEL'SDFCTLL2'SAFILE                                             BUG4119
+     C                     Z-ADD1         SAASE
+     C                     MOVEL'*LOVAL'  SAKEY
+     C                     EXSR DBERR
+     C                     ELSE
+     C**********           READ SDFCTLL1                 51                                  BUG4119
+     C                     READ SDFCTLL2                 51                                  BUG4119
+     C           *IN51     DOWEQ'0'
+     C*
+     C** FOR EACH RECORD ON THE FILE CHECK TO SEE IF AN AUDIT
+     C** REPORT NEEDS TO BE PRODUCED
+     C*
+     C                     EXSR PROC
+     C**********           READ SDFCTLL1                 51                                  BUG4119
+     C                     READ SDFCTLL2                 51                                  BUG4119
+     C                     END
+     C                     END
+     C                     EXSR END
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE PROC                                              *
+     C*  CHECKS THE FILE CONTROLS TO DETERMINE WHETHER AN AUDIT REPORT*
+     C*  NEEDS TO BE PRODUCED                                         *
+     C*                                                               *
+     C*****************************************************************
+     C           PROC      BEGSR
+     C*
+     C** IF THERE HAVE BEEN ANY CHANGES TO THE FILE THEN AN AUDIT
+     C** REPORT MUST BE PRODUCED
+     C*
+     C           AHNOIN    IFNE 0
+     C           AHNOAM    ORNE 0
+     C           AHNODL    ORNE 0
+     C                     EXSR FREPT
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*
+     C*  SUBROUTINE FREPT
+     C*  FIND THE REPORT THAT NEEDS TO BE CALLED
+     C*
+     C*****************************************************************
+     C           FREPT     BEGSR
+     C/COPY WNCPYSRC,SDH00244
+     C           AHFLNM    LOKUPTABFIL    TABPGM         30
+     C           *IN30     IFEQ '0'
+     C*
+     C** ERROR OCCURRED WHILST LOOKING FOR AUDIT REPORT PROGRAM NAME
+     C*
+     C*********************MOVE MSG,4     DBCAUS                          LN1106
+     C*********************Z-ADD2         SAASE                           LN1106
+     C*********************EXSR DBERR                                     LN1106
+     C                     ELSE
+     C                     SETOF                     U7U8
+     C                     MOVE *BLANKS   PGM
+     C                     MOVELTABPGM    PGM
+     C                     CALL PGM                    40
+     C                     PARM *BLANKS   P0RTN
+     C                     PARM 'A'       AUREQ   1
+     C************         PARM           SEQNO                           135060
+     C                     PARM *BLANKS   SEQNO                           135060
+     C                     PARM           LEVEL
+     C                     PARM           ENTTY
+     C           *IN40     IFEQ '1'
+     C*
+     C** ERROR OCCURRED ON CALL TO AUDIT REPORT (DATABASE)
+     C*
+     C                     MOVE *BLANKS   SAFILE
+     C                     Z-ADD3         SAASE
+     C                     MOVE *BLANKS   SAKEY
+     C                     EXSR CALERR
+     C                     ELSE
+     C*
+     C** CHECK THE JOB SWITCHES
+     C*
+     C                     EXSR CHECK
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE CHECK                                             *
+     C*  CHECK THE JOB SWITCHES TO FIND OUT IF A DATABASE OR A FILE   *
+     C*  CONTROL ERROR HAS OCCURRED IN THE AUDIT REPORT               *
+     C*                                                               *
+     C*****************************************************************
+     C           CHECK     BEGSR
+     C                     MOVE *BLANKS   PGM
+     C                     MOVEL'SDC0310' PGM    10
+     C                     CALL PGM                    41
+     C                     PARM           U7STS   1
+     C                     PARM           U8STS   1
+     C           *IN41     IFEQ '1'
+     C*
+     C** CALL TO PROGRAM FAILED (DATABASE ERROR)
+     C*
+     C                     MOVE *BLANKS   SAFILE
+     C                     Z-ADD4         SAASE
+     C                     MOVE *BLANKS   SAKEY
+     C                     EXSR CALERR
+     C                     ELSE
+     C           U8STS     IFEQ '1'
+     C           U7STS     IFEQ '1'
+     C*
+     C** DATABASE ERROR OCCURRED
+     C*
+     C                     MOVE *BLANKS   FILE
+     C                     MOVELAHFLNM    FILE
+     C                     MOVE *BLANKS   DBCAUS
+     C                     MOVE MESSAG    DBCAUS
+     C                     MOVELAHFLNM    SAFILE
+     C                     Z-ADD5         SAASE
+     C                     MOVE *BLANKS   SAKEY
+     C                     EXSR DBERR
+     C                     ELSE
+     C*
+     C** FILE CONTROL ERROR OCCURRED
+     C*
+     C                     MOVE *BLANKS   SAFILE
+     C                     Z-ADD6         SAASE
+     C                     MOVE *BLANKS   SAKEY
+     C                     EXSR FCERR
+     C                     END
+     C                     ELSE
+     C                     EXSR RESET
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE RESET                                             *
+     C*  RESET INSERT, AMEND AND DELETE FIELDS FOR THE FILE CONTROLS  *
+     C*                                                               *
+     C*****************************************************************
+     C           RESET     BEGSR
+     C           AHFLNM    CHAINSDFCTLL0             50
+     C           *IN50     IFEQ '1'
+     C*
+     C** DATABASE ERROR
+     C*
+     C                     MOVE MSG,2     DBCAUS
+     C                     MOVEL'SDFCTLL0'SAFILE
+     C                     Z-ADD7         SAASE
+     C                     MOVELAHFLNM    SAKEY
+     C                     EXSR DBERR
+     C                     ELSE
+     C                     Z-ADD0         AHNOIN
+     C                     Z-ADD0         AHNOAM
+     C                     Z-ADD0         AHNODL
+     C                     UPDAT@AHREAU                50
+     C           *IN50     IFEQ '1'
+     C*
+     C** DATABASE ERROR
+     C*
+     C                     MOVE MSG,3     DBCAUS
+     C                     MOVEL'SDFCTLL0'SAFILE
+     C                     Z-ADD8         SAASE
+     C                     MOVELAHFLNM    SAKEY
+     C                     EXSR DBERR
+     C                     END
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE DBERR                                             *
+     C*  PROCESSING FOR A DATABASE ERROR                              *
+     C*                                                               *
+     C*****************************************************************
+     C           DBERR     BEGSR
+     C                     MOVE 'Y'       DBSTS   1
+     C                     WRITEDBERRF
+     C           *IN60     IFEQ '1'
+     C                     WRITETITLE
+     C                     SETOF                     60
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE CALERR                                            *
+     C*  PROCESSING FOR AN ERROR ON CALLING A PROGRAM                 *
+     C*                                                               *
+     C*****************************************************************
+     C           CALERR    BEGSR
+     C                     MOVE 'Y'       CALSTS  1
+     C                     WRITECALERRF
+     C           *IN60     IFEQ '1'
+     C                     WRITETITLE
+     C                     SETOF                     60
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE FCERR                                             *
+     C*  PROCESSING FOR A DATABASE ERROR                              *
+     C*                                                               *
+     C*****************************************************************
+     C           FCERR     BEGSR
+     C                     MOVE 'Y'       FCSTS   1
+     C                     MOVE *BLANKS   FCCAUS
+     C                     MOVELAHFLNM    FCCAUS
+     C                     WRITEFCERRF
+     C           *IN60     IFEQ '1'
+     C                     WRITETITLE
+     C                     SETOF                     60
+     C                     END
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE END                                               *
+     C*  TERMINATE THE PROGRAM                                        *
+     C*                                                               *
+     C*****************************************************************
+     C           END       BEGSR
+     C           DBSTS     IFEQ 'Y'
+     C           CALSTS    OREQ 'Y'
+     C           FCSTS     OREQ 'Y'
+     C                     EXSR ERROR
+     C                     ELSE
+     C                     WRITEFOOTER
+     C                     MOVE *BLANKS   P0RTN
+     C                     END
+     C                     WRITEENDF
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  SUBROUTINE ERROR                                             *
+     C*  SET UP LDA                                                   *
+     C*                                                               *
+     C*****************************************************************
+     C           ERROR     BEGSR
+     C           DBSTS     IFEQ 'Y'
+     C           CALSTS    OREQ 'Y'
+     C*
+     C** DATABASE ERROR
+     C*
+     C                     SETON                     U7U8
+     C                     MOVEL'*DBERR ' P0RTN
+     C                     ELSE
+     C*
+     C** FILE CONTROL ERROR
+     C*
+     C                     SETON                     U8
+     C                     MOVEL'*FCOOB ' P0RTN
+     C                     END
+     C*
+     C** SET UP LDA
+     C*
+     C           *LOCK     IN   LDA
+     C                     MOVE SAFILE    DBFILE
+     C                     MOVE SAKEY     DBKEY
+     C                     MOVE SAASE     DBASE
+     C                     MOVE 'SD0541X' DBPGM
+     C                     OUT  LDA
+     C                     ENDSR
+     C*****************************************************************
+     C/EJECT
+**   TABLE       ELEMENTS WITH NO REPORTS REMOVED                   S01333LN1000
+SDINDSPD  SD0100P          LOCAL INDUSTRY CODES
+SDICDRPD  SD9000P          INSTALATION CONTROL DATA
+SDACODPD  SD0030P          ACCOUNT CODES
+SDACOFPD  SD0200P          ACCOUNT OFFICERS
+SDALTNPD  SD0300P          ALTERNATIVE NAMES AND ADDRESSES
+SDBOOKPD  SD0310P          BOOK DETAILS
+SDBRCHPD  SD0060P          BRANCH CODES
+SDBROKPD  SD0070P          BROKER DETAILS
+SDBSRTPD  SD0170P          BASE RATES
+SDCCSYPD  SD0380P          CURRENCY CLEARING SYSTEM
+SDCNSTPD  SD0220P          COUNTER PARTY NOSTROS
+SDCOMPPD  SD0230P          COMPANY CODES
+SDCTRYPD  SD0180P          COUNTRY CODES
+SDCURRPD  SD0020P          CURRENCY CODES
+SDCUSTPD  SD0010P          CUSTOMER DETAILS
+SDDEPTPD  SD0120P          DEPT CODES
+SDDLNOPD  SD0110P          DEAL NUMBER RANGES
+SDDLSTPD  SD0250P          DEAL SUB-TYPES
+SDDOCMPD  SD0350P          DOCUMENT CODES
+SDEXSTPD  SD0400P          EXTENDED SETTLEMENTS
+SDFACTPD  SD0270P          FACILITY TYPES
+SDFEEPD   SD0320P          FEE CODES
+SDFOCSPD  SD0330P          FUTURES AND OPTIONS CLIENTS
+SDHOLPD   SD0160P          HOLIDAYS
+SDINSTPD  SD0090P          LOCAL INSTITUTION CODES
+SDLIMTPD  SD0140P          LIMITS
+SDLOANPD  SD0280P          LOAN TYPE/SUB-TYPES
+SDLOCNPD  SD0550P          LOCATION CODES
+SDMNDRPD  SD0500P          MANUAL DIARY TYPES
+SDNARRPD  SD0080P          NARRATIVE CODES
+SDNOSTPD  SD0150P          NOSTRO NUMBERS
+SDPRFMPD  SD0490P          PROFIT CENTRES
+SDPRFCPD  SD0480P          PROFIT CENTRES
+SDREGNPD  SD0190P          REGION CODES
+SDRETRPD  SD0130P          RETAIL TRANSACTION TYPES
+SDSECSPD  SD0340P          SECURITIES TRADING CLIENTS
+SDCLLMPD  SD0450P          CLIENT LIMITS
+SDCNLMPD  SD0470P          COUNTRY LIMITS
+SDRGLMPD  SD0460P          REGION LIMITS
+FCSOUTPD  FC0310P          STANDARD OUTPUT INSTRUCTIONS
+FCPREQPD  FC0210P          PERIODIC REQUESTS
+MAARCHPD  MA0320P          ARCHIVE IDENTIFIERS
+MARCOLPD  MA0330P          REPORTS FOR COLLATION
+FCMOUTPD  FC0220P          MANDATORY OUTPUT INSTRUCTIONS
+SDCRWCPD  SD1400P          CUSTOMER RISK WEIGHTING CODES                  S01333
+SDCGRPPD  SD1410P          CUSTOMER GROUPING CODES                        S01333
+SDCMRKPD  SD1420P          CUSTOMER MARKETING INFORMATION                 S01333
+SDREPCPD  SD1300P          BSPL CODES                                     S01333
+SDRPSTPD  SD1310P          BSPL SETS                                      S01333
+SDACRCPD  SD0580P          ACCOUNT CODES BY BSPL CODE                     S01333
+SDCFCDPD  SD0360P          CUSTOMER FEES DETAILS                          S01421
+SDBNCDPD  SD0590P          RETAIL TELLER SYSTEM BANK CODES                CRT001
+SDFNCDPD  SD0680P          RETAIL TELLER SYSTEM FUNCTION CODES            CRT001
+SDTELDPD  SD0690P          RETAIL TELLER SYSTEM TELLER IDENTIFIERS        CRT001
+SDMTAGPD  SD2040P          MESSAGE FIELD TAG DESCRIPTION                  075253
+SDMTPYPD  SD2030P          MESSAGE TYPE  DESCRIPTION                      075253
+SDBAICPD  SD1200P          CONFIGURATION DETAILS                          CRT003
+SDBAIDPD  SD1210P          AUTHORISE DEVICE DETAILS                       CRT003
+SDBAITPD  SD1220P          TRANSACTION TYPE DETAILS                       CRT003
+SDCPTTPD  SD0711P          COUNTERPARTY TRANSACTION TYPE DETAILS          CDL002
+SDWTCSPD  SD0372P          WITHHOLDING TAX CUSTOMER DETAILS               CSE023
+SDRPCDPD  SD0373P          RECIPIENT CODES DETAILS                        CSE023
+SDINCCPD  SD0374P          INCOME CODE DETAILS                            CSE023
+SDTXBSPD  SD0375P          TAX BASKET CODE DETAILS                        CSE023
+SDEXEMPD  SD0376P          EXEMPTION CODE DETAILS                         CSE023
+SDWHTTPD  SD0377P          WITHHOLDING TAX TREATY DETAILS                 CSE023
+SDBNFOPD  SD0378P          BENEFICIAL OWNER DETAILS                       CSE023
+SDINTCLPD SD0379P          INTERMEDIARY CLIENTS DETAILS                   CSE023
+SDTICSPD  SD0371P          TRADE INNOVATION CUSTOMER DETAILS              183145
+SDYLDCPD  SD0741P          YIELD CURVES DETAILS                                               CAS001
+SDYLDRPD  SD000742         YIELD RATES REPORT                                                 CAS001
+SDHGSTPD  SD000743P        HEDGE STRATEGY TABLES                                              CAS002
+ASHGLKPD  AS000001P        HEDGE LINKAGE AUDIT REPORT                                         CAS002
+GLNETGPD  GL001247         RWA NETTING GROUPS AUDIT                                  CGL018 AR988376
+SDCOTPPD  SD0721P          MIDAS SD COLLATERAL TYPES REPORT               CGL011
+SDCOLOPD  SD0731P          MIDAS SD COLLATERAL LOCATION CODES             CGL011
+SDNWRKPD  SD200103         NETWORK DESCRIPTION DETAILS                                        CGL013
+SDATSTPD  SD009830         ACCOUNT TRANSFER TYPE/SUB-TYPE                                     CAP204
+SDGESTPD  SD200201         FEDERAL STATE CODES                                                CER054
+SDRLAFPD  SD200202         RELIGIOUS AFFILIATION CODES                                        CER054
+SDBSCCPD  SD000830         BORROWER SECTOR CLASSIFICATION                                     CER045
+SDECACPD  SD000831         ECONOMIC ACTIVITY CODES                                            CER045
+SDBISTPD  SD000832         BORROWER SECTOR CLASSIFICATION/BISTA                               CER045
+SDBUCLPD  SD000833         BUSINESS CLASSIFICATION CLASS                                      CER045
+SDBUSUPD  SD000834         BUSINESS CLASSIFICATION SUB-CLASS                                  CER045
+SDBUTYPD  SD000835         BUSINESS CLASSIFICATION TYPE                                     BUG26779
+SDOPESPD  SD001247         OUTGOING PAYMENT EXT. SETT. INSTN. RPT.                            CFT045
+** MSG                                                                    LN1106
+CHAIN TO FILE SDFCTLL1
+CHAIN TO FILE SDFCTLL0
+UPDATE TO FILE SDFCTLL0
+CHAIN TO FILE SDFCTLL2                                                                       BUG4119
+** CPY@     : Copyright notice for inclusion in all programs
+(c) Finastra International Limited 2001

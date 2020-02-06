@@ -1,0 +1,1352 @@
+     A*****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas FT Cheques For collection maintenance')          *
+     A*****************************************************************
+     A*                                                               *
+     A*  Midas - FUNDS TRANSFER MODULE                            *
+     A*                                                               *
+     A*  DSPF/FT0070DF  -  CHEQUES FOR COLLECTION                     *
+     A*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     A*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR804457           Date 01Sep11               *
+      *                 CER049             Date 06Dec10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CDL049             Date 03Apr06               *
+      *                 BUG8992            Date 14Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CEU006             Date 08Apr98               *
+      *                 112563             Date 24Jan97               *
+     A*                 104633             DATE 16JUL96               *
+     A*                 CAC001             DATE 01FEB96               *
+     A*                 S01499             DATE 06JUN94               *
+     A*                 S01494             DATE 25MAY94               *
+     A*                 063188             DATE 23NOV93               *
+     A*                 058194             DATE 15JUL93               *
+     A*                 056823             DATE 17JUN93               *
+     A*                 050923             DATE 23APR93               *
+     A*                 044285             DATE 23APR93               *
+     A*                 S01414             DATE 30MAR93               *
+     A*                 E39162             DATE 18JUN92               *
+     A*                 E32543             DATE 21NOV91               *   E32543
+     A*                 E29970             DATE 01AUG91               *   E29970
+     A*                 S10284             DATE 18JUN91               *   E29970
+     A*                 E29891             DATE 18FEB91               *   E29891
+     A*                 S01117             DATE 18OCT90               *
+     A*                 S01253             DATE 17APR90               *
+     A*                 S01199             DATE 17/08/90              *
+     A*                                                               *
+     A*****************************************************************
+     A*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  AR804457 - Allow amend of Credit Value Date on Authorized    *
+      *             Transactions. (Child: AR804458)                   *
+      *  CER049 - Stamp Tax                                           *
+      *  CDL049 - Addition of a Reference Rate field                  *
+      *  BUG8992 - Available action codes not displayed               *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+     A*  CEU006 - EMU FT Payments and Settlement.                     *
+     A*  112563  -  Header and footer changes required for GUI        *
+     A*             Multilanguage support.                            *
+     A*  104633  -  GUI Amendments to DSPF with non-standard footers  *
+     A*  CAC001 - Profit Centre Accounting Development:               *
+     A*           If Analytical Accounting is installed and debit/    *
+     A*           credit currencies are different, F19 for Margin In- *
+     A*           formation will be enabled.                          *
+     A*  S01499  -  BLI VAT Processing.                               *
+     A*  S01494  -  BLI Funds Transfer Enhancements.                  *
+     A*  063188  -  Remove CHECK(FE) for Settle value date field.     *
+     A*  058194  -  Fix window processing for detail screen and       *
+     A*             add message file                                  *
+     A*  056823  -  Change processing for cheque credit details       *
+     A*             - allow rate to be entered                        *
+     A*  050923  -  Change help text to reference DC10                *
+     A*  044285  -  Change help text for R10                          *
+     A*  S01414  -  Book Code and Profit Centre Incorporation.        *
+     A*  E39162  -  CHANGE 'PRINT' TO 'PRINT(MPRINT)'.                *
+     A*  E32543  -  DATES VALIDATION FOR HOLIDAYS (EXTRA INDICATORS   *
+     A*             ADDED AS THESE ARE WARNINGS)                      *
+     A*  E29970  -  COMMAND 7 PROCESSING                              *
+     A*  E29891  -  STANDARDISATION DELETE = F10                      *
+     A*  S01117  -  RELEASE 10                                        *
+     A*  S10284  -  DRAFT PROCESSING                                  *
+     A*  S01253  -  RECOMPILED FOR MULTILANGUAGE SCREENS              *
+     A*  S01199  -  HELP SYSTEM.                                  *
+     A*                                                               *
+     A*****************************************************************
+     A                                      DSPSIZ(24 80 *DS3)
+     A                                      CHGINPDFT(HI)
+     A                                      INDARA
+     A                                      PRINT(*LIBL/MPRINT)
+     A*                                                    /*S01199*/
+     A          R FT0070F1                  TEXT('(c) Finastra International +
+     A                                      Limited +
+     A                                      2001')
+     A                                      CF03(03)
+     A                                      CF12(12)
+     A  70                                  CF07(07)
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A                                      PUTOVR
+     A                                      BLINK
+     A*
+     A*
+     A*                                                    /*S01199*/
+     A*                                                    /*S01117*/
+     A*                                                    /*S01117*/
+     A*
+     A*                                                    /*S01199*/
+     A*
+     A*                                                    /S01117/
+     A************                      1 16'CHEQUES FOR COLLECTION MAINTENANCE'
+     A************                          DSPATR(HI UL)
+     A************                      1 58TIME
+     A************                      1 67'WID'
+     A************WID           10      1 71
+     A            USRID         10A  O  1  2
+     A**                                             Begin /112563/
+     A***********                       1 13'FT0070'
+     A                                  1 13'FT0070A'
+     A**                                             End   /112563/
+     A                                  1 26'CHEQUES FOR COLLECTION MAINTENANCE'
+     A                                      DSPATR(HI UL)
+     A            SRUNA          7A  O  1 72
+     A            WID           10A  O  2  2
+     A                                  2 71TIME
+     A*                                                    /S01117/
+     A*
+     A                                  3  6'Enter action code'
+     A            SACTD          1A  B  3 25
+     A  40                                  DSPATR(RI PC)
+     A*                                                    /S01117/
+     A****N71******                         DSPATR(UL)
+     A**71*********                         DSPATR(PR)
+     A N70N71                               DSPATR(UL)
+     A  71
+     AO 70                                  DSPATR(PR)
+     A*                                                    /S01117/
+     A    N40                               DSPATR(HI)
+     A                                      OVRDTA
+     A                                  3 29'Payment reference'
+     A            SPREF         15A  B  3 48
+     A  41                                  DSPATR(RI PC)
+     A*                                                    /S01117/
+     A****N71*******                        DSPATR(UL)
+     A**71**********                        DSPATR(PR)
+     A N70N71                               DSPATR(UL)
+     A  71
+     AO 70                                  DSPATR(PR)
+     A*                                                    /S01117/
+     A    N41                               DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+     A  20                              4  6'Booking branch'
+     A  70                                  DSPATR(ND)
+     A                                      OVRATR
+     A  20        SBKGBR         3A  B  4 21
+     A  37                                  DSPATR(RI PC)
+     A    N71                               DSPATR(UL)
+     A  70
+     AO 71                                  DSPATR(PR)
+     A    N37                               DSPATR(HI)
+     A  70                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+     A                                  4 29'Cheque sequence'
+     A            SCQSQ          2A  B  4 48
+     A  42                                  DSPATR(RI PC)
+     A    N71                               DSPATR(UL)
+     A  71                                  DSPATR(PR)
+     A    N42                               DSPATR(HI)
+     A                                      OVRDTA
+     A                                      CHECK(FE)
+      **Start of change BUG8992
+     A**********                       20  2'Payment reference assigned +
+     A**********                             to previous insert'
+     A**77******                            DSPATR(ND)
+     A**********                            DSPATR(HI)
+     A**********                            OVRATR
+     A**********  IPREF         15A  O 20 51
+     A**77******                            DSPATR(ND)
+     A**********                            DSPATR(HI)
+     A**********                            OVRDTA
+     A**********  ERRS1         76     21  2
+     A*N89******                            DSPATR(ND)
+     A**89******                            DSPATR(RI)
+     A**********                            OVRDTA
+     A**********  ERRS2         76     22  2
+     A*N89******                            DSPATR(ND)
+     A**89******                            DSPATR(RI)
+     A**********                            OVRDTA
+     A                                 19  2'Payment reference assigned +
+     A                                       to previous insert'
+     A  77                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRATR
+     A            IPREF         15A  O 19 51
+     A  77                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            ERRS1         76     20  2
+     A N89                                  DSPATR(ND)
+     A  89                                  DSPATR(RI)
+     A                                      OVRDTA
+     A            ERRS2         76     21  2
+     A N89                                  DSPATR(ND)
+     A  89                                  DSPATR(RI)
+     A                                      OVRDTA
+     A                                 22  2'I=Insert  A=Amend  +
+     A                                      E=Enquire'
+     A                                    +2'D=Delete'
+      **End of change BUG8992
+      ******                                         Start  /104633/
+     A******                           23  2'Press F3 to end, or +
+     A******                                 F12 for initial screen'
+     A**70**                              +1 'or F7 for next payment.'
+     A                                 23  2'F3=Exit   F12=Previous'
+     A  70                                +1 '  F7=Next payment'
+      ******                                           End  /104633/
+     A**
+     A          R FT0070F2                  TEXT('CHEQUES FOR COLLECTION')
+     A                                      CF03(03)
+     A*                                                    /*E29970*/
+     A  70                                  CF07(07)
+     A*                                                    /*E29970*/
+     A*                                                    /*E29891*/
+     A**14*******                           CF04(04)
+     A  14                                  CF10(04)
+     A*                                                    /*E29891*/
+     A                                      CF12(12)
+     A*********        Start Of Change                     /S01494/
+     A  72N14                               CA21(24)
+     A*                End Of Change                       /S01494/
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A                                      PUTOVR
+     A                                      BLINK
+     A*                                                    /*S01117*/
+     A*                                                    /*S01199*/
+     A*                                                    /S01117/
+     A************                      1 16'CHEQUES FOR COLLECTION MAINTENANCE'
+     A************                          DSPATR(HI UL)
+     A************                      1 58TIME
+     A************                      1 67'WID'
+     A************WID           10      1 71
+     A            USRID         10A  O  1  2
+     A**                                             Begin /112563/
+     A***********                       1 13'FT0070'
+     A                                  1 13'FT0070B'
+     A**                                             End   /112563/
+     A                                  1 26'CHEQUES FOR COLLECTION MAINTENANCE'
+     A                                      DSPATR(HI UL)
+     A            SRUNA          7A  O  1 72
+     A            WID           10A  O  2  2
+     A                                  2 71TIME
+     A*                                                    /S01117/
+     A*
+     A                                  3  6'Enter action code'
+     A            SACTD          1A  O  3 25
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A                                  3 29'Payment reference'
+     A            SPREF         15A  O  3 48
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      ** Start of change  AR804457
+     A**********  SSTAT         10A  O  3 71                                                AR804457
+     A            SSTAT         12A  O  3 69
+      ** End of change  AR804457
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+     A  20                              4  6'Booking branch'
+     A  20        SBKGBR         3A  O  4 21
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+      **                                             Begin /CEU006/
+     A**                                4 29'Cheque sequence'
+     A**          SCQSQ          2A  O  4 48
+     A                                  5 29'Cheque sequence'
+     A            SCQSQ          2A  O  5 48
+      **                                             End   /CEU006/
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+      **                                             Begin /CEU006/
+     A**21                              5  6'Orig. branch'
+     A**21        SORBR          3A  B  5 21
+     A  21                              4 29'Orig. branch'
+     A  21        SORBR          3A  B  4 48
+      **                                             End   /CEU006/
+     A  38                                  DSPATR(RI PC)
+     A N72N73N28                            DSPATR(UL)
+     A  72
+     AO 28
+     AO 73                                  DSPATR(PR)
+     A    N38                               DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+     A                                  6  6'Payment type'
+     A                                  6 21'CC'
+     A                                      DSPATR(HI)
+     A                                  6 26'Payment sub-type'
+     A            SPYST          2A  B  6 44
+     A  44                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N44                               DSPATR(HI)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A**                                8  2'Debit party details:'
+     A                                  7  2'Debit party details:'
+      **                                             End   /CEU006/
+      **                                             Begin /CEU006/
+     A**                                9  6'Collecting bank'
+     A**          SCBK1         35A  B  9 26
+     A                                  8  6'Collecting bank'
+     A            SCBK1         35A  B  8 26
+      **                                             End   /CEU006/
+     A  45                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N45                               DSPATR(HI)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A**          SCBK2         35A  B 10 26
+     A            SCBK2         35A  B  9 26
+      **                                             End   /CEU006/
+     A  29                                  DSPATR(RI)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A N29                                  DSPATR(HI)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A**          SCBK3         35A  B 11 26
+     A            SCBK3         35A  B 10 26
+      **                                             End   /CEU006/
+     A  29                                  DSPATR(RI)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A N29                                  DSPATR(HI)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A**          SCBK4         35A  B 12 26
+     A            SCBK4         35A  B 11 26
+      **                                             End   /CEU006/
+     A  29                                  DSPATR(RI)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A N29                                  DSPATR(HI)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A**                               14  6'Receiver''s correspondent'
+     A**          SRCCO         10A  B 14 33
+     A                                 13  6'Receiver''s correspondent'
+     A            SRCCO         10A  B 13 33
+      **                                             End   /CEU006/
+     A  46                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N46                               DSPATR(HI)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A**                               16  2'Total collection amount'
+     A**          STCQA         14A  B 16 26
+     A                                 14  2'Total collection amount'
+     A            STCQA         14A  B 14 26
+      **                                             End   /CEU006/
+     A  49                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N49                               DSPATR(HI)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A**                               16 41'Settle ccy'
+     A**          SSMCY          3A  B 16 53
+     A                                 14 41'Settle ccy'
+     A            SSMCY          3A  B 14 53
+      **                                             End   /CEU006/
+     A  47                                  DSPATR(RI PC)
+     A    N72N69                            DSPATR(UL)
+     A  69
+     AO 72                                  DSPATR(PR)
+     A    N47                               DSPATR(HI)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A**                               16 57'Settle value date'
+     A**          SPYVD          6A  B 16 75
+     A                                 14 57'Settle value date'
+     A            SPYVD          6A  B 14 75
+      **                                             End   /CEU006/
+     A*******E32543*******
+     A**48                                  DSPATR(RI PC)
+     A  26
+     AO 48                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A****N48                               DSPATR(HI)
+     A    N48N26                            DSPATR(HI)
+     A*******E32543*******
+     A                                      OVRDTA
+     A* Start 063188
+     A**********                            CHECK(FE)
+     A* End   063188
+     A* Start S01414
+      **                                             Begin /CEU006/
+     A**                               17 41'Book Code'
+     A**          SHBOKC    R        B 17 53REFFLD(BOKC MFRFL)
+     A                                 15 41'Book Code'
+     A            SHBOKC    R        B 15 53REFFLD(BOKC MFRFL)
+      **                                             End   /CEU006/
+     A  83                                  DSPATR(RI PC)
+     A N83                                  DSPATR(HI)
+     A*
+     A N72                                  DSPATR(UL)
+     A*
+     A  72                                  DSPATR(PR)
+     A                                      OVRDTA
+     A*
+      **                                             Begin /CEU006/
+     A**                               17 57'Profit Centre'
+     A                                 15 57'Profit Centre'
+      **                                             End   /CEU006/
+     A                                      OVRATR
+     A  84                                  DSPATR(ND)
+     A*
+      **                                             Begin /CEU006/
+     A**          SHPRFC    R        B 17 75REFFLD(PRFC MFRFL)
+     A            SHPRFC    R        B 15 75REFFLD(PRFC MFRFL)
+      **                                             End   /CEU006/
+     A  84                                  DSPATR(ND)
+     A*
+     A  84
+     AO   N85
+     AO 72                                  DSPATR(PR)
+     A*
+     A N84   N86                            DSPATR(HI)
+     A*
+     A N72
+     AAN84 85                               DSPATR(UL)
+     A*
+     A N84    86                            DSPATR(RI PC)
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A  25                             16  2'Notified Delivery -
+     A                                      currency/amount'
+     A  25        SNDCY          3A  B 16 37
+     A  02                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N02                               DSPATR(HI)
+     A                                      OVRDTA
+     A  25        SNDAM         14A  B 16 42
+     A  88                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N88                               DSPATR(HI)
+     A                                      OVRDTA
+      **                                             End   /CEU006/
+     A*
+     A*********************************18  2'Total of credits entered'
+     A************STCRE*********14A**O*18 29
+     A                                 19  2'Total of credits entered'
+     A            STCRE         14A  O 19 29
+     A*
+     A* End  S01414
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A* Start S01414
+     A*********************************18 45'Difference'
+     A************SDIFF*********14A**O*18 60
+     A                                 19 45'Difference'
+     A            SDIFF         14A  O 19 60
+     A* End  S01414
+     A                                      DSPATR(HI)
+     A  78                                  DSPATR(RI)
+     A                                      OVRDTA
+     A* Start S01414
+     A************DIFFSN*********1A**O*18 73TEXT('SIGN FOR DIFFERENCE')
+     A            DIFFSN         1A  O 19 73TEXT('SIGN FOR DIFFERENCE')
+     A* End  S01414
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A**
+     A            ERRS1         76     21  2
+     A N89                                  DSPATR(ND)
+     A  89                                  DSPATR(RI)
+     A                                      OVRDTA
+     A
+     A            ERRS2         76     22  2
+     A N89                                  DSPATR(ND)
+     A  89                                  DSPATR(RI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*N14*****                        23  2'Press F3 to end, or +
+     A*********                              F12 for initial screen'
+      ******                                        Start  /104633/
+     A*N14**                           23  2'Press F3 to end  F12 +
+     A******                                 for initial scrn'
+     A*N14N70 72                       23 41'F21 for add''l info'
+     A N14                             23  2'F3=Exit   F12=Previous'
+     A N14N70 72                       23 27'F21=For add''l info'
+      ******                                          End  /104633/
+     A*                                                    /*E29970*/
+     A*N14*70**                        23 45'or F7 for next payment'
+     A*                                                    /*E29970*/
+      ******                                       Start  /104633/
+     A*N14*70                          23 41'F7 for next payment'
+     A*N14*70 72                       23 62'F21 for add''l info'
+     A N14 70                          23 27'F7=Next payment'
+     A N14 70 72                       23 45'F21=For add''l info'
+      ******                                         End   /104633/
+     A*                End Of Change                       /S01494/
+     A*                                                    /*E29891*/
+     A**14*******                      23  2'Press F3 to end, or +
+     A***********                            F12 for initial screen +
+     A***********                            or F4 to delete'
+     A*                                                    /*E29970*/
+     A***********
+     A**14*******                      23  2'Press F3 to end, or +
+     A***********                            F12 for initial screen +
+     A***********                            or F10 to delete'
+      ******                                        Start  /104633/
+     A**14**                           23  2'Press F3 to end, F12 +
+     A******                                 for initial screen, F10 +
+     A******                                 to delete'
+     A**14*70                             +1'or F7 for next payment.'
+     A  14                             23  2'F3=Exit   F10=Delete   +
+     A                                       F12=Previous'
+     A  14 70                             +1'  F7=Next payment'
+      ******                                         End   /104633/
+     A*                                                    /*E29970*/
+     A*                                                    /*E29891*/
+     A*
+     A**
+     A*
+     A          R FT0070F3                  TEXT('CHEQUES FOR COLLECTION')
+     A                                      CF03(03)
+     A*/COPY WNCPYSRC,FT0070DF11
+     A*                                                    /*E29891*/
+     A**14*******                           CF04(04)
+     A  14                                  CF10(04)
+     A*                                                    /*E29891*/
+     A*********        Start Of Change                     /S01494/
+     A  72N14                               CA21(24)
+     A*                End Of Change                       /S01494/
+     A*                                              Begin /CAC001/
+     A  68                                  CF19
+     A*                                              End   /CAC001/
+     A*                                                    /*S01199*/
+     A*                                                    /*S01199*/
+     A                                      PUTOVR
+      * S01241
+     A                                      OVERLAY
+     A                                      KEEP
+      * S01241
+     A                                      BLINK
+     A*
+     A*                                                    /S01414/
+     A*                                                    /*S01199*/
+     A*
+     A*                                                    /S01117/
+     A************                      1 16'CHEQUES FOR COLLECTION MAINTENANCE'
+     A************                          DSPATR(HI UL)
+     A************                      1 58TIME
+     A************                      1 67'WID'
+     A************WID           10      1 71
+     A            USRID         10A  O  1  2
+     A**                                             Begin /112563/
+     A***********                       1 13'FT0070'
+     A                                  1 13'FT0070C'
+     A**                                             End   /112563/
+     A                                  1 26'CHEQUES FOR COLLECTION MAINTENANCE'
+     A                                      DSPATR(HI UL)
+     A            SRUNA          7A  O  1 72
+     A            WID           10A  O  2  2
+     A                                  2 71TIME
+     A*                                                    /S01117/
+     A*
+     A                                  3  6'Payment reference'
+     A            PREF          15A  O  3 25
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+      ** Start of change  AR804457
+     A**********  SSTAT         10A  O  3 71                                                AR804457
+     A            SSTAT         12A  O  3 69
+      ** End of change  AR804457
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A                                  3 42'Cheque sequence'
+     A            SCQSQ          2A  O  3 59
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********                         5  2'Credit party details:'
+     A*********                         5 31'Credit party'
+     A*********   SCRPA         12A  B  5 46
+     A                                  4  2'Credit party details:'
+     A**********                        4 31'Credit party'                                    CDL049
+     A                                  4 24'Cr. party'                                       CDL049
+     A**Start of change CGL029
+     A**********  SCRPA         12A  B  4 46                                                  CGL029
+     A**********  SCRPA         18A  B  4 46                                                  CDL049
+     A            SCRPA         18A  B  4 34                                                  CDL049
+     A**End of change CGL029
+     A*                End Of Change                       /S01494/
+     A* 50
+     A*ON89                                 DSPATR(PC)
+     A  50                                                                                    CDL049
+     AON89N10                               DSPATR(PC)                                        CDL049
+     A  50                                  DSPATR(RI)
+     A*/COPY WNCPYSRC,FT0070DF01
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FT0070DF02
+     A    N50                               DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+     A*********        Start Of Change                     /S01494/
+     A**20*****   SCRBR          3A  B  5 59
+     A**Start of change CGL029
+     A**20******  SCRBR          3A  B  4 59                                                  CGL029
+     A**20******  SCRBR          3A  B  4 65                                                  CDL049
+     A  20        SCRBR          3A  B  4 53                                                  CDL049
+     A**End of change CGL029
+     A*                End Of Change                       /S01494/
+     A**50******                                                                              CDL049
+     A*ON89*****                            DSPATR(PC)                                        CDL049
+     A  50                                                                                    CDL049
+     AON89N10                               DSPATR(PC)                                        CDL049
+     A  50                                  DSPATR(RI)
+     A*/COPY WNCPYSRC,FT0070DF03
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FT0070DF04
+     A    N50                               DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                                                       CDL049
+     A                                  4 57'Ref Rate'                                        CDL049
+     A  80                                  DSPATR(ND)                                        CDL049
+     A                                      OVRATR                                            CDL049
+     A            S#REFR        14A  B  4 66TEXT('Reference Rate')                            CDL049
+     A                                      OVRDTA                                            CDL049
+     A  80                                  DSPATR(ND)                                        CDL049
+     A N81                                  DSPATR(HI)                                        CDL049
+     A  81                                  DSPATR(RI PC)                                     CDL049
+     A N72                                  DSPATR(UL)                                        CDL049
+     A  80                                                                                    CDL049
+     AO 72                                  DSPATR(PR)                                        CDL049
+     A*                                                    /S01117/
+     A*********        Start Of Change                     /S01494/
+     A*********                         7  2'Cheque amount'
+     A*********                         7 16'(Settle ccy)'
+     A*********   SCQAM         14A  B  7 30
+     A                                  5  2'Cheque amount'
+     A                                  5 16'(Settle ccy)'
+     A            SCQAM         14A  B  5 30
+     A*                End Of Change                       /S01494/
+     A  51                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N51                               DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********                         7 49'Credit currency'
+     A*********   SCCCY          3A  B  7 66
+     A                                  5 49'Credit currency'
+     A            SCCCY          3A  B  5 66
+     A*                End Of Change                       /S01494/
+     A  52                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N52                               DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********                         8  2'Credit value date'
+     A*********   SCVDA          6A  B  8 21
+     A                                  6  2'Credit value date'
+     A            SCVDA          6A  B  6 21
+     A*/COPY WNCPYSRC,FT0070DF09
+     A*                End Of Change                       /S01494/
+     A*******E32543******
+     A**53                                  DSPATR(RI PC)
+     A  23
+     AO 53                                  DSPATR(RI PC)
+      ** Start of change AR804457
+     A****N72***                            DSPATR(UL)                                      AR804457
+     A N76
+     AO   N72                               DSPATR(UL)
+     A**72******                            DSPATR(PR)                                      AR804457
+     A  76
+     AA 72                                  DSPATR(PR)
+      ** End of change AR804457
+     A****N53                               DSPATR(HI)
+     A    N53N23                            DSPATR(HI)
+     A*******E32543******
+     A*/COPY WNCPYSRC,FT0070DF10
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********                         8 33'Rate'
+     A*********   SRATE         14A  B  8 39
+     A                                  6 33'Rate'
+     A*/COPY WNCPYSRC,FT0070DF07
+     A            SRATE         14A  B  6 39
+     A*                End Of Change                       /S01494/
+     A*
+     A* Start 056823 - RATE is again input capable
+     A*                                                            S10284
+     A**54**********************************DSPATR(RI PC)
+     A**54******************                DSPATR(RI)
+     A**********************                DSPATR(PR)
+     A****N72*******************************DSPATR(UL)
+     A**72**********************************DSPATR(PR)
+     A  54                                  DSPATR(RI PC)
+     A  72                                  DSPATR(PR)
+     A N72                                  DSPATR(UL)
+     A*                                                            S10284
+     A* End   056823
+     A    N54                               DSPATR(HI)
+     A                                      OVRDTA
+     A*
+     A*********        Start Of Change                     /S01494/
+     A*********                         8 55'Override'
+     A*********   SOVER          1A  B  8 66
+     A                                  6 55'Override'
+     A            SOVER          1A  B  6 66
+     A*                End Of Change                       /S01494/
+     A  55                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N55                               DSPATR(HI)
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,FT0070DF08
+     A*                                                            S10284
+     A*********        Start Of Change                     /S01494/
+     A*********                         9 02'Credit currency amount'
+     A*********   SCCYAM        14A  B  9 25
+     A                                  7 02'Credit currency amount'
+     A            SCCYAM        14A  B  7 25
+     A*                End Of Change                       /S01494/
+     A*
+     A* Start 056823
+     A**33*****************
+     A*O*32****************
+     A*O*54****************                  DSPATR(RI)
+     A**33*****************
+     A*O*32****************
+     A*O*54****************                  DSPATR(PC)
+     A****N72**************                 DSPATR(UL)
+     A**72*****************                 DSPATR(PR)
+     A****N33**************
+     A*A***N54*************
+     A*A***N32*************                  DSPATR(HI)
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A*/COPY WNCPYSRC,FTH00191
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FTH00192
+     A    N33                               DSPATR(HI)
+     A* End   056823
+     A*
+     A                                      OVRDTA
+      **                                             Begin /CEU006/
+     A  25                              7 40'Pay Delivery'
+     A  25        SPDCY          3A  B  7 54
+     A  01                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N01                               DSPATR(HI)
+     A                                      OVRDTA
+     A  25        SPDAM         14A  B  7 59
+     A  13                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N13                               DSPATR(HI)
+     A                                      OVRDTA
+      **                                             End   /CEU006/
+     A*
+     A* Start S01414
+     A*********        Start Of Change                     /S01494/
+     A*********                         9 43'Book Code'
+     A*********   SBOKC     R        B  9 55REFFLD(BOKC MFRFL)
+      **                                             Begin /CEU006/
+     A**                                7 43'Book Code'
+     A**          SBOKC     R        B  7 55REFFLD(BOKC MFRFL)
+     A                                  9 43'Book Code'
+     A            SBOKC     R        B  9 55REFFLD(BOKC MFRFL)
+      **                                             End   /CEU006/
+     A*                End Of Change                       /S01494/
+     A  83                                  DSPATR(RI PC)
+     A N83                                  DSPATR(HI)
+     A*
+     A N72                                  DSPATR(UL)
+     A*
+     A  72                                  DSPATR(PR)
+     A                                      OVRDTA
+     A*
+     A*********        Start Of Change                     /S01494/
+     A*********                         9 59'Profit Centre'
+      **                                             Begin /CEU006/
+     A**                                7 59'Profit Centre'
+     A                                  9 59'Profit Centre'
+      **                                             End   /CEU006/
+     A*                End Of Change                       /S01494/
+     A                                      OVRATR
+     A  84                                  DSPATR(ND)
+     A*
+     A*********        Start Of Change                     /S01494/
+     A*********   SPRFC     R        B  9 74REFFLD(PRFC MFRFL)
+      **                                             Begin /CEU006/
+     A**          SPRFC     R        B  7 74REFFLD(PRFC MFRFL)
+     A            SPRFC     R        B  9 74REFFLD(PRFC MFRFL)
+      **                                             End   /CEU006/
+     A*                End Of Change                       /S01494/
+     A  84                                  DSPATR(ND)
+     A*
+     A  84
+     AO   N85
+     AO 72                                  DSPATR(PR)
+     A*
+     A N84   N86                            DSPATR(HI)
+     A*
+     A N72
+     AAN84 85                               DSPATR(UL)
+     A*
+     A N84    86                            DSPATR(RI PC)
+     A                                      OVRDTA
+     A*
+     A* End  S01414
+     A*                                                            S10284
+     A**********************************9  2'Central bank ref'     S10284
+     A*********        Start Of Change                     /S01494/
+     A*********                        10  2'Central bank ref'
+     A                                  8  2'Central bank ref'
+     A*                End Of Change                       /S01494/
+     A            SDBC1         11A  B    +1
+     A  62                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N62                               DSPATR(HI)
+     A                                      OVRDTA
+     A************SDBC2         11A  B  9 31                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDBC2         11A  B 10 31
+     A            SDBC2         11A  B  8 31
+     A*                End Of Change                       /S01494/
+     A  63                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N63                               DSPATR(HI)
+     A                                      OVRDTA
+     A************SDBC3         11A  B  9 43                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDBC3         11A  B 10 43
+     A            SDBC3         11A  B  8 43
+     A*                End Of Change                       /S01494/
+     A  64                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N64                               DSPATR(HI)
+     A                                      OVRDTA
+     A************SDBC4         11A  B  9 55                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDBC4         11A  B 10 55
+     A            SDBC4         11A  B  8 55
+     A*                End Of Change                       /S01494/
+     A  65                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N65                               DSPATR(HI)
+     A                                      OVRDTA
+     A************SDBC5         11A  B  9 67                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDBC5         11A  B 10 67
+     A            SDBC5         11A  B  8 67
+     A*                End Of Change                       /S01494/
+     A  66                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N66                               DSPATR(HI)
+     A                                      OVRDTA
+     A*********************************10**5'Description'          S10284
+     A*********        Start Of Change                     /S01494/
+     A*********                        11  5'Description'
+     A                                  9  5'Description'
+     A*                End Of Change                       /S01494/
+     A************SDES1         35A  B 11  5                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDES1         35A  B 12  5
+     A            SDES1         35A  B 10  5
+     A*                End Of Change                       /S01494/
+     A N72                                  DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A  12                                  DSPATR(RI)
+     A  12                                  DSPATR(PC)
+     A N12                                  DSPATR(HI)
+     A                                      OVRDTA
+     A************SDES2         35A  B 11 42                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDES2         35A  B 12 42
+     A            SDES2         35A  B 10 42
+     A*                End Of Change                       /S01494/
+     A N72                                  DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A  12                                  DSPATR(RI)
+     A N12                                  DSPATR(HI)
+     A                                      OVRDTA
+     A************SDES3         35A  B 12  5                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDES3         35A  B 13  5
+     A            SDES3         35A  B 11  5
+     A*                End Of Change                       /S01494/
+     A N72                                  DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A  12                                  DSPATR(RI)
+     A N12                                  DSPATR(HI)
+     A                                      OVRDTA
+     A************SDES4         35A  B 12 42                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDES4         35A  B 13 42
+     A            SDES4         35A  B 11 42
+     A*                End Of Change                       /S01494/
+     A N72                                  DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A  12                                  DSPATR(RI)
+     A N12                                  DSPATR(HI)
+     A                                      OVRDTA
+     A************SDES5         35A  B 13  5                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDES5         35A  B 14  5
+     A            SDES5         35A  B 12  5
+     A*                End Of Change                       /S01494/
+     A N72                                  DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A  12                                  DSPATR(RI)
+     A N12                                  DSPATR(HI)
+     A                                      OVRDTA
+     A************SDES6         35A  B 13 42                       S10284
+     A*********        Start Of Change                     /S01494/
+     A*********   SDES6         35A  B 14 42
+     A            SDES6         35A  B 12 42
+     A*                End Of Change                       /S01494/
+     A N72                                  DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A*/COPY WNCPYSRC,FT0070DF05
+     A  12                                  DSPATR(RI)
+     A N12                                  DSPATR(HI)
+     A*/COPY WNCPYSRC,FT0070DF06
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********                        15  5'Charges to the debit of a/c'
+     A*********   SCHDB         12A  B 15 35
+     A                                 13  5'Charges to the debit of a/c'
+     A**Start of change CGL029
+     A**********  SCHDB         12A  B 13 35                                                  CGL029
+     A            SCHDB         18A  B 13 35
+     A**End of change CGL029
+     A*                End Of Change                       /S01494/
+     A  61                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N61                               DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+     A*********        Start Of Change                     /S01494/
+     A**20*****   SCDBR          3A  B 15 48
+     A**Start of change CGL029
+     A**20******  SCDBR          3A  B 13 48                                                  CGL029
+     A  20        SCDBR          3A  B 13 54
+     A**End of change CGL029
+     A*                End Of Change                       /S01494/
+     A  61                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N61                               DSPATR(HI)
+     A                                      OVRDTA
+     A*                                                    /S01117/
+     A*********        Start Of Change                     /S01494/
+     A*********                        16 12'Commission tariff'
+     A*********   STCTF          1A  B 16 34
+     A                                 14 12'Commission tariff'
+     A            STCTF          1A  B 14 34
+     A*                End Of Change                       /S01494/
+     A  56                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N56                               DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01499/
+     A                                 14 53'VAT?'
+     A N08                                  DSPATR(ND)
+     A*                End Of Change                       /S01499/
+     A*********        Start Of Change                     /S01494/
+     A*********                        17 25'Charge'
+     A*********   SECCY1         3A  O 17 34
+     A                                 15 25'Charge'
+     A            SECCY1         3A  O 15 34
+     A*                End Of Change                       /S01494/
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********   STRCME        12A  B 17 40
+     A            STRCME        12A  B 15 40
+     A*                End Of Change                       /S01494/
+     A  57                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N57                               DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01499/
+     A            SVATI1         1A  B 15 55
+     A                                      OVRDTA
+     A N72                                  DSPATR(UL)
+     A N08
+     AO 72                                  DSPATR(PR)
+     A N08                                  DSPATR(ND)
+     A  05                                  DSPATR(RI PC)
+     A N05                                  DSPATR(HI)
+     A*                End Of Change                       /S01499/
+     A*********        Start Of Change                     /S01494/
+     A*********   SCCCY1         3A  O 17 56
+     A            SCCCY1         3A  O 15 59
+     A*                End Of Change                       /S01494/
+     A N72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********   STRCMF        12A  O 17 62
+     A            STRCMF        12A  O 15 65
+     A*                End Of Change                       /S01494/
+     A N72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A                                 16  5'FX/Change commission'
+     A N09                                  DSPATR(ND)
+     A            SECCY5         3A  O 16 34
+     A                                      DSPATR(HI)
+     A N09                                  DSPATR(ND)
+     A                                      OVRDTA
+     A            SCHCME        12A  B 16 40
+     A  32                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A N09
+     AO 72                                  DSPATR(PR)
+     A    N32                               DSPATR(HI)
+     A N09                                  DSPATR(ND)
+     A                                      OVRDTA
+     A*                End Of Change                       /S01494/
+     A*********        Start Of Change                     /S01499/
+     A            SVATI5         1A  B 16 55
+     A                                      OVRDTA
+     A N72                                  DSPATR(UL)
+     A N08
+     AON09
+     AO 72                                  DSPATR(PR)
+     A N08
+     AON09                                  DSPATR(ND)
+     A  06                                  DSPATR(RI PC)
+     A N06                                  DSPATR(HI)
+     A*                End Of Change                       /S01499/
+     A*********        Start Of Change                     /S01494/
+     A            SCCCY5         3A  O 16 59
+     A N72N73
+     AON09                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            SCHCMF        12A  O 16 65
+     A N72N73
+     AON09                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*                End Of Change                       /S01494/
+     A*********        Start Of Change                     /S01494/
+     A*********                        18  5'Collection charge'
+     A*********   SECCY2         3A  O 18 34
+     A                                 17  5'Collection charge'
+     A            SECCY2         3A  O 17 34
+     A*                End Of Change                       /S01494/
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********   SCOLLE        12A  B 18 40
+     A            SCOLLE        12A  B 17 40
+     A*                End Of Change                       /S01494/
+     A  60                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N60                               DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01499/
+     A            SVATI2         1A  B 17 55
+     A                                      OVRDTA
+     A N72                                  DSPATR(UL)
+     A N08
+     AO 72                                  DSPATR(PR)
+     A N08                                  DSPATR(ND)
+     A  10                                  DSPATR(RI PC)
+     A N10                                  DSPATR(HI)
+     A*                End Of Change                       /S01499/
+     A*********        Start Of Change                     /S01494/
+     A*********   SCCCY2         3A  O 18 56
+     A            SCCCY2         3A  O 17 59
+     A*                End Of Change                       /S01494/
+     A N72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********   SCOLLF        12A  O 18 62
+     A            SCOLLF        12A  O 17 65
+     A*                End Of Change                       /S01494/
+     A N72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********                        19  5'Costs abroad'
+     A*********   SECCY3         3A  O 19 34
+     A*/COPY WNCPYSRC,FT0070DF14
+      **Start Of Change CER049
+     A**********                       18  5'Costs abroad'                                    CER049
+     A N76                             18  5'Costs abroad'                                    CER049
+     A  76                             18  5'Stamp Tax'
+      ** End Of Change CER049
+     A*/COPY WNCPYSRC,FT0070DF15
+     A            SECCY3         3A  O 18 34
+     A*                End Of Change                       /S01494/
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********   SCSTAE        12A  B 19 40
+     A            SCSTAE        12A  B 18 40
+     A*                End Of Change                       /S01494/
+     A  59                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N59                               DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01499/
+     A            SVATI3         1A  B 18 55
+     A                                      OVRDTA
+     A N72                                  DSPATR(UL)
+     A N08
+     AO 72                                  DSPATR(PR)
+     A N08                                  DSPATR(ND)
+     A  11                                  DSPATR(RI PC)
+     A N11                                  DSPATR(HI)
+     A*                End Of Change                       /S01499/
+     A*********        Start Of Change                     /S01494/
+     A*********   SCCCY3         3A  O 19 56
+     A            SCCCY3         3A  O 18 59
+     A*                End Of Change                       /S01494/
+     A N72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********   SCSTAF        12A  O 19 62
+     A            SCSTAF        12A  O 18 65
+     A*                End Of Change                       /S01494/
+     A N72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********                        20  5'Telex charge'
+     A*********   SECCY4         3A  O 20 34
+     A                                 19  5'Telex charge'
+     A            SECCY4         3A  O 19 34
+     A*                End Of Change                       /S01494/
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********   STXCHE        12A  B 20 40
+     A            STXCHE        12A  B 19 40
+     A*                End Of Change                       /S01494/
+     A  58                                  DSPATR(RI PC)
+     A    N72                               DSPATR(UL)
+     A  72                                  DSPATR(PR)
+     A    N58                               DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01499/
+     A            SVATI4         1A  B 19 55
+     A                                      OVRDTA
+     A N72                                  DSPATR(UL)
+     A N08
+     AO 72                                  DSPATR(PR)
+     A N08                                  DSPATR(ND)
+     A  39                                  DSPATR(RI PC)
+     A N39                                  DSPATR(HI)
+     A*                End Of Change                       /S01499/
+     A*********        Start Of Change                     /S01494/
+     A*********   SCCCY4         3A  O 20 56
+     A            SCCCY4         3A  O 19 59
+     A*                End Of Change                       /S01494/
+     A N72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01494/
+     A*********   STXCHF        12A  O 20 62
+     A            STXCHF        12A  O 19 65
+     A*                End Of Change                       /S01494/
+     A N72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        Start Of Change                     /S01499/
+     A                                 20  5'V.A.T.'
+     A N08                                  DSPATR(ND)
+     A            SECCY6         3A  O 20 34
+     A N08                                  DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            SVATTE        12A  O 20 40
+     A N08                                  DSPATR(ND)
+     A  36                                  DSPATR(RI)
+     A    N36                               DSPATR(HI)
+     A                                      OVRDTA
+     A            SCCCY6         3A  O 20 59
+     A N08
+     AON72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A            SVATTF        12A  O 20 65
+     A N08
+     AON72N73                               DSPATR(ND)
+     A                                      DSPATR(HI)
+     A                                      OVRDTA
+     A*********        End Of Change                       /S01499/
+     A            ERRS1         76     21  2
+     A*******E32543*******
+     A*N89                                  DSPATR(ND)
+     A**89                                  DSPATR(RI)
+     A N89N27                               DSPATR(ND)
+     A  89
+     AO 27                                  DSPATR(RI)
+     A                                      OVRDTA
+     A
+     A            ERRS2         76     22  2
+     A*N89                                  DSPATR(ND)
+     A**89                                  DSPATR(RI PC)
+     A N89N27                               DSPATR(ND)
+     A  89
+     AO 27                                  DSPATR(RI)
+     A*******E32543*******
+     A                                      OVRDTA
+     A*/COPY WNCPYSRC,FT0070DF12
+      ******                                        Start  /104633/
+     A*N14**                           23  2'Press F3 to return +
+     A******                                 to the debit detail screen'
+     A*N14*******                      23  2'F3=Exit'
+     A*                                              Begin /CAC001/
+     A*N14*******                      23  2'Press F3 to return +
+     A***********                            to the debit detail screen'
+      ******                                        Start  /104633/
+1    A*N14N68****                      23  2'Press F3 to return to +
+     A***********                            debit details'
+     A*N14*68****                      23  2'Press F3 to return to +
+     A***********                            debit details, F19 for +
+     A***********                            margin info'
+     A N14N68                          23  2'F3=Exit'
+     A N14 68                          23  2'F3=Exit  F19=Margin info'
+      ******                                         End   /104633/
+     A*                                              End   /CAC001/
+      ******                                         End   /104633/
+     A*********        Start Of Change                     /S01494/
+      ******                                        Start  /104633/
+     A*                                              Begin /CAC001/
+     A*N14*72****                      23 48'or F21 for addt''l info'
+     A*N14*72****                      23 59'or F21 for addt''l info'
+     A*                                              End   /CAC001/
+     A*N14*72                          23 48'or F21 for addt''l info'
+     A N14 72                          23 12'F21=For addt''l info'
+      ******                                          End  /104633/
+     A*                End Of Change                       /S01494/
+     A*                                                    /*E29891*/
+     A**14******                       23  2'Press F3 to return +
+     A**********                             to the debit detail screen +
+     A**********                             or F4 for delete'
+      ******                                        Start  /104633/
+     A*                                              Begin /CAC001/
+     A**14*******                      23  2'Press F3 to return +
+     A***********                            to the debit detail screen +
+     A***********                            or F10 for delete'
+      ******                                        Start  /104633/
+     A**14N68****                      23  2'Press F3 to return to +
+     A***********                            debit details or F10 for +
+     A***********                            delete'
+     A**14*68****                      23  2'Press F3 to return to +
+     A***********                            debit details, F10 for +
+     A***********                            delete or F19 for margin +
+     A***********                            info'
+     A*/COPY WNCPYSRC,FT0070DF13
+     A  14N68                          23  2'F3=Exit  F10=Delete'
+     A  14 68                          23  2'F3=Exit F10=Delete F19=Margin info'
+      ******                                         End   /104633/
+     A*                                              End   /CAC001/
+      ******                                         End   /104633/
+     A*                                                    /*E29891*/
+     A*********        Start Of Change                     /S01494/
+     A          R FT0070F4                  TEXT('Extra Info window')
+     A                                      OVERLAY
+     A                                      PUTOVR
+     A                                      WINDOW(10 17 11 60)
+     A                                      CF03(03)
+     A                                      CF12(12)
+     A**                                             Begin /112563/
+     A                                  2  2'FT0070'
+     A**                                             End   /112563/
+     A                                  2 19'ADDITIONAL INFORMATION'
+     A                                      DSPATR(HI)
+     A                                  5  2'Input User 1'
+     A            SUSRP1    R        O  5 22REFFLD(INUSR1 MFRFL)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A            SUSER1    R        O  5 34REFFLD(USER1 MFRFL)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A                                  6  2'Authorising User 1'
+     A  17                                  DSPATR(ND)
+     A            SAUP1     R        O  6 22REFFLD(AUP1 MFRFL)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A  17                                  DSPATR(ND)
+     A            SAUT1     R        O  6 34REFFLD(USER1 MFRFL)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A  17                                  DSPATR(ND)
+     A                                  7  2'Authorising User 2'
+     A  17                                  DSPATR(ND)
+     A            SAUP2     R        O  7 22REFFLD(AUP2 MFRFL)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A  17                                  DSPATR(ND)
+     A            SAUT2     R        O  7 34REFFLD(USER1 MFRFL)
+     A                                      OVRDTA
+     A                                      DSPATR(HI)
+     A  17                                  DSPATR(ND)
+      ******                                        Start  /104633/
+     A******                           10  2'F3 to exit, F12 for +
+     A******                                initial screen'
+     A                                 10  2'F3=Exit   F12=Previous'
+      ******                                          End  /104633/
+     A*                End Of Change                       /S01494/
+     A* 058194 Start
+     A          R #MSGRCD                   TEXT('Program messages')
+     A                                      SFL SFLMSGRCD(24)
+     A            MSGKEY                    SFLMSGKEY
+     A            ##PGM                     SFLPGMQ
+     A*
+     A          R #MSGCTL                   TEXT('Program messages')
+     A                                      SFLCTL(#MSGRCD)
+     A                                      SFLPAG(01) SFLSIZ(03)
+     A  31                                  OVERLAY PUTOVR
+     A                                      SFLINZ SFLDSP SFLDSPCTL
+     A  30
+     AON30                                  SFLEND
+     A            ##PGM                     SFLPGMQ

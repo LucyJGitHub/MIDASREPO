@@ -1,0 +1,601 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI *  TEXT('Midas FT Check for deletes')                          */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas      FUNDS TRANSFER MODULE                            */
+/*                                                                   */
+/*       FTC0005    Check for Fees and Charges Delete                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2001                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*       Prev Amend No. BG18886            Date 26May08              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/* Midas Release 4 --------------- Base -----------------------------*/
+/* Midas DBA 3.05 ---------------------------------------------------*/
+/*                      CFT009 *C *CREATE  Date 01Jun00              */
+/*                      xxxxxx               Date xxxxxxx            */
+/*                                                                   */
+/*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
+/*       BG18886 - Amend non-standard codes.                         */
+/*       CFT009 - Fees and Charges Development                       */
+/*********************************************************************/
+             PGM        PARM(&CODE &TRNS_TYPE &DEL_IN &DEL_OP +
+                          &DEL_CP &DEL_CC &DEL_RF &DEL_CT &DEL_PC &ERROR)
+ 
+             DCL        VAR(&CODE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&TRNS_TYPE) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&DEL_IN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DEL_OP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DEL_CP) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DEL_CC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DEL_RF) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DEL_CT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&DEL_PC) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&SECLVL) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&NUMREC) TYPE(*DEC) LEN(3) VALUE(0)
+ 
+             DCL        VAR(&QRYSLT) TYPE(*CHAR) LEN(512)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&TMP_FILE) TYPE(*CHAR) LEN(10)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2001')
+ 
+             CHGJOB     STSMSG(*NONE)
+ 
+             CHGVAR     VAR(&DEL_IN) VALUE(' ')
+             CHGVAR     VAR(&DEL_OP) VALUE(' ')
+             CHGVAR     VAR(&DEL_CP) VALUE(' ')
+             CHGVAR     VAR(&DEL_CC) VALUE(' ')
+             CHGVAR     VAR(&DEL_RF) VALUE(' ')
+             CHGVAR     VAR(&DEL_CT) VALUE(' ')
+ 
+             IF         COND((&TRNS_TYPE *EQ 'INPAY') *OR +
+                          (&TRNS_TYPE = '*ALL ')) THEN(GOTO +
+                          CMDLBL(INPAY))
+ 
+             IF         COND(&TRNS_TYPE *EQ 'OTPAY') THEN(GOTO +
+                          CMDLBL(OTPAY))
+ 
+             IF         COND(&TRNS_TYPE *EQ 'CPAID') THEN(GOTO +
+                          CMDLBL(CPAID))
+ 
+             IF         COND(&TRNS_TYPE *EQ 'CCOLL') THEN(GOTO +
+                          CMDLBL(CCOLL))
+ 
+             IF         COND(&TRNS_TYPE *EQ 'RFT  ') THEN(GOTO +
+                          CMDLBL(RFT))
+ 
+             IF         COND(&TRNS_TYPE *EQ 'CCT  ') THEN(GOTO +
+                          CMDLBL(CCT))
+ 
+ 
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/* ==========  INCOMING PAYMENTS   ========== */
+INPAY:       CHGVAR     VAR(&TMP_FILE) VALUE('TEMPIN')
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+             CHGVAR     VAR(&FILE) VALUE('INPAYXPD')
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE('(' *CAT 'FXSPSC *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'INPDOF *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'TLCODE *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'CHCHCD *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'ADCHCD *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'TLCHCD *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'MISCH  *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'MSCH1  *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'MSCH2  *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'MSCH3  *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'MSCH4  *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'MSCH5  *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'TFCCCO *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'FXCHEC *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ')' +
+                          *CAT ' *AND INRECI *EQ "D"')
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVIN:      RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_IN) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVIN)) */                                              /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVIN))                                                 /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             IF         COND(&TRNS_TYPE *NE '*ALL ') THEN(GOTO +
+                          CMDLBL(ENDPGM))
+ 
+/* ==========  OUTGOING PAYMENTS   ========== */
+ OTPAY:      CHGVAR     VAR(&TMP_FILE) VALUE('TEMPOT')
+             CHGVAR     VAR(&FILE) VALUE('OTPAYXPD')
+ 
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE('(' *CAT 'FXSRSC *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'OTPDOF *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'TLXCDE *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'CHQCHC *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'CACHCD *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'SSTCCD *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'SPRCCD *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'MSCHC  *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'MSCHC1 *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'MSCHC2 *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'MSCHC3 *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'MSCHC4 *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'MSCHC5 *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'TFCCCD *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'FXCACC *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ')' *CAT ' *AND OPRECI *EQ +
+                          "D"')
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVOT:      RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_OP) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVOT)) */                                              /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVOT))                                                 /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             IF         COND(&TRNS_TYPE *NE '*ALL ') THEN(GOTO +
+                          CMDLBL(ENDPGM))
+ 
+/* ==========  CHEQUES PAID        ========== */
+ CPAID:      CHGVAR     VAR(&TMP_FILE) VALUE('TEMPCP')
+             CHGVAR     VAR(&FILE) VALUE('CQPADDD')
+ 
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE('(' *CAT 'TFCMCC *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'FCHCCC *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'CSTACD *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'COLCGC *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ')' *CAT ' *AND RECI *EQ "D"')
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVCP:      RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_CP) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVCP)) */                                              /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVCP))                                                 /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             IF         COND(&TRNS_TYPE *NE '*ALL ') THEN(GOTO +
+                          CMDLBL(ENDPGM))
+ 
+/* ==========  CHEQUES COLLECTED   ========== */
+ CCOLL:      CHGVAR     VAR(&TMP_FILE) VALUE('TEMPCC')
+             CHGVAR     VAR(&FILE) VALUE('CQCOCDD')
+ 
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE('(' *CAT 'FXSPDS *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'TRCMCC *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'FXCCCC *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'COCHCD *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ' *OR ' *CAT 'CABCCD *EQ ' +
+                          *CAT '"' *TCAT &CODE *TCAT '"' *CAT ' *OR +
+                          ' *CAT 'TLXCHD *EQ ' *CAT '"' *TCAT &CODE +
+                          *TCAT '"' *CAT ')' *CAT ' *AND RECI *EQ "D"')
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVCC:      RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_CC) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVCC)) */                                              /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVCC))                                                 /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             IF         COND(&TRNS_TYPE *NE '*ALL ') THEN(GOTO +
+                          CMDLBL(ENDPGM))
+ 
+/* ==========  REQUEST FOR TRANSFERS   ====== */
+ RFT:        CHGVAR     VAR(&TMP_FILE) VALUE('TEMPRFD')
+             CHGVAR     VAR(&FILE) VALUE('FT101DPD')
+ 
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE( +
+                        'TFCOCC *EQ ' *CAT '"'            +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'FXCCCD *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'IMICC1 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'IMICC2 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'IMICC3 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'IMICC4 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'IMICC5 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'               +
+                        )
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVRFD:     RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_RF) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVRFD)) */                                             /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVRFD))                                                /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             CHGVAR     VAR(&TMP_FILE) VALUE('TEMPRFH')
+             CHGVAR     VAR(&FILE) VALUE('FT101HPD')
+ 
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE( +
+                        'FXSRST *EQ ' *CAT '"'            +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'SWSTCC *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'SWPRCC *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'OMICC1 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'OMICC2 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'OMICC3 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'OMICC3 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'OMICC5 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'               +
+                        )
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVRFH:     RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_RF) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVRFH)) */                                             /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVRFH))                                                /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             IF         COND(&TRNS_TYPE *NE '*ALL ') THEN(GOTO +
+                          CMDLBL(ENDPGM))
+ 
+/* ==========  CUSTOMER CREDIT TRANSFERS    = */
+ CCT:        CHGVAR     VAR(&TMP_FILE) VALUE('TEMPCCD')
+             CHGVAR     VAR(&FILE) VALUE('FT102DPD')
+ 
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE( +
+                        'MICCD1 *EQ ' *CAT '"'            +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MICCD2 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MICCD3 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MICCD4 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MICCD5 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'TRCOCC *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'FXCCC  *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'               +
+                        )
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVCT:      RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_CT) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVCT)) */                                              /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVCT))                                                 /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             CHGVAR     VAR(&TMP_FILE) VALUE('TEMPCCH')
+             CHGVAR     VAR(&FILE) VALUE('FT102HPD')
+ 
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE( +
+                        'FXSSCD *EQ ' *CAT '"'            +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'SSTCHC *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'SPRCHC *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'               +
+                        )
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVCTH:     RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_CT) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVCTH)) */                                             /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVCTH))                                                /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             IF         COND(&TRNS_TYPE *NE '*ALL ') THEN(GOTO +
+                          CMDLBL(ENDPGM))
+ 
+ 
+/* ==========  END CUSTOMER CREDIT TRANSFERS    = */
+ 
+/* ==========  PAYMENT CHARGE DEFAULTS          = */
+ PCD:        CHGVAR     VAR(&TMP_FILE) VALUE('TEMPPCD')
+             CHGVAR     VAR(&FILE) VALUE('FTPYCGPD')
+ 
+             CLRPFM     FILE(QTEMP/&TMP_FILE)
+             MONMSG     MSGID(CPF0000)
+ 
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE( +
+                        'FXSPST *EQ ' *CAT '"'            +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'PDOFCD *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'TXCHCD *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'CHCHRG *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'CABCHC *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'SWSTCH *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'SWPRCH *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MISCHG *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MISCH1 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MISCH2 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MISCH3 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MISCH4 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'MISCH5 *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'TRCMCH *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'FXCHCC *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'ADVCHG *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'TELCHG *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'COLCHG *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'CORCHG *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'  *CAT ' *OR ' +
+                        *CAT 'DEDCHG *EQ ' *CAT '"'       +
+                        *TCAT &CODE *TCAT '"'               +
+                        )
+ 
+             OPNQRYF    FILE((&FILE)) QRYSLT(&QRYSLT) +
+                          ALWCPYDTA(*OPTIMIZE) OPTIMIZE(*FIRSTIO)
+ 
+             CPYFRMQRYF FROMOPNID(&FILE) TOFILE(QTEMP/&TMP_FILE) +
+                          MBROPT(*ADD) CRTFILE(*YES)
+ 
+ RCVPC:      RCVMSG     PGMQ(*SAME) RMV(*YES) SECLVL(&SECLVL) +
+                          MSGDTA(&MSGDTA) MSGID(&MSGID)
+                          MONMSG     MSGID(CPF0000) EXEC(DO)
+                          CHGVAR     VAR(&ERROR) VALUE('Y')
+                          GOTO       CMDLBL(ENDPGM)
+                          ENDDO
+ 
+ 
+             IF         COND(&MSGID = 'CPC2955') THEN(CHGVAR +
+                          VAR(&NUMREC) VALUE(%SST(&SECLVL 23 3)))
+ 
+             IF         COND(&NUMREC > 0) THEN(CHGVAR VAR(&DEL_PC) +
+                          VALUE('Y'))
+ 
+/**********  IF         COND(&MSGID *= '       ') THEN(GOTO +
+                          CMDLBL(RCVPC)) */                                              /*BG18886*/
+             IF         COND(&MSGID *NE '       ') THEN(GOTO +
+                          CMDLBL(RCVPC))                                                 /*BG18886*/
+ 
+             CLOF       OPNID(&FILE)
+ 
+             IF         COND(&TRNS_TYPE *NE '*ALL ') THEN(GOTO +
+                          CMDLBL(ENDPGM))
+ 
+/* ==========  END PAYMENT CHARGE DEFAULTS      = */
+ ENDPGM:     CHGJOB     STSMSG(*NONE)
+ 
+             ENDPGM
+ 

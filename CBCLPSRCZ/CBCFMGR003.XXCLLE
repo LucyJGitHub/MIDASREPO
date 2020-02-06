@@ -1,0 +1,131 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                  /*AR1096969*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas - Close of Business Processing                      */
+/*                                                                 */
+/*       CBCFMGR003 - Midas CB File Manager - Add LF Mbrs          */
+/*                                                                 */
+/*       (C) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. AR1096969*REDUNDANTDate 21Mar13            */
+/*       Prev Amend No. AR544186 *CREATE  Date 01Aug12             */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       AR1096969 - CBCFMGR_nn jobs should no longer run in our   */
+/*                   system                                        */
+/*                 - CCB022B - COB Restructure - COB File Manager  */
+/*                   (Missed out for drop2A delivery)              */
+/*       AR544186 - Improve performance of LEC0604/LEC07003 in     */
+/*                  COB (Child:AR544188)                           */
+/*                                                                 */
+/*******************************************************************/
+             PGM
+ 
+             DCL        VAR(&MIBSCPY) TYPE(*CHAR) LEN(64) VALUE('(+
+                           C) Copyright Misys International Banking +
+                           Systems 2012')
+ 
+             DCL        VAR(&JOBDTAQ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTAMBRS) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&TEXT) TYPE(*CHAR) LEN(70)
+             DCL        VAR(&SHARE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&JOB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DATA1) TYPE(*CHAR) LEN(350)
+             DCL        VAR(&MSGLEN1) TYPE(*DEC) LEN(5 0) VALUE(350)
+             DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
+             DCL        VAR(&DATA2) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MSGLEN2) TYPE(*DEC) LEN(5 0) VALUE(10)
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(500)
+             DCL        VAR(&MSG) TYPE(*CHAR) LEN(75)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+             RTVJOBA    JOB(&JOB)
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+ 
+ RCVDTAQ:    CALL       PGM(QRCVDTAQ) PARM('CBADLFDTAQ' &DPLIB +
+                           &MSGLEN1 &DATA1 &RCVWAIT)
+ 
+             IF         COND(%SST(&DATA1 1 8) = 'SHUTDOWN') +
+                           THEN(GOTO CMDLBL(END))
+ 
+             CHGVAR     VAR(&JOBDTAQ) VALUE(%SST(&DATA1 1 10))
+             CHGVAR     VAR(&LIB) VALUE(%SST(&DATA1 11 10))
+             CHGVAR     VAR(&FILE) VALUE(%SST(&DATA1 21 10))
+             CHGVAR     VAR(&MBR) VALUE(%SST(&DATA1 31 10))
+             CHGVAR     VAR(&DTAMBRS) VALUE(%SST(&DATA1 41 200))
+             CHGVAR     VAR(&TEXT) VALUE(%SST(&DATA1 241 65))
+             CHGVAR     VAR(&SHARE) VALUE(%SST(&DATA1 306 4))
+ 
+/** Check if member already present before trying to add */
+ 
+             RTVMBRD    FILE(&LIB/&FILE) MBR(&MBR)
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+ 
+               CHGVAR     VAR(&CMD) VALUE('ADDLFM FILE(' *CAT &LIB +
+                             *TCAT '/' *CAT &FILE *TCAT ') MBR(' +
+                             *CAT &MBR *TCAT ') DTAMBRS' +
+                             *CAT &DTAMBRS +
+                             *TCAT ' TEXT(''' *CAT &TEXT *TCAT ''') +
+                             SHARE(' *CAT &SHARE *TCAT ')')
+ 
+               SNDPGMMSG  MSG(&CMD)
+ 
+/** Add member back */
+ 
+               CALL       PGM(QCMDEXC) PARM(&CMD 500)
+               MONMSG     MSGID(CPF0000) EXEC(DO)
+ 
+/** Any error, try adding again after delaying the job and */
+/** dump if still in error */
+ 
+                 DLYJOB     DLY(5)
+                 RMVM       FILE(&FILE) MBR(*ALL)
+                 MONMSG     MSGID(CPF0000)
+                 DLYJOB     DLY(5)
+                 CALL       PGM(QCMDEXC) PARM(&CMD 500)
+                 MONMSG     MSGID(CPF0000) EXEC(DO)
+                   CHGVAR     VAR(&MSG) VALUE('An error occurred +
+                                 in job ' *CAT &JOB *CAT ' : +
+                                 ADDLFM ' *CAT &FILE)
+                   SNDMSG     TOMSGQ(MOPERQ) MSG(&MSG)
+                   DMPCLPGM
+                 ENDDO
+               ENDDO
+             ENDDO
+ 
+/** Any error from RTVMBRD other than member already exists, */
+/** dump and continue */
+ 
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+               CHGVAR     VAR(&MSG) VALUE('An error occurred in +
+                             job ' *CAT &JOB *CAT ' : ADDLFM ' +
+                             *CAT &FILE)
+               SNDMSG     TOMSGQ(MOPERQ) MSG(&MSG)
+               DMPCLPGM
+             ENDDO
+ 
+             CALL       PGM(QSNDDTAQ) PARM(&JOBDTAQ &DPLIB &MSGLEN2 +
+                           'COMPLETED ')
+ 
+             GOTO       CMDLBL(RCVDTAQ)
+ 
+/* Error processing - send message to MOPERQ and dump */
+ 
+ ABNOR:      CHGVAR     &MSG VALUE('Program CBCFMGR003 +
+                            terminated abnormally')
+             SNDMSG     TOMSGQ(MOPERQ) MSG(&MSG)
+             DMPCLPGM
+ 
+ END:        CHGVAR     VAR(&MIBSCPY) VALUE('(C) Copiright Misys +
+                           International Banking Systems 2012')
+ ENDPGM

@@ -1,0 +1,131 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas UT Error Codes Collector')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utilities Module                                    */
+/*                                                                   */
+/*       UTC00040 - Error Codes Collector Utility                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CBF011  *CREATE    Date 04Jul11              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CBF011 - BF Infrastructure: Error Message Handling          */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&LIBLST &TOPPGM)
+ 
+             DCL        VAR(&LIBLST) TYPE(*CHAR) LEN(102)
+             DCL        VAR(&TOPPGM) TYPE(*CHAR) LEN(1052)
+             DCL        VAR(&PRMLST) TYPE(*CHAR) LEN(1050)
+             DCL        VAR(&NBRB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBR) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&OBJCNT) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&VARLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&VARPGM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RETCODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CNT) TYPE(*DEC) LEN(3 0) VALUE(0)
+             DCL        VAR(&PRMCNT) TYPE(*DEC) LEN(3 0) VALUE(0)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/** Check and clear files used by utility */
+ 
+             CHKOBJ     OBJ(UTFINFPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9810 CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             CLRPFM     FILE(UTFINFPD)
+ 
+             CHKOBJ     OBJ(UTLIBLPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9810 CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             CLRPFM     FILE(UTLIBLPD)
+ 
+             CHKOBJ     OBJ(UTPGMLPD) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9810 CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             CLRPFM     FILE(UTPGMLPD)
+ 
+/** Retrieve total number of libraries in Lib List */
+ 
+             CHGVAR     VAR(&NBRB) VALUE(%SST(&LIBLST 1 2))
+             CHGVAR     VAR(&NBR) VALUE(%BIN(&NBRB))
+ 
+             CHGVAR     VAR(&OBJCNT) VALUE(3)
+ 
+/** Check if libraries are existing */
+ 
+CHKLIB:
+             CHGVAR     VAR(&VARLIB) VALUE(%SST(&LIBLST &OBJCNT 10))
+ 
+             CHKOBJ     OBJ(&VARLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9810 CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+ 
+             CHGVAR     VAR(&CNT) VALUE(&CNT + 1)
+             CHGVAR     VAR(&OBJCNT) VALUE(&OBJCNT + 10)
+             IF         COND(&CNT *NE &NBR) THEN(GOTO CMDLBL(CHKLIB))
+ 
+/** Add Library List to UTLIBLPD */
+ 
+             CHGVAR     VAR(&PRMCNT) VALUE(&CNT * 10)
+             CHGVAR     VAR(&PRMLST) VALUE(%SST(&LIBLST 3 &PRMCNT))
+ 
+             CALL       PGM(UT000040) PARM('L' &PRMLST &RETCODE)
+ 
+             IF         COND(&RETCODE *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+ 
+/** Retrieve total number of top level programs */
+ 
+             CHGVAR     VAR(&NBRB) VALUE(%SST(&TOPPGM 1 2))
+             CHGVAR     VAR(&NBR) VALUE(%BIN(&NBRB))
+ 
+             CHGVAR     VAR(&OBJCNT) VALUE(3)
+             CHGVAR     VAR(&CNT) VALUE(0)
+ 
+/** Check if programs are existing */
+ 
+CHKPGM:
+             CHGVAR     VAR(&VARPGM) VALUE(%SST(&TOPPGM &OBJCNT 10))
+ 
+             CHKOBJ     OBJ(&VARPGM) OBJTYPE(*PGM)
+             MONMSG     MSGID(CPF9810 CPF9801) EXEC(DO)
+             CHKOBJ     OBJ(&VARPGM) OBJTYPE(*PGM)
+             MONMSG     MSGID(CPF9810 CPF9801) EXEC(GOTO CMDLBL(ABNOR))
+             ENDDO
+ 
+             CHGVAR     VAR(&CNT) VALUE(&CNT + 1)
+             CHGVAR     VAR(&OBJCNT) VALUE(&OBJCNT + 210)
+             IF         COND(&CNT *NE &NBR) THEN(GOTO CMDLBL(CHKPGM))
+ 
+/** Add Top-Level Programs to UTPGMLPD */
+ 
+             CHGVAR     VAR(&PRMCNT) VALUE(&CNT * 210)
+             CHGVAR     VAR(&PRMLST) VALUE(%SST(&TOPPGM 3 &PRMCNT))
+ 
+             CALL       PGM(UT000040) PARM('P' &PRMLST &RETCODE)
+ 
+             IF         COND(&RETCODE *NE ' ') THEN(GOTO CMDLBL(ABNOR))
+ 
+/** Call Error Message Collector */
+ 
+             CALL       PGM(UT000041)
+             MONMSG     MSGID(CPF0000 MCH0000) CMPDTA(*NONE) +
+                          EXEC(GOTO CMDLBL(ABNOR))
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('MIERRCOL ended abnormally - see job +
+                          log') TOPGMQ(*EXT)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ENDPGM:
+             ENDPGM

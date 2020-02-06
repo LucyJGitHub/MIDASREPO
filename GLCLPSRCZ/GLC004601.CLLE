@@ -1,0 +1,183 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas GL Generation of Account Transfer Payments')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas    - General Ledger Module                            */
+/*                                                                   */
+/*       GLC004601 - Midas GL Generation of Account Transfer         */
+/*                   Payments                                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2010                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1012196          Date 14Jan13              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BUG27658           Date 12May10              */
+/*                      BUG27196           Date 11Mar10              */
+/*                      CAP204 *CREATE     Date 05Feb10              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1012196 - GE-TX postings is not included in postings      */
+/*                   file merge. Reverse BUG27658. (Child:AR1012197) */
+/*       BUG27658 - Incorrect computation of available balance       */
+/*       BUG27196 - Remove hash total calculation of GLATMIPD        */
+/*       CAP204 - Teller Related APIs - Account Transfer             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ &POST)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&POST) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2010')
+ 
+/* Global monitor message. */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             SNDPGMMSG  MSG('GLC004601 - GL Generation of Account +
+                          Transfer Payments') TOMSGQ(MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Create data area LDA */
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/* Setup system prefix variable from SDSTAT data area. */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+ 
+/* Read COB components file to check the restart status */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(&STAT *NE 'Y') THEN(DO)
+               DLTF       FILE(XGLATMIPD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XGLHATMPD)
+               MONMSG     MSGID(CPF2105)
+               CPYF       FROMFILE(GLATMIPD) TOFILE(&DPLIB/XGLATMIPD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(GLHATMPD) TOFILE(&DPLIB/XGLHATMPD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+ 
+/* If it is a restart. */
+ 
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+               CPYF       FROMFILE(XGLATMIPD) TOFILE(GLATMIPD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+               CPYF       FROMFILE(XGLHATMPD) TOFILE(GLHATMPD) +
+                            MBROPT(*REPLACE)
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)   */                           /*BUG27196*/
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
+                            FILE(GLHATMPD))                                             /*BUG27196*/
+             ENDDO
+ 
+/* Call CB0150 to update restart indicator */
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+ 
+             IF         COND(&POST *EQ '1') THEN(DO)
+               CLRPFM     FILE(GETXHH)
+               CLRPFM     FILE(GETXPD)
+               CLRPFM     FILE(GETXZZ)
+             ENDDO
+ 
+             IF         COND(&POST *EQ '5') THEN(DO)
+               CLRPFM     FILE(GETX2HH)
+               CLRPFM     FILE(GETX2PD)
+               CLRPFM     FILE(GETX2ZZ)
+               OVRDBF     FILE(GETXHH) TOFILE(GETX2HH)
+               OVRDBF     FILE(GETXPD) TOFILE(GETX2PD)
+               OVRDBF     FILE(GETXZZ) TOFILE(GETX2ZZ)
+             ENDDO
+ 
+/* Call Midas GL Generation of Account Transfer Payments */
+ 
+/*           CALL       PGM(GL004601)                    */                             /*BUG27196*/
+             CALL       PGM(GL004601) PARM('Y')                                         /*BUG27196*/
+ 
+             DLTOVR     FILE(*ALL)
+ 
+/**Merge*postings*/                                                           /*BUG27658 AR1012196*/
+/**********                                                          */       /*BUG27658 AR1012196*/
+/**********  IF         COND(%SWITCH(XXXXXX00) *AND &POST *EQ '1') +
+                          THEN(DO)                                   */       /*BUG27658 AR1012196*/
+/**********    CPYF       FROMFILE(GETXPD) TOFILE(REEODPF) MBROPT(*ADD) +
+                            INCREL((*IF RIND *EQ 1) (*AND RECI *EQ +
+                            'P')) FMTOPT(*MAP *DROP)                 */       /*BUG27658 AR1012196*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)    */       /*BUG27658 AR1012196*/
+/**********      CHGJOB     SWS(XXXXXX11)                            */       /*BUG27658 AR1012196*/
+/**********      CHGVAR     VAR(&MEM) VALUE('GETXPD' *TCAT ' not +
+                              found - GLC004601')                    */       /*BUG27658 AR1012196*/
+/**********      SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)           */       /*BUG27658 AR1012196*/
+/**********      GOTO       CMDLBL(ABNOR)                            */       /*BUG27658 AR1012196*/
+/**********    ENDDO                                                 */       /*BUG27658 AR1012196*/
+/**********  ENDDO                                                   */       /*BUG27658 AR1012196*/
+/**********                                                          */       /*BUG27658 AR1012196*/
+/**********  IF         COND(%SWITCH(XXXXXX00) *AND &POST *EQ '5') +
+                          THEN(DO)                                   */       /*BUG27658 AR1012196*/
+/**********    CPYF       FROMFILE(GETX2PD) TOFILE(REEODPF) MBROPT(*ADD) +
+                            INCREL((*IF RIND *EQ 1) (*AND RECI *EQ +
+                            'P')) FMTOPT(*MAP *DROP)                 */       /*BUG27658 AR1012196*/
+/**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)    */       /*BUG27658 AR1012196*/
+/**********      CHGJOB     SWS(XXXXXX11)                            */       /*BUG27658 AR1012196*/
+/**********      CHGVAR     VAR(&MEM) VALUE('GETX2PD' *TCAT ' not +
+                              found - GLC004601')                    */       /*BUG27658 AR1012196*/
+/**********      SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)           */       /*BUG27658 AR1012196*/
+/**********      GOTO       CMDLBL(ABNOR)                            */       /*BUG27658 AR1012196*/
+/**********    ENDDO                                                 */       /*BUG27658 AR1012196*/
+/**********  ENDDO                                                   */       /*BUG27658 AR1012196*/
+/**********                                                          */       /*BUG27658 AR1012196*/
+/* If no error occured in the program */
+ 
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+ 
+/* Call CB0150 to update restart indicator */
+ 
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+               DLTF       FILE(XGLATMIPD)
+               MONMSG     MSGID(CPF2105)
+               DLTF       FILE(XGLHATMPD)
+               MONMSG     MSGID(CPF2105)
+             ENDDO
+ 
+/* Database error processing. */
+ 
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                            TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          GLC004601 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+END:
+             ENDPGM

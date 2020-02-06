@@ -1,0 +1,799 @@
+     H        1
+     F*****************************************************************
+/*OVR *  CRTSRCPF FILE(QTEMP/INPSRC) RCDLEN(112)                      *
+/*OVR *  CRTSRCPF FILE(QTEMP/COPYSRC) RCDLEN(112)                     *
+/*OVR *  CRTSRCPF FILE(QTEMP/SOURCE) RCDLEN(112)                      *
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas UT Write creation source')                       *
+      *****************************************************************
+      *                                                               *
+      *  Midas Utilities Module                                       *
+      *                                                               *
+      *  UT0009 - CRTOBJ: WRITE SOURCE TO CREATION MEMBER             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUP040             Date 16Jul13               *
+      *                 AR853603           Date 21Oct11               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CPK018  *MOVED     Date 26Apr04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CCB009             Date 14Jun00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 163132             Date 24Jun99               *
+      *                 CAP002             Date 19Nov97               *
+      *                 CPK008             DATE 13Feb97               *
+      *                 CAA011             DATE 29Oct96               *
+      *                 CAA009             DATE 19AUG96               *
+      *                 095167             DATE 27OCT95               *
+      *                 095092             DATE 20AUG95               *
+      *                 092401             DATE 30AUG95               *
+      *                 082942             DATE 07FEB95               *
+      *                 078080             DATE 28OCT94               *
+      *                 074291             DATE 10AUG94               *
+      *                 S01516             DATE 18JUL94               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CUP040 - Handle SQLRPG member type.                          *
+      *  Ar853603 - Handle SQLRPGLE member type.                      *
+      *  CPK018 - MidasPlus packaging.  Move to global layer.         *
+      *  CCB009 - Include original change dates from /COPY members.   *
+      *  163132 - If OMIT processing is used, the next line after an  *
+      *           Array X/COPY is omitted                             *
+      *  CAP002 - Fix introduced during MM API development: the /COPY *
+      *           searching could not cope with a library name in the *
+      *           /COPY line.                                         *
+      *  CPK008 - DBA R2 packaging:                                   *
+      *           - Changes for source being 112 long (recompile).    *
+      *           - Allow for ILE source types                        *
+      *  CAA011 - To allow CRTOBJ to handle /COPY's in array spec     *
+      *  CAA009 - Changes to make final source line number sequencing *
+      *           used by CRTOBJ to match original source as much as  *
+      *           possible:                                           *
+      *           (I)   Increments /COPY by 0.01                      *
+      *           (II)  Reuse sequence numbers within /COPY's except  *
+      *                 for CL programs                               *
+      *           (II)  Introduction of Switchability for 2nd level   *
+      *                 /COPY RPG compiles                            *
+      *  095167 - Allow /COPY source file to be > 8 chars long        *
+      *  095092 - Remove prohibition on including /COPYs for RPG      *
+      *  092401 - Add library parameter to UTC0012 call.              *
+      *  082942 - Allow the /OMIT statements to be placed in /COPYs.  *
+      *  078080 - Add /OMIT processing for DDS                        *
+      *  074291 - Further enhancements to CRTOBJ                      *
+      *  S01516 - Incorporation of enhanced CRTOBJ into core          *
+      *                                                               *
+      *****************************************************************
+     F/EJECT
+     F*INPSRC*IF**F***** 92            DISK                               CPK008
+     FINPSRC  IF  F     112            DISK                               CPK008
+     FCOPYSRC IF  E                    DISK                           UC
+     F            COPYSRC                           KRENAMECPYSCF
+     FSOURCE  O   E                    DISK
+     F            SOURCE                            KRENAMEOUTPUT
+     F/EJECT
+     E                    CPY@    1   1 80
+     E*
+     E** Array containing Copyright statement
+     E*
+     IINPSRC  NS  01
+     I                                        1   62INPSEQ
+     I                                        7  120INPDAT
+     I**********                             13  92 INPDTA                CPK008
+     I                                       13 112 INPDTA                CPK008
+     ICPYSCF
+      *
+      *    Rename input fields from /COPY member
+      *
+     I              SRCSEQ                          INPSEQ
+     I              SRCDAT                          INPDAT
+     I              SRCDTA                          INPDTA
+     I            DS
+      *
+      *    Data structure for input source
+      *
+     I**********                              1  92 SRCIN                 CPK008
+     I**********                             13  92 INPDTA                CPK008
+     I                                        1 112 SRCIN                 CPK008
+     I                                       13 112 INPDTA                CPK008
+     I                                       13  19 CLCOPY
+     I                                       18  23 ARRAY                 CAA011
+     I                                       19  23 COPY
+     I                                       20  24 DDSCPY
+     I                                       20  29 OMTSTR                074291
+     I                                       31  31 OMTCMT                074291
+     I                                       20  27 OMTEND                074291
+     I                                       21  41 CLDATA
+     I*******                                25  45 CPYDTA                CAP002
+     I                                       25  56 CPYDTA                CAP002
+     I*******                                26  46 DDSDTA                CAP002
+     I                                       26  56 DDSDTA                CAP002
+     I            DS
+      *
+      *    Data structure for output source
+      *
+     I**********                              1  92 SRCOUT                CPK008
+     I                                        1 112 SRCOUT                CPK008
+     I                                        1   62OUTSEQ
+     I**********                             13  92 OUTDTA                CPK008
+     I                                        7  120OUTDAT                CCB009
+     I                                       13 112 OUTDTA                CPK008
+     I                                       19  19 COPCOM
+     I                                       21  25 OMITNO                074291
+     I                                       27  39 OMTMSG                074291
+     I                                       50  69 NOTICE
+      *                                                                   074291
+      *    Binary variables for edit APIs                                 074291
+      *                                                                   074291
+     I            DS                                                      074291
+     I                                    B   1   40EDMSKL                074291
+     I                                    B   5   80RCVVRL                074291
+     I                                    B   9  120SRCVRP                074291
+     I                                    B  13  160SRCVDP                074291
+      *                                                                   074291
+      *    Data structure to return error information                     074291
+      *                                                                   074291
+     IRCVERR      DS                                                      074291
+     I                                    B   1   40BYTPRV                074291
+      *
+      *    Flag for missing /COPY members
+      *
+     I              '**SOURCE NOT FOUND**'C         MSG
+     I              '*MBR INCLUDED BELOW*'C         MSG2                  095092
+      *                                                                   074291
+      *    Start and end flags for omit processing                        074291
+      *                                                                   074291
+     I              '/OMITSTART'          C         OMIT1                 074291
+     I              '/OMITEND'            C         OMIT2                 074291
+     I              'LINES OMITTED'       C         OMITM                 074291
+      *
+     C           *ENTRY    PLIST
+     C***********          PARM           SRCTYP  4                       CPK008
+     C                     PARM           SRCTYP 10                       CPK008
+     C                     PARM           RPG2L   4                       CAA009
+     C*
+     C** Set up copyright parameter
+     C*
+     C                     MOVEACPY@      BIS@   80
+     C                     Z-ADD0         OUTSEQ
+     C                     EXSR INIT                                      074291
+      *
+      *    Read through input source
+      *
+     C                     READ INPSRC                   99
+     C           *IN99     DOWEQ'0'
+     C*                                                                   CAA009
+      * If sequence no in main source is less than the previous           CAA009
+      * sequence no, then increment by 0.01                               CAA009
+     C*                                                                   CAA009
+     C           CLCOPY    IFEQ '/*/COPY'                                 CAA009
+     C           SRCTYP    ANDEQ'CLP'                                     CAA009
+     C           INPSEQ    ANDLEWRKSEQ                                    CAA009
+     C           CLCOPY    OREQ '/*/COPY'                                 CPK008
+     C           SRCTYP    ANDEQ'CLLE'                                    CPK008
+     C           INPSEQ    ANDLEWRKSEQ                                    CPK008
+     C                     Z-ADDWRKSEQ    INPSEQ                          CAA009
+     C                     ADD  0.01      INPSEQ                          CAA009
+     C                     ENDIF                                          CAA009
+     C*                                                                   CAA009
+      * For 'RPG', 'DDS' and 'CMD' store the sequence no and the          CAA009
+      * next sequence no.                                                 CAA009
+     C*                                                                   CAA009
+     C           COPY      IFEQ '/COPY'                                   CAA009
+     C           RPG2L     ANDEQ'*YES'                                    CAA009
+     C           DDSCPY    OREQ '/COPY'                                   CAA009
+     C           SRCTYP    ANDNE'RPG'                                     CAA009
+     C           SRCTYP    ANDNE'RPGLE'                                   CPK008
+     C           SRCTYP    ANDNE'SQLRPGLE'                                                  Ar853603
+     C           SRCTYP    ANDNE'SQLRPG'                                                      CUP040
+     C           SRCTYP    ANDNE'CLP'                                     CAA009
+     C           SRCTYP    ANDNE'CLLE'                                    CPK008
+     C           SRCTYP    OREQ 'CMD'                                     CAA009
+     C                     Z-ADDINPSEQ    STRSEQ  62                      CAA009
+     C                     READ INPSRC                   90               CAA009
+     C           *IN90     IFEQ *OFF                                      CAA009
+     C                     Z-ADDINPSEQ    NXTSEQ  62                      CAA009
+     C                     READPINPSRC                   90               CAA009
+     C                     ENDIF                                          CAA009
+     C                     ENDIF                                          CAA009
+      *                                                                   CAA009
+     C                     MOVE 'N'       ERROR   1
+     C                     MOVE 'N'       CPYLIN  1
+     C                     MOVE *BLANKS   CPYFIL
+     C                     MOVE *BLANKS   CPYSRC
+     C                     MOVE 'N'       OMTFND  1                       CAA009
+     C                     MOVE *OFF      *IN58                           CAA011
+      *
+      *****Process*/COPY*record*according*to*source*************          CAA009
+      *    Process /COPY record according to source type and for          CAA009
+      *    second for second level /COPY.                                 CAA009
+      *
+     C           SRCTYP    IFEQ 'RPG'
+     C           SRCTYP    OREQ 'RPGLE'                                   CPK008
+     C           SRCTYP    OREQ 'SQLRPGLE'                                                  Ar853603
+     C           SRCTYP    OREQ 'SQLRPG'                                                      CUP040
+     C           RPG2L     IFEQ '*YES'                                    CAA009
+     C           DDSCPY    CASEQ'/OMIT'   OMTRPG                          074291
+     C           COPY      CASEQ'/COPY'   SCAN
+     C                     ENDCS
+     C                     ENDIF                                          CAA009
+     C                     ELSE
+     C           SRCTYP    IFNE 'CLP'
+     C           SRCTYP    ANDNE'CLLE'                                    CPK008
+     C           SRCTYP    ANDNE'CMD'
+     C           DDSCPY    CASEQ'/OMIT'   OMTRPG                          078080
+     C           DDSCPY    CASEQ'/COPY'   SCANDD
+     C                     ENDCS
+     C                     ELSE
+     C           CLCOPY    CASEQ'/*/COPY' SCANCL
+     C                     ENDCS
+     C                     ENDIF
+     C                     ENDIF
+      *                                                                   CAA009
+      * Process /COPY record for 'RPG' without second level /COPY         CAA009
+      *                                                                   CAA009
+     C           SRCTYP    IFEQ 'RPG'                                     CAA009
+     C           SRCTYP    OREQ 'RPGLE'                                   CPK008
+     C           SRCTYP    OREQ 'SQLRPGLE'                                                  Ar853603
+     C           SRCTYP    OREQ 'SQLRPG'                                                      CUP040
+     C           RPG2L     IFEQ '*NO'                                     CAA009
+     C           DDSCPY    CASEQ'/OMIT'   OMTRPG                          CAA009
+     C           COPY      CASEQ'/COPY'   SCAN                            CAA009
+     C                     ENDCS                                          CAA009
+     C           ARRAY     IFNE 'X/COPY'                                  CAA011
+     C                     MOVE 'N'       CPYLIN                          CAA009
+     C                     ENDIF                                          CAA011
+     C                     ENDIF                                          CAA009
+     C                     ENDIF                                          CAA009
+      *
+      *    Count omitted lines if comment needed                          074291
+      *                                                                   074291
+     C           OMIT      IFEQ 'Y'                                       074291
+     C           OMCMNT    ANDEQ'Y'                                       074291
+     C                     ADD  1         OMLINE  50                      074291
+     C                     ENDIF                                          074291
+      *
+      *    Write 'creation' source member
+      *
+     C           OMIT      IFEQ 'N'                                       074291
+     C                     Z-ADDINPSEQ    OUTSEQ                          CAA009
+     C                     EXSR WRITE
+     C                     ENDIF                                          074291
+      *                                                                   074291
+      *    Set on omit flag if reporting omitted lines (at OMITSTART)     074291
+      *                                                                   074291
+     C           OMTSTR    IFEQ OMIT1                                     074291
+     C           OMCMNT    ANDEQ'Y'                                       074291
+     C                     MOVE 'Y'       OMIT                            074291
+     C                     ENDIF                                          074291
+      *                                                                   074291
+      *    Reset omit flag at OMITEND if not reporting omitted lines      074291
+      *    (/OMITEND line is not to be included in compile source)        074291
+      *                                                                   074291
+     C           OMTEND    IFEQ OMIT2                                     074291
+     C           OMCMNT    ANDEQ'N'                                       074291
+     C           CPYOMT    OREQ 'END  '                                   082942
+     C                     MOVE 'N'       OMIT                            074291
+     C                     ENDIF                                          074291
+      *                                                                   074291
+     C***********SRCTYP    IFNE 'RPG'                                     095092
+     C***********CPYLIN    ANDEQ'Y'                                       095092
+     C           CPYLIN    IFEQ 'Y'                                       095092
+     C           ERROR     ANDEQ'N'
+     C                     MOVE 'Y'       OMTFND                          CAA009
+     C                     EXSR WRTCPY
+     C                     ENDIF
+      *
+     C                     READ INPSRC                   99
+     C                     ENDDO
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      ********************************************************************
+      *
+      *    CHKCPY SR - To check for existence of /COPY member
+      *
+     C           CHKCPY    BEGSR
+      *
+     C                     CALL 'UTC0012'
+     C                     PARM           CPYFIL
+     C                     PARM           CPYSRC
+     C                     PARM           SRCTYP
+     C                     PARM 'N'       ERROR
+     C                     PARM           CPYLIB 10                       092401
+      *
+     C                     ENDSR
+      *
+      ********************************************************************074291
+      *                                                                   074291
+      *    INIT SR - To initialise program variables                      074291
+      *                                                                   074291
+     C           INIT      BEGSR                                          074291
+      *                                                                   074291
+      *    Set off omit flag                                              074291
+      *                                                                   074291
+     C                     MOVE 'N'       OMIT    1                       074291
+      *                                                                   074291
+      *    Define variables for edit APIs                                 074291
+      *                                                                   074291
+     C                     Z-ADD5         EDMSKL                          074291
+     C                     Z-ADD5         RCVVRL                          074291
+     C                     MOVE 'Z'       EDTCDE                          074291
+     C                     Z-ADD5         SRCVRP                          074291
+     C                     Z-ADD0         SRCVDP                          074291
+     C                     MOVEL'*PACKED' SRCVCL                          074291
+     C           *LIKE     DEFN OMLINE    SRCVAR                          074291
+     C                     MOVE *BLANKS   EDTOUT  5                       074291
+     C                     Z-ADD0         BYTPRV                          074291
+     C                     MOVE 'N'       LEVEL2  1                       095092
+      *                                                                   074291
+     C                     ENDSR                                          074291
+      *                                                                   074291
+      ********************************************************************074291
+      *                                                                   074291
+      *    OMTRPG SR - To exclude RPG code from compile source            074291
+      *                                                                   074291
+     C           OMTRPG    BEGSR                                          074291
+      *                                                                   074291
+      *    Set flags at start of omitted code ...                         074291
+      *                                                                   074291
+     C           OMTSTR    IFEQ OMIT1                                     074291
+     C           CPYOMT    OREQ 'START'                                   082942
+      *                                                                   074291
+      *    ... omit with comment                                          074291
+      *                                                                   074291
+     C           OMTCMT    IFEQ ' '                                       074291
+     C           OMTCMT    OREQ 'Y'                                       074291
+     C                     MOVE 'Y'       OMCMNT  1                       074291
+     C                     ELSE                                           074291
+      *                                                                   074291
+      *    ... or omit without comment                                    074291
+      *                                                                   074291
+     C                     MOVE 'Y'       OMIT    1                       074291
+     C                     MOVE 'N'       OMCMNT                          074291
+     C                     ENDIF                                          074291
+     C                     ENDIF                                          074291
+      *                                                                   074291
+      *    Report omitted lines at end of omitted section                 074291
+      *                                                                   074291
+     C           OMTEND    IFEQ OMIT2                                     074291
+     C           OMCMNT    IFEQ 'Y'                                       074291
+     C                     EXSR OMTRPT                                    074291
+     C                     MOVE 'N'       OMIT                            074291
+     C                     ENDIF                                          074291
+     C                     Z-ADD0         OMLINE                          074291
+     C                     ENDIF                                          074291
+      *                                                                   074291
+     C                     ENDSR                                          074291
+      *                                                                   074291
+      ********************************************************************074291
+      *                                                                   074291
+      *    OMTRPT SR - To report omitted lines in compile source          074291
+      *                                                                   074291
+     C           OMTRPT    BEGSR                                          074291
+      *                                                                   074291
+      *    Edit count of omitted lines                                    074291
+      *                                                                   074291
+     C                     MOVE OMLINE    SRCVAR                          074291
+     C                     EXSR UTEDIT                                    074291
+      *                                                                   074291
+      *    Set up comment line and output to creation source              074291
+      *                                                                   074291
+     C                     ADD  0.01      OUTSEQ                          074291
+     C                     MOVE *BLANKS   OUTDTA                          074291
+     C                     MOVE '*'       COPCOM                          074291
+     C                     MOVE EDTOUT    OMITNO                          074291
+     C                     MOVE OMITM     OMTMSG                          074291
+     C                     MOVE OUTSEQ    SRCSEQ                          074291
+     C                     MOVE OUTDTA    SRCDTA                          074291
+     C                     MOVE OUTDAT    SRCDAT                          CCB009
+     C                     WRITEOUTPUT                                    074291
+      *                                                                   074291
+     C                     ENDSR                                          074291
+      *                                                                   074291
+      ********************************************************************
+      *
+      *    SCAN SR - To retrieve names of /COPY member and source file
+      *              from a line of RPG source
+      *
+     C           SCAN      BEGSR
+     C                     MOVE 'Y'       CPYLIN
+      *                                                                   CAP002
+      ** First extract library name, if it was entered; blanking the      CAP002
+      ** field out at the start, to prevent problems on subsequent        CAP002
+      ** calls of this routine.                                           CAP002
+     C                     MOVEL*BLANKS   CPYLIB                          CAP002
+     C           '/'       SCAN CPYDTA    POSN    20                      CAP002
+      *                                                                   CAP002
+      ** If library separator was found, set the library name size value  CAP002
+      ** (LSIZE) to one less than the position of the slash, and a the    CAP002
+      ** start position of the file name (M) to one greater than the      CAP002
+      ** position of the slash.                                           CAP002
+     C           POSN      IFNE *ZERO                                     CAP002
+     C           POSN      SUB  1         LSIZE   20                      CAP002
+     C           POSN      ADD  1         M       20                      CAP002
+     C           LSIZE     SUBSTCPYDTA:1  CPYLIB 10                       CAP002
+      *                                                                   CAP002
+      ** If library not specified, set the start position of the file     CAP002
+      ** name to position 1                                               CAP002
+     C                     ELSE                                           CAP002
+     C                     Z-ADD1         M       20                      CAP002
+     C                     ENDIF                                          CAP002
+      *                                                                   CAP002
+      ** Find the length of the file name and the start position of the   CAP002
+      ** member name by scanning for the comma                            CAP002
+     C***********','       SCAN CPYDTA    POSN    10                      095167
+     C           ','       SCAN CPYDTA    POSN    20                      095167
+      *                                                                   CAP002
+      ** The difference between the position of the comma and the start   CAP002
+      ** position of the file name gives us the length of the file name.  CAP002
+     C***********POSN      SUB  1         FSIZE   20                      CAP002
+     C           POSN      SUB  M         FSIZE   20                      CAP002
+      *                                                                   CAP002
+      ** One greater than the position of the comma gives us the start    CAP002
+      ** position of the member name.                                     CAP002
+     C           POSN      ADD  1         N       20
+     C***********FSIZE     SUBSTCPYDTA:1  CPYFIL 10                       CAP002
+     C           FSIZE     SUBSTCPYDTA:M  CPYFIL 10                       CAP002
+     C           10        SUBSTCPYDTA:N  CPYSRC 10
+      *                                                                   CAP002
+     C                     EXSR CHKCPY
+     C                     EXSR OMITSR                                    082942
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      *    SCANDD SR - To retrieve names of /COPY member and source file
+      *                from a line of DDS source
+      *
+     C           SCANDD    BEGSR
+      *
+     C                     MOVE 'Y'       CPYLIN
+     C***********','       SCAN DDSDTA    POSN    10                      095167
+     C           ','       SCAN DDSDTA    POSN                            095167
+     C           POSN      SUB  1         FSIZE   20
+     C           POSN      ADD  1         N       20
+     C           FSIZE     SUBSTDDSDTA:1  CPYFIL 10
+     C           10        SUBSTDDSDTA:N  CPYSRC 10
+     C                     EXSR CHKCPY
+     C                     EXSR OMITSR                                    082942
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      *    SCANCL SR - To retrieve names of /COPY member and source file
+      *                from a line of CL or CMD source
+      *
+     C           SCANCL    BEGSR
+      *
+     C                     MOVE 'Y'       CPYLIN
+     C***********','       SCAN CLDATA    POSN    10                      095167
+     C           ','       SCAN CLDATA    POSN                            095167
+     C           POSN      SUB  1         FSIZE   20
+     C           POSN      ADD  1         N       20
+     C           FSIZE     SUBSTCLDATA:1  CPYFIL 10
+     C           10        SUBSTCLDATA:N  CPYSRC 10
+     C                     EXSR CHKCPY
+     C                     EXSR OMITSR                                    082942
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      *                                                                   074291
+      *    UTEDIT SR - To edit number for output                          074291
+      *                                                                   074291
+     C           UTEDIT    BEGSR                                          074291
+      *                                                                   074291
+      *    Convert edit code to edit mask                                 074291
+      *                                                                   074291
+     C                     CALL 'QECCVTEC'                                074291
+     C                     PARM           EDTMSK256                       074291
+     C                     PARM           EDMSKL                          074291
+     C                     PARM           RCVVRL                          074291
+     C                     PARM           ZERBAL  1                       074291
+     C                     PARM           EDTCDE  1                       074291
+     C                     PARM           FFCIND  1                       074291
+     C                     PARM           SRCVRP                          074291
+     C                     PARM           SRCVDP                          074291
+     C                     PARM           RCVERR                          074291
+      *                                                                   074291
+      *    Edit input using mask created above                            074291
+      *       - input is SRCVAR                                           074291
+      *       - output is EDTOUT                                          074291
+      *                                                                   074291
+     C                     CALL 'QECEDT'                                  074291
+     C                     PARM           EDTOUT                          074291
+     C                     PARM           RCVVRL                          074291
+     C                     PARM           SRCVAR                          074291
+     C                     PARM           SRCVCL 10                       074291
+     C                     PARM           SRCVRP                          074291
+     C                     PARM           EDTMSK                          074291
+     C                     PARM           EDMSKL                          074291
+     C                     PARM           ZERBAL  1                       074291
+     C                     PARM           RCVERR                          074291
+      *                                                                   074291
+     C                     ENDSR                                          074291
+      *                                                                   074291
+      ********************************************************************074291
+      *
+      *    WRTCPY SR - To write /COPY source to 'creation' member
+      *
+     C           WRTCPY    BEGSR
+      *
+     C*  Set on a flag to show that any lines processed here are from a   095092
+     C*   /COPY and so, if they are themselves /COPY lines from an RPG,   095092
+     C*   should not automatically be converted to comments.              095092
+     C                     MOVE 'Y'       LEVEL2  1                       095092
+     C                     Z-ADDSRCSEQ    WRKSEQ  62                      CAA009
+     C*                                                                   095092
+     C                     MOVE 'N'       CPYLIN  1
+     C                     OPEN COPYSRC
+      *
+     C                     READ COPYSRC                  98
+     C           *IN98     DOWEQ'0'
+     C*                                                                   095092
+     C           SRCTYP    IFEQ 'RPG'                                     095092
+     C           SRCTYP    OREQ 'RPGLE'                                   CPK008
+     C           SRCTYP    OREQ 'SQLRPGLE'                                                  Ar853603
+     C           SRCTYP    OREQ 'SQLRPG'                                                      CUP040
+     C                     EXSR COPY2L                                    095092
+     C                     END                                            095092
+      *                                                                   CAA009
+      * Increment second level /COPY's by 0.01                            CAA009
+      *                                                                   CAA009
+     C                     ADD  0.01      WRKSEQ                          CAA009
+      *                                                                   CAA009
+      * For 'RPG' reset the counter once 99 lines in /COPY member         CAA009
+      * have been processed.                                              CAA009
+      *                                                                   CAA009
+     C           WRKSEQ    IFEQ NXTSEQ                                    CAA009
+     C           SRCTYP    ANDNE'CLP'                                     CAA009
+     C           SRCTYP    ANDNE'CLLE'                                    CPK008
+     C                     Z-ADDWRKSEQ    VERIFY  62                      CAA009
+     C                     Z-ADDSTRSEQ    WRKSEQ                          CAA009
+     C                     ADD  0.01      WRKSEQ                          CAA009
+     C           WRKSEQ    IFEQ NXTSEQ                                    CAA009
+     C                     Z-ADDSTRSEQ    WRKSEQ                          CAA009
+     C                     ENDIF                                          CAA009
+     C                     ENDIF                                          CAA009
+     C*                                                                   CAA009
+     C                     Z-ADDWRKSEQ    OUTSEQ                          CAA009
+     C*                                                                   CAA009
+     C                     EXSR WRITE
+     C                     READ COPYSRC                  98
+     C                     ENDDO
+      *
+     C                     CLOSECOPYSRC
+      *
+     C*  Reset the second level /COPY flag.                               095092
+     C                     MOVE 'N'       LEVEL2  1                       095092
+     C*                                                                   095092
+     C                     ENDSR
+      *
+      ********************************************************************
+      *
+      *    WRITE SR - To write source to 'creation' member
+      *
+     C           WRITE     BEGSR
+      *
+     C                     MOVE ' '       COPCOM
+     C                     MOVE *BLANKS   NOTICE
+     C                     MOVE INPDTA    OUTDTA
+     C                     MOVE INPDAT    OUTDAT                          CCB009
+      ***********                                                         095092
+      *****Flag*source line if /COPY member not found                     095092
+      ***********                                                         095092
+     C***********ERROR     IFEQ 'Y'                                       095092
+     C***********SRCTYP    IFEQ 'RPG'                                     095092
+     C***********          MOVE '*'       COPCOM                          095092
+     C***********          ENDIF                                          095092
+     C***********          MOVE MSG       NOTICE                          095092
+     C***********          ENDIF                                          095092
+     C*                                                                   095092
+     C*  If this is a /COPY line from the main body of an RPG program,    095092
+     C*   turn it into a comment as it will have been expanded by this    095092
+     C*   program and output a message to that effect.                    095092
+     C*  If this is a /COPY line from an RPG /COPY, only turn it into a   095092
+     C*   comment if the /COPY member was not found.                      095092
+     C*  If either sort of /COPY was not found report this.               095092
+     C*                                                                   095092
+     C           SRCTYP    IFEQ 'RPG'                                     095092
+     C           SRCTYP    OREQ 'RPGLE'                                   CPK008
+     C           SRCTYP    OREQ 'SQLRPGLE'                                                  Ar853603
+     C           SRCTYP    OREQ 'SQLRPG'                                                      CUP040
+     C*                                                                   095092
+     C           CPYLIN    IFEQ 'Y'                                       095092
+     C           LEVEL2    ANDEQ'N'                                       095092
+     C           RPG2L     ANDEQ'*YES'                                    CAA009
+     C                     MOVE MSG2      NOTICE                          095092
+     C                     MOVE '*'       COPCOM                          095092
+     C                     ENDIF                                          095092
+     C*                                                                   095092
+     C           CPYLIN    IFEQ 'Y'                                       095092
+     C           LEVEL2    ANDEQ'Y'                                       095092
+     C           ERROR     ANDEQ'Y'                                       095092
+     C                     MOVE '*'       COPCOM                          095092
+     C                     ENDIF                                          095092
+     C*                                                                   095092
+     C           ERROR     IFEQ 'Y'                                       095092
+     C                     MOVE MSG       NOTICE                          095092
+      *                                                                   CAA009
+      * If no source found then change /COPY to comment line.             CAA009
+      *                                                                   CAA009
+     C                     MOVE '*'       COPCOM                          CAA009
+     C           ARRAY     IFEQ 'X/COPY'                                  CAA011
+     C           SRCTYP    ANDEQ'RPG'                                     CAA011
+     C           ARRAY     OREQ 'X/COPY'                                  CPK008
+     C           SRCTYP    ANDEQ'RPGLE'                                   CPK008
+     C           ARRAY     OREQ 'X/COPY'                                                    Ar853603
+     C           SRCTYP    ANDEQ'SQLRPGLE'                                                  Ar853603
+     C           ARRAY     OREQ 'X/COPY'                                                      CUP040
+     C           SRCTYP    ANDEQ'SQLRPG'                                                      CUP040
+     C                     MOVE *ON       *IN58                           CAA011
+     C                     ENDIF                                          CAA011
+     C                     ENDIF                                          095092
+     C*                                                                   095092
+     C                     ENDIF                                          095092
+      *
+     C* As RPG /COPYs are now included, generate the lines numbers for    095092
+     C*  all source types                                                 095092
+     C***********SRCTYP    IFEQ 'RPG'                                     095092
+     C***********          MOVE INPSEQ    OUTSEQ                          095092
+     C***********          ELSE                                           095092
+     C***********          ADD  1         OUTSEQ                          095092
+     C***********          ENDIF                                          095092
+     C*                                                                   095092
+     C**************       ADD  1         OUTSEQ                   095092 CAA009
+     C*                                                                   095092
+     C           CPYOMT    IFEQ 'START'                                   CAA009
+     C           OMTFND    ANDEQ'N'                                       CAA009
+     C                     MOVE INPSEQ    OUTSEQ                          CAA009
+     C                     ENDIF                                          CAA009
+     C*                                                                   CAA009
+     C           OUTSEQ    IFLE SRCSEQ                                    CAA009
+     C           VERIFY    ANDLESRCSEQ                                    CAA009
+     C                     MOVE INPSEQ    OUTSEQ                          CAA009
+     C                     ENDIF                                          CAA009
+     C*                                                                   CAA009
+     C           CPYOMT    IFEQ 'END '                                    CAA009
+     C           OUTSEQ    ANDEQSRCSEQ                                    CAA009
+     C                     Z-ADDINPSEQ    OUTSEQ                          CAA009
+     C                     ENDIF                                          CAA009
+     C*                                                                   CAA009
+     C           SRCTYP    IFEQ 'CLP'                                     CAA009
+     C           INPSEQ    ANDLEWRKSEQ                                    CAA009
+     C           *IN98     ANDNE*OFF                                      CAA009
+     C           SRCTYP    OREQ 'CLLE'                                    CPK008
+     C           INPSEQ    ANDLEWRKSEQ                                    CPK008
+     C           *IN98     ANDNE*OFF                                      CPK008
+     C                     ADD  0.01      WRKSEQ                          CAA009
+     C                     Z-ADDWRKSEQ    OUTSEQ                          CAA009
+     C                     ENDIF                                          CAA009
+     C*                                                                   CAA009
+      *                                                                   CAA009
+     C                     MOVE OUTSEQ    SRCSEQ
+     C                     MOVE OUTDTA    SRCDTA
+     C                     MOVE OUTDAT    SRCDAT                          CCB009
+     C*                                                                   CAA011
+     C* To control the output for /COPY's in arrays.                      CAA011
+     C*                                                                   CAA011
+     C           ARRAY     IFEQ 'X/COPY'                                  CAA011
+     C           SRCTYP    ANDEQ'RPG'                                     CAA011
+     C           ARRAY     OREQ 'X/COPY'                                  CPK008
+     C           SRCTYP    ANDEQ'RPGLE'                                   CPK008
+     C           ARRAY     OREQ 'X/COPY'                                                    Ar853603
+     C           SRCTYP    ANDEQ'SQLRPGLE'                                                  Ar853603
+     C           ARRAY     OREQ 'X/COPY'                                                      CUP040
+     C           SRCTYP    ANDEQ'SQLRPG'                                                      CUP040
+     C                     MOVE *ON       *IN58                           CAA011
+     C                     MOVE ARRAY     ARSTR1  6                       CAA011
+     C                     MOVE ARRAY     ARSTR2  6                       CAA011
+     C                     ENDIF                                          CAA011
+     C*                                                                   CAA011
+     C           ARSTR1    IFEQ 'X/COPY'                                  CAA011
+     C           CPYOMT    ANDEQ'START'                                   CAA011
+     C                     MOVE *ON       *IN58                           CAA011
+     C           ARRAY     IFNE 'X/COPY'                                  CAA011
+     C                     MOVE *BLANKS   ARSTR1                          CAA011
+     C                     ENDIF                                          CAA011
+     C                     ENDIF                                          CAA011
+     C*                                                                   CAA011
+     C           ARSTR2    IFEQ 'X/COPY'                                  CAA011
+     C           CPYOMT    ANDEQ'END  '                                   CAA011
+     C                     MOVE *ON       *IN58                           CAA011
+     C           ARRAY     IFNE 'X/COPY'                                  CAA011
+     C                     MOVE *BLANKS   ARSTR2                          CAA011
+     C                     ENDIF                                          CAA011
+     C                     ENDIF                                          CAA011
+     C*                                                                   CAA011
+     C           OMTSTS    IFNE 'OMIT'                                    082942
+     C           *IN58     IFEQ *OFF                                      CAA011
+     C                     WRITEOUTPUT
+     C                     ELSE                                           CAA011
+     C                     MOVE *OFF      *IN58                           CAA011
+     C                     ENDIF                                          CAA011
+     C                     END                                            082942
+      *
+     C                     MOVE *BLANKS   ARSTR1                          163132
+     C                     MOVE *BLANKS   ARSTR2                          163132
+      *
+     C                     ENDSR
+      ********************************************************************082942
+      *                                                                   082942
+      *    OMITSR - Subroutine to check /COPY for omit processing.        082942
+      *                                                                   082942
+     C           OMITSR    BEGSR                                          082942
+      *                                                                   082942
+      ** Check for embedded omit instructions.                            082942
+     C           ERROR     IFEQ 'N'                                       082942
+     C           CPYOMT    IFEQ 'START'                                   082942
+     C                     MOVEL'OMIT'    OMTSTS  4                       082942
+     C                     END                                            082942
+     C                     CALL 'UTC0023'                                 082942
+     C                     PARM           CPYFIL                          082942
+     C                     PARM           CPYSRC                          082942
+     C                     PARM           CPYOMT  5                       082942
+     C           CPYOMT    IFEQ 'START'                                   082942
+     C                     EXSR WRITE                                     082942
+     C                     EXSR OMTRPG                                    082942
+     C                     END                                            082942
+     C           CPYOMT    IFEQ 'END  '                                   082942
+     C                     MOVEL*BLANKS   OMTSTS                          082942
+     C           SRCTYP    IFEQ 'RPG'                                     082942
+     C           SRCTYP    OREQ 'RPGLE'                                   CPK008
+     C           SRCTYP    OREQ 'SQLRPGLE'                                                  Ar853603
+     C           SRCTYP    OREQ 'SQLRPG'                                                      CUP040
+     C                     EXSR WRITE                                     082942
+     C                     END                                            082942
+     C                     END                                            082942
+     C                     END                                            082942
+      *                                                                   082942
+      *                                                                   082942
+     C                     ENDSR                                          082942
+      ********************************************************************082942
+     C*                                                                   095092
+     C*    COPY2L - Subroutine to process the data from a top level       095092
+     C*             /COPY and convert to comments any /COPY lines that it 095092
+     C*             includes that point to /COPYs that do not exist.      095092
+     C*                                                                   095092
+     C*    Note this is only performed for RPG - the second level /COPY   095092
+     C*             is processed by the compiler.                         095092
+     C*                                                                   095092
+     C           COPY2L    BEGSR                                          095092
+     C*                                                                   095092
+     C*  Reset the '/COPY member not found' flag (ERROR) to 'N', as it    095092
+     C*   will be set on by a lower level SR if any /COPY member is       095092
+     C*   and clear any clutter out of the work fields.                   095092
+     C                     MOVE 'N'       ERROR                           095092
+     C                     MOVE *BLANKS   CPYFIL                          095092
+     C                     MOVE *BLANKS   CPYSRC                          095092
+     C*                                                                   095092
+     C*  Check whether this line is a /COPY.  If it is use the SCAN       095092
+     C*   subroutine to determine the name on the /COPY source file and   095092
+     C*   member.                                                         095092
+     C*  SR SCAN will also use SR CHKCPY to check if the /COPY member     095092
+     C*   exists and use SR OMITSR to see if the /COPY member includes    095092
+     C*   any 'OMIT' instructions.  This last part is irrelevant but can  095092
+     C*   be ignored as the fileds it sets up will not be used until      095092
+     C*   after the next main program line has been read when they will   095092
+     C*   be reset.                                                       095092
+     C*                                                                   095092
+     C           5         SUBSTINPDTA:7  CCOPY   5                       095092
+     C           CCOPY     IFEQ '/COPY'                                   095092
+     C                     EXSR SCAN                                      095092
+     C                     END                                            095092
+     C*                                                                   095092
+     C                     ENDSR                                          095092
+     C*                                                                   095092
+     C********************************************************************095092
+**  CPY@
+(c) Finastra International Limited 2001

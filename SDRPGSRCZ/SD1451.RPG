@@ -1,0 +1,1903 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Data feed request (MDF)')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing data module                                 *
+      *                                                               *
+      *  SD1451 - Data Feed Request (MDF)                             *
+      *                                                               *
+      *  Function:  This program is used to enter details related to  *
+      *  a data feed request                                          *
+      *                                                               *
+      *  Called By: SD1450 - Data Feed Request Maintenance            *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. 213560             Date 29May03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 196570             Date 06Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006  *CREATE    Date 19Sep00               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  213560 - Can enquire on data request but still add a currency*
+      *  196570 - Patch for Market Data Feed (recompile)              *
+      *  CSD006 - Market Data Feed                                    *
+      *                                                               *
+      *****************************************************************
+      * INDICATORS                                                    *
+      * 06 - Enable F6                                                *
+      * 10 - Enable F10                                               *
+      * 29 - Protect all screen fields                                *
+      * 30-51 - Handle screen fields error                            *
+      * 90 - Work indicator                                           *
+      *****************************************************************
+     FSD1451DFCF  E                    WORKSTN
+     F                                              KINFSR *PSSR
+     FSDMDFRL0UF  E           K        DISK                      A    UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      ** Data feed request items
+     FSDMDFIL0UF  E           K        DISK                           UC
+     F                                              KCOMIT
+     F                                              KINFSR *PSSR
+      /EJECT
+      *
+      ** Array containing Copyright statement
+     E                    CPY@    1   1 80
+      ** Array of QCMDEXC commands
+     E                    CMD@    1   1 80
+      *
+      ** Array of QCMDEXC command to edit
+      /COPY SDCPYSRC,SD1453E001
+      *
+      ** Time array HH:MM
+     E                    @T         20  5
+      ** Yes/No array
+     E                    @Y         20  1
+      ** Data structure to handle time fields on the screen
+      /COPY SDCPYSRC,SD1451I001
+      ** Data structure for subroutines used to format time
+      /COPY SDCPYSRC,SD1451I002
+      /SPACE 3
+      ** NAMED CONSTANTS
+      *
+     I              '0123456789'          C         DIGITS
+     ISDY       E DSDSSDY
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+      ** Midas SD MDF source code
+     ISDMDFS    E DSSDMDFSPD
+      ** Midas SD MDF mapping code
+     ISDMAPC    E DSSDMAPCPD
+      ** Midas SD Data Feed Request Details
+     I@1DBRC    E DSSDMDFRPD
+     I#1DBRC      DS                           9999
+      /EJECT
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           P@RTN   7
+      ** Request Id
+     C                     PARM           P@REQI
+      ** Action code
+     C                     PARM           P@ANCD  1
+      ** Key Pressed
+     C                     PARM           P@KEYP  2
+      *
+     C           *LIKE     DEFN MRREQI    P@REQI
+      *
+      ** Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Read in Installation Data
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+      *
+      ** Set Date Format Indicator *IN98  on if date format is MMDDYY
+      *
+     C           AGDFF     IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     EXSR INZPGM
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR MAIN
+     C                     ENDIF
+      *
+     C                     EXSR TERPGM
+     C                     SETON                     LR
+      *
+      *****************************************************************
+      * INZPGM - Initialize program                                   *
+      *****************************************************************
+     C           INZPGM    BEGSR
+     C                     MOVEL*BLANK    P@RTN
+     C                     MOVEL'N'       WEND    1
+      ** Open files with option SHARE *NO
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDMDFRL0'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDMDFRL0
+     C                     MOVEACMD@,1    EDT
+     C                     MOVEL'SDMDFIL0'WARG10
+     C                     EXSR EXECMD
+     C                     OPEN SDMDFIL0
+      ** Initialize msg sub file pgmq
+     C                     MOVELPGM       ##PGM
+      ** Screen variables
+     C                     MOVELAGMRDT    SRUNA
+     C                     MOVELWSID      SWSID
+     C                     MOVELUSER      SUSER
+      *
+      ** Enable Fields
+     C                     EXSR ENAFLD
+      *
+      ** Enable Function Keys
+     C                     EXSR ENAKEY
+      *
+      ** Retrieve/Convert Informations from file record
+     C           P@REQI    IFNE *BLANK
+     C                     EXSR RTVRCD
+     C           P@RTN     IFEQ *BLANK
+     C                     EXSR CVTRCD
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * TERPGM - Terminate program                                    *
+      *****************************************************************
+     C           TERPGM    BEGSR
+     C                     CLOSESDMDFRL0
+     C                     CLOSESDMDFIL0
+     C                     ENDSR
+      *****************************************************************
+      * MAIN - Main                                                   *
+      *****************************************************************
+     C           MAIN      BEGSR
+      *
+     C           WEND      DOUEQ'Y'
+      ** Display screen
+     C                     EXSR DSPSCR
+      ** Exit requested ?
+     C           *INKC     IFNE '1'
+     C           *INKL     ANDNE'1'
+      ** Validate screen
+     C           P@ANCD    IFEQ 'I'
+     C           P@ANCD    OREQ 'A'
+     C                     EXSR VALSCR
+     C                     ENDIF
+      *
+     C           P@MSGI    IFEQ *BLANK
+     C           WQUERY    ANDNE'1'
+      ** Update process ?
+     C           *INKJ     IFEQ '1'
+     C           P@ANCD    OREQ 'I'
+     C           P@ANCD    OREQ 'A'
+     C           P@ANCD    OREQ 'E'
+      ** Lock records
+     C           P@ANCD    IFEQ 'D'
+     C           P@ANCD    OREQ 'A'
+     C                     EXSR LCKRCD
+     C                     ENDIF
+      ** Update them
+     C           P@MSGI    IFEQ *BLANK
+     C                     EXSR UPDFIL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      ** Call another transaction ?
+     C           P@MSGI    IFEQ *BLANK
+     C                     EXSR OTHPGM
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDDO
+      *
+     C                     ENDSR
+      *****************************************************************
+      * DSPSCR - Display screen                                       *
+      *****************************************************************
+     C           DSPSCR    BEGSR
+      *
+      ** Default screen values
+     C                     EXSR DFTSCR
+      *
+      ** Display the screen
+     C                     WRITE#MSGCTL
+     C                     EXFMTSD1451F0
+      *
+      ** Clear Message Q and highligthed fields
+     C                     CALL 'ZA0250'
+     C                     SETOF                     30
+     C                     SETOF                     31
+     C                     SETOF                     32
+     C                     SETOF                     33
+     C                     SETOF                     34
+     C                     SETOF                     35
+     C                     SETOF                     36
+     C                     SETOF                     37
+     C                     SETOF                     38
+     C                     SETOF                     39
+     C                     SETOF                     40
+     C                     SETOF                     41
+     C                     SETOF                     42
+     C                     SETOF                     43
+     C                     SETOF                     44
+     C                     SETOF                     45
+     C                     SETOF                     46
+     C                     SETOF                     47
+     C                     SETOF                     48
+     C                     SETOF                     49
+     C                     SETOF                     50
+     C                     SETOF                     51
+      ** Used as a flag to determine whether validation error occured
+     C                     MOVEL*BLANK    P@MSGI
+      *
+      ** Determine which key has been pressed
+     C                     SELEC
+      ** F3 pressed
+     C           *INKC     WHEQ '1'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'03'      P@KEYP
+      ** F6 pressed
+     C           *INKF     WHEQ '1'
+     C                     MOVEL'06'      P@KEYP
+      ** F10 pressed
+     C           *INKJ     WHEQ '1'
+     C                     SELEC
+     C           P@ANCD    WHEQ 'D'
+     C                     MOVEL'10'      P@KEYP
+     C                     OTHER
+     C                     ENDSL
+      ** F12 pressed
+     C           *INKL     WHEQ '1'
+     C                     MOVEL'Y'       WEND
+     C                     MOVEL'12'      P@KEYP
+      ** Enter pressed
+     C                     OTHER
+     C                     MOVEL*BLANK    P@KEYP
+     C                     SELEC
+     C           P@ANCD    WHEQ 'D'
+     C                     MOVEL'Y'       WEND
+     C           P@ANCD    WHEQ 'E'
+     C                     MOVEL'Y'       WEND
+     C                     OTHER
+     C                     ENDSL
+      *
+     C                     ENDSL
+      *
+     C                     ENDSR
+      *****************************************************************
+      * VALSCR - Validate screen                                      *
+      *****************************************************************
+     C           VALSCR    BEGSR
+      ** Help requested
+     C                     EXSR HLPREQ
+      *
+      ** Check request identifier
+     C                     EXSR CKREQI
+      ** Check description
+     C                     EXSR CKDESC
+      ** Check market data source
+     C                     EXSR CKDTSC
+      ** Check mapping code
+     C                     EXSR CKMAPC
+      ** Check first time
+     C                     EXSR CKFRST
+      ** Check last time
+     C                     EXSR CKLAST
+      ** Check interval time
+     C                     EXSR CKITRV
+      ** Check multi times
+     C                     EXSR CKMUTM
+      ** Check all currencies
+     C                     EXSR CKACCY
+      ** Check all securities
+     C                     EXSR CKASEC
+      ** Check all securities in which a position is held
+     C                     EXSR CKASBP
+      ** Check all base rates
+     C                     EXSR CKABRT
+      ** Check all populate fields
+     C                     EXSR CKPOPU
+      ** Check refresh list daily
+     C                     EXSR CKREFD
+      ** Display warnings
+     C                     EXSR DSPWRN
+      *
+     C           EXVSCR    ENDSR
+      *****************************************************************
+      * OTHPGM - Other Programs need to be called                     *
+      *****************************************************************
+     C           OTHPGM    BEGSR
+     C                     MOVEL*BLANK    P2MSGD
+      *
+     C                     SELEC
+      ** Insert Mode and a field in Y among Populate Field tags
+     C           P@ANCD    WHEQ 'I'
+     C           WNBYPO    ANDNE0
+     C                     EXSR POPITM
+     C           P2RTN     IFNE *BLANK
+      ** Errors: redisplay the screen with error message
+     C                     MOVELP2RTN     P@MSGI
+     C                     MOVELP2MSGD    P@MSGD
+     C                     MOVEL'N'       WEND
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+      ** Amend Mode or F6 pressed
+     C           *INKF     WHEQ '1'
+     C           P@ANCD    OREQ 'A'
+      ** If something has changed among populate item
+      ** or a change has occured in the API type of mapping code.
+      ** All are 'N' => delete all the items
+      ** One is 'Y' => populate again
+      ** Before displaying the item list
+     C           WPOPCH    IFEQ 'Y'
+     C           WAPTCH    OREQ 'Y'
+     C           WNBYPO    IFEQ 0
+     C                     EXSR DLTALL
+     C                     ELSE
+     C                     EXSR POPITM
+     C                     ENDIF
+     C                     ENDIF
+     C           P2RTN     IFEQ *BLANK
+     C                     EXSR LSTITM
+     C                     ENDIF
+      ** No errors: see what key has been pressed
+     C           P2RTN     IFEQ *BLANK
+     C                     SELEC
+     C           P2KEYP    WHEQ '12'
+     C                     MOVEL'N'       WEND
+     C           P2KEYP    WHEQ '03'
+     C                     MOVELP2KEYP    P@KEYP
+     C                     MOVEL'Y'       WEND
+     C           P2KEYP    WHEQ *BLANK
+     C                     MOVEL'Y'       WEND
+     C                     ENDSL
+     C                     ELSE
+      ** Errors: redisplay the screen with error message
+     C                     MOVELP2RTN     P@MSGI
+     C                     MOVELP2MSGD    P@MSGD
+     C                     MOVEL'N'       WEND
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C                     ENDSL
+     C                     ENDSR
+      *****************************************************************
+      * UPDFIL - Update files                                         *
+      *****************************************************************
+     C           UPDFIL    BEGSR
+      *
+     C                     SELEC
+     C           P@ANCD    WHEQ 'I'
+     C                     CLEARSDMDFRD0
+     C                     EXSR CVTOTH
+     C                     EXSR CVTSCR
+     C                     WRITESDMDFRD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0004' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C           P@ANCD    WHEQ 'D'
+     C           SREQI     SETLLSDMDFIL0
+     C           SREQI     READESDMDFIL0                 90
+     C           *IN90     DOWEQ'0'
+     C           P@MSGI    ANDEQ*BLANK
+     C                     DELETSDMDFID0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0004' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ELSE
+     C           SREQI     READESDMDFIL0                 90
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C           P@MSGI    IFEQ *BLANK
+     C                     DELETSDMDFRD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0004' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C                     ENDIF
+     C           P@ANCD    WHEQ 'A'
+     C                     EXSR CVTOTH
+     C                     EXSR CVTSCR
+     C                     UPDATSDMDFRD0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0004' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ELSE
+      ** Memorize to monitor updates done by other workstations
+     C                     MOVEL@1DBRC    #1DBRC
+      ** API Type of the request has changed now
+     C                     MOVELMCAPIT    SHAPIT
+      ** Reset all warnings flags
+     C                     MOVEL'N'       WN0071
+     C                     MOVEL'N'       WN0056
+     C                     ENDIF
+     C                     ENDSL
+      *
+      ** End of the transaction
+     C           P@MSGI    IFEQ *BLANK
+     C                     MOVEL'Y'       WEND
+     C                     COMIT
+     C                     ELSE
+      *
+      ** Unlock all the files before ROLBACK
+     C                     UNLCKSDMDFRL0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDMDFRL0'WFILNM
+     C                     EXSR ERR002
+     C                     ENDIF
+     C                     UNLCKSDMDFIL0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDMDFIL0'WFILNM
+     C                     EXSR ERR002
+     C                     ENDIF
+      *
+     C                     ROLBK
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * LCKRCD - Lock Records                                         *
+      *****************************************************************
+     C           LCKRCD    BEGSR
+      ** Check record hasn't been updated by another workstation
+      ** And prepare the update
+      ** Otherwise send error messages
+      *
+      ** Record deleted by another workstation ?
+     C           SREQI     CHAINSDMDFRL0             90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0007' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      ** Record updated by another workstation ?
+     C           *IN90     IFEQ '0'
+     C           @1DBRC    IFNE #1DBRC
+     C                     UNLCKSDMDFRL0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDMDFRL0'WFILNM
+     C                     EXSR ERR002
+     C                     ENDIF
+     C                     MOVEL'Y2USRMSG'P@MSGF
+     C                     MOVEL'Y2U0007' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * RTVRCD - Retrieve Information from file record                *
+      *****************************************************************
+     C           RTVRCD    BEGSR
+      ** Get record
+     C           P@REQI    CHAINSDMDFRL0             90
+     C           *IN90     IFEQ '0'
+      ** Unlock record
+     C                     UNLCKSDMDFRL0               90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDMDFRL0'WFILNM
+     C                     EXSR ERR002
+     C                     ENDIF
+      ** Memorize to monitor updates done by other workstations
+     C                     MOVEL@1DBRC    #1DBRC
+     C                     ELSE
+     C                     MOVEL'SDM0046' P@RTN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CVTRCD - Convert Record Fields                                *
+      *****************************************************************
+     C           CVTRCD    BEGSR
+     C                     MOVELMRREQI    SREQI
+     C                     MOVELMRDESC    SDESC
+     C                     MOVELMRDTSC    SDTSC
+     C                     MOVELMRMAPC    SMAPC
+     C                     Z-ADDMRFRST    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SFRST
+      *
+     C                     Z-ADDMRLAST    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SLAST
+      *
+     C                     Z-ADDMRITRV    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SITRV
+      *
+     C                     Z-ADDMRSP01    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP01
+      *
+     C                     Z-ADDMRSP02    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP02
+      *
+     C                     Z-ADDMRSP03    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP03
+      *
+     C                     Z-ADDMRSP04    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP04
+      *
+     C                     Z-ADDMRSP05    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP05
+      *
+     C                     Z-ADDMRSP06    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP06
+      *
+     C                     Z-ADDMRSP07    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP07
+      *
+     C                     Z-ADDMRSP08    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP08
+      *
+     C                     Z-ADDMRSP09    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP09
+      *
+     C                     Z-ADDMRSP10    HHMM
+     C                     EXSR FMTHCM
+     C                     MOVELHHCMM     SSP10
+      *
+     C                     MOVELMRACCY    SACCY
+     C                     MOVELMRASEC    SASEC
+     C                     MOVELMRASBP    SASBP
+     C                     MOVELMRABRT    SABRT
+     C                     MOVELMRREFD    SREFD
+      *
+     C                     MOVELMRMAPC    P@MAPC    P
+     C                     CALL 'AOMAPCR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@MAPC 32
+     C           SDMAPC    PARM           SDY
+     C           P@RTCD    IFEQ *BLANK
+     C           *LIKE     DEFN MCAPIT    SHAPIT
+     C                     MOVELMCAPIT    SHAPIT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CVTSCR - Convert Screen Fields                                *
+      *****************************************************************
+     C           CVTSCR    BEGSR
+     C                     MOVELSREQI     MRREQI
+     C                     MOVELSDESC     MRDESC
+     C                     MOVELSDTSC     MRDTSC
+     C                     MOVELSMAPC     MRMAPC
+      *
+     C                     MOVELSFRST     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRFRST
+      *
+     C                     MOVELSLAST     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRLAST
+      *
+     C                     MOVELSITRV     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRITRV
+      *
+     C                     MOVELSSP01     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP01
+      *
+     C                     MOVELSSP02     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP02
+      *
+     C                     MOVELSSP03     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP03
+      *
+     C                     MOVELSSP04     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP04
+      *
+     C                     MOVELSSP05     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP05
+      *
+     C                     MOVELSSP06     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP06
+      *
+     C                     MOVELSSP07     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP07
+      *
+     C                     MOVELSSP08     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP08
+      *
+     C                     MOVELSSP09     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP09
+      *
+     C                     MOVELSSP10     HHCMM
+     C                     EXSR FMTHM
+     C                     Z-ADDHHMM      MRSP10
+      *
+     C                     MOVELSACCY     MRACCY
+     C                     MOVELSASEC     MRASEC
+     C                     MOVELSASBP     MRASBP
+     C                     MOVELSABRT     MRABRT
+     C                     MOVELSREFD     MRREFD
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CVTOTH - Convert Other Fields                                 *
+      *****************************************************************
+     C           CVTOTH    BEGSR
+     C                     MOVEL'D'       MRRECI
+     C                     MOVELP@ANCD    MRTYLC
+     C                     Z-ADDAGRDNB    MRLCD
+     C                     ENDSR
+      *****************************************************************
+      * ENAKEY - Enable Function Keys                                 *
+      *****************************************************************
+     C           ENAKEY    BEGSR
+      *
+     C                     SETOF                     10
+     C                     SETOF                     06
+      ** Enable F10 ?
+     C           P@ANCD    IFEQ 'D'
+     C                     SETON                     10
+     C                     ENDIF
+      ** Enable F06 ?
+     C           P@ANCD    IFNE 'I'
+     C                     SETON                     06
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * ENAFLD - Enable Fields                                        *
+      *****************************************************************
+     C           ENAFLD    BEGSR
+     C                     SETOF                     29
+      *
+      ** Protect fields
+     C           P@ANCD    IFEQ 'D'
+     C           P@ANCD    OREQ 'E'
+     C                     SETON                     29
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * DFTSCR - Default screen values                                *
+      *****************************************************************
+     C           DFTSCR    BEGSR
+      *
+     C           SREFD     IFEQ *BLANK
+     C                     MOVEL'N'       SREFD
+     C                     ENDIF
+     C           SACCY     IFEQ *BLANK
+     C                     MOVEL'N'       SACCY
+     C                     ENDIF
+     C           SASEC     IFEQ *BLANK
+     C                     MOVEL'N'       SASEC
+     C                     ENDIF
+     C           SASBP     IFEQ *BLANK
+     C                     MOVEL'N'       SASBP
+     C                     ENDIF
+     C           SABRT     IFEQ *BLANK
+     C                     MOVEL'N'       SABRT
+     C                     ENDIF
+      *
+     C                     MOVEL':'       COL1
+     C                     MOVEL':'       COL2
+     C                     MOVEL':'       COL3
+     C                     MOVEL':'       COL4
+     C                     MOVEL':'       COL5
+     C                     MOVEL':'       COL6
+     C                     MOVEL':'       COL7
+     C                     MOVEL':'       COL8
+     C                     MOVEL':'       COL9
+     C                     MOVEL':'       COL10
+     C                     MOVEL':'       COL11
+     C                     MOVEL':'       COL12
+     C                     MOVEL':'       COL13
+     C                     ENDSR
+      *****************************************************************
+      * HLPREQ - Help Requested                                       *
+      *****************************************************************
+     C           HLPREQ    BEGSR
+      ** Flag set to Y if '?' entered somewhere on the screen
+     C                     MOVEL'0'       WQUERY  1
+     C           '?'       SCAN SDTSC     WIQM    30
+     C           WIQM      IFNE 0
+     C                     MOVEL'1'       WQUERY
+     C                     ENDIF
+     C           '?'       SCAN SMAPC     WIQM    30
+     C           WIQM      IFNE 0
+     C                     MOVEL'1'       WQUERY
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKREQI - Check request identifier                             *
+      *****************************************************************
+     C           CKREQI    BEGSR
+      *
+      ** Field must be entered
+     C           SREQI     IFEQ *BLANK
+     C                     MOVEL'SDM0012' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+      *
+      ** No leading blank are allowed
+     C           *IN30     IFEQ '0'
+     C           ' '       CHECKSREQI     WNOBLK  30
+     C           WNOBLK    IFGT 1
+     C                     MOVEL'SDM0013' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN30     IFEQ '0'
+     C           SREQI     SETLLSDMDFRL0                 90
+      ** No duplicate records are admitted in insert mode
+     C                     SELEC
+     C           P@ANCD    WHEQ 'I'
+     C           *IN90     IFEQ '1'
+     C                     MOVEL'SDM0019' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+      ** Record must exist
+     C           P@ANCD    WHEQ 'A'
+     C           *IN90     IFEQ '0'
+     C                     MOVEL'SDM0020' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     30
+     C                     ENDIF
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKDESC - Check description                                    *
+      *****************************************************************
+     C           CKDESC    BEGSR
+      *
+      ** Field must be entered
+     C           SDESC     IFEQ *BLANK
+     C                     MOVEL'SDM0012' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     31
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKDTSC - Check market data source                             *
+      *****************************************************************
+     C           CKDTSC    BEGSR
+      *
+      ** Field is mandatory
+     C           SDTSC     IFEQ *BLANK
+     C                     MOVEL'SDM0012' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     32
+     C                     ENDIF
+      *
+      ** Field must be valid
+     C           SDTSC     IFNE *BLANK
+     C                     MOVELSDTSC     P@DTSC    P
+     C                     CALL 'AOMDFSR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@DTSC 32
+     C           SDMDFS    PARM           SDY
+     C           P@RTCD    IFEQ *BLANK
+     C                     MOVELP@DTSC    SDTSC
+     C                     ELSE
+     C           P@RTCD    IFNE *BLANK
+     C                     MOVEL'SDM0005' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     32
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKMAPC - Check mapping code                                   *
+      *****************************************************************
+     C           CKMAPC    BEGSR
+      *
+      ** Field is mandatory
+     C           SMAPC     IFEQ *BLANK
+     C                     MOVEL'SDM0012' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     33
+     C                     ENDIF
+      *
+      ** Field must be valid
+     C           SMAPC     IFNE *BLANK
+     C                     MOVELSMAPC     P@MAPC    P
+     C                     CALL 'AOMAPCR0'
+     C                     PARM           P@RTCD  7
+     C                     PARM '*KEY'    P@OPTN  7
+     C                     PARM           P@MAPC 32
+     C           SDMAPC    PARM           SDY
+     C           P@RTCD    IFEQ *BLANK
+     C                     MOVELP@MAPC    SMAPC
+     C                     ELSE
+     C           P@RTCD    IFNE *BLANK
+     C                     MOVEL'SDM0014' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     33
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKFRST - Check first time                                     *
+      *****************************************************************
+     C           CKFRST    BEGSR
+      *
+      ** Time must be entered
+     C           SFIHH     IFEQ *BLANK
+     C           SFIMM     ANDEQ*BLANK
+     C                     MOVEL'SDM0007' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     34
+     C                     ENDIF
+      *
+      ** Check format
+     C                     MOVELSFIHH     WTIMHH
+     C                     MOVELSFIMM     WTIMMM
+     C                     MOVELCOL1      WTIMCO
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHNE *BLANK
+     C                     MOVEL'SDM0006' P@MSGI
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     34
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * CKLAST - Check last time                                      *
+      *****************************************************************
+     C           CKLAST    BEGSR
+      *
+      ** Time must be entered
+     C           SLAHH     IFEQ *BLANK
+     C           SLAMM     ANDEQ*BLANK
+     C                     MOVEL'SDM0007' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     35
+     C                     ENDIF
+      *
+      ** Check format
+     C                     MOVELSLAHH     WTIMHH
+     C                     MOVELSLAMM     WTIMMM
+     C                     MOVELCOL2      WTIMCO
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHNE *BLANK
+     C                     MOVEL'SDM0006' P@MSGI
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     35
+     C                     ENDIF
+      *
+      ** Check time series
+     C           WERRTM    IFEQ *BLANK
+      *
+     C                     MOVELSFRST     @T,1
+     C                     MOVELSLAST     @T,2
+     C                     Z-ADD2         WNBTM
+     C                     EXSR CKTMSE
+     C           WERTMS    IFNE *BLANK
+     C                     SELEC
+     C           WERTMS    WHEQ '01'
+     C                     MOVEL'SDM0008' P@MSGI
+     C           WERTMS    WHEQ '02'
+     C                     MOVEL'SDM0021' P@MSGI
+     C           WERTMS    WHEQ '03'
+     C                     MOVEL'SDM0009' P@MSGI
+     C                     ENDSL
+      ** 34 is start of error (PC,RI) for SFRST
+      ** Highligth the rigth field
+      ** Highlight = *INPC of first field + Index of error - 1
+     C           34        ADD  WFLDTM    I
+     C                     SUB  1         I
+     C                     MOVEA'1'       *IN,I
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKITRV - Check interval time                                  *
+      *****************************************************************
+     C           CKITRV    BEGSR
+      *
+      ** Cannot be entered if first time is the same as last time
+     C           SITHH     IFNE *BLANK
+     C           SITMM     ORNE *BLANK
+     C           SFRST     IFEQ SLAST
+     C                     MOVEL'SDM0010' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     36
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check format
+     C                     MOVELSITHH     WTIMHH
+     C                     MOVELSITMM     WTIMMM
+     C                     MOVELCOL3      WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     36
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * CKMUTM - Check multi times                                    *
+      *****************************************************************
+     C           CKMUTM    BEGSR
+      *
+      ** Count Number of times filled
+     C                     MOVELSSP01     @T,1
+     C                     MOVELSSP02     @T,2
+     C                     MOVELSSP03     @T,3
+     C                     MOVELSSP04     @T,4
+     C                     MOVELSSP05     @T,5
+     C                     MOVELSSP06     @T,6
+     C                     MOVELSSP07     @T,7
+     C                     MOVELSSP08     @T,8
+     C                     MOVELSSP09     @T,9
+     C                     MOVELSSP10     @T,10
+     C                     Z-ADD10        WNBTM
+     C                     EXSR CNTNBT
+     C           *LIKE     DEFN WNBTIM    WNBRQT
+      ** Memorize it
+     C                     Z-ADDWNBTIM    WNBRQT
+      *
+      ** Not allowed ?
+     C           WNBRQT    IFGT 0
+     C           SFRST     IFEQ SLAST
+     C           SFRST     ANDNE*BLANK
+     C           SFRST     ANDNEBLKTIM
+     C                     MOVEL'SDM0022' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     37
+     C                     SETON                     38
+     C                     SETON                     39
+     C                     SETON                     40
+     C                     SETON                     41
+     C                     SETON                     42
+     C                     SETON                     43
+     C                     SETON                     44
+     C                     SETON                     45
+     C                     SETON                     46
+     C                     ENDIF
+      *
+     C           SITRV     IFNE *BLANK
+     C           SITRV     ANDNEBLKTIM
+     C                     MOVEL'SDM0023' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     37
+     C                     SETON                     38
+     C                     SETON                     39
+     C                     SETON                     40
+     C                     SETON                     41
+     C                     SETON                     42
+     C                     SETON                     43
+     C                     SETON                     44
+     C                     SETON                     45
+     C                     SETON                     46
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check formats
+     C                     MOVELS01HH     WTIMHH
+     C                     MOVELS01MM     WTIMMM
+     C                     MOVELCOL4      WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     37
+     C                     ENDIF
+      *
+     C                     MOVELS02HH     WTIMHH
+     C                     MOVELS02MM     WTIMMM
+     C                     MOVELCOL5      WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     38
+     C                     ENDIF
+      *
+     C                     MOVELS03HH     WTIMHH
+     C                     MOVELS03MM     WTIMMM
+     C                     MOVELCOL6      WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     39
+     C                     ENDIF
+      *
+     C                     MOVELS04HH     WTIMHH
+     C                     MOVELS04MM     WTIMMM
+     C                     MOVELCOL7      WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     40
+     C                     ENDIF
+      *
+     C                     MOVELS05HH     WTIMHH
+     C                     MOVELS05MM     WTIMMM
+     C                     MOVELCOL8      WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     41
+     C                     ENDIF
+      *
+     C                     MOVELS06HH     WTIMHH
+     C                     MOVELS06MM     WTIMMM
+     C                     MOVELCOL9      WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     42
+     C                     ENDIF
+      *
+     C                     MOVELS07HH     WTIMHH
+     C                     MOVELS07MM     WTIMMM
+     C                     MOVELCOL10     WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     43
+     C                     ENDIF
+      *
+     C                     MOVELS08HH     WTIMHH
+     C                     MOVELS08MM     WTIMMM
+     C                     MOVELCOL11     WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     44
+     C                     ENDIF
+      *
+     C                     MOVELS09HH     WTIMHH
+     C                     MOVELS09MM     WTIMMM
+     C                     MOVELCOL12     WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     45
+     C                     ENDIF
+      *
+     C                     MOVELS10HH     WTIMHH
+     C                     MOVELS10MM     WTIMMM
+     C                     MOVELCOL13     WTIMCO
+     C                     MOVEL'00:01'   WTIMBG
+     C                     EXSR CKTIME
+     C           WERRTM    IFNE *BLANK
+     C                     SELEC
+     C           WERRTM    WHEQ '01'
+     C                     MOVEL'SDM0006' P@MSGI
+     C           WERRTM    WHEQ '02'
+     C                     MOVEL'SDM0011' P@MSGI
+     C                     MOVEL'00:01'   P@MSGD
+     C                     ENDSL
+     C                     EXSR SNDMSG
+     C                     SETON                     46
+     C                     ENDIF
+      *
+      ** Check time series
+     C           WERRTM    IFEQ *BLANK
+      *
+     C                     MOVELSSP01     @T,1
+     C                     MOVELSSP02     @T,2
+     C                     MOVELSSP03     @T,3
+     C                     MOVELSSP04     @T,4
+     C                     MOVELSSP05     @T,5
+     C                     MOVELSSP06     @T,6
+     C                     MOVELSSP07     @T,7
+     C                     MOVELSSP08     @T,8
+     C                     MOVELSSP09     @T,9
+     C                     MOVELSSP10     @T,10
+     C                     Z-ADD10        WNBTM
+     C                     EXSR CKTMSE
+     C           WERTMS    IFNE *BLANK
+     C                     SELEC
+     C           WERTMS    WHEQ '01'
+     C                     MOVEL'SDM0008' P@MSGI
+     C           WERTMS    WHEQ '02'
+     C                     MOVEL'SDM0021' P@MSGI
+     C           WERTMS    WHEQ '03'
+     C                     MOVEL'SDM0009' P@MSGI
+     C                     ENDSL
+      ** 37 is start of error (PC,RI) for SSP01
+      ** Highligth the rigth field
+      ** Highlight = *INPC of first field + Index of error - 1
+     C           37        ADD  WFLDTM    I
+     C                     SUB  1         I
+     C                     MOVEA'1'       *IN,I
+     C                     EXSR SNDMSG
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** No errors in S/R CKTMSE ?
+     C           WERTMS    IFEQ *BLANK
+      ** First time must be > First time requested
+     C           SSP01     IFNE *BLANK
+     C           SSP01     ANDNEBLKTIM
+     C           SSP01     IFLE SFRST
+     C                     MOVEL'SDM0024' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     37
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Check last requested time
+      ** Last time requested must be < Last time
+     C           WNBRQT    IFNE 0
+     C                     MOVELSSP01     @T,1
+     C                     MOVELSSP02     @T,2
+     C                     MOVELSSP03     @T,3
+     C                     MOVELSSP04     @T,4
+     C                     MOVELSSP05     @T,5
+     C                     MOVELSSP06     @T,6
+     C                     MOVELSSP07     @T,7
+     C                     MOVELSSP08     @T,8
+     C                     MOVELSSP09     @T,9
+     C                     MOVELSSP10     @T,10
+     C                     Z-ADDWNBRQT    WPOLST
+     C                     MOVEL'<'       WOPCMP
+     C                     MOVELSLAST     WTMCMP
+     C                     EXSR CMLSTM
+     C           WERLST    IFNE *BLANK
+      ** 37 is start of error (PC,RI) for SSP01
+      ** Highligth the rigth field
+      ** Highlight = *INPC of first field + Index of error - 1
+     C           37        ADD  WNBRQT    I
+     C                     SUB  1         I
+     C                     MOVEA'1'       *IN,I
+     C                     MOVEL'SDM0025' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKACCY - Check all currencies                                 *
+      *****************************************************************
+     C           CKACCY    BEGSR
+      *
+     C           SACCY     IFNE 'Y'
+     C           SACCY     ANDNE'N'
+     C                     MOVEL'SDM0015' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     47
+     C                     ENDIF
+      *
+     C           SACCY     IFEQ 'Y'
+     C           MCAPIT    IFNE 'S'
+     C           MCAPIT    ANDNE'F'
+     C           MCAPIT    ANDNE'B'
+     C           MCAPIT    ANDNE'L'
+     C           P@MSGD    CAT  'S':0     P@MSGD
+     C           P@MSGD    CAT  'F':0     P@MSGD
+     C           P@MSGD    CAT  'B':0     P@MSGD
+     C           P@MSGD    CAT  'L':0     P@MSGD
+     C                     MOVEL'SDM0016' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     47
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKASEC - Check all securities                                 *
+      *****************************************************************
+     C           CKASEC    BEGSR
+     C           SASEC     IFNE 'Y'
+     C           SASEC     ANDNE'N'
+     C                     MOVEL'SDM0015' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     48
+     C                     ENDIF
+      *
+     C           SASEC     IFEQ 'Y'
+     C           MCAPIT    IFNE 'P'
+     C           P@MSGD    CAT  'P':0     P@MSGD
+     C                     MOVEL'SDM0016' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     48
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKASBP - Check all securities in which a position is held     *
+      *****************************************************************
+     C           CKASBP    BEGSR
+     C           SASBP     IFNE 'Y'
+     C           SASBP     ANDNE'N'
+     C                     MOVEL'SDM0015' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     49
+     C                     ENDIF
+      *
+     C           SASBP     IFEQ 'Y'
+     C           MCAPIT    IFNE 'P'
+     C           P@MSGD    CAT  'P':0     P@MSGD
+     C                     MOVEL'SDM0016' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     49
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKABRT - Check all base rates                                 *
+      *****************************************************************
+     C           CKABRT    BEGSR
+     C           SABRT     IFNE 'Y'
+     C           SABRT     ANDNE'N'
+     C                     MOVEL'SDM0015' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     50
+     C                     ENDIF
+      *
+     C           SABRT     IFEQ 'Y'
+     C           MCAPIT    IFNE 'M'
+     C           P@MSGD    CAT  'M':0     P@MSGD
+     C                     MOVEL'SDM0016' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     50
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKPOPU - Check all populate fields                            *
+      *****************************************************************
+     C           CKPOPU    BEGSR
+      *
+     C                     MOVELSACCY     @Y,1
+     C                     MOVELSASEC     @Y,2
+     C                     MOVELSASBP     @Y,3
+     C                     MOVELSABRT     @Y,4
+     C                     EXSR CNTNBY
+      ** Memorize number of Yes for S/R CKREFD, OTHPGM
+     C           *LIKE     DEFN WNBY      WNBYPO
+     C                     Z-ADDWNBY      WNBYPO
+     C           WNBY      IFGT 1
+     C                     MOVEL'SDM0017' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     47
+     C                     SETON                     48
+     C                     SETON                     49
+     C                     SETON                     50
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * DSPWRN - Display all the warning                              *
+      *****************************************************************
+     C           DSPWRN    BEGSR
+      ** This S/R is called after ALL the validation S/R.
+     C           P@MSGI    IFEQ *BLANK
+      ** Warning for mapping code
+     C                     EXSR WNMAPC
+      ** Warning for populate field
+     C                     EXSR WNPOPU
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * WNMAPC - Warning for mapping code                             *
+      *****************************************************************
+     C           WNMAPC    BEGSR
+      *
+      ** Change has occured in amend mode ?
+     C           P@ANCD    IFEQ 'A'
+      *
+     C                     MOVELMCAPIT    WCAPIT
+     C                     MOVELSHAPIT    WCRQAP
+     C                     EXSR APTCHG
+     C           WAPTCH    IFEQ 'Y'
+     C           WN0071    IFNE 'Y'
+     C                     MOVEL'Y'       WN0071
+     C                     MOVEL'SDM0071' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'N'       WN0071  1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * WNPOPU - Warning for populate field                           *
+      *****************************************************************
+     C           WNPOPU    BEGSR
+      *
+      ** Change has occured in amend mode ?
+     C           P@ANCD    IFEQ 'A'
+      *
+     C                     EXSR POPCHG
+     C           WPOPCH    IFEQ 'Y'
+     C           WN0056    IFNE 'Y'
+     C                     MOVEL'Y'       WN0056
+     C                     MOVEL'SDM0056' P@MSGI
+     C                     EXSR SNDMSG
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVEL'N'       WN0056  1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CNTNBT - Count number of Times                                *
+      *****************************************************************
+     C           CNTNBT    BEGSR
+     C                     Z-ADD0         WNBTIM  30
+      *
+     C                     DO   WNBTM     I       30
+     C           @T,I      IFNE *BLANK
+     C           @T,I      ANDNEBLKTIM
+     C                     ADD  1         WNBTIM
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     MOVEL*BLANK    @T
+     C                     Z-ADD0         WNBTM   30
+      *
+     C                     ENDSR
+      *****************************************************************
+      * APTCHG - Detect a change in API type te fields                *
+      *****************************************************************
+     C           APTCHG    BEGSR
+      ** New API type
+     C           *LIKE     DEFN MCAPIT    WCAPIT
+      ** Old API type
+     C           *LIKE     DEFN SHAPIT    WCRQAP
+      *
+     C                     MOVEL'N'       WAPTCH  1
+     C           WCRQAP    IFNE WCAPIT
+     C                     MOVEL'Y'       WAPTCH
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANK    WCAPIT
+     C                     MOVEL*BLANK    WCRQAP
+      *
+     C                     ENDSR
+      *****************************************************************
+      * POPCHG - Detect a chenge among populate fields                *
+      *****************************************************************
+     C           POPCHG    BEGSR
+     C                     MOVEL'N'       WPOPCH  1
+     C           SACCY     IFNE MRACCY
+     C           SACCY     IFEQ 'Y'
+     C                     MOVEL'Y'       WPOPCH
+     C                     ENDIF
+     C                     ENDIF
+     C           SASEC     IFNE MRASEC
+     C           SASEC     IFEQ 'Y'
+     C                     MOVEL'Y'       WPOPCH
+     C                     ENDIF
+     C                     ENDIF
+     C           SASBP     IFNE MRASBP
+     C           SASBP     IFEQ 'Y'
+     C                     MOVEL'Y'       WPOPCH
+     C                     ENDIF
+     C                     ENDIF
+     C           SABRT     IFNE MRABRT
+     C           SABRT     IFEQ 'Y'
+     C                     MOVEL'Y'       WPOPCH
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CMLSTM - Compare last time of an array with a reference time  *
+      *****************************************************************
+     C           CMLSTM    BEGSR
+     C                     MOVEL*BLANK    WERLST  2
+      *
+      ** Execute comparisons, error if criteria not satisfied
+     C                     Z-ADDWPOLST    I
+     C                     SELEC
+     C           WOPCMP    WHEQ '<='
+     C           @T,I      IFGT WTMCMP
+     C                     MOVEL'01'      WERLST
+     C                     ENDIF
+     C           WOPCMP    WHEQ '>='
+     C           @T,I      IFLT WTMCMP
+     C                     MOVEL'01'      WERLST
+     C                     ENDIF
+     C           WOPCMP    WHEQ '='
+     C           @T,I      IFNE WTMCMP
+     C                     MOVEL'01'      WERLST
+     C                     ENDIF
+     C           WOPCMP    WHEQ '<'
+     C           @T,I      IFGE WTMCMP
+     C                     MOVEL'01'      WERLST
+     C                     ENDIF
+     C           WOPCMP    WHEQ '>'
+     C           @T,I      IFLE WTMCMP
+     C                     MOVEL'01'      WERLST
+     C                     ENDIF
+     C                     ENDSL
+      *
+     C                     MOVEL*BLANK    @T
+     C                     Z-ADD0         WPOLST  30
+     C                     MOVEL*BLANK    WOPCMP  2
+     C                     MOVEL*BLANK    WTMCMP  5
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CNTNBY - Count number of 'Y'                                  *
+      *****************************************************************
+     C           CNTNBY    BEGSR
+      *
+     C                     Z-ADD1         I
+     C                     Z-ADD0         WNBY    30
+     C           I         DOWLE10
+     C           @Y,I      ANDNE*BLANKS
+     C           @Y,I      IFEQ 'Y'
+     C                     ADD  1         WNBY
+     C                     ENDIF
+     C                     ADD  1         I
+     C                     ENDDO
+     C                     MOVEL*BLANK    @Y
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKREFD - Check refresh list daily                             *
+      *****************************************************************
+     C           CKREFD    BEGSR
+      *
+     C           SREFD     IFNE 'Y'
+     C           SREFD     ANDNE'N'
+     C                     MOVEL'SDM0015' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     51
+     C                     ENDIF
+      *
+      ** At least one 'Populate list' field must contain a Y
+     C           WNBYPO    IFEQ 0
+     C           SREFD     ANDEQ'Y'
+     C                     MOVEL'SDM0018' P@MSGI
+     C                     EXSR SNDMSG
+     C                     SETON                     47
+     C                     SETON                     48
+     C                     SETON                     49
+     C                     SETON                     50
+     C                     SETON                     51
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      * CKTIME - Check time format                                    *
+      *****************************************************************
+     C           CKTIME    BEGSR
+     C                     MOVEL*BLANK    WERRTM  2
+     C                     MOVEL*BLANK    WTIME   5
+      *
+     C           WTIMHH    IFEQ *BLANK
+     C           WTIMMM    ANDEQ*BLANK
+     C                     GOTO ECKTIM
+     C                     ENDIF
+      *
+     C           DIGITS    CHECKWTIMHH    WNODIG  20
+     C           WNODIG    IFNE 0
+     C                     MOVEL'01'      WERRTM
+     C                     GOTO ECKTIM
+     C                     ENDIF
+      *
+     C           DIGITS    CHECKWTIMMM    WNODIG  20
+     C           WNODIG    IFNE 0
+     C                     MOVEL'01'      WERRTM
+     C                     GOTO ECKTIM
+     C                     ENDIF
+      *
+     C           WTIMHH    IFGT '23'
+     C           WTIMMM    ORGT '59'
+     C                     MOVEL'01'      WERRTM
+     C                     GOTO ECKTIM
+     C                     ENDIF
+      *
+     C           WTIMCO    IFNE ':'
+     C                     MOVEL'01'      WERRTM
+     C                     GOTO ECKTIM
+     C                     ENDIF
+      *
+     C           WTIMBG    IFNE *BLANK
+     C           WTIME     CAT  WTIMHH:0  WTIME
+     C           WTIME     CAT  ':':0     WTIME
+     C           WTIME     CAT  WTIMMM:0  WTIME
+     C           WTIME     IFLT WTIMBG
+     C                     MOVEL'02'      WERRTM
+     C                     GOTO ECKTIM
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           ECKTIM    TAG
+     C                     MOVEL*BLANK    WTIMHH  2
+     C                     MOVEL*BLANK    WTIMMM  2
+     C                     MOVEL*BLANK    WTIMBG  5
+     C                     MOVEL*BLANK    WTIMCO  1
+     C                     ENDSR
+      *****************************************************************
+      * CKTMSE - Check time series                                    *
+      *****************************************************************
+     C           CKTMSE    BEGSR
+     C                     MOVEL*BLANK    WERTMS  2
+     C                     Z-ADD0         WFLDTM  30
+     C                     Z-ADD0         WNBCMP  30
+      ** First blank
+     C                     Z-ADD0         WFB     30
+      ** First non blank
+     C                     Z-ADD0         WFNB    30
+      *
+     C                     DO   WNBTM     I       30
+     C           @T,I      IFNE *BLANK
+     C           @T,I      ANDNEBLKTIM
+     C           WFB       IFNE 0
+      ** No blanks are admitted in the beginning
+     C           WFB       IFLT I
+     C           WFNB      ANDEQ0
+     C                     MOVEL'02'      WERTMS
+     C                     ELSE
+      ** No blanks are admitted between time values
+     C                     MOVEL'01'      WERTMS
+     C                     ENDIF
+     C                     Z-ADDWFB       WFLDTM
+     C                     GOTO ECKTMS
+     C                     ENDIF
+     C                     Z-ADDI         WFNB
+     C                     ELSE
+     C           WFB       IFEQ 0
+     C                     Z-ADDI         WFB
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Verify that hierarchy among time periods is respected
+     C           WNBTM     SUB  1         WNBCMP
+     C                     Z-ADD1         I
+     C           I         DOWLEWNBCMP
+     C           @T,I      ANDNE*BLANK
+     C           @T,I      ANDNEBLKTIM
+     C           I         ADD  1         J       30
+     C           @T,J      IFNE *BLANK
+     C           @T,J      ANDNEBLKTIM
+     C           @T,I      IFGT @T,J
+     C                     Z-ADDJ         WFLDTM
+     C                     MOVEL'03'      WERTMS
+     C                     GOTO ECKTMS
+     C                     ENDIF
+     C                     ENDIF
+     C                     ADD  1         I
+     C                     ENDDO
+      *
+     C           ECKTMS    TAG
+     C                     MOVEL*BLANK    @T
+     C                     Z-ADD0         WNBTM   30
+     C                     ENDSR
+      *****************************************************************
+      * LSTITM - List of item                                         *
+      *****************************************************************
+     C           LSTITM    BEGSR
+     C           *LIKE     DEFN P@REQI    P2REQI
+     C           *LIKE     DEFN P@RTN     P2RTN
+     C           *LIKE     DEFN P@KEYP    P2KEYP
+     C           *LIKE     DEFN SMAPC     P2MAPC
+     C           *LIKE     DEFN SDTSC     P2DTSC
+      *
+     C                     MOVEL*BLANK    P2RTN
+     C                     MOVEL*BLANK    P2KEYP
+      *
+      ** Default parameters if not filled before the call of LSTITM
+     C           P2REQI    IFEQ *BLANK
+     C                     MOVELP@REQI    P2REQI
+     C                     ENDIF
+     C           P2MAPC    IFEQ *BLANK
+     C                     MOVELSMAPC     P2MAPC
+     C                     ENDIF
+     C           P2DTSC    IFEQ *BLANK
+     C                     MOVELSDTSC     P2DTSC
+     C                     ENDIF
+      *
+     C                     CALL 'SD1452'
+     C                     PARM           P2RTN
+     C                     PARM           P2REQI
+     C                     PARM           P2MAPC
+     C                     PARM           P2DTSC
+     C*********************PARM           P2KEYP                                              213560
+     C                     PARM P@ANCD    P2KEYP                                              213560
+     C                     PARM *BLANKS   P2ACTF  1                                           213560
+      *
+     C                     MOVEL*BLANK    P2REQI
+     C                     MOVEL*BLANK    P2MAPC
+     C                     MOVEL*BLANK    P2DTSC
+      *
+     C                     ENDSR
+      *****************************************************************
+      * DLTALL - Delete all the items                                 *
+      *****************************************************************
+     C           DLTALL    BEGSR
+      ** We only want to delete items, we dont want to populate
+      ** any of them.
+     C                     MOVEL'N'       P2ACCY
+     C                     MOVEL'N'       P2ASEC
+     C                     MOVEL'N'       P2ASBP
+     C                     MOVEL'N'       P2ABRT
+     C                     MOVEL'Y'       P2DLT
+     C                     EXSR POPITM
+     C                     ENDSR
+      *****************************************************************
+      * POPITM - Populate all the items                               *
+      *****************************************************************
+     C           POPITM    BEGSR
+     C           *LIKE     DEFN P@MSGD    P2MSGD
+     C           *LIKE     DEFN MRACCY    P2ACCY
+     C           *LIKE     DEFN MRASEC    P2ASEC
+     C           *LIKE     DEFN MRASBP    P2ASBP
+     C           *LIKE     DEFN MRABRT    P2ABRT
+      *
+     C                     MOVEL*BLANK    P2RTN
+     C                     MOVEL*BLANK    P2MSGD
+      *
+      ** Default parameters if not filled before the call of POPITM
+     C           P2REQI    IFEQ *BLANK
+     C                     MOVELSREQI     P2REQI
+     C                     ENDIF
+     C           P2MAPC    IFEQ *BLANK
+     C                     MOVELSMAPC     P2MAPC
+     C                     ENDIF
+     C           P2DTSC    IFEQ *BLANK
+     C                     MOVELSDTSC     P2DTSC
+     C                     ENDIF
+     C           P2ACCY    IFEQ *BLANK
+     C                     MOVELSACCY     P2ACCY
+     C                     ENDIF
+     C           P2ASEC    IFEQ *BLANK
+     C                     MOVELSASEC     P2ASEC
+     C                     ENDIF
+     C           P2ASBP    IFEQ *BLANK
+     C                     MOVELSASBP     P2ASBP
+     C                     ENDIF
+     C           P2ABRT    IFEQ *BLANK
+     C                     MOVELSABRT     P2ABRT
+     C                     ENDIF
+     C           P2DLT     IFEQ *BLANK
+     C                     MOVEL'N'       P2DLT
+     C                     ENDIF
+      *
+     C                     CALL 'SD1455'
+     C                     PARM           P2RTN
+     C                     PARM           P2MSGD
+     C                     PARM           P2REQI
+     C                     PARM           P2MAPC
+     C                     PARM           P2DTSC
+     C                     PARM           P2DLT
+     C                     PARM           P2ACCY
+     C                     PARM           P2ASEC
+     C                     PARM           P2ASBP
+     C                     PARM           P2ABRT
+      *
+     C                     MOVEL*BLANK    P2REQI
+     C                     MOVEL*BLANK    P2MAPC
+     C                     MOVEL*BLANK    P2DTSC
+     C                     MOVEL*BLANK    P2DLT   1
+     C                     MOVEL*BLANK    P2ACCY
+     C                     MOVEL*BLANK    P2ASEC
+     C                     MOVEL*BLANK    P2ASBP
+     C                     MOVEL*BLANK    P2ABRT
+      *
+     C                     ENDSR
+      *****************************************************************
+      * ERR002 - Error type 002, unlock XXXXXXXX failed               *
+      *****************************************************************
+     C           ERR002    BEGSR
+     C           *LIKE     DEFN DBFILE    WFILNM
+     C           *LOCK     IN   LDA
+     C                     SETON                       U7U8
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVELWFILNM    DBFILE    P      *DB ERROR 002 *
+     C                     MOVEL'*UNLCK'  DBKEY     P      ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: (**calling routines**)                             *
+      *                                                               *
+      * Calls: None                                                   *
+      *                                                               *
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ***************
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+      ************ CALL DBERRCTL IF INTERACTIVE PROGRAM ******************
+      *
+     C                     CALL 'DBERRCTL'
+      *
+      ********************************************************************
+     C                     END
+      *
+      ************ END PROGRAM IF DBERRCTL NOT CALLED ********************
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      ********************************************************************
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+      ** Subroutines to format time FMTHCM, FMTHM
+      /COPY SDCPYSRC,SD1451C001
+      **  Execute an OS400 command
+      /COPY SDCPYSRC,SD1453C002
+      ** Send a message SNDMSG
+      /COPY SDCPYSRC,SD1453C003
+**  CPY@
+(c) Finastra International Limited 2001
+** Command Array
+OVRDBF     FILE(XXXXXXXXXX) SHARE(*NO) SECURE(*YES)

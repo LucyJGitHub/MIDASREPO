@@ -1,0 +1,317 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('WHT ICD Installation Utility')
+      *****************************************************************
+      *                                                               *
+      *  Midas - General Ledger Module                                *
+      *                                                               *
+      *  GL0205 - WHT ICD Installation utility                        *
+      *                                                               *
+      *  Function - Set up details on DL/RE WHT ICD extension file    *
+      *             when running in seton mode ('1' or '2'), and      *
+      *             RE WHT ICD file and DE WHT ICD file when running  *
+      *             in setof mode ('3'), and produce a report.        *
+      *                                                               *
+      *  Called By: GLC0204 - Switchable feature initialisation pgm   *
+      *                                                               *
+      *  (c) Finastra International Limited 2006                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CDL013  *CREATE    Date 08Jun06               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CDL013 - Tiered Withholding Tax                              *
+      *                                                               *
+      *****************************************************************
+      *
+     FSDSTAAL0UF  E           K        DISK                      A
+      ** Retail WHT ICD Extension file - Update
+      *
+     FSDSTAXL0UF  E           K        DISK
+      ** Retail WHT ICD file
+      *
+     FSDDEALL0UF  E           K        DISK
+      ** Dealing WHT ICD file - Update
+      *
+     FGL0205P1O   E             69     PRINTER
+      ** WHT ICD Installation report file
+      *
+     FGL0205AUO   E                    PRINTER
+      ** WHT ICD Installation audit file                                    "
+      *****************************************************************
+     E/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Function of indicators                                       *
+      *  ----------------------                                       *
+      *                                                               *
+      *     60 - Report switching: update SDSTAXL0   OFF              *
+      *                            update SDDEALL0   ON               *
+      *     69 - Overflow Indicator                                   *
+      *     70 - Record not found                                     *
+      *                                                               *
+      *  U7+U8 - Database error occurs                                *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  Subroutines                                                  *
+      *  -----------                                                  *
+      *                                                               *
+      *  #EUPDR - Update SDSTAAL0                                     *
+      *  #EUPRE - Update SDSTAXL0                                     *
+      *  #EUPDL - Update SDDEALL0                                     *
+      *                                                               *
+      *****************************************************************
+      *
+     E                    CPY@    1   1 80
+      ** Array for Object Copyright Statement
+      *****************************************************************
+     I/EJECT
+      *****************************************************************
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     I              'Run Date & User Repo-C         BANK
+     I              'rt Title'
+      ** Database Error Reference descriptive text for AOBANK failure
+      *
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *                                                               *
+      *  Main Control Processing                                      *
+      *  -----------------------                                      *
+      *                                                               *
+      *  Calls     #EUPDR - Update SDSTAAL0                           *
+      *            #EUPRE - Update SDSTAXL0                           *
+      *            #EUPDL - Update SDDEALL0                           *
+      *            #EXIT  - Database error reporting                  *
+      *                                                               *
+      *****************************************************************
+      ** Entry parameters
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+      *
+      ** Copyright statement
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Main Processing
+      *
+      ** Retrieve Run Date & User Report Title via AOBANKR0
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** If error occured, terminate the program
+     C           @RTCD     IFNE *BLANK
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELBANK      DBKEY
+     C                     Z-ADD07        DBASE
+     C                     MOVEL'GL0205'  DBPGM
+     C                     EXSR #EXIT
+     C                     ENDIF
+      *
+      ** Declare work fields & indicators
+     C                     MOVEL'RETAIL'  WTYPE  10 P
+     C                     MOVE *OFF      *IN66
+     C                     MOVE *OFF      *IN67
+     C                     MOVE *OFF      *IN68
+      *
+      ** Set up details
+     C           MODE      IFEQ '3'
+     C                     EXSR #EUPRE
+     C                     EXSR #EUPDL
+     C                     ELSE
+     C                     EXSR #EUPDR
+     C                     ENDIF
+      *
+      ** Print report footer
+     C                     WRITEFOOTER
+      *
+      ** Exit program
+     C                     SETON                     LR
+     C                     RETRN
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EUPDR - Update SDSTAAL0                                     *
+      *                                                               *
+      *****************************************************************
+     C           #EUPDR    BEGSR
+      *
+      ** Chain to SDSTAXL0 to retrieve WHT rate field TXWTRR
+     C           WTYPE     CHAINSDSTAXL0             70
+      *
+      ** If error, terminate the program
+     C           *IN70     IFEQ *ON
+     C                     MOVEL'SDSTAXL0'DBFILE
+     C                     MOVEL'*KEY'    DBKEY
+     C                     Z-ADD01        DBASE
+     C                     EXSR #EXIT
+     C                     ENDIF
+      *
+      ** Chain to SDSTAAL0
+     C           WTYPE     CHAINSDSTAAL0             70
+      *
+      *
+      ** Save Tiered WHT Rate Level 1 & update with Retail WHT Rate
+      ** Zero WHT Rate Levels 2-9.
+     C                     MOVE ETXR1     UETXR1
+     C                     MOVE TXWTRR    ETXR1
+     C                     Z-ADD0         ETXR2
+     C                     Z-ADD0         ETXR3
+     C                     Z-ADD0         ETXR4
+     C                     Z-ADD0         ETXR5
+     C                     Z-ADD0         ETXR6
+     C                     Z-ADD0         ETXR7
+     C                     Z-ADD0         ETXR8
+     C                     Z-ADD0         ETXR9
+      *
+      ** Update the file
+     C           *IN70     IFEQ '0'
+     C                     UPDATSDSTAXDA
+     C                     ELSE
+     C                     MOVEL'RETAIL'  EBACD
+     C                     WRITESDSTAXDA
+     C                     ENDIF
+      *
+      ** Print the header & report
+     C                     WRITEHEADER
+     C                     WRITESUBHD1
+     C                     WRITEDET1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EUPRE - Update SDSTAXL0                                     *
+      *                                                               *
+      *****************************************************************
+     C           #EUPRE    BEGSR
+      *
+      ** Chain to SDSTAXY0 to retrieve Tiered Tax Rate Level 1 field
+     C           WTYPE     CHAINSDSTAAL0             70
+      *
+      ** If error, terminate the program
+     C           *IN70     IFEQ *ON
+     C                     MOVEL'SDSTAAL0'DBFILE
+     C                     MOVEL'*KEY'    DBKEY
+     C                     Z-ADD03        DBASE
+     C                     EXSR #EXIT
+     C                     ENDIF
+      *
+      ** Chain to SDSTAXL0
+     C           WTYPE     CHAINSDSTAXL0             70
+      *
+     C                     MOVEL'SDSTAXL0'DBFILE    P
+      *
+      ** If error, terminate the program
+     C           *IN70     IFEQ *ON
+     C                     MOVEL'*KEY'    DBKEY
+     C                     Z-ADD04        DBASE
+     C                     EXSR #EXIT
+     C                     ENDIF
+      *
+      ** Save Retail WHT Rate & update with Tiered WHT Rate level 1
+     C                     MOVE TXWTRR    UTXWTR
+     C                     MOVE ETXR1     TXWTRR
+      *
+      ** Update the file
+     C                     UPDATSDSTAXD0
+      *
+      ** Print the header & report
+     C                     MOVE *ON       *IN60
+     C                     WRITEHEADER
+     C                     WRITESUBHD2
+     C                     WRITEDET2
+     C                     MOVE *OFF      *IN60
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  #EUPDL - Update SDDEALL0                                     *
+      *                                                               *
+      *****************************************************************
+     C           #EUPDL    BEGSR
+      *
+      ** Chain to SDSTAAL0 to retrieve Tiered Tax Rate Level 1 field
+     C           WTYPE     CHAINSDSTAAL0             70
+      *
+      ** If error, terminate the program
+     C           *IN70     IFEQ *ON
+     C                     MOVEL'SDSTAAL0'DBFILE
+     C                     MOVEL'*KEY'    DBKEY
+     C                     Z-ADD05        DBASE
+     C                     EXSR #EXIT
+     C                     ENDIF
+      *
+      ** Change Record Type & chain to SDDEALL0
+     C                     MOVEL'DEAL'    WTYPE  10 P
+     C           WTYPE     CHAINSDDEALL0             70
+      *
+     C                     MOVEL'SDDEALL0'DBFILE    P
+      *
+      ** If error, terminate the program
+     C           *IN70     IFEQ *ON
+     C                     MOVEL'*KEY'    DBKEY
+     C                     Z-ADD06        DBASE
+     C                     EXSR #EXIT
+     C                     ENDIF
+      *
+      ** Save HK Tax Rate and update with Tiered WHT Rate Level 1
+     C                     MOVE BNHKTR    UBNHKT
+     C                     MOVE ETXR1     BNHKTR
+      *
+      ** Update the file
+     C                     UPDAT@BNREEH
+      *
+      ** Print the report only
+     C                     MOVE *ON       *IN61
+     C                     WRITEDET2
+     C                     MOVE *OFF      *IN61
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *   #EXIT - Print database error and exit program
+      *
+      *   Called by all routines
+      *****************************************************************
+     C           #EXIT     BEGSR
+      *
+     C           MODE      IFEQ '3'
+     C                     WRITEDBHED2
+     C                     ELSE
+     C                     WRITEDBHED1
+     C                     ENDIF
+      *
+     C                     WRITEDBERR
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+** CPY@ - Object copyright
+(c) Finastra International Limited 2006

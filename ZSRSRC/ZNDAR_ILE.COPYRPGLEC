@@ -1,0 +1,427 @@
+      *****************************************************************
+      *                                                               *
+      *  ZNDAR_ILE - Subroutine to calculate next account review date *
+      *                                                               *
+      *  Function: Calculate next account review date based on        *
+      *            account review frequency                           *
+      *                                                               *
+      *  Last Amend No. MD027573A          Date 24Sep14               *
+      *  Prev Amend No. MD027573           Date 04Aug14               *
+      *                 MD027572           Date 06Aug14               *
+      *                 CSD092   *CREATE   Date 01May13               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD027573A - Next schedule date must not be lower than        *
+      *              rundate                                          *
+      *  MD027573 - Next schedule date must not be lower than         *
+      *             rundate                                           *
+      *  MD027572 - Account Review next scheduled date and sequence   *
+      *             eventually becomes incorrect                      *
+      *  CSD092 - Account Review                                      *
+      *                                                               *
+      *****************************************************************
+ 
+     C     ZNDAR         BEGSR
+ 
+      ** Calculations to define/clear fields.
+ 
+     C                   MOVE      ZFREQ         ZFREQ             1
+     C                   Z-ADD     ZDAYNO        ZDAYNO            5 0
+     C                   MOVE      ZCCY          ZCCY              3
+     C                   MOVE      ZLOC          ZLOC              3
+     C                   MOVE      *BLANK        ZZERR@            7
+ 
+      ** Convert day number to date
+ 
+     C                   EXSR      ZDATE2
+ 
+     C                   MOVEL     ZADATE        ZZWRK2            2
+     C                   MOVE      ZZWRK2        ZMDAY             2 0
+ 
+     C                   EVAL      *IN90 = '0'
+ 
+     C                   DO
+     C                   SELECT
+ 
+      ** D - daily wokring day
+ 
+     C                   WHEN      ZFREQ = 'D'
+     C                   EVAL      ZDAYNO = ZDAYNO + 1
+     C                   EVAL      ZDAY = ZDAY + 1
+ 
+      ** W - weekly
+ 
+     C                   WHEN      ZFREQ = 'W'
+     C                   EVAL      ZDAYNO = ZDAYNO + 7
+     C**********         EVAL      ZDAY = ZDAY + 7                                          MD027572
+ 
+      ** F - fortnightly
+ 
+     C                   WHEN      ZFREQ = 'F'
+     C                   EVAL      ZDAYNO = ZDAYNO + 14
+     C**********         EVAL      ZDAY = ZDAY + 14                                         MD027572
+ 
+      ** M - monthly
+ 
+     C                   WHEN      ZFREQ = 'M'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 1
+ 
+      ** T - bimonthly
+ 
+     C                   WHEN      ZFREQ = 'T'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 2
+ 
+      ** Q - quarterly
+ 
+     C                   WHEN      ZFREQ = 'Q'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 3
+ 
+      ** X - six monthly
+ 
+     C                   WHEN      ZFREQ = 'X'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 6
+ 
+      ** Y - yearly
+ 
+     C                   WHEN      ZFREQ = 'Y'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZYEAR = ZYEAR + 1
+ 
+      ** If frequency = '4' for 4-monthly.
+ 
+     C                   WHEN      ZFREQ = '4'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 4
+ 
+      ** If frequency = '5' for 5-monthly.
+ 
+     C                   WHEN      ZFREQ = '5'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 5
+ 
+      ** If frequency = '7' for 7-monthly.
+ 
+     C                   WHEN      ZFREQ = '7'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 7
+ 
+      ** If frequency = '8' for 8-monthly.
+ 
+     C                   WHEN      ZFREQ = '8'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 8
+ 
+      ** If frequency = '9' for 9-monthly.
+ 
+     C                   WHEN      ZFREQ = '9'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 9
+ 
+      ** If frequency = 'V' for 10-monthly.
+ 
+     C                   WHEN      ZFREQ = 'V'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 10
+ 
+      ** If frequency = 'E' for 11-monthly.
+ 
+     C                   WHEN      ZFREQ = 'E'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZMTH = ZMTH + 11
+ 
+      ** If frequency = 'C' for two-yearly.
+ 
+     C                   WHEN      ZFREQ = 'C'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZYEAR = ZYEAR + 2
+ 
+      ** If frequency = 'I' for three-yearly.
+ 
+     C                   WHEN      ZFREQ = 'I'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZYEAR = ZYEAR + 3
+ 
+      ** If frequency = 'J' for four-yearly.
+ 
+     C                   WHEN      ZFREQ = 'J'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZYEAR = ZYEAR + 4
+ 
+      ** If frequency = 'N' for five-yearly.
+ 
+     C                   WHEN      ZFREQ = 'N'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZYEAR = ZYEAR + 5
+ 
+      ** If frequency = 'U' for ten-yearly.
+ 
+     C                   WHEN      ZFREQ = 'U'
+     C                   EVAL      ZDAY = ZMDAY
+     C                   EVAL      ZYEAR = ZYEAR + 10
+ 
+     C                   ENDSL
+ 
+     C                   IF        ZFREQ <> 'W'                                             MD027572
+     C                             AND ZFREQ <> 'F'                                         MD027572
+      ** Validate month
+ 
+     C                   IF        ZMTH > 12
+     C                   EVAL      ZMTH = ZMTH - 12
+     C                   EVAL      ZYEAR = ZYEAR + 1
+     C                   ENDIF
+ 
+      ** Check for leap year
+ 
+     C     ZYEAR         DIV       4             ZLYR              2 0
+     C                   MVR                     ZLY               1 0
+ 
+      ** Validate day number
+ 
+     C                   MOVE      ZFMD(ZMTH)    ZWRK2             2 0
+     C                   IF        ZMTH = 2 AND
+     C                             ZLY = 0
+     C                   EVAL      ZWRK2 = 29
+     C                   ENDIF
+ 
+     C                   IF        ZDAY > ZWRK2
+     C                   EVAL      ZDAY = ZWRK2
+     C                   ENDIF
+ 
+      ** Reformat date, DDMMYY or MMDDYY, and convert to day number
+ 
+     C                   MOVEL     ZDAY          ZWRK4             4 0
+     C                   MOVE      ZMTH          ZWRK4
+     C                   IF        *IN98 = '1'
+     C                   MOVEL     ZMTH          ZWRK4
+     C                   MOVE      ZDAY          ZWRK4
+     C                   ENDIF
+     C                   MOVEL     ZWRK4         ZDATE
+     C                   MOVE      ZYEAR         ZDATE
+     C                   Z-ADD     ZDAYNO        ZDAYNO2           5 0                     MD027573A
+     C                   EXSR      ZDATE1
+     C                   Z-ADD     ZDAYNO2       ZDAYNO                                    MD027573A
+ 
+     C                   ENDIF                                                              MD027572
+     C                                                                                      MD027572
+     C                   DOU       ZIND = 'W'
+ 
+      ** Check if holiday on currency
+ 
+     C                   EVAL      *IN94 = '0'
+     C                   EXSR      ZCHKH
+ 
+      ** If a holiday, increment/decrement day number as required
+ 
+     C                   IF        ZIND = 'H'
+     C                   IF        ZFREQ = 'D'                                              MD027573
+     C                   EVAL      ZDAYNO = ZDAYNO + 1                                      MD027573
+     C                   ELSE                                                               MD027573
+     C                   EVAL      ZDAYNO = ZDAYNO - 1
+     C                   ENDIF                                                              MD027573
+     C                   ENDIF
+ 
+     C                   ENDDO
+ 
+     C                   ENDDO
+ 
+     C                   ENDSR
+ 
+      *****************************************************************
+      **                                                              *
+      **   ZDATE1 - Subroutine to validate dates submitted and        *
+      **            convert to a number of days.                      *
+      **                                                              *
+      *****************************************************************
+ 
+     C     ZDATE1        BEGSR
+ 
+      ** Clear day number
+ 
+     C                   Z-ADD     0             ZDAYNO            5 0
+ 
+      ** Calculation to define input date field
+ 
+     C                   Z-ADD     ZDATE         ZDATE             6 0
+ 
+      ** Get individual day, month and year fields
+ 
+     C                   MOVE      ZDATE         ZYEAR             2 0
+     C                   IF        *IN98 = '0'
+     C                   MOVEL     ZDATE         ZDAY              2 0
+     C                   ELSE
+     C                   MOVEL     ZDATE         ZMTH              2 0
+     C                   ENDIF
+     C                   MOVE      ZDATE         ZWRK4             4 0
+     C                   IF        *IN98 = '0'
+     C                   MOVEL     ZWRK4         ZMTH
+     C                   ELSE
+     C                   MOVEL     ZWRK4         ZDAY
+     C                   ENDIF
+ 
+      ** Ensure month is valid
+ 
+     C     ZMTH          COMP      0                                    9999
+     C                   IF        *IN99 = '0'
+     C     ZMTH          COMP      12                                 99
+     C                   ELSE
+     C                   GOTO      ZDEND1
+     C                   ENDIF
+ 
+      ** Check for 30 day months
+ 
+     C     ZMTH          COMP      4                                      90
+     C  N90ZMTH          COMP      6                                      90
+     C  N90ZMTH          COMP      9                                      90
+     C  N90ZMTH          COMP      11                                     90
+ 
+      ** Ensure day is valid
+ 
+     C     ZDAY          COMP      0                                    9999
+     C   90
+     CANN99ZDAY          COMP      30                                 99
+     C  N90
+     CANN99ZDAY          COMP      31                                 99
+     C   99              GOTO      ZDEND1
+ 
+      ** Check for leap year and february
+ 
+     C     ZYEAR         ADD       28            ZYEAR
+     C     ZYEAR         DIV       4             ZLYR              2 0
+     C                   MVR                     ZLY               1 0    91
+     C     ZMTH          COMP      2                                  93  92
+ 
+      ** If February, further validate day
+ 
+     C  N91
+     CAN 92ZDAY          COMP      28                                 99
+     C   91
+     CAN 92ZDAY          COMP      29                                 99
+     C   99              GOTO      ZDEND1
+ 
+      ** Determine number of days from 31/12/1971
+ 
+     C     ZLYR          MULT      1461          ZDAYNO
+     C  N91ZDAYNO        ADD       ZYDY(ZLY)     ZDAYNO
+     C   91
+     CAN 93ZDAYNO        ADD       1             ZDAYNO
+     C     ZDAYNO        ADD       ZMDY(ZMTH)    ZDAYNO
+     C     ZDAYNO        ADD       ZDAY          ZDAYNO
+ 
+     C     ZDEND1        ENDSR
+ 
+      *****************************************************************
+      **                                                              *
+      **   ZDATE2 - Subroutine to convert a day number to date format *
+      **                                                              *
+      *****************************************************************
+ 
+     C     ZDATE2        BEGSR
+ 
+      ** Clear date fields
+ 
+     C                   Z-ADD     0             ZDATE             6 0
+     C                   MOVEL     '       '     ZADATE            7
+ 
+      ** Calculation to define input day number
+ 
+     C                   Z-ADD     ZDAYNO        ZDAYNO            5 0
+ 
+      ** Determine year number
+      ** Adjust day number in case last day of year
+ 
+     C     ZDAYNO        SUB       1             ZDAYN1            5 0  99
+     C   99              GOTO      ZDEND2
+ 
+      ** Calculate number of 4 year spans since 31/12/1971
+ 
+     C     ZDAYN1        DIV       1461          ZLYR              2 0
+     C                   MVR                     ZDAYN1
+ 
+      ** Calculate number of remaining years
+ 
+     C                   Z-ADD     1             ZWRK2             2 0
+     C     ZDTAG1        TAG
+     C     ZDAYN1        COMP      ZYDY(ZWRK2)                          90
+     C  N90ZWRK2         ADD       1             ZWRK2
+     C  N90              GOTO      ZDTAG1
+     C     ZWRK2         SUB       1             ZWRK2                    91
+ 
+      ** Decrement day number by days in remaining years
+ 
+     C  N91ZDAYN1        SUB       ZYDY(ZWRK2)   ZDAYN1
+ 
+      ** Calculate actual year number
+ 
+     C     ZLYR          MULT      4             ZWRK3             3 0
+     C     ZWRK3         ADD       72            ZWRK3
+     C                   Z-ADD     ZWRK3         ZYEAR             2 0
+     C     ZYEAR         ADD       ZWRK2         ZYEAR
+ 
+      ** Determine month number
+      ** Adjust day number in case last day of leap year FEB
+ 
+     C                   SETOFF                                       9293
+     C   91ZDAYN1        COMP      59                                   9293
+     C   91
+     CANN92ZDAYN1        SUB       1             ZDAYN1
+ 
+      ** Calculate month number
+ 
+     C                   Z-ADD     2             ZWRK2
+     C     ZDTAG2        TAG
+     C     ZDAYN1        COMP      ZMDY(ZWRK2)                          94
+     C  N94ZWRK2         ADD       1             ZWRK2
+     C  N94              GOTO      ZDTAG2
+     C     ZWRK2         SUB       1             ZWRK2
+ 
+     C                   Z-ADD     ZWRK2         ZMTH              2 0
+ 
+      ** Determine day of month
+      ** Add back last day of year adjustment
+ 
+     C                   EVAL      ZDAYN1 = ZDAYN1 + 1
+ 
+      ** Calculate day of month
+ 
+     C     ZDAYN1        SUB       ZMDY(ZWRK2)   ZDAY              2 0
+ 
+      ** Add back leap year 29th February adjustment, if required
+ 
+     C                   IF        *IN93 = '1'
+     C                   EVAL      ZDAY = ZDAY + 1
+     C                   ENDIF
+ 
+      ** Format date, DDMMYY or MMDDYY
+ 
+     C                   IF        *IN98 = '0'
+     C                   MOVEL     ZDAY          ZWRK4             4 0
+     C                   ELSE
+     C                   MOVE      ZDAY          ZWRK4
+     C                   ENDIF
+     C                   IF        *IN98 = '0'
+     C                   MOVE      ZMTH          ZWRK4
+     C                   ELSE
+     C                   MOVEL     ZMTH          ZWRK4
+     C                   ENDIF
+     C                   MOVEL     ZWRK4         ZDATE
+     C                   MOVE      ZYEAR         ZDATE
+ 
+      ** Format alpha date, DDMMMYY
+ 
+     C     ZDAY          COMP      10                                   95
+     C                   MOVEL     ZDAY          ZWRK5             5
+     C                   IF        *IN95 = '1'
+     C                   MOVEL     ' '           ZWRK5
+     C                   ENDIF
+     C                   MOVE      ZMNM(ZMTH)    ZWRK5
+     C                   MOVEL     ZWRK5         ZADATE
+     C                   MOVE      ZYEAR         ZADATE
+ 
+     C     ZDEND2        ENDSR
+ 
+      *****************************************************************

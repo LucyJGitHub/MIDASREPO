@@ -1,0 +1,55 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Consolidate SQL')                            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       SMC001000 - SQL Processor - Global                          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2013                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1076132 *CREATE  Date 18Feb13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1076132 - Automate SQL delivery deployment                */
+/*                                                                   */
+/*********************************************************************/
+ 
+             PGM        PARM(&SQLFS &MODE)
+             DCL        VAR(&SQLFS) TYPE(*CHAR) LEN(252)
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SQLFP) TYPE(*CHAR) LEN(251)
+             DCL        VAR(&SQLF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBRB) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&NBR) TYPE(*DEC) LEN(3 0)
+             DCL        VAR(&RETCODE) TYPE(*DEC) LEN(1 0) VALUE(0)
+             DCL        VAR(&ITMCNT) TYPE(*DEC) LEN(4 0) VALUE(3)
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+   /* Get number of files from input */
+ 
+             CHGVAR     VAR(&NBRB) VALUE(%SST(&SQLFS 1 2))
+             CHGVAR     VAR(&NBR) VALUE(%BIN(&NBRB))
+ 
+             CHGVAR     VAR(&SQLFP) VALUE(%SST(&SQLFS 3 250))
+             CHGVAR     VAR(%SST(&SQLFP 251 1)) VALUE(#)
+ 
+ 
+   /* Commence consolidation of SQL files from deliveries  */
+             CALL       PGM(SM000102) PARM(&SQLFP &MODE &NBR)
+ 
+             SNDPGMMSG  MSG('SQL files successfully merged.')
+             GOTO       CMDLBL(END)
+ 
+ ERROR:
+             SNDPGMMSG  MSG('CONSQLD failed. Please check if you +
+                          have sufficient authority to the +
+                          specified files.')
+ END:
+             ENDPGM

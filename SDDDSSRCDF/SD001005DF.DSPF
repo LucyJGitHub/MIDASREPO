@@ -1,0 +1,836 @@
+     A*****************************************************************
+/*STD *  DSPFBASE                                                     *
+/*EXI *  TEXT('Midas SD Time Zone Maintenance Display File')
+      *****************************************************************
+      *                                                               *
+      *  MIDAS - Standing Data Module                                 *
+      *                                                               *
+      *  DSPF/SD001005DF - Midas SD Time Zone Maintenance Screen      *
+      *                                                               *
+      *  (C) Finastra International Limited 2008                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. BUG20731           Date 30Aug08               *
+      *                 BUG20043           Date 18Aug08               *
+      *                 BUG19400           Date 20Jun08               *
+      *                 BUG19950           Date 14Jul08               *
+      *                 BUG19849           Date 08Jul08               *
+      *                 BUG19780           Date 03Jul08               *
+      *                 BUG19762           Date 03Jul08               *
+      *                 BUG19523           Date 26Jun08               *
+      *                 BUG19243           Date 17Jun08               *
+      *                 BUG19143           Date 10Jun08               *
+      *                 BUG19136           Date 11Jun08               *
+      *                 CSW208  *CREATE    Date 15Apr08               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  BUG20731 - Zone field at Time Zone Maintenance at Zone Level *
+      *             accepts blank input.                              *
+      *  BUG20043 - Various Errors in Timezone program                *
+      *  BUG19400 - Zone field is missing value. No error msg is shown*
+      *  BUG19950 - Various errors                                    *
+      *  BUG19849 - Start and End Time of DST added on the screen     *
+      *  BUG19780 - System accepts non-alphanumeric value (ex: ?) in  *
+      *             Time Zone Code field in "Copy"                    *
+      *  BUG19762 -  At system level, list view does not reflect      *
+      *              the GMT Time                                     *
+      *  BUG19523 - Various Errors.                                   *
+      *  BUG19243 - Correct time format for the "Current Time at Time *
+      *             Zone"                                             *
+      *  BUG19143 - Computation of Current Time at Time Zone and      *
+      *             deleting the field System Offset at System Level  *
+      *  BUG19136 - GMT Time and GMT Delta Time Sign should be        *
+      *             defaulted to "0000" and "+" respectively          *
+      *  CSW208 - SWIFT 2008 Changes                                  *
+      *                                                               *
+      *****************************************************************
+     A          R SDM01005S2                SFL
+     A                                      TEXT('(c) Finastra International -
+     A                                      Limited 2008')
+     A  34                                  SFLNXTCHG
+     A            D0OPT          1A  B  8  2TEXT('Option')
+     A                                      DSPATR(UL)
+     A  33                                  DSPATR(RI)
+     A  33                                  DSPATR(PC)
+     A N33                                  DSPATR(HI)
+     A            D@TZLCD        1A  O  8  5DSPATR(HI)
+     A            D@ZONE        10   H
+     A            D@ZONE1       10A  O  8  8DSPATR(HI)
+     A            D@BRCA         3A  H
+     A            D@TZCOD       10A  O  8 20DSPATR(HI)
+     A            D@TZYR         4A  O  8 31DSPATR(HI)
+     A            D@STDES       20A  O  8 36DSPATR(HI)
+     A** Start of Change BUG19523                                                           BUG19523
+     A**********  D@DTIME        4A  O  8 58DSPATR(HI)                                      BUG19523
+     A**********  D@GMTS         1A  O  8 65DSPATR(HI)                                      BUG19523
+     A            D@DTIME        4Y 0O  8 61DSPATR(HI)
+     A** Start of Change BUG19762
+     A**********                            EDTWRD('  :  ')                                 BUG19762
+     A                                      EDTWRD('0  :  ')
+     A** END of Change BUG19762
+     A            D@GMTS         1A  O  8 59DSPATR(HI)
+     A** End of Change BUG19523
+     A            D@DSTCD       10A  O  8 68DSPATR(HI)
+      *
+      *****************************************************************
+     A          R SDM01005C2                SFLCTL(SDM01005S2)
+     A                                      TEXT('Subfile Control Record Format-
+     A                                      ')
+     A                                      CF03(03)
+     A N37                                  CF05(05)
+     A N37                                  CF09(09)
+     A N88                                  CF14(14)
+     A N87                                  CF16(16)
+     A N86                                  CF20(20)
+     A N83 78                               CF22(22)
+     A N36                                  ROLLUP(98)
+     A N36                                  ROLLDOWN
+     A                                      OVERLAY
+     A  30                                  SFLDSP
+     A                                      SFLDSPCTL
+     A  31                                  SFLCLR
+     A  36                                  SFLEND
+     A                                      SFLSIZ(0015)
+     A                                      SFLPAG(0013)
+      *
+     A            D0SFRN         4S 0H      SFLRCDNBR
+      *
+     A            D0USER        10A  O  1  2TEXT('Current User')
+      *
+     A                                  1 13'SD001005'
+      *
+     A            D0MRDT         7A  O  1 73TEXT('Midas Run Date')
+      *
+     A            D0WID         10A  O  2  2TEXT('WorkStation ID')
+      *
+     A N89N31                           2 31'Time Zone Enquiry'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  87 89N31                        2 31'Time Zone Maintenance'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  88 89N31                        2 21'Time Zone Maintenance at Branch Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  86 89N31                        2 21'Time Zone Maintenance at System Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  86N89N31                        2 21'Time Zone Enquiry at System Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  83 89N86                        2 21'Time Zone Maintenance at Zone Leve-
+     A                                      l'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  83N89N86                        2 21'Time Zone Enquiry at Zone Level'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  88N89N31                        2 21'Time Zone Enquiry at Branch Level'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            D0TIME         6Y 0O  2 72TEXT('Current Time')
+     A** Start of Change BUG19762
+     A**********                            EDTWRD('  :  :  ')                              BUG19762
+     A                                      EDTWRD('0  :  :  ')
+     A** End  of Change BUG19762
+     A                                  4 20'Time'
+     A                                  4 25'Zone'
+     A                                  4 30'Year'
+     A                                  4 38'Short Description'
+     A** Start of Change BUG19523                                                           BUG19523
+     A**********                        4 57'Delta'                                         BUG19523
+     A**********                        4 63'GMT'                                           BUG19523
+     A                                  4 60'Delta'
+     A** End  of Change BUG19523
+     A                                  4 68'DST Code'
+     A                                  5 24'Code'
+     A** Start of Change BUG19523
+     A**********                        5 57'Time'                                          BUG19523
+     A                                  5 61'Time'
+     A**********                        5 63'Sign'                                          BUG19523
+     A** End of Change BUG19523
+     A            H@TZCOD       10A  B  6 20TEXT('Time Zone Code')
+     A                                      DSPATR(HI)
+     A            H@TZYR         4A  B  6 31TEXT('Year')
+     A                                      DSPATR(HI)
+     A** Start of Change BUG19523
+     A**********                        5  4'Lvl'                                           BUG19523
+     A**********                        5  8'Zone/Branch'                                   BUG19523
+     A** Start of Change BUG19780
+     A**78                              5  8'Zone/Branch'                                   BUG19780
+     A*N78                              5  9'Branch'                                        BUG19780
+      ** Start of Change BUG20731
+     A**78******                        5  8'Zone/Branch'                                   BUG20731
+     A  83                              5  8' Zone'
+      ** End of Change BUG20731
+     A  88                              5  9'Branch'
+     A** End of Change BUG19780
+     A** End of Change BUG19523
+     A            H@SDES        20A  B  6 36DSPATR(HI)
+     A** Start of Change BUG19523
+     A**********  H@GMT          4A  B  6 58DSPATR(HI)                                      BUG19523
+     A            H@GMTS         1   B  6 59DSPATR(HI)
+     A            H@GMT          4A  B  6 61DSPATR(HI)
+     A** End  of Change BUG19523
+     A            H@DSTC        10A  B  6 68DSPATR(HI)
+      *
+      *****************************************************************
+     A          R SDM01005D1
+     A                                      CF03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+     A                                      CF12(12 'Cancel')
+     A                                      OVERLAY
+     A            PSUSER        10A  O  1  2TEXT('Current User')
+     A                                  1 13'SD001005'
+     A            D0MRDT         7A  O  1 73TEXT('Midas Run Date')
+     A            PSJOBNAME     10A  O  2  2TEXT('WorkStation ID')
+     A N88N86                           2 31'Time Zone Maintenance'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  83                              2 21'Time Zone Maintenance at Zone Leve-
+     A                                      l'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  88                              2 21'Time Zone Maintenance at Branch Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  86N83                           2 21'Time Zone Maintenance at System Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            D0TIME         6Y 0O  2 72TEXT('Current Time')
+     A** Start of Change BUG19762
+     A**********                            EDTWRD('  :  :  ')                              BUG19762
+     A                                      EDTWRD('0  :  :  ')
+     A** End of Change BUG19762
+      ** Start of Change - BUG19780
+     A**********  S1TZCOD       10A  B  6 66                                                BUG19780
+     A**50                                  DSPATR(PC)                                      BUG19780
+     A**50                                  DSPATR(RI)                                      BUG19780
+     A**********                            COLOR(WHT)                                      BUG19780
+     A**********  S1TZYR         4A  B  6  9                                                BUG19780
+     A**57                                  DSPATR(RI)                                      BUG19780
+     A**57                                  DSPATR(PC)                                      BUG19780
+     A**                                    COLOR(WHT)                                      BUG19780
+     A**88                              6 16'Branch:'                                       BUG19780
+     A**88        S1BRCH         3A  B  6 24                                                BUG19780
+     A**56                                  DSPATR(RI)                                      BUG19780
+     A**56                                  DSPATR(PC)                                      BUG19780
+     A**********                            COLOR(WHT)                                      BUG19780
+     A**********                        6  2'Year: '                                        BUG19780
+     A**83                              6 30'Zone: '                                        BUG19780
+     A**83        S1ZONE        10A  B  6 37COLOR(WHT)                                      BUG19780
+     A**********                        6 49'Time Zone Code: '                              BUG19780
+     A            S1TZCOD       10A  B  6 19
+     A  50                                  DSPATR(PC)
+     A  50                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+     A            S1TZYR         4A  B  6 76
+     A  57                                  DSPATR(RI)
+     A  57                                  DSPATR(PC)
+     A                                      COLOR(WHT)
+     A  88                              6 32'Branch:'
+     A  88        S1BRCH         3A  B  6 40
+     A  56                                  DSPATR(RI)
+     A  56                                  DSPATR(PC)
+     A                                      COLOR(WHT)
+     A                                  6 69'Year: '
+     A  83                              6 47'Zone: '
+      ** Start of Change BUG20731
+     A**83******  S1ZONE        10A  B  6 54COLOR(WHT)                                      BUG20731
+     A  83        S1ZONE        10A  O  6 54COLOR(WHT)
+      ** End of Change BUG20731
+      ** Start of Change BUG19400
+     A  58                                  DSPATR(RI)
+     A  58                                  DSPATR(PC)
+      ** End of Change BUG19400
+     A                                  6  2'Time Zone Code: '
+      ** End of Change - BUG19780
+      *
+      *****************************************************************
+     A          R SDM01005D2
+     A                                      CF03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+     A                                      CF12(12 'Cancel')
+     A                                      OVERLAY
+     A            D0USER        10A  O  1  2TEXT('Current User')
+     A                                  1 13'SD001005M'
+     A            D0MRDT         7A  O  1 73TEXT('Midas Run Date')
+     A            D0WID         10A  O  2  2TEXT('WorkStation ID')
+     A                                  2 31'Time Zone Maintenance'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  88                              2 21'Time Zone Maintenance at Branch Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            D0TIME         6Y 0O  2 72TEXT('Current Time')
+     A** Start of Change BUG19762
+     A**********                            EDTWRD('  :  :  ')                              BUG19762
+     A                                      EDTWRD('0  :  :  ')
+     A** End of Change BUG19762
+     A** Start of Change BUG19780
+     A**********                        5 53'Time Zone Code: '                              BUG19780
+     A**********                        5  2'Year:'                                         BUG19780
+     A**********  S2TZCOD       10A  O  5 70DSPATR(HI)                                      BUG19780
+     A**********  S2TZYR         4A  O  5  8DSPATR(HI)                                      BUG19780
+     A                                  5  2'Time Zone Code: '
+     A                                  5 70'Year:'
+     A            S2TZCOD       10A  O  5 19DSPATR(HI)
+     A  88                              5 41'Branch:'
+     A  88        DDBRCA         3A  O  5 49DSPATR(HI)
+     A            S2TZYR         4A  O  5 76DSPATR(HI)
+     A** End of Change BUG19780
+     A                                  8  2'Time Zone Code IBM..:'
+     A            DDTIBM        10A  B  8 24DSPATR(HI)
+     A                                  9  2'Short Description...:'
+     A            DDDESC        25A  B  9 24
+     A  51                                  DSPATR(PC)
+     A  51                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+     A                                 10  2'Description:'
+     A            DDDDES        65A  B 10 15DSPATR(HI)
+     A                                 12  2'GMT Delta Time......:'
+     A                                 13  2'GMT Delta Time Sign.:'
+     A            DDGMTS         1A  B 13 24
+     A  53                                  DSPATR(PC)
+     A  53                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+     A                                 14  2'Daylight Saving Time:'
+     A            DDDSTF         1A  B 14 24
+     A  54                                  DSPATR(PC)
+     A  54                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+     A                                 15  2'DST Code............:'
+     A  65        DDDSTC        10A  B 15 24
+     A  55                                  DSPATR(RI)
+     A  55                                  DSPATR(PC)
+     A                                      COLOR(WHT)
+     A            DDDSTD        57A  O 16 24DSPATR(HI)
+     A                                 17  2'DST Offset..........:'
+     A            DDDSTO         3A  O 17 24DSPATR(HI)
+     A                                 18  2'Current Time at time Zone:'
+     A                                 19  2'DST Start Date......:'
+     A                                 20  2'DST End Date........:'
+     A            DDGMT          4Y 0B 12 24
+     A  52                                  DSPATR(PC)
+     A**Start of change BUG19136
+     A**********                            EDTCDE(4)                                       BUG19136
+     A                                      EDTWRD('0    ')
+     A**End of change BUG19136
+     A  52                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+      **Start of Change BUG19243
+     A**********  DDCRTM         6A  O 18 29DSPATR(HI)                                      BUG19243
+     A            DDCRTM         6Y 0O 18 29DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+      **End of Change BUG19243
+     A            DDDSTS         6A  O 19 24DSPATR(HI)
+     A            DDDSTE         6A  O 20 24DSPATR(HI)
+     A** Start of Change BUG19780
+     A**88                              5 24'Branch:'                                       BUG19780
+     A**88        DDBRCA         3A  O  5 32DSPATR(HI)                                      BUG19780
+     A** End of Change BUG19780
+     A** Start of Change BUG19849
+     A**84******                       19 36'DST On'                                        BUG19849
+     A  84                             19 43'DST On'
+     A                                      DSPATR(RI)
+     A                                      COLOR(RED)
+     A** End of Change BUG19849
+      **Start of Change BUG19143
+     A**********                       18 38'System'                                        BUG19143
+     A**********                       18 45'Offset:'                                       BUG19143
+     A**********  S2OFFSET       5   O 18 53DSPATR(HI)                                      BUG19143
+      **Start of Change BUG19243
+     A**********  S2OFFSET       5   O 18 38DSPATR(HI)                                      BUG19243
+     A            S2OFFSET       6   O 18 38DSPATR(HI)
+      **End of Change BUG19243
+      **End of Change BUG19143
+      **Start of Change BUG19849
+     A  85        DDDSDH         6Y 0O 19 31DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+     A  85        DDDENH         6Y 0O 20 31DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+      **End of Change BUG19849
+      *
+      *****************************************************************
+     A          R SDM01005D3
+     A                                      CF03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+      **Start of Change BUG20043
+     A**89******                            CF10(10 'Delete')                               BUG20043
+     A  76                                  CF10(10 'Delete')
+      **End of Change BUG20043
+     A                                      CF12(12 'Cancel')
+     A  88                                  CF17(17 'ALL Branch')
+     A  88                                  CF18(18 'ALL Location')
+     A                                      OVERLAY
+     A            D0USER        10A  O  1  2TEXT('Current User')
+     A                                  1 13'SD001005E'
+     A            D0MRDT         7A  O  1 73TEXT('Midas Run Date')
+     A            D0WID         10A  O  2  2TEXT('WorkStation ID')
+     A  89                              2 31'Time Zone Maintenance'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A N89                              2 31'Time Zone Enquiry'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  83 89                           2 21'Time Zone Maintenance at Zone Leve-
+     A                                      l'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  88 89                           2 21'Time Zone Maintenance at Branch Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  86 89                           2 21'Time Zone Maintenance at System Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  88N89                           2 21'Time Zone Enquiry  at Branch Level'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+      **Start of Change BUG20043
+     A  83N89                           2 21'Time Zone Enquiry at Zone Level'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  86N89                           2 21'Time Zone Enquiry  at System Level'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+      **End of Change BUG20043
+     A            D0TIME         6Y 0O  2 72TEXT('Current Time')
+      **Start of Change BUG19762
+     A**********                            EDTWRD('  :  :  ')                              BUG19762
+     A                                      EDTWRD('0  :  :  ')
+      **End of Change BUG19762
+     A**Start of change BUG19780
+     A**********                        6 53'Time Zone Code: '                              BUG19780
+     A**********                        6  2'Year:'                                         BUG19780
+     A**********  S2TZCOD       10A  O  6 70DSPATR(HI)                                      BUG19780
+     A**********  S2TZYR         4A  O  6  8DSPATR(HI)                                      BUG19780
+     A                                  6  2'Time Zone Code: '
+     A            S2TZCOD       10A  O  6 19DSPATR(HI)
+     A  88                              6 32'Branch: '
+     A  88        S2BRCH         3A  O  6 41DSPATR(HI)
+     A  83                              6 49'Zone: '
+     A  83        S2ZONE        10A  O  6 56DSPATR(HI)
+     A                                  6 69'Year:'
+     A            S2TZYR         4A  O  6 75DSPATR(HI)
+     A**End of change BUG19780
+     A                                  8  2'Time Zone Code IBM..:'
+     A            DDTIBM        10A  O  8 24DSPATR(HI)
+     A                                  9  2'Short Description...:'
+     A            DDDESC        25A  O  9 24DSPATR(HI)
+     A                                 10  2'Description:'
+     A N82        DDDDES        65A  O 10 15DSPATR(HI)
+     A  82        DDDES1        65A  B 10 15DSPATR(HI)
+     A                                 12  2'GMT Delta Time......:'
+     A                                 13  2'GMT Delta Time Sign.:'
+     A            DDGMTS         1A  O 13 24DSPATR(HI)
+     A                                 14  2'Daylight Saving Time:'
+     A            DDDSTF         1A  O 14 24DSPATR(HI)
+     A                                 15  2'DST Code............:'
+     A            DDDSTC        10A  O 15 24DSPATR(HI)
+     A                                 16  2'DST Description.....:'
+     A            DDDSTD        57A  O 16 24DSPATR(HI)
+     A                                 17  2'DST Offset..........:'
+     A            DDDSTO         3A  O 17 24DSPATR(HI)
+     A                                 18  2'Current Time at time Zone:'
+     A                                 19  2'DST Start Date......:'
+     A                                 20  2'DST End Date........:'
+     A            DDGMT          4Y 0O 12 24DSPATR(HI)
+     A**Start of change BUG19136
+     A**********                            EDTWRD('  :  ')                                 BUG19136
+     A                                      EDTWRD('0  :  ')
+     A**End of change BUG19136
+      **Start of change BUG19243
+     A**********  DDCRTM         6A  O 18 29DSPATR(HI)                                      BUG19243
+     A            DDCRTM         6Y 0O 18 29DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+      **End of change BUG19243
+     A            DDDSTS         6A  O 19 24DSPATR(HI)
+      **Start of Change BUG19849
+     A**84******                       19 36'DST On'                                        BUG19849
+     A  84                             19 43'DST On'
+      **End of Change BUG19849
+     A                                      DSPATR(RI)
+     A                                      COLOR(RED)
+     A            DDDSTE         6A  O 20 24DSPATR(HI)
+      **Start of Change BUG19780
+     A**88                              6 28'Branch: '                                      BUG19780
+     A**88        S2BRCH         3A  O  6 37DSPATR(HI)                                      BUG19780
+     A**83                              6 30'Zone: '                                        BUG19780
+     A**83        S2ZONE        10A  O  6 37DSPATR(HI)                                      BUG19780
+      **End of Change BUG19780
+      **Start of Change BUG19143
+     A**********                       18 38'System Offset:'                                BUG19143
+     A**********  S2OFFSET       5   O 18 54DSPATR(HI)                                      BUG19143
+      **Start of change BUG19243
+     A**********  S2OFFSET       5   O 18 38DSPATR(HI)                                      BUG19243
+     A            S2OFFSET       6   O 18 38DSPATR(HI)
+      **End of change BUG19243
+      **End of Change BUG19143
+      **Start of Change BUG19849
+     A  85        DDDSDH         6Y 0O 19 31DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+     A  85        DDDENH         6Y 0O 20 31DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+      **End of Change BUG19849
+      *
+      *****************************************************************
+     A          R SDM01005D4
+     A                                      CF03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+     A                                      CF12(12 'Cancel')
+     A                                      OVERLAY
+     A            D0USER        10A  O  1  2TEXT('Current User')
+     A                                  1 13'SD001005M'
+     A            D0MRDT         7A  O  1 73TEXT('Midas Run Date')
+     A            D0WID         10A  O  2  2TEXT('WorkStation ID')
+     A                                  2 26'Time Zone Maintenance at System Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            D0TIME         6Y 0O  2 72TEXT('Current Time')
+     A**Start of change BUG19762
+     A**********                            EDTWRD('  :  :  ')                              BUG19762
+     A                                      EDTWRD('0  :  :  ')                             BUG19762
+     A**End of change BUG19762
+     A**Start of change BUG19780
+     A**********                        6 50'Time Zone Code: '                              BUG19780
+     A**********                        6  2'Year:'                                         BUG19780
+     A**********  S2TZCOD       10A  O  6 67DSPATR(HI)                                      BUG19780
+     A**********  S2TZYR         4A  O  6  8DSPATR(HI)                                      BUG19780
+     A                                  6  2'Time Zone Code: '
+     A                                  6 67'Year:'
+     A            S2TZCOD       10A  O  6 19DSPATR(HI)
+     A            S2TZYR         4A  O  6 73DSPATR(HI)
+     A**End of change BUG19780
+     A                                  8  2'Time Zone Code IBM..:'
+     A            DDTIBM        10A  B  8 24DSPATR(HI)
+     A                                  9  2'Short Description...:'
+     A            DDDESC        25A  B  9 24
+     A  51                                  DSPATR(PC)
+     A  51                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+     A                                 10  2'Description:'
+     A            DDDDES        65A  B 10 15DSPATR(HI)
+     A                                 12  2'GMT Delta Time......:'
+     A                                 13  2'GMT Delta Time Sign.:'
+     A            DDGMTS         1A  B 13 24
+     A  53                                  DSPATR(PC)
+     A  53                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+     A                                 14  2'Daylight Saving Time:'
+     A            DDDSTF         1A  B 14 24
+     A  54                                  DSPATR(PC)
+     A  54                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+     A                                 15  2'DST Code............:'
+     A  65        DDDSTC        10A  B 15 24
+     A  55                                  DSPATR(RI)
+     A  55                                  DSPATR(PC)
+     A                                      COLOR(WHT)
+     A            DDGMT          4Y 0B 12 24
+     A  52                                  DSPATR(PC)
+     A**Start of change BUG19136
+     A**********                            EDTCDE(4)                                       BUG19136
+     A                                      EDTWRD('0  :  ')
+     A**End of change BUG19136
+     A  52                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+      *
+      *****************************************************************
+     A          R SDM01005D5
+     A                                      CF03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+     A N86 89                               CF10(10 'Delete')
+     A                                      CF12(12 'Cancel')
+     A  89N88N87                            CF21(21 'Confirm Changes')
+     A                                      OVERLAY
+     A            D0USER        10A  O  1  2TEXT('Current User')
+     A                                  1 13'SD001005E'
+     A            D0MRDT         7A  O  1 73TEXT('Midas Run Date')
+     A            D0WID         10A  O  2  2TEXT('WorkStation ID')
+     A  86N83                           2 21'Time Zone Maintenance at System Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  83N86                           2 21'Time Zone Maintenance at Zone Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  86N89                           2 21'Time Zone Enquiry at System Level'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  83N89                           2 21'Time Zone Enquiry at Zone Level'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            D0TIME         6Y 0O  2 72TEXT('Current Time')
+     A**Start of change BUG19762
+     A**********                            EDTWRD('  :  :  ')                              BUG19762
+     A                                      EDTWRD('0  :  :  ')
+     A**End of change BUG19762
+     A**Start of Change BUG19780
+     A**********                        6 53'Time Zone Code: '                              BUG19780
+     A**********                        6  2'Year:'                                         BUG19780
+     A**********  S2TZCOD       10A  O  6 70DSPATR(HI)                                      BUG19780
+     A**********  S2TZYR         4A  O  6  8DSPATR(HI)                                      BUG19780
+     A                                  6  2'Time Zone Code: '
+     A            S2TZCOD       10A  O  6 19DSPATR(HI)
+     A  88                              6 32'Branch: '
+     A  88        S2BRCH         3A  O  6 41DSPATR(HI)
+     A  83                              6 49'Zone: '
+     A  83        S2ZONE        10A  O  6 56DSPATR(HI)
+     A                                  6 70'Year:'
+     A            S2TZYR         4A  O  6 76DSPATR(HI)
+     A**End of Change BUG19780
+     A                                  8  2'Time Zone Code IBM..:'
+     A            DDTIBM        10A  O  8 24DSPATR(HI)
+     A                                  9  2'Short Description...:'
+     A            DDDESC        25A  O  9 24DSPATR(HI)
+     A                                 10  2'Description:'
+     A            DDDDES        65A  O 10 15DSPATR(HI)
+     A                                 12  2'GMT Delta Time......:'
+     A                                 13  2'GMT Delta Time Sign.:'
+     A            DDGMTS         1A  O 13 24DSPATR(HI)
+     A                                 14  2'Daylight Saving Time:'
+     A            DDDSTF         1A  O 14 24DSPATR(HI)
+     A                                 15  2'DST Code............:'
+     A            DDDSTC        10A  O 15 24DSPATR(HI)
+     A                                 16  2'DST Description.....:'
+     A            DDDSTD        57A  O 16 24DSPATR(HI)
+     A                                 17  2'DST Offset..........:'
+     A            DDDSTO         3A  O 17 24DSPATR(HI)
+     A                                 18  2'Current Time at time Zone:'
+     A                                 19  2'DST Start Date......:'
+     A                                 20  2'DST End Date........:'
+     A            DDGMT          4Y 0O 12 24DSPATR(HI)
+     A**Start of change BUG19136
+     A**********                            EDTWRD('  :  ')                                 BUG19136
+     A                                      EDTWRD('0  :  ')
+     A**End of change BUG19136
+      **Start of Change BUG19243
+     A**********  DDCRTM         6A  O 18 29DSPATR(HI)                                      BUG19243
+     A            DDCRTM         6Y 0O 18 29DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+      **End of Change BUG19243
+     A            DDDSTS         6A  O 19 24DSPATR(HI)
+      **Start of Change BUG19849
+     A**84******                       19 36'DST On'                                        BUG19849
+     A  84                             19 43'DST On'
+      **End of Change BUG19849
+     A                                      DSPATR(RI)
+     A                                      COLOR(RED)
+     A            DDDSTE         6A  O 20 24DSPATR(HI)
+      ** Start of Change BUG19780
+     A**88                              6 54'Branch: '                                      BUG19780
+     A**88        S2BRCH         3A  O  6 63DSPATR(HI)                                      BUG19780
+     A**83                              6 30'Zone: '                                        BUG19780
+     A**83        S2ZONE        10A  O  6 37DSPATR(HI)                                      BUG19780
+      ** End of Change BUG19780
+      **Start of Change BUG19143
+     A*********                        18 38'System Offset:'                                BUG19143
+     A*********   S2OFFSET       5   O 18 54DSPATR(HI)                                      BUG19143
+      **Start of Change BUG19243
+     A*********   S2OFFSET       5   O 18 38DSPATR(HI)                                      BUG19243
+     A            S2OFFSET       6   O 18 38DSPATR(HI)
+      **End of Change BUG19243
+      **End of Change BUG19143
+      **Start of Change BUG19849
+     A  85        DDDSDH         6Y 0O 19 31DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+     A  85        DDDENH         6Y 0O 20 31DSPATR(HI)
+     A                                      EDTWRD('0 :  :  ')
+      **End of Change BUG19849
+      *
+      *****************************************************************
+     A          R SDM01005D6
+     A                                      CF03(03 'Exit')
+     A                                      CF05(05 'Refresh')
+     A                                      CF12(12 'Cancel')
+     A                                      OVERLAY
+     A            PSUSER        10A  O  1  2TEXT('Current User')
+     A                                  1 13'SD001005'
+     A            D0MRDT         7A  O  1 73TEXT('Midas Run Date')
+     A            PSJOBNAME     10A  O  2  2TEXT('WorkStation ID')
+     A N88N86                           2 31'Time Zone Maintenance'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  83                              2 21'Time Zone Maintenance at Zone Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  88                              2 21'Time Zone Maintenance at Branch Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A  86                              2 21'Time Zone Maintenance at System Le-
+     A                                      vel'
+     A                                      DSPATR(HI)
+     A                                      DSPATR(UL)
+     A            D0TIME         6Y 0O  2 72TEXT('Current Time')
+      **Start of Change BUG19762
+     A**********                            EDTWRD('  :  :  ')                              BUG19762
+     A                                      EDTWRD('0  :  :  ')
+      **End  of Change BUG19762
+     A** Start of Change BUG19780
+     A**********  S1TZCOD       10A  B  6 66                                                BUG19780
+     A**50                                  DSPATR(PC)                                      BUG19780
+     A**50                                  DSPATR(RI)                                      BUG19780
+     A**********                            COLOR(WHT)                                      BUG19780
+     A**********  S1TZYR         4A  O  6  9DSPATR(HI)                                      BUG19780
+     A**88                              6 16'Branch:'                                       BUG19780
+     A**88        S1BRCH         3A  O  6 24                                                BUG19780
+     A**56                                  DSPATR(RI)                                      BUG19780
+     A**56                                  DSPATR(PC)                                      BUG19780
+     A**********                            COLOR(WHT)                                      BUG19780
+     A**********                        6  2'Year: '                                        BUG19780
+     A**********                        6 49'Time Zone Code: '                              BUG19780
+     A**83                              6 30'Zone: '                                        BUG19780
+     A**83        S1ZONE        10A  O  6 37COLOR(WHT)                                      BUG19780
+     A            S1TZCOD       10A  B  6 19
+     A  50                                  DSPATR(PC)
+     A  50                                  DSPATR(RI)
+     A                                      COLOR(WHT)
+     A            S1TZYR         4A  O  6 76DSPATR(HI)
+     A  88                              6 32'Branch:'
+     A  88        S1BRCH         3A  O  6 40
+     A  56                                  DSPATR(RI)
+     A  56                                  DSPATR(PC)
+     A                                      COLOR(WHT)
+     A                                  6 69'Year: '
+     A                                  6  2'Time Zone Code: '
+     A  83                              6 46'Zone: '
+     A  83        S1ZONE        10A  O  6 53COLOR(WHT)
+     A** End of Change BUG19780
+      *
+      *****************************************************************
+     A          R SDM01005F0                TEXT('Footer Record Format')
+      **Start of Change BUG19950
+     A**89N79***                       23  2'F3=Exit   F5=Refresh  F12=Cancel'              BUG19950
+      **Start of Change BUG20043
+     A**89N79N31                       23  2'F3=Exit   F5=Refresh  F12=Cancel'              BUG20043
+     A  89N79N75                       23  2'F3=Exit   F5=Refresh  F12=Cancel'
+      **End of Change BUG20043
+      ** End of Change BUG19950
+     A N89 79                          23  2'F3=Exit   F12=Cancel'
+     A  89 31 79                       23  2'F3=Exit   F12=Cancel'
+      **Start of Change BUG19950
+     A*N89*31***                       23  2'F3=Exit   F10=Delete  F12=Cancel'              BUG19950
+      **Start of Change BUG20043
+     A**89*31N79                       23  2'F3=Exit   F10=Delete  F12=Cancel'              BUG20043
+     A  89 31 75
+     A N76                             23  2'F3=Exit   F12=Cancel'
+     A  89 31 75
+     AA 76                             23  2'F3=Exit   F10=Delete  F12=Cancel'
+      **End of Change BUG20043
+      ** End of Change BUG19950
+      *
+      *****************************************************************
+     A          R SDM01005F1                TEXT('Footer Record Format')
+      *
+      ** Time Zone Level
+      *
+     A N89 87                          22  2'E=Enquire  F3=Exit F12=Cancel'
+     A N89 87N78                       23  2'F14=Branch Level F20=System Level'
+      *
+     A N89 87 78                       23  2'F14=Branch Level F20=System -
+     A                                       Level F22=Zone Level'
+      *
+      ** Time Zone Level
+      *
+     A N83N86N88                       22  2'A=Amend  D=Delete'
+     A** Start of Change BUG19523
+     A*N83N86N88                       22 22'E=Enquire'                                     BUG19523
+     A N83N86N88                       22 22'E=Enquire  C=Copy'
+     A** End of Change BUG19523
+     A N83N86N88                       23  2'F3=Exit F5=Refresh'
+     A  78
+     AAN83N86N88                       23 22'F9=Insert F14=Branch Level F20=-
+     A                                       System Level F22=Zone Level'
+     A N78
+     AAN83N86N88                       23 22'F9=Insert F14=Branch Level F20=-
+     A                                       System Level'
+      *
+      ** Zone Level
+      *
+     A  83N88N86                       23  2'F14=Branch Level  F16=Time Zone -
+     A                                       Level   F20=System Level'
+      *
+      ** System Level
+      *
+     A  78
+     AA 86N88N83                       23  2'F14=Branch Level  F16=Time Zone -
+     A                                       Level   F22=Zone Level'
+      *
+     A N78
+     AA 86N88N83                       23  2'F14=Branch Level  F16=Time Zone -
+     A                                       Level'
+      *
+     A  89N31                          22  2'A=Amend  D=Delete  E=Enquire -
+     A                                       F3=Exit  F5=Refresh  F9=Insert'
+      *
+      ** Branch Level
+      *
+     A  78
+     AAN83N87 88                       23  2'F16=Time Zone Level  F20=System -
+     A                                       Level   F22=Zone Level'
+      *
+     A N78
+     AAN83N87 88                       23  2'F16=Time Zone Level  F20=System -
+     A                                       Level'
+      *
+     A N89N31N88                       22  2'E=Enquire  F3=Exit  F12=Cancel'
+     A N89N31N88                       23  2'F14=Branch Level Enq.  F20=Sys-
+     A                                      tem Level Enq.  F22=Zone Level Enq.'
+     A N89N31 88                       22  2'E=Enquire  F3=Exit  F12=Cancel'
+      *
+      *****************************************************************
+     A          R SDM01005F2                TEXT('Footer Record Format')
+     A  89 31 88                       22  2'F3=Exit    F12=Cancel'
+     A N86N83 88                       22  2'F3=Exit    F12=Cancel'
+     A N86N83 88                       23  2'F17=Apply to all Branches  F18=Ap-
+     A                                      ply to all location'
+      ** Start of Changes - CSW208A
+     A  89N88 86                       23  2'F3=Exit  F12=Cancel'
+     A                                 23 35'Enter=Save Changes'
+      ** End of Changes - CSW208A
+      ** Start of Change BUG20731
+     A**89N88***                       23  2'F3=Exit  F5=Refresh  F12=Cancel  F-            BUG20731
+     A**********                            21=Apply changes to All'                        BUG20731
+     A  89N88                          23  2'F3=Exit   F12=Cancel   F21=Confirm'
+      ** End of Change BUG20731
+      *
+      **Start of Change BUG20043
+      *****************************************************************
+     A          R SDM01005F3                TEXT('Footer Record Format')
+     A                                 23  2'F3=Exit  F12=Cancel'
+     A                                 23 26'Enter=Save Record'
+      *
+      **End of Change BUG20043
+      *****************************************************************
+     A          R SDM01005S1
+     A                                      SFLMSGRCD(24)
+     A                                      TEXT('Message Subfile Record Format-
+     A                                      ') SFL
+     A            D1SFKY                    SFLMSGKEY
+     A            D1PGMQ                    SFLPGMQ
+      *
+      *****************************************************************
+     A          R SDM01005C1
+     A                                      SFLSIZ(0003) SFLPAG(001)
+     A                                      SFLCTL(SDM01005S1) +
+     A                                      TEXT('Message Subfile Control Recor-
+     A                                      d Format') OVERLAY SFLDSP +
+     A                                      SFLDSPCTL SFLINZ
+     A  32                                  SFLEND
+     A            D1PGMQ                    SFLPGMQ(10)

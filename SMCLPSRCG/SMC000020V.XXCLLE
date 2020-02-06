@@ -1,0 +1,164 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000020V - Validity checker for CREATEZONE                */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*                                                                   */
+/*       Last Amend No. CUP041 *REDUNDANT  Date 07Oct14              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. CSM006  *CREATE    Date 18Mar05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CUP041 - New Bridge methodology to combine menu options     */
+/*       CSM006 - Create new zone based on existing zone.            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&NEWZONE &GLOBLYR &BASEZONE &ZONE +
+                          &ZONECODE &ZONEDESC)
+ 
+             DCL        VAR(&NEWZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GLOBLYR) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&BASEZONE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&ZONE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ZONECODE) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&ZONEDESC) TYPE(*CHAR) LEN(50)
+ 
+             DCL        VAR(&GXLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
+ 
+             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+                          2005')
+ 
+             DCLF       FILE(GPZONEPD)
+ 
+/* Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Check if zone exists already; if it does then check whether member */
+/* exists on SMNEWZPD to see if option has been run before. */
+             CHGVAR     VAR(&XLIB) VALUE(&NEWZONE *TCAT 'XLIB')
+             CHKOBJ     OBJ(*LIBL/&GXLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                GOTO       CMDLBL(GLOB_LAYER)
+             ENDDO
+             CHKOBJ     OBJ(*LIBL/SMNEWZPD) OBJTYPE(*FILE) +
+                          MBR(&NEWZONE)
+             MONMSG     MSGID(CPF9815) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Zone' *BCAT &NEWZONE *BCAT +
+                             'already exists.  Check what is on the +
+                             machine.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+GLOB_LAYER:
+/* Check that global layer exists.  If a ggGXLIB exists then this is deemed  */
+/* to be satisfactory.  */
+             CHGVAR     VAR(&GXLIB) VALUE(&GLOBLYR *TCAT 'GXLIB')
+             CHKOBJ     OBJ(*LIBL/&GXLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Library' *BCAT &GXLIB *BCAT +
+                             'does not exist which implies there is no +
+                             global layer.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* If the global layer exists then set up the global library list. */
+             CALL       PGM(GPC000016) PARM(&GLOBLYR)
+/* Read GPZONEPD to check that the 'Based on' zone is attached to the */
+/* global layer.                                                      */
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ZONE_ERROR)
+             ENDDO
+             IF         COND(&BASEZONE *EQ &ZOZONE) THEN(DO)
+                GOTO       CMDLBL(ZONE_EXIST)
+             ENDDO
+             GOTO       CMDLBL(READNEXT)
+ZONE_ERROR:
+             SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                          MSGDTA('0000"Based on" zone is not +
+                          attached to the global layer.') MSGTYPE(*DIAG)
+             CHGVAR     VAR(&ERROR) VALUE('Y')
+             GOTO       CMDLBL(ABNOR)
+ 
+/* Check if the 'Based on' zone exists.  If zzXLIB exists this is */
+/* deemed to be satisfactory.                                     */
+ZONE_EXIST:
+             CHGVAR     VAR(&XLIB) VALUE(&BASEZONE *TCAT 'XLIB')
+             CHKOBJ     OBJ(*LIBL/&XLIB) OBJTYPE(*LIB)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) +
+                             MSGDTA('0000Library' *BCAT &XLIB *BCAT +
+                             'does not exist which implies there is no +
+                             "Based on" zone.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Check that prereqisites exist; save files of database and source should */
+/* exist in the GXLIB.                                                     */
+             CHKOBJ     OBJ(&GXLIB/MP_DMLIB) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             CHKOBJ     OBJ(&GXLIB/MP_DPLIB) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             CHKOBJ     OBJ(&GXLIB/MP_DTALIB) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             CHKOBJ     OBJ(&GXLIB/MP_DVLIB) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             CHKOBJ     OBJ(&GXLIB/MP_DZLIB) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             CHKOBJ     OBJ(&GXLIB/MP_SQLSRCQ) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+             ENDDO
+             IF         COND(&ERROR *EQ 'Y') THEN(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000One +
+                             or more prerequisite save files does not +
+                             exist in' *BCAT &GXLIB *TCAT '.') +
+                             MSGTYPE(*DIAG)
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+/* Check that job description MIDASIC exists in the "Based On" XLIB. */
+             CHKOBJ     OBJ(&XLIB/MIDASIC) OBJTYPE(*JOBD)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                SNDPGMMSG  MSGID(CPD0006) MSGF(QCPFMSG) MSGDTA('0000Job +
+                             description MIDASIC does not exist in the +
+                             "Based on" zone.') MSGTYPE(*DIAG)
+                CHGVAR     VAR(&ERROR) VALUE('Y')
+                GOTO       CMDLBL(ABNOR)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             IF         COND(&ERROR *EQ 'Y') THEN(SNDPGMMSG +
+                          MSGID(CPF0002) MSGF(QCPFMSG) +
+                          MSGTYPE(*ESCAPE))
+END:
+             ENDPGM

@@ -1,0 +1,259 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ED Drip feed housekeeping')
+      *****************************************************************
+      *                                                               *
+      *  Midas  -  Midas Export Data Module                           *
+      *                                                               *
+      *  ED0101 - DRIP FEED HOUSEKEEPING                              *
+      *                                                               *
+      *  Function: Program clears down 'expired' members (batches)    *
+      *            in PF/EDJRNEPD and deletes unwanted records on     *
+      *            PF/EDDFAUPD and PF/EDSAVEPD                        *
+      *                                                               *
+      *  Called By: EDC0100 - Drip Feed Housekeeping Component        *
+      *                                                               *
+      *  Calls:     AOBANKR0 - Access Object for Bank Details ICD     *
+      *             AOMEXPR0 - Access Object for ED ICD               *
+      *             EDC0070  - Delete batch from PF/EDJRNEPD          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. 103749             Date 05Jun96               *
+      *                 101971 *C *CREATE  Date 17Jul95               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  103749 - FIELD TOO SHORT CAUSED EDJRNEPD-EDDFAUPD NOT        *
+      *           BEING DROPPED(ACCORDING TO RETENTION PERIOD)        *
+      *  101971 - Phase II Modifications (Replaces ED0100)            *
+      *                                                               *
+      *****************************************************************
+      *
+     FEDDFAUL1UF  E           K        DISK         KINFSR *PSSR
+     FEDSAVEL1UF  E           K        DISK         KINFSR *PSSR
+      *
+     FED0101AUO   E                    PRINTER
+      /TITLE FUNCTION OF INCICATORS
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *    01  - READ OF EDDFAUL1                                     *
+      *    02  - READ OF EDSAVEL1                                     *
+      *    41  - ED0101AU HEADER PRINTED                              *
+      *                                                               *
+      *  U7+U8 - Database Error                                       *
+      *                                                               *
+      *****************************************************************
+      /TITLE SUBROUTINE INDEX
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Initial Processing                                  *
+      *  PROCES - Perform Detail Processing                           *
+      *  *PSSR  - Program error handling routine                      *
+      *                                                               *
+      *****************************************************************
+     E/TITLE E-SPECIFICATIONS
+     E                    CPY@    1   1 80
+      ***  Array for Object Copyright Statement.
+      *
+     I/TITLE I-SPECIFICATIONS
+      *
+     IDSFDY     E DSDSFDY
+      ** First Data Structure for Access Objects
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details
+      *
+     ISDMEXP    E DSSDMEXPPD
+      ** ED ICD Details
+      *
+     IDBERR       DS                            256
+      * Data structure for data-base error processing.
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      ** PROGRAM STATUS DATA STRUCTURE
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USID
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+     C                     EXSR PROCES
+      *
+      *================================================================
+      *  P R O G R A M     E N D                                      *
+      *                                                               *
+     C                     SETON                     LR               *
+     C                     RETRN                                      *
+      *                                                               *
+      *================================================================
+      /TITLE SR/INIT
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls    : None.                                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      ACT@   80
+      *
+      *** Access Bank Details - for audit report
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+     C                     CALL 'AOMEXPR0'
+     C                     PARM '*MSG   ' WRTCD
+     C                     PARM '*FIRST ' WOPTN
+     C           SDMEXP    PARM SDMEXP    DSFDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'SDMEXPPD'DBFILE           * DB ERROR 02 *
+     C                     MOVE *BLANKS   DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Print Audit report header
+     C                     Z-ADD*ZERO     RRLIV   70
+     C                     Z-ADD*ZERO     RRDEL   70
+     C                     WRITEHEADAU
+     C                     SETON                     41
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR
+      *
+     C                     READ EDDFAUL1                 01
+      *
+      *** If no records read then output Audit Report only
+     C           *IN01     IFEQ *ON                        B1
+     C                     WRITENULLAU
+     C                     ELSE                            X1
+      *
+      ** Process until End of valid records.
+     C           *IN01     DOWEQ*OFF                       B2
+     C           EEAUDR    ADD  1         WEAUDR  20                      103749
+     C           EEAUDR    IFNE 9                                         103749
+     C                     ADD  1         EEAUDR
+     C                     END                                            103749
+      *
+      ** Delete if Age greater than or equal to retention period
+     C***********EEAUDR    IFGE E7DFRP                     B3             103749
+     C           WEAUDR    IFGE E7DFRP                     B3             103749
+     C                     CALL 'EDC0070'
+     C                     PARM           EEBTCH
+     C                     PARM           PRTN    1
+      *
+     C           EEBTCH    CHAINEDSAVED0             02
+     C           *IN02     IFEQ *OFF                       B4
+     C                     DELETEDSAVED0
+     C                     ENDIF                           E4
+      *
+     C                     DELETEDDFAUD0
+      *
+     C                     ELSE                            X3
+     C                     ADD  1         RRLIV
+     C                     UPDATEDDFAUD0
+      *
+     C                     ENDIF                           E3
+     C                     READ EDDFAUL1                 01
+      *
+     C                     ENDDO                           E2
+      *
+     C                     WRITEDETAILAU
+     C                     ENDIF                           E1
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+     C                     SETON                     U7U8LR
+      *
+      ***  Check to see that *PSSR has not already been called.
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVEL'ED0101'  DBPGM
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+      **  Error Report ED0101AU
+     C           *IN41     IFEQ *OFF
+     C                     WRITEHEADAU
+     C                     SETON                     41
+     C                     ENDIF
+      *
+     C                     WRITEDBERROR
+      *
+     C                     DUMP
+     C                     END
+      *
+      ** Exit program
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE COMPILE-TIME ARRAYS
+      ***
+**  CPY@
+(c) Finastra International Limited 2001

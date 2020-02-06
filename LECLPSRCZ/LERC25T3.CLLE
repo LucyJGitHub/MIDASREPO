@@ -1,0 +1,54 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE/GL Profitability Extract - End Sub Task')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Lending Module                                      */
+/*                                                                   */
+/*       LERC25T3 - Midas RE/GL Profitability Extract - End Sub Task */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467 *CREATE  Date 14Apr13              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       AR1097467B - Expected 15% COB run optimization not met      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&SNDDTAQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('LEPRESERVE')
+             DCL        VAR(&DTAQLIBL) TYPE(*CHAR) LEN(10) +
+                          VALUE('*LIBL     ')
+             DCL        VAR(&MSGLENGTH) TYPE(*DEC) LEN(5 0) VALUE(50)
+             DCL        VAR(&MSGDATA) TYPE(*CHAR) LEN(50) +
+                          VALUE('FINISH')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Send message to MRUNQ */
+ 
+             SNDPGMMSG  MSG('LERC25T3 - Profitability Extract - End +
+                          Sub-Task') TOMSGQ(MRUNQ)
+ 
+/* Send FINISH message to tasks */
+ 
+             CALL       PGM(QSNDDTAQ) PARM(&SNDDTAQ &DTAQLIBL +
+                          &MSGLENGTH &MSGDATA)
+ 
+             GOTO       CMDLBL(END)
+ 
+ ABNOR:      SNDPGMMSG  MSG('Program LERC25T3 ended abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

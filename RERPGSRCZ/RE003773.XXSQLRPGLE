@@ -1,0 +1,149 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+      *****************************************************************
+/*S*D****RPGSQLBND*****************************************************                     CRE083BW
+      *****************************************************************
+      *                                                               *
+      *  Midas - Close of Business module                             *
+      *                                                               *
+      *  RE003773 - Midas RE Account Balance Detail SQL               *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *                                                               *
+      *  Last Amend No. CRE083BW  *REDUNDANT Date 06Aug12             *
+      *  Prev Amend No. CRE083AF  *CREATE    Date 06Aug12             *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  CRE083BW - COB Restructure - RE COB Optimisation Phase 1     *
+      *  CRE083AF - COB Restructure - RE COB Optimisation Phase 1     *
+      *                                                               *
+      *****************************************************************
+      *  Function of indicators                                       *
+      *                                                               *
+      *****************************************************************
+     D PRTCD           S              7
+     D TOTROW          S             10  0
+     D ROWSF           S              4  0
+     D LOPCTR          S             10  0
+     D RTACDS          DS           212    OCCURS(1000)
+     D RECI                    1      1A
+     D BRCA                    2      4A
+     D ATYP                    5      5A
+     D STYP                    6      6A
+     D CNUM                    7     12A
+     D CCY                    13     15A
+     D ACOD                   16     25S 0
+     D ACSQ                   26     27S 0
+     D ACNO                   28     37S 0
+     D CASK                   38     45A
+     D CRNM                   46     65A
+     D ACOC                   66     67A
+     D EFAC                   68     69S 0
+     D RETB                   70     70A
+     D LRCR                   71     75P 0
+     D LDBL                   76     90P 0
+     D CLBL                   91    105P 0
+     D HELD                  106    120P 0
+     D MINB                  121    131P 0
+     D ODLN                  132    142P 0
+     D ODED                  143    147P 0
+     D DLIM                  148    152P 0
+     D EPLB                  153    167P 0
+     D EPCB                  168    182P 0
+     D RTLB                  183    197P 0
+     D RTCB                  198    212P 0
+ 
+     C     *ENTRY        PLIST
+     C                   PARM                    PRTCD
+ 
+      ** Populate Account Balance Detail (RETACRE)
+ 
+     C/EXEC SQL
+     C+ declare RECursor insensitive scroll cursor for
+     C+ select
+     C+ A.RECI, A.BRCA, A.ATYP, A.STYP ,A.CNUM,A.CCY,A.ACOD,
+     C+ A.ACSQ ,A.ACNO, C.CASK, C.CRNM, C.ACOC, A.EFAC,A.RETB, A.LRCR,
+     C+ A.LDBL, A.CLBL, A.HELD, A.MINB, A.ODLN, A.ODED,A.DLIM,
+     C+ A.EPLB,A.EPCB, A.RTLB, A.RTCB
+     C+ from ACCNTAB A left outer join CLINTCB C on A.CNUM = C.CNUM
+     C+ where A.RECI = 'D' AND ATYP = 'R'
+     C/END-EXEC
+ 
+     C/EXEC SQL
+     C+ open RECursor
+     C/END-EXEC
+ 
+      ** Get the number of rows of the selected records
+ 
+     C/EXEC SQL
+     C+ get diagnostics :TOTROW  = DB2_NUMBER_ROWS
+     C/END-EXEC
+ 
+      ** Skip if Rows is 0
+ 
+     C                   IF        TOTROW <> 0
+ 
+      ** Get the loop count
+ 
+     C                   IF        TOTROW > 1000
+     C                   EVAL      LOPCTR = %DIV(TOTROW:1000)
+     C                   EVAL      ROWSF = %REM(TOTROW:1000)
+      *
+     C                   IF        ROWSF <> 0
+     C                   ADD       1             LOPCTR
+     C                   ENDIF
+      *
+     C                   ELSE
+     C                   ADD       1             LOPCTR
+     C                   EVAL      ROWSF = TOTROW
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   DOW       LOPCTR > 0
+     C                   IF        ROWSF <> 0
+     C/EXEC SQL
+     C+ fetch next from RECURSOR for :ROWSF rows into :RTACDS
+     C/END-EXEC
+      *
+     C/EXEC SQL
+     C+ insert into RETACL1 :ROWSF rows values(:RTACDS)
+     C/END-EXEC
+      *
+     C                   SUB       1             LOPCTR
+     C                   ENDIF
+     C                   Z-ADD     1000          ROWSF
+     C                   ENDDO
+      *
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
+     C                   EVAL      PRTCD = '*ERROR '
+     C                   EXSR      *PSSR
+     C                   ENDIF
+ 
+     C/EXEC SQL
+     C+ close RECursor
+     C/END-EXEC
+ 
+     C                   SETON                                        LR
+     C                   RETURN
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+     C     *PSSR         BEGSR
+      *
+     C                   IF        @RUN = *BLANKS
+     C                   MOVE      'Y'           @RUN              1
+     C                   MOVE      *ON           *INU7
+     C                   MOVE      *ON           *INU8
+     C                   MOVE      *ON           *INLR
+     C                   DUMP
+     C                   ENDIF
+      *
+     C                   RETURN
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************

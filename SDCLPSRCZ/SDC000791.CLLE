@@ -1,0 +1,153 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SD Exemption Threshold Extract')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC000791 - SD Exemption Threshold Extract                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2008                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG25416           Date 14Aug09              */
+/*                      BUG25039           Date 23Jul09              */
+/*                      BUG24574           Date 07Jul09              */
+/*                      BUG24173A          Date 17Jun09              */
+/*                      BUG24173           Date 12Jun09              */
+/*                      CER048  *CREATE    Date 19May08              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CER059 - German Feature Upgrade to Delhi                    */
+/*       BUG25416 - Exemption Threshold Extract does not contain data*/
+/*                  from Previous Tax Year                           */
+/*       BUG25039 - Problem with posting on account                  */
+/*       BUG24574 - Withholding Tax - R4 vs M+                       */
+/*       BUG24173A - Exemption Threshold Extract contains no records */
+/*       BUG24173 - Exemption Threshold Extract contains no records  */
+/*       CER048 - German Features - Taxes                            */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&RSEQ &LEVEL &ENTITY &PARM)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2008')
+/** RCF sequence number */
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+/** RCF level */
+             DCL        VAR(&LEVEL) TYPE(*CHAR) LEN(1)
+/** RCF entity */
+             DCL        VAR(&ENTITY) TYPE(*CHAR) LEN(3)
+/** Header branch and branches to report  */
+             DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&BRCH) TYPE(*CHAR) LEN(99)
+             DCL        VAR(&BRANCH) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
+/** LDA DATA       */
+             DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&TAXRUN) TYPE(*CHAR) LEN(1)
+/** GWT901, Check if today a Tax Year End Run */
+             DCL        VAR(&TAXRTN) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RUNYR) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RUNYRD) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&FILNAM) TYPE(*CHAR) LEN(10)
+/*           DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1) */               /*BUG24173*/ /*BUG24173A*/
+             DCL        VAR(&FIRSYR) TYPE(*DEC) LEN(5 0)                             /*BUG24173A*/
+             DCL        VAR(&FIRSYC) TYPE(*CHAR) LEN(5)                              /*BUG24173A*/
+             DCL        VAR(&MBRNAME) TYPE(*CHAR) LEN(10)                               /*BUG24574*/
+             DCL        VAR(&WOVR) TYPE(*CHAR) LEN(1) VALUE('N')                        /*BUG24574*/
+             DCL        VAR(&MBRNML1) TYPE(*CHAR) LEN(10)                               /*BUG25039*/
+             DCLF       FILE(SDBANKPD) RCDFMT(SDBANKD0)                              /*BUG24173A*/
+ 
+/** Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR1))
+ 
+             RTVJOBA    USER(&USER)
+ 
+             ALCOBJ     OBJ((SDSADVPD *FILE *EXCL)) WAIT(0)
+ 
+             CLRPFM     FILE(SDSADVPD)
+/** Read SDBANKPD to get runday number */                                            /*BUG24173A*/
+             RCVF      RCDFMT(SDBANKD0)                                              /*BUG24173A*/
+/** Retrieve end of year details on KESTAT and MPHAS **/                              /*BUG24173*/
+/*           RTVDTAARA  DTAARA(MPHAS (1 1)) RTNVAR(&MPHAS) */           /*BUG24173*/ /*BUG24173A*/
+/*           RTVDTAARA  DTAARA(KESTAT (66 1)) RTNVAR(&TAXRTN) */        /*BUG24173*/ /*BUG24173A*/
+/*           RTVDTAARA  DTAARA(KESTAT (67 2)) RTNVAR(&RUNYR) */         /*BUG24173*/ /*BUG24173A*/
+             RTVDTAARA  DTAARA(KESTAT (66 2)) RTNVAR(&RUNYR)                         /*BUG24173A*/
+             RTVDTAARA  DTAARA(KESTAT (68 5)) RTNVAR(&FIRSYC)                        /*BUG24173A*/
+             IF         COND(&FIRSYC *NE '     ') THEN(DO)                           /*BUG24173A*/
+             CHGVAR     VAR(&FIRSYR) VALUE(&FIRSYC)                                  /*BUG24173A*/
+                                                                                      /*BUG24173*/
+/*           IF         COND(&TAXRTN *EQ 'Y') THEN(DO) */               /*BUG24173*/ /*BUG24173A*/
+             IF         COND(&BJRDNB = &FIRSYR) THEN(DO)                             /*BUG24173A*/
+/**********  CHGVAR     VAR(&FILNAM) VALUE('SDINPHPD' *CAT &RUNYR)   */        /*BUG24173 BUG24574*/
+/**********  OVRDBF     FILE(SDINPHPD) TOFILE(&FILNAM)               */        /*BUG24173 BUG24574*/
+/**********  CHGVAR     VAR(&FILNAM) VALUE('SDINPHL0' *CAT &RUNYR)   */        /*BUG24173 BUG24574*/
+/**********  OVRDBF     FILE(SDINPHL0) TOFILE(&FILNAM)               */        /*BUG24173 BUG24574*/
+/**********  CHGVAR     VAR(&FILNAM) VALUE('SDINPHL1' *CAT &RUNYR)   */        /*BUG24173 BUG24574*/
+/**********  OVRDBF     FILE(SDINPHL1) TOFILE(&FILNAM)               */        /*BUG24173 BUG24574*/
+/**********  CHGVAR     VAR(&FILNAM) VALUE('SDINPHL2' *CAT &RUNYR)   */        /*BUG24173 BUG24574*/
+/**********  OVRDBF     FILE(SDINPHL2) TOFILE(&FILNAM)               */        /*BUG24173 BUG24574*/
+             CHGVAR     VAR(&MBRNAME) VALUE('SDINPHPD' *CAT &RUNYR)                     /*BUG24574*/
+             OVRDBF     FILE(SDINPHPD) MBR(&MBRNAME)                                    /*BUG24574*/
+/**********  CHGVAR     VAR(&MBRNML1) VALUE('SDINPHL1' *CAT &RUNYR)  */        /*BUG25039 BUG25416*/
+/**********  OVRDBF     FILE(SDINPHL1) MBR(&MBRNAME)                 */        /*BUG25039 BUG25416*/
+             CHGVAR     VAR(&MBRNML1) VALUE('SDINPHL1' *CAT &RUNYR)                     /*BUG25416*/
+             OVRDBF     FILE(SDINPHL1) MBR(&MBRNML1)                                    /*BUG25416*/
+             CHGVAR     VAR(&WOVR) VALUE('Y')
+             ENDDO                                                                    /*BUG24173*/
+             ENDDO                                                                   /*BUG24173A*/
+ 
+/** Call program */
+             CHGVAR     VAR(&BRCH) VALUE(&PARM)
+/**********  CALL       PGM(SD000791) PARM(&RSEQ &BRCH &TAXRUN)      */                 /*BUG25416*/
+             CALL       PGM(SD000791) PARM(&RSEQ &BRCH &TAXRUN &FIRSYR)                 /*BUG25416*/
+                                                                                        /*BUG24574*/
+/**********  IF         COND(&WOVR = 'Y') THEN(DLTOVR FILE(SDINPHPD))      /*BUG24574*/ /*BUG25039*/
+             IF         COND(&WOVR = 'Y') THEN(DO)                                      /*BUG25039*/
+               DLTOVR FILE(SDINPHPD)                                                    /*BUG25039*/
+               DLTOVR FILE(SDINPHL1)                                                    /*BUG25039*/
+             ENDDO                                                                      /*BUG25039*/
+ 
+/** If data base error send appropriate message and terminate pgm */
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+               RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&DATA)
+               SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&DATA) +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+               GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&BRANCH) VALUE(%SST(&BRCH 1 3))
+ 
+             CHGDTAARA  DTAARA(KESTAT (52 1)) VALUE('1')
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(KESTAT (53 3)) VALUE(&BRANCH)
+             MONMSG     MSGID(CPF0000)
+             CHGDTAARA  DTAARA(KESTAT (56 10)) VALUE(&USER)
+             MONMSG     MSGID(CPF0000)
+/*           IF         COND(&MPHAS *NE 'A') THEN(DO)    */             /*BUG24173*/ /*BUG24173A*/
+/*           CHGDTAARA  DTAARA(KESTAT (66 1)) VALUE('N') */             /*BUG24173*/ /*BUG24173A*/
+/*           ENDDO                                       */             /*BUG24173*/ /*BUG24173A*/
+             GOTO       CMDLBL(END)
+ 
+/** Additional error message in case of problem */
+ ERROR1:     CHGJOB     SWS(XXXXXX01)
+             DMPCLPGM
+             SNDPGMMSG  MSG('SDC000791 - Program execution error') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000)
+ END:
+             CHGVAR   VAR(&CPYFLD) VALUE('(c) +
+                       Finastra International Limited')
+ 
+             CHGDTAARA  DTAARA(KESTAT (51 1)) VALUE('N')
+ 
+             DLCOBJ     OBJ((SDSADVPD *FILE *EXCL))
+             MONMSG     MSGID(CPF0000)
+ 
+             ENDPGM

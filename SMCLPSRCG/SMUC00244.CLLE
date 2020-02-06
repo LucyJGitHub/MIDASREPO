@@ -1,0 +1,76 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    DBGVIEW(*LIST)                                              */
+/*EXI    TEXT('Midas SM Delete objects made redundant by new AF')    */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMUC00244 - Delete objects made redundant by new Action     */
+/*                   File utilities                                  */
+/*                                                                   */
+/*       (c) Finastra International Limited 2011                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP021  *CREATE    Date 12Aug11              */
+/*                      XXXXXX             Date DDMmmYY              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CUP021 - Rewrite of Action File processing.                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&OBJTYPE) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
+ 
+             DCLF       FILE(UPDLVCPD)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                          2011')
+ 
+ /** Global monitor message */
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                            CMDLBL(ERROR))
+ 
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDPGM)
+             ENDDO
+ 
+             IF         COND(%SST(&AUMBTX 1 9) *EQ 'XX CUP021' *OR +
+                          %SST(&AUMBTX 1 9) *EQ 'XM CUP021') THEN(DO)
+RTVOBJD:
+                RTVOBJD    OBJ(&AUMBNM) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
+                MONMSG     MSGID(CPF9812) EXEC(DO)
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+/** Ensure that new version of global UPACTF* is not deleted. */
+             IF         COND(&AUMBNM *EQ 'UPACTFPD' *OR &AUMBNM *EQ +
+                          'UPACTFL0') THEN(DO)
+                   IF         COND(%SST(&RTNLIB 3 1) *EQ 'G') THEN(DO)
+                      GOTO       CMDLBL(READNEXT)
+                   ENDDO
+                ENDDO
+ 
+                DLTF       FILE(&RTNLIB/&AUMBNM)
+                MONMSG     MSGID(CPF3219) EXEC(DO)
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+ 
+/** Check that no other versions exist in library list. */
+                GOTO       CMDLBL(RTVOBJD)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERROR:
+             CHGJOB     SWS(XXXXXX11)
+ 
+ENDPGM:
+             ENDPGM

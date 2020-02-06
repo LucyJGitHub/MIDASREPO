@@ -1,0 +1,58 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RE AWV Extract Program')                        */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC03664B - Midas RE AWV Extract Program                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2012                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083BK *CREATE   Date 06Aug12              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CRE083BK - COB Restructure - RE COB Optimisation Phase 1    */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+ 
+             COPYRIGHT  TEXT('(c) Finastra International Limited +
+                           Ltd. 2012')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                           CMDLBL(ABNOR))
+ 
+/* Check if switchable feature CER044 is on */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SAR) VALUE('CER044')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SAR &SCSARD)
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+                CALL       PGM(RE3664B)
+             ENDDO
+ 
+             GOTO       CMDLBL(END)
+ 
+ABNOR:
+             SNDPGMMSG  MSG('REC03664B Midas RE AWV Extract Program +
+                           ended abnormally') +
+                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+ 
+END:
+             ENDPGM

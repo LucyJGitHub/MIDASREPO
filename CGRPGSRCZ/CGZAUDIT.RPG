@@ -1,0 +1,817 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas CG Standard audit report program.')
+/*OVRF*: OVRDBF (File in program) (file on system)                  : *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - User Defined Correspondence                      *
+     F*                                                               *
+     F*  CGZAUDIT      - Standard audit report                        *
+     F*                                                               *
+     F*  Function:  This program provides a standard audit report.    *
+     F*             It is passed parameters which include a           *
+     F*              message ID (providing a description of           *
+     F*              the amount) and a quantity.                      *
+     F*                                                               *
+     F*  Called By: Many programs, as required.                       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG2330            Date 29Apr04               *
+      *                 CSC022             Date 24Feb04               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 081387             Date 10Jan95               *
+      *                 S01522             Date 25Nov94               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+     F*  BUG2330- CG programs looking at wrong dataarea for CSC022    *
+      *  CSC022 - Commitment Control Changes for MidasPlus            *
+     F*  081387 - Parameter for message file not passed               *
+     F*  S01522 - User Defined Correspondence                         *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Indicator usage                                              *
+     F*  ~~~~~~~~~~~~~~~                                              *
+     F*  61 -- Printer overflow.                                      *
+     F*  62 -- Additional digits.                                     *
+     F*  70 -- Multi-branch indicator.                                *
+     F*  90 -- Error detected.                                        *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  Subroutine usage                                             *
+     F*  ~~~~~~~~~~~~~~~~                                             *
+     F*  SRPRT  -- Print a line of text.                              *
+     F*  SRNDTA -- Print "No data to report" line.                    *
+     F*  SRSKIP -- Skip a line.                                       *
+     F*  SRHEAD -- Prints the report's headings.                      *
+     F*  SROPEN -- Handles opening the printer file.                  *
+     F*  SRCLOS -- Handles closing the printer file.                  *
+     F*  SRACT  -- Reports an undefined action code.                  *
+     F*  SRINIT -- Provides initialisation and definitions.           *
+     F*                                                               *
+     F*  Copied in routines:                                          *
+     F*                                                               *
+     F*  *PSSR  -- Program error routine.                             *
+     F*  SRFILE -- File error routine.                                *
+     F*  SRERR  -- Error reporting routine.                           *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE
+     F*-------------------------------------------------------------------
+     F* Copied-in file definitions:
+     F*
+     F/COPY WNCPYSRC,AUDITCFPG
+     F*-------------------------------------------------------------------
+     FCGZAUDP1O   E             61     PRINTER      KINFSR SRFILE     UC
+     F                                              KINFDS PRTINF
+     F* Printer file
+     F*-------------------------------------------------------------------
+     FSDBANKPDIF  E                    DISK         KINFSR SRFILE
+     F* Bank details
+     F*-------------------------------------------------------------------
+     E/EJECT
+     E*-------------------------------------------------------------------
+     E* Error processing array:
+     E*
+     E/COPY CGCPYSRC,SRERRE
+     E*
+     E                    CPY@    1   1 80               Copyright
+     E                    CMD@    1   1 80               Command line.
+     E                    EDT        80  1               Edit string.
+     E*
+     E* Copied-in array definitions:
+     E*
+     E/COPY WNCPYSRC,AUDITCEPG
+      *                                                                                       CSC022
+      ** Array to hold commitment jobs name                                                   CSC022
+      *                                                                                       CSC022
+     E                    WCMT       10 10                                                    CSC022
+     E*-------------------------------------------------------------------
+     I/EJECT
+     I*-------------------------------------------------------------------
+     I* Define run-data data area:
+     I*
+     IRUNDTA    E DSRUNDAT
+     I*...................................................................
+     I* Error processing data structures:
+     I*
+     I/COPY CGCPYSRC,SRERRI
+     I*...................................................................
+     IPRTINF      DS
+     I* Printer file information data structure:
+     I*
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I*...................................................................
+     I* Input parameters data structure:
+     I*
+     II#DTA       DS                            256
+     I*
+     I* Spool file name (if blank, name unchanged)
+     I* N.B. To change name, I#SPLR must be Y
+     I*       unless first call of program:
+     I                                        1  10 I#SPLN
+     I* Repeat open and close of spool file:
+     I                                       11  11 I#SPLR
+     I* Report reference:
+     I                                       12  21 I#REFN
+     I* Report title (uses MSGID on CGUSRMSG):
+     I                                       26  32 I#TITL
+     I* Title underline (uses MSGID on CGUSRMSG):
+     I                                       33  39 I#TUL
+     I* Flag to control Report Control Facility:
+     I                                       40  40 I#RCF
+     I* Define fields for line printing:
+     I                                       41  47 I#TEXT
+     I                                       48  57 I#FILE
+     I                                       58  720I#QTY
+     I                                       73  730I#DECS
+     I                                       74  74 I#EDIT
+     I                                       75  770I#EXT
+     I                                       78  78 I#MORE
+     I                                       81 130 I#SUB
+     I*...................................................................
+     I* Data structure for compilation - Copyright insertion:
+     I*
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I*...................................................................
+     I* Define fields for message translation:
+     I*
+     IDSMTR       DS
+     I                                        1 132 #MSDTA
+     I                                      133 264 #MSTX1
+     I#MSTX2      DS
+     I                                        1 256 #MSTXA
+     I                                      257 512 #MSTXB
+     IDSFDY     E DSDSFDY                                                                     CSC022
+     IWDSJOB    E DSSCCMTJOB                                                                  CSC022
+     I              COMITNUM                        WCMTNO                                    CSC022
+     I              COMITJOB1                       WJOB01                                    CSC022
+     I              COMITJOB2                       WJOB02                                    CSC022
+     I              COMITJOB3                       WJOB03                                    CSC022
+     I              COMITJOB4                       WJOB04                                    CSC022
+     I              COMITJOB5                       WJOB05                                    CSC022
+     I              COMITJOB6                       WJOB06                                    CSC022
+     I              COMITJOB7                       WJOB07                                    CSC022
+     I              COMITJOB8                       WJOB08                                    CSC022
+     I              COMITJOB9                       WJOB09                                    CSC022
+     I              COMITJOB10                      WJOB10                                    CSC022
+     I                                        4 103 WCJOBS                                    CSC022
+      ** Commitment Control dataarea                                                          CSC022
+      *                                                                                       CSC022
+     ISCSARD    E DSSCSARDPD                                                                  CSC022
+     I*...................................................................
+     I* Named constants -- default text strings:
+     I*
+     I              '                *** -C         ##NDTA
+     I              'No details to report-
+     I              ' ***                '
+     I*
+     I              '                   *-C         ##END
+     I              '** End of report ***-
+     I              '                    '
+     I********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*                 M A I N L I N E
+     C********************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           W0RTN   7
+     C                     PARM           W0ACT   8
+     C                     PARM           I#DTA
+     C                     PARM           I#RSQN  5
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+     C*
+     C* Initialise program
+     C*
+     C           @@INIT    IFNE 'Y'
+     C                     EXSR SRINIT
+     C                     ENDIF
+     C*
+     C* If action is *CLOSE, call SRCLOS and terminate program:
+     C*
+     C           W0ACT     IFEQ '*CLOSE'
+     C                     EXSR SRCLOS
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDIF
+     C*
+     C* Call subroutine depending on action code
+     C*
+     C           W0ACT     CASEQ'*OPEN   'SROPEN
+     C           W0ACT     CASEQ'*LINE   'SRPRT
+     C           W0ACT     CASEQ'*SKIP   'SRSKIP
+     C           W0ACT     CASEQ'*NODATA 'SRNDTA
+     C           W0ACT     CASEQ'*CLOSESP'SRCLOS
+     C*
+     C* Copy in optional action processing:
+     C*
+     C/COPY WNCPYSRC,CGZAUDACT
+     C*
+     C                     CAS            SRACT
+     C                     ENDCS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C* Return to calling program:
+     C*
+     C                     RETRN
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRPRT prints a line of text.                       **
+     C********************************************************************
+     C           SRPRT     BEGSR                           * S R P R T   *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRPRT '  @STK,Q
+     C*
+     C* If not opened, do so now:
+     C*
+     C           ##OPRT    IFEQ *BLANK
+     C                     EXSR SROPEN
+     C                     ELSE
+     C*
+     C* If open and spool repeat is yes, close the file then reopen:
+     C*
+     C           ##OPRT    IFNE *BLANK
+     C           I#SPLR    ANDEQ'Y'
+     C                     EXSR SRCLOS
+     C                     EXSR SROPEN
+     C                     ENDIF
+     C                     ENDIF
+     C* Retrieve text:
+     C                     EXSR SRTEXT
+     C                     MOVEL#MSTX1    P3TEXT
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Format the quantity:
+     C*
+     C                     Z-ADDI#QTY     ZFLD15
+     C                     Z-ADDI#DECS    ZDECS
+     C                     MOVE I#EDIT    ZECODE
+     C                     MOVE *BLANKS   ZOUT21
+     C*
+     C* If additional, force zero decimals and show "nnnn.ext":
+     C*
+     C                     SETOF                     62
+     C           I#MORE    IFNE *BLANK
+     C                     Z-ADD*ZERO     ZDECS
+     C                     MOVE I#EXT     P3EXT
+     C                     SETON                     62
+     C                     ENDIF
+     C*
+     C                     CALL 'ZSEDIT'
+     C                     PARM           ZFLD15 150
+     C                     PARM           ZDECS   10
+     C                     PARM           ZECODE  1
+     C                     PARM           ZOUT21 21
+     C*
+     C                     MOVE ZOUT21    P3QTY
+     C* Print a line:
+     C                     EXSR SRHEAD
+     C                     WRITEF3DETL
+     C*
+     C           EXPRT     TAG                             <<<=== EXPRT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRTEXT retrieves a text string.                    **
+     C********************************************************************
+     C           SRTEXT    BEGSR                           * S R T E X T *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRTEXT'  @STK,Q
+     C*
+     C* Retrieve the text string from message ID I#TEXT in file I#FILE:
+     C*
+     C                     MOVE I#TEXT    #MSGID  7
+     C                     MOVELI#SUB     #MSDTA
+     C                     MOVE I#FILE    #MSGF  10
+     C           I#FILE    IFEQ *BLANKS
+     C                     MOVEL'CGUSRMSG'#MSGF
+     C                     ENDIF
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM           #MSGID
+     C                     PARM           #MSGF
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C* Error:
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'*CALL  ' W0FILE           ***************
+     C                     MOVEL'CGC1000' W0KEY            ** Error 1.  **
+     C                     Z-ADD1         W0ERNB           ***************
+     C                     MOVEL'MEM5003' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C           EXTEXT    TAG                             <<<=== EXTEXT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRNDTA prints the "No data to report" line.        **
+     C********************************************************************
+     C           SRNDTA    BEGSR                           * S R N D T A *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRNDTA'  @STK,Q
+     C*
+     C* If not opened, do so now:
+     C*
+     C           ##OPRT    IFEQ *BLANK
+     C                     EXSR SROPEN
+     C                     ENDIF
+     C*
+     C* Retrieve the text:
+     C*
+     C           I#TEXT    IFEQ *BLANKS
+     C                     MOVE ##NDTA    P5TEXT
+     C                     ELSE
+     C                     EXSR SRTEXT
+     C                     MOVEL#MSTX1    P5TEXT
+     C                     ENDIF
+     C* Print line:
+     C                     WRITEF5NDTA
+     C*
+     C           EXNDTA    TAG                             <<<=== EXNDTA
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRSKIP skips a blank line.                         **
+     C********************************************************************
+     C           SRSKIP    BEGSR                           * S R S K I P *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRSKIP'  @STK,Q
+     C*
+     C* If not opened, do so now:
+     C*
+     C           ##OPRT    IFEQ *BLANK
+     C                     EXSR SROPEN
+     C                     ENDIF
+     C* Skip a line:
+     C           *IN61     IFEQ *ON
+     C                     EXSR SRHEAD
+     C                     ELSE
+     C                     WRITEF4SKIP
+     C                     ENDIF
+     C*
+     C           EXSKIP    TAG                             <<<=== EXSKIP
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRHEAD tests for page overflow, printing headings. **
+     C********************************************************************
+     C           SRHEAD    BEGSR                           * S R H E A D *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRHEAD'  @STK,Q
+     C* Skip a line:
+     C           *IN61     IFEQ *ON
+     C                     WRITEF1HED1
+     C                     WRITEF2HED2
+     C                     SETOF                     61
+     C                     ENDIF
+     C*
+     C           EXHEAD    TAG                             <<<=== EXHEAD
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SROPEN opens printer file CGZAUDP1.                **
+     C********************************************************************
+     C           SROPEN    BEGSR                           * S R O P E N *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SROPEN'  @STK,Q
+     C*
+     C* If spool file name is requested, change override
+     C*
+     C           ##OPRT    IFEQ *BLANK
+     C           I#SPLN    ANDNE*BLANKS
+     C*
+     C* Override file CGZAUDP1 with Share(*NO) and spool file name:
+     C*
+     C                     MOVEACMD@,1    EDT
+     C           I#SPLN    IFNE *BLANKS
+     C                     MOVEAI#SPLN    EDT,46
+     C                     ENDIF
+     C                     MOVEAEDT       OVRDBF 80
+     C                     Z-ADD80        CMDLEN 155
+     C*
+     C                     CALL 'QCMDEXC'              9090
+     C                     PARM           OVRDBF
+     C                     PARM           CMDLEN
+     C* Error:
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'*CALL  ' W0FILE           ***************
+     C                     MOVEL'QCMDEXC' W0KEY            ** Error 2.  **
+     C                     Z-ADD2         W0ERNB           ***************
+     C                     MOVEL'MEM5005' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     ENDIF
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Open CGZAUDP1 for output:
+     C*
+     C                     OPEN CGZAUDP1               90
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'CGZAUDP1'W0FILE           ***************
+     C                     MOVEL'*OPEN'   W0KEY            ** Error 3.  **
+     C                     Z-ADD3         W0ERNB           ***************
+     C                     MOVEL'MEM5005' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C* If I#RCF is not blank, use the Report Control Facility:
+     C*
+     C           I#RCF     IFNE *BLANK
+     C*
+     C* If I#SPLN is not blank, this is the name for RCF:
+     C*
+     C           I#SPLN    IFNE *BLANKS
+     C                     MOVELI#SPLN    UUSFNM
+     C                     ELSE
+     C                     MOVELSFILEU    UUSFNM
+     C                     ENDIF
+     C*
+     C* ZSFILE - Log Spool File.
+     C*
+     C* Set spool file number:
+     C*
+     C                     Z-ADDSFNUMU    WUSFNB  60
+     C                     MOVE *BLANKS   UUSRSQ  5
+     C           *LIKE     DEFN UUZSER    WUZSER
+     C*
+     C* Write report request:
+     C*
+     C                     CALL 'ZSFILE'               90
+     C           UUSRSQ    PARM I#RSQN    UURSQN  5
+     C                     PARM *BLANKS   UUENTY  3
+     C                     PARM           UUSFNM 10
+     C                     PARM WUSFNB    UUSFNB  60
+     C           WUZSER    PARM *BLANK    UUZSER  1
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Report error on call to ZSFILE:
+     C*
+     C           *IN90     IFEQ *ON
+     C           WUZSER    OREQ 'Y'
+     C                     MOVEL'*CALL   'W0FILE           ***************
+     C                     MOVEL'ZSFILE'  W0KEY            ** Error 4.  **
+     C                     Z-ADD4         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C* Endif RCF:
+     C                     ENDIF
+     C*
+     C                     MOVE 'Y'       ##OPRT  1
+     C* Retrieve title text:
+     C                     MOVE I#TITL    #MSGID
+     C                     MOVE I#FILE    #MSGF                           081387
+     C           I#FILE    IFEQ *BLANKS                                   081387
+     C                     MOVEL'CGUSRMSG'#MSGF                           081387
+     C                     ENDIF                                          081387
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM           #MSGID
+     C*********************PARM 'CGUSRMSG'#MSGF                           081387
+     C                     PARM           #MSGF                           081387
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C* Error:
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'*CALL  ' W0FILE           ***************
+     C                     MOVEL'CGC1000' W0KEY            ** Error 5.  **
+     C                     Z-ADD5         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     MOVEL#MSTX1    P2TITL
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Retrieve underline text:
+     C*
+     C                     MOVE I#TUL     #MSGID
+     C*
+     C                     CALL 'CGC1000'              9090
+     C                     PARM           #MSGID
+     C*********************PARM 'CGUSRMSG'#MSGF                           081387
+     C                     PARM           #MSGF                           081387
+     C                     PARM           #MSDTA
+     C                     PARM *BLANKS   #MSTX1
+     C                     PARM *BLANKS   #MSTX2
+     C* Error:
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'*CALL  ' W0FILE           ***************
+     C                     MOVEL'CGC1000' W0KEY            ** Error 6.  **
+     C                     Z-ADD6         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+     C*
+     C                     MOVEL#MSTX1    P2TUL
+     C* Print header:
+     C                     MOVE I#REFN    P1REFN
+     C                     SETON                     61
+     C                     EXSR SRHEAD
+     C*
+     C           EXOPEN    TAG                             <<<=== EXOPEN
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRCLOS closes the printer file.                    **
+     C********************************************************************
+     C           SRCLOS    BEGSR                           * S R C L O S *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRCLOS'  @STK,Q
+     C*
+     C* /Copy point for End of Report:
+     C*
+     C/COPY WNCPYSRC,AUDITCPER
+     C*
+     C* Retrieve the text:
+     C*
+     C           I#TEXT    IFEQ *BLANKS
+     C                     MOVE ##NDTA    P6TEXT
+     C                     ELSE
+     C                     EXSR SRTEXT
+     C                     MOVEL#MSTX1    P6TEXT
+     C                     ENDIF
+     C*
+     C* If not opened, do so now:
+     C*
+     C           ##OPRT    IFEQ *BLANK
+     C                     EXSR SROPEN
+     C                     ENDIF
+     C*
+     C* Print "End of report":
+     C*
+     C                     WRITEF6END
+     C* Close the file:
+     C                     CLOSECGZAUDP1
+     C                     MOVE *BLANK    ##OPRT
+     C*
+     C           EXCLOS    TAG                             <<<=== EXCLOS
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRACT handles an undefined action.                 **
+     C********************************************************************
+     C           SRACT     BEGSR                           * S R A C T   *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q
+     C                     MOVEL'SRACT '  @STK,Q
+     C*
+     C* Database error -- undefined action:
+     C*
+     C                     MOVEL'*ACTION 'W0FILE           ***************
+     C                     MOVELW0ACT     W0KEY            ** Error 7.  **
+     C                     Z-ADD7         W0ERNB           ***************
+     C                     MOVEL'MEM5006' W0MSGD
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C*
+     C           EXACT     TAG                             <<<=== EXACT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**  Subroutine SRINIT provides initialisation and definition.     **
+     C********************************************************************
+     C           SRINIT    BEGSR                           * S R I N I T *
+     C*
+     C* Add subroutine to stack:
+     C*
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRINIT'  @STK,Q
+     C*
+     C* Move copyright statement:
+     C*
+     C                     MOVE CPYR@#    ACT@   80
+     C*
+     C* Get Rundate:
+     C*
+     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+     C                     IN   RUNDTA
+     C                     MOVE AGMRDT    ##MRDT  7        Midas Run date
+     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+     C                     MOVE AGRDNB    WURDNB  50       Run day number
+     C                     MOVE AGSUC     WUSUC   1        Set up complete
+     C                     MOVE AGDFF     WUDFF   1        Date Format
+     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+     C*
+     C* Extract bank details:
+     C*
+     C           1         CHAINSDBANKPD             9090
+     C           *IN90     IFEQ *ON
+     C                     MOVEL'SDBANKPD'W0FILE
+     C                     MOVEL'*FIRST  'W0KEY            ***************
+     C                     Z-ADD8         W0ERNB           ** Error 8.  **
+     C                     MOVEL'MEM5003' W0MSGD           ***************
+     C                     MOVEL'MIDAS  ' W0MSGF
+     C                     EXSR SRERR
+     C                     ENDIF
+      *                                                                                       CSC022
+      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+      ** is switched on                                                                       CSC022
+      *                                                                                       CSC022
+     C                     MOVE 'N'       CSC022  1                                           CSC022
+     C                     MOVE 'N'       WCMTSK  1                                           CSC022
+      *                                                                                       CSC022
+     C                     CALL 'AOSARDR0'                                                    CSC022
+     C                     PARM *BLANKS   PRTCD   7                                           CSC022
+     C                     PARM '*VERIFY' POPTN   7                                           CSC022
+     C                     PARM 'CSC022'  PSARD   6                                           CSC022
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+      *                                                                                       CSC022
+     C           PRTCD     IFEQ *BLANKS                                                       CSC022
+     C                     MOVE 'Y'       CSC022                                              CSC022
+     C                     MOVE 'N'       WCMTSK                                              CSC022
+      *                                                                                       CSC022
+     C                     IN   WDSJOB                                                        CSC022
+      *                                                                                       CSC022
+     C           WCMTNO    IFGT 0                                                             CSC022
+     C                     MOVEAWCJOBS    WCMT                                                CSC022
+     C                     Z-ADD1         I       20                                          CSC022
+      *                                                                                       CSC022
+     C           ##JOB     LOKUPWCMT,I                   51                                   CSC022
+     C           *IN51     IFEQ *ON                                                           CSC022
+     C                     MOVE 'Y'       WCMTSK                                              CSC022
+     C                     ENDIF                                                              CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C                     ELSE                                                               CSC022
+     C           PRTCD     IFNE '*NRF'                                                        CSC022
+     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+     C                     Z-ADD21        W0ERNB                                              CSC022
+     C                     EXSR SRERR                                                         CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C************NAMVAR   DEFN           WDSJOB                                       CSC022BUG2330
+     C           *NAMVAR   DEFN SCCMTJOB  WDSJOB                                             BUG2330
+      *                                                                                       CSC022
+     C                     ENDIF                                                              CSC022
+      *                                                                                       CSC022
+     C*...................................................................
+     C/EJECT
+     C*...................................................................
+     C* Set multi-branch indicator:
+     C*
+     C                     SETOF                     70
+     C           WUMBIN    IFNE 'Y'
+     C                     SETON                     70
+     C                     ENDIF
+     C*
+     C* Flag initialisation as complete:
+     C*
+     C                     MOVE 'Y'       @@INIT  1
+     C*
+     C           EXINIT    TAG                             <<<=== EXINIT
+     C*
+     C* Unwind subroutine stack:
+     C*
+     C                     MOVE *BLANKS   @STK,Q
+     C                     SUB  1         Q
+     C*
+     C                     ENDSR
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C** *PSSR  - ERROR HANDLING
+     C********************************************************************
+     C*
+     C/COPY CGCPYSRC,SRERRPSSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C* /Copy point for calculations:
+     C*
+     C/COPY WNCPYSRC,AUDITCCPG
+     C*
+     C* /Copy point for error-handling subroutine:
+     C*
+     C/COPY CGCPYSRC,SRERRC
+     C********************************************************************
+     O/EJECT
+     O********************************************************************
+     O* /Copy point for output specifications:
+     O*
+     O/COPY WNCPYSRC,AUDITCOPG
+     O*
+     O********************************************************************
+** CPY@ -- Copyright statement
+(c) Finastra International Limited 2001
+** Commands
+OVRPRTF FILE(CGZAUDP1  ) SHARE(*NO) SPLFNAME(XXXXXXXXXX) SECURE(*YES)

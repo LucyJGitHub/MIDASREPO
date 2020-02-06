@@ -1,0 +1,327 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Copy multi-membered DP files')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Implementation module                               */
+/*                                                                   */
+/*       SMC000008 - Copy multi-membered DP files                    */
+/*                                                                   */
+/*       (c) Finastra International Limited 2006                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD020092           Date 11Apr13              */
+/*                      CUP006             Date 22Jun10              */
+/*                      BUG27793           Date 08Jun10              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/*                      CSM010             Date 22Jun07              */
+/*                      CSD027             Date 21May07              */
+/*                      CUP033             Date 23Jan07              */
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*                      CPK025  *CREATE    Date 21Sep05              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       MD020092 - Check if data areas are in DPLIB or DMLIB        */
+/*       CUP006 - Additional migration for moved data areas.         */
+/*       BUG27793 - Make migration multi-streamed.                   */
+/*       CSM010 - Applied by CSD027.                                 */
+/*       CSD027 - Copy WTRNSD *NOCHK to handle alpha customer.  The  */
+/*                data is not important but the members are.         */
+/*       CUP033 - Use MKCTLD from "from" library because the "to"    */
+/*                version will be empty if job is submitted.         */
+/*       CPK025 - MidasPlus 1.3 packaging.  Automate copy of         */
+/*                multi-membered files  for DP library.              */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&FROMPFX &TOPFX)
+ 
+             DCL        VAR(&FROMPFX) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOPFX) TYPE(*CHAR) LEN(2)
+ 
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+/**********  DCL        VAR(&TODMLIB) TYPE(*CHAR) LEN(10)                              */ /*CUP033*/
+             DCL        VAR(&FROMDMLIB) TYPE(*CHAR) LEN(10)                               /*CUP033*/
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TDMLIB) TYPE(*CHAR) LEN(10)                                  /*CUP006*/
+             DCL        VAR(&FDTLIB) TYPE(*CHAR) LEN(10)                                  /*CUP006*/
+             DCL        VAR(&CBTASKSP) TYPE(*CHAR) LEN(10)                                /*CUP006*/
+             DCL        VAR(&ERCTLD) TYPE(*CHAR) LEN(256)                                 /*CUP006*/
+ 
+             DCLF       FILE(MKCTLD)
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
+ 
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+/* Set status to ACTIVE. */                                                             /*BUG27793*/
+             CALL       PGM(SM000008) PARM('SMC000008' '*PGM' +
+                          '*UPDATE' 'ACTIVE')                                           /*BUG27793*/
+ 
+             CHGVAR     VAR(&FROMLIB) VALUE(&FROMPFX *TCAT 'DPLIB')
+             CHGVAR     VAR(&TOLIB) VALUE(&TOPFX *TCAT 'DPLIB')
+/**********  CHGVAR     VAR(&TODMLIB) VALUE(&TOPFX *TCAT 'DMLIB')                      */ /*CUP033*/
+             CHGVAR     VAR(&FROMDMLIB) VALUE(&FROMPFX *TCAT 'DMLIB')                     /*CUP033*/
+             CHGVAR     VAR(&FDTLIB) VALUE(&FROMPFX *TCAT 'DTALIB')                       /*CUP006*/
+             CHGVAR     VAR(&TDMLIB) VALUE(&TOPFX *TCAT 'DMLIB')                          /*CUP006*/
+ 
+/**Ensure*the*'to'*DMLIB*is*in*the*library*list*for*the*read*of*MKCTLD.**/ /*          */ /*CUP033*/
+/**********  ADDLIBLE   LIB(&TODMLIB)                                                  */ /*CUP033*/
+/**********  MONMSG     MSGID(CPF0000)                                                 */ /*CUP033*/
+ 
+/* Copy across FF files if necessary. */
+/**********  CPYF       FROMFILE(&FROMLIB/WTRNSD) +                                    */ /*CSD027*/
+/**********               TOFILE(&TOLIB/WTRNSD) FROMMBR(*ALL) +                        */ /*CSD027*/
+/**********               TOMBR(*FROMMBR) MBROPT(*REPLACE) +                           */ /*CSD027*/
+/**********               FMTOPT(*MAP *DROP)                                           */ /*CSD027*/
+             CPYF       FROMFILE(&FROMLIB/WTRNSD) +
+                          TOFILE(&TOLIB/WTRNSD) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*NOCHK)                                                  /*CSD027*/
+             MONMSG     MSGID(CPF0000)
+             CLRPFM     FILE(&TOLIB/WTRNSD) MBR(*ALL)                                     /*CSD027*/
+             MONMSG     MSGID(CPF0000)                                                    /*CSD027*/
+             CPYF       FROMFILE(&FROMLIB/JRNEFD) +
+                          TOFILE(&TOLIB/JRNEFD) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF0000)
+ 
+/* Copy across UDC files if necessary. */
+             CPYF       FROMFILE(&FROMLIB/CGPGENPD) +
+                          TOFILE(&TOLIB/CGPGENPD) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)
+             MONMSG     MSGID(CPF0000)
+ 
+             CPYF       FROMFILE(&FROMLIB/CGSQLTXT) +
+                          TOFILE(&TDMLIB/CGSQLTXT) FROMMBR(*ALL) +
+                          TOMBR(*FROMMBR) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+/* Read MKCTLD to bring across FF data areas. */
+             OVRDBF     FILE(MKCTLD) TOFILE(&FROMDMLIB/MKCTLD) +
+                          OVRSCOPE(*JOB)                                                  /*CUP033*/
+MKCTLD:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+/**********     GOTO       CMDLBL(ENDPGM)                                            */ /*BUG27793*/
+/**********     GOTO       CMDLBL(SUCCESS)                                */ /*BUG27793*/ /*CUP006*/
+                GOTO       CMDLBL(STEP01)                                                 /*CUP006*/
+             ENDDO
+ 
+/**********  CRTDUPOBJ  OBJ(&MRKT) FROMLIB(&FROMLIB) +                               */ /*MD020092*/
+/**********               OBJTYPE(*DTAARA) TOLIB(&TOLIB)                             */ /*MD020092*/
+             CRTDUPOBJ  OBJ(&MRKT) FROMLIB(&FROMLIB) +
+                          OBJTYPE(*DTAARA) TOLIB(&TDMLIB)                               /*MD020092*/
+             MONMSG     MSGID(CPF2130) EXEC(DO)                                         /*MD020092*/
+                CRTDUPOBJ  OBJ(&MRKT) FROMLIB(&FROMDMLIB) +
+                             OBJTYPE(*DTAARA) TOLIB(&TDMLIB)                            /*MD020092*/
+                MONMSG     MSGID(CPF0000)
+             ENDDO                                                                      /*MD020092*/
+ 
+             GOTO       CMDLBL(MKCTLD)
+ 
+STEP01:                                                                                   /*CUP006*/
+/* Check if data area CBTASKSP exists in 'from' DTALIB ... */                             /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/CBTASKSP) OBJTYPE(*DTAARA)                            /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP02)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise change value of data area. */                                            /*CUP006*/
+             RTVDTAARA  DTAARA(&FDTLIB/CBTASKSP) RTNVAR(&CBTASKSP)                        /*CUP006*/
+             CHGDTAARA  DTAARA(&TDMLIB/CBTASKSP) VALUE(&CBTASKSP)                         /*CUP006*/
+ 
+STEP02:                                                                                   /*CUP006*/
+/* Check if data area ERCTLD exists in 'from' DTALIB ... */                               /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/ERCTLD) OBJTYPE(*DTAARA)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP03)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise change value of data area. */                                            /*CUP006*/
+             RTVDTAARA  DTAARA(&FDTLIB/ERCTLD) RTNVAR(&ERCTLD)                            /*CUP006*/
+             CHGDTAARA  DTAARA(&TDMLIB/ERCTLD) VALUE(&ERCTLD)                             /*CUP006*/
+ 
+STEP03:                                                                                   /*CUP006*/
+/* Check if file APQMBXPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/APQMBXPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP04)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/APQMBXPD) +
+                          TOFILE(&TDMLIB/APQMBXPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP04:                                                                                   /*CUP006*/
+/* Check if file PBALERTPD exists in 'from' DTALIB ... */                                 /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/PBALERTPD) OBJTYPE(*FILE)                             /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP05)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/PBALERTPD) +
+                          TOFILE(&TDMLIB/PBALERTPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP05:                                                                                   /*CUP006*/
+/* Check if file ILRKDLPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/ILRKDLPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP06)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/ILRKDLPD) +
+                          TOFILE(&TDMLIB/ILRKDLPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP06:                                                                                   /*CUP006*/
+/* Check if file ILRKFFPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/ILRKFFPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP07)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/ILRKFFPD) +
+                          TOFILE(&TDMLIB/ILRKFFPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP07:                                                                                   /*CUP006*/
+/* Check if file ILRKFTPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/ILRKFTPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP08)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/ILRKFTPD) +
+                          TOFILE(&TDMLIB/ILRKFTPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP08:                                                                                   /*CUP006*/
+/* Check if file ILRKLEPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/ILRKLEPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP09)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/ILRKLEPD) +
+                          TOFILE(&TDMLIB/ILRKLEPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP09:                                                                                   /*CUP006*/
+/* Check if file ILRKSEPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/ILRKSEPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP10)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/ILRKSEPD) +
+                          TOFILE(&TDMLIB/ILRKSEPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP10:                                                                                   /*CUP006*/
+/* Check if file CADWNDPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/CADWNDPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP11)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/CADWNDPD) +
+                          TOFILE(&TDMLIB/CADWNDPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP11:                                                                                   /*CUP006*/
+/* Check if file ERDWNDPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/ERDWNDPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP12)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/ERDWNDPD) +
+                          TOFILE(&TDMLIB/ERDWNDPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP12:                                                                                   /*CUP006*/
+/* Check if file ERLUIBPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/ERLUIBPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP13)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/ERLUIBPD) +
+                          TOFILE(&TDMLIB/ERLUIBPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP13:                                                                                   /*CUP006*/
+/* Check if file EROUTFPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/EROUTFPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP14)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/EROUTFPD) +
+                          TOFILE(&TDMLIB/EROUTFPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP14:                                                                                   /*CUP006*/
+/* Check if file SDEXTSPD exists in 'from' DTALIB ... */                                  /*CUP006*/
+             CHKOBJ     OBJ(&FDTLIB/SDEXTSPD) OBJTYPE(*FILE)                              /*CUP006*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                           /*CUP006*/
+/* ... if it doesn't then move to next step ... */                                        /*CUP006*/
+                GOTO       CMDLBL(STEP15)                                                 /*CUP006*/
+             ENDDO                                                                        /*CUP006*/
+/* ... otherwise copy file to 'to' DMLIB. */                                              /*CUP006*/
+             CPYF       FROMFILE(&FDTLIB/SDEXTSPD) +
+                          TOFILE(&TDMLIB/SDEXTSPD) MBROPT(*REPLACE) +
+                          FMTOPT(*MAP *DROP)                                              /*CUP006*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP006*/
+ 
+STEP15:                                                                                   /*CUP006*/
+ 
+/* If successful then update driving file. */                                           /*BUG27793*/
+SUCCESS:                                                                                /*BUG27793*/
+             CALL       PGM(SM000008) PARM('SMC000008' '*PGM' +
+                          '*UPDATE' 'PASSED')                                           /*BUG27793*/
+ 
+             GOTO       CMDLBL(ENDPGM)
+ERROR:
+/* Set status to FAILED. */                                                             /*BUG27793*/
+             CALL       PGM(SM000008) PARM('SMC000008' '*PGM' +
+                          '*UPDATE' 'FAILED')                                           /*BUG27793*/
+             CHGJOB     SWS(XXXXXX11)
+ENDPGM:
+             DLTOVR     FILE(MKCTLD) LVL(*JOB)                                            /*CUP033*/
+             MONMSG     MSGID(CPF0000)                                                    /*CUP033*/
+             ENDPGM

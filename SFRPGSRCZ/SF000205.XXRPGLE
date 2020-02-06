@@ -1,0 +1,331 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+      *****************************************************************
+/*S*D****RPGBASEBND****************************************************
+      *****************************************************************
+      *                                                               *
+      *  Midas - Security Profile Facility                            *
+      *                                                               *
+      *  SF000205 - Midas Users Enquiry                               *
+      *                                                               *
+      *  Function: This program enables the user to enquire on        *
+      *  I/C       their own and other users' authority to action     *
+      *            codes, companies and branches.                     *
+      *                                                               *
+      *  Called By: Input Cycle Menu                                  *
+      *  Calls:     SF000200                                          *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *                                                               *
+      *  Last Amend No. AR904191*REDUNDANT Date 03Feb12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *  Prev Amend No. CRE026             Date 24May06               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CGP009             Date 22Dec04               *
+      *                 TDA035             Date 02Apr04               *
+      *                 CSF002 *RENAME     Date 11Aug03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 187882             Date 16Feb01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CAAA01             Date 08Mar95               *
+      *                 S01117             Date 25Mar92               *
+      *                 S01269             Date 24Jun91               *
+      *                 LN0122             Date 16Jun90               *
+      *                 S01199             Date 19Sep89               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  AR904191 - Replaced as per BF requirement (CBF005)           *
+      *  CRE026 - Consumer Banking (Recompile)                        *
+      *  CGP009 - Local Zone Time Difference (Recompile)              *
+      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+      *  CSF002 - Global Processing                                   *
+      *           SF0205 has been converted to ILE and renamed.       *
+      *           Commented out program codes have been stripped out  *
+      *           for clarity.                                        *
+      *  187882 - Increased size of RRN.                              *
+      *  CAAA01 - GUI/400 development                                 *
+      *         - recompiled over changed MUSERDD                     *
+      *  S01117 - RECOMPILE FOR FT CHANGE TO MUSERDD                  *
+      *  S01269 - RECOMPILE OVER CHANGED LF/MUSER                     *
+      *  LN0122 - IMPROVE PROGRAMME PERFORMANCE                       *
+      *  S01199 - HELP SYSTEM.                                        *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Use of indicators.                                           *
+      *                                                               *
+      *    10         SUBFILE DISPLAY                                 *
+      *    11         SUBFILE END                                     *
+      *    12         SFLNXTCHG                                       *
+      *                                                               *
+      *    20         DISPLAY SCREEN                                  *
+      *    22         SELECTION OTHER THAN A 'Y'                      *
+      *    23         NO SELECTION MADE                               *
+      *                                                               *
+      *    30         GENERAL ERROR INDICATOR                         *
+      *    31         GPZONEL2 No Record Found Indicator              *
+      *    50         USER PROFILES - END OF FILE                     *
+      *    99         SUBFILE READ  - END OF FILE                     *
+      *                                                               *
+      *****************************************************************
+     FSF000205DFCF   E             WORKSTN
+     F                                     SFILE(SF000205F1:RRN)
+     FMUSER     IF   E           K DISK
+     FGPZONEL2  IF   E           K DISK
+      *
+     D RARR            S              5  0 DIM(100)
+      *
+      ** Program status data structure.
+     D PSDS           SDS
+     D  WSID                 244    246
+     D  WSID2                245    246
+     D  SWSID                244    253
+     D  USRID                254    263
+      *
+      ** Local data area.
+     D LDA             DS           256
+     D  DBFILE               134    141
+     D  DBKEY                142    170
+     D  DBPGM                171    180
+     D  DBASE                181    183  0
+      *
+      ** SDSTAT
+     D SDSTAT          DS           256
+     D  LIBR                   6      7
+      *
+      ** DATA STRUCTURES FOR USE WITH ACCESS OBJECTS
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)
+      *
+      **
+     D DSFDY         E DS                  EXTNAME(DSFDY)
+      ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+      *********************************************************************
+      * MAIN PROCEDURE                                                    *
+      *********************************************************************
+      *
+      **  GET SDSTAT
+      *
+     C     *DTAARA       DEFINE                  SDSTAT
+     C                   IN        SDSTAT
+     C                   UNLOCK    SDSTAT
+      *
+      ** Get the zone name.
+      *
+     C     LIBR          CHAIN     GPZONEL2                           31
+     C     *IN31         IFEQ      *OFF
+     C                   MOVE      ZOZONE        SZONE
+     C                   ENDIF
+      *
+      ** OBTAIN RUN DATE FROM SDBANKPD
+      *
+     C                   CALL      'AOBANKR0'
+     C                   PARM      '*DBERR  '    @RTCD             7
+     C                   PARM      '*FIRST  '    @OPTN             7
+     C     SDBANK        PARM      SDBANK        DSFDY
+     C                   MOVE      BJMRDT        SRUNA
+      *
+      ** MAIN PROCESSING
+      *
+     C                   Z-ADD     0             RRN               5 0
+     C                   Z-ADD     1             SDREC
+      *
+      ** SET ON SUBFILE AND DISPLAY SCREEN INDICATORS
+      *
+     C                   SETON                                        101120
+      *
+      ** LOAD SUBFILE
+      *
+     C     *BLANKS       SETLL     MUSER
+     C                   READ      MUSER                                  50
+      *
+     C     *IN50         DOWEQ     '0'
+      *
+     C     RECI          IFEQ      'D'
+     C                   ADD       1             RRN
+      *
+     C                   MOVE      USRP          SUSR
+     C                   MOVE      USER1         SUSNM
+      *
+     C                   WRITE     SF000205F1
+      *
+     C                   END
+      *
+     C                   SETOFF                                           12
+     C                   READ      MUSER                                  50
+      *
+     C                   END
+      *
+      ** NO RECORDS IN SUBFILE
+      *
+     C     RRN           IFEQ      0
+     C                   SETOFF                                           10
+     C                   END
+      *
+     C     *INKC         DOWEQ     '0'
+      *
+     C                   EXSR      UPDSR
+     C                   EXSR      DISP
+      /EJECT
+      *
+     C                   MOVEL     *BLANKS       SUSR
+     C                   Z-ADD     1             RRN
+      *
+      ** RECIEVE SELECTED USERS AND PASS CONTROL TO SF000200
+      *
+     C     *IN99         DOWEQ     '0'
+     C     *INKC         ANDEQ     '0'
+     C     RRN           CHAIN     SF000205F1                         99
+     C                   ADD       1             RRN
+     C                   SETON                                        20
+      *
+     C     *IN99         IFEQ      '0'
+     C     SSLCT         ANDNE     *BLANK
+     C                   CALL      'SF000200'
+     C                   PARM                    SUSR
+     C                   PARM                    RTCD              1
+     C                   PARM                    SZONE
+     C                   MOVE      *BLANK        SSLCT
+     C                   UPDATE    SF000205F1
+     C                   END
+      *
+      ** IF RETURN CODE INDICATES 'INITIAL SCREEN' REDISPLAY SCREEN
+      *
+     C     RTCD          IFEQ      '1'
+     C     *IN99         ANDEQ     '0'
+     C                   SETON                                          20
+     C                   Z-ADD     1             RRN
+     C                   MOVE      *BLANKS       RTCD
+     C                   EXSR      UPDSR
+     C                   EXSR      DISP
+     C                   Z-ADD     1             RRN
+     C                   END
+      *
+      ** IF RETURN CODE INDICATES 'PROGRAMME END', END PROGRAMME
+      *
+     C     RTCD          IFEQ      '2'
+     C                   SETON                                        99
+     C                   MOVE      '1'           *INKC
+     C                   END
+      *
+     C                   END
+      *
+     C                   END
+      *
+      ** END PROGRAM
+      *
+     C                   EXSR      EXIT
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * EXIT   - CMD/3 TAKEN TO EXIT                                  *
+      *                                                               *
+      *****************************************************************
+     C     EXIT          BEGSR
+      *
+     C                   SETON                                          LR
+     C                   RETURN
+      *
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * DISP   - DISPLAY SUBFILE                                      *
+      *                                                               *
+      *****************************************************************
+     C     DISP          BEGSR
+      *
+      ** DISPLAY SCREEN :-
+      *
+     C     *IN20         DOWEQ     '1'
+      *
+      ** - HEADINGS
+      *
+     C                   WRITE     SF000205F3
+      *
+      ** - SUBFILE
+      *
+     C                   SETOFF                                         99
+     C     RARR(1)       IFNE      0
+     C                   Z-ADD     RARR(1)       SDREC
+     C                   END
+     C                   EXFMT     SF000205F2
+     C                   Z-ADD     1             X                 3 0
+     C                   Z-ADD     0             RARR
+     C                   Z-ADD     1             SDREC
+     C                   SETOFF                                       222324
+      *
+      ** VALIDATE FILEDS ENTERED
+      *
+     C                   Z-ADD     1             RRN
+     C     *IN99         DOWEQ     '0'
+     C     RRN           CHAIN     SF000205F1                         99
+     C                   ADD       1             RRN
+     C     SSLCT         IFNE      'Y'
+     C     SSLCT         ANDNE     ' '
+     C                   MOVE      RRN           RARR(X)
+     C                   SUB       1             RARR(X)
+     C                   ADD       1             X
+     C                   SETON                                        24
+     C                   END
+      *
+      ** IF NOTHING IS SELECTED REDISPLAY THE SCREEN
+      *
+     C     SSLCT         IFEQ      'Y'
+     C                   SETON                                        23
+     C                   END
+      *
+     C                   END
+     C                   SETOFF                                       99
+      *
+      ** RESET INDICATORS
+      *
+     C     *IN24         IFEQ      '0'
+     C     *IN23         ANDEQ     '1'
+     C     *INKC         OREQ      '1'
+     C                   SETOFF                                       2030
+     C                   ELSE
+     C                   EXSR      UPDSR
+     C                   END
+      *
+      ** CHECK CMD/KEY PRESSED + ACTION CODE ON EXITING DISPLAY
+      *
+     C     *IN10         CASEQ     '0'           EXIT
+      *
+     C                   END
+      *
+     C                   END
+      *
+     C                   ENDSR
+      **********************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * UPDSR  - UPDATE SUBFILE                                       *
+      *                                                               *
+      *****************************************************************
+     C     UPDSR         BEGSR
+      *
+     C                   Z-ADD     1             RRN
+     C     RRN           CHAIN     SF000205F1                         98
+     C     *IN98         DOWEQ     '0'
+     C     RRN           LOOKUP    RARR                                   97
+     C     *IN97         IFEQ      '1'
+     C                   SETON                                        2224
+     C                   ELSE
+     C                   SETOFF                                       22
+     C                   END
+     C     *IN98         IFEQ      '0'
+     C                   UPDATE    SF000205F1
+     C                   END
+     C                   ADD       1             RRN
+     C     RRN           CHAIN     SF000205F1                         98
+     C                   END
+     C                   Z-ADD     1             RRN
+      *
+     C                   ENDSR
+      *

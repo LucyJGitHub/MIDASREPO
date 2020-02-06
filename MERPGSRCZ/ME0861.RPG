@@ -1,0 +1,1062 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas ME Format ISO mail')
+      *****************************************************************
+      *                                                               *
+      *  Midas - MESSAGE MANAGEMENT                                   *
+      *                                                               *
+      *    ME0861 - Outgoing mail re-print ISO formatting program     *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 BUG6198            Date 04Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 212173             Date 18Nov02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 186181             Date 10Nov00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 141572             DATE 21SEP98               *
+     F*                 140629             Date 18Sep98               *
+      *                 CSW098             DATE 24MAR98               *
+      *                 113352             DATE 13FEB97               *
+      *                 CSW097             DATE 26MAY97               *
+      *                 086802             DATE 19JUN96               *
+      *                 E38493             DATE 16APR92               *
+      *                 E29588             DATE 17DEC91               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  BUG6198- Cannot save new Details for CUSD (Recompile)        *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  219242 - Not possible to create MT103+ payment msg from      *
+      *           non-FT transaction (Recompile)                      *
+      *  219241 - Defaulting of "Details of Charges" assign a         *
+      *           system value (Recompile)                            *
+      *  212173 - Process validation fields for MT103s                *
+     F*  186181 - Format for currency and amounts needs to be able to *
+     F*           cope with a sign in front                           *
+      *  141572 - Recompile over changes in MGOREFPD                  *
+     F*  140629 - Convert field 72 amount (, to .)                    *
+      *  CSW098 - SWIFT 1998 changes.                                 *
+      *           This program is changed to recognise MT515/518      *
+      *           tags :98a: date/time format suffixed with a         *
+      *           qualifier and/or type (:qual//type/yyymmddhhmmss).  *
+      *           A new tag format 'DT' is introduced to format time  *
+      *           to hh:mm:ss.  Also, :95P: (:qual//swiftid) should   *
+      *           also be output with name and address as with :5nA:  *
+      *           and :8nA: tags.                                     *
+      *    113352 - Recompile over changes in MGOREFPD                *
+      *  CSW097 - Swift changes 1997:                                 *
+      *           The program was amended to recognise dates          *
+      *           in CCYYMMDD format.                                 *
+      *    086802 - Pgm is not correctly formatting dates in ISO      *
+      *             Date Format.                                      *
+      *    E38493 - SUPRESS ALL BRANCH INFO WHEN SINGLE BRANCHING     *  *
+      *    E29588 - POST COLLECTION SWIFT RATIONALISATION AMENDMENTS  *
+      *              o Use TRNF to access reference for mult. 210     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  C R E A T I O N     P A R A M E T E R S                      *
+      *                                                               *
+      *                                                               *
+      *****************************************************************
+     FMGOREFL0IF  E           K        DISK
+     FMGOMSGPDIF  E           K        DISK
+     FSDMTAGL0IF  E           K        DISK
+     FSDMTPYL0IF  E           K        DISK
+     FSDBRCHL0IF  E           K        DISK
+      * Customer and C/Party nostro files by network address
+     FSDCUSTL7IF  E           K        DISK
+     F            @CUSTGE                           KRENAMESDCUSTSW
+     FSDCNSTL2IF  E           K        DISK
+     F            @CNSTLD                           KRENAMESDCNSTSW
+      *
+      *
+      *****************************************************************
+      * ID C  F  H  L    Function of indicators                       *
+      *    10            Check for multiple TRN tag. & check for      *
+      *                  verification message type/field.             *
+      *    81            USED IN SCAN FOR /OCMT/ AND /CHGS/           *   140629
+      *    98 & 95       Chain to MGOREFL0 fails                      *
+      *    97            Chain to MGOMSGPD fails                      *
+      *   U7U8LR         DB error                                     *
+      *****************************************************************
+     E                    CPY@    1   1 80
+      ** Copyright statement
+      *
+     E                    TG          5  1
+      **  Message field tag
+      *
+     E                    TXT     1   9 22
+      **  Text to be printed on report
+      *
+     E/COPY WNCPYSRC,ME0861E001
+     E************        VERFY   1   5  6                                                    212173
+     E                    VERFY   1   6  6                                                    212173
+      **  Message types/fields requiring verification
+      *
+     E/COPY WNCPYSRC,ME0861E002
+     E                    TRNTG   1   2  7
+      **  Message tag format
+      *
+     E                    AMAR       20  1
+      **  Array for formatting amounts
+      *
+     E                    DTE         8  1
+      **  Array for formatting dates
+      *
+     E                    FLD        50  1
+      **  Array for formatting fields
+      *
+     I            DS
+     I                                        1  90 SDTAQ
+      *
+      ** Data structure to hold data queue contents
+      *
+     I                                        4  16 TX1
+     I                                       17  19 @MTPY
+     I                                       22  56 @MTPD
+     I                                       66  81 TX2
+     I                                       70  81 TX22
+      *
+      **
+      *
+     I                                        4  12 TX3
+     I                                       15  29 @MTRN
+     I                                       32  37 TX4
+     I                                       39  41 @BRCA
+     I                                       43  72 @A8BRN
+     I                                       75  81 @RDAT
+      *
+      **
+      *
+     I                                        4  33 TX5
+     I                                       35  39 @MTAG
+     I                                       41  90 @MFLD
+     I            DS
+     I                                        1   6 DAT
+     I                                        1   2 YY
+     I                                        3   4 MM
+     I                                        5   6 DD
+      *
+     I            DS
+     I                                        1   7 DAT2
+     I                                        1   2 DD2
+     I                                        3   5 MM2
+     I                                        6   7 YY2
+      *                                                                   CSW097
+      ** Data structure to hold date in CCYYMMDD format.                  CSW097
+      *                                                                   CSW097
+     I            DS                                                      CSW097
+     I                                        1   8 DAT3                  CSW097
+     I                                        1   4 YY3                   CSW097
+     I                                        5   6 MM3                   CSW097
+     I                                        7   8 DD3                   CSW097
+      *                                                                   CSW097
+      ** Data structure to hold defined constants.                        CSW097
+      *                                                                   CSW097
+     I              '0123456789'          C         DIGITS                CSW097
+      *                                                                   CSW097
+      ** Data structure MFLD2 to hold the first seven character of MFLD   CSW097
+      *                                                                   CSW097
+     I            DS                                                      CSW097
+     I                                        1   7 MFLD2                 CSW097
+     I                                        7   7 CHAR7                 CSW097
+     I                                        4   4 CHAR44                186181
+     I                                        2   4 CHAR24                186181
+      ** DS for splitting up date
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      ** Data structure for DB error reporting
+      *
+     ISDMGME    E DSSDMGMEPD
+     I** Message Management details.
+     ISDMMOD    E DSSDMMODPD                                              E38493
+     I** Midas Module details.                                            E38493
+     I*
+     IDSFDY     E DSDSFDY
+      **  Access object DS
+      *
+      *****************************************************************
+      *               Index to subroutines                            *
+      *               ~~~~~~~~~~~~~~~~~~~~                            *
+      *  main process                                                 *
+      *  REF     - Process message reference file                     *
+      *  DETL    - Process message detail file                        *
+      *  FLDPRC  - Process field                                      *
+      *  MLTTRN  - Process multiple TRN field                         *
+      *  SWADDR  - Access Name/Town for SWIFT address                 *
+      *  CASR    - Format CCY/AMOUNT subfield                         *
+      *  DCASR   - Format DATE/CCY/AMOUNT subfield                    *
+      *  ASR     - Format AMOUNT subfield                             *
+      *  DSR     - Format DATE subfield                               *
+      *  CATCH   - Catchall format for non-blank but unrecognised     *
+      *            format code                                        *
+      *  *PSSR   - error handling                                     *
+      *****************************************************************
+      *
+     C/EJECT
+      *****************************************************************
+      *   main processs                                               *
+      *   Calls - REF & DETL                                          *
+      *****************************************************************
+      *
+      ** Set up LDA for database errors
+     C           *NAMVAR   DEFN           LDA
+      *
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTRN   16
+     C                     PARM           PBCH    3
+     C                     PARM           RDAT    7
+     C                     PARM           PERR    1
+      *
+      ** Set up copyright statement
+     C                     MOVEACPY@      BIS@   80
+      *
+      ** Set up key to MTAG file
+     C           MGTAGK    KLIST
+     C                     KFLD           MTAGK   5
+     C                     KFLD           MTPYK   3
+      *                                                                   CSW098
+     C           KMTAG     KLIST                                          CSW098
+     C                     KFLD           MTAGK                           CSW098
+     C                     KFLD           MTPYK                           CSW098
+     C                     KFLD           MSEQN   3                       CSW098
+      *                                                                   CSW098
+      ** Check if (CSW098) SWIFT 1998 changes is on                       CSW098
+      *                                                                   CSW098
+     C                     CALL 'SWIFT98'              7676               CSW098
+     C                     PARM *BLANKS   CSW098  7                       CSW098
+      *                                                                   CSW098
+     C           *IN76     IFEQ '1'                                       CSW098
+     C           *LOCK     IN   LDA                                       CSW098
+     C                     MOVE '008'     DBASE                           CSW098
+     C                     MOVEL'SWIFT98 'KEY16                           CSW098
+     C                     MOVE 'ERROR   'KEY16  16        * * * * * * * *CSW098
+     C                     MOVELKEY16     DBKEY            *  DBERR 008  *CSW098
+     C                     MOVEL*BLANKS   DBFILE           * * * * * * * *CSW098
+     C                     OUT  LDA                                       CSW098
+     C                     MOVEL'1'       PERR                            CSW098
+     C                     EXSR *PSSR                                     CSW098
+     C                     END                                            CSW098
+      *                                                                   CSW003
+      *
+      ** Set up parameters for data queue
+     C                     MOVEL'MEISOPRT'DTAQ   10
+     C                     MOVEL'QTEMP'   LIB    10
+     C                     Z-ADD90        LEN     50
+     C           DATA      PLIST
+     C                     PARM           DTAQ
+     C                     PARM           LIB
+     C                     PARM           LEN
+     C                     PARM           SDTAQ
+      *
+      ** Process message reference
+     C                     EXSR REF
+      *
+      ** Process message detail
+     C                     EXSR DETL
+      *
+      ** End
+     C                     SETON                     LR
+      *
+     C/EJECT
+      *****************************************************************
+      *   REF - Process Message reference file                        *
+      *   Called by - Main processing                                 *
+      *   Calls - *PSSR                                               *
+      *****************************************************************
+      *
+     C           REF       BEGSR
+      *
+      ** Access SDMGMEPD for verification flag via access program.
+      *
+     C                     CALL 'AOMGMER0'
+     C                     PARM '*MSG    '@RTCD   7
+     C                     PARM '*FIRST  '@OPTN   7
+     C           SDMGME    PARM SDMGME    DSFDY
+      *
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0861'  DBPGM
+     C                     MOVE '01'      DBASE             ***************
+     C                     MOVEL'SDMGMEPD'DBFILE            * DB ERROR 01 *
+     C                     MOVEL@OPTN     DBKEY             ***************
+     C                     MOVE '1'       PERR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *                                                                   E38493
+      ** Access SDMMODPD for multibranching indidcator                    E38493
+      *                                                                   E38493
+     C                     CALL 'AOMMODR0'                                E38493
+     C                     PARM '*MSG    '@RTCD   7                       E38493
+     C                     PARM '*FIRST  '@OPTN   7                       E38493
+     C           SDMMOD    PARM SDMMOD    DSFDY                           E38493
+      *                                                                   E38493
+     C           @RTCD     IFNE *BLANK                                    E38493
+     C           *LOCK     IN   LDA                                       E38493
+     C                     MOVE 'ME0861'  DBPGM                           E38493
+     C                     MOVE '07'      DBASE             **************E38493
+     C                     MOVEL'SDMMODPD'DBFILE            * DB ERROR 07 E38493
+     C                     MOVEL@OPTN     DBKEY             **************E38493
+     C                     MOVE '1'       PERR                            E38493
+     C                     OUT  LDA                                       E38493
+     C                     EXSR *PSSR                                     E38493
+     C                     END                                            E38493
+      *
+      ** Access message reference file for TRN passed in as parameter
+     C           PTRN      CHAINMGOREFL0             98
+      *
+     C           *IN98     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0861'  DBPGM
+     C                     MOVE '02'      DBASE             ***************
+     C                     MOVE 'MGOREF'  DBFILE            * DB ERROR 02 *
+     C                     MOVE PTRN      DBKEY             ***************
+     C                     MOVE '1'       PERR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** If multiple message go to first part
+     C           TRNF      IFNE *BLANKS
+      *
+     C           TRNF      CHAINMGOREFL0             98
+      *
+     C           *IN98     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0861'  DBPGM
+     C                     MOVE '03'      DBASE             ***************
+     C                     MOVE 'MGOREF'  DBFILE            * DB ERROR 03 *
+     C                     MOVE TRNF      DBKEY             ***************
+     C                     MOVE '1'       PERR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     END
+      *
+      ** Save status information for header
+     C                     MOVELMGST      SAVSTS  4
+     C                     MOVELMGSG      SAVGRP  1
+      *
+      ** Establish whether message is a multiple
+     C           TRNM      IFNE *BLANKS
+     C                     MOVEL'Y'       MULT    1
+     C                     END
+      *
+      ** Format message headings & output to DATAQ/MEDTQPRT (R01)
+      *
+     C                     EXSR FMTMH
+      *
+      ** Print a blank line
+     C                     MOVE *BLANKS   SDTAQ
+     C                     CALL 'QSNDDTAQ'DATA
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      *   DETL - Process message detail file                          *
+      *   Called by - Main process                                    *
+      *   Calls - *PSSR & FLDPRC                                      *
+      *****************************************************************
+      *
+     C           DETL      BEGSR
+      *
+     C           TRNO      CHAINMGOMSGPD             97
+      *
+      ** DBASE error if no matching record or EOF
+     C           *IN97     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0861'  DBPGM
+     C                     MOVE '04'      DBASE             ***************
+     C                     MOVE 'MGOMSG'  DBFILE            * DB ERROR 04 *
+     C                     MOVE TRNO      DBKEY             ***************
+     C                     MOVE '1'       PERR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+      *
+      ** Save TRN this message
+     C                     ELSE
+     C                     MOVELTRNO      TRNSAV 16
+      *
+      ** Read remaining records
+     C           *IN97     DOWEQ'0'
+      *
+      ** Perform detail processing
+     C                     EXSR FLDPRC
+     C           TRNSAV    READEMGOMSGPD                 97
+      *
+     C                     END
+     C                     END
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   FMTMH  Format Msg type/Sender/Destination                   *
+      *   Called by - HEADR SR                                        *
+      *   Calls -  SWADDR, STADDR, TXADDR, PAPER, QSNDDTAQ            *
+      *****************************************************************
+      *
+      *
+     C           FMTMH     BEGSR
+      *
+     C                     MOVEL*BLANKS   SDTAQ
+     C                     MOVELTXT,1     TX1
+      *
+      ** Original or copy
+     C           MGST      IFEQ 'PRTD'
+     C                     MOVELTXT,2     TX22
+     C                     ELSE
+     C                     MOVELTXT,8     TX2
+     C                     END
+      *
+     C                     MOVELMTPY      MTPYK2  3
+     C           MTPYK2    CHAINSDMTPYL0             94
+      *
+      ** If not found move <MSG DESC NOT FOUND> INTO DATA QUEUE
+      *
+     C                     MOVE *BLANKS   @MTPY
+     C                     MOVELMTPY      @MTPY
+      *
+     C           *IN94     IFEQ '1'
+     C                     MOVE *BLANKS   @MTPD
+     C                     MOVELTXT,9     @MTPD
+     C                     ELSE
+     C                     MOVE *BLANKS   @MTPD
+     C                     MOVELEEMTPD    @MTPD
+     C                     END
+     C                     CALL 'QSNDDTAQ'DATA
+      *
+     C                     MOVEL*BLANKS   SDTAQ
+      *                                                                   E38493
+      *   Set up Run Date field                                           E38493
+     C                     MOVELRDAT      @RDAT                           E38493
+      *                                                                   E38493
+      *   When multibranched                                              E38493
+     C           BGMBIN    IFEQ 'Y'                                       E38493
+      *
+      **  Access SDBRCHL0 for branch name
+      *
+     C           BRCA      CHAINSDBRCHL0             93
+      *
+     C           *IN93     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0861  'DBPGM
+     C                     MOVE '05'      DBASE            ***************
+     C                     MOVE PBCH      DBKEY            * DB ERROR 05 *
+     C                     MOVE 'SDBRCHL0'DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+     C                     MOVE *BLANKS   @A8BRN
+     C                     MOVELA8BRNM    @A8BRN
+      *
+     C                     MOVE *BLANKS   @BRCA
+     C                     MOVELBRCA      @BRCA
+     C**********           MOVE *BLANKS   @RDAT                           E38493
+     C**********           MOVELRDAT      @RDAT                           E38493
+     C                     MOVE *BLANKS   TX4
+     C                     MOVELTXT,4     TX4
+     C                     END                                            E38493
+     C*                                                                   E38493
+     C           MULT      IFNE 'Y'
+     C*                                                                   E38493
+      ** If single branch system, blank branch code field                 E38493
+     C                     MOVE *BLANKS   TX4                             E38493
+     C*                                                                   E38493
+      ** If Midas message output Midas transaction number
+     C           SYTM      IFEQ *BLANKS
+     C           MTRN      ANDNE*BLANKS
+     C           SYTM      OREQ 'MIDAS'
+     C           MTRN      ANDNE*BLANKS
+     C                     MOVE *BLANKS   TX3
+     C                     MOVELTXT,3     TX3
+     C                     MOVE *BLANKS   @MTRN
+     C                     MOVELMTRN      @MTRN
+     C                     END
+     C                     END
+     C                     CALL 'QSNDDTAQ'DATA
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   FLDPRC - Process Field                                      *
+      *   Called by - DETL                                            *
+      *   Calls - MLTTRN & QSNDDTAQ                                   *
+      *****************************************************************
+      *
+     C           FLDPRC    BEGSR
+      *
+      ** Initialise tag format field
+     C                     MOVE *BLANKS   EFTAGF
+     C                     MOVE *BLANKS   SAVTAG
+     C                     MOVE *BLANKS   TX5
+     C                     MOVE *BLANKS   @MTAG
+     C                     MOVE *BLANKS   @MFLD
+      *
+      ** If message tag is not blank
+     C           MTAG      IFNE *BLANKS
+      *
+      ** Save MTAG
+     C                     MOVELMTAG      SAVTAG  5
+      *
+      ** If multiple message and tag is TRN of part
+     C           MULT      IFEQ 'Y'
+      *
+     C                     MOVELMTPY      TRNTGK  7
+     C                     MOVELMTAG      CHAR4   4
+     C                     MOVE CHAR4     TRNTGK
+     C           TRNTGK    LOKUPTRNTG                    10
+      *
+     C           *IN10     IFEQ '1'
+      *
+      ** Process multiple TRN field tag
+     C                     EXSR MLTTRN
+     C                     END
+      *
+     C                     END
+      *
+      ** Clear dataqueue DS
+     C                     MOVE *BLANKS   SDTAQ
+      *
+      ** Use message tag and message type to access field tag
+      ** reference file
+     C                     MOVELMTAG      MTAGK
+     C                     MOVELMTPY      MTPYK
+     C*                                                                   CSW098
+     C** If SWIFT 1998 changes is installed, consider message sequence    CSW098
+     C** as well                                                          CSW098
+     C*                                                                   CSW098
+     C           CSW098    IFEQ 'CSW098 '                                 CSW098
+     C           MSEQ      ANDNE*BLANKS                                   CSW098
+     C*  Search 1: type specific, sequence specific                       CSW098
+     C                     MOVELMSEQ      MSEQN                           CSW098
+     C           KMTAG     CHAINSDMTAGL0             96                   CSW098
+     C*  Search 2: type specific, sequence generic (blank)                CSW098
+     C           *IN96     IFEQ '1'                                       CSW098
+     C                     MOVEL*BLANKS   MSEQN                           CSW098
+     C           KMTAG     CHAINSDMTAGL0             96                   CSW098
+     C                     ENDIF                                          CSW098
+     C*  Search 3: type generic ('ALL'), sequence specific                CSW098
+     C           *IN96     IFEQ '1'                                       CSW098
+     C                     MOVEL'ALL'     MTPYK                           CSW098
+     C                     MOVELMSEQ      MSEQN                           CSW098
+     C           KMTAG     CHAINSDMTAGL0             96                   CSW098
+     C                     ENDIF                                          CSW098
+     C*  Search 4: type generic ('ALL'), sequence generic (blank)         CSW098
+     C           *IN96     IFEQ '1'                                       CSW098
+     C                     MOVEL*BLANKS   MSEQN                           CSW098
+     C           KMTAG     CHAINSDMTAGL0             96                   CSW098
+     C                     ENDIF                                          CSW098
+     C*                                                                   CSW098
+     C                     ELSE                                           CSW098
+     C*                                                                   CSW098
+     C           MGTAGK    CHAINSDMTAGL0             96
+      *
+      ** If no record found just use message tag to access field tag
+      ** reference file
+     C           *IN96     IFEQ '1'
+     C                     MOVE 'ALL'     MTPYK
+     C           MGTAGK    CHAINSDMTAGL0             96
+     C                     ENDIF                                          CSW098
+      *
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+      ** If no record found put <TAG DESC NOT FOUND> into
+      ** Message Tag Description part of data queue
+     C           *IN96     IFEQ '1'
+     C                     MOVE *BLANK    TX5
+     C                     MOVELTXT,5     TX5
+     C                     END
+     C***********          END                                            CSW098
+      *
+      ** If record tag found move description into corresponding part
+      ** of data queue
+     C           *IN96     IFEQ '0'
+     C                     MOVELEFISFD    TX5
+     C                     END
+      *
+      **  Move MTAG into corresponding part of data queue
+     C                     MOVELMTAG      @MTAG
+      *
+     C                     END
+      *                                                                   140629
+      ** If /OCMT/ or /CHGS/ then change comma in amount to decimal       140629
+      ** point.                                                           140629
+      *                                                                   140629
+     C           '/OCMT/'  SCAN MFLD:1                   81               140629
+      *                                                                   140629
+     C           *IN81     IFEQ *OFF                                      140629
+     C           '/CHGS/'  SCAN MFLD:1                   81               140629
+     C                     ENDIF                                          140629
+      *                                                                   140629
+     C           *IN81     IFEQ *ON                                       140629
+      *                                                                   140629
+      ** If ',' in amount change to '.'                                   140629
+      *                                                                   140629
+     C           ',':'.'   XLATEMFLD      MFLD                            140629
+     C                     ENDIF                                          140629
+      *                                                                   140629
+      *
+      ** Check for verification field
+     C/COPY WNCPYSRC,ME0861C001
+     C                     MOVELMTPY      VERFYK  6
+     C                     MOVELSAVTAG    CHAR3   3
+     C                     MOVE CHAR3     VERFYK
+     C/COPY WNCPYSRC,ME0861C002
+     C           VERFYK    LOKUPVERFY                    10
+      *
+      ** If verification is on AND field is verification field AND
+      ** messsage is not released
+     C           ENVPM     IFEQ 'Y'
+     C           *IN10     ANDEQ'1'
+     C           SAVGRP    ANDEQ'1'
+      *
+      ** Move <NOT VERIFIED> into message data field part of data queue
+     C                     MOVELTXT,6     @MFLD
+      *
+      ** Otherwise print message data
+     C                     ELSE
+      *
+     C           EFTAGF    IFNE *BLANKS
+      *
+      ** Call appropriate formatting subroutine if required
+     C           EFTAGF    CASEQ'CA '     CASR
+     C           EFTAGF    CASEQ'DCA'     DCASR
+     C           EFTAGF    CASEQ'A'       ASR
+     C           EFTAGF    CASEQ'D'       DSR
+     C           EFTAGF    CASEQ'DT'      DTSR                            CSW098
+     C                     CAS            CATCH
+     C                     END
+      *
+     C                     ELSE
+      *
+      **  If saved field tag is an address and the first character
+      **  is not a '/'
+     C                     MOVEASAVTAG    TG
+     C                     MOVELMFLD      CHAR1   1
+     C           TG,2      IFEQ '5'
+     C           TG,4      ANDEQ'A'
+     C           CHAR1     ANDNE'/'
+     C           TG,2      OREQ '8'                                       CSW098
+     C           TG,4      ANDEQ'A'                                       CSW098
+     C           TG,2      OREQ '9'                                       CSW098
+     C           TG,4      ANDEQ'P'                                       CSW098
+      *
+      ** Execute S/R SWADDR to pick up name/town for this SWIFT address
+     C           TG,4      IFEQ 'P'                                       CSW098
+     C           11        SUBSTMFLD:8    ZADDR                           CSW098
+     C                     ELSE                                           CSW098
+     C                     MOVELMFLD      ZADDR
+     C                     ENDIF                                          CSW098
+     C                     EXSR SWADDR
+     C                     MOVELMFLD      F5NA   50
+     C                     MOVE ZNAME     F5NA
+     C                     MOVE *BLANKS   @MFLD
+     C                     MOVELF5NA      @MFLD
+      *
+     C                     ELSE
+      *
+      ** If no formatting code and not an address move data to display
+      ** field without further processing
+     C                     MOVE *BLANKS   @MFLD
+     C                     MOVELMFLD      @MFLD
+      *
+     C                     END
+      *
+     C                     END
+      *
+     C                     END
+      *
+      ** Send report line to Data queue
+     C                     CALL 'QSNDDTAQ'DATA
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   MLTTRN - Process multiple TRN field                         *
+      *   Called by - FLDPRC                                          *
+      *   Calls - QSNDDTAQ, *PSSR                                     *
+      *****************************************************************
+      *
+     C           MLTTRN    BEGSR
+      *
+      ***Access*MGOREF*using*field*data*(which*should*contain*TRN****     E29588
+      ***of*this*part*when*this*S/R*is*called)***********************     E29588
+      **  Access messsage reference file using transaction reference      E29588
+      **  of next part (210) or contents of :20: (203)                    E29588
+     C******************** MOVELMFLD      MTKEY  16                       E29588
+     C           MTPY      IFEQ '210'                                     E29588
+     C                     MOVELTRNM      MTKEY  16                       E29588
+     C                     ELSE                                           E29588
+     C                     MOVELMFLD      MTKEY                           E29588
+     C                     END                                            E29588
+     C           MTKEY     CHAINMGOREFL0             95
+      *
+     C           *IN95     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVE 'ME0861'  DBPGM
+     C                     MOVE '06'      DBASE             ***************
+     C                     MOVE 'MGOREF'  DBFILE            * DB ERROR 06 *
+     C                     MOVE MTKEY     DBKEY             ***************
+     C                     MOVE '1'       PERR
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ** Initialise Dataqueue
+     C                     MOVEL*BLANKS   SDTAQ
+      *
+      ** Send one blank line
+     C                     CALL 'QSNDDTAQ'DATA
+      *
+      ** Check if part mult message is deleted
+     C           PTST      IFEQ 'D'
+     C                     MOVE *BLANK    TX5
+     C                     MOVELTXT,7     TX5
+     C                     END
+      *
+     C                     CALL 'QSNDDTAQ'DATA
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   SWADDR - Format Name/Town from SWIFT address                *
+      *   Called by - FLDPRC, FMTMH                                   *
+      *   Standard input -  ZADDR, Address, 20A                       *
+      *   Standard output - ZNAME, Customer/Countreparty name, 35A    *
+      *                     ZTOWN, Customer/Counterparty town, 35A    *
+      *                     *IN90 If ON implies no record found       *
+      *****************************************************************
+      *
+     C           SWADDR    BEGSR
+      *
+      ** Define standard fields
+     C                     MOVE ZADDR     ZADDR  20
+     C                     MOVE *BLANKS   ZNAME  35
+     C                     MOVE *BLANKS   ZTOWN  20
+      *
+      ** Move standard address to SWIFT address key
+     C                     MOVELZADDR     SFWAD  12
+      *
+      ** First try customer file, SDCUST
+     C           SFWAD     CHAINSDCUSTSW             92
+     C           *IN92     IFEQ '0'
+     C                     MOVELBBCRNM    ZNAME
+     C                     MOVELBBCRTN    ZTOWN
+     C                     ELSE
+      *
+      ** If not found on customer file, try C/Party Nostro file SDCNST
+     C           SFWAD     CHAINSDCNSTSW             92
+     C           *IN92     IFEQ '0'
+     C                     MOVELAWCPNM    ZNAME
+     C                     MOVELAWCNTN    ZTOWN
+     C                     END
+     C                     END
+      *
+     C                     ENDSR                           SWADDR
+     C/EJECT
+      *****************************************************************
+      *   CASR  - Format CURRENCY/AMOUNT subfield                     *
+      *   Called by - FLDPRC                                          *
+      *****************************************************************
+      *
+     C           CASR      BEGSR
+      *
+     C                     MOVEA*BLANKS   FLD
+     C                     MOVELMFLD      WK1     1                       186181
+     C                     MOVELMFLD      MFLD2                           186181
+     C           DIGITS    CHECKCHAR44                   47               186181
+     C           WK1       IFEQ 'N'                                       186181
+     C           *IN47     ANDEQ'1'                                       186181
+     C                     MOVE MFLD      WK46   46                       186181
+     C                     MOVEAWK46      AMAR                            186181
+     C                     ELSE                                           186181
+     C                     MOVELMFLD      WK3     3
+     C                     MOVE MFLD      WK47   47
+     C                     MOVEAWK47      AMAR
+     C                     END                                            186181
+     C                     Z-ADD1         A       20
+     C           ','       LOKUPAMAR,A                   40
+     C           *IN40     IFEQ '1'
+     C                     MOVE '.'       AMAR,A
+     C                     END
+     C           WK1       IFEQ 'N'                                       186181
+     C           *IN47     ANDEQ'1'                                       186181
+     C                     MOVEAWK1       FLD,1                           186181
+     C                     MOVEACHAR24    FLD,3                           186181
+     C                     MOVEAAMAR      FLD,7                           186181
+     C                     ELSE                                           186181
+     C                     MOVEAWK3       FLD,1
+     C                     MOVEAAMAR      FLD,5
+     C                     END                                            186181
+      *
+     C                     MOVE *BLANK    @MFLD
+     C                     MOVEAFLD       @MFLD
+      *
+     C                     ENDSR                           CASR
+     C/EJECT
+      *****************************************************************
+      *   DCASR - DATE/CCY/AMOUNT subfield                            *
+      *  nb. This program is for ISO print, so dates should remain in *
+      *      ISO (ie YYMMDD) format, despite the fact that elsewhere  *
+      *      they are formatted to MMDDYY or DDMMYY depending on ICD. *
+      *   Called by - FLDPRC                                          *
+      *****************************************************************
+      *
+     C           DCASR     BEGSR
+      *
+     C                     MOVEA*BLANKS   AMAR
+     C                     MOVEAMFLD      FLD
+     C                     MOVELMFLD      MFLD2                           CSW097
+     C           DIGITS    CHECKCHAR7                    47               CSW097
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVEAFLD,10    AMAR
+     C                     ELSE                                           CSW097
+     C                     MOVEAFLD,12    AMAR                            CSW097
+     C                     ENDIF                                          CSW097
+     C                     Z-ADD1         A
+     C           ','       LOKUPAMAR,A                   40
+     C           *IN40     IFEQ '1'
+     C                     MOVE '.'       AMAR,A
+     C                     END
+     C           *IN47     IFEQ '1'                                       CSW097
+     C                     MOVEAFLD,7     WK3
+     C                     MOVELMFLD      DAT
+      *
+      ** By this stage, AMAR contains amount, WK3 contains currency
+      ** and DAT (a DS - YY MM DD) contains date
+     C                     MOVEA*BLANKS   FLD
+     C                     MOVEAYY        FLD,1
+     C                     MOVEA'/'       FLD,3
+     C                     MOVEAMM        FLD,4
+     C                     MOVEA'/'       FLD,6
+     C                     MOVEADD        FLD,7
+     C                     MOVEAWK3       FLD,10
+     C                     MOVEAAMAR      FLD,14
+     C                     ELSE                                           CSW097
+     C                     MOVEAFLD,9     WK3                             CSW097
+     C                     MOVELMFLD      DAT3                            CSW097
+     C                     MOVEA*BLANKS   FLD                             CSW097
+     C                     MOVEAYY3       FLD,1                           CSW097
+     C                     MOVEA'/'       FLD,5                           CSW097
+     C                     MOVEAMM3       FLD,6                           CSW097
+     C                     MOVEA'/'       FLD,8                           CSW097
+     C                     MOVEADD3       FLD,9                           CSW097
+     C                     MOVEAWK3       FLD,12                          CSW097
+     C                     MOVEAAMAR      FLD,16                          CSW097
+     C                     ENDIF                                          CSW097
+      *
+     C                     MOVE *BLANK    @MFLD
+     C                     MOVEAFLD       @MFLD
+      *
+     C                     ENDSR                           DCASR
+     C/EJECT
+      *****************************************************************
+      *   ASR - AMOUNT subfield                                       *
+      *   Called by - FLDPRC                                          *
+      *****************************************************************
+      *
+     C           ASR       BEGSR
+      *
+     C                     MOVEAMFLD      AMAR
+     C                     Z-ADD1         A       20
+     C           ','       LOKUPAMAR,A                   40
+     C           *IN40     IFEQ '1'
+     C                     MOVE '.'       AMAR,A
+     C                     END
+     C                     MOVE *BLANK    @MFLD
+     C                     MOVEAAMAR      @MFLD
+      *
+     C                     ENDSR                           ASR
+     C/EJECT
+      *****************************************************************
+      *   DSR - DATE subfield                                         *
+      *  nb. This program is for ISO print, so dates should remain in *
+      *      ISO (ie YYMMDD) format, despite the fact that elsewhere  *
+      *      they are formatted to MMDDYY or DDMMYY depending on ICD. *
+      *   Called by - FLDPRC                                          *
+      *****************************************************************
+      *
+     C           DSR       BEGSR
+      *
+     C                     MOVEA*BLANKS   FLD
+      *
+      ** Check for defined qualifiers, issuer codes or type in the form   CSW098
+      **  MFLD = ':QUAL//TYPE/YYYYMMDD' whereby formatting should         CSW098
+      ** only be done on the YYYYMMDD.                                    CSW098
+      *                                                                   CSW098
+     C                     MOVE *BLANKS   WMFLD  50                       CSW098
+     C                     MOVE *BLANKS   WFLA   50                       CSW098
+     C                     MOVE *BLANKS   WFLD   50                       CSW098
+      *                                                                   CSW098
+     C           1         SUBSTMFLD:1    @WM1    1                       CSW098
+     C           @WM1      IFEQ ':'                        Qualifier StartCSW098
+     C           '/'       SCAN MFLD:7    C       20       Issuer Code EndCSW098
+      *                                                                   CSW098
+     C           C         IFNE 0                                         CSW098
+     C                     ADD  1         C                               CSW098
+     C           '/'       SCAN MFLD:C    D       20       Type End       CSW098
+     C           D         IFNE 0                                         CSW098
+     C                     Z-ADDD         C                               CSW098
+     C                     ELSE                                           CSW098
+     C                     SUB  1         C                               CSW098
+     C                     ENDIF                                          CSW098
+     C           C         SUBSTMFLD      WMFLD                           CSW098
+     C                     ADD  1         C                               CSW098
+     C                     SUBSTMFLD:C    WFLA                            CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C                     ELSE                                           CSW098
+     C                     MOVELMFLD      WFLA                            CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C***********          MOVELMFLD      DAT                      CSW097 CSW098
+     C***********          MOVELMFLD      MFLD2                    CSW097 CSW098
+     C                     MOVELWFLA      DAT                             CSW098
+     C                     MOVELWFLA      MFLD2                           CSW098
+     C           DIGITS    CHECKCHAR7                    47               CSW097
+      *                                                                   CSW097
+      ** The seventh character is not numeric.                            CSW097
+      *                                                                   CSW097
+     C           *IN47     IFEQ '1'                                       CSW097
+     C***********          MOVEADD        FLD,1                           086802
+     C                     MOVEAYY        FLD,1                           086802
+     C                     MOVEA'/'       FLD,3
+     C                     MOVEAMM        FLD,4
+     C                     MOVEA'/'       FLD,6
+     C***********          MOVEAYY        FLD,7                           086802
+     C                     MOVEADD        FLD,7                           086802
+     C                     ELSE                                           CSW097
+     C***********          MOVELMFLD      DAT3                     CSW097 CSW098
+     C                     MOVELWFLA      DAT3                            CSW098
+     C                     MOVEAYY3       FLD,1                           CSW097
+     C                     MOVEA'/'       FLD,5                           CSW097
+     C                     MOVEAMM3       FLD,6                           CSW097
+     C                     MOVEA'/'       FLD,8                           CSW097
+     C                     MOVEADD3       FLD,9                           CSW097
+     C                     ENDIF                                          CSW097
+      *
+     C                     MOVE *BLANK    @MFLD
+     C           WMFLD     IFNE *BLANKS                                   CSW098
+     C                     MOVELWMFLD     @MFLD                           CSW098
+     C                     MOVEAFLD       WFLD                            CSW098
+     C                     CAT  WFLD:0    @MFLD                           CSW098
+     C                     ELSE                                           CSW098
+     C                     MOVEAFLD       @MFLD
+     C                     ENDIF                                          CSW098
+      *
+     C                     ENDSR                           DSR
+     C/EJECT                                                              CSW098
+      *****************************************************************   CSW098
+      *   DTSR - DATE/TIME field                                      *   CSW098
+      *   Called by - FLDPRC                                          *   CSW098
+      *****************************************************************   CSW098
+      *                                                                   CSW098
+     C           DTSR      BEGSR                                          CSW098
+      *                                                                   CSW098
+      **  Output date part                                                CSW098
+      *                                                                   CSW098
+     C                     EXSR DSR                                       CSW098
+      *                                                                   CSW098
+     C                     MOVE *BLANKS   WFLD                            CSW098
+      *                                                                   CSW098
+     C           *IN47     IFEQ '1'                                       CSW098
+     C           2         SUBSTWFLA:7    @WL2    2                       CSW098
+     C                     MOVEL@WL2      WFLD                            CSW098
+     C                     CAT  ':':0     WFLD                            CSW098
+     C           2         SUBSTWFLA:9    @WL2                            CSW098
+     C                     CAT  @WL2:0    WFLD                            CSW098
+     C                     CAT  ':':0     WFLD                            CSW098
+     C           2         SUBSTWFLA:11   @WL2                            CSW098
+     C                     CAT  @WL2:0    WFLD                            CSW098
+     C                     ELSE                                           CSW098
+     C           2         SUBSTWFLA:9    @WL2                            CSW098
+     C                     MOVEL@WL2      WFLD                            CSW098
+     C                     CAT  ':':0     WFLD                            CSW098
+     C           2         SUBSTWFLA:11   @WL2                            CSW098
+     C                     CAT  @WL2:0    WFLD                            CSW098
+     C                     CAT  ':':0     WFLD                            CSW098
+     C           2         SUBSTWFLA:13   @WL2                            CSW098
+     C                     CAT  @WL2:0    WFLD                            CSW098
+     C                     ENDIF                                          CSW098
+      *                                                                   CSW098
+     C                     CAT  WFLD:1    @MFLD                           CSW098
+      *                                                                   CSW098
+     C                     ENDSR                                          CSW098
+     C/EJECT
+      *****************************************************************
+      *   CATCH - CATCHALL subfield format                            *
+      *   Called by - FLDPRC                                          *
+      *****************************************************************
+      *
+     C           CATCH     BEGSR
+      *
+     C                     MOVE *BLANK    @MFLD
+     C                     MOVELMFLD      @MFLD
+      *
+     C                     ENDSR                           CATCH
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *   Called by - REF, DETL, MLTTRN                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     MOVE '1'       PERR
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/COPY WNCPYSRC,ME0861C003
+** CPY@   **      Object copyright
+(c) Finastra International Limited 2001
+** TEXT - Text for labels
+Message type
+*** COPY ***
+Trans. no.
+Branch
+<TAG DESC NOT FOUND>
+<NOT VERIFIED>
+***DELETED***
+*** ORIGINAL ***
+<MSG DESC NOT FOUND>
+** VERFY - Message types/fields requiring verification
+100:32
+202:32
+203:19
+203:30
+203:32
+103:32
+** TRNTG - Multiple TRN Message types/fields
+203:20:
+210:21:
+     X/COPY WNCPYSRC,ME0861X001

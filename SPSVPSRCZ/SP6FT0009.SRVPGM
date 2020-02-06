@@ -1,0 +1,164 @@
+/*********************************************************************/
+/*STD    SVPBASE                                                     */
+/*EXI    MODULE(FTV2MTP      FTV2NWK     FTV2VLF      FTOPAYAVL      */
+/*EXI           FTOPAYCVL    FTVONWK     FTVOMTP      FTVOVLF        */
+/*EXI           FTVOCVF      FTVOCOC     FTVOCOB      FTVOCBA        */
+/*EXI           FTVOCIN      FTVOCAB     FTVOCBN      FTVOCDP        */
+/*E*I***********FTVOCBB******FTVOCIC**********************************/                 /*BUG26775*/
+/*E*I***********FTVOCBB******FTVOCIC*****FTVOMVF**********************/      /*BUG26775*/ /*CRE067*/
+/*EXI           FTVOCBB      FTVOCIC     FTVOMVF      FTVTVAT        */                   /*CRE067*/
+/*EXI    ) SRCMBR(SP6FT0009) ACTGRP(*CALLER)                         */
+/*EXI    TEXT('Midas SP FT core non-kernel validation functions 7')  */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Service Program                                     */
+/*                                                                   */
+/*       SP6FT0009 - FT Core Non-kernel Validation Functions 9       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2009                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSW215             Date 06Apr15              */
+/*                      CFT157             Date 29Aug14              */
+/*                      MD000091           Date 10May13              */
+/*                      AR1096208          Date 17Apr13              */
+/*                      AR1080804          Date 27Jan13              */
+/*                      CSF011A            Date 28Nov11              */
+/*                      CRE075             Date 06Dec10              */
+/*                      CRE067             Date 05Oct10              */
+/*                      BUG26775           Date 19Nov09              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*                      BUG26548           Date 23Oct09              */
+/*                      BUG26087           Date 22Sep09              */
+/*                      BUG26186           Date 24Sep09              */
+/*                      BUG25973           Date 17Sep09              */
+/*                      BUG25841           Date 03Sep09              */
+/*                      BUG25101           Date 03Sep09              */
+/*                      BUG25072           Date 04Aug09              */
+/*                      BUG24973           Date 23Jul09              */
+/*                      BUG24663           Date 29Jun09              */
+/*                      BUG24496           Date 22Jun09              */
+/*                      BUG25005           Date 16Jul09              */
+/*                      BUG25085           Date 24Jul09              */
+/*                      BUG24510           Date 24Jun09              */
+/*                      BUG24396           Date 26Jun09              */
+/*                      BUG24962           Date 22Jul09              */
+/*                      BUG24934           Date 15Jul09              */
+/*                      CSW209  *CREATE    Date 01Apr09              */
+/*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       CSW215 - SWIFT Changes 2015 (Recompile)                     */
+/*       CFT157 - Stop FT Transaction after Authorisation            */
+/*                 (Recompile)                                       */
+/*       MD000091 - Event Codes Substitution (Recompile)             */
+/*       AR1096208 - System defaulted VAT Ind as checked in charges  */
+/*                   details 2 tab but the system do not compute for */
+/*                   VAT amount (Recompile)                          */
+/*       AR1080804 - The ff errors occurred 45037422 Invalid Amount  */
+/*                   (Field: Total VAT Charge) even if no VAT amount */
+/*                   was inerted. (Recompile)                        */
+/*       CSF011A - CCR015: Display Order in Confirmation Pages       */
+/*                 (Recompile)                                       */
+/*       CRE075 - Effective Date for Retail Accounts (Recompile)     */
+/*       CRE067 - Midas Plus/Teller Interface via Bankfusion         */
+/*       BUG26775 - Validation error in Outgoing Validation Flag     */
+/*       BUG26548 - Passed parm does not match entry parm for FTVXVXV*/
+/*                  (Recompile)                                      */
+/*       BUG26087 - The word COVER is missing in the error message   */
+/*                  (Recompile)                                      */
+/*       BUG26186 - Sender to Receiver Info Cover B not higlighted   */
+/*                  during error (Recompile)                         */
+/*       BUG25973 - When Ordering Customer L1 is equal to valid IBAN */
+/*                  without slash followed by 1/, 6/, 6/ the system  */
+/*                  accepts the transaction (Recompile)              */
+/*       BUG25841 - Sender to Receiver Information (Cover A) is not  */
+/*                  highlighted when in error (Recompile)            */
+/*       BUG25101 - CSW209 FDS2.01 Changes (Recompile)               */
+/*       BUG25072 - The error message descending order sequence was  */
+/*                  not correct (Recompile)                          */
+/*       BUG24973 - Misleading error message for Sender to Receiver  */
+/*                  Information (Cover A) field (Recompile)          */
+/*       BUG24663 - Second line should be entered even if input is   */
+/*                  valid account                                    */
+/*       BUG24496 - Warning Message did not appear for IBAN with     */
+/*                  invalid ISO Code                                 */
+/*       BUG25005 - Unexpected error message displayed (Recompile)   */
+/*       BUG25085- Misleading error message for Sender to Receiver   */
+/*                 Cover (Recompile)                                 */
+/*       BUG24510 - Instructed Amount Cover must be entered if       */
+/*                  Instructed Currency is not blank (Recompile)     */
+/*       BUG24396 - Error on FTVOCBN  module (Recompile)             */
+/*       BUG24962 - Incoming message type field should be blanks     */
+/*                  (Recompile)                                      */
+/*       BUG24934 - Invalid Character did not accept (Recompile)     */
+/*       CSW209 - SWIFT 2009 Changes                                 */
+/*                                                                   */
+/*********************************************************************/
+ 
+             STRPGMEXP  PGMLVL(*CURRENT) LVLCHK(*YES) SIGNATURE(*GEN)
+               EXPORT     SYMBOL(FTV2MTP)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTV2NWK)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTV2VLF)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTOPAYAVL)                                               /*CRE067*/
+               EXPORT     SYMBOL(FTOPAYCVL)                                               /*CRE067*/
+               EXPORT     SYMBOL(FTVONWK)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOMTP)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOVLF)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCVF)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCOC)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCOB)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCIN)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCAB)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCBN)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCDP)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCBB)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCIC)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOCBA)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVOMVF)                                                 /*CRE067*/
+               EXPORT     SYMBOL(FTVTVAT)                                                 /*CRE067*/
+             ENDPGMEXP                                                                    /*CRE067*/
+                                                                                          /*CRE067*/
+             STRPGMEXP  PGMLVL(*PREVIOUS) LVLCHK(*YES) SIGNATURE(*GEN)                    /*CRE067*/
+               EXPORT     SYMBOL(FTV2MTP)
+               EXPORT     SYMBOL(FTV2NWK)
+               EXPORT     SYMBOL(FTV2VLF)
+               EXPORT     SYMBOL(FTOPAYAVL)
+               EXPORT     SYMBOL(FTOPAYCVL)
+               EXPORT     SYMBOL(FTVONWK)
+               EXPORT     SYMBOL(FTVOMTP)
+               EXPORT     SYMBOL(FTVOVLF)
+               EXPORT     SYMBOL(FTVOCVF)
+               EXPORT     SYMBOL(FTVOCOC)
+               EXPORT     SYMBOL(FTVOCOB)
+               EXPORT     SYMBOL(FTVOCIN)
+               EXPORT     SYMBOL(FTVOCAB)
+               EXPORT     SYMBOL(FTVOCBN)
+               EXPORT     SYMBOL(FTVOCDP)
+               EXPORT     SYMBOL(FTVOCBB)
+               EXPORT     SYMBOL(FTVOCIC)
+               EXPORT     SYMBOL(FTVOCBA)
+               EXPORT     SYMBOL(FTVOMVF)                                               /*BUG26775*/
+             ENDPGMEXP
+                                                                                        /*BUG26775*/
+             STRPGMEXP  PGMLVL(*PRV) LVLCHK(*YES) SIGNATURE(*GEN)                       /*BUG26775*/
+               EXPORT     SYMBOL(FTV2MTP)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTV2NWK)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTV2VLF)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTOPAYAVL)                                             /*BUG26775*/
+               EXPORT     SYMBOL(FTOPAYCVL)                                             /*BUG26775*/
+               EXPORT     SYMBOL(FTVONWK)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOMTP)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOVLF)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCVF)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCOC)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCOB)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCIN)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCAB)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCBN)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCDP)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCBB)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCIC)                                               /*BUG26775*/
+               EXPORT     SYMBOL(FTVOCBA)                                               /*BUG26775*/
+             ENDPGMEXP                                                                  /*BUG26775*/

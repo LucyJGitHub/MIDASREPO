@@ -1,0 +1,261 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas EU EMU update PF/MANPOZZ trailer')
+      *****************************************************************
+      *                                                               *
+      *  Midas - EMU Module                                           *
+      *                                                               *
+      *  EU0750 - EMU Update PF/MANPOZZ Trailer File                  *
+      *                                                               *
+      *  Function:  This program adds the hash total from PF/EUPOSTZZ *
+      *             to PF/MANPOZZ.                                    *
+      *                                                               *
+      *  Called By: GLC26 - Batch Transaction File Split              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *  Prev Amend No. CEU028  *CREATE    Date 24Aug98               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CEU028 - EMU GL Utilities                                    *
+      *                                                               *
+      *****************************************************************
+     FEUPOSTZZIF  E                    DISK         KINFSR *PSSR
+     FMANPOZZ UF  E                    DISK         KINFSR *PSSR A
+     F            APOSTZZF                          KRENAMEMANPOSTF
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  10 - Read for PF/EUPOSTZZ                                    *
+      *  11 - Read for PF/MANPOZZ                                     *
+      *  12 - Error on UPDAT/WRITE - PF/MANPOZZ                       *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+      ** Array containing Copyright statement
+      *
+      /SPACE 3
+     ILDA       E DSLDA                         256
+      ** Local Data Area
+      *
+      /EJECT
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL'EU0750'  DBPGM
+     C                     OUT  LDA
+      *
+     C           1         SETLLEUPOSTZZ                 10
+     C                     READ EUPOSTZZ                 10
+      *
+     C           *IN10     IFEQ '0'
+      *
+     C                     Z-ADDNORE1     WNORE1  50
+     C                     Z-ADDHRWN      WHRWN  150
+     C                     Z-ADDHRDC      WHRDC   30
+      *
+     C           1         SETLLMANPOZZ                  11
+     C                     READ MANPOZZ                  11
+      *
+     C           *IN11     IFEQ '1'
+     C                     MOVEL'T'       RECI
+     C                     Z-ADDWNORE1    NORE1
+     C                     Z-ADDWHRWN     HRWN
+     C                     Z-ADDWHRDC     HRDC
+     C                     WRITEMANPOSTF               12
+     C                     ELSE
+     C                     ADD  WNORE1    NORE1
+     C                     Z-ADDWHRWN     ZZAMTI
+     C                     Z-ADDWHRDC     ZZAMTD
+     C                     Z-ADDHRWN      ZZTOTI
+     C                     Z-ADDHRDC      ZZTOTD
+     C                     EXSR GLZSUM
+     C                     Z-ADDZZTOTI    HRWN
+     C                     Z-ADDZZTOTD    HRDC
+     C                     UPDATMANPOSTF               12
+     C                     ENDIF
+      *
+     C           *IN12     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ************
+     C                     MOVEL'MANPOZZ' DBFILE           * DBERR 01 *
+     C                     MOVEL'*WRITE  'DBKEY            ************
+     C           DBKEY     CAT  '*UPDAT':1DBKEY
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *****************************************************************
+      *                                                               *
+      *  GLZSUM - Hash Totalling                                      *
+      *                                                               *
+      *  Called by: Main Processing                                   *
+      *                                                               *
+      *  Calls:     *PSSR - Program exception error routine           *
+      *                                                               *
+      *****************************************************************
+     C           GLZSUM    BEGSR
+     C                     Z-ADDZZTOTI    ZZTOTI 150
+     C                     Z-ADDZZTOTD    ZZTOTD  30
+     C                     SETOF                     919293
+     C                     SETOF                     949599
+      *
+      ** Determine sign of ZZAMTI & D,   92 If neg.
+      *
+     C           ZZAMTI    COMP 0                      9293
+     C   93      ZZAMTD    COMP 0                      9293
+     C   93                GOTO ZZSEND
+      *
+      ** Determine sign of ZZTOTI & D, 91 If neg.
+      *
+     C           ZZTOTI    COMP 0                      9193
+     C   93      ZZTOTD    COMP 0                      9193
+      *
+      ** If ZZTOTAL is zero, return ZZAMOUNT.
+      *
+     C   93                Z-ADDZZAMTI    ZZTOTI
+     C   93                Z-ADDZZAMTD    ZZTOTD
+     C   93                GOTO ZZSEND
+      *
+      ** If signs differ bypass overflow checks.
+      *
+     C   91N92
+     CORN91 92             GOTO ZZOFPS
+      *
+     C           ZZAMTD    ADD  ZZTOTD    ZZWK2   40
+     C           ZZWK2     COMP 999                  93
+     C  N93      ZZWK2     COMP -999                   93
+      *
+     C   93N92   ZZAMTI    ADD  1         ZZWK3  150
+     C      93 92ZZAMTI    SUB  1         ZZWK3
+     C   93      ZZTOTI    ADD  ZZWK3     ZZWK3
+     C  N93      ZZTOTI    ADD  ZZAMTI    ZZWK3
+      *
+      **If the modulus of ZZWK3 is LT mod. ZZTOTI then O/F Has Occurred
+      *
+     C  N92      ZZWK3     COMP ZZTOTI                 99
+     C   92      ZZWK3     COMP ZZTOTI               99
+     C  N99                Z-ADDZZWK2     ZZTOTD
+     C  N99                Z-ADDZZWK3     ZZTOTI
+      *
+      **If O/F Zeroise ZZAMT , ind '99' set and ZZTOT fields left INTACT.
+      *
+     C   99                Z-ADD0         ZZAMT  153
+     C   99      *LOCK     IN   LDA
+     C   99                Z-ADD2         DBASE            ************
+     C   99                MOVEL'GLZSUM ' DBFILE           * DBERR 02 *
+     C   99                MOVEL'OVERFLOW'DBKEY            ************
+     C   99                OUT  LDA
+     C   99                EXSR *PSSR
+     C                     GOTO ZZSEND
+      *
+      ** The 'SIGNS' are different
+      *
+     C           ZZOFPS    TAG
+      *
+      ** If ZZAMT was Negative, make it pos. to comp with ZZTOT
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI 150
+     C   92                Z-SUBZZAMTD    ZZAMTD  30
+      *
+      ** If ZZTOT was negative, make it pos. to COMP with ZZAMT.
+      *
+     C   91                Z-SUBZZTOTI    ZZTOTI
+     C   91                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Both ZZAMT and ZZTOT are now positive.
+      *
+     C           ZZTOTI    COMP ZZAMTI               93  95
+     C   95      ZZTOTD    COMP ZZAMTD               93  95
+      *
+      ** If ZZTOT EQ. ZZAMT return zero.
+      *
+     C   95                Z-ADD0         ZZTOTI
+     C   95                Z-ADD0         ZZTOTD
+     C   95                GOTO ZZSEND
+      *
+      ** If ZZTOT GT. ZZAMT.
+      *
+     C   93      ZZAMTD    COMP ZZTOTD               94
+     C   93 94   ZZTOTI    SUB  1         ZZTOTI
+     C   93 94   ZZTOTD    ADD  1000      ZZWK2
+     C   93      ZZTOTI    SUB  ZZAMTI    ZZTOTI
+     C   93 94   ZZWK2     SUB  ZZAMTD    ZZTOTD
+     C   93N94   ZZTOTD    SUB  ZZAMTD    ZZTOTD
+      *
+      ** IF ZZAMT GT. ZZTOT.
+      *
+     C  N93      ZZTOTD    COMP ZZAMTD               94
+     C  N93 94   ZZAMTI    SUB  1         ZZWK3  150
+     C  N93 94   ZZAMTD    ADD  1000      ZZWK2
+     C  N93 94   ZZWK3     SUB  ZZTOTI    ZZTOTI
+     C  N93N94   ZZAMTI    SUB  ZZTOTI    ZZTOTI
+     C  N93 94   ZZWK2     SUB  ZZTOTD    ZZTOTD
+     C  N93N94   ZZAMTD    SUB  ZZTOTD    ZZTOTD
+      *
+      ** Reverse sign of ZZTOT if larger I/P fields were negative
+      *
+     C                     SETOF                     94
+     C   93 91
+     CORN93 92             SETON                     94
+     C   94                Z-SUBZZTOTI    ZZTOTI
+     C   94                Z-SUBZZTOTD    ZZTOTD
+      *
+      ** Restore sign of ZZAMTI & ZZAMTD If it was reversed.
+      *
+     C   92                Z-SUBZZAMTI    ZZAMTI
+     C   92                Z-SUBZZAMTD    ZZAMTD
+     C           ZZSEND    TAG
+      *
+      ** If ZZTOTD is ZERO, and ZZTOTI is NEG. set up ZZNEGD.
+      *
+     C                     SETOF                     96
+     C           ZZTOTD    COMP 0                        91
+     C   91      ZZTOTI    COMP 0                      96
+     C   96                MOVE '.000-'   ZZNEGD  5
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      * Called by: MAIN - Main Processing                             *
+      *            GLZSUM - Hash Totalling                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+     C                     DUMP
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+      *
+     C                     ENDSR
+      *****************************************************************
+**  CPY@
+(c) Finastra International Limited 2001

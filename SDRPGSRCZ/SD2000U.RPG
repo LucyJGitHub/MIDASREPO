@@ -1,0 +1,257 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Update Network file')                         *
+      *****************************************************************
+      *                                                               *
+      *  Midas                                              *
+      *                                                               *
+      *    SD2000U - UPDAT NETWORK FILE                               *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER030             Date 09Jul08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL013             Date 29Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E31858             Date 13Nov91               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER030 - Multicash German Feature (Recompile)                *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL013 - MT94x Messages Generation (Recompile over new layout*
+      *                                      of SDNWRKPD)             *
+      *    E31858 - CHANGE FILE DESCRIPTION OF SDFCTLL0 TO COMIT      *
+      *                                                               *
+      *****************************************************************
+     FSDMMODPDIF  E                    DISK
+     FSDNWRKL0UF  E           K        DISK                      A
+     FSDFCTLL0UF  E           K        DISK
+     F                                              KCOMIT                E31858
+      *
+      * ID C  F  H  L    Function of indicators
+      *    99            EOF SDMMODPD
+      *    98            RECORD FOUND/NOT FOUND ON SDNWRKPD
+      *    97            EOF SDFCTLL0
+      *    20            INSERTED RECORD ON SDNWRKPD
+      *    21            DELETED RECORD ON SDNWRKPD
+      *    U7,U8         DB Error
+      *    LR            END PROGRAM
+      *
+     E                    CPY@    1   1 80
+      *
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      **  Local data area data structure
+      *
+     I            DS
+     I I            'S.W.I.F.T.'              1  20 SWIFT
+      *
+      **  Initialization of the SWIFT variable
+      *
+     I            DS
+     I I            'SDNWRKPD'                1  10 SDNWRK
+      *
+      **  Initialization of the SDNWRK variable
+      *
+     IYMD         DS
+     I                                        1   2 YY
+     I                                        3   6 MD
+      *
+      **  RUNDAT in YYMMDD format
+      *
+     IXXY         DS                              6
+     I                                        1   2 XX
+      *
+      **  Used to convert YMD into MMDDYY or DDMMYY depending on the
+      **  date format ie. D or M
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** Set up copyright statement
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Obtain Rundat & date format
+      *
+     C                     CALL 'ZM0080'
+     C           XXY       PARM           YMD
+     C                     PARM           DFMT    1
+      *
+      **  Reformat Rundat into correct date format :- D DDMMYY or
+      **  M MMDDYY
+      *
+     C                     MOVE YY        XXY
+     C           DFMT      IFEQ 'D'
+     C                     MOVE MD        XX
+     C                     ELSE
+     C                     MOVELMD        XXY
+     C                     END
+      *
+     C                     MOVE XXY       @@DATE
+      *
+      **  Convert Rundat from DDMMYY/MMDDYY into Run Day no.
+      *
+     C                     CALL 'ZA0270'
+     C                     PARM           @@DATE  60
+     C                     PARM DFMT      @@DFMT  1
+     C                     PARM           @@RTN   1
+     C                     PARM           @@DAYN  50
+      *
+      **  Access SDMMODPD for active networks
+      *
+     C           1         CHAINSDMMODPD             9999
+      *
+     C           *IN99     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD1         DBASE            ***************
+     C                     MOVEL'FIRST'   DBKEY            * DB ERROR 01 *
+     C                     MOVEL'SDMMODPD'DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **    Access SDNWRKPD using the key 'SWIFT'. Check if the SWIFT
+      **  network is ON or OFF. If ON & SWIFT details are not already
+      **  on the Network file (SDNWRKPD) insert the details on the file
+      **  (*IN20).
+      **    However if the SWIFT network is OFF & details are on the
+      **  Network file delete them (*IN21).
+      *
+     C           'SWIFT '  CHAINSDNWRKL0             98
+      *
+     C           BGMSDL    IFEQ 'Y'                                   1
+      *
+     C           *IN98     IFEQ '1'                                   2
+     C                     MOVEL'SWIFT   'EDNWRK
+     C                     MOVE 'I'       EDTYLC
+     C                     MOVE *BLANKS   EDNETD
+     C                     MOVE SWIFT     EDNETD
+     C                     MOVE @@DAYN    EDLCD
+     C                     WRITE@EDREJY
+     C                     SETON                     20
+     C                     EXSR FCTL
+     C                     END                                       E2
+      *
+     C                     ELSE                                      X1
+      *
+     C           *IN98     IFEQ '0'                                   2
+     C                     DELET@EDREJY
+     C                     SETON                     21
+     C                     EXSR FCTL
+     C                     END                                       E2
+      *
+     C                     END                                       E1
+      *
+      **    Access SDNWRKPD using the key 'TELEX'. Check if the TELEX
+      **  network is ON or OFF. If ON & TELEX details are not already
+      **  on the Network file (SDNWRKPD) insert the details on the file
+      **  (*IN20).
+      **    However if the TELEX network is OFF & details are on the
+      **  Network file delete them (*IN21).
+      *
+      *
+     C           'TELEX '  CHAINSDNWRKL0             98
+      *
+     C           BGMTMI    IFEQ 'Y'                                   1
+      *
+     C           *IN98     IFEQ '1'                                   2
+     C                     MOVEL'TELEX   'EDNWRK
+     C                     MOVE *BLANKS   EDNETD
+     C                     MOVE 'Telex   'EDNETD
+     C                     MOVE 'I'       EDTYLC
+     C                     MOVE @@DAYN    EDLCD
+     C                     WRITE@EDREJY
+     C                     SETON                     20
+     C                     EXSR FCTL
+     C                     END                                       E2
+      *
+     C                     ELSE                                      X1
+      *
+     C           *IN98     IFEQ '0'                                   2
+     C                     DELET@EDREJY
+     C                     SETON                     21
+     C                     EXSR FCTL
+     C                     END                                       E2
+      *
+     C                     END                                       E1
+      *
+     C                     SETON                     LR
+     C/EJECT
+      *****************************************************************
+      *   FCTL  - Update file control subroutine                      *
+      *****************************************************************
+      *
+     C           FCTL      BEGSR
+      *
+      **  Access SDFCTLPA using the key 'SDNWRKPD'
+      *
+     C           SDNWRK    CHAINSDFCTLL0             97
+     C           *IN97     IFEQ '1'                                   1
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            ***************
+     C                     MOVEL'SDNWRKPD'DBKEY            * DB ERROR 02 *
+     C                     MOVEL'SDFCTLL0'DBFILE           ***************
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     END                                       E1
+      *
+      **  Inserted records
+      *
+     C           *IN20     IFEQ '1'
+     C           AHNORC    ADD  1         AHNORC
+     C           AHNOIN    ADD  1         AHNOIN
+     C                     END
+      *
+      **  Deleted records
+      *
+     C           *IN21     IFEQ '1'
+     C           AHNORC    SUB  1         AHNORC
+     C           AHNODL    ADD  1         AHNODL
+     C                     END
+      *
+      **  Set off indicators *IN20 & *IN21
+      *
+     C                     MOVEA'00'      *IN,20
+      *
+      **  Update file control file SDFCTLPA
+      *
+     C                     UPDAT@AHREAU
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+      *   *PSSR - Error handling                                      *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *****************************************************************
+** CPY@   **      Object copyright
+(c) Finastra International Limited 2001

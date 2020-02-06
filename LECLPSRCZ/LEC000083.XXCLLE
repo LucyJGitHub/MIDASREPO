@@ -1,0 +1,163 @@
+/*******************************************************************/
+/*S*D****CLPBASEBND*************************************************/                     /*CLE164*/
+/*******************************************************************/
+/*                                                                 */
+/*       Midas     - Customer Lending Module                       */
+/*                                                                 */
+/*       LEC000083 - Pre-Check Auto Settlements report             */
+/*                                                                 */
+/*       (c) Misys International Banking Systems Ltd. 2012         */
+/*                                                                 */
+/*       Last Amend No. CLE164 *REDUNDANT  Date 18Aug14            */
+/*       Prev Amend No. AR1022006          Date 01Aug12            */
+/*                      CLE134 *CREATE     Date 01Aug12            */
+/*                                                                 */
+/*******************************************************************/
+/*                                                                 */
+/*       CLE164 - CLE134 Enhancement F (Repayment Methodology)     */
+/*       AR1022006 - CR031 - COB Performance Optimisation          */
+/*       CLE134 - Past Due Call Loan Processing                    */
+/*                                                                 */
+/*******************************************************************/
+ 
+/**********  PGM        PARM(&RSEQ &RLEV &RENT)                                     */ /*AR1022006*/
+             PGM        PARM(&RSEQ &RLEV &RENT &SBMJ)                                  /*AR1022006*/
+ 
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                           Misys International Banking Systems Ltd. +
+                           2012')
+ 
+             DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&SBMJ) TYPE(*CHAR) LEN(1)                                  /*AR1022006*/
+             DCL        VAR(&DONE) TYPE(*CHAR) LEN(3)                                  /*AR1022006*/
+ 
+             DCL        VAR(&RDNBA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&DNWDA) TYPE(*CHAR) LEN(5)
+ 
+             DCLF       FILE(SDBANKPD)
+ 
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERR_DIE))
+ 
+/** Initialisation */
+ 
+             CHGJOB     SWS(00000000)
+ 
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+ 
+/** Retrieve ICD Details */
+ 
+             RCVF
+             CHGVAR     VAR(&RDNBA) VALUE(&BJRDNB)
+             CHGVAR     VAR(&DNWDA) VALUE(&BJDNWD)
+ 
+/** Create Temporary Extract Files */
+ 
+             IF         COND(&SBMJ = ' ') THEN(DO)                                     /*AR1022006*/
+/**********  CRTDUPOBJ  OBJ(LEPSXTPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +               */ /*AR1022006*/
+/**********                TOLIB(QTEMP)                                             */ /*AR1022006*/
+/**********  MONMSG     MSGID(CPF2130)                                              */ /*AR1022006*/
+ 
+/**********  CRTDUPOBJ  OBJ(LEPSX1PD) FROMLIB(*LIBL) OBJTYPE(*FILE) +               */ /*AR1022006*/
+/**********                TOLIB(QTEMP)                                             */ /*AR1022006*/
+/**********  MONMSG     MSGID(CPF2130)                                              */ /*AR1022006*/
+ 
+/**********  CLRPFM     FILE(QTEMP/LEPSXTPD)                                        */ /*AR1022006*/
+/**********  CLRPFM     FILE(QTEMP/LEPSX1PD)                                        */ /*AR1022006*/
+             CLRPFM     FILE(LEPSXTPD)                                                 /*AR1022006*/
+             CLRPFM     FILE(LEPSX1PD)                                                 /*AR1022006*/
+             CHGDTAARA  DTAARA(LEPDPSET (1 3)) VALUE('NNN')                            /*AR1022006*/
+             SBMJOB     CMD(CALL PGM(LEC000083) PARM(&RSEQ &RLEV +
+                          &RENT 'A')) JOB(LEC000083A)                                  /*AR1022006*/
+             SBMJOB     CMD(CALL PGM(LEC000083) PARM(&RSEQ &RLEV +
+                          &RENT 'B')) JOB(LEC000083B)                                  /*AR1022006*/
+             SBMJOB     CMD(CALL PGM(LEC000083) PARM(&RSEQ &RLEV +
+                          &RENT 'C')) JOB(LEC000083C)                                  /*AR1022006*/
+             ENDDO                                                                     /*AR1022006*/
+ 
+/** Copy Logical File Data to Extract File */
+ 
+             IF         COND(&SBMJ = 'A') THEN(DO)                                     /*AR1022006*/
+/**********  CPYF       FROMFILE(LEACCNJ0) TOFILE(QTEMP/LEPSX1PD) +                 */ /*AR1022006*/
+/**********                MBROPT(*UPDADD) INCREL((*IF XTVUDT *GE +                 */ /*AR1022006*/
+/**********                &RDNBA) (*AND XTVUDT *LT &DNWDA)) +                      */ /*AR1022006*/
+/**********                FMTOPT(*MAP *DROP)                                       */ /*AR1022006*/
+             CPYF       FROMFILE(LEACCNJ0) TOFILE(LEPSX1PD) +
+                          MBROPT(*UPDADD) INCREL((*IF XTVUDT *GE +
+                          &RDNBA) (*AND XTVUDT *LT &DNWDA)) +
+                          FMTOPT(*MAP *DROP)                                           /*AR1022006*/
+ 
+/**********  CPYF       FROMFILE(QTEMP/LEPSX1PD) +                                  */ /*AR1022006*/
+/**********                TOFILE(QTEMP/LEPSXTPD) +                                 */ /*AR1022006*/
+/**********                MBROPT(*ADD) FMTOPT(*MAP *DROP)                          */ /*AR1022006*/
+             CPYF       FROMFILE(LEPSX1PD) TOFILE(LEPSXTPD) +
+                          MBROPT(*ADD) FMTOPT(*MAP *DROP)                              /*AR1022006*/
+             CHGDTAARA  DTAARA(LEPDPSET (1 1)) VALUE('Y')                              /*AR1022006*/
+             GOTO       CMDLBL(ENDPGM)                                                 /*AR1022006*/
+             ENDDO                                                                     /*AR1022006*/
+ 
+             IF         COND(&SBMJ = 'B') THEN(DO)                                     /*AR1022006*/
+/**********  CPYF       FROMFILE(LEACCNJ1) TOFILE(QTEMP/LEPSXTPD) +                 */ /*AR1022006*/
+/**********                MBROPT(*ADD) INCREL((*IF XTVUDT *GE +                    */ /*AR1022006*/
+/**********                &RDNBA) (*AND XTVUDT *LT &DNWDA)) +                      */ /*AR1022006*/
+/**********                FMTOPT(*MAP *DROP)                                       */ /*AR1022006*/
+             CPYF       FROMFILE(LEACCNJ1) TOFILE(LEPSXTPD) +
+                          MBROPT(*ADD) INCREL((*IF XTVUDT *GE +
+                          &RDNBA) (*AND XTVUDT *LT &DNWDA)) +
+                          FMTOPT(*MAP *DROP)                                           /*AR1022006*/
+             CHGDTAARA  DTAARA(LEPDPSET (2 1)) VALUE('Y')                              /*AR1022006*/
+             GOTO       CMDLBL(ENDPGM)                                                 /*AR1022006*/
+             ENDDO                                                                     /*AR1022006*/
+ 
+             IF         COND(&SBMJ = 'C') THEN(DO)                                     /*AR1022006*/
+/**********  CPYF       FROMFILE(LEACCNJ3) TOFILE(QTEMP/LEPSXTPD) +                 */ /*AR1022006*/
+/**********                MBROPT(*ADD) INCREL((*IF XTVUDT *GE +                    */ /*AR1022006*/
+/**********                &RDNBA) (*AND XTVUDT *LT &DNWDA)) +                      */ /*AR1022006*/
+/**********                FMTOPT(*MAP *DROP)                                       */ /*AR1022006*/
+             CPYF       FROMFILE(LEACCNJ3) TOFILE(LEPSXTPD) +
+                          MBROPT(*ADD) INCREL((*IF XTVUDT *GE +
+                          &RDNBA) (*AND XTVUDT *LT &DNWDA)) +
+                          FMTOPT(*MAP *DROP)                                           /*AR1022006*/
+             CHGDTAARA  DTAARA(LEPDPSET (3 1)) VALUE('Y')                              /*AR1022006*/
+             GOTO       CMDLBL(ENDPGM)                                                 /*AR1022006*/
+             ENDDO                                                                     /*AR1022006*/
+ 
+WAIT:                                                                                  /*AR1022006*/
+             DLYJOB     DLY(30)                                                        /*AR1022006*/
+             RTVDTAARA  DTAARA(LEPDPSET (1 3)) RTNVAR(&DONE)                           /*AR1022006*/
+             IF         COND(&DONE *NE 'YYY') THEN(GOTO +
+                          CMDLBL(WAIT))                                                /*AR1022006*/
+/** Produce Report */
+ 
+/**********  OVRDBF     FILE(LEPSXTPD) TOFILE(QTEMP/LEPSXTPD)                          /*AR1022006*/
+ 
+             CALL       PGM(LE000083) PARM(&RSEQ &RLEV &RENT)
+             MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_PGM)
+ 
+             IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
+ 
+             GOTO       CMDLBL(ENDPGM)
+ 
+/** Process Errors */
+ 
+ERR_DIE:
+             SNDPGMMSG  MSG('Job terminated, database in error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             CHGJOB     SWS(XXXXXX11)
+             GOTO       CMDLBL(ENDPGM)
+ 
+ERR_PGM:
+             SNDPGMMSG  MSG('Job terminated due to program error.') +
+                           TOMSGQ(MOPERQ MRUNQ)
+ 
+             GOTO       CMDLBL(ENDPGM)
+/** Termination Process */
+ 
+ ENDPGM:
+/**********  DLTOVR     FILE(LEPSXTPD)                                                 /*AR1022006*/
+/**********  MONMSG     MSGID(CPF0000)                                                 /*AR1022006*/
+ 
+             ENDPGM

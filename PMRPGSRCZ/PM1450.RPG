@@ -1,0 +1,1872 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM FT events extract')                           *
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management                                 *
+     F*                                                               *
+     F*  PM1450  - PM FT EVENTS EXTRACT                               *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER047             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247399             Date 06Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CFT032             Date 11Sep06               *
+      *                 CDL049             Date 11Jul06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.04 -----------------------------------------------*
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 CAP136             Date 15Nov99               *
+      *                 175479             Date 08Feb00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+     F*                 CPB001             Date 21Feb00               *
+     F*                 158839             Date 13Apr99               *
+     F*                 146605             Date 01Nov98               *
+     F*                 169122             Date 24Sep99               *
+     F*                 CFT004             Date 24Sep99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 CSD005             Date 02Mar99               *
+      *                 143152             Date 26Apr99               *
+      *                 CTI002             Date 11May99               *
+     F*                 CPM005             DATE 10JUL96               *
+     F*                 093471             DATE 10JUL96               *
+     F*                 S01486             DATE 05AUG94               *
+     F*                 47719              DATE 24NOV92               *
+     F*                 046165             DATE 22OCT92               *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER047 - German Features LF037-00 Reporting §24c KWG         *
+      *           (Recompile)                                         *
+      *  247399 - Database error 016 in PM1450 file ACCNTAB. Partial  *
+      *           account ACBK has no branch associated when chained  *
+      *           to ACCNTAB.                                         *
+      *  CFT032 - Account line in field 50k in MT103                  *
+      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP136 - Conversion of FT Incoming Payment inputs into       *
+      *           modular structure to use as APIs.                   *
+      *           Recompiled over changed PF/INPAYDD.                 *
+     A*  175479 - Recompiled over changes in INPAYDD                  *
+     F*  CPB001 -  'Private Banking' Module                           *
+     F*  158839 - Recompile over  PMFTEVJ1.                           *
+     F*  146605 - setup correct key to chain to accntab               *
+      *  169122 - WWBRCA contains invalid data. This causes access to *
+      *           account file to fail however account number is      *
+      *           valid.                                              *
+      *  CFT004 - Allow IBAN Number in field beneficiary
+      *  CSD005 - Standing Data Account Narrative.  Add new field     *
+      *           to SDACODPD.  Recompilation of programs.            *
+     F*  143152 - Apply fix 114125 - Portfolio defn detail key not    *
+     F*           setup if a retail customer.                         *
+      *  CTI002 - Recompiled : File SDACODPD changed                  *
+     F*  CPM005 - Private Banking Phase 2                             *
+     F*           Focus Group Changes upgraded to DBA                 *
+     F*           PBFG/7 - NET COMMITMENT BY CURRENCY                 *
+     F*           PBFG/8 - DISPLAY POSITIONS SPLIT BY CURRENCY        *
+     F*  093471 - Take account of the "PM Event Amount Pay/Recieve"   *
+     F*           for the sign of the event amount                    *
+     F*           If Pay     ---> Negative sign                       *
+     F*           If Receive ---> Positive sign                       *
+     F*  S01486 - Private Banking upgrade to Release 10               *
+     F*  47719  - CORRECT CONVERSION OF AMOUNTS BETWEEN CURRENCIES    *
+     F*  046165 - WWACOD contains invalid data. This causes access to *
+     F*           account code file to fail however account code is   *
+     F*           valid.                                              *
+     F*                                                               *
+     F*****************************************************************
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FPMFTEVJ1IF  E                    DISK
+     F                                              KINFSR *PSSR
+     F***PMIOPMT*IF**E           K        DISK                            S01486
+     FPMIOPML0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***PMCQC***IF**E           K        DISK                            S01486
+     FPMCQCOL0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     F***PMCQP***IF**E           K        DISK                            S01486
+     FPMCQPAL0IF  E           K        DISK                               S01486
+     F                                              KINFSR *PSSR
+     FACNUM   IF  E           K        DISK
+     F            ACCNTABF                          KRENAMEACNUMF
+     F                                              KINFSR *PSSR
+     FACCNT   IF  E           K        DISK
+     F            ACCNTAAF                          KIGNORE
+     F            ACCNTACF                          KIGNORE
+     F                                              KINFSR *PSSR
+     F***PMPORTPPIF**E           K        DISK                            S01486
+     FPMPORTPDIF  E           K        DISK                               S01486
+     F* PREFIX PN
+     F                                              KINFSR *PSSR
+     F***SDCURRL0IF**E           K        DISK                            S01486
+     F**PREFIX*A6*********************************************************S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDACODL0IF**E           K        DISK                            S01486
+     F**PREFIX*A5*********************************************************S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F**PREFIX*BJ*********************************************************S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDPLCSL0IF**E           K        DISK                            S01486
+     F**PREFIX*BB/QB******************************************************S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***TABSE***IF**E           K        DISK                            S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F*********** TABLETAF                          KIGNORE               S01486
+     F*********** TABTB10F                          KIGNORE               S01486
+     F*********** TABTB11F                          KIGNORE               S01486
+     F*********** TABTB36F                          KIGNORE               S01486
+     F*********** TABTB40F                          KIGNORE               S01486
+     F*********** TABTE10F                          KIGNORE               S01486
+     F*********** TABTE20F                          KIGNORE               S01486
+     F*********** TABTG10F                          KIGNORE               S01486
+     F*********** TABTG20F                          KIGNORE               S01486
+     F*********** TABLETHF                          KIGNORE               S01486
+     F*********** TABLETJF                          KIGNORE               S01486
+     F*********** TABLETKF                          KIGNORE               S01486
+     F**NOSTROS***TABLETLF                          KIGNORE
+     F*********** TABLETNF                          KIGNORE               S01486
+     F*********** TABLETPF                          KIGNORE               S01486
+     F*********** TABLETRF                          KIGNORE               S01486
+     F*********** TABLETXF                          KIGNORE               S01486
+     F*********** TABLET2F                          KIGNORE               S01486
+     F*********** TABLET3F                          KIGNORE               S01486
+     F*********** TABLET5F                          KIGNORE               S01486
+     F***PMEVNTPPO***E                    DISK                            S01486
+     FPMEVNTPDO   E                    DISK                               S01486
+     F                                              KINFSR *PSSR
+     FPMEVCYPDO   E                    DISK                               CPM005
+     F                                              KINFSR *PSSR          CPM005
+     F/COPY WNCPYSRC,PM1450F001
+     FPM1450AUO   E                    PRINTER
+      /EJECT
+      *
+      *   INDICATOR USAGE
+      *   ---------------
+      *
+      *   01      OTPAYDDF READING FORMAT
+      *   02      INPAYDDF READING FORMAT
+      *   03      CQCOCDDF READING FORMAT
+      *   04      CQPADDDF READING FORMAT
+      *   05      CQCODDDF READING FORMAT
+      *   06      CQPACDDF READING FORMAT
+      ****71******ACCESS*SDBANKL1*****************************************S01486
+      *   72      ACCESS SDCURRL0
+      ****73******ACCESS*PMIOPMT******************************************S01486
+      ****74******ACCESS*PMCQC********************************************S01486
+      ****75******ACCESS*PMCQP********************************************S01486
+      *   73      ACCESS PMIODML0                                         S01486
+      *   74      ACCESS PMCQCOL0                                         S01486
+      *   75      ACCESS PMCQPAL0                                         S01486
+      *   76      ACCESS ACNUM
+      *   77      ACCESS ACCNT
+      ****78******ACCESS*PMPORTPP*****************************************S01486
+      *   78      ACCESS PMPORTPD                                         S01486
+      ****79******ACCESS*SDPLCSL0*****************************************S01486
+      ****80******ACCESS*SDACODL0*****************************************S01486
+      *   89      END OF FILE
+      *   98      DATE FORMAT
+      *   LR      LAST RECORD PROCESSING
+      *
+      /EJECT
+      *
+      /COPY ZSRSRC,ZDATE2Z1
+      *
+      ** ARRAY FOR FORMATTING FT DETAILS FOR OUTPUT SR/ZFFTLN
+     E**********          ZLI        20  1                                                    CGL029
+     E                    ZLI        26  1                                                    CGL029
+      *
+      ** ARRAYS USE TO CONVERT EVENT TYPE IN EVENT NARRATIVE
+     E                    ARA     1   5 20
+     E                    ARB     1  15 20
+     E*                                                                   B08268
+     E** TABLES/ARRAYS USED TO AVOID FILE ACCESS OPERATIONS               B08268
+     E                    CYCD      200  3                                B08268
+     E                    SPRT      200 13 8                              B08268
+     E                    NBDP      200  1 0                              B08268
+     E                    MDNA      200  1                                B08268
+      *
+      /COPY ZSRSRC,ZPOWERZ1
+     E                    CPY@    1   1 80
+      /EJECT
+     IOTPAYDDF    01
+      /EJECT
+     IINPAYDDF    02
+      /EJECT
+     ICQCOCDDF    03
+      /EJECT
+     ICQCODDDF    05
+      /EJECT
+     ICQPADDDF    04
+      /EJECT
+     ICQPACDDF    06
+      /EJECT
+     IPMFTEVJ0
+     I***********   QBCUST                          CNUM                  S01486
+     I              QBCUST                          CUNR                  S01486
+     I*                                                                   B08268
+     IPMSTAT      DS                                                      B08268
+     I                                        1   50WWECD                 B08268
+     I                                        1 256 WWSTAT                B08268
+      *
+     I***DATA*STRUCTURE*TO*FILL*DBKEY*IF*ERROR*ON*PF/PMPORTPP*************S01486
+     I*  DATA STRUCTURE TO FILL DBKEY IF ERROR ON PF/PMPORTPD             S01486
+      *
+     IPKEY        DS
+     I**********                              1   60WWPNP8                                    CSD027
+     I                                        1   6 WWPNP8                                    CSD027
+     I                                        7  10 WWPTFR
+      *
+      *  DATA STRUCTURE TO FILL AKEY
+      *
+     IWWDA        DS
+     I**********                              1   60WWDAUM                                    CSD027
+     I                                        1   6 WWDAUM                                    CSD027
+     I**********                              7  100WWDAOD                                    CGL029
+     I**********                             11  120WWDASQ                                    CGL029
+     I**********                             13  15 WWDABR                             169122 CGL029
+     I                                        7  160WWDAOD                                    CGL029
+     I                                       17  180WWDASQ                                    CGL029
+     I                                       19  21 WWDABR                                    CGL029
+      *
+      *  DATA STRUCTURE TO HAVE A ZONED FIELD
+      *
+     I            DS
+     I                                        1   30ZDAYS
+      *
+      *  DATA STRUCTURE TO FILL DBKEY IF ERROR ON LF/ACCNT
+      *
+     IAKEY        DS
+     I**********                              1   60WWCNUM                                    CSD027
+     I                                        1   6 WWCNUM                                    CSD027
+     I                                        7   9 WWCCY
+     I**********                             10  130WWACOD                                    CGL029
+     I**********                             14  150WWACSQ                                    CGL029
+     I**********                             16  18 WWBRCA                             S01486 CGL029
+     I                                       10  190WWACOD                                    CGL029
+     I                                       20  210WWACSQ                                    CGL029
+     I                                       22  24 WWBRCA                                    CGL029
+      *
+     I***DATA*STRUCTURE*TO*FILL*DBKEY*IF*ERROR*ON*LF/PMCQP & PMCQC        S01486
+     I** DATA STRUCTURE TO FILL DBKEY IF ERROR ON LF/PMCQPAL0 &           S01486
+     I** & PMCQCOL0                                                       S01486
+      *
+     ICKEY        DS
+     I                                        1  15 PREF
+     I                                       16  170CQSQ
+      *
+      ** LOCAL DATA AREA FOR DATABASE ERROR DETAILS
+      *
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*                                                                   S01486
+     ISDACOD    E DSSDACODPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR ACCOUNT CODE DETAILS                     S01486
+     I*                                                                   S01486
+     ISDBANK    E DSSDBANKPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR BANK DETAILS                             S01486
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              CPB001
+     I** DUMMY RECORD FORMAT FOR MODULE DETAILS                           CPB001
+     I*                                                                   CPB001
+     ISDCURR    E DSSDCURRPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR CURRENCY DETAILS                         S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR CUSTOMER DETAILS                         S01486
+     I*                                                                   S01486
+     ISDNOST    E DSSDNOSTPD                                              S01486
+     I              QQACCD                          GEACCD                                    CGL029
+     I** DUMMY RECORD FORMAT FOR NOSTRO DETAILS                           S01486
+     I*                                                                   S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I** DUMMY RECORD FORMAT FOR PORTFOLIO MANAGEMENT CUSTOMER DETAILS    S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01486
+     I*                                                                   CPB001
+     IDSLDY     E DSDSLDY                                                 CPB001
+     I* THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE            CPB001
+     I*                                                                   S01486
+     IP@ACCN    E DSACCNTAB                                               CFT004
+     I              LCD                             IBLCD                 CFT004
+     I** DUMMY RECORD FORMAT FOR ACCOUNT DETAILS                          CFT004
+     I/COPY WNCPYSRC,PM1450I001
+      *                                                                   CFT004
+     ISCSARD    E DSSCSARDPD                                              CFT004
+     I** DUMMY RECORD FORMAT FOR SWITCHABLE FEATURE DETAILS               CFT004
+      *
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * INDEX OF SUBROUTINES                                                   *
+      * MAIN     - MAIN PROCESSING                                             *
+      * INIT     - INITIAL PROCESSING                                          *
+      * P01      - PROCESS 91P1, 91P2, 91P8 & 91P9 EVENTS                      *
+      * P02      - PROCESS 91P3 & 91P4                                         *
+      * P03      - PROCESS 91P5 & 91P6                                         *
+      * P04      - ESTABLISH CUSTOMER FOR CASHFLOW EVENT                       *
+      * P05      - FORMAT & OUTPUT EVENT RECORD                                *
+      * W01      - WRITE PROTFOLIO CASHFLOW EVENTS DETAIL                      *
+      * W02      - PRODUCE AUDIT REPORT                                        *
+      * ZFFTLN   - FORMAT THE 20A PORTFOLIO MANAGEMENT FOR FT                  *
+      * ZDATE2   - CONVERT A DAY NUMBER TO DATE FORMAT                         *
+      * ZCCYCN   - CONVERT AN AMOUNT IN ONE CCY TO ANOTHER SPOT RATES          *
+      * ZCCYXR   - CONVERT IN ONE CCY TO ANOTHER WITH EXCHANGE RATE            *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * EXTERNAL ROUTINES CALLED                                               *
+      *                                                                        *
+      **************************************************************************
+     C           *LIKE     DEFN CQSQ      WWCQSQ
+     C           *LIKE     DEFN PREF      WWPREF
+     C           *LIKE     DEFN ACNO      WWACNO
+     C           *LIKE     DEFN CNUM      WWPNUM
+     C           *LIKE     DEFN BBCUST    WWCUST
+     C           *LIKE     DEFN EDAT      WWCTLD
+     C           *LIKE     DEFN A6SPRT    WWSPOT
+     C           *LIKE     DEFN A6MDIN    WWMDIN
+     C           *LIKE     DEFN A6NBDP    WWCDP
+     C           *LIKE     DEFN DSTT      WWCHRG
+     C           *LIKE     DEFN DSTT      WWATYP
+     C********** *LIKE     DEFN PREF      WWACCD                                              CGL029
+     C           *LIKE     DEFN A5ACCD    WWKCOD
+     C                     MOVELWWACCD    WWACCD 21                                           CGL029
+      *
+      /EJECT
+      *
+     I***KLIST*PLIST*TO*ACCESS*PF/PMPORTPP********************************S01486
+     I*  KLIST PLIST TO ACCESS PF/PMPORTPD                                S01486
+      *
+     C           PLIST     KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWPTFR
+      *
+      *  KLIST ALIST TO ACCESS LF/ACCNT
+      *
+     C           ALIST     KLIST
+     C                     KFLD           WWCNUM
+     C                     KFLD           WWCCY
+     C                     KFLD           WWACOD
+     C                     KFLD           WWACSQ
+     C                     KFLD           WWBRCA                          S01486
+      *
+     I***KLIST*CLIST*TO*ACCESS*LF/PMCQP***********************************S01486
+     I*  KLIST CLIST TO ACCESS LF/PMCQPAL0                                S01486
+      *
+     C           CLIST     KLIST
+     C                     KFLD           PREF
+     C                     KFLD           CQSQ
+      *
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  P R O G R A M   S T A R T                                    *
+      *                                                               *
+      *****************************************************************
+      *
+      * PERFORM INIT
+      *
+     C                     MOVEACPY@      BIS@   80
+     C                     EXSR INIT
+      *
+     C                     READ PMFTEVJ0                 89
+     C***********          Z-ADDCNUM      WWPNUM                          S01486
+     C                     MOVELCUNR      WWPNUM                          S01486
+      *
+     C           *IN89     DOWEQ'0'                        - B1
+      *
+     C           EDAT      IFLE WWCTLD                     - B2
+      *
+     C           ETYP      CASEQ'91P1'    P01
+     C           ETYP      CASEQ'91P2'    P01
+     C           ETYP      CASEQ'91P3'    P02
+     C           ETYP      CASEQ'91P4'    P02
+     C           ETYP      CASEQ'91P5'    P03
+     C           ETYP      CASEQ'91P6'    P03
+     C           ETYP      CASEQ'91P8'    P01
+     C           ETYP      CASEQ'91P9'    P01
+     C                     CAS            *PSSR
+     C                     END
+      *
+      * SUB-ROUTINE TO DETERMINE THE FIELD CONTENING THE CREDIT OR
+      * DEBIT PARTY & THE TYPE OF ACCOUNT
+      *
+     C                     EXSR P04
+      *
+      * FORMAT & OUTPUT EVENT RECORD
+      *
+     C                     EXSR P05
+      *
+     C                     END                             - E2
+      *
+     C                     READ PMFTEVJ0                 89
+     C***********          Z-ADDCNUM      WWPNUM                          S01486
+     C                     MOVELCUNR      WWPNUM                          S01486
+      *
+     C                     END                             - E1
+      *
+      * PRINT AUDIT REPORT
+      *
+     C                     EXSR W02
+      *
+     C                     SETON                     LR
+     C*
+     C                     RETRN
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * INIT     - INITIAL PROCESSING                                          *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWCTLD   - CONTROL DATE (=RUND + 365)                                  *
+      * WWSPOT   - SPOT RATE BASE                                              *
+      * WWMDIN   - MULTIPLY/DIVIDE INDICATOR BASE                              *
+      * WWCDP    - DECIMAL PLACE BASE                                          *
+      * WWCNUM   - CUSTOMER NUMBER (6N)                                        *
+      * WWPTFR   - PORTFOLIO MANAGEMENT REFERENCE                              *
+      * WWPREF   - PAYMENT REFERENCE                                           *
+      * WWCQSQ   - CHEQUE SEQUENCE                                             *
+      *                                                                        *
+      **************************************************************************
+     C           INIT      BEGSR                           **INIT BEGSR**
+      *
+      *  SETUP DATA BASE ERROR FIELDS
+      *
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE *BLANKS   DBLOT
+     C                     MOVE 'PM1450  'DBPGM
+     C                     OUT  LDA                                       S01486
+     C*                                                                   B08268
+     C** DEFINE DATA AREA PMSTAT                                          B08268
+     C           *NAMVAR   DEFN           PMSTAT                          B08268
+     C                     IN   PMSTAT                                    B08268
+     C*                                                                   CPB001
+     C**   Access module details                                          CPB001
+     C                     CALL 'AOMMODR0'                                CPB001
+     C                     PARM *BLANKS   @RTCD   7                       CPB001
+     C                     PARM '*FIRST ' @OPTN   7                       CPB001
+     C           SDMMOD    PARM SDMMOD    DSFDY                           CPB001
+      *
+     C***READ*ICD1*FROM*LF/SDBANKL1***************************************S01486
+     C** ACCESS BANK ICD DETAILS                                          S01486
+      *
+     C***********          READ SDBANKL1                 71               S01486
+     C************IN71     IFEQ '1'                        - B1           S01486
+     C***********          Z-ADD01        DBASE            ***************S01486
+     C***********          MOVE 'SDBANKL1'DBFILE           **DB ERROR 01**S01486
+     C***********          EXSR *PSSR                      ***************S01486
+     C***********          END                             - E1           S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '*DBERR'  RTCD    7                       S01486
+     C                     PARM '*FIRST'  OPTN    7                       S01486
+     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+      *
+      *  CALCULATE CONTROL DATE TO CHECK EVENT
+      *
+     C****       BJRDNB    ADD  365       WWCTLD                          B08268
+     C           WWECD     ADD  365       WWCTLD                          B08268
+     C           BJDFIN    IFEQ 'M'                        - B1
+     C                     MOVE '1'       *IN98
+     C                     END                             - E1
+     C*                                                                   B08268
+     C** READ THROUGH SDCURRL0 SETTING UP ARRAY OF CURRENCIES             B08268
+     C***********          READ SDCURRL0                 72         B08268S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*FIRST'  OPTN                            S01486
+     C                     PARM *BLANKS   KEYCY   3                       S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C                     Z-ADD1         B       30                      B08268
+     C************IN72     DOWEQ'0'                                 B08268S01486
+     C           RTCD      DOWEQ*BLANKS                                   S01486
+     C                     MOVE A6CYCD    CYCD,B                          B08268
+     C                     Z-ADDA6SPRT    SPRT,B                          B08268
+     C                     MOVE A6MDIN    MDNA,B                          B08268
+     C                     Z-ADDA6NBDP    NBDP,B                          B08268
+     C                     ADD  1         B                               B08268
+     C***********          READ SDCURRL0                 72         B08268S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*NEXT'   OPTN                            S01486
+     C                     PARM *BLANKS   KEYCY                           S01486
+     C           SDCURR    PARM SDCURR    DSSDY                           S01486
+     C                     END                                            B08268
+      ****                                                                B08268
+      ****EAD LF/SDCURRL0 TO GET FX EXCHANGE RATE INFORMATION             B08268
+      ****                                                                B08268
+     C****       BJCYCD    CHAINSDCURRL0             72                   B08268
+     C****       *IN72     IFEQ '1'                        - B1           B08268
+     C****                 Z-ADD02        DBASE            ***************B08268
+     C****                 MOVEL'SDCURRL0'DBFILE           **DB ERROR 02**B08268
+     C****                 MOVELBJCYCD    DBKEY            ***************B08268
+     C****                 EXSR *PSSR                                     B08268
+     C****                 END                             - E1           B08268
+      ****                                                                B08268
+      ****AVE FX EXCHANGE RATE INFORMATION FOR BASE CURRENCY              B08268
+      ****                                                                B08268
+     C****                 Z-ADDA6SPRT    WWSPOT                          B08268
+     C****                 MOVE A6MDIN    WWMDIN                          B08268
+     C****                 Z-ADDA6NBDP    WWCDP                           B08268
+      *                                                                   B08268
+      *  READ LF/SDCURRL0 TO GET FX EXCHANGE RATE INFORMATION             B08268
+      *                                                                   B08268
+     C                     Z-ADD1         B                               B08268
+     C           BJCYCD    LOKUPCYCD,B                   72               B08268
+     C** ERROR                                                            B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD2         DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELBJCYCD    DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08268
+     C                     Z-ADDSPRT,B    A6SPRT                          B08268
+     C                     MOVE MDNA,B    A6MDIN                          B08268
+     C                     Z-ADDNBDP,B    A6NBDP                          B08268
+     C                     Z-ADDA6SPRT    WWSPOT                          B08268
+     C                     MOVE A6MDIN    WWMDIN                          B08268
+     C                     Z-ADDA6NBDP    WWCDP                           B08268
+     C                     END                                            B08268
+      *
+      ** Access SAR details file to see if CFT004 is installed.           CFT004
+      *                                                                   CFT004
+     C                     CALL 'AOSARDR0'                                CFT004
+     C                     PARM *BLANKS   P@RTCD  7                       CFT004
+     C                     PARM '*VERIFY' P@OPTN  7                       CFT004
+     C                     PARM 'CFT004'  @SARD   6                       CFT004
+     C           SCSARD    PARM *BLANKS   DSFDY                           CFT004
+      *                                                                   CFT004
+      ** Allow IBAN processing                                            CFT004
+      *                                                                   CFT004
+     C           P@RTCD    IFEQ *BLANKS                                   CFT004
+     C                     MOVEL'Y'       CFT004  1                       CFT004
+     C                     END                                            CFT004
+      *                                                                   056031
+      *  INITIALIZE THE COUNTER FIELD FOR AUDIT PRINT
+      *
+     C                     Z-ADD*ZEROS    RRCNT
+     C                     Z-ADD*ZEROS    RRNORE                          CPM005
+     C                     MOVE *LOVAL    WWCNUM
+     C                     MOVE *LOVAL    WWPTFR
+     C                     MOVE *LOVAL    WWPREF
+     C                     Z-ADD*ZEROS    WWCQSQ
+     C/COPY WNCPYSRC,PM1450C001
+      *
+     C                     ENDSR                           **INIT ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P01      - PROCESS 91P1, 91P2, 91P8 & 91P9 EVENTS                      *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      * MAIN     - MAIN PROCESSING                                             *
+      * MAIN     - MAIN PROCESSING                                             *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPREF   - PAYMENT REFERENCE                                           *
+      * WWCHRG   - CHARGE INDICATOR                                            *
+      *                                                                        *
+      **************************************************************************
+     C           P01       BEGSR                           **P01 BEGSR**
+      *
+      *  CHECK IF PAYMENT REFERENCE HAS CHANGED
+      *
+     C           PREF      IFNE WWPREF                     - B1
+      *
+      * RESET INDICATOR
+      *
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN02
+     C                     MOVE '0'       *IN03
+     C                     MOVE '0'       *IN04
+     C                     MOVE '0'       *IN05
+     C                     MOVE '0'       *IN06
+      *
+     C***********PREF      CHAINPMIOPMT              73                   S01486
+     C           PREF      CHAINPMIOPML0             73                   S01486
+     C           *IN73     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD03        DBASE            ***************
+     C***********          MOVEL'PMIOPMT 'DBFILE           **DB ERROR 03**S01486
+     C                     MOVEL'PMIOPML0'DBFILE           **DB ERROR 03**S01486
+     C                     MOVELPREF      DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     MOVE PREF      WWPREF
+      *
+     C                     END                             - E1
+      *
+      * EVENT TYPE '91P1', '91P2' OR '91P8'
+      *
+     C           ETYP      IFEQ '91P1'                     - B1
+     C           *IN02     ANDEQ'1'
+     C           EAMT      ANDNEPYAM
+     C           ETYP      OREQ '91P2'
+     C           *IN01     ANDEQ'1'
+     C           EAMT      ANDNESMAM
+     C           ETYP      OREQ '91P8'
+     C           *IN01     ANDEQ'1'
+     C           EAMT      ANDNESMAM
+     C                     MOVE 'Y'       WWCHRG
+     C                     ELSE                            - X1
+     C                     MOVE 'N'       WWCHRG
+     C                     END                             - E1
+      *
+     C                     MOVE 'N'       WWCHRG                          EMFIX
+     C                     ENDSR                           **P01 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P02      - PROCESS 91P3 & 91P4                                         *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPREF   - PAYMENT REFERENCE                                           *
+      * WWCQSQ   - CHEQUE SEQUENCE                                             *
+      * WWCHRG   - CHARGE INDICATOR                                            *
+      *                                                                        *
+      **************************************************************************
+     C           P02       BEGSR                           **P02 BEGSR**
+      *
+      *  CHECK IF PAYMENT REFERENCE HAS CHANGED
+      *
+     C           PREF      IFNE WWPREF                     - B1
+     C           CQSQ      ORNE WWCQSQ
+      *
+      * RESET INDICATOR
+      *
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN02
+     C                     MOVE '0'       *IN03
+     C                     MOVE '0'       *IN04
+     C                     MOVE '0'       *IN05
+     C                     MOVE '0'       *IN06
+      *
+     C***********CLIST     CHAINPMCQC                74                   S01486
+     C           CLIST     CHAINPMCQCOL0             74                   S01486
+     C           *IN74     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD04        DBASE            ***************
+     C***********          MOVEL'PMCQC   'DBFILE           **DB ERROR 04**S01486
+     C                     MOVEL'PMCQCOL0'DBFILE           **DB ERROR 04**S01486
+     C                     MOVELCKEY      DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     MOVE PREF      WWPREF
+     C                     MOVE CQSQ      WWCQSQ
+      *
+     C                     END                             - E1
+      *
+      * EVENT TYPE '91P3'
+      *
+     C           ETYP      IFEQ '91P3'                     - B1
+     C           *IN03     ANDEQ'1'
+     C           EAMT      ANDNECQAM
+     C                     MOVE 'Y'       WWCHRG
+     C                     ELSE                            - X1
+     C                     MOVE 'N'       WWCHRG
+     C                     END                             - E1
+      *
+     C                     MOVE 'N'       WWCHRG                          EMFIX
+     C                     ENDSR                           **P02 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P03      - PROCESS 91P5 & 91P6                                         *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWPREF   - PAYMENT REFERENCE                                           *
+      * WWCQSQ   - CHEQUE SEQUENCE                                             *
+      * WWCHRG   - CHARGE INDICATOR                                            *
+      *                                                                        *
+      **************************************************************************
+     C           P03       BEGSR                           **P03 BEGSR**
+      *
+      *  CHECK IF PAYMENT REFERENCE HAS CHANGED
+      *
+     C           PREF      IFNE WWPREF                     - B1
+     C           CQSQ      ORNE WWCQSQ
+      *
+      * RESET INDICATOR
+      *
+     C                     MOVE '0'       *IN01
+     C                     MOVE '0'       *IN02
+     C                     MOVE '0'       *IN03
+     C                     MOVE '0'       *IN04
+     C                     MOVE '0'       *IN05
+     C                     MOVE '0'       *IN06
+      *
+     C***********CLIST     CHAINPMCQP                75                   S01486
+     C           CLIST     CHAINPMCQPAL0             75                   S01486
+     C           *IN75     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD05        DBASE            ***************
+     C***********          MOVEL'PMCQP   'DBFILE           **DB ERROR 05**S01486
+     C                     MOVEL'PMCQPAL0'DBFILE           **DB ERROR 05**S01486
+     C                     MOVELCKEY      DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     MOVE PREF      WWPREF
+     C                     MOVE CQSQ      WWCQSQ
+      *
+     C                     END                             - E1
+      *
+      * EVENT TYPE '91P5'
+      *
+     C           ETYP      IFEQ '91P5'                     - B1
+     C           *IN04     ANDEQ'1'
+     C           EAMT      ANDNECQAM
+     C                     MOVE 'Y'       WWCHRG
+     C                     ELSE                            - X1
+     C                     MOVE 'N'       WWCHRG
+     C                     END                             - E1
+      *
+     C                     MOVE 'N'       WWCHRG                          EMFIX
+     C                     ENDSR                           **P03 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P04      - ESTABLISH CUSTOMER FOR CASHFLOW EVENT                       *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWATYP   - ACCOUNT TYPE                                                *
+      * WWACCD   - ACCOUNT DETAILS                                             *
+      * WWCHRG   - CHARGE INDICATOR                                            *
+      *                                                                        *
+      **************************************************************************
+     C           P04       BEGSR                           **P04 BEGSR**
+      *
+      * INITIALIZE SAVED FIELDS
+      *
+     C                     MOVE *BLANKS   WWATYP
+     C                     MOVE *BLANKS   WWACCD
+     C                     MOVE *BLANKS   WWIBAN                          CFT004
+      *
+      * PROCESS OTPAYDDF RECORD
+      *
+     C           *IN01     IFEQ '1'                        - B1
+     C/COPY WNCPYSRC,PM1450C002
+      *
+      * PROCESS EVENT TYPE '91P1' & '91P9' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P1'                     - B2
+     C           ETYP      OREQ '91P9'
+     C                     MOVE 'R'       Q9AMTR
+     C           DSTT      IFEQ 'R'                        - B3
+     C           DSTT      OREQ 'F'
+     C           DSTT      OREQ 'G'
+     C                     MOVE DSTT      WWATYP
+     C                     MOVELDST1      WWACCD
+     C                     ELSE                            - X3
+     C                     MOVE SNCT      WWATYP
+     C                     MOVELSNCO      WWACCD
+     C                     END                             - E3
+     C/COPY WNCPYSRC,PM1450C003
+     C                     END                             - E2
+      *
+      * PROCESS EVENT TYPE '91P2' & '91P8' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P2'                     - B2
+     C           ETYP      OREQ '91P8'
+     C           WWCHRG    IFEQ 'N'                        - B3
+     C                     MOVE 'P'       Q9AMTR
+     C           ORCT      IFEQ 'R'                        - B4
+     C           ORCT      OREQ 'P'
+     C                     MOVE ORCT      WWATYP
+     C                     MOVELORC1      WWACCD
+     C                     ELSE                            - X4
+     C                     MOVE ORBT      WWATYP
+     C                     MOVELORBK      WWACCD
+     C                     END                             - E4
+      *                                                                                       CFT032
+     C           1         SUBSTORC1:1    SLSH    1                                           CFT032
+     C           SLSH      IFEQ '/'                                                           CFT032
+     C                     MOVEL*BLANKS   WWACCD                                              CFT032
+     C           34        SUBSTORC1:2    WWACCD                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C           ORCT      IFEQ 'I'                                                           CFT032
+     C           SLSH      IFNE '/'                                                           CFT032
+     C           '/'       CAT  ORC1      WWIBAN                                              CFT032
+     C                     ELSE                                                               CFT032
+     C                     MOVE ORC1      WWIBAN                                              CFT032
+     C                     ENDIF                                                              CFT032
+     C                     ENDIF                                                              CFT032
+      *                                                                                       CFT032
+     C/COPY WNCPYSRC,PM1450C004
+     C                     ELSE                            - X3
+     C                     MOVE 'C'       Q9AMTR
+     C                     MOVE CDRT      WWATYP
+     C                     MOVELCDRO      WWACCD
+     C                     END                             - E3
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      * PROCESS INPAYDDF RECORD
+      *
+     C           *IN02     IFEQ '1'                        - B1
+     C/COPY WNCPYSRC,PM1450C005
+      *
+      * PROCESS EVENT TYPE '91P1' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P1'                     - B2
+     C           WWCHRG    IFEQ 'N'                        - B3
+     C                     MOVE 'R'       Q9AMTR
+     C           BNCT      IFEQ 'R'                        - B4
+     C           BNCT      OREQ 'P'
+     C                     MOVE BNCT      WWATYP
+     C                     MOVELBNC1      WWACCD
+     C                     ELSE                            - X4
+     C           BNCT      IFEQ 'I'                        - B5           CFT004
+     C                     MOVE BNCT      WWATYP                          CFT004
+     C                     MOVELBNC1      WWIBAN 35                       CFT004
+     C                     ELSE                            - X5           CFT004
+     C                     MOVE ACBT      WWATYP
+     C                     MOVELACBK      WWACCD
+      *                                                                                       247399
+      ** If Multi-branching indicator is not 'Y', use the Single Branch                       247399
+      ** Code otherwise move the Account with Bank Branch.                                    247399
+      *                                                                                       247399
+     C                     MOVE *BLANKS   WWDABR                                              247399
+     C           BGMBIN    IFNE 'Y'                                                           247399
+     C                     MOVE BJSBRC    WWDABR                                              247399
+     C                     ELSE                                                               247399
+     C                     MOVE ACBB      WWDABR                                              247399
+     C                     ENDIF                                                              247399
+      *                                                                                       247399
+     C                     END                             - E5           CFT004
+     C                     END                             - E4
+     C                     ELSE                            - X3
+     C                     MOVE 'C'       Q9AMTR
+     C                     MOVE CDRT      WWATYP
+     C                     MOVELCDRO      WWACCD
+     C                     END                             - E3
+     C                     END                             - E2
+      *
+      * PROCESS EVENT TYPE '91P2' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P2'                     - B2
+     C                     MOVE 'P'       Q9AMTR
+     C           SNTP      IFEQ 'R'                        - B3
+     C           SNTP      OREQ 'G'
+     C           SNTP      OREQ 'F'
+     C                     MOVE SNTP      WWATYP
+     C                     MOVELSND1      WWACCD
+     C                     ELSE                            - X3
+     C                     MOVE RCRT      WWATYP
+     C                     MOVELRCCO      WWACCD
+     C                     END                             - E3
+     C/COPY WNCPYSRC,PM1450C006
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      * PROCESS CQCOCDDF RECORD
+      *
+     C           *IN03     IFEQ '1'                        - B1
+      *
+      * PROCESS EVENT TYPE '91P4' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P4'                     - B2
+     C                     MOVE 'R'       Q9AMTR
+     C                     MOVE CRPT      WWATYP
+     C                     MOVELCRPY      WWACCD
+     C                     END                             - E2
+      *
+      * PROCESS EVENT TYPE '91P3' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P3'                     - B2
+     C                     MOVE 'C'       Q9AMTR
+     C                     MOVE CDRT      WWATYP
+     C                     MOVELCDRO      WWACCD
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      * PROCESS CQPADDDF RECORD
+      *
+     C           *IN04     IFEQ '1'                        - B1
+      *
+      * PROCESS EVENT TYPE '91P6' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P6'                     - B2
+     C                     MOVE 'P'       Q9AMTR
+     C                     MOVE DRPT      WWATYP
+     C                     MOVELDRPY      WWACCD
+     C                     END                             - E2
+      *
+      * PROCESS EVENT TYPE '91P5' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P5'                     - B2
+     C                     MOVE 'C'       Q9AMTR
+     C                     MOVE CDRT      WWATYP
+     C                     MOVELCDRO      WWACCD
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      * PROCESS CQCODDDF RECORD
+      *
+     C           *IN05     IFEQ '1'                        - B1
+      *
+      * PROCESS EVENT TYPE '91P3' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P3'                     - B2
+     C                     MOVE 'P'       Q9AMTR
+     C           COBT      IFEQ 'R'                        - B3
+     C           COBT      OREQ 'F'
+     C           COBT      OREQ 'G'
+     C                     MOVE COBT      WWATYP
+     C                     MOVELCOB1      WWACCD
+     C                     ELSE                            - X3
+     C                     MOVE RCRT      WWATYP
+     C                     MOVELRCCO      WWACCD
+     C                     END                             - E3
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      * PROCESS CQPACDDF RECORD
+      *
+     C           *IN06     IFEQ '1'                        - B1
+      *
+      * PROCESS EVENT TYPE '91P5' FOR THIS RECORD
+      *
+     C           ETYP      IFEQ '91P5'                     - B2
+     C                     MOVE 'R'       Q9AMTR
+     C           RBKT      IFEQ 'R'                        - B3
+     C           RBKT      OREQ 'F'
+     C           RBKT      OREQ 'G'
+     C                     MOVE RBKT      WWATYP
+     C                     MOVELRBK1      WWACCD
+     C                     ELSE                            - X3
+     C                     MOVE SNCT      WWATYP
+     C                     MOVELSNCO      WWACCD
+     C                     END                             - E3
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      * CHECK IF CUSTOMER/ACCOUNT ARE FILLED ELSE DATA BASE ERROR
+      *
+     C           WWATYP    IFEQ *BLANKS                    - B1
+     C           WWACCD    OREQ *BLANKS
+     C           WWIBAN    ANDEQ*BLANKS                                   CFT004
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD06        DBASE            ***************
+     C                     MOVEL'PMFTEVJ0'DBFILE           **DB ERROR 06**
+     C                     MOVELETYP      DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     ENDSR                           **P04 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * P05      - FORMAT & OUTPUT EVENT RECORD                                *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      * W01      - WRITE PROTFOLIO CASHFLOW EVENTS DETAIL                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWATYP   - ACCOUNT TYPE                                                *
+      * WWACNO   - RETAIL NUMBER                                               *
+      * WWPTFR   - PORTFOLIO MANAGEMENT REFERENCE                              *
+      * WWDA     - FILL AKEY (PARTIAL ACCOUNT: CNUM, ACOD, ACSQ)               *
+      * WWCNUM   - CUSTOMER NUMBER (6N)                                        *
+      * WWACOD   - ACCOUNT CODE                                                *
+      * WWACSQ   - ACCOUNT SEQUENCE                                            *
+      * WWCCY    - CURRENCY                                                    *
+      * WWACCD   - ACCOUNT DETAILS                                             *
+      * WWBRCA   - BRANCH                                             *   S01486
+      *                                                                        *
+      **************************************************************************
+     C           P05       BEGSR                           **P05 BEGSR**
+      *
+      * CUSTOMER TYPE RETAIL ACCOUNT (10N)
+      *
+     C           WWATYP    IFEQ 'R'                        - B1
+      *
+     C                     MOVELWWACCD    WWACNO
+      *
+     C           WWACNO    CHAINACNUM                76
+     C           *IN76     IFEQ '0'                        - B2
+     C                     Z-ADDACOD      WWACOD                          046165
+      *
+     C                     Z-ADDACSQ      WWACSQ                          146605
+     C                     MOVELBRCA      WWBRCA                          146605
+     C**********           Z-ADDCNUM      WWCNUM                                       143152 CSD027
+     C                     MOVE CNUM      WWCNUM                                              CSD027
+      *
+     C           PTFR      IFNE *BLANKS
+     C                     MOVE PTFR      WWPTFR
+     C                     ELSE                            - X2
+     C                     MOVE '9997'    WWPTFR
+     C                     END                             - E2
+     C                     ELSE
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD15        DBASE            ***************
+     C                     MOVEL'ACCNTAB 'DBFILE           **DB ERROR 15**
+     C                     MOVELWWACNO    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     END                             - E1
+      *
+     C           WWATYP    IFEQ 'P'                        - B1
+     C           WWATYP    OREQ 'G'
+      *
+      * CUSTOMER TYPE PARTIAL ACCOUNT (CNUM, ACOD, ACSQ)
+      *
+     C           WWATYP    IFEQ 'P'                        - B2
+     C                     MOVELWWACCD    WWDA
+     C                     MOVE WWDAUM    WWCNUM
+     C                     MOVE WWDAOD    WWACOD
+     C                     MOVE WWDASQ    WWACSQ
+     C                     MOVE ECCY      WWCCY
+     C*********************MOVE BRCA      WWBRCA                    S01486169122
+     C                     MOVE WWDABR    WWBRCA                          169122
+     C                     END                             - E2
+      *
+      * CUSTOMER TYPE FULL MIDAS ACCOUNT (CNUM, CCY, ACOD, ACSQ)
+      *
+     C           WWATYP    IFEQ 'G'                        - B2
+     C                     MOVELWWACCD    AKEY
+     C                     END                             - E2
+      *
+     C           ALIST     CHAINACCNT                77
+     C           *IN77     IFEQ '0'                        - B2
+     C           PTFR      IFNE *BLANKS
+     C                     MOVE PTFR      WWPTFR
+     C                     ELSE                            - X2
+     C                     MOVE '9997'    WWPTFR
+     C                     END                             - E2
+     C                     ELSE                            - X2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD16        DBASE            ***************
+     C                     MOVEL'ACCNTAB 'DBFILE           **DB ERROR 16**
+     C                     MOVELWWACCD    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+      *
+     C                     END                             - E1
+      *
+      * CUSTOMER TYPE A NOSTRO
+      *
+     C           WWATYP    IFEQ 'F'
+     C           WWATYP    OREQ 'N'
+     C* FULL NOSTRO
+     C           WWATYP    IFEQ 'F'
+     C                     MOVELWWACCD    NOSWRK  5
+     C***********          MOVE NOSWRK    NOSKEY 12                       S01486
+     C                     MOVELNOSWRK    KEYCY                           S01486
+     C                     MOVE NOSWRK    KEYNS                           S01486
+     C                     ELSE
+     C***********          MOVELECCY      NOSWRK                          S01486
+     C***********          MOVELWWACCD    NOSWKA  2                       S01486
+     C***********          MOVE NOSWKA    NOSWRK                          S01486
+     C***********          MOVE NOSWRK    NOSKEY                          S01486
+     C                     MOVELECCY      KEYCY                           S01486
+     C                     MOVELWWACCD    KEYNS                           S01486
+     C                     END
+     C*
+     C***********          MOVEL'70'      NOSKEY                          S01486
+     C***********NOSKEY    CHAINTABLETLF             89                   S01486
+     C                     CALL 'AONOSTR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM *BLANKS   KEYCU   6                       S01486
+     C                     PARM           KEYCY   3                       S01486
+     C**********           PARM *BLANKS   KEYAC   4                                    S01486 CGL029
+     C                     PARM *BLANKS   KEYAC  10                                           CGL029
+     C                     PARM *BLANKS   KEYAS   2                       S01486
+     C                     PARM           KEYNS   2                       S01486
+     C                     PARM *BLANKS   KEYBR   3                       S01486
+     C                     PARM *BLANKS   KEYCS  10                       S01486
+     C                     PARM *BLANKS   KEYPN   1                       S01486
+     C           SDNOST    PARM SDNOST    DSFDY                           S01486
+     C************IN89     IFEQ '1'                                       S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD17        DBASE            ************
+     C***********          MOVEL'TABLETL' DBFILE           *DB ERR 17 *   S01486
+     C***********          MOVELNOSKEY    DBKEY            ************   S01486
+     C                     MOVEL'SDNOSTPD'DBFILE           *DB ERR 17 *   S01486
+     C                     MOVELKEYCY     DBKEY            ************   S01486
+     C                     MOVE KEYNS     DBKEY                           S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     ELSE
+     C***********          MOVE CNUM      WWCNUM                          S01486
+     C***********          MOVE NOSKEY    WWCCY1  5                       S01486
+     C***********          MOVELWWCCY1    WWCCY                           S01486
+     C***********          MOVE ACOD      WWACOD                          S01486
+     C***********          MOVE ACSQ      WWACSQ                          S01486
+     C                     MOVE A7CUST    WWCNUM                          S01486
+     C                     MOVELKEYCY     WWCCY                           S01486
+     C                     MOVE A7ACCD    WWACOD                          S01486
+     C                     MOVE A7ACSN    WWACSQ                          S01486
+     C                     MOVE A7BRCD    WWBRCA                          S01486
+     C                     END
+     C           ALIST     CHAINACCNT                77
+     C           *IN77     IFEQ '0'                        - B2
+     C           PTFR      IFNE *BLANKS
+     C                     MOVE PTFR      WWPTFR
+     C                     ELSE                            - X2
+     C                     MOVE '9997'    WWPTFR
+     C                     END                             - E2
+     C                     ELSE                            - X2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD18        DBASE            ***************
+     C                     MOVEL'ACCNTAB 'DBFILE           **DB ERROR 18**
+     C***********          MOVELNOSWRK    DBKEY            ***************S01486
+     C                     MOVELAKEY      DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C                     END
+      *                                                                   CFT004
+      * IBAN NUMBER                                                       CFT004
+      *                                                                   CFT004
+     C           WWATYP    IFEQ 'I'                        - B1           CFT004
+     C           CFT004    ANDEQ'Y'                                       CFT004
+      *                                                                   CFT004
+     C           34        SUBSTWWIBAN:2  P@IBAN 34                       CFT004
+      *                                                                   CFT004
+     C                     MOVE *BLANKS   DSSDY                           CFT004
+     C                     CALL 'AOIBANR2'                                CFT004
+     C                     PARM           P@RTCD                          CFT004
+     C                     PARM           P@IBAN 34                       CFT004
+     C           P@ACCN    PARM           DSSDY                           CFT004
+      *                                                                   CFT004
+     C           P@RTCD    IFEQ *BLANKS                    - B2           CFT004
+     C                     Z-ADDACOD      WWACOD                          CFT004
+      *                                                                   CFT004
+     C**********           Z-ADDCNUM      WWCNUM                                       CFT004 CSD027
+     C                     MOVE CNUM      WWCNUM                                              CSD027
+      *                                                                   CFT004
+     C           PTFR      IFNE *BLANKS                    - B3           CFT004
+     C                     MOVE PTFR      WWPTFR                          CFT004
+     C                     ELSE                            - X3           CFT004
+     C                     MOVE '9997'    WWPTFR                          CFT004
+     C                     END                             - E3           CFT004
+     C                     ELSE                            - X2           CFT004
+     C           *LOCK     IN   LDA                                       CFT004
+     C                     Z-ADD19        DBASE            ***************CFT004
+     C                     MOVEL'ACCNTAB 'DBFILE           **DB ERROR 19**CFT004
+     C                     MOVELWWIBAN    DBKEY            ***************CFT004
+     C                     OUT  LDA                                       CFT004
+     C                     EXSR *PSSR                                     CFT004
+     C                     END                             - E2           CFT004
+      *                                                                   CFT004
+     C                     END                             - E1           CFT004
+      * GET PORTFOLIO DETAILS
+      *
+     C           WWPTFR    IFNE '9997'                     - B1
+     C***********PLIST     CHAINPMPORTPP             78                   S01486
+     C           PLIST     CHAINPMPORTPD             78                   S01486
+     C           *IN78     IFEQ '1'                        - B2
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD07        DBASE            ***************
+     C***********          MOVEL'PMPORTPP'DBFILE           **DB ERROR 07**S01486
+     C                     MOVEL'PMPORTPD'DBFILE           **DB ERROR 07**S01486
+     C                     MOVE WWCNUM    WWPNP8                          146605
+     C                     MOVELPKEY      DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+      * WRITE PORTFOLIO CASHFLOW EVENTS DETAILS
+      *
+     C                     EXSR W01
+      *
+     C                     ADD  1         RRCNT
+      *
+     C                     ENDSR                           **P05 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * W01      - WRITE PROTFOLIO CASHFLOW EVENTS DETAIL                      *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      * ZFFTLN   - FORMAT THE 20A PORTFOLIO MANAGEMENT FOR FT                  *
+      * ZCCYCN   - CONVERT AN AMOUNT IN ONE CCY TO ANOTHER SPOT RATES          *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * P05      - FORMAT & OUTPUT EVENT RECORD                                *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      * WWAENB   - CUSTOMER NUMBER (6A)                                        *
+      * WWPNUM   - CUSTOMER NUMBER OF EVENT INPUT                              *
+      * WWPTFR   - PORTFOLIO MANAGEMENT REFERENCE                              *
+      * WWKCOD   - ACCOUNT CODE KEY (4A)                                       *
+      * WWACOD   - ACCOUNT CODE                                                *
+      * WWCCY    - CURRENCY                                                    *
+      * WWSPOT   - SPOT RATE BASE                                              *
+      * WWMDIN   - MULTIPLY/DIVIDE INDICATOR BASE                              *
+      * WWCDP    - DECIMAL PLACE BASE                                          *
+      *                                                                        *
+      **************************************************************************
+     C           W01       BEGSR                           **W01 BEGSR**
+      *
+     C                     MOVE 'D'       Q9RECI
+     C***********          MOVE WWPNUM    WWCUST                          S01486
+     C***********WWCUST    CHAINSDPLCSL0             79                   S01486
+     C                     MOVELWWPNUM    KEYCN                           S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM           KEYCN  10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSFDY                           S01486
+     C************IN79     IFEQ '1'                        - B1           S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C           BGN4ST    ANDNE'Y'                                       CPB001
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD08        DBASE            ***************
+     C                     MOVEL'SDPLCSL0'DBFILE           **DB ERROR 08**
+     C                     MOVELWWPNUM    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E3
+     C*****                CALL 'AOCUSTR0'                          S01486CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C                     PARM           KEYCN  10                       S01486
+     C                     PARM *BLANKS   KEYST   7                       S01486
+     C*****      SDCUST    PARM SDCUST    DSSDY                     S01486CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD08        DBASE            ***************S01486
+     C                     MOVEL'SDCUSTL0'DBFILE           **DB ERROR 08**S01486
+     C                     MOVELWWPNUM    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                             - E3           S01486
+     C*                                                                   CPB001
+     C           BBPRBA    IFEQ 'Y'                                       CPB001
+     C           PLIST     CHAINPMPORTPD             78                   CPB001
+     C           *IN78     IFEQ '1'                                       CPB001
+     C           *LOCK     IN   LDA                                       CPB001
+     C                     Z-ADD19        DBASE            ***************CPB001
+     C                     MOVEL'PMPORTPD'DBFILE           **DB ERROR 19**CPB001
+     C                     MOVE WWCNUM    WWPNP8           ***************CPB001
+     C                     MOVELPKEY      DBKEY                           CPB001
+     C                     OUT  LDA                                       CPB001
+     C                     EXSR *PSSR                                     CPB001
+     C                     ELSE                                           CPB001
+     C                     MOVELPNPTCY    QBCSBY                          CPB001
+     C                     Z-ADDPNPCDP    QBBYDP                          CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+      *
+     C                     MOVE BBACOC    Q9ACOC
+     C***********          Z-ADDWWPNUM    Q9CNUM                          S01486
+     C                     MOVELWWPNUM    Q9CNUM                          S01486
+     C                     MOVE WWPTFR    Q9PTFR
+      *
+     C                     MOVE *BLANKS   Q9TTRF
+     C                     MOVELPREF      Q9SEPR
+     C                     MOVE 'FT'      Q9MODI
+     C                     MOVE QBCSBY    Q9CSBY
+     C                     Z-ADDQBBYDP    Q9BYDP
+     C           WWPTFR    IFEQ '9997'                     - B1
+     C                     MOVE QBCSBY    Q9PTCY
+     C                     Z-ADDQBBYDP    Q9PCDP
+     C                     ELSE                            - X1
+     C                     MOVE PNPTCY    Q9PTCY
+     C                     Z-ADDPNPCDP    Q9PCDP
+     C                     END                             - E1
+     C***********          MOVE WWACOD    WWKCOD                          S01486
+     C***********WWKCOD    CHAINSDACODL0             80                   S01486
+     C                     MOVE WWACOD    KEYAC                           S01486
+     C                     CALL 'AOACODR0'                                S01486
+     C                     PARM *BLANKS   RTCD                            S01486
+     C                     PARM '*KEY'    OPTN                            S01486
+     C**********           PARM           KEYAC   4                                    S01486 CGL029
+     C                     PARM           KEYAC                                               CGL029
+     C********** SDACOD    PARM SDACOD    DSFDY                                        S01486 CGL029
+     C           SDACOD    PARM SDACOD    DSSDY                                               CGL029
+     C************IN80     IFEQ '1'                        - B1           S01486
+     C           RTCD      IFNE *BLANKS                                   S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD09        DBASE            ***************
+     C                     MOVEL'SDACODL0'DBFILE           **DB ERROR 09**
+     C                     MOVELWWACOD    DBKEY            ***************
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END                             - E1
+     C                     MOVE A5INNR    Q9INNR
+      *
+      * MIDAS INSTRUMENT TYPE DEPEND ON FT FILES
+      *
+     C           *IN01     IFEQ '1'                        - B1
+      *
+      * IN THIS CASE DEPEND ALSO ON EVENT TYPE
+      *
+     C           ETYP      IFEQ '91P8'                     - B2
+     C           ETYP      OREQ '91P9'
+     C                     MOVE ARA,3     Q9T1XT
+     C                     ELSE                            - X2
+     C                     MOVE ARA,2     Q9T1XT
+     C                     END                             - E2
+     C                     END                             - E1
+     C           *IN02     IFEQ '1'                        - B1
+     C                     MOVE ARA,1     Q9T1XT
+     C                     END                             - E1
+     C           *IN03     IFEQ '1'                        - B1
+     C           *IN05     OREQ '1'
+     C                     MOVE ARA,4     Q9T1XT
+     C                     END                             - E1
+     C           *IN04     IFEQ '1'                        - B1
+     C           *IN06     OREQ '1'
+     C                     MOVE ARA,5     Q9T1XT
+     C                     END                             - E1
+      *
+      * INSTRUMENT ENQUIRY DETAILS
+      *
+     C                     MOVE ECCY      ZCCY
+     C                     MOVE OTCY      ZSCY
+     C           EDAT      IFLT OTHD                       - B1
+     C                     Z-ADDEDAT      ZVDAT
+     C           OTHD      SUB  EDAT      ZDAYS
+     C                     ELSE                            - X1
+     C                     Z-ADDOTHD      ZVDAT
+     C           EDAT      SUB  OTHD      ZDAYS
+     C                     END                             - E1
+     C                     EXSR ZFFTLN
+     C                     MOVE ZLIN      Q9T2XT
+      *
+     C                     Z-ADDEDAT      Q9EVTD
+      *
+      * EVENT NARRATIVE DEPEND ON FT FILES, EVENT TYPE & INCOMING/
+      * OUTGOING INDICATOR
+      *
+     C           *IN02     IFEQ '1'                        - B1
+     C           ETYP      IFEQ '91P1'                     - B2
+     C           Q9AMTR    IFEQ 'C'                        - B3
+     C                     MOVE ARB,2     Q9ENAR
+     C                     ELSE                            - X3
+     C                     MOVE ARB,1     Q9ENAR
+     C                     END                             - E3
+     C                     END                             - E2
+     C           ETYP      IFEQ '91P2'                     - B2
+     C                     MOVE ARB,4     Q9ENAR
+     C                     END                             - E2
+     C                     END                             - E1
+     C           *IN01     IFEQ '1'                        - B1
+     C           ETYP      IFEQ '91P1'                     - B2
+     C                     MOVE ARB,3     Q9ENAR
+     C                     END                             - E2
+     C           ETYP      IFEQ '91P2'                     - B2
+     C           Q9AMTR    IFEQ 'C'                        - B3
+     C                     MOVE ARB,6     Q9ENAR
+     C                     ELSE                            - X3
+     C                     MOVE ARB,5     Q9ENAR
+     C                     END                             - E3
+     C                     END                             - E2
+     C           ETYP      IFEQ '91P8'                     - B2
+     C           Q9AMTR    IFEQ 'C'                        - B3
+     C                     MOVE ARB,8     Q9ENAR
+     C                     ELSE                            - X3
+     C                     MOVE ARB,7     Q9ENAR
+     C                     END                             - E3
+     C                     END                             - E2
+     C           ETYP      IFEQ '91P9'                     - B2
+     C                     MOVE ARB,9     Q9ENAR
+     C                     END                             - E2
+     C                     END                             - E1
+     C           *IN05     IFEQ '1'                        - B1
+     C           ETYP      IFEQ '91P3'                     - B2
+     C                     MOVE ARB,10    Q9ENAR
+     C                     END                             - E2
+     C                     END                             - E1
+     C           *IN03     IFEQ '1'                        - B1
+     C           ETYP      IFEQ '91P3'                     - B2
+     C           Q9AMTR    IFEQ 'C'                        - B3
+     C                     MOVE ARB,12    Q9ENAR
+     C                     END                             - E3
+     C                     END                             - E2
+     C           ETYP      IFEQ '91P4'                     - B2
+     C                     MOVE ARB,11    Q9ENAR
+     C                     END                             - E2
+     C                     END                             - E1
+     C           *IN06     IFEQ '1'                        - B1
+     C           ETYP      IFEQ '91P5'                     - B2
+     C                     MOVE ARB,13    Q9ENAR
+     C                     END                             - E2
+     C                     END                             - E1
+     C           *IN04     IFEQ '1'                        - B1
+     C           ETYP      IFEQ '91P5'                     - B2
+     C           Q9AMTR    IFEQ 'C'                        - B3
+     C                     MOVE ARB,15    Q9ENAR
+     C                     END                             - E3
+     C                     END                             - E2
+     C           ETYP      IFEQ '91P6'                     - B2
+     C                     MOVE ARB,14    Q9ENAR
+     C                     END                             - E2
+     C                     END                             - E1
+      *
+     C                     MOVE ECCY      Q9ECCY
+     C                     Z-ADDEAMT      Q9ETAM
+      *
+     C           Q9AMTR    IFEQ 'C'                        - B1
+     C                     MOVE 'P'       Q9AMTR
+     C                     END                             - E1
+      ****                                                                B08268
+      ****ENT AMOUNT PORTFOLIO CURRENCY                                   B08268
+      ****                                                                B08268
+     C****       ECCY      CHAINSDCURRL0             72                   B08268
+     C****       *IN72     IFEQ '1'                        - B1           B08268
+     C****                 Z-ADD10        DBASE            ***************B08268
+     C****                 MOVEL'SDCURRL0'DBFILE           **DB ERROR 10**B08268
+     C****                 MOVELECCY      DBKEY            ***************B08268
+     C****                 EXSR *PSSR                                     B08268
+     C****                 END                             - E1           B08268
+      *                                                                   B08268
+      * EVENT AMOUNT PORTFOLIO CURRENCY                                   B08268
+      *                                                                   B08268
+     C                     Z-ADD1         B                               B08268
+     C           ECCY      LOKUPCYCD,B                   72               B08268
+     C** ERROR                                                            B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD10        DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELECCY      DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08268
+     C                     Z-ADDSPRT,B    A6SPRT                          B08268
+     C                     MOVE MDNA,B    A6MDIN                          B08268
+     C                     Z-ADDNBDP,B    A6NBDP                          B08268
+     C                     END                                            B08268
+     C*                                                                   B08268
+     C                     Z-ADDEAMT      ZAMTF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVE ECCY      ZCCYF
+     C           WWPTFR    IFEQ '9997'                     - B1
+     C                     MOVE QBCSBY    WWCCY
+     C                     ELSE                            - X1
+     C                     MOVE PNPTCY    WWCCY
+     C                     END                             - E1
+     C****       WWCCY     CHAINSDCURRL0             72                   B08268
+     C****       *IN72     IFEQ '1'                        - B1           B08268
+     C****                 Z-ADD11        DBASE            ***************B08268
+     C****                 MOVEL'SDCURRL0'DBFILE           **DB ERROR 11**B08268
+     C****                 MOVELWWCCY     DBKEY            ***************B08268
+     C****                 EXSR *PSSR                                     B08268
+     C****                 END                             - E1           B08268
+     C*                                                                   B08268
+     C                     Z-ADD1         B                               B08268
+     C           WWCCY     LOKUPCYCD,B                   72               B08268
+     C** ERROR                                                            B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD11        DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELWWCCY     DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08268
+     C                     Z-ADDSPRT,B    A6SPRT                          B08268
+     C                     MOVE MDNA,B    A6MDIN                          B08268
+     C                     Z-ADDNBDP,B    A6NBDP                          B08268
+     C                     END                                            B08268
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVE A6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     MOVE WWCCY     ZCCYT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9PTFA
+      ****                                                                B08268
+      ****ENT AMOUNT CUSTOMER CURRENCY                                    B08268
+      ****                                                                B08268
+     C****       ECCY      CHAINSDCURRL0             72                   B08268
+     C****       *IN72     IFEQ '1'                        - B1           B08268
+     C****                 Z-ADD12        DBASE            ***************B08268
+     C****                 MOVEL'SDCURRL0'DBFILE           **DB ERROR 12**B08268
+     C****                 MOVELECCY      DBKEY            ***************B08268
+     C****                 EXSR *PSSR                                     B08268
+     C****                 END                             - E1           B08268
+      *                                                                   B08268
+      * EVENT AMOUNT CUSTOMER CURRENCY                                    B08268
+      *                                                                   B08268
+     C                     Z-ADD1         B                               B08268
+     C           ECCY      LOKUPCYCD,B                   72               B08268
+     C** ERROR                                                            B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD12        DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELECCY      DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08268
+     C                     Z-ADDSPRT,B    A6SPRT                          B08268
+     C                     MOVE MDNA,B    A6MDIN                          B08268
+     C                     Z-ADDNBDP,B    A6NBDP                          B08268
+     C                     END                                            B08268
+      *                                                                   B08268
+     C                     Z-ADDEAMT      ZAMTF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVE ECCY      ZCCYF
+     C****       QBCSBY    CHAINSDCURRL0             72                   B08268
+     C****       *IN72     IFEQ '1'                        - B1           B08268
+     C****                 Z-ADD13        DBASE            ***************B08268
+     C****                 MOVEL'SDCURRL0'DBFILE           **DB ERROR 13**B08268
+     C****                 MOVELQBCSBY    DBKEY            ***************B08268
+     C****                 EXSR *PSSR                                     B08268
+     C****                 END                             - E1           B08268
+     C*                                                                   B08268
+     C                     Z-ADD1         B                               B08268
+     C           QBCSBY    LOKUPCYCD,B                   72               B08268
+     C** ERROR                                                            B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD13        DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELQBCSBY    DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08268
+     C                     Z-ADDSPRT,B    A6SPRT                          B08268
+     C                     MOVE MDNA,B    A6MDIN                          B08268
+     C                     Z-ADDNBDP,B    A6NBDP                          B08268
+     C                     END                                            B08268
+      *                                                                   B08268
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     MOVE A6MDIN    ZMDINT
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     MOVE QBCSBY    ZCCYT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9CUCA
+      ****                                                                B08268
+      ****ENT AMOUNT BASE CURRENCY                                        B08268
+      ****                                                                B08268
+     C****       ECCY      CHAINSDCURRL0             72                   B08268
+     C****       *IN72     IFEQ '1'                        - B1           B08268
+     C****                 Z-ADD14        DBASE            ***************B08268
+     C****                 MOVEL'SDCURRL0'DBFILE           **DB ERROR 14**B08268
+     C****                 MOVELECCY      DBKEY            ***************B08268
+     C****                 EXSR *PSSR                                     B08268
+     C****                 END                             - E1           B08268
+     C*                                                                   B08268
+      * EVENT AMOUNT BASE CURRENCY                                        B08268
+      *                                                                   B08268
+     C                     Z-ADD1         B                               B08268
+     C           ECCY      LOKUPCYCD,B                   72               B08268
+     C** ERROR                                                            B08268
+     C           *IN72     IFEQ '0'                        ***************B08268
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD14        DBASE            **DB ERROR 02**B08268
+     C                     MOVEL'SDCURRL0'DBFILE           ***************B08268
+     C                     MOVELECCY      DBKEY                           B08268
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     B08268
+     C                     ELSE                                           B08268
+     C                     Z-ADDSPRT,B    A6SPRT                          B08268
+     C                     MOVE MDNA,B    A6MDIN                          B08268
+     C                     Z-ADDNBDP,B    A6NBDP                          B08268
+     C                     END                                            B08268
+      *                                                                   B08268
+     C                     Z-ADDEAMT      ZAMTF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVE A6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     MOVE ECCY      ZCCYF
+     C                     MOVE BJCYCD    ZCCYT
+     C                     Z-ADDWWSPOT    ZRATET
+     C                     MOVE WWMDIN    ZMDINT
+     C                     Z-ADDWWCDP     ZCDPT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZAMTT     Q9BCYA
+      *
+     C                     WRITEPMEVNTP0
+      *                                                                   CPM005
+      **  Write on PMEVCYPD                                               CPM005
+      *                                                                   CPM005
+     C                     MOVEL'D'       FGRECI           Record Id      CPM005
+     C**********           Z-ADDQ9CNUM    FGCNUM           Cust Nbr                    CPM005 CSD027
+     C                     MOVE Q9CNUM    FGCNUM           Cust Nbr                           CSD027
+     C                     MOVELQ9PTFR    FGPTFR           Portfolio Ref  CPM005
+     C                     Z-ADDQ9EVTD    FGEVDT           Event Date     CPM005
+     C                     MOVEL*BLANKS   FGEVFX           Event Type FX  CPM005
+     C                     Z-ADD*ZEROS    FGDGRS           Group Seq      CPM005
+     C                     MOVEL*BLANKS   FGINSC           Instrument CodeCPM005
+     C                     Z-ADD*ZEROS    FGINDS           Instrument Seq CPM005
+     C                     MOVEL'CC'      FGEVTY           Event Type     CPM005
+     C                     MOVELQ9ECCY    FGCURR           Currency       CPM005
+      *                                                                   093471
+      **  Receive Event Amount                                            093471
+      *                                                                   093471
+     C           Q9AMTR    IFEQ 'R'                                       093471
+     C                     Z-ADDQ9PTFA    FGMNT1           Amount Port CcyCPM005
+     C                     Z-ADDQ9CUCA    FGMNT2           Amount Cust CcyCPM005
+      *                                                                   093471
+      **  Pay Event Amount                                                093471
+      *                                                                   093471
+     C                     ELSE                                           093471
+     C                     Z-SUBQ9PTFA    FGMNT1           Amount Port Ccy093471
+     C                     Z-SUBQ9CUCA    FGMNT2           Amount Cust Ccy093471
+     C                     END                                            093471
+      *                                                                   CPM005
+     C                     WRITEPMEVCYD0                                  CPM005
+      *                                                                   CPM005
+     C                     ADD  1         RRNORE           Nbr of records CPM005
+      *
+     C                     ENDSR                           **W01 ENDSR**
+     C**************************************************************************
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * W02      - PRODUCE AUDIT REPORT                                        *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           W02       BEGSR                           **W02 BEGSR**
+      *
+     C                     WRITEHEADAU
+     C                     WRITETOTAU
+     C***********          WRITEENDAU                                     S01486
+      *
+     C                     ENDSR                           **W02 ENDSR**
+      /EJECT
+     C********************************************************************
+     C*
+     C*  ZFFTLN SR. TO FORMAT THE 20A PORTFOLIO MANAGMENT LINE DESCRIPTION
+     C*                                 FOR FUNDS TRANSFER
+     C*
+     C*  FORMAT: AAA BBB DDMMMYY CCC
+     C*          AAA = PAY CURRENCY
+     C*          BBB = SETTLEMENT CURRENCY
+     C*          DDMMMYY = PAY VALUE DATE
+     C*          CCC = DAYS BETWEEN PAY/SETTLE DATE
+     C*
+     C*
+     C*  INPUT  FIELDS
+     C*       ZCCY    3A     PAY CURRENCY
+     C*       ZSCY    3A     SETTLEMENT CURRENCY
+     C*       ZVDAT   50     PAY VALUE DATE
+     C*       ZDAYS   30     DAYS BETWEEN PAY/SETTLE DATE
+     C*
+     C*  OUTPUT  FIELDS
+     C*       ZLIN   20A     LINE DESCRIPTION
+     C*
+     C*  ARRAY USED
+     C*       ZLI    20 ELEMENTS, EACH 1 CHARACTER LONG
+     C*
+     C**************************************************************************
+     C           ZFFTLN    BEGSR                           *** ZFFTLN ***
+     C                     MOVE ZCCY      ZCCY    3
+     C                     MOVE ZSCY      ZSCY    3
+     C                     Z-ADDZVDAT     ZVDAT   50
+     C*
+     C** CLEAR LINE DESCRIPTION .
+     C                     MOVEA*BLANKS   ZLI
+     C*
+     C** MOVE PAY CURRENCY TO LINE DESCRIPTION
+     C                     MOVEAZCCY      ZLI,01
+     C*
+     C** MOVE SETTLEMENT CURRENCY TO LINE DESCRIPTION
+     C                     MOVEAZSCY      ZLI,05
+     C*
+     C** CHANGE MIDAS DATE INTO DDMMMYY TO LINE DESCRIPTION
+     C                     Z-ADDZVDAT     ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVEAZADATE    ZLI,9
+     C*
+     C** MOVE DAYS BETWEEN PAY/SETTLE DATE TO LINE DESCRIPTION
+     C                     MOVE ZDAYS     ZWRKDN  3
+     C                     MOVEAZWRKDN    ZLI,17
+     C*
+     C** SET ALL FIELDS TO BLANKS OR ZEROS
+     C                     MOVE *BLANKS   ZCCY
+     C                     MOVE *BLANKS   ZSCY
+     C                     Z-ADD*ZEROS    ZVDAT
+     C                     Z-ADD*ZEROS    ZDAYS
+     C*
+     C**********           MOVEAZLI       ZLIN   20                                           CGL029
+     C                     MOVEAZLI       ZLIN   26                                           CGL029
+     C*
+     C                     ENDSR
+     C**************************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZDATE2Z2
+      /EJECT
+      /COPY ZSRSRC,ZCCYCN
+      ****/EJECT                                                          47719
+      ****/COPY ZSRSRC,ZCCYXR                                             47719
+      /EJECT                                                              S01486
+      /COPY ZSRSRC,ZCCYXR                                                 S01486
+      /EJECT
+      **************************************************************************
+      *                                                                        *
+      * *PSSR    - DATABASE ERROR PROCESSING                                   *
+      *                                                                        *
+      * SUBROUTINE CALLS:                                                      *
+      *                                                                        *
+      * SUBROUTINE CALLED FROM:                                                *
+      * MAIN     - MAIN PROCESSING                                             *
+      * INIT     - INITIAL PROCESSING                                          *
+      * P01      - PROCESS 91P1, 91P2, 91P8 & 91P9 EVENTS                      *
+      * P02      - PROCESS 91P3 & 91P4                                         *
+      * P03      - PROCESS 91P5 & 91P6                                         *
+      * P04      - ESTABLISH CUSTOMER FOR CASHFLOW EVENT                       *
+      * P05      - FORMAT & OUTPUT EVENT RECORD                                *
+      * W01      - WRITE PROTFOLIO CASHFLOW EVENTS DETAIL                      *
+      *                                                                        *
+      * ROUTINE USES VARIABLES:                                                *
+      *                                                                        *
+      **************************************************************************
+     C           *PSSR     BEGSR                           ** *PSRR BSR**
+     C**
+     C** ROLL BACK CHANGES , DUMP AND RETURN TO THE CALLING PROGRAM
+     C**
+     C                     SETON                     LRU7U8
+     C                     WRITEHEADAU
+     C                     WRITEERRORAU
+     C***********          WRITEENDAU                                     S01486
+     C                     DUMP
+     C                     RETRN
+     C**
+     C                     ENDSR                            ** *PSRR ESR**
+     C*=========================================================================
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  ARA
+INCOMING PAYMENT
+OUTGOING PAYMENT
+REGULAR PAYMENT
+CHEQUE COLLECTION
+CHEQUE PAYMENT
+**  ARB
+INCOMING PAYMENT CR
+INCOMING PAYT CHARGE
+OUTGOING PAYMENT CR
+INCOMING PAYMENT DR
+OUTGOING PAYMENT DR
+OUTGOING PAYT CHARGE
+REGULAR PAYMENT DR
+REGULAR PAYT CHARGE
+REGULAR PAYMENT CR
+CHEQUE COLLECTN DR
+CHEQUE COLLECTN CR
+CHEQ COLLECTN CHARGE
+CHEQUE PAYMENT CR
+CHEQUE PAYMENT DR
+CHEQ PAYMENT CHARGE
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  CPY@
+(c) Finastra International Limited 2001

@@ -1,0 +1,109 @@
+/*********************************************************************/
+/*S*D****CLPBASEBND***************************************************/                   /*CCB023*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Global Processing Module                            */
+/*                                                                   */
+/*       GOC210500 - Non Authorised Standing Orders and Customer     */
+/*                   Exchanges (COB)                                 */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*                                                                   */
+/*       Last Amend No. CCB023 *REDUNDANT  Date 06Aug12              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/*       Prev Amend No. CSC041  *CREATE    Date 26Nov09              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CCB023 - COB Restructure - Input Cycle Termination          */
+/*                Restructuring                                      */
+/*       CSC041 - 4-Eyes Checking Gaps (Applied BUG24112, BUG24027A, */
+/*                BUG24027, BUG23875)                                */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+ 
+             DCL        VAR(&PRTNCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRTCDC) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRTCDF) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRTCDS) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PRTCDA) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Misys International Banking Systems Ltd. +
+                          2009')
+ 
+/* Global monitor message */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/* Check for unauthorised Standing Order */
+ 
+             CALL       PGM(GPC210500) PARM(&PRTNCD)
+ 
+             IF         COND(&PRTNCD = '       ') THEN(GOTO CMDLBL(CUSX))
+ 
+             SNDMSG     MSG('Standing Orders Remains Unauthorised') +
+                          TOMSGQ(MOPERQ)
+ 
+/* Check for unauthorised Customer Exchange */
+ 
+ CUSX:       CALL       PGM(GPC210501) PARM(&PRTCDC)
+ 
+             IF         COND(&PRTCDC = '      ') THEN(GOTO CMDLBL(FWRT))
+ 
+             SNDMSG     MSG('Customer Exchanges Remains Unauthorised') +
+                          TOMSGQ(MOPERQ)
+ 
+/* Check for unauthorised Forward Rates */
+ 
+ FWRT:       CALL       PGM(GPC210502) PARM(&PRTCDF)
+ 
+             IF         COND(&PRTCDF = '      ') THEN(GOTO CMDLBL(STCQ))
+ 
+             SNDMSG     MSG('Forward Rates Remains Unauthorised') +
+                          TOMSGQ(MOPERQ)
+ 
+/* Check for unauthorised Stopped Cheques */
+ 
+ STCQ:       CALL       PGM(GPC210503) PARM(&PRTCDS)
+ 
+             IF         COND(&PRTCDS = '      ') THEN(GOTO CMDLBL(SPTR))
+ 
+             SNDMSG     MSG('Stopped Cheques Remains Unauthorised') +
+                          TOMSGQ(MOPERQ)
+ 
+/* Check for unauthorised Spot Rates */
+ 
+ SPTR:       CALL       PGM(GPC210504) PARM(&PRTCDA)
+ 
+             IF         COND(&PRTCDA = '      ') THEN(GOTO CMDLBL(CHECK))
+ 
+             SNDMSG     MSG('Spot Rates Remains Unauthorised') +
+                          TOMSGQ(MOPERQ)
+ 
+ CHECK:      IF         COND((&PRTNCD *NE '       ') *OR (&PRTCDC +
+                          *NE '       ') *OR (&PRTCDF *NE '       +
+                          ') *OR (&PRTCDS *NE '       ') *OR +
+                          (&PRTCDA *NE '       ')) THEN(GOTO +
+                          CMDLBL(ABNOR))
+             ELSE       CMD(GOTO CMDLBL(END))
+ 
+ ABNOR:
+ 
+             CHGJOB     SWS(XXXXXX11)
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+             SNDMSG     MSG('Program GOC210500 ended abnormally - job +
+                          cancelled') TOMSGQ(MOPERQ)
+ 
+             MONMSG     MSGID(CPF0000 MCH0000)
+ 
+ END:
+ 
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Misys International Banking Systems Ltd.')
+ 
+             ENDPGM

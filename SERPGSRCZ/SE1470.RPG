@@ -1,0 +1,468 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Project Forward Customer Posns.')
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE1470 - PROJECT FORWARD CUSTOMER POSITIONS                  *
+     F*                                                               *
+     F*  Function: This program projects Forward Portfolio Customer   *
+     F*   (COB)    Positions by Branch/Security/Customer/Date using   *
+     F*            Forward-valued Trades (TREVED). The data held is   *
+     F*            as for Current Positions, with only two fields     *
+     F*            projected; Nominal-Value Date Basis, and Ex-Coupon *
+     F*            Nominal. The Current Position, if it exists is     *
+     F*            used as a starting point for these two Balances.   *
+     F*                                                               *
+     F*  Called by: SEC1108 - Project Forward Customer Positions      *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*  PREV AMEND NO. 052254             DATE 10JAN94               *
+     F*                 E34034             DATE  7JAN92               *
+     F*                 S01117             DATE 02NOV90               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*    MD046248 - Finastra Rebranding                             *
+     F*    052254  -    RECOMPILED as CURRENT FACTOR amended from 9,8 *
+     F*                 to 10,9                                       *
+     F*    E34034  -    Recompiled over changed printer file          *
+     F*    S01117  -    MULTI-BRANCHING                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+      *
+     FCPSEV   IPE E           K        DISK
+     FCPOSN   IF  E           K        DISK
+     F*TABSE***IF  E           K        DISK                              S01117
+     F*********** TABLETAF                          KIGNORE               S01117
+     F*********** TABLETHF                          KIGNORE               S01117
+     F*********** TABLETJF                          KIGNORE               S01117
+     F*********** TABLETLF                          KIGNORE               S01117
+     F*********** TABLETKF                          KIGNORE               S01117
+     F*********** TABLETNF                          KIGNORE               S01117
+     F*********** TABLETPF                          KIGNORE               S01117
+     F*********** TABLETRF                          KIGNORE               S01117
+     F*********** TABLETXF                          KIGNORE               S01117
+     F**ICD*1*****TABTB10F                          KIGNORE
+     F*********** TABTB11F                          KIGNORE               S01117
+     F*********** TABTB36F                          KIGNORE               S01117
+     F*********** TABTB40F                          KIGNORE               S01117
+     F*********** TABTE10F                          KIGNORE               S01117
+     F*********** TABTE20F                          KIGNORE               S01117
+     F*********** TABTG10F                          KIGNORE               S01117
+     F*********** TABTG20F                          KIGNORE               S01117
+     F*********** TABLET2F                          KIGNORE               S01117
+     F*********** TABLET3F                          KIGNORE               S01117
+     F*********** TABLET5F                          KIGNORE               S01117
+     FTREVEA  IF  E                    DISK
+     FCPOSFD  O   E                    DISK
+     F            CPOSNDF                           KRENAMECPOSFDF
+     FCPOSFA  O   E                    DISK
+     FSE1470AUO   E                    PRINTER
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   L1  - Branch/Security/Customer/Date combination change      *
+     F*   L2  - Branch/Security/Customer combination change           *
+     F*                                                               *
+     F*   40  - Detail records read                                   *
+     F*   50  - Work indicator                                        *
+     F*   66  - Detail record to be printed                           *
+     F*   67  - At least one detail record has been written           *
+     F*                                                               *
+     F* 90-99 - Used in Standard Subroutines                          *
+     F*                                                               *
+     F*   U7  - Database Error                                        *
+     F*   U8  - Database / Control Error                              *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  L2DET  - Access Customer Positions (Current)                 *
+     F*  DATARA - Access Dataarea RUNDAT for run day & update         *   S01117
+     F*            Dataarea LDA.                                      *   S01117
+     F*  TITLE  - Access Bank Details to get Title.                   *   S01117
+     F****ZSYSTM*-*Access*ICD*record***********************************   S01117
+     F*  SRLR   - Total Calcs Routine                                 *
+     F*  *PSSR  - Error handling                                      *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80                                S01117
+     E/SPACE 3                                                            S01117
+     ITREVEDF
+     I***********   TRBN                            CSBR  L2              S01117
+     I              TRBA                            CSBA  L2              S01117
+     I              TRSS                            CSSC  L2
+     I              TRPT                            CSCN  L2
+     I              TRVD                            CSDA  L1
+      *
+     ICPOSNDF
+     I***********   CSBR                            XCSBR                 S01117
+     I              CSBA                            XCSBR                 S01117
+     I              CSSC                            XCSSC
+     I              CSCN                            XCSCN
+     I              CSDA                            XCSDA
+     I              CSNT                            XCSNT
+     I**************CSNV                            XCSNV
+     I              CSNS                            XCSNS
+     I**************CSEX                            XCSEX
+     I              CSPT                            XCSPT
+     I              CSPV                            XCSPV
+     I              CSBT                            XCSBT
+     I              CSBV                            XCSBV
+     I              CSCT                            XCSCT
+     I              CSCV                            XCSCV
+     I              TNLU                            XTNLU
+      *
+     ITREVEAF
+     I              NORE                            TRIN
+      *
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+     ICPYR@#      DS                                                      S01117
+     I                                        1  80 CPY@                  S01117
+     I                                        1  20 CPY@##                S01117
+      ***  Local Data Area for DB Error Information
+     I*LDA********UDS                            256                      S01117
+     I***********                           134 177 #DBLOT                S01117
+     I*********** DS                                                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 177 DBASE                 S01117
+     ILDA         DS                            256                       S01117
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     IRUNDT       DS                                                      S01117
+      ** DATA AREA RUNDAT                                                 S01117
+     I                                        1   7 RUNA                  S01117
+     I                                    P   8  100RUND                  S01117
+     I                                       11  11 SSF                   S01117
+     I                                       12  12 DATF                  S01117
+     I                                       13  13 MBIN                  S01117
+     I**  EXTERNAL DS FOR BANK DETAILS                                    S01117
+     ISDBANK    E DSSDBANKPD                                              S01117
+     I              BJURPT                          TITL                  S01117
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE          S01117
+     IDSFDY     E DSDSFDY                                                 S01117
+     I*
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Initial Processing
+      *
+      * Access the Customer Positions (Current) file  - LF/CPOSN
+      *
+     C           KEY01     KLIST
+     C***********          KFLD           CSBR                            S01117
+     C                     KFLD           CSBA                            S01117
+     C                     KFLD           CSSC
+     C                     KFLD           CSCN
+      *
+     C           *IN40     IFEQ '0'
+      *
+      * Prepare LDA for the database error output
+      *
+     C***********          IN   LDA                                       S01117
+     C***********          MOVE *BLANKS   #DBLOT                          S01117
+     C***********          OUT  LDA                                       S01117
+     C                     EXSR DATARA                                    S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     EXSR TITLE                                     S01117
+     C***********          MOVE *BLANKS   DBLOT                           S01117
+     C***********          MOVEL'SE1470'  DBPGM                           S01117
+      *
+      ***********                                                         S01117
+      **Access*the*I.C.D.*record*(PF/TABTB10)*****************************S01117
+      ***********                                                         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+      **Error*in*ZSYSTM***************************************************S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INLR            End of job     S01117
+     C***********          ELSE                                           S01117
+      **ICD*record*found.*************************************************S01117
+     C                     MOVE '1'       *IN40
+     C***********          END                                            S01117
+     C                     END
+      *
+      *================================================================
+      /EJECT
+      *================================================================
+      *
+      ***  Main Processing
+      *
+     C           *IN40     IFEQ '1'
+      *
+      * At change of Br/Sec/Customer set up initial values of the
+      *   accumulator fields -    1. Niminal - Value Date Basis (CSNV)
+      *                           2. Ex-Coupon Niminal.         (CSEX)
+      *
+     C           *INL2     CASEQ'1'       L2DET
+     C                     END
+      *
+      **  ONLY PROCESS FURTHER FOR FORWARD VALUE DATED TRADES
+      *
+     C           CSDA      IFGT RUND
+      *
+      * For each event record add/sub event nominal to Nominal-Vdat basis.
+      *  (NOTE : Trade type  EQ  TP : sub,  TS : add.)
+      *
+      *   Set up output fields.
+      *
+     C                     ADD  1         TRCNT   50
+     C                     SETON                     66
+      *
+      *   Update : Nominal - Value Date Basis
+      *
+     C           TRTT      IFEQ 'TS'
+     C                     ADD  TRON      CSNV
+     C                     END
+     C           TRTT      IFEQ 'TP'
+     C                     SUB  TRON      CSNV
+     C                     END
+      *
+      *   Update : Ex-Coupon Nominal
+      *
+     C           TRED      IFEQ 'X'
+     C           TRTT      IFEQ 'TS'
+     C                     ADD  TRON      CSEX
+     C                     END
+     C           TRTT      IFEQ 'TP'
+     C                     SUB  TRON      CSEX
+     C                     END
+     C                     END
+     C                     END
+      *
+     C                     END
+      *
+      *================================================================
+      /EJECT
+      *================================================================
+      *
+      ***  Total Time Processing
+      *
+      * Output Projected Positions record at value date change.
+      *
+     CL1         *INL1     IFEQ '1'
+     CL1         *IN40     ANDEQ'1'
+     CL1         *IN66     ANDEQ'1'
+      *
+     CL1                   ADD  1         OUTREC
+     CL1                   MOVE 'D'       RECI
+     CL1                   WRITECPOSFDF
+     CL1                   SETOF                     66
+     CL1                   SETON                     67
+     CL1                   END
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     CLR                   EXSR SRLR
+      *                                                               *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  L2DET  - Subroutine To access the Customer Positions(Current)*
+      *           File and set up initial values for the accumulator  *
+      *           fields :  Nominal - Value Date Basis  (CSNV)        *
+      *                     Ex-Coupon Nominal           (CSEX)        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           L2DET     BEGSR                           *** L2DET  ***
+      *
+      * Zero the initial accumulator values.
+      *
+     C                     Z-ADD0         CSNV
+     C                     Z-ADD0         CSEX
+      *
+      * Access the Customer Positions (Current) file  - LF/CPOSN
+      *
+     C           KEY01     CHAINCPOSN                50
+      *
+     C                     ENDSR
+      *
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLR   - Subroutine for Control Processing                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRLR      BEGSR                           ***  SRLR  ***
+      ***********                                                         S01117
+      **If*no*records*read,***********************************************S01117
+      ***access*the*I.C.D.*record*(PF/TABTB10)****************************S01117
+      ***********                                                         S01117
+     C************IN40     IFEQ '0'                        Empty primary  S01117
+     C************IN99     ANDEQ'0'                         file.         S01117
+     C***********          EXSR ZSYSTM                                    S01117
+     C***********          END                                            S01117
+      ***********                                                         S01117
+      **   Update Dataarea LDA & Access Run Date From Dataarea RUNDAT     S01117
+     C                     EXSR DATARA                                    S01117
+     C**   ACCESS BANK DETAILS, FOR TITLE                                 S01117
+     C                     EXSR TITLE                                     S01117
+      *
+      * Write control report headings
+      *
+     C                     WRITEHEADAU
+      *
+      **Error*in*ZSYSTM***************************************************S01117
+      ***********                                                         S01117
+     C************IN99     IFEQ '1'                                       S01117
+     C***********          MOVE '1'       *INU8                           S01117
+     C***********          MOVE '1'       *INU7            ***************S01117
+     C***********          MOVEL'01'      DBASE            **DB ERROR 01**S01117
+     C***********          MOVEL'TABLE'   DBFILE           ***************S01117
+     C***********          MOVELZTABKY    DBKEY                           S01117
+     C***********          WRITEERROR                                     S01117
+      ***********         ~~~~~~~~~~~~                                    S01117
+     C***********          END                                            S01117
+      *
+      *  Access AUDIT record for Customer Trade Events
+      *
+     C                     READ TREVEAF                  50
+      *
+      *  Control Totals
+      *
+     C                     WRITETRTOT
+      *
+      ***  Trade Events Totals
+      *          - WRITE Audit record
+      *
+     C                     Z-ADDOUTREC    NORE
+     C                     WRITECPOSFAF
+      *
+      *                                                                   S01117
+      ***IF*NO*OUTPUT/EMPTY*FILES*-*Print*a*message*to*this*effect********S01117
+      ***********                                                         S01117
+     C************IN40     IFEQ '0'                                       S01117
+     C************IN67     OREQ '0'                                       S01117
+     C***********          WRITENONE                                      S01117
+      ***********        ~~~~~~~~~~~~~~~~                                 S01117
+      ***********                                                         S01117
+      *********ELSE***-*Print*Records*Written*Total***********************S01117
+      ***********                                                         S01117
+     C***********          ELSE                                           S01117
+     C                     WRITECONTROL
+      *
+     C***********          END                                            S01117
+      *
+      ***END*OF*PROGRAM***************************************************S01117
+     C***********          WRITETRAILAU                                   S01117
+      ***********        ~~~~~~~~~~~~~~~~                                 S01117
+      ***If*Database*Erorrs*found,*update*LDA*****************************S01117
+      ***********                                                         S01117
+     C************NAMVAR   DEFN           LDA                             S01117
+      ***********                                                         S01117
+     C************INU8     IFEQ '1'                                       S01117
+      ***********                                                         S01117
+     C************LOCK     IN   LDA                                       S01117
+     C***********          MOVELDBLOT     #DBLOT                          S01117
+     C***********          OUT  LDA                                       S01117
+     C***********          END                                            S01117
+      ***********                                                         S01117
+     C                     ENDSR
+      *
+      *****************************************************************
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  TITLE  - Subroutine to access bank details                   *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      **                                                                  S01117
+     C           TITLE     BEGSR                                          S01117
+     C                     CALL 'AOBANKR0'                                S01117
+     C                     PARM '*MSG   ' @RTCD   7                       S01117
+     C                     PARM '*FIRST ' @OPTN   7                       S01117
+     C           SDBANK    PARM SDBANK    DSFDY                           S01117
+     C*                                                                   S01117
+     C           @RTCD     IFNE *BLANK                                    S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SDBANKPD'DBFILE                          S01117
+     C                     MOVEL@OPTN     DBKEY            ***************S01117
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 11  *S01117
+     C                     Z-ADD11        DBASE            ***************S01117
+     C                     OUT  LDA                                       S01117
+     C                     SETON                     U7U8LR               S01117
+     C                     WRITEHEADAU                                    S01117
+     C                     WRITEERROR                                     S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     RETRN                                          S01117
+     C                     END                                            S01117
+      **                                                                  S01117
+     C                     ENDSR                                          S01117
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  DATARA - Subroutine to initialize LDA and read RUNDAT        *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      **                                                                  S01117
+     C           DATARA    BEGSR                                          S01117
+      **                                                                  S01117
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL*BLANK    DBLOT                           S01117
+     C                     MOVEL'SE1470'  DBPGM                           S01117
+     C                     OUT  LDA                                       S01117
+      *In the data area RUNDAT                                            S01117
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
+     C                     IN   RUNDT                                     S01117
+      **                                                                  S01117
+     C                     ENDSR                                          S01117
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+      *****************************************************************   S01117
+     C*****ZSYSTM*SR.*TO*CHAIN*TO*THE*INSTALLATION*CONTROL*DATA*RECORD.***S01117
+     C***********                                                         S01117
+     C*COPY ZSRSRC,ZSYSTMZ1***                                            S01117
+**  CPY@
+(c) Finastra International Limited 2001

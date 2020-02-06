@@ -1,0 +1,1119 @@
+     H        1                                                           S01486
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas PM Investment Policy Details - Exception Rpt')   *
+     H***********                                                         S01486
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Portfolio Management Module                      *
+     F*                                                               *
+     F*  PM0450 - Investment Policy Details - Exceptions Report       *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 105685             Date 02Oct96               *
+      *                 S01486             Date 08Dec94               *
+     F*                 47719              DATE 24NOV92               *
+     F*                 B07822             DATE 25MAY91               *
+     F*                 R05938             DATE 02MAY91               *
+     F*                 R05789             DATE 04APR91               *
+     F*                 R0113              DATE 07FEB91               *
+     F*                 R0021              DATE 22JAN91               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER043 - German Features LF041-00 New Fields and Defaulting. *
+      *           (Recompile)                                         *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+     F*  105685 - RPG1215 OPEN ISSUED ON AN OPENED FILE (PM0450P1)    *
+     F*  S01486 - Portfolio Management Upgrade to Release 10          *
+     F*  47719  - CORRECT CONVERSION OF AMOUNTS BETWEEN CURRENCIES    *
+     F*  B07822 - IF MINIMUM RANGE 100% AND MAX RANGE 0% OUTPUT A     *
+     F*           BLANK MAX RANGE                                     *
+     F*  R05938 - AMOUNT OUTSIDE POLICY NOT CORRECTLY CALCULATED      *
+     F*  R05789 - ONLY OUTPUT FX RATES IF DETAILS REPORTED FOR        *
+     F*           OFFICER                                             *
+     F*  R0113  - EXCEPTION AMOUNT CALCULATION SUPPRESSED FROM        *
+     F*           THIS PROGRAM AND ADDED IN PM0445. FIELD HAS BEEN    *
+     F*           ADDED IN FILE PMIVPEPP.                             *
+     F*  R0021  - SHOULD NOT BE DB ERROR IF NO DETAILS ON PMIVPEPP    *
+     F*                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     F*
+     F**************
+     F** SYNON FILES
+     F**************
+     F***SDBANKL1IF**E           K        DISK                            S01486
+     F***PREFIX*'BJ'***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     FSDCURRL0IF  E           K        DISK
+     F** PREFIX 'A6' **
+     F                                              KINFSR *PSSR
+     F***SDCUSTL0IF**E           K        DISK                        UC  S01486
+     F***PREFIX*'BB'***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F***SDACOFL0IF**E           K        DISK                        UC  S01486
+     F***PREFIX*'AZ'***************************************************   S01486
+     F***********                                   KINFSR *PSSR          S01486
+     F*
+     F*****************************
+     F** PORTFOLIO MANAGEMENT FILES
+     F*****************************
+     F***PMPORTPPIF**E           K        DISK                        UC  S01486
+     FPMPORTPDIF  E           K        DISK                           UC  S01486
+     F** PREFIX 'PN' **      PORTFOLIO MANGEMENT DETAILS
+     F                                              KINFSR *PSSR
+     F***PMBIPNPPIF**E           K        DISK                            S01486
+     FPMBIPNPDIF  E           K        DISK                               S01486
+     F** PREFIX 'PS' **      BANK INVESTMENT POLICY NARRATIVES
+     F                                              KINFSR *PSSR
+     F***PMIVPEPPIF**E           K        DISK                            S01486
+     FPMIVPEPDIF  E           K        DISK                               S01486
+     F** PREFIX 'QV' **      INVESTMENT POLICIES EXCEPTIONS
+     F                                              KINFSR *PSSR
+     F*
+     F*****************
+     F** QUERY FILE
+     F*****************
+     F***PMIVNTPOIF**E           K        DISK                            S01486
+     FPMIVNTQ0IF  E           K        DISK                               S01486
+     F** PREFIX 'AZ' 'BB' 'PN'
+     F                                              KINFSR *PSSR
+     F*
+     F*****************
+     F** PRINTER FILE
+     F*****************
+     F***PM0450P1O***E             80     PRINTER                     UC  S01486
+     FPM0450P1O   E             80     PRINTER      KINFSR *PSSR      UC  S01486
+     F                                              KINFDS SPOOL1         S01486
+     F** PREFIX 'RR'         PORTFOLIO MANAGEMENT EXCEPTIONS REPORT
+     F*
+     FPM0450AUO   E                    PRINTER      KINFSR *PSSR      UC  S01486
+     F                                              KINFDS SPOOLU         S01486
+     F*                                                                   S01486
+     F******************************************************************
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                        *
+     F*                                                                *
+     F**  71    -     PRIMARY FILE ACCESS
+     F**  72    -     FILE ACCESS
+     F**  73    -     FILE ACCESS
+     F**  80    -     PRTF - OVERFLOW INDICATOR
+     F*
+     F**  U7-U8 -     DATA BASE ERROR
+     F*
+     F**  LR    -     END PROGRAM
+     F*
+     F*****************************************************************
+     E*
+     E** TABLES AND ARRAYS
+     E*********************************************************************
+     E*
+     E***********         CMD     1   1 39               QCMDEXC ARRAY    S01486
+     E*
+      *COPY ZSRSRC,ZPOWERZ1
+     E                    POWER   1   7  7 3             POWER ARRAY
+     E*
+     E** ARRAY FOR ZEDIT
+      /COPY ZSRSRC,ZSEDITZ1
+     E** ARRAY FOR ZEDIT
+      /COPY ZSRSRC,ZEDITZ1
+     E*
+     E** NARRATIVES FOR HEADER
+     E                    NAR     1  11 36
+     E*                                                                   S01486
+     E**  For compilation - copyright insertion                           S01486
+     E                    CPY@    1   1 80                                S01486
+     E*                                                                   S01486
+     I*
+     I***LDA********UDS                            256                    S01486
+     ILDA         DS                            256                       S01486
+     I                                      132 183 DBLOT
+     I                                      132 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I*
+     I** PROGRAM STATUS DATA STRUCTURE FOR WS/USER ID'S
+     IPSDS       SDS
+     I                                      247 249 WSID
+     I                                      254 263 USID
+     I*
+     I** DS TO FORMAT PRINTER LOCATION PARAMETER FOR QCMDEXC
+     IWWPRT       DS                              4
+     I                                        1   3 WWPRTL
+     I*                                                                   S01486
+     ISPOOLU      DS                                                      S01486
+     I** File Information Data Structure (Audit Report)                   S01486
+     I*                                                                   S01486
+     I                                       83  92 SFILEU                S01486
+     I                                    B 123 1240SFNUMU                S01486
+     ISPOOL1      DS                                                      S01486
+     I** File Information Data Structure (Detail Report)                  S01486
+     I*                                                                   S01486
+     I                                       83  92 SFILE1                S01486
+     I                                    B 123 1240SFNUM1                S01486
+     I*
+     I@BANK     E DSSDBANKPD                                              S01486
+     I** Dummy record format for access to Bank Details                   S01486
+     I*                                                                   S01486
+     I@CURR     E DSSDCURRPD                                              S01486
+     I** Dummy record format for access to Currency Details               S01486
+     I*                                                                   S01486
+     I@CUST     E DSSDCUSTPD                                              S01486
+     I** Dummy record format for access to Customer Details               S01486
+     I*                                                                   S01486
+     I@ACOF     E DSSDACOFPD                                              S01486
+     I** Dummy record format for access to Account Officer Details        S01486
+     I*                                                                   S01486
+     IDSFDY     E DSDSFDY                                                 S01486
+     I** First DS for access programs, short data structure               S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I** Second DS for access programs, long data structure               S01486
+     I*                                                                   S01486
+     I** DATA STRUCTURE FOR SUBROUTINE ZSEDIT
+      /COPY ZSRSRC,ZSEDITZ2
+     I**
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * INDEX OF SUBROUTINES                                             *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #P01     - PROCESS NO RECORD FOUND ON PRIMARY FILE               *
+      * #P02     - OVERRIDE PRTF/FORMAT HEADER                           *
+      * #P03     - READ POLICIES DETAILS                                 *
+      * #P04     - FORMAT POLICIES DETAILS                               *
+      * #W01     - OUTPUT HEADER DETAILS                                 *
+      * #W02     - OUTPUT LIST OF FX RATES                               *
+      * #W03     - OUTPUT DETAIL LINE                                    *
+      * #W04     - OUTPUT POLICY TITLE                                   *
+      * #W05     - OUTPUT AMOUNT FOR CHECKING                            *
+      * #INIT    - INITIAL PROCESSING                                    *
+      * ZSEDIT   - FORMAT A NUMERIC FIELD WITH DECIMAL POINT             *
+      * ZCCYCN   - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER        *
+      * ZCCYXR   - SEE ZCCYCN                                            *
+      * *PSSR    - PROCESS OF DATA BASE ERRORS                           *
+      *                                                                  *
+      * EXTERNAL ROUTINES CALLED                                         *
+      * QCMDEXC  - SYSTEM PROGRAM USED TO OVERRIDE PRINTER FILE          *
+      *                                                                  *
+     C***************************************************************
+     C**    C A L C U L A T I O N S                                **
+     C**    -----------------------                                **
+     C***************************************************************
+     C*
+     C** KEY LISTS
+     C*
+     C           WWPMKL    KLIST
+     C                     KFLD           PNCNUM
+     C                     KFLD           PNPTFR
+     C** *************
+     C** PROGRAM START
+     C** *************
+     C           *ENTRY    PLIST
+     C***********          PARM           WPACOC  4        * ACCOUNT OFFI S01486
+     C                     PARM           @RENT   3                       S01486
+     C                     PARM           WPCUST  6        * CUSTOMER NUMBER
+     C                     PARM           WPPTFR  4        * PORTFOLIO REF.
+     C                     PARM           @RSEQ   5                       S01486
+     C*
+     C** PERFORM INITIAL PROCESS
+     C                     EXSR #INIT
+     C*
+     C***READ*FIRST*RECORD*FROM*QRYF/PMIVNTPO**************************   S01486
+     C***********          READ PMIVNTPO                 71               S01486
+     C**  Read first record from QRYF/PMIVNTQ0.                           S01486
+     C                     READ PMIVNTQ0                 71               S01486
+     C*
+     C** IF NO RECORD IS FOUND
+     C           *IN71     IFEQ '1'
+     C                     EXSR #P01
+     C                     END
+     C*
+     C** PROCESS EXCEPTION POLICIES
+     C           *IN71     DOWEQ'0'                        - B1
+     C                     MOVE AZACOC    WWACOC  2
+     C*
+     C***Change*of*Printer*Location************************************   S01486
+     C***********WWPRTL    IFNE AZPRTL                                    S01486
+     C**  Change in A/C Officer                                           S01486
+     C           AZACOC    IFNE WWACO1                                    S01486
+     C           *IN41     OREQ '0'                                       S01486
+     C                     EXSR #P02
+     C                     MOVE '1'       *IN41                           S01486
+     C                     END
+     C*
+     C** Process Policies details
+     C                     EXSR #P03
+     C***********          READ PMIVNTPO                 71               S01486
+     C                     READ PMIVNTQ0                 71               S01486
+     C*
+     C** Change of A/C Officer
+     C           WWACOC    IFNE AZACOC
+     C           WWACOC    ANDEQWWACO1                                    R05789
+     C           *IN71     OREQ '1'
+     C           WWACOC    ANDEQWWACO1                                    R05789
+     C                     EXSR #W02
+     C                     END
+     C*
+     C                     END                             - E1
+     C*                                                                   S01486
+     C           *IN40     IFEQ '1'                                       S01486
+     C*
+     C** OUTPUT 'END OF REPORT'
+     C                     WRITEENDRE
+     C*
+     C** CLOSE PRINTER FILE
+     C                     CLOSEPM0450P1
+     C*
+     C                     END                                            S01486
+     C*
+     C                     MOVE '1'       *INLR
+     C*
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P01     - PROCESS NO RECORD FOUND ON PRIMARY FILE               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W01     - OUTPUT HEADER                                         *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #P01      BEGSR
+     C*
+     C***********WPACOC    IFNE '*ALL'                                    S01486
+     C***********          MOVELWPACOC    AZACOC                          S01486
+     C           @RENT     IFNE 'ALL'                                     S01486
+     C                     MOVEL@RENT     AZACOC                          S01486
+     C***********          OPEN SDACOFL0                                  S01486
+     C***********AZACOC    CHAINSDACOFL0             72                   S01486
+     C***********          CLOSESDACOFL0                                  S01486
+     C*
+     C                     CALL 'AOACOFR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM AZACOC    @ACOC   2                       S01486
+     C           @ACOF     PARM @ACOF     DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD5         DBASE            ***************S01486
+     C                     MOVE 'SDACOFPD'DBFILE           * DB ERROR 05 *S01486
+     C                     MOVELAZACOC    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           WPCUST    IFNE '*ALL  '
+     C                     MOVELWPCUST    BBCUST
+     C***********          OPEN SDCUSTL0                                  S01486
+     C***********BBCUST    CHAINSDCUSTL0             72                   S01486
+     C***********          CLOSESDCUSTL0                                  S01486
+     C*
+     C                     CALL 'AOCUSTR0'                                S01486
+     C                     PARM *BLANKS   @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM BBCUST    @CUSN  10                       S01486
+     C                     PARM           @KYST   7                       S01486
+     C           @CUST     PARM @CUST     DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     Z-ADD6         DBASE            ***************S01486
+     C                     MOVE 'SDCUSTPD'DBFILE           * DB ERROR 06 *S01486
+     C                     MOVELBBCUST    DBKEY            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           WPPTFR    IFNE '*ALL'
+     C                     MOVELWPPTFR    PNPTFR
+     C***********          OPEN PMPORTPP                                  S01486
+     C***********WWPMKL    CHAINPMPORTPP             72                   S01486
+     C***********          CLOSEPMPORTPP                                  S01486
+     C                     OPEN PMPORTPD                                  S01486
+     C           WWPMKL    CHAINPMPORTPD             72                   S01486
+     C                     CLOSEPMPORTPD                                  S01486
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     END
+     C*
+     C** OPEN PRINTER FILE
+     C***********          EXSR #P02                                      S01486
+     C                     OPEN PM0450AU                                  S01486
+     C*                                                                   S01486
+     C                     MOVELSFILEU    SFILE                           S01486
+     C                     Z-ADDSFNUMU    ZSNUM                           S01486
+     C                     MOVEL*BLANKS   SENTY                           S01486
+     C                     EXSR #LZSFL                                    S01486
+     C*                                                                   S01486
+     C** OUTPUT HEADER
+     C***********          EXSR #W01                                      S01486
+     C                     WRITEHEADAU                                    S01486
+     C*
+     C** OUTPUT 'NO EXCEPTIONS TO BE REPORTED'
+     C***********          WRITEPORTEX                                    S01486
+     C                     WRITENODTLS                                    S01486
+     C*
+     C                     ENDSR                           * #P01
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P02     - OPEN /CLOSE PRINTER FILE                              *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * QCMDEXC  - SYSTEM PROGRAM USED TO OVERRIDE PRINTER FILE          *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWPRTL   - PRINTER LOCATION CODE                                 *
+      * WWPRT    - PARAMETER FOR PROGRAM QCMDEXC                         *
+      * WWCMD    - PARAMETER FOR PROGRAM QCMDEXC                         *
+      *                                                                  *
+      ********************************************************************
+     C           #P02      BEGSR
+     C*
+     C** IF THIS IS NOT THE FIRST RECORD PROCESSED
+     C***********WWPRTL    IFNE *BLANKS                                   S01486
+     C           WWACO1    IFNE *BLANKS                                   S01486
+     C*
+     C** Output 'END OF REPORT'
+     C                     WRITEENDRE
+     C*
+     C** Close Printer file
+     C                     CLOSEPM0450P1
+     C*                                                                   S01486
+     C                     MOVE '0'       *IN40                           S01486
+     C*                                                                   S01486
+     C                     END
+     C*
+     C***OVRPRTF*TO*PRTF*PM0450PXXX*(XXX*=*PRINTER*LOCATION*CODE):*****   S01486
+     C***********          MOVE AZPRTL    WWPRTL                          S01486
+     C***********          MOVE WWPRT     WWCMD                           S01486
+     C***********          CALL 'QCMDEXC'                                 S01486
+     C***********          PARM WWCMD     QCAA   43                       S01486
+     C***********          PARM 43        QCAN   155                      S01486
+     C*
+     C*********************OPEN PM0450P1                                  105685
+     C                     OPEN PM0450P1               98                 105685
+     C*
+     C                     MOVELSFILE1    SFILE                           S01486
+     C                     Z-ADDSFNUM1    ZSNUM                           S01486
+     C                     MOVELAZACOC    SENTY                           S01486
+     C                     EXSR #LZSFL                                    S01486
+     C                     Z-ADD0         PAGE                            S01486
+     C*                                                                   S01486
+     C                     MOVE '1'       *IN40                           S01486
+     C*                                                                   S01486
+     C                     ENDSR                           * #P02
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P03     - READ POLICIES DETAILS                                 *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * #W01     - OUTPUT HEADER                                         *
+      * #W04     - OUTPUT POLICY TITLE                                   *
+      * #W05     - OUTPUT AMOUNT FOR CHECKING                            *
+      * #P04     - FORMAT POLICIES DETAILS                               *
+      * #W03     - OUTPUT DETAIL LINE                                    *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      **WWPMKL***-*KEY*FOR*CHAINING*TO*PF/PMIVPEPP*AND*PF/PMPORTPP*****   S01486
+      * WWPMKL   - KEY FOR CHAINING TO PF/PMIVPEPD AND PF/PMPORTPD    *   S01486
+      * WWCODE   - FLAG FOR INVESTMENT POLICY TYPE                       *
+      * WWPCOD   - SAVE POLICY CODE                                      *
+      *                                                                  *
+      ********************************************************************
+     C           #P03      BEGSR
+     C*
+     C***********PNPTCY    CHAINSDCURRL0             72                   S01486
+     C*
+     C************IN72     IFEQ '1'                        ***************S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '       ' @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM PNPTCY    @CYCD   3                       S01486
+     C           @CURR     PARM @CURR     DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                        ***************S01486
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C***********          MOVEL'SDCURRL0'DBFILE           ***************S01486
+     C                     MOVE 'SDCURRPD'DBFILE                          S01486
+     C                     MOVELPNPTCY    DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C***********WWPMKL    SETLLPMIVPEPP                                  S01486
+     C***********WWPMKL    READEPMIVPEPP               7373               S01486
+     C           WWPMKL    SETLLPMIVPEPD                                  S01486
+     C           WWPMKL    READEPMIVPEPD               7373               S01486
+     C*
+     C**         *IN73     IFEQ '1'                        ***************R0021
+     C**                   Z-ADD4         DBASE            * DB ERROR 04 *R0021
+     C**                   MOVEL'PMIVPEPP'DBFILE           ***************R0021
+     C**                   MOVELPNCNUM    DBKEY                           R0021
+     C**                   MOVE PNPTFR    DBKEY                           R0021
+     C**                   EXSR *PSSR                                     R0021
+     C**                   END                                            R0021
+     C*
+     C** Get Bank Investment Policy narrative
+     C           *IN73     IFEQ '0'                        ***************R0021
+     C           PNPOLC    IFNE *BLANK
+     C***********PNPOLC    CHAINPMBIPNPP             72                   S01486
+     C           PNPOLC    CHAINPMBIPNPD             72                   S01486
+     C                     END
+     C*
+     C** Output Header
+     C                     EXSR #W01
+     C*
+     C** Output Bank/Non Bank Policy type
+     C                     EXSR #W04
+     C*
+     C** Output titles
+     C                     WRITETITLE1
+     C                     Z-ADD0         WWPCOD  10
+     C                     END                                            R0021
+     C*
+     C           *IN73     DOWEQ'0'
+     C****                                                                R05788
+     C***Format Amount for Checking                                       R05788
+     C****       QVPCOD    IFNE WWPCOD                                    R05788
+     C****                 Z-ADDQVCAMT    ZFLD15                          R05788
+     C****                 Z-ADDPNPCDP    ZDECS                           R05788
+     C****                 EXSR ZSEDIT                                    R05788
+     C****                 MOVE ZOUT21    RRCAMT                          R05788
+     C****                                                                R05788
+     C***Output Amount for Checking                                       R05788
+     C****                 EXSR #W05                                      R05788
+     C****                 Z-ADDQVPCOD    WWPCOD                          R05788
+     C****                 END                                            R05788
+     C*
+     C** Format Policy details
+     C                     EXSR #P04
+     C*
+     C** Output Policy details
+     C                     EXSR #W03
+     C***********WWPMKL    READEPMIVPEPP               7373               S01486
+     C           WWPMKL    READEPMIVPEPD               7373               S01486
+     C                     END
+     C*
+     C                     ENDSR                           * #P03
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #P04     - FORMAT POLICIES DETAILS                               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZSEDIT   - FORMAT A NUMERIC FIELD WITH DECIMAL POINT             *
+      * ZCCYCN   - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER        *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - READ POLICIES DETAILS                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWXAMR   - WORK FIELD FOR EXCEPTION AMOUNT                       *
+      * WWXRAT   - WORK FIELD FOR EXCEPTION RATE                         *
+      *                                                                  *
+      ********************************************************************
+     C           #P04      BEGSR
+     C*
+     C                     Z-ADD0         WWXAMR 150
+     C                     Z-ADD0         WWXRAT  31
+     C*
+     C** CONVERT AMOUNT IN INVESTMENT FROM PORTFOLIO CCY TO BASE CCY
+     C***********          Z-ADDQVIAMT    ZAMTF                           S01486
+     C                     Z-ADDGIIAMT    ZAMTF                           S01486
+     C                     MOVELPNPTCY    ZCCYF
+     C                     Z-ADDA6SPRT    ZRATEF
+     C                     MOVELA6MDIN    ZMDINF
+     C                     Z-ADDA6NBDP    ZCDPF
+     C                     EXSR ZCCYCN
+     C*
+     C** FORMAT AMOUNT IN INVESTMENT IN BASE CCY
+     C                     Z-ADDZAMTT     ZFLD15
+     C                     Z-ADDZCDPT     ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRBAMT
+     C*
+     C** FORMAT AMOUNT IN INVESTMENT IN PORTFOLIO CCY
+     C***********          Z-ADDQVIAMT    ZFLD15                          S01486
+     C                     Z-ADDGIIAMT    ZFLD15                          S01486
+     C                     Z-ADDPNPCDP    ZDECS
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRIAMT
+     C*
+     C***********QVACTR    IFEQ -999.9                                    S01486
+     C           GIACTR    IFEQ -999.9                                    S01486
+     C                     MOVE '*****'   RRACTR
+     C                     MOVE '*'       RRACTS
+     C                     MOVE *ALL'*'   RRXAMT
+     C*
+     C** FORMAT ACTUAL PERCENTAGE
+     C                     ELSE
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE *BLANKS   RRSIGN
+     C***********QVACTR    IFLT 0                                         S01486
+     C***********          Z-SUBQVACTR    WWACTR  41                      S01486
+     C           GIACTR    IFLT 0                                         S01486
+     C                     Z-SUBGIACTR    WWACTR  41                      S01486
+     C                     MOVE WWACTR    ZFIELD
+     C                     MOVE '-'       RRSIGN
+     C                     ELSE
+     C                     MOVE ' '       RRSIGN
+     C***********          MOVE QVACTR    ZFIELD                          S01486
+     C                     MOVE GIACTR    ZFIELD                          S01486
+     C                     END
+     C                     Z-ADD3         ZADIG
+     C                     Z-ADD1         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RRACTR
+     C                     MOVE '%'       RRACTS
+     C*
+     C** FORMAT EXCEPTION AMOUNT IN BASE CCY
+     C***********QVACTR****IFLT QVMINR                                    R0113
+     C***********QVACTR****SUB  QVMINR    WWXRAT                          R0113
+     C***********WWXRAT****MULT QVCAMT    WWXAMR                          R0113
+     C*********************END                                            R0113
+     C*********************                                               R0113
+     C***********QVACTR****IFGT QVMAXR                                    R0113
+     C***********QVMINR****ANDNE100                                       R0113
+     C***********QVACTR****SUB  QVMAXR    WWXRAT                          R0113
+     C***********WWXRAT****MULT QVCAMT    WWXAMR                          R0113
+     C*********************END                                            R0113
+     C*********************                                               R0113
+     C***********WWXAMR****IFNE 0                                         R0113
+     C*********************DIV  100       WWXAMR                          R0113
+     C*********************Z-ADDWWXAMR    ZAMTF                           R0113
+     C****       QVXAMT    IFNE 0                                         R05938
+     C****                 DIV  100       QVXAMT                          R05938
+     C****                 Z-ADDQVXAMT    ZAMTF                           R05938
+     C****                 MOVELPNPTCY    ZCCYF                           R05938
+     C****                 Z-ADDA6SPRT    ZRATEF                          R05938
+     C****                 MOVELA6MDIN    ZMDINF                          R05938
+     C****                 Z-ADDA6NBDP    ZCDPF                           R05938
+     C****                 EXSR ZCCYCN                                    R05938
+     C****                 Z-ADDZAMTT     ZFLD15                          R05938
+     C****                 Z-ADDZCDPT     ZDECS                           R05938
+     C****                 EXSR ZSEDIT                                    R05938
+     C****                 MOVE ZOUT21    RRXAMT                          R05938
+     C****                 ELSE                                           R05938
+     C****                 MOVE *BLANKS   RRXAMT                          R05938
+     C****                 END                                            R05938
+     C*                                                                   R05938
+     C** FORMAT AMOUNT FOR CHECKING FOR OUTPUT                            R05938
+     C***********          Z-ADDQVXAMT    ZFLD15                   R05938 S01486
+     C                     Z-ADDGIXAMT    ZFLD15                          S01486
+     C                     Z-ADDZCDPT     ZDECS                           R05938
+     C                     EXSR ZSEDIT                                    R05938
+     C                     MOVE ZOUT21    RRXAMT                          R05938
+     C*
+     C                     END
+     C*
+     C                     ENDSR                           * #P04
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W01     - OUTPUT HEADER                                         *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P01     - PROCESS NO RECORD FOUND ON PRIMARY FILE               *
+      * #P03     - READ POLICIES DETAILS                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W01      BEGSR
+     C*
+     C** ACCOUNT OFFICER DETAILS
+     C           AZACOC    IFEQ *BLANKS
+     C***********          MOVELWPACOC    RRACOC                          S01486
+     C                     MOVEL@RENT     RRACOC                          S01486
+     C                     MOVELNAR,1     RRACON
+     C                     ELSE
+     C                     MOVELAZACOC    RRACOC
+     C                     MOVELAZACON    RRACON
+     C                     END
+     C*
+     C** CUSTOMER DETAILS
+     C           BBCUST    IFEQ *BLANKS
+     C                     MOVELWPCUST    RRCUST
+     C                     MOVELNAR,2     RRCRNM
+     C                     ELSE
+     C                     MOVELBBCUST    RRCUST
+     C                     MOVELBBCRNM    RRCRNM
+     C                     END
+     C*
+     C** PORTFOLIO DETAILS
+     C           PNPTFR    IFEQ *BLANKS
+     C                     MOVELWPPTFR    RRPTFR
+     C                     MOVELNAR,3     RRPTFN
+     C                     ELSE
+     C                     MOVELPNPTFR    RRPTFR
+     C                     MOVELPNPTFN    RRPTFN
+     C                     END
+     C*
+     C                     MOVELPNPTCY    RRCUR1                          R05789
+     C*                                                                   R05788
+     C** Format Amount for Checking                                       R05788
+     C***********          Z-ADDQVCAMT    ZFLD15                   R05788 S01486
+     C                     Z-ADDGICAMT    ZFLD15                          S01486
+     C                     Z-ADDPNPCDP    ZDECS                           R05788
+     C                     EXSR ZSEDIT                                    R05788
+     C                     MOVE ZOUT21    RRCAMT                          R05788
+     C*
+     C                     OPEN PM0450P1               98                 105685
+     C***********          WRITEHEADER                                    S01486
+     C                     WRITEHEADER1                                   S01486
+     C*
+     C                     ENDSR                           * #W01
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W02     - OUTPUT LIST OF FX RATES                               *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * ZEDIT    - FORMAT A NUMERIC FIELD WITH DECIMAL POINT             *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     -                                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWWORK   - WORK FIELD FOR FX RATES TITLE                         *
+      *                                                                  *
+      ********************************************************************
+     C           #W02      BEGSR
+     C*
+     C                     MOVEL*BLANK    WWWORK
+     C*
+     C                     MOVEL*LOVAL    A6CYCD
+     C           A6CYCD    SETLLSDCURRL0
+     C                     READ SDCURRL0                 72
+     C*
+     C           *IN72     DOWEQ'0'
+     C*
+     C           WWWORK    IFEQ ' '
+     C                     MOVE 'Y'       WWWORK  1
+     C                     MOVE '1'       *IN80
+     C                     WRITETITLE2
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C                     MOVELA6CYCD    RRCUR3
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE A6SPRT    ZFIELD
+     C                     Z-ADD5         ZADIG
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    RRRATE
+     C*
+     C                     MOVELA6MDEX    RRMDIN
+     C*
+     C                     WRITEFXDET
+     C*
+     C           *IN80     IFEQ '1'
+     C                     WRITETITLE2
+     C                     MOVE '0'       *IN80
+     C                     END
+     C*
+     C                     READ SDCURRL0                 72
+     C                     END
+     C*
+     C                     ENDSR                           * #W02
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W03     - OUTPUT DETAIL LINE                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCODE   - FLAG FOR INVESTMENT POLICY TYPE                       *
+      *                                                                  *
+      ********************************************************************
+     C           #W03      BEGSR
+     C*
+     C** INVESTMENT CODE
+     C***********QVGCOD    IFEQ *BLANK                                    S01486
+     C           GIGCOD    IFEQ *BLANK                                    S01486
+     C***********          MOVELQVICOD    RRINVC                          S01486
+     C                     MOVELGIICOD    RRINVC                          S01486
+     C                     ELSE
+     C***********          MOVELQVGCOD    RRINVC                          S01486
+     C                     MOVELGIGCOD    RRINVC                          S01486
+     C                     END
+     C*
+     C***********          MOVELQVINAR    RRINAR                          S01486
+     C***********          Z-ADDQVMINR    RRMINR                          S01486
+     C***********          Z-ADDQVMAXR    RRMAXR                          S01486
+     C                     MOVELGIINAR    RRINAR                          S01486
+     C                     Z-ADDGIMINR    RRMINR                          S01486
+     C                     Z-ADDGIMAXR    RRMAXR                          S01486
+     C*                                                                   B07822
+     C                     SETON                     60                   B07822
+     C***********QVMAXR    IFEQ 0                                  B07822 S01486
+     C***********QVMINR    ANDEQ100                                B07822 S01486
+     C           GIMAXR    IFEQ 0                                         S01486
+     C           GIMINR    ANDEQ100                                       S01486
+     C                     MOVE *BLANKS   RRMAXR                          B07822
+     C                     SETOF                     60                   B07822
+     C                     END                                            B07822
+     C*
+     C                     WRITEPOLDET
+     C*
+     C                     MOVE AZACOC    WWACO1  2                       R05789
+     C*
+     C** RESET FIELDS
+     C                     MOVEL*BLANKS   RRINVC
+     C                     MOVEL*BLANKS   RRINAR
+     C                     MOVEL*BLANKS   RRMINR
+     C                     MOVEL*BLANKS   RRMAXR
+     C                     MOVEL*BLANKS   RRXAMT
+     C                     MOVEL*BLANKS   RRACTR
+     C                     MOVEL*BLANKS   RRIAMT
+     C                     MOVEL*BLANKS   RRBAMT
+     C*
+     C           *IN80     IFEQ '1'
+     C***********          WRITEHEADER                                    S01486
+     C                     WRITEHEADER1                                   S01486
+     C                     MOVE '0'       *IN80
+     C                     WRITEPOLTYP
+     C                     WRITETITLE1
+     C                     END
+     C*
+     C                     ENDSR                           * #W03
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W04     - OUTPUT POLICY TITLE                                   *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - READ POLICIES DETAILS                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W04      BEGSR
+     C*
+     C           PNPOLC    IFEQ *BLANKS
+     C                     MOVELNAR,5     RRPOLT
+     C                     MOVEL*BLANKS   RRPOLC
+     C                     MOVEL*BLANKS   RRPOLN
+     C                     ELSE
+     C                     MOVELNAR,4     RRPOLT
+     C                     MOVELPNPOLC    RRPOLC
+     C                     MOVELPSPOLN    RRPOLN
+     C                     END
+     C*
+     C                     WRITEPOLTYP
+     C*
+     C                     ENDSR                           * #W04
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #W05     - OUTPUT AMOUNT FOR CHECKING                            *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * #P03     - READ POLICIES DETAILS                                 *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           #W05      BEGSR
+     C*
+     C** Instrument
+     C***********QVPCOD    IFEQ 1                                         S01486
+     C           GIPCOD    IFEQ 1                                         S01486
+     C                     MOVELNAR,6     RRINVT
+     C**********           MOVELNAR,10    RRVALT
+     C                     END
+     C*
+     C** Currency
+     C***********QVPCOD    IFEQ 2                                         S01486
+     C           GIPCOD    IFEQ 2                                         S01486
+     C                     MOVELNAR,7     RRINVT
+     C************         MOVELNAR,10    RRVALT
+     C                     END
+     C*
+     C** Country
+     C***********QVPCOD    IFEQ 3                                         S01486
+     C           GIPCOD    IFEQ 3                                         S01486
+     C                     MOVELNAR,8     RRINVT
+     C************         MOVELNAR,11    RRVALT
+     C                     END
+     C*
+     C** Industry
+     C***********QVPCOD    IFEQ 4                                         S01486
+     C           GIPCOD    IFEQ 4                                         S01486
+     C                     MOVELNAR,9     RRINVT
+     C***********          MOVELNAR,11    RRVALT
+     C                     END
+     C*
+     C***********          MOVELPNPTFR    RRCUR1                          R05789
+     C                     WRITEBANDET
+     C*
+     C                     MOVEL*BLANKS   RRINVT
+     C                     MOVEL*BLANKS   RRCAMT
+     C*
+     C                     ENDSR                           * #W05
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      * *PSSR    - PROCESS OF DATA BASE ERRORS                           *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      * WWCMD    - PARAMETER FOR PROGRAM QCMDEXC                         *
+      * WWPRT    - PARAMETER FOR PROGRAM QCMDEXC                         *
+      *                                                                  *
+      ********************************************************************
+     C           #INIT     BEGSR
+     C*                                                                   S01486
+     C**  Copyright statement                                             S01486
+     C*                                                                   S01486
+     C                     MOVEACPY@      ACT@   80                       S01486
+     C*                                                                   S01486
+     C           *NAMVAR   DEFN           LDA                             S01486
+     C*
+     C                     MOVE '0'       *IN
+     C                     MOVEL'PM0450'  DBPGM
+     C                     MOVEL'J'       ZECODE
+     C*
+     C****BUILT*COMMAND*EXPRESSION*FOR*QCMDEXC:************************   S01486
+     C***********          MOVELCMD,1     WWCMD  43                       S01486
+     C***********          MOVE ')'       WWPRT                           S01486
+     C*
+     C** ACCESS BANK DETAILS FROM SDBANKL1
+     C************LOVAL    SETLLSDBANKL1                                  S01486
+     C***********          READ SDBANKL1                 72               S01486
+     C*
+     C************IN72     IFEQ '1'                        ***************S01486
+     C*                                                                   S01486
+     C                     CALL 'AOBANKR0'                                S01486
+     C                     PARM '        '@RTCD   7                       S01486
+     C                     PARM '*FIRST  '@OPTN   7                       S01486
+     C           @BANK     PARM @BANK     DSFDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                        ***************S01486
+     C                     Z-ADD2         DBASE            * DB ERROR 02 *
+     C***********          MOVEL'SDBANKL1'DBFILE           ***************S01486
+     C                     MOVE 'SDBANKPD'DBFILE                          S01486
+     C                     MOVEL*BLANKS   DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** OUTPUT HEADER DETAILS
+     C                     MOVELBJURPT    RRURPT
+     C                     MOVELBJMRDT    RRMRDT
+     C*
+     C** ACCESS SDCURRL0
+     C***********BJCYCD    CHAINSDCURRL0             72                   S01486
+     C*
+     C************IN72     IFEQ '1'                        ***************S01486
+     C*                                                                   S01486
+     C                     CALL 'AOCURRR0'                                S01486
+     C                     PARM '*MSG   ' @RTCD                           S01486
+     C                     PARM '*KEY   ' @OPTN                           S01486
+     C                     PARM BJCYCD    @CYCD   3                       S01486
+     C           @CURR     PARM @CURR     DSSDY                           S01486
+     C*                                                                   S01486
+     C           @RTCD     IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                        ***************S01486
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C***********          MOVEL'SDCURRL0'DBFILE           ***************S01486
+     C                     MOVE 'SDCURRPD'DBFILE                          S01486
+     C                     MOVELBJCYCD    DBKEY
+     C                     OUT  LDA                                       S01486
+     C                     EXSR *PSSR
+     C                     END
+     C*
+     C** PREPARE DETAILS FOR LATER USE
+     C                     MOVELBJCYCD    RRCUR2
+     C                     MOVELBJCYCD    RRCUR4
+     C                     MOVELBJCYCD    ZCCYT
+     C                     Z-ADDA6SPRT    ZRATET
+     C                     Z-ADDA6NBDP    ZCDPT
+     C                     MOVELA6MDIN    ZMDINT
+     C*
+     C                     ENDSR                           * #INIT
+      ********************************************************************
+      /EJECT
+      ********************************************************************
+      /EJECT
+      /COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+      /COPY ZSRSRC,ZEDITZ2
+      /EJECT
+      /COPY ZSRSRC,ZCCYCN
+      ****/EJECT                                                          47719
+      ****/COPY ZSRSRC,ZCCYXR                                             47719
+     C**************************************************************************
+      /EJECT
+      ********************************************************************
+      *                                                                  *
+      * *PSSR    - PROCESS OF DATA BASE ERRORS                           *
+      *                                                                  *
+      * SUBROUTINE CALLS:                                                *
+      *                                                                  *
+      * SUBROUTINE CALLED FROM:                                          *
+      * MAIN     - MAIN PROCESSING                                       *
+      * #P14     - CALCULATE EXCEPTION AMOUNTS                           *
+      * #P02     - PROCESS BANK INVESTMENT POLICY                        *
+      * #P06     - PROCESS BANK INSTRUMENT POLICY                        *
+      * #P10     - PROCESS PORTFOLIO INSTRUMENT POLICY                   *
+      * #P07     - PROCESS BANK CURRENCY POLICY                          *
+      * #P11     - PROCESS PORTFOLIO CURRENCY POLICY                     *
+      * #P08     - PROCESS BANK COUNTRY POLICY                           *
+      * #P12     - PROCESS PORTFOLIO COUNTRY POLICY                      *
+      * #P09     - PROCESS BANK INDUSTRY POLICY                          *
+      * #P13     - PROCESS PORTFOLIO INDUSTRY POLICY                     *
+      * #INIT    - INITIAL PROCESSING                                    *
+      *                                                                  *
+      * ROUTINE USES VARIABLES:                                          *
+      *                                                                  *
+      ********************************************************************
+     C           *PSSR     BEGSR
+     C*
+     C                     OPEN PM0450AU                                  S01486
+     C                     MOVELSFILEU    SFILE                           S01486
+     C                     Z-ADDSFNUMU    ZSNUM                           S01486
+     C                     MOVEL*BLANKS   SENTY                           S01486
+     C                     EXSR #LZSFL                                    S01486
+     C                     WRITEHEADAU                                    S01486
+     C                     WRITEERRORAU                                   S01486
+     C*                                                                   S01486
+     C           *IN40     IFEQ '1'                                       S01486
+     C                     WRITEDBERROR                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C**
+     C** PRINT DUMP AND CANCEL PROGRAM
+     C**
+     C                     DUMP
+     C                     MOVE '1'       *INLR
+     C**
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C***************************************************************
+      /EJECT
+     C*****************************************************************   S01486
+     C*                                                               *   S01486
+     C*  #LZSFL - Subroutine to call ZSFILE                           *   S01486
+     C*                                                               *   S01486
+     C*****************************************************************   S01486
+     C*                                                                   S01486
+     C           #LZSFL    BEGSR                                          S01486
+     C*                                                                   S01486
+     C                     CALL 'ZSFILE'                                  S01486
+     C                     PARM           @RSEQ                           S01486
+     C                     PARM           SENTY   3                       S01486
+     C                     PARM           SFILE  10                       S01486
+     C                     PARM           ZSNUM   60                      S01486
+     C                     PARM           ZSERR   1                       S01486
+     C*                                                                   S01486
+     C** If an error occurred during ZSFILE processing,                   S01486
+     C** return to the calling program.                                   S01486
+     C*                                                                   S01486
+     C           ZSERR     IFEQ 'Y'                                       S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     ENDSR                                          S01486
+     C*                                                                   S01486
+     C*****************************************************************   S01486
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  NAR  - NARRATIVES FOR HEADER
+ALL ACCOUNT OFFICERS
+ALL CUSTOMERS
+ALL PORTFOLIOS
+BANK INVESTMENT POLICY
+PORTFOLIO SPECIFIC INVESTMENT POLICY
+INSTRUMENT POLICY
+CURRENCY POLICY
+COUNTRY POLICY
+INDUSTRY POLICY
+VALUE OF PORTFOLIO (NETTED)
+VALUE OF SECURITIES (NETTED)
+**  CPY@
+(c) Finastra International Limited 2001

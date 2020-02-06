@@ -1,0 +1,464 @@
+     H DEBUG
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+      *****************************************************************
+/*S*D ***RPGSQLMOD*****************************************************                     MD023662
+      *****************************************************************
+      *                                                               *
+      *  Midas - Global Processing Module                             *
+      *                                                               *
+      *  GO220000 - Midas UDF Files purging                           *
+      *                                                               *
+      *  Function:  This program purge the records from the           *
+      *             UDF files found on GPUDFDPD                       *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *                                                               *
+      *  Called By: GOC220000                                         *
+      *                                                               *
+      *  Last Amend No. MD023662 *REDUNDANTDate 21Nov13               *
+      *  Prev Amend No. AR782378           Date 02Nov12               *
+      *                 AR1018468          Date 20Oct12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR685293  *CREATE  Date 26Jan11               *
+      *                 xxxxxx             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD023662 - Reconciliation: T_GZAMADEX records not dropped    *
+      *  AR782378 - UDF Files are not purged during COB. Created      *
+      *             program to purge UDF files during COB.            *
+      *             Added deletion for GZFEEMEX (Child: AR782379)     *
+/*    *  AR1018468 - UDF Historical files (Child:AR1018470)           *
+      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+/*    *  AR685293 - UDF Files are not purged during COB.  Created     *
+      *             program to purge UDF files during COB.            *
+      *             (Child: AR685294)                                 *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *   01    - Read until EOF of UDF List GPUDFDPD                 *
+      *   02    - Read until EOF of UDF files that will be deleted    *
+      *           record by record                                    *
+      *   03    - Chain for master files                              *
+      *                                                               *
+      *****************************************************************
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *****************************************************************
+     FGPUDFDPD  IF   E           K DISK    INFSR(*PSSR)
+      ** UDF list
+      *
+     FDEAMSD    IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(DEAM_)
+      ** DEAM master file
+      *
+     FGZDEAMEXL0UF   E           K DISK    INFSR(*PSSR)
+     FLEFEADLA  IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(FEST_)
+      ** FEST master file
+      *
+     FGZFESTEXL0UF   E           K DISK    INFSR(*PSSR)
+     FSEDEVDL1  IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(SEDE_)
+      ** SEDE master file
+      *
+     FGZSEDEEXL0UF   E           K DISK    INFSR(*PSSR)
+     FFXCLSPSHL0IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(CLSP_)
+      ** CLSP master file
+      *
+     FGZCLSPEXL0UF   E           K DISK    INFSR(*PSSR)
+     FFXCLSPSDL3IF   E           K DISK    INFSR(*PSSR)
+     F                                     PREFIX(CLS2_)
+      ** CLS2 master file
+      *
+     FGZCLS2EXL0UF   E           K DISK    INFSR(*PSSR)
+     FGZFEEMEXL0UF   E           K DISK    INFSR(*PSSR)                                     AR782378
+     FLEFEEDL1  IF   E           K DISK    INFSR(*PSSR)                                     AR782378
+     F                                     PREFIX(FE_)                                      AR782378
+      *
+      ** +--------------------------------------+
+      ** ¦ Arrays and Data Structures           ¦
+      ** ¦ ==========================           ¦
+      ** +--------------------------------------+
+      ** Local data area for database error details
+      *
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+      ** Dynamic SQL Statement
+      *
+     D SQLStmt         S           1000A   INZ(*Blanks)
+      ** ZDate10 working variables
+      *
+     D WDateIn         S              8A
+     D*WDayNumber      S              5S 0                                                 AR1018468
+     D WDayNumber      S              5P 0                                                 AR1018468
+      ** Inputs and Outputs
+      *
+     D I#RTCD          S              7A
+     D I#ERMS          S             50A
+     D I#FULLCHECK     S              1A
+     D O#ZONE          S             10A
+     D O#SHTC          S              4A
+     D O#RDNB          S              5P 0
+     D O#DNWD          S              5P 0
+     D O#BCCY          S              3A
+     D O#NJOB          S              1S 0
+      ** Work Fields
+      *
+     D TMP_VDAT        S             10A   INZ(*BLANKS)
+     D GLO_CNUM        S             10A   INZ(*BLANKS)
+     D LOC_CNUM        S              6A   INZ(*BLANKS)
+     D DEAMK_DLNO      S              6S 0
+     D K_VDAT          S              5S 0
+     D DEAMK_DASN      S              3S 0
+     D FESTK_CNUM      S              6A
+     D FESTK_FAFC      S              5S 0
+     D FESTK_FSEQ      S              2S 0
+     D CLSPK_SEQN      S              2S 0
+     D CLS2K_SEQN      S              2S 0
+     D CLS2K_DSEQ      S              2S 0
+     D FEEMK_CNUM      S              6A                                                    AR782378
+     D FEEMK_FAFC      S              5S 0                                                  AR782378
+     D FEEMK_LNRF      S              6A                                                    AR782378
+     D FEEMK_FSEQ      S              2S 0                                                  AR782378
+      *****************************************************************
+      /EJECT
+      ** +--- Start of Main processing -----------------------------------+
+      ** ¦                                                                ¦
+      ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+      ** ¦ executed at program activation.                                ¦
+      ** ¦                                                                ¦
+      ** +----------------------------------------------------------------+
+      *
+      ** Read the list of UDF files
+      *
+     C                   READ      GPUDFDD0                               01
+     C                   DOW       *IN01 = *OFF
+      *
+      ** Delete types 1 are those that can be deleted by UDF key and
+      ** master file key.
+      *
+     C                   IF        GPUDFD = '1'
+     C                   EVAL      SQLStmt = 'Delete from ' + %trim(GPUDF) +
+     C                                       ' Where ' + %trim(GPUDFK) +
+     C                                       ' And ' + %trim(GPUDFZ) + ' = ' +
+     C                                       '''' + %trim(O#ZONE) + ''''
+     C/EXEC SQL
+     C+                  EXECUTE   Immediate :SQLStmt
+     C/END-EXEC
+      *
+      ** Delete types 2 are those that has global customer ID in UDF key
+      ** Created SQL LF to convert global customers to local.
+      *
+     C                   ELSEIF    GPUDFD = '2'
+      *
+     C                   EVAL      SQLStmt = 'Delete from ' + %trim(GPUDF) +
+     C                                       ' Where ' + %trim(GPUDFK) +
+     C                                       ' Where CGZONE = ' +
+     C                                       '''' + %trim(O#ZONE) + '''' +
+     C                                       ') And ' + %trim(GPUDFZ) + '=' +
+     C                                       '''' + %trim(O#ZONE) + ''''
+     C/EXEC SQL
+     C+                  EXECUTE   Immediate :SQLStmt
+     C/END-EXEC
+      *
+      ** Delete types 3 are those that have value dates not in Midas Day No.
+      ** Can only be deleted record by record
+      *
+     C                   ELSE
+      *
+     C                   SELECT
+     C                   WHEN      GPUDF = 'T_GZDEAMEX'
+     C                   EXSR      PROC_DEAM
+     C                   WHEN      GPUDF = 'T_GZCLS2EX'
+     C                   EXSR      PROC_CLS2
+     C                   WHEN      GPUDF = 'T_GZCLSPEX'
+     C                   EXSR      PROC_CLSP
+     C                   WHEN      GPUDF = 'T_GZFESTEX'
+     C                   EXSR      PROC_FEST
+     C                   WHEN      GPUDF = 'T_GZSEDEEX'
+     C                   EXSR      PROC_SEDE
+     C                   WHEN      GPUDF = 'T_GZFEEMEX'                                     AR782378
+     C                   EXSR      PROC_FEEM                                                AR782378
+     C                   ENDSL
+      *
+     C                   ENDIF
+     C                   READ      GPUDFDD0                               01
+     C                   ENDDO
+     C
+      *
+     C                   SETON                                            LR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      ** PROC_CLSP - Process purging of CLSP UDF
+      *****************************************************************
+     C     PROC_CLSP     BEGSR
+     C                   READ      T_GZCLSPF                              02
+     C                   DOW       *IN02 = *OFF
+     C                   IF        O#ZONE = ZONE
+      *
+     C                   MOVE      CLSSEQ        CLSPK_SEQN
+     C                   MOVE      CLSVDT        TMP_VDAT
+     C                   EXSR      CVTDAT
+      *
+     C     CLSP_K        CHAIN     FXCLPHD0                           03
+     C                   IF        *IN03 = *ON
+     C                   DELETE    T_GZCLSPF
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   READ      T_GZCLSPF                              02
+     C                   ENDDO
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      ** PROC_CLS2 - Process purging of CLS2 UDF
+      *****************************************************************
+     C     PROC_CLS2     BEGSR
+     C                   READ      T_GZCLS2F                              02
+     C                   DOW       *IN02 = *OFF
+     C                   IF        O#ZONE = ZONE
+      *
+     C                   MOVE      CLSSEQ        CLS2K_SEQN
+     C                   MOVE      CLSDSQ        CLS2K_DSEQ
+     C                   MOVE      CLSVDT        TMP_VDAT
+     C                   EXSR      CVTDAT
+      *
+     C     CLS2_K        CHAIN     FXCLPDD0                           03
+     C                   IF        *IN03 = *ON
+     C                   DELETE    T_GZCLS2F
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   READ      T_GZCLS2F                              02
+     C                   ENDDO
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      ** PROC_DEAM - Process purging of DEAM UDF
+      *****************************************************************
+     C     PROC_DEAM     BEGSR
+     C                   READ      T_GZDEAMF                              02
+     C                   DOW       *IN02 = *OFF
+     C                   IF        O#ZONE = ZONE
+      *
+     C                   MOVE      DDDLNO        DEAMK_DLNO
+     C                   MOVE      DDDS38        DEAMK_DASN
+     C                   MOVE      DDVDAT        TMP_VDAT
+     C                   EXSR      CVTDAT
+      *
+     C     DEAM_K        CHAIN     DEAMSDIF                           03
+     C                   IF        *IN03 = *ON
+     C                   DELETE    T_GZDEAMF
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   READ      T_GZDEAMF                              02
+     C                   ENDDO
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      ** PROC_FEST - Process purging of FEST UDF
+      *****************************************************************
+     C     PROC_FEST     BEGSR
+     C                   READ      T_GZFESTF                              02
+     C                   DOW       *IN02 = *OFF
+     C                   IF        O#ZONE = ZONE
+      *
+     C                   MOVEL     S_FACT        FESTK_FAFC
+     C                   MOVE      S_FCNO        FESTK_FAFC
+     C                   MOVE      S_FSEQ        FESTK_FSEQ
+     C                   MOVE      S_VDAT        TMP_VDAT
+     C                   EXSR      CVTDAT
+     C                   MOVE      S_CSSN        GLO_CNUM
+     C                   EXSR      CVTCNUM
+     C                   MOVE      LOC_CNUM      FESTK_CNUM
+      *
+     C     FEST_K        CHAIN     LEFEEADF                           03
+     C                   IF        *IN03 = *ON
+     C                   DELETE    T_GZFESTF
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   READ      T_GZFESTF                              02
+     C                   ENDDO
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      ** PROC_SEDE - Process purging of SEDE UDF
+      *****************************************************************
+     C     PROC_SEDE     BEGSR
+     C                   READ      T_GZSEDEF                              02
+     C                   DOW       *IN02 = *OFF
+     C                   IF        O#ZONE = ZONE
+      *
+     C                   MOVE      DDSDED        TMP_VDAT
+     C                   EXSR      CVTDAT
+      *
+     C     SEDE_K        CHAIN     SEDEVDF                            03
+     C                   IF        *IN03 = *ON
+     C                   DELETE    T_GZSEDEF
+     C                   ENDIF
+     C                   ENDIF
+      *
+     C                   READ      T_GZSEDEF                              02
+     C                   ENDDO
+     C                   ENDSR
+      *****************************************************************
+     C/EJECT
+      *****************************************************************                     AR782378
+      ** PROC_FEEM - Process purging of FEEM UDF                                            AR782378
+      *****************************************************************                     AR782378
+     C     PROC_FEEM     BEGSR                                                              AR782378
+     C                   READ      T_GZFEEMF                              02                AR782378
+     C                   DOW       *IN02 = *OFF                                             AR782378
+     C                   IF        O#ZONE = ZONE                                            AR782378
+      *                                                                                     AR782378
+     C                   MOVE      DDCSSN        GLO_CNUM                                   AR782378
+     C                   EXSR      CVTCNUM                                                  AR782378
+     C                   MOVE      LOC_CNUM      FEEMK_CNUM                                 AR782378
+     C                   IF        DDFACT = *Blanks and DDFCNO = *Blanks                    AR782378
+     C                   MOVE      '00000'       FEEMK_FAFC                                 AR782378
+     C                   ELSE                                                               AR782378
+     C                   MOVEL     DDFACT        FEEMK_FAFC                                 AR782378
+     C                   MOVE      DDFCNO        FEEMK_FAFC                                 AR782378
+     C                   ENDIF                                                              AR782378
+     C                   IF        DDLNRF = *Blanks                                         AR782378
+     C                   MOVE      '000000'      FEEMK_LNRF                                 AR782378
+     C                   ELSE                                                               AR782378
+     C                   MOVE      DDLNRF        FEEMK_LNRF                                 AR782378
+     C                   ENDIF                                                              AR782378
+     C                   MOVE      DDFSEQ        FEEMK_FSEQ                                 AR782378
+      *                                                                                     AR782378
+     C     FEEM_K        CHAIN     LEFEEDF                            03                    AR782378
+     C                   IF        *IN03 = *ON                                              AR782378
+     C                   DELETE    T_GZFEEMF                                                AR782378
+     C                   ENDIF                                                              AR782378
+     C                   ENDIF                                                              AR782378
+      *                                                                                     AR782378
+     C                   READ      T_GZFEEMF                              02                AR782378
+     C                   ENDDO                                                              AR782378
+     C                   ENDSR                                                              AR782378
+      *****************************************************************                     AR782378
+     C/EJECT                                                                                AR782378
+      *****************************************************************
+      ** CVTCNUM   - Converts Global customer to local format
+      *****************************************************************
+     C     CVTCNUM       BEGSR
+     C/EXEC SQL
+     C+ SELECT CGCUST INTO :LOC_CNUM FROM GPGLCUSL
+     C+ WHERE CGGLOB = :GLO_CNUM AND CGZONE = :O#ZONE
+     C/END-EXEC
+     C                   ENDSR
+     C/EJECT
+      *****************************************************************
+      ** CVTDAT    - Converts YYYY-MM-DD to Midas Day No
+      *****************************************************************
+     C     CVTDAT        BEGSR
+      *
+      ** Remove hyphens
+      *
+     C                   EVAL      TMP_VDAT = %REPLACE('' : TMP_VDAT : 5 : 1)
+     C                   EVAL      TMP_VDAT = %REPLACE('' : TMP_VDAT : 7 : 1)
+     C                   EVAL      WDateIn = TMP_VDAT
+     C                   CALLB     'ZDATE10'
+     C                   PARM                    WDateIn
+     C                   PARM                    WDayNumber
+     C                   EVAL      K_VDAT = WDayNumber
+      *
+     C                   ENDSR
+      *
+      *****************************************************************
+      * *INZSR - Program Initialisation routine                       *
+      *****************************************************************
+ 
+     C     *INZSR        BEGSR
+     C                   CALL      'GOGETZONE'
+     C                   PARM      *BLANKS       I#RTCD
+     C                   PARM      *BLANKS       I#ERMS
+      ** INPUTS
+     C                   PARM      'N'           I#FULLCHECK
+      ** OUTPUTS
+     C                   PARM                    O#ZONE
+     C                   PARM                    O#SHTC
+     C                   PARM                    O#RDNB
+     C                   PARM                    O#DNWD
+     C                   PARM                    O#BCCY
+     C                   PARM                    O#NJOB
+      *
+      ** Check for error in access object
+      *
+     C                   IF        I#RTCD <> *BLANKS
+     C                   MOVEL     'SC005000'    DBPGM
+     C                   MOVEL     'GPZONEPD'    DBFILE
+     C                   MOVEL     '002'         DBASE
+     C                   MOVEL     *BLANKS       DBKEY
+     C                   EXSR      *PSSR
+     C                   ENDIF
+      *
+      ** Work fields
+      *
+     C     DEAM_K        KLIST
+     C                   KFLD                    DEAMK_DLNO
+     C                   KFLD                    K_VDAT
+     C                   KFLD                    DEAMK_DASN
+      *                                                                                     AR782378
+     C     FEEM_K        KLIST                                                              AR782378
+     C                   KFLD                    FEEMK_CNUM                                 AR782378
+     C                   KFLD                    FEEMK_FAFC                                 AR782378
+     C                   KFLD                    FEEMK_LNRF                                 AR782378
+     C                   KFLD                    FEEMK_FSEQ                                 AR782378
+      *
+     C     FEST_K        KLIST
+     C                   KFLD                    FESTK_CNUM
+     C                   KFLD                    FESTK_FAFC
+     C                   KFLD                    FESTK_FSEQ
+     C                   KFLD                    K_VDAT
+      *
+     C     SEDE_K        KLIST
+     C                   KFLD                    DDSDSN
+     C                   KFLD                    DDSDET
+     C                   KFLD                    K_VDAT
+      *
+     C     CLSP_K        KLIST
+     C                   KFLD                    CLSCCY
+     C                   KFLD                    CLSNST
+     C                   KFLD                    K_VDAT
+     C                   KFLD                    CLSPK_SEQN
+      *
+     C     CLS2_K        KLIST
+     C                   KFLD                    CLSCCY
+     C                   KFLD                    CLSNST
+     C                   KFLD                    K_VDAT
+     C                   KFLD                    CLS2K_SEQN
+     C                   KFLD                    CLSTIM
+     C                   KFLD                    CLS2K_DSEQ
+      *
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  Called By :                                                  *
+      *  Calls     :                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C     *PSSR         BEGSR
+     C                   EVAL      *INU7 = *ON
+     C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON
+     C                   DUMP
+     C                   RETURN
+      *
+     C                   ENDSR

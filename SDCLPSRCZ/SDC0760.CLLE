@@ -1,0 +1,131 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI *  TEXT('Midas SD SSI Effective Date Processing')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Standing Data Module                                */
+/*                                                                   */
+/*       SDC0760 - Midas SD SSI Effective Date Processing            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2004                     */
+/*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/* Bank Fusion Midas 1.4 Base ---------------------------------------*/
+/* Midas Plus 1.4 Base 04 -------------------------------------------*/
+/* Midas Plus 1.4 Base ----------------------------------------------*/
+/* Midas Plus 1.3 ---------------- Base -----------------------------*/
+/*       Prev Amend No. BUG6430            Date 31Mar05              */
+/*                      CDL031  *CREATE    Date 25Nov04              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
+/*       BUG6430 - Live Instructions should be Historic and Forward  */
+/*                 Insts should be Live after CoB                    */
+/*       CDL031 - Effective Date on Extended SSI                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+ 
+             DCL        VAR(&CNAM)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ)  TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&STATUS)  TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&PRESBS) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&TOLIB)  TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEXTD) TYPE(*DEC) LEN(5 0)
+             DCL        VAR(&QRYSLT) TYPE(*CHAR) LEN(36)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2004')
+             DCLF       FILE(SDBANKPD)
+ 
+/* Global MONMSG to trap errors  */
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
+                          CMDLBL(ERROR))
+ 
+             CHGJOB     SWS(00000000)
+ 
+             SNDPGMMSG  MSG('SDC0760 - FRN/Mortgage Rate Change +
+                          Generation Ctl') TOMSGQ(MRUNQ)
+ 
+/* Do Security Copies */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRESBS)
+ 
+             CHGVAR     VAR(&TOLIB) VALUE(&PRESBS *TCAT 'DPLIB')
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STATUS)
+ 
+/* Override to SEQONLY(*YES 100) */
+ 
+             OVRDBF     FILE(XSDEXSTPD) SEQONLY(*YES 100)
+             OVRDBF     FILE(SDEXSTPD) SEQONLY(*YES 100)
+ 
+/* If Restart, Take Security Copies */
+ 
+             IF         COND(&STATUS = 'Y') THEN(DO)
+ 
+                CPYF       FROMFILE(&TOLIB/XSDEXSTPD) TOFILE(SDEXSTPD) +
+                             MBROPT(*REPLACE) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)    +
+                             EXEC(CLRPFM FILE(SDEXSTPD))
+             ENDDO
+ 
+             ELSE CMD(DO)
+ 
+/* Delete Copy Files */
+ 
+                DLTF       FILE(XSDEXSTPD)
+                MONMSG     MSGID(CPF0000)
+ 
+/* Backup File */
+ 
+                CPYF       FROMFILE(SDEXSTPD) TOFILE(&TOLIB/XSDEXSTPD) +
+                             MBROPT(*REPLACE) CRTFILE(*YES) FMTOPT(*NONE)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+ 
+                CHGVAR     VAR(&STATUS) VALUE('Y')
+ 
+                CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STATUS)
+ 
+             ENDDO
+ 
+             DLTOVR     FILE(XSDEXSTPD)
+             DLTOVR     FILE(SDEXSTPD)
+ 
+/* Call RPG/SD0760 - SSI Effective Date Processing  */
+ 
+             RCVF       RCDFMT(SDBANKD0)
+/*********** CHGVAR     VAR(&NEXTD) VALUE(&BJRDNB + 1)                      /*BUG6430*/
+             CHGVAR     VAR(&NEXTD) VALUE(&BJDNWD)                          /*BUG6430*/
+ 
+             CHGVAR     VAR(&QRYSLT) VALUE('BYRECI *EQ "F" *AND +
+                          BYEFFD *LE      ')
+             CHGVAR     VAR(%SST(&QRYSLT 32 5)) VALUE(&NEXTD)
+ 
+             OVRDBF     FILE(SDEXSTPD) SHARE(*YES)
+             OPNQRYF    FILE((SDEXSTPD)) OPTION(*ALL) +
+                          QRYSLT(&QRYSLT) KEYFLD((BYEFFD *ASCEND))
+ 
+             CALL       PGM(SD0760)
+             CLOF SDEXSTPD
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
+ 
+/* Change component status */
+ 
+             CHGVAR     VAR(&STATUS) VALUE('N')
+ 
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STATUS)
+ 
+             DLTF       FILE(&TOLIB/XSDEXSTPD)
+             MONMSG     MSGID(CPF0000)
+ 
+             GOTO       CMDLBL(END)
+ 
+ERROR:       CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SDC0760 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             DMPCLPGM
+ 
+END:         ENDPGM

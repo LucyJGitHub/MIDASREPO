@@ -1,0 +1,866 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Reactivate matured loans')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0373 - Reactivate Matured Loans                            *
+      *                                                               *
+      *  Function:  This program will reactivate matured loans        *
+      *  (phase(s))                                                   *
+      *                                                               *
+      *  Called By: LEC0603 - Daily File Maintenance - 1              *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046162           Date 15Aug17               *
+      *                 MD039449           Date 04Jul16               *
+      *                 CLE154             Date 07Aug12               *
+      *                 CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 CRE073             Date 06Dec10               *
+      *                 CLE143             Date 06Dec10               *
+      *                 251331             Date 22Nov07               *
+      *                 CER059             Date 19Jul10               *
+      *                 CER020             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE036             Date 22Sep03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 CAP074             Date 08Aug02               *
+      *                 CAS005             Date 16Dec02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 202381             Date 24Apr02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 194991             Date 08Aug01               *
+      *                 CLE014             Date 20Mar01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 157150             Date 23May01               *
+      *                 CLE011             Date 07Nov00               *
+      *                 157669             Date 18Apr00               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 144915             Date 28Oct98               *
+      *                 127731             Date 04Dec97               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
+      *  MD046162 - PDCL loans attached to reactivated loans will     *
+      *             also be reactivated.                              *
+      *  MD039449 - CLE164: Unable to change loan autosettle          *
+      *             indicator from N to C                             *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
+      *  CLE134 - Past Due Call Loan Processing (Recompile)           *
+      *  CLE148 - Alpha Loan Reference                                *
+      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+      *  CLE143 - Original Loan Contract Date & Effective Interest    *
+      *           Rate (Recompile)                                    *
+      *  251331 - Ensure -ve MR for interest is also processed for    *
+      *           reactivation.                                       *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+      *           Midas Plus (Recompile)                              *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE036 - LE Enh for Nordea Phase 1 Pty 2- Specific Base Rate *
+      *           (Recompile)                                         *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CAP074 - Lending API enhancements - Loans input.             *
+      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+      *           (Recompile)                                         *
+      *  CAS004 - Hedge Accounting Phase A (Recompile)                *
+      *  CLE028 - Flat Rate Personal Loans (Rule of 78s)              *
+      *           (Recompile)                                         *
+      *  202381 - Re-activated loans and loan amendments do not       *
+      *           appear for amendment/authorisation.                 *
+      *           Ensure RATF is reset to blank after reactivation.   *
+      *  194991 - Re-activated loan matures wrong principal          *
+      *  CLE014 - Customer Driven Lending Enhancements                *
+      *  157150 - Trailer is only updated once.                       *
+      *  CLE011 - Rate Fixing Days for Lending Rollover Processing    *
+      *           Recompile                                           *
+      *  157669 - Cost of Funds are being reported incorrectly        *
+      *           Recompiled due to changes in files HISTSHQ/LEHISSL0 *
+      *  144915 - Recompiled due to changes in LF/CLOAN.              *
+      *  127731 - Reactivate Matured Loans                            *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Loan amendments file
+     FLELOAML0IF  E           K        DISK         KINFSR *PSSR
+      *
+      ** Live Loans Details
+     FCLOAN   UF  E           K        DISK         KINFSR *PSSR
+     F            CLOANHHF                          KIGNORE
+     F            CLOANZ1F                          KIGNORE
+      *
+      ** Live Loans Details
+     FLEHISSL0UF  E           K        DISK         KINFSR *PSSR
+     F**HISTSZX*UFE           K        DISK         KINFSR *PSSR          157150
+     FHISTSZX UF  E                    DISK         KINFSR *PSSR          157150
+     FLE0373P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL1
+     FCLOANZI0UF  E           K        DISK                                                 MD039449
+      *                                                                                     MD046162
+      ** Loan amendments file                                                               MD046162
+     FLEPDUEL2IF  E           K        DISK         KINFSR *PSSR                            MD046162
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *                                                               *
+      *   89  - End of File                                           *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRINIT - Program Initialisation                              *
+      *  SRPROC - Detail Processing                                   *
+      *  SRREPT - Process Report Lines                                *
+      *                                                               *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  RCFP1  - RCF Processing for P1 Report                        *
+      *                                                               *
+      *  ZDATE1 - Validate Date and Convert into Midas Day Number     *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZDAYS  - Calculation Number of Days between Two Dates        *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZFRPEDZ1
+      /SPACE 3
+      *
+     ICLOANCLF
+     I              RECI                            LRECI
+     I              AUTO                            LAUTO
+     I              RATF                            LRATF                                     202381
+     ICLOANCKF
+     I              RECI                            KRECI
+     IHISTSHMF
+     I              RECI                            MRECI
+     I              PRAM                            MPRAM
+     I              CPAM                            MCPAM                 CLE014
+     I              INTR                            MINTR                 CLE014
+     IHISTSHNF
+     I              RECI                            NRECI
+     I              PRAM                            NPRAM
+     IHISTSHPF
+     I              RECI                            PRECI
+     I              AMTP                            PAMTP
+     I              PRAM                            PPRAM
+     I              PRSQ                            PPRSQ                 CLE014
+     I              INTA                            PINTA                                   MD046162
+     IHISTSHQF
+     I              RECI                            QRECI
+     ILEPDUED0                                                                              MD046162
+     I              YTKPACL                         YTKPCL                                  MD046162
+     I              YTKPABR                         YTKPBR                                  MD046162
+     I              YTKPAAC                         YTKPAC                                  MD046162
+     I              YTKPASE                         YTKPSE                                  MD046162
+     I              YTKPACY                         YTKPCY                                  MD046162
+     I              YTKIACL                         YTKICL                                  MD046162
+     I              YTKIABR                         YTKIBR                                  MD046162
+     I              YTKIAAC                         YTKIAC                                  MD046162
+     I              YTKIASE                         YTKISE                                  MD046162
+     I              YTKIACY                         YTKICY                                  MD046162
+      *
+     ILDA       E DSLDA                         256
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      *
+      ** Data Area giving Installation Control Details
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure
+      *
+     I                                     *PROGRAM PGM
+     I                                      244 253 WSID
+     I                                      254 263 USER
+     ISPOOL1      DS
+      ***  File Information Data Structure for LE0373P1.
+     I                                       83  92 SFILE1
+     I                                    B 123 1240SFNUM1
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      **  External data structures for Bank Details
+      *
+     ISDCURR    E DSSDCURRPD
+      **  External DS for Currency Details
+      *
+     ISCSARD    E DSSCSARDPD                                              CLE014
+      ** External DS for switchable features                              CLE014
+      *                                                                   CLE014
+     ISDBRCH    E DSSDBRCHPD
+      **  External DS for Branch Details
+      *
+     IDSFDY     E DSDSFDY
+      **  First DS for access programs, short data structure
+      *
+     IDSSDY     E DSDSSDY
+      **  Second DS for access programs, long data structure
+      *
+     I/COPY ZSRSRC,ZFRPEDZ2
+      **  Midas ZS Edit Amount
+      *
+      ** Key Lists
+      ** ~~~~~~~~~
+      *
+      **  Chain to CLOAN
+     C           K#KY01    KLIST
+     C**********           KFLD           K1LNRF  60                                          CLE148
+     C                     KFLD           K1LNRF  6                                           CLE148
+     C                     KFLD           K1RCDT  1
+      *
+      **  Chain to LEHISSL0
+     C           K#KY02    KLIST
+     C                     KFLD           K1BRCA  3
+     C**********           KFLD           K1CNUM  60                                          CSD027
+     C                     KFLD           K1CNUM  6                                           CSD027
+     C                     KFLD           K1LNRF
+      **  Chain to LEPDUEL2                                                                 MD046162
+     C           K#KY03    KLIST                                                            MD046162
+     C                     KFLD           K3LNRF  6                                         MD046162
+      *
+     C/TITLE Main Processing
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR SRINIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR SRPROC
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/SRINIT
+      *****************************************************************
+      *                                                               *
+      *  SRINIT    : Subroutine to do Program Initialisation          *
+      *  Called By : Main Processing                                  *
+      *  Calls:                                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRINIT    BEGSR
+      *
+      **  Set up copyright parameter
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      **  Define data areas
+      *
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   RUNDAT
+     C           AGMBIN    IFEQ 'Y'
+     C                     SETON                     37
+     C                     ENDIF
+      *
+      **  Access RUNDAT for multibranching indicator
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *LOCK     IN   LDA
+     C**********           MOVEL'LE0373'  DBPGM                           CLE014
+     C                     MOVEL'LE0373'  DBPGM     P                     CLE014
+     C                     OUT  LDA
+      *
+      **  Call Access Program for Bank Details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DBERROR 001 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      **  Check System Date Format, DDMMYY (*IN98 off)
+      **                            MMDDYY (*IN98 on).
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     ENDIF
+      *                                                                   CLE014
+      ** Check whether SAR CLE014 is installed or not.                    CLE014
+      *                                                                   CLE014
+     C                     CALL 'AOSARDR0'                                CLE014
+     C                     PARM *BLANK    PRTCD   7                       CLE014
+     C                     PARM '*VERIFY' POPTN   7                       CLE014
+     C                     PARM 'CLE014'  PSARD   6                       CLE014
+     C           SCSARD    PARM SCSARD    DSFDY                           CLE014
+      *                                                                   CLE014
+     C           PRTCD     IFEQ *BLANK                                    CLE014
+     C                     MOVE 'Y'       CLE014  1                       CLE014
+     C                     ELSE                                           CLE014
+     C                     MOVE 'N'       CLE014                          CLE014
+     C           PRTCD     IFNE '*NRF   '                                 CLE014
+     C                     MOVEL'SCSARDPD'DBFILE                          CLE014
+     C                     Z-ADD4         DBASE                           CLE014
+     C                     MOVEL'CLE014'  DBKEY                           CLE014
+     C                     EXSR *PSSR                                     CLE014
+     C                     ENDIF                                          CLE014
+     C                     ENDIF                                          CLE014
+      *
+      **  Initialize work variables
+      *
+     C                     Z-ADD0         WCOUNT  50
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+     C                     MOVE *BLANKS   PREVB   3
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      *****************************************************************
+      /TITLE SR/PROCES
+      *****************************************************************
+      *                                                               *
+      *  SRPROC - Subroutine to do the Detail Processing.             *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  REPORT - Process Report Lines                                *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRPROC    BEGSR
+      *
+      **  Read first record from File.
+      *
+     C           *LOVAL    SETLLLELOAML0
+     C                     READ LELOAML0                 89
+      *
+      **  Do Until End of File.
+      *
+     C           *IN89     DOUEQ'1'
+      *
+     C           AMTP      IFEQ 'MR'
+     C           PAST      ANDEQ'Y'
+     C           PRAM      ANDLT0
+     C           AMTP      OREQ 'MR'                                                          251331
+     C           PAST      ANDEQ'Y'                                                           251331
+     C           INTA      ANDLT0                                                             251331
+      *
+     C                     MOVE LNRF      K1LNRF
+     C                     MOVE 'A'       K1RCDT
+     C           K#KY01    CHAINCLOAN                90
+     C           *IN90     IFEQ '0'
+     C           LRECI     ANDEQ'M'
+     C                     MOVE 'D'       LRECI
+     C                     MOVE 'N'       LAUTO
+     C                     MOVE ' '       LRATF                                               202381
+     C                     UPDATCLOANCLF
+      *                                                                                     MD039449
+      ** Delete the record in CLE164 extension file CLOANZTD because                        MD039449
+      ** reinstated loan is auto-settle N                                                   MD039449
+      *                                                                                     MD039449
+     C           K1LNRF    SETLLCLOANZI0                                                    MD039449
+     C           K1LNRF    READECLOANZI0                 90                                 MD039449
+     C           *IN90     DOWEQ'0'                                                         MD039449
+     C                     DELETCLOANZD0                                                    MD039449
+     C           K1LNRF    READECLOANZI0                 90                                 MD039449
+     C                     ENDDO                                                            MD039449
+      *
+     C                     MOVE 'B'       K1RCDT
+     C           K#KY01    CHAINCLOAN                90
+     C           *IN90     IFEQ '0'
+     C           KRECI     ANDEQ'M'
+     C                     MOVE 'D'       KRECI
+     C                     UPDATCLOANCKF
+      *
+     C                     MOVE BRCA      K1BRCA
+     C                     MOVE CNUM      K1CNUM
+     C           K#KY02    SETLLHISTSHMF
+     C           K#KY02    READEHISTSHMF                 60
+     C           *IN60     DOWEQ'0'
+     C           MRECI     ANDEQ'M'
+     C                     MOVE 'D'       MRECI
+      *                                                                   CLE014
+      **  Zeroise CPAM and INTR to trigger recalculation in LE0400        CLE014
+      *                                                                   CLE014
+     C           CLE014    IFEQ 'Y'                                       CLE014
+     C                     Z-ADD0         MCPAM                           CLE014
+     C                     Z-ADD0         MINTR                           CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C                     UPDATHISTSHMF
+     C           K#KY02    READEHISTSHMF                 60
+     C                     ENDDO
+      *
+     C           K#KY02    SETLLHISTSHNF
+     C           K#KY02    READEHISTSHNF                 60
+     C           *IN60     DOWEQ'0'
+     C           NRECI     ANDEQ'M'
+     C                     MOVE 'D'       NRECI
+     C                     UPDATHISTSHNF
+     C           K#KY02    READEHISTSHNF                 60
+     C                     ENDDO
+      *
+     C           K#KY02    SETLLHISTSHPF
+     C           K#KY02    READEHISTSHPF                 60
+     C           *IN60     DOWEQ'0'
+     C           PRECI     ANDEQ'M'
+     C           CLE014    IFEQ 'N'                                       CLE014
+     C           PAMTP     IFNE 'MA'
+     C                     MOVE 'D'       PRECI
+     C                     UPDATHISTSHPF
+     C                     ELSE
+     C                     DELETHISTSHPF
+     C                     EXSR SRTRAI
+     C                     ENDIF
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C           CLE014    IFEQ 'Y'                                       CLE014
+     C                     MOVE 'D'       PRECI                           194991
+     C           PAMTP     IFEQ 'MA'                                      CLE014
+     C**********           MOVE 'D'       PRECI                    CLE014 194991
+     C                     MOVE 'MR'      PAMTP                           CLE014
+     C                     Z-ADD18        PPRSQ                           CLE014
+     C                     ENDIF                                          CLE014
+     C                     UPDATHISTSHPF                                  CLE014
+     C                     ENDIF                                          CLE014
+      *                                                                   CLE014
+     C           K#KY02    READEHISTSHPF                 60
+     C                     ENDDO
+      *
+     C           K#KY02    SETLLHISTSHQF
+     C           K#KY02    READEHISTSHQF                 60
+     C           *IN60     DOWEQ'0'
+     C           QRECI     ANDEQ'M'
+     C                     MOVE 'D'       QRECI
+     C                     UPDATHISTSHQF
+     C           K#KY02    READEHISTSHQF                 60
+     C                     ENDDO
+      *
+      **  Process Report Lines.
+      *
+     C                     EXSR SRREPT
+      *
+      **  Count records read.
+      *
+     C                     ADD  1         WCOUNT
+     C                     ENDIF
+     C                     ENDIF
+     C                     EXSR SRPDCL                                                      MD046162
+     C                     ENDIF
+      *
+      **  Read next record.
+      *
+     C                     READ LELOAML0                 89
+      *
+      **  End of Do Until End of Valid Records.
+      *
+     C                     ENDDO
+      *
+      **  Write final records and Totals to Report.
+      *
+     C                     EXSR SREND1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/REPORT
+      *****************************************************************
+      *                                                               *
+      *  SRREPT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls:                                                       *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRREPT    BEGSR
+      *
+     C           PREVB     IFNE BRCA
+     C           OPNIND    IFEQ 'Y'
+      *
+      **  Print 'End of Report'
+      *
+     C                     MOVE PREVB     RBRCA
+     C                     MOVE WCOUNT    RCOUNT
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+     C                     CLOSELE0373P1
+     C                     OPEN LE0373P1
+     C                     EXSR SRCFP1
+     C                     MOVE 'Y'       OPNIND  1
+     C                     MOVE BRCA      PREVB
+      *
+      **  Access Branch Details
+      *
+     C**********           CALL 'AOBRCHR0'                                                    CGL029
+     C                     CALL 'AOBRCHR1'                                                    CGL029
+     C                     PARM '*MSG    'WRTCD
+     C                     PARM '*KEY    'WOPTN
+     C                     PARM BRCA      WBRCA   3
+     C********** SDBRCH    PARM SDBRCH    DSFDY                                               CGL029
+     C           SDBRCH    PARM SDBRCH    DSSDY                                               CGL029
+      *
+      **  Handle Database Error
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DBERROR 003 *
+     C                     MOVELBRCA      DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      **  Print Headings
+      *
+     C                     WRITEHEADP1
+     C                     ELSE
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+     C                     ENDIF
+      *
+      **  Move Action Fields to Report Fields
+      *
+     C                     MOVE LNRF      RLNRF
+     C                     MOVE CNUM      RCNUM
+     C                     MOVE FCUS      RFCUS
+     C                     MOVE FTYP      RFTYP
+     C                     MOVE FSEQ      RFSEQ
+      *
+     C                     Z-ADD0         ZDAYNO
+     C                     MOVE SLID      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RSLID
+      *
+     C                     Z-ADD0         ZDAYNO
+     C                     MOVE MDAT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    RMDAT
+      *
+      **  Call Access Program for Currency Details
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*KEY   ' WOPTN   7
+     C                     PARM CCY       WAJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      **  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     Z-ADD002       DBASE            * DBERROR 002 *
+     C                     MOVELCCY       DBKEY            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDPRAM      ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     EXSR ZFRPED
+     C                     MOVE ZOUT25    RPRAM
+      *
+      **  Print LE0373P1 Details
+      *
+     C                     WRITEDETAIL
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRTRAI
+      *****************************************************************
+      *                                                               *
+      *  SRTRAI - Subroutine to Update Trailer File HISTSZX           *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRTRAI    BEGSR
+      *
+     C           1         SETLLHISTSZXF                                  157150
+     C                     READ HISTSZXF                 50
+     C           *IN50     IFEQ '0'
+     C                     SUB  1         NORE
+     C                     UPDATHISTSZXF
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SREND1
+      *****************************************************************
+      *                                                               *
+      *  SREND1 - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: SRPROC                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SREND1    BEGSR
+      *
+     C           OPNIND    IFEQ 'Y'
+      *
+      **  Check that sufficient lines remain for the Format. If not,
+      **  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+     C                     WRITEHEADP1
+     C                     ENDIF
+      *
+      **  Write out Total Format.
+      *
+     C                     MOVE PREVB     RBRCA
+     C                     MOVE WCOUNT    RCOUNT
+     C                     WRITETRAILP1
+     C                     ENDIF
+      *
+      **  End Program and Return
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/*PSSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR
+      *
+      **  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     ENDIF
+      *
+      **  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      /TITLE SR/SRCFP1
+      *****************************************************************
+      *                                                               *
+      *  SRCFP1 - Subroutine to register the P1 Printer File via RCF. *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRCFP1    BEGSR
+      *
+      **  Ensure Report Spool File recorded by RCF.
+      *
+     C                     Z-ADDSFNUM1    ZSNUM   60
+      *
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE BRCA      SENTY
+     C                     ELSE
+     C                     MOVE *BLANKS   SENTY
+     C                     ENDIF
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM *BLANKS   SEQ     5
+     C                     PARM           SENTY   3
+     C                     PARM           SFILE1
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      **  If Error occurs during ZSFILE processing, then return to the
+      **  Calling Program.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      *
+      *****************************************************************
+      /TITLE SR/SRPDCL                                                                      MD046162
+      *****************************************************************                     MD046162
+      *                                                               *                     MD046162
+      *  SRPDCL - Subroutine to Update Trailer File HISTSZX           *                     MD046162
+      *                                                               *                     MD046162
+      *  Called By: SRPDCL                                            *                     MD046162
+      *  Calls    : None                                              *                     MD046162
+      *                                                               *                     MD046162
+      *****************************************************************                     MD046162
+      *                                                                                     MD046162
+     C           SRPDCL    BEGSR                                                            MD046162
+      *                                                                                     MD046162
+     C                     MOVE LNRF      K3LNRF                                            MD046162
+     C                     MOVE *BLANKS   YPLON                                             MD046162
+     C                     MOVE *BLANKS   K1LNRF                                            MD046162
+     C           K#KY03    SETLLLEPDUEL2                                                    MD046162
+     C           K#KY03    READELEPDUEL2                 70                                 MD046162
+      *                                                                                     MD046162
+     C           *IN70     DOWEQ'0'                                                         MD046162
+     C           YPLON     ANDNEK1LNRF                                                      MD046162
+      *                                                                                     MD046162
+     C                     MOVE YPLON     K1LNRF                                            MD046162
+     C                     MOVE 'A'       K1RCDT                                            MD046162
+     C           K#KY01    CHAINCLOAN                90                                     MD046162
+     C           *IN90     IFEQ '0'                                                         MD046162
+     C           LRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       LRECI                                             MD046162
+     C                     Z-ADD0         MDAT                                              MD046162
+     C                     BITOF'2'       ACEI                                              MD046162
+     C                     UPDATCLOANCLF                                                    MD046162
+      *                                                                                     MD046162
+     C                     MOVE 'B'       K1RCDT                                            MD046162
+     C           K#KY01    CHAINCLOAN                90                                     MD046162
+     C           *IN90     IFEQ '0'                                                         MD046162
+     C           KRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       KRECI                                             MD046162
+     C                     UPDATCLOANCKF                                                    MD046162
+      *                                                                                     MD046162
+     C                     MOVE BRCA      K1BRCA                                            MD046162
+     C                     MOVE CNUM      K1CNUM                                            MD046162
+     C           K#KY02    SETLLHISTSHMF                                                    MD046162
+     C           K#KY02    READEHISTSHMF                 60                                 MD046162
+     C           *IN60     DOWEQ'0'                                                         MD046162
+     C           MRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       MRECI                                             MD046162
+      *                                                                                     MD046162
+      **  Zeroise CPAM and INTR to trigger recalculation in LE0400                          MD046162
+      *                                                                                     MD046162
+     C           CLE014    IFEQ 'Y'                                                         MD046162
+     C                     Z-ADD0         MCPAM                                             MD046162
+     C                     Z-ADD0         MINTR                                             MD046162
+     C                     ENDIF                                                            MD046162
+      *                                                                                     MD046162
+     C                     UPDATHISTSHMF                                                    MD046162
+     C           K#KY02    READEHISTSHMF                 60                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C           K#KY02    SETLLHISTSHNF                                                    MD046162
+     C           K#KY02    READEHISTSHNF                 60                                 MD046162
+     C           *IN60     DOWEQ'0'                                                         MD046162
+     C           NRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       NRECI                                             MD046162
+     C                     UPDATHISTSHNF                                                    MD046162
+     C           K#KY02    READEHISTSHNF                 60                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C           K#KY02    SETLLHISTSHPF                                                    MD046162
+     C           K#KY02    READEHISTSHPF                 60                                 MD046162
+     C           *IN60     DOWEQ'0'                                                         MD046162
+     C           PRECI     ANDEQ'M'                                                         MD046162
+     C           PAMTP     IFNE 'MA'                                                        MD046162
+     C                     MOVE 'D'       PRECI                                             MD046162
+     C                     UPDATHISTSHPF                                                    MD046162
+     C                     ELSE                                                             MD046162
+     C           PINTA     IFNE 0                                                           MD046162
+     C           PPRAM     ORNE 0                                                           MD046162
+     C                     MOVE 'D'       PRECI                                             MD046162
+     C                     MOVE 'MR'      PAMTP                                             MD046162
+     C                     Z-ADD18        PPRSQ                                             MD046162
+     C                     UPDATHISTSHPF                                                    MD046162
+     C                     ELSE                                                             MD046162
+     C                     DELETHISTSHPF                                                    MD046162
+     C                     EXSR SRTRAI                                                      MD046162
+     C                     ENDIF                                                            MD046162
+     C                     ENDIF                                                            MD046162
+     C           K#KY02    READEHISTSHPF                 60                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C           K#KY02    SETLLHISTSHQF                                                    MD046162
+     C           K#KY02    READEHISTSHQF                 60                                 MD046162
+     C           *IN60     DOWEQ'0'                                                         MD046162
+     C           QRECI     ANDEQ'M'                                                         MD046162
+     C                     MOVE 'D'       QRECI                                             MD046162
+     C                     UPDATHISTSHQF                                                    MD046162
+     C           K#KY02    READEHISTSHQF                 60                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C                     ENDIF                                                            MD046162
+     C                     ENDIF                                                            MD046162
+     C           K#KY03    READELEPDUEL2                 70                                 MD046162
+     C                     ENDDO                                                            MD046162
+      *                                                                                     MD046162
+     C                     ENDSR                                                            MD046162
+      *                                                                                     MD046162
+      *****************************************************************                     MD046162
+      /TITLE SR/ZDATE2
+     C/COPY ZSRSRC,ZDATE2Z2
+      /TITLE SR/ZFRPED
+     C/COPY ZSRSRC,ZFRPEDZ3
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
